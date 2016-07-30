@@ -1,6 +1,7 @@
 "use strict";
 import * as vscode from "vscode";
 import * as child_process from "child_process";
+import * as as from "./analysis_server_types";
 
 export class Analyzer {
 	private analyzerProcess: child_process.ChildProcess;
@@ -21,13 +22,13 @@ export class Analyzer {
 		let evt = <UnknownEvent>JSON.parse(message);
 		switch (evt.event) {
 			case "server.connected":
-				this.serverConnected(<ServerConnectedEvent>evt);
+				this.serverConnected(<as.ServerConnectedNotification>evt.params);
 				break;
 		}
 	}
 
-	private serverConnected(evt: ServerConnectedEvent) {
-		let message = `Connected to Dart analysis server version ${evt.params.version}`;
+	private serverConnected(evt: as.ServerConnectedNotification) {
+		let message = `Connected to Dart analysis server version ${evt.version}`;
 
 		console.log(message);
 		let disposable = vscode.window.setStatusBarMessage(message);
@@ -48,10 +49,3 @@ class Event<T> {
 }
 
 class UnknownEvent extends Event<any> { }
-
-class ServerConnectedEvent extends Event<SeverConnectedParams> {}
-
-class SeverConnectedParams {
-	version: string;
-	pid: number;
-}
