@@ -2,23 +2,34 @@
     "name": "dart-code",
     "displayName": "Dart Code",
     "description": "Dart support for Visual Studio Code.",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "publisher": "DanTup",
     "engines": {
         "vscode": "^1.0.0"
     },
     "categories": [
-        "Other"
+        "Languages",
+        "Linters"
     ],
     "activationEvents": [
-        "onCommand:extension.sayHello"
+        "onLanguage:dart"
     ],
     "main": "./out/src/extension",
     "contributes": {
-        "commands": [{
-            "command": "extension.sayHello",
-            "title": "Hello World"
-        }]
+        "languages": [
+            {
+                "id": "dart",
+                "extensions": [
+                    ".dart"
+                ],
+                "filenames": [
+                    "pubspec.yaml"
+                ],
+                "aliases": [
+                    "Dart"
+                ]
+            }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "node ./node_modules/vscode/bin/compile",
