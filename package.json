@@ -28,7 +28,9 @@
     ],
     "icon": "media/icon.png",
     "activationEvents": [
-        "onLanguage:dart"
+        "onLanguage:dart",
+        "onLanguage:pubspec",
+        "workspaceContains:pubspec.yaml"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -38,11 +40,17 @@
                 "extensions": [
                     ".dart"
                 ],
+                "aliases": [
+                    "Dart"
+                ]
+            },
+            {
+                "id": "pubspec",
                 "filenames": [
                     "pubspec.yaml"
                 ],
                 "aliases": [
-                    "Dart"
+                    "Pubspec"
                 ]
             }
         ]

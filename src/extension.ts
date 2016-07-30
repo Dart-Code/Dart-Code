@@ -2,8 +2,9 @@
 import * as vscode from 'vscode';
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('Congratulations, your extension "dart-code" is now active!');
+    console.log('Dart-Code activated!');
 }
 
 export function deactivate() {
+    console.log('Dart-Code deactivated!');
 }
