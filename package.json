@@ -7,10 +7,26 @@
     "engines": {
         "vscode": "^1.0.0"
     },
+    "license": "SEE LICENSE IN LICENSE FILE",
+    "bugs": {
+        "url": "https://github.com/DanTup/Dart-Code/issues"
+    },
+    "homepage": "https://github.com/DanTup/Dart-Code/blob/master/README.md",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DanTup/Dart-Code.git"
+    },
     "categories": [
         "Languages",
         "Linters"
     ],
+    "keywords": [
+        "dart",
+        "dartlang",
+        "pub",
+        "pubspec"
+    ],
+    "icon": "media/icon.png",
     "activationEvents": [
         "onLanguage:dart"
     ],
