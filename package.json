@@ -53,7 +53,17 @@
                     "Pubspec"
                 ]
             }
-        ]
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Dart Configuration",
+            "properties": {
+                "dart.sdkPath": {
+                    "type": "string",
+                    "description": "The location of the Dart SDK to use for analyzing and executing code. If blank, Dart-Code will attempt to find it from the PATH environment variable."
+                }
+            }
+        }
     },
     "scripts": {
         "vscode:prepublish": "node ./node_modules/vscode/bin/compile",
