@@ -32,10 +32,10 @@ export function activate(context: vscode.ExtensionContext) {
     analyzer.registerForServerConnected(e => {
         let message = `Connected to Dart analysis server version ${e.version}`;
 
-		console.log(message);
-		let disposable = vscode.window.setStatusBarMessage(message);
+        console.log(message);
+        let disposable = vscode.window.setStatusBarMessage(message);
 
-		setTimeout(() => disposable.dispose(), 3000);
+        setTimeout(() => disposable.dispose(), 3000);
     });
 
     // Set up providers.
@@ -45,7 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Set up diagnostics.
     let diagnostics = vscode.languages.createDiagnosticCollection("dart");
     context.subscriptions.push(diagnostics);
-    let diagnosticsProvider = new DartDiagnosticProvider(analyzer, diagnostics);        
+    let diagnosticsProvider = new DartDiagnosticProvider(analyzer, diagnostics);
 
     // Set the root...
     if (vscode.workspace.rootPath) {
@@ -59,7 +59,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {
     analyzer.stop();
-    
+
     console.log("Dart-Code deactivated!");
 }
 
