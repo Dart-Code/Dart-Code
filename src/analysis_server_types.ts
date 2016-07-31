@@ -6,28 +6,11 @@
 /**
 Return the version number of the analysis server.
 */
-export class ServerGetVersionRequest {
-}
-
-/**
-Return the version number of the analysis server.
-*/
 export class ServerGetVersionResponse {
 	/**
 	The version number of the analysis server.
 	*/
 	version: string
-}
-
-/**
-Cleanly shutdown the analysis server. Requests that are
-received after this request will not be processed. Requests
-that were received before this request, but for which a
-response has not yet been sent, will not be responded to. No
-further responses or notifications will be sent after the
-response to this request has been sent.
-*/
-export class ServerShutdownRequest {
 }
 
 /**
@@ -258,16 +241,6 @@ export class AnalysisGetReachableSourcesResponse {
 	for its presence in the resulting key set.
 	*/
 	sources: { [key: string]: string[]; }
-}
-
-/**
-Return library dependency information for use in client-side indexing
-and package URI resolution.
-
-Clients that are only using the libraries field should consider using the
-analyzedFiles notification instead.
-*/
-export class AnalysisGetLibraryDependenciesRequest {
 }
 
 /**
@@ -1709,12 +1682,6 @@ export class ExecutionLaunchDataNotification {
 /**
 Return server diagnostics.
 */
-export class DiagnosticGetDiagnosticsRequest {
-}
-
-/**
-Return server diagnostics.
-*/
 export class DiagnosticGetDiagnosticsResponse {
 	/**
 	The list of analysis contexts.
@@ -3133,12 +3100,12 @@ export type ServerService =
 An identifier used to associate completion results with a
 completion request.
 */
-export type CompletionId = String;
+export type CompletionId = string;
 
 /**
 The identifier for a execution context.
 */
-export type ExecutionContextId = String;
+export type ExecutionContextId = string;
 
 /**
 The absolute, normalized path of a file.
@@ -3147,11 +3114,11 @@ If the format of a file path in a request is not valid, e.g. the
 path is not absolute or is not normalized, then an error of type
 INVALID_FILE_PATH_FORMAT will be generated.
 */
-export type FilePath = String;
+export type FilePath = string;
 
 /**
 An identifier used to associate search results with a search
 request.
 */
-export type SearchId = String;
+export type SearchId = string;
 

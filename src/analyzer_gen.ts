@@ -10,25 +10,25 @@ import * as a from "./analyzer";
 export abstract class AnalyzerGen {
 	protected abstract notify<T>(subscriptions: ((notification: T) => void)[], params: T);
 	protected abstract subscribe<T>(subscriptions: ((notification: T) => void)[], subscriber: (notification: T) => void): vscode.Disposable;
-	protected abstract sendRequest<TReq, TResp>(method: string, params: TReq): Thenable<TResp>;
+	protected abstract sendRequest<TReq, TResp>(method: string, params?: TReq): Thenable<TResp>;
 
-	serverConnectedSubscriptions: ((notification: as.ServerConnectedNotification) => void)[] = [];
-	serverErrorSubscriptions: ((notification: as.ServerErrorNotification) => void)[] = [];
-	serverStatusSubscriptions: ((notification: as.ServerStatusNotification) => void)[] = [];
-	analysisAnalyzedFilesSubscriptions: ((notification: as.AnalysisAnalyzedFilesNotification) => void)[] = [];
-	analysisErrorsSubscriptions: ((notification: as.AnalysisErrorsNotification) => void)[] = [];
-	analysisFlushResultsSubscriptions: ((notification: as.AnalysisFlushResultsNotification) => void)[] = [];
-	analysisFoldingSubscriptions: ((notification: as.AnalysisFoldingNotification) => void)[] = [];
-	analysisHighlightsSubscriptions: ((notification: as.AnalysisHighlightsNotification) => void)[] = [];
-	analysisImplementedSubscriptions: ((notification: as.AnalysisImplementedNotification) => void)[] = [];
-	analysisInvalidateSubscriptions: ((notification: as.AnalysisInvalidateNotification) => void)[] = [];
-	analysisNavigationSubscriptions: ((notification: as.AnalysisNavigationNotification) => void)[] = [];
-	analysisOccurrencesSubscriptions: ((notification: as.AnalysisOccurrencesNotification) => void)[] = [];
-	analysisOutlineSubscriptions: ((notification: as.AnalysisOutlineNotification) => void)[] = [];
-	analysisOverridesSubscriptions: ((notification: as.AnalysisOverridesNotification) => void)[] = [];
-	completionResultsSubscriptions: ((notification: as.CompletionResultsNotification) => void)[] = [];
-	searchResultsSubscriptions: ((notification: as.SearchResultsNotification) => void)[] = [];
-	executionLaunchDataSubscriptions: ((notification: as.ExecutionLaunchDataNotification) => void)[] = [];
+	private serverConnectedSubscriptions: ((notification: as.ServerConnectedNotification) => void)[] = [];
+	private serverErrorSubscriptions: ((notification: as.ServerErrorNotification) => void)[] = [];
+	private serverStatusSubscriptions: ((notification: as.ServerStatusNotification) => void)[] = [];
+	private analysisAnalyzedFilesSubscriptions: ((notification: as.AnalysisAnalyzedFilesNotification) => void)[] = [];
+	private analysisErrorsSubscriptions: ((notification: as.AnalysisErrorsNotification) => void)[] = [];
+	private analysisFlushResultsSubscriptions: ((notification: as.AnalysisFlushResultsNotification) => void)[] = [];
+	private analysisFoldingSubscriptions: ((notification: as.AnalysisFoldingNotification) => void)[] = [];
+	private analysisHighlightsSubscriptions: ((notification: as.AnalysisHighlightsNotification) => void)[] = [];
+	private analysisImplementedSubscriptions: ((notification: as.AnalysisImplementedNotification) => void)[] = [];
+	private analysisInvalidateSubscriptions: ((notification: as.AnalysisInvalidateNotification) => void)[] = [];
+	private analysisNavigationSubscriptions: ((notification: as.AnalysisNavigationNotification) => void)[] = [];
+	private analysisOccurrencesSubscriptions: ((notification: as.AnalysisOccurrencesNotification) => void)[] = [];
+	private analysisOutlineSubscriptions: ((notification: as.AnalysisOutlineNotification) => void)[] = [];
+	private analysisOverridesSubscriptions: ((notification: as.AnalysisOverridesNotification) => void)[] = [];
+	private completionResultsSubscriptions: ((notification: as.CompletionResultsNotification) => void)[] = [];
+	private searchResultsSubscriptions: ((notification: as.SearchResultsNotification) => void)[] = [];
+	private executionLaunchDataSubscriptions: ((notification: as.ExecutionLaunchDataNotification) => void)[] = [];
 
 	protected handleNotification(evt: a.UnknownNotification) {
 		switch (evt.event) {
@@ -291,8 +291,8 @@ export abstract class AnalyzerGen {
 	/**
 	Return the version number of the analysis server.
 	*/
-	serverGetVersion(request: as.ServerGetVersionRequest): Thenable<as.ServerGetVersionResponse> {
-		return this.sendRequest("server.getVersion", request);
+	serverGetVersion(): Thenable<as.ServerGetVersionResponse> {
+		return this.sendRequest("server.getVersion");
 	}
 
 	/**
@@ -303,8 +303,8 @@ export abstract class AnalyzerGen {
 	further responses or notifications will be sent after the
 	response to this request has been sent.
 	*/
-	serverShutdown(request: as.ServerShutdownRequest): Thenable<a.UnknownResponse> {
-		return this.sendRequest("server.shutdown", request);
+	serverShutdown(): Thenable<a.UnknownResponse> {
+		return this.sendRequest("server.shutdown");
 	}
 
 	/**
@@ -373,8 +373,8 @@ export abstract class AnalyzerGen {
 	Clients that are only using the libraries field should consider using the
 	analyzedFiles notification instead.
 	*/
-	analysisGetLibraryDependencies(request: as.AnalysisGetLibraryDependenciesRequest): Thenable<as.AnalysisGetLibraryDependenciesResponse> {
-		return this.sendRequest("analysis.getLibraryDependencies", request);
+	analysisGetLibraryDependencies(): Thenable<as.AnalysisGetLibraryDependenciesResponse> {
+		return this.sendRequest("analysis.getLibraryDependencies");
 	}
 
 	/**
@@ -746,7 +746,7 @@ export abstract class AnalyzerGen {
 	/**
 	Return server diagnostics.
 	*/
-	diagnosticGetDiagnostics(request: as.DiagnosticGetDiagnosticsRequest): Thenable<as.DiagnosticGetDiagnosticsResponse> {
-		return this.sendRequest("diagnostic.getDiagnostics", request);
+	diagnosticGetDiagnostics(): Thenable<as.DiagnosticGetDiagnosticsResponse> {
+		return this.sendRequest("diagnostic.getDiagnostics");
 	}
 }

@@ -46,7 +46,7 @@ export class Analyzer extends AnalyzerGen {
 			handler[0](evt.result);
 	}
 
-	protected sendRequest<TReq, TResp>(method: string, params: TReq): Thenable<TResp> {
+	protected sendRequest<TReq, TResp>(method: string, params?: TReq): Thenable<TResp> {
 		// Generate an ID for this request so we can match up the response.
 		let id = this.nextRequestID++;
 
@@ -80,8 +80,10 @@ export class Analyzer extends AnalyzerGen {
 
 	stop() {
 		console.log(`Stopping Dart analysis server...`);
-		// TODO: end gracefully!
-		this.analyzerProcess.kill();
+
+		// TODO: Figure out if it's ok to be slow when deactivating an extension.
+
+		this.serverShutdown().then(() => this.analyzerProcess.kill());
 	}
 }
 
