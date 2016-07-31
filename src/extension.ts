@@ -1,14 +1,17 @@
 "use strict";
+
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import {Analyzer} from "./analyzer";
+import {DartHoverProvider} from "./dart_hover_provider";
 
 const configExtensionName = "dart";
 const configSdkPathName = "sdkPath";
 const dartVMPath = "bin/dart.exe";
 const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
-const analyzerOutputWindow = "Dart Analysis Server"; // TODO: This should be debug-only?
+
+const DART_MODE: vscode.DocumentFilter = { language: 'dart', scheme: 'file' };
 
 let dartSdkRoot: string;
 let analyzer: Analyzer;
@@ -23,6 +26,8 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     analyzer = new Analyzer(path.join(dartSdkRoot, dartVMPath), path.join(dartSdkRoot, analyzerPath));
+
+    context.subscriptions.push(vscode.languages.registerHoverProvider(DART_MODE, new DartHoverProvider(analyzer)));
 }
 
 export function deactivate() {
