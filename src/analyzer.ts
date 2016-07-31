@@ -31,8 +31,9 @@ export class Analyzer {
 
 	private sendMessage<T>(req: Request<T>) {
 		let json = JSON.stringify(req);
-		console.log(`SND: ${json}\r\n`);
+		console.log(`SND: ${json}`);
 		this.analyzerProcess.stdin.write(json);
+		this.analyzerProcess.stdin.write("\r\n");
 	}
 
 	private handleNotification(evt: UnknownNotification) {
@@ -70,6 +71,10 @@ export class Analyzer {
 		let disposable = vscode.window.setStatusBarMessage(message);
 
 		setTimeout(() => disposable.dispose(), 3000);
+	}
+
+	setAnalysisRoots(request: as.AnalysisSetAnalysisRootsRequest): Thenable<UnknownResponse> {
+		return this.sendRequest("analysis.setAnalysisRoots", request);
 	}
 
 	getHover(request: as.AnalysisGetHoverRequest): Thenable<as.AnalysisGetHoverResponse> {

@@ -28,6 +28,15 @@ export function activate(context: vscode.ExtensionContext) {
     analyzer = new Analyzer(path.join(dartSdkRoot, dartVMPath), path.join(dartSdkRoot, analyzerPath));
 
     context.subscriptions.push(vscode.languages.registerHoverProvider(DART_MODE, new DartHoverProvider(analyzer)));
+
+    // Set the root...
+    // if (vscode.workspace.rootPath) {
+    //     analyzer.setAnalysisRoots({
+    //         included: [vscode.workspace.rootPath],
+    //         excluded: [],
+    //         packageRoots: null
+    //     });
+    // }
 }
 
 export function deactivate() {
