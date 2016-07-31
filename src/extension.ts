@@ -6,6 +6,7 @@ import * as path from "path";
 import { Analyzer } from "./analyzer";
 import { DartHoverProvider } from "./dart_hover_provider";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
+import { DartWorkspaceSymbolProvider } from "./dart_workspace_symbol_provider";
 
 const configExtensionName = "dart";
 const configSdkPathName = "sdkPath";
@@ -39,6 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Set up providers.
     context.subscriptions.push(vscode.languages.registerHoverProvider(DART_MODE, new DartHoverProvider(analyzer)));
+    context.subscriptions.push(vscode.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
 
     // Set up diagnostics.
     let diagnostics = vscode.languages.createDiagnosticCollection("dart");
