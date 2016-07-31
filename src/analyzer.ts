@@ -7,7 +7,7 @@ import * as as from "./analysis_server_types";
 export class Analyzer {
 	private analyzerProcess: child_process.ChildProcess;
 	private nextRequestID = 1;
-	private activeRequests: { [key: number]: [(result: any) => void, (error: any) => void] } = {};
+	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void] } = {};
 
 	constructor(dartVMPath: string, analyzerPath: string) {
 		console.log(`Starting Dart analysis server...`);
@@ -45,7 +45,11 @@ export class Analyzer {
 	}
 
 	private handleResponse(evt: UnknownResponse) {
-
+		let handler = this.activeRequests[evt.id];
+		if (evt.error)
+			handler[1](evt.error);
+		else
+			handler[0](evt.result);
 	}
 
 	private sendRequest<TReq, TResp>(method: string, params: TReq): Thenable<TResp> {
@@ -54,7 +58,7 @@ export class Analyzer {
 
 		return new Promise<TResp>((resolve, reject) => {
 			// Stash the callbacks so we can call them later.
-			this.activeRequests[id] = [resolve, reject];
+			this.activeRequests[id.toString()] = [resolve, reject];
 
 			this.sendMessage({
 				id: id.toString(),
