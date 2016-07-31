@@ -3,7 +3,7 @@
 import * as vscode from "vscode";
 import * as child_process from "child_process";
 import * as as from "./analysis_server_types";
-import {AnalyzerGen} from "./analyzer_gen";
+import { AnalyzerGen } from "./analyzer_gen";
 
 export class Analyzer extends AnalyzerGen {
 	private analyzerProcess: child_process.ChildProcess;

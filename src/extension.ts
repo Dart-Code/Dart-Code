@@ -3,9 +3,9 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import {Analyzer} from "./analyzer";
-import {DartHoverProvider} from "./dart_hover_provider";
-import {DartDiagnosticProvider} from "./dart_diagnostic_provider";
+import { Analyzer } from "./analyzer";
+import { DartHoverProvider } from "./dart_hover_provider";
+import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
 
 const configExtensionName = "dart";
 const configSdkPathName = "sdkPath";

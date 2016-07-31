@@ -1,7 +1,7 @@
 "use strict";
 
-import {DiagnosticCollection, Diagnostic, DiagnosticSeverity, Uri, Range, Position} from "vscode";
-import {Analyzer} from "./analyzer";
+import { DiagnosticCollection, Diagnostic, DiagnosticSeverity, Uri, Range, Position } from "vscode";
+import { Analyzer } from "./analyzer";
 import * as as from "./analysis_server_types";
 
 export class DartDiagnosticProvider {
@@ -41,8 +41,9 @@ export class DartDiagnosticProvider {
 			case "WARNING":
 				return DiagnosticSeverity.Warning;
 			case "INFO":
-				return DiagnosticSeverity.Information; 
+				return DiagnosticSeverity.Information;
+			default:
+				throw new Error("Unknown severity type: " + severity); 
 		}
-		return DiagnosticSeverity.Hint; // TODO: ???
 	}
 }
