@@ -62,6 +62,10 @@ export class Analyzer extends AnalyzerGen {
 		});
 	}
 
+	protected notify<T>(subscriptions: ((notification: T) => void)[], notification: T) {
+		subscriptions.forEach(sub => sub(notification));
+	}
+
 	protected serverConnected(evt: as.ServerConnectedNotification) {
 		let message = `Connected to Dart analysis server version ${evt.version}`;
 
