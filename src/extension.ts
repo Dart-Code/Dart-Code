@@ -5,6 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 import {Analyzer} from "./analyzer";
 import {DartHoverProvider} from "./dart_hover_provider";
+import {DartDiagnosticProvider} from "./dart_diagnostic_provider";
 
 const configExtensionName = "dart";
 const configSdkPathName = "sdkPath";
@@ -27,16 +28,31 @@ export function activate(context: vscode.ExtensionContext) {
 
     analyzer = new Analyzer(path.join(dartSdkRoot, dartVMPath), path.join(dartSdkRoot, analyzerPath));
 
+    analyzer.registerForServerConnected(e => {
+        let message = `Connected to Dart analysis server version ${e.version}`;
+
+		console.log(message);
+		let disposable = vscode.window.setStatusBarMessage(message);
+
+		setTimeout(() => disposable.dispose(), 3000);
+    });
+
+    // Set up providers.
     context.subscriptions.push(vscode.languages.registerHoverProvider(DART_MODE, new DartHoverProvider(analyzer)));
 
+    // Set up diagnostics.
+    let diagnostics = vscode.languages.createDiagnosticCollection("dart");
+    context.subscriptions.push(diagnostics);
+    let diagnosticsProvider = new DartDiagnosticProvider(analyzer, diagnostics);        
+
     // Set the root...
-    // if (vscode.workspace.rootPath) {
-    //     analyzer.setAnalysisRoots({
-    //         included: [vscode.workspace.rootPath],
-    //         excluded: [],
-    //         packageRoots: null
-    //     });
-    // }
+    if (vscode.workspace.rootPath) {
+        analyzer.analysisSetAnalysisRoots({
+            included: [vscode.workspace.rootPath],
+            excluded: [],
+            packageRoots: null
+        });
+    }
 }
 
 export function deactivate() {
