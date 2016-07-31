@@ -3,13 +3,15 @@
 import * as vscode from "vscode";
 import * as child_process from "child_process";
 import * as as from "./analysis_server_types";
+import {AnalyzerGen} from "./analyzer_gen";
 
-export class Analyzer {
+export class Analyzer extends AnalyzerGen {
 	private analyzerProcess: child_process.ChildProcess;
 	private nextRequestID = 1;
 	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void] } = {};
 
 	constructor(dartVMPath: string, analyzerPath: string) {
+		super();
 		console.log(`Starting Dart analysis server...`);
 		this.analyzerProcess = child_process.spawn(dartVMPath, [analyzerPath]);
 
@@ -36,14 +38,6 @@ export class Analyzer {
 		this.analyzerProcess.stdin.write("\r\n");
 	}
 
-	private handleNotification(evt: UnknownNotification) {
-		switch (evt.event) {
-			case "server.connected":
-				this.serverConnected(<as.ServerConnectedNotification>evt.params);
-				break;
-		}
-	}
-
 	private handleResponse(evt: UnknownResponse) {
 		let handler = this.activeRequests[evt.id];
 		if (evt.error)
@@ -52,7 +46,7 @@ export class Analyzer {
 			handler[0](evt.result);
 	}
 
-	private sendRequest<TReq, TResp>(method: string, params: TReq): Thenable<TResp> {
+	protected sendRequest<TReq, TResp>(method: string, params: TReq): Thenable<TResp> {
 		// Generate an ID for this request so we can match up the response.
 		let id = this.nextRequestID++;
 
@@ -68,21 +62,13 @@ export class Analyzer {
 		});
 	}
 
-	private serverConnected(evt: as.ServerConnectedNotification) {
+	protected serverConnected(evt: as.ServerConnectedNotification) {
 		let message = `Connected to Dart analysis server version ${evt.version}`;
 
 		console.log(message);
 		let disposable = vscode.window.setStatusBarMessage(message);
 
 		setTimeout(() => disposable.dispose(), 3000);
-	}
-
-	setAnalysisRoots(request: as.AnalysisSetAnalysisRootsRequest): Thenable<UnknownResponse> {
-		return this.sendRequest("analysis.setAnalysisRoots", request);
-	}
-
-	getHover(request: as.AnalysisGetHoverRequest): Thenable<as.AnalysisGetHoverResponse> {
-		return this.sendRequest("analysis.getHover", request);
 	}
 
 	stop() {
@@ -92,23 +78,23 @@ export class Analyzer {
 	}
 }
 
-class Request<T> {
+export class Request<T> {
 	id: string;
 	method: string;
 	params: T;
 }
 
-class Response<T> {
+export class Response<T> {
 	id: string;
 	error: as.RequestError;
 	result: T;
 }
 
-class UnknownResponse extends Response<any> { }
+export class UnknownResponse extends Response<any> { }
 
-class Notification<T> {
+export class Notification<T> {
 	event: string;
 	params: T;
 }
 
-class UnknownNotification extends Notification<any> { }
+export class UnknownNotification extends Notification<any> { }

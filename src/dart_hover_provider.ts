@@ -12,7 +12,7 @@ export class DartHoverProvider implements HoverProvider {
 
 	provideHover(document: TextDocument, position: Position, token: CancellationToken): Thenable<Hover> {
 		return new Promise<Hover>((resolve, reject) => {
-			this.analyzer.getHover({
+			this.analyzer.analysisGetHover({
 				file: document.fileName,
 				offset: document.offsetAt(position)
 			}).then(resp => {
