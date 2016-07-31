@@ -3,11 +3,13 @@
 
 "use strict";
 
+import * as vscode from "vscode";
 import * as as from "./analysis_server_types";
 import * as a from "./analyzer";
 
 export abstract class AnalyzerGen {
 	protected abstract notify<T>(subscriptions: ((notification: T) => void)[], params: T);
+	protected abstract subscribe<T>(subscriptions: ((notification: T) => void)[], subscriber: (notification: T) => void): vscode.Disposable;
 	protected abstract sendRequest<TReq, TResp>(method: string, params: TReq): Thenable<TResp>;
 
 	serverConnectedSubscriptions: ((notification: as.ServerConnectedNotification) => void)[] = [];
@@ -81,8 +83,209 @@ export abstract class AnalyzerGen {
 			case "execution.launchData":
 				this.notify(this.executionLaunchDataSubscriptions, <as.ExecutionLaunchDataNotification>evt.params);
 				break;
-
 		}
+	}
+
+	/**
+	Reports that the server is running. This notification is
+	issued once after the server has started running but before
+	any requests are processed to let the client know that it
+	started correctly.
+	It is not possible to subscribe to or unsubscribe from this
+	notification.
+	*/
+	registerForServerConnected(subscriber: (notification: as.ServerConnectedNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.serverConnectedSubscriptions, subscriber);
+	}
+
+	/**
+	Reports that an unexpected error has occurred while
+	executing the server. This notification is not used for
+	problems with specific requests (which are returned as part
+	of the response) but is used for exceptions that occur while
+	performing other tasks, such as analysis or preparing
+	notifications.
+	It is not possible to subscribe to or unsubscribe from this
+	notification.
+	*/
+	registerForServerError(subscriber: (notification: as.ServerErrorNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.serverErrorSubscriptions, subscriber);
+	}
+
+	/**
+	Reports the current status of the server. Parameters are
+	omitted if there has been no change in the status
+	represented by that parameter.
+	This notification is not subscribed to by default. Clients
+	can subscribe by including the value "STATUS" in
+	the list of services passed in a server.setSubscriptions
+	request.
+	*/
+	registerForServerStatus(subscriber: (notification: as.ServerStatusNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.serverStatusSubscriptions, subscriber);
+	}
+
+	/**
+	Reports the paths of the files that are being analyzed.
+	This notification is not subscribed to by default. Clients can
+	subscribe by including the value "ANALYZED_FILES" in the list
+	of services passed in an analysis.setGeneralSubscriptions request.
+	*/
+	registerForAnalysisAnalyzedFiles(subscriber: (notification: as.AnalysisAnalyzedFilesNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.analysisAnalyzedFilesSubscriptions, subscriber);
+	}
+
+	/**
+	Reports the errors associated with a given file. The set of
+	errors included in the notification is always a complete
+	list that supersedes any previously reported errors.
+	It is only possible to unsubscribe from this notification by
+	using the command-line flag --no-error-notification.
+	*/
+	registerForAnalysisErrors(subscriber: (notification: as.AnalysisErrorsNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.analysisErrorsSubscriptions, subscriber);
+	}
+
+	/**
+	Reports that any analysis results that were previously
+	associated with the given files should be considered to be
+	invalid because those files are no longer being analyzed,
+	either because the analysis root that contained it is no
+	longer being analyzed or because the file no longer exists.
+	If a file is included in this notification and at some later
+	time a notification with results for the file is received,
+	clients should assume that the file is once again being
+	analyzed and the information should be processed.
+	It is not possible to subscribe to or unsubscribe from this
+	notification.
+	*/
+	registerForAnalysisFlushResults(subscriber: (notification: as.AnalysisFlushResultsNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.analysisFlushResultsSubscriptions, subscriber);
+	}
+
+	/**
+	Reports the folding regions associated with a given
+	file. Folding regions can be nested, but will not be
+	overlapping. Nesting occurs when a foldable element, such as
+	a method, is nested inside another foldable element such as
+	a class.
+	This notification is not subscribed to by default. Clients
+	can subscribe by including the value "FOLDING" in
+	the list of services passed in an analysis.setSubscriptions
+	request.
+	*/
+	registerForAnalysisFolding(subscriber: (notification: as.AnalysisFoldingNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.analysisFoldingSubscriptions, subscriber);
+	}
+
+	/**
+	Reports the highlight regions associated with a given file.
+	This notification is not subscribed to by default. Clients
+	can subscribe by including the value "HIGHLIGHTS"
+	in the list of services passed in an
+	analysis.setSubscriptions request.
+	*/
+	registerForAnalysisHighlights(subscriber: (notification: as.AnalysisHighlightsNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.analysisHighlightsSubscriptions, subscriber);
+	}
+
+	/**
+	Reports the classes that are implemented or extended and
+	class members that are implemented or overridden in a file.
+	This notification is not subscribed to by default. Clients
+	can subscribe by including the value "IMPLEMENTED" in
+	the list of services passed in an analysis.setSubscriptions
+	request.
+	*/
+	registerForAnalysisImplemented(subscriber: (notification: as.AnalysisImplementedNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.analysisImplementedSubscriptions, subscriber);
+	}
+
+	/**
+	Reports that the navigation information associated with a region of a
+	single file has become invalid and should be re-requested.
+	This notification is not subscribed to by default. Clients can
+	subscribe by including the value "INVALIDATE" in the list of
+	services passed in an analysis.setSubscriptions request.
+	*/
+	registerForAnalysisInvalidate(subscriber: (notification: as.AnalysisInvalidateNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.analysisInvalidateSubscriptions, subscriber);
+	}
+
+	/**
+	Reports the navigation targets associated with a given file.
+	This notification is not subscribed to by default. Clients
+	can subscribe by including the value "NAVIGATION"
+	in the list of services passed in an
+	analysis.setSubscriptions request.
+	*/
+	registerForAnalysisNavigation(subscriber: (notification: as.AnalysisNavigationNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.analysisNavigationSubscriptions, subscriber);
+	}
+
+	/**
+	Reports the occurrences of references to elements within a
+	single file.
+	This notification is not subscribed to by default. Clients
+	can subscribe by including the value "OCCURRENCES"
+	in the list of services passed in an
+	analysis.setSubscriptions request.
+	*/
+	registerForAnalysisOccurrences(subscriber: (notification: as.AnalysisOccurrencesNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.analysisOccurrencesSubscriptions, subscriber);
+	}
+
+	/**
+	Reports the outline associated with a single file.
+	This notification is not subscribed to by default. Clients
+	can subscribe by including the value "OUTLINE" in
+	the list of services passed in an analysis.setSubscriptions
+	request.
+	*/
+	registerForAnalysisOutline(subscriber: (notification: as.AnalysisOutlineNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.analysisOutlineSubscriptions, subscriber);
+	}
+
+	/**
+	Reports the overriding members in a file.
+	This notification is not subscribed to by default. Clients
+	can subscribe by including the value "OVERRIDES" in
+	the list of services passed in an analysis.setSubscriptions
+	request.
+	*/
+	registerForAnalysisOverrides(subscriber: (notification: as.AnalysisOverridesNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.analysisOverridesSubscriptions, subscriber);
+	}
+
+	/**
+	Reports the completion suggestions that should be presented
+	to the user. The set of suggestions included in the
+	notification is always a complete list that supersedes any
+	previously reported suggestions.
+	*/
+	registerForCompletionResults(subscriber: (notification: as.CompletionResultsNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.completionResultsSubscriptions, subscriber);
+	}
+
+	/**
+	Reports some or all of the results of performing a requested
+	search. Unlike other notifications, this notification
+	contains search results that should be added to any
+	previously received search results associated with the same
+	search id.
+	*/
+	registerForSearchResults(subscriber: (notification: as.SearchResultsNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.searchResultsSubscriptions, subscriber);
+	}
+
+	/**
+	Reports information needed to allow a single file to be launched.
+	This notification is not subscribed to by default. Clients can
+	subscribe by including the value "LAUNCH_DATA" in the list of services
+	passed in an execution.setSubscriptions request.
+	*/
+	registerForExecutionLaunchData(subscriber: (notification: as.ExecutionLaunchDataNotification) => void) : vscode.Disposable {
+		return this.subscribe(this.executionLaunchDataSubscriptions, subscriber);
 	}
 
 	/**

@@ -66,13 +66,16 @@ export class Analyzer extends AnalyzerGen {
 		subscriptions.forEach(sub => sub(notification));
 	}
 
-	protected serverConnected(evt: as.ServerConnectedNotification) {
-		let message = `Connected to Dart analysis server version ${evt.version}`;
-
-		console.log(message);
-		let disposable = vscode.window.setStatusBarMessage(message);
-
-		setTimeout(() => disposable.dispose(), 3000);
+	protected subscribe<T>(subscriptions: ((notification: T) => void)[], subscriber: (notification: T) => void): vscode.Disposable {
+		subscriptions.push(subscriber);
+		return {
+			dispose: () => {
+				var index = subscriptions.indexOf(subscriber);
+				if (index >= 0) {
+					subscriptions.splice(index, 1);
+				}
+			}
+		};
 	}
 
 	stop() {
