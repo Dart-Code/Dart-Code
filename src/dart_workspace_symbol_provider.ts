@@ -41,6 +41,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	}
 
 	private getSymbolKind(kind: as.ElementKind) : SymbolKind {
+		// TODO: Review if these are all mapped as well as possible.
 		switch (kind) {
 			case "CLASS":
 				return SymbolKind.Class;
