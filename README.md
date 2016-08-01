@@ -1,4 +1,4 @@
-# Dart Code
+# Dart-Code
 
 Dart support for Visual Studio Code.
 
@@ -8,11 +8,11 @@ None (yet).
 
 ## Requirements
 
-The Dart SDK must be available on your machine and added to your `PATH`.
+The Dart SDK must be available on your machine and added to your `PATH` or set in the extensions configuration.
 
-## Extension Settings
+## Extension Configuration
 
-None (yet).
+SdkPath: // TODO
 
 ## Known Issues
 
