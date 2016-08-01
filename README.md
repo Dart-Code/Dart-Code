@@ -1,6 +1,10 @@
+<img src="./media/icon.png" align="left" />
+
 # Dart-Code
 
 Dart support for Visual Studio Code.
+
+<br clear="both" />
 
 ## Features
 
