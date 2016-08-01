@@ -54,6 +54,18 @@
                 ]
             }
         ],
+        "grammars": [
+            {
+                "language": "dart",
+                "scopeName": "source.dart",
+                "path": "./syntaxes/dart.json"
+            },
+            {
+                "language": "pubspec",
+                "scopeName": "source.yaml",
+                "path": "./syntaxes/yaml.plist"
+            }
+        ],
         "configuration": {
             "type": "object",
             "title": "Dart Configuration",
