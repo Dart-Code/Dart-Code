@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     analyzer = new Analyzer(path.join(dartSdkRoot, dartVMPath), path.join(dartSdkRoot, analyzerPath));
-
+    // TODO: Check if EventEmitter<T> would be more appropriate than our own.
     analyzer.registerForServerConnected(e => {
         let message = `Connected to Dart analysis server version ${e.version}`;
 
