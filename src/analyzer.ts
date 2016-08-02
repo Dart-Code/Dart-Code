@@ -18,9 +18,13 @@ export class Analyzer extends AnalyzerGen {
 		this.analyzerProcess.stdout.on('data', (data: Buffer) => {
 			let message = data.toString();
 			console.log(`RCV: ${message}`);
-			if (message != null && message.trim() != "")
-				this.handleMessage(message);
+			if (message != null)
+				this.handleMessages(message);
 		});
+	}
+
+	private handleMessages(message: string) {
+		message.split("\n").filter(m => m.trim() != "").forEach(m => this.handleMessage(m));
 	}
 
 	private handleMessage(message: string) {
