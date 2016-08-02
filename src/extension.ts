@@ -7,6 +7,7 @@ import { Analyzer } from "./analyzer";
 import { DartHoverProvider } from "./dart_hover_provider";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
 import { DartWorkspaceSymbolProvider } from "./dart_workspace_symbol_provider";
+import { FileChangeHandler } from "./file_change_handler";
 
 const configExtensionName = "dart";
 const configSdkPathName = "sdkPath";
@@ -55,6 +56,15 @@ export function activate(context: vscode.ExtensionContext) {
             packageRoots: null
         });
     }
+
+    // Hook editor changes to send updated contents to analyzer.
+    let fileChangeHandler = new FileChangeHandler(analyzer);
+    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(td => fileChangeHandler.onDidOpenTextDocument(td)));
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => fileChangeHandler.onDidChangeTextDocument(e)));
+    context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(td => fileChangeHandler.onDidCloseTextDocument(td)));
+
+    // Handle any files that were already open at this time.
+    vscode.workspace.textDocuments.forEach(td => fileChangeHandler.onDidOpenTextDocument(td));
 }
 
 export function deactivate() {
