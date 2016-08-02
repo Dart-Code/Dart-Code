@@ -8,9 +8,11 @@ import { DartHoverProvider } from "./dart_hover_provider";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
 import { DartWorkspaceSymbolProvider } from "./dart_workspace_symbol_provider";
 import { FileChangeHandler } from "./file_change_handler";
+import { DartIndentFixer } from "./dart_indent_fixer";
 
 const configExtensionName = "dart";
 const configSdkPathName = "sdkPath";
+const configSetIndentName = "setIndentSettings";
 const dartVMPath = "bin/dart.exe";
 const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
 
@@ -18,6 +20,7 @@ const DART_MODE: vscode.DocumentFilter = { language: 'dart', scheme: 'file' };
 
 let dartSdkRoot: string;
 let analyzer: Analyzer;
+let config = vscode.workspace.getConfiguration(configExtensionName);
 
 export function activate(context: vscode.ExtensionContext) {
     console.log("Dart-Code activated!");
@@ -62,9 +65,14 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(td => fileChangeHandler.onDidOpenTextDocument(td)));
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => fileChangeHandler.onDidChangeTextDocument(e)));
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(td => fileChangeHandler.onDidCloseTextDocument(td)));
+    vscode.workspace.textDocuments.forEach(td => fileChangeHandler.onDidOpenTextDocument(td)); // Handle already-open files.
 
-    // Handle any files that were already open at this time.
-    vscode.workspace.textDocuments.forEach(td => fileChangeHandler.onDidOpenTextDocument(td));
+    // TODO: Fix this...
+    //   See https://github.com/Microsoft/vscode/issues/10048
+    // Hook active editor change to reset Dart indenting.
+    // let dartIndentFixer = new DartIndentFixer(() => config.get<boolean>(configSetIndentName, true));
+    // context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(td => dartIndentFixer.onDidChangeActiveTextEditor(td)));
+    // dartIndentFixer.onDidChangeActiveTextEditor(vscode.window.activeTextEditor); // Handle already-open file.
 }
 
 export function deactivate() {
@@ -74,7 +82,6 @@ export function deactivate() {
 }
 
 function findDartSdk(): string {
-    let config = vscode.workspace.getConfiguration(configExtensionName);
     let paths = (<string>process.env.PATH).split(";");
 
     // We don't expect the user to add .\bin in config, but it would be in the PATHs
