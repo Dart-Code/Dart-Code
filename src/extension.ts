@@ -1,8 +1,8 @@
 "use strict";
 
 import * as vscode from "vscode";
-import * as fs from "fs";
 import * as path from "path";
+import * as util from "./utils";
 import { Analyzer } from "./analyzer";
 import { DartHoverProvider } from "./dart_hover_provider";
 import { DartCompletionItemProvider } from "./dart_completion_item_provider";
@@ -11,35 +11,24 @@ import { DartWorkspaceSymbolProvider } from "./dart_workspace_symbol_provider";
 import { FileChangeHandler } from "./file_change_handler";
 import { DartIndentFixer } from "./dart_indent_fixer";
 
-const configExtensionName = "dart";
-const configSdkPathName = "sdkPath";
-const configSetIndentName = "setIndentSettings";
-const dartVMPath = "bin/dart.exe";
-const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
-
 const DART_MODE: vscode.DocumentFilter = { language: 'dart', scheme: 'file' };
 
 let dartSdkRoot: string;
 let analyzer: Analyzer;
-let config = vscode.workspace.getConfiguration(configExtensionName);
 
 export function activate(context: vscode.ExtensionContext) {
     console.log("Dart-Code activated!");
 
-    dartSdkRoot = findDartSdk();
+    dartSdkRoot = util.findDartSdk();
     if (dartSdkRoot == null) {
         vscode.window.showErrorMessage("Dart-Code: Could not find a Dart SDK to use. Please add it to your PATH or set it in the extensions settings and reload");
         return; // Don't set anything else up; we can't work like this!
     }
 
-    analyzer = new Analyzer(path.join(dartSdkRoot, dartVMPath), path.join(dartSdkRoot, analyzerPath));
+    analyzer = new Analyzer(path.join(dartSdkRoot, util.dartVMPath), path.join(dartSdkRoot, util.analyzerPath));
     // TODO: Check if EventEmitter<T> would be more appropriate than our own.
     analyzer.registerForServerConnected(e => {
-        let message = `Connected to Dart analysis server version ${e.version}`;
-
-        console.log(message);
-        let disposable = vscode.window.setStatusBarMessage(message);
-
+        let disposable = vscode.window.setStatusBarMessage(`Connected to Dart analysis server version ${e.version}`);
         setTimeout(() => disposable.dispose(), 3000);
     });
 
@@ -81,29 +70,4 @@ export function deactivate() {
     analyzer.stop();
 
     console.log("Dart-Code deactivated!");
-}
-
-function findDartSdk(): string {
-    let paths = (<string>process.env.PATH).split(";");
-
-    // We don't expect the user to add .\bin in config, but it would be in the PATHs
-    if (config.has(configSdkPathName))
-        paths.unshift(path.join(config.get<string>(configSdkPathName), 'bin'));
-
-    let sdkPath = paths.find(isValidDartSdk);
-    if (sdkPath)
-        return path.join(sdkPath, ".."); // Take .\bin back off.
-
-    return null;
-}
-
-function isValidDartSdk(pathToTest: string): boolean {
-    // Apparently this is the "correct" way to check files exist synchronously in Node :'(
-    try {
-        fs.accessSync(path.join(pathToTest, "..", analyzerPath), fs.R_OK);
-        return true; // If no error, we found a match!
-    }
-    catch (e) { }
-
-    return false; // Didn't find it, so must be an invalid path.
 }
