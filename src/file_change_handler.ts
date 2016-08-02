@@ -22,11 +22,26 @@ export class FileChangeHandler {
 	}
 
 	onDidChangeTextDocument(e: vscode.TextDocumentChangeEvent) {
-		let files: { [key: string]: as.ChangeContentOverlay } = {};
-		
+		// TODO: Fix this...
+		// HACK: e.document.offsetAt appears to return the wrong offset when there are
+		// multiple edits (since it uses the current document state which can include
+		// earlier edits, offsetting the values!)
+		//   See https://github.com/Microsoft/vscode/issues/10047
+		//
+		// As a workaround, we just send the full contents on every edit. This sucks :(
+
+		// let files: { [key: string]: as.ChangeContentOverlay } = {};
+		// 
+		// files[e.document.fileName] = {
+		// 	type: "change",
+		// 	edits: e.contentChanges.map(c => this.convertChange(e.document, c))
+		// };
+
+		let files: { [key: string]: as.AddContentOverlay } = {};
+
 		files[e.document.fileName] = {
-			type: "change",
-			edits: e.contentChanges.map(c => this.convertChange(e.document, c))
+			type: "add",
+			content: e.document.getText()
 		};
 
 		this.analyzer.analysisUpdateContent({ files: files });
