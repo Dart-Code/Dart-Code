@@ -4,7 +4,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { workspace } from "vscode";
 
-export const dartVMPath = "bin/dart.exe";
+export const dartVMPath = "bin/dart";
 export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
 const configExtensionName = "dart";
 const configSdkPathName = "sdkPath";
