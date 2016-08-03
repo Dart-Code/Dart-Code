@@ -19,6 +19,7 @@ let analyzer: Analyzer;
 export function activate(context: vscode.ExtensionContext) {
     console.log("Dart-Code activated!");
 
+    // TODO: See if we can cache this value to speed up future startups. 
     dartSdkRoot = util.findDartSdk();
     if (dartSdkRoot == null) {
         vscode.window.showErrorMessage("Dart-Code: Could not find a Dart SDK to use. Please add it to your PATH or set it in the extensions settings and reload");
