@@ -28,23 +28,29 @@ export class FileChangeHandler {
 		// earlier edits, offsetting the values!)
 		//   See https://github.com/Microsoft/vscode/issues/10047
 		//
-		// As a workaround, we just send the full contents on every edit. This sucks :(
+		// As a workaround, we just send the full contents if there was more than one edit.
 
-		// let files: { [key: string]: as.ChangeContentOverlay } = {};
-		// 
-		// files[e.document.fileName] = {
-		// 	type: "change",
-		// 	edits: e.contentChanges.map(c => this.convertChange(e.document, c))
-		// };
+		if (e.contentChanges.length == 1) {
+			let files: { [key: string]: as.ChangeContentOverlay } = {};
 
-		let files: { [key: string]: as.AddContentOverlay } = {};
+			files[e.document.fileName] = {
+				type: "change",
+				edits: e.contentChanges.map(c => this.convertChange(e.document, c))
+			};
 
-		files[e.document.fileName] = {
-			type: "add",
-			content: e.document.getText()
-		};
+			this.analyzer.analysisUpdateContent({ files: files });
+		}
+		else {
+			// TODO: Remove this block when the bug is fixed (or we figure out it's not a bug).
+			let files: { [key: string]: as.AddContentOverlay } = {};
 
-		this.analyzer.analysisUpdateContent({ files: files });
+			files[e.document.fileName] = {
+				type: "add",
+				content: e.document.getText()
+			};
+
+			this.analyzer.analysisUpdateContent({ files: files });
+		}
 	}
 
 	onDidCloseTextDocument(document: vscode.TextDocument) {
