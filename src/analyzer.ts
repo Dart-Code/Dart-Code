@@ -23,6 +23,10 @@ export class Analyzer extends AnalyzerGen {
 		});
 	}
 
+	// TODO: Support buffering when a message doesn't come through with a newline. On Ubuntu testing, this seems to happens
+	// during completion which causes a crash ("unexpected end of input" during JSON.parse).
+
+
 	private handleMessages(message: string) {
 		message.split("\n").filter(m => m.trim() != "").forEach(m => this.handleMessage(m));
 	}
