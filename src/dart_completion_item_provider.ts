@@ -1,6 +1,6 @@
 "use strict";
 
-import { TextDocument, Position, CancellationToken, CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind } from "vscode";
+import { TextDocument, Position, CancellationToken, CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range } from "vscode";
 import { Analyzer } from "./analyzer";
 import * as as from "./analysis_server_types";
 
@@ -22,13 +22,13 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 						return;
 
 					disposable.dispose();
-					resolve(new CompletionList(notification.results.map(r => this.convertResult(document, r))));
+					resolve(new CompletionList(notification.results.map(r => this.convertResult(document, notification, r))));
 				})
 			});
 		});
 	}
 
-	private convertResult(document: TextDocument, suggestion: as.CompletionSuggestion): CompletionItem {
+	private convertResult(document: TextDocument, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion): CompletionItem {
 		let start = document.positionAt(suggestion.selectionOffset);
 		return {
 			label: suggestion.completion,
@@ -38,7 +38,13 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			sortText: null, // TODO: Make it so we don't need to provide all this stuff
 			filterText: null,
 			insertText: null,
-			textEdit: null
+			textEdit: new TextEdit(
+				new Range(
+					document.positionAt(notification.replacementOffset),
+					document.positionAt(notification.replacementOffset + notification.replacementLength)
+				),
+				suggestion.completion
+			)
 		};
 	}
 
