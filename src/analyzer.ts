@@ -9,26 +9,42 @@ export class Analyzer extends AnalyzerGen {
 	private analyzerProcess: child_process.ChildProcess;
 	private nextRequestID = 1;
 	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void] } = {};
+	private messageBuffer: string[] = [];
 
 	constructor(dartVMPath: string, analyzerPath: string) {
 		super();
 		console.log(`Starting Dart analysis server...`);
 		this.analyzerProcess = child_process.spawn(dartVMPath, [analyzerPath]);
 
-		this.analyzerProcess.stdout.on('data', (data: Buffer) => {
+		this.analyzerProcess.stdout.on("data", (data: Buffer) => {
 			let message = data.toString();
 			console.log(`RCV: ${message}`);
-			if (message != null)
-				this.handleMessages(message);
+
+			if (message != null) {
+				// Add this message to the buffer for processing.
+				this.messageBuffer.push(message);
+
+				// Kick off processing if we have a full message.
+				if (message.indexOf("\n") >= 0)
+					this.processMessageBuffer();
+			}
 		});
 	}
 
-	// TODO: Support buffering when a message doesn't come through with a newline. On Ubuntu testing, this seems to happens
-	// during completion which causes a crash ("unexpected end of input" during JSON.parse).
+	private processMessageBuffer() {
+		var fullBuffer = this.messageBuffer.join("");
+		this.messageBuffer = [];
 
+		// If the message doesn't end with \n then put the last part back into the buffer.
+		if (!fullBuffer.endsWith("\n")) {
+			var lastNewline = fullBuffer.lastIndexOf("\n");
+			var incompleteMessage = fullBuffer.substring(lastNewline + 1);
+			fullBuffer = fullBuffer.substring(0, lastNewline);
+			this.messageBuffer.push(incompleteMessage);
+		}
 
-	private handleMessages(message: string) {
-		message.split("\n").filter(m => m.trim() != "").forEach(m => this.handleMessage(m));
+		// Process the complete messages in the buffer.
+		fullBuffer.split("\n").filter(m => m.trim() != "").forEach(m => this.handleMessage(m));
 	}
 
 	private handleMessage(message: string) {
