@@ -29,7 +29,6 @@
     "icon": "media/icon.png",
     "activationEvents": [
         "onLanguage:dart",
-        "onLanguage:pubspec",
         "workspaceContains:pubspec.yaml"
     ],
     "main": "./out/src/extension",
@@ -43,15 +42,6 @@
                 "aliases": [
                     "Dart"
                 ]
-            },
-            {
-                "id": "pubspec",
-                "filenames": [
-                    "pubspec.yaml"
-                ],
-                "aliases": [
-                    "Pubspec"
-                ]
             }
         ],
         "grammars": [
@@ -59,11 +49,6 @@
                 "language": "dart",
                 "scopeName": "source.dart",
                 "path": "./syntaxes/dart.json"
-            },
-            {
-                "language": "pubspec",
-                "scopeName": "source.yaml",
-                "path": "./syntaxes/yaml.plist"
             }
         ],
         "configuration": {
