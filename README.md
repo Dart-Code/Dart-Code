@@ -14,14 +14,38 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
 ## Features
 
-- Detects SDK location from PATH
-- Syntax highlighting
-- Basic code completion
-- Realtime errors/warnings/hints reported in error window and with squiggles
-- Format document with custom line length
-- Hovers/tooltip information
-- Workspace-wide symbol search (`Ctrl+T`)
-- Auto-closing braces/quotes
+### Syntax highlighting
+
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/syntax highlighting.gif" />
+
+### Basic code completion
+
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/code completion.gif" />
+
+### Realtime errors/warnings/hints reported in error window and with squiggles
+
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/diagnostics.gif" />
+
+### Format document with custom line length
+
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/format code.gif" />
+
+### Hovers/tooltip information
+
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/tooltips.gif" />
+
+### Workspace-wide symbol search (`Ctrl+T`)
+
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/search.gif" />
+
+### Auto-closing braces/quotes
+
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/braces.gif" />
+
+### Automatically Detects Dart SDK
+
+As long as Dart is in your `PATH` environment variable, Dart Code will find it automatically.
+
 
 ## Requirements
 
