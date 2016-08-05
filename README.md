@@ -58,7 +58,7 @@ The Dart SDK must be available on your machine and added to your `PATH` or set i
 
 ## Known Issues
 
-- Tooltip positioning is bad
+- Tooltip positioning is sometimes bad
 - Multi-cursor edits may be much slower than single-cursor
 - Code completion doesn't provide parameter help
 
