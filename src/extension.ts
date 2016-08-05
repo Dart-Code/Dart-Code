@@ -12,7 +12,8 @@ import { DartWorkspaceSymbolProvider } from "./dart_workspace_symbol_provider";
 import { FileChangeHandler } from "./file_change_handler";
 import { DartIndentFixer } from "./dart_indent_fixer";
 
-const DART_MODE: vscode.DocumentFilter = { language: 'dart', scheme: 'file' };
+const DART_MODE: vscode.DocumentFilter = { language: "dart", scheme: "file" };
+const stateLastKnownSdkPathName = "dart.lastKnownSdkPath";
 
 let dartSdkRoot: string;
 let analyzer: Analyzer;
@@ -20,12 +21,12 @@ let analyzer: Analyzer;
 export function activate(context: vscode.ExtensionContext) {
     console.log("Dart-Code activated!");
 
-    // TODO: See if we can cache this value to speed up future startups. 
-    dartSdkRoot = util.findDartSdk();
+    dartSdkRoot = util.findDartSdk(<string>context.globalState.get(stateLastKnownSdkPathName));
     if (dartSdkRoot == null) {
         vscode.window.showErrorMessage("Dart-Code: Could not find a Dart SDK to use. Please add it to your PATH or set it in the extensions settings and reload");
         return; // Don't set anything else up; we can't work like this!
     }
+    context.globalState.update(stateLastKnownSdkPathName, dartSdkRoot);
 
     analyzer = new Analyzer(path.join(dartSdkRoot, util.dartVMPath), path.join(dartSdkRoot, util.analyzerPath));
     // TODO: Check if EventEmitter<T> would be more appropriate than our own.
