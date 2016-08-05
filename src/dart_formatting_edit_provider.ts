@@ -14,8 +14,8 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 		return new Promise<TextEdit[]>((resolve, reject) => {
 			this.analyzer.editFormat({
 				file: document.fileName,
-				selectionOffset: 0, // TODO: Not need this
-				selectionLength: 0, // TODO: Not need this
+				selectionOffset: 0,
+				selectionLength: 0,
 				lineLength: 80 // TODO: Not need this
 			}).then(resp => {
 				if (resp.edits.length == 0)
