@@ -24,7 +24,6 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 				if (resp.edits.length == 0)
 					resolve(null);
 				else
-					// TODO: Add Range (probably will reduce calls to the API as mouse moves?)
 					resolve(resp.edits.map(e => this.convertData(document, e)));
 			});
 		});
