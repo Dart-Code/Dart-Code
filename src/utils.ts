@@ -10,9 +10,12 @@ const configExtensionName = "dart";
 const configSdkPathName = "sdkPath";
 const configSetIndentName = "setIndentSettings";
 
-let config = workspace.getConfiguration(configExtensionName);
 var isWin = /^win/.test(process.platform);
 let dartExecutableName = isWin ? "dart.exe" : "dart";
+
+export function getConfig<T>(key: string) {
+    return <T>workspace.getConfiguration(configExtensionName).get(key);
+}
 
 export function findDartSdk(lastKnownPath: string): string {
     let paths = (<string>process.env.PATH).split(path.delimiter);
@@ -22,7 +25,7 @@ export function findDartSdk(lastKnownPath: string): string {
         paths.unshift(path.join(lastKnownPath, "bin"));
 
     // We don't expect the user to add .\bin in config, but it would be in the PATHs
-    let userDefinedSdkPath = <string>config.get(configSdkPathName);
+    let userDefinedSdkPath = getConfig<string>(configSdkPathName);
     if (userDefinedSdkPath)
         paths.unshift(path.join(userDefinedSdkPath, "bin"));
 
