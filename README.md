@@ -56,7 +56,7 @@ The Dart SDK must be available on your machine and added to your `PATH` or set i
 
 ## Release Notes
 
-### [v0.5.0](https://github.com/DanTup/Dart-Code/releases/tag/v0.1.0) *(2016-08-04)*
+### [v0.5.2](https://github.com/DanTup/Dart-Code/releases/tag/v0.5.2) *(2016-08-05)*
 
 Another preview release to gather feedback on important things missing for v1. This version should be [installed from the marketplace](https://marketplace.visualstudio.com/items?itemName=DanTup.dart-code).
 
