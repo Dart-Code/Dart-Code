@@ -11,25 +11,33 @@ const configSdkPathName = "sdkPath";
 const configSetIndentName = "setIndentSettings";
 
 let config = workspace.getConfiguration(configExtensionName);
+var isWin = /^win/.test(process.platform);
+let dartExecutableName = isWin ? "dart.exe" : "dart";
 
 export function findDartSdk(): string {
     let paths = (<string>process.env.PATH).split(path.delimiter);
 
     // We don't expect the user to add .\bin in config, but it would be in the PATHs
-    if (config.has(configSdkPathName))
-        paths.unshift(path.join(config.get<string>(configSdkPathName), 'bin'));
+    let userDefinedSdkPath = <string>config.get(configSdkPathName);
+    if (userDefinedSdkPath)
+        paths.unshift(path.join(userDefinedSdkPath, 'bin'));
 
-    let sdkPath = paths.find(isValidDartSdk);
-    if (sdkPath)
-        return path.join(sdkPath, ".."); // Take .\bin back off.
+    // Find which path has a Dart executable in it.
+    let dartPath = paths.find(hasDartExecutable);
+    if (!dartPath)
+        return null;
 
-    return null;
+    // To allow for symlinks, resolve the Dart executable to its real path.
+    let realDartPath = fs.realpathSync(path.join(dartPath, dartExecutableName));
+
+    // Return just the folder portion without the bin folder.
+    return path.join(path.dirname(realDartPath), "..");
 }
 
-function isValidDartSdk(pathToTest: string): boolean {
+function hasDartExecutable(pathToTest: string): boolean {
     // Apparently this is the "correct" way to check files exist synchronously in Node :'(
     try {
-        fs.accessSync(path.join(pathToTest, "..", analyzerPath), fs.R_OK);
+        fs.accessSync(path.join(pathToTest, dartExecutableName), fs.X_OK);
         return true; // If no error, we found a match!
     }
     catch (e) { }
