@@ -8,7 +8,7 @@ Dart support for Visual Studio Code.
 
 ## Features
 
-- Attempts to detect SDK location from PATH
+- Detects SDK location from PATH
 - Syntax highlighting
 - Basic code completion
 - Realtime errors/warnings/hints reported in error window and with squiggles
@@ -36,7 +36,7 @@ The Dart SDK must be available on your machine and added to your `PATH` or set i
 
 Super-early preview release to get some testing from other people. The next preview will be distributed in the store but I wanted to get a little feedback from others before I publish it there.
 
-- Attempts to detect SDK location from PATH
+- Detects SDK location from PATH
 - Syntax highlighting
 - Basic code completion
 - Realtime errors/warnings/hints reported in error window and with squiggles
