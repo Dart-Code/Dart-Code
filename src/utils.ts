@@ -13,7 +13,7 @@ const configSetIndentName = "setIndentSettings";
 let config = workspace.getConfiguration(configExtensionName);
 
 export function findDartSdk(): string {
-    let paths = (<string>process.env.PATH).split(";");
+    let paths = (<string>process.env.PATH).split(path.delimiter);
 
     // We don't expect the user to add .\bin in config, but it would be in the PATHs
     if (config.has(configSdkPathName))
