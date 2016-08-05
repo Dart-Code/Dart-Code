@@ -1,6 +1,6 @@
 "use strict";
 
-import { HoverProvider, Hover, TextDocument, Position, CancellationToken } from "vscode";
+import { HoverProvider, Hover, TextDocument, Position, CancellationToken, Range } from "vscode";
 import { Analyzer } from "./analyzer";
 import * as as from "./analysis_server_types";
 
@@ -18,9 +18,13 @@ export class DartHoverProvider implements HoverProvider {
 			}).then(resp => {
 				if (resp.hovers.length == 0)
 					resolve(null);
-				else
-					// TODO: Add Range (probably will reduce calls to the API as mouse moves?)
-					resolve(new Hover(resp.hovers.map(this.getHoverData)));
+				else {
+					let range = new Range(
+						document.positionAt(resp.hovers[0].offset),
+						document.positionAt(resp.hovers[0].offset + resp.hovers[0].length)
+					);
+					resolve(new Hover(resp.hovers.map(this.getHoverData), range));
+				}
 			});
 		});
 	}
