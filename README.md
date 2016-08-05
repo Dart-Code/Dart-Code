@@ -1,10 +1,16 @@
-<img src="./media/icon.png" align="left" />
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/icon.png" align="left" />
 
 # Dart Code
 
 Dart support for Visual Studio Code.
 
 <br clear="both" />
+
+## Installation
+
+Dart Code can be [installed from the Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=DanTup.dart-code). Open VS Code Quick Open (`Ctrl+P`) and paste the following and press enter:
+
+    ext install dart-code
 
 ## Features
 
@@ -36,7 +42,7 @@ The Dart SDK must be available on your machine and added to your `PATH` or set i
 
 ### [v0.5.0](https://github.com/DanTup/Dart-Code/releases/tag/v0.1.0) *(2016-08-04)*
 
-Another preview release to gather feedback on important things missing for v1. This version should be installed from the marketplace.
+Another preview release to gather feedback on important things missing for v1. This version should be [installed from the marketplace](https://marketplace.visualstudio.com/items?itemName=DanTup.dart-code).
 
 - SDK detection is more reliable on Linux/Mac
 - Name changed from "Dart-Code" to "Dart Code"
