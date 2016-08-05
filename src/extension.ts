@@ -19,11 +19,11 @@ let dartSdkRoot: string;
 let analyzer: Analyzer;
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log("Dart-Code activated!");
+    console.log("Dart Code activated!");
 
     dartSdkRoot = util.findDartSdk(<string>context.globalState.get(stateLastKnownSdkPathName));
     if (dartSdkRoot == null) {
-        vscode.window.showErrorMessage("Dart-Code: Could not find a Dart SDK to use. Please add it to your PATH or set it in the extensions settings and reload");
+        vscode.window.showErrorMessage("Dart Code: Could not find a Dart SDK to use. Please add it to your PATH or set it in the extensions settings and reload");
         return; // Don't set anything else up; we can't work like this!
     }
     context.globalState.update(stateLastKnownSdkPathName, dartSdkRoot);
@@ -73,5 +73,5 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
     analyzer.stop();
 
-    console.log("Dart-Code deactivated!");
+    console.log("Dart Code deactivated!");
 }

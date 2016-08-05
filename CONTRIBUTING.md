@@ -1,4 +1,4 @@
-# Contributing to Dart-Code
+# Contributing to Dart Code
 
 ## Issues
 

@@ -1,6 +1,6 @@
 {
     "name": "dart-code",
-    "displayName": "Dart-Code",
+    "displayName": "Dart Code",
     "description": "Dart support for Visual Studio Code.",
     "version": "0.1.0",
     "publisher": "DanTup",
@@ -58,7 +58,7 @@
             "properties": {
                 "dart.sdkPath": {
                     "type": "string",
-                    "description": "The location of the Dart SDK to use for analyzing and executing code. If blank, Dart-Code will attempt to find it from the PATH environment variable."
+                    "description": "The location of the Dart SDK to use for analyzing and executing code. If blank, Dart Code will attempt to find it from the PATH environment variable."
                 },
                 "dart.lineWidth": {
                     "type": "integer",
