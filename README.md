@@ -23,7 +23,8 @@ The Dart SDK must be available on your machine and added to your `PATH` or set i
 
 ## Extension Configuration
 
-`dart.sdkPath`: If the Dart SDK is not automatically found on your machine you can set the path to it here.
+- `dart.sdkPath`: If the Dart SDK is not automatically found on your machine from your `PATH` you can set the path to it here.
+- `dart.lineWidth`: The line width to pass to the Dart formatter. Defaults to 80.
 
 ## Known Issues
 
