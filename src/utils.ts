@@ -2,7 +2,8 @@
 
 import * as path from "path";
 import * as fs from "fs";
-import { workspace } from "vscode";
+import * as as from "./analysis_server_types";
+import { workspace, Position, Range } from "vscode";
 
 export const dartVMPath = "bin/dart";
 export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
@@ -50,4 +51,13 @@ function hasDartExecutable(pathToTest: string): boolean {
     catch (e) { }
 
     return false; // Didn't find it, so must be an invalid path.
+}
+
+export function toPosition(location: as.Location): Position {
+    return new Position(location.startLine - 1, location.startColumn - 1);
+}
+
+export function toRange(location: as.Location): Range {
+    let startPos = toPosition(location);
+    return new Range(startPos, startPos.translate(0, location.length));
 }
