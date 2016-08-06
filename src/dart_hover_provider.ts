@@ -30,9 +30,51 @@ export class DartHoverProvider implements HoverProvider {
 	}
 
 	private getHoverData(hover: as.HoverInformation): string {
-		return (
-			(hover.dartdoc != null ? hover.dartdoc + "\r\n" : "")
-			+ hover.elementDescription
-		).trim();
+		if (!hover.elementDescription) return null;
+
+		let elementDescription = hover.elementDescription;
+		let elementKind = hover.elementKind;
+		let dartdoc: string = hover.dartdoc;
+		let containingClassDescription = hover.containingClassDescription;
+		let propagatedType = hover.propagatedType;
+		let callable = (elementKind == 'function' || elementKind == 'method');
+		let field = (elementKind == 'getter' || elementKind == 'setter' || elementKind == 'field');
+
+		let contents: string = '';
+
+		if (containingClassDescription && callable) contents += containingClassDescription + '.';
+		if (containingClassDescription && field) contents += containingClassDescription + ' ';
+		if (elementDescription) contents += `${elementDescription}\n`;
+		if (contents.length > 0) contents = `\`\`\`dart\n${contents}\`\`\`\n`;
+		if (propagatedType) contents += `*${propagatedType.trim()}*\n`;
+		if (dartdoc) contents += `\n${DartHoverProvider.cleanDartdoc(dartdoc)}`;
+
+		return contents.trim();
+	}
+
+	// TODO: word wrap the text to 80 cols
+	private static cleanDartdoc(doc: string): string {
+		// Clean up some dart.core dartdoc.
+		let index = doc.indexOf('## Other resources');
+		if (index != -1)
+			doc = doc.substring(0, index);
+
+		// Truncate long dartdoc.
+		let lines = doc.split('\n');
+		if (lines.length > 20) {
+			for (let index = 20 - 6; index < lines.length; index++) {
+				if (lines[index].trim().length == 0) {
+					lines = lines.slice(0, index);
+					lines.push('\n…');
+					break;
+				}
+			}
+			doc = lines.join('\n');
+		}
+
+		doc = doc.replace(/\[:\S+:\]/g, (match) => `[${match.substring(2, match.length - 2)}]`);
+		doc = doc.replace(/(\[\S+\])([^(])/g, (match, one, two) => `${one}()${two}`);
+
+		return doc;
 	}
 }
