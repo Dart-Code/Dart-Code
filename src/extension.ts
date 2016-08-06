@@ -28,12 +28,18 @@ export function activate(context: vscode.ExtensionContext) {
     }
     context.globalState.update(stateLastKnownSdkPathName, dartSdkRoot);
 
+    // Show the SDK version in the status bar.
+    let sdkVersion = util.getDartSdkVersion(dartSdkRoot);
+    if (sdkVersion) {
+        let versionStatusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE);
+        versionStatusItem.text = sdkVersion;
+        versionStatusItem.tooltip = "Dart SDK Version";
+        versionStatusItem.show();
+        context.subscriptions.push(versionStatusItem);
+    }
+
     analyzer = new Analyzer(path.join(dartSdkRoot, util.dartVMPath), path.join(dartSdkRoot, util.analyzerPath));
     // TODO: Check if EventEmitter<T> would be more appropriate than our own.
-    analyzer.registerForServerConnected(e => {
-        let disposable = vscode.window.setStatusBarMessage(`Connected to Dart analysis server version ${e.version}`);
-        setTimeout(() => disposable.dispose(), 3000);
-    });
 
     // Set up providers.
     context.subscriptions.push(vscode.languages.registerHoverProvider(DART_MODE, new DartHoverProvider(analyzer)));

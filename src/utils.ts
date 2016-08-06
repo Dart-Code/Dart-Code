@@ -60,3 +60,12 @@ export function toRange(location: as.Location): Range {
     let startPos = toPosition(location);
     return new Range(startPos, startPos.translate(0, location.length));
 }
+
+export function getDartSdkVersion(sdkRoot: string): string {
+    try {
+        return fs.readFileSync(path.join(sdkRoot, "version"), "utf8");
+    }
+    catch (e) {
+        return null;
+    }
+}
