@@ -1,8 +1,8 @@
 "use strict";
 
-import { DiagnosticCollection, Diagnostic, DiagnosticSeverity, Uri, Range, Position } from "vscode";
 import { Analyzer } from "./analyzer";
-import { toRange } from "./utils";
+import { DiagnosticCollection, Diagnostic, DiagnosticSeverity, Uri, Range, Position } from "vscode";
+import { getConfig, toRange } from "./utils";
 import * as as from "./analysis_server_types";
 
 export class DartDiagnosticProvider {
@@ -16,9 +16,12 @@ export class DartDiagnosticProvider {
 	}
 
 	private handleErrors(notification: as.AnalysisErrorsNotification) {
+		let errors = notification.errors;
+		if (!getConfig('showTodos'))
+			errors = errors.filter((error) => error.type != 'TODO');
 		this.diagnostics.set(
 			Uri.file(notification.file), 
-			notification.errors.map(e => this.createDiagnostic(e))
+			errors.map(e => this.createDiagnostic(e))
 		);
 	}
 
@@ -28,7 +31,7 @@ export class DartDiagnosticProvider {
 			message: error.message,
 			range: toRange(error.location),
 			severity: this.getSeverity(error.severity),
-			source: error.type
+			source: 'dart'
 		};
 	}
 
