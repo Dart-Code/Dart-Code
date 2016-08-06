@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import * as child_process from "child_process";
 import * as as from "./analysis_server_types";
 import { AnalyzerGen } from "./analyzer_gen";
+import { getConfig } from "./utils";
 
 let verbose: boolean = true;
 
@@ -15,8 +16,17 @@ export class Analyzer extends AnalyzerGen {
 
 	constructor(dartVMPath: string, analyzerPath: string) {
 		super();
+
 		console.log(`Starting Dart analysis server...`);
-		this.analyzerProcess = child_process.spawn(dartVMPath, [analyzerPath]);
+
+		let args = [analyzerPath];
+
+		// Optionally start the analyzer's diagnostic web server on the given port.
+		let port = getConfig('analyzerDiagnosticsPort');
+		if (port)
+			args.push(`--port=${port}`);
+
+		this.analyzerProcess = child_process.spawn(dartVMPath, args);
 
 		this.analyzerProcess.stdout.on("data", (data: Buffer) => {
 			let message = data.toString();
@@ -33,13 +43,13 @@ export class Analyzer extends AnalyzerGen {
 	}
 
 	private processMessageBuffer() {
-		var fullBuffer = this.messageBuffer.join("");
+		let fullBuffer = this.messageBuffer.join("");
 		this.messageBuffer = [];
 
 		// If the message doesn't end with \n then put the last part back into the buffer.
 		if (!fullBuffer.endsWith("\n")) {
-			var lastNewline = fullBuffer.lastIndexOf("\n");
-			var incompleteMessage = fullBuffer.substring(lastNewline + 1);
+			let lastNewline = fullBuffer.lastIndexOf("\n");
+			let incompleteMessage = fullBuffer.substring(lastNewline + 1);
 			fullBuffer = fullBuffer.substring(0, lastNewline);
 			this.messageBuffer.push(incompleteMessage);
 		}

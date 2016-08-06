@@ -70,6 +70,11 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Forces indenting with two spaces when Dart files are opened. This is on by default because VS Code doesn't support per-language settings and most people use tabs/4 spaces for other languages."
+				},
+				"dart.showTodos": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show TODOs in the Problems view."
 				}
 			}
 		}
