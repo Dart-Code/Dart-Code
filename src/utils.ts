@@ -9,13 +9,12 @@ export const dartVMPath = "bin/dart";
 export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
 const configExtensionName = "dart";
 const configSdkPathName = "sdkPath";
-const configSetIndentName = "setIndentSettings";
 
 var isWin = /^win/.test(process.platform);
 let dartExecutableName = isWin ? "dart.exe" : "dart";
 
-export function getConfig<T>(key: string) {
-    return <T>workspace.getConfiguration(configExtensionName).get(key);
+export function getConfig<T>(key: string): T {
+    return workspace.getConfiguration(configExtensionName).get<T>(key);
 }
 
 export function findDartSdk(lastKnownPath: string): string {
