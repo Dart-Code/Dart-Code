@@ -2,6 +2,7 @@
 
 import { DiagnosticCollection, Diagnostic, DiagnosticSeverity, Uri, Range, Position } from "vscode";
 import { Analyzer } from "./analyzer";
+import { toRange } from "./utils";
 import * as as from "./analysis_server_types";
 
 export class DartDiagnosticProvider {
@@ -22,13 +23,10 @@ export class DartDiagnosticProvider {
 	}
 
 	private createDiagnostic(error: as.AnalysisError): Diagnostic {
-		let startPos = new Position(error.location.startLine - 1, error.location.startColumn - 1); // TODO: Abstract this out; esp as G are 1-based, MS 0-based!
-		let endPos = startPos.translate(0, error.location.length);
-
 		return {
 			code: error.code,
 			message: error.message,
-			range: new Range(startPos, endPos),
+			range: toRange(error.location),
 			severity: this.getSeverity(error.severity),
 			source: error.type
 		};

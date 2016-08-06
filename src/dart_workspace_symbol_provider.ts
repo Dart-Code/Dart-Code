@@ -2,6 +2,7 @@
 
 import { WorkspaceSymbolProvider, SymbolInformation, CancellationToken, SymbolKind, Location, Uri, Range, Position } from "vscode";
 import { Analyzer } from "./analyzer";
+import { toRange } from "./utils";
 import * as as from "./analysis_server_types";
 
 export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
@@ -11,8 +12,19 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	}
 
 	provideWorkspaceSymbols(query: string, token: CancellationToken): Thenable<SymbolInformation[]> {
+		let chars = Array.from(query);
+		// Filter out regex special chars.
+		chars = chars.filter((c) => {
+				return '[]()\\-'.indexOf(c) == -1;
+    });
+		chars = chars.map((c: string) => {
+				if (c.toUpperCase() == c.toLowerCase()) return c;
+				return `[${c.toUpperCase()}${c.toLowerCase()}]`;
+		});
+		let pattern = chars.join('.*');
+
 		return new Promise<SymbolInformation[]>((resolve, reject) => {
-			this.analyzer.searchFindTopLevelDeclarations({ pattern: query }).then(resp => {
+			this.analyzer.searchFindTopLevelDeclarations({ pattern: pattern }).then(resp => {
 				var disposable = this.analyzer.registerForSearchResults(notification => {
 					// Skip any results that are not ours (or are not the final results).
 					if (notification.id != resp.id || !notification.isLast)
@@ -26,15 +38,12 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	}
 
 	private convertResult(result: as.SearchResult): SymbolInformation {
-		let startPos = new Position(result.location.startLine - 1, result.location.startColumn - 1); // TODO: Abstract this out; esp as G are 1-based, MS 0-based!
-		let endPos = startPos.translate(0, result.location.length);
-
 		return {
 			name: result.path[0].name,
 			kind: this.getSymbolKind(result.path[0].kind),
 			location: {
 				uri: Uri.file(result.location.file),
-				range: new Range(startPos, endPos)
+				range: toRange(result.location)
 			},
 			containerName: result.path.length > 1 ? result.path[1].name : null
 		};
