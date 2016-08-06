@@ -62,12 +62,10 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(td => fileChangeHandler.onDidCloseTextDocument(td)));
     vscode.workspace.textDocuments.forEach(td => fileChangeHandler.onDidOpenTextDocument(td)); // Handle already-open files.
 
-    // TODO: Fix this...
-    //   See https://github.com/Microsoft/vscode/issues/10048
     // Hook active editor change to reset Dart indenting.
-    // let dartIndentFixer = new DartIndentFixer(() => config.get<boolean>(configSetIndentName, true));
-    // context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(td => dartIndentFixer.onDidChangeActiveTextEditor(td)));
-    // dartIndentFixer.onDidChangeActiveTextEditor(vscode.window.activeTextEditor); // Handle already-open file.
+    let dartIndentFixer = new DartIndentFixer();
+    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(td => dartIndentFixer.onDidChangeActiveTextEditor(td)));
+    dartIndentFixer.onDidChangeActiveTextEditor(vscode.window.activeTextEditor); // Handle already-open file.
 }
 
 export function deactivate() {
