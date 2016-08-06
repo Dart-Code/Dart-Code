@@ -20,7 +20,8 @@ export class Analyzer extends AnalyzerGen {
 
 		this.analyzerProcess.stdout.on("data", (data: Buffer) => {
 			let message = data.toString();
-			if (verbose && message.trim().length != 0) console.log(`<== ${message}`);
+			if (verbose && message.trim().length != 0)
+				console.log(`<== ${message}`);
 
 			// Add this message to the buffer for processing.
 			this.messageBuffer.push(message);
@@ -57,7 +58,8 @@ export class Analyzer extends AnalyzerGen {
 
 	private sendMessage<T>(req: Request<T>) {
 		let json = JSON.stringify(req);
-		if (verbose) console.log(`==> ${json}`);
+		if (verbose)
+			console.log(`==> ${json}`);
 		this.analyzerProcess.stdin.write(json);
 		this.analyzerProcess.stdin.write("\n");
 	}
