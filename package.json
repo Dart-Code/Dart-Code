@@ -1,86 +1,86 @@
 {
-    "name": "dart-code",
-    "displayName": "Dart Code",
-    "description": "Dart support for Visual Studio Code.",
-    "version": "0.5.2",
-    "publisher": "DanTup",
-    "preview": true,
-    "engines": {
-        "vscode": "^1.0.0"
-    },
-    "license": "SEE LICENSE IN LICENSE FILE",
-    "bugs": {
-        "url": "https://github.com/DanTup/Dart-Code/issues"
-    },
-    "homepage": "https://github.com/DanTup/Dart-Code/blob/master/README.md",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/DanTup/Dart-Code.git"
-    },
-    "categories": [
-        "Languages",
-        "Linters"
-    ],
-    "keywords": [
-        "dart",
-        "dartlang",
-        "pub",
-        "pubspec"
-    ],
-    "icon": "media/icon.png",
-    "activationEvents": [
-        "onLanguage:dart",
-        "workspaceContains:pubspec.yaml"
-    ],
-    "main": "./out/src/extension",
-    "contributes": {
-        "languages": [
-            {
-                "id": "dart",
-                "extensions": [
-                    ".dart"
-                ],
-                "aliases": [
-                    "Dart"
-                ],
-                "configuration": "./syntaxes/dart-configuration.json"
-            }
-        ],
-        "grammars": [
-            {
-                "language": "dart",
-                "scopeName": "source.dart",
-                "path": "./syntaxes/dart.json"
-            }
-        ],
-        "configuration": {
-            "type": "object",
-            "title": "Dart Configuration",
-            "properties": {
-                "dart.sdkPath": {
-                    "type": "string",
-                    "description": "The location of the Dart SDK to use for analyzing and executing code. If blank, Dart Code will attempt to find it from the PATH environment variable."
-                },
-                "dart.lineWidth": {
-                    "type": "integer",
-                    "default": 80,
-                    "description": "The maximum length of a line of code. This is used by the document formatter."
-                },
-                "dart.setIndentSettings": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Forces indenting with two spaces when Dart files are opened. This is on by default because VS Code doesn't support per-language settings and most people use tabs/4 spaces for other languages."
-                }
-            }
-        }
-    },
-    "scripts": {
-        "vscode:prepublish": "node ./node_modules/vscode/bin/compile",
-        "compile": "node ./node_modules/vscode/bin/compile -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install"
-    },
-    "devDependencies": {
-        "typescript": "^1.8.5",
-        "vscode": "^0.11.0"
-    }
+	"name": "dart-code",
+	"displayName": "Dart Code",
+	"description": "Dart support for Visual Studio Code.",
+	"version": "0.5.2",
+	"publisher": "DanTup",
+	"preview": true,
+	"engines": {
+		"vscode": "^1.0.0"
+	},
+	"license": "SEE LICENSE IN LICENSE FILE",
+	"bugs": {
+		"url": "https://github.com/DanTup/Dart-Code/issues"
+	},
+	"homepage": "https://github.com/DanTup/Dart-Code/blob/master/README.md",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/DanTup/Dart-Code.git"
+	},
+	"categories": [
+		"Languages",
+		"Linters"
+	],
+	"keywords": [
+		"dart",
+		"dartlang",
+		"pub",
+		"pubspec"
+	],
+	"icon": "media/icon.png",
+	"activationEvents": [
+		"onLanguage:dart",
+		"workspaceContains:pubspec.yaml"
+	],
+	"main": "./out/src/extension",
+	"contributes": {
+		"languages": [
+			{
+				"id": "dart",
+				"extensions": [
+					".dart"
+				],
+				"aliases": [
+					"Dart"
+				],
+				"configuration": "./syntaxes/dart-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "dart",
+				"scopeName": "source.dart",
+				"path": "./syntaxes/dart.json"
+			}
+		],
+		"configuration": {
+			"type": "object",
+			"title": "Dart Configuration",
+			"properties": {
+				"dart.sdkPath": {
+					"type": "string",
+					"description": "The location of the Dart SDK to use for analyzing and executing code. If blank, Dart Code will attempt to find it from the PATH environment variable."
+				},
+				"dart.lineWidth": {
+					"type": "integer",
+					"default": 80,
+					"description": "The maximum length of a line of code. This is used by the document formatter."
+				},
+				"dart.setIndentSettings": {
+					"type": "boolean",
+					"default": true,
+					"description": "Forces indenting with two spaces when Dart files are opened. This is on by default because VS Code doesn't support per-language settings and most people use tabs/4 spaces for other languages."
+				}
+			}
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "node ./node_modules/vscode/bin/compile",
+		"compile": "node ./node_modules/vscode/bin/compile -watch -p ./",
+		"postinstall": "node ./node_modules/vscode/bin/install"
+	},
+	"devDependencies": {
+		"typescript": "^1.8.5",
+		"vscode": "^0.11.0"
+	}
 }
