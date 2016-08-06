@@ -20,64 +20,64 @@ let dartSdkRoot: string;
 let analyzer: Analyzer;
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log("Dart Code activated!");
+	console.log("Dart Code activated!");
 
-    dartSdkRoot = util.findDartSdk(<string>context.globalState.get(stateLastKnownSdkPathName));
-    if (dartSdkRoot == null) {
-        vscode.window.showErrorMessage("Dart Code: Could not find a Dart SDK to use. Please add it to your PATH or set it in the extensions settings and reload");
-        return; // Don't set anything else up; we can't work like this!
-    }
-    context.globalState.update(stateLastKnownSdkPathName, dartSdkRoot);
+	dartSdkRoot = util.findDartSdk(<string>context.globalState.get(stateLastKnownSdkPathName));
+	if (dartSdkRoot == null) {
+		vscode.window.showErrorMessage("Dart Code: Could not find a Dart SDK to use. Please add it to your PATH or set it in the extensions settings and reload");
+		return; // Don't set anything else up; we can't work like this!
+	}
+	context.globalState.update(stateLastKnownSdkPathName, dartSdkRoot);
 
-    // Show the SDK version in the status bar.
-    let sdkVersion = util.getDartSdkVersion(dartSdkRoot);
-    if (sdkVersion) {
-        let versionStatusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE);
-        versionStatusItem.text = sdkVersion;
-        versionStatusItem.tooltip = "Dart SDK Version";
-        versionStatusItem.show();
-        context.subscriptions.push(versionStatusItem);
-    }
+	// Show the SDK version in the status bar.
+	let sdkVersion = util.getDartSdkVersion(dartSdkRoot);
+	if (sdkVersion) {
+		let versionStatusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE);
+		versionStatusItem.text = sdkVersion;
+		versionStatusItem.tooltip = "Dart SDK Version";
+		versionStatusItem.show();
+		context.subscriptions.push(versionStatusItem);
+	}
 
-    analyzer = new Analyzer(path.join(dartSdkRoot, util.dartVMPath), path.join(dartSdkRoot, util.analyzerPath));
-    // TODO: Check if EventEmitter<T> would be more appropriate than our own.
+	analyzer = new Analyzer(path.join(dartSdkRoot, util.dartVMPath), path.join(dartSdkRoot, util.analyzerPath));
+	// TODO: Check if EventEmitter<T> would be more appropriate than our own.
 
-    // Set up providers.
-    context.subscriptions.push(vscode.languages.registerHoverProvider(DART_MODE, new DartHoverProvider(analyzer)));
-    context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(DART_MODE, new DartFormattingEditProvider(analyzer)));
-    context.subscriptions.push(vscode.languages.registerCompletionItemProvider(DART_MODE, new DartCompletionItemProvider(analyzer), "."));
-    context.subscriptions.push(vscode.languages.registerDefinitionProvider(DART_MODE, new DartDefinitionProvider(analyzer)));
-    context.subscriptions.push(vscode.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
+	// Set up providers.
+	context.subscriptions.push(vscode.languages.registerHoverProvider(DART_MODE, new DartHoverProvider(analyzer)));
+	context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(DART_MODE, new DartFormattingEditProvider(analyzer)));
+	context.subscriptions.push(vscode.languages.registerCompletionItemProvider(DART_MODE, new DartCompletionItemProvider(analyzer), "."));
+	context.subscriptions.push(vscode.languages.registerDefinitionProvider(DART_MODE, new DartDefinitionProvider(analyzer)));
+	context.subscriptions.push(vscode.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
 
-    // Set up diagnostics.
-    let diagnostics = vscode.languages.createDiagnosticCollection("dart");
-    context.subscriptions.push(diagnostics);
-    let diagnosticsProvider = new DartDiagnosticProvider(analyzer, diagnostics);
+	// Set up diagnostics.
+	let diagnostics = vscode.languages.createDiagnosticCollection("dart");
+	context.subscriptions.push(diagnostics);
+	let diagnosticsProvider = new DartDiagnosticProvider(analyzer, diagnostics);
 
-    // Set the root...
-    if (vscode.workspace.rootPath) {
-        analyzer.analysisSetAnalysisRoots({
-            included: [vscode.workspace.rootPath],
-            excluded: [],
-            packageRoots: null
-        });
-    }
+	// Set the root...
+	if (vscode.workspace.rootPath) {
+		analyzer.analysisSetAnalysisRoots({
+			included: [vscode.workspace.rootPath],
+			excluded: [],
+			packageRoots: null
+		});
+	}
 
-    // Hook editor changes to send updated contents to analyzer.
-    let fileChangeHandler = new FileChangeHandler(analyzer);
-    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(td => fileChangeHandler.onDidOpenTextDocument(td)));
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => fileChangeHandler.onDidChangeTextDocument(e)));
-    context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(td => fileChangeHandler.onDidCloseTextDocument(td)));
-    vscode.workspace.textDocuments.forEach(td => fileChangeHandler.onDidOpenTextDocument(td)); // Handle already-open files.
+	// Hook editor changes to send updated contents to analyzer.
+	let fileChangeHandler = new FileChangeHandler(analyzer);
+	context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(td => fileChangeHandler.onDidOpenTextDocument(td)));
+	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => fileChangeHandler.onDidChangeTextDocument(e)));
+	context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(td => fileChangeHandler.onDidCloseTextDocument(td)));
+	vscode.workspace.textDocuments.forEach(td => fileChangeHandler.onDidOpenTextDocument(td)); // Handle already-open files.
 
-    // Hook active editor change to reset Dart indenting.
-    let dartIndentFixer = new DartIndentFixer();
-    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(td => dartIndentFixer.onDidChangeActiveTextEditor(td)));
-    dartIndentFixer.onDidChangeActiveTextEditor(vscode.window.activeTextEditor); // Handle already-open file.
+	// Hook active editor change to reset Dart indenting.
+	let dartIndentFixer = new DartIndentFixer();
+	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(td => dartIndentFixer.onDidChangeActiveTextEditor(td)));
+	dartIndentFixer.onDidChangeActiveTextEditor(vscode.window.activeTextEditor); // Handle already-open file.
 }
 
 export function deactivate() {
-    analyzer.stop();
+	analyzer.stop();
 
-    console.log("Dart Code deactivated!");
+	console.log("Dart Code deactivated!");
 }
