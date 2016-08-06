@@ -5,6 +5,8 @@ import * as child_process from "child_process";
 import * as as from "./analysis_server_types";
 import { AnalyzerGen } from "./analyzer_gen";
 
+let verbose: boolean = true;
+
 export class Analyzer extends AnalyzerGen {
 	private analyzerProcess: child_process.ChildProcess;
 	private nextRequestID = 1;
@@ -18,16 +20,14 @@ export class Analyzer extends AnalyzerGen {
 
 		this.analyzerProcess.stdout.on("data", (data: Buffer) => {
 			let message = data.toString();
-			console.log(`RCV: ${message}`);
+			if (verbose && message.trim().length != 0) console.log(`<== ${message}`);
 
-			if (message != null) {
-				// Add this message to the buffer for processing.
-				this.messageBuffer.push(message);
+			// Add this message to the buffer for processing.
+			this.messageBuffer.push(message);
 
-				// Kick off processing if we have a full message.
-				if (message.indexOf("\n") >= 0)
-					this.processMessageBuffer();
-			}
+			// Kick off processing if we have a full message.
+			if (message.indexOf("\n") >= 0)
+				this.processMessageBuffer();
 		});
 	}
 
@@ -57,9 +57,9 @@ export class Analyzer extends AnalyzerGen {
 
 	private sendMessage<T>(req: Request<T>) {
 		let json = JSON.stringify(req);
-		console.log(`SND: ${json}`);
+		if (verbose) console.log(`==> ${json}`);
 		this.analyzerProcess.stdin.write(json);
-		this.analyzerProcess.stdin.write("\r\n");
+		this.analyzerProcess.stdin.write("\n");
 	}
 
 	private handleResponse(evt: UnknownResponse) {
