@@ -52,11 +52,17 @@ function hasDartExecutable(pathToTest: string): boolean {
     return false; // Didn't find it, so must be an invalid path.
 }
 
-export function toPosition(location: as.Location): Position {
+export interface Location {
+    startLine: number;
+    startColumn: number;
+    length: number;
+}
+
+export function toPosition(location: Location): Position {
     return new Position(location.startLine - 1, location.startColumn - 1);
 }
 
-export function toRange(location: as.Location): Range {
+export function toRange(location: Location): Range {
     let startPos = toPosition(location);
     return new Range(startPos, startPos.translate(0, location.length));
 }
