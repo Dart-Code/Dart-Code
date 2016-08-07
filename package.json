@@ -6,7 +6,7 @@
 	"publisher": "DanTup",
 	"preview": true,
 	"engines": {
-		"vscode": "^1.0.0"
+		"vscode": "^1.4.0"
 	},
 	"license": "SEE LICENSE IN LICENSE FILE",
 	"bugs": {
@@ -66,7 +66,7 @@
 					"default": 80,
 					"description": "The maximum length of a line of code. This is used by the document formatter."
 				},
-				"dart.setIndentSettings": {
+				"dart.setIndentation": {
 					"type": "boolean",
 					"default": true,
 					"description": "Forces indenting with two spaces when Dart files are opened. This is on by default because VS Code doesn't support per-language settings and most people use tabs/4 spaces for other languages."
@@ -74,7 +74,7 @@
 				"dart.showTodos": {
 					"type": "boolean",
 					"default": true,
-					"description": "Show TODOs in the Problems view."
+					"description": "Whether to show TODOs in the Problems list."
 				}
 			}
 		}

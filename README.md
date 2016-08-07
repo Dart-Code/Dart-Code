@@ -46,13 +46,24 @@ The Dart SDK must be available on your machine and added to your `PATH` or set i
 ## Extension Configuration
 
 - `dart.sdkPath`: If the Dart SDK is not automatically found on your machine from your `PATH` you can set the path to it here.
-- `dart.lineWidth`: The line width to pass to the Dart formatter. Defaults to 80.
+- `dart.lineLength`: The maximum length of a line of code. This is used by the document formatter. Defaults to 80.
+- `dart.setIndentation`: Forces indenting with two spaces when Dart files are opened. This is on by default because VS Code doesn't support per-language settings and most people use tabs/4 spaces for other languages. Defaults to true.
+- `dart.showTodos`: Whether to show TODOs in the Problems list. Defaults to true.
 
 ## Known Issues
 
 - Tooltip positioning is sometimes bad
 - Multi-cursor edits may be much slower than single-cursor
 - Code completion doesn't provide parameter help
+
+## Analytics
+
+This extension reports some very basic events to help inform development decisions, such as:
+
+- When the extension is loaded
+- When you enabled/disable some features (eg. showTodos)
+
+Included in the event is your platform (Win/Linux/Mac) and the extensions version number. 
 
 ## Release Notes
 
