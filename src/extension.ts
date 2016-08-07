@@ -23,7 +23,7 @@ const stateLastKnownSdkPathName = "dart.lastKnownSdkPath";
 let dartSdkRoot: string;
 let analyzer: Analyzer;
 
-let showTodos: boolean;
+let showTodos: boolean = config.showTodos;
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log("Dart Code activated!");
