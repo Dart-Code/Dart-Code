@@ -4,18 +4,13 @@ import * as path from "path";
 import * as fs from "fs";
 import * as as from "./analysis_server_types";
 import { workspace, Position, Range } from "vscode";
+import { config } from "./config";
 
 export const dartVMPath = "bin/dart";
 export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
-const configExtensionName = "dart";
-const configSdkPathName = "sdkPath";
 
 var isWin = /^win/.test(process.platform);
 let dartExecutableName = isWin ? "dart.exe" : "dart";
-
-export function getConfig<T>(key: string): T {
-	return workspace.getConfiguration(configExtensionName).get<T>(key);
-}
 
 export function findDartSdk(lastKnownPath: string): string {
 	let paths = (<string>process.env.PATH).split(path.delimiter);
@@ -25,7 +20,7 @@ export function findDartSdk(lastKnownPath: string): string {
 		paths.unshift(path.join(lastKnownPath, "bin"));
 
 	// We don't expect the user to add .\bin in config, but it would be in the PATHs
-	let userDefinedSdkPath = getConfig<string>(configSdkPathName);
+	let userDefinedSdkPath = config.userDefinedSdkPath;
 	if (userDefinedSdkPath)
 		paths.unshift(path.join(userDefinedSdkPath, "bin"));
 

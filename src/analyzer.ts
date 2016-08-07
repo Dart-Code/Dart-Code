@@ -4,9 +4,7 @@ import * as vscode from "vscode";
 import * as child_process from "child_process";
 import * as as from "./analysis_server_types";
 import { AnalyzerGen } from "./analyzer_gen";
-import { getConfig } from "./utils";
-
-let verbose: boolean = true;
+import { config } from "./config";
 
 export class Analyzer extends AnalyzerGen {
 	private analyzerProcess: child_process.ChildProcess;
@@ -22,7 +20,7 @@ export class Analyzer extends AnalyzerGen {
 		let args = [analyzerPath];
 
 		// Optionally start the analyzer's diagnostic web server on the given port.
-		let port = getConfig('analyzerDiagnosticsPort');
+		let port = config.analyzerDiagnosticsPort;
 		if (port)
 			args.push(`--port=${port}`);
 
@@ -30,7 +28,7 @@ export class Analyzer extends AnalyzerGen {
 
 		this.analyzerProcess.stdout.on("data", (data: Buffer) => {
 			let message = data.toString();
-			if (verbose && message.trim().length != 0)
+			if (config.verbose && message.trim().length != 0)
 				console.log(`<== ${message}`);
 
 			// Add this message to the buffer for processing.
@@ -68,7 +66,7 @@ export class Analyzer extends AnalyzerGen {
 
 	private sendMessage<T>(req: Request<T>) {
 		let json = JSON.stringify(req);
-		if (verbose)
+		if (config.verbose)
 			console.log(`==> ${json}`);
 		this.analyzerProcess.stdin.write(json);
 		this.analyzerProcess.stdin.write("\n");

@@ -4,6 +4,7 @@ import * as path from "path";
 import * as util from "./utils";
 import * as vscode from "vscode";
 import { Analyzer } from "./analyzer";
+import { config } from "./config";
 import { DartCompletionItemProvider } from "./dart_completion_item_provider";
 import { DartDefinitionProvider } from "./dart_definition_provider";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
@@ -113,8 +114,9 @@ function handleServerStatus(status: ServerStatusNotification) {
 }
 
 function handleConfigurationChange() {
-	let todoSettingChanged = showTodos != util.getConfig<boolean>('showTodos');
-	showTodos = util.getConfig<boolean>('showTodos');
+	let newShowTodoSetting = config.showTodos;
+	let todoSettingChanged = showTodos != newShowTodoSetting;
+	showTodos = newShowTodoSetting;
 
 	if (todoSettingChanged) {
 		analyzer.analysisReanalyze({

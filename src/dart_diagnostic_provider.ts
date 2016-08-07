@@ -2,7 +2,8 @@
 
 import { Analyzer } from "./analyzer";
 import { DiagnosticCollection, Diagnostic, DiagnosticSeverity, Uri, Range, Position } from "vscode";
-import { getConfig, toRange } from "./utils";
+import { toRange } from "./utils";
+import { config } from "./config";
 import * as as from "./analysis_server_types";
 
 export class DartDiagnosticProvider {
@@ -17,7 +18,7 @@ export class DartDiagnosticProvider {
 
 	private handleErrors(notification: as.AnalysisErrorsNotification) {
 		let errors = notification.errors;
-		if (!getConfig<boolean>('showTodos'))
+		if (!config.showTodos)
 			errors = errors.filter((error) => error.type != 'TODO');
 		this.diagnostics.set(
 			Uri.file(notification.file), 

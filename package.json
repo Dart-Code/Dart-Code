@@ -61,7 +61,7 @@
 					"type": "string",
 					"description": "The location of the Dart SDK to use for analyzing and executing code. If blank, Dart Code will attempt to find it from the PATH environment variable."
 				},
-				"dart.lineWidth": {
+				"dart.lineLength": {
 					"type": "integer",
 					"default": 80,
 					"description": "The maximum length of a line of code. This is used by the document formatter."

@@ -3,9 +3,7 @@
 import { DocumentFormattingEditProvider, TextDocument, FormattingOptions, CancellationToken, TextEdit, Range } from "vscode";
 import { Analyzer } from "./analyzer";
 import * as as from "./analysis_server_types";
-import * as util from "./utils";
-
-export const configLineWidthName = "lineWidth";
+import { config } from "./config";
 
 export class DartFormattingEditProvider implements DocumentFormattingEditProvider {
 	private analyzer: Analyzer;
@@ -19,7 +17,7 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 				file: document.fileName,
 				selectionOffset: 0,
 				selectionLength: 0,
-				lineLength: util.getConfig<number>(configLineWidthName)
+				lineLength: config.lineLength
 			}).then(resp => {
 				if (resp.edits.length == 0)
 					resolve(null);
