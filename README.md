@@ -69,8 +69,6 @@ Included in the event is your platform (Win/Linux/Mac) and the extensions versio
 
 ### [v0.6.0](https://github.com/DanTup/Dart-Code/releases/tag/v0.6.0) *(2016-08-07)*
 
-Another preview release to gather feedback on important things missing for v1. This version should be [installed from the marketplace](https://marketplace.visualstudio.com/items?itemName=DanTup.dart-code).
-
 - A new option `dart.showTodos` (default: `true`) has been added to show/hide TODO messages from the Problems list
 - "Analyzing…" will now show in the status bar when files are being analyzed
 - Go to Definition is now supported within your project (though does not yet work with SDK classes)
@@ -83,8 +81,6 @@ Another preview release to gather feedback on important things missing for v1. T
 
 ### [v0.5.2](https://github.com/DanTup/Dart-Code/releases/tag/v0.5.2) *(2016-08-05)*
 
-Another preview release to gather feedback on important things missing for v1. This version should be [installed from the marketplace](https://marketplace.visualstudio.com/items?itemName=DanTup.dart-code).
-
 - SDK detection is more reliable on Linux/Mac
 - Name changed from "Dart-Code" to "Dart Code"
 - Setting added to control line-width passed to formatter
@@ -94,8 +90,6 @@ Another preview release to gather feedback on important things missing for v1. T
 - Pressing enter between a set of braces will automatically indent
 
 ### [v0.1.0](https://github.com/DanTup/Dart-Code/releases/tag/v0.1.0) *(2016-08-04)*
-
-Super-early preview release to get some testing from other people. The next preview will be distributed in the store but I wanted to get a little feedback from others before I publish it there.
 
 - Detects SDK location from PATH
 - Syntax highlighting
