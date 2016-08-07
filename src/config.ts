@@ -20,7 +20,7 @@ class Config {
 
 	get userDefinedSdkPath() { return this.getConfig<string>("sdkPath"); }
 	get lineLength() { return this.getConfig<number>("lineLength"); }
-	get setIndentSettings() { return this.getConfig<number>("setIndentSettings"); }
+	get setIndentation() { return this.getConfig<number>("setIndentation"); }
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
 	get analyzerDiagnosticsPort() { return this.getConfig<number>("analyzerDiagnosticsPort"); }
 	get verbose() { return this.getConfig<boolean>("verbose"); }
