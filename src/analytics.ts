@@ -21,7 +21,8 @@ class Analytics {
 	constructor() {
 		let packageJson = require('../../package.json');
         this.version = packageJson.version;
-		this.isDevelopment = process.argv.indexOf("--type=extensionHost") >= 0;
+		// TODO: Find a better way to do this that doesn't rely on us remembering to do something!
+		this.isDevelopment = this.version.endsWith("-dev");
 	}
 
 	logActivation() { this.log(EventCategory.Extension, EventAction.Activated); }
