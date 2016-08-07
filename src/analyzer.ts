@@ -38,6 +38,10 @@ export class Analyzer extends AnalyzerGen {
 			if (message.indexOf("\n") >= 0)
 				this.processMessageBuffer();
 		});
+
+		this.serverSetSubscriptions({
+			subscriptions: ['STATUS']
+		});
 	}
 
 	private processMessageBuffer() {

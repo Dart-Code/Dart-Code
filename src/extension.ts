@@ -5,6 +5,7 @@ import * as util from "./utils";
 import * as vscode from "vscode";
 import { Analyzer } from "./analyzer";
 import { config } from "./config";
+import { AnalyzerStatusReporter } from "./analyzer_status_reporter";
 import { DartCompletionItemProvider } from "./dart_completion_item_provider";
 import { DartDefinitionProvider } from "./dart_definition_provider";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
@@ -22,9 +23,6 @@ let dartSdkRoot: string;
 let analyzer: Analyzer;
 
 let showTodos: boolean;
-
-let statusBarItem: vscode.StatusBarItem;
-let statusShowing: boolean = false;
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log("Dart Code activated!");
@@ -48,10 +46,6 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	analyzer = new Analyzer(path.join(dartSdkRoot, util.dartVMPath), path.join(dartSdkRoot, util.analyzerPath));
-	analyzer.serverSetSubscriptions({
-		subscriptions: ['STATUS']
-	});
-	analyzer.registerForServerStatus(handleServerStatus);
 
 	// TODO: Check if EventEmitter<T> would be more appropriate than our own.
 
@@ -61,6 +55,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.languages.registerCompletionItemProvider(DART_MODE, new DartCompletionItemProvider(analyzer), "."));
 	context.subscriptions.push(vscode.languages.registerDefinitionProvider(DART_MODE, new DartDefinitionProvider(analyzer)));
 	context.subscriptions.push(vscode.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
+	context.subscriptions.push(new AnalyzerStatusReporter(analyzer));
 
 	// Set up diagnostics.
 	let diagnostics = vscode.languages.createDiagnosticCollection("dart");
@@ -89,28 +84,6 @@ export function activate(context: vscode.ExtensionContext) {
 	dartIndentFixer.onDidChangeActiveTextEditor(vscode.window.activeTextEditor); // Handle already-open file.
 
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(handleConfigurationChange));
-}
-
-function handleServerStatus(status: ServerStatusNotification) {
-	if (!status.analysis)
-		return;
-	
-	if (statusBarItem == null) {
-		statusBarItem = vscode.window.createStatusBarItem();
-		statusBarItem.text = 'Analyzing…'
-	}
-
-	statusShowing = status.analysis.isAnalyzing;
-
-	if (statusShowing) {
-		// Debounce short analysis times.
-		setTimeout(() => {
-			if (statusShowing) 
-				statusBarItem.show();
-		}, 250);
-	} else {
-		statusBarItem.hide();
-	}
 }
 
 function handleConfigurationChange() {
