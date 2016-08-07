@@ -1,6 +1,7 @@
 "use strict";
 
 import * as vscode from "vscode";
+import * as path from "path";
 import { Analyzer } from "./analyzer";
 import * as as from "./analysis_server_types";
 
@@ -84,8 +85,11 @@ export class FileChangeHandler {
 	private isDartLike(document: vscode.TextDocument): boolean {
 		if (document.isUntitled || !document.fileName)
 			return false;
+
+		const analyzableLanguages = ["dart", "html"];
+		const analyzableFilenames = [".analysis_options", "analysis_options.yaml"];
 		
-		let fileName = document.fileName;
-		return fileName.endsWith('.dart') || fileName == '.analysis_options';
+		return analyzableLanguages.indexOf(document.languageId) >= 0
+			|| analyzableFilenames.indexOf(path.basename(document.fileName)) >= 0;
 	}
 }
