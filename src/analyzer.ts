@@ -117,9 +117,7 @@ export class Analyzer extends AnalyzerGen {
 	stop() {
 		console.log(`Stopping Dart analysis server...`);
 
-		// TODO: Figure out if it's ok to be slow when deactivating an extension.
-
-		this.serverShutdown().then(() => this.analyzerProcess.kill());
+		this.analyzerProcess.kill();
 	}
 }
 

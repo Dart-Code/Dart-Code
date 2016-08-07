@@ -1,23 +1,29 @@
 "use strict";
 
-import * as vscode from "vscode";
 import * as path from "path";
 import * as util from "./utils";
+import * as vscode from "vscode";
 import { Analyzer } from "./analyzer";
-import { DartFormattingEditProvider } from "./dart_formatting_edit_provider";
-import { DartHoverProvider } from "./dart_hover_provider";
 import { DartCompletionItemProvider } from "./dart_completion_item_provider";
 import { DartDefinitionProvider } from "./dart_definition_provider";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
+import { DartFormattingEditProvider } from "./dart_formatting_edit_provider";
+import { DartHoverProvider } from "./dart_hover_provider";
+import { DartIndentFixer } from "./dart_indent_fixer";
 import { DartWorkspaceSymbolProvider } from "./dart_workspace_symbol_provider";
 import { FileChangeHandler } from "./file_change_handler";
-import { DartIndentFixer } from "./dart_indent_fixer";
+import { ServerStatusNotification } from "./analysis_server_types";
 
 const DART_MODE: vscode.DocumentFilter = { language: "dart", scheme: "file" };
 const stateLastKnownSdkPathName = "dart.lastKnownSdkPath";
 
 let dartSdkRoot: string;
 let analyzer: Analyzer;
+
+let showTodos: boolean;
+
+let statusBarItem: vscode.StatusBarItem;
+let statusShowing: boolean = false;
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log("Dart Code activated!");
@@ -41,6 +47,11 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	analyzer = new Analyzer(path.join(dartSdkRoot, util.dartVMPath), path.join(dartSdkRoot, util.analyzerPath));
+	analyzer.serverSetSubscriptions({
+		subscriptions: ['STATUS']
+	});
+	analyzer.registerForServerStatus(handleServerStatus);
+
 	// TODO: Check if EventEmitter<T> would be more appropriate than our own.
 
 	// Set up providers.
@@ -75,6 +86,41 @@ export function activate(context: vscode.ExtensionContext) {
 	let dartIndentFixer = new DartIndentFixer();
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(td => dartIndentFixer.onDidChangeActiveTextEditor(td)));
 	dartIndentFixer.onDidChangeActiveTextEditor(vscode.window.activeTextEditor); // Handle already-open file.
+
+	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(handleConfigurationChange));
+}
+
+function handleServerStatus(status: ServerStatusNotification) {
+	if (!status.analysis)
+		return;
+	
+	if (statusBarItem == null) {
+		statusBarItem = vscode.window.createStatusBarItem();
+		statusBarItem.text = 'Analyzing…'
+	}
+
+	statusShowing = status.analysis.isAnalyzing;
+
+	if (statusShowing) {
+		// Debounce short analysis times.
+		setTimeout(() => {
+			if (statusShowing) 
+				statusBarItem.show();
+		}, 250);
+	} else {
+		statusBarItem.hide();
+	}
+}
+
+function handleConfigurationChange() {
+	let todoSettingChanged = showTodos != util.getConfig<boolean>('showTodos');
+	showTodos = util.getConfig<boolean>('showTodos');
+
+	if (todoSettingChanged) {
+		analyzer.analysisReanalyze({
+			roots: [vscode.workspace.rootPath] 
+		});
+	}
 }
 
 export function deactivate() {

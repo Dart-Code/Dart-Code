@@ -11,6 +11,9 @@ export class FileChangeHandler {
 	}
 
 	onDidOpenTextDocument(document: vscode.TextDocument) {
+		if (!this.isDartLike(document))
+		  return;
+
 		let files: { [key: string]: as.AddContentOverlay } = {};
 
 		files[document.fileName] = {
@@ -22,6 +25,9 @@ export class FileChangeHandler {
 	}
 
 	onDidChangeTextDocument(e: vscode.TextDocumentChangeEvent) {
+		if (!this.isDartLike(e.document))
+		  return;
+
 		// TODO: Fix this...
 		// HACK: e.document.offsetAt appears to return the wrong offset when there are
 		// multiple edits (since it uses the current document state which can include
@@ -54,6 +60,9 @@ export class FileChangeHandler {
 	}
 
 	onDidCloseTextDocument(document: vscode.TextDocument) {
+		if (!this.isDartLike(document))
+		  return;
+
 		let files: { [key: string]: as.RemoveContentOverlay } = {};
 
 		files[document.fileName] = {
@@ -70,5 +79,13 @@ export class FileChangeHandler {
 			replacement: change.text,
 			id: "" // TODO: Fix this, should be optional!
 		}
+	}
+
+	private isDartLike(document: vscode.TextDocument): boolean {
+		if (document.isUntitled || !document.fileName)
+			return false;
+		
+		let fileName = document.fileName;
+		return fileName.endsWith('.dart') || fileName == '.analysis_options';
 	}
 }
