@@ -16,14 +16,20 @@ export class DartHoverProvider implements HoverProvider {
 				file: document.fileName,
 				offset: document.offsetAt(position)
 			}).then(resp => {
-				if (resp.hovers.length == 0)
+				if (resp.hovers.length == 0) {
 					resolve(null);
-				else {
-					let range = new Range(
-						document.positionAt(resp.hovers[0].offset),
-						document.positionAt(resp.hovers[0].offset + resp.hovers[0].length)
-					);
-					resolve(new Hover(resp.hovers.map(this.getHoverData), range));
+				} else {
+					let hover = resp.hovers[0];
+					let markdown = this.getHoverData(hover);
+					if (markdown) {
+						let range = new Range(
+							document.positionAt(hover.offset),
+							document.positionAt(hover.offset + hover.length)
+						);
+						resolve(new Hover(markdown, range));
+					} else {
+						resolve(null);
+					}
 				}
 			});
 		});
