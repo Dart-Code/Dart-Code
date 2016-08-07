@@ -67,6 +67,19 @@ Included in the event is your platform (Win/Linux/Mac) and the extensions versio
 
 ## Release Notes
 
+### [v0.6.0](https://github.com/DanTup/Dart-Code/releases/tag/v0.6.0) *(2016-08-07)*
+
+Another preview release to gather feedback on important things missing for v1. This version should be [installed from the marketplace](https://marketplace.visualstudio.com/items?itemName=DanTup.dart-code).
+
+- A new option `dart.showTodos` (defaults to `true`) has been added to allow you to hide TODO messages from the Problems list
+- "Analyzing…" will now show in the status bar when files are being analyzed
+- Go to Definition is now supported within your project (though does not yet work with SDK classes)
+- The Dart SDK version number will now show in the bottom right status bar
+- Dart files will automatically be set to 2-space indenting when you open them (the new option `dart.setIndentation` can be used to disable this)
+- Symbol search is now case-insensitive and also supports better filtering (eg. "TA" will match "TwitterApi")
+- Tooltips reading `undefined` will no longer appear for some items (eg. string literals)
+- Tooltip formatting/display has been greatly improved
+
 ### [v0.5.2](https://github.com/DanTup/Dart-Code/releases/tag/v0.5.2) *(2016-08-05)*
 
 Another preview release to gather feedback on important things missing for v1. This version should be [installed from the marketplace](https://marketplace.visualstudio.com/items?itemName=DanTup.dart-code).
@@ -78,7 +91,6 @@ Another preview release to gather feedback on important things missing for v1. T
 - Tooltip hovers now indicate the range that they apply to
 - Braces/quotes now automatically close
 - Pressing enter between a set of braces will automatically indent
-
 
 ### [v0.1.0](https://github.com/DanTup/Dart-Code/releases/tag/v0.1.0) *(2016-08-04)*
 
