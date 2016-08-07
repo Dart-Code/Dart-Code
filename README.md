@@ -54,6 +54,15 @@ The Dart SDK must be available on your machine and added to your `PATH` or set i
 - Multi-cursor edits may be much slower than single-cursor
 - Code completion doesn't provide parameter help
 
+## Analytics
+
+This extension reports some very basic events to help inform development decisions, such as:
+
+- When the extension is loaded
+- When you enabled/disable some features (eg. showTodos)
+
+Included in the event is your platform (Win/Linux/Mac) and the extensions version number. 
+
 ## Release Notes
 
 ### [v0.5.2](https://github.com/DanTup/Dart-Code/releases/tag/v0.5.2) *(2016-08-05)*
