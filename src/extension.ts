@@ -3,9 +3,10 @@
 import * as path from "path";
 import * as util from "./utils";
 import * as vscode from "vscode";
+import { analytics } from "./analytics";
 import { Analyzer } from "./analyzer";
-import { config } from "./config";
 import { AnalyzerStatusReporter } from "./analyzer_status_reporter";
+import { config } from "./config";
 import { DartCompletionItemProvider } from "./dart_completion_item_provider";
 import { DartDefinitionProvider } from "./dart_definition_provider";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
@@ -26,6 +27,7 @@ let showTodos: boolean;
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log("Dart Code activated!");
+	analytics.logActivation();
 
 	dartSdkRoot = util.findDartSdk(<string>context.globalState.get(stateLastKnownSdkPathName));
 	if (dartSdkRoot == null) {
@@ -92,6 +94,7 @@ function handleConfigurationChange() {
 	showTodos = newShowTodoSetting;
 
 	if (todoSettingChanged) {
+		analytics.logShowTodosToggled(showTodos);
 		analyzer.analysisReanalyze({
 			roots: [vscode.workspace.rootPath] 
 		});
