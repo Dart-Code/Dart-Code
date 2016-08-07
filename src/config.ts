@@ -12,7 +12,6 @@ class Config {
 
 	private loadConfig() {
 		this.config = workspace.getConfiguration("dart");
-		console.log(`Loaded config! verbose = ${this.getConfig("verbose")}`);
 	}
 
 	private getConfig<T>(key: string): T {
