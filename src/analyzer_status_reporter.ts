@@ -5,8 +5,8 @@ import { Analyzer } from "./analyzer";
 import { ServerStatusNotification } from "./analysis_server_types";
 
 export class AnalyzerStatusReporter extends Disposable {
-	statusBarItem: StatusBarItem;
-	statusShowing: boolean;
+	private statusBarItem: StatusBarItem;
+	private statusShowing: boolean;
 
 	constructor(analyzer: Analyzer) {
 		super(() => this.statusBarItem.dispose());
