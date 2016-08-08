@@ -3,6 +3,7 @@
 import { env, extensions, Extension, workspace } from "vscode";
 import * as https from "https";
 import * as querystring from "querystring";
+import { config } from "./config";
 
 enum EventCategory {
     Extension,
@@ -21,14 +22,16 @@ class Analytics {
 	constructor() {
 		let packageJson = require('../../package.json');
         this.version = packageJson.version;
-		// TODO: Find a better way to do this that doesn't rely on us remembering to do something!
-		this.isDevelopment = this.version.endsWith("-dev");
+		this.isDevelopment = this.version.endsWith("-dev") || env.machineId == "someValue.machineId";
 	}
 
 	logActivation() { this.log(EventCategory.Extension, EventAction.Activated); }
 	logShowTodosToggled(enabled: boolean) { this.log(EventCategory.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }
 
 	private log(category: EventCategory, action: EventAction) {
+		if (!config.allowAnalytics)
+			return;
+
 		let data = {
 			v: "1", // API Version.
 			tid: "UA-2201586-19",

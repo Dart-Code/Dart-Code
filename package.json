@@ -2,13 +2,13 @@
 	"name": "dart-code",
 	"displayName": "Dart Code",
 	"description": "Dart support for Visual Studio Code.",
-	"version": "0.6.2-dev",
+	"version": "0.6.3-dev",
 	"publisher": "DanTup",
 	"preview": true,
 	"engines": {
 		"vscode": "^1.4.0"
 	},
-	"license": "SEE LICENSE IN LICENSE FILE",
+	"license": "SEE LICENSE IN LICENSE",
 	"bugs": {
 		"url": "https://github.com/DanTup/Dart-Code/issues"
 	},
@@ -75,6 +75,11 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Whether to show TODOs in the Problems list."
+				},
+				"dart.allowAnalytics": {
+					"type": "boolean",
+					"default": true,
+					"description": "Note: We only send a few very basic events and the extension version number/platform :-)"
 				}
 			}
 		}
