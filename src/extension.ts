@@ -9,6 +9,7 @@ import { AnalyzerStatusReporter } from "./analyzer_status_reporter";
 import { config } from "./config";
 import { DartCompletionItemProvider } from "./dart_completion_item_provider";
 import { DartDefinitionProvider } from "./dart_definition_provider";
+import { DartReferenceProvider } from "./dart_reference_provider";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
 import { DartFormattingEditProvider } from "./dart_formatting_edit_provider";
 import { DartHoverProvider } from "./dart_hover_provider";
@@ -57,6 +58,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(DART_MODE, new DartFormattingEditProvider(analyzer)));
 	context.subscriptions.push(vscode.languages.registerCompletionItemProvider(DART_MODE, new DartCompletionItemProvider(analyzer), "."));
 	context.subscriptions.push(vscode.languages.registerDefinitionProvider(DART_MODE, new DartDefinitionProvider(analyzer)));
+	context.subscriptions.push(vscode.languages.registerReferenceProvider(DART_MODE, new DartReferenceProvider(analyzer)));
 	context.subscriptions.push(vscode.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
 	context.subscriptions.push(new AnalyzerStatusReporter(analyzer));
 
