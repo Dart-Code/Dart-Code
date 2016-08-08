@@ -13,7 +13,7 @@ export class FileChangeHandler {
 	}
 
 	onDidOpenTextDocument(document: vscode.TextDocument) {
-		if (!util.isDartLike(document))
+		if (!util.isAnalyzable(document))
 		  return;
 
 		let files: { [key: string]: as.AddContentOverlay } = {};
@@ -27,7 +27,7 @@ export class FileChangeHandler {
 	}
 
 	onDidChangeTextDocument(e: vscode.TextDocumentChangeEvent) {
-		if (!util.isDartLike(e.document))
+		if (!util.isAnalyzable(e.document))
 		  return;
 
 		// TODO: Fix this...
@@ -62,7 +62,7 @@ export class FileChangeHandler {
 	}
 
 	onDidCloseTextDocument(document: vscode.TextDocument) {
-		if (!util.isDartLike(document))
+		if (!util.isAnalyzable(document))
 		  return;
 
 		let files: { [key: string]: as.RemoveContentOverlay } = {};

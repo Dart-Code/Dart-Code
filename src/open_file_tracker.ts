@@ -31,7 +31,7 @@ export class OpenFileTracker {
 		let visibleDocuments = window.visibleTextEditors.map(e => e.document);
 		let otherOpenDocuments = this.openDocuments.filter(doc => visibleDocuments.indexOf(doc) == -1);
 
-		let priorityDocuments = visibleDocuments.concat(otherOpenDocuments).filter(d => util.isDartLike(d));
+		let priorityDocuments = visibleDocuments.concat(otherOpenDocuments).filter(d => util.isAnalyzable(d));
 		let priorityFiles = priorityDocuments.map(doc => doc.fileName);
 
 		console.log("Sending: " + priorityFiles.join(", "));

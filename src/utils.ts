@@ -71,7 +71,7 @@ export function getDartSdkVersion(sdkRoot: string): string {
 	}
 }
 
-export function isDartLike(document: TextDocument): boolean {
+export function isAnalyzable(document: TextDocument): boolean {
 	if (document.isUntitled || !document.fileName)
 		return false;
 
