@@ -34,8 +34,6 @@ export class OpenFileTracker {
 		let priorityDocuments = visibleDocuments.concat(otherOpenDocuments).filter(d => util.isAnalyzable(d));
 		let priorityFiles = priorityDocuments.map(doc => doc.fileName);
 
-		console.log("Sending: " + priorityFiles.join(", "));
-
 		this.analyzer.analysisSetPriorityFiles({
 			files: priorityFiles
 		})
