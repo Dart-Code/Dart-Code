@@ -22,8 +22,7 @@ class Analytics {
 	constructor() {
 		let packageJson = require('../../package.json');
         this.version = packageJson.version;
-		// TODO: Find a better way to do this that doesn't rely on us remembering to do something!
-		this.isDevelopment = this.version.endsWith("-dev");
+		this.isDevelopment = this.version.endsWith("-dev") || env.machineId == "someValue.machineId";
 	}
 
 	logActivation() { this.log(EventCategory.Extension, EventAction.Activated); }
