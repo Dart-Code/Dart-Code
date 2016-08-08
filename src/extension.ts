@@ -15,6 +15,7 @@ import { DartHoverProvider } from "./dart_hover_provider";
 import { DartIndentFixer } from "./dart_indent_fixer";
 import { DartWorkspaceSymbolProvider } from "./dart_workspace_symbol_provider";
 import { FileChangeHandler } from "./file_change_handler";
+import { OpenFileTracker } from "./open_file_tracker";
 import { ServerStatusNotification } from "./analysis_server_types";
 
 const DART_MODE: vscode.DocumentFilter = { language: "dart", scheme: "file" };
@@ -80,11 +81,19 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(td => fileChangeHandler.onDidCloseTextDocument(td)));
 	vscode.workspace.textDocuments.forEach(td => fileChangeHandler.onDidOpenTextDocument(td)); // Handle already-open files.
 
+	// Hook open/active file changes so we can set priority files with the analyzer.
+	let openFileTracker = new OpenFileTracker(analyzer);
+	context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(td => openFileTracker.trackFile(td)));
+	context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(td => openFileTracker.untrackFile(td)));
+	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(e => openFileTracker.updatePriorityFiles()));
+	openFileTracker.trackFile(vscode.window.activeTextEditor.document); // Handle already-open files.
+
 	// Hook active editor change to reset Dart indenting.
 	let dartIndentFixer = new DartIndentFixer();
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(td => dartIndentFixer.onDidChangeActiveTextEditor(td)));
 	dartIndentFixer.onDidChangeActiveTextEditor(vscode.window.activeTextEditor); // Handle already-open file.
 
+	// Handle config changes so we can reanalyze if necessary.
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(handleConfigurationChange));
 }
 
@@ -96,7 +105,7 @@ function handleConfigurationChange() {
 	if (todoSettingChanged) {
 		analytics.logShowTodosToggled(showTodos);
 		analyzer.analysisReanalyze({
-			roots: [vscode.workspace.rootPath] 
+			roots: [vscode.workspace.rootPath]
 		});
 	}
 }
