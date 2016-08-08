@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { Analyzer } from "./analyzer";
 import * as as from "./analysis_server_types";
+import * as util from "./utils";
 
 export class FileChangeHandler {
 	private analyzer: Analyzer;
@@ -12,7 +13,7 @@ export class FileChangeHandler {
 	}
 
 	onDidOpenTextDocument(document: vscode.TextDocument) {
-		if (!this.isDartLike(document))
+		if (!util.isAnalyzable(document))
 		  return;
 
 		let files: { [key: string]: as.AddContentOverlay } = {};
@@ -26,7 +27,7 @@ export class FileChangeHandler {
 	}
 
 	onDidChangeTextDocument(e: vscode.TextDocumentChangeEvent) {
-		if (!this.isDartLike(e.document))
+		if (!util.isAnalyzable(e.document))
 		  return;
 
 		// TODO: Fix this...
@@ -61,7 +62,7 @@ export class FileChangeHandler {
 	}
 
 	onDidCloseTextDocument(document: vscode.TextDocument) {
-		if (!this.isDartLike(document))
+		if (!util.isAnalyzable(document))
 		  return;
 
 		let files: { [key: string]: as.RemoveContentOverlay } = {};
@@ -80,16 +81,5 @@ export class FileChangeHandler {
 			replacement: change.text,
 			id: "" // TODO: Fix this, should be optional!
 		}
-	}
-
-	private isDartLike(document: vscode.TextDocument): boolean {
-		if (document.isUntitled || !document.fileName)
-			return false;
-
-		const analyzableLanguages = ["dart", "html"];
-		const analyzableFilenames = [".analysis_options", "analysis_options.yaml"];
-		
-		return analyzableLanguages.indexOf(document.languageId) >= 0
-			|| analyzableFilenames.indexOf(path.basename(document.fileName)) >= 0;
 	}
 }

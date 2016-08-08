@@ -3,7 +3,7 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as as from "./analysis_server_types";
-import { workspace, Position, Range } from "vscode";
+import { workspace, Position, Range, TextDocument } from "vscode";
 import { config } from "./config";
 
 export const dartVMPath = "bin/dart";
@@ -69,4 +69,19 @@ export function getDartSdkVersion(sdkRoot: string): string {
 	catch (e) {
 		return null;
 	}
+}
+
+export function isAnalyzable(document: TextDocument): boolean {
+	if (document.isUntitled || !document.fileName)
+		return false;
+
+	// asRelativePath returns the input if it's outside of the rootPath.
+	if (workspace.asRelativePath(document.fileName) == document.fileName)
+		return false;
+
+	const analyzableLanguages = ["dart", "html"];
+	const analyzableFilenames = [".analysis_options", "analysis_options.yaml"];
+
+	return analyzableLanguages.indexOf(document.languageId) >= 0
+		|| analyzableFilenames.indexOf(path.basename(document.fileName)) >= 0;
 }
