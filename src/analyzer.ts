@@ -143,3 +143,57 @@ export class Notification<T> {
 }
 
 export class UnknownNotification extends Notification<any> { }
+
+export function getSymbolKindForElementKind(kind: as.ElementKind): vscode.SymbolKind {
+	// TODO: Review if these are all mapped as well as possible.
+	switch (kind) {
+		case "CLASS":
+			return vscode.SymbolKind.Class;
+		case "CLASS_TYPE_ALIAS":
+			return vscode.SymbolKind.Class;
+		case "COMPILATION_UNIT":
+			return vscode.SymbolKind.Module;
+		case "CONSTRUCTOR":
+			return vscode.SymbolKind.Constructor;
+		case "ENUM":
+			return vscode.SymbolKind.Enum;
+		case "ENUM_CONSTANT":
+			return vscode.SymbolKind.Constant;
+		case "FIELD":
+			return vscode.SymbolKind.Field;
+		case "FILE":
+			return vscode.SymbolKind.File;
+		case "FUNCTION":
+			return vscode.SymbolKind.Function;
+		case "FUNCTION_TYPE_ALIAS":
+			return vscode.SymbolKind.Function;
+		case "GETTER":
+			return vscode.SymbolKind.Property;
+		case "LABEL":
+			return vscode.SymbolKind.Module;
+		case "LIBRARY":
+			return vscode.SymbolKind.Namespace;
+		case "LOCAL_VARIABLE":
+			return vscode.SymbolKind.Variable;
+		case "METHOD":
+			return vscode.SymbolKind.Method;
+		case "PARAMETER":
+			return vscode.SymbolKind.Variable;
+		case "PREFIX":
+			return vscode.SymbolKind.Variable;
+		case "SETTER":
+			return vscode.SymbolKind.Property;
+		case "TOP_LEVEL_VARIABLE":
+			return vscode.SymbolKind.Variable;
+		case "TYPE_PARAMETER":
+			return vscode.SymbolKind.Variable;
+		case "UNIT_TEST_GROUP":
+			return vscode.SymbolKind.Module;
+		case "UNIT_TEST_TEST":
+			return vscode.SymbolKind.Method;
+		case "UNKNOWN":
+			return vscode.SymbolKind.Object;
+		default:
+			throw new Error("Unknown kind: " + kind);
+	}
+}
