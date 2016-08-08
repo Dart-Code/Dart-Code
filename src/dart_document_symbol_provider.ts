@@ -19,8 +19,6 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 			subscriptions: { 'OUTLINE': [file] }
 		});
 
-		// TODO: Improve the presentation to make the file structure clearer?
-
 		return new Promise<SymbolInformation[]>((resolve, reject) => {
 			let disposable = this.analyzer.registerForAnalysisOutline(n => {
 				if (n.file != file)
@@ -39,11 +37,11 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 		});
 	}
 
-	private transcribeOutline(symbols: SymbolInformation[], parent, outline) {
+	private transcribeOutline(symbols: SymbolInformation[], parent: as.Element, outline: as.Outline) {
 		let element = outline.element;
 
 		let name = element.name;
-		if (element.kind == "CONSTRUCTOR" || element.kind == "METHOD" || element.kind == "FUNCTION")
+		if (element.parameters)
 			name = `${name}()`;
 
 		symbols.push({

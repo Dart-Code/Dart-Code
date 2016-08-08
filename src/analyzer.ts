@@ -158,7 +158,7 @@ export function getSymbolKindForElementKind(kind: as.ElementKind): vscode.Symbol
 		case "ENUM":
 			return vscode.SymbolKind.Enum;
 		case "ENUM_CONSTANT":
-			return vscode.SymbolKind.Constant;
+			return vscode.SymbolKind.Enum;
 		case "FIELD":
 			return vscode.SymbolKind.Field;
 		case "FILE":
