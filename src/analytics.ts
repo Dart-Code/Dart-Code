@@ -3,6 +3,7 @@
 import { env, extensions, Extension, workspace } from "vscode";
 import * as https from "https";
 import * as querystring from "querystring";
+import { config } from "./config";
 
 enum EventCategory {
     Extension,
@@ -29,6 +30,9 @@ class Analytics {
 	logShowTodosToggled(enabled: boolean) { this.log(EventCategory.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }
 
 	private log(category: EventCategory, action: EventAction) {
+		if (!config.allowAnalytics)
+			return;
+
 		let data = {
 			v: "1", // API Version.
 			tid: "UA-2201586-19",
