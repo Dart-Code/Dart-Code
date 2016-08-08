@@ -85,6 +85,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(td => dartIndentFixer.onDidChangeActiveTextEditor(td)));
 	dartIndentFixer.onDidChangeActiveTextEditor(vscode.window.activeTextEditor); // Handle already-open file.
 
+	// Handle config changes so we can reanalyze if necessary.
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(handleConfigurationChange));
 }
 
@@ -96,7 +97,7 @@ function handleConfigurationChange() {
 	if (todoSettingChanged) {
 		analytics.logShowTodosToggled(showTodos);
 		analyzer.analysisReanalyze({
-			roots: [vscode.workspace.rootPath] 
+			roots: [vscode.workspace.rootPath]
 		});
 	}
 }
