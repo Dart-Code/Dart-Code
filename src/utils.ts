@@ -75,6 +75,10 @@ export function isAnalyzable(document: TextDocument): boolean {
 	if (document.isUntitled || !document.fileName)
 		return false;
 
+	// asRelativePath returns the input if it's outside of the rootPath.
+	if (workspace.asRelativePath(document.fileName) == document.fileName)
+		return false;
+
 	const analyzableLanguages = ["dart", "html"];
 	const analyzableFilenames = [".analysis_options", "analysis_options.yaml"];
 
