@@ -4,15 +4,15 @@ import { window, StatusBarItem, Disposable } from "vscode";
 import { Analyzer } from "./analyzer";
 import { ServerStatusNotification } from "./analysis_server_types";
 
-let statusBarItem: StatusBarItem;
-let statusShowing: boolean;
-
 export class AnalyzerStatusReporter extends Disposable {
-	constructor(analyzer: Analyzer) {
-		statusBarItem = window.createStatusBarItem();
-		statusBarItem.text = 'Analyzing…';
+	private statusBarItem: StatusBarItem;
+	private statusShowing: boolean;
 
-		super(() => statusBarItem.dispose());
+	constructor(analyzer: Analyzer) {
+		super(() => this.statusBarItem.dispose());
+
+		this.statusBarItem = window.createStatusBarItem();
+		this.statusBarItem.text = "Analyzing…";
 
 		analyzer.registerForServerStatus(n => this.handleServerStatus(n));
 	}
@@ -21,16 +21,16 @@ export class AnalyzerStatusReporter extends Disposable {
 		if (!status.analysis)
 			return;
 
-		statusShowing = status.analysis.isAnalyzing;
+		this.statusShowing = status.analysis.isAnalyzing;
 
-		if (statusShowing) {
+		if (this.statusShowing) {
 			// Debounce short analysis times.
 			setTimeout(() => {
-				if (statusShowing)
-					statusBarItem.show();
+				if (this.statusShowing)
+					this.statusBarItem.show();
 			}, 250);
 		} else {
-			statusBarItem.hide();
+			this.statusBarItem.hide();
 		}
 	}
 }

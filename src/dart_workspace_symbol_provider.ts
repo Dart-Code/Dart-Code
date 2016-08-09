@@ -15,13 +15,14 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		let chars = Array.from(query);
 		// Filter out regex special chars.
 		chars = chars.filter((c) => {
-			return '[]()\\-'.indexOf(c) == -1;
-		});
+			return "[]()\\-".indexOf(c) == -1;
+    	});
 		chars = chars.map((c: string) => {
-			if (c.toUpperCase() == c.toLowerCase()) return c;
+			if (c.toUpperCase() == c.toLowerCase())
+				return c;
 			return `[${c.toUpperCase()}${c.toLowerCase()}]`;
 		});
-		let pattern = chars.join('.*');
+		let pattern = chars.join(".*");
 
 		return new Promise<SymbolInformation[]>((resolve, reject) => {
 			this.analyzer.searchFindTopLevelDeclarations({ pattern: pattern }).then(resp => {
