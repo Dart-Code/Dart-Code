@@ -41,8 +41,9 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 		let element = outline.element;
 
 		let name = element.name;
-		if (element.parameters)
-			name = `${name}()`;
+
+		if (element.parameters)		
+			name = `${name}${element.parameters}`;
 
 		symbols.push({
 			name: name,
