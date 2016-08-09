@@ -87,10 +87,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Hook open/active file changes so we can set priority files with the analyzer.
 	let openFileTracker = new OpenFileTracker(analyzer);
-	context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(td => openFileTracker.trackFile(td)));
-	context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(td => openFileTracker.untrackFile(td)));
+	context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(td => openFileTracker.updatePriorityFiles()));
+	context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(td => openFileTracker.updatePriorityFiles()));
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(e => openFileTracker.updatePriorityFiles()));
-	openFileTracker.trackFile(vscode.window.activeTextEditor.document); // Handle already-open files.
+	openFileTracker.updatePriorityFiles(); // Handle already-open files.
 
 	// Hook active editor change to reset Dart indenting.
 	let dartIndentFixer = new DartIndentFixer();
