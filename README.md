@@ -84,7 +84,7 @@ This can be disabled via the `dart.allowAnalytics` setting.
 - Open files are given higher priority for analysis operations
 - The extension no longer tries (and fails) to analyze open files that are outside of workspace folder
 
-Additionally, a new option `dart.allowAnalytics` was added to control if analytics are sent. Only very basic events are captured (such as extension activation and if you toggle certain features) and are sent along with the extention version/platform. No code, filenames, project names or personal information will be sent. Source code for all analytics is visible [here](https://github.com/DanTup/Dart-Code/blob/master/src/analytics.ts).
+Additionally, a new option `dart.allowAnalytics` was added to control if analytics are sent. Only very basic events are captured (such as extension activation and if you toggle certain features) and are sent along with the extension version/platform. No code, filenames, project names or personal information will be sent. Source code for all analytics is visible [here](https://github.com/DanTup/Dart-Code/blob/master/src/analytics.ts).
 
 ### v0.6.1 *(2016-08-07)*
 
