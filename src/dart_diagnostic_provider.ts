@@ -14,6 +14,9 @@ export class DartDiagnosticProvider {
 		this.diagnostics = diagnostics;
 
 		this.analyzer.registerForAnalysisErrors(es => this.handleErrors(es));
+
+		// Fired when files are deleted
+		this.analyzer.registerForAnalysisFlushResults(es => this.flushResults(es));
 	}
 
 	private handleErrors(notification: as.AnalysisErrorsNotification) {
@@ -46,6 +49,14 @@ export class DartDiagnosticProvider {
 				return DiagnosticSeverity.Information;
 			default:
 				throw new Error("Unknown severity type: " + severity); 
+		}
+	}
+
+	private flushResults(notification: as.AnalysisFlushResultsNotification) {		
+		if (notification.files) {
+			notification.files.forEach(file => {
+				this.diagnostics.delete(Uri.file(file));
+			});
 		}
 	}
 }
