@@ -30,7 +30,9 @@
 	"icon": "media/icon.png",
 	"activationEvents": [
 		"onLanguage:dart",
-		"workspaceContains:pubspec.yaml"
+		"workspaceContains:pubspec.yaml",
+		"onCommand:pub.get",
+		"onCommand:pub.upgrade"
 	],
 	"main": "./out/src/extension",
 	"contributes": {
@@ -53,6 +55,56 @@
 				"path": "./syntaxes/dart.json"
 			}
 		],
+		"commands": [
+			{
+				"command": "pub.get",
+				"title": "Pub Get",
+				"category": "Dart",
+				"icon": {
+					"light": "./media/pull.svg",
+					"dark": "./media/pull-inverse.svg"
+				}
+			},
+			{
+				"command": "pub.upgrade",
+				"title": "Pub Upgrade",
+				"category": "Dart",
+				"icon": {
+					"light": "./media/pull.svg",
+					"dark": "./media/pull-inverse.svg"
+				}
+			}
+		],
+		"menus": {
+			"editor/title": [
+				{
+					"when": "resourceLangId == yaml",
+					"command": "pub.get",
+					"alt": "pub.upgrade",
+					"group": "navigation"
+				}
+			],
+			"editor/context": [
+				{
+					"when": "resourceLangId == yaml",
+					"command": "pub.get"
+				},
+				{
+					"when": "resourceLangId == yaml",
+					"command": "pub.upgrade"
+				}
+			],
+			"explorer/context": [
+				{
+					"when": "resourceLangId == yaml",
+					"command": "pub.get"
+				},
+				{
+					"when": "resourceLangId == yaml",
+					"command": "pub.upgrade"
+				}
+			]
+		},
 		"configuration": {
 			"type": "object",
 			"title": "Dart Configuration",
