@@ -102,7 +102,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(handleConfigurationChange));
 
 	let pubManager = new PubManager(dartSdkRoot);
-    pubManager.registerCommands(context);
+	pubManager.registerCommands(context);
 }
 
 function handleConfigurationChange() {
