@@ -34,9 +34,7 @@ export class PubManager {
 
 		// TODO: Add a wrapper around the Dart SDK? It could do things like
 		// return the paths for tools in the bin/ dir. 
-		let pubPath = os.platform() == "win32"
-			? path.join(this.sdk, "bin", "pub.bat")
-			: path.join(this.sdk, "bin", "pub");
+		let pubPath = path.join(this.sdk, "bin", "pub");
 		channel.appendLine(`[${shortPath}] pub ${command}`);
 		let process = child_process.exec(`${pubPath} ${command}`, { "cwd": projectPath });
 		channels.runProcessInChannel(process, channel);
