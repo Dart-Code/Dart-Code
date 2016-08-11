@@ -3,6 +3,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import * as util from "./utils";
 
 export function locateBestProjectRoot(): string {
 	let root = vs.workspace.rootPath;
@@ -13,16 +14,12 @@ export function locateBestProjectRoot(): string {
 	if (!editor)
 		return root;
 
-	let file = editor.document.fileName;
-	if (editor.document.isUntitled || !file)
+	if (!util.isWithinRootPath(editor.document))
 		return root;
 
-	// Make sure the current file is under the root.
-	if (!file.startsWith(root))
-		return root;
-
-	let dir = path.dirname(file);
+	let dir = path.dirname(editor.document.fileName);
 	while (dir != root && dir.length > 1) {
+		// TODO: existsSync is deprecated. 
 		if (fs.existsSync(path.join(dir, "pubspec.yaml")))
 			return dir;
 		dir = path.dirname(dir);

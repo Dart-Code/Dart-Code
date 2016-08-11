@@ -75,8 +75,7 @@ export function isAnalyzable(document: TextDocument): boolean {
 	if (document.isUntitled || !document.fileName)
 		return false;
 
-	// asRelativePath returns the input if it's outside of the rootPath.
-	if (workspace.asRelativePath(document.fileName) == document.fileName)
+	if (!isWithinRootPath(document))
 		return false;
 
 	const analyzableLanguages = ["dart", "html"];
@@ -84,4 +83,9 @@ export function isAnalyzable(document: TextDocument): boolean {
 
 	return analyzableLanguages.indexOf(document.languageId) >= 0
 		|| analyzableFilenames.indexOf(path.basename(document.fileName)) >= 0;
+}
+
+export function isWithinRootPath(document: TextDocument) {
+	// asRelativePath returns the input if it's outside of the rootPath.
+	return workspace.asRelativePath(document.fileName) != document.fileName;
 }
