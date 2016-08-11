@@ -4,7 +4,7 @@ import * as channels from "./channels";
 import * as child_process from "child_process";
 import * as os from "os";
 import * as path from "path";
-import * as project from "./project";
+import * as project from "../project";
 import * as vs from "vscode";
 
 export class PubManager {

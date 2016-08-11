@@ -18,7 +18,7 @@ import { DartDocumentSymbolProvider } from "./dart_document_symbol_provider";
 import { DartWorkspaceSymbolProvider } from "./dart_workspace_symbol_provider";
 import { FileChangeHandler } from "./file_change_handler";
 import { OpenFileTracker } from "./open_file_tracker";
-import { PubManager } from "./pub";
+import { PubManager } from "./commands/pub";
 import { ServerStatusNotification } from "./analysis/analysis_server_types";
 
 const DART_MODE: vscode.DocumentFilter = { language: "dart", scheme: "file" };
