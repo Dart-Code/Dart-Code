@@ -31,13 +31,13 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 
 				let symbols: SymbolInformation[] = [];
 				for (let element of n.outline.children)
-					this.transcribeOutline(symbols, null, element);
+					this.transcribeOutline(document, symbols, null, element);
 				resolve(symbols);
 			});
 		});
 	}
 
-	private transcribeOutline(symbols: SymbolInformation[], parent: as.Element, outline: as.Outline) {
+	private transcribeOutline(document: TextDocument, symbols: SymbolInformation[], parent: as.Element, outline: as.Outline) {
 		let element = outline.element;
 
 		let name = element.name;
@@ -50,14 +50,26 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 			kind: getSymbolKindForElementKind(element.kind),
 			location: {
 				uri: Uri.file(element.location.file),
-				range: toRange(element.location)
+				range: this.getRange(document, outline)
 			},
 			containerName: parent == null ? null : parent.name
 		});
 
 		if (outline.children) {
 			for (let child of outline.children)
-				this.transcribeOutline(symbols, element, child);
+				this.transcribeOutline(document, symbols, element, child);
 		}
+	}
+	
+	private getRange(document: TextDocument, outline: as.Outline): Range {
+		// The outline's location includes whitespace before the block but the elements
+		// location only includes the small range declaring the element. To give the best
+		// experience to the user (perfectly highlight the range) we take the start point
+		// from the element but the end point from the outline.
+
+		let startPos = document.positionAt(outline.element.location.offset);
+		let endPos = document.positionAt(outline.offset + outline.length);
+
+		return new Range(startPos, endPos);
 	}
 }
