@@ -12,6 +12,19 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	}
 
 	provideWorkspaceSymbols(query: string, token: CancellationToken): Thenable<SymbolInformation[]> {
+		return new Promise<SymbolInformation[]>((resolve, reject) => {
+			Promise.all([
+				this.searchTopLevelSymbols(query),
+				this.searchmemberDeclerations(query)
+			]).then(results => resolve(this.combineResults(results)));
+		});
+	}
+
+	private combineResults(results: as.SearchResult[][]): SymbolInformation[] {
+		return results[0].concat(results[1]).map(r => this.convertResult(r));
+	}
+
+	private searchTopLevelSymbols(query: string): PromiseLike<as.SearchResult[]> {
 		let chars = Array.from(query);
 		// Filter out regex special chars.
 		chars = chars.filter((c) => {
@@ -24,7 +37,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		});
 		let pattern = chars.join(".*");
 
-		return new Promise<SymbolInformation[]>((resolve, reject) => {
+		return new Promise<as.SearchResult[]>((resolve, reject) => {
 			this.analyzer.searchFindTopLevelDeclarations({ pattern: pattern }).then(resp => {
 				var disposable = this.analyzer.registerForSearchResults(notification => {
 					// Skip any results that are not ours (or are not the final results).
@@ -32,7 +45,24 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 						return;
 
 					disposable.dispose();
-					resolve(notification.results.map(r => this.convertResult(r)));
+					resolve(notification.results);
+				})
+			});
+		});
+	}
+
+	private searchmemberDeclerations(query: string): PromiseLike<as.SearchResult[]> {
+		return new Promise<as.SearchResult[]>((resolve, reject) => {
+			this.analyzer.searchFindMemberDeclarations({
+				name: query
+			}).then(resp => {
+				var disposable = this.analyzer.registerForSearchResults(notification => {
+					// Skip any results that are not ours (or are not the final results).
+					if (notification.id != resp.id || !notification.isLast)
+						return;
+
+					disposable.dispose();
+					resolve(notification.results);
 				})
 			});
 		});
