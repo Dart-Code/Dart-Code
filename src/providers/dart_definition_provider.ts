@@ -21,7 +21,9 @@ export class DartDefinitionProvider implements DefinitionProvider {
 				if (resp.targets.length == 0)
 					resolve(null)
 				else
-					// TODO: Remove this filter when we know if we can support SDK files
+					// This filter is required because SDK 1.18.10 (and earlier) return 0s for SDK classes.
+					// Although this may be fixed in future, we can't rely on the user having a newer SDK so
+					// we should leave the filter in, and if their SDK supports it, it'll just start working.
 					//   See: https://groups.google.com/a/dartlang.org/forum/#!topic/analyzer-discuss/VGmyyvsfdI8
 					resolve(resp.targets.filter(t => t.startLine > 0).map(t => this.convertResult(t, resp.files[t.fileIndex])));
 			});
