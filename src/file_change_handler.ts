@@ -79,7 +79,7 @@ export class FileChangeHandler {
 			offset: document.offsetAt(change.range.start),
 			length: change.rangeLength,
 			replacement: change.text,
-			id: "" // TODO: Fix this, should be optional!
+			id: ""
 		}
 	}
 }

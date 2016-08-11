@@ -35,7 +35,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			kind: this.getKind(suggestion.kind),
 			detail: suggestion.element != null ? suggestion.element.kind : null,
 			documentation: suggestion.docSummary,
-			sortText: null, // TODO: Make it so we don't need to provide all this stuff
+			sortText: null,
 			filterText: null,
 			insertText: null,
 			textEdit: new TextEdit(
