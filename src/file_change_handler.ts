@@ -2,8 +2,8 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import { Analyzer } from "./analyzer";
-import * as as from "./analysis_server_types";
+import { Analyzer } from "./analysis/analyzer";
+import * as as from "./analysis/analysis_server_types";
 import * as util from "./utils";
 
 export class FileChangeHandler {

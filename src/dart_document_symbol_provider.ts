@@ -1,9 +1,9 @@
 "use strict";
 
 import { TextDocument, DocumentSymbolProvider, SymbolInformation, CancellationToken, SymbolKind, Location, Uri, Range, Position } from "vscode";
-import { Analyzer, getSymbolKindForElementKind } from "./analyzer";
+import { Analyzer, getSymbolKindForElementKind } from "./analysis/analyzer";
 import { toRange } from "./utils";
-import * as as from "./analysis_server_types";
+import * as as from "./analysis/analysis_server_types";
 
 export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 	private analyzer: Analyzer;

@@ -4,7 +4,7 @@ import * as path from "path";
 import * as util from "./utils";
 import * as vscode from "vscode";
 import { analytics } from "./analytics";
-import { Analyzer } from "./analyzer";
+import { Analyzer } from "./analysis/analyzer";
 import { AnalyzerStatusReporter } from "./analyzer_status_reporter";
 import { config } from "./config";
 import { DartCompletionItemProvider } from "./dart_completion_item_provider";
@@ -19,7 +19,7 @@ import { DartWorkspaceSymbolProvider } from "./dart_workspace_symbol_provider";
 import { FileChangeHandler } from "./file_change_handler";
 import { OpenFileTracker } from "./open_file_tracker";
 import { PubManager } from "./pub";
-import { ServerStatusNotification } from "./analysis_server_types";
+import { ServerStatusNotification } from "./analysis/analysis_server_types";
 
 const DART_MODE: vscode.DocumentFilter = { language: "dart", scheme: "file" };
 const stateLastKnownSdkPathName = "dart.lastKnownSdkPath";

@@ -1,8 +1,8 @@
 "use strict";
 
 import { window, StatusBarItem, Disposable } from "vscode";
-import { Analyzer } from "./analyzer";
-import { ServerStatusNotification } from "./analysis_server_types";
+import { Analyzer } from "./analysis/analyzer";
+import { ServerStatusNotification } from "./analysis/analysis_server_types";
 
 export class AnalyzerStatusReporter extends Disposable {
 	private statusBarItem: StatusBarItem;

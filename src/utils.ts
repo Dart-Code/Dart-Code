@@ -2,7 +2,7 @@
 
 import * as path from "path";
 import * as fs from "fs";
-import * as as from "./analysis_server_types";
+import * as as from "./analysis/analysis_server_types";
 import { workspace, Position, Range, TextDocument } from "vscode";
 import { config } from "./config";
 
