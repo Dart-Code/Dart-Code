@@ -8,39 +8,39 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
 ### Syntax highlighting
 
-<img src="https://github.com/DanTup/Dart-Code/raw/master/media/syntax highlighting.gif" />
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/screenshots/syntax highlighting.gif" />
 
 ### Basic code completion
 
-<img src="https://github.com/DanTup/Dart-Code/raw/master/media/code completion.gif" />
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/screenshots/code completion.gif" />
 
 ### Go to Definition
 
-<img src="https://github.com/DanTup/Dart-Code/raw/master/media/go to definition.gif" />
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/screenshots/go to definition.gif" />
 
 ### Find References
 
-<img src="https://github.com/DanTup/Dart-Code/raw/master/media/find references.gif" />
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/screenshots/find references.gif" />
 
 ### Realtime errors/warnings/hints reported in error window and with squiggles
 
-<img src="https://github.com/DanTup/Dart-Code/raw/master/media/diagnostics.gif" />
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/screenshots/diagnostics.gif" />
 
 ### Format document with custom line length
 
-<img src="https://github.com/DanTup/Dart-Code/raw/master/media/format code.gif" />
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/screenshots/format code.gif" />
 
 ### Hovers/tooltip information
 
-<img src="https://github.com/DanTup/Dart-Code/raw/master/media/tooltips.gif" />
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/screenshots/tooltips.gif" />
 
 ### Workspace-wide symbol search (`Ctrl+T`)
 
-<img src="https://github.com/DanTup/Dart-Code/raw/master/media/search.gif" />
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/screenshots/search.gif" />
 
 ### Auto-closing braces/quotes
 
-<img src="https://github.com/DanTup/Dart-Code/raw/master/media/braces.gif" />
+<img src="https://github.com/DanTup/Dart-Code/raw/master/media/screenshots/braces.gif" />
 
 ### Automatically Detects Dart SDK
 
