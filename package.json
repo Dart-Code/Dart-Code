@@ -59,8 +59,8 @@
 				"title": "Pub Get",
 				"category": "Dart",
 				"icon": {
-					"light": "./media/pull.svg",
-					"dark": "./media/pull-inverse.svg"
+					"light": "./media/commands/pull.svg",
+					"dark": "./media/commands/pull-inverse.svg"
 				}
 			},
 			{
@@ -68,8 +68,8 @@
 				"title": "Pub Upgrade",
 				"category": "Dart",
 				"icon": {
-					"light": "./media/pull.svg",
-					"dark": "./media/pull-inverse.svg"
+					"light": "./media/commands/pull.svg",
+					"dark": "./media/commands/pull-inverse.svg"
 				}
 			}
 		],
