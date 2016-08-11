@@ -52,11 +52,8 @@ export class DartDiagnosticProvider {
 		}
 	}
 
-	private flushResults(notification: as.AnalysisFlushResultsNotification) {		
-		if (notification.files) {
-			notification.files.forEach(file => {
-				this.diagnostics.delete(Uri.file(file));
-			});
-		}
+	private flushResults(notification: as.AnalysisFlushResultsNotification) {
+		let entries = notification.files.map<[Uri, Diagnostic[]]>(file => [Uri.file(file), undefined]);
+		this.diagnostics.set(entries);
 	}
 }
