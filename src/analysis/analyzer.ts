@@ -1,6 +1,6 @@
 "use strict";
 
-import * as vscode from "vscode";
+import * as vs from "vscode";
 import * as child_process from "child_process";
 import * as as from "./analysis_server_types";
 import { AnalyzerGen } from "./analyzer_gen";
@@ -40,7 +40,7 @@ export class Analyzer extends AnalyzerGen {
 		});
 
 		this.serverSetSubscriptions({
-			subscriptions: ['STATUS']
+			subscriptions: ["STATUS"]
 		});
 	}
 
@@ -104,7 +104,7 @@ export class Analyzer extends AnalyzerGen {
 		subscriptions.forEach(sub => sub(notification));
 	}
 
-	protected subscribe<T>(subscriptions: ((notification: T) => void)[], subscriber: (notification: T) => void): vscode.Disposable {
+	protected subscribe<T>(subscriptions: ((notification: T) => void)[], subscriber: (notification: T) => void): vs.Disposable {
 		subscriptions.push(subscriber);
 		return {
 			dispose: () => {
@@ -144,55 +144,55 @@ export class Notification<T> {
 
 export class UnknownNotification extends Notification<any> { }
 
-export function getSymbolKindForElementKind(kind: as.ElementKind): vscode.SymbolKind {
+export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind {
 	// TODO: Review if these are all mapped as well as possible.
 	switch (kind) {
 		case "CLASS":
-			return vscode.SymbolKind.Class;
+			return vs.SymbolKind.Class;
 		case "CLASS_TYPE_ALIAS":
-			return vscode.SymbolKind.Class;
+			return vs.SymbolKind.Class;
 		case "COMPILATION_UNIT":
-			return vscode.SymbolKind.Module;
+			return vs.SymbolKind.Module;
 		case "CONSTRUCTOR":
-			return vscode.SymbolKind.Constructor;
+			return vs.SymbolKind.Constructor;
 		case "ENUM":
-			return vscode.SymbolKind.Enum;
+			return vs.SymbolKind.Enum;
 		case "ENUM_CONSTANT":
-			return vscode.SymbolKind.Enum;
+			return vs.SymbolKind.Enum;
 		case "FIELD":
-			return vscode.SymbolKind.Field;
+			return vs.SymbolKind.Field;
 		case "FILE":
-			return vscode.SymbolKind.File;
+			return vs.SymbolKind.File;
 		case "FUNCTION":
-			return vscode.SymbolKind.Function;
+			return vs.SymbolKind.Function;
 		case "FUNCTION_TYPE_ALIAS":
-			return vscode.SymbolKind.Function;
+			return vs.SymbolKind.Function;
 		case "GETTER":
-			return vscode.SymbolKind.Property;
+			return vs.SymbolKind.Property;
 		case "LABEL":
-			return vscode.SymbolKind.Module;
+			return vs.SymbolKind.Module;
 		case "LIBRARY":
-			return vscode.SymbolKind.Namespace;
+			return vs.SymbolKind.Namespace;
 		case "LOCAL_VARIABLE":
-			return vscode.SymbolKind.Variable;
+			return vs.SymbolKind.Variable;
 		case "METHOD":
-			return vscode.SymbolKind.Method;
+			return vs.SymbolKind.Method;
 		case "PARAMETER":
-			return vscode.SymbolKind.Variable;
+			return vs.SymbolKind.Variable;
 		case "PREFIX":
-			return vscode.SymbolKind.Variable;
+			return vs.SymbolKind.Variable;
 		case "SETTER":
-			return vscode.SymbolKind.Property;
+			return vs.SymbolKind.Property;
 		case "TOP_LEVEL_VARIABLE":
-			return vscode.SymbolKind.Variable;
+			return vs.SymbolKind.Variable;
 		case "TYPE_PARAMETER":
-			return vscode.SymbolKind.Variable;
+			return vs.SymbolKind.Variable;
 		case "UNIT_TEST_GROUP":
-			return vscode.SymbolKind.Module;
+			return vs.SymbolKind.Module;
 		case "UNIT_TEST_TEST":
-			return vscode.SymbolKind.Method;
+			return vs.SymbolKind.Method;
 		case "UNKNOWN":
-			return vscode.SymbolKind.Object;
+			return vs.SymbolKind.Object;
 		default:
 			throw new Error("Unknown kind: " + kind);
 	}

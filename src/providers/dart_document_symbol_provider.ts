@@ -16,7 +16,7 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 		let file = document.fileName;
 
 		this.analyzer.analysisSetSubscriptions({
-			subscriptions: { 'OUTLINE': [file] }
+			subscriptions: { "OUTLINE": [file] }
 		});
 
 		return new Promise<SymbolInformation[]>((resolve, reject) => {
@@ -25,7 +25,7 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 					return;
 
 				this.analyzer.analysisSetSubscriptions({
-					subscriptions: { 'OUTLINE': [] }
+					subscriptions: { "OUTLINE": [] }
 				});
 				disposable.dispose();
 

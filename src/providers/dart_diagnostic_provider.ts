@@ -35,7 +35,7 @@ export class DartDiagnosticProvider {
 			message: error.message,
 			range: toRange(error.location),
 			severity: this.getSeverity(error.severity),
-			source: 'dart'
+			source: "dart"
 		};
 	}
 

@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-import * as fs from 'fs';
-import * as path from 'path';
-import * as vs from 'vscode';
+import * as fs from "fs";
+import * as path from "path";
+import * as vs from "vscode";
 
 export function locateBestProjectRoot(): string {
 	let root = vs.workspace.rootPath;
@@ -23,7 +23,7 @@ export function locateBestProjectRoot(): string {
 
 	let dir = path.dirname(file);
 	while (dir != root && dir.length > 1) {
-		if (fs.existsSync(path.join(dir, 'pubspec.yaml')))
+		if (fs.existsSync(path.join(dir, "pubspec.yaml")))
 			return dir;
 		dir = path.dirname(dir);
 	}

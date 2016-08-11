@@ -2,7 +2,7 @@
 
 import * as path from "path";
 import * as util from "./utils";
-import * as vscode from "vscode";
+import * as vs from "vscode";
 import { analytics } from "./analytics";
 import { Analyzer } from "./analysis/analyzer";
 import { AnalyzerStatusReporter } from "./analyzer_status_reporter";
@@ -21,7 +21,7 @@ import { OpenFileTracker } from "./open_file_tracker";
 import { PubManager } from "./commands/pub";
 import { ServerStatusNotification } from "./analysis/analysis_server_types";
 
-const DART_MODE: vscode.DocumentFilter = { language: "dart", scheme: "file" };
+const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
 const stateLastKnownSdkPathName = "dart.lastKnownSdkPath";
 
 let dartSdkRoot: string;
@@ -29,13 +29,13 @@ let analyzer: Analyzer;
 
 let showTodos: boolean = config.showTodos;
 
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: vs.ExtensionContext) {
 	console.log("Dart Code activated!");
 	analytics.logActivation();
 
 	dartSdkRoot = util.findDartSdk(<string>context.globalState.get(stateLastKnownSdkPathName));
 	if (dartSdkRoot == null) {
-		vscode.window.showErrorMessage("Could not find a Dart SDK to use. " +
+		vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
 			"Please add it to your PATH or configure the 'dart.sdkPath' setting and reload.");
 		return; // Don't set anything else up; we can't work like this!
 	}
@@ -44,7 +44,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Show the SDK version in the status bar.
 	let sdkVersion = util.getDartSdkVersion(dartSdkRoot);
 	if (sdkVersion) {
-		let versionStatusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE);
+		let versionStatusItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, Number.MIN_VALUE);
 		versionStatusItem.text = sdkVersion;
 		versionStatusItem.tooltip = "Dart SDK Version";
 		versionStatusItem.show();
@@ -56,24 +56,24 @@ export function activate(context: vscode.ExtensionContext) {
 	// TODO: Check if EventEmitter<T> would be more appropriate than our own.
 
 	// Set up providers.
-	context.subscriptions.push(vscode.languages.registerHoverProvider(DART_MODE, new DartHoverProvider(analyzer)));
-	context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(DART_MODE, new DartFormattingEditProvider(analyzer)));
-	context.subscriptions.push(vscode.languages.registerCompletionItemProvider(DART_MODE, new DartCompletionItemProvider(analyzer), "."));
-	context.subscriptions.push(vscode.languages.registerDefinitionProvider(DART_MODE, new DartDefinitionProvider(analyzer)));
-	context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider(DART_MODE, new DartDocumentSymbolProvider(analyzer)));
-	context.subscriptions.push(vscode.languages.registerReferenceProvider(DART_MODE, new DartReferenceProvider(analyzer)));
-	context.subscriptions.push(vscode.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
+	context.subscriptions.push(vs.languages.registerHoverProvider(DART_MODE, new DartHoverProvider(analyzer)));
+	context.subscriptions.push(vs.languages.registerDocumentFormattingEditProvider(DART_MODE, new DartFormattingEditProvider(analyzer)));
+	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new DartCompletionItemProvider(analyzer), "."));
+	context.subscriptions.push(vs.languages.registerDefinitionProvider(DART_MODE, new DartDefinitionProvider(analyzer)));
+	context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(DART_MODE, new DartDocumentSymbolProvider(analyzer)));
+	context.subscriptions.push(vs.languages.registerReferenceProvider(DART_MODE, new DartReferenceProvider(analyzer)));
+	context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
 	context.subscriptions.push(new AnalyzerStatusReporter(analyzer));
 
 	// Set up diagnostics.
-	let diagnostics = vscode.languages.createDiagnosticCollection("dart");
+	let diagnostics = vs.languages.createDiagnosticCollection("dart");
 	context.subscriptions.push(diagnostics);
 	let diagnosticsProvider = new DartDiagnosticProvider(analyzer, diagnostics);
 
 	// Set the root...
-	if (vscode.workspace.rootPath) {
+	if (vs.workspace.rootPath) {
 		analyzer.analysisSetAnalysisRoots({
-			included: [vscode.workspace.rootPath],
+			included: [vs.workspace.rootPath],
 			excluded: [],
 			packageRoots: null
 		});
@@ -81,25 +81,25 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Hook editor changes to send updated contents to analyzer.
 	let fileChangeHandler = new FileChangeHandler(analyzer);
-	context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(td => fileChangeHandler.onDidOpenTextDocument(td)));
-	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => fileChangeHandler.onDidChangeTextDocument(e)));
-	context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(td => fileChangeHandler.onDidCloseTextDocument(td)));
-	vscode.workspace.textDocuments.forEach(td => fileChangeHandler.onDidOpenTextDocument(td)); // Handle already-open files.
+	context.subscriptions.push(vs.workspace.onDidOpenTextDocument(td => fileChangeHandler.onDidOpenTextDocument(td)));
+	context.subscriptions.push(vs.workspace.onDidChangeTextDocument(e => fileChangeHandler.onDidChangeTextDocument(e)));
+	context.subscriptions.push(vs.workspace.onDidCloseTextDocument(td => fileChangeHandler.onDidCloseTextDocument(td)));
+	vs.workspace.textDocuments.forEach(td => fileChangeHandler.onDidOpenTextDocument(td)); // Handle already-open files.
 
 	// Hook open/active file changes so we can set priority files with the analyzer.
 	let openFileTracker = new OpenFileTracker(analyzer);
-	context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(td => openFileTracker.updatePriorityFiles()));
-	context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(td => openFileTracker.updatePriorityFiles()));
-	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(e => openFileTracker.updatePriorityFiles()));
+	context.subscriptions.push(vs.workspace.onDidOpenTextDocument(td => openFileTracker.updatePriorityFiles()));
+	context.subscriptions.push(vs.workspace.onDidCloseTextDocument(td => openFileTracker.updatePriorityFiles()));
+	context.subscriptions.push(vs.window.onDidChangeActiveTextEditor(e => openFileTracker.updatePriorityFiles()));
 	openFileTracker.updatePriorityFiles(); // Handle already-open files.
 
 	// Hook active editor change to reset Dart indenting.
 	let dartIndentFixer = new DartIndentFixer();
-	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(td => dartIndentFixer.onDidChangeActiveTextEditor(td)));
-	dartIndentFixer.onDidChangeActiveTextEditor(vscode.window.activeTextEditor); // Handle already-open file.
+	context.subscriptions.push(vs.window.onDidChangeActiveTextEditor(td => dartIndentFixer.onDidChangeActiveTextEditor(td)));
+	dartIndentFixer.onDidChangeActiveTextEditor(vs.window.activeTextEditor); // Handle already-open file.
 
 	// Handle config changes so we can reanalyze if necessary.
-	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(handleConfigurationChange));
+	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(handleConfigurationChange));
 
 	let pubManager = new PubManager(dartSdkRoot);
 	pubManager.registerCommands(context);
@@ -113,7 +113,7 @@ function handleConfigurationChange() {
 	if (todoSettingChanged) {
 		analytics.logShowTodosToggled(showTodos);
 		analyzer.analysisReanalyze({
-			roots: [vscode.workspace.rootPath]
+			roots: [vs.workspace.rootPath]
 		});
 	}
 }

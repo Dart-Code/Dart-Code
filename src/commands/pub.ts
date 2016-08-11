@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import * as channels from "./channels";
 import * as child_process from "child_process";
@@ -29,7 +29,7 @@ export class PubManager {
 			? path.dirname(selection.fsPath)
 			: project.locateBestProjectRoot();
 		let shortPath = path.join(path.basename(root), path.relative(root, projectPath));
-		let channel = channels.getCreateChannel("Pub");
+		let channel = channels.createChannel("Pub");
 		channel.show(true);
 
 		// TODO: Add a wrapper around the Dart SDK? It could do things like

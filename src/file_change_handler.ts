@@ -1,6 +1,6 @@
 "use strict";
 
-import * as vscode from "vscode";
+import * as vs from "vscode";
 import * as path from "path";
 import { Analyzer } from "./analysis/analyzer";
 import * as as from "./analysis/analysis_server_types";
@@ -12,7 +12,7 @@ export class FileChangeHandler {
 		this.analyzer = analyzer;
 	}
 
-	onDidOpenTextDocument(document: vscode.TextDocument) {
+	onDidOpenTextDocument(document: vs.TextDocument) {
 		if (!util.isAnalyzable(document))
 		  return;
 
@@ -26,7 +26,7 @@ export class FileChangeHandler {
 		this.analyzer.analysisUpdateContent({ files: files });
 	}
 
-	onDidChangeTextDocument(e: vscode.TextDocumentChangeEvent) {
+	onDidChangeTextDocument(e: vs.TextDocumentChangeEvent) {
 		if (!util.isAnalyzable(e.document))
 		  return;
 
@@ -61,7 +61,7 @@ export class FileChangeHandler {
 		}
 	}
 
-	onDidCloseTextDocument(document: vscode.TextDocument) {
+	onDidCloseTextDocument(document: vs.TextDocument) {
 		if (!util.isAnalyzable(document))
 		  return;
 
@@ -74,7 +74,7 @@ export class FileChangeHandler {
 		this.analyzer.analysisUpdateContent({ files: files });
 	}
 
-	private convertChange(document: vscode.TextDocument, change: vscode.TextDocumentContentChangeEvent): as.SourceEdit {
+	private convertChange(document: vs.TextDocument, change: vs.TextDocumentContentChangeEvent): as.SourceEdit {
 		return {
 			offset: document.offsetAt(change.range.start),
 			length: change.rangeLength,
