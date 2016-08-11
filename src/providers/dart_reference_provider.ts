@@ -1,6 +1,9 @@
 "use strict";
 
-import { ReferenceProvider, ReferenceContext, TextDocument, Location, Uri, Position, CancellationToken, CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range } from "vscode";
+import {
+	ReferenceProvider, ReferenceContext, TextDocument, Location, Uri, Position, CancellationToken,
+	CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range
+} from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
 import * as util from "../utils";
@@ -24,7 +27,7 @@ export class DartReferenceProvider implements ReferenceProvider {
 						return;
 
 					disposable.dispose();
-					resolve(notification.results.map(r => this.convertResult(r)));					
+					resolve(notification.results.map(r => this.convertResult(r)));
 				});
 			});
 		});

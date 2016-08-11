@@ -1,6 +1,9 @@
 "use strict";
 
-import { DefinitionProvider, Definition, TextDocument, Location, Uri, Position, CancellationToken, CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range } from "vscode";
+import {
+	DefinitionProvider, Definition, TextDocument, Location, Uri, Position, CancellationToken,
+	CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range
+} from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
 import * as util from "../utils";
