@@ -1,10 +1,10 @@
 "use strict";
 
-import { Analyzer } from "./analysis/analyzer";
+import { Analyzer } from "../analysis/analyzer";
 import { DiagnosticCollection, Diagnostic, DiagnosticSeverity, Uri, Range, Position } from "vscode";
-import { toRange } from "./utils";
-import { config } from "./config";
-import * as as from "./analysis/analysis_server_types";
+import { toRange } from "../utils";
+import { config } from "../config";
+import * as as from "../analysis/analysis_server_types";
 
 export class DartDiagnosticProvider {
 	private analyzer: Analyzer;

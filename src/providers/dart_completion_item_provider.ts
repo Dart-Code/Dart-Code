@@ -1,8 +1,8 @@
 "use strict";
 
 import { TextDocument, Position, CancellationToken, CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range } from "vscode";
-import { Analyzer } from "./analysis/analyzer";
-import * as as from "./analysis/analysis_server_types";
+import { Analyzer } from "../analysis/analyzer";
+import * as as from "../analysis/analysis_server_types";
 
 export class DartCompletionItemProvider implements CompletionItemProvider {
 	private analyzer: Analyzer;

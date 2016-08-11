@@ -1,9 +1,9 @@
 "use strict";
 
 import { WorkspaceSymbolProvider, SymbolInformation, CancellationToken, SymbolKind, Location, Uri, Range, Position } from "vscode";
-import { Analyzer, getSymbolKindForElementKind } from "./analysis/analyzer";
-import { toRange } from "./utils";
-import * as as from "./analysis/analysis_server_types";
+import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
+import { toRange } from "../utils";
+import * as as from "../analysis/analysis_server_types";
 
 export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	private analyzer: Analyzer;
