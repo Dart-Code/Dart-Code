@@ -18,6 +18,7 @@ import { DartDocumentSymbolProvider } from "./dart_document_symbol_provider";
 import { DartWorkspaceSymbolProvider } from "./dart_workspace_symbol_provider";
 import { FileChangeHandler } from "./file_change_handler";
 import { OpenFileTracker } from "./open_file_tracker";
+import { PubManager } from "./pub";
 import { ServerStatusNotification } from "./analysis_server_types";
 
 const DART_MODE: vscode.DocumentFilter = { language: "dart", scheme: "file" };
@@ -99,6 +100,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Handle config changes so we can reanalyze if necessary.
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(handleConfigurationChange));
+
+	let pubManager = new PubManager(dartSdkRoot);
+	pubManager.registerCommands(context);
 }
 
 function handleConfigurationChange() {
