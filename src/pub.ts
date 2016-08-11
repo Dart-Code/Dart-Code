@@ -23,10 +23,10 @@ export class PubManager {
 		}));
 	}
 
-	private runPub(command: String, selection?) {
+	private runPub(command: String, selection?: vs.Uri) {
 		let root = vs.workspace.rootPath;
 		let projectPath = selection
-			? path.dirname(selection.path)
+			? path.dirname(selection.fsPath)
 			: project.locateBestProjectRoot();
 		let shortPath = path.join(path.basename(root), path.relative(root, projectPath));
 		let channel = channels.getCreateChannel("Pub");
