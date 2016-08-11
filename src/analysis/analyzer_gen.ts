@@ -94,7 +94,7 @@ export abstract class AnalyzerGen {
 	It is not possible to subscribe to or unsubscribe from this
 	notification.
 	*/
-	registerForServerConnected(subscriber: (notification: as.ServerConnectedNotification) => void) : vs.Disposable {
+	registerForServerConnected(subscriber: (notification: as.ServerConnectedNotification) => void): vs.Disposable {
 		return this.subscribe(this.serverConnectedSubscriptions, subscriber);
 	}
 
@@ -108,7 +108,7 @@ export abstract class AnalyzerGen {
 	It is not possible to subscribe to or unsubscribe from this
 	notification.
 	*/
-	registerForServerError(subscriber: (notification: as.ServerErrorNotification) => void) : vs.Disposable {
+	registerForServerError(subscriber: (notification: as.ServerErrorNotification) => void): vs.Disposable {
 		return this.subscribe(this.serverErrorSubscriptions, subscriber);
 	}
 
@@ -121,7 +121,7 @@ export abstract class AnalyzerGen {
 	the list of services passed in a server.setSubscriptions
 	request.
 	*/
-	registerForServerStatus(subscriber: (notification: as.ServerStatusNotification) => void) : vs.Disposable {
+	registerForServerStatus(subscriber: (notification: as.ServerStatusNotification) => void): vs.Disposable {
 		return this.subscribe(this.serverStatusSubscriptions, subscriber);
 	}
 
@@ -131,7 +131,7 @@ export abstract class AnalyzerGen {
 	subscribe by including the value "ANALYZED_FILES" in the list
 	of services passed in an analysis.setGeneralSubscriptions request.
 	*/
-	registerForAnalysisAnalyzedFiles(subscriber: (notification: as.AnalysisAnalyzedFilesNotification) => void) : vs.Disposable {
+	registerForAnalysisAnalyzedFiles(subscriber: (notification: as.AnalysisAnalyzedFilesNotification) => void): vs.Disposable {
 		return this.subscribe(this.analysisAnalyzedFilesSubscriptions, subscriber);
 	}
 
@@ -142,7 +142,7 @@ export abstract class AnalyzerGen {
 	It is only possible to unsubscribe from this notification by
 	using the command-line flag --no-error-notification.
 	*/
-	registerForAnalysisErrors(subscriber: (notification: as.AnalysisErrorsNotification) => void) : vs.Disposable {
+	registerForAnalysisErrors(subscriber: (notification: as.AnalysisErrorsNotification) => void): vs.Disposable {
 		return this.subscribe(this.analysisErrorsSubscriptions, subscriber);
 	}
 
@@ -159,7 +159,7 @@ export abstract class AnalyzerGen {
 	It is not possible to subscribe to or unsubscribe from this
 	notification.
 	*/
-	registerForAnalysisFlushResults(subscriber: (notification: as.AnalysisFlushResultsNotification) => void) : vs.Disposable {
+	registerForAnalysisFlushResults(subscriber: (notification: as.AnalysisFlushResultsNotification) => void): vs.Disposable {
 		return this.subscribe(this.analysisFlushResultsSubscriptions, subscriber);
 	}
 
@@ -174,7 +174,7 @@ export abstract class AnalyzerGen {
 	the list of services passed in an analysis.setSubscriptions
 	request.
 	*/
-	registerForAnalysisFolding(subscriber: (notification: as.AnalysisFoldingNotification) => void) : vs.Disposable {
+	registerForAnalysisFolding(subscriber: (notification: as.AnalysisFoldingNotification) => void): vs.Disposable {
 		return this.subscribe(this.analysisFoldingSubscriptions, subscriber);
 	}
 
@@ -185,7 +185,7 @@ export abstract class AnalyzerGen {
 	in the list of services passed in an
 	analysis.setSubscriptions request.
 	*/
-	registerForAnalysisHighlights(subscriber: (notification: as.AnalysisHighlightsNotification) => void) : vs.Disposable {
+	registerForAnalysisHighlights(subscriber: (notification: as.AnalysisHighlightsNotification) => void): vs.Disposable {
 		return this.subscribe(this.analysisHighlightsSubscriptions, subscriber);
 	}
 
@@ -197,7 +197,7 @@ export abstract class AnalyzerGen {
 	the list of services passed in an analysis.setSubscriptions
 	request.
 	*/
-	registerForAnalysisImplemented(subscriber: (notification: as.AnalysisImplementedNotification) => void) : vs.Disposable {
+	registerForAnalysisImplemented(subscriber: (notification: as.AnalysisImplementedNotification) => void): vs.Disposable {
 		return this.subscribe(this.analysisImplementedSubscriptions, subscriber);
 	}
 
@@ -208,7 +208,7 @@ export abstract class AnalyzerGen {
 	subscribe by including the value "INVALIDATE" in the list of
 	services passed in an analysis.setSubscriptions request.
 	*/
-	registerForAnalysisInvalidate(subscriber: (notification: as.AnalysisInvalidateNotification) => void) : vs.Disposable {
+	registerForAnalysisInvalidate(subscriber: (notification: as.AnalysisInvalidateNotification) => void): vs.Disposable {
 		return this.subscribe(this.analysisInvalidateSubscriptions, subscriber);
 	}
 
@@ -219,7 +219,7 @@ export abstract class AnalyzerGen {
 	in the list of services passed in an
 	analysis.setSubscriptions request.
 	*/
-	registerForAnalysisNavigation(subscriber: (notification: as.AnalysisNavigationNotification) => void) : vs.Disposable {
+	registerForAnalysisNavigation(subscriber: (notification: as.AnalysisNavigationNotification) => void): vs.Disposable {
 		return this.subscribe(this.analysisNavigationSubscriptions, subscriber);
 	}
 
@@ -231,7 +231,7 @@ export abstract class AnalyzerGen {
 	in the list of services passed in an
 	analysis.setSubscriptions request.
 	*/
-	registerForAnalysisOccurrences(subscriber: (notification: as.AnalysisOccurrencesNotification) => void) : vs.Disposable {
+	registerForAnalysisOccurrences(subscriber: (notification: as.AnalysisOccurrencesNotification) => void): vs.Disposable {
 		return this.subscribe(this.analysisOccurrencesSubscriptions, subscriber);
 	}
 
@@ -242,7 +242,7 @@ export abstract class AnalyzerGen {
 	the list of services passed in an analysis.setSubscriptions
 	request.
 	*/
-	registerForAnalysisOutline(subscriber: (notification: as.AnalysisOutlineNotification) => void) : vs.Disposable {
+	registerForAnalysisOutline(subscriber: (notification: as.AnalysisOutlineNotification) => void): vs.Disposable {
 		return this.subscribe(this.analysisOutlineSubscriptions, subscriber);
 	}
 
@@ -253,7 +253,7 @@ export abstract class AnalyzerGen {
 	the list of services passed in an analysis.setSubscriptions
 	request.
 	*/
-	registerForAnalysisOverrides(subscriber: (notification: as.AnalysisOverridesNotification) => void) : vs.Disposable {
+	registerForAnalysisOverrides(subscriber: (notification: as.AnalysisOverridesNotification) => void): vs.Disposable {
 		return this.subscribe(this.analysisOverridesSubscriptions, subscriber);
 	}
 
@@ -263,7 +263,7 @@ export abstract class AnalyzerGen {
 	notification is always a complete list that supersedes any
 	previously reported suggestions.
 	*/
-	registerForCompletionResults(subscriber: (notification: as.CompletionResultsNotification) => void) : vs.Disposable {
+	registerForCompletionResults(subscriber: (notification: as.CompletionResultsNotification) => void): vs.Disposable {
 		return this.subscribe(this.completionResultsSubscriptions, subscriber);
 	}
 
@@ -274,7 +274,7 @@ export abstract class AnalyzerGen {
 	previously received search results associated with the same
 	search id.
 	*/
-	registerForSearchResults(subscriber: (notification: as.SearchResultsNotification) => void) : vs.Disposable {
+	registerForSearchResults(subscriber: (notification: as.SearchResultsNotification) => void): vs.Disposable {
 		return this.subscribe(this.searchResultsSubscriptions, subscriber);
 	}
 
@@ -284,7 +284,7 @@ export abstract class AnalyzerGen {
 	subscribe by including the value "LAUNCH_DATA" in the list of services
 	passed in an execution.setSubscriptions request.
 	*/
-	registerForExecutionLaunchData(subscriber: (notification: as.ExecutionLaunchDataNotification) => void) : vs.Disposable {
+	registerForExecutionLaunchData(subscriber: (notification: as.ExecutionLaunchDataNotification) => void): vs.Disposable {
 		return this.subscribe(this.executionLaunchDataSubscriptions, subscriber);
 	}
 
