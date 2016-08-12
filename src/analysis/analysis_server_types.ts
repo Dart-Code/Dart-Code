@@ -537,7 +537,7 @@ export class AnalysisUpdateContentRequest {
 	A table mapping the files whose content has changed to a
 	description of the content change.
 	*/
-	files: { [key: string]: AddContentOverlay|ChangeContentOverlay|RemoveContentOverlay; }
+	files: { [key: string]: AddContentOverlay | ChangeContentOverlay | RemoveContentOverlay; }
 }
 
 /**

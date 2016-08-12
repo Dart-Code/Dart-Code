@@ -1,7 +1,7 @@
 "use strict";
 
 import { window, workspace, TextDocument } from "vscode";
-import { Analyzer } from "./analyzer";
+import { Analyzer } from "./analysis/analyzer";
 import * as util from "./utils";
 
 export class OpenFileTracker {
@@ -19,6 +19,6 @@ export class OpenFileTracker {
 
 		this.analyzer.analysisSetPriorityFiles({
 			files: priorityFiles
-		})
+		}).then(() => {}, e => console.warn(e.message));
 	}
 }

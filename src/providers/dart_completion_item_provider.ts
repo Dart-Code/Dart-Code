@@ -1,8 +1,8 @@
 "use strict";
 
 import { TextDocument, Position, CancellationToken, CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range } from "vscode";
-import { Analyzer } from "./analyzer";
-import * as as from "./analysis_server_types";
+import { Analyzer } from "../analysis/analyzer";
+import * as as from "../analysis/analysis_server_types";
 
 export class DartCompletionItemProvider implements CompletionItemProvider {
 	private analyzer: Analyzer;
@@ -35,7 +35,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			kind: this.getKind(suggestion.kind),
 			detail: suggestion.element != null ? suggestion.element.kind : null,
 			documentation: suggestion.docSummary,
-			sortText: null, // TODO: Make it so we don't need to provide all this stuff
+			sortText: null,
 			filterText: null,
 			insertText: null,
 			textEdit: new TextEdit(

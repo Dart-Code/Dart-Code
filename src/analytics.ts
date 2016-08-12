@@ -20,7 +20,7 @@ class Analytics {
 	private version: string;
 	private isDevelopment: boolean;
 	constructor() {
-		let packageJson = require('../../package.json');
+		let packageJson = require("../../package.json");
         this.version = packageJson.version;
 		this.isDevelopment = this.version.endsWith("-dev") || env.machineId == "someValue.machineId";
 	}
