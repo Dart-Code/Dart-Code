@@ -64,7 +64,7 @@ export function toRange(location: Location): Range {
 
 export function getDartSdkVersion(sdkRoot: string): string {
 	try {
-		return fs.readFileSync(path.join(sdkRoot, "version"), "utf8");
+		return fs.readFileSync(path.join(sdkRoot, "version"), "utf8").trim();
 	}
 	catch (e) {
 		return null;
