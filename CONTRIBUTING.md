@@ -1,5 +1,8 @@
 # Contributing to Dart Code
 
+[![Build Status](https://travis-ci.org/Dart-Code/Dart-Code.svg?branch=master)](https://travis-ci.org/Dart-Code/Dart-Code)
+[![Build status](https://ci.appveyor.com/api/projects/status/github/Dart-Code/Dart-Code)](https://ci.appveyor.com/api/projects/status/github/Dart-Code/Dart-Code)
+
 ## Issues
 
 [Create an issue](https://github.com/Dart-Code/Dart-Code/issues/new) for bugs, questions, suggestions or other feedback. Please try to keep one issue per item. All feedback is appreciated! Please try to include as much information as possible and a screenshot if appropriate.
