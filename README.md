@@ -92,7 +92,7 @@ This can be disabled via the `dart.allowAnalytics` setting.
 
 Additionally, some non-features:
 
-- Dart-Code now builds continiously on Jenkins (Mac OSX + Linux) and AppVeyor (Windows)
+- Dart-Code now builds continiously on Travis (Mac OSX + Linux) and AppVeyor (Windows)
 - Analaytics now include Dart SDK and Analysis Server version numbers to help us understand what features we can use and/or drop support for 
 
 ### v0.6.2 *(2016-08-08)*
