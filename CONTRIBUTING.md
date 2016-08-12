@@ -1,7 +1,7 @@
 # Contributing to Dart Code
 
-[![Build Status](https://travis-ci.org/Dart-Code/Dart-Code.svg?branch=master)](https://travis-ci.org/Dart-Code/Dart-Code)
-[![Build status](https://ci.appveyor.com/api/projects/status/github/Dart-Code/Dart-Code)](https://ci.appveyor.com/api/projects/status/github/Dart-Code/Dart-Code)
+[![Linux & Mac build status](https://travis-ci.org/Dart-Code/Dart-Code.svg?branch=master)](https://travis-ci.org/Dart-Code/Dart-Code)
+[![Windows build status](https://ci.appveyor.com/api/projects/status/github/Dart-Code/Dart-Code?svg=true)](https://ci.appveyor.com/api/projects/status/github/Dart-Code/Dart-Code)
 
 ## Issues
 
