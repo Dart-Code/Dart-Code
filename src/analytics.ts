@@ -50,8 +50,6 @@ class Analytics {
 			cd4: this.analysisServerVersion,
 		};
 
-		console.log(`Logging ${data.cd3}, ${data.cd4}`);
-
 		const options: https.RequestOptions = {
 			hostname: "www.google-analytics.com",
 			port: 443,
