@@ -13,8 +13,7 @@ before_install:
 
 install:
   - npm install
-  - npm run vscode:prepublish
 
 script:
-  - node ./node_modules/typescript/bin/tsc
+  - npm run vscode:prepublish
   - npm test --silent
