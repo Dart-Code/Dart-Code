@@ -10,12 +10,12 @@
 	},
 	"license": "SEE LICENSE IN LICENSE",
 	"bugs": {
-		"url": "https://github.com/DanTup/Dart-Code/issues"
+		"url": "https://github.com/Dart-Code/Dart-Code/issues"
 	},
-	"homepage": "https://github.com/DanTup/Dart-Code/blob/master/README.md",
+	"homepage": "https://github.com/Dart-Code/Dart-Code/blob/master/README.md",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/DanTup/Dart-Code.git"
+		"url": "https://github.com/Dart-Code/Dart-Code.git"
 	},
 	"categories": [
 		"Languages",

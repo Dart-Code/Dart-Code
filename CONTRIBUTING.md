@@ -2,11 +2,11 @@
 
 ## Issues
 
-[Create an issue](https://github.com/DanTup/Dart-Code/issues/new) for bugs, questions, suggestions or other feedback. Please try to keep one issue per item. All feedback is appreciated! Please try to include as much information as possible and a screenshot if appropriate.
+[Create an issue](https://github.com/Dart-Code/Dart-Code/issues/new) for bugs, questions, suggestions or other feedback. Please try to keep one issue per item. All feedback is appreciated! Please try to include as much information as possible and a screenshot if appropriate.
 
 ## Code
 
-If you're going to work on an issue, please add a comment to the issue so others know it's being looked at. If there isn't an issue for the work you want to do, please create one. The [up-for-grabs](https://github.com/DanTup/Dart-Code/labels/up-for-grabs) issues might make good starting points for new contributors.
+If you're going to work on an issue, please add a comment to the issue so others know it's being looked at. If there isn't an issue for the work you want to do, please create one. The [up-for-grabs](https://github.com/Dart-Code/Dart-Code/labels/up-for-grabs) issues might make good starting points for new contributors.
 
 - If you end up with a large number of commits for tidying up/fixing, consider squashing
 - Try to keep the bulk of work out of `extension.ts` by creating new files/classes but do keep the wire-up code in `extension.ts` as a central place to know what's set up
