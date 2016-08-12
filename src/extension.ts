@@ -32,8 +32,7 @@ let showTodos: boolean = config.showTodos;
 
 export function activate(context: vs.ExtensionContext) {
 	console.log("Dart Code activated!");
-	analytics.logActivation();
-
+	
 	dartSdkRoot = util.findDartSdk(<string>context.globalState.get(stateLastKnownSdkPathName));
 	if (dartSdkRoot == null) {
 		vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
@@ -52,7 +51,15 @@ export function activate(context: vs.ExtensionContext) {
 		context.subscriptions.push(versionStatusItem);
 	}
 
+	// Fire up the analyzer process.
 	analyzer = new Analyzer(path.join(dartSdkRoot, util.dartVMPath), path.join(dartSdkRoot, util.analyzerPath));
+
+	// Send an activation event once we get the analysis server version back.
+	analytics.sdkVersion = sdkVersion;
+	let connectedEvents = analyzer.registerForServerConnected(sc => {
+		analytics.analysisServerVersion = sc.version;
+		analytics.logActivation();
+	});
 
 	// TODO: Check if EventEmitter<T> would be more appropriate than our own.
 

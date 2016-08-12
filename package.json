@@ -129,7 +129,7 @@
 				"dart.allowAnalytics": {
 					"type": "boolean",
 					"default": true,
-					"description": "Note: We only send a few very basic events and the extension version number/platform :-)"
+					"description": "Note: We only send a few very basic events and the platform and extension/Dart version numbers :-)"
 				}
 			}
 		}

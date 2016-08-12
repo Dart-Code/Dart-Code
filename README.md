@@ -56,7 +56,7 @@ The Dart SDK must be available on your machine and added to your `PATH` or set i
 - `dart.lineLength`: The maximum length of a line of code. This is used by the document formatter. Defaults to 80.
 - `dart.setIndentation`: Forces indenting with two spaces when Dart files are opened. This is on by default because VS Code doesn't support per-language settings and most people use tabs/4 spaces for other languages. Defaults to true.
 - `dart.showTodos`: Whether to show TODOs in the Problems list. Defaults to true.
-- `dart.allowAnalytics`: Note: We only send a few very basic events and the extension version number/platform :-)
+- `dart.allowAnalytics`: Note: We only send a few very basic events and the platform and extension/Dart version numbers :-)
 
 ## Known Issues
 
@@ -72,7 +72,7 @@ This extension reports some very basic events to help inform development decisio
 - When the extension is loaded
 - When you enabled/disable some features (eg. showTodos)
 
-Included in the event is your platform (Win/Linux/Mac) and the extensions version number.
+Included in the event is your platform (Win/Linux/Mac) and extension/Dart version numbers.
 
 This can be disabled via the `dart.allowAnalytics` setting.  
 

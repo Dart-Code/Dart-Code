@@ -17,12 +17,14 @@ enum EventAction {
 }
 
 class Analytics {
-	private version: string;
+	private extensionVersion: string;
 	private isDevelopment: boolean;
+	sdkVersion: string;
+	analysisServerVersion: string;	
 	constructor() {
 		let packageJson = require("../../package.json");
-        this.version = packageJson.version;
-		this.isDevelopment = this.version.endsWith("-dev") || env.machineId == "someValue.machineId";
+        this.extensionVersion = packageJson.version;
+		this.isDevelopment = this.extensionVersion.endsWith("-dev") || env.machineId == "someValue.machineId";
 	}
 
 	logActivation() { this.log(EventCategory.Extension, EventAction.Activated); }
@@ -38,13 +40,17 @@ class Analytics {
 			cid: env.machineId,
 			ul: env.language,
 			an: "Dart Code",
-			av: this.version,
+			av: this.extensionVersion,
 			t: "event",
 			ec: EventCategory[category],
 			ea: EventAction[action],
 			cd1: this.isDevelopment,
 			cd2: process.platform,
+			cd3: this.sdkVersion,
+			cd4: this.analysisServerVersion,
 		};
+
+		console.log(`Logging ${data.cd3}, ${data.cd4}`);
 
 		const options: https.RequestOptions = {
 			hostname: "www.google-analytics.com",
