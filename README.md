@@ -38,9 +38,13 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
 <img src="https://github.com/Dart-Code/Dart-Code/raw/master/media/screenshots/search.gif" />
 
-### Auto-closing braces/quotes
+### Additionally: 
 
-<img src="https://github.com/Dart-Code/Dart-Code/raw/master/media/screenshots/braces.gif" />
+- Auto-closing braces/quotes
+- Document symbol list/search with highlighting
+- `pub get` and `pub upgrade` commands
+- Other symbol references to current symbol are highlighted
+
 
 ### Automatically Detects Dart SDK
 
@@ -77,6 +81,19 @@ Included in the event is your platform (Win/Linux/Mac) and extension/Dart versio
 This can be disabled via the `dart.allowAnalytics` setting.  
 
 ## Release Notes
+
+### v0.7.0 *(2016-08-12)*
+
+- Workspace symbol search (`Ctrl+T`) now includes more symbols from your workspace including imported packages
+- Document symbol list/search has been implemented (`Ctrl+Shift+O`)
+- Document highlights have been implemented (selected a symbol will highlight other instances)
+- Commands for `pub get` and `pub ugprade` have been added
+- Errors and warnings from files that are deleted when not open will no longer hang around in the problems view
+
+Additionally, some non-features:
+
+- Dart-Code now builds continiously on Jenkins (Mac OSX + Linux) and AppVeyor (Windows)
+- Analaytics now include Dart SDK and Analysis Server version numbers to help us understand what features we can use and/or drop support for 
 
 ### v0.6.2 *(2016-08-08)*
 
