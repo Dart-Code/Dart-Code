@@ -87,5 +87,9 @@ export function isAnalyzable(document: TextDocument): boolean {
 
 export function isWithinRootPath(document: TextDocument) {
 	// asRelativePath returns the input if it's outside of the rootPath.
-	return workspace.asRelativePath(document.fileName) != document.fileName;
+	// Edit: Doesn't actually work properly:
+	//   https://github.com/Microsoft/vscode/issues/10446
+	//return workspace.asRelativePath(document.fileName) != document.fileName;
+
+	return workspace.rootPath != null && document.fileName.startsWith(workspace.rootPath + path.sep); 
 }
