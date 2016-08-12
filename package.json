@@ -142,7 +142,7 @@
 					"dart"
 				]
 			},
-			"program": "./out/src/debug_entry.js",
+			"program": "./out/src/debug/debug_entry.js",
 			"runtime": "node",
 			"configurationAttributes": {
 				"launch": {
