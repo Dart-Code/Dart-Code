@@ -1,5 +1,5 @@
 build_script:
-- cmd: >-
-    npm install
-    npm run vscode:prepublish
-    npm test --silent
+- cmd:
+    - npm install
+    - npm run vscode:prepublish
+    - npm test --silent
