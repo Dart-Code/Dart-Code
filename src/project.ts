@@ -12,7 +12,7 @@ export function locateBestProjectRoot(): string {
 
 	let editor = vs.window.activeTextEditor;
 	if (!editor)
-		return rootBrokenStill;
+		return root;
 
 	if (!util.isWithinRootPath(editor.document))
 		return root;
