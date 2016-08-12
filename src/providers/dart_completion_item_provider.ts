@@ -16,7 +16,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				file: document.fileName,
 				offset: document.offsetAt(position)
 			}).then(resp => {
-				var disposable = this.analyzer.registerForCompletionResults(notification => {
+				let disposable = this.analyzer.registerForCompletionResults(notification => {
 					// Skip any results that are not ours (or are not the final results).
 					if (notification.id != resp.id || !notification.isLast)
 						return;

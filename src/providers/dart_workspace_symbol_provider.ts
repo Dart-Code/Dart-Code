@@ -39,7 +39,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 
 		return new Promise<as.SearchResult[]>((resolve, reject) => {
 			this.analyzer.searchFindTopLevelDeclarations({ pattern: pattern }).then(resp => {
-				var disposable = this.analyzer.registerForSearchResults(notification => {
+				let disposable = this.analyzer.registerForSearchResults(notification => {
 					// Skip any results that are not ours (or are not the final results).
 					if (notification.id != resp.id || !notification.isLast)
 						return;
@@ -56,7 +56,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 			this.analyzer.searchFindMemberDeclarations({
 				name: query
 			}).then(resp => {
-				var disposable = this.analyzer.registerForSearchResults(notification => {
+				let disposable = this.analyzer.registerForSearchResults(notification => {
 					// Skip any results that are not ours (or are not the final results).
 					if (notification.id != resp.id || !notification.isLast)
 						return;

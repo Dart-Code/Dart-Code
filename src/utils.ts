@@ -9,7 +9,7 @@ import { config } from "./config";
 export const dartVMPath = "bin/dart";
 export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
 
-var isWin = /^win/.test(process.platform);
+let isWin = /^win/.test(process.platform);
 let dartExecutableName = isWin ? "dart.exe" : "dart";
 
 export function findDartSdk(lastKnownPath: string): string {

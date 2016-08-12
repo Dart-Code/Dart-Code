@@ -21,7 +21,7 @@ export class DartReferenceProvider implements ReferenceProvider {
 				offset: document.offsetAt(position),
 				includePotential: true
 			}).then(resp => {
-				var disposable = this.analyzer.registerForSearchResults(notification => {
+				let disposable = this.analyzer.registerForSearchResults(notification => {
 					// Skip any results that are not ours (or are not the final results).
 					if (notification.id != resp.id || !notification.isLast)
 						return;
