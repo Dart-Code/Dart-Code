@@ -19,7 +19,8 @@
 	},
 	"categories": [
 		"Languages",
-		"Linters"
+		"Linters",
+		"Debuggers"
 	],
 	"keywords": [
 		"dart",
@@ -141,13 +142,59 @@
 					"description": "Note: We only send a few very basic events and the platform and extension/Dart version numbers :-)"
 				}
 			}
+		},
+		"debuggers": [{
+			"type": "dart-cli",
+			"label": "Dart command line",
+			"program": "./out/src/debug/debug_entry.js",
+			"runtime": "node",
+			"configurationAttributes": {
+				"launch": {
+					"required": [
+						"cwd",
+						"program"
+					],
+					"properties": {
+						"cwd": {
+							"type": "string",
+							"description": "Workspace root."
+						},
+						"program": {
+							"type": "string",
+							"description": "Path to a Dart file.",
+							"default": "${workspaceRoot}/bin/main.dart"
+						},
+						"args": {
+							"type": "array",
+							"description": "Command line arguments to the application.",
+							"items": {
+								"type": "string"
+							}
+						}
+					}
+				}
+			},
+			"initialConfigurations": [
+				{
+					"name": "Dart command line",
+					"type": "dart-cli",
+					"request": "launch",
+					"cwd": "${workspaceRoot}",
+					"program": "${workspaceRoot}/bin/main.dart",
+					"args": []
+				}
+			]
 		}
-	},
+	]},
 	"scripts": {
 		"vscode:prepublish": "node ./node_modules/vscode/bin/compile",
 		"compile": "node ./node_modules/vscode/bin/compile -watch -p ./",
 		"test": "node ./node_modules/vscode/bin/test",
 		"postinstall": "node ./node_modules/vscode/bin/install"
+	},
+	"dependencies": {
+		"vscode-debugadapter": "^1.11.0",
+		"vscode-debugprotocol": "^1.11.0"
 	},
 	"devDependencies": {
 		"typescript": "^1.8.5",
