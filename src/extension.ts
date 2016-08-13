@@ -76,7 +76,7 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(new AnalyzerStatusReporter(analyzer));
 
 	// Set up commands for Dart editors.
-	new DartCommands(context, analyzer);
+	context.subscriptions.push(new DartCommands(context, analyzer));
 
 	// Set up diagnostics.
 	let diagnostics = vs.languages.createDiagnosticCollection("dart");
