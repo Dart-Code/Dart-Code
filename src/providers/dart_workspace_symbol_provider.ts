@@ -2,7 +2,7 @@
 
 import { WorkspaceSymbolProvider, SymbolInformation, CancellationToken, SymbolKind, Location, Uri, Range, Position } from "vscode";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
-import { toRange } from "../utils";
+import { toRange, isWithinRootPath } from "../utils";
 import * as as from "../analysis/analysis_server_types";
 
 export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
@@ -21,7 +21,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	}
 
 	private combineResults(results: as.SearchResult[][]): SymbolInformation[] {
-		return results[0].concat(results[1]).map(r => this.convertResult(r));
+		return results[0].concat(results[1]).filter(r => this.shouldIncludeResult(r)).map(r => this.convertResult(r));
 	}
 
 	private searchTopLevelSymbols(query: string): PromiseLike<as.SearchResult[]> {
@@ -66,6 +66,13 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 				})
 			});
 		});
+	}
+
+	private shouldIncludeResult(result: as.SearchResult): boolean {
+		// Must be either:
+		//   1. Public (not start with an underscore).
+		//   2. In our project.
+		return !result.path[0].name.startsWith("_") || isWithinRootPath(result.location.file);
 	}
 
 	private convertResult(result: as.SearchResult): SymbolInformation {
