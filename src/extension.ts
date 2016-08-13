@@ -12,6 +12,7 @@ import { DartDefinitionProvider } from "./providers/dart_definition_provider";
 import { DartReferenceProvider } from "./providers/dart_reference_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
 import { DartFormattingEditProvider } from "./providers/dart_formatting_edit_provider";
+import { DartDocumentHighlightProvider } from "./providers/dart_highlighting_provider";
 import { DartHoverProvider } from "./providers/dart_hover_provider";
 import { DartIndentFixer } from "./dart_indent_fixer";
 import { DartDocumentSymbolProvider } from "./providers/dart_document_symbol_provider";
@@ -31,8 +32,7 @@ let showTodos: boolean = config.showTodos;
 
 export function activate(context: vs.ExtensionContext) {
 	console.log("Dart Code activated!");
-	analytics.logActivation();
-
+	
 	dartSdkRoot = util.findDartSdk(<string>context.globalState.get(stateLastKnownSdkPathName));
 	if (dartSdkRoot == null) {
 		vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
@@ -51,7 +51,15 @@ export function activate(context: vs.ExtensionContext) {
 		context.subscriptions.push(versionStatusItem);
 	}
 
+	// Fire up the analyzer process.
 	analyzer = new Analyzer(path.join(dartSdkRoot, util.dartVMPath), path.join(dartSdkRoot, util.analyzerPath));
+
+	// Send an activation event once we get the analysis server version back.
+	analytics.sdkVersion = sdkVersion;
+	let connectedEvents = analyzer.registerForServerConnected(sc => {
+		analytics.analysisServerVersion = sc.version;
+		analytics.logActivation();
+	});
 
 	// TODO: Check if EventEmitter<T> would be more appropriate than our own.
 
@@ -63,6 +71,7 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(DART_MODE, new DartDocumentSymbolProvider(analyzer)));
 	context.subscriptions.push(vs.languages.registerReferenceProvider(DART_MODE, new DartReferenceProvider(analyzer)));
 	context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
+	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(DART_MODE, new DartDocumentHighlightProvider(analyzer)));
 	context.subscriptions.push(new AnalyzerStatusReporter(analyzer));
 
 	// Set up diagnostics.

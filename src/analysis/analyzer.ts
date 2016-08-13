@@ -108,7 +108,7 @@ export class Analyzer extends AnalyzerGen {
 		subscriptions.push(subscriber);
 		return {
 			dispose: () => {
-				var index = subscriptions.indexOf(subscriber);
+				let index = subscriptions.indexOf(subscriber);
 				if (index >= 0) {
 					subscriptions.splice(index, 1);
 				}

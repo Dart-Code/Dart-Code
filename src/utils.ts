@@ -9,7 +9,7 @@ import { config } from "./config";
 export const dartVMPath = "bin/dart";
 export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
 
-var isWin = /^win/.test(process.platform);
+let isWin = /^win/.test(process.platform);
 let dartExecutableName = isWin ? "dart.exe" : "dart";
 
 export function findDartSdk(lastKnownPath: string): string {
@@ -64,7 +64,7 @@ export function toRange(location: Location): Range {
 
 export function getDartSdkVersion(sdkRoot: string): string {
 	try {
-		return fs.readFileSync(path.join(sdkRoot, "version"), "utf8");
+		return fs.readFileSync(path.join(sdkRoot, "version"), "utf8").trim();
 	}
 	catch (e) {
 		return null;
@@ -87,5 +87,9 @@ export function isAnalyzable(document: TextDocument): boolean {
 
 export function isWithinRootPath(document: TextDocument) {
 	// asRelativePath returns the input if it's outside of the rootPath.
-	return workspace.asRelativePath(document.fileName) != document.fileName;
+	// Edit: Doesn't actually work properly:
+	//   https://github.com/Microsoft/vscode/issues/10446
+	//return workspace.asRelativePath(document.fileName) != document.fileName;
+
+	return workspace.rootPath != null && document.fileName.startsWith(workspace.rootPath + path.sep); 
 }

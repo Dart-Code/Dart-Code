@@ -1,6 +1,9 @@
 "use strict";
 
-import { ReferenceProvider, ReferenceContext, TextDocument, Location, Uri, Position, CancellationToken, CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range } from "vscode";
+import {
+	ReferenceProvider, ReferenceContext, TextDocument, Location, Uri, Position, CancellationToken,
+	CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range
+} from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
 import * as util from "../utils";
@@ -18,13 +21,13 @@ export class DartReferenceProvider implements ReferenceProvider {
 				offset: document.offsetAt(position),
 				includePotential: true
 			}).then(resp => {
-				var disposable = this.analyzer.registerForSearchResults(notification => {
+				let disposable = this.analyzer.registerForSearchResults(notification => {
 					// Skip any results that are not ours (or are not the final results).
 					if (notification.id != resp.id || !notification.isLast)
 						return;
 
 					disposable.dispose();
-					resolve(notification.results.map(r => this.convertResult(r)));					
+					resolve(notification.results.map(r => this.convertResult(r)));
 				});
 			});
 		});

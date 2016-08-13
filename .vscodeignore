@@ -6,5 +6,9 @@ test/**
 src/**
 **/*.map
 .gitignore
+.gitattributes
 tsconfig.json
 media/screenshots/**
+.travis.yml
+appveyor.yml
+CONTRIBUTING.md

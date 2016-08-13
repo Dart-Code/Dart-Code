@@ -1,6 +1,9 @@
 "use strict";
 
-import { TextDocument, DocumentSymbolProvider, SymbolInformation, CancellationToken, SymbolKind, Location, Uri, Range, Position } from "vscode";
+import {
+	TextDocument, DocumentSymbolProvider, SymbolInformation, CancellationToken, SymbolKind,
+	Location, Uri, Range, Position
+} from "vscode";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { toRange } from "../utils";
 import * as as from "../analysis/analysis_server_types";
@@ -14,19 +17,14 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 
 	provideDocumentSymbols(document: TextDocument, token: CancellationToken): Thenable<SymbolInformation[]> {
 		let file = document.fileName;
-
-		this.analyzer.analysisSetSubscriptions({
-			subscriptions: { "OUTLINE": [file] }
-		});
+		this.analyzer.analysisSetSubscriptions({ subscriptions: { "OUTLINE": [file] } });
 
 		return new Promise<SymbolInformation[]>((resolve, reject) => {
 			let disposable = this.analyzer.registerForAnalysisOutline(n => {
 				if (n.file != file)
 					return;
 
-				this.analyzer.analysisSetSubscriptions({
-					subscriptions: { "OUTLINE": [] }
-				});
+				this.analyzer.analysisSetSubscriptions({ subscriptions: { "OUTLINE": [] } });
 				disposable.dispose();
 
 				let symbols: SymbolInformation[] = [];
@@ -60,7 +58,7 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 				this.transcribeOutline(document, symbols, element, child);
 		}
 	}
-	
+
 	private getRange(document: TextDocument, outline: as.Outline): Range {
 		// The outline's location includes whitespace before the block but the elements
 		// location only includes the small range declaring the element. To give the best
