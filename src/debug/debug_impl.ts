@@ -23,9 +23,6 @@ export class DartDebugSession extends DebugSession {
 
 	public constructor() {
 		super();
-
-		this.setDebuggerLinesStartAt1(false);
-		this.setDebuggerColumnsStartAt1(false);
 	}
 
 	protected initializeRequest(
@@ -34,11 +31,11 @@ export class DartDebugSession extends DebugSession {
 	): void {
 		response.body = {
 			supportsConfigurationDoneRequest: true,
-			supportsEvaluateForHovers: true,
-			exceptionBreakpointFilters: [
-				{ filter: "All", label: "All Exceptions", default: false },
-				{ filter: "Unhandled", label: "Uncaught Exceptions", default: true }
-			]
+			// supportsEvaluateForHovers: true,
+			// exceptionBreakpointFilters: [
+			// 	{ filter: "All", label: "All Exceptions", default: false },
+			// 	{ filter: "Unhandled", label: "Uncaught Exceptions", default: true }
+			// ]
 		};
 		this.sendResponse(response);
 	}
@@ -176,7 +173,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected customRequest(request: string, response: DebugProtocol.Response, args: any): void {
-		this._log("[customRequest]");
+		this.log("[customRequest]");
 
 		switch (request) {
 			default:
@@ -191,7 +188,7 @@ export class DartDebugSession extends DebugSession {
 		this.sendResponse(response);
 	}
 
-	_log(obj) {
+	private log(obj) {
 		this.sendEvent(new OutputEvent(`${obj}\n`));
 	}
 }

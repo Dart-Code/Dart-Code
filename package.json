@@ -137,11 +137,6 @@
 		"debuggers": [{
 			"type": "dart-cli",
 			"label": "Dart command line",
-			"enableBreakpointsFor": {
-				"languageIds": [
-					"dart"
-				]
-			},
 			"program": "./out/src/debug/debug_entry.js",
 			"runtime": "node",
 			"configurationAttributes": {
