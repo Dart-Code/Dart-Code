@@ -29,6 +29,11 @@ export class DartDocumentHighlightProvider implements DocumentHighlightProvider 
 				disposable.dispose();
 
 				let highlights: DocumentHighlight[] = [];
+				
+				// The analysis server returns all items in the file that can have occurances, and
+				// for each item, all the occurances of it in the file. We loop through each item
+				// seeing if there's a match for the current cursor position. If there is, we create
+				// highlights for those occurances, short circuit the search, and return the results.
 				for (let occurrence of n.occurrences) {
 					this.buildOccurrences(highlights, document, offset, occurrence);
 					if (highlights.length > 0) {
@@ -51,7 +56,9 @@ export class DartDocumentHighlightProvider implements DocumentHighlightProvider 
 		for (let i = 0; i < offsets.length; i++) {
 			let offset = offsets[i];
 
+			// Look for a match in any of the occurance ranges.
 			if ((offset <= position) && (position < (offset + length))) {
+				// If we get a match, then create highlights for all the items in the matching occurance.
 				for (let i = 0; i < offsets.length; i++) {
 					let offset = offsets[i];
 					let range = new Range(
