@@ -7,6 +7,7 @@ import { analytics } from "./analytics";
 import { Analyzer } from "./analysis/analyzer";
 import { AnalyzerStatusReporter } from "./analyzer_status_reporter";
 import { config } from "./config";
+import { DartCommands } from "./providers/dart_commands";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
 import { DartDefinitionProvider } from "./providers/dart_definition_provider";
 import { DartReferenceProvider } from "./providers/dart_reference_provider";
@@ -73,6 +74,9 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
 	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(DART_MODE, new DartDocumentHighlightProvider(analyzer)));
 	context.subscriptions.push(new AnalyzerStatusReporter(analyzer));
+
+	// Set up commands for Dart editors.
+	context.subscriptions.push(new DartCommands(context, analyzer));
 
 	// Set up diagnostics.
 	let diagnostics = vs.languages.createDiagnosticCollection("dart");

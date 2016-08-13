@@ -62,8 +62,7 @@
 					"light": "./media/commands/pull.svg",
 					"dark": "./media/commands/pull-inverse.svg"
 				}
-			},
-			{
+			}, {
 				"command": "pub.upgrade",
 				"title": "Pub Upgrade",
 				"category": "Dart",
@@ -71,8 +70,18 @@
 					"light": "./media/commands/pull.svg",
 					"dark": "./media/commands/pull-inverse.svg"
 				}
+			}, {
+				"command": "dart.organizeDirectives",
+				"title": "Organize Directives",
+				"category": "Dart"
 			}
 		],
+		"keybindings": [{
+			"command": "dart.organizeDirectives",
+			"key": "ctrl+alt+o",
+			"mac": "cmd+alt+o",
+			"when": "editorLangId == dart"
+		}],
 		"menus": {
 			"editor/title": [
 				{
