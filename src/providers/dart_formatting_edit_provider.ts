@@ -23,7 +23,7 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 					resolve(null);
 				else
 					resolve(resp.edits.map(e => this.convertData(document, e)));
-			});
+			}, e => console.warn(e.message));
 		});
 	}
 
