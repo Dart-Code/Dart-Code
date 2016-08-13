@@ -2,7 +2,8 @@
 
 import { window, StatusBarItem, Disposable } from "vscode";
 import { Analyzer } from "./analysis/analyzer";
-import { ServerStatusNotification } from "./analysis/analysis_server_types";
+import { ServerStatusNotification, ServerErrorNotification } from "./analysis/analysis_server_types";
+import { config } from "./config";
 
 export class AnalyzerStatusReporter extends Disposable {
 	private statusBarItem: StatusBarItem;
@@ -15,6 +16,7 @@ export class AnalyzerStatusReporter extends Disposable {
 		this.statusBarItem.text = "Analyzing…";
 
 		analyzer.registerForServerStatus(n => this.handleServerStatus(n));
+		analyzer.registerForServerError(e => this.handleServerError(e));
 	}
 
 	private handleServerStatus(status: ServerStatusNotification) {
@@ -32,5 +34,13 @@ export class AnalyzerStatusReporter extends Disposable {
 		} else {
 			this.statusBarItem.hide();
 		}
+	}
+
+	private handleServerError(error: ServerErrorNotification) {
+		console.warn(error.message);
+		if (error.stackTrace)
+			console.warn(error.stackTrace);
+		if (config.analyzerDiagnosticsPort)
+			window.showErrorMessage(error.message);
 	}
 }
