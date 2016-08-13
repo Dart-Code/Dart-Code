@@ -14,7 +14,7 @@ export function locateBestProjectRoot(): string {
 	if (!editor)
 		return root;
 
-	if (!util.isWithinRootPath(editor.document))
+	if (!util.isWithinRootPath(editor.document.fileName))
 		return root;
 
 	let dir = path.dirname(editor.document.fileName);
