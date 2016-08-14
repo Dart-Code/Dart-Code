@@ -28,13 +28,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	}
 
 	private searchTopLevelSymbols(query: string): PromiseLike<as.SearchResult[]> {
-		let chars = Array.from(query);
-		chars = chars.map((c: string) => {
-			if (c.toUpperCase() == c.toLowerCase())
-				return c;
-			return `[${c.toUpperCase()}${c.toLowerCase()}]`;
-		});
-		let pattern = chars.join(".*");
+		let pattern = this.makeCaseInsensitiveFuzzyRegex(query);
 
 		return new Promise<as.SearchResult[]>((resolve, reject) => {
 			this.analyzer.searchFindTopLevelDeclarations({ pattern: pattern }).then(resp => {
@@ -52,8 +46,11 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 
 	private searchmemberDeclerations(query: string): PromiseLike<as.SearchResult[]> {
 		return new Promise<as.SearchResult[]>((resolve, reject) => {
+			// TODO: Change this if the regex "support" gets fixed.
+			let pattern = this.makeCaseInsensitiveFuzzyRegex(query);
+
 			this.analyzer.searchFindMemberDeclarations({
-				name: query
+				name: pattern
 			}).then(resp => {
 				let disposable = this.analyzer.registerForSearchResults(notification => {
 					// Skip any results that are not ours (or are not the final results).
@@ -76,6 +73,17 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 			return "[](){}\\|./<>?+".indexOf(c) == -1;
 		});
 		return chars.join("");
+	}
+
+	private makeCaseInsensitiveFuzzyRegex(query: string): string {
+		let chars = Array.from(query);
+		chars = chars.map((c: string) => {
+			if (c.toUpperCase() == c.toLowerCase())
+				return c;
+			return `[${c.toUpperCase()}${c.toLowerCase()}]`;
+		});
+		let pattern = chars.join(".*");
+		return `.*${pattern}.*`;
 	}
 
 	private shouldIncludeResult(result: as.SearchResult): boolean {
