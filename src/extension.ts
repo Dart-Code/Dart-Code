@@ -32,7 +32,7 @@ let analyzer: Analyzer;
 let showTodos: boolean = config.showTodos;
 
 export function activate(context: vs.ExtensionContext) {
-	console.log("Dart Code activated!");
+	util.log("Dart Code activated!");
 	
 	dartSdkRoot = util.findDartSdk(<string>context.globalState.get(stateLastKnownSdkPathName));
 	if (dartSdkRoot == null) {
@@ -134,5 +134,5 @@ function handleConfigurationChange() {
 export function deactivate() {
 	analyzer.stop();
 
-	console.log("Dart Code deactivated!");
+	util.log("Dart Code deactivated!");
 }

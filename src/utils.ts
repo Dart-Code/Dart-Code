@@ -93,3 +93,8 @@ export function isWithinRootPath(file: string) {
 
 	return workspace.rootPath != null && file.startsWith(workspace.rootPath + path.sep); 
 }
+
+export function log(message: any): void {
+	if (config.verbose)
+		console.log(message);
+}

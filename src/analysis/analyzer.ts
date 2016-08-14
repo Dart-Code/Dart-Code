@@ -3,19 +3,22 @@
 import * as vs from "vscode";
 import * as child_process from "child_process";
 import * as as from "./analysis_server_types";
+import * as fs from "fs";
 import { AnalyzerGen } from "./analyzer_gen";
 import { config } from "../config";
+import { log } from "../utils";
 
 export class Analyzer extends AnalyzerGen {
 	private analyzerProcess: child_process.ChildProcess;
 	private nextRequestID = 1;
 	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void] } = {};
 	private messageBuffer: string[] = [];
+	private logStream: fs.WriteStream;
 
 	constructor(dartVMPath: string, analyzerPath: string) {
 		super();
 
-		console.log(`Starting Dart analysis server...`);
+		log(`Starting Dart analysis server...`);
 
 		let args = [analyzerPath];
 
@@ -28,8 +31,6 @@ export class Analyzer extends AnalyzerGen {
 
 		this.analyzerProcess.stdout.on("data", (data: Buffer) => {
 			let message = data.toString();
-			if (config.verbose && message.trim().length != 0)
-				console.log(`<== ${message}`);
 
 			// Add this message to the buffer for processing.
 			this.messageBuffer.push(message);
@@ -61,6 +62,7 @@ export class Analyzer extends AnalyzerGen {
 	}
 
 	private handleMessage(message: string) {
+		this.logTraffic(`<== ${message}\n`);
 		let msg = JSON.parse(message);
 		if (msg.event)
 			this.handleNotification(<UnknownNotification>msg);
@@ -69,11 +71,26 @@ export class Analyzer extends AnalyzerGen {
 	}
 
 	private sendMessage<T>(req: Request<T>) {
-		let json = JSON.stringify(req);
-		if (config.verbose)
-			console.log(`==> ${json}`);
+		let json = JSON.stringify(req) + "\n";
+		this.logTraffic(`==> ${json}`);
 		this.analyzerProcess.stdin.write(json);
-		this.analyzerProcess.stdin.write("\n");
+	}
+
+	private logTraffic(message: String): void {
+		const max: number = 2000;
+
+		if (config.analyzerLogFile) {
+			if (!this.logStream)
+				this.logStream = fs.createWriteStream(config.analyzerLogFile);
+			if (message.length > max)
+				this.logStream.write(message.substring(0, max) + "...\n");
+			else
+				this.logStream.write(message);
+		} else if (!config.analyzerLogFile && this.logStream) {
+			// Turn off logging.
+			this.logStream.close();
+			this.logStream = null;
+		}
 	}
 
 	private handleResponse(evt: UnknownResponse) {
@@ -117,9 +134,14 @@ export class Analyzer extends AnalyzerGen {
 	}
 
 	stop() {
-		console.log(`Stopping Dart analysis server...`);
+		log(`Stopping Dart analysis server...`);
 
 		this.analyzerProcess.kill();
+
+		if (this.logStream) {
+			this.logStream.close();
+			this.logStream = null;
+		}
 	}
 }
 

@@ -4,6 +4,7 @@ import { env, extensions, Extension, workspace } from "vscode";
 import * as https from "https";
 import * as querystring from "querystring";
 import { config } from "./config";
+import { log } from "./utils";
 
 enum EventCategory {
     Extension,
@@ -62,7 +63,7 @@ class Analytics {
 
 		let req = https.request(options, resp => {
 			if (resp.statusCode < 200 || resp.statusCode > 300) {
-				console.log(`Failed to send analytics ${resp.statusCode}: ${resp.statusMessage}`);
+				log(`Failed to send analytics ${resp.statusCode}: ${resp.statusMessage}`);
 			}
 		});
 		req.write(querystring.stringify(data));
