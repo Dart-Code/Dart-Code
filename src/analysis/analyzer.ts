@@ -137,6 +137,11 @@ export class Analyzer extends AnalyzerGen {
 		log(`Stopping Dart analysis server...`);
 
 		this.analyzerProcess.kill();
+
+		if (this.logStream) {
+			this.logStream.close();
+			this.logStream = null;
+		}
 	}
 }
 

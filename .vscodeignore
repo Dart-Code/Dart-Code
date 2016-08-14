@@ -10,5 +10,6 @@ src/**
 tsconfig.json
 media/screenshots/**
 .travis.yml
+analyzer.log
 appveyor.yml
 CONTRIBUTING.md
