@@ -31,7 +31,7 @@ export class DartHoverProvider implements HoverProvider {
 						resolve(null);
 					}
 				}
-			});
+			}, e => { console.warn(e.message); reject(); });
 		});
 	}
 

@@ -24,7 +24,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 					disposable.dispose();
 					resolve(new CompletionList(notification.results.map(r => this.convertResult(document, notification, r))));
 				})
-			});
+			}, e => { console.warn(e.message); reject(); });
 		});
 	}
 

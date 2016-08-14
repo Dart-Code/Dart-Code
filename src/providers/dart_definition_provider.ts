@@ -29,7 +29,7 @@ export class DartDefinitionProvider implements DefinitionProvider {
 					// we should leave the filter in, and if their SDK supports it, it'll just start working.
 					//   See: https://groups.google.com/a/dartlang.org/forum/#!topic/analyzer-discuss/VGmyyvsfdI8
 					resolve(resp.targets.filter(t => t.startLine > 0).map(t => this.convertResult(t, resp.files[t.fileIndex])));
-			});
+			}, e => { console.warn(e.message); reject(); });
 		});
 	}
 

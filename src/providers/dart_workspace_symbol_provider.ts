@@ -17,7 +17,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 			Promise.all([
 				this.searchTopLevelSymbols(query),
 				this.searchmemberDeclerations(query)
-			]).then(results => resolve(this.combineResults(results)));
+			]).then(results => resolve(this.combineResults(results)), e => { console.warn(e.message); reject(); });
 		});
 	}
 
@@ -44,7 +44,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 					disposable.dispose();
 					resolve(notification.results);
 				})
-			});
+			}, e => { console.warn(e.message); reject(); });
 		});
 	}
 
@@ -61,7 +61,8 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 					disposable.dispose();
 					resolve(notification.results);
 				})
-			});
+			}, e => { console.warn(e.message); reject(); });
+		});
 	}
 
 	private sanitizeUserQuery(query: string): string {
