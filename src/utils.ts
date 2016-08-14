@@ -103,6 +103,5 @@ function checkIsDevelopment() {
 }
 
 export function log(message: any): void {
-	if (config.verbose)
-		console.log(message);
+	console.log(message);
 }

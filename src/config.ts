@@ -24,7 +24,6 @@ class Config {
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
 	get analyzerDiagnosticsPort() { return this.getConfig<number>("analyzerDiagnosticsPort"); }
 	get analyzerLogFile() { return this.getConfig<string>("analyzerLogFile"); }
-	get verbose() { return this.getConfig<boolean>("verbose"); }
 	get allowAnalytics() { return this.getConfig<boolean>("allowAnalytics"); }
 }
 
