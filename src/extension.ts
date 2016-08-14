@@ -22,6 +22,7 @@ import { FileChangeHandler } from "./file_change_handler";
 import { OpenFileTracker } from "./open_file_tracker";
 import { PubManager } from "./commands/pub";
 import { ServerStatusNotification } from "./analysis/analysis_server_types";
+import * as debug from "./debug/sdk_path"
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
 const stateLastKnownSdkPathName = "dart.lastKnownSdkPath";
@@ -41,6 +42,7 @@ export function activate(context: vs.ExtensionContext) {
 		return; // Don't set anything else up; we can't work like this!
 	}
 	context.globalState.update(stateLastKnownSdkPathName, dartSdkRoot);
+	debug.writeSdkPath(dartSdkRoot); // Write the SDK path for the debugger to find.
 
 	// Show the SDK version in the status bar.
 	let sdkVersion = util.getDartSdkVersion(dartSdkRoot);
