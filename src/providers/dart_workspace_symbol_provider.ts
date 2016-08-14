@@ -12,6 +12,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	}
 
 	provideWorkspaceSymbols(query: string, token: CancellationToken): Thenable<SymbolInformation[]> {
+		query = this.sanitizeUserQuery(query);
 		return new Promise<SymbolInformation[]>((resolve, reject) => {
 			Promise.all([
 				this.searchTopLevelSymbols(query),
@@ -26,10 +27,6 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 
 	private searchTopLevelSymbols(query: string): PromiseLike<as.SearchResult[]> {
 		let chars = Array.from(query);
-		// Filter out regex special chars.
-		chars = chars.filter((c) => {
-			return "[]()\\-".indexOf(c) == -1;
-    	});
 		chars = chars.map((c: string) => {
 			if (c.toUpperCase() == c.toLowerCase())
 				return c;
@@ -65,7 +62,17 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 					resolve(notification.results);
 				})
 			});
+	}
+
+	private sanitizeUserQuery(query: string): string {
+		let chars = Array.from(query);
+		// Filter out special chars that will break regex.
+		// searchFindTopLevelDeclarations supports regex, but we build the pattern with the output of this.
+		// searchmemberDeclerations is not intended to support regex but does.
+		chars = chars.filter((c) => {
+			return "[](){}\\|./<>?+".indexOf(c) == -1;
 		});
+		return chars.join("");
 	}
 
 	private shouldIncludeResult(result: as.SearchResult): boolean {
