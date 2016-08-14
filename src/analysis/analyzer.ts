@@ -8,7 +8,7 @@ import { AnalyzerGen } from "./analyzer_gen";
 import { config } from "../config";
 import { log } from "../utils";
 
-export class Analyzer extends AnalyzerGen {
+export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	private analyzerProcess: child_process.ChildProcess;
 	private nextRequestID = 1;
 	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void] } = {};
@@ -133,7 +133,7 @@ export class Analyzer extends AnalyzerGen {
 		};
 	}
 
-	stop() {
+	dispose() {
 		log(`Stopping Dart analysis server...`);
 
 		this.analyzerProcess.kill();

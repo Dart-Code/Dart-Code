@@ -56,6 +56,7 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Fire up the analyzer process.
 	analyzer = new Analyzer(path.join(dartSdkRoot, util.dartVMPath), path.join(dartSdkRoot, util.analyzerPath));
+	context.subscriptions.push(analyzer);
 
 	// Send an activation event once we get the analysis server version back.
 	analytics.sdkVersion = sdkVersion;
@@ -134,7 +135,4 @@ function handleConfigurationChange() {
 }
 
 export function deactivate() {
-	analyzer.stop();
-
-	util.log("Dart Code deactivated!");
 }
