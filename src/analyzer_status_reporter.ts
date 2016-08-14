@@ -4,6 +4,7 @@ import { window, StatusBarItem, Disposable } from "vscode";
 import { Analyzer } from "./analysis/analyzer";
 import { ServerStatusNotification, ServerErrorNotification } from "./analysis/analysis_server_types";
 import { config } from "./config";
+import { isDevelopment } from "./utils";
 
 export class AnalyzerStatusReporter extends Disposable {
 	private statusBarItem: StatusBarItem;
@@ -40,7 +41,7 @@ export class AnalyzerStatusReporter extends Disposable {
 		console.warn(error.message);
 		if (error.stackTrace)
 			console.warn(error.stackTrace);
-		if (config.analyzerDiagnosticsPort)
+		if (isDevelopment)
 			window.showErrorMessage(error.message);
 	}
 }
