@@ -4,7 +4,7 @@ import { env, extensions, Extension, workspace } from "vscode";
 import * as https from "https";
 import * as querystring from "querystring";
 import { config } from "./config";
-import { log } from "./utils";
+import { log, isDevelopment } from "./utils";
 
 enum EventCategory {
     Extension,
@@ -19,14 +19,8 @@ enum EventAction {
 
 class Analytics {
 	private extensionVersion: string;
-	private isDevelopment: boolean;
 	sdkVersion: string;
 	analysisServerVersion: string;	
-	constructor() {
-		let packageJson = require("../../package.json");
-        this.extensionVersion = packageJson.version;
-		this.isDevelopment = this.extensionVersion.endsWith("-dev") || env.machineId == "someValue.machineId";
-	}
 
 	logActivation() { this.log(EventCategory.Extension, EventAction.Activated); }
 	logShowTodosToggled(enabled: boolean) { this.log(EventCategory.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }
@@ -45,7 +39,7 @@ class Analytics {
 			t: "event",
 			ec: EventCategory[category],
 			ea: EventAction[action],
-			cd1: this.isDevelopment,
+			cd1: isDevelopment,
 			cd2: process.platform,
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,

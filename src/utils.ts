@@ -3,7 +3,7 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as as from "./analysis/analysis_server_types";
-import { workspace, Position, Range, TextDocument } from "vscode";
+import { env, workspace, Position, Range, TextDocument } from "vscode";
 import { config } from "./config";
 
 export const dartVMPath = "bin/dart";
@@ -11,6 +11,8 @@ export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
 
 let isWin = /^win/.test(process.platform);
 let dartExecutableName = isWin ? "dart.exe" : "dart";
+
+export const isDevelopment = checkIsDevelopment();
 
 export function findDartSdk(lastKnownPath: string): string {
 	let paths = (<string>process.env.PATH).split(path.delimiter);
@@ -91,7 +93,13 @@ export function isWithinRootPath(file: string) {
 	//   https://github.com/Microsoft/vscode/issues/10446
 	//return workspace.asRelativePath(document.fileName) != document.fileName;
 
-	return workspace.rootPath != null && file.startsWith(workspace.rootPath + path.sep); 
+	return workspace.rootPath != null && file.startsWith(workspace.rootPath + path.sep);
+}
+
+function checkIsDevelopment() {
+	let packageJson = require("../../package.json");
+	let extensionVersion = packageJson.version;
+	return extensionVersion.endsWith("-dev") || env.machineId == "someValue.machineId";
 }
 
 export function log(message: any): void {
