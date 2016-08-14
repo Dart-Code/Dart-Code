@@ -33,8 +33,6 @@ let analyzer: Analyzer;
 let showTodos: boolean = config.showTodos;
 
 export function activate(context: vs.ExtensionContext) {
-	util.log("Dart Code activated!");
-	
 	dartSdkRoot = util.findDartSdk(<string>context.globalState.get(stateLastKnownSdkPathName));
 	if (dartSdkRoot == null) {
 		vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
