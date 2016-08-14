@@ -5,6 +5,7 @@ import * as child_process from "child_process";
 import * as as from "./analysis_server_types";
 import { AnalyzerGen } from "./analyzer_gen";
 import { config } from "../config";
+import { log } from "../utils";
 
 export class Analyzer extends AnalyzerGen {
 	private analyzerProcess: child_process.ChildProcess;
@@ -15,7 +16,7 @@ export class Analyzer extends AnalyzerGen {
 	constructor(dartVMPath: string, analyzerPath: string) {
 		super();
 
-		console.log(`Starting Dart analysis server...`);
+		log(`Starting Dart analysis server...`);
 
 		let args = [analyzerPath];
 
@@ -117,7 +118,7 @@ export class Analyzer extends AnalyzerGen {
 	}
 
 	stop() {
-		console.log(`Stopping Dart analysis server...`);
+		log(`Stopping Dart analysis server...`);
 
 		this.analyzerProcess.kill();
 	}
