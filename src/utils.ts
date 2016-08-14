@@ -9,8 +9,8 @@ import { config } from "./config";
 export const dartVMPath = "bin/dart";
 export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
 
-let isWin = /^win/.test(process.platform);
-let dartExecutableName = isWin ? "dart.exe" : "dart";
+const isWin = /^win/.test(process.platform);
+const dartExecutableName = isWin ? "dart.exe" : "dart";
 
 export const isDevelopment = checkIsDevelopment();
 
