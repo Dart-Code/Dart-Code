@@ -15,6 +15,7 @@ If you're going to work on an issue, please add a comment to the issue so others
 - Try to keep the bulk of work out of `extension.ts` by creating new files/classes but do keep the wire-up code in `extension.ts` as a central place to know what's set up
 - Try not to force functionality on users, add options to disable things that everyone might not want (eg. TODOs and Linting in problems view)
 - Code Style
+  - All files should start with `"use strict";`
   - Use PascalCase for type names
   - Do not use `I` as a prefix for interface names
   - Use PascalCase for enum values
