@@ -58,7 +58,10 @@ export class DartRenameProvider implements RenameProvider {
 				});
 
 				// Wait all openTextDocument to finish
-				Promise.all(promises).then(() => resolve(workspaceEdit));
+				Promise.all(promises).then(() => {
+					window.showInformationMessage(resp.change.message); 
+					resolve(workspaceEdit)
+				});
 				
 			}, e => console.warn(e.message));
 		});
