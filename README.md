@@ -67,14 +67,14 @@ This can be disabled via the `dart.allowAnalytics` setting.
 
 ## Release Notes
 
-### v0.8.0 *(2016-08-15)*
+### v0.8.1 *(2016-08-15)*
 
 - The display of symbols in the workspace symbol search (`Ctrl+T`) has been improved \*
 - The Dart language service will no longer crash when you enter symbols into the (`Ctrl+T`) search box
 - Pressing `F5` will now allow you to run a Dart command line application (you will need to set the path in `.vscode\launch.json`) \*\*
 - Organise Directives (`ctrl+alt+o`) has been added
 
-### v0.8.0 Known Issues
+#### v0.8.1 Known Issues
 
  \* Filenames may not display correctly in the stable version (1.4) of Code but will be fine in the Insiders version (and the next stable release)<br />
  \*\* Currently reading from `stdin` will cause the program to hang; this will be addressed in an upcoming release
