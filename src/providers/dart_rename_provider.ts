@@ -20,7 +20,7 @@ export class DartRenameProvider implements RenameProvider {
 			this.analyzer.editGetRefactoring({
 				kind: "RENAME",
 				file: document.fileName,
-				offset: document.offsetAt(position),
+				offset: document.offsetAt(wordRange.start),
 				length: wordRange.end.character - wordRange.start.character,
 				validateOnly: false,
 				options: {
