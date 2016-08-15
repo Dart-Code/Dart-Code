@@ -90,7 +90,9 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		// Must be either:
 		//   1. Public (not start with an underscore).
 		//   2. In our project.
-		return !result.path[0].name.startsWith("_") || isWithinRootPath(result.location.file);
+		let isPrivate = result.path[0].name.startsWith("_") || result.path[1].name.startsWith("_");
+
+		return isWithinRootPath(result.location.file) || !isPrivate;
 	}
 
 	private convertResult(result: as.SearchResult): SymbolInformation {
