@@ -72,15 +72,13 @@ export class DartRenameProvider implements RenameProvider {
 		let hasError = false;
 		problems.forEach(problem => {
 			switch (problem.severity) {
-
 				case "INFO":
 					window.showInformationMessage(problem.message);
 					break;
-
 				case "WARNING":
+					hasError = true;
 					window.showWarningMessage(problem.message);
 					break;
-
 				default: // This can be ERROR or FATAL problems
 					hasError = true;
 					window.showErrorMessage(problem.message);
