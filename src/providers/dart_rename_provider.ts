@@ -15,12 +15,13 @@ export class DartRenameProvider implements RenameProvider {
 	}
 
 	private doRename(document: TextDocument, position: Position, newName: string, token: CancellationToken): Thenable<WorkspaceEdit> {
-        return new Promise<WorkspaceEdit>((resolve, reject) => {
+		return new Promise<WorkspaceEdit>((resolve, reject) => {
+			var wordRange = document.getWordRangeAtPosition(position);				
 			this.analyzer.editGetRefactoring({
 				kind: "RENAME",
 				file: document.fileName,
 				offset: document.offsetAt(position),
-				length: position.character,
+				length: wordRange.end.character - wordRange.start.character,
 				validateOnly: false,
 				options: {
 					newName: newName
