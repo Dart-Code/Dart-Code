@@ -44,15 +44,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - Document symbol list/search with highlighting
 - `pub get` and `pub upgrade` commands
 - Other symbol references to current symbol are highlighted
-
-
-### Automatically Detects Dart SDK
-
-As long as Dart is in your `PATH` environment variable, Dart Code will find it automatically.
-
-## Requirements
-
-The Dart SDK must be available on your machine and added to your `PATH` or set in the extensions configuration.
+- Automatically finds Dart SDK if it is in your `PATH` environment variable
 
 ## Extension Configuration
 
@@ -61,13 +53,6 @@ The Dart SDK must be available on your machine and added to your `PATH` or set i
 - `dart.setIndentation`: Forces indenting with two spaces when Dart files are opened. This is on by default because VS Code doesn't support per-language settings and most people use tabs/4 spaces for other languages. Defaults to true.
 - `dart.showTodos`: Whether to show TODOs in the Problems list. Defaults to true.
 - `dart.allowAnalytics`: Note: We only send a few very basic events and the platform and extension/Dart version numbers :-)
-
-## Known Issues
-
-- Tooltip positioning is sometimes bad
-- Tooltips sometimes show stale data
-- Code completion doesn't provide parameter help
-- Cursor position may not be correctly preserved during reformat operations
 
 ## Analytics
 
