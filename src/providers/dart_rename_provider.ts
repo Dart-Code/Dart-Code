@@ -36,8 +36,10 @@ export class DartRenameProvider implements RenameProvider {
 						.concat(resp.finalProblems)
 				);
 
-				if (hasError)
+				if (hasError) {
 					reject("Rename cancelled.");
+					return;
+				}
 
 				let promises = [];				
 				resp.change.edits.forEach(changeEdit => {
