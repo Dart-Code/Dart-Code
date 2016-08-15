@@ -12,6 +12,7 @@ export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
 const isWin = /^win/.test(process.platform);
 const dartExecutableName = isWin ? "dart.exe" : "dart";
 
+export const extensionVersion = getExtensionVersion();
 export const isDevelopment = checkIsDevelopment();
 
 export function findDartSdk(lastKnownPath: string): string {
@@ -96,9 +97,12 @@ export function isWithinRootPath(file: string) {
 	return workspace.rootPath != null && file.startsWith(workspace.rootPath + path.sep);
 }
 
-function checkIsDevelopment() {
+function getExtensionVersion(): string {
 	let packageJson = require("../../package.json");
-	let extensionVersion = packageJson.version;
+	return packageJson.version;
+}
+
+function checkIsDevelopment() {
 	return extensionVersion.endsWith("-dev") || env.machineId == "someValue.machineId";
 }
 
