@@ -48,9 +48,9 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
 ## Extension Configuration
 
-- `dart.sdkPath`: If the Dart SDK is not automatically found on your machine from your `PATH` you can set the path to it here.
+- `dart.sdkPath`: If the Dart SDK is not automatically found on your machine from your `PATH` you can enter the path to it here.
 - `dart.lineLength`: The maximum length of a line of code. This is used by the document formatter. Defaults to 80.
-- `dart.setIndentation`: Forces indenting with two spaces when Dart files are opened. This is on by default because VS Code doesn't support per-language settings and most people use tabs/4 spaces for other languages. Defaults to true.
+- `dart.setIndentation`: Forces indenting with two spaces when Dart files are opened. This is on by default because VS Code doesn't currently support per-language settings and most people use tabs/4 spaces for other languages but Convention is 2 spaces. Defaults to true.
 - `dart.showTodos`: Whether to show TODOs in the Problems list. Defaults to true.
 - `dart.allowAnalytics`: Note: We only send a few very basic events and the platform and extension/Dart version numbers :-)
 
@@ -73,7 +73,9 @@ This can be disabled via the `dart.allowAnalytics` setting.
 - The Dart language service will no longer crash when you enter symbols into the (`Ctrl+T`) search box
 - Pressing `F5` will now allow you to run a Dart command line application (you will need to set the path in `.vscode\launch.json`) \*\*
 - Organise Directives (`ctrl+alt+o`) has been added
+
 ### v0.8.0 Known Issues
+
  \* Filenames may not display correctly in the stable version (1.4) of Code but will be fine in the Insiders version (and the next stable release)<br />
  \*\* Currently reading from `stdin` will cause the program to hang; this will be addressed in an upcoming release
 
