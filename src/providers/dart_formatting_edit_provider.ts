@@ -4,6 +4,7 @@ import { DocumentFormattingEditProvider, TextDocument, FormattingOptions, Cancel
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
 import { config } from "../config";
+import { logError } from "../utils";
 
 export class DartFormattingEditProvider implements DocumentFormattingEditProvider {
 	private analyzer: Analyzer;
@@ -23,7 +24,7 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 					resolve(null);
 				else
 					resolve(resp.edits.map(e => this.convertData(document, e)));
-			}, e => { console.warn(e.message); reject(); });
+			}, e => { logError(e); reject(); });
 		});
 	}
 

@@ -3,7 +3,7 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as as from "./analysis/analysis_server_types";
-import { env, workspace, Position, Range, TextDocument } from "vscode";
+import { env, workspace, window, Position, Range, TextDocument } from "vscode";
 import { config } from "./config";
 
 export const dartVMPath = "bin/dart";
@@ -104,4 +104,10 @@ function checkIsDevelopment() {
 
 export function log(message: any): void {
 	console.log(message);
+}
+
+export function logError(error: { message: string }): void {
+	if (isDevelopment)
+		window.showErrorMessage("DEBUG: " + error.message.toString());
+	console.error(error.message);
 }

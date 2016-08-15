@@ -29,7 +29,7 @@ export class DartReferenceProvider implements ReferenceProvider {
 					disposable.dispose();
 					resolve(notification.results.map(r => this.convertResult(r)));
 				});
-			}, e => { console.warn(e.message); reject(); });
+			}, e => { util.logError(e); reject(); });
 		});
 	}
 

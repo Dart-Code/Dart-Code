@@ -4,7 +4,7 @@ import { window, StatusBarItem, Disposable } from "vscode";
 import { Analyzer } from "./analysis/analyzer";
 import { ServerStatusNotification, ServerErrorNotification } from "./analysis/analysis_server_types";
 import { config } from "./config";
-import { isDevelopment } from "./utils";
+import { isDevelopment, logError } from "./utils";
 
 export class AnalyzerStatusReporter extends Disposable {
 	private statusBarItem: StatusBarItem;
@@ -38,10 +38,8 @@ export class AnalyzerStatusReporter extends Disposable {
 	}
 
 	private handleServerError(error: ServerErrorNotification) {
-		console.warn(error.message);
+		logError(error);
 		if (error.stackTrace)
-			console.warn(error.stackTrace);
-		if (isDevelopment)
-			window.showErrorMessage(error.message);
+			console.error(error.stackTrace);		
 	}
 }

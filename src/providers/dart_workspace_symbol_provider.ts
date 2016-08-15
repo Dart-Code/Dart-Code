@@ -4,7 +4,7 @@ import { WorkspaceSymbolProvider, SymbolInformation, CancellationToken, SymbolKi
 import * as path from "path";
 import * as fs from "fs";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
-import { toRange, isWithinRootPath } from "../utils";
+import { toRange, isWithinRootPath, logError } from "../utils";
 import * as as from "../analysis/analysis_server_types";
 
 export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
@@ -19,7 +19,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 			Promise.all([
 				this.searchTopLevelSymbols(query),
 				this.searchMemberDeclarations(query)
-			]).then(results => resolve(this.combineResults(results)), e => { console.warn(e.message); reject(); });
+			]).then(results => resolve(this.combineResults(results)), e => { logError(e); reject(); });
 		});
 	}
 
@@ -40,7 +40,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 					disposable.dispose();
 					resolve(notification.results);
 				})
-			}, e => { console.warn(e.message); reject(); });
+			}, e => { logError(e); reject(); });
 		});
 	}
 
@@ -60,7 +60,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 					disposable.dispose();
 					resolve(notification.results);
 				})
-			}, e => { console.warn(e.message); reject(); });
+			}, e => { logError(e); reject(); });
 		});
 	}
 

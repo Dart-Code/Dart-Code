@@ -3,6 +3,7 @@
 import { TextDocument, Position, CancellationToken, CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
+import { logError } from "../utils";
 
 export class DartCompletionItemProvider implements CompletionItemProvider {
 	private analyzer: Analyzer;
@@ -24,7 +25,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 					disposable.dispose();
 					resolve(new CompletionList(notification.results.map(r => this.convertResult(document, notification, r))));
 				})
-			}, e => { console.warn(e.message); reject(); });
+			}, e => { logError(e); reject(); });
 		});
 	}
 

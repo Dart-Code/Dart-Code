@@ -3,6 +3,7 @@
 import { HoverProvider, Hover, TextDocument, Position, CancellationToken, Range } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
+import { logError } from "../utils";
 
 export class DartHoverProvider implements HoverProvider {
 	private analyzer: Analyzer;
@@ -31,7 +32,7 @@ export class DartHoverProvider implements HoverProvider {
 						resolve(null);
 					}
 				}
-			}, e => { console.warn(e.message); reject(); });
+			}, e => { logError(e); reject(); });
 		});
 	}
 
