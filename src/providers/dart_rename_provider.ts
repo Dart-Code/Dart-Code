@@ -11,9 +11,7 @@ export class DartRenameProvider implements RenameProvider {
 	}
 	
 	provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): Thenable<WorkspaceEdit> {		
-		return workspace.saveAll(false).then(() => {
-			return this.doRename(document, position, newName, token);
-		});
+		return this.doRename(document, position, newName, token);
 	}
 
 	private doRename(document: TextDocument, position: Position, newName: string, token: CancellationToken): Thenable<WorkspaceEdit> {
