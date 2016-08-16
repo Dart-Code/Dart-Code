@@ -1,5 +1,7 @@
 ## Installation
 
+[![Join the chat at https://gitter.im/dart-code/Dart-Code](https://badges.gitter.im/dart-code/Dart-Code.svg)](https://gitter.im/dart-code/Dart-Code?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Dart Code can be [installed from the Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=DanTup.dart-code). Open VS Code Quick Open (`Ctrl+P`) and paste the following and press enter:
 
     ext install dart-code
