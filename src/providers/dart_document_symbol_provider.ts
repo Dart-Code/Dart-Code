@@ -43,6 +43,9 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 		if (element.parameters)
 			name = `${name}${element.parameters}`;
 
+			if (parent && parent.name)
+				name = `${parent.name}.${name}`;
+
 		symbols.push({
 			name: name,
 			kind: getSymbolKindForElementKind(element.kind),
@@ -50,7 +53,7 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 				uri: Uri.file(element.location.file),
 				range: this.getRange(document, outline)
 			},
-			containerName: parent == null ? null : parent.name
+			containerName: null
 		});
 
 		if (outline.children) {
