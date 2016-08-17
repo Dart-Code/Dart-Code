@@ -19,6 +19,7 @@
 	},
 	"categories": [
 		"Languages",
+		"Snippets", 
 		"Linters",
 		"Debuggers"
 	],
@@ -53,6 +54,12 @@
 				"scopeName": "source.dart",
 				"path": "./syntaxes/dart.json"
 			}
+		],
+        "snippets": [
+			{
+            	"language": "dart",
+            	"path": "./snippets/dart.json"
+        	}
 		],
 		"commands": [
 			{
