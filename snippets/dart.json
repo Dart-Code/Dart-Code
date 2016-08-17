@@ -93,6 +93,14 @@
 				"}"
 			]
 		},
+		"fun": {
+			"prefix": "fun",
+			"body": [
+				"${3:void} ${1:name}(${2:args}) {",
+				"  $4",
+				"}"
+			]
+		},
 		"import": {
 			"prefix": "import",
 			"body": "import \"$1\";"
