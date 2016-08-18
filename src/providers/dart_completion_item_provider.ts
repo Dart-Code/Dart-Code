@@ -31,10 +31,35 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 
 	private convertResult(document: TextDocument, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion): CompletionItem {
 		let start = document.positionAt(suggestion.selectionOffset);
+
+		let detail: string = null;
+
+		if (suggestion.element) {
+			let element = suggestion.element;
+			detail = element.kind;
+
+			// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), 
+			// show its parameters and return type.
+			if (element.parameters) {
+				let sig = `${element.name}${element.parameters}`;
+
+				if (element.kind == "CONSTRUCTOR") {
+					sig = (element.name)
+						? `${suggestion.declaringType}.${sig}`
+						: `${suggestion.declaringType}${sig}`;
+				}
+
+				if (element.returnType)
+					sig += " → " + element.returnType
+
+				detail += " " + sig;
+			}
+		}
+
 		return {
 			label: suggestion.completion,
 			kind: this.getKind(suggestion.kind),
-			detail: suggestion.element != null ? suggestion.element.kind : null,
+			detail: detail,
 			documentation: suggestion.docSummary,
 			sortText: null,
 			filterText: null,
