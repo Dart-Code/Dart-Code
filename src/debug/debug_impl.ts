@@ -18,9 +18,10 @@ import {
 
 // TODO: modules? ModuleEvent
 // TODO: supportsSetVariable
-// TODO: class variables
-// TODO: library variables
+// TODO: class variables?
+// TODO: library variables?
 // TODO: break large arrays into subarrays
+// TODO: should we call toString() on objects that don't have valueAsString?
 
 export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	cwd: string;
@@ -397,7 +398,7 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	_callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef): Promise<string> {
+	private callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef): Promise<string> {
 		return this.observatory.evaluate(isolate.id, instanceRef.id, "toString()").then((result: DebuggerResult) => {
 			if (result.result.type == "@Error") {
 				return null;

@@ -1,6 +1,8 @@
 "use strict";
 
+// TODO: Is this the best way to import this?
 import WebSocket = require('ws');
+
 import { PromiseCompleter } from "./utils";
 
 export class DebuggerResult {
