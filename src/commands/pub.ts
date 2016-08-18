@@ -36,7 +36,7 @@ export class PubManager {
 		// return the paths for tools in the bin/ dir. 
 		let pubPath = path.join(this.sdk, "bin", "pub");
 		channel.appendLine(`[${shortPath}] pub ${command}`);
-		let process = child_process.exec(`${pubPath} ${command}`, { "cwd": projectPath });
+		let process = child_process.exec(`"${pubPath.replace("\"", "\\\"")}" ${command}`, { "cwd": projectPath });
 		channels.runProcessInChannel(process, channel);
 	}
 }
