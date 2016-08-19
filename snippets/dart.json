@@ -1,0 +1,105 @@
+{
+	".source.dart": {
+		"main": {
+			"prefix": "main",
+			"body": [
+				"main(List<String> args) {",
+				"  $1",
+				"}"
+			]
+		},
+		"try": {
+			"prefix": "try",
+			"body": [
+				"try {",
+				"  $2",
+				"} catch (${1:e}) {",
+				"}"
+			]
+		},
+		"if": {
+			"prefix": "if",
+			"body": [
+				"if ($1) {",
+				"  $2",
+				"}"
+			]
+		},
+		"if else": {
+			"prefix": "ife",
+			"body": [
+				"if ($1) {",
+				"  $2",
+				"} else {",
+				"}"
+			]
+		},
+		"switch case": {
+			"prefix": "switch",
+			"body": [
+				"switch ($1) {",
+				"  case $2:",
+				"    $3",
+				"    break;",
+				"  default:",
+				"}"
+			]
+		},
+		"for": {
+			"prefix": "for",
+			"body": [
+				"for (var i = 0; i < ${1:count}; i++) {",
+				"  $2",
+				"}"
+			]
+		},
+		"for in": {
+			"prefix": "fori",
+			"body": [
+				"for (var ${1:item} in ${2:items}) {",
+				"  $3",
+				"}"
+			]
+		},
+		"while": {
+			"prefix": "while",
+			"body": [
+				"while ($1) {",
+				"  $2",
+				"}"
+			]
+		},
+		"do while": {
+			"prefix": "do",
+			"body": [
+				"do {",
+				"  $2",
+				"} while ($1);"
+			]
+		},
+		"fun": {
+			"prefix": "fun",
+			"body": [
+				"${3:void} ${1:name}(${2:args}) {",
+				"  $4",
+				"}"
+			]
+		},
+		"import": {
+			"prefix": "import",
+			"body": "import '$1';"
+		},
+		"class": {
+			"prefix": "class",
+			"body": [
+				"class ${1:Name} {",
+				"  $2",
+				"}"
+			]
+		},
+		"typedef": {
+			"prefix": "typedef",
+			"body": "typedef ${1:Type} ${2:Name}(${3:params});"
+		}
+	}
+}
