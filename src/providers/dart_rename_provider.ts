@@ -3,7 +3,8 @@
 import { window, workspace, RenameProvider, OutputChannel, WorkspaceEdit, TextDocument, Position, CancellationToken, Uri, TextEdit, Range } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
-import * as channel from "../commands/channels"
+import * as channels from "../commands/channels"
+import * as utils from "../utils"
 
 export class DartRenameProvider implements RenameProvider {
 	private analyzer: Analyzer;
@@ -17,7 +18,18 @@ export class DartRenameProvider implements RenameProvider {
 
 	private doRename(document: TextDocument, position: Position, newName: string, token: CancellationToken): Thenable<WorkspaceEdit> {
 		return new Promise<WorkspaceEdit>((resolve, reject) => {
-			var wordRange = document.getWordRangeAtPosition(position);
+			let wordRange = document.getWordRangeAtPosition(position);			
+			let outputChannel = channels.getChannel("Refactorings");
+
+			var word = document.getText(wordRange);
+			if (utils.isKeyword(word)) {
+				let msg = `Cannot rename keyword '${word}'.`;
+				window.showErrorMessage(msg);
+				outputChannel.appendLine("[ERROR] " + msg);
+				reject("");
+				return;
+			}				
+
 			this.analyzer.editGetRefactoring({
 				kind: "RENAME",
 				file: document.fileName,
@@ -29,9 +41,9 @@ export class DartRenameProvider implements RenameProvider {
 				}
 			}).then(resp => {
 				let workspaceEdit = new WorkspaceEdit();
-				let outputChannel = channel.getChannel("Refactorings");
 
-				outputChannel.appendLine(`[INFO] ${resp.change.message}...`);
+				if (resp.change && resp.change.message)
+					outputChannel.appendLine(`[INFO] ${resp.change.message}...`);
 
 				let hasError = this.handleProblem(
 					resp.initialProblems
