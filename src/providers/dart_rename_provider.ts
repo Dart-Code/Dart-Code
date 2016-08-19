@@ -1,8 +1,9 @@
 "use strict";
 
-import { window, workspace, RenameProvider, WorkspaceEdit, TextDocument, Position, CancellationToken, Uri, TextEdit, Range } from "vscode";
+import { window, workspace, RenameProvider, OutputChannel, WorkspaceEdit, TextDocument, Position, CancellationToken, Uri, TextEdit, Range } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
+import * as channel from "../commands/channels"
 
 export class DartRenameProvider implements RenameProvider {
 	private analyzer: Analyzer;
@@ -28,14 +29,19 @@ export class DartRenameProvider implements RenameProvider {
 				}
 			}).then(resp => {
 				let workspaceEdit = new WorkspaceEdit();
+				let outputChannel = channel.getChannel("Refactorings");
+
+				outputChannel.appendLine(`[INFO] ${resp.change.message}...`);
 
 				let hasError = this.handleProblem(
 					resp.initialProblems
 						.concat(resp.optionsProblems)
-						.concat(resp.finalProblems)
+						.concat(resp.finalProblems),
+					outputChannel
 				);
 
 				if (hasError) {
+					outputChannel.appendLine("[INFO] Rename aborted.");
 					reject("");
 					return;
 				}
@@ -60,7 +66,7 @@ export class DartRenameProvider implements RenameProvider {
 
 				// Wait all openTextDocument to finish
 				Promise.all(promises).then(() => {
-					window.showInformationMessage(resp.change.message);
+					outputChannel.appendLine("[INFO] Rename successful.");
 					resolve(workspaceEdit)
 				});
 
@@ -68,22 +74,20 @@ export class DartRenameProvider implements RenameProvider {
 		});
 	}
 
-	private handleProblem(problems: as.RefactoringProblem[]): boolean {
-		let hasError = false;
-		problems.forEach(problem => {
-			switch (problem.severity) {
-				case "INFO":
-					window.showInformationMessage(problem.message);
-					break;
-				case "WARNING":
-					hasError = true;
-					window.showWarningMessage(problem.message);
-					break;
-				default: // This can be ERROR or FATAL problems
-					hasError = true;
-					window.showErrorMessage(problem.message);
-			}
-		});
-		return hasError;
+	private handleProblem(problems: as.RefactoringProblem[], outputChannel: OutputChannel): boolean {
+		// Log all in output channel
+		problems.forEach(problem => outputChannel.appendLine(`[${problem.severity}] ${problem.message}`));
+
+		let errors = problems
+			.filter(p => p.severity != "INFO")
+			.sort((p1, p2) => p1.severity.localeCompare(p2.severity));
+
+		if (errors.length == 0)
+			return false;
+
+		// Popups just the first error
+		window.showErrorMessage(errors[0].message);
+
+		return true;
 	}
 }
