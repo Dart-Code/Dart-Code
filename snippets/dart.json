@@ -45,14 +45,6 @@
 				"}"
 			]
 		},
-		"assert": {
-			"prefix": "assert",
-			"body": "assert($1);"
-		},
-		"print": {
-			"prefix": "print",
-			"body": "print($1);"
-		},
 		"for": {
 			"prefix": "for",
 			"body": [
@@ -64,8 +56,8 @@
 		"for in": {
 			"prefix": "fori",
 			"body": [
-				"for (var x in ${1:list}) {",
-				"  $2",
+				"for (var ${1:item} in ${2:items}) {",
+				"  $3",
 				"}"
 			]
 		},
@@ -85,14 +77,6 @@
 				"} while ($1);"
 			]
 		},
-		"void": {
-			"prefix": "void",
-			"body": [
-				"void ${1:name}() {",
-				"  $2",
-				"}"
-			]
-		},
 		"fun": {
 			"prefix": "fun",
 			"body": [
@@ -103,7 +87,7 @@
 		},
 		"import": {
 			"prefix": "import",
-			"body": "import \"$1\";"
+			"body": "import '$1';"
 		},
 		"class": {
 			"prefix": "class",
@@ -115,7 +99,7 @@
 		},
 		"typedef": {
 			"prefix": "typedef",
-			"body": "typedef ${1:type} ${2:name};"
+			"body": "typedef ${1:Type} ${2:Name}(${3:params});"
 		}
 	}
 }
