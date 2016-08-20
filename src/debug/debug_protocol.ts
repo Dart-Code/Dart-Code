@@ -4,6 +4,9 @@ let WebSocket = require("ws");
 
 import { PromiseCompleter } from "./utils";
 
+// Toggle this to view VM debugger wire traffic.
+const shouldLogTraffic: boolean = false;
+
 export class DebuggerResult {
 	result: VMResponse;
 
@@ -215,6 +218,10 @@ export class ObservatoryConnection {
 		this.socket.on("open", cb);
 	}
 
+	onLogging(callback: (message: string) => void) {
+		this.eventListeners['logging'] = callback;
+	}
+
 	getVersion(): Promise<DebuggerResult> {
 		return this.callMethod("getVersion");
 	}
@@ -292,12 +299,15 @@ export class ObservatoryConnection {
 		let json = { id: id, method: method };
 		if (params)
 			json["params"] = params;
-		this.socket.send(JSON.stringify(json));
+		let str = JSON.stringify(json);
+		this.logTraffic(`==> ${str}`);
+		this.socket.send(str);
 
 		return completer.promise;
 	}
 
 	handleData(data: string) {
+		this.logTraffic(`<== ${data}\n`);
 		let json = JSON.parse(data);
 		let id = json.id;
 		let method = json.method;
@@ -327,6 +337,20 @@ export class ObservatoryConnection {
 
 	onClose(cb: (code: number, message: string) => void) {
 		this.socket.on("close", cb);
+	}
+
+	// TODO: We could instead log this to a file.
+	private logTraffic(message: String): void {
+		if (!shouldLogTraffic)
+			return;
+
+		let callback = this.eventListeners['logging'];
+		if (callback) {
+			const max: number = 2000;
+			if (message.length > max)
+				message = message.substring(0, max) + "...";
+			callback(message);
+		}
 	}
 
 	close() {
