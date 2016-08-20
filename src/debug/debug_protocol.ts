@@ -1,7 +1,6 @@
 "use strict";
 
-// TODO: Is this the best way to import this?
-import WebSocket = require('ws');
+let WebSocket = require("ws");
 
 import { PromiseCompleter } from "./utils";
 
@@ -203,7 +202,7 @@ export class RPCError {
 export class ObservatoryConnection {
 	static portRegex: RegExp = new RegExp("Observatory listening on (http:\\/\\/127.0.0.1:\\d+)");
 
-	socket: WebSocket;
+	socket: any;
 	private completers: { [key: string]: PromiseCompleter<DebuggerResult> } = {};
 	private eventListeners: { [key: string]: any } = {};
 
