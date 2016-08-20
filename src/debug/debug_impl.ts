@@ -94,7 +94,7 @@ export class DartDebugSession extends DebugSession {
 			}
 
 			if (match) {
-				this._initObservatory(match[1]);
+				this.initObservatory(match[1]);
 			} else {
 				this.sendEvent(new OutputEvent(data, "stdout"));
 			}
@@ -119,9 +119,11 @@ export class DartDebugSession extends DebugSession {
 			this.sendEvent(new InitializedEvent());
 	}
 
-	private _initObservatory(uri: string) {
+	private initObservatory(uri: string) {
 		this.observatory = new ObservatoryConnection(`${uri}/ws`);
-
+		this.observatory.onLogging(message => {
+			this.sendEvent(new OutputEvent(`${message.trim()}\n`));
+		});
 		this.observatory.onOpen(() => {
 			this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event));
 			this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event));
@@ -864,20 +866,20 @@ class ThreadInfo {
 
 	receivedPauseStart() {
 		this._receivedPauseStart = true;
-		this._checkResume();
+		this.checkResume();
 	}
 
 	setInitialBreakpoints() {
 		this._setInitialBreakpoints = true;
-		this._checkResume();
+		this.checkResume();
 	}
 
 	receivedConfigurationDone() {
 		this._receivedConfigurationDone = true;
-		this._checkResume();
+		this.checkResume();
 	}
 
-	_checkResume() {
+	checkResume() {
 		if (this._receivedPauseStart && this._setInitialBreakpoints && this._receivedConfigurationDone) {
 			this.manager.debugSession.observatory.resume(this.ref.id);
 		}
