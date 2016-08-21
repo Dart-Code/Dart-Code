@@ -7,7 +7,7 @@ import * as path from "path";
 import * as project from "../project";
 import * as vs from "vscode";
 
-export class PubManager {
+export class SdkCommands {
 	private sdk: string;
 
 	constructor(sdk: string) {
