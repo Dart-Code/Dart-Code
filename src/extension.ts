@@ -20,9 +20,8 @@ import { DartDocumentSymbolProvider } from "./providers/dart_document_symbol_pro
 import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
 import { FileChangeHandler } from "./file_change_handler";
 import { OpenFileTracker } from "./open_file_tracker";
-import { PubManager } from "./commands/pub";
+import { SdkCommands } from "./commands/sdk";
 import { ServerStatusNotification } from "./analysis/analysis_server_types";
-import * as debug from "./debug/sdk_path"
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
 const stateLastKnownSdkPathName = "dart.lastKnownSdkPath";
@@ -40,7 +39,6 @@ export function activate(context: vs.ExtensionContext) {
 		return; // Don't set anything else up; we can't work like this!
 	}
 	context.globalState.update(stateLastKnownSdkPathName, dartSdkRoot);
-	debug.writeSdkPath(dartSdkRoot); // Write the SDK path for the debugger to find.
 
 	// Show the SDK version in the status bar.
 	let sdkVersion = util.getDartSdkVersion(dartSdkRoot);
@@ -75,9 +73,6 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
 	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(DART_MODE, new DartDocumentHighlightProvider(analyzer)));
 	context.subscriptions.push(new AnalyzerStatusReporter(analyzer));
-
-	// Set up commands for Dart editors.
-	context.subscriptions.push(new DartCommands(context, analyzer));
 
 	// Set up diagnostics.
 	let diagnostics = vs.languages.createDiagnosticCollection("dart");
@@ -115,8 +110,12 @@ export function activate(context: vs.ExtensionContext) {
 	// Handle config changes so we can reanalyze if necessary.
 	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(handleConfigurationChange));
 
-	let pubManager = new PubManager(dartSdkRoot);
-	pubManager.registerCommands(context);
+	// Register SDK commands.
+	let sdkCommands = new SdkCommands(dartSdkRoot);
+	sdkCommands.registerCommands(context);
+
+	// Set up commands for Dart editors.
+	context.subscriptions.push(new DartCommands(context, analyzer));
 }
 
 function handleConfigurationChange() {

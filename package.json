@@ -19,6 +19,7 @@
 	},
 	"categories": [
 		"Languages",
+		"Snippets",
 		"Linters",
 		"Debuggers"
 	],
@@ -54,6 +55,12 @@
 				"path": "./syntaxes/dart.json"
 			}
 		],
+		"snippets": [
+			{
+				"language": "dart",
+				"path": "./snippets/dart.json"
+			}
+		],
 		"commands": [
 			{
 				"command": "pub.get",
@@ -63,7 +70,8 @@
 					"light": "./media/commands/pull.svg",
 					"dark": "./media/commands/pull-inverse.svg"
 				}
-			}, {
+			},
+			{
 				"command": "pub.upgrade",
 				"title": "Pub Upgrade",
 				"category": "Dart",
@@ -71,18 +79,21 @@
 					"light": "./media/commands/pull.svg",
 					"dark": "./media/commands/pull-inverse.svg"
 				}
-			}, {
+			},
+			{
 				"command": "dart.organizeDirectives",
 				"title": "Organize Directives",
 				"category": "Dart"
 			}
 		],
-		"keybindings": [{
-			"command": "dart.organizeDirectives",
-			"key": "ctrl+alt+o",
-			"mac": "cmd+alt+o",
-			"when": "editorLangId == dart"
-		}],
+		"keybindings": [
+			{
+				"command": "dart.organizeDirectives",
+				"key": "ctrl+alt+o",
+				"mac": "cmd+alt+o",
+				"when": "editorLangId == dart"
+			}
+		],
 		"menus": {
 			"editor/title": [
 				{
@@ -143,54 +154,65 @@
 				}
 			}
 		},
-		"debuggers": [{
-			"type": "dart-cli",
-			"label": "Dart command line",
-			"enableBreakpointsFor": {
-				"languageIds": [
-					"dart"
-				]
-			},
-			"program": "./out/src/debug/debug_entry.js",
-			"runtime": "node",
-			"configurationAttributes": {
-				"launch": {
-					"required": [
-						"cwd",
-						"program"
-					],
-					"properties": {
-						"cwd": {
-							"type": "string",
-							"description": "Workspace root."
-						},
-						"program": {
-							"type": "string",
-							"description": "Path to a Dart file.",
-							"default": "${workspaceRoot}/bin/main.dart"
-						},
-						"args": {
-							"type": "array",
-							"description": "Command line arguments to the application.",
-							"items": {
-								"type": "string"
+		"debuggers": [
+			{
+				"type": "dart-cli",
+				"label": "Dart command line",
+				"enableBreakpointsFor": {
+					"languageIds": [
+						"dart"
+					]
+				},
+				"program": "./out/src/debug/debug_entry.js",
+				"runtime": "node",
+				"variables": {
+					"sdkPath": "dart.getSdkPath"
+				},
+				"configurationAttributes": {
+					"launch": {
+						"required": [
+							"cwd",
+							"program"
+						],
+						"properties": {
+							"cwd": {
+								"type": "string",
+								"description": "Workspace root."
+							},
+							"sdkPath": {
+								"type": "string",
+								"description": "Location of Dart SDK path.",
+								"default": "${command.sdkPath}"
+							},
+							"program": {
+								"type": "string",
+								"description": "Path to a Dart file.",
+								"default": "${workspaceRoot}/bin/main.dart"
+							},
+							"args": {
+								"type": "array",
+								"description": "Command line arguments to the application.",
+								"items": {
+									"type": "string"
+								}
 							}
 						}
 					}
-				}
-			},
-			"initialConfigurations": [
-				{
-					"name": "Dart command line",
-					"type": "dart-cli",
-					"request": "launch",
-					"cwd": "${workspaceRoot}",
-					"program": "${workspaceRoot}/bin/main.dart",
-					"args": []
-				}
-			]
-		}
-	]},
+				},
+				"initialConfigurations": [
+					{
+						"name": "Dart command line",
+						"type": "dart-cli",
+						"request": "launch",
+						"cwd": "${workspaceRoot}",
+						"sdkPath": "${command.sdkPath}",
+						"program": "${workspaceRoot}/bin/main.dart",
+						"args": []
+					}
+				]
+			}
+		]
+	},
 	"scripts": {
 		"vscode:prepublish": "node ./node_modules/vscode/bin/compile",
 		"compile": "node ./node_modules/vscode/bin/compile -watch -p ./",
