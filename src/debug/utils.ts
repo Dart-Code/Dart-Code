@@ -14,6 +14,11 @@ export function uriToFilePath(uri: string): string {
 
 // TODO: improve
 export function fileToUri(file: string): string {
+	// Handle windows paths; slashes must be converted and we need an extra slash prefixed.
+	file = file.replace(/\\/g, "/");
+	if (!file.startsWith("/"))
+		file = "/" + file;
+
 	return `file://${file}`;
 }
 
