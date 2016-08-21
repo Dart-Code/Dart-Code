@@ -8,10 +8,10 @@ import {
 	Thread, StackFrame, Scope, Source, Handles, Breakpoint, ThreadEvent, Variable
 } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { readSdkPath } from "./sdk_path"
 
 export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	cwd: string;
+	sdkPath: string;
 	program: string;
 	args: Array<string>;
 }
@@ -21,8 +21,8 @@ export class DartDebugSession extends DebugSession {
 	private cwd: string;
 	private childProcess: child_process.ChildProcess;
 	private processExited: boolean = false;
-	private sdkPath = readSdkPath();
-	private dartPath = this.sdkPath != null ? path.join(this.sdkPath, "bin", "dart") : "dart"; 
+	private sdkPath: string;
+	private dartPath: string; 
 
 	public constructor() {
 		super();
@@ -45,6 +45,8 @@ export class DartDebugSession extends DebugSession {
 
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: DartLaunchRequestArguments): void {
 		this.cwd = args.cwd;
+		this.sdkPath = args.sdkPath;
+		this.dartPath = this.sdkPath != null ? path.join(this.sdkPath, "bin", "dart") : "dart";
 		this.sourceFile = path.relative(args.cwd, args.program);
 		this.sendEvent(new OutputEvent(`dart ${this.sourceFile}\n`));
 

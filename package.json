@@ -160,6 +160,9 @@
 				"label": "Dart command line",
 				"program": "./out/src/debug/debug_entry.js",
 				"runtime": "node",
+				"variables": {
+					"sdkPath": "dart.getSdkPath"
+				},
 				"configurationAttributes": {
 					"launch": {
 						"required": [
@@ -170,6 +173,11 @@
 							"cwd": {
 								"type": "string",
 								"description": "Workspace root."
+							},
+							"sdkPath": {
+								"type": "string",
+								"description": "Location of Dart SDK path.",
+								"default": "${command.sdkPath}"
 							},
 							"program": {
 								"type": "string",
@@ -192,6 +200,7 @@
 						"type": "dart-cli",
 						"request": "launch",
 						"cwd": "${workspaceRoot}",
+						"sdkPath": "${command.sdkPath}",
 						"program": "${workspaceRoot}/bin/main.dart",
 						"args": []
 					}

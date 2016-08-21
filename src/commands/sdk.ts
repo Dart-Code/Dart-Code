@@ -15,6 +15,7 @@ export class SdkCommands {
 	}
 
 	registerCommands(context: vs.ExtensionContext) {
+		context.subscriptions.push(vs.commands.registerCommand("dart.getSdkPath", _ => this.sdk));
 		context.subscriptions.push(vs.commands.registerCommand("pub.get", selection => {
 			this.runPub("get", selection);
 		}));
