@@ -2,7 +2,7 @@
 	"name": "dart-code",
 	"displayName": "Dart Code",
 	"description": "Dart support for Visual Studio Code.",
-	"version": "0.9.0",
+	"version": "0.10.0-dev",
 	"publisher": "DanTup",
 	"preview": true,
 	"engines": {
