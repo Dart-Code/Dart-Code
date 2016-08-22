@@ -82,6 +82,7 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 		if (config.analyzerLogFile) {
 			if (!this.logStream)
 				this.logStream = fs.createWriteStream(config.analyzerLogFile);
+			this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
 			if (message.length > max)
 				this.logStream.write(message.substring(0, max) + "...\r\n");
 			else
