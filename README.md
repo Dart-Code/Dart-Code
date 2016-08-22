@@ -19,6 +19,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - Auto-closing braces/quotes
 - Document symbol list/search with highlighting (`Ctrl+Shift+O`)
 - `pub get` and `pub upgrade` commands
+- Supports strong mode and linting (configured in `analysis_options.yaml` or `.analysis_options`)
 - Other references to symbol under cursor are highlighted
 - Automatically finds Dart SDK if it is in your `PATH` environment variable
 
