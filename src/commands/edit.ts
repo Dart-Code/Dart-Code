@@ -5,7 +5,7 @@ import * as editors from "../editors";
 import * as vs from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 
-export class DartCommands implements vs.Disposable {
+export class EditCommands implements vs.Disposable {
 	private context: vs.ExtensionContext;
 	private analyzer: Analyzer;
 	private commands: Array<vs.Disposable> = [];
