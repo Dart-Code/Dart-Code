@@ -3,6 +3,10 @@
 import * as fs from "fs";
 import * as path from "path";
 
+function isWindows(): boolean {
+	return process.platform === 'win32';
+}
+
 // TODO: improve
 export function uriToFilePath(uri: string): string {
 	if (uri.startsWith("file://"))
@@ -106,6 +110,9 @@ export class PackageMap {
 			let dir = this.map[name];
 			if (file.startsWith(dir)) {
 				let rest = file.substring(dir.length);
+				// package: uri should always use forward slashes.
+				if (isWindows())
+					rest = rest.replace(/\\/g, '/');
 				return `package:${name}/${rest}`;
 			}
 		}
