@@ -9,6 +9,7 @@ import { AnalyzerStatusReporter } from "./analyzer_status_reporter";
 import { config } from "./config";
 import { DartCommands } from "./providers/dart_commands";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
+import { DartCodeActionProvider } from "./providers/dart_code_action_provider";
 import { DartDefinitionProvider } from "./providers/dart_definition_provider";
 import { DartReferenceProvider } from "./providers/dart_reference_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
@@ -75,6 +76,7 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.languages.registerReferenceProvider(DART_MODE, new DartReferenceProvider(analyzer)));
 	context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
 	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(DART_MODE, new DartDocumentHighlightProvider(analyzer)));
+	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, new DartCodeActionProvider(analyzer)));
 	context.subscriptions.push(new AnalyzerStatusReporter(analyzer));
 
 	// Set up diagnostics.
