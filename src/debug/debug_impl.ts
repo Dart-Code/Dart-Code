@@ -331,9 +331,8 @@ export class DartDebugSession extends DebugSession {
 		if (data.data.type == "Frame") {
 			let frame: VMFrame = <VMFrame>data.data;
 			let variables: DebugProtocol.Variable[] = [];
-			for (let variable of frame.vars) {
+			for (let variable of frame.vars)
 				variables.push(this.instanceRefToVariable(thread, variable.name, variable.value));
-			}
 			response.body = { variables: variables };
 			this.sendResponse(response);
 		} else {
@@ -374,18 +373,16 @@ export class DartDebugSession extends DebugSession {
 							for (let association of instance.associations) {
 								let keyName = this.valueAsString(association.key);
 								if (!keyName) {
-									if (association.key.type == "Sentinel") {
+									if (association.key.type == "Sentinel")
 										keyName = "<evalError>";
-									} else {
+									else
 										keyName = (<VMInstanceRef>association.key).id;
-									}
 								}
 								variables.push(this.instanceRefToVariable(thread, keyName, association.value));
 							}
 						} else if (instance.fields) {
-							for (let field of instance.fields) {
+							for (let field of instance.fields)
 								variables.push(this.instanceRefToVariable(thread, field.decl.name, field.value));
-							}
 						} else {
 							// TODO: unhandled kind
 							this.log(instance.kind);
@@ -604,16 +601,24 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private valueAsString(ref: VMInstanceRef | VMSentinel): string {
-		if (ref.type == "Sentinel") {
+		if (ref.type == "Sentinel")
 			return ref.valueAsString;
-		} else if (ref.valueAsString) {
-			let instanceRef = <VMInstanceRef>ref;
+
+		let instanceRef = <VMInstanceRef>ref;
+
+		if (ref.valueAsString) {
 			let str: string = instanceRef.valueAsString;
 			if (instanceRef.valueAsStringIsTruncated)
 				str += "…";
+			if (instanceRef.kind == 'String')
+				str = `'${str}'`;
 			return str;
+		} else if (ref.kind == 'List') {
+			return `[${instanceRef.length}]`;
+		} else if (ref.kind == 'Map') {
+			return `{${instanceRef.length}}`;
 		} else {
-			return null;
+			return instanceRef.class.name;
 		}
 	}
 
@@ -629,22 +634,16 @@ export class DartDebugSession extends DebugSession {
 		} else {
 			let val = <VMInstanceRef>ref;
 
-			// TODO: Use "kind" when its values are better documented.
-			if (val.valueAsString) {
-				return {
-					name: name,
-					type: val.class.name,
-					value: this.valueAsString(val),
-					variablesReference: 0
-				};
-			} else {
-				return {
-					name: name,
-					type: val.class.name,
-					value: "",
-					variablesReference: thread.storeData(val)
-				};
-			}
+			let str = this.valueAsString(val);
+			if (!val.valueAsString && !str)
+				str = '';
+
+			return {
+				name: name,
+				type: val.class.name,
+				value: str,
+				variablesReference: val.valueAsString ? 0 : thread.storeData(val)
+			};
 		}
 	}
 
@@ -674,8 +673,8 @@ class ThreadManager {
 	threads: ThreadInfo[] = [];
 	debugSession: DartDebugSession;
 	bps = {};
-	_receivedConfigurationDone = false;
-	_exceptionPauseMode = "Unhandled";
+	private hasConfigurationDone = false;
+	private exceptionMode = "Unhandled";
 
 	constructor(debugSession: DartDebugSession) {
 		this.debugSession = debugSession;
@@ -692,7 +691,7 @@ class ThreadManager {
 			// If this is the first time we"ve seen it, fire an event
 			this.debugSession.sendEvent(new ThreadEvent("started", thread.number));
 
-			if (this._receivedConfigurationDone)
+			if (this.hasConfigurationDone)
 				thread.receivedConfigurationDone();
 		}
 
@@ -700,7 +699,7 @@ class ThreadManager {
 		if (eventKind == "IsolateRunnable") {
 			thread.runnable = true;
 
-			this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, this._exceptionPauseMode);
+			this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, this.exceptionMode);
 
 			let promises = []
 			for (let uri of Object.keys(this.bps)) {
@@ -713,11 +712,10 @@ class ThreadManager {
 	}
 
 	receivedConfigurationDone() {
-		this._receivedConfigurationDone = true;
+		this.hasConfigurationDone = true;
 
-		for (let thread of this.threads) {
+		for (let thread of this.threads)
 			thread.receivedConfigurationDone();
-		}
 	}
 
 	getThreadInfoFromRef(ref: VMIsolateRef): ThreadInfo {
@@ -741,7 +739,7 @@ class ThreadManager {
 	}
 
 	setExceptionPauseMode(mode: string) {
-		this._exceptionPauseMode = mode;
+		this.exceptionMode = mode;
 
 		for (let thread of this.threads) {
 			if (thread.runnable)
@@ -862,29 +860,28 @@ class ThreadInfo {
 		return Promise.all(promises);
 	}
 
-	_receivedPauseStart = false;
-	_setInitialBreakpoints = false;
-	_receivedConfigurationDone = false;
+	private gotPauseStart = false;
+	private initialBreakpoints = false;
+	private hasConfigurationDone = false;
 
 	receivedPauseStart() {
-		this._receivedPauseStart = true;
+		this.gotPauseStart = true;
 		this.checkResume();
 	}
 
 	setInitialBreakpoints() {
-		this._setInitialBreakpoints = true;
+		this.initialBreakpoints = true;
 		this.checkResume();
 	}
 
 	receivedConfigurationDone() {
-		this._receivedConfigurationDone = true;
+		this.hasConfigurationDone = true;
 		this.checkResume();
 	}
 
 	checkResume() {
-		if (this._receivedPauseStart && this._setInitialBreakpoints && this._receivedConfigurationDone) {
+		if (this.gotPauseStart && this.initialBreakpoints && this.hasConfigurationDone)
 			this.manager.debugSession.observatory.resume(this.ref.id);
-		}
 	}
 
 	handleResumed() {
