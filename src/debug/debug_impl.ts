@@ -674,8 +674,8 @@ class ThreadManager {
 	threads: ThreadInfo[] = [];
 	debugSession: DartDebugSession;
 	bps = {};
-	_receivedConfigurationDone = false;
-	_exceptionPauseMode = "Unhandled";
+	private hasConfigurationDone = false;
+	private exceptionMode = "Unhandled";
 
 	constructor(debugSession: DartDebugSession) {
 		this.debugSession = debugSession;
@@ -692,7 +692,7 @@ class ThreadManager {
 			// If this is the first time we"ve seen it, fire an event
 			this.debugSession.sendEvent(new ThreadEvent("started", thread.number));
 
-			if (this._receivedConfigurationDone)
+			if (this.hasConfigurationDone)
 				thread.receivedConfigurationDone();
 		}
 
@@ -700,7 +700,7 @@ class ThreadManager {
 		if (eventKind == "IsolateRunnable") {
 			thread.runnable = true;
 
-			this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, this._exceptionPauseMode);
+			this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, this.exceptionMode);
 
 			let promises = []
 			for (let uri of Object.keys(this.bps)) {
@@ -713,11 +713,10 @@ class ThreadManager {
 	}
 
 	receivedConfigurationDone() {
-		this._receivedConfigurationDone = true;
+		this.hasConfigurationDone = true;
 
-		for (let thread of this.threads) {
+		for (let thread of this.threads)
 			thread.receivedConfigurationDone();
-		}
 	}
 
 	getThreadInfoFromRef(ref: VMIsolateRef): ThreadInfo {
@@ -741,7 +740,7 @@ class ThreadManager {
 	}
 
 	setExceptionPauseMode(mode: string) {
-		this._exceptionPauseMode = mode;
+		this.exceptionMode = mode;
 
 		for (let thread of this.threads) {
 			if (thread.runnable)
@@ -862,29 +861,28 @@ class ThreadInfo {
 		return Promise.all(promises);
 	}
 
-	_receivedPauseStart = false;
-	_setInitialBreakpoints = false;
-	_receivedConfigurationDone = false;
+	private gotPauseStart = false;
+	private initialBreakpoints = false;
+	private hasConfigurationDone = false;
 
 	receivedPauseStart() {
-		this._receivedPauseStart = true;
+		this.gotPauseStart = true;
 		this.checkResume();
 	}
 
 	setInitialBreakpoints() {
-		this._setInitialBreakpoints = true;
+		this.initialBreakpoints = true;
 		this.checkResume();
 	}
 
 	receivedConfigurationDone() {
-		this._receivedConfigurationDone = true;
+		this.hasConfigurationDone = true;
 		this.checkResume();
 	}
 
 	checkResume() {
-		if (this._receivedPauseStart && this._setInitialBreakpoints && this._receivedConfigurationDone) {
+		if (this.gotPauseStart && this.initialBreakpoints && this.hasConfigurationDone)
 			this.manager.debugSession.observatory.resume(this.ref.id);
-		}
 	}
 
 	handleResumed() {
