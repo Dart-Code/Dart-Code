@@ -88,8 +88,7 @@ export function activate(context: vs.ExtensionContext) {
 	if (vs.workspace.rootPath) {
 		analyzer.analysisSetAnalysisRoots({
 			included: [vs.workspace.rootPath],
-			excluded: [],
-			packageRoots: null
+			excluded: []
 		});
 	}
 
