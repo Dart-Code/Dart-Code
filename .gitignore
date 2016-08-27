@@ -1,4 +1,5 @@
 out
 node_modules
-.vscode-test/
 analyzer.log
+.vscode/.browse.VC.*
+.vscode-test/

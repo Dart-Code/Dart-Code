@@ -6,14 +6,13 @@ import * as as from "./analysis/analysis_server_types";
 import { env, workspace, window, Position, Range, TextDocument } from "vscode";
 import { config } from "./config";
 
+export const latestReleasedSdk = "1.18.1";
 export const dartVMPath = "bin/dart";
 export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
-
-const isWin = /^win/.test(process.platform);
-const dartExecutableName = isWin ? "dart.exe" : "dart";
-
 export const extensionVersion = getExtensionVersion();
 export const isDevelopment = checkIsDevelopment();
+const isWin = /^win/.test(process.platform);
+const dartExecutableName = isWin ? "dart.exe" : "dart";
 
 export function findDartSdk(lastKnownPath: string): string {
 	let paths = (<string>process.env.PATH).split(path.delimiter);
@@ -114,4 +113,30 @@ export function logError(error: { message: string }): void {
 	if (isDevelopment)
 		window.showErrorMessage("DEBUG: " + error.message.toString());
 	console.error(error.message);
+}
+
+export function isOutOfDate(versionToCheck: string, expectedVersion: string): boolean {
+	// Versions can be in form:
+	//   x.y.z-aaa+bbb
+	// The +bbb is ignored for checking versions
+	// All -aaa's come before the same version without
+	function split(version: string): number[] {
+		let parts = version.split('-');
+		let numbers = parts[0].split(".").map(v => parseInt(v)); // Get x.y.z
+		numbers.push(parts.length > 1 ? 0 : 1); // Push a .10 for -something or .1 for nothing so we can sort easily.
+		return numbers;
+	}
+
+	let vCheck = split(versionToCheck);
+	let vExpected = split(expectedVersion);
+
+	for (let i = 0; i < vCheck.length; i++) {
+		if (vExpected[i] > vCheck[i])
+			return true;
+		else if (vExpected[i] < vCheck[i])
+			return false;
+	}
+
+	// If we got here, they're the same.
+	return false;
 }

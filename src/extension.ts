@@ -48,6 +48,9 @@ export function activate(context: vs.ExtensionContext) {
 		versionStatusItem.tooltip = "Dart SDK Version";
 		versionStatusItem.show();
 		context.subscriptions.push(versionStatusItem);
+
+		if (util.isOutOfDate(sdkVersion, util.latestReleasedSdk))
+			vs.window.showWarningMessage("A newer version of the Dart SDK is available. Some features of Dart Code may not work correctly with an old SDK.");
 	}
 
 	// Fire up the analyzer process.
