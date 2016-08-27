@@ -50,6 +50,14 @@ export interface VMIsolateRef extends VMResponse {
 	name: string;
 }
 
+export interface VMIsolate extends VMResponse {
+	id: string;
+	number: string;
+	name: string;
+	runnable: boolean;
+	pauseEvent: VMEvent;
+}
+
 export interface VMObjRef extends VMResponse {
 	id: string;
 }
@@ -156,6 +164,15 @@ export interface VMResponse {
 	type: string;
 }
 
+export interface VM extends VMResponse {
+	architectureBits: number;
+	targetCPU: string;
+	hostCPU: string;
+	version: string;
+	pid: number;
+	isolates: VMIsolateRef[];
+}
+
 export interface VMSentinel extends VMResponse {
 	// SentinelKind
 	kind: string;
@@ -224,6 +241,14 @@ export class ObservatoryConnection {
 
 	getVersion(): Promise<DebuggerResult> {
 		return this.callMethod("getVersion");
+	}
+
+	getVM(): Promise<DebuggerResult> {
+		return this.callMethod("getVM");
+	}
+
+	getIsolate(isolateId: string): Promise<DebuggerResult> {
+		return this.callMethod("getIsolate", { "isolateId": isolateId });
 	}
 
 	on(streamId: string, callback: (event: VMEvent) => void) {

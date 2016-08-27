@@ -12,7 +12,7 @@ import { PackageMap, uriToFilePath, fileToUri, PromiseCompleter } from "./utils"
 import {
 	ObservatoryConnection, VMEvent, VMIsolateRef, RPCError, DebuggerResult, VMStack, VMSentinel, VMObj,
 	VMFrame, VMFuncRef, VMInstanceRef, VMScriptRef, VMScript, VMSourceLocation, VMErrorRef, VMBreakpoint,
-	VMInstance, VMResponse, VMClassRef
+	VMInstance, VMResponse, VMClassRef, VM, VMIsolate
 } from "./debug_protocol";
 
 // TODO: modules? ModuleEvent
@@ -129,7 +129,29 @@ export class DartDebugSession extends DebugSession {
 		this.observatory.onOpen(() => {
 			this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event));
 			this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event));
-			this.sendEvent(new InitializedEvent());
+			this.observatory.getVM().then(result => {
+				let vm: VM = <VM>result.result;
+				let promises = [];
+
+				for (let isolateRef of vm.isolates) {
+					promises.push(this.observatory.getIsolate(isolateRef.id).then(response => {
+						let isolate: VMIsolate = <VMIsolate>response.result;
+						this.threadManager.registerThread(
+							isolateRef,
+							isolate.runnable ? "IsolateRunnable" : "IsolateStart"
+						);
+
+						if (isolate.pauseEvent.kind == "PauseStart") {
+							let thread = this.threadManager.getThreadInfoFromRef(isolateRef);
+							thread.receivedPauseStart();
+						}
+					}));
+				}
+
+				Promise.all(promises).then((_) => {
+					this.sendEvent(new InitializedEvent());
+				});
+			});
 		});
 
 		this.observatory.onClose((code: number, message: string) => {
@@ -688,15 +710,15 @@ class ThreadManager {
 			this.nextThreadId++;
 			this.threads.push(thread);
 
-			// If this is the first time we"ve seen it, fire an event
+			// If this is the first time we've seen it, fire an event
 			this.debugSession.sendEvent(new ThreadEvent("started", thread.number));
 
 			if (this.hasConfigurationDone)
 				thread.receivedConfigurationDone();
 		}
 
-		// If it"s just become runnable (IsolateRunnable), then set breakpoints.
-		if (eventKind == "IsolateRunnable") {
+		// If it's just become runnable (IsolateRunnable), then set breakpoints.
+		if (eventKind == "IsolateRunnable" && !thread.runnable) {
 			thread.runnable = true;
 
 			this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, this.exceptionMode);
