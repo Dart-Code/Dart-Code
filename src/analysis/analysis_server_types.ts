@@ -463,7 +463,7 @@ export interface AnalysisUpdateContentRequest {
 	 * A table mapping the files whose content has changed to a
 	 * description of the content change.
 	 */
-	files: { [key: string]: AddContentOverlay|ChangeContentOverlay|RemoveContentOverlay; };
+	files: { [key: string]: AddContentOverlay | ChangeContentOverlay | RemoveContentOverlay; };
 }
 
 /**
@@ -2811,12 +2811,12 @@ export interface RefactoringMethodParameter {
 /**
  * An abstract superclass of all refactoring feedbacks.
  */
-export interface RefactoringFeedback {}
+export interface RefactoringFeedback { }
 
 /**
  * An abstract superclass of all refactoring options.
  */
-export interface RefactoringOptions {}
+export interface RefactoringOptions { }
 
 /**
  * An enumeration of the kinds of parameters.
