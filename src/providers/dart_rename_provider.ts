@@ -79,17 +79,17 @@ export class DartRenameProvider implements RenameProvider {
 	}
 
 	private handleProblem(problems: as.RefactoringProblem[], outputChannel: OutputChannel): boolean {
-		// Log all in output channel
+		// Log all in output channel.
 		problems.forEach(problem => outputChannel.appendLine(`[${problem.severity}] ${problem.message}`));
 
 		let errors = problems
-			.filter(p => p.severity != "INFO")
-			.sort((p1, p2) => p1.severity.localeCompare(p2.severity));
+			.filter(p => p.severity != "INFO" && p.severity != "WARNING")
+			.sort((p1, p2) => p2.severity.localeCompare(p1.severity));
 
 		if (errors.length == 0)
 			return false;
 
-		// Popups just the first error
+		// Popups just the first error.
 		window.showErrorMessage(errors[0].message);
 
 		return true;
