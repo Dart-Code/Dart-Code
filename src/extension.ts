@@ -19,6 +19,7 @@ import { DartHoverProvider } from "./providers/dart_hover_provider";
 import { DartIndentFixer } from "./dart_indent_fixer";
 import { DartDocumentSymbolProvider } from "./providers/dart_document_symbol_provider";
 import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
+import { DartRenameProvider } from "./providers/dart_rename_provider";
 import { FileChangeHandler } from "./file_change_handler";
 import { OpenFileTracker } from "./open_file_tracker";
 import { SdkCommands } from "./commands/sdk";
@@ -77,6 +78,7 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
 	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(DART_MODE, new DartDocumentHighlightProvider(analyzer)));
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, new DartCodeActionProvider(analyzer)));
+	context.subscriptions.push(vs.languages.registerRenameProvider(DART_MODE, new DartRenameProvider(analyzer)));
 	context.subscriptions.push(new AnalyzerStatusReporter(analyzer));
 
 	// Set up diagnostics.
