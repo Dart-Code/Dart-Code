@@ -14,12 +14,8 @@ export const isDevelopment = checkIsDevelopment();
 const isWin = /^win/.test(process.platform);
 const dartExecutableName = isWin ? "dart.exe" : "dart";
 
-export function findDartSdk(lastKnownPath: string): string {
+export function findDartSdk(): string {
 	let paths = (<string>process.env.PATH).split(path.delimiter);
-
-	// If we have a last-known path then push that onto the front of the list to search first.
-	if (lastKnownPath)
-		paths.unshift(path.join(lastKnownPath, "bin"));
 
 	// We don't expect the user to add .\bin in config, but it would be in the PATHs
 	let userDefinedSdkPath = config.userDefinedSdkPath;

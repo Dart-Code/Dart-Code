@@ -24,7 +24,6 @@ import { SdkCommands } from "./commands/sdk";
 import { ServerStatusNotification } from "./analysis/analysis_server_types";
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
-const stateLastKnownSdkPathName = "dart.lastKnownSdkPath";
 
 let dartSdkRoot: string;
 let analyzer: Analyzer;
@@ -32,13 +31,12 @@ let analyzer: Analyzer;
 let showTodos: boolean = config.showTodos;
 
 export function activate(context: vs.ExtensionContext) {
-	dartSdkRoot = util.findDartSdk(<string>context.globalState.get(stateLastKnownSdkPathName));
+	dartSdkRoot = util.findDartSdk();
 	if (dartSdkRoot == null) {
 		vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
 			"Please add it to your PATH or configure the 'dart.sdkPath' setting and reload.");
 		return; // Don't set anything else up; we can't work like this!
 	}
-	context.globalState.update(stateLastKnownSdkPathName, dartSdkRoot);
 
 	// Show the SDK version in the status bar.
 	let sdkVersion = util.getDartSdkVersion(dartSdkRoot);
