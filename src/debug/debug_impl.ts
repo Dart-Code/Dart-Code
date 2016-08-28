@@ -181,20 +181,33 @@ export class DartDebugSession extends DebugSession {
 		if (!breakpoints)
 			breakpoints = [];
 
-		let sourcePath = source.path;
-		let uri = this.packageMap.convertFileToPackageUri(sourcePath);
-		if (!uri)
-			uri = fileToUri(sourcePath);
+		let uris = this.getBreakpointUris(source.path);
 
-		this.threadManager.setBreakpoints(uri, breakpoints).then((result: boolean[]) => {
-			let bpResponse = [];
-			for (let verified of result) {
-				bpResponse.push({ verified: verified });
-			}
+		uris.forEach(uri => {
+			this.threadManager.setBreakpoints(uri, breakpoints).then((result: boolean[]) => {
+				let bpResponse = [];
+				for (let verified of result) {
+					bpResponse.push({ verified: verified });
+				}
 
-			response.body = { breakpoints: bpResponse };
-			this.sendResponse(response);
-		}).catch((error) => this.errorResponse(response, `${error}`));
+				response.body = { breakpoints: bpResponse };
+				this.sendResponse(response);
+			}).catch((error) => this.errorResponse(response, `${error}`));
+		})
+	}
+
+	private getBreakpointUris(sourcePath: string): string[] {
+		let uris = [];
+
+		// Add the raw file path.
+		uris.push(fileToUri(sourcePath));
+
+		// Convert to package path and add that too.
+		let packageUri = this.packageMap.convertFileToPackageUri(sourcePath);
+		if (packageUri)
+			uris.push(packageUri);
+
+		return uris;
 	}
 
 	protected setExceptionBreakPointsRequest(
