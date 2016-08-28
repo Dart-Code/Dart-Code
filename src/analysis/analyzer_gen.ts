@@ -527,7 +527,7 @@ export abstract class AnalyzerGen {
 	if the file path represents the path to a directory on the
 	filesystem.
 	*/
-	analysisUpdateContent(request: as.AnalysisUpdateContentRequest): Thenable<as.AnalysisUpdateContentResponse> {
+	analysisUpdateContent(request: as.AnalysisUpdateContentRequest): Thenable<a.UnknownResponse> {
 		return this.sendRequest("analysis.updateContent", request);
 	}
 
