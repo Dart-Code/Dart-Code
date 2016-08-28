@@ -21,15 +21,6 @@ export class DartRenameProvider implements RenameProvider {
 			let wordRange = document.getWordRangeAtPosition(position);			
 			let outputChannel = channels.getChannel("Refactorings");
 
-			var word = document.getText(wordRange);
-			if (utils.isKeyword(word)) {
-				let msg = `Cannot rename keyword '${word}'.`;
-				window.showErrorMessage(msg);
-				outputChannel.appendLine("[ERROR] " + msg);
-				reject("");
-				return;
-			}				
-
 			this.analyzer.editGetRefactoring({
 				kind: "RENAME",
 				file: document.fileName,

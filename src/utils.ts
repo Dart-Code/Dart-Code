@@ -105,21 +105,3 @@ function checkIsDevelopment() {
 export function log(message: any): void {
 	console.log(message);
 }
-
-const _keywords = [
-	"abstract", "continue", "false", "new", "this",
-	"as", "default", "final", "null", "throw",
-	"assert", "deferred", "finally", "operator", "true",
-	"async", "do", "for", "part", "try",
-	"async*", "dynamic", "get", "rethrow", "typedef",
-	"await", "else", "if", "return", "var",
-	"break", "enum", "implements", "set", "void",
-	"case", "export", "import", "static", "while",
-	"catch", "external", "in", "super", "with",
-	"class", "extends", "is", "switch", "yield",
-	"const", "factory", "library", "sync*", "yield*",
-];
-
-export function isKeyword(str: string): boolean {
-	return _keywords.indexOf(str) > -1;
-}
