@@ -14,6 +14,13 @@ export function createChannel(name: string): vs.OutputChannel {
     return channels[name];
 }
 
+export function getChannel(name: string): vs.OutputChannel {
+    if (channels[name] == null)
+        return createChannel(name);
+
+    return channels[name];
+}
+
 export function runProcessInChannel(process: child_process.ChildProcess, channel: vs.OutputChannel) {
     process.stdout.on("data", (data) => channel.append(data));
     process.stderr.on("data", (data) => channel.append(data));
