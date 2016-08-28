@@ -18,7 +18,7 @@ export class DartRenameProvider implements RenameProvider {
 
 	private doRename(document: TextDocument, position: Position, newName: string, token: CancellationToken): Thenable<WorkspaceEdit> {
 		return new Promise<WorkspaceEdit>((resolve, reject) => {
-			let wordRange = document.getWordRangeAtPosition(position);			
+			let wordRange = document.getWordRangeAtPosition(position);
 			let outputChannel = channels.getChannel("Refactorings");
 			outputChannel.appendLine("");
 
@@ -33,6 +33,20 @@ export class DartRenameProvider implements RenameProvider {
 				}
 			}).then(resp => {
 				let workspaceEdit = new WorkspaceEdit();
+
+				// Check that the thing we're refactoring macthes up with what the AS says the oldName is. This
+				// allows us to abort (even though it's a bit late) if it seems like we're doing something unexpected.
+				// See https://github.com/Dart-Code/Dart-Code/issues/144
+				if (resp.feedback) {
+					let expectedOldName = document.getText(wordRange);
+					let actualOldName = (<any>resp.feedback).oldName; // TODO: Fix up feedback objects to have types. 
+					if (actualOldName && actualOldName != expectedOldName) {
+						window.showErrorMessage("This type of rename is not yet supported.");
+						outputChannel.appendLine(`[ERROR] Rename aborting due to rename mismatch (expected: ${expectedOldName}, got: ${actualOldName}). This rename will be supported in a future version.`);
+						reject("");
+						return;
+					}
+				}
 
 				if (resp.change && resp.change.message)
 					outputChannel.appendLine(`[INFO] ${resp.change.message}...`);
