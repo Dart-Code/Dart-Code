@@ -25,7 +25,6 @@ import { SdkCommands } from "./commands/sdk";
 import { ServerStatusNotification } from "./analysis/analysis_server_types";
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
-const stateLastKnownSdkPathName = "dart.lastKnownSdkPath";
 
 let dartSdkRoot: string;
 let analyzer: Analyzer;
@@ -33,13 +32,12 @@ let analyzer: Analyzer;
 let showTodos: boolean = config.showTodos;
 
 export function activate(context: vs.ExtensionContext) {
-	dartSdkRoot = util.findDartSdk(<string>context.globalState.get(stateLastKnownSdkPathName));
+	dartSdkRoot = util.findDartSdk();
 	if (dartSdkRoot == null) {
 		vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
 			"Please add it to your PATH or configure the 'dart.sdkPath' setting and reload.");
 		return; // Don't set anything else up; we can't work like this!
 	}
-	context.globalState.update(stateLastKnownSdkPathName, dartSdkRoot);
 
 	// Show the SDK version in the status bar.
 	let sdkVersion = util.getDartSdkVersion(dartSdkRoot);
@@ -50,8 +48,10 @@ export function activate(context: vs.ExtensionContext) {
 		versionStatusItem.show();
 		context.subscriptions.push(versionStatusItem);
 
-		if (util.isOutOfDate(sdkVersion, util.latestReleasedSdk))
-			vs.window.showWarningMessage("A newer version of the Dart SDK is available. Some features of Dart Code may not work correctly with an old SDK.");
+		util.getLatestSdkVersion().then(version => {
+			if (util.isOutOfDate(sdkVersion, version))
+				vs.window.showWarningMessage(`Version ${version} of the Dart SDK is available (you have ${sdkVersion}). Some features of Dart Code may not work correctly with an old SDK.`);
+		}, util.logError);
 	}
 
 	// Fire up the analyzer process.
@@ -88,8 +88,7 @@ export function activate(context: vs.ExtensionContext) {
 	if (vs.workspace.rootPath) {
 		analyzer.analysisSetAnalysisRoots({
 			included: [vs.workspace.rootPath],
-			excluded: [],
-			packageRoots: null
+			excluded: []
 		});
 	}
 

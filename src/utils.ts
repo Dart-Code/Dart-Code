@@ -2,11 +2,11 @@
 
 import * as path from "path";
 import * as fs from "fs";
+import * as https from "https";
 import * as as from "./analysis/analysis_server_types";
 import { env, workspace, window, Position, Range, TextDocument } from "vscode";
 import { config } from "./config";
 
-export const latestReleasedSdk = "1.18.1";
 export const dartVMPath = "bin/dart";
 export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
 export const extensionVersion = getExtensionVersion();
@@ -14,12 +14,8 @@ export const isDevelopment = checkIsDevelopment();
 const isWin = /^win/.test(process.platform);
 const dartExecutableName = isWin ? "dart.exe" : "dart";
 
-export function findDartSdk(lastKnownPath: string): string {
+export function findDartSdk(): string {
 	let paths = (<string>process.env.PATH).split(path.delimiter);
-
-	// If we have a last-known path then push that onto the front of the list to search first.
-	if (lastKnownPath)
-		paths.unshift(path.join(lastKnownPath, "bin"));
 
 	// We don't expect the user to add .\bin in config, but it would be in the PATHs
 	let userDefinedSdkPath = config.userDefinedSdkPath;
@@ -111,8 +107,30 @@ export function log(message: any): void {
 
 export function logError(error: { message: string }): void {
 	if (isDevelopment)
-		window.showErrorMessage("DEBUG: " + error.message.toString());
+		window.showErrorMessage("DEBUG: " + error.message);
 	console.error(error.message);
+}
+
+export function getLatestSdkVersion(): PromiseLike<string> {
+	return new Promise<string>((resolve, reject) => {
+		const options: https.RequestOptions = {
+			hostname: "storage.googleapis.com",
+			port: 443,
+			path: "/dart-archive/channels/stable/release/latest/VERSION",
+			method: "GET",
+		};
+
+		let req = https.request(options, resp => {
+			if (resp.statusCode < 200 || resp.statusCode > 300) {
+				reject({ message: `Failed to get Dart SDK Version ${resp.statusCode}: ${resp.statusMessage}` });
+			} else {
+				resp.on('data', (d) => {
+					resolve(JSON.parse(d.toString()).version);
+				});
+			}
+		});
+		req.end();
+	});
 }
 
 export function isOutOfDate(versionToCheck: string, expectedVersion: string): boolean {
