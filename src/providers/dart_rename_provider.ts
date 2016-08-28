@@ -20,6 +20,7 @@ export class DartRenameProvider implements RenameProvider {
 		return new Promise<WorkspaceEdit>((resolve, reject) => {
 			let wordRange = document.getWordRangeAtPosition(position);			
 			let outputChannel = channels.getChannel("Refactorings");
+			outputChannel.appendLine("");
 
 			this.analyzer.editGetRefactoring({
 				kind: "RENAME",
