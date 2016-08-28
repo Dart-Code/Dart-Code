@@ -21,12 +21,10 @@ import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_p
 import { DartRenameProvider } from "./providers/dart_rename_provider";
 import { FileChangeHandler } from "./file_change_handler";
 import { OpenFileTracker } from "./open_file_tracker";
-import { PubManager } from "./commands/pub";
+import { SdkCommands } from "./commands/sdk";
 import { ServerStatusNotification } from "./analysis/analysis_server_types";
-import * as debug from "./debug/sdk_path"
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
-const stateLastKnownSdkPathName = "dart.lastKnownSdkPath";
 
 let dartSdkRoot: string;
 let analyzer: Analyzer;
@@ -34,14 +32,12 @@ let analyzer: Analyzer;
 let showTodos: boolean = config.showTodos;
 
 export function activate(context: vs.ExtensionContext) {
-	dartSdkRoot = util.findDartSdk(<string>context.globalState.get(stateLastKnownSdkPathName));
+	dartSdkRoot = util.findDartSdk();
 	if (dartSdkRoot == null) {
 		vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
 			"Please add it to your PATH or configure the 'dart.sdkPath' setting and reload.");
 		return; // Don't set anything else up; we can't work like this!
 	}
-	context.globalState.update(stateLastKnownSdkPathName, dartSdkRoot);
-	debug.writeSdkPath(dartSdkRoot); // Write the SDK path for the debugger to find.
 
 	// Show the SDK version in the status bar.
 	let sdkVersion = util.getDartSdkVersion(dartSdkRoot);
@@ -51,6 +47,11 @@ export function activate(context: vs.ExtensionContext) {
 		versionStatusItem.tooltip = "Dart SDK Version";
 		versionStatusItem.show();
 		context.subscriptions.push(versionStatusItem);
+
+		util.getLatestSdkVersion().then(version => {
+			if (util.isOutOfDate(sdkVersion, version))
+				vs.window.showWarningMessage(`Version ${version} of the Dart SDK is available (you have ${sdkVersion}). Some features of Dart Code may not work correctly with an old SDK.`);
+		}, util.logError);
 	}
 
 	// Fire up the analyzer process.
@@ -78,9 +79,6 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.languages.registerRenameProvider(DART_MODE, new DartRenameProvider(analyzer)));
 	context.subscriptions.push(new AnalyzerStatusReporter(analyzer));
 
-	// Set up commands for Dart editors.
-	context.subscriptions.push(new DartCommands(context, analyzer));
-
 	// Set up diagnostics.
 	let diagnostics = vs.languages.createDiagnosticCollection("dart");
 	context.subscriptions.push(diagnostics);
@@ -90,8 +88,7 @@ export function activate(context: vs.ExtensionContext) {
 	if (vs.workspace.rootPath) {
 		analyzer.analysisSetAnalysisRoots({
 			included: [vs.workspace.rootPath],
-			excluded: [],
-			packageRoots: null
+			excluded: []
 		});
 	}
 
@@ -117,8 +114,12 @@ export function activate(context: vs.ExtensionContext) {
 	// Handle config changes so we can reanalyze if necessary.
 	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(handleConfigurationChange));
 
-	let pubManager = new PubManager(dartSdkRoot);
-	pubManager.registerCommands(context);
+	// Register SDK commands.
+	let sdkCommands = new SdkCommands(dartSdkRoot);
+	sdkCommands.registerCommands(context);
+
+	// Set up commands for Dart editors.
+	context.subscriptions.push(new DartCommands(context, analyzer));
 }
 
 function handleConfigurationChange() {

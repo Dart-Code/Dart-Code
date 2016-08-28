@@ -1,7 +1,11 @@
 "use strict";
 
-import { TextDocument, Position, CancellationToken, CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range } from "vscode";
+import {
+	TextDocument, Position, CancellationToken, CompletionItemProvider, CompletionList,
+	CompletionItem, CompletionItemKind, TextEdit, Range
+} from "vscode";
 import { Analyzer } from "../analysis/analyzer";
+import { logError } from "../utils";
 import * as as from "../analysis/analysis_server_types";
 
 export class DartCompletionItemProvider implements CompletionItemProvider {
@@ -10,7 +14,9 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		this.analyzer = analyzer;
 	}
 
-	provideCompletionItems(document: TextDocument, position: Position, token: CancellationToken): Thenable<CompletionList> {
+	provideCompletionItems(
+		document: TextDocument, position: Position, token: CancellationToken
+	): Thenable<CompletionList> {
 		return new Promise<CompletionList>((resolve, reject) => {
 			this.analyzer.completionGetSuggestions({
 				file: document.fileName,
@@ -22,22 +28,72 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 						return;
 
 					disposable.dispose();
-					resolve(new CompletionList(notification.results.map(r => this.convertResult(document, notification, r))));
+					resolve(new CompletionList(notification.results.map(r => {
+						return this.convertResult(document, notification, r);
+					})));
 				})
-			}, e => { console.warn(e.message); reject(); });
+			}, e => { logError(e); reject(); });
 		});
 	}
 
-	private convertResult(document: TextDocument, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion): CompletionItem {
+	private convertResult(
+		document: TextDocument, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion
+	): CompletionItem {
 		let start = document.positionAt(suggestion.selectionOffset);
+		let label = suggestion.completion;
+		let detail: string = "";
+
+		if (suggestion.element) {
+			let element = suggestion.element;
+			let elementKind = this.getElementKind(element.kind);
+			detail = element.kind.toLowerCase();
+
+			// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its
+			// parameters and return type.
+			if (element.parameters && elementKind != CompletionItemKind.Property) {
+				label += element.parameters.length == 2 ? "()" : "(…)";
+
+				let sig = `${element.name}${element.parameters}`;
+
+				if (element.kind == "CONSTRUCTOR") {
+					sig = (element.name)
+						? `${suggestion.declaringType}.${sig}`
+						: `${suggestion.declaringType}${sig}`;
+				}
+
+				detail += " " + sig;
+			}
+
+			if (elementKind == CompletionItemKind.Property) {
+				// Setters appear as methods with one arg (and cause getters to not appear),
+				// so treat them both the same and just display with the properties type.
+
+				// TODO: We show (readonly) if it's a getter. We can only do it this way because of the AS
+				// not sending GETTERs when there's a SETTER. If/when this gets fixed, we'll have to change
+				// this logic.
+
+				detail = element.kind == "GETTER"
+					? "(readonly) " + element.returnType
+					: element.parameters.substring(1, element.parameters.lastIndexOf(" "));
+			}
+			else if (element.returnType)
+				detail += " → " + element.returnType
+		}
+
+		detail = detail.length == 0 ? detail = null : detail.trim();
+
+		let kind = suggestion.element
+			? this.getElementKind(suggestion.element.kind)
+			: this.getSuggestionKind(suggestion.kind);
+
 		return {
-			label: suggestion.completion,
-			kind: this.getKind(suggestion.kind),
-			detail: suggestion.element != null ? suggestion.element.kind : null,
+			label: label,
+			kind: kind,
+			detail: detail,
 			documentation: suggestion.docSummary,
 			sortText: null,
 			filterText: null,
-			insertText: null,
+			insertText: suggestion.completion,
 			textEdit: new TextEdit(
 				new Range(
 					document.positionAt(notification.replacementOffset),
@@ -48,8 +104,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		};
 	}
 
-	private getKind(kind: as.CompletionSuggestionKind): CompletionItemKind {
-		// TODO: Review these...
+	private getSuggestionKind(kind: as.CompletionSuggestionKind): CompletionItemKind {
 		switch (kind) {
 			case "ARGUMENT_LIST":
 				return CompletionItemKind.Variable;
@@ -66,6 +121,57 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			case "OPTIONAL_ARGUMENT":
 				return CompletionItemKind.Variable;
 			case "PARAMETER":
+				return CompletionItemKind.Value;
+		}
+	}
+
+	private getElementKind(kind: as.ElementKind): CompletionItemKind {
+		switch (kind) {
+			case "CLASS":
+				return CompletionItemKind.Class;
+			case "CLASS_TYPE_ALIAS":
+				return CompletionItemKind.Class;
+			case "COMPILATION_UNIT":
+				return CompletionItemKind.Module;
+			case "CONSTRUCTOR":
+				return CompletionItemKind.Constructor;
+			case "ENUM":
+				return CompletionItemKind.Enum;
+			case "ENUM_CONSTANT":
+				return CompletionItemKind.Enum;
+			case "FIELD":
+				return CompletionItemKind.Field;
+			case "FILE":
+				return CompletionItemKind.File;
+			case "FUNCTION":
+				return CompletionItemKind.Function;
+			case "FUNCTION_TYPE_ALIAS":
+				return CompletionItemKind.Function;
+			case "GETTER":
+				return CompletionItemKind.Property;
+			case "LABEL":
+				return CompletionItemKind.Module;
+			case "LIBRARY":
+				return CompletionItemKind.Module;
+			case "LOCAL_VARIABLE":
+				return CompletionItemKind.Variable;
+			case "METHOD":
+				return CompletionItemKind.Method;
+			case "PARAMETER":
+				return CompletionItemKind.Variable;
+			case "PREFIX":
+				return CompletionItemKind.Variable;
+			case "SETTER":
+				return CompletionItemKind.Property;
+			case "TOP_LEVEL_VARIABLE":
+				return CompletionItemKind.Variable;
+			case "TYPE_PARAMETER":
+				return CompletionItemKind.Variable;
+			case "UNIT_TEST_GROUP":
+				return CompletionItemKind.Module;
+			case "UNIT_TEST_TEST":
+				return CompletionItemKind.Method;
+			case "UNKNOWN":
 				return CompletionItemKind.Value;
 		}
 	}

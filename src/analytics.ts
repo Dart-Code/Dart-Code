@@ -4,7 +4,7 @@ import { env, extensions, Extension, workspace } from "vscode";
 import * as https from "https";
 import * as querystring from "querystring";
 import { config } from "./config";
-import { log, isDevelopment } from "./utils";
+import { log, isDevelopment, extensionVersion } from "./utils";
 
 enum EventCategory {
     Extension,
@@ -18,7 +18,6 @@ enum EventAction {
 }
 
 class Analytics {
-	private extensionVersion: string;
 	sdkVersion: string;
 	analysisServerVersion: string;	
 
@@ -35,7 +34,7 @@ class Analytics {
 			cid: env.machineId,
 			ul: env.language,
 			an: "Dart Code",
-			av: this.extensionVersion,
+			av: extensionVersion,
 			t: "event",
 			ec: EventCategory[category],
 			ea: EventAction[action],

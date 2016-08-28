@@ -62,7 +62,7 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	}
 
 	private handleMessage(message: string) {
-		this.logTraffic(`<== ${message}\n`);
+		this.logTraffic(`<== ${message}\r\n`);
 		let msg = JSON.parse(message);
 		if (msg.event)
 			this.handleNotification(<UnknownNotification>msg);
@@ -71,7 +71,7 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	}
 
 	private sendMessage<T>(req: Request<T>) {
-		let json = JSON.stringify(req) + "\n";
+		let json = JSON.stringify(req) + "\r\n";
 		this.logTraffic(`==> ${json}`);
 		this.analyzerProcess.stdin.write(json);
 	}
@@ -82,8 +82,9 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 		if (config.analyzerLogFile) {
 			if (!this.logStream)
 				this.logStream = fs.createWriteStream(config.analyzerLogFile);
+			this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
 			if (message.length > max)
-				this.logStream.write(message.substring(0, max) + "...\n");
+				this.logStream.write(message.substring(0, max) + "...\r\n");
 			else
 				this.logStream.write(message);
 		} else if (!config.analyzerLogFile && this.logStream) {
