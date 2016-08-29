@@ -7,14 +7,18 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 ## Features
 
 - Syntax highlighting
-- Basic code completion
+- Code completion
+- Realtime errors/warnings/TODOs reported in problems window (`Ctrl+Shift+M`) and with squiggles
+- Hovers/tooltip information
 - Go to Definition (`F12`)
 - Find References (`Shift+F12`)
 - Excute Dart command line apps (`F5`)
+- Debugging support for command line apps (`F5`)
+- Notification of new stable Dart SDK releases
+- Rename refactoring (`F2`)
 - Organise directives (`Ctrl+Alt+O`)
-- Realtime errors/warnings/TODOs reported in problems window (`Ctrl+Shift+M`) and with squiggles
+- Code fixes/lightbulb (`Ctrl+.` and `F8`)
 - Format document with custom line length (`Alt+Shift+F`)
-- Hovers/tooltip information
 - Workspace-wide symbol search (`Ctrl+T`)
 - Auto-closing braces/quotes
 - Document symbol list/search with highlighting (`Ctrl+Shift+O`)
