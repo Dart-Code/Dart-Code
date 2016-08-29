@@ -181,7 +181,8 @@ export class DartDebugSession extends DebugSession {
 		if (!breakpoints)
 			breakpoints = [];
 
-		let uris = this.getBreakpointUris(source.path);
+		// Get all possible valid source uris for the given path.
+		let uris = this.getPossibleSourceUris(source.path);
 
 		uris.forEach(uri => {
 			this.threadManager.setBreakpoints(uri, breakpoints).then((result: boolean[]) => {
@@ -196,7 +197,15 @@ export class DartDebugSession extends DebugSession {
 		})
 	}
 
-	private getBreakpointUris(sourcePath: string): string[] {
+	/***
+	 * Converts a source path to an array of possible uris.
+	 * 
+	 * This is to ensure that we can hit breakpoints in the case
+	 * where the VM considers a file to be a package: uri and also
+	 * a filesystem uri (this can vary depending on how it was
+	 * imported by the user). 
+	 */
+	private getPossibleSourceUris(sourcePath: string): string[] {
 		let uris = [];
 
 		// Add the raw file path.
