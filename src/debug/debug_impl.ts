@@ -181,20 +181,42 @@ export class DartDebugSession extends DebugSession {
 		if (!breakpoints)
 			breakpoints = [];
 
-		let sourcePath = source.path;
-		let uri = this.packageMap.convertFileToPackageUri(sourcePath);
-		if (!uri)
-			uri = fileToUri(sourcePath);
+		// Get all possible valid source uris for the given path.
+		let uris = this.getPossibleSourceUris(source.path);
 
-		this.threadManager.setBreakpoints(uri, breakpoints).then((result: boolean[]) => {
-			let bpResponse = [];
-			for (let verified of result) {
-				bpResponse.push({ verified: verified });
-			}
+		uris.forEach(uri => {
+			this.threadManager.setBreakpoints(uri, breakpoints).then((result: boolean[]) => {
+				let bpResponse = [];
+				for (let verified of result) {
+					bpResponse.push({ verified: verified });
+				}
 
-			response.body = { breakpoints: bpResponse };
-			this.sendResponse(response);
-		}).catch((error) => this.errorResponse(response, `${error}`));
+				response.body = { breakpoints: bpResponse };
+				this.sendResponse(response);
+			}).catch((error) => this.errorResponse(response, `${error}`));
+		})
+	}
+
+	/***
+	 * Converts a source path to an array of possible uris.
+	 * 
+	 * This is to ensure that we can hit breakpoints in the case
+	 * where the VM considers a file to be a package: uri and also
+	 * a filesystem uri (this can vary depending on how it was
+	 * imported by the user). 
+	 */
+	private getPossibleSourceUris(sourcePath: string): string[] {
+		let uris = [];
+
+		// Add the raw file path.
+		uris.push(fileToUri(sourcePath));
+
+		// Convert to package path and add that too.
+		let packageUri = this.packageMap.convertFileToPackageUri(sourcePath);
+		if (packageUri)
+			uris.push(packageUri);
+
+		return uris;
 	}
 
 	protected setExceptionBreakPointsRequest(
