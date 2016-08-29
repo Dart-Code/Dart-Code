@@ -37,14 +37,16 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 
 	private transcribeOutline(document: TextDocument, symbols: SymbolInformation[], parent: as.Element, outline: as.Outline) {
 		let element = outline.element;
-
 		let name = element.name;
 
-		if (element.parameters)
+		if (element.parameters && element.kind != "SETTER")
 			name = `${name}${element.parameters}`;
 
-			if (parent && parent.name)
-				name = `${parent.name}.${name}`;
+		if (parent && parent.name)
+			name = `${parent.name}.${name}`;
+
+		// For properties, show if get/set.
+		let propertyType = element.kind == "SETTER" ? "set" : element.kind == "GETTER" ? "get" : null;
 
 		symbols.push({
 			name: name,
@@ -53,7 +55,7 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 				uri: Uri.file(element.location.file),
 				range: this.getRange(document, outline)
 			},
-			containerName: null
+			containerName: propertyType // HACK: Not really correct, but renders nicely. 
 		});
 
 		if (outline.children) {
