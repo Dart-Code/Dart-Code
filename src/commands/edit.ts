@@ -5,7 +5,7 @@ import * as editors from "../editors";
 import * as vs from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 
-export class DartCommands implements vs.Disposable {
+export class EditCommands implements vs.Disposable {
 	private context: vs.ExtensionContext;
 	private analyzer: Analyzer;
 	private commands: Array<vs.Disposable> = [];
@@ -15,11 +15,12 @@ export class DartCommands implements vs.Disposable {
 		this.analyzer = analyzer;
 
 		this.commands.push(
-			vs.commands.registerTextEditorCommand("dart.organizeDirectives", this.organizeDirectives, this)
+			vs.commands.registerTextEditorCommand("dart.organizeDirectives", this.organizeDirectives, this),
+			vs.commands.registerCommand("dart.applySourceChange", this.applyEdits, this)
 		);
 	}
 
-	organizeDirectives(editor: vs.TextEditor, editBuilder: vs.TextEditorEdit) {
+	private organizeDirectives(editor: vs.TextEditor, editBuilder: vs.TextEditorEdit) {
 		if (!editors.hasActiveDartEditor()) {
 			vs.window.showWarningMessage("No active Dart editor.");
 			return;
@@ -50,5 +51,24 @@ export class DartCommands implements vs.Disposable {
 	dispose(): any {
 		for (let command of this.commands)
 			command.dispose();
+	}
+
+	private applyEdits(document: vs.TextDocument, change: as.SourceChange) {
+		let changes = new vs.WorkspaceEdit();
+
+		change.edits.forEach(edit => {
+			edit.edits.forEach(e => {
+				changes.replace(
+					vs.Uri.file(edit.file),
+					new vs.Range(
+						document.positionAt(e.offset),
+						document.positionAt(e.offset + e.length)
+					),
+					e.replacement
+				)
+			})
+		});
+
+		vs.workspace.applyEdit(changes);
 	}
 }
