@@ -85,7 +85,9 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 					document.positionAt(notification.replacementOffset + notification.replacementLength)
 				),
 				suggestion.completion
-			)
+			),
+			additionalTextEdits: null,
+			command: null
 		};
 	}
 
