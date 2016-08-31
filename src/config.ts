@@ -18,13 +18,13 @@ class Config {
 		return this.config.get<T>(key);
 	}
 
-	get userDefinedSdkPath() { return this.getConfig<string>("sdkPath"); }
+	get allowAnalytics() { return this.getConfig<boolean>("allowAnalytics"); }
+	get analyzerDiagnosticsPort() { return this.getConfig<number>("analyzerDiagnosticsPort"); }
+	get analyzerLogFile() { return this.getConfig<string>("analyzerLogFile"); }
 	get lineLength() { return this.getConfig<number>("lineLength"); }
 	get setIndentation() { return this.getConfig<number>("setIndentation"); }
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
-	get analyzerDiagnosticsPort() { return this.getConfig<number>("analyzerDiagnosticsPort"); }
-	get analyzerLogFile() { return this.getConfig<string>("analyzerLogFile"); }
-	get allowAnalytics() { return this.getConfig<boolean>("allowAnalytics"); }
+	get userDefinedSdkPath() { return this.getConfig<string>("sdkPath"); }
 }
 
 export const config = new Config();
