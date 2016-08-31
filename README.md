@@ -30,6 +30,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 ## Extension Settings
 
 - `dart.allowAnalytics`: Note: We only send a few very basic events and the platform and extension/Dart version numbers :-)
+- `dart.checkForSdkUpdates`: Whether to check you are using the latest version of the Dart SDK at startup. Defaults to `true`.
 - `dart.lineLength`: The maximum length of a line of code. This is used by the document formatter. Defaults to `80`.
 - `dart.sdkPath`: If the Dart SDK is not automatically found on your machine from your `PATH` you can enter the path to it here.
 - `dart.setIndentation`: Forces indenting with two spaces when Dart files are opened. This is on by default because VS Code doesn't currently support per-language settings and most people use tabs/4 spaces for other languages but Convention is 2 spaces. Defaults to `true`.

@@ -151,6 +151,11 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Note: We only send a few very basic events and the platform and extension/Dart version numbers :-)"
+				},
+				"dart.checkForSdkUpdates": {
+					"type": "boolean",
+					"default": true,
+					"description": "Checks whether you are using the latest version of the Dart SDK at startup."
 				}
 			}
 		},
