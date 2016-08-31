@@ -158,6 +158,11 @@
 			{
 				"type": "dart-cli",
 				"label": "Dart command line",
+				"enableBreakpointsFor": {
+					"languageIds": [
+						"dart"
+					]
+				},
 				"program": "./out/src/debug/debug_entry.js",
 				"runtime": "node",
 				"variables": {
@@ -216,7 +221,8 @@
 	},
 	"dependencies": {
 		"vscode-debugadapter": "^1.11.0",
-		"vscode-debugprotocol": "^1.11.0"
+		"vscode-debugprotocol": "^1.11.0",
+		"ws": "^1.1.1"
 	},
 	"devDependencies": {
 		"typescript": "^1.8.5",
