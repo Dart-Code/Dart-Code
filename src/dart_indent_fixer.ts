@@ -11,7 +11,8 @@ export class DartIndentFixer {
 
 		let isDart = editor.document.languageId === "dart";
 		let isPubspec = editor.document.languageId === "yaml" && path.basename(editor.document.fileName).toLowerCase() == "pubspec.yaml";
-		if (config.setIndentation && (isDart || isPubspec)) {
+		let isAnalysisOptions = editor.document.languageId === "yaml" && path.basename(editor.document.fileName).toLowerCase() == "analysis_options.yaml";
+		if (config.setIndentation && (isDart || isPubspec || isAnalysisOptions)) {
 			editor.options = {
 				insertSpaces: true,
 				tabSize: 2

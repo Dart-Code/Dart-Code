@@ -3128,3 +3128,184 @@ export interface TypeHierarchyItem {
 	subclasses: number[];
 }
 
+/**
+ * Create a local variable initialized by the expression that covers
+ * the specified selection.
+ * 
+ * It is an error if the selection range is not covered by a
+ * complete expression.
+ */
+export interface ExtractLocalVariableFeedback extends RefactoringFeedback {
+	/**
+	 * The offsets of the expressions that cover the specified
+	 * selection, from the down most to the up most.
+	 */
+	coveringExpressionOffsets?: number[];
+
+	/**
+	 * The lengths of the expressions that cover the specified
+	 * selection, from the down most to the up most.
+	 */
+	coveringExpressionLengths?: number[];
+
+	/**
+	 * The proposed names for the local variable.
+	 */
+	names: string[];
+
+	/**
+	 * The offsets of the expressions that would be replaced by
+	 * a reference to the variable.
+	 */
+	offsets: number[];
+
+	/**
+	 * The lengths of the expressions that would be replaced by
+	 * a reference to the variable. The lengths correspond to
+	 * the offsets. In other words, for a given expression, if
+	 * the offset of that expression is offsets[i], then the
+	 * length of that expression is lengths[i].
+	 */
+	lengths: number[];
+}
+
+/**
+ * Create a method whose body is the specified expression or
+ * list of statements, possibly augmented with a return
+ * statement.
+ * 
+ * It is an error if the range contains anything other than a
+ * complete expression (no partial expressions are allowed) or
+ * a complete sequence of statements.
+ */
+export interface ExtractMethodFeedback extends RefactoringFeedback {
+	/**
+	 * The offset to the beginning of the expression or
+	 * statements that will be extracted.
+	 */
+	offset: number;
+
+	/**
+	 * The length of the expression or statements that will be
+	 * extracted.
+	 */
+	length: number;
+
+	/**
+	 * The proposed return type for the method.
+	 * If the returned element does not have a declared return type,
+	 * this field will contain an empty string.
+	 */
+	returnType: string;
+
+	/**
+	 * The proposed names for the method.
+	 */
+	names: string[];
+
+	/**
+	 * True if a getter could be created rather than a method.
+	 */
+	canCreateGetter: boolean;
+
+	/**
+	 * The proposed parameters for the method.
+	 */
+	parameters: RefactoringMethodParameter[];
+
+	/**
+	 * The offsets of the expressions or statements that would
+	 * be replaced by an invocation of the method.
+	 */
+	offsets: number[];
+
+	/**
+	 * The lengths of the expressions or statements that would
+	 * be replaced by an invocation of the method. The lengths
+	 * correspond to the offsets. In other words, for a given
+	 * expression (or block of statements), if the offset of
+	 * that expression is offsets[i], then the length of that
+	 * expression is lengths[i].
+	 */
+	lengths: number[];
+}
+
+/**
+ * Inline the initializer expression of a local variable in
+ * place of any references to that variable.
+ * 
+ * It is an error if the range contains anything other than all
+ * or part of the name of a single local variable.
+ */
+export interface InlineLocalVariableFeedback extends RefactoringFeedback {
+	/**
+	 * The name of the variable being inlined.
+	 */
+	name: string;
+
+	/**
+	 * The number of times the variable occurs.
+	 */
+	occurrences: number;
+}
+
+/**
+ * Inline a method in place of one or all references to that
+ * method.
+ * 
+ * It is an error if the range contains anything other than all
+ * or part of the name of a single method.
+ */
+export interface InlineMethodFeedback extends RefactoringFeedback {
+	/**
+	 * The name of the class enclosing the method being inlined.
+	 * If not a class member is being inlined, this field will be absent.
+	 */
+	className?: string;
+
+	/**
+	 * The name of the method (or function) being inlined.
+	 */
+	methodName: string;
+
+	/**
+	 * True if the declaration of the method is selected.
+	 * So all references should be inlined.
+	 */
+	isDeclaration: boolean;
+}
+
+/**
+ * Rename a given element and all of the references to that
+ * element.
+ * 
+ * It is an error if the range contains anything other than all
+ * or part of the name of a single function (including methods,
+ * getters and setters), variable (including fields, parameters
+ * and local variables), class or function type.
+ */
+export interface RenameFeedback extends RefactoringFeedback {
+	/**
+	 * The offset to the beginning of the name selected to be
+	 * renamed.
+	 */
+	offset: number;
+
+	/**
+	 * The length of the name selected to be renamed.
+	 */
+	length: number;
+
+	/**
+	 * The human-readable description of the kind of element being
+	 * renamed (such as “class” or “function type
+	 * alias”).
+	 */
+	elementKindName: string;
+
+	/**
+	 * The old name of the element before the refactoring.
+	 */
+	oldName: string;
+}
+

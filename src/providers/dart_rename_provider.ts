@@ -39,8 +39,8 @@ export class DartRenameProvider implements RenameProvider {
 				// See https://github.com/Dart-Code/Dart-Code/issues/144
 				if (resp.feedback) {
 					let expectedOldName = document.getText(wordRange);
-					let actualOldName = (<any>resp.feedback).oldName; // TODO: Fix up feedback objects to have types. 
-					if (actualOldName && actualOldName != expectedOldName) {
+					let actualOldName = (<as.RenameFeedback>resp.feedback).oldName; // TODO: Does the API spec have enough for us to make these generics? 
+					if (actualOldName != null && actualOldName != expectedOldName) {
 						window.showErrorMessage("This type of rename is not yet supported.");
 						outputChannel.appendLine(`[ERROR] Rename aborting due to rename mismatch (expected: ${expectedOldName}, got: ${actualOldName}). This rename will be supported in a future version.`);
 						reject("");

@@ -40,47 +40,32 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		document: TextDocument, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion
 	): CompletionItem {
 		let start = document.positionAt(suggestion.selectionOffset);
+		let element = suggestion.element;
+		let elementKind = element ? this.getElementKind(element.kind) : null;
+
 		let label = suggestion.completion;
 		let detail: string = "";
 
-		if (suggestion.element) {
-			let element = suggestion.element;
-			let elementKind = this.getElementKind(element.kind);
-			detail = element.kind.toLowerCase();
-
-			// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its
-			// parameters and return type.
-			if (element.parameters && elementKind != CompletionItemKind.Property) {
-				label += element.parameters.length == 2 ? "()" : "(…)";
-
-				let sig = `${element.name}${element.parameters}`;
-
-				if (element.kind == "CONSTRUCTOR") {
-					sig = (element.name)
-						? `${suggestion.declaringType}.${sig}`
-						: `${suggestion.declaringType}${sig}`;
-				}
-
-				detail += " " + sig;
-			}
-
-			if (elementKind == CompletionItemKind.Property) {
-				// Setters appear as methods with one arg (and cause getters to not appear),
-				// so treat them both the same and just display with the properties type.
-
-				// TODO: We show (readonly) if it's a getter. We can only do it this way because of the AS
-				// not sending GETTERs when there's a SETTER. If/when this gets fixed, we'll have to change
-				// this logic.
-
-				detail = element.kind == "GETTER"
-					? "(readonly) " + element.returnType
-					: element.parameters.substring(1, element.parameters.lastIndexOf(" "));
-			}
-			else if (element.returnType)
-				detail += " → " + element.returnType
+		// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its
+		// parameters.
+		if (element && element.parameters && elementKind != CompletionItemKind.Property) {
+			label += element.parameters.length == 2 ? "()" : "(…)";
+			detail = element.parameters;
 		}
 
-		detail = detail.length == 0 ? detail = null : detail.trim();
+		// If we're a property, work out the type. 
+		if (elementKind == CompletionItemKind.Property) {
+			// Setters appear as methods with one arg (and cause getters to not appear),
+			// so treat them both the same and just display with the properties type.
+			detail = element.kind == "GETTER"
+				? element.returnType
+				: element.parameters.substring(1, element.parameters.lastIndexOf(" "));
+			// Otherwise, get return type from method.
+		} else if (element && element.returnType)
+			detail =
+				detail == ""
+					? element.returnType
+					: detail + " → " + element.returnType;
 
 		let kind = suggestion.element
 			? this.getElementKind(suggestion.element.kind)

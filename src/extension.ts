@@ -7,8 +7,9 @@ import { analytics } from "./analytics";
 import { Analyzer } from "./analysis/analyzer";
 import { AnalyzerStatusReporter } from "./analyzer_status_reporter";
 import { config } from "./config";
-import { DartCommands } from "./providers/dart_commands";
+import { EditCommands } from "./commands/edit";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
+import { DartCodeActionProvider } from "./providers/dart_code_action_provider";
 import { DartDefinitionProvider } from "./providers/dart_definition_provider";
 import { DartReferenceProvider } from "./providers/dart_reference_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
@@ -76,6 +77,7 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.languages.registerReferenceProvider(DART_MODE, new DartReferenceProvider(analyzer)));
 	context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
 	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(DART_MODE, new DartDocumentHighlightProvider(analyzer)));
+	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, new DartCodeActionProvider(analyzer)));
 	context.subscriptions.push(vs.languages.registerRenameProvider(DART_MODE, new DartRenameProvider(analyzer)));
 	context.subscriptions.push(new AnalyzerStatusReporter(analyzer));
 
@@ -119,7 +121,7 @@ export function activate(context: vs.ExtensionContext) {
 	sdkCommands.registerCommands(context);
 
 	// Set up commands for Dart editors.
-	context.subscriptions.push(new DartCommands(context, analyzer));
+	context.subscriptions.push(new EditCommands(context, analyzer));
 }
 
 function handleConfigurationChange() {
