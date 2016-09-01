@@ -17,7 +17,6 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - Notification of new stable Dart SDK releases
 - Rename refactoring (`F2`)
 - Organise directives (`Ctrl+Alt+O`)
-- Code fixes/lightbulb (`Ctrl+.` and `F8`)
 - Format document with custom line length (`Alt+Shift+F`)
 - Workspace-wide symbol search (`Ctrl+T`)
 - Auto-closing braces/quotes
