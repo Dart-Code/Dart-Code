@@ -24,7 +24,7 @@ export class DartDiagnosticProvider {
 		if (!config.showTodos)
 			errors = errors.filter((error) => error.type != "TODO");
 		this.diagnostics.set(
-			Uri.file(notification.file), 
+			Uri.file(notification.file),
 			errors.map(e => this.createDiagnostic(e))
 		);
 	}
@@ -48,7 +48,7 @@ export class DartDiagnosticProvider {
 			case "INFO":
 				return DiagnosticSeverity.Information;
 			default:
-				throw new Error("Unknown severity type: " + severity); 
+				throw new Error("Unknown severity type: " + severity);
 		}
 	}
 

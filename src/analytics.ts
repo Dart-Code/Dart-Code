@@ -19,7 +19,7 @@ enum EventAction {
 
 class Analytics {
 	sdkVersion: string;
-	analysisServerVersion: string;	
+	analysisServerVersion: string;
 
 	logActivation() { this.log(EventCategory.Extension, EventAction.Activated); }
 	logShowTodosToggled(enabled: boolean) { this.log(EventCategory.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }

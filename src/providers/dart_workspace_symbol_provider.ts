@@ -106,7 +106,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 			.map(e => e.name)
 			.join(".");
 
-			// For properties, show if get/set.
+		// For properties, show if get/set.
 		if (result.path[0].kind == "SETTER")
 			elementPathDescription += " set";
 		if (result.path[0].kind == "GETTER")
