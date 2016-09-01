@@ -14,6 +14,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - Find References (`Shift+F12`)
 - Excute Dart command line apps (`F5`)
 - Debugging support for command line apps (`F5`)
+- Code fixes/lightbulb (`Ctrl+.` and `F8`)
 - Notification of new stable Dart SDK releases
 - Rename refactoring (`F2`)
 - Organise directives (`Ctrl+Alt+O`)
