@@ -1,17 +1,14 @@
 // Place your settings in this file to overwrite default and user settings.
 {
-    "editor.detectIndentation": false,
-    "editor.insertSpaces": false,
-    "editor.tabSize": 4,
-
+	"editor.detectIndentation": false,
+	"editor.insertSpaces": false,
+	"editor.tabSize": 4,
 	"files.exclude": {
-        "out": true,
-        "**/node_modules": true
-    },
-
+		"out": true,
+		"**/node_modules": true
+	},
 	"search.exclude": {
-        "out": true
-    },
-
+		"out": true
+	},
 	"typescript.tsdk": "./node_modules/typescript/lib" // we want to use the TS server from our node_modules folder to control its version
 }
