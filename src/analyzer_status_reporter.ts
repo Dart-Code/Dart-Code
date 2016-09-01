@@ -40,6 +40,6 @@ export class AnalyzerStatusReporter extends Disposable {
 	private handleServerError(error: ServerErrorNotification) {
 		logError(error);
 		if (error.stackTrace)
-			console.error(error.stackTrace);		
+			console.error(error.stackTrace);
 	}
 }

@@ -1,6 +1,5 @@
 out
 node_modules
 analyzer.log
-.vscode/.browse.VC.db
-.vscode/.browse.VC.db-wal
+.vscode/.browse.VC.db*
 .vscode-test/

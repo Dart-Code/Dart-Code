@@ -14,7 +14,7 @@ export class FileChangeHandler {
 
 	onDidOpenTextDocument(document: vs.TextDocument) {
 		if (!util.isAnalyzable(document))
-		  return;
+			return;
 
 		let files: { [key: string]: as.AddContentOverlay } = {};
 
@@ -28,7 +28,7 @@ export class FileChangeHandler {
 
 	onDidChangeTextDocument(e: vs.TextDocumentChangeEvent) {
 		if (!util.isAnalyzable(e.document))
-		  return;
+			return;
 
 		// TODO: Fix this...
 		// HACK: e.document.offsetAt appears to return the wrong offset when there are
@@ -63,7 +63,7 @@ export class FileChangeHandler {
 
 	onDidCloseTextDocument(document: vs.TextDocument) {
 		if (!util.isAnalyzable(document))
-		  return;
+			return;
 
 		let files: { [key: string]: as.RemoveContentOverlay } = {};
 

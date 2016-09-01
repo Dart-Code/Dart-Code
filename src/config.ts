@@ -21,7 +21,7 @@ class Config {
 	get allowAnalytics() { return this.getConfig<boolean>("allowAnalytics"); }
 	get analyzerDiagnosticsPort() { return this.getConfig<number>("analyzerDiagnosticsPort"); }
 	get analyzerLogFile() { return this.getConfig<string>("analyzerLogFile"); }
-	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }	
+	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
 	get lineLength() { return this.getConfig<number>("lineLength"); }
 	get setIndentation() { return this.getConfig<number>("setIndentation"); }
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }

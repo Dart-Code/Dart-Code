@@ -19,6 +19,6 @@ export class OpenFileTracker {
 
 		this.analyzer.analysisSetPriorityFiles({
 			files: priorityFiles
-		}).then(() => {}, util.logError);
+		}).then(() => { }, util.logError);
 	}
 }
