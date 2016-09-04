@@ -30,9 +30,9 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 		args.push(analyzerPath);
 
 		// Optionally start the analyzer's diagnostic web server on the given port.
-		let port = config.analyzerDiagnosticsPort;
-		if (port)
-			args.push(`--port=${port}`);
+		let diagnosticsPort = config.analyzerDiagnosticsPort;
+		if (diagnosticsPort)
+			args.push(`--port=${diagnosticsPort}`);
 
 		this.analyzerProcess = child_process.spawn(dartVMPath, args);
 
