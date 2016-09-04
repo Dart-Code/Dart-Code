@@ -4,6 +4,10 @@ os:
   - osx
   - linux
 
+language: dart
+dart:
+  - stable
+
 before_install:
   - if [ $TRAVIS_OS_NAME == "linux" ]; then
       export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
@@ -16,4 +20,4 @@ install:
 
 script:
   - npm run vscode:prepublish
-  - npm test --silent
+  - npm test

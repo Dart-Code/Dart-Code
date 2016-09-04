@@ -1,7 +1,18 @@
+install:
+- ps: >-
+    Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
+
+    7z.exe x dart.zip
+
+    $env:PATH = "$pwd\dart-sdk\bin;" + $env:PATH
+- cmd: >-
+    dart --version
+
 build_script:
 - cmd: >-
     npm install
 
     npm run vscode:prepublish
+
 test_script:
-- cmd: npm test --silent
+- cmd: npm test

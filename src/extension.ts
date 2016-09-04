@@ -27,8 +27,8 @@ import { ServerStatusNotification } from "./analysis/analysis_server_types";
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
 
-let dartSdkRoot: string;
-let analyzer: Analyzer;
+export let dartSdkRoot: string;
+export let analyzer: Analyzer;
 
 let showTodos: boolean = config.showTodos;
 
