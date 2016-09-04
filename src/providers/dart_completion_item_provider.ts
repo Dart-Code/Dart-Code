@@ -79,22 +79,20 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			? this.getElementKind(suggestion.element.kind)
 			: this.getSuggestionKind(suggestion.kind);
 
-		return {
-			label: label,
-			kind: kind,
-			detail: (suggestion.isDeprecated ? "(deprecated) " : "") + detail,
-			documentation: suggestion.docSummary,
-			sortText: null,
-			filterText: null,
-			insertText: suggestion.completion,
-			textEdit: new TextEdit(
-				new Range(
-					document.positionAt(notification.replacementOffset),
-					document.positionAt(notification.replacementOffset + notification.replacementLength)
-				),
-				completionText
-			)
-		};
+		let completion = new CompletionItem(label, kind);
+		completion.label = label;
+		completion.kind = kind;
+		completion.detail = (suggestion.isDeprecated ? "(deprecated) " : "") + detail;
+		completion.documentation = suggestion.docSummary;
+		completion.insertText = suggestion.completion;
+		completion.textEdit = new TextEdit(
+			new Range(
+				document.positionAt(notification.replacementOffset),
+				document.positionAt(notification.replacementOffset + notification.replacementLength)
+			),
+			completionText
+		);
+		return completion;
 	}
 
 	private getSuggestionKind(kind: as.CompletionSuggestionKind): CompletionItemKind {
