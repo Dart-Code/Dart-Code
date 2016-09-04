@@ -6,7 +6,7 @@ import * as as from "./analysis_server_types";
 import * as fs from "fs";
 import { AnalyzerGen } from "./analyzer_gen";
 import { config } from "../config";
-import { log } from "../utils";
+import { log, logError } from "../utils";
 
 export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	private analyzerProcess: child_process.ChildProcess;
@@ -63,7 +63,16 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 
 	private handleMessage(message: string) {
 		this.logTraffic(`<== ${message}\r\n`);
-		let msg = JSON.parse(message);
+		let msg: any;
+		try {
+			msg = JSON.parse(message);
+		}
+		catch (e) {
+			// This will include things like Observatory output.
+			logError({ message: `Unable to parse message (${e}): ${message}` });
+			return;
+		}
+
 		if (msg.event)
 			this.handleNotification(<UnknownNotification>msg);
 		else
