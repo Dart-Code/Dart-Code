@@ -82,7 +82,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		return {
 			label: label,
 			kind: kind,
-			detail: detail,
+			detail: (suggestion.isDeprecated ? "(deprecated) " : "") + detail,
 			documentation: suggestion.docSummary,
 			sortText: null,
 			filterText: null,
