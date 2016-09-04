@@ -12,9 +12,9 @@ install:
 
 build_script:
 - cmd: >-
-    npm install
+    npm install --depth 0 --silent
 
-    npm run vscode:prepublish
+    npm run vscode:prepublish --silent
 
 test_script:
-- cmd: npm test
+- cmd: npm test --silent

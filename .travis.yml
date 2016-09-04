@@ -16,8 +16,8 @@ before_install:
     fi
 
 install:
-  - npm install
+  - npm install --depth 0 --silent
 
 script:
-  - npm run vscode:prepublish
-  - npm test
+  - npm run vscode:prepublish --silent
+  - npm test --silent
