@@ -5,6 +5,8 @@ install:
     7z.exe x dart.zip
 
     $env:PATH = "$pwd\dart-sdk\bin;" + $env:PATH
+
+    $env:ELECTRON_NO_ATTACH_CONSOLE = 1
 - cmd: >-
     dart --version
 
