@@ -44,6 +44,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		let elementKind = element ? this.getElementKind(element.kind) : null;
 
 		let label = suggestion.completion;
+		let completionText = suggestion.completion;
 		let detail: string = "";
 
 		// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its
@@ -51,6 +52,13 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		if (element && element.parameters && elementKind != CompletionItemKind.Property) {
 			label += element.parameters.length == 2 ? "()" : "(…)";
 			detail = element.parameters;
+
+			// Add placeholders for params to the completion.
+			if (suggestion.parameterNames) {
+				let args = suggestion.parameterNames.slice(0, suggestion.requiredParameterCount);
+				let argPlaceholders = args.map(n => `{{${n}}}`).join(", ");
+				completionText += `(${argPlaceholders}){{_}}`;
+			}
 		}
 
 		// If we're a property, work out the type. 
@@ -84,7 +92,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 					document.positionAt(notification.replacementOffset),
 					document.positionAt(notification.replacementOffset + notification.replacementLength)
 				),
-				suggestion.completion
+				completionText
 			)
 		};
 	}
