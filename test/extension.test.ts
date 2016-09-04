@@ -14,9 +14,8 @@ describe("Extension", () => {
 	it("is activated successfully upon opening a Dart file", done => {
 		vs.workspace.openTextDocument(sampleFileUri)
 			.then(() => assert.equal(ext.isActive, true))
-			.then(() => ext.activate())
-			.then(api => assert.notEqual(extension.dartSdkRoot, null))
-			.then(api => assert.notEqual(extension.analyzer, null))
+			.then(() => assert.notEqual(extension.dartSdkRoot, null))
+			.then(() => assert.notEqual(extension.analyzer, null))
 			.then(done, e => done(new Error(e)));
     });
 });
