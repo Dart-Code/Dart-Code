@@ -14,6 +14,9 @@ before_install:
       sh -e /etc/init.d/xvfb start;
       sleep 3;
     fi
+  - dart --version
+  - node --version
+  - npm --version
 
 install:
   - npm install --depth 0 --silent
