@@ -20,6 +20,7 @@ class Config {
 
 	get allowAnalytics() { return this.getConfig<boolean>("allowAnalytics"); }
 	get analyzerDiagnosticsPort() { return this.getConfig<number>("analyzerDiagnosticsPort"); }
+	get analyzerObservatoryPort() { return this.getConfig<number>("analyzerObservatoryPort"); }
 	get analyzerLogFile() { return this.getConfig<string>("analyzerLogFile"); }
 	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
 	get lineLength() { return this.getConfig<number>("lineLength"); }

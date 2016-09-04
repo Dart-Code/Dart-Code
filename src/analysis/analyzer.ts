@@ -20,7 +20,14 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 
 		log(`Starting Dart analysis server...`);
 
-		let args = [analyzerPath];
+		let args = [];
+
+		// Optionally start Observatory for the analyzer.
+		let observatoryPort = config.analyzerObservatoryPort;
+		if (observatoryPort)
+			args.push(`--observe=${observatoryPort}`);
+
+		args.push(analyzerPath);
 
 		// Optionally start the analyzer's diagnostic web server on the given port.
 		let port = config.analyzerDiagnosticsPort;
