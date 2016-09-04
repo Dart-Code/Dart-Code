@@ -27,7 +27,7 @@ describe("Activated extension", () => {
 	});
     it("has a functional analysis server", done => {
 		extension.analyzer.serverGetVersion()
-			.then(resp => assert.equal(/^\d+\.\d+\.\d+g$/.test(resp.version), true))
+			.then(resp => assert.equal(/^\d+\.\d+\.\d+$/.test(resp.version), true))
 			.then(() => done(), e => done(new Error(e)));
     });
 });
