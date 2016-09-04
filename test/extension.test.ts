@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import * as extension from "../src/extension";
 
 const isWin = /^win/.test(process.platform);
-const ext = vs.extensions.getExtension/*<extension.ExtensionApi>*/("DanTup.dart-code");
+const ext = vs.extensions.getExtension("DanTup.dart-code");
 const sampleFilePath = (isWin ? "X:\\" : "/tmp/") + "sample.dart";
 const sampleFileUri = vs.Uri.parse(`untitled:${sampleFilePath}`);
 
