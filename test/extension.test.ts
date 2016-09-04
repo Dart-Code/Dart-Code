@@ -16,6 +16,18 @@ describe("Extension", () => {
 			.then(() => assert.equal(ext.isActive, true))
 			.then(() => assert.notEqual(extension.dartSdkRoot, null))
 			.then(() => assert.notEqual(extension.analyzer, null))
-			.then(done, e => done(new Error(e)));
+			.then(() => done(), e => done(new Error(e)));
+    });
+});
+
+describe("Activated extension", () => {
+	before(done => {
+		vs.workspace.openTextDocument(sampleFileUri)
+			.then(() => done(), e => done(new Error(e)));
+	});
+    it("has a functional analysis server", done => {
+		extension.analyzer.serverGetVersion()
+			.then(resp => assert.equal(/^\d+\.\d+\.\d+g$/.test(resp.version), true))
+			.then(() => done(), e => done(new Error(e)));
     });
 });
