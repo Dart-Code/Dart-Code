@@ -156,6 +156,11 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Checks whether you are using the latest version of the Dart SDK at startup."
+				},
+				"dart.runPubGetOnPubspecChanges": {
+					"type": "boolean",
+					"default": true,
+					"description": "Automatically runs `pub get` whenever pubspec.yaml is saved."
 				}
 			}
 		},

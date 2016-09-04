@@ -6,6 +6,7 @@ import * as os from "os";
 import * as path from "path";
 import * as project from "../project";
 import * as vs from "vscode";
+import { config } from "../config";
 
 export class SdkCommands {
 	private sdk: string;
@@ -21,6 +22,12 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("pub.upgrade", selection => {
 			this.runPub("upgrade", selection);
+		}));
+
+		// Hook saving pubspec to run pub.get.
+		context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {
+			if (config.runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() == "pubspec.yaml")
+				vs.commands.executeCommand("pub.get", td.uri);
 		}));
 	}
 

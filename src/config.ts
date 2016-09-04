@@ -24,6 +24,7 @@ class Config {
 	get analyzerLogFile() { return this.getConfig<string>("analyzerLogFile"); }
 	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
 	get lineLength() { return this.getConfig<number>("lineLength"); }
+	get runPubGetOnPubspecChanges() { return this.getConfig<boolean>("runPubGetOnPubspecChanges"); }
 	get setIndentation() { return this.getConfig<number>("setIndentation"); }
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
 	get userDefinedSdkPath() { return this.getConfig<string>("sdkPath"); }
