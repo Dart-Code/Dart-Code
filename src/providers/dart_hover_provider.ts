@@ -79,8 +79,14 @@ export class DartHoverProvider implements HoverProvider {
 			doc = lines.join("\n");
 		}
 
+		// Remove colons from old-style references like [:foo:].
 		doc = doc.replace(/\[:\S+:\]/g, (match) => `[${match.substring(2, match.length - 2)}]`);
-		doc = doc.replace(/(\[\S+\])([^(])/g, (match, one, two) => `${one}()${two}`);
+
+		// Change any links without hyperlinks to just code syntax.
+		// That is, anything in [squares] that isn't a [link](http://blah).
+		// Note: To ensure we get things at the end, we need to match "not a paren or end of string"
+		// and we need to put that character back in since the regex consumed it.
+		doc = doc.replace(/\[(\S+)\]([^(]|$)/g, (match, one, two) => `\`${one}\`${two}`);
 
 		return doc;
 	}
