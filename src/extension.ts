@@ -17,6 +17,7 @@ import { DartFormattingEditProvider } from "./providers/dart_formatting_edit_pro
 import { DartDocumentHighlightProvider } from "./providers/dart_highlighting_provider";
 import { DartHoverProvider } from "./providers/dart_hover_provider";
 import { DartIndentFixer } from "./dart_indent_fixer";
+import { DartLanguageConfiguration } from "./providers/dart_language_configuration";
 import { DartDocumentSymbolProvider } from "./providers/dart_document_symbol_provider";
 import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
 import { DartRenameProvider } from "./providers/dart_rename_provider";
@@ -81,6 +82,7 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(DART_MODE, new DartDocumentHighlightProvider(analyzer)));
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, new DartCodeActionProvider(analyzer)));
 	context.subscriptions.push(vs.languages.registerRenameProvider(DART_MODE, new DartRenameProvider(analyzer)));
+	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE.language, new DartLanguageConfiguration()));
 	context.subscriptions.push(new AnalyzerStatusReporter(analyzer));
 
 	// Set up diagnostics.
