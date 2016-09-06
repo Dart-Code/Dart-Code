@@ -60,6 +60,10 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				completionText += `(${argPlaceholders}){{_}}`;
 			}
 		}
+		// If it's a named arg, also add placeholders for the value.
+		else if (suggestion.kind == "NAMED_ARGUMENT" && suggestion.parameterName) {
+			completionText += `{{${suggestion.parameterName}}}`;
+		}
 
 		// If we're a property, work out the type. 
 		if (elementKind == CompletionItemKind.Property) {
