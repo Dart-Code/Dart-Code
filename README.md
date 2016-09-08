@@ -6,40 +6,41 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
 ## New in 0.11
 
-- Code fixes have been added! Use `Ctrl+.` for the lightbulb menu or `F8` for a diagnostics widget 
-- Pub run will run automatically when you save `pubspec.yaml` (this can be disabled with the `dart.runPubGetOnPubspecChanges` setting)
+- Code fixes have been added! Use `Ctrl`+`.` for the lightbulb menu or `F8` for diagnostics widget 
+- `pub get` will run automatically when you save `pubspec.yaml` (can be disabled with the `dart.runPubGetOnPubspecChanges` setting)
 - Completion for methods/constructors now adds placeholders for mandatory arguments
 - Completion for named arguments now adds a placeholder for the value
 - Pressing `<ENTER>` in a triple-slash comment (`/// ...`)  will now pre-complete the comment markers for the next line
 - Pressing `<ENTER>` in an old-style multiline comment (`/** ... */`) will now pre-complete following lines and place the closing marker (`*/`) in the right position
-- Hovers will no longer contain hyperlinks that don't work where docs reference other elements
-- Display improvements to hovers/tooltips (these are not finished and be improved again in a future release)
-- Completion now shows when an element is deprecated
-- Hovers will now show when an element is deprecated (note: requires Dart SDK 1.20, currently unreleased)
+- Hovers will no longer contain hyperlinks that don't work when docs reference other elements
+- Display improvements to hovers/tooltips (these are not finished and will continue to be improvedin future releases)
+- Completion now shows when an element is `deprecated`
+- Hovers will now show when an element is `deprecated` (note: requires Dart SDK 1.20, currently unreleased)
 
-Additionally there were some performance improvements, the beginning of automated testing and some additional diagnostics to help users provide more detailed information if they encounter bugs.
+Additionally there were some performance improvements, the beginning of automated testing and some additional diagnostic settings (to help users provide more detailed information if they encounter bugs).
 
-Many bugs have been fixed by Microsoft and the Dart team that affect Dart Code so please be sure to upgrade to the latest versions of Code and the Dart SDK.
+Many bugs have been fixed by Microsoft and the Dart team that affect Dart Code so please be sure to upgrade to the latest versions of Code (`1.5`) and the Dart SDK (`1.19.1`).
 
 ## Features
 
 - Syntax highlighting
 - Code completion
-- Realtime errors/warnings/TODOs reported in problems window (`Ctrl+Shift+M`) and with squiggles
+- Realtime errors/warnings/TODOs reported in problems window (`Ctrl`+`Shift`+`M`) and with squiggles
 - Hovers/tooltip information
 - Go to Definition (`F12`)
-- Find References (`Shift+F12`)
+- Find References (`Shift`+`F12`)
 - Excute Dart command line apps (`F5`)
 - Debugging support for command line apps (`F5`)
-- Code fixes/lightbulb (`Ctrl+.` and `F8`)
+- Code fixes/lightbulb (`Ctrl`+`.` and `F8`)
 - Notification of new stable Dart SDK releases
 - Rename refactoring (`F2`)
-- Organise directives (`Ctrl+Alt+O`)
-- Format document with custom line length (`Alt+Shift+F`)
-- Workspace-wide symbol search (`Ctrl+T`)
+- Organise directives (`Ctrl`+`Alt`+`O`)
+- Format document with custom line length (`Alt`+`Shift`+`F`)
+- Workspace-wide symbol search (`Ctrl`+`T`)
 - Auto-closing braces/quotes
-- Document symbol list/search with highlighting (`Ctrl+Shift+O`)
+- Document symbol list/search with highlighting (`Ctrl`+`Shift`+`O`)
 - `pub get` and `pub upgrade` commands
+- Automatically run `pub get` when `pubspec.yaml` is saved
 - Supports strong mode and linting (configured in `analysis_options.yaml` or `.analysis_options`)
 - Other references to symbol under cursor are highlighted
 - Automatically finds Dart SDK if it is in your `PATH` environment variable
