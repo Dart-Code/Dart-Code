@@ -4,6 +4,23 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
     ext install dart-code
 
+## New in 0.11
+
+- Code fixes have been added! Use `Ctrl+.` for the lightbulb menu or `F8` for a diagnostics widget 
+- Pub run will run automatically when you save `pubspec.yaml` (this can be disabled with the `dart.runPubGetOnPubspecChanges` setting)
+- Completion for methods/constructors now adds placeholders for mandatory arguments
+- Completion for named arguments now adds a placeholder for the value
+- Pressing `<ENTER>` in a triple-slash comment (`/// ...`)  will now pre-complete the comment markers for the next line
+- Pressing `<ENTER>` in an old-style multiline comment (`/** ... */`) will now pre-complete following lines and place the closing marker (`*/`) in the right position
+- Hovers will no longer contain hyperlinks that don't work where docs reference other elements
+- Display improvements to hovers/tooltips (these are not finished and be improved again in a future release)
+- Completion now shows when an element is deprecated
+- Hovers will now show when an element is deprecated (note: requires Dart SDK 1.20, currently unreleased)
+
+Additionally there were some performance improvements, the beginning of automated testing and some additional diagnostics to help users provide more detailed information if they encounter bugs.
+
+Many bugs have been fixed by Microsoft and the Dart team that affect Dart Code so please be sure to upgrade to the latest versions of Code and the Dart SDK.
+
 ## Features
 
 - Syntax highlighting
