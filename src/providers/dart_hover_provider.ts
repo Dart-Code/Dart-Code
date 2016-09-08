@@ -51,7 +51,7 @@ export class DartHoverProvider implements HoverProvider {
 
 		if (containingClassDescription && callable) contents += containingClassDescription + ".";
 		if (containingClassDescription && field) contents += containingClassDescription + " ";
-		if (elementDescription) contents += `${elementDescription}\n`;
+		if (elementDescription) contents += (hover.isDeprecated ? "(deprecated) " : "") + `${elementDescription}\n`;
 		if (contents.length > 0) contents = `\`\`\`dart\n${contents}\`\`\`\n`;
 		if (propagatedType) contents += `*${propagatedType.trim()}*\n`;
 		if (dartdoc) contents += `\n${DartHoverProvider.cleanDartdoc(dartdoc)}`;
