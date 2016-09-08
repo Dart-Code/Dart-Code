@@ -2434,6 +2434,11 @@ export interface HoverInformation {
 	elementKind?: string;
 
 	/**
+	 * True if the referenced element is deprecated.
+	 */
+	isDeprecated?: boolean;
+
+	/**
 	 * A human-readable description of the parameter
 	 * corresponding to the expression being hovered over. This
 	 * data is omitted if the location is not in an argument to a
