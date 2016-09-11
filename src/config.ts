@@ -1,6 +1,6 @@
 "use strict";
 
-import { workspace, WorkspaceConfiguration } from "vscode";
+import { workspace, WorkspaceConfiguration, version as codeVersion } from "vscode";
 
 class Config {
 	config: WorkspaceConfiguration;
@@ -30,4 +30,15 @@ class Config {
 	get userDefinedSdkPath() { return this.getConfig<string>("sdkPath"); }
 }
 
+export class CodeCapabilities {
+	version: number;
+
+	constructor(codeVersion: string) {
+		this.version = parseFloat(codeVersion.split('.').slice(0, 2).join('.'));
+	}
+
+	get hasScrollableHovers() { return this.version >= 1.6; }
+}
+
 export const config = new Config();
+export const vsCodeVersion = new CodeCapabilities(codeVersion);
