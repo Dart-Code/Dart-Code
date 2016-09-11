@@ -4,6 +4,7 @@ import { HoverProvider, Hover, TextDocument, Position, CancellationToken, Range 
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
 import { logError } from "../utils";
+import { vsCodeVersion } from "../config";
 
 export class DartHoverProvider implements HoverProvider {
 	private analyzer: Analyzer;
@@ -68,7 +69,7 @@ export class DartHoverProvider implements HoverProvider {
 
 		// Truncate long dartdoc.
 		let lines = doc.split("\n");
-		if (lines.length > 20) {
+		if (lines.length > 20 && !vsCodeVersion.hasScrollableHovers) {
 			for (let index = 20 - 6; index < lines.length; index++) {
 				if (lines[index].trim().length == 0) {
 					lines = lines.slice(0, index);
