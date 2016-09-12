@@ -4,7 +4,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as https from "https";
 import * as as from "./analysis/analysis_server_types";
-import { env, workspace, window, Position, Range, TextDocument } from "vscode";
+import { env, workspace, window, Position, Range, TextDocument, commands, Uri } from "vscode";
 import { config } from "./config";
 
 export const dartVMPath = "bin/dart";
@@ -157,4 +157,8 @@ export function isOutOfDate(versionToCheck: string, expectedVersion: string): bo
 
 	// If we got here, they're the same.
 	return false;
+}
+
+export function openInBrowser(url: string) {
+	commands.executeCommand("vscode.open", Uri.parse(url));
 }

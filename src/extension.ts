@@ -53,7 +53,13 @@ export function activate(context: vs.ExtensionContext) {
 		if (config.checkForSdkUpdates) {
 			util.getLatestSdkVersion().then(version => {
 				if (util.isOutOfDate(sdkVersion, version))
-					vs.window.showWarningMessage(`Version ${version} of the Dart SDK is available (you have ${sdkVersion}). Some features of Dart Code may not work correctly with an old SDK.`);
+					vs.window.showWarningMessage(
+						`Version ${version} of the Dart SDK is available (you have ${sdkVersion}). Some features of Dart Code may not work correctly with an old SDK.`,
+						"Go to Downloads"
+					).then(selectedItem => {
+						if (selectedItem)
+							util.openInBrowser("https://www.dartlang.org/install/archive");
+					});
 			}, util.logError);
 		}
 	}
