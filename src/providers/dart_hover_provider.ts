@@ -22,13 +22,16 @@ export class DartHoverProvider implements HoverProvider {
 					resolve(null);
 				} else {
 					let hover = resp.hovers[0];
-					let markdown = this.getHoverData(hover);
-					if (markdown) {
+					let data = this.getHoverData(hover);
+					if (data) {
 						let range = new Range(
 							document.positionAt(hover.offset),
 							document.positionAt(hover.offset + hover.length)
 						);
-						resolve(new Hover(markdown, range));
+						resolve(new Hover(
+							[{ language: 'dart', value: data.displayString }, data.documentation],
+							range
+						));
 					} else {
 						resolve(null);
 					}
@@ -37,7 +40,7 @@ export class DartHoverProvider implements HoverProvider {
 		});
 	}
 
-	private getHoverData(hover: as.HoverInformation): string {
+	private getHoverData(hover: as.HoverInformation): any {
 		if (!hover.elementDescription) return null;
 
 		let elementDescription = hover.elementDescription;
@@ -53,15 +56,18 @@ export class DartHoverProvider implements HoverProvider {
 		if (containingClassDescription && callable) contents += containingClassDescription + ".";
 		if (containingClassDescription && field) contents += containingClassDescription + " ";
 		if (elementDescription) contents += (hover.isDeprecated ? "(deprecated) " : "") + `${elementDescription}\n`;
-		if (contents.length > 0) contents = `\`\`\`dart\n${contents}\`\`\`\n`;
-		if (propagatedType) contents += `*${propagatedType.trim()}*\n`;
-		if (dartdoc) contents += `\n${DartHoverProvider.cleanDartdoc(dartdoc)}`;
+		if (propagatedType) contents += `propogated type: ${propagatedType.trim()}`;
 
-		return contents.trim();
+		return {
+			displayString: contents.trim(),
+			documentation: DartHoverProvider.cleanDartdoc(dartdoc)
+		}
 	}
 
-	// TODO: word wrap the text to 80 cols
 	private static cleanDartdoc(doc: string): string {
+		if (!doc)
+			return null;
+
 		// Clean up some dart.core dartdoc.
 		let index = doc.indexOf("## Other resources");
 		if (index != -1)
