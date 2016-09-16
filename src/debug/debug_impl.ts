@@ -5,22 +5,23 @@ import * as path from "path";
 import {
 	DebugSession,
 	InitializedEvent, TerminatedEvent, StoppedEvent, BreakpointEvent, OutputEvent, Event,
-	Thread, StackFrame, Scope, Source, Handles, Breakpoint, ThreadEvent, Variable
+	Thread, StackFrame, Scope, Source, Handles, Breakpoint, ThreadEvent, Variable, ModuleEvent,
+	Module
 } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { PackageMap, uriToFilePath, fileToUri, PromiseCompleter } from "./utils";
 import {
 	ObservatoryConnection, VMEvent, VMIsolateRef, RPCError, DebuggerResult, VMStack, VMSentinel, VMObj,
 	VMFrame, VMFuncRef, VMInstanceRef, VMScriptRef, VMScript, VMSourceLocation, VMErrorRef, VMBreakpoint,
-	VMInstance, VMResponse, VMClassRef, VM, VMIsolate
+	VMInstance, VMResponse, VMClassRef, VM, VMIsolate, VMLibraryRef
 } from "./debug_protocol";
 
-// TODO: modules? ModuleEvent
 // TODO: supportsSetVariable
 // TODO: class variables?
 // TODO: library variables?
-// TODO: break large arrays into subarrays
-// TODO: should we call toString() on objects that don't have valueAsString?
+// stepBackRequest(response: DebugProtocol.StepBackResponse, args: DebugProtocol.StepBackArguments): void;
+// restartFrameRequest(response: DebugProtocol.RestartFrameResponse, args: DebugProtocol.RestartFrameArguments): void;
+// completionsRequest(response: DebugProtocol.CompletionsResponse, args: DebugProtocol.CompletionsArguments): void;
 
 export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	cwd: string;
@@ -155,7 +156,7 @@ export class DartDebugSession extends DebugSession {
 		});
 
 		this.observatory.onClose((code: number, message: string) => {
-			// This event arives before the process exit event.
+			// This event arrives before the process exit event.
 			setTimeout(() => {
 				if (!this.processExited)
 					this.sendEvent(new TerminatedEvent());
@@ -199,11 +200,11 @@ export class DartDebugSession extends DebugSession {
 
 	/***
 	 * Converts a source path to an array of possible uris.
-	 * 
+	 *
 	 * This is to ensure that we can hit breakpoints in the case
 	 * where the VM considers a file to be a package: uri and also
 	 * a filesystem uri (this can vary depending on how it was
-	 * imported by the user). 
+	 * imported by the user).
 	 */
 	private getPossibleSourceUris(sourcePath: string): string[] {
 		let uris = [];
@@ -369,6 +370,12 @@ export class DartDebugSession extends DebugSession {
 
 	protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void {
 		let variablesReference = args.variablesReference;
+
+		// implement paged arrays
+		// let filter = args.filter; // optional; either "indexed" or "named"
+        let start = args.start; // (optional) index of the first variable to return; if omitted children start at 0
+        let count = args.count; // (optional) number of variables to return. If count is missing or 0, all variables are returned
+
 		let data = this.threadManager.getStoredData(variablesReference);
 		let thread = data.thread;
 
@@ -382,15 +389,9 @@ export class DartDebugSession extends DebugSession {
 		} else {
 			let instanceRef = <VMInstanceRef>data.data;
 
-			// let offset = 0;
-			// let count = 0;
-			// if (instanceRef.kind == "List" || instanceRef.kind == "Map") {
-			//   offset = 0;
-			//   // TODO: We should cap this, and report that the list is truncated.
-			//   count = instanceRef.length;
-			// }
-
-			this.observatory.getObject(thread.ref.id, instanceRef.id).then((result: DebuggerResult) => {
+			this.observatory.getObject(thread.ref.id, instanceRef.id, start, count).then(
+				(result: DebuggerResult
+			) => {
 				let variables: DebugProtocol.Variable[] = [];
 
 				if (result.result.type == "Sentinel") {
@@ -406,12 +407,13 @@ export class DartDebugSession extends DebugSession {
 						let instance = <VMInstance>obj;
 
 						// TODO: show by kind instead
-
 						if (instance.elements) {
 							let len = instance.elements.length;
+							if (!start)
+								start = 0;
 							for (let i = 0; i < len; i++) {
 								let element = instance.elements[i];
-								variables.push(this.instanceRefToVariable(thread, `[${i}]`, element));
+								variables.push(this.instanceRefToVariable(thread, `[${i + start}]`, element));
 							}
 						} else if (instance.associations) {
 							for (let association of instance.associations) {
@@ -686,7 +688,8 @@ export class DartDebugSession extends DebugSession {
 				name: name,
 				type: val.class.name,
 				value: str,
-				variablesReference: val.valueAsString ? 0 : thread.storeData(val)
+				variablesReference: val.valueAsString ? 0 : thread.storeData(val),
+				indexedVariables: (val.kind.endsWith('List') ? val.length : null)
 			};
 		}
 	}

@@ -58,7 +58,7 @@ export interface VMIsolate extends VMResponse {
 	pauseEvent: VMEvent;
 }
 
-export interface VMObjRef extends VMResponse {
+export interface VMObjectRef extends VMResponse {
 	id: string;
 }
 
@@ -83,7 +83,7 @@ export interface VMSourceLocation extends VMResponse {
 	endTokenPos?: number;
 }
 
-export interface VMScriptRef extends VMObjRef {
+export interface VMScriptRef extends VMObjectRef {
 	// The uri from which this script was loaded.
 	uri: string;
 }
@@ -130,21 +130,21 @@ export interface VMMapAssociation {
 	value: VMInstanceRef | VMSentinel;
 }
 
-export interface VMFieldRef extends VMObjRef {
+export interface VMFieldRef extends VMObjectRef {
 	// The name of this field.
 	name: string;
 	// The owner of this field, which can be either a Library or a Class.
-	owner: VMObjRef;
+	owner: VMObjectRef;
 }
 
-export interface VMLibraryRef extends VMObjRef {
+export interface VMLibraryRef extends VMObjectRef {
 	// The name of this library.
 	name: string;
 	// The uri of this library.
 	uri: string;
 }
 
-export interface VMFuncRef extends VMObjRef {
+export interface VMFuncRef extends VMObjectRef {
 	name: string;
 	// The owner of this function, which can be one of [LibraryRef], [ClassRef] or [FuncRef].
 	owner: VMLibraryRef | VMClassRef | VMFuncRef;
@@ -171,6 +171,7 @@ export interface VM extends VMResponse {
 	version: string;
 	pid: number;
 	isolates: VMIsolateRef[];
+	libraries: VMLibraryRef[];
 }
 
 export interface VMSentinel extends VMResponse {
@@ -180,7 +181,7 @@ export interface VMSentinel extends VMResponse {
 	valueAsString: string;
 }
 
-export interface VMInstanceRef extends VMObjRef {
+export interface VMInstanceRef extends VMObjectRef {
 	kind: string;
 	class: VMClassRef;
 	valueAsString?: string;
@@ -188,14 +189,14 @@ export interface VMInstanceRef extends VMObjRef {
 	length?: number;
 }
 
-export interface VMErrorRef extends VMObjRef {
+export interface VMErrorRef extends VMObjectRef {
 	// The kind of error.
 	kind: string;
 	// A description of the error.
 	message: string;
 }
 
-export interface VMClassRef extends VMObjRef {
+export interface VMClassRef extends VMObjectRef {
 	name: string;
 }
 
