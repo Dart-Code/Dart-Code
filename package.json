@@ -133,6 +133,16 @@
 			"type": "object",
 			"title": "Dart Configuration",
 			"properties": {
+				"dart.debugSdkLibraries": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether SDK libraries should be marked as debuggable."
+				},
+				"dart.debugExternalLibraries": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether external libraries should be marked as debuggable."
+				},
 				"dart.sdkPath": {
 					"type": "string",
 					"description": "The location of the Dart SDK to use for analyzing and executing code. If blank, Dart Code will attempt to find it from the PATH environment variable."
