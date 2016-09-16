@@ -55,7 +55,7 @@ export class PackageMap {
 		return null;
 	}
 
-	map: {} = {};
+	private map: {} = {};
 
 	constructor(file?: string) {
 		if (!file) return;
