@@ -6,6 +6,7 @@ import {
 } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import { logError } from "../utils";
+import { config } from "../config";
 import * as as from "../analysis/analysis_server_types";
 
 export class DartCompletionItemProvider implements CompletionItemProvider {
@@ -54,14 +55,16 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			detail = element.parameters;
 
 			// Add placeholders for params to the completion.
-			if (suggestion.parameterNames) {
+			if (config.insertArgumentPlaceholders && suggestion.parameterNames) {
 				let args = suggestion.parameterNames.slice(0, suggestion.requiredParameterCount);
 				let argPlaceholders = args.map(n => `{{${n}}}`).join(", ");
 				completionText += `(${argPlaceholders}){{_}}`;
 			}
+			else
+				completionText += `({{_}})`;
 		}
 		// If it's a named arg, also add placeholders for the value.
-		else if (suggestion.kind == "NAMED_ARGUMENT" && suggestion.parameterName) {
+		else if (config.insertArgumentPlaceholders && suggestion.kind == "NAMED_ARGUMENT" && suggestion.parameterName) {
 			completionText += `{{${suggestion.parameterName}}}`;
 		}
 

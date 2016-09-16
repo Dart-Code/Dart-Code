@@ -49,6 +49,7 @@ Many bugs have been fixed by Microsoft and the Dart team that affect Dart Code s
 
 - `dart.allowAnalytics`: Note: We only send a few very basic events and the platform and extension/Dart version numbers :-)
 - `dart.checkForSdkUpdates`: Whether to check you are using the latest version of the Dart SDK at startup. Defaults to `true`.
+- `dart.insertArgumentPlaceholders`: Whether to insert argument placeholders during code completions. Defaults to `true`.
 - `dart.lineLength`: The maximum length of a line of code. This is used by the document formatter. Defaults to `80`.
 - `dart.runPubGetOnPubspecChanges`: Whether to automatically run `pub get` whenever pubspec.yaml is saved. Defaults to `true`.
 - `dart.sdkPath`: If the Dart SDK is not automatically found on your machine from your `PATH` you can enter the path to it here.

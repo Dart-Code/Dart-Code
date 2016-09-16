@@ -23,6 +23,7 @@ class Config {
 	get analyzerObservatoryPort() { return this.getConfig<number>("analyzerObservatoryPort"); }
 	get analyzerLogFile() { return this.getConfig<string>("analyzerLogFile"); }
 	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
+	get insertArgumentPlaceholders() { return this.getConfig<boolean>("insertArgumentPlaceholders"); }
 	get lineLength() { return this.getConfig<number>("lineLength"); }
 	get runPubGetOnPubspecChanges() { return this.getConfig<boolean>("runPubGetOnPubspecChanges"); }
 	get setIndentation() { return this.getConfig<number>("setIndentation"); }
