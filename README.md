@@ -4,22 +4,12 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
     ext install dart-code
 
-## New in 0.11
+## New in 0.11.1
 
-- Code fixes have been added! Use `Ctrl`+`.` for the lightbulb menu or `F8` for diagnostics widget 
-- `pub get` will run automatically when you save `pubspec.yaml` (can be disabled with the `dart.runPubGetOnPubspecChanges` setting)
-- Completion for methods/constructors now adds placeholders for mandatory arguments
-- Completion for named arguments now adds a placeholder for the value
-- Pressing `<ENTER>` in a triple-slash comment (`/// ...`)  will now pre-complete the comment markers for the next line
-- Pressing `<ENTER>` in an old-style multiline comment (`/** ... */`) will now pre-complete following lines and place the closing marker (`*/`) in the right position
-- Hovers will no longer contain hyperlinks that don't work when docs reference other elements
-- Display improvements to hovers/tooltips (these are not finished and will continue to be improvedin future releases)
-- Completion now shows when an element is `deprecated`
-- Hovers will now show when an element is `deprecated` (note: requires Dart SDK 1.20, currently unreleased)
-
-Additionally there were some performance improvements, the beginning of automated testing and some additional diagnostic settings (to help users provide more detailed information if they encounter bugs).
-
-Many bugs have been fixed by Microsoft and the Dart team that affect Dart Code so please be sure to upgrade to the latest versions of Code (`1.5`) and the Dart SDK (`1.19.1`).
+- An option has been added (`dart.insertArgumentPlaceholders`) to turn off placeholder insertion during completion operations
+- More improvements have been made to hovers (these appear best in Code 1.6, currently the Insiders build)
+- Large lists will now be "paged" in the debugger locals/watch windows to improve performance
+- The SDK update notification now has a button to jump directly to the Dart SDK download page 
 
 ## Features
 
