@@ -6,7 +6,7 @@ import * as as from "./analysis_server_types";
 import * as fs from "fs";
 import { AnalyzerGen } from "./analyzer_gen";
 import { config } from "../config";
-import { log, logError } from "../utils";
+import { log, logError, extensionVersion } from "../utils";
 
 export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	private analyzerProcess: child_process.ChildProcess;
@@ -33,6 +33,10 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 		let diagnosticsPort = config.analyzerDiagnosticsPort;
 		if (diagnosticsPort)
 			args.push(`--port=${diagnosticsPort}`);
+
+		// Add info about the extension that will be collected for crash reports etc.
+		args.push(`--client-id=DanTup.dart-code`);
+		args.push(`--client-version=${extensionVersion}`);
 
 		this.analyzerProcess = child_process.spawn(dartVMPath, args);
 
