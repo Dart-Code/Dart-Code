@@ -93,7 +93,17 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	private sendMessage<T>(req: Request<T>) {
 		let json = JSON.stringify(req) + "\r\n";
 		this.logTraffic(`==> ${json}`);
-		this.analyzerProcess.stdin.write(json);
+		try {
+			this.analyzerProcess.stdin.write(json);
+		}
+		catch (e) {
+			const reloadAction: string = "Reload Project";
+			vs.window.showErrorMessage("The Dart analysis server has terminated. Save your changes then reload the project to resume.", reloadAction).then(res => {
+				if (res == reloadAction)
+					vs.commands.executeCommand("workbench.action.reloadWindow");
+			});
+			throw e;
+		}
 	}
 
 	private logTraffic(message: String): void {
