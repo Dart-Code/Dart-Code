@@ -4,12 +4,9 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
     ext install dart-code
 
-## New in 0.11.1
+## New in 0.11.2
 
-- An option has been added (`dart.insertArgumentPlaceholders`) to turn off placeholder insertion during completion operations
-- More improvements have been made to hovers (these appear best in Code 1.6, currently the Insiders build)
-- Large lists will now be "paged" in the debugger locals/watch windows to improve performance
-- The SDK update notification now has a button to jump directly to the Dart SDK download page 
+- If the Dart analysis server crashes you will now be prompted to save and reload the project (rather than everything being silently broken)  
 
 ## Features
 
