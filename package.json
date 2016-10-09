@@ -92,6 +92,12 @@
 				"key": "ctrl+alt+o",
 				"mac": "cmd+alt+o",
 				"when": "editorLangId == dart"
+			},
+			{
+				"command": "dart.showTypeHierarchy",
+				"key": "f4",
+				"mac": "f4",
+				"when": "editorLangId == dart"
 			}
 		],
 		"menus": {

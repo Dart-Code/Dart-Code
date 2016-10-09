@@ -24,6 +24,7 @@ import { DartRenameProvider } from "./providers/dart_rename_provider";
 import { FileChangeHandler } from "./file_change_handler";
 import { OpenFileTracker } from "./open_file_tracker";
 import { SdkCommands } from "./commands/sdk";
+import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { ServerStatusNotification } from "./analysis/analysis_server_types";
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
@@ -132,6 +133,9 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Set up commands for Dart editors.
 	context.subscriptions.push(new EditCommands(context, analyzer));
+
+	// Register misc commands.
+ 	context.subscriptions.push(new TypeHierarchyCommand(context, analyzer));
 }
 
 function handleConfigurationChange() {
