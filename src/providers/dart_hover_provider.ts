@@ -73,19 +73,6 @@ export class DartHoverProvider implements HoverProvider {
 		if (index != -1)
 			doc = doc.substring(0, index);
 
-		// Truncate long dartdoc.
-		let lines = doc.split("\n");
-		if (lines.length > 20 && !vsCodeVersion.hasScrollableHovers) {
-			for (let index = 20 - 6; index < lines.length; index++) {
-				if (lines[index].trim().length == 0) {
-					lines = lines.slice(0, index);
-					lines.push("\n…");
-					break;
-				}
-			}
-			doc = lines.join("\n");
-		}
-
 		// Remove colons from old-style references like [:foo:].
 		doc = doc.replace(/\[:\S+:\]/g, (match) => `[${match.substring(2, match.length - 2)}]`);
 
