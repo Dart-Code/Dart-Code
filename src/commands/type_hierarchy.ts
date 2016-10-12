@@ -41,7 +41,6 @@ export class TypeHierarchyCommand implements vs.Disposable {
 			let options = { placeHolder: name(items, 0) };
 
 			// TODO: How / where to show implements?
-			// TODO: How / where to show mixins?
 			let tree = [];
 			let startItem = items[0];
 
@@ -73,8 +72,11 @@ export class TypeHierarchyCommand implements vs.Disposable {
 function addParents(items: as.TypeHierarchyItem[], tree: as.TypeHierarchyItem[], item: as.TypeHierarchyItem) {
 	if (item.superclass) {
 		let parent = items[item.superclass];
-		tree.unshift(parent);
-		addParents(items, tree, parent);
+
+		if (parent.classElement.name != 'Object') {
+			tree.unshift(parent);
+			addParents(items, tree, parent);
+		}
 	}
 }
 
@@ -113,9 +115,6 @@ function itemToPick(item: as.TypeHierarchyItem, items: as.TypeHierarchyItem[]): 
 			desc += ', ';
 		desc += `with ${item.mixins.map(i => name(items, i)).join(', ')}`;
 	}
-
-	// TODO: Show the library location in the details (dart:core, ...) (share code
-	// with dart_workspace_symbol_provider.ts).
 
 	let result = {
 		label: item.classElement.name,
