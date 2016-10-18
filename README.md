@@ -4,9 +4,11 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
     ext install dart-code
 
-## New in 0.11.2
+## New in 0.12.0
 
-- If the Dart analysis server crashes you will now be prompted to save and reload the project (rather than everything being silently broken)  
+- A new "type hierarchy" feature has been added (`F4`) 
+- The "Preview" tag has been removed from Dart Code
+- The VS Code version number is now included in analytics to help make decisions about when code supporting older versions of Code can be removed  
 
 ## Features
 
@@ -20,6 +22,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - Debugging support for command line apps (`F5`)
 - Code fixes/lightbulb (`Ctrl`+`.` and `F8`)
 - Notification of new stable Dart SDK releases
+- Type hierarchy (`F4`)
 - Rename refactoring (`F2`)
 - Organise directives (`Ctrl`+`Alt`+`O`)
 - Format document with custom line length (`Alt`+`Shift`+`F`)
