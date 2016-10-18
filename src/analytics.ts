@@ -1,6 +1,6 @@
 "use strict";
 
-import { env, extensions, Extension, workspace } from "vscode";
+import { env, extensions, Extension, workspace, version as codeVersion } from "vscode";
 import * as https from "https";
 import * as querystring from "querystring";
 import { config } from "./config";
@@ -42,6 +42,7 @@ class Analytics {
 			cd2: process.platform,
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,
+			cd5: codeVersion
 		};
 
 		const options: https.RequestOptions = {
