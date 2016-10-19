@@ -24,7 +24,7 @@ export class DartTypeFormattingEditProvider implements OnTypeFormattingEditProvi
 					resolve(null);
 				else
 					resolve(resp.edits.map(e => this.convertData(document, e)));
-			}, e => { logError(e); reject(); });
+			}, e => { reject(); });
 		});
 	}
 
