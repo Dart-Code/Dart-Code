@@ -14,6 +14,7 @@ import { DartDefinitionProvider } from "./providers/dart_definition_provider";
 import { DartReferenceProvider } from "./providers/dart_reference_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
 import { DartFormattingEditProvider } from "./providers/dart_formatting_edit_provider";
+import { DartTypeFormattingEditProvider } from "./providers/dart_type_formatting_edit_provider";
 import { DartDocumentHighlightProvider } from "./providers/dart_highlighting_provider";
 import { DartHoverProvider } from "./providers/dart_hover_provider";
 import { DartIndentFixer } from "./dart_indent_fixer";
@@ -81,6 +82,7 @@ export function activate(context: vs.ExtensionContext) {
 	// Set up providers.
 	context.subscriptions.push(vs.languages.registerHoverProvider(DART_MODE, new DartHoverProvider(analyzer)));
 	context.subscriptions.push(vs.languages.registerDocumentFormattingEditProvider(DART_MODE, new DartFormattingEditProvider(analyzer)));
+	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, new DartTypeFormattingEditProvider(analyzer), "}", ";"));
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new DartCompletionItemProvider(analyzer), "."));
 	context.subscriptions.push(vs.languages.registerDefinitionProvider(DART_MODE, new DartDefinitionProvider(analyzer)));
 	context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(DART_MODE, new DartDocumentSymbolProvider(analyzer)));
