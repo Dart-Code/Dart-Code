@@ -6,7 +6,7 @@
 	"publisher": "DanTup",
 	"preview": true,
 	"engines": {
-		"vscode": "^1.4.0"
+		"vscode": "^1.6.0"
 	},
 	"license": "SEE LICENSE IN LICENSE",
 	"bugs": {
