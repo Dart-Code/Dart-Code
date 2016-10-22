@@ -4,11 +4,13 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
     ext install dart-code
 
-## New in 0.12.0
+## New in 0.13.0
 
-- A new "type hierarchy" feature has been added (`F4`) 
-- The "Preview" tag has been removed from Dart Code
-- The VS Code version number is now included in analytics to help make decisions about when code supporting older versions of Code can be removed  
+- Support has been added to format documents while typing (you must enable `editor.formatOnType`). This currently triggers when you type `;` or `}`. **Please send feedback!**
+- Additionally, upgrading to the Dart SDK v1.20 will get you the following fixes:
+  - Analysis server will no longer crash on Windows when typing `import`s that start with `con`
+  - Dart docs will now correctly appear in code completion for your own functions
+  - Watch/hover/repl evaluation while debugging now works for async methods
 
 ## Features
 
@@ -26,6 +28,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - Rename refactoring (`F2`)
 - Organise directives (`Ctrl`+`Alt`+`O`)
 - Format document with custom line length (`Alt`+`Shift`+`F`)
+- Support for formatting-during-typing
 - Workspace-wide symbol search (`Ctrl`+`T`)
 - Auto-closing braces/quotes
 - Document symbol list/search with highlighting (`Ctrl`+`Shift`+`O`)
