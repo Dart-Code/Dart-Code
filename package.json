@@ -196,7 +196,7 @@
 				"program": "./out/src/debug/debug_entry.js",
 				"runtime": "node",
 				"variables": {
-					"sdkPath": "dart.getSdkPath"
+					"debugSettings": "dart.getDebugSettings"
 				},
 				"configurationAttributes": {
 					"launch": {
@@ -209,10 +209,10 @@
 								"type": "string",
 								"description": "Workspace root."
 							},
-							"sdkPath": {
+							"debugSettings": {
 								"type": "string",
-								"description": "Location of Dart SDK path.",
-								"default": "${command.sdkPath}"
+								"description": "Debug settings.",
+								"default": "${command.debugSettings}"
 							},
 							"program": {
 								"type": "string",
@@ -235,7 +235,7 @@
 						"type": "dart-cli",
 						"request": "launch",
 						"cwd": "${workspaceRoot}",
-						"sdkPath": "${command.sdkPath}",
+						"debugSettings": "${command.debugSettings}",
 						"program": "${workspaceRoot}/bin/main.dart",
 						"args": []
 					}

@@ -9,7 +9,7 @@ import {
 	Module
 } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { PackageMap, uriToFilePath, fileToUri, PromiseCompleter } from "./utils";
+import { PackageMap, uriToFilePath, fileToUri, PromiseCompleter, DebugSettings } from "./utils";
 import {
 	ObservatoryConnection, VMEvent, VMIsolateRef, RPCError, DebuggerResult, VMStack, VMSentinel, VMObj,
 	VMFrame, VMFuncRef, VMInstanceRef, VMScriptRef, VMScript, VMSourceLocation, VMErrorRef, VMBreakpoint,
@@ -25,7 +25,7 @@ import {
 
 export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	cwd: string;
-	sdkPath: string;
+	debugSettings: string;
 	program: string;
 	args: Array<string>;
 }
@@ -33,7 +33,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 export class DartDebugSession extends DebugSession {
 	private sourceFile: string;
 	private cwd: string;
-	private sdkPath: string;
+	private debugSettings: DebugSettings;
 	private dartPath: string;
 	private childProcess: child_process.ChildProcess;
 	private processExited: boolean = false;
@@ -64,8 +64,8 @@ export class DartDebugSession extends DebugSession {
 
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: DartLaunchRequestArguments): void {
 		this.cwd = args.cwd;
-		this.sdkPath = args.sdkPath;
-		this.dartPath = this.sdkPath != null ? path.join(this.sdkPath, "bin", "dart") : "dart";
+		this.debugSettings = JSON.parse(args.debugSettings);
+		this.dartPath = this.debugSettings.sdkPath != null ? path.join(this.debugSettings.sdkPath, "bin", "dart") : "dart";
 		this.sourceFile = path.relative(args.cwd, args.program);
 		this.sendEvent(new OutputEvent(`dart ${this.sourceFile}\n`));
 
