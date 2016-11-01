@@ -391,57 +391,57 @@ export class DartDebugSession extends DebugSession {
 
 			this.observatory.getObject(thread.ref.id, instanceRef.id, start, count).then(
 				(result: DebuggerResult
-			) => {
-				let variables: DebugProtocol.Variable[] = [];
+				) => {
+					let variables: DebugProtocol.Variable[] = [];
 
-				if (result.result.type == "Sentinel") {
-					variables.push({
-						name: "evalError",
-						value: (<VMSentinel>result.result).valueAsString,
-						variablesReference: 0
-					});
-				} else {
-					let obj: VMObj = <VMObj>result.result;
-
-					if (obj.type == "Instance") {
-						let instance = <VMInstance>obj;
-
-						// TODO: show by kind instead
-						if (instance.elements) {
-							let len = instance.elements.length;
-							if (!start)
-								start = 0;
-							for (let i = 0; i < len; i++) {
-								let element = instance.elements[i];
-								variables.push(this.instanceRefToVariable(thread, `[${i + start}]`, element));
-							}
-						} else if (instance.associations) {
-							for (let association of instance.associations) {
-								let keyName = this.valueAsString(association.key);
-								if (!keyName) {
-									if (association.key.type == "Sentinel")
-										keyName = "<evalError>";
-									else
-										keyName = (<VMInstanceRef>association.key).id;
-								}
-								variables.push(this.instanceRefToVariable(thread, keyName, association.value));
-							}
-						} else if (instance.fields) {
-							for (let field of instance.fields)
-								variables.push(this.instanceRefToVariable(thread, field.decl.name, field.value));
-						} else {
-							// TODO: unhandled kind
-							this.log(instance.kind);
-						}
+					if (result.result.type == "Sentinel") {
+						variables.push({
+							name: "evalError",
+							value: (<VMSentinel>result.result).valueAsString,
+							variablesReference: 0
+						});
 					} else {
-						// TODO: unhandled type
-						this.log(obj.type);
-					}
-				}
+						let obj: VMObj = <VMObj>result.result;
 
-				response.body = { variables: variables };
-				this.sendResponse(response);
-			}).catch((error) => this.errorResponse(response, `${error}`));
+						if (obj.type == "Instance") {
+							let instance = <VMInstance>obj;
+
+							// TODO: show by kind instead
+							if (instance.elements) {
+								let len = instance.elements.length;
+								if (!start)
+									start = 0;
+								for (let i = 0; i < len; i++) {
+									let element = instance.elements[i];
+									variables.push(this.instanceRefToVariable(thread, `[${i + start}]`, element));
+								}
+							} else if (instance.associations) {
+								for (let association of instance.associations) {
+									let keyName = this.valueAsString(association.key);
+									if (!keyName) {
+										if (association.key.type == "Sentinel")
+											keyName = "<evalError>";
+										else
+											keyName = (<VMInstanceRef>association.key).id;
+									}
+									variables.push(this.instanceRefToVariable(thread, keyName, association.value));
+								}
+							} else if (instance.fields) {
+								for (let field of instance.fields)
+									variables.push(this.instanceRefToVariable(thread, field.decl.name, field.value));
+							} else {
+								// TODO: unhandled kind
+								this.log(instance.kind);
+							}
+						} else {
+							// TODO: unhandled type
+							this.log(obj.type);
+						}
+					}
+
+					response.body = { variables: variables };
+					this.sendResponse(response);
+				}).catch((error) => this.errorResponse(response, `${error}`));
 		}
 	}
 
