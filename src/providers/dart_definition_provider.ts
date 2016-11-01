@@ -24,16 +24,17 @@ export class DartDefinitionProvider implements DefinitionProvider {
 				if (resp.targets.length == 0)
 					resolve(null)
 				else
-					// This filter is required because SDK 1.18.10 (and earlier) return 0s for SDK classes.
-					// Although this may be fixed in future, we can't rely on the user having a newer SDK so
-					// we should leave the filter in, and if their SDK supports it, it'll just start working.
-					//   See: https://groups.google.com/a/dartlang.org/forum/#!topic/analyzer-discuss/VGmyyvsfdI8
-					resolve(resp.targets.filter(t => t.startLine > 0).map(t => this.convertResult(t, resp.files[t.fileIndex])));
+					resolve(resp.targets.map(t => this.convertResult(t, resp.files[t.fileIndex])));
 			}, e => { util.logError(e); reject(); });
 		});
 	}
 
 	private convertResult(target: as.NavigationTarget, file: string): Location {
+		// HACK: We sometimes get a startColumn of 0 (should be 1-based). Just treat this as 1 for now.
+		//     See https://github.com/Dart-Code/Dart-Code/issues/200
+		if (target.startColumn == 0)
+			target.startColumn = 1;
+
 		return {
 			uri: Uri.file(file),
 			range: util.toRange(target)
