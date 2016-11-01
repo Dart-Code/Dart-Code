@@ -56,6 +56,7 @@ export class PackageMap {
 	}
 
 	private map: {} = {};
+	private localPackageName;
 
 	constructor(file?: string) {
 		if (!file) return;
@@ -76,8 +77,16 @@ export class PackageMap {
 					this.map[name] = uriToFilePath(rest);
 				else
 					this.map[name] = path.join(path.dirname(file), rest);
+
+				// If we map to "lib/" then this must be the local package so we can stash the name.
+				if (rest == "lib/")
+					this.localPackageName = name;
 			}
 		}
+	}
+
+	getLocalPackageName(): string {
+		return this.localPackageName;
 	}
 
 	getPackagePath(name: string): string {
