@@ -4,13 +4,10 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
     ext install dart-code
 
-## New in 0.13.0
+## New in 0.13.1
 
-- Support has been added to format documents while typing (you must enable `editor.formatOnType`). This currently triggers when you type `;` or `}`. **Please send feedback!**
-- Additionally, upgrading to the Dart SDK v1.20 will get you the following fixes:
-  - Analysis server will no longer crash on Windows when typing `import`s that start with `con`
-  - Dart docs will now correctly appear in code completion for your own functions
-  - Watch/hover/repl evaluation while debugging now works for async methods
+- Code completion should no longer occasionally fail showing `Loading...`
+- Invoking `Go to Definition` on import statements should no longer occasionally fail silently
 
 ## Features
 
