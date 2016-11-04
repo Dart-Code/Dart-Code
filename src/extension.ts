@@ -46,6 +46,7 @@ export function activate(context: vs.ExtensionContext) {
 			if (selectedItem)
 				util.openInBrowser(DART_DOWNLOAD_URL);
 		});
+		analytics.logSdkDetectionFailure();
 		return; // Don't set anything else up; we can't work like this!
 	}
 
