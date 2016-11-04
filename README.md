@@ -4,11 +4,6 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
     ext install dart-code
 
-## New in 0.13.1
-
-- Code completion should no longer occasionally fail showing `Loading...`
-- Invoking `Go to Definition` on import statements should no longer occasionally fail silently
-
 ## Features
 
 - Syntax highlighting
