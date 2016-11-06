@@ -16,6 +16,21 @@ export function uriToFilePath(uri: string): string {
 	return uri;
 }
 
+function findFile(file: string, startLocation: string) {
+	let lastParent;
+	let parent = path.dirname(startLocation);
+
+	while (parent && parent.length > 1 && parent != lastParent) {
+		let packages = path.join(parent, file);
+		if (fs.existsSync(packages))
+			return packages;
+		lastParent = parent;
+		parent = path.dirname(parent);
+	}
+
+	return null;
+}
+
 // TODO: improve
 export function fileToUri(file: string): string {
 	// Handle windows paths; slashes must be converted and we need an extra slash prefixed.
@@ -41,18 +56,7 @@ export class PromiseCompleter<T> {
 
 export class PackageMap {
 	static findPackagesFile(entryPoint: string): string {
-		let lastParent;
-		let parent = path.dirname(entryPoint);
-
-		while (parent && parent.length > 1 && parent != lastParent) {
-			let packages = path.join(parent, ".packages");
-			if (fs.existsSync(packages))
-				return packages;
-			lastParent = parent;
-			parent = path.dirname(parent);
-		}
-
-		return null;
+		return findFile('.packages', entryPoint);
 	}
 
 	private map: {} = {};
