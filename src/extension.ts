@@ -27,6 +27,7 @@ import { OpenFileTracker } from "./open_file_tracker";
 import { SdkCommands } from "./commands/sdk";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { ServerStatusNotification } from "./analysis/analysis_server_types";
+import { upgradeProject } from "./project_upgrade";
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
 
@@ -137,7 +138,10 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(new EditCommands(context, analyzer));
 
 	// Register misc commands.
- 	context.subscriptions.push(new TypeHierarchyCommand(context, analyzer));
+	context.subscriptions.push(new TypeHierarchyCommand(context, analyzer));
+
+	// Perform any required project upgrades.
+	upgradeProject();
 }
 
 function handleConfigurationChange() {
