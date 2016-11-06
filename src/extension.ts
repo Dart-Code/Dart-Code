@@ -30,6 +30,7 @@ import { ServerStatusNotification } from "./analysis/analysis_server_types";
 import { upgradeProject } from "./project_upgrade";
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
+const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
 
 export let dartSdkRoot: string;
 export let analyzer: Analyzer;
@@ -40,7 +41,13 @@ export function activate(context: vs.ExtensionContext) {
 	dartSdkRoot = util.findDartSdk();
 	if (dartSdkRoot == null) {
 		vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
-			"Please add it to your PATH or configure the 'dart.sdkPath' setting and reload.");
+			"Please add it to your PATH or configure the 'dart.sdkPath' setting and reload.",
+			"Go to Dart Downloads"
+		).then(selectedItem => {
+			if (selectedItem)
+				util.openInBrowser(DART_DOWNLOAD_URL);
+		});
+		analytics.logSdkDetectionFailure();
 		return; // Don't set anything else up; we can't work like this!
 	}
 
@@ -58,10 +65,10 @@ export function activate(context: vs.ExtensionContext) {
 				if (util.isOutOfDate(sdkVersion, version))
 					vs.window.showWarningMessage(
 						`Version ${version} of the Dart SDK is available (you have ${sdkVersion}). Some features of Dart Code may not work correctly with an old SDK.`,
-						"Go to Downloads"
+						"Go to Dart Downloads"
 					).then(selectedItem => {
 						if (selectedItem)
-							util.openInBrowser("https://www.dartlang.org/install/archive");
+							util.openInBrowser(DART_DOWNLOAD_URL);
 					});
 			}, util.logError);
 		}

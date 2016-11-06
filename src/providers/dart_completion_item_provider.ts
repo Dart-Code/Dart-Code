@@ -74,7 +74,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			// so treat them both the same and just display with the properties type.
 			detail = element.kind == "GETTER"
 				? element.returnType
-				: element.parameters.substring(1, element.parameters.lastIndexOf(" "));
+				// See https://github.com/dart-lang/sdk/issues/27747
+				: element.parameters ? element.parameters.substring(1, element.parameters.lastIndexOf(" ")) : "";
 			// Otherwise, get return type from method.
 		} else if (element && element.returnType)
 			detail =

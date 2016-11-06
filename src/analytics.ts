@@ -13,6 +13,7 @@ enum EventCategory {
 
 enum EventAction {
     Activated,
+	SdkDetectionFailure,
 	Enabled,
 	Disabled
 }
@@ -22,6 +23,7 @@ class Analytics {
 	analysisServerVersion: string;
 
 	logActivation() { this.log(EventCategory.Extension, EventAction.Activated); }
+	logSdkDetectionFailure() { this.log(EventCategory.Extension, EventAction.SdkDetectionFailure); }
 	logShowTodosToggled(enabled: boolean) { this.log(EventCategory.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }
 
 	private log(category: EventCategory, action: EventAction) {
