@@ -31,6 +31,24 @@ function findFile(file: string, startLocation: string) {
 	return null;
 }
 
+export function getLocalPackageName(entryPoint: string) {
+	let pubspec = findFile("pubspec.yaml", entryPoint);
+	if (!pubspec)
+		return null;
+
+	// TODO: This could fail if a nested "name:" property exists above the main "name:" property..
+	// The proper fix is to use a proper YAML parser but none of those on npm look very appealing
+	// (most have several dependencies, full issue trackers and/or are not being maintained). 
+	let lines = fs.readFileSync(pubspec).toString().split("\n");
+	let values = lines.filter(l => l.indexOf(":") > -1).map(l => l.split(":"));
+	let namePair = values.find(v => v[0].trim() == "name");
+
+	if (namePair)
+		return namePair[1].trim();
+	else
+		return null;
+}
+
 // TODO: improve
 export function fileToUri(file: string): string {
 	// Handle windows paths; slashes must be converted and we need an extra slash prefixed.
@@ -56,11 +74,10 @@ export class PromiseCompleter<T> {
 
 export class PackageMap {
 	static findPackagesFile(entryPoint: string): string {
-		return findFile('.packages', entryPoint);
+		return findFile(".packages", entryPoint);
 	}
 
 	private map: {} = {};
-	private localPackageName;
 
 	constructor(file?: string) {
 		if (!file) return;
@@ -81,16 +98,8 @@ export class PackageMap {
 					this.map[name] = uriToFilePath(rest);
 				else
 					this.map[name] = path.join(path.dirname(file), rest);
-
-				// If we map to "lib/" then this must be the local package so we can stash the name.
-				if (rest == "lib/")
-					this.localPackageName = name;
 			}
 		}
-	}
-
-	getLocalPackageName(): string {
-		return this.localPackageName;
 	}
 
 	getPackagePath(name: string): string {

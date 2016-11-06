@@ -9,7 +9,7 @@ import {
 	Module
 } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { PackageMap, uriToFilePath, fileToUri, PromiseCompleter, DebugSettings } from "./utils";
+import { PackageMap, uriToFilePath, fileToUri, PromiseCompleter, DebugSettings, getLocalPackageName } from "./utils";
 import {
 	ObservatoryConnection, VMEvent, VMIsolateRef, RPCError, DebuggerResult, VMStack, VMSentinel, VMObj,
 	VMFrame, VMFuncRef, VMInstanceRef, VMScriptRef, VMScript, VMSourceLocation, VMErrorRef, VMBreakpoint,
@@ -40,6 +40,7 @@ export class DartDebugSession extends DebugSession {
 	observatory: ObservatoryConnection;
 	private threadManager: ThreadManager;
 	private packageMap: PackageMap;
+	private localPackageName: string;
 
 	public constructor() {
 		super();
@@ -70,6 +71,7 @@ export class DartDebugSession extends DebugSession {
 		this.sendEvent(new OutputEvent(`dart ${this.sourceFile}\n`));
 
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program));
+		this.localPackageName = getLocalPackageName(args.program);
 
 		this.sendResponse(response);
 
@@ -148,9 +150,8 @@ export class DartDebugSession extends DebugSession {
 						}
 
 						// Helpers to categories libraries as SDK/ExternalLibrary/not.
-						let localPackageName = this.packageMap.getLocalPackageName();
 						let isSdkLibrary = (l: VMLibraryRef) => l.uri.startsWith("dart:");
-						let isExternalLibrary = (l: VMLibraryRef) => l.uri.startsWith("package:") && !l.uri.startsWith(`package:${localPackageName}/`);
+						let isExternalLibrary = (l: VMLibraryRef) => l.uri.startsWith("package:") && !l.uri.startsWith(`package:${this.localPackageName}/`);
 
 						// Set whether libraries should be debuggable based on user settings.
 						return Promise.all(
