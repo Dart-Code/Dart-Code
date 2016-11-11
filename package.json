@@ -5,7 +5,7 @@
 	"version": "0.14.0-dev",
 	"publisher": "DanTup",
 	"engines": {
-		"vscode": "^1.4.0"
+		"vscode": "^1.6.0"
 	},
 	"license": "SEE LICENSE IN LICENSE",
 	"bugs": {
