@@ -93,18 +93,18 @@ export class DartDebugSession extends DebugSession {
 		process.stdout.on("data", (data) => {
 			let match: RegExpExecArray;
 			if (!this.observatory) {
-				match = ObservatoryConnection.portRegex.exec(data);
+				match = ObservatoryConnection.portRegex.exec(data as string);
 			}
 
 			if (match) {
 				this.initObservatory(match[1]);
 			} else {
-				this.sendEvent(new OutputEvent(data, "stdout"));
+				this.sendEvent(new OutputEvent(data as string, "stdout"));
 			}
 		});
 		process.stderr.setEncoding("utf8");
 		process.stderr.on("data", (data) => {
-			this.sendEvent(new OutputEvent(data, "stderr"));
+			this.sendEvent(new OutputEvent(data as string, "stderr"));
 		});
 		process.on("error", (error) => {
 			this.sendEvent(new OutputEvent(`error: ${error}\n`));

@@ -22,7 +22,7 @@ export function getChannel(name: string): vs.OutputChannel {
 }
 
 export function runProcessInChannel(process: child_process.ChildProcess, channel: vs.OutputChannel) {
-    process.stdout.on("data", (data) => channel.append(data));
-    process.stderr.on("data", (data) => channel.append(data));
+    process.stdout.on("data", (data) => channel.append(data as string));
+    process.stderr.on("data", (data) => channel.append(data as string));
     process.on("close", (code) => channel.appendLine(`exit code ${code}`));
 }
