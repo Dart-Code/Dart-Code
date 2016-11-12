@@ -10,6 +10,8 @@ import { config } from "./config";
 import { dartSdkRoot } from "./extension";
 import { getDartSdkVersion } from "./utils";
 
+let tmp = require("tmp");
+
 const maxErrorReportCount = 3;
 
 let errorCount = 0;
@@ -94,9 +96,9 @@ ${error.stackTrace}
 \`\`\`
 `;
 
-		let tempPath = path.join(os.tmpdir(), 'bug.md');
-		fs.writeFileSync(tempPath, data, 'utf8');
-		workspace.openTextDocument(tempPath).then(document => {
+		let tempFile = tmp.fileSync({ prefix: 'bug-', postfix: '.md' });
+		fs.writeFileSync(tempFile.name, data, 'utf8');
+		workspace.openTextDocument(tempFile.name).then(document => {
 			window.showTextDocument(document);
 		});
 	}
