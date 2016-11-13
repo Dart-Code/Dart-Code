@@ -10,8 +10,6 @@ import { config } from "./config";
 import { dartSdkRoot } from "./extension";
 import { getDartSdkVersion } from "./utils";
 
-let tmp = require("tmp");
-
 const maxErrorReportCount = 3;
 
 let errorCount = 0;
@@ -96,10 +94,17 @@ ${error.stackTrace}
 \`\`\`
 `;
 
-		let tempFile = tmp.fileSync({ prefix: 'bug-', postfix: '.md' });
-		fs.writeFileSync(tempFile.name, data, 'utf8');
-		workspace.openTextDocument(tempFile.name).then(document => {
+		let fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.md`;
+		let tempPath = path.join(os.tmpdir(), fileName);
+		fs.writeFileSync(tempPath, data, 'utf8');
+		workspace.openTextDocument(tempPath).then(document => {
 			window.showTextDocument(document);
 		});
 	}
+}
+
+function getRandomInt(min: number, max: number) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
 }
