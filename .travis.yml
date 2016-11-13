@@ -19,8 +19,8 @@ before_install:
   - npm --version
 
 install:
-  - npm install --depth 0 --silent
+  - npm install --depth 0
 
 script:
-  - npm run vscode:prepublish --silent
-  - npm test --silent
+  - npm run vscode:prepublish
+  - npm test

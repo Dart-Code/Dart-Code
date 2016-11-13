@@ -37,7 +37,7 @@ export function findDartSdk(): string {
 function hasDartExecutable(pathToTest: string): boolean {
 	// Apparently this is the "correct" way to check files exist synchronously in Node :'(
 	try {
-		fs.accessSync(path.join(pathToTest, dartExecutableName), fs.X_OK);
+		fs.accessSync(path.join(pathToTest, dartExecutableName), fs.constants.X_OK);
 		return true; // If no error, we found a match!
 	}
 	catch (e) { }
