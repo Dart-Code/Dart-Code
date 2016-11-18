@@ -6,7 +6,7 @@ import * as querystring from "querystring";
 import { config } from "./config";
 import { log, isDevelopment, extensionVersion } from "./utils";
 
-enum EventCategory {
+enum Category {
 	Extension,
 	TODOs,
 	Analyzer
@@ -21,20 +21,41 @@ enum EventAction {
 	FatalError
 }
 
+enum TimingVariable {
+	Startup
+}
+
 class Analytics {
 	sdkVersion: string;
 	analysisServerVersion: string;
 
-	logActivation() { this.log(EventCategory.Extension, EventAction.Activated); }
-	logSdkDetectionFailure() { this.log(EventCategory.Extension, EventAction.SdkDetectionFailure); }
-	logShowTodosToggled(enabled: boolean) { this.log(EventCategory.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }
-	logAnalyzerError(fatal: boolean) { this.log(EventCategory.Analyzer, fatal ? EventAction.FatalError : EventAction.Error); }
+	logExtensionStartup(timeInMS: number) {
+		this.log(Category.Extension, EventAction.Activated);
+		this.time(Category.Extension, TimingVariable.Startup, timeInMS);
+	};
+	logSdkDetectionFailure() { this.log(Category.Extension, EventAction.SdkDetectionFailure); }
+	logShowTodosToggled(enabled: boolean) { this.log(Category.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }
+	logAnalyzerError(fatal: boolean) { this.log(Category.Analyzer, fatal ? EventAction.FatalError : EventAction.Error); }
+	logAnalyzerStartupTime(timeInMS: number) {
+		this.time(Category.Analyzer, TimingVariable.Startup, timeInMS);
+	}
 
-	private log(category: EventCategory, action: EventAction) {
+	private log(category: Category, action: EventAction) {
+		this.send(category, action);
+	}
+
+	private time(category: Category, timingVariable: TimingVariable, timeInMS: number) {
+		this.send(category, null, timingVariable, timeInMS);
+	}
+
+	private send(category: Category, action?: EventAction, timingVariable?: TimingVariable, timeInMS?: number) {
 		if (!config.allowAnalytics)
 			return;
 
-		let isSessionStart = category == EventCategory.Extension && action == EventAction.Activated;
+		let isEvent = action != undefined;
+		let isTiming = timingVariable != undefined;
+		let logType = isEvent ? "event" : "timing";
+		let isSessionStart = category == Category.Extension && action == EventAction.Activated;
 
 		let debugPreference = "My code";
 		if (config.debugSdkLibraries && config.debugExternalLibraries)
@@ -51,10 +72,13 @@ class Analytics {
 			ul: env.language,
 			an: "Dart Code",
 			av: extensionVersion,
-			t: "event",
-			sc: isSessionStart ? "start" : "",
-			ec: EventCategory[category],
-			ea: EventAction[action],
+			t: logType,
+			sc: isEvent && isSessionStart ? "start" : "",
+			ec: isEvent ? Category[category] : undefined,
+			ea: isEvent ? EventAction[action] : undefined,
+			utc: isTiming ? Category[category] : undefined,
+			utv: isTiming ? TimingVariable[timingVariable] : undefined,
+			utt: isTiming ? Math.round(timeInMS) : undefined,
 			cd1: isDevelopment,
 			cd2: process.platform,
 			cd3: this.sdkVersion,

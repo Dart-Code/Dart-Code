@@ -39,6 +39,7 @@ export let analyzer: Analyzer;
 let showTodos: boolean = config.showTodos;
 
 export function activate(context: vs.ExtensionContext) {
+	var startTime = new Date();
 	dartSdkRoot = util.findDartSdk();
 	if (dartSdkRoot == null) {
 		vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
@@ -83,7 +84,8 @@ export function activate(context: vs.ExtensionContext) {
 	analytics.sdkVersion = sdkVersion;
 	let connectedEvents = analyzer.registerForServerConnected(sc => {
 		analytics.analysisServerVersion = sc.version;
-		analytics.logActivation();
+		let endTime = new Date();
+		analytics.logAnalyzerStartupTime(endTime.getTime() - startTime.getTime());
 	});
 
 	// TODO: Check if EventEmitter<T> would be more appropriate than our own.
@@ -153,6 +155,10 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Prompt user for any special config we might want to set.
 	promptUserForConfigs(context);
+
+	// Log how long all this startup took.
+	let endTime = new Date();
+	analytics.logExtensionStartup(endTime.getTime() - startTime.getTime());
 }
 
 function handleConfigurationChange() {
