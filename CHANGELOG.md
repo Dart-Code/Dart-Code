@@ -1,3 +1,7 @@
+# v0.14.1
+
+- Minor update to improve session handling for analytics
+
 # v0.14.0
 
 Note: Due to use of new APIs, Dart Code v0.14 requires Visual Studio Code v1.6 or newer.
