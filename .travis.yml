@@ -2,7 +2,7 @@ sudo: false
 
 os:
   - osx
-#  - linux
+  - linux
 
 language: dart
 dart:
@@ -14,6 +14,7 @@ before_install:
       sh -e /etc/init.d/xvfb start;
       sleep 3;
     fi
+  - nvm install 6
   - dart --version
   - node --version
   - npm --version
