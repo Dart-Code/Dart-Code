@@ -8,14 +8,17 @@ import { log, isDevelopment, extensionVersion } from "./utils";
 
 enum EventCategory {
 	Extension,
-	TODOs
+	TODOs,
+	Analyzer
 }
 
 enum EventAction {
 	Activated,
 	SdkDetectionFailure,
 	Enabled,
-	Disabled
+	Disabled,
+	Error,
+	FatalError
 }
 
 class Analytics {
@@ -25,6 +28,7 @@ class Analytics {
 	logActivation() { this.log(EventCategory.Extension, EventAction.Activated); }
 	logSdkDetectionFailure() { this.log(EventCategory.Extension, EventAction.SdkDetectionFailure); }
 	logShowTodosToggled(enabled: boolean) { this.log(EventCategory.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }
+	logAnalyzerError(fatal: boolean) { this.log(EventCategory.Analyzer, fatal ? EventAction.FatalError : EventAction.Error); }
 
 	private log(category: EventCategory, action: EventAction) {
 		if (!config.allowAnalytics)

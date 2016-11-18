@@ -3,6 +3,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { analytics } from "./analytics";
 import { window, workspace, env, commands, extensions, StatusBarItem, Disposable, TextDocument } from "vscode";
 import { Analyzer } from "./analysis/analyzer";
 import { ServerStatusNotification, ServerErrorNotification } from "./analysis/analysis_server_types";
@@ -52,6 +53,8 @@ export class AnalyzerStatusReporter extends Disposable {
 		console.error(error.message);
 		if (error.stackTrace)
 			console.error(error.stackTrace);
+
+		analytics.logAnalyzerError(error.isFatal);
 
 		errorCount++;
 
