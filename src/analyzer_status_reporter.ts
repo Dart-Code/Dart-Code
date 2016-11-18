@@ -6,7 +6,7 @@ import * as path from "path";
 import { analytics } from "./analytics";
 import { window, workspace, env, commands, extensions, StatusBarItem, Disposable, TextDocument } from "vscode";
 import { Analyzer } from "./analysis/analyzer";
-import { ServerStatusNotification, ServerErrorNotification } from "./analysis/analysis_server_types";
+import { ServerStatusNotification, ServerErrorNotification, RequestError } from "./analysis/analysis_server_types";
 import { config } from "./config";
 import { dartSdkRoot } from "./extension";
 import { getDartSdkVersion } from "./utils";
@@ -29,6 +29,7 @@ export class AnalyzerStatusReporter extends Disposable {
 
 		analyzer.registerForServerStatus(n => this.handleServerStatus(n));
 		analyzer.registerForServerError(e => this.handleServerError(e));
+		analyzer.registerForRequestError(e => this.handleRequestError(e));
 	}
 
 	private handleServerStatus(status: ServerStatusNotification) {
@@ -46,6 +47,15 @@ export class AnalyzerStatusReporter extends Disposable {
 		} else {
 			this.statusBarItem.hide();
 		}
+	}
+
+	handleRequestError(error: RequestError) {
+		// Map this request error to a server error to reuse the shared code.
+		this.handleServerError({
+			isFatal: false,
+			message: error.message,
+			stackTrace: error.stackTrace
+		});
 	}
 
 	private handleServerError(error: ServerErrorNotification) {

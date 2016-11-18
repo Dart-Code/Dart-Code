@@ -15,6 +15,8 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	private messageBuffer: string[] = [];
 	private logStream: fs.WriteStream;
 
+	private requestErrorSubscriptions: ((notification: as.RequestError) => void)[] = [];
+
 	constructor(dartVMPath: string, analyzerPath: string) {
 		super();
 
@@ -126,10 +128,16 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 
 	private handleResponse(evt: UnknownResponse) {
 		let handler = this.activeRequests[evt.id];
-		if (evt.error)
+		if (evt.error && evt.error.code == "SERVER_ERROR")
+			this.notify(this.requestErrorSubscriptions, <as.RequestError>evt.error);
+		else if (evt.error)
 			handler[1](evt.error);
 		else
 			handler[0](evt.result);
+	}
+
+	registerForRequestError(subscriber: (notification: as.RequestError) => void): vs.Disposable {
+		return this.subscribe(this.requestErrorSubscriptions, subscriber);
 	}
 
 	protected sendRequest<TReq, TResp>(method: string, params?: TReq): Thenable<TResp> {
