@@ -21,6 +21,10 @@ enum EventAction {
 	FatalError
 }
 
+enum TimingVariable {
+	Startup
+}
+
 class Analytics {
 	sdkVersion: string;
 	analysisServerVersion: string;
@@ -31,9 +35,20 @@ class Analytics {
 	logAnalyzerError(fatal: boolean) { this.log(Category.Analyzer, fatal ? EventAction.FatalError : EventAction.Error); }
 
 	private log(category: Category, action: EventAction) {
+		this.send(category, action);
+	}
+
+	private time(category: Category, timingVariable: TimingVariable, timeInMS: number) {
+		this.send(category, null, timingVariable, timeInMS);
+	}
+
+	private send(category: Category, action?: EventAction, timingVariable?: TimingVariable, timeInMS?: number) {
 		if (!config.allowAnalytics)
 			return;
 
+		let isEvent = action != undefined;
+		let isTiming = timingVariable != undefined;
+		let logType = isEvent ? "event" : "timing";
 		let isSessionStart = category == Category.Extension && action == EventAction.Activated;
 
 		let debugPreference = "My code";
@@ -51,10 +66,13 @@ class Analytics {
 			ul: env.language,
 			an: "Dart Code",
 			av: extensionVersion,
-			t: "event",
-			sc: isSessionStart ? "start" : "",
-			ec: Category[category],
-			ea: EventAction[action],
+			t: logType,
+			sc: isEvent && isSessionStart ? "start" : "",
+			ec: isEvent ? Category[category] : undefined,
+			ea: isEvent ? EventAction[action] : undefined,
+			utc: isTiming ? Category[category] : undefined,
+			utv: isTiming ? TimingVariable[timingVariable] : undefined,
+			utt: isTiming ? Math.round(timeInMS) : undefined,
 			cd1: isDevelopment,
 			cd2: process.platform,
 			cd3: this.sdkVersion,
