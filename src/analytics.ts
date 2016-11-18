@@ -29,10 +29,16 @@ class Analytics {
 	sdkVersion: string;
 	analysisServerVersion: string;
 
-	logActivation(timeInMS: number) { this.log(Category.Extension, EventAction.Activated); }
+	logExtensionStartup(timeInMS: number) {
+		this.log(Category.Extension, EventAction.Activated);
+		this.time(Category.Extension, TimingVariable.Startup, timeInMS);
+	};
 	logSdkDetectionFailure() { this.log(Category.Extension, EventAction.SdkDetectionFailure); }
 	logShowTodosToggled(enabled: boolean) { this.log(Category.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }
 	logAnalyzerError(fatal: boolean) { this.log(Category.Analyzer, fatal ? EventAction.FatalError : EventAction.Error); }
+	logAnalyzerStartupTime(timeInMS: number) {
+		this.time(Category.Analyzer, TimingVariable.Startup, timeInMS);
+	}
 
 	private log(category: Category, action: EventAction) {
 		this.send(category, action);
