@@ -17,7 +17,7 @@ function update_launch_json_change_sdk_to_settings() {
 	// Find Dart CLI items that might need upgrading.
 	configs.filter(c => c.type == "dart-cli").map(d => {
 		// Remove the old sdkPath.
-		if (d.sdkPath) {
+		if (d.sdkPath !== undefined) {
 			console.log("Found old sdkPath, removing...");
 			d.sdkPath = undefined;
 			hasChanged = true;
