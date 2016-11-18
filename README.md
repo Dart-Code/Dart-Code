@@ -14,6 +14,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - Find References (`Shift`+`F12`)
 - Excute Dart command line apps (`F5`)
 - Debugging support for command line apps (`F5`)
+- Support for debugging just user code or SDK/libraries too
 - Code fixes/lightbulb (`Ctrl`+`.` and `F8`)
 - Notification of new stable Dart SDK releases
 - Type hierarchy (`F4`)
@@ -24,6 +25,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - Workspace-wide symbol search (`Ctrl`+`T`)
 - Auto-closing braces/quotes
 - Document symbol list/search with highlighting (`Ctrl`+`Shift`+`O`)
+- Generation of analysis error reports for easy reporting to the Dart team 
 - `pub get` and `pub upgrade` commands
 - Automatically run `pub get` when `pubspec.yaml` is saved
 - Supports strong mode and linting (configured in `analysis_options.yaml` or `.analysis_options`)

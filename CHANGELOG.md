@@ -1,3 +1,21 @@
+# v0.14.0
+
+Note: Due to use of new APIs, Dart Code v0.14 requires Visual Studio Code v1.6 or newer.
+
+## Debug Just My Code
+
+New options have been added controlling whether to step into SDK and external library code when debugging. When first opening Dart Code with this change you will be prompted to choose whether to "Debug just my code" or "Debug all code". You can change this at any time with the `dart.debugSdkLibraries` and `dart.debugExternalLibraries` options.
+
+## Analysis Server Error Reporting
+
+If the analysis server encounters an error you will now be prompted (up to 3 times per session) to report the issue to the Dart team. Clicking "Generate error report" will build a document of markdown that you can simple copy/paste directly into the Dart SDK issue tracker (linked at the top of the report).
+
+## Misc
+
+- A small change was made to ensure [debugging compatibility with future versions of the Dart SDK](https://groups.google.com/a/dartlang.org/forum/#!msg/announce/VxSw-V5tx8k/wPV0GfX7BwAJ).
+- If the Dart SDK is not found on your machine, the error message will now include a button to launch the [Dart installation page](https://www.dartlang.org/install).
+- As of Visual Studio Code v1.7, the `editor.formatOnSave` setting will work correctly for Dart files.  
+
 # v0.13.1
 
 - Code completion should no longer occasionally fail showing `Loading...`

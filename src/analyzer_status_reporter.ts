@@ -70,7 +70,7 @@ export class AnalyzerStatusReporter extends Disposable {
 
 		// Offer to report the error.
 		if (config.reportAnalyzerErrors && errorCount <= maxErrorReportCount) {
-			const shouldReport: string = "Report Exception";
+			const shouldReport: string = "Generate error report";
 			window.showErrorMessage(`Exception from the Dart analysis server: ${error.message}`, shouldReport).then(res => {
 				if (res == shouldReport)
 					this.reportError(error);
