@@ -6,7 +6,7 @@ import * as querystring from "querystring";
 import { config } from "./config";
 import { log, isDevelopment, extensionVersion } from "./utils";
 
-enum EventCategory {
+enum Category {
 	Extension,
 	TODOs,
 	Analyzer
@@ -25,16 +25,16 @@ class Analytics {
 	sdkVersion: string;
 	analysisServerVersion: string;
 
-	logActivation() { this.log(EventCategory.Extension, EventAction.Activated); }
-	logSdkDetectionFailure() { this.log(EventCategory.Extension, EventAction.SdkDetectionFailure); }
-	logShowTodosToggled(enabled: boolean) { this.log(EventCategory.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }
-	logAnalyzerError(fatal: boolean) { this.log(EventCategory.Analyzer, fatal ? EventAction.FatalError : EventAction.Error); }
+	logActivation(timeInMS: number) { this.log(Category.Extension, EventAction.Activated); }
+	logSdkDetectionFailure() { this.log(Category.Extension, EventAction.SdkDetectionFailure); }
+	logShowTodosToggled(enabled: boolean) { this.log(Category.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }
+	logAnalyzerError(fatal: boolean) { this.log(Category.Analyzer, fatal ? EventAction.FatalError : EventAction.Error); }
 
-	private log(category: EventCategory, action: EventAction) {
+	private log(category: Category, action: EventAction) {
 		if (!config.allowAnalytics)
 			return;
 
-		let isSessionStart = category == EventCategory.Extension && action == EventAction.Activated;
+		let isSessionStart = category == Category.Extension && action == EventAction.Activated;
 
 		let debugPreference = "My code";
 		if (config.debugSdkLibraries && config.debugExternalLibraries)
@@ -53,7 +53,7 @@ class Analytics {
 			av: extensionVersion,
 			t: "event",
 			sc: isSessionStart ? "start" : "",
-			ec: EventCategory[category],
+			ec: Category[category],
 			ea: EventAction[action],
 			cd1: isDevelopment,
 			cd2: process.platform,
