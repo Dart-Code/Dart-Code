@@ -89,10 +89,11 @@ class Analytics {
 		if (isEvent && isSessionStart)
 			data.sc = "start";
 
+		let debug = false;
 		const options: https.RequestOptions = {
 			hostname: "www.google-analytics.com",
 			port: 443,
-			path: "/collect",
+			path: debug ? "/debug/collect" : "/collect",
 			method: "POST",
 			headers: {
 				"Content-Type": "application/x-www-form-urlencoded"
@@ -100,6 +101,9 @@ class Analytics {
 		};
 
 		let req = https.request(options, resp => {
+			if (debug)
+				resp.on("data", c => console.log('GA-DEBUG: ' + c));
+
 			if (resp.statusCode < 200 || resp.statusCode > 300) {
 				log(`Failed to send analytics ${resp.statusCode}: ${resp.statusMessage}`);
 			}
