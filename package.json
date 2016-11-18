@@ -158,6 +158,11 @@
 					"default": true,
 					"description": "Whether to show TODOs in the Problems list."
 				},
+				"dart.reportAnalyzerErrors": {
+					"type": "boolean",
+					"default": true,
+					"description": "Offer to report analysis server exceptions when they occur."
+				},
 				"dart.allowAnalytics": {
 					"type": "boolean",
 					"default": true,

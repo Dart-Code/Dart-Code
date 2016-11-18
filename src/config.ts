@@ -28,6 +28,7 @@ class Config {
 	get runPubGetOnPubspecChanges() { return this.getConfig<boolean>("runPubGetOnPubspecChanges"); }
 	get setIndentation() { return this.getConfig<number>("setIndentation"); }
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
+	get reportAnalyzerErrors() { return this.getConfig<boolean>("reportAnalyzerErrors"); }
 	get userDefinedSdkPath() { return this.getConfig<string>("sdkPath"); }
 }
 
