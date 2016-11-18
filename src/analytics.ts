@@ -7,12 +7,12 @@ import { config } from "./config";
 import { log, isDevelopment, extensionVersion } from "./utils";
 
 enum EventCategory {
-    Extension,
-	TODOs,
+	Extension,
+	TODOs
 }
 
 enum EventAction {
-    Activated,
+	Activated,
 	SdkDetectionFailure,
 	Enabled,
 	Disabled
