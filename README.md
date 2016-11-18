@@ -47,10 +47,11 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
 ## Analytics
 
-This extension reports some very basic events to help inform development decisions, such as:
+This extension reports some basic events and timings to help inform development decisions, such as:
 
-- When the extension is loaded
-- When you enabled/disable some features (eg. showTodos)
+- Extension is loaded
+- Some settings (TODOs shown, whether you're debugging all code / your code)
+- Timings (how long did extension take to load / how long till analysis server was ready)
 
 Included in the event is your platform (Win/Linux/Mac) and extension/Dart version numbers.
 
