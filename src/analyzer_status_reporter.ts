@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { analytics } from "./analytics";
-import { window, workspace, env, commands, extensions, StatusBarItem, Disposable, TextDocument } from "vscode";
+import { window, workspace, env, commands, extensions, StatusBarItem, Disposable, TextDocument, version as codeVersion } from "vscode";
 import { Analyzer } from "./analysis/analyzer";
 import { ServerStatusNotification, ServerErrorNotification, RequestError } from "./analysis/analysis_server_types";
 import { config } from "./config";
@@ -84,25 +84,25 @@ export class AnalyzerStatusReporter extends Disposable {
 		let dartCodeVersion = extensions.getExtension('DanTup.dart-code').packageJSON.version;
 
 		let data = `
-Please report the following to https://github.com/dart-lang/sdk/issues/new:
+Please report the following to https://github.com/dart-lang/sdk/issues/new :
 
-Exception from analysis server (running from VSCode)
+Exception from analysis server (running from [Dart Code](https://marketplace.visualstudio.com/items?itemName=DanTup.dart-code))
 
-### what happened
+### What I was doing
 
-<please describe what you were doing when this exception occurred>
+(please describe what you were doing when this exception occurred)
 
-### versions
+### Versions
 
-- SDK ${sdkVersion}
-- ${env.appName}
+- Dart SDK ${sdkVersion}
+- ${env.appName} ${codeVersion}
 - Dart Code ${dartCodeVersion}
 
-### the exception
+### Exception ${error.isFatal ? ' (Fatal)' : ''}
 
-${error.message} ${error.isFatal ? ' (fatal)' : ''}
+${error.message}
 
-\`\`\`
+\`\`\`text
 ${error.stackTrace}
 \`\`\`
 `;
