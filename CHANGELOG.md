@@ -1,3 +1,8 @@
+# v0.14.2
+
+- Fix to fix for analytics :(
+- Add timings for extension activation and analysis server startup
+
 # v0.14.1
 
 - Minor update to improve session handling for analytics
