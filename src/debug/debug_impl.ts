@@ -379,8 +379,8 @@ export class DartDebugSession extends DebugSession {
 
 		// implement paged arrays
 		// let filter = args.filter; // optional; either "indexed" or "named"
-        let start = args.start; // (optional) index of the first variable to return; if omitted children start at 0
-        let count = args.count; // (optional) number of variables to return. If count is missing or 0, all variables are returned
+		let start = args.start; // (optional) index of the first variable to return; if omitted children start at 0
+		let count = args.count; // (optional) number of variables to return. If count is missing or 0, all variables are returned
 
 		let data = this.threadManager.getStoredData(variablesReference);
 		let thread = data.thread;
