@@ -65,7 +65,7 @@ class Analytics {
 		else if (config.debugExternalLibraries)
 			debugPreference = "My code + Libraries";
 
-		let data = {
+		let data: any = {
 			v: "1", // API Version.
 			tid: "UA-2201586-19",
 			cid: env.machineId,
@@ -73,7 +73,6 @@ class Analytics {
 			an: "Dart Code",
 			av: extensionVersion,
 			t: logType,
-			sc: isEvent && isSessionStart ? "start" : "",
 			ec: isEvent ? Category[category] : undefined,
 			ea: isEvent ? EventAction[action] : undefined,
 			utc: isTiming ? Category[category] : undefined,
@@ -86,6 +85,9 @@ class Analytics {
 			cd5: codeVersion,
 			cd6: debugPreference
 		};
+
+		if (isEvent && isSessionStart)
+			data.sc = "start";
 
 		const options: https.RequestOptions = {
 			hostname: "www.google-analytics.com",
