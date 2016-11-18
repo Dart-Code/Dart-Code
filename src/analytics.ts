@@ -65,7 +65,7 @@ class Analytics {
 		else if (config.debugExternalLibraries)
 			debugPreference = "My code + Libraries";
 
-		let data = {
+		let data: any = {
 			v: "1", // API Version.
 			tid: "UA-2201586-19",
 			cid: env.machineId,
@@ -73,7 +73,6 @@ class Analytics {
 			an: "Dart Code",
 			av: extensionVersion,
 			t: logType,
-			sc: isEvent && isSessionStart ? "start" : "",
 			ec: isEvent ? Category[category] : undefined,
 			ea: isEvent ? EventAction[action] : undefined,
 			utc: isTiming ? Category[category] : undefined,
@@ -87,10 +86,14 @@ class Analytics {
 			cd6: debugPreference
 		};
 
+		if (isEvent && isSessionStart)
+			data.sc = "start";
+
+		let debug = false;
 		const options: https.RequestOptions = {
 			hostname: "www.google-analytics.com",
 			port: 443,
-			path: "/collect",
+			path: debug ? "/debug/collect" : "/collect",
 			method: "POST",
 			headers: {
 				"Content-Type": "application/x-www-form-urlencoded"
@@ -98,6 +101,9 @@ class Analytics {
 		};
 
 		let req = https.request(options, resp => {
+			if (debug)
+				resp.on("data", c => console.log('GA-DEBUG: ' + c));
+
 			if (resp.statusCode < 200 || resp.statusCode > 300) {
 				log(`Failed to send analytics ${resp.statusCode}: ${resp.statusMessage}`);
 			}
