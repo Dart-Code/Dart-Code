@@ -34,6 +34,14 @@ class Analytics {
 		if (!config.allowAnalytics)
 			return;
 
+		let debugPreference = "My code";
+		if (config.debugSdkLibraries && config.debugExternalLibraries)
+			debugPreference = "All code";
+		else if (config.debugSdkLibraries)
+			debugPreference = "My code + SDK";
+		else if (config.debugExternalLibraries)
+			debugPreference = "My code + Libraries";
+
 		let data = {
 			v: "1", // API Version.
 			tid: "UA-2201586-19",
@@ -48,7 +56,8 @@ class Analytics {
 			cd2: process.platform,
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,
-			cd5: codeVersion
+			cd5: codeVersion,
+			cd6: debugPreference
 		};
 
 		const options: https.RequestOptions = {

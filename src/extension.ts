@@ -27,6 +27,8 @@ import { OpenFileTracker } from "./open_file_tracker";
 import { SdkCommands } from "./commands/sdk";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { ServerStatusNotification } from "./analysis/analysis_server_types";
+import { upgradeProject } from "./project_upgrade";
+import { promptUserForConfigs } from "./user_config_prompts";
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
 const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
@@ -145,6 +147,12 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Register misc commands.
 	context.subscriptions.push(new TypeHierarchyCommand(context, analyzer));
+
+	// Perform any required project upgrades.
+	upgradeProject();
+
+	// Prompt user for any special config we might want to set.
+	promptUserForConfigs(context);
 }
 
 function handleConfigurationChange() {

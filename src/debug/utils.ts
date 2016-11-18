@@ -16,6 +16,39 @@ export function uriToFilePath(uri: string): string {
 	return uri;
 }
 
+function findFile(file: string, startLocation: string) {
+	let lastParent;
+	let parent = path.dirname(startLocation);
+
+	while (parent && parent.length > 1 && parent != lastParent) {
+		let packages = path.join(parent, file);
+		if (fs.existsSync(packages))
+			return packages;
+		lastParent = parent;
+		parent = path.dirname(parent);
+	}
+
+	return null;
+}
+
+export function getLocalPackageName(entryPoint: string) {
+	let pubspec = findFile("pubspec.yaml", entryPoint);
+	if (!pubspec)
+		return null;
+
+	// TODO: This could fail if a nested "name:" property exists above the main "name:" property..
+	// The proper fix is to use a proper YAML parser but none of those on npm look very appealing
+	// (most have several dependencies, full issue trackers and/or are not being maintained). 
+	let lines = fs.readFileSync(pubspec).toString().split("\n");
+	let values = lines.filter(l => l.indexOf(":") > -1).map(l => l.split(":"));
+	let namePair = values.find(v => v[0].trim() == "name");
+
+	if (namePair)
+		return namePair[1].trim();
+	else
+		return null;
+}
+
 // TODO: improve
 export function fileToUri(file: string): string {
 	// Handle windows paths; slashes must be converted and we need an extra slash prefixed.
@@ -41,21 +74,10 @@ export class PromiseCompleter<T> {
 
 export class PackageMap {
 	static findPackagesFile(entryPoint: string): string {
-		let lastParent;
-		let parent = path.dirname(entryPoint);
-
-		while (parent && parent.length > 1 && parent != lastParent) {
-			let packages = path.join(parent, ".packages");
-			if (fs.existsSync(packages))
-				return packages;
-			lastParent = parent;
-			parent = path.dirname(parent);
-		}
-
-		return null;
+		return findFile(".packages", entryPoint);
 	}
 
-	map: {} = {};
+	private map: {} = {};
 
 	constructor(file?: string) {
 		if (!file) return;
@@ -119,4 +141,10 @@ export class PackageMap {
 
 		return null;
 	}
+}
+
+export class DebugSettings {
+	sdkPath: string;
+	debugSdkLibraries: boolean;
+	debugExternalLibraries: boolean;
 }

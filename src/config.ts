@@ -18,11 +18,19 @@ class Config {
 		return this.config.get<T>(key);
 	}
 
+	private setConfig<T>(key: string, value: T): Thenable<void> {
+		return this.config.update(key, value, true).then(() => this.loadConfig());
+	}
+
 	get allowAnalytics() { return this.getConfig<boolean>("allowAnalytics"); }
 	get analyzerDiagnosticsPort() { return this.getConfig<number>("analyzerDiagnosticsPort"); }
 	get analyzerObservatoryPort() { return this.getConfig<number>("analyzerObservatoryPort"); }
 	get analyzerLogFile() { return this.getConfig<string>("analyzerLogFile"); }
 	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
+	get debugSdkLibraries() { return this.getConfig<boolean>("debugSdkLibraries"); }
+	setDebugSdkLibraries(value: boolean): Thenable<void> { return this.setConfig("debugSdkLibraries", value); }
+	get debugExternalLibraries() { return this.getConfig<boolean>("debugExternalLibraries"); }
+	setDebugExternalLibraries(value: boolean): Thenable<void> { return this.setConfig("debugExternalLibraries", value); }
 	get insertArgumentPlaceholders() { return this.getConfig<boolean>("insertArgumentPlaceholders"); }
 	get lineLength() { return this.getConfig<number>("lineLength"); }
 	get runPubGetOnPubspecChanges() { return this.getConfig<boolean>("runPubGetOnPubspecChanges"); }

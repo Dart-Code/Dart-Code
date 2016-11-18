@@ -56,6 +56,7 @@ export interface VMIsolate extends VMResponse {
 	name: string;
 	runnable: boolean;
 	pauseEvent: VMEvent;
+	libraries: VMLibraryRef[];
 }
 
 export interface VMObjectRef extends VMResponse {
@@ -313,6 +314,10 @@ export class ObservatoryConnection {
 			frameIndex: frameIndex,
 			expression: expression
 		});
+	}
+
+	setLibraryDebuggable(isolateId: string, libraryId: string, isDebuggable: boolean): Promise<DebuggerResult> {
+		return this.callMethod("setLibraryDebuggable", { "isolateId": isolateId, "libraryId": libraryId, "isDebuggable": isDebuggable });
 	}
 
 	nextId: number = 0;

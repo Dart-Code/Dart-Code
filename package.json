@@ -134,6 +134,16 @@
 			"type": "object",
 			"title": "Dart Configuration",
 			"properties": {
+				"dart.debugSdkLibraries": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether SDK libraries should be marked as debuggable."
+				},
+				"dart.debugExternalLibraries": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether external libraries should be marked as debuggable."
+				},
 				"dart.sdkPath": {
 					"type": "string",
 					"description": "The location of the Dart SDK to use for analyzing and executing code. If blank, Dart Code will attempt to find it from the PATH environment variable."
@@ -192,7 +202,7 @@
 				"program": "./out/src/debug/debug_entry.js",
 				"runtime": "node",
 				"variables": {
-					"sdkPath": "dart.getSdkPath"
+					"debugSettings": "dart.getDebugSettings"
 				},
 				"configurationAttributes": {
 					"launch": {
@@ -205,10 +215,10 @@
 								"type": "string",
 								"description": "Workspace root."
 							},
-							"sdkPath": {
+							"debugSettings": {
 								"type": "string",
-								"description": "Location of Dart SDK path.",
-								"default": "${command.sdkPath}"
+								"description": "Debug settings.",
+								"default": "${command.debugSettings}"
 							},
 							"program": {
 								"type": "string",
@@ -231,7 +241,7 @@
 						"type": "dart-cli",
 						"request": "launch",
 						"cwd": "${workspaceRoot}",
-						"sdkPath": "${command.sdkPath}",
+						"debugSettings": "${command.debugSettings}",
 						"program": "${workspaceRoot}/bin/main.dart",
 						"args": []
 					}

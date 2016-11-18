@@ -9,7 +9,7 @@ import {
 	Module
 } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { PackageMap, uriToFilePath, fileToUri, PromiseCompleter } from "./utils";
+import { PackageMap, uriToFilePath, fileToUri, PromiseCompleter, DebugSettings, getLocalPackageName } from "./utils";
 import {
 	ObservatoryConnection, VMEvent, VMIsolateRef, RPCError, DebuggerResult, VMStack, VMSentinel, VMObj,
 	VMFrame, VMFuncRef, VMInstanceRef, VMScriptRef, VMScript, VMSourceLocation, VMErrorRef, VMBreakpoint,
@@ -25,7 +25,7 @@ import {
 
 export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	cwd: string;
-	sdkPath: string;
+	debugSettings: string;
 	program: string;
 	args: Array<string>;
 }
@@ -33,13 +33,14 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 export class DartDebugSession extends DebugSession {
 	private sourceFile: string;
 	private cwd: string;
-	private sdkPath: string;
+	private debugSettings: DebugSettings;
 	private dartPath: string;
 	private childProcess: child_process.ChildProcess;
 	private processExited: boolean = false;
 	observatory: ObservatoryConnection;
 	private threadManager: ThreadManager;
 	private packageMap: PackageMap;
+	private localPackageName: string;
 
 	public constructor() {
 		super();
@@ -64,12 +65,13 @@ export class DartDebugSession extends DebugSession {
 
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: DartLaunchRequestArguments): void {
 		this.cwd = args.cwd;
-		this.sdkPath = args.sdkPath;
-		this.dartPath = this.sdkPath != null ? path.join(this.sdkPath, "bin", "dart") : "dart";
+		this.debugSettings = JSON.parse(args.debugSettings);
+		this.dartPath = this.debugSettings.sdkPath != null ? path.join(this.debugSettings.sdkPath, "bin", "dart") : "dart";
 		this.sourceFile = path.relative(args.cwd, args.program);
 		this.sendEvent(new OutputEvent(`dart ${this.sourceFile}\n`));
 
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program));
+		this.localPackageName = getLocalPackageName(args.program);
 
 		this.sendResponse(response);
 
@@ -152,6 +154,19 @@ export class DartDebugSession extends DebugSession {
 							let thread = this.threadManager.getThreadInfoFromRef(isolateRef);
 							thread.receivedPauseStart();
 						}
+
+						// Helpers to categories libraries as SDK/ExternalLibrary/not.
+						let isSdkLibrary = (l: VMLibraryRef) => l.uri.startsWith("dart:");
+						let isExternalLibrary = (l: VMLibraryRef) => l.uri.startsWith("package:") && !l.uri.startsWith(`package:${this.localPackageName}/`);
+
+						// Set whether libraries should be debuggable based on user settings.
+						return Promise.all(
+							isolate.libraries.map(library => {
+								if ((isSdkLibrary(library) && !this.debugSettings.debugSdkLibraries)
+									|| (isExternalLibrary(library) && !this.debugSettings.debugExternalLibraries))
+									this.observatory.setLibraryDebuggable(isolateRef.id, library.id, false);
+							})
+						);
 					}));
 				}
 
