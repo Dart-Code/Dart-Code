@@ -34,6 +34,8 @@ class Analytics {
 		if (!config.allowAnalytics)
 			return;
 
+		let isSessionStart = category == EventCategory.Extension && action == EventAction.Activated;
+
 		let debugPreference = "My code";
 		if (config.debugSdkLibraries && config.debugExternalLibraries)
 			debugPreference = "All code";
@@ -50,6 +52,7 @@ class Analytics {
 			an: "Dart Code",
 			av: extensionVersion,
 			t: "event",
+			sc: isSessionStart ? "start" : "",
 			ec: EventCategory[category],
 			ea: EventAction[action],
 			cd1: isDevelopment,
