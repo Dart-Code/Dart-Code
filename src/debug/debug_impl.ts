@@ -97,7 +97,13 @@ export class DartDebugSession extends DebugSession {
 			}
 
 			if (match) {
-				this.initObservatory(match[1]);
+				let uri = match[1].trim();
+
+				// In SDK 1.22, trailing slash was added to the url (see #215).
+				if (!uri.endsWith('/'))
+					uri = uri + '/';
+
+				this.initObservatory(uri);
 			} else {
 				this.sendEvent(new OutputEvent(data.toString(), "stdout"));
 			}
@@ -123,7 +129,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private initObservatory(uri: string) {
-		this.observatory = new ObservatoryConnection(`${uri}/ws`);
+		this.observatory = new ObservatoryConnection(`${uri}ws`);
 		this.observatory.onLogging(message => {
 			this.sendEvent(new OutputEvent(`${message.trim()}\n`));
 		});

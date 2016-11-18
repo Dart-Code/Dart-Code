@@ -221,7 +221,7 @@ export class RPCError {
 }
 
 export class ObservatoryConnection {
-	static portRegex: RegExp = new RegExp("Observatory listening on (http:\\/\\/127.0.0.1:\\d+)");
+	static portRegex: RegExp = new RegExp("Observatory listening on (http:.+)");
 
 	socket: any;
 	private completers: { [key: string]: PromiseCompleter<DebuggerResult> } = {};
