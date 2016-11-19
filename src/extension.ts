@@ -40,7 +40,7 @@ let showTodos: boolean = config.showTodos;
 let userDefinedSdkPath: string = config.userDefinedSdkPath;
 
 export function activate(context: vs.ExtensionContext) {
-	var startTime = new Date();
+	let extensionStartTime = new Date();
 	dartSdkRoot = util.findDartSdk();
 	if (dartSdkRoot == null) {
 		vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
@@ -75,18 +75,20 @@ export function activate(context: vs.ExtensionContext) {
 					});
 			}, util.logError);
 		}
+		analytics.sdkVersion = sdkVersion;
 	}
 
 	// Fire up the analyzer process.
+	let analyzerStartTime = new Date();
 	analyzer = new Analyzer(path.join(dartSdkRoot, util.dartVMPath), path.join(dartSdkRoot, util.analyzerPath));
 	context.subscriptions.push(analyzer);
 
-	// Send an activation event once we get the analysis server version back.
-	analytics.sdkVersion = sdkVersion;
+	// Log analysis server startup time when we get the welcome message/version.
 	let connectedEvents = analyzer.registerForServerConnected(sc => {
 		analytics.analysisServerVersion = sc.version;
-		let endTime = new Date();
-		analytics.logAnalyzerStartupTime(endTime.getTime() - startTime.getTime());
+		let analyzerEndTime = new Date();
+		analytics.logAnalyzerStartupTime(analyzerEndTime.getTime() - analyzerStartTime.getTime());
+		connectedEvents.dispose();
 	});
 
 	// TODO: Check if EventEmitter<T> would be more appropriate than our own.
@@ -158,8 +160,8 @@ export function activate(context: vs.ExtensionContext) {
 	promptUserForConfigs(context);
 
 	// Log how long all this startup took.
-	let endTime = new Date();
-	analytics.logExtensionStartup(endTime.getTime() - startTime.getTime());
+	let extensionEndTime = new Date();
+	analytics.logExtensionStartup(extensionEndTime.getTime() - extensionStartTime.getTime());
 }
 
 function handleConfigurationChange() {
@@ -168,7 +170,7 @@ function handleConfigurationChange() {
 	let todoSettingChanged = showTodos != newShowTodoSetting;
 	showTodos = newShowTodoSetting;
 
-	// SDK	
+	// SDK
 	let newUserDefinedSdkPath = config.userDefinedSdkPath;
 	let sdkSettingChanged = userDefinedSdkPath != newUserDefinedSdkPath;
 	userDefinedSdkPath = newUserDefinedSdkPath;
