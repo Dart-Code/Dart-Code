@@ -9,7 +9,8 @@ import { log, isDevelopment, extensionVersion } from "./utils";
 enum Category {
 	Extension,
 	TODOs,
-	Analyzer
+	Analyzer,
+	Debugger
 }
 
 enum EventAction {
@@ -39,6 +40,7 @@ class Analytics {
 	logAnalyzerError(fatal: boolean) { this.log(Category.Analyzer, fatal ? EventAction.FatalError : EventAction.Error); }
 	logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
 	logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS); }
+	logDebuggerStart() { this.log(Category.Debugger, EventAction.Activated); }
 
 	private log(category: Category, action: EventAction) {
 		this.send(category, action);
@@ -58,6 +60,7 @@ class Analytics {
 		let isTiming = timingVariable != undefined;
 		let logType = isEvent ? "event" : "timing";
 		let isSessionStart = category == Category.Extension && action == EventAction.Activated;
+		let isDebuggerStart = category == Category.Debugger && action == EventAction.Activated;
 
 		let debugPreference = "My code";
 		if (config.debugSdkLibraries && config.debugExternalLibraries)
@@ -85,7 +88,7 @@ class Analytics {
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,
 			cd5: codeVersion,
-			cd6: debugPreference
+			cd6: isDebuggerStart ? debugPreference : undefined
 		};
 
 		if (isEvent && isSessionStart)

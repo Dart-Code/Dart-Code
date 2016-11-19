@@ -1,5 +1,6 @@
 "use strict";
 
+import { analytics } from "../analytics";
 import * as channels from "./channels";
 import * as child_process from "child_process";
 import * as os from "os";
@@ -18,6 +19,7 @@ export class SdkCommands {
 
 	registerCommands(context: vs.ExtensionContext) {
 		context.subscriptions.push(vs.commands.registerCommand("dart.getDebugSettings", _ => {
+			analytics.logDebuggerStart();
 			let settings: DebugSettings = {
 				sdkPath: this.sdk,
 				debugSdkLibraries: config.debugSdkLibraries,
