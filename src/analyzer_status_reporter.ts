@@ -79,14 +79,13 @@ export class AnalyzerStatusReporter extends Disposable {
 	}
 
 	private reportError(error: ServerErrorNotification) {
-		// TODO: How to get the VSCode version?
 		let sdkVersion = getDartSdkVersion(dartSdkRoot);
 		let dartCodeVersion = extensions.getExtension('DanTup.dart-code').packageJSON.version;
 
 		let data = `
 Please report the following to https://github.com/dart-lang/sdk/issues/new :
 
-Exception from analysis server (running from [Dart Code](https://marketplace.visualstudio.com/items?itemName=DanTup.dart-code))
+Exception from analysis server (running from VSCode / Dart Code)
 
 ### What I was doing
 
@@ -103,7 +102,7 @@ Exception from analysis server (running from [Dart Code](https://marketplace.vis
 ${error.message}
 
 \`\`\`text
-${error.stackTrace}
+${error.stackTrace.trim()}
 \`\`\`
 `;
 
