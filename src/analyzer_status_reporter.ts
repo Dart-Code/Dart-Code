@@ -64,7 +64,7 @@ export class AnalyzerStatusReporter extends Disposable {
 		if (error.stackTrace)
 			console.error(error.stackTrace);
 
-		analytics.logAnalyzerError(error.isFatal);
+		analytics.logAnalyzerError(error.message, error.isFatal);
 
 		errorCount++;
 

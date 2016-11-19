@@ -21,9 +21,7 @@ enum EventAction {
 	Activated,
 	SdkDetectionFailure,
 	Enabled,
-	Disabled,
-	Error,
-	FatalError
+	Disabled
 }
 
 enum TimingVariable {
@@ -41,7 +39,7 @@ class Analytics {
 	};
 	logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
 	logShowTodosToggled(enabled: boolean) { this.event(Category.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }
-	logAnalyzerError(fatal: boolean) { this.event(Category.Analyzer, fatal ? EventAction.FatalError : EventAction.Error); }
+	logAnalyzerError(description: string, fatal: boolean) { this.error("Analyzer: " + description, fatal); }
 	logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
 	logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS); }
 	logDebuggerStart() { this.event(Category.Debugger, EventAction.Activated); }
@@ -70,6 +68,16 @@ class Analytics {
 			utc: Category[category],
 			utv: TimingVariable[timingVariable],
 			utt: Math.round(timeInMS)
+		};
+
+		this.send(data);
+	}
+
+	private error(description: string, fatal: boolean) {
+		let data: any = {
+			t: "exception",
+			exd: description.split("\n")[0].substring(0, 150),
+			exf: fatal ? 1 : 0
 		};
 
 		this.send(data);
