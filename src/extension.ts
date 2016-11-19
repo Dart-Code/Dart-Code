@@ -91,6 +91,21 @@ export function activate(context: vs.ExtensionContext) {
 		connectedEvents.dispose();
 	});
 
+	// Log analysis server first analysis completion time when it completes.
+	var analysisStartTime: Date;
+	let analysisCompleteEvents = analyzer.registerForServerStatus(ss => {
+		// Analysis started for the first time.
+		if (ss.analysis && ss.analysis.isAnalyzing && !analysisStartTime)
+			analysisStartTime = new Date();
+		
+		// Analysis ends for the first time.
+		if (ss.analysis && !ss.analysis.isAnalyzing && analysisStartTime) {
+			let analysisEndTime = new Date();
+			analytics.logAnalyzerFirstAnalysisTime(analysisEndTime.getTime() - analysisStartTime.getTime());
+			analysisCompleteEvents.dispose();
+		}
+	});
+
 	// TODO: Check if EventEmitter<T> would be more appropriate than our own.
 
 	// Set up providers.

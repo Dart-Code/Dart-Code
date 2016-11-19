@@ -22,7 +22,8 @@ enum EventAction {
 }
 
 enum TimingVariable {
-	Startup
+	Startup,
+	FirstAnalysis
 }
 
 class Analytics {
@@ -37,6 +38,7 @@ class Analytics {
 	logShowTodosToggled(enabled: boolean) { this.log(Category.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }
 	logAnalyzerError(fatal: boolean) { this.log(Category.Analyzer, fatal ? EventAction.FatalError : EventAction.Error); }
 	logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
+	logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS); }
 
 	private log(category: Category, action: EventAction) {
 		this.send(category, action);
