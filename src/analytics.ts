@@ -47,27 +47,19 @@ class Analytics {
 	logDebuggerStart() { this.event(Category.Debugger, EventAction.Activated); }
 
 	private event(category: Category, action: EventAction) {
-		let isSessionStart = category == Category.Extension && action == EventAction.Activated;
-		let isDebuggerStart = category == Category.Debugger && action == EventAction.Activated;
-
-		let debugPreference = "My code";
-		if (config.debugSdkLibraries && config.debugExternalLibraries)
-			debugPreference = "All code";
-		else if (config.debugSdkLibraries)
-			debugPreference = "My code + SDK";
-		else if (config.debugExternalLibraries)
-			debugPreference = "My code + Libraries";
-
 		let data: any = {
 			t: "event",
 			ec: Category[category],
 			ea: EventAction[action],
 		};
 
-		if (isSessionStart)
+		// Force a session start if this is extension activation.		
+		if (category == Category.Extension && action == EventAction.Activated)
 			data.sc = "start";
-		if (isDebuggerStart)
-			data.cd6 = debugPreference;
+		
+		// Include debug preference if it's a debugger start.
+		if (category == Category.Debugger && action == EventAction.Activated)
+			data.cd6 = this.getDebuggerPreference();
 		
 		this.send(data);
 	}
@@ -139,6 +131,17 @@ class Analytics {
 		});
 		req.write(querystring.stringify(data));
 		req.end();
+	}
+
+	private getDebuggerPreference(): string {
+		if (config.debugSdkLibraries && config.debugExternalLibraries)
+			return "All code";
+		else if (config.debugSdkLibraries)
+			return "My code + SDK";
+		else if (config.debugExternalLibraries)
+			return "My code + Libraries";
+		else
+			return "My code";	
 	}
 }
 
