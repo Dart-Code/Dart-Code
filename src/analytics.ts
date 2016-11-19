@@ -49,6 +49,8 @@ class Analytics {
 	}
 
 	private send(category: Category, action?: EventAction, timingVariable?: TimingVariable, timeInMS?: number) {
+		//console.log('Sending analytics: ' + Category[category] + ', ' + EventAction[action] + ', ' + TimingVariable[timingVariable] + ', ' + timeInMS);
+
 		if (!config.allowAnalytics)
 			return;
 
