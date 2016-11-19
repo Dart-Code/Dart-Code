@@ -157,7 +157,7 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	}
 
 	protected notify<T>(subscriptions: ((notification: T) => void)[], notification: T) {
-		subscriptions.forEach(sub => sub(notification));
+		subscriptions.slice().forEach(sub => sub(notification));
 	}
 
 	protected subscribe<T>(subscriptions: ((notification: T) => void)[], subscriber: (notification: T) => void): vs.Disposable {
