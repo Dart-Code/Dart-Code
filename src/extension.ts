@@ -37,6 +37,7 @@ export let dartSdkRoot: string;
 export let analyzer: Analyzer;
 
 let showTodos: boolean = config.showTodos;
+let userDefinedSdkPath: string = config.userDefinedSdkPath;
 
 export function activate(context: vs.ExtensionContext) {
 	var startTime = new Date();
@@ -162,14 +163,28 @@ export function activate(context: vs.ExtensionContext) {
 }
 
 function handleConfigurationChange() {
+	// TODOs
 	let newShowTodoSetting = config.showTodos;
 	let todoSettingChanged = showTodos != newShowTodoSetting;
 	showTodos = newShowTodoSetting;
+
+	// SDK	
+	let newUserDefinedSdkPath = config.userDefinedSdkPath;
+	let sdkSettingChanged = userDefinedSdkPath != newUserDefinedSdkPath;
+	userDefinedSdkPath = newUserDefinedSdkPath;
 
 	if (todoSettingChanged) {
 		analytics.logShowTodosToggled(showTodos);
 		analyzer.analysisReanalyze({
 			roots: [vs.workspace.rootPath]
+		});
+	}
+
+	if (sdkSettingChanged) {
+		const reloadAction: string = "Reload Project";
+		vs.window.showWarningMessage("The Dart SDK path has been changed. Save your changes then reload the project to complete the switch.", reloadAction).then(res => {
+			if (res == reloadAction)
+				vs.commands.executeCommand("workbench.action.reloadWindow");
 		});
 	}
 }
