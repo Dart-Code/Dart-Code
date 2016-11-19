@@ -1,3 +1,8 @@
+# v0.14.3
+
+- When changing the `dart.sdkPath` setting you will now be prompted (and given a button) to reload the project
+- If the analysis service crashes and analytics are enabled, the first line of the error message will be included in an analytics event 
+
 # v0.14.2
 
 - Fix to fix for analytics :(

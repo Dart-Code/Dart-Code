@@ -34,7 +34,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
 ## Extension Settings
 
-- `dart.allowAnalytics`: Note: We only send a few very basic events and the platform and extension/Dart version numbers :-)
+- `dart.allowAnalytics`: Note: We only send a few basic events and version numbers (see below) :-)
 - `dart.checkForSdkUpdates`: Whether to check you are using the latest version of the Dart SDK at startup. Defaults to `true`.
 - `dart.debugSdkLibraries`: Whether SDK libraries should be marked as debuggable. Defaults to `false`.
 - `dart.debugExternalLibraries`: Whether libraries should be marked as debuggable. Defaults to `false`.
@@ -52,6 +52,7 @@ This extension reports some basic events and timings to help inform development 
 - Extension is loaded
 - Some settings (TODOs shown, whether you're debugging all code / your code)
 - Timings (how long did extension take to load / how long till analysis server was ready)
+- Crashes in the Dart analysis server
 
 Included in the event is your platform (Win/Linux/Mac) and extension/Dart version numbers.
 
