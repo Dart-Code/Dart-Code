@@ -6,6 +6,10 @@ import * as querystring from "querystring";
 import { config } from "./config";
 import { log, isDevelopment, extensionVersion } from "./utils";
 
+// Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.
+// This is only required for debugging analytics and needn't be sent for standard Dart Code development (dev hits are already filtered with isDevelopment).
+let debug = false;
+
 enum Category {
 	Extension,
 	TODOs,
@@ -32,33 +36,17 @@ class Analytics {
 	analysisServerVersion: string;
 
 	logExtensionStartup(timeInMS: number) {
-		this.log(Category.Extension, EventAction.Activated);
+		this.event(Category.Extension, EventAction.Activated);
 		this.time(Category.Extension, TimingVariable.Startup, timeInMS);
 	};
-	logSdkDetectionFailure() { this.log(Category.Extension, EventAction.SdkDetectionFailure); }
-	logShowTodosToggled(enabled: boolean) { this.log(Category.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }
-	logAnalyzerError(fatal: boolean) { this.log(Category.Analyzer, fatal ? EventAction.FatalError : EventAction.Error); }
+	logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
+	logShowTodosToggled(enabled: boolean) { this.event(Category.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }
+	logAnalyzerError(fatal: boolean) { this.event(Category.Analyzer, fatal ? EventAction.FatalError : EventAction.Error); }
 	logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
 	logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS); }
-	logDebuggerStart() { this.log(Category.Debugger, EventAction.Activated); }
+	logDebuggerStart() { this.event(Category.Debugger, EventAction.Activated); }
 
-	private log(category: Category, action: EventAction) {
-		this.send(category, action);
-	}
-
-	private time(category: Category, timingVariable: TimingVariable, timeInMS: number) {
-		this.send(category, null, timingVariable, timeInMS);
-	}
-
-	private send(category: Category, action?: EventAction, timingVariable?: TimingVariable, timeInMS?: number) {
-		//console.log('Sending analytics: ' + Category[category] + ', ' + EventAction[action] + ', ' + TimingVariable[timingVariable] + ', ' + timeInMS);
-
-		if (!config.allowAnalytics)
-			return;
-
-		let isEvent = action != undefined;
-		let isTiming = timingVariable != undefined;
-		let logType = isEvent ? "event" : "timing";
+	private event(category: Category, action: EventAction) {
 		let isSessionStart = category == Category.Extension && action == EventAction.Activated;
 		let isDebuggerStart = category == Category.Debugger && action == EventAction.Activated;
 
@@ -71,30 +59,54 @@ class Analytics {
 			debugPreference = "My code + Libraries";
 
 		let data: any = {
+			t: "event",
+			ec: Category[category],
+			ea: EventAction[action],
+		};
+
+		if (isSessionStart)
+			data.sc = "start";
+		if (isDebuggerStart)
+			data.cd6 = debugPreference;
+		
+		this.send(data);
+	}
+
+	private time(category: Category, timingVariable: TimingVariable, timeInMS: number) {
+		let data: any = {
+			t: "timing",
+			utc: Category[category],
+			utv: TimingVariable[timingVariable],
+			utt: Math.round(timeInMS)
+		};
+
+		this.send(data);
+	}
+
+	private send(customData: any) {
+		if (!config.allowAnalytics)
+			return;
+
+		let data: any = {
 			v: "1", // API Version.
 			tid: "UA-2201586-19",
 			cid: env.machineId,
 			ul: env.language,
 			an: "Dart Code",
 			av: extensionVersion,
-			t: logType,
-			ec: isEvent ? Category[category] : undefined,
-			ea: isEvent ? EventAction[action] : undefined,
-			utc: isTiming ? Category[category] : undefined,
-			utv: isTiming ? TimingVariable[timingVariable] : undefined,
-			utt: isTiming ? Math.round(timeInMS) : undefined,
 			cd1: isDevelopment,
 			cd2: process.platform,
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,
 			cd5: codeVersion,
-			cd6: isDebuggerStart ? debugPreference : undefined
 		};
 
-		if (isEvent && isSessionStart)
-			data.sc = "start";
+		// Copy custom data over.		
+		Object.assign(data, customData);
 
-		let debug = false;
+		if (debug)
+			console.log("Sending analytic: " + JSON.stringify(data));	
+
 		const options: https.RequestOptions = {
 			hostname: "www.google-analytics.com",
 			port: 443,
@@ -107,7 +119,19 @@ class Analytics {
 
 		let req = https.request(options, resp => {
 			if (debug)
-				resp.on("data", c => console.log('GA-DEBUG: ' + c));
+				resp.on("data", c => {
+					try {
+						var gaDebugResp = JSON.parse(c.toString());
+						if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
+							console.log("Sent OK!");
+						else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
+							console.warn(c.toString());
+						else
+							console.warn("Unexpected GA debug response: " + c.toString());	
+					} catch (e) {
+						console.warn("Error in GA debug response: " + c.toString());
+					}
+				});
 
 			if (resp.statusCode < 200 || resp.statusCode > 300) {
 				log(`Failed to send analytics ${resp.statusCode}: ${resp.statusMessage}`);
