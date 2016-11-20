@@ -97,7 +97,7 @@ Exception from analysis server (running from VSCode / Dart Code)
 - ${env.appName} ${codeVersion}
 - Dart Code ${dartCodeVersion}
 
-### Exception ${error.isFatal ? ' (Fatal)' : ''}
+### Exception${error.isFatal ? ' (fatal)' : ''}
 
 ${error.message}
 
