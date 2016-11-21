@@ -37,7 +37,7 @@ export let dartSdkRoot: string;
 export let analyzer: Analyzer;
 
 let showTodos: boolean = config.showTodos;
-let userDefinedSdkPath: string = config.userDefinedSdkPath;
+let analyzerSettings: string = getAnalyzerSettings();
 
 export function activate(context: vs.ExtensionContext) {
 	let extensionStartTime = new Date();
@@ -186,9 +186,9 @@ function handleConfigurationChange() {
 	showTodos = newShowTodoSetting;
 
 	// SDK
-	let newUserDefinedSdkPath = config.userDefinedSdkPath;
-	let sdkSettingChanged = userDefinedSdkPath != newUserDefinedSdkPath;
-	userDefinedSdkPath = newUserDefinedSdkPath;
+	let newAnalyzerSettings = getAnalyzerSettings();
+	let analyzerSettingsChanged = analyzerSettings != newAnalyzerSettings;
+	analyzerSettings = newAnalyzerSettings;
 
 	if (todoSettingChanged) {
 		analytics.logShowTodosToggled(showTodos);
@@ -197,13 +197,25 @@ function handleConfigurationChange() {
 		});
 	}
 
-	if (sdkSettingChanged) {
+	if (analyzerSettingsChanged) {
 		const reloadAction: string = "Reload Project";
-		vs.window.showWarningMessage("The Dart SDK path has been changed. Save your changes then reload the project to complete the switch.", reloadAction).then(res => {
+		vs.window.showWarningMessage("The Dart SDK/Analyzer settings have been changed. Save your changes then reload the project to restart the analyzer.", reloadAction).then(res => {
 			if (res == reloadAction)
 				vs.commands.executeCommand("workbench.action.reloadWindow");
 		});
 	}
+}
+
+function getAnalyzerSettings() {
+	// The return value here is used to detect when any config option changes that affects the analyzer.
+	// It doesn't matter how these are combined; it just gets called on every config change and compared.
+	// Only options that requier an analyzer restart should be included.
+	return config.userDefinedSdkPath
+		+ config.analyzerLogFile
+		+ config.analyzerDiagnosticsPort
+		+ config.analyzerObservatoryPort
+		+ config.analyzerInstrumentationLogFile
+		+ config.analyzerAdditionalArgs;
 }
 
 export function deactivate() {
