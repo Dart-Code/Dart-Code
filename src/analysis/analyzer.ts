@@ -25,20 +25,26 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 		let args = [];
 
 		// Optionally start Observatory for the analyzer.
-		let observatoryPort = config.analyzerObservatoryPort;
-		if (observatoryPort)
-			args.push(`--observe=${observatoryPort}`);
+		if (config.analyzerObservatoryPort)
+			args.push(`--observe=${config.analyzerObservatoryPort}`);
 
 		args.push(analyzerPath);
 
 		// Optionally start the analyzer's diagnostic web server on the given port.
-		let diagnosticsPort = config.analyzerDiagnosticsPort;
-		if (diagnosticsPort)
-			args.push(`--port=${diagnosticsPort}`);
+		if (config.analyzerDiagnosticsPort)
+			args.push(`--port=${config.analyzerDiagnosticsPort}`);
 
 		// Add info about the extension that will be collected for crash reports etc.
 		args.push(`--client-id=DanTup.dart-code`);
 		args.push(`--client-version=${extensionVersion}`);
+
+		// The analysis server supports a verbose instrumentation log file.
+		if (config.analyzerInstrumentationLogFile)
+			args.push(`--instrumentation-log-file=${config.analyzerInstrumentationLogFile}`);
+
+		// Allow arbitrary args to be passed to the analysis server.
+		if (config.analyzerAdditionalArgs)
+			args.concat(config.analyzerAdditionalArgs);
 
 		this.analyzerProcess = child_process.spawn(dartVMPath, args);
 
