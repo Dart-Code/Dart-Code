@@ -76,7 +76,7 @@ class Analytics {
 	private error(description: string, fatal: boolean) {
 		let data: any = {
 			t: "exception",
-			exd: description.split("\n")[0].substring(0, 150),
+			exd: description.split(/[\n\{\/]/)[0].substring(0, 150).trim(),
 			exf: fatal ? 1 : 0
 		};
 
