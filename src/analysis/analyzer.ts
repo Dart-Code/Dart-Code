@@ -20,8 +20,6 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	constructor(dartVMPath: string, analyzerPath: string) {
 		super();
 
-		log(`Starting Dart analysis server...`);
-
 		let args = [];
 
 		// Optionally start Observatory for the analyzer.
@@ -46,6 +44,7 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 		if (config.analyzerAdditionalArgs)
 			args.concat(config.analyzerAdditionalArgs);
 
+		log("Starting Dart analysis server with args: " + args.join(' '));		
 		this.analyzerProcess = child_process.spawn(dartVMPath, args);
 
 		this.analyzerProcess.stdout.on("data", (data: Buffer) => {
