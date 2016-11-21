@@ -1,3 +1,10 @@
+# v0.14.4
+
+- Some additional debugging settings have been added to help track down analysis server issues
+- Changing analysis server debug settings will now prompt you to reload the project to restart the analysis server
+- Some minor tweaks have been made to the error report generation when the analysis service crashes
+- Exception analytics should no longer sometimes include users source code paths/filenames in logs
+
 # v0.14.3
 
 - When changing the `dart.sdkPath` setting you will now be prompted (and given a button) to reload the project
