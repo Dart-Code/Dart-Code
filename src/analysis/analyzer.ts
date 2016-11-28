@@ -42,9 +42,9 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 
 		// Allow arbitrary args to be passed to the analysis server.
 		if (config.analyzerAdditionalArgs)
-			args.concat(config.analyzerAdditionalArgs);
+			args = args.concat(config.analyzerAdditionalArgs);
 
-		log("Starting Dart analysis server with args: " + args.join(' '));		
+		log("Starting Dart analysis server with args: " + args.join(' '));
 		this.analyzerProcess = child_process.spawn(dartVMPath, args);
 
 		this.analyzerProcess.stdout.on("data", (data: Buffer) => {
@@ -86,8 +86,11 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 			msg = JSON.parse(message);
 		}
 		catch (e) {
-			// This will include things like Observatory output.
-			logError({ message: `Unable to parse message (${e}): ${message}` });
+			// This will include things like Observatory output and some analyzer logging code.
+			message = message.trim();
+			if (!message.startsWith('--- ') && !message.startsWith('+++ ')) {
+				logError({ message: `Unable to parse message (${e}): ${message}` });
+			}
 			return;
 		}
 
