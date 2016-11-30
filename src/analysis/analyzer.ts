@@ -11,7 +11,7 @@ import { log, logError, extensionVersion } from "../utils";
 export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	private analyzerProcess: child_process.ChildProcess;
 	private nextRequestID = 1;
-	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void] } = {};
+	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] } = {};
 	private messageBuffer: string[] = [];
 	private logStream: fs.WriteStream;
 
@@ -89,7 +89,7 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 			// This will include things like Observatory output and some analyzer logging code.
 			message = message.trim();
 			if (!message.startsWith('--- ') && !message.startsWith('+++ ')) {
-				logError({ message: `Unable to parse message (${e}): ${message}` });
+				console.error(`Unable to parse message (${e}): ${message}`);
 			}
 			return;
 		}
@@ -136,12 +136,18 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 
 	private handleResponse(evt: UnknownResponse) {
 		let handler = this.activeRequests[evt.id];
-		if (evt.error && evt.error.code == "SERVER_ERROR")
+		let method: string = handler[2];
+
+		if (evt.error && evt.error.code == "SERVER_ERROR") {
+			evt.error['method'] = method;
 			this.notify(this.requestErrorSubscriptions, <as.RequestError>evt.error);
-		else if (evt.error)
+		}
+
+		if (evt.error) {
 			handler[1](evt.error);
-		else
+		} else {
 			handler[0](evt.result);
+		}
 	}
 
 	registerForRequestError(subscriber: (notification: as.RequestError) => void): vs.Disposable {
@@ -154,7 +160,7 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 
 		return new Promise<TResp>((resolve, reject) => {
 			// Stash the callbacks so we can call them later.
-			this.activeRequests[id.toString()] = [resolve, reject];
+			this.activeRequests[id.toString()] = [resolve, reject, method];
 
 			this.sendMessage({
 				id: id.toString(),
