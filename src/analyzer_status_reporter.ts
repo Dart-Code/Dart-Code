@@ -55,10 +55,10 @@ export class AnalyzerStatusReporter extends Disposable {
 			isFatal: false,
 			message: error.message,
 			stackTrace: error.stackTrace
-		});
+		}, error['method']);
 	}
 
-	private handleServerError(error: ServerErrorNotification) {
+	private handleServerError(error: ServerErrorNotification, method?: string) {
 		// Always log to the console.
 		console.error(error.message);
 		if (error.stackTrace)
@@ -73,12 +73,12 @@ export class AnalyzerStatusReporter extends Disposable {
 			const shouldReport: string = "Generate error report";
 			window.showErrorMessage(`Exception from the Dart analysis server: ${error.message}`, shouldReport).then(res => {
 				if (res == shouldReport)
-					this.reportError(error);
+					this.reportError(error, method);
 			});
 		}
 	}
 
-	private reportError(error: ServerErrorNotification) {
+	private reportError(error: ServerErrorNotification, method?: string) {
 		let sdkVersion = getDartSdkVersion(dartSdkRoot);
 		let dartCodeVersion = extensions.getExtension('DanTup.dart-code').packageJSON.version;
 
@@ -90,7 +90,7 @@ Exception from analysis server (running from VSCode / Dart Code)
 ### What I was doing
 
 (please describe what you were doing when this exception occurred)
-
+${method ? '\n### Request\n\nWhile responding to request: `' + method + '`\n' : '' }
 ### Versions
 
 - Dart SDK ${sdkVersion}
