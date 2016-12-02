@@ -15,6 +15,7 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	private messageBuffer: string[] = [];
 	private logStream: fs.WriteStream;
 	private lastDiagnostics: as.ContextData[];
+	private analyzerLaunchArgs: string[];
 
 	private requestErrorSubscriptions: ((notification: as.RequestError) => void)[] = [];
 
@@ -45,7 +46,8 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 		if (config.analyzerAdditionalArgs)
 			args = args.concat(config.analyzerAdditionalArgs);
 
-		log("Starting Dart analysis server with args: " + args.join(' '));
+		this.analyzerLaunchArgs = args.slice(1); // Trim the first one as it's just snapshot path.
+		log("Starting Dart analysis server with args: " + this.analyzerLaunchArgs.join(' '));
 		this.analyzerProcess = child_process.spawn(dartVMPath, args);
 
 		this.analyzerProcess.stdout.on("data", (data: Buffer) => {
@@ -200,6 +202,10 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 
 	getLastDiagnostics(): as.ContextData[] {
 		return this.lastDiagnostics;
+	}
+
+	getAnalyzerLaunchArgs(): string[] {
+		return this.analyzerLaunchArgs;
 	}
 
 	dispose() {
