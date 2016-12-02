@@ -20,6 +20,7 @@ let errorCount = 0;
 export class AnalyzerStatusReporter extends Disposable {
 	private statusBarItem: StatusBarItem;
 	private statusShowing: boolean;
+	private analyzer: Analyzer;
 
 	constructor(analyzer: Analyzer) {
 		super(() => this.statusBarItem.dispose());
@@ -27,6 +28,7 @@ export class AnalyzerStatusReporter extends Disposable {
 		this.statusBarItem = window.createStatusBarItem();
 		this.statusBarItem.text = "Analyzing…";
 
+		this.analyzer = analyzer;		
 		analyzer.registerForServerStatus(n => this.handleServerStatus(n));
 		analyzer.registerForServerError(e => this.handleServerError(e));
 		analyzer.registerForRequestError(e => this.handleRequestError(e));
@@ -82,6 +84,9 @@ export class AnalyzerStatusReporter extends Disposable {
 		let sdkVersion = getDartSdkVersion(dartSdkRoot);
 		let dartCodeVersion = extensions.getExtension('DanTup.dart-code').packageJSON.version;
 
+		// Attempt to get the last diagnostics
+		let diagnostics = this.analyzer.getLastDiagnostics();
+
 		let data = `
 Please report the following to https://github.com/dart-lang/sdk/issues/new :
 
@@ -96,7 +101,7 @@ ${method ? '\n### Request\n\nWhile responding to request: `' + method + '`\n' : 
 - Dart SDK ${sdkVersion}
 - ${env.appName} ${codeVersion}
 - Dart Code ${dartCodeVersion}
-
+${diagnostics ? '\n### Diagnostic Contexts\n\n```js\n' + JSON.stringify(diagnostics, null, 4) + '\n```\n' : '' }
 ### Exception${error.isFatal ? ' (fatal)' : ''}
 
 ${error.message}
