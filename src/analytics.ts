@@ -39,7 +39,7 @@ class Analytics {
 	};
 	logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
 	logShowTodosToggled(enabled: boolean) { this.event(Category.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }
-	logAnalyzerError(description: string, fatal: boolean) { this.error("Analyzer: " + description, fatal); }
+	logAnalyzerError(description: string, fatal: boolean) { this.error("AS: " + description, fatal); }
 	logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
 	logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS); }
 	logDebuggerStart() { this.event(Category.Debugger, EventAction.Activated); }
