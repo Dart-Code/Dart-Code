@@ -14,6 +14,7 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] } = {};
 	private messageBuffer: string[] = [];
 	private logStream: fs.WriteStream;
+	private lastDiagnostics: as.ContextData[];
 
 	private requestErrorSubscriptions: ((notification: as.RequestError) => void)[] = [];
 
@@ -61,6 +62,10 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 		this.serverSetSubscriptions({
 			subscriptions: ["STATUS"]
 		});
+
+		// Hook error subscriptions so we can try and get diagnostic info if this happens.
+		this.registerForServerError(e => this.requestDiagnosticsUpdate());
+		this.registerForRequestError(e => this.requestDiagnosticsUpdate());
 	}
 
 	private processMessageBuffer() {
@@ -184,6 +189,17 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 				}
 			}
 		};
+	}
+
+	private requestDiagnosticsUpdate() {
+		this.lastDiagnostics = null;
+		this.diagnosticGetDiagnostics()
+			.then(resp => this.lastDiagnostics = resp.contexts)
+			.then(() => console.log(JSON.stringify(this.lastDiagnostics)));
+	}
+
+	getLastDiagnostics(): as.ContextData[] {
+		return this.lastDiagnostics;
 	}
 
 	dispose() {
