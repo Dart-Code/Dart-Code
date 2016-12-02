@@ -86,6 +86,7 @@ export class AnalyzerStatusReporter extends Disposable {
 
 		// Attempt to get the last diagnostics
 		let diagnostics = this.analyzer.getLastDiagnostics();
+		let analyzerArgs = this.analyzer.getAnalyzerLaunchArgs();
 
 		let data = `
 Please report the following to https://github.com/dart-lang/sdk/issues/new :
@@ -101,7 +102,15 @@ ${method ? '\n### Request\n\nWhile responding to request: `' + method + '`\n' : 
 - Dart SDK ${sdkVersion}
 - ${env.appName} ${codeVersion}
 - Dart Code ${dartCodeVersion}
-${diagnostics ? '\n### Diagnostic Contexts\n\n```js\n' + JSON.stringify(diagnostics, null, 4) + '\n```\n' : '' }
+
+### Analyzer Info
+
+The analyzer was launched with the arguments:
+
+\`\`\`text
+${analyzerArgs.join('\n')}
+\`\`\`
+${diagnostics ? '\nDiagnostics requested after the error occurred are:\n\n```js\n' + JSON.stringify(diagnostics, null, 4) + '\n```\n' : '' }
 ### Exception${error.isFatal ? ' (fatal)' : ''}
 
 ${error.message}
