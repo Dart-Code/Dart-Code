@@ -261,7 +261,8 @@
 		"ws": "^1.1.1"
 	},
 	"devDependencies": {
-		"typescript": "^2.0.3",
+		"typescript": "// Change back to ^ when #232 is resolved.",
+		"typescript": "~2.0.3",
 		"vscode": "^1.0.0",
 		"mocha": "^2.3.3",
 		"@types/node": "^6.0.40",
