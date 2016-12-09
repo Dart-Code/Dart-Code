@@ -1,3 +1,11 @@
+# v0.14.5
+
+- Passing additional arguments to the analysis server via the hidden setting `dart.analyzerAdditionalArgs` now works as expected
+- Generated error reports will now include which analysis server arguments were used 
+- Generated error reports will now include which type of request the server was processing
+- Generated error reports may now include additional diagnostic information from the analysis server
+- Generated error reports will now include some intro text encouraging the user to review the report for any sensitive information
+
 # v0.14.4
 
 - Some additional debugging settings have been added to help track down analysis server issues
