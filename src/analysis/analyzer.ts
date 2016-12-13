@@ -195,6 +195,13 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 
 	private requestDiagnosticsUpdate() {
 		this.lastDiagnostics = null;
+
+		// HACK: If we're using the new driver, don't try to request these, they won't work (and we might get stuck in a loop!)
+		if (this.analyzerLaunchArgs.find(arg => arg.indexOf("--enable-new-analysis-driver") > -1)) {
+			console.log("Ignoring request for diagnostics update due to --enable-new-analysis-driver");
+			return;
+		}
+
 		this.diagnosticGetDiagnostics()
 			.then(resp => this.lastDiagnostics = resp.contexts)
 			.then(() => console.log(JSON.stringify(this.lastDiagnostics)));
