@@ -203,8 +203,7 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 		}
 
 		this.diagnosticGetDiagnostics()
-			.then(resp => this.lastDiagnostics = resp.contexts)
-			.then(() => console.log(JSON.stringify(this.lastDiagnostics)));
+			.then(resp => this.lastDiagnostics = resp.contexts);
 	}
 
 	getLastDiagnostics(): as.ContextData[] {
