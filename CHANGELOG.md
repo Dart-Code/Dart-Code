@@ -1,3 +1,7 @@
+# v0.14.6
+
+- Using the experimental analysis driver will no longer result multiple error reports being offered when an error occurs 
+
 # v0.14.5
 
 - Passing additional arguments to the analysis server via the hidden setting `dart.analyzerAdditionalArgs` now works as expected
