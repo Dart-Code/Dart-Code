@@ -1,3 +1,9 @@
+# v0.14.7
+
+- Code completion will no longer insert underscore characters after upgrading to Code 1.8.
+
+**Note:** This version requires Visual Studio Code 1.8.
+
 # v0.14.6
 
 - Using the experimental analysis driver will no longer result multiple error reports being offered when an error occurs 
