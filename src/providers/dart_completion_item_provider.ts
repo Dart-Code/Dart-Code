@@ -2,7 +2,7 @@
 
 import {
 	TextDocument, Position, CancellationToken, CompletionItemProvider, CompletionList,
-	CompletionItem, CompletionItemKind, TextEdit, Range
+	CompletionItem, CompletionItemKind, TextEdit, Range, SnippetString
 } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import { logError } from "../utils";
@@ -45,8 +45,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		let elementKind = element ? this.getElementKind(element.kind) : null;
 
 		let label = suggestion.completion;
-		let completionText = suggestion.completion;
-		let detail: string = "";
+		let completionText = suggestion.completion.replace('$', '\\$').replace('{', '\\{').replace('}', '\\}'); // Escape ${} as we're always using SnippetString.
+		let detail = "";
 
 		// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its
 		// parameters.
@@ -57,15 +57,20 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			// Add placeholders for params to the completion.
 			if (config.insertArgumentPlaceholders && suggestion.parameterNames) {
 				let args = suggestion.parameterNames.slice(0, suggestion.requiredParameterCount);
-				let argPlaceholders = args.map(n => `{{${n}}}`).join(", ");
-				completionText += `(${argPlaceholders}){{_}}`;
+				let argPlaceholders = args.map((n, i) => `\${${i + 1}:${n}}`).join(", ");
+
+				// If blank, force in a dummy tabstop to go between the parents.
+				if (argPlaceholders == "")
+					argPlaceholders = "$1";
+				
+				completionText += `(${argPlaceholders})$0`;				
 			}
 			else
-				completionText += `({{_}})`;
+				completionText += `($0)`;
 		}
 		// If it's a named arg, also add placeholders for the value.
 		else if (config.insertArgumentPlaceholders && suggestion.kind == "NAMED_ARGUMENT" && suggestion.parameterName) {
-			completionText += `{{${suggestion.parameterName}}}`;
+			completionText += `\${${suggestion.parameterName}}`;
 		}
 
 		// If we're a property, work out the type. 
@@ -92,13 +97,10 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		completion.kind = kind;
 		completion.detail = (suggestion.isDeprecated ? "(deprecated) " : "") + detail;
 		completion.documentation = suggestion.docSummary;
-		completion.insertText = suggestion.completion;
-		completion.textEdit = new TextEdit(
-			new Range(
-				document.positionAt(notification.replacementOffset),
-				document.positionAt(notification.replacementOffset + notification.replacementLength)
-			),
-			completionText
+		completion.insertText = new SnippetString(completionText);
+		completion.range = new Range(
+			document.positionAt(notification.replacementOffset),
+			document.positionAt(notification.replacementOffset + notification.replacementLength)
 		);
 		return completion;
 	}
