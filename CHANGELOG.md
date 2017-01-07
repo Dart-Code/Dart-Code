@@ -1,3 +1,7 @@
+# v0.14.9
+
+- Completing named arguments that already have values will no longer cause the argument name to be inserted twice.
+
 # v0.14.8
 
 - An error message about the "new driver" will no longer appear when using version v1.22.0-dev.5.0 or later of the Dart SDK.
