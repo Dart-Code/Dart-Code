@@ -196,15 +196,12 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	private requestDiagnosticsUpdate() {
 		this.lastDiagnostics = null;
 
-		// HACK: If we're using the new driver, don't try to request these, they won't work (and we might get stuck in a loop!)
-		// https://github.com/Dart-Code/Dart-Code/issues/233
-		if (this.analyzerLaunchArgs.find(arg => arg.indexOf("--enable-new-analysis-driver") > -1)) {
-			console.log("Ignoring request for diagnostics update due to --enable-new-analysis-driver");
-			return;
-		}
+		// New drive is default in SDK 1.22, so just skip this until it has diagnostics implemented.
+		// See https://github.com/Dart-Code/Dart-Code/issues/244
+		return;
 
-		this.diagnosticGetDiagnostics()
-			.then(resp => this.lastDiagnostics = resp.contexts);
+		// this.diagnosticGetDiagnostics()
+		// 	.then(resp => this.lastDiagnostics = resp.contexts);
 	}
 
 	getLastDiagnostics(): as.ContextData[] {
