@@ -1,3 +1,7 @@
+# v0.14.8
+
+- An error message about the "new driver" will no longer appear when usingversion v1.22.0-dev.5.0 or later of the Dart SDK.
+
 # v0.14.7
 
 - Code completion will no longer insert underscore characters after upgrading to Code 1.8.
