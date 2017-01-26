@@ -14,7 +14,7 @@ function prompt(context: vs.ExtensionContext, key: string, prompt: () => Thenabl
 	//context.globalState.update(stateKey, undefined);
 
 	// If we've not prompted the user with this question before...
-	if (context.globalState.get(stateKey, false) !== true) {
+	if (context.globalState.get(stateKey) !== true) {
 		// Prompt, but only record if the user responded.
 		prompt().then(res => context.globalState.update(stateKey, res), error);
 	}
