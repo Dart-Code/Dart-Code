@@ -20,7 +20,7 @@ export class DartCodeActionProvider implements CodeActionProvider {
 				file: document.fileName,
 				offset: document.offsetAt(range.start)
 			}).then(resp => {
-				let allFixes = [].concat.apply([], resp.fixes.map(fix => fix.fixes));
+				let allFixes = new Array<as.SourceChange>().concat(...resp.fixes.map(fix => fix.fixes));
 				resolve(allFixes.map(fix => this.convertResult(document, fix)));
 			}, e => { logError(e); reject(); });
 		});

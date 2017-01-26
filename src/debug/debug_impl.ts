@@ -320,7 +320,7 @@ export class DartDebugSession extends DebugSession {
 			vmFrames = vmFrames.slice(startFrame, startFrame + levels);
 
 			let stackFrames: StackFrame[] = [];
-			let promises = [];
+			let promises: Promise<void>[] = [];
 
 			vmFrames.forEach((frame: VMFrame) => {
 				let frameId = thread.storeData(frame);
@@ -730,7 +730,7 @@ export class DartDebugSession extends DebugSession {
 		return null;
 	}
 
-	private log(obj) {
+	private log(obj: string) {
 		this.sendEvent(new OutputEvent(`${obj}\n`));
 	}
 }
@@ -740,7 +740,7 @@ class ThreadManager {
 
 	threads: ThreadInfo[] = [];
 	debugSession: DartDebugSession;
-	bps = {};
+	bps: { [uri: string]: DebugProtocol.SourceBreakpoint[] } = {};
 	private hasConfigurationDone = false;
 	private exceptionMode = "Unhandled";
 
@@ -845,7 +845,7 @@ class ThreadManager {
 	}
 
 	nextDataId: number = 1;
-	storedData = {};
+	storedData: { [id: number]: StoredData } = {};
 
 	storeData(thread: ThreadInfo, data: VMResponse): number {
 		let id = this.nextDataId;
@@ -860,7 +860,7 @@ class ThreadManager {
 
 	removeStoredIds(ids: number[]) {
 		for (let id of ids) {
-			delete this.storeData[id];
+			delete this.storedData[id];
 		}
 	}
 
@@ -888,7 +888,7 @@ class ThreadInfo {
 	storedIds: number[] = [];
 	scriptCompleters: { [key: string]: PromiseCompleter<VMScript> } = {};
 	runnable: boolean = false;
-	vmBps = {};
+	vmBps: { [uri: string]: VMBreakpoint[] } = {};
 	atAsyncSuspension: boolean = false;
 
 	constructor(manager: ThreadManager, ref: VMIsolateRef, number: number) {

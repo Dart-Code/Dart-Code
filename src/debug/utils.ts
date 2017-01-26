@@ -77,7 +77,7 @@ export class PackageMap {
 		return findFile(".packages", entryPoint);
 	}
 
-	private map: {} = {};
+	private map: { [name: string]: string } = {};
 
 	constructor(file?: string) {
 		if (!file) return;

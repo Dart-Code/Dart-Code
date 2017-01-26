@@ -144,14 +144,15 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	private handleResponse(evt: UnknownResponse) {
 		let handler = this.activeRequests[evt.id];
 		let method: string = handler[2];
+		let error: as.RequestError & { method?: string } = evt.error;
 
-		if (evt.error && evt.error.code == "SERVER_ERROR") {
-			evt.error['method'] = method;
-			this.notify(this.requestErrorSubscriptions, <as.RequestError>evt.error);
+		if (error && error.code == "SERVER_ERROR") {
+			error.method = method;
+			this.notify(this.requestErrorSubscriptions, error);
 		}
 
-		if (evt.error) {
-			handler[1](evt.error);
+		if (error) {
+			handler[1](error);
 		} else {
 			handler[0](evt.result);
 		}

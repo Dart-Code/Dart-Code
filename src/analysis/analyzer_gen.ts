@@ -8,7 +8,7 @@ import * as as from "./analysis_server_types";
 import * as a from "./analyzer";
 
 export abstract class AnalyzerGen {
-	protected abstract notify<T>(subscriptions: ((notification: T) => void)[], params: T);
+	protected abstract notify<T>(subscriptions: ((notification: T) => void)[], params: T): void;
 	protected abstract subscribe<T>(subscriptions: ((notification: T) => void)[], subscriber: (notification: T) => void): vs.Disposable;
 	protected abstract sendRequest<TReq, TResp>(method: string, params?: TReq): Thenable<TResp>;
 
