@@ -42,6 +42,6 @@ function promptForDebugJustMyCode(): PromiseLike<boolean> {
 	});
 }
 
-function error(err) {
+function error(err: any) {
 	vs.window.showErrorMessage(err.message);
 }

@@ -64,7 +64,7 @@ export class DartRenameProvider implements RenameProvider {
 					return;
 				}
 
-				let promises = [];
+				let promises: Thenable<TextDocument>[] = [];
 				resp.change.edits.forEach(changeEdit => {
 					changeEdit.edits.forEach(fileEdit => {
 						let uri = Uri.file(changeEdit.file);

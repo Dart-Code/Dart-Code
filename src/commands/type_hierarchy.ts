@@ -48,9 +48,9 @@ export class TypeHierarchyCommand implements vs.Disposable {
 			addParents(items, tree, startItem);
 			addChildren(items, tree, startItem);
 
-			vs.window.showQuickPick(tree.map(item => itemToPick(item, items)), options).then(result => {
+			vs.window.showQuickPick(tree.map(item => itemToPick(item, items)), options).then((result: vs.QuickPickItem & { location?: as.Location }) => {
 				if (result) {
-					let location: as.Location = result['location'];
+					let location: as.Location = result.location;
 					vs.workspace.openTextDocument(location.file).then(document => {
 						vs.window.showTextDocument(document).then(editor => {
 							let range = toRange(location);

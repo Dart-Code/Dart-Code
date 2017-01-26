@@ -1,6 +1,6 @@
 "use strict";
 
-let WebSocket = require("ws");
+import * as WebSocket from "ws";
 
 import { PromiseCompleter } from "./utils";
 
@@ -204,9 +204,9 @@ export interface VMClassRef extends VMObjectRef {
 export class RPCError {
 	code: number;
 	message: string;
-	data;
+	data: any;
 
-	constructor(code: number, message: string, data?) {
+	constructor(code: number, message: string, data?: any) {
 		this.code = code;
 		this.message = message;
 		this.data = data;
@@ -224,9 +224,10 @@ export class RPCError {
 export class ObservatoryConnection {
 	static portRegex: RegExp = new RegExp("Observatory listening on (http:.+)");
 
-	socket: any;
+	socket: WebSocket;
 	private completers: { [key: string]: PromiseCompleter<DebuggerResult> } = {};
-	private eventListeners: { [key: string]: any } = {};
+	private logging?: (message: string) => void;
+	private eventListeners: { [key: string]: (message: VMEvent) => void } = {};
 
 	constructor(uri: string) {
 		this.socket = new WebSocket(uri);
@@ -238,7 +239,7 @@ export class ObservatoryConnection {
 	}
 
 	onLogging(callback: (message: string) => void) {
-		this.eventListeners['logging'] = callback;
+		this.logging = callback;
 	}
 
 	getVersion(): Promise<DebuggerResult> {
@@ -263,9 +264,15 @@ export class ObservatoryConnection {
 	}
 
 	addBreakpointWithScriptUri(isolateId: string, scriptUri: string, line: number, column?: number): Promise<DebuggerResult> {
-		let data = { "isolateId": isolateId, "scriptUri": scriptUri, "line": line };
+		let data: {
+			isolateId: string,
+			scriptUri: string,
+			line: number,
+			column?: number
+		};
+		data = { isolateId: isolateId, scriptUri: scriptUri, line: line };
 		if (column)
-			data["column"] = column;
+			data.column = column;
 		return this.callMethod("addBreakpointWithScriptUri", data);
 	}
 
@@ -292,11 +299,17 @@ export class ObservatoryConnection {
 	}
 
 	getObject(isolateId: string, objectId: string, offset?: number, count?: number): Promise<DebuggerResult> {
-		let data = { "isolateId": isolateId, "objectId": objectId };
+		let data: {
+			isolateId: string,
+			objectId: string,
+			offset?: number,
+			count?: number
+		};
+		data = { isolateId: isolateId, objectId: objectId };
 		if (offset)
-			data["offset"] = offset;
+			data.offset = offset;
 		if (count)
-			data["count"] = count;
+			data.count = count;
 		return this.callMethod("getObject", data);
 	}
 
@@ -322,14 +335,19 @@ export class ObservatoryConnection {
 
 	nextId: number = 0;
 
-	callMethod(method: string, params?): Promise<DebuggerResult> {
+	callMethod(method: string, params?: any): Promise<DebuggerResult> {
 		let id = `${this.nextId++}`;
 		let completer = new PromiseCompleter<DebuggerResult>();
 		this.completers[id] = completer;
 
-		let json = { id: id, method: method };
+		let json: {
+			id: string,
+			method: string,
+			params?: any
+		};
+		json = { id: id, method: method };
 		if (params)
-			json["params"] = params;
+			json.params = params;
 		let str = JSON.stringify(json);
 		this.logTraffic(`==> ${str}`);
 		this.socket.send(str);
@@ -339,7 +357,21 @@ export class ObservatoryConnection {
 
 	handleData(data: string) {
 		this.logTraffic(`<== ${data}\n`);
-		let json = JSON.parse(data);
+		let json: {
+			id: string,
+			error: {
+				code: number,
+				message: string,
+				data: any
+			},
+			method: any,
+			result: VMResponse,
+			params: {
+				streamId: string,
+				event: VMEvent
+			}
+		};
+		json = JSON.parse(data);
 		let id = json.id;
 		let method = json.method;
 		let error = json.error;
@@ -371,11 +403,11 @@ export class ObservatoryConnection {
 	}
 
 	// TODO: We could instead log this to a file.
-	private logTraffic(message: String): void {
+	private logTraffic(message: string): void {
 		if (!shouldLogTraffic)
 			return;
 
-		let callback = this.eventListeners['logging'];
+		let callback = this.logging;
 		if (callback) {
 			const max: number = 2000;
 			if (message.length > max)
