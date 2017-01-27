@@ -51,15 +51,14 @@ export class DartHoverProvider implements HoverProvider {
 		let callable = (elementKind == "function" || elementKind == "method");
 		let field = (elementKind == "getter" || elementKind == "setter" || elementKind == "field");
 
-		let contents: string = "";
-
-		if (containingClassDescription && callable) contents += containingClassDescription + ".";
-		if (containingClassDescription && field) contents += containingClassDescription + " ";
-		if (elementDescription) contents += (hover.isDeprecated ? "(deprecated) " : "") + `${elementDescription}\n`;
-		if (propagatedType) contents += `propogated type: ${propagatedType.trim()}`;
+		let displayString: string = "";
+		if (containingClassDescription && callable) displayString += containingClassDescription + ".";
+		if (containingClassDescription && field) displayString += containingClassDescription + " ";
+		if (elementDescription) displayString += (hover.isDeprecated ? "(deprecated) " : "") + `${elementDescription}\n`;
+		if (propagatedType) displayString += `propogated type: ${propagatedType.trim()}`;
 
 		return {
-			displayString: contents.trim(),
+			displayString: displayString.trim(),
 			documentation: DartHoverProvider.cleanDartdoc(dartdoc)
 		}
 	}
