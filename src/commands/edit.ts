@@ -44,7 +44,7 @@ export class EditCommands implements vs.Disposable {
 					vs.window.showWarningMessage("Unable to apply organize directives edits.");
 			});
 		}, (error) => {
-			vs.window.showErrorMessage(`Error running organize directives: ${error}.`);
+			vs.window.showErrorMessage(`Error running organize directives: ${error.message}.`);
 		});
 	}
 
