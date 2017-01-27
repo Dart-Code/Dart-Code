@@ -50,6 +50,7 @@ export class DartHoverProvider implements HoverProvider {
 		let propagatedType = hover.propagatedType;
 		let callable = (elementKind == "function" || elementKind == "method");
 		let field = (elementKind == "getter" || elementKind == "setter" || elementKind == "field");
+		let containingLibraryName = hover.containingLibraryName;
 
 		let displayString: string = "";
 		if (containingClassDescription && callable) displayString += containingClassDescription + ".";
@@ -57,9 +58,12 @@ export class DartHoverProvider implements HoverProvider {
 		if (elementDescription) displayString += (hover.isDeprecated ? "(deprecated) " : "") + `${elementDescription}\n`;
 		if (propagatedType) displayString += `propogated type: ${propagatedType.trim()}`;
 
+		let documentation = DartHoverProvider.cleanDartdoc(dartdoc);
+		if (containingLibraryName) documentation = `_${containingLibraryName}_\r\n\r\n` + documentation;
+		
 		return {
 			displayString: displayString.trim(),
-			documentation: DartHoverProvider.cleanDartdoc(dartdoc)
+			documentation: documentation
 		}
 	}
 
