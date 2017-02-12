@@ -1,3 +1,7 @@
+# v0.15.1
+
+- Fixed an issue introduced in v0.15.0 where `null` would something appear in tooltips for items with no doc comments.
+
 # v0.15.0
 
 - Tooltips will now show include the name of the library that a type comes from.
