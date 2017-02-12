@@ -1,3 +1,8 @@
+# v0.15.0
+
+- Tooltips will now show include the name of the library that a type comes from.
+- When the `Organise Directives` command fails (eg. due to a compile error) the correct message will be displayed instead of `[Object object]`
+
 # v0.14.9
 
 - Completing named arguments that already have values will no longer cause the argument name to be inserted twice.
