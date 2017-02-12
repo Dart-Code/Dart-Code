@@ -59,7 +59,7 @@ export class DartHoverProvider implements HoverProvider {
 		if (propagatedType) displayString += `propogated type: ${propagatedType.trim()}`;
 
 		let documentation = DartHoverProvider.cleanDartdoc(dartdoc);
-		if (containingLibraryName) documentation = `_${containingLibraryName}_\r\n\r\n` + documentation;
+		if (containingLibraryName) documentation = `_${containingLibraryName}_\r\n\r\n` + (documentation != null ? documentation : "");
 		
 		return {
 			displayString: displayString.trim(),
