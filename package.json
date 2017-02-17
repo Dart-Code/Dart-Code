@@ -215,6 +215,11 @@
 								"type": "string",
 								"description": "Workspace root."
 							},
+							"checkedMode": {
+								"type": "boolean",
+								"description": "Whether to run the VM in checked mode.",
+								"default": true
+							},
 							"debugSettings": {
 								"type": "string",
 								"description": "Debug settings.",
@@ -241,6 +246,7 @@
 						"type": "dart-cli",
 						"request": "launch",
 						"cwd": "${workspaceRoot}",
+						"checkedMode": true,
 						"debugSettings": "${command.debugSettings}",
 						"program": "${workspaceRoot}/bin/main.dart",
 						"args": []

@@ -25,6 +25,7 @@ import {
 
 export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	cwd: string;
+	checkedMode: boolean;
 	debugSettings: string;
 	program: string;
 	args: Array<string>;
@@ -80,6 +81,9 @@ export class DartDebugSession extends DebugSession {
 		if (debug) {
 			appArgs.push("--enable-vm-service:0");
 			appArgs.push("--pause_isolates_on_start=true");
+		}
+		if (args.checkedMode) {
+			appArgs.push("--checked");
 		}
 		appArgs.push(this.sourceFile);
 		if (args.args)
