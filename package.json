@@ -33,7 +33,8 @@
 	"activationEvents": [
 		"onLanguage:dart",
 		"onLanguage:dartpubspec",
-		"onLanguage:dartanalysisoptions"
+		"onLanguage:dartanalysisoptions",
+		"workspaceContains:pubspec.yaml"
 	],
 	"main": "./out/src/extension",
 	"contributes": {
