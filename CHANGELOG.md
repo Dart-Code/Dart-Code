@@ -1,3 +1,10 @@
+# v1.0.0
+
+- Pressing F5 to launch Dart programs after upgrading to Code 1.10 will no longer fail with an error about an unexpected token in `launch.json`
+- Pressing F5 to launch Dart programs will now use Dart's `checked mode` by default
+- A new option has been introduced (`pubAdditionalArgs`) that allows additional arguments to be passed to `pub` in the `Pub Get` and `Pub Upgrade` commands (this may be useful if you wish to use `--packages-dir`)
+- The order of items in error reports have been tweaked slightly to move more useful stuff further up
+
 # v0.15.1
 
 - Fixed an issue introduced in v0.15.0 where `null` would something appear in tooltips for items with no doc comments.
