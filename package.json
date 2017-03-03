@@ -32,7 +32,8 @@
 	"icon": "media/icon.png",
 	"activationEvents": [
 		"onLanguage:dart",
-		"workspaceContains:pubspec.yaml"
+		"onLanguage:dartpubspec",
+		"onLanguage:dartanalysisoptions"
 	],
 	"main": "./out/src/extension",
 	"contributes": {
@@ -46,6 +47,25 @@
 					"Dart"
 				],
 				"configuration": "./syntaxes/dart-configuration.json"
+			},
+			{
+				"id": "dartpubspec",
+				"filenames": [
+					"pubspec.yaml"
+				],
+				"aliases": [
+					"Pubspec"
+				]
+			},
+			{
+				"id": "dartanalysisoptions",
+				"filenames": [
+					"analysis_options.yaml",
+					".analysis_options"
+				],
+				"aliases": [
+					"Analysis Options"
+				]
 			}
 		],
 		"grammars": [
@@ -103,7 +123,7 @@
 		"menus": {
 			"editor/title": [
 				{
-					"when": "resourceLangId == yaml",
+					"when": "resourceLangId == dartpubspec",
 					"command": "pub.get",
 					"alt": "pub.upgrade",
 					"group": "navigation"
@@ -111,24 +131,38 @@
 			],
 			"editor/context": [
 				{
-					"when": "resourceLangId == yaml",
+					"when": "resourceLangId == dartpubspec",
 					"command": "pub.get"
 				},
 				{
-					"when": "resourceLangId == yaml",
+					"when": "resourceLangId == dartpubspec",
 					"command": "pub.upgrade"
 				}
 			],
 			"explorer/context": [
 				{
-					"when": "resourceLangId == yaml",
+					"when": "resourceLangId == dartpubspec",
 					"command": "pub.get"
 				},
 				{
-					"when": "resourceLangId == yaml",
+					"when": "resourceLangId == dartpubspec",
 					"command": "pub.upgrade"
 				}
 			]
+		},
+		"configurationDefaults": {
+			"[dart]": {
+				"editor.tabSize": 2,
+				"editor.insertSpaces": true
+			},
+			"[dartpubspec]": {
+				"editor.tabSize": 2,
+				"editor.insertSpaces": true
+			},
+			"[dartanalysisoptions]": {
+				"editor.tabSize": 2,
+				"editor.insertSpaces": true
+			}
 		},
 		"configuration": {
 			"type": "object",
@@ -152,11 +186,6 @@
 					"type": "integer",
 					"default": 80,
 					"description": "The maximum length of a line of code. This is used by the document formatter."
-				},
-				"dart.setIndentation": {
-					"type": "boolean",
-					"default": true,
-					"description": "Forces indenting with two spaces when Dart files are opened. This is on by default because VS Code doesn't support per-language settings and most people use tabs/4 spaces for other languages."
 				},
 				"dart.insertArgumentPlaceholders": {
 					"type": "boolean",

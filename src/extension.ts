@@ -17,7 +17,6 @@ import { DartFormattingEditProvider } from "./providers/dart_formatting_edit_pro
 import { DartTypeFormattingEditProvider } from "./providers/dart_type_formatting_edit_provider";
 import { DartDocumentHighlightProvider } from "./providers/dart_highlighting_provider";
 import { DartHoverProvider } from "./providers/dart_hover_provider";
-import { DartIndentFixer } from "./dart_indent_fixer";
 import { DartLanguageConfiguration } from "./providers/dart_language_configuration";
 import { DartDocumentSymbolProvider } from "./providers/dart_document_symbol_provider";
 import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
@@ -97,7 +96,7 @@ export function activate(context: vs.ExtensionContext) {
 		// Analysis started for the first time.
 		if (ss.analysis && ss.analysis.isAnalyzing && !analysisStartTime)
 			analysisStartTime = new Date();
-		
+
 		// Analysis ends for the first time.
 		if (ss.analysis && !ss.analysis.isAnalyzing && analysisStartTime) {
 			let analysisEndTime = new Date();
@@ -149,11 +148,6 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.workspace.onDidCloseTextDocument(td => openFileTracker.updatePriorityFiles()));
 	context.subscriptions.push(vs.window.onDidChangeActiveTextEditor(e => openFileTracker.updatePriorityFiles()));
 	openFileTracker.updatePriorityFiles(); // Handle already-open files.
-
-	// Hook active editor change to reset Dart indenting.
-	let dartIndentFixer = new DartIndentFixer();
-	context.subscriptions.push(vs.window.onDidChangeActiveTextEditor(td => dartIndentFixer.onDidChangeActiveTextEditor(td)));
-	dartIndentFixer.onDidChangeActiveTextEditor(vs.window.activeTextEditor); // Handle already-open file.
 
 	// Handle config changes so we can reanalyze if necessary.
 	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(handleConfigurationChange));
