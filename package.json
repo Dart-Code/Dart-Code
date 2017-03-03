@@ -258,7 +258,7 @@
 							"debugSettings": {
 								"type": "string",
 								"description": "Debug settings.",
-								"default": "${command.debugSettings}"
+								"default": "${command:debugSettings}"
 							},
 							"program": {
 								"type": "string",
