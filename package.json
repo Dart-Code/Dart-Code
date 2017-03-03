@@ -212,6 +212,11 @@
 					"default": true,
 					"description": "Checks whether you are using the latest version of the Dart SDK at startup."
 				},
+				"dart.pubAdditionalArgs": {
+					"type": "array",
+					"default": [],
+					"description": "Additional args to pass to pub get and pub upgrade commands (eg. --packages-dir)."
+				},
 				"dart.runPubGetOnPubspecChanges": {
 					"type": "boolean",
 					"default": true,

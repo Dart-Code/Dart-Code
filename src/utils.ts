@@ -7,12 +7,14 @@ import * as as from "./analysis/analysis_server_types";
 import { env, workspace, window, Position, Range, TextDocument, commands, Uri } from "vscode";
 import { config } from "./config";
 
-export const dartVMPath = "bin/dart";
+const isWin = /^win/.test(process.platform);
+const dartExecutableName = isWin ? "dart.exe" : "dart";
+const pubExecutableName = isWin ? "pub.bat" : "pub";
+export const dartVMPath = "bin/" + dartExecutableName;
+export const dartPubPath = "bin/" + pubExecutableName;
 export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
 export const extensionVersion = getExtensionVersion();
 export const isDevelopment = checkIsDevelopment();
-const isWin = /^win/.test(process.platform);
-const dartExecutableName = isWin ? "dart.exe" : "dart";
 
 export function findDartSdk(): string {
 	let paths = (<string>process.env.PATH).split(path.delimiter);

@@ -40,6 +40,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - `dart.debugExternalLibraries`: Whether libraries should be marked as debuggable. Defaults to `false`.
 - `dart.insertArgumentPlaceholders`: Whether to insert argument placeholders during code completions. Defaults to `true`.
 - `dart.lineLength`: The maximum length of a line of code. This is used by the document formatter. Defaults to `80`.
+- `dart.pubAdditionalArgs`: Additional args to pass to `pub get` and `pub upgrade` commands (eg. `--packages-dir`).
 - `dart.runPubGetOnPubspecChanges`: Whether to automatically run `pub get` whenever pubspec.yaml is saved. Defaults to `true`.
 - `dart.sdkPath`: If the Dart SDK is not automatically found on your machine from your `PATH` you can enter the path to it here.
 - `dart.showTodos`: Whether to show TODOs in the Problems list. Defaults to `true`.

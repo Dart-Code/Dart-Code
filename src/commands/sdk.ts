@@ -9,6 +9,7 @@ import * as project from "../project";
 import * as vs from "vscode";
 import { config } from "../config";
 import { DebugSettings } from "../debug/utils";
+import { dartPubPath } from "../utils";
 
 export class SdkCommands {
 	private sdk: string;
@@ -41,7 +42,7 @@ export class SdkCommands {
 		}));
 	}
 
-	private runPub(command: String, selection?: vs.Uri) {
+	private runPub(command: string, selection?: vs.Uri) {
 		let root = vs.workspace.rootPath;
 		let projectPath = selection
 			? path.dirname(selection.fsPath)
@@ -50,11 +51,19 @@ export class SdkCommands {
 		let channel = channels.createChannel("Pub");
 		channel.show(true);
 
+		let args = [];
+		args.push(command);
+
+		// Allow arbitrary args to be passed.
+		if (config.pubAdditionalArgs)
+			args = args.concat(config.pubAdditionalArgs);
+
 		// TODO: Add a wrapper around the Dart SDK? It could do things like
 		// return the paths for tools in the bin/ dir. 
-		let pubPath = path.join(this.sdk, "bin", "pub");
-		channel.appendLine(`[${shortPath}] pub ${command}`);
-		let process = child_process.exec(`"${pubPath.replace("\"", "\\\"")}" ${command}`, { "cwd": projectPath });
+		let pubPath = path.join(this.sdk, dartPubPath);
+		channel.appendLine(`[${shortPath}] pub ${args.join(" ")}`);
+
+		let process = child_process.spawn(pubPath, args, { "cwd": projectPath });
 		channels.runProcessInChannel(process, channel);
 	}
 }
