@@ -5,7 +5,7 @@ import {
 	TextEdit, Range, Command
 } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
-import { logError } from "../utils";
+import { logError, isAnalyzable } from "../utils";
 import * as as from "../analysis/analysis_server_types";
 
 export class DartCodeActionProvider implements CodeActionProvider {
@@ -15,6 +15,8 @@ export class DartCodeActionProvider implements CodeActionProvider {
 	}
 
 	provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Thenable<Command[]> {
+		if (!isAnalyzable(document))
+			return null;
 		return new Promise<Command[]>((resolve, reject) => {
 			this.analyzer.editGetFixes({
 				file: document.fileName,
