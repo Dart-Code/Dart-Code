@@ -1,3 +1,7 @@
+# v1.0.1
+
+- Opening a Dart file from the Dart SDK (such as navigating via `Go to Definition` on an SDK type) when using a dev-version 1.23 Dart SDK will no longer result in an infinite analyzing loop causing `Analyzing...` to flicker on the status bar
+
 # v1.0.0
 
 - Pressing F5 to launch Dart programs after upgrading to Code 1.10 will no longer fail with an error about an unexpected token in `launch.json`
