@@ -23,9 +23,13 @@ export class SdkCommands {
 			analytics.logDebuggerStart();
 
 			// Attach any properties that weren't explicitly set.			
+			debugConfig.cwd = debugConfig.cwd || "${workspaceRoot}";
+			debugConfig.args = debugConfig.args || [];
 			debugConfig.sdkPath = debugConfig.sdkPath || this.sdk;
 			debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || config.debugSdkLibraries;
 			debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || config.debugExternalLibraries;
+			if (debugConfig.checkedMode === undefined)
+				debugConfig.checkedMode = true;
 
 			vs.commands.executeCommand('vscode.startDebug', debugConfig);
 			return {
