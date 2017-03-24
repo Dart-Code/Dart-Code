@@ -236,7 +236,7 @@
 					"name": "keyword.control.new.dart"
 				},
 				{
-					"match": "\\b(abstract|class|enum|extends|external|factory|implements|interface|get|native|operator|set|typedef|with)\\b",
+					"match": "\\b(abstract|class|enum|extends|external|factory|implements|get|native|operator|set|typedef|with)\\b",
 					"name": "keyword.declaration.dart"
 				},
 				{
