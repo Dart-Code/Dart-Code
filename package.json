@@ -240,7 +240,6 @@
 				"configurationAttributes": {
 					"launch": {
 						"required": [
-							"cwd",
 							"program"
 						],
 						"properties": {
@@ -273,10 +272,7 @@
 						"name": "Dart command line",
 						"type": "dart-cli",
 						"request": "launch",
-						"cwd": "${workspaceRoot}",
-						"checkedMode": true,
-						"program": "${workspaceRoot}/bin/main.dart",
-						"args": []
+						"program": "${workspaceRoot}/bin/main.dart"
 					}
 				]
 			}
