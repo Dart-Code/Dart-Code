@@ -54,11 +54,11 @@ class Analytics {
 		// Force a session start if this is extension activation.		
 		if (category == Category.Extension && action == EventAction.Activated)
 			data.sc = "start";
-		
+
 		// Include debug preference if it's a debugger start.
 		if (category == Category.Debugger && action == EventAction.Activated)
 			data.cd6 = this.getDebuggerPreference();
-		
+
 		this.send(data);
 	}
 
@@ -105,7 +105,7 @@ class Analytics {
 		Object.assign(data, customData);
 
 		if (debug)
-			console.log("Sending analytic: " + JSON.stringify(data));	
+			console.log("Sending analytic: " + JSON.stringify(data));
 
 		const options: https.RequestOptions = {
 			hostname: "www.google-analytics.com",
@@ -127,7 +127,7 @@ class Analytics {
 						else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
 							console.warn(c.toString());
 						else
-							console.warn("Unexpected GA debug response: " + c.toString());	
+							console.warn("Unexpected GA debug response: " + c.toString());
 					} catch (e) {
 						console.warn("Error in GA debug response: " + c.toString());
 					}
@@ -149,7 +149,7 @@ class Analytics {
 		else if (config.debugExternalLibraries)
 			return "My code + Libraries";
 		else
-			return "My code";	
+			return "My code";
 	}
 }
 
