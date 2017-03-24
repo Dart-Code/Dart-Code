@@ -1,3 +1,8 @@
+# v1.0.2
+
+- `interface` has been removed from the list of keywords for syntax highlighting. It has not been a Dart keyword for sometime and resulted in incorrect colouring when using it as a variable name
+- Expressions in interpolated strings should now be highlighted even when containing properties and method calls
+
 # v1.0.1
 
 - Opening a Dart file from the Dart SDK (such as navigating via `Go to Definition` on an SDK type) when using a dev-version 1.23 Dart SDK will no longer result in an infinite analyzing loop causing `Analyzing...` to flicker on the status bar
