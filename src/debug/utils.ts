@@ -143,8 +143,3 @@ export class PackageMap {
 	}
 }
 
-export class DebugSettings {
-	sdkPath: string;
-	debugSdkLibraries: boolean;
-	debugExternalLibraries: boolean;
-}

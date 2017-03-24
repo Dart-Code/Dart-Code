@@ -236,9 +236,7 @@
 				},
 				"program": "./out/src/debug/debug_entry.js",
 				"runtime": "node",
-				"variables": {
-					"debugSettings": "dart.getDebugSettings"
-				},
+				"startSessionCommand": "dart.startDebugSession",
 				"configurationAttributes": {
 					"launch": {
 						"required": [
@@ -254,11 +252,6 @@
 								"type": "boolean",
 								"description": "Whether to run the VM in checked mode.",
 								"default": true
-							},
-							"debugSettings": {
-								"type": "string",
-								"description": "Debug settings.",
-								"default": "${command:debugSettings}"
 							},
 							"program": {
 								"type": "string",
@@ -282,7 +275,6 @@
 						"request": "launch",
 						"cwd": "${workspaceRoot}",
 						"checkedMode": true,
-						"debugSettings": "${command.debugSettings}",
 						"program": "${workspaceRoot}/bin/main.dart",
 						"args": []
 					}

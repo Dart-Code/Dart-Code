@@ -8,7 +8,6 @@ import * as path from "path";
 import * as project from "../project";
 import * as vs from "vscode";
 import { config } from "../config";
-import { DebugSettings } from "../debug/utils";
 import { dartPubPath } from "../utils";
 
 export class SdkCommands {
@@ -19,15 +18,22 @@ export class SdkCommands {
 	}
 
 	registerCommands(context: vs.ExtensionContext) {
-		context.subscriptions.push(vs.commands.registerCommand("dart.getDebugSettings", _ => {
+		// Debug commands.
+		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugSession", debugConfig => {
 			analytics.logDebuggerStart();
-			let settings: DebugSettings = {
-				sdkPath: this.sdk,
-				debugSdkLibraries: config.debugSdkLibraries,
-				debugExternalLibraries: config.debugExternalLibraries,
+
+			// Attach any properties that weren't explicitly set.			
+			debugConfig.sdkPath = debugConfig.sdkPath || this.sdk;
+			debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || config.debugSdkLibraries;
+			debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || config.debugExternalLibraries;
+
+			vs.commands.executeCommand('vscode.startDebug', debugConfig);
+			return {
+				status: 'ok'
 			};
-			return JSON.stringify(settings);
 		}));
+
+		// Pub commands.
 		context.subscriptions.push(vs.commands.registerCommand("pub.get", selection => {
 			this.runPub("get", selection);
 		}));
