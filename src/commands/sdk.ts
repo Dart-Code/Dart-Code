@@ -20,6 +20,12 @@ export class SdkCommands {
 	registerCommands(context: vs.ExtensionContext) {
 		// Debug commands.
 		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugSession", debugConfig => {
+			if (Object.keys(debugConfig).length === 0) {
+				return {
+					status: 'initialConfiguration'
+				};
+			}
+
 			analytics.logDebuggerStart();
 
 			// Attach any properties that weren't explicitly set.			
