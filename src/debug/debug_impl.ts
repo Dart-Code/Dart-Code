@@ -174,7 +174,7 @@ export class DartDebugSession extends DebugSession {
 						return Promise.all(
 							isolate.libraries.map(library => {
 								// Note: Condition is negated.
-								var shouldDebug = !(
+								let shouldDebug = !(
 									// Inside here is shouldNotDebug!
 									(isSdkLibrary(library) && !this.debugSdkLibraries)
 									|| (isExternalLibrary(library) && !this.debugExternalLibraries)
