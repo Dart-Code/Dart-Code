@@ -131,7 +131,6 @@ export function activate(context: vs.ExtensionContext) {
 	// Set the root...
 	if (vs.workspace.rootPath) {
 		let packageRoots = findPackageRoots(vs.workspace.rootPath);
-		console.log(packageRoots);
 		analyzer.analysisSetAnalysisRoots({
 			included: packageRoots,
 			excluded: []
