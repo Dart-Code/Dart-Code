@@ -173,9 +173,13 @@ export class DartDebugSession extends DebugSession {
 						// Set whether libraries should be debuggable based on user settings.
 						return Promise.all(
 							isolate.libraries.map(library => {
-								if ((isSdkLibrary(library) && !this.debugSdkLibraries)
-									|| (isExternalLibrary(library) && !this.debugExternalLibraries))
-									this.observatory.setLibraryDebuggable(isolateRef.id, library.id, false);
+								// Note: Condition is negated.
+								var shouldDebug = !(
+									// Inside here is shouldNotDebug!
+									(isSdkLibrary(library) && !this.debugSdkLibraries)
+									|| (isExternalLibrary(library) && !this.debugExternalLibraries)
+								)
+								this.observatory.setLibraryDebuggable(isolateRef.id, library.id, shouldDebug);
 							})
 						);
 					}));
