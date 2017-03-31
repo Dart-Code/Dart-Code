@@ -1,5 +1,6 @@
 "use strict";
 
+import * as fs from "fs";
 import * as path from "path";
 import * as util from "./utils";
 import * as vs from "vscode";
@@ -130,6 +131,7 @@ export function activate(context: vs.ExtensionContext) {
 	// Set the root...
 	if (vs.workspace.rootPath) {
 		let packageRoots = findPackageRoots(vs.workspace.rootPath);
+		console.log(packageRoots);
 		analyzer.analysisSetAnalysisRoots({
 			included: packageRoots,
 			excluded: []
@@ -174,8 +176,39 @@ export function activate(context: vs.ExtensionContext) {
 	analytics.logExtensionStartup(extensionEndTime.getTime() - extensionStartTime.getTime());
 }
 
-function findPackageRoots(root: string) {
-	return [vs.workspace.rootPath];
+function findPackageRoots(root: string): string[] {
+	// It's possible the opened folder is not a Dart package itself, but
+	// a collection of other packages. By sending just the root we end up
+	// with incorrect package resolution.
+	//
+	// To handle this, we will walk the tree up to 3 levels deep and find
+	// any folders with a pubspec.yaml and use them as package roots.
+	//
+	// Additionally, the original root will be included if:
+	// a) it has a pubspec.yaml
+	// b) no child package roots were found
+
+	function getChildren(parent: string, numLevels: number): string[] {
+		let packageRoots: string[] = [];
+		let dirs = fs.readdirSync(parent).filter(item => fs.statSync(path.join(parent, item)).isDirectory());
+		dirs.forEach(folder => {
+			let folderPath = path.join(parent, folder);
+			// If this is a package, add it. Else, recurse (if we still have levels to go).
+			if (fs.existsSync(path.join(folderPath, "pubspec.yaml"))) {
+				packageRoots.push(folderPath);
+			}
+			else if (numLevels > 1)
+				packageRoots = packageRoots.concat(getChildren(folderPath, numLevels - 1));
+		});
+		return packageRoots;
+	}
+
+	var roots = getChildren(root, 3);
+
+	if (roots.length == 0 || fs.existsSync(path.join(root, "pubspec.yaml")))
+		roots.push(root);
+
+	return roots;
 }
 
 function handleConfigurationChange() {
@@ -190,9 +223,10 @@ function handleConfigurationChange() {
 	analyzerSettings = newAnalyzerSettings;
 
 	if (todoSettingChanged) {
+		let packageRoots = findPackageRoots(vs.workspace.rootPath);
 		analytics.logShowTodosToggled(showTodos);
 		analyzer.analysisReanalyze({
-			roots: [vs.workspace.rootPath]
+			roots: packageRoots
 		});
 	}
 
