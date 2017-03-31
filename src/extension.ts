@@ -129,8 +129,9 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Set the root...
 	if (vs.workspace.rootPath) {
+		let packageRoots = findPackageRoots(vs.workspace.rootPath);
 		analyzer.analysisSetAnalysisRoots({
-			included: [vs.workspace.rootPath],
+			included: packageRoots,
 			excluded: []
 		});
 	}
@@ -171,6 +172,10 @@ export function activate(context: vs.ExtensionContext) {
 	// Log how long all this startup took.
 	let extensionEndTime = new Date();
 	analytics.logExtensionStartup(extensionEndTime.getTime() - extensionStartTime.getTime());
+}
+
+function findPackageRoots(root: string) {
+	return [vs.workspace.rootPath];
 }
 
 function handleConfigurationChange() {
