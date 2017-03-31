@@ -1,3 +1,12 @@
+# v1.1.0
+
+- Opening a folder that is not itself a Dart package but contains others (such as the Flutter repository) will no longer give false errors/warnings caused by incorrect package resolution
+- Setting Dart SDK/libraries as debuggable/non-debuggable will now work correctly with SDK 1.23 which has different debugging defaults
+- The `launch.json` file should now be much simpler than before and not contain internal Dart Code settings that are not relevant to the user *
+- The `launch.json` file now properly supports default so `checkedMode: true` and `args: []` are not longer required unless being changed *
+
+\* Your launch.json file should automatically be tidied up when you first open your project.
+
 # v1.0.2
 
 - `interface` has been removed from the list of keywords for syntax highlighting. It has not been a Dart keyword for sometime and resulted in incorrect colouring when using it as a variable name
