@@ -176,16 +176,19 @@ export function activate(context: vs.ExtensionContext) {
 }
 
 function findPackageRoots(root: string): string[] {
-	// It's possible the opened folder is not a Dart package itself, but
-	// a collection of other packages. By sending just the root we end up
-	// with incorrect package resolution.
+	// For repos with code inside a "packages" folder, the analyzer doesn't resolve package paths
+	// correctly. Until this is fixed in the analyzer, detect this and perform a workaround.
+	// This introduces other issues, so don't do it unless we know we need to (eg. flutter repo).
 	//
-	// To handle this, we will walk the tree up to 3 levels deep and find
-	// any folders with a pubspec.yaml and use them as package roots.
-	//
-	// Additionally, the original root will be included if:
-	// a) it has a pubspec.yaml
-	// b) no child package roots were found
+	// See also:
+	//   https://github.com/Dart-Code/Dart-Code/issues/275 - Original issue (flutter repo not resolving correctly)
+	//   https://github.com/Dart-Code/Dart-Code/issues/280 - Issue introduced by the workaround
+	//   https://github.com/dart-lang/sdk/issues/29414 - Analyzer issue (where the real fix will be)
+
+	if (!isPackageRootWorkaroundRequired())
+		return [vs.workspace.rootPath];
+
+	console.log('Workspace root appears to need package root workaround...');
 
 	function getChildren(parent: string, numLevels: number): string[] {
 		let packageRoots: string[] = [];
@@ -208,6 +211,13 @@ function findPackageRoots(root: string): string[] {
 		roots.push(root);
 
 	return roots;
+}
+
+function isPackageRootWorkaroundRequired(): boolean {
+	// It's hard to tell if the packages folder is actually a real one (--packages-dir) or
+	// this is a repo like Flutter, so we'll use the presence of a file we know exists only
+	// in the flutter one. This is very fragile, but hopefully a very temporary workaround.
+	return fs.existsSync(path.join(vs.workspace.rootPath, "packages", ".gitignore"));
 }
 
 function handleConfigurationChange() {
