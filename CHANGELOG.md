@@ -1,3 +1,7 @@
+# v1.2.0
+
+- The change made in v1.1.0 to support opening the Flutter repo introduced some new issues and has been reverted except for specific workspaces. The issue is caused by using a folder named `packages` which is [not currently supported by the analyzer](https://github.com/dart-lang/sdk/issues/29414). In order to fix the issue for the Flutter repo the workaround will be triggered by the presence of a `.\packages\.gitignore` file (which exists in the Flutter repo but not in `packages` folders created by `pub`). This workaround will be removed once the Analyzer has been updated.
+
 # v1.1.0
 
 - Opening a folder that is not itself a Dart package but contains others (such as the Flutter repository) will no longer give false errors/warnings caused by incorrect package resolution
