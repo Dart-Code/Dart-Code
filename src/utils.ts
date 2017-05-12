@@ -17,10 +17,11 @@ export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
 export const flutterPath = "bin/" + flutterExecutableName;
 export const extensionVersion = getExtensionVersion();
 export const isDevelopment = checkIsDevelopment();
+export let isFlutterProject: boolean = checkIsFlutterProject();
 
-export function isFlutterProject(): boolean {
+export function checkIsFlutterProject(): boolean {
 	if (workspace.rootPath)  // If VS Code has a project open
-		if (fs.existsSync(path.join(workspace.rootPath, "pubspec.yaml"))){
+		if (fs.existsSync(path.join(workspace.rootPath, "pubspec.yaml"))) {
 			let regex = new RegExp('sdk:\\sflutter', 'i');
 			return regex.test(fs.readFileSync((path.join(workspace.rootPath, "pubspec.yaml"))).toString());
 		}
@@ -29,9 +30,9 @@ export function isFlutterProject(): boolean {
 
 export function findDartSdk(): string {
 	// Flutter detection clause
-	if (isFlutterProject() && findFlutterHome()){
+	if (isFlutterProject && findFlutterHome()) {
 		let flutterDartSdk = path.join(findFlutterHome(), "bin/cache/dart-sdk/bin");
-		if (fs.existsSync(path.join(flutterDartSdk, dartExecutableName))){
+		if (fs.existsSync(path.join(flutterDartSdk, dartExecutableName))) {
 			let realDartPath = fs.realpathSync(path.join(flutterDartSdk, dartExecutableName));
 			return path.join(path.dirname(realDartPath), "..");
 		}
@@ -73,13 +74,13 @@ export function findFlutterHome(): string {
 	let flutterHome = paths.find(hasFlutterExecutable);
 	if (!flutterHome)
 		return null;
-	
+
 	let realFlutterHome = fs.realpathSync(path.join(flutterHome, flutterExecutableName));
 
 	return path.join(path.dirname(realFlutterHome), "..");
 }
 
-function hasFlutterExecutable(pathToTest: string): boolean{
+function hasFlutterExecutable(pathToTest: string): boolean {
 	try {
 		fs.accessSync(path.join(pathToTest, flutterExecutableName), fs.constants.X_OK);
 		return true;

@@ -105,6 +105,24 @@
 				"command": "dart.organizeDirectives",
 				"title": "Organize Directives",
 				"category": "Dart"
+			},
+			{
+				"command": "flutter.packages.get",
+				"title": "Get Flutter Packages",
+				"category": "Flutter",
+				"icon": {
+					"light": "./media/commands/pull.svg",
+					"dark": "./media/commands/pull-inverse.svg"
+				}
+			},
+			{
+				"command": "flutter.packages.upgrade",
+				"title": "Upgrade Flutter Packages",
+				"category": "Flutter",
+				"icon": {
+					"light": "./media/commands/pull.svg",
+					"dark": "./media/commands/pull-inverse.svg"
+				}
 			}
 		],
 		"keybindings": [

@@ -8,7 +8,7 @@ import * as path from "path";
 import * as project from "../project";
 import * as vs from "vscode";
 import { config } from "../config";
-import { dartPubPath } from "../utils";
+import { dartPubPath, isFlutterProject, findFlutterHome, flutterPath } from "../utils";
 
 export class SdkCommands {
 	private sdk: string;
@@ -45,10 +45,25 @@ export class SdkCommands {
 
 		// Pub commands.
 		context.subscriptions.push(vs.commands.registerCommand("pub.get", selection => {
-			this.runPub("get", selection);
+			if (isFlutterProject) {
+				vs.commands.executeCommand("flutter.packages.get");
+			} else {
+				this.runPub("get", selection);
+			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("pub.upgrade", selection => {
-			this.runPub("upgrade", selection);
+			if (isFlutterProject){
+				vs.commands.executeCommand("flutter.packages.upgrade");
+			} else {
+				this.runPub("upgrade", selection);
+			}
+		}));
+
+		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", selection => {
+			this.runFlutter("packages get");
+		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", selection => {
+			this.runFlutter("packages upgrade", selection);
 		}));
 
 		// Hook saving pubspec to run pub.get.
@@ -56,6 +71,27 @@ export class SdkCommands {
 			if (config.runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() == "pubspec.yaml")
 				vs.commands.executeCommand("pub.get", td.uri);
 		}));
+	}
+
+	private runFlutter(command: string, selection?: vs.Uri){
+		let root = vs.workspace.rootPath;
+		let projectPath = selection
+			? path.dirname(selection.fsPath)
+			: project.locateBestProjectRoot();
+		let shortPath = path.join(path.basename(root), path.relative(root, projectPath));
+		let channel = channels.createChannel("Flutter");
+		channel.show(true);
+
+		let args = new Array();
+		command.split(' ').forEach(option => {
+			args.push(option);
+		});
+
+		let flutterBinPath = path.join(findFlutterHome(), flutterPath);
+		channel.appendLine(`[${shortPath}] flutter ${args.join(" ")}`);
+
+		let process = child_process.spawn(flutterBinPath, args, { "cwd": projectPath});
+		channels.runProcessInChannel(process, channel);
 	}
 
 	private runPub(command: string, selection?: vs.Uri) {
