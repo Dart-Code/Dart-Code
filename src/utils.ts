@@ -14,6 +14,7 @@ const flutterExecutableName = isWin ? "flutter.bat" : "flutter";
 export const dartVMPath = "bin/" + dartExecutableName;
 export const dartPubPath = "bin/" + pubExecutableName;
 export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
+export const flutterPath = "bin/" + flutterExecutableName;
 export const extensionVersion = getExtensionVersion();
 export const isDevelopment = checkIsDevelopment();
 
@@ -27,11 +28,16 @@ export function isFlutterProject(): boolean {
 }
 
 export function findDartSdk(): string {
-	let paths = (<string>process.env.PATH).split(path.delimiter);
+	// Flutter detection clause
+	if (isFlutterProject() && findFlutterHome()){
+		let flutterDartSdk = path.join(findFlutterHome(), "bin/cache/dart-sdk/bin");
+		if (fs.existsSync(path.join(flutterDartSdk, dartExecutableName))){
+			let realDartPath = fs.realpathSync(path.join(flutterDartSdk, dartExecutableName));
+			return path.join(path.dirname(realDartPath), "..");
+		}
+	}
 
-	// Putting Flutter before userDefined, so that UD takes priority
-	if (isFlutterProject())
-		paths.unshift(path.join(findFlutterSdk(), "bin/cache/dart-sdk/bin"));
+	let paths = (<string>process.env.PATH).split(path.delimiter);
 
 	// We don't expect the user to add .\bin in config, but it would be in the PATHs
 	let userDefinedSdkPath = config.userDefinedSdkPath;
@@ -61,16 +67,16 @@ function hasDartExecutable(pathToTest: string): boolean {
 	return false; // Didn't find it, so must be an invalid path.
 }
 
-export function findFlutterSdk(): string {
+export function findFlutterHome(): string {
 	let paths = (<string>process.env.PATH).split(path.delimiter);
 
-	let flutterPath = paths.find(hasFlutterExecutable);
-	if (!flutterPath)
+	let flutterHome = paths.find(hasFlutterExecutable);
+	if (!flutterHome)
 		return null;
 	
-	let realFlutterPath = fs.realpathSync(path.join(flutterPath, flutterExecutableName));
+	let realFlutterHome = fs.realpathSync(path.join(flutterHome, flutterExecutableName));
 
-	return path.join(path.dirname(realFlutterPath), "..");
+	return path.join(path.dirname(realFlutterHome), "..");
 }
 
 function hasFlutterExecutable(pathToTest: string): boolean{
