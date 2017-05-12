@@ -10,14 +10,26 @@ import { config } from "./config";
 const isWin = /^win/.test(process.platform);
 const dartExecutableName = isWin ? "dart.exe" : "dart";
 const pubExecutableName = isWin ? "pub.bat" : "pub";
+const flutterExecutableName = isWin ? "flutter.bat" : "flutter";
 export const dartVMPath = "bin/" + dartExecutableName;
 export const dartPubPath = "bin/" + pubExecutableName;
 export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
 export const extensionVersion = getExtensionVersion();
 export const isDevelopment = checkIsDevelopment();
 
+export function isFlutterProject(): boolean {
+	if (workspace.rootPath)
+		if (fs.existsSync(path.join(workspace.rootPath, "pubspec.yaml")))
+			return fs.readFileSync((path.join(workspace.rootPath, "pubspec.yaml"))).includes("sdk: flutter");
+	return false;
+}
+
 export function findDartSdk(): string {
 	let paths = (<string>process.env.PATH).split(path.delimiter);
+
+	// Putting Flutter before userDefined, so that UD takes priority
+	if (isFlutterProject)
+		paths.unshift(path.join(findFlutterSdk(), "bin/cache/dart-sdk/bin"));
 
 	// We don't expect the user to add .\bin in config, but it would be in the PATHs
 	let userDefinedSdkPath = config.userDefinedSdkPath;
@@ -45,6 +57,28 @@ function hasDartExecutable(pathToTest: string): boolean {
 	catch (e) { }
 
 	return false; // Didn't find it, so must be an invalid path.
+}
+
+export function findFlutterSdk(): string {
+	let paths = (<string>process.env.PATH).split(path.delimiter);
+
+	let flutterPath = paths.find(hasFlutterExecutable);
+	if (!flutterPath)
+		return null;
+	
+	let realFlutterPath = fs.realpathSync(path.join(flutterPath, flutterExecutableName));
+
+	return path.join(path.dirname(realFlutterPath), "..");
+}
+
+function hasFlutterExecutable(pathToTest: string): boolean{
+	try {
+		fs.accessSync(path.join(pathToTest, flutterExecutableName), fs.constants.X_OK);
+		return true;
+	}
+	catch (e) { }
+
+	return false;
 }
 
 export interface Location {
