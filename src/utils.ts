@@ -18,9 +18,11 @@ export const extensionVersion = getExtensionVersion();
 export const isDevelopment = checkIsDevelopment();
 
 export function isFlutterProject(): boolean {
-	if (workspace.rootPath)
-		if (fs.existsSync(path.join(workspace.rootPath, "pubspec.yaml")))
-			return fs.readFileSync((path.join(workspace.rootPath, "pubspec.yaml"))).includes("sdk: flutter");
+	if (workspace.rootPath)  // If VS Code has a project open
+		if (fs.existsSync(path.join(workspace.rootPath, "pubspec.yaml"))){
+			let regex = new RegExp('sdk:\\sflutter', 'i');
+			return regex.test(fs.readFileSync((path.join(workspace.rootPath, "pubspec.yaml"))).toString());
+		}
 	return false;
 }
 
