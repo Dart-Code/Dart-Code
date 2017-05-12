@@ -28,7 +28,7 @@ export function findDartSdk(): string {
 	let paths = (<string>process.env.PATH).split(path.delimiter);
 
 	// Putting Flutter before userDefined, so that UD takes priority
-	if (isFlutterProject)
+	if (isFlutterProject())
 		paths.unshift(path.join(findFlutterSdk(), "bin/cache/dart-sdk/bin"));
 
 	// We don't expect the user to add .\bin in config, but it would be in the PATHs
