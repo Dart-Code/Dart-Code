@@ -63,7 +63,7 @@ export function activate(context: vs.ExtensionContext) {
 		versionStatusItem.show();
 		context.subscriptions.push(versionStatusItem);
 
-		if (config.checkForSdkUpdates && !util.isFlutterProject()) {
+		if (config.checkForSdkUpdates && !util.isFlutterProject) {
 			util.getLatestSdkVersion().then(version => {
 				if (util.isOutOfDate(sdkVersion, version))
 					vs.window.showWarningMessage(
@@ -231,6 +231,10 @@ function handleConfigurationChange() {
 	let analyzerSettingsChanged = analyzerSettings != newAnalyzerSettings;
 	analyzerSettings = newAnalyzerSettings;
 
+	// Flutter
+	let newFlutterSetting = util.checkIsFlutterProject();
+	let flutterSettingChanged = util.isFlutterProject != newFlutterSetting;
+
 	if (todoSettingChanged) {
 		let packageRoots = findPackageRoots(vs.workspace.rootPath);
 		analytics.logShowTodosToggled(showTodos);
@@ -242,6 +246,14 @@ function handleConfigurationChange() {
 	if (analyzerSettingsChanged) {
 		const reloadAction: string = "Reload Project";
 		vs.window.showWarningMessage("The Dart SDK/Analyzer settings have been changed. Save your changes then reload the project to restart the analyzer.", reloadAction).then(res => {
+			if (res == reloadAction)
+				vs.commands.executeCommand("workbench.action.reloadWindow");
+		});
+	}
+
+	if (flutterSettingChanged) {
+		const reloadAction: string = "Reload Project";
+		vs.window.showWarningMessage("Your project has added/removed Flutter. For best results, save your changes then reload the project.", reloadAction).then(res => {
 			if (res == reloadAction)
 				vs.commands.executeCommand("workbench.action.reloadWindow");
 		});

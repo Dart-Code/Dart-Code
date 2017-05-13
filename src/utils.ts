@@ -17,8 +17,9 @@ export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
 export const flutterPath = "bin/" + flutterExecutableName;
 export const extensionVersion = getExtensionVersion();
 export const isDevelopment = checkIsDevelopment();
+export let isFlutterProject: boolean = checkIsFlutterProject();
 
-export function isFlutterProject(): boolean {
+export function checkIsFlutterProject(): boolean {
 	if (workspace.rootPath)  // If VS Code has a project open
 		if (fs.existsSync(path.join(workspace.rootPath, "pubspec.yaml"))){
 			let regex = new RegExp('sdk:\\sflutter', 'i');
@@ -29,7 +30,7 @@ export function isFlutterProject(): boolean {
 
 export function findDartSdk(): string {
 	// Flutter detection clause
-	if (isFlutterProject() && findFlutterHome()){
+	if (isFlutterProject && findFlutterHome()){
 		let flutterDartSdk = path.join(findFlutterHome(), "bin/cache/dart-sdk/bin");
 		if (fs.existsSync(path.join(flutterDartSdk, dartExecutableName))){
 			let realDartPath = fs.realpathSync(path.join(flutterDartSdk, dartExecutableName));
