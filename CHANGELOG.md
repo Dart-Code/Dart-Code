@@ -1,7 +1,10 @@
 # v1.3.0
 
-- When opening a Flutter project, the locally cached Dart SDK will be used instead of the one configured in settings or from PATH
-- SDK update checks are now disabled for Flutter projects as a result of using their own SDK
+- When opening a Flutter project, the below locations will be checked for a Flutter SDK and the embedded Dart SDK will be used (if no flutter SDK is found an error message will be shown)
+  - `.\bin\flutter(.bat)`
+  - `(FLUTTER_HOME)\bin\flutter(.bat)`
+  - All folders in `PATH`
+- Dart SDK update checks are now disabled for Flutter projects due to the embedded Dartk SDK
 
 # v1.2.0
 
