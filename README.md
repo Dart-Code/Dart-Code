@@ -6,6 +6,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
 ## Features
 
+- Support for Flutter projects
 - Syntax highlighting
 - Code completion
 - Realtime errors/warnings/TODOs reported in problems window (`Ctrl`+`Shift`+`M`) and with squiggles
