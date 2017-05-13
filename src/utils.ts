@@ -28,9 +28,18 @@ export function checkIsFlutterProject(): boolean {
 	return false;
 }
 
+export function isFlutterProject(): boolean {
+	if (workspace.rootPath)  // If VS Code has a project open
+		if (fs.existsSync(path.join(workspace.rootPath, "pubspec.yaml"))){
+			let regex = new RegExp('sdk:\\sflutter', 'i');
+			return regex.test(fs.readFileSync((path.join(workspace.rootPath, "pubspec.yaml"))).toString());
+		}
+	return false;
+}
+
 export function findDartSdk(): string {
 	// Flutter detection clause
-	if (isFlutterProject && findFlutterHome()){
+	if (isFlutterProject() && findFlutterHome()){
 		let flutterDartSdk = path.join(findFlutterHome(), "bin/cache/dart-sdk/bin");
 		if (fs.existsSync(path.join(flutterDartSdk, dartExecutableName))){
 			let realDartPath = fs.realpathSync(path.join(flutterDartSdk, dartExecutableName));
