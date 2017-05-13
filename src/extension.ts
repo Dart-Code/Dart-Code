@@ -33,6 +33,9 @@ import { promptUserForConfigs } from "./user_config_prompts";
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
 const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
 
+const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
+const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
+
 export let sdks: util.Sdks;
 export let analyzer: Analyzer;
 
@@ -181,6 +184,9 @@ export function activate(context: vs.ExtensionContext) {
 	// Prompt user for any special config we might want to set.
 	promptUserForConfigs(context);
 
+	// Turn on all the commands.	
+	setCommandVisiblity(true);
+
 	// Log how long all this startup took.
 	let extensionEndTime = new Date();
 	analytics.logExtensionStartup(extensionEndTime.getTime() - extensionStartTime.getTime());
@@ -287,4 +293,10 @@ function getAnalyzerSettings() {
 }
 
 export function deactivate() {
+	setCommandVisiblity(false);
+}
+
+function setCommandVisiblity(enable: boolean) {
+	vs.commands.executeCommand('setContext', DART_PROJECT_LOADED, enable);
+	vs.commands.executeCommand('setContext', FLUTTER_PROJECT_LOADED, enable && util.isFlutterProject);
 }

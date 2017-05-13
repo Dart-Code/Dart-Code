@@ -107,6 +107,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.showTypeHierarchy",
+				"title": "Show Type Hierarchy",
+				"category": "Dart"
+			},
+			{
 				"command": "flutter.packages.get",
 				"title": "Get Flutter Packages",
 				"category": "Flutter",
@@ -140,32 +145,80 @@
 			}
 		],
 		"menus": {
+			"commandPalette": [
+				{
+					"command": "pub.get",
+					"when": "dart-code:dartProjectLoaded"
+				},
+				{
+					"command": "pub.upgrade",
+					"when": "dart-code:dartProjectLoaded"
+				},
+				{
+					"command": "dart.organizeDirectives",
+					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
+				},
+				{
+					"command": "dart.showTypeHierarchy",
+					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
+				},
+				{
+					"command": "flutter.packages.get",
+					"when": "dart-code:flutterProjectLoaded"
+				},
+				{
+					"command": "flutter.packages.upgrade",
+					"when": "dart-code:flutterProjectLoaded"
+				}
+			],
 			"editor/title": [
 				{
-					"when": "resourceLangId == dartpubspec",
+					"when": "resourceLangId == dartpubspec && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
 					"command": "pub.get",
 					"alt": "pub.upgrade",
+					"group": "navigation"
+				},
+				{
+					"when": "resourceLangId == dartpubspec && dart-code:flutterProjectLoaded",
+					"command": "flutter.packages.get",
+					"alt": "flutter.packages.upgrade",
 					"group": "navigation"
 				}
 			],
 			"editor/context": [
 				{
-					"when": "resourceLangId == dartpubspec",
+					"when": "resourceLangId == dartpubspec && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
 					"command": "pub.get"
 				},
 				{
-					"when": "resourceLangId == dartpubspec",
+					"when": "resourceLangId == dartpubspec && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
 					"command": "pub.upgrade"
+				},
+				{
+					"when": "resourceLangId == dartpubspec && dart-code:flutterProjectLoaded",
+					"command": "flutter.packages.get"
+				},
+				{
+					"when": "resourceLangId == dartpubspec && dart-code:flutterProjectLoaded",
+					"command": "flutter.packages.upgrade"
 				}
 			],
 			"explorer/context": [
 				{
-					"when": "resourceLangId == dartpubspec",
+					"when": "resourceLangId == dartpubspec && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
 					"command": "pub.get"
 				},
 				{
-					"when": "resourceLangId == dartpubspec",
+					"when": "resourceLangId == dartpubspec && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
 					"command": "pub.upgrade"
+				},
+				{
+					"when": "resourceLangId == dartpubspec && dart-code:flutterProjectLoaded",
+					"command": "flutter.packages.get"
+				},
+				{
+					"when": "resourceLangId == dartpubspec && dart-code:flutterProjectLoaded",
+					"command": "flutter.packages.upgrade"
 				}
 			]
 		},
