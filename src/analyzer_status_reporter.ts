@@ -8,7 +8,7 @@ import { window, workspace, env, commands, extensions, StatusBarItem, Disposable
 import { Analyzer } from "./analysis/analyzer";
 import { ServerStatusNotification, ServerErrorNotification, RequestError } from "./analysis/analysis_server_types";
 import { config } from "./config";
-import { dartSdkRoot } from "./extension";
+import { sdks } from "./extension";
 import { getDartSdkVersion } from "./utils";
 
 const maxErrorReportCount = 3;
@@ -28,7 +28,7 @@ export class AnalyzerStatusReporter extends Disposable {
 		this.statusBarItem = window.createStatusBarItem();
 		this.statusBarItem.text = "Analyzing…";
 
-		this.analyzer = analyzer;		
+		this.analyzer = analyzer;
 		analyzer.registerForServerStatus(n => this.handleServerStatus(n));
 		analyzer.registerForServerError(e => this.handleServerError(e));
 		analyzer.registerForRequestError(e => this.handleRequestError(e));
@@ -58,7 +58,7 @@ export class AnalyzerStatusReporter extends Disposable {
 			message: error.message,
 			stackTrace: error.stackTrace
 		},
-		error.method);
+			error.method);
 	}
 
 	private handleServerError(error: ServerErrorNotification, method?: string) {
@@ -82,7 +82,7 @@ export class AnalyzerStatusReporter extends Disposable {
 	}
 
 	private reportError(error: ServerErrorNotification, method?: string) {
-		let sdkVersion = getDartSdkVersion(dartSdkRoot);
+		let sdkVersion = getDartSdkVersion(sdks.dart);
 		let dartCodeVersion = extensions.getExtension('DanTup.dart-code').packageJSON.version;
 
 		// Attempt to get the last diagnostics
@@ -98,7 +98,7 @@ Exception from analysis server (running from VSCode / Dart Code)
 ### What I was doing
 
 (please describe what you were doing when this exception occurred)
-${method ? '\n### Request\n\nWhile responding to request: `' + method + '`\n' : '' }
+${method ? '\n### Request\n\nWhile responding to request: `' + method + '`\n' : ''}
 ### Versions
 
 - Dart SDK ${sdkVersion}
@@ -120,7 +120,7 @@ ${error.message}
 \`\`\`text
 ${error.stackTrace.trim()}
 \`\`\`
-${diagnostics ? '\nDiagnostics requested after the error occurred are:\n\n```js\n' + JSON.stringify(diagnostics, null, 4) + '\n```\n' : '' }
+${diagnostics ? '\nDiagnostics requested after the error occurred are:\n\n```js\n' + JSON.stringify(diagnostics, null, 4) + '\n```\n' : ''}
 `;
 
 		let fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.md`;

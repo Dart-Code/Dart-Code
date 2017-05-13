@@ -28,8 +28,11 @@ export function checkIsFlutterProject(): boolean {
 	return false;
 }
 
-export function findSdk(): string {
-	return isFlutterProject ? findFlutterDartSdk() : findDartSdk();
+export function findSdks(): Sdks {
+	const flutterSdk = isFlutterProject ? findFlutterSdk() : null;
+	const dartSdk = isFlutterProject ? findFlutterDartSdk(flutterSdk) : findDartSdk();
+
+	return { dart: dartSdk, flutter: flutterSdk };
 }
 
 function findDartSdk(): string {
@@ -52,13 +55,11 @@ function findDartSdk(): string {
 	return path.join(path.dirname(realDartPath), "..");
 }
 
-function findFlutterDartSdk(): string {
-	let flutterHome = findFlutterSdk();
-
-	if (!flutterHome)
+function findFlutterDartSdk(flutterSdk: string): string {
+	if (!flutterSdk)
 		return null;
 
-	let flutterDartPath = path.join(flutterHome, "bin/cache/dart-sdk");
+	let flutterDartPath = path.join(flutterSdk, "bin/cache/dart-sdk");
 	if (hasDartExecutable(path.join(flutterDartPath, "bin")))
 		return flutterDartPath;
 
@@ -221,4 +222,9 @@ export function isOutOfDate(versionToCheck: string, expectedVersion: string): bo
 
 export function openInBrowser(url: string) {
 	commands.executeCommand("vscode.open", Uri.parse(url));
+}
+
+export class Sdks {
+	dart: string;
+	flutter: string;
 }

@@ -33,8 +33,7 @@ import { promptUserForConfigs } from "./user_config_prompts";
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
 const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
 
-export let dartSdkRoot: string;
-export let flutterSdkRoot: string;
+export let sdks: util.Sdks;
 export let analyzer: Analyzer;
 
 let showTodos: boolean = config.showTodos;
@@ -42,9 +41,8 @@ let analyzerSettings: string = getAnalyzerSettings();
 
 export function activate(context: vs.ExtensionContext) {
 	let extensionStartTime = new Date();
-	dartSdkRoot = util.findSdk();
-	flutterSdkRoot = util.findFlutterSdk();
-	if (dartSdkRoot == null) {
+	sdks = util.findSdks();
+	if (sdks.dart == null) {
 		if (util.isFlutterProject) {
 			vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
 				"Please set FLUTTER_ROOT, run flutter to download an SDK or configure the 'dart.flutterSdkPath' setting and reload."
@@ -64,7 +62,7 @@ export function activate(context: vs.ExtensionContext) {
 	}
 
 	// Show the SDK version in the status bar.
-	let sdkVersion = util.getDartSdkVersion(dartSdkRoot);
+	let sdkVersion = util.getDartSdkVersion(sdks.dart);
 	if (sdkVersion) {
 		let versionStatusItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, Number.MIN_VALUE);
 		versionStatusItem.text = sdkVersion;
@@ -89,7 +87,7 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Fire up the analyzer process.
 	let analyzerStartTime = new Date();
-	analyzer = new Analyzer(path.join(dartSdkRoot, util.dartVMPath), path.join(dartSdkRoot, util.analyzerPath));
+	analyzer = new Analyzer(path.join(sdks.dart, util.dartVMPath), path.join(sdks.dart, util.analyzerPath));
 	context.subscriptions.push(analyzer);
 
 	// Log analysis server startup time when we get the welcome message/version.
@@ -168,7 +166,7 @@ export function activate(context: vs.ExtensionContext) {
 	}));
 
 	// Register SDK commands.
-	let sdkCommands = new SdkCommands(dartSdkRoot, flutterSdkRoot);
+	let sdkCommands = new SdkCommands(sdks);
 	sdkCommands.registerCommands(context);
 
 	// Set up commands for Dart editors.

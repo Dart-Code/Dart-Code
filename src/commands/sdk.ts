@@ -8,15 +8,13 @@ import * as path from "path";
 import * as project from "../project";
 import * as vs from "vscode";
 import { config } from "../config";
-import { dartPubPath, isFlutterProject, flutterPath } from "../utils";
+import { dartPubPath, isFlutterProject, flutterPath, Sdks } from "../utils";
 
 export class SdkCommands {
-	private dartSdk: string;
-	private flutterSdk: string;
+	private sdks: Sdks;
 
-	constructor(dartSdk: string, flutterSdk: string) {
-		this.dartSdk = dartSdk;
-		this.flutterSdk = flutterSdk;
+	constructor(sdks: Sdks) {
+		this.sdks = sdks;
 	}
 
 	registerCommands(context: vs.ExtensionContext) {
@@ -33,7 +31,7 @@ export class SdkCommands {
 			// Attach any properties that weren't explicitly set.			
 			debugConfig.cwd = debugConfig.cwd || "${workspaceRoot}";
 			debugConfig.args = debugConfig.args || [];
-			debugConfig.sdkPath = debugConfig.sdkPath || this.dartSdk;
+			debugConfig.sdkPath = debugConfig.sdkPath || this.sdks.dart;
 			debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || config.debugSdkLibraries;
 			debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || config.debugExternalLibraries;
 			if (debugConfig.checkedMode === undefined)
@@ -89,7 +87,7 @@ export class SdkCommands {
 			args.push(option);
 		});
 
-		let flutterBinPath = path.join(this.flutterSdk, flutterPath);
+		let flutterBinPath = path.join(this.sdks.flutter, flutterPath);
 		channel.appendLine(`[${shortPath}] flutter ${args.join(" ")}`);
 
 		let process = child_process.spawn(flutterBinPath, args, { "cwd": projectPath });
@@ -114,7 +112,7 @@ export class SdkCommands {
 
 		// TODO: Add a wrapper around the Dart SDK? It could do things like
 		// return the paths for tools in the bin/ dir. 
-		let pubPath = path.join(this.dartSdk, dartPubPath);
+		let pubPath = path.join(this.sdks.dart, dartPubPath);
 		channel.appendLine(`[${shortPath}] pub ${args.join(" ")}`);
 
 		let process = child_process.spawn(pubPath, args, { "cwd": projectPath });
