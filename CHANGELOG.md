@@ -6,7 +6,9 @@
   - `(FLUTTER_HOME)\bin\flutter(.bat)`
   - All folders in `PATH`
 - Dart SDK update checks are now disabled for Flutter projects due to the embedded Dartk SDK
+- Pub commands are now generally replaced with Flutter equivilents when a Flutter project is open (note: Pub commands still appear in the command palette for familiarity but will execute flutters versions)
 - When `flutter: sdk: flutter` is added to/removed from `pubspec.yaml` you will be prompted to reload to switch between Dart/Flutter SDKs
+- Pub commands will no longer appear in the command palette when a Dart project is not open
 
 # v1.2.0
 
