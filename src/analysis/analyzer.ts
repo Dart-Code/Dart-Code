@@ -47,7 +47,7 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 			args = args.concat(config.analyzerAdditionalArgs);
 
 		this.analyzerLaunchArgs = args.slice(1); // Trim the first one as it's just snapshot path.
-		log("Starting Dart analysis server with args: " + this.analyzerLaunchArgs.join(' '));
+		log(`Starting ${analyzerPath} with args: ` + this.analyzerLaunchArgs.join(' '));
 		this.analyzerProcess = child_process.spawn(dartVMPath, args);
 
 		this.analyzerProcess.stdout.on("data", (data: Buffer) => {

@@ -28,16 +28,11 @@ export function checkIsFlutterProject(): boolean {
 	return false;
 }
 
-export function findDartSdk(): string {
-	// Flutter detection clause
-	if (isFlutterProject && findFlutterHome()) {
-		let flutterDartSdk = path.join(findFlutterHome(), "bin/cache/dart-sdk/bin");
-		if (fs.existsSync(path.join(flutterDartSdk, dartExecutableName))) {
-			let realDartPath = fs.realpathSync(path.join(flutterDartSdk, dartExecutableName));
-			return path.join(path.dirname(realDartPath), "..");
-		}
-	}
+export function findSdk(): string {
+	return isFlutterProject ? findFlutterDartSdk() : findDartSdk();
+}
 
+function findDartSdk(): string {
 	let paths = (<string>process.env.PATH).split(path.delimiter);
 
 	// We don't expect the user to add .\bin in config, but it would be in the PATHs
@@ -57,19 +52,30 @@ export function findDartSdk(): string {
 	return path.join(path.dirname(realDartPath), "..");
 }
 
-function hasDartExecutable(pathToTest: string): boolean {
-	// Apparently this is the "correct" way to check files exist synchronously in Node :'(
-	try {
-		fs.accessSync(path.join(pathToTest, dartExecutableName), fs.constants.X_OK);
-		return true; // If no error, we found a match!
-	}
-	catch (e) { }
+function findFlutterDartSdk(): string {
+	let flutterHome = findFlutterHome();
 
-	return false; // Didn't find it, so must be an invalid path.
+	if (!flutterHome)
+		return null;
+
+	let flutterDartPath = path.join(flutterHome, "bin/cache/dart-sdk");
+	if (hasDartExecutable(path.join(flutterDartPath, "bin")))
+		return flutterDartPath;
+
+	return null;
 }
 
+// TODO: Don't export?
 export function findFlutterHome(): string {
-	let paths = (<string>process.env.PATH).split(path.delimiter);
+	// Workspace takes priority.
+	let paths = [path.join(workspace.rootPath, "bin")];
+
+	// Next try FLUTTER_HOME.
+	if (process.env.FLUTTER_HOME)
+		paths.unshift(path.join(process.env.FLUTTER_HOME, "bin"));
+
+	// Add on PATH, since we might find the SDK there too.
+	paths = paths.concat((<string>process.env.PATH).split(path.delimiter));
 
 	let flutterHome = paths.find(hasFlutterExecutable);
 	if (!flutterHome)
@@ -77,12 +83,17 @@ export function findFlutterHome(): string {
 
 	let realFlutterHome = fs.realpathSync(path.join(flutterHome, flutterExecutableName));
 
+	console.log(`Found flutter at ${realFlutterHome}`);
+
 	return path.join(path.dirname(realFlutterHome), "..");
 }
 
-function hasFlutterExecutable(pathToTest: string): boolean {
+let hasDartExecutable = (pathToTest: string) => hasExecutable(pathToTest, dartExecutableName);
+let hasFlutterExecutable = (pathToTest: string) => hasExecutable(pathToTest, flutterExecutableName);
+
+function hasExecutable(pathToTest: string, executableName: string): boolean {
 	try {
-		fs.accessSync(path.join(pathToTest, flutterExecutableName), fs.constants.X_OK);
+		fs.accessSync(path.join(pathToTest, executableName), fs.constants.X_OK);
 		return true;
 	}
 	catch (e) { }

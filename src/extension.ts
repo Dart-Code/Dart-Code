@@ -41,15 +41,22 @@ let analyzerSettings: string = getAnalyzerSettings();
 
 export function activate(context: vs.ExtensionContext) {
 	let extensionStartTime = new Date();
-	dartSdkRoot = util.findDartSdk();
+	dartSdkRoot = util.findSdk();
 	if (dartSdkRoot == null) {
-		vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
-			"Please add it to your PATH or configure the 'dart.sdkPath' setting and reload.",
-			"Go to Dart Downloads"
-		).then(selectedItem => {
-			if (selectedItem)
-				util.openInBrowser(DART_DOWNLOAD_URL);
-		});
+		if (util.isFlutterProject) {
+			vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
+				"Please set FLUTTER_HOME, run flutter to download an SDK or configure the 'dart.flutterSdkPath' setting and reload."
+			);
+		}
+		else {
+			vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
+				"Please add it to your PATH or configure the 'dart.sdkPath' setting and reload.",
+				"Go to Dart Downloads"
+			).then(selectedItem => {
+				if (selectedItem)
+					util.openInBrowser(DART_DOWNLOAD_URL);
+			});
+		}
 		analytics.logSdkDetectionFailure();
 		return; // Don't set anything else up; we can't work like this!
 	}
