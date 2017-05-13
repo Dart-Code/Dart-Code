@@ -85,7 +85,7 @@ export class SdkCommands {
 		let args = new Array();
 		command.split(' ').forEach(option => {
 			args.push(option);
-		}); // TODO: Make sure this works okay even with whitespace
+		});
 
 		let flutterBinPath = path.join(findFlutterHome(), flutterPath);
 		channel.appendLine(`[${shortPath}] flutter ${args.join(" ")}`);
