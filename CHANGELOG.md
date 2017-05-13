@@ -1,3 +1,8 @@
+# v1.3.0
+
+- When opening a Flutter project, the locally cached Dart SDK will be used instead of the one configured in settings or from PATH
+- SDK update checks are now disabled for Flutter projects as a result of using their own SDK
+
 # v1.2.0
 
 - The change made in v1.1.0 to support opening the Flutter repo introduced some new issues and has been reverted except for specific workspaces. The issue is caused by using a folder named `packages` which is [not currently supported by the analyzer](https://github.com/dart-lang/sdk/issues/29414). In order to fix the issue for the Flutter repo the workaround will be triggered by the presence of a `.\packages\.gitignore` file (which exists in the Flutter repo but not in `packages` folders created by `pub`). This workaround will be removed once the Analyzer has been updated.
