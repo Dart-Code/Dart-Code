@@ -10,13 +10,33 @@ import { config } from "./config";
 const isWin = /^win/.test(process.platform);
 const dartExecutableName = isWin ? "dart.exe" : "dart";
 const pubExecutableName = isWin ? "pub.bat" : "pub";
+const flutterExecutableName = isWin ? "flutter.bat" : "flutter";
 export const dartVMPath = "bin/" + dartExecutableName;
 export const dartPubPath = "bin/" + pubExecutableName;
 export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
+export const flutterPath = "bin/" + flutterExecutableName;
 export const extensionVersion = getExtensionVersion();
 export const isDevelopment = checkIsDevelopment();
 
+export function isFlutterProject(): boolean {
+	if (workspace.rootPath)  // If VS Code has a project open
+		if (fs.existsSync(path.join(workspace.rootPath, "pubspec.yaml"))){
+			let regex = new RegExp('sdk:\\sflutter', 'i');
+			return regex.test(fs.readFileSync((path.join(workspace.rootPath, "pubspec.yaml"))).toString());
+		}
+	return false;
+}
+
 export function findDartSdk(): string {
+	// Flutter detection clause
+	if (isFlutterProject() && findFlutterHome()){
+		let flutterDartSdk = path.join(findFlutterHome(), "bin/cache/dart-sdk/bin");
+		if (fs.existsSync(path.join(flutterDartSdk, dartExecutableName))){
+			let realDartPath = fs.realpathSync(path.join(flutterDartSdk, dartExecutableName));
+			return path.join(path.dirname(realDartPath), "..");
+		}
+	}
+
 	let paths = (<string>process.env.PATH).split(path.delimiter);
 
 	// We don't expect the user to add .\bin in config, but it would be in the PATHs
@@ -45,6 +65,28 @@ function hasDartExecutable(pathToTest: string): boolean {
 	catch (e) { }
 
 	return false; // Didn't find it, so must be an invalid path.
+}
+
+export function findFlutterHome(): string {
+	let paths = (<string>process.env.PATH).split(path.delimiter);
+
+	let flutterHome = paths.find(hasFlutterExecutable);
+	if (!flutterHome)
+		return null;
+	
+	let realFlutterHome = fs.realpathSync(path.join(flutterHome, flutterExecutableName));
+
+	return path.join(path.dirname(realFlutterHome), "..");
+}
+
+function hasFlutterExecutable(pathToTest: string): boolean{
+	try {
+		fs.accessSync(path.join(pathToTest, flutterExecutableName), fs.constants.X_OK);
+		return true;
+	}
+	catch (e) { }
+
+	return false;
 }
 
 export interface Location {

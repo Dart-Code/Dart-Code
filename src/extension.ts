@@ -63,7 +63,7 @@ export function activate(context: vs.ExtensionContext) {
 		versionStatusItem.show();
 		context.subscriptions.push(versionStatusItem);
 
-		if (config.checkForSdkUpdates) {
+		if (config.checkForSdkUpdates && !util.isFlutterProject()) {
 			util.getLatestSdkVersion().then(version => {
 				if (util.isOutOfDate(sdkVersion, version))
 					vs.window.showWarningMessage(
