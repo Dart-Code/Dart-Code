@@ -22,7 +22,7 @@ export let isFlutterProject: boolean = checkIsFlutterProject();
 export function checkIsFlutterProject(): boolean {
 	if (workspace.rootPath)  // If VS Code has a project open
 		if (fs.existsSync(path.join(workspace.rootPath, "pubspec.yaml"))) {
-			let regex = new RegExp('sdk:\\sflutter', 'i');
+			let regex = new RegExp('sdk\\s*:\\s*flutter', 'i');
 			return regex.test(fs.readFileSync((path.join(workspace.rootPath, "pubspec.yaml"))).toString());
 		}
 	return false;
