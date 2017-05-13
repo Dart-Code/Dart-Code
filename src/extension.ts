@@ -34,6 +34,7 @@ const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
 const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
 
 export let dartSdkRoot: string;
+export let flutterSdkRoot: string;
 export let analyzer: Analyzer;
 
 let showTodos: boolean = config.showTodos;
@@ -42,10 +43,11 @@ let analyzerSettings: string = getAnalyzerSettings();
 export function activate(context: vs.ExtensionContext) {
 	let extensionStartTime = new Date();
 	dartSdkRoot = util.findSdk();
+	flutterSdkRoot = util.findFlutterSdk();
 	if (dartSdkRoot == null) {
 		if (util.isFlutterProject) {
 			vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
-				"Please set FLUTTER_HOME, run flutter to download an SDK or configure the 'dart.flutterSdkPath' setting and reload."
+				"Please set FLUTTER_ROOT, run flutter to download an SDK or configure the 'dart.flutterSdkPath' setting and reload."
 			);
 		}
 		else {
@@ -166,7 +168,7 @@ export function activate(context: vs.ExtensionContext) {
 	}));
 
 	// Register SDK commands.
-	let sdkCommands = new SdkCommands(dartSdkRoot);
+	let sdkCommands = new SdkCommands(dartSdkRoot, flutterSdkRoot);
 	sdkCommands.registerCommands(context);
 
 	// Set up commands for Dart editors.

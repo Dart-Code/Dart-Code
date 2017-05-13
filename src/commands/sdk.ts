@@ -8,13 +8,15 @@ import * as path from "path";
 import * as project from "../project";
 import * as vs from "vscode";
 import { config } from "../config";
-import { dartPubPath, isFlutterProject, findFlutterHome, flutterPath } from "../utils";
+import { dartPubPath, isFlutterProject, flutterPath } from "../utils";
 
 export class SdkCommands {
-	private sdk: string;
+	private dartSdk: string;
+	private flutterSdk: string;
 
-	constructor(sdk: string) {
-		this.sdk = sdk;
+	constructor(dartSdk: string, flutterSdk: string) {
+		this.dartSdk = dartSdk;
+		this.flutterSdk = flutterSdk;
 	}
 
 	registerCommands(context: vs.ExtensionContext) {
@@ -31,7 +33,7 @@ export class SdkCommands {
 			// Attach any properties that weren't explicitly set.			
 			debugConfig.cwd = debugConfig.cwd || "${workspaceRoot}";
 			debugConfig.args = debugConfig.args || [];
-			debugConfig.sdkPath = debugConfig.sdkPath || this.sdk;
+			debugConfig.sdkPath = debugConfig.sdkPath || this.dartSdk;
 			debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || config.debugSdkLibraries;
 			debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || config.debugExternalLibraries;
 			if (debugConfig.checkedMode === undefined)
@@ -52,7 +54,7 @@ export class SdkCommands {
 			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("pub.upgrade", selection => {
-			if (isFlutterProject){
+			if (isFlutterProject) {
 				vs.commands.executeCommand("flutter.packages.upgrade");
 			} else {
 				this.runPub("upgrade", selection);
@@ -73,7 +75,7 @@ export class SdkCommands {
 		}));
 	}
 
-	private runFlutter(command: string, selection?: vs.Uri){
+	private runFlutter(command: string, selection?: vs.Uri) {
 		let root = vs.workspace.rootPath;
 		let projectPath = selection
 			? path.dirname(selection.fsPath)
@@ -87,10 +89,10 @@ export class SdkCommands {
 			args.push(option);
 		});
 
-		let flutterBinPath = path.join(findFlutterHome(), flutterPath);
+		let flutterBinPath = path.join(this.flutterSdk, flutterPath);
 		channel.appendLine(`[${shortPath}] flutter ${args.join(" ")}`);
 
-		let process = child_process.spawn(flutterBinPath, args, { "cwd": projectPath});
+		let process = child_process.spawn(flutterBinPath, args, { "cwd": projectPath });
 		channels.runProcessInChannel(process, channel);
 	}
 
@@ -112,7 +114,7 @@ export class SdkCommands {
 
 		// TODO: Add a wrapper around the Dart SDK? It could do things like
 		// return the paths for tools in the bin/ dir. 
-		let pubPath = path.join(this.sdk, dartPubPath);
+		let pubPath = path.join(this.dartSdk, dartPubPath);
 		channel.appendLine(`[${shortPath}] pub ${args.join(" ")}`);
 
 		let process = child_process.spawn(pubPath, args, { "cwd": projectPath });

@@ -2,9 +2,11 @@
 
 - When opening a Flutter project, the below locations will be checked for a Flutter SDK and the embedded Dart SDK will be used (if no flutter SDK is found an error message will be shown)
   - `.\bin\flutter(.bat)`
+  - `(FLUTTER_ROOT)\bin\flutter(.bat)`
   - `(FLUTTER_HOME)\bin\flutter(.bat)`
   - All folders in `PATH`
 - Dart SDK update checks are now disabled for Flutter projects due to the embedded Dartk SDK
+- When `flutter: sdk: flutter` is added to/removed from `pubspec.yaml` you will be prompted to reload to switch between Dart/Flutter SDKs
 
 # v1.2.0
 

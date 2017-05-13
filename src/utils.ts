@@ -53,7 +53,7 @@ function findDartSdk(): string {
 }
 
 function findFlutterDartSdk(): string {
-	let flutterHome = findFlutterHome();
+	let flutterHome = findFlutterSdk();
 
 	if (!flutterHome)
 		return null;
@@ -66,9 +66,13 @@ function findFlutterDartSdk(): string {
 }
 
 // TODO: Don't export?
-export function findFlutterHome(): string {
+export function findFlutterSdk(): string {
 	// Workspace takes priority.
 	let paths = [path.join(workspace.rootPath, "bin")];
+
+	// Next try FLUTTER_ROOT.
+	if (process.env.FLUTTER_ROOT)
+		paths.unshift(path.join(process.env.FLUTTER_ROOT, "bin"));
 
 	// Next try FLUTTER_HOME.
 	if (process.env.FLUTTER_HOME)
