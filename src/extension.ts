@@ -160,6 +160,10 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Handle config changes so we can reanalyze if necessary.
 	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(handleConfigurationChange));
+	context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {
+		if (path.basename(td.fileName).toLowerCase() == "pubspec.yaml")
+			handleConfigurationChange();
+	}));
 
 	// Register SDK commands.
 	let sdkCommands = new SdkCommands(dartSdkRoot);
@@ -260,7 +264,10 @@ function handleConfigurationChange() {
 
 	if (flutterSettingChanged) {
 		const reloadAction: string = "Reload Project";
-		vs.window.showWarningMessage("Your project has added/removed Flutter. For best results, save your changes then reload the project.", reloadAction).then(res => {
+		const msg = newFlutterSetting
+			? "Your project now uses Flutter. Save your changes then reload the project to load the Flutter SDK."
+			: "Your project no longer uses Flutter. Save your changes then reload the project to switch back to the standard Dart SDK.";
+		vs.window.showWarningMessage(msg, reloadAction).then(res => {
 			if (res == reloadAction)
 				vs.commands.executeCommand("workbench.action.reloadWindow");
 		});
