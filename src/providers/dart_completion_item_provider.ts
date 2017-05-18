@@ -102,6 +102,12 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			document.positionAt(notification.replacementOffset),
 			document.positionAt(notification.replacementOffset + notification.replacementLength)
 		);
+		// Relevance is a number, highest being best. Code sorts by text, so subtract from a large number so that
+		// a text sort will result in the correct order.
+		// 555 -> 999455
+		//  10 -> 999990
+		//   1 -> 999999
+		completion.sortText = (1000000 - suggestion.relevance).toString();
 		return completion;
 	}
 
