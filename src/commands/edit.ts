@@ -69,6 +69,14 @@ export class EditCommands implements vs.Disposable {
 			})
 		});
 
+		// Apply the edits.		
 		vs.workspace.applyEdit(changes);
+
+		// Set the cursor position.
+		if (change.selection) {
+			let pos = document.positionAt(change.selection.offset);
+			let selection = new vs.Selection(pos, pos);
+			vs.window.showTextDocument(document).then(ed => ed.selection = selection);
+		}
 	}
 }
