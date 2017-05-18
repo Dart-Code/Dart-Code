@@ -32,6 +32,7 @@ import { promptUserForConfigs } from "./user_config_prompts";
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
 const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
+const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
 
 const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
@@ -47,9 +48,13 @@ export function activate(context: vs.ExtensionContext) {
 	sdks = util.findSdks();
 	if (sdks.dart == null) {
 		if (util.isFlutterProject) {
-			vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
-				"Please set FLUTTER_ROOT, run flutter to download an SDK or configure the 'dart.flutterSdkPath' setting and reload."
-			);
+			vs.window.showErrorMessage("Could not find a Flutter SDK to use. " +
+				"Please add it to your PATH or set FLUTTER_HOME and reload.",
+				"Go to Flutter Downloads"
+			).then(selectedItem => {
+				if (selectedItem)
+					util.openInBrowser(FLUTTER_DOWNLOAD_URL);
+			});
 		}
 		else {
 			vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
