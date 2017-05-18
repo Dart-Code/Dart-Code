@@ -62,8 +62,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				// If blank, force in a dummy tabstop to go between the parents.
 				if (argPlaceholders == "")
 					argPlaceholders = "$1";
-				
-				completionText += `(${argPlaceholders})$0`;				
+
+				completionText += `(${argPlaceholders})$0`;
 			}
 			else
 				completionText += `($0)`;
