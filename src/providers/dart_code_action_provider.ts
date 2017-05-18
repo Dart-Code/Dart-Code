@@ -18,12 +18,23 @@ export class DartCodeActionProvider implements CodeActionProvider {
 		if (!isAnalyzable(document))
 			return null;
 		return new Promise<Command[]>((resolve, reject) => {
-			this.analyzer.editGetFixes({
-				file: document.fileName,
-				offset: document.offsetAt(range.start)
-			}).then(resp => {
-				let allFixes = new Array<as.SourceChange>().concat(...resp.fixes.map(fix => fix.fixes));
-				resolve(allFixes.map(fix => this.convertResult(document, fix)));
+			Promise.all([
+				this.analyzer.editGetFixes({
+					file: document.fileName,
+					offset: document.offsetAt(range.start)
+				}),
+				this.analyzer.editGetAssists({
+					file: document.fileName,
+					offset: document.offsetAt(range.start),
+					length: range.end.character - range.start.character
+				})
+			]).then(results => {
+				let fixes = <as.EditGetFixesResponse>results[0];
+				let assists = <as.EditGetAssistsResponse>results[1];
+
+				let allEdits = new Array<as.SourceChange>().concat(...fixes.fixes.map(fix => fix.fixes)).concat(...assists.assists);
+
+				resolve(allEdits.map(edit => this.convertResult(document, edit)));
 			}, e => { logError(e); reject(); });
 		});
 	}
