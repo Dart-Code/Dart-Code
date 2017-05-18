@@ -33,8 +33,6 @@
 	"icon": "media/icon.png",
 	"activationEvents": [
 		"onLanguage:dart",
-		"onLanguage:dartpubspec",
-		"onLanguage:dartanalysisoptions",
 		"workspaceContains:pubspec.yaml"
 	],
 	"main": "./out/src/extension",
@@ -49,25 +47,6 @@
 					"Dart"
 				],
 				"configuration": "./syntaxes/dart-configuration.json"
-			},
-			{
-				"id": "dartpubspec",
-				"filenames": [
-					"pubspec.yaml"
-				],
-				"aliases": [
-					"Pubspec"
-				]
-			},
-			{
-				"id": "dartanalysisoptions",
-				"filenames": [
-					"analysis_options.yaml",
-					".analysis_options"
-				],
-				"aliases": [
-					"Analysis Options"
-				]
 			}
 		],
 		"grammars": [
@@ -174,13 +153,13 @@
 			],
 			"editor/title": [
 				{
-					"when": "resourceLangId == dartpubspec && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
 					"command": "pub.get",
 					"alt": "pub.upgrade",
 					"group": "navigation"
 				},
 				{
-					"when": "resourceLangId == dartpubspec && dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:flutterProjectLoaded",
 					"command": "flutter.packages.get",
 					"alt": "flutter.packages.upgrade",
 					"group": "navigation"
@@ -188,51 +167,43 @@
 			],
 			"editor/context": [
 				{
-					"when": "resourceLangId == dartpubspec && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
 					"command": "pub.get"
 				},
 				{
-					"when": "resourceLangId == dartpubspec && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
 					"command": "pub.upgrade"
 				},
 				{
-					"when": "resourceLangId == dartpubspec && dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:flutterProjectLoaded",
 					"command": "flutter.packages.get"
 				},
 				{
-					"when": "resourceLangId == dartpubspec && dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:flutterProjectLoaded",
 					"command": "flutter.packages.upgrade"
 				}
 			],
 			"explorer/context": [
 				{
-					"when": "resourceLangId == dartpubspec && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
 					"command": "pub.get"
 				},
 				{
-					"when": "resourceLangId == dartpubspec && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
 					"command": "pub.upgrade"
 				},
 				{
-					"when": "resourceLangId == dartpubspec && dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:flutterProjectLoaded",
 					"command": "flutter.packages.get"
 				},
 				{
-					"when": "resourceLangId == dartpubspec && dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:flutterProjectLoaded",
 					"command": "flutter.packages.upgrade"
 				}
 			]
 		},
 		"configurationDefaults": {
 			"[dart]": {
-				"editor.tabSize": 2,
-				"editor.insertSpaces": true
-			},
-			"[dartpubspec]": {
-				"editor.tabSize": 2,
-				"editor.insertSpaces": true
-			},
-			"[dartanalysisoptions]": {
 				"editor.tabSize": 2,
 				"editor.insertSpaces": true
 			}
