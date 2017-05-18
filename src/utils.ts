@@ -75,10 +75,6 @@ export function findFlutterSdk(): string {
 	if (process.env.FLUTTER_ROOT)
 		paths.unshift(path.join(process.env.FLUTTER_ROOT, "bin"));
 
-	// Next try FLUTTER_HOME.
-	if (process.env.FLUTTER_HOME)
-		paths.unshift(path.join(process.env.FLUTTER_HOME, "bin"));
-
 	// Add on PATH, since we might find the SDK there too.
 	paths = paths.concat((<string>process.env.PATH).split(path.delimiter));
 
