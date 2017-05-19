@@ -1,3 +1,14 @@
+# v1.4.0
+
+- Code assists are now available and will show up as lightbulbs similar to existing code fixes (for example, `Wrap in new widget` in Flutter projects)
+- Code completion will now refresh on certain key presses (`space`, `(`, `=`) which should result in more accurate results more often
+- Code completion results are now sorted by relevance rather than alphabetically
+- Cursor position should now be better maintained when executing code fixes
+- `pubspec.yaml` and `analysisoptions.yaml` will once again use the built-in YAML language/highlighting
+- When opening a flutter project, the `.packages` file will now also be used when trying to locate the Flutter SDK
+- The error message shown when unable to locate the Flutter SDK has been simplified and a link to the Flutter download page added
+- The environment variable `FLUTTER_HOME` is not recommended for use and will no longer be used to locate a Flutter SDK (`FLUTTER_ROOT` is still checked)
+
 # v1.3.0
 
 - When opening a Flutter project, the below locations will be checked for a Flutter SDK and the embedded Dart SDK will be used (if no flutter SDK is found an error message will be shown)
