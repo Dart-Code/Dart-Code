@@ -6,6 +6,7 @@ import * as https from "https";
 import * as as from "./analysis/analysis_server_types";
 import { env, workspace, window, Position, Range, TextDocument, commands, Uri } from "vscode";
 import { config } from "./config";
+import { PackageMap } from "./debug/utils";
 
 const isWin = /^win/.test(process.platform);
 const dartExecutableName = isWin ? "dart.exe" : "dart";
@@ -67,13 +68,18 @@ function findFlutterDartSdk(flutterSdk: string): string {
 }
 
 // TODO: Don't export?
-export function findFlutterSdk(): string {
+function findFlutterSdk(): string {
 	// Workspace takes priority.
 	let paths = [path.join(workspace.rootPath, "bin")];
 
+	// Next try .packages file.
+	let pathFromPackages = extractFlutterSdkPathFromPackagesFile(path.join(workspace.rootPath, ".packages"));
+	if (pathFromPackages)
+		paths = paths.concat(pathFromPackages);
+
 	// Next try FLUTTER_ROOT.
 	if (process.env.FLUTTER_ROOT)
-		paths.unshift(path.join(process.env.FLUTTER_ROOT, "bin"));
+		paths = paths.concat(path.join(process.env.FLUTTER_ROOT, "bin"));
 
 	// Add on PATH, since we might find the SDK there too.
 	paths = paths.concat((<string>process.env.PATH).split(path.delimiter));
@@ -87,6 +93,40 @@ export function findFlutterSdk(): string {
 	console.log(`Found flutter at ${realFlutterHome}`);
 
 	return path.join(path.dirname(realFlutterHome), "..");
+
+	function extractFlutterSdkPathFromPackagesFile(file: string): string {
+		if (!fs.existsSync(file))
+			return null;
+
+		let path = new PackageMap(file).getPackagePath("flutter");
+
+		if (!path)
+			return null;
+
+		// Trim suffix we don't need.
+		const pathSuffix = "/packages/flutter/lib/";
+		if (path.endsWith(pathSuffix)) {
+			path = path.substr(0, path.length - pathSuffix.length)
+		}
+
+		// Make sure ends with a slash.
+		if (!path.endsWith('/'))
+			path = path + '/';
+
+		// Append bin if required.
+		if (!path.endsWith('/bin/')) {
+			path = path + 'bin/';
+		}
+
+		// Windows fixup.		
+		if (isWin) {
+			path = path.replace(/\//g, '\\');
+			if (path[0] == '\\')
+				path = path.substring(1);
+		}
+
+		return path;
+	}
 }
 
 let hasDartExecutable = (pathToTest: string) => hasExecutable(pathToTest, dartExecutableName);
