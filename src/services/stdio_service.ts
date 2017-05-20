@@ -19,8 +19,9 @@ export abstract class StdIOService implements Disposable {
 		this.logFile = logFile;
 	}
 
-	protected createProcess(binPath: string, args: string[]) {
-		this.process = child_process.spawn(binPath, args);
+	protected createProcess(workingDirectory: string, binPath: string, args: string[]) {
+		log(`Starting ${binPath} with args: ${args.join(' ')} ${workingDirectory ? `in ${workingDirectory}` : ''}`);
+		this.process = child_process.spawn(binPath, args, { cwd: workingDirectory });
 
 		this.process.stdout.on("data", (data: Buffer) => {
 			let message = data.toString();
@@ -73,18 +74,21 @@ export abstract class StdIOService implements Disposable {
 		fullBuffer.split("\n").filter(m => m.trim() != "").forEach(m => this.handleMessage(m));
 	}
 
+	protected abstract shouldHandleMessage(message: string): boolean;
+
 	handleMessage(message: string): void {
+		message = message.trim();
 		this.logTraffic(`<== ${message}\r\n`);
+
+		if (!this.shouldHandleMessage(message))
+			return;
+
 		let msg: any;
 		try {
 			msg = JSON.parse(message);
 		}
 		catch (e) {
-			// This will include things like Observatory output and some analyzer logging code.
-			message = message.trim();
-			if (!message.startsWith('--- ') && !message.startsWith('+++ ')) {
-				console.error(`Unable to parse message (${e}): ${message}`);
-			}
+			console.error(`Unable to parse message (${e}): ${message}`);
 			return;
 		}
 
