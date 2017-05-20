@@ -317,6 +317,18 @@
 						"request": "launch",
 						"program": "${workspaceRoot}/bin/main.dart"
 					}
+				],
+				"configurationSnippets": [
+					{
+						"label": "Dart command line",
+						"description": "Dart command line",
+						"body": {
+							"name": "Dart command line",
+							"type": "dart-cli",
+							"request": "launch",
+							"program": "^\"\\${workspaceRoot}/bin/main.dart\""
+						}
+					}
 				]
 			}
 		]
