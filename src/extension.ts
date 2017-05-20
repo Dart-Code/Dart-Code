@@ -75,7 +75,7 @@ export function activate(context: vs.ExtensionContext) {
 	// Show the SDK version in the status bar.
 	let sdkVersion = util.getDartSdkVersion(sdks.dart);
 	if (sdkVersion) {
-		let versionStatusItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, Number.MIN_VALUE);
+		let versionStatusItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
 		versionStatusItem.text = sdkVersion;
 		versionStatusItem.tooltip = "Dart SDK Version";
 		versionStatusItem.show();
