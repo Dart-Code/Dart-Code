@@ -1,6 +1,6 @@
 'use strict';
 
 import { DebugSession } from "vscode-debugadapter";
-import { DartDebugSession } from "./debug_impl";
+import { DartDebugSession } from "./dart_debug_impl";
 
 DebugSession.run(DartDebugSession);

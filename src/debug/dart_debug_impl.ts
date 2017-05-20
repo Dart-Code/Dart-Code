@@ -14,7 +14,7 @@ import {
 	ObservatoryConnection, VMEvent, VMIsolateRef, RPCError, DebuggerResult, VMStack, VMSentinel, VMObj,
 	VMFrame, VMFuncRef, VMInstanceRef, VMScriptRef, VMScript, VMSourceLocation, VMErrorRef, VMBreakpoint,
 	VMInstance, VMResponse, VMClassRef, VM, VMIsolate, VMLibraryRef
-} from "./debug_protocol";
+} from "./dart_debug_protocol";
 
 // TODO: supportsSetVariable
 // TODO: class variables?

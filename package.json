@@ -277,7 +277,7 @@
 						"dart"
 					]
 				},
-				"program": "./out/src/debug/debug_entry.js",
+				"program": "./out/src/debug/dart_debug_entry.js",
 				"runtime": "node",
 				"startSessionCommand": "dart.startDebugSession",
 				"configurationAttributes": {
