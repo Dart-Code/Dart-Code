@@ -23,6 +23,7 @@ import { DartDocumentSymbolProvider } from "./providers/dart_document_symbol_pro
 import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
 import { DartRenameProvider } from "./providers/dart_rename_provider";
 import { FileChangeHandler } from "./file_change_handler";
+import { Flutter } from "./flutter/flutter";
 import { OpenFileTracker } from "./open_file_tracker";
 import { SdkCommands } from "./commands/sdk";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
@@ -39,6 +40,7 @@ const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
 
 export let sdks: util.Sdks;
 export let analyzer: Analyzer;
+export let flutter: Flutter;
 
 let showTodos: boolean = config.showTodos;
 let analyzerSettings: string = getAnalyzerSettings();
@@ -98,6 +100,12 @@ export function activate(context: vs.ExtensionContext) {
 	const analyzerPath = config.analyzerPath || path.join(sdks.dart, util.analyzerPath);
 	analyzer = new Analyzer(path.join(sdks.dart, util.dartVMPath), analyzerPath);
 	context.subscriptions.push(analyzer);
+
+	// Fire up Flutter daemon if required.	
+	if (util.isFlutterProject) {
+		flutter = new Flutter(path.join(sdks.flutter, util.flutterPath), vs.workspace.rootPath);
+		context.subscriptions.push(flutter);
+	}
 
 	// Log analysis server startup time when we get the welcome message/version.
 	let connectedEvents = analyzer.registerForServerConnected(sc => {
@@ -296,7 +304,8 @@ function getAnalyzerSettings() {
 		+ config.analyzerDiagnosticsPort
 		+ config.analyzerObservatoryPort
 		+ config.analyzerInstrumentationLogFile
-		+ config.analyzerAdditionalArgs;
+		+ config.analyzerAdditionalArgs
+		+ config.flutterDaemonLogFile;
 }
 
 export function deactivate() {
