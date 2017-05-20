@@ -9,13 +9,18 @@ import { config } from "../config";
 import { log, logError, extensionVersion } from "../utils";
 
 export class Analyzer extends AnalyzerGen implements vs.Disposable {
-	private analyzerProcess: child_process.ChildProcess;
+	private serviceName = "Dart analysis server";
+	private process: child_process.ChildProcess;
 	private nextRequestID = 1;
 	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] } = {};
 	private messageBuffer: string[] = [];
+	private logFile = config.analyzerLogFile;
 	private logStream: fs.WriteStream;
+	private observatoryPort = config.analyzerObservatoryPort;
+	private diagnosticsPort = config.analyzerDiagnosticsPort;
+	private additionalArgs = config.analyzerAdditionalArgs;
 	private lastDiagnostics: as.ContextData[];
-	private analyzerLaunchArgs: string[];
+	private launchArgs: string[];
 
 	private requestErrorSubscriptions: ((notification: as.RequestError) => void)[] = [];
 
@@ -25,14 +30,14 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 		let args = [];
 
 		// Optionally start Observatory for the analyzer.
-		if (config.analyzerObservatoryPort)
-			args.push(`--observe=${config.analyzerObservatoryPort}`);
+		if (this.observatoryPort)
+			args.push(`--observe=${this.observatoryPort}`);
 
 		args.push(analyzerPath);
 
 		// Optionally start the analyzer's diagnostic web server on the given port.
-		if (config.analyzerDiagnosticsPort)
-			args.push(`--port=${config.analyzerDiagnosticsPort}`);
+		if (this.diagnosticsPort)
+			args.push(`--port=${this.diagnosticsPort}`);
 
 		// Add info about the extension that will be collected for crash reports etc.
 		args.push(`--client-id=DanTup.dart-code`);
@@ -43,14 +48,14 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 			args.push(`--instrumentation-log-file=${config.analyzerInstrumentationLogFile}`);
 
 		// Allow arbitrary args to be passed to the analysis server.
-		if (config.analyzerAdditionalArgs)
-			args = args.concat(config.analyzerAdditionalArgs);
+		if (this.additionalArgs)
+			args = args.concat(this.additionalArgs);
 
-		this.analyzerLaunchArgs = args.slice(1); // Trim the first one as it's just snapshot path.
-		log(`Starting ${analyzerPath} with args: ` + this.analyzerLaunchArgs.join(' '));
-		this.analyzerProcess = child_process.spawn(dartVMPath, args);
+		this.launchArgs = args.slice(1); // Trim the first one as it's just snapshot path.
+		log(`Starting ${analyzerPath} with args: ` + this.launchArgs.join(' '));
+		this.process = child_process.spawn(dartVMPath, args);
 
-		this.analyzerProcess.stdout.on("data", (data: Buffer) => {
+		this.process.stdout.on("data", (data: Buffer) => {
 			let message = data.toString();
 
 			// Add this message to the buffer for processing.
@@ -111,11 +116,11 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 		let json = JSON.stringify(req) + "\r\n";
 		this.logTraffic(`==> ${json}`);
 		try {
-			this.analyzerProcess.stdin.write(json);
+			this.process.stdin.write(json);
 		}
 		catch (e) {
 			const reloadAction: string = "Reload Project";
-			vs.window.showErrorMessage("The Dart analysis server has terminated. Save your changes then reload the project to resume.", reloadAction).then(res => {
+			vs.window.showErrorMessage(`The ${this.serviceName} has terminated. Save your changes then reload the project to resume.`, reloadAction).then(res => {
 				if (res == reloadAction)
 					vs.commands.executeCommand("workbench.action.reloadWindow");
 			});
@@ -126,15 +131,15 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	private logTraffic(message: String): void {
 		const max: number = 2000;
 
-		if (config.analyzerLogFile) {
+		if (this.logFile) {
 			if (!this.logStream)
-				this.logStream = fs.createWriteStream(config.analyzerLogFile);
+				this.logStream = fs.createWriteStream(this.logFile);
 			this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
 			if (message.length > max)
 				this.logStream.write(message.substring(0, max) + "...\r\n");
 			else
 				this.logStream.write(message);
-		} else if (!config.analyzerLogFile && this.logStream) {
+		} else if (!this.logFile && this.logStream) {
 			// Turn off logging.
 			this.logStream.close();
 			this.logStream = null;
@@ -210,13 +215,13 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	}
 
 	getAnalyzerLaunchArgs(): string[] {
-		return this.analyzerLaunchArgs;
+		return this.launchArgs;
 	}
 
 	dispose() {
-		log(`Stopping Dart analysis server...`);
+		log(`Stopping ${this.serviceName}...`);
 
-		this.analyzerProcess.kill();
+		this.process.kill();
 
 		if (this.logStream) {
 			this.logStream.close();
