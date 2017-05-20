@@ -34,6 +34,7 @@ class Config {
 	setDebugSdkLibraries(value: boolean): Thenable<void> { return this.setConfig("debugSdkLibraries", value); }
 	get debugExternalLibraries() { return this.getConfig<boolean>("debugExternalLibraries"); }
 	setDebugExternalLibraries(value: boolean): Thenable<void> { return this.setConfig("debugExternalLibraries", value); }
+	get flutterDaemonLogFile() { return this.getConfig<string>("flutterDaemonLogFile"); }
 	get insertArgumentPlaceholders() { return this.getConfig<boolean>("insertArgumentPlaceholders"); }
 	get lineLength() { return this.getConfig<number>("lineLength"); }
 	get pubAdditionalArgs() { return this.getConfig<string[]>("pubAdditionalArgs"); }
