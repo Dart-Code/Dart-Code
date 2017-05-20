@@ -10,15 +10,11 @@ import { log, logError, extensionVersion } from "../utils";
 import { Request, UnknownResponse, UnknownNotification } from "../services/stdio_service";
 
 export class Analyzer extends AnalyzerGen {
-	private nextRequestID = 1;
-	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] } = {};
 	private observatoryPort = config.analyzerObservatoryPort;
 	private diagnosticsPort = config.analyzerDiagnosticsPort;
 	private additionalArgs = config.analyzerAdditionalArgs;
 	private lastDiagnostics: as.ContextData[];
 	private launchArgs: string[];
-
-	private requestErrorSubscriptions: ((notification: as.RequestError) => void)[] = [];
 
 	constructor(dartVMPath: string, analyzerPath: string) {
 		super("Dart analysis server", config.analyzerLogFile);
@@ -59,82 +55,6 @@ export class Analyzer extends AnalyzerGen {
 		// Hook error subscriptions so we can try and get diagnostic info if this happens.
 		this.registerForServerError(e => this.requestDiagnosticsUpdate());
 		this.registerForRequestError(e => this.requestDiagnosticsUpdate());
-	}
-
-	handleMessage(message: string): void {
-		this.logTraffic(`<== ${message}\r\n`);
-		let msg: any;
-		try {
-			msg = JSON.parse(message);
-		}
-		catch (e) {
-			// This will include things like Observatory output and some analyzer logging code.
-			message = message.trim();
-			if (!message.startsWith('--- ') && !message.startsWith('+++ ')) {
-				console.error(`Unable to parse message (${e}): ${message}`);
-			}
-			return;
-		}
-
-		if (msg.event)
-			this.handleNotification(<UnknownNotification>msg);
-		else
-			this.handleResponse(<UnknownResponse>msg);
-	}
-
-	private handleResponse(evt: UnknownResponse) {
-		let handler = this.activeRequests[evt.id];
-		let method: string = handler[2];
-		let error: as.RequestError & { method?: string } = evt.error;
-
-		if (error && error.code == "SERVER_ERROR") {
-			error.method = method;
-			this.notify(this.requestErrorSubscriptions, error);
-		}
-
-		if (error) {
-			handler[1](error);
-		} else {
-			handler[0](evt.result);
-		}
-	}
-
-	registerForRequestError(subscriber: (notification: as.RequestError) => void): vs.Disposable {
-		return this.subscribe(this.requestErrorSubscriptions, subscriber);
-	}
-
-	protected sendRequest<TReq, TResp>(method: string, params?: TReq): Thenable<TResp> {
-		// Generate an ID for this request so we can match up the response.
-		let id = this.nextRequestID++;
-
-		return new Promise<TResp>((resolve, reject) => {
-			// Stash the callbacks so we can call them later.
-			this.activeRequests[id.toString()] = [resolve, reject, method];
-
-			let req = {
-				id: id.toString(),
-				method: method,
-				params: params
-			};
-			let json = JSON.stringify(req) + "\r\n";
-			this.sendMessage(json);
-		});
-	}
-
-	protected notify<T>(subscriptions: ((notification: T) => void)[], notification: T) {
-		subscriptions.slice().forEach(sub => sub(notification));
-	}
-
-	protected subscribe<T>(subscriptions: ((notification: T) => void)[], subscriber: (notification: T) => void): vs.Disposable {
-		subscriptions.push(subscriber);
-		return {
-			dispose: () => {
-				let index = subscriptions.indexOf(subscriber);
-				if (index >= 0) {
-					subscriptions.splice(index, 1);
-				}
-			}
-		};
 	}
 
 	private requestDiagnosticsUpdate() {

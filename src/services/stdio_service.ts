@@ -8,9 +8,12 @@ import { log } from "../utils";
 export abstract class StdIOService implements vs.Disposable {
 	protected serviceName: string;
 	protected process: child_process.ChildProcess;
-	protected messageBuffer: string[] = [];
+	private nextRequestID = 1;
+	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] } = {};
+	private messageBuffer: string[] = [];
 	private logFile: string;
 	private logStream: fs.WriteStream;
+	private requestErrorSubscriptions: ((notification: any) => void)[] = [];
 
 	constructor(serviceName: string, logFile: string) {
 		this.serviceName = serviceName;
@@ -32,7 +35,25 @@ export abstract class StdIOService implements vs.Disposable {
 		});
 	}
 
-	protected sendMessage<T>(json: string) {
+	protected sendRequest<TReq, TResp>(method: string, params?: TReq): Thenable<TResp> {
+		// Generate an ID for this request so we can match up the response.
+		let id = this.nextRequestID++;
+
+		return new Promise<TResp>((resolve, reject) => {
+			// Stash the callbacks so we can call them later.
+			this.activeRequests[id.toString()] = [resolve, reject, method];
+
+			let req = {
+				id: id.toString(),
+				method: method,
+				params: params
+			};
+			let json = JSON.stringify(req) + "\r\n";
+			this.sendMessage(json);
+		});
+	}
+
+	private sendMessage<T>(json: string) {
 		this.logTraffic(`==> ${json}`);
 		try {
 			this.process.stdin.write(json);
@@ -63,7 +84,65 @@ export abstract class StdIOService implements vs.Disposable {
 		fullBuffer.split("\n").filter(m => m.trim() != "").forEach(m => this.handleMessage(m));
 	}
 
-	protected abstract handleMessage(message: string): void;
+	handleMessage(message: string): void {
+		this.logTraffic(`<== ${message}\r\n`);
+		let msg: any;
+		try {
+			msg = JSON.parse(message);
+		}
+		catch (e) {
+			// This will include things like Observatory output and some analyzer logging code.
+			message = message.trim();
+			if (!message.startsWith('--- ') && !message.startsWith('+++ ')) {
+				console.error(`Unable to parse message (${e}): ${message}`);
+			}
+			return;
+		}
+
+		if (msg.event)
+			this.handleNotification(<UnknownNotification>msg);
+		else
+			this.handleResponse(<UnknownResponse>msg);
+	}
+
+	protected abstract handleNotification(evt: UnknownNotification): void;
+
+	private handleResponse(evt: UnknownResponse) {
+		let handler = this.activeRequests[evt.id];
+		let method: string = handler[2];
+		let error = evt.error;
+
+		if (error && error.code == "SERVER_ERROR") {
+			error.method = method;
+			this.notify(this.requestErrorSubscriptions, error);
+		}
+
+		if (error) {
+			handler[1](error);
+		} else {
+			handler[0](evt.result);
+		}
+	}
+
+	protected notify<T>(subscriptions: ((notification: T) => void)[], notification: T) {
+		subscriptions.slice().forEach(sub => sub(notification));
+	}
+
+	protected subscribe<T>(subscriptions: ((notification: T) => void)[], subscriber: (notification: T) => void): vs.Disposable {
+		subscriptions.push(subscriber);
+		return {
+			dispose: () => {
+				let index = subscriptions.indexOf(subscriber);
+				if (index >= 0) {
+					subscriptions.splice(index, 1);
+				}
+			}
+		};
+	}
+
+	registerForRequestError(subscriber: (notification: any) => void): vs.Disposable {
+		return this.subscribe(this.requestErrorSubscriptions, subscriber);
+	}
 
 	protected logTraffic(message: String): void {
 		const max: number = 2000;

@@ -12,10 +12,6 @@ export abstract class AnalyzerGen extends StdIOService {
 		super(serviceName, logFile);
 	}
 
-	protected abstract notify<T>(subscriptions: ((notification: T) => void)[], params: T): void;
-	protected abstract subscribe<T>(subscriptions: ((notification: T) => void)[], subscriber: (notification: T) => void): vs.Disposable;
-	protected abstract sendRequest<TReq, TResp>(method: string, params?: TReq): Thenable<TResp>;
-
 	private serverConnectedSubscriptions: ((notification: as.ServerConnectedNotification) => void)[] = [];
 	private serverErrorSubscriptions: ((notification: as.ServerErrorNotification) => void)[] = [];
 	private serverStatusSubscriptions: ((notification: as.ServerStatusNotification) => void)[] = [];
