@@ -24,6 +24,7 @@ import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_p
 import { DartRenameProvider } from "./providers/dart_rename_provider";
 import { FileChangeHandler } from "./file_change_handler";
 import { Flutter } from "./flutter/flutter";
+import { FlutterDeviceManager } from "./flutter/device_manager";
 import { OpenFileTracker } from "./open_file_tracker";
 import { SdkCommands } from "./commands/sdk";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
@@ -105,6 +106,9 @@ export function activate(context: vs.ExtensionContext) {
 	if (util.isFlutterProject) {
 		flutter = new Flutter(path.join(sdks.flutter, util.flutterPath), vs.workspace.rootPath);
 		context.subscriptions.push(flutter);
+		context.subscriptions.push(new FlutterDeviceManager(flutter));
+		// Enable device polling.
+		flutter.deviceEnable();
 	}
 
 	// Log analysis server startup time when we get the welcome message/version.

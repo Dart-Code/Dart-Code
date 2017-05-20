@@ -8,6 +8,7 @@ import * as fs from "fs";
 
 export abstract class StdIOService implements Disposable {
 	protected process: child_process.ChildProcess;
+	protected messagesWrappedInBrackets = false;
 	private nextRequestID = 1;
 	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] } = {};
 	private messageBuffer: string[] = [];
@@ -15,12 +16,13 @@ export abstract class StdIOService implements Disposable {
 	private logStream: fs.WriteStream;
 	private requestErrorSubscriptions: ((notification: any) => void)[] = [];
 
-	constructor(logFile: string) {
+	constructor(logFile: string, wrappedMessages: boolean = false) {
 		this.logFile = logFile;
+		this.messagesWrappedInBrackets = wrappedMessages;
 	}
 
 	protected createProcess(workingDirectory: string, binPath: string, args: string[]) {
-		log(`Starting ${binPath} with args: ${args.join(' ')} ${workingDirectory ? `in ${workingDirectory}` : ''}`);
+		//log(`Starting ${binPath} with args: ${args.join(' ')} ${workingDirectory ? `in ${workingDirectory}` : ''}`);
 		this.process = child_process.spawn(binPath, args, { cwd: workingDirectory });
 
 		this.process.stdout.on("data", (data: Buffer) => {
@@ -48,7 +50,9 @@ export abstract class StdIOService implements Disposable {
 				method: method,
 				params: params
 			};
-			let json = JSON.stringify(req) + "\r\n";
+			let json = this.messagesWrappedInBrackets
+				? "[" + JSON.stringify(req) + "]\r\n"
+				: JSON.stringify(req) + "\r\n";
 			this.sendMessage(json);
 		});
 	}
@@ -86,6 +90,9 @@ export abstract class StdIOService implements Disposable {
 		let msg: any;
 		try {
 			msg = JSON.parse(message);
+
+			if (this.messagesWrappedInBrackets)
+				msg = msg[0];
 		}
 		catch (e) {
 			console.error(`Unable to parse message (${e}): ${message}`);
