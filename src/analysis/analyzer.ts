@@ -8,14 +8,10 @@ import { AnalyzerGen } from "./analyzer_gen";
 import { config } from "../config";
 import { log, logError, extensionVersion } from "../utils";
 
-export class Analyzer extends AnalyzerGen implements vs.Disposable {
-	private serviceName = "Dart analysis server";
-	private process: child_process.ChildProcess;
+export class Analyzer extends AnalyzerGen {
 	private nextRequestID = 1;
 	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] } = {};
 	private messageBuffer: string[] = [];
-	private logFile = config.analyzerLogFile;
-	private logStream: fs.WriteStream;
 	private observatoryPort = config.analyzerObservatoryPort;
 	private diagnosticsPort = config.analyzerDiagnosticsPort;
 	private additionalArgs = config.analyzerAdditionalArgs;
@@ -25,7 +21,7 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 	private requestErrorSubscriptions: ((notification: as.RequestError) => void)[] = [];
 
 	constructor(dartVMPath: string, analyzerPath: string) {
-		super();
+		super("Dart analysis server", config.analyzerLogFile);
 
 		let args = [];
 
@@ -128,24 +124,6 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 		}
 	}
 
-	private logTraffic(message: String): void {
-		const max: number = 2000;
-
-		if (this.logFile) {
-			if (!this.logStream)
-				this.logStream = fs.createWriteStream(this.logFile);
-			this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
-			if (message.length > max)
-				this.logStream.write(message.substring(0, max) + "...\r\n");
-			else
-				this.logStream.write(message);
-		} else if (!this.logFile && this.logStream) {
-			// Turn off logging.
-			this.logStream.close();
-			this.logStream = null;
-		}
-	}
-
 	private handleResponse(evt: UnknownResponse) {
 		let handler = this.activeRequests[evt.id];
 		let method: string = handler[2];
@@ -216,17 +194,6 @@ export class Analyzer extends AnalyzerGen implements vs.Disposable {
 
 	getAnalyzerLaunchArgs(): string[] {
 		return this.launchArgs;
-	}
-
-	dispose() {
-		log(`Stopping ${this.serviceName}...`);
-
-		this.process.kill();
-
-		if (this.logStream) {
-			this.logStream.close();
-			this.logStream = null;
-		}
 	}
 }
 

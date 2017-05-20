@@ -6,8 +6,13 @@
 import * as vs from "vscode";
 import * as as from "./analysis_server_types";
 import * as a from "./analyzer";
+import { StdIOService } from "../services/stdio_service";
 
-export abstract class AnalyzerGen {
+export abstract class AnalyzerGen extends StdIOService {
+	constructor(serviceName: string, logFile: string) {
+		super(serviceName, logFile);
+	}
+
 	protected abstract notify<T>(subscriptions: ((notification: T) => void)[], params: T): void;
 	protected abstract subscribe<T>(subscriptions: ((notification: T) => void)[], subscriber: (notification: T) => void): vs.Disposable;
 	protected abstract sendRequest<TReq, TResp>(method: string, params?: TReq): Thenable<TResp>;
