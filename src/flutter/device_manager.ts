@@ -11,7 +11,7 @@ export class FlutterDeviceManager extends vs.Disposable {
 	constructor(flutter: Flutter) {
 		super(() => this.statusBarItem.dispose());
 
-		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, Number.MIN_VALUE);
+		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 0);
 		this.statusBarItem.tooltip = "Flutter";
 		this.statusBarItem.show();
 		this.updateStatusBar();
