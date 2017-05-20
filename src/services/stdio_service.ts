@@ -45,3 +45,24 @@ export abstract class StdIOService implements vs.Disposable {
 		}
 	}
 }
+
+export class Request<T> {
+	id: string;
+	method: string;
+	params: T;
+}
+
+export class Response<T> {
+	id: string;
+	error: any;
+	result: T;
+}
+
+export class UnknownResponse extends Response<any> { }
+
+export class Notification<T> {
+	event: string;
+	params: T;
+}
+
+export class UnknownNotification extends Notification<any> { }

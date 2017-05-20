@@ -7,6 +7,7 @@ import * as fs from "fs";
 import { AnalyzerGen } from "./analyzer_gen";
 import { config } from "../config";
 import { log, logError, extensionVersion } from "../utils";
+import { Request, UnknownResponse, UnknownNotification } from "../services/stdio_service";
 
 export class Analyzer extends AnalyzerGen {
 	private nextRequestID = 1;
@@ -196,27 +197,6 @@ export class Analyzer extends AnalyzerGen {
 		return this.launchArgs;
 	}
 }
-
-export class Request<T> {
-	id: string;
-	method: string;
-	params: T;
-}
-
-export class Response<T> {
-	id: string;
-	error: as.RequestError;
-	result: T;
-}
-
-export class UnknownResponse extends Response<any> { }
-
-export class Notification<T> {
-	event: string;
-	params: T;
-}
-
-export class UnknownNotification extends Notification<any> { }
 
 export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind {
 	// TODO: Review if these are all mapped as well as possible.

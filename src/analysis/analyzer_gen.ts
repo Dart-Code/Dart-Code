@@ -5,8 +5,7 @@
 
 import * as vs from "vscode";
 import * as as from "./analysis_server_types";
-import * as a from "./analyzer";
-import { StdIOService } from "../services/stdio_service";
+import { StdIOService, UnknownResponse, UnknownNotification } from "../services/stdio_service";
 
 export abstract class AnalyzerGen extends StdIOService {
 	constructor(serviceName: string, logFile: string) {
@@ -35,7 +34,7 @@ export abstract class AnalyzerGen extends StdIOService {
 	private searchResultsSubscriptions: ((notification: as.SearchResultsNotification) => void)[] = [];
 	private executionLaunchDataSubscriptions: ((notification: as.ExecutionLaunchDataNotification) => void)[] = [];
 
-	protected handleNotification(evt: a.UnknownNotification) {
+	protected handleNotification(evt: UnknownNotification) {
 		switch (evt.event) {
 			case "server.connected":
 				this.notify(this.serverConnectedSubscriptions, <as.ServerConnectedNotification>evt.params);
@@ -308,7 +307,7 @@ export abstract class AnalyzerGen extends StdIOService {
 	further responses or notifications will be sent after the
 	response to this request has been sent.
 	*/
-	serverShutdown(): Thenable<a.UnknownResponse> {
+	serverShutdown(): Thenable<UnknownResponse> {
 		return this.sendRequest("server.shutdown");
 	}
 
@@ -319,7 +318,7 @@ export abstract class AnalyzerGen extends StdIOService {
 	valid services. If there is an error, then the current
 	subscriptions will remain unchanged.
 	*/
-	serverSetSubscriptions(request: as.ServerSetSubscriptionsRequest): Thenable<a.UnknownResponse> {
+	serverSetSubscriptions(request: as.ServerSetSubscriptionsRequest): Thenable<UnknownResponse> {
 		return this.sendRequest("server.setSubscriptions", request);
 	}
 
@@ -418,7 +417,7 @@ export abstract class AnalyzerGen extends StdIOService {
 	paths that are not currently analysis roots, then an error of type
 	INVALID_ANALYSIS_ROOT will be generated.
 	*/
-	analysisReanalyze(request: as.AnalysisReanalyzeRequest): Thenable<a.UnknownResponse> {
+	analysisReanalyze(request: as.AnalysisReanalyzeRequest): Thenable<UnknownResponse> {
 		return this.sendRequest("analysis.reanalyze", request);
 	}
 
@@ -450,7 +449,7 @@ export abstract class AnalyzerGen extends StdIOService {
 	the file system is reached. If such a file is found, it will
 	be used to resolve package: URI’s within the file.
 	*/
-	analysisSetAnalysisRoots(request: as.AnalysisSetAnalysisRootsRequest): Thenable<a.UnknownResponse> {
+	analysisSetAnalysisRoots(request: as.AnalysisSetAnalysisRootsRequest): Thenable<UnknownResponse> {
 		return this.sendRequest("analysis.setAnalysisRoots", request);
 	}
 
@@ -462,7 +461,7 @@ export abstract class AnalyzerGen extends StdIOService {
 	services. If there is an error, then the current subscriptions will
 	remain unchanged.
 	*/
-	analysisSetGeneralSubscriptions(request: as.AnalysisSetGeneralSubscriptionsRequest): Thenable<a.UnknownResponse> {
+	analysisSetGeneralSubscriptions(request: as.AnalysisSetGeneralSubscriptionsRequest): Thenable<UnknownResponse> {
 		return this.sendRequest("analysis.setGeneralSubscriptions", request);
 	}
 
@@ -487,7 +486,7 @@ export abstract class AnalyzerGen extends StdIOService {
 	if it later becomes a file it can be included in the set of
 	actual priority files.
 	*/
-	analysisSetPriorityFiles(request: as.AnalysisSetPriorityFilesRequest): Thenable<a.UnknownResponse> {
+	analysisSetPriorityFiles(request: as.AnalysisSetPriorityFilesRequest): Thenable<UnknownResponse> {
 		return this.sendRequest("analysis.setPriorityFiles", request);
 	}
 
@@ -518,7 +517,7 @@ export abstract class AnalyzerGen extends StdIOService {
 	services. If there is an error, then the existing
 	subscriptions will remain unchanged.
 	*/
-	analysisSetSubscriptions(request: as.AnalysisSetSubscriptionsRequest): Thenable<a.UnknownResponse> {
+	analysisSetSubscriptions(request: as.AnalysisSetSubscriptionsRequest): Thenable<UnknownResponse> {
 		return this.sendRequest("analysis.setSubscriptions", request);
 	}
 
@@ -532,7 +531,7 @@ export abstract class AnalyzerGen extends StdIOService {
 	if the file path represents the path to a directory on the
 	filesystem.
 	*/
-	analysisUpdateContent(request: as.AnalysisUpdateContentRequest): Thenable<a.UnknownResponse> {
+	analysisUpdateContent(request: as.AnalysisUpdateContentRequest): Thenable<UnknownResponse> {
 		return this.sendRequest("analysis.updateContent", request);
 	}
 
@@ -543,7 +542,7 @@ export abstract class AnalyzerGen extends StdIOService {
 	in the analysis options that are not valid, they will be
 	silently ignored.
 	*/
-	analysisUpdateOptions(request: as.AnalysisUpdateOptionsRequest): Thenable<a.UnknownResponse> {
+	analysisUpdateOptions(request: as.AnalysisUpdateOptionsRequest): Thenable<UnknownResponse> {
 		return this.sendRequest("analysis.updateOptions", request);
 	}
 
@@ -709,7 +708,7 @@ export abstract class AnalyzerGen extends StdIOService {
 	is no longer valid after this command. The server is allowed to re-use
 	ids when they are no longer valid.
 	*/
-	executionDeleteContext(request: as.ExecutionDeleteContextRequest): Thenable<a.UnknownResponse> {
+	executionDeleteContext(request: as.ExecutionDeleteContextRequest): Thenable<UnknownResponse> {
 		return this.sendRequest("execution.deleteContext", request);
 	}
 
@@ -744,7 +743,7 @@ export abstract class AnalyzerGen extends StdIOService {
 	services. If there is an error, then the current subscriptions will
 	remain unchanged.
 	*/
-	executionSetSubscriptions(request: as.ExecutionSetSubscriptionsRequest): Thenable<a.UnknownResponse> {
+	executionSetSubscriptions(request: as.ExecutionSetSubscriptionsRequest): Thenable<UnknownResponse> {
 		return this.sendRequest("execution.setSubscriptions", request);
 	}
 
