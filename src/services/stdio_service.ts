@@ -8,6 +8,7 @@ import { log } from "../utils";
 export abstract class StdIOService implements vs.Disposable {
 	protected serviceName: string;
 	protected process: child_process.ChildProcess;
+	protected messageBuffer: string[] = [];
 	private logFile: string;
 	private logStream: fs.WriteStream;
 
@@ -15,6 +16,54 @@ export abstract class StdIOService implements vs.Disposable {
 		this.serviceName = serviceName;
 		this.logFile = logFile;
 	}
+
+	protected createProcess(binPath: string, args: string[]) {
+		this.process = child_process.spawn(binPath, args);
+
+		this.process.stdout.on("data", (data: Buffer) => {
+			let message = data.toString();
+
+			// Add this message to the buffer for processing.
+			this.messageBuffer.push(message);
+
+			// Kick off processing if we have a full message.
+			if (message.indexOf("\n") >= 0)
+				this.processMessageBuffer();
+		});
+	}
+
+	protected sendMessage<T>(json: string) {
+		this.logTraffic(`==> ${json}`);
+		try {
+			this.process.stdin.write(json);
+		}
+		catch (e) {
+			const reloadAction: string = "Reload Project";
+			vs.window.showErrorMessage(`The ${this.serviceName} has terminated. Save your changes then reload the project to resume.`, reloadAction).then(res => {
+				if (res == reloadAction)
+					vs.commands.executeCommand("workbench.action.reloadWindow");
+			});
+			throw e;
+		}
+	}
+
+	protected processMessageBuffer() {
+		let fullBuffer = this.messageBuffer.join("");
+		this.messageBuffer = [];
+
+		// If the message doesn't end with \n then put the last part back into the buffer.
+		if (!fullBuffer.endsWith("\n")) {
+			let lastNewline = fullBuffer.lastIndexOf("\n");
+			let incompleteMessage = fullBuffer.substring(lastNewline + 1);
+			fullBuffer = fullBuffer.substring(0, lastNewline);
+			this.messageBuffer.push(incompleteMessage);
+		}
+
+		// Process the complete messages in the buffer.
+		fullBuffer.split("\n").filter(m => m.trim() != "").forEach(m => this.handleMessage(m));
+	}
+
+	protected abstract handleMessage(message: string): void;
 
 	protected logTraffic(message: String): void {
 		const max: number = 2000;

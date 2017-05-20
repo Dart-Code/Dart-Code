@@ -12,7 +12,6 @@ import { Request, UnknownResponse, UnknownNotification } from "../services/stdio
 export class Analyzer extends AnalyzerGen {
 	private nextRequestID = 1;
 	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] } = {};
-	private messageBuffer: string[] = [];
 	private observatoryPort = config.analyzerObservatoryPort;
 	private diagnosticsPort = config.analyzerDiagnosticsPort;
 	private additionalArgs = config.analyzerAdditionalArgs;
@@ -50,18 +49,8 @@ export class Analyzer extends AnalyzerGen {
 
 		this.launchArgs = args.slice(1); // Trim the first one as it's just snapshot path.
 		log(`Starting ${analyzerPath} with args: ` + this.launchArgs.join(' '));
-		this.process = child_process.spawn(dartVMPath, args);
 
-		this.process.stdout.on("data", (data: Buffer) => {
-			let message = data.toString();
-
-			// Add this message to the buffer for processing.
-			this.messageBuffer.push(message);
-
-			// Kick off processing if we have a full message.
-			if (message.indexOf("\n") >= 0)
-				this.processMessageBuffer();
-		});
+		this.createProcess(dartVMPath, args);
 
 		this.serverSetSubscriptions({
 			subscriptions: ["STATUS"]
@@ -72,23 +61,7 @@ export class Analyzer extends AnalyzerGen {
 		this.registerForRequestError(e => this.requestDiagnosticsUpdate());
 	}
 
-	private processMessageBuffer() {
-		let fullBuffer = this.messageBuffer.join("");
-		this.messageBuffer = [];
-
-		// If the message doesn't end with \n then put the last part back into the buffer.
-		if (!fullBuffer.endsWith("\n")) {
-			let lastNewline = fullBuffer.lastIndexOf("\n");
-			let incompleteMessage = fullBuffer.substring(lastNewline + 1);
-			fullBuffer = fullBuffer.substring(0, lastNewline);
-			this.messageBuffer.push(incompleteMessage);
-		}
-
-		// Process the complete messages in the buffer.
-		fullBuffer.split("\n").filter(m => m.trim() != "").forEach(m => this.handleMessage(m));
-	}
-
-	private handleMessage(message: string) {
+	handleMessage(message: string): void {
 		this.logTraffic(`<== ${message}\r\n`);
 		let msg: any;
 		try {
@@ -107,22 +80,6 @@ export class Analyzer extends AnalyzerGen {
 			this.handleNotification(<UnknownNotification>msg);
 		else
 			this.handleResponse(<UnknownResponse>msg);
-	}
-
-	private sendMessage<T>(req: Request<T>) {
-		let json = JSON.stringify(req) + "\r\n";
-		this.logTraffic(`==> ${json}`);
-		try {
-			this.process.stdin.write(json);
-		}
-		catch (e) {
-			const reloadAction: string = "Reload Project";
-			vs.window.showErrorMessage(`The ${this.serviceName} has terminated. Save your changes then reload the project to resume.`, reloadAction).then(res => {
-				if (res == reloadAction)
-					vs.commands.executeCommand("workbench.action.reloadWindow");
-			});
-			throw e;
-		}
 	}
 
 	private handleResponse(evt: UnknownResponse) {
@@ -154,11 +111,13 @@ export class Analyzer extends AnalyzerGen {
 			// Stash the callbacks so we can call them later.
 			this.activeRequests[id.toString()] = [resolve, reject, method];
 
-			this.sendMessage({
+			let req = {
 				id: id.toString(),
 				method: method,
 				params: params
-			});
+			};
+			let json = JSON.stringify(req) + "\r\n";
+			this.sendMessage(json);
 		});
 	}
 
