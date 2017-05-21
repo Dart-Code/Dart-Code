@@ -291,6 +291,9 @@
 					"captures": {
 						"2": {
 							"name": "variable.parameter.dart"
+						},
+						"3": {
+							"name": "variable.parameter.dart"
 						}
 					},
 					"match": "\\$((\\w+)|\\{([^{}]+)\\})"
