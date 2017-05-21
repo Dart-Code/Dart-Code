@@ -180,67 +180,63 @@
 		"constants-and-special-vars": {
 			"patterns": [
 				{
-					"match": "\\b(true|false|null)\\b",
+					"match": "(?<!\\$)\\b(true|false|null)\\b(?!\\$)",
 					"name": "constant.language.dart"
 				},
 				{
-					"match": "\\b(this|super)\\b",
+					"match": "(?<!\\$)\\b(this|super)\\b(?!\\$)",
 					"name": "variable.language.dart"
 				},
 				{
-					"match": "\\b((0(x|X)[0-9a-fA-F]*)|(([0-9]+\\.?[0-9]*)|(\\.[0-9]+))((e|E)(\\+|-)?[0-9]+)?)\\b",
+					"match": "(?<!\\$)\\b((0(x|X)[0-9a-fA-F]*)|(([0-9]+\\.?[0-9]*)|(\\.[0-9]+))((e|E)(\\+|-)?[0-9]+)?)\\b(?!\\$)",
 					"name": "constant.numeric.dart"
 				},
 				{
-					"match": "\\b_?[A-Z][a-zA-Z0-9_]+\\b",
+					"match": "(?<![a-zA-Z0-9_$])[_$]*[A-Z][a-zA-Z0-9_$]*",
 					"name": "support.class.dart"
 				},
 				{
-					"match": "(_?[a-z][a-zA-Z0-9_]+)(\\(|\\s+=>)",
+					"match": "([_$]*[a-z][a-zA-Z0-9_$]*)(\\(|\\s+=>)",
 					"captures": {
 						"1": {
 							"name": "entity.name.function.dart"
 						}
 					}
-				},
-				{
-					"match": "\\b[A-Z_0-9]+\\b",
-					"name": "support.constant.dart"
 				}
 			]
 		},
 		"keywords": {
 			"patterns": [
 				{
-					"match": "\\bas\\b",
+					"match": "(?<!\\$)\\bas\\b(?!\\$)",
 					"name": "keyword.cast.dart"
 				},
 				{
-					"match": "\\b(try|on|catch|finally|throw|rethrow)\\b",
+					"match": "(?<!\\$)\\b(try|on|catch|finally|throw|rethrow)\\b(?!\\$)",
 					"name": "keyword.control.catch-exception.dart"
 				},
 				{
-					"match": "\\b(break|case|continue|default|do|else|for|if|in|return|switch|while)\\b",
+					"match": "(?<!\\$)\\b(break|case|continue|default|do|else|for|if|in|return|switch|while)\\b(?!\\$)",
 					"name": "keyword.control.dart"
 				},
 				{
-					"match": "\\b(sync(\\*)?|async(\\*)?|await|yield(\\*)?)\\b",
+					"match": "(?<!\\$)\\b(sync(\\*)?|async(\\*)?|await|yield(\\*)?)\\b(?!\\$)",
 					"name": "keyword.control.dart"
 				},
 				{
-					"match": "\\bassert\\b",
+					"match": "(?<!\\$)\\bassert\\b(?!\\$)",
 					"name": "keyword.control.dart"
 				},
 				{
-					"match": "\\b(new)\\b",
+					"match": "(?<!\\$)\\b(new)\\b(?!\\$)",
 					"name": "keyword.control.new.dart"
 				},
 				{
-					"match": "\\b(abstract|class|enum|extends|external|factory|implements|get|native|operator|set|typedef|with)\\b",
+					"match": "(?<!\\$)\\b(abstract|class|enum|extends|external|factory|implements|get|native|operator|set|typedef|with)\\b(?!\\$)",
 					"name": "keyword.declaration.dart"
 				},
 				{
-					"match": "\\b(is\\!?)\\b",
+					"match": "(?<!\\$)\\b(is\\!?)\\b(?!\\$)",
 					"name": "keyword.operator.dart"
 				},
 				{
@@ -280,11 +276,11 @@
 					"name": "keyword.operator.logical.dart"
 				},
 				{
-					"match": "\\b(static|final|const)\\b",
+					"match": "(?<!\\$)\\b(static|final|const)\\b(?!\\$)",
 					"name": "storage.modifier.dart"
 				},
 				{
-					"match": "\\b(?:void|bool|num|int|double|dynamic|var)\\b",
+					"match": "(?<!\\$)\\b(?:void|bool|num|int|double|dynamic|var)\\b(?!\\$)",
 					"name": "storage.type.primitive.dart"
 				}
 			]
