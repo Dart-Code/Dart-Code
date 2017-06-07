@@ -8,8 +8,8 @@ import * as as from "./analysis_server_types";
 import { StdIOService, UnknownResponse, UnknownNotification } from "../services/stdio_service";
 
 export abstract class AnalyzerGen extends StdIOService {
-	constructor(serviceName: string, logFile: string) {
-		super(serviceName, logFile);
+	constructor(logFile: string) {
+		super(logFile);
 	}
 
 	private serverConnectedSubscriptions: ((notification: as.ServerConnectedNotification) => void)[] = [];

@@ -1,12 +1,12 @@
 "use strict";
 
-import * as vs from "vscode";
+import { Disposable } from "vscode";
 import * as child_process from "child_process";
 import * as fs from "fs";
-import { log } from "../utils";
 
-export abstract class StdIOService implements vs.Disposable {
-	protected serviceName: string;
+// Reminder: This class is used in the debug adapter as well as the main Code process!
+
+export abstract class StdIOService implements Disposable {
 	protected process: child_process.ChildProcess;
 	private nextRequestID = 1;
 	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] } = {};
@@ -15,8 +15,7 @@ export abstract class StdIOService implements vs.Disposable {
 	private logStream: fs.WriteStream;
 	private requestErrorSubscriptions: ((notification: any) => void)[] = [];
 
-	constructor(serviceName: string, logFile: string) {
-		this.serviceName = serviceName;
+	constructor(logFile: string) {
 		this.logFile = logFile;
 	}
 
@@ -53,19 +52,9 @@ export abstract class StdIOService implements vs.Disposable {
 		});
 	}
 
-	private sendMessage<T>(json: string) {
+	protected sendMessage<T>(json: string) {
 		this.logTraffic(`==> ${json}`);
-		try {
-			this.process.stdin.write(json);
-		}
-		catch (e) {
-			const reloadAction: string = "Reload Project";
-			vs.window.showErrorMessage(`The ${this.serviceName} has terminated. Save your changes then reload the project to resume.`, reloadAction).then(res => {
-				if (res == reloadAction)
-					vs.commands.executeCommand("workbench.action.reloadWindow");
-			});
-			throw e;
-		}
+		this.process.stdin.write(json);
 	}
 
 	protected processMessageBuffer() {
@@ -128,7 +117,7 @@ export abstract class StdIOService implements vs.Disposable {
 		subscriptions.slice().forEach(sub => sub(notification));
 	}
 
-	protected subscribe<T>(subscriptions: ((notification: T) => void)[], subscriber: (notification: T) => void): vs.Disposable {
+	protected subscribe<T>(subscriptions: ((notification: T) => void)[], subscriber: (notification: T) => void): Disposable {
 		subscriptions.push(subscriber);
 		return {
 			dispose: () => {
@@ -140,7 +129,7 @@ export abstract class StdIOService implements vs.Disposable {
 		};
 	}
 
-	registerForRequestError(subscriber: (notification: any) => void): vs.Disposable {
+	registerForRequestError(subscriber: (notification: any) => void): Disposable {
 		return this.subscribe(this.requestErrorSubscriptions, subscriber);
 	}
 
@@ -163,8 +152,6 @@ export abstract class StdIOService implements vs.Disposable {
 	}
 
 	dispose() {
-		log(`Stopping ${this.serviceName}...`);
-
 		this.process.kill();
 
 		if (this.logStream) {

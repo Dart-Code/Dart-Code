@@ -17,7 +17,7 @@ export class Analyzer extends AnalyzerGen {
 	private launchArgs: string[];
 
 	constructor(dartVMPath: string, analyzerPath: string) {
-		super("Dart analysis server", config.analyzerLogFile);
+		super(config.analyzerLogFile);
 
 		let args = [];
 
@@ -55,6 +55,20 @@ export class Analyzer extends AnalyzerGen {
 		// Hook error subscriptions so we can try and get diagnostic info if this happens.
 		this.registerForServerError(e => this.requestDiagnosticsUpdate());
 		this.registerForRequestError(e => this.requestDiagnosticsUpdate());
+	}
+
+	protected sendMessage<T>(json: string) {
+		try {
+			super.sendMessage(json);
+		}
+		catch (e) {
+			const reloadAction: string = "Reload Project";
+			vs.window.showErrorMessage(`The Dart Analyzer has terminated. Save your changes then reload the project to resume.`, reloadAction).then(res => {
+				if (res == reloadAction)
+					vs.commands.executeCommand("workbench.action.reloadWindow");
+			});
+			throw e;
+		}
 	}
 
 	private requestDiagnosticsUpdate() {
