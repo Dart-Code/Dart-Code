@@ -1,3 +1,9 @@
+# v1.4.1
+
+- Identifiers that start or end with `$` symbols will now highlight correctly
+- Highlighting of variables inside interpolated strings is now more accurate
+- Configuration snippets have been added to make adding additional debug configs to `launch.json` easier
+
 # v1.4.0
 
 - Code assists are now available and will show up as lightbulbs similar to existing code fixes (for example, `Wrap in new widget` in Flutter projects)
