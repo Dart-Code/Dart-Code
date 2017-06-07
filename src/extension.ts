@@ -95,7 +95,8 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Fire up the analyzer process.
 	let analyzerStartTime = new Date();
-	analyzer = new Analyzer(path.join(sdks.dart, util.dartVMPath), path.join(sdks.dart, util.analyzerPath));
+	const analyzerPath = config.analyzerPath || path.join(sdks.dart, util.analyzerPath);
+	analyzer = new Analyzer(path.join(sdks.dart, util.dartVMPath), analyzerPath);
 	context.subscriptions.push(analyzer);
 
 	// Log analysis server startup time when we get the welcome message/version.
@@ -291,6 +292,7 @@ function getAnalyzerSettings() {
 	// Only options that requier an analyzer restart should be included.
 	return config.userDefinedSdkPath
 		+ config.analyzerLogFile
+		+ config.analyzerPath
 		+ config.analyzerDiagnosticsPort
 		+ config.analyzerObservatoryPort
 		+ config.analyzerInstrumentationLogFile

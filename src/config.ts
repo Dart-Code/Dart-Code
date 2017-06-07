@@ -26,6 +26,7 @@ class Config {
 	get analyzerDiagnosticsPort() { return this.getConfig<number>("analyzerDiagnosticsPort"); }
 	get analyzerObservatoryPort() { return this.getConfig<number>("analyzerObservatoryPort"); }
 	get analyzerLogFile() { return this.getConfig<string>("analyzerLogFile"); }
+	get analyzerPath() { return this.getConfig<string>("analyzerPath"); }
 	get analyzerInstrumentationLogFile() { return this.getConfig<string>("analyzerInstrumentationLogFile"); }
 	get analyzerAdditionalArgs() { return this.getConfig<string[]>("analyzerAdditionalArgs"); }
 	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
