@@ -171,12 +171,13 @@ export class DartDebugSession extends DebugSession {
 						}
 
 						// Helpers to categories libraries as SDK/ExternalLibrary/not.
+						let isValidToDebug = (l: VMLibraryRef) => !l.uri.startsWith("dart:_"); // TODO: See https://github.com/dart-lang/sdk/issues/29813
 						let isSdkLibrary = (l: VMLibraryRef) => l.uri.startsWith("dart:");
 						let isExternalLibrary = (l: VMLibraryRef) => l.uri.startsWith("package:") && !l.uri.startsWith(`package:${this.localPackageName}/`);
 
 						// Set whether libraries should be debuggable based on user settings.
 						return Promise.all(
-							isolate.libraries.map(library => {
+							isolate.libraries.filter(isValidToDebug).map(library => {
 								// Note: Condition is negated.
 								let shouldDebug = !(
 									// Inside here is shouldNotDebug!
