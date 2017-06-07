@@ -1,14 +1,14 @@
 "use strict";
 
 import * as vs from "vscode";
-import { Flutter } from "./flutter";
+import { FlutterDaemon } from "./flutter_daemon";
 import * as f from "./flutter_types";
 
 export class FlutterDeviceManager extends vs.Disposable {
 	private statusBarItem: vs.StatusBarItem;
 	private devices: f.Device[] = [];
 
-	constructor(flutter: Flutter) {
+	constructor(daemon: FlutterDaemon) {
 		super(() => this.statusBarItem.dispose());
 
 		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 0);
@@ -16,8 +16,8 @@ export class FlutterDeviceManager extends vs.Disposable {
 		this.statusBarItem.show();
 		this.updateStatusBar();
 
-		flutter.registerForDeviceAdded(n => { this.devices.push(n); this.updateStatusBar(); });
-		flutter.registerForDeviceRemoved(n => { this.devices = this.devices.filter(d => d.id != n.id); this.updateStatusBar(); });
+		daemon.registerForDeviceAdded(n => { this.devices.push(n); this.updateStatusBar(); });
+		daemon.registerForDeviceRemoved(n => { this.devices = this.devices.filter(d => d.id != n.id); this.updateStatusBar(); });
 	}
 
 	updateStatusBar(): void {

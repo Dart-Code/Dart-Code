@@ -23,7 +23,7 @@ import { DartDocumentSymbolProvider } from "./providers/dart_document_symbol_pro
 import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
 import { DartRenameProvider } from "./providers/dart_rename_provider";
 import { FileChangeHandler } from "./file_change_handler";
-import { Flutter } from "./flutter/flutter";
+import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { FlutterDeviceManager } from "./flutter/device_manager";
 import { OpenFileTracker } from "./open_file_tracker";
 import { SdkCommands } from "./commands/sdk";
@@ -41,7 +41,7 @@ const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
 
 export let sdks: util.Sdks;
 export let analyzer: Analyzer;
-export let flutter: Flutter;
+export let flutterDaemon: FlutterDaemon;
 
 let showTodos: boolean = config.showTodos;
 let analyzerSettings: string = getAnalyzerSettings();
@@ -104,11 +104,11 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Fire up Flutter daemon if required.	
 	if (util.isFlutterProject) {
-		flutter = new Flutter(path.join(sdks.flutter, util.flutterPath), vs.workspace.rootPath);
-		context.subscriptions.push(flutter);
-		context.subscriptions.push(new FlutterDeviceManager(flutter));
+		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, util.flutterPath), vs.workspace.rootPath);
+		context.subscriptions.push(flutterDaemon);
+		context.subscriptions.push(new FlutterDeviceManager(flutterDaemon));
 		// Enable device polling.
-		flutter.deviceEnable();
+		flutterDaemon.deviceEnable();
 	}
 
 	// Log analysis server startup time when we get the welcome message/version.
