@@ -17,11 +17,25 @@
 			"preLaunchTask": "npm"
 		},
 		{
-			"name": "Server",
+			"name": "Dart Debug Server",
 			"type": "node",
 			"request": "launch",
 			"cwd": "${workspaceRoot}",
 			"program": "${workspaceRoot}/src/debug/dart_debug_entry.ts",
+			"args": [
+				"--server=4711"
+			],
+			"sourceMaps": true,
+			"outFiles": [
+				"${workspaceRoot}/out/src/**/*.js"
+			]
+		},
+		{
+			"name": "Flutter Debug Server",
+			"type": "node",
+			"request": "launch",
+			"cwd": "${workspaceRoot}",
+			"program": "${workspaceRoot}/src/debug/flutter_debug_entry.ts",
 			"args": [
 				"--server=4711"
 			],
@@ -49,10 +63,17 @@
 	],
 	"compounds": [
 		{
-			"name": "Extension + Server",
+			"name": "Extension + Dart Debug Server",
 			"configurations": [
 				"Extension",
-				"Server"
+				"Dart Debug Server"
+			]
+		},
+		{
+			"name": "Extension + Flutter Debug Server",
+			"configurations": [
+				"Extension",
+				"Flutter Debug Server"
 			]
 		}
 	]
