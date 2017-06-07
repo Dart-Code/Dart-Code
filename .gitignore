@@ -1,6 +1,7 @@
 out
 node_modules
-analyzer.log
+*.log
 .vscode/.browse.VC.db*
 .vscode-test/
+logs/**
 .DS_Store
