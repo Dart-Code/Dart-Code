@@ -9,6 +9,7 @@ src/**
 .gitattributes
 tsconfig.json
 media/screenshots/**
+logs/**
 .travis.yml
 *.log
 appveyor.yml
