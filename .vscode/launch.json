@@ -3,17 +3,32 @@
 	"version": "0.1.0",
 	"configurations": [
 		{
-			"name": "Launch Extension",
+			"name": "Extension",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceRoot}"
 			],
-			"stopOnEntry": false,
 			"sourceMaps": true,
-			"outFiles": [ "${workspaceRoot}/out/src/**/*.js" ],
+			"outFiles": [
+				"${workspaceRoot}/out/src/**/*.js"
+			],
 			"preLaunchTask": "npm"
+		},
+		{
+			"name": "Server",
+			"type": "node",
+			"request": "launch",
+			"cwd": "${workspaceRoot}",
+			"program": "${workspaceRoot}/src/debug/dart_debug_entry.ts",
+			"args": [
+				"--server=4711"
+			],
+			"sourceMaps": true,
+			"outFiles": [
+				"${workspaceRoot}/out/src/**/*.js"
+			]
 		},
 		{
 			"name": "Launch Tests",
@@ -26,8 +41,19 @@
 			],
 			"stopOnEntry": false,
 			"sourceMaps": true,
-			"outFiles": [ "${workspaceRoot}/out/test/**/*.js" ],
+			"outFiles": [
+				"${workspaceRoot}/out/test/**/*.js"
+			],
 			"preLaunchTask": "npm"
+		}
+	],
+	"compounds": [
+		{
+			"name": "Extension + Server",
+			"configurations": [
+				"Extension",
+				"Server"
+			]
 		}
 	]
 }
