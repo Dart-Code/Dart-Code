@@ -69,21 +69,18 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: DartLaunchRequestArguments): void {
-
 		if (!args || !args.sdkPath || !args.program) {
 			this.sendEvent(new OutputEvent("Unable to restart debugging. Please try ending the debug session and starting again."));
 			this.sendEvent(new TerminatedEvent());
 			return;
 		}
 
-		//this.log(JSON.stringify(args));
 		this.cwd = args.cwd;
 		this.sdkPath = args.sdkPath;
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.dartPath = this.sdkPath != null ? path.join(this.sdkPath, "bin", "dart") : "dart";
 		this.sourceFile = path.relative(args.cwd, args.program);
-		this.sendEvent(new OutputEvent(`dart ${this.sourceFile}\n`));
 
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program));
 		this.localPackageName = getLocalPackageName(args.program);
