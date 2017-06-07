@@ -18,29 +18,32 @@ export class SdkCommands {
 	}
 
 	registerCommands(context: vs.ExtensionContext) {
-		// Debug commands.
-		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugSession", debugConfig => {
-			if (Object.keys(debugConfig).length === 0) {
-				return {
-					status: 'initialConfiguration'
-				};
-			}
-
+		function setupDebugConfig(debugConfig: any, sdks: Sdks) {
 			analytics.logDebuggerStart();
 
-			// Attach any properties that weren't explicitly set.			
+			// Attach any properties that weren't explicitly set.
 			debugConfig.cwd = debugConfig.cwd || "${workspaceRoot}";
 			debugConfig.args = debugConfig.args || [];
-			debugConfig.sdkPath = debugConfig.sdkPath || this.sdks.dart;
+			debugConfig.sdkPath = debugConfig.sdkPath || sdks.dart;
+			debugConfig.flutterSdkPath = debugConfig.flutterSdkPath || sdks.flutter;
 			debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || config.debugSdkLibraries;
 			debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || config.debugExternalLibraries;
 			if (debugConfig.checkedMode === undefined)
 				debugConfig.checkedMode = true;
+		}
+
+		// Debug commands.
+		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugSession", debugConfig => {
+			if (Object.keys(debugConfig).length === 0)
+				return { status: 'initialConfiguration' };
+
+			setupDebugConfig(debugConfig, this.sdks);
+
+			if (isFlutterProject)
+				debugConfig.program = debugConfig.program || "${workspaceRoot}/lib/main.dart";
 
 			vs.commands.executeCommand('vscode.startDebug', debugConfig);
-			return {
-				status: 'ok'
-			};
+			return { status: 'ok' };
 		}));
 
 		// Pub commands.
