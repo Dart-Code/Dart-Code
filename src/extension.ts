@@ -24,7 +24,6 @@ import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_p
 import { DartRenameProvider } from "./providers/dart_rename_provider";
 import { FileChangeHandler } from "./file_change_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
-import { FlutterDeviceManager } from "./flutter/device_manager";
 import { OpenFileTracker } from "./open_file_tracker";
 import { SdkCommands } from "./commands/sdk";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
@@ -104,11 +103,9 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Fire up Flutter daemon if required.	
 	if (util.isFlutterProject) {
+		// TODO: finish wiring this up so we can manage the selected device from the status bar (eventualy - use first for now)
 		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, util.flutterPath), vs.workspace.rootPath);
 		context.subscriptions.push(flutterDaemon);
-		context.subscriptions.push(new FlutterDeviceManager(flutterDaemon));
-		// Enable device polling.
-		flutterDaemon.deviceEnable();
 	}
 
 	// Log analysis server startup time when we get the welcome message/version.

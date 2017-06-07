@@ -1,18 +1,26 @@
 "use strict";
 
-import * as vs from "vscode";
-import * as child_process from "child_process";
-import * as fs from "fs";
 import { config } from "../config";
+import { FlutterDeviceManager } from "./device_manager";
 import { log, logError, extensionVersion } from "../utils";
 import { StdIOService, Request, UnknownResponse, UnknownNotification } from "../services/stdio_service";
+import * as child_process from "child_process";
 import * as f from "./flutter_types";
+import * as fs from "fs";
+import * as vs from "vscode";
 
 export class FlutterDaemon extends StdIOService {
+	deviceManager: FlutterDeviceManager;
+
 	constructor(flutterBinPath: string, projectFolder: string) {
 		super(config.flutterDaemonLogFile, true);
 
 		this.createProcess(projectFolder, flutterBinPath, ["daemon"]);
+
+		this.deviceManager = new FlutterDeviceManager(this);
+
+		// Enable device polling.
+		this.deviceEnable();
 	}
 
 	protected sendMessage<T>(json: string) {
