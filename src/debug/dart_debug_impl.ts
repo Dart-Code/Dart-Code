@@ -9,7 +9,7 @@ import {
 	Module
 } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { PackageMap, uriToFilePath, fileToUri, PromiseCompleter, getLocalPackageName } from "./utils";
+import { PackageMap, uriToFilePath, fileToUri, PromiseCompleter, getLocalPackageName, isWin } from "./utils";
 import {
 	ObservatoryConnection, VMEvent, VMIsolateRef, RPCError, DebuggerResult, VMStack, VMSentinel, VMObj,
 	VMFrame, VMFuncRef, VMInstanceRef, VMScriptRef, VMScript, VMSourceLocation, VMErrorRef, VMBreakpoint,
@@ -24,9 +24,13 @@ import {
 // completionsRequest(response: DebugProtocol.CompletionsResponse, args: DebugProtocol.CompletionsArguments): void;
 
 export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
+	// TODO: Tidy all this up
 	cwd: string;
 	checkedMode: boolean;
 	sdkPath: string;
+	// TODO: Flutter stuff shouldn't be in here
+	flutterSdkPath: string;
+	flutterRunLogFile: string;
 	debugSdkLibraries: boolean;
 	debugExternalLibraries: boolean;
 	program: string;
@@ -34,18 +38,24 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 }
 
 export class DartDebugSession extends DebugSession {
-	private sourceFile: string;
+	// TODO: Tidy all this up
+	protected sourceFile: string;
 	private cwd: string;
 	private sdkPath: string;
+	private flutterSdkPath: string;
+	protected flutterRunLogFile: string;
 	private debugSdkLibraries: boolean;
 	private debugExternalLibraries: boolean;
-	private dartPath: string;
-	private childProcess: child_process.ChildProcess;
+	protected dartPath: string;
+	// TODO: Flutter stuff shouldn't be in here
+	protected flutterPath: string;
+	protected childProcess: child_process.ChildProcess;
 	private processExited: boolean = false;
 	observatory: ObservatoryConnection;
 	private threadManager: ThreadManager;
 	private packageMap: PackageMap;
 	private localPackageName: string;
+	protected sendStdOutToConsole: boolean = true;
 
 	public constructor() {
 		super();
@@ -77,9 +87,14 @@ export class DartDebugSession extends DebugSession {
 
 		this.cwd = args.cwd;
 		this.sdkPath = args.sdkPath;
+		// TODO: Flutter stuff shouldn't be in here
+		this.flutterSdkPath = args.flutterSdkPath;
+		this.flutterRunLogFile = args.flutterRunLogFile;
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.dartPath = this.sdkPath != null ? path.join(this.sdkPath, "bin", "dart") : "dart";
+		const flutterExec = isWin ? "flutter.bat" : "flutter";
+		this.flutterPath = this.flutterSdkPath != null ? path.join(this.flutterSdkPath, "bin", flutterExec) : flutterExec;
 		this.sourceFile = path.relative(args.cwd, args.program);
 
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program));
@@ -88,23 +103,8 @@ export class DartDebugSession extends DebugSession {
 		this.sendResponse(response);
 
 		let debug = !args.noDebug;
-		let appArgs = [];
-		if (debug) {
-			appArgs.push("--enable-vm-service:0");
-			appArgs.push("--pause_isolates_on_start=true");
-		}
-		if (args.checkedMode) {
-			appArgs.push("--checked");
-		}
-		appArgs.push(this.sourceFile);
-		if (args.args)
-			appArgs = appArgs.concat(args.args);
-
-		let process = child_process.spawn(this.dartPath, appArgs, {
-			cwd: args.cwd
-		});
-
-		this.childProcess = process;
+		this.childProcess = this.spawnProcess(args);
+		const process = this.childProcess;
 
 		process.stdout.setEncoding("utf8");
 		process.stdout.on("data", (data) => {
@@ -120,10 +120,9 @@ export class DartDebugSession extends DebugSession {
 				if (!uri.endsWith('/'))
 					uri = uri + '/';
 
-				this.initObservatory(uri);
-			} else {
+				this.initObservatory(`${uri}ws`);
+			} else if (this.sendStdOutToConsole)
 				this.sendEvent(new OutputEvent(data.toString(), "stdout"));
-			}
 		});
 		process.stderr.setEncoding("utf8");
 		process.stderr.on("data", (data) => {
@@ -145,8 +144,29 @@ export class DartDebugSession extends DebugSession {
 			this.sendEvent(new InitializedEvent());
 	}
 
-	private initObservatory(uri: string) {
-		this.observatory = new ObservatoryConnection(`${uri}ws`);
+	protected spawnProcess(args: DartLaunchRequestArguments) {
+		let debug = !args.noDebug;
+		let appArgs = [];
+		if (debug) {
+			appArgs.push("--enable-vm-service=0");
+			appArgs.push("--pause_isolates_on_start=true");
+		}
+		if (args.checkedMode) {
+			appArgs.push("--checked");
+		}
+		appArgs.push(this.sourceFile);
+		if (args.args)
+			appArgs = appArgs.concat(args.args);
+
+		let process = child_process.spawn(this.dartPath, appArgs, {
+			cwd: args.cwd
+		});
+
+		return process;
+	}
+
+	protected initObservatory(uri: string) {
+		this.observatory = new ObservatoryConnection(uri);
 		this.observatory.onLogging(message => {
 			this.sendEvent(new OutputEvent(`${message.trim()}\n`));
 		});
