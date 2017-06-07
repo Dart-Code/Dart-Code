@@ -7,7 +7,7 @@ import * as fs from "fs";
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
 export abstract class StdIOService implements Disposable {
-	protected process: child_process.ChildProcess;
+	process: child_process.ChildProcess;
 	protected messagesWrappedInBrackets = false;
 	private nextRequestID = 1;
 	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] } = {};
