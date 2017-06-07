@@ -764,7 +764,7 @@ export class DartDebugSession extends DebugSession {
 		return null;
 	}
 
-	private log(obj: string) {
+	protected log(obj: string) {
 		this.sendEvent(new OutputEvent(`${obj}\n`));
 	}
 }
