@@ -26,6 +26,7 @@ export class SdkCommands {
 			debugConfig.args = debugConfig.args || [];
 			debugConfig.sdkPath = debugConfig.sdkPath || sdks.dart;
 			debugConfig.flutterSdkPath = debugConfig.flutterSdkPath || sdks.flutter;
+			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || config.flutterRunLogFile;
 			debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || config.debugSdkLibraries;
 			debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || config.debugExternalLibraries;
 			if (debugConfig.checkedMode === undefined)
