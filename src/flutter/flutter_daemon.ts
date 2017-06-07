@@ -8,7 +8,7 @@ import { log, logError, extensionVersion } from "../utils";
 import { StdIOService, Request, UnknownResponse, UnknownNotification } from "../services/stdio_service";
 import * as f from "./flutter_types";
 
-export class Flutter extends StdIOService {
+export class FlutterDaemon extends StdIOService {
 	constructor(flutterBinPath: string, projectFolder: string) {
 		super(config.flutterDaemonLogFile, true);
 
