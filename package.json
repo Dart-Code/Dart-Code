@@ -321,12 +321,52 @@
 				"configurationSnippets": [
 					{
 						"label": "Dart command line",
-						"description": "Dart command line",
+						"description": "Launch and debug Dart command line applications",
 						"body": {
 							"name": "Dart command line",
 							"type": "dart-cli",
 							"request": "launch",
 							"program": "^\"\\${workspaceRoot}/bin/main.dart\""
+						}
+					}
+				]
+			},
+			{
+				"type": "flutter",
+				"label": "Flutter mobile app",
+				"enableBreakpointsFor": {
+					"languageIds": [
+						"dart"
+					]
+				},
+				"program": "./out/src/debug/flutter_debug_entry.js",
+				"runtime": "node",
+				"startSessionCommand": "dart.startDebugSession",
+				"configurationAttributes": {
+					"launch": {
+						"properties": {
+							"cwd": {
+								"type": "string",
+								"description": "Workspace root."
+							}
+						}
+					}
+				},
+				"initialConfigurations": [
+					{
+						"name": "Flutter mobile app",
+						"type": "flutter",
+						"request": "launch"
+					}
+				],
+				"configurationSnippets": [
+					{
+						"label": "Flutter mobile app",
+						"description": "Launch and debug Flutter mobile applications",
+						"body": {
+							"name": "Flutter mobile app",
+							"type": "flutter",
+							"request": "launch"
 						}
 					}
 				]
