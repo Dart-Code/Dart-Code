@@ -3,7 +3,7 @@
 import * as fs from "fs";
 import * as path from "path";
 
-const isWin = /^win/.test(process.platform);
+export const isWin = /^win/.test(process.platform);
 
 // TODO: improve
 export function uriToFilePath(uri: string): string {
