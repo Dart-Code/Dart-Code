@@ -33,7 +33,7 @@
 	"icon": "media/icon.png",
 	"activationEvents": [
 		"onLanguage:dart",
-		"workspaceContains:pubspec.yaml"
+		"workspaceContains:**/pubspec.yaml"
 	],
 	"main": "./out/src/extension",
 	"contributes": {
