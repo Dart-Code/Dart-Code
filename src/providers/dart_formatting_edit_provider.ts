@@ -29,9 +29,9 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 	}
 
 	private convertData(document: TextDocument, edit: as.SourceEdit): TextEdit {
-		return {
-			range: new Range(document.positionAt(edit.offset), document.positionAt(edit.offset + edit.length)),
-			newText: edit.replacement
-		};
+		return new TextEdit(
+			new Range(document.positionAt(edit.offset), document.positionAt(edit.offset + edit.length)),
+			edit.replacement
+		);
 	}
 }
