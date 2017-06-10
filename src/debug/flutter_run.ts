@@ -5,6 +5,7 @@ import * as child_process from "child_process";
 import * as f from "../flutter/flutter_types";
 import * as fs from "fs";
 import { Disposable } from "vscode";
+import { OutputEvent } from "vscode-debugadapter";
 
 export class FlutterRun extends StdIOService {
 	constructor(flutterBinPath: string, projectFolder: string, args: string[], logFile: string) {
@@ -15,8 +16,17 @@ export class FlutterRun extends StdIOService {
 
 	protected shouldHandleMessage(message: string): boolean {
 		// Everything in flutter is wrapped in [] so we can tell what to handle.
-		return message.startsWith('[') && message.endsWith(']');
+		if (message.startsWith('[') && message.endsWith(']'))
+			return true;
+		else
+			this.notify(this.unhandledMessageSubscriptions, message);
 	}
+
+	private unhandledMessageSubscriptions: ((notification: string) => void)[] = [];
+	registerForUnhandledMessages(subscriber: (notification: string) => void): Disposable {
+		return this.subscribe(this.unhandledMessageSubscriptions, subscriber);
+	}
+
 
 	// TODO: Can we code-gen all this like the analysis server?
 

@@ -38,6 +38,7 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		// TODO: Add log file.
 		this.flutter = new FlutterRun(this.args.flutterPath, args.cwd, appArgs, this.args.flutterRunLogFile);
+		this.flutter.registerForUnhandledMessages(msg => this.log(msg));
 
 		// Set up subscriptions.
 		this.flutter.registerForAppStart(n => { this.log("Building and launching application..."); this.currentRunningAppId = n.appId; });
