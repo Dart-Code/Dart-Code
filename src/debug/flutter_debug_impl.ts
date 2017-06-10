@@ -41,7 +41,7 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		// Set up subscriptions.
 		this.flutter.registerForAppStart(n => { this.log("Building and launching application..."); this.currentRunningAppId = n.appId; });
-		this.flutter.registerForAppDebugPort(n => this.initObservatory(n.wsUri || `ws://127.0.0.1:${n.port}/ws`)); // TODO: Confirm this is correct use for port.
+		this.flutter.registerForAppDebugPort(n => this.initObservatory(n.wsUri));
 
 		return this.flutter.process;
 	}
