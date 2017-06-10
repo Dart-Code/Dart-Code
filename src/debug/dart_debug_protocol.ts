@@ -4,9 +4,6 @@ import * as WebSocket from "ws";
 
 import { PromiseCompleter } from "./utils";
 
-// Toggle this to view VM debugger wire traffic.
-const shouldLogTraffic: boolean = false;
-
 export class DebuggerResult {
 	result: VMResponse;
 
@@ -410,11 +407,7 @@ export class ObservatoryConnection {
 		this.socket.on("close", cb);
 	}
 
-	// TODO: We could instead log this to a file.
 	private logTraffic(message: string): void {
-		if (!shouldLogTraffic)
-			return;
-
 		let callback = this.logging;
 		if (callback) {
 			const max: number = 2000;

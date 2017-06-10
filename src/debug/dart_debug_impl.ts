@@ -1,6 +1,7 @@
 "use strict";
 
 import * as child_process from "child_process";
+import * as fs from "fs";
 import * as path from "path";
 import {
 	DebugSession,
@@ -30,6 +31,7 @@ export class DartDebugSession extends DebugSession {
 	protected childProcess: child_process.ChildProcess;
 	private processExited: boolean = false;
 	observatory: ObservatoryConnection;
+	private observatoryLogStream: fs.WriteStream;
 	private threadManager: ThreadManager;
 	private packageMap: PackageMap;
 	private localPackageName: string;
@@ -133,7 +135,17 @@ export class DartDebugSession extends DebugSession {
 	protected initObservatory(uri: string) {
 		this.observatory = new ObservatoryConnection(uri);
 		this.observatory.onLogging(message => {
-			this.sendEvent(new OutputEvent(`${message.trim()}\n`));
+			const max: number = 2000;
+
+			if (this.args.observatoryLogFile) {
+				if (!this.observatoryLogStream)
+					this.observatoryLogStream = fs.createWriteStream(this.args.observatoryLogFile);
+				this.observatoryLogStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
+				if (message.length > max)
+					this.observatoryLogStream.write(message.substring(0, max) + "...\r\n");
+				else
+					this.observatoryLogStream.write(message);
+			}
 		});
 		this.observatory.onOpen(() => {
 			this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event));
@@ -182,6 +194,10 @@ export class DartDebugSession extends DebugSession {
 		});
 
 		this.observatory.onClose((code: number, message: string) => {
+			if (this.observatoryLogStream) {
+				this.observatoryLogStream.close();
+				this.observatoryLogStream = null;
+			}
 			// This event arrives before the process exit event.
 			setTimeout(() => {
 				if (!this.processExited)
