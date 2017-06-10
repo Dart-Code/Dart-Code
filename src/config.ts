@@ -38,6 +38,7 @@ class Config {
 	get flutterRunLogFile() { return this.getConfig<string>("flutterRunLogFile"); }
 	get insertArgumentPlaceholders() { return this.getConfig<boolean>("insertArgumentPlaceholders"); }
 	get lineLength() { return this.getConfig<number>("lineLength"); }
+	get observatoryLogFile() { return this.getConfig<string>("observatoryLogFile"); }
 	get pubAdditionalArgs() { return this.getConfig<string[]>("pubAdditionalArgs"); }
 	get runPubGetOnPubspecChanges() { return this.getConfig<boolean>("runPubGetOnPubspecChanges"); }
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
