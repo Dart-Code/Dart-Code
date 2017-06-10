@@ -19,7 +19,6 @@ export interface AppEvent {
 }
 
 export interface AppDebugPort extends AppEvent {
-	port: number;
-	wsUri?: string;
+	wsUri: string;
 	baseUri?: string;
 }
