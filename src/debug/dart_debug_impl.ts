@@ -103,9 +103,9 @@ export class DartDebugSession extends DebugSession {
 		process.on("exit", (code, signal) => {
 			this.processExited = true;
 			if (!code && !signal)
-				this.sendEvent(new OutputEvent("finished"));
+				this.sendEvent(new OutputEvent("Exited"));
 			else
-				this.sendEvent(new OutputEvent(`finished (${signal ? `${signal}`.toLowerCase() : code})`));
+				this.sendEvent(new OutputEvent(`Exited (${signal ? `${signal}`.toLowerCase() : code})`));
 			this.sendEvent(new TerminatedEvent());
 		});
 
