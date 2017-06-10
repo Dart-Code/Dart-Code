@@ -31,6 +31,7 @@ export class SdkCommands {
 			debugConfig.dartPath = debugConfig.dartPath || path.join(sdks.dart, "bin", dartExec);
 			debugConfig.flutterPath = debugConfig.flutterPath || (sdks.flutter ? path.join(sdks.flutter, "bin", flutterExec) : null);
 			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || config.flutterRunLogFile;
+			debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || config.observatoryLogFile;
 			debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || config.debugSdkLibraries;
 			debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || config.debugExternalLibraries;
 			if (debugConfig.checkedMode === undefined)
