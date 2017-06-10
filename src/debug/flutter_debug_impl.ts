@@ -19,6 +19,14 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.sendStdOutToConsole = false;
 	}
 
+	protected initializeRequest(
+		response: DebugProtocol.InitializeResponse,
+		args: DebugProtocol.InitializeRequestArguments
+	): void {
+		response.body.supportsRestartRequest = true;
+		super.initializeRequest(response, args);
+	}
+
 	protected spawnProcess(args: FlutterLaunchRequestArguments): any {
 		let debug = !args.noDebug;
 		let appArgs = [];
@@ -41,7 +49,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.flutter.registerForUnhandledMessages(msg => this.log(msg));
 
 		// Set up subscriptions.
-		this.flutter.registerForAppStart(n => { this.log("Building and launching application..."); this.currentRunningAppId = n.appId; });
+		this.flutter.registerForAppStart(n => this.currentRunningAppId = n.appId);
 		this.flutter.registerForAppDebugPort(n => this.initObservatory(n.wsUri));
 
 		return this.flutter.process;
@@ -54,5 +62,13 @@ export class FlutterDebugSession extends DartDebugSession {
 		if (this.currentRunningAppId)
 			this.flutter.stop(this.currentRunningAppId);
 		super.disconnectRequest(response, args);
+	}
+
+	protected restartRequest(
+		response: DebugProtocol.RestartResponse,
+		args: DebugProtocol.RestartArguments
+	): void {
+		this.flutter.restart(this.currentRunningAppId);
+		super.restartRequest(response, args);
 	}
 }
