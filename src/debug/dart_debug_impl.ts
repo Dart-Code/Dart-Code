@@ -9,7 +9,7 @@ import {
 	Module
 } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { PackageMap, uriToFilePath, fileToUri, PromiseCompleter, getLocalPackageName, isWin } from "./utils";
+import { PackageMap, uriToFilePath, fileToUri, PromiseCompleter, getLocalPackageName, isWin, DartLaunchRequestArguments } from "./utils";
 import {
 	ObservatoryConnection, VMEvent, VMIsolateRef, RPCError, DebuggerResult, VMStack, VMSentinel, VMObj,
 	VMFrame, VMFuncRef, VMInstanceRef, VMScriptRef, VMScript, VMSourceLocation, VMErrorRef, VMBreakpoint,
@@ -23,32 +23,10 @@ import {
 // restartFrameRequest(response: DebugProtocol.RestartFrameResponse, args: DebugProtocol.RestartFrameArguments): void;
 // completionsRequest(response: DebugProtocol.CompletionsResponse, args: DebugProtocol.CompletionsArguments): void;
 
-export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
-	// TODO: Tidy all this up
-	cwd: string;
-	checkedMode: boolean;
-	sdkPath: string;
-	// TODO: Flutter stuff shouldn't be in here
-	flutterSdkPath: string;
-	flutterRunLogFile: string;
-	debugSdkLibraries: boolean;
-	debugExternalLibraries: boolean;
-	program: string;
-	args: Array<string>;
-}
-
 export class DartDebugSession extends DebugSession {
+	protected args: DartLaunchRequestArguments;
 	// TODO: Tidy all this up
 	protected sourceFile: string;
-	private cwd: string;
-	private sdkPath: string;
-	private flutterSdkPath: string;
-	protected flutterRunLogFile: string;
-	private debugSdkLibraries: boolean;
-	private debugExternalLibraries: boolean;
-	protected dartPath: string;
-	// TODO: Flutter stuff shouldn't be in here
-	protected flutterPath: string;
 	protected childProcess: child_process.ChildProcess;
 	private processExited: boolean = false;
 	observatory: ObservatoryConnection;
@@ -79,30 +57,19 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: DartLaunchRequestArguments): void {
-		if (!args || !args.sdkPath || !args.program) {
+		if (!args || !args.dartPath || !args.program) {
 			this.sendEvent(new OutputEvent("Unable to restart debugging. Please try ending the debug session and starting again."));
 			this.sendEvent(new TerminatedEvent());
 			return;
 		}
 
-		this.cwd = args.cwd;
-		this.sdkPath = args.sdkPath;
-		// TODO: Flutter stuff shouldn't be in here
-		this.flutterSdkPath = args.flutterSdkPath;
-		this.flutterRunLogFile = args.flutterRunLogFile;
-		this.debugSdkLibraries = args.debugSdkLibraries;
-		this.debugExternalLibraries = args.debugExternalLibraries;
-		this.dartPath = this.sdkPath != null ? path.join(this.sdkPath, "bin", "dart") : "dart";
-		const flutterExec = isWin ? "flutter.bat" : "flutter";
-		this.flutterPath = this.flutterSdkPath != null ? path.join(this.flutterSdkPath, "bin", flutterExec) : flutterExec;
+		this.args = args;
 		this.sourceFile = path.relative(args.cwd, args.program);
-
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program));
 		this.localPackageName = getLocalPackageName(args.program);
 
 		this.sendResponse(response);
 
-		let debug = !args.noDebug;
 		this.childProcess = this.spawnProcess(args);
 		const process = this.childProcess;
 
@@ -140,7 +107,7 @@ export class DartDebugSession extends DebugSession {
 			this.sendEvent(new TerminatedEvent());
 		});
 
-		if (!debug)
+		if (args.noDebug)
 			this.sendEvent(new InitializedEvent());
 	}
 
@@ -158,9 +125,7 @@ export class DartDebugSession extends DebugSession {
 		if (args.args)
 			appArgs = appArgs.concat(args.args);
 
-		let process = child_process.spawn(this.dartPath, appArgs, {
-			cwd: args.cwd
-		});
+		let process = child_process.spawn(this.args.dartPath, appArgs, { cwd: args.cwd });
 
 		return process;
 	}
@@ -201,8 +166,8 @@ export class DartDebugSession extends DebugSession {
 								// Note: Condition is negated.
 								let shouldDebug = !(
 									// Inside here is shouldNotDebug!
-									(isSdkLibrary(library) && !this.debugSdkLibraries)
-									|| (isExternalLibrary(library) && !this.debugExternalLibraries)
+									(isSdkLibrary(library) && !this.args.debugSdkLibraries)
+									|| (isExternalLibrary(library) && !this.args.debugExternalLibraries)
 								)
 								this.observatory.setLibraryDebuggable(isolateRef.id, library.id, shouldDebug);
 							})
@@ -701,7 +666,7 @@ export class DartDebugSession extends DebugSession {
 	private convertVMUriToUserName(uri: string): string {
 		if (uri.startsWith("file:")) {
 			uri = uriToFilePath(uri);
-			uri = path.relative(this.cwd, uri);
+			uri = path.relative(this.args.cwd, uri);
 		}
 
 		return uri;

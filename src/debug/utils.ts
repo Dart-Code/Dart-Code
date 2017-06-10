@@ -2,6 +2,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import { DebugProtocol } from "vscode-debugprotocol";
 
 export const isWin = /^win/.test(process.platform);
 
@@ -141,3 +142,17 @@ export class PackageMap {
 	}
 }
 
+export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
+	cwd: string;
+	checkedMode: boolean;
+	dartPath: string;
+	debugSdkLibraries: boolean;
+	debugExternalLibraries: boolean;
+	program: string;
+	args: Array<string>;
+}
+
+export interface FlutterLaunchRequestArguments extends DartLaunchRequestArguments {
+	flutterPath: string;
+	flutterRunLogFile: string;
+}
