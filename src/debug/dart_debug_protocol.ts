@@ -354,7 +354,7 @@ export class ObservatoryConnection {
 		if (params)
 			json.params = params;
 		let str = JSON.stringify(json);
-		this.logTraffic(`==> ${str}`);
+		this.logTraffic(`==> ${str}\n`);
 		this.socket.send(str);
 
 		return completer.promise;
