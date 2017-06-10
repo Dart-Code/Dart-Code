@@ -9,6 +9,7 @@ import * as project from "../project";
 import * as vs from "vscode";
 import { config } from "../config";
 import { dartPubPath, isFlutterProject, flutterPath, Sdks } from "../utils";
+import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 
 export class SdkCommands {
 	private sdks: Sdks;
@@ -18,14 +19,17 @@ export class SdkCommands {
 	}
 
 	registerCommands(context: vs.ExtensionContext) {
-		function setupDebugConfig(debugConfig: any, sdks: Sdks) {
+		function setupDebugConfig(debugConfig: FlutterLaunchRequestArguments, sdks: Sdks) {
 			analytics.logDebuggerStart();
+
+			const dartExec = isWin ? "dart.exe" : "dart";
+			const flutterExec = isWin ? "flutter.bat" : "flutter";
 
 			// Attach any properties that weren't explicitly set.
 			debugConfig.cwd = debugConfig.cwd || "${workspaceRoot}";
 			debugConfig.args = debugConfig.args || [];
-			debugConfig.sdkPath = debugConfig.sdkPath || sdks.dart;
-			debugConfig.flutterSdkPath = debugConfig.flutterSdkPath || sdks.flutter;
+			debugConfig.dartPath = debugConfig.dartPath || path.join(sdks.dart, "bin", dartExec);
+			debugConfig.flutterPath = debugConfig.flutterPath || (sdks.flutter ? path.join(sdks.flutter, "bin", flutterExec) : null);
 			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || config.flutterRunLogFile;
 			debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || config.debugSdkLibraries;
 			debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || config.debugExternalLibraries;
@@ -34,7 +38,7 @@ export class SdkCommands {
 		}
 
 		// Debug commands.
-		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugSession", debugConfig => {
+		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugSession", (debugConfig: FlutterLaunchRequestArguments) => {
 			if (Object.keys(debugConfig).length === 0)
 				return { status: 'initialConfiguration' };
 
