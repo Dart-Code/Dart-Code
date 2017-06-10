@@ -45,4 +45,13 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		return this.flutter.process;
 	}
+
+	protected disconnectRequest(
+		response: DebugProtocol.DisconnectResponse,
+		args: DebugProtocol.DisconnectArguments
+	): void {
+		if (this.currentRunningAppId)
+			this.flutter.stop(this.currentRunningAppId);
+		super.disconnectRequest(response, args);
+	}
 }
