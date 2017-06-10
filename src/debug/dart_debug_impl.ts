@@ -47,14 +47,12 @@ export class DartDebugSession extends DebugSession {
 		response: DebugProtocol.InitializeResponse,
 		args: DebugProtocol.InitializeRequestArguments
 	): void {
-		response.body = {
-			supportsConfigurationDoneRequest: true,
-			supportsEvaluateForHovers: true,
-			exceptionBreakpointFilters: [
-				{ filter: "All", label: "All Exceptions", default: false },
-				{ filter: "Unhandled", label: "Uncaught Exceptions", default: true }
-			]
-		};
+		response.body.supportsConfigurationDoneRequest = true;
+		response.body.supportsEvaluateForHovers = true;
+		response.body.exceptionBreakpointFilters = [
+			{ filter: "All", label: "All Exceptions", default: false },
+			{ filter: "Unhandled", label: "Uncaught Exceptions", default: true }
+		];
 		this.sendResponse(response);
 	}
 
