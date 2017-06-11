@@ -23,6 +23,11 @@ export class FlutterDaemon extends StdIOService {
 		this.deviceEnable();
 	}
 
+	dispose() {
+		this.deviceManager.dispose();
+		super.dispose();
+	}
+
 	protected sendMessage<T>(json: string) {
 		try {
 			super.sendMessage(json);
