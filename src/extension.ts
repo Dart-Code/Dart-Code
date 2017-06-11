@@ -185,7 +185,7 @@ export function activate(context: vs.ExtensionContext) {
 	}));
 
 	// Register SDK commands.
-	let sdkCommands = new SdkCommands(sdks);
+	let sdkCommands = new SdkCommands(sdks, flutterDaemon.deviceManager);
 	sdkCommands.registerCommands(context);
 
 	// Set up commands for Dart editors.
