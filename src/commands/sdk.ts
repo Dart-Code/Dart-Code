@@ -10,16 +10,19 @@ import * as vs from "vscode";
 import { config } from "../config";
 import { dartPubPath, isFlutterProject, flutterPath, Sdks } from "../utils";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
+import { FlutterDeviceManager } from "../flutter/device_manager";
 
 export class SdkCommands {
 	private sdks: Sdks;
+	private deviceManager: FlutterDeviceManager;
 
-	constructor(sdks: Sdks) {
+	constructor(sdks: Sdks, deviceManager: FlutterDeviceManager) {
 		this.sdks = sdks;
+		this.deviceManager = deviceManager;
 	}
 
 	registerCommands(context: vs.ExtensionContext) {
-		function setupDebugConfig(debugConfig: FlutterLaunchRequestArguments, sdks: Sdks) {
+		function setupDebugConfig(debugConfig: FlutterLaunchRequestArguments, sdks: Sdks, deviceId: string) {
 			analytics.logDebuggerStart();
 
 			const dartExec = isWin ? "dart.exe" : "dart";
@@ -29,13 +32,14 @@ export class SdkCommands {
 			debugConfig.cwd = debugConfig.cwd || "${workspaceRoot}";
 			debugConfig.args = debugConfig.args || [];
 			debugConfig.dartPath = debugConfig.dartPath || path.join(sdks.dart, "bin", dartExec);
-			debugConfig.flutterPath = debugConfig.flutterPath || (sdks.flutter ? path.join(sdks.flutter, "bin", flutterExec) : null);
-			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || config.flutterRunLogFile;
 			debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || config.observatoryLogFile;
 			debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || config.debugSdkLibraries;
 			debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || config.debugExternalLibraries;
 			if (debugConfig.checkedMode === undefined)
 				debugConfig.checkedMode = true;
+			debugConfig.flutterPath = debugConfig.flutterPath || (sdks.flutter ? path.join(sdks.flutter, "bin", flutterExec) : null);
+			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || config.flutterRunLogFile;
+			debugConfig.deviceId = debugConfig.deviceId || deviceId;
 		}
 
 		// Debug commands.
@@ -43,7 +47,7 @@ export class SdkCommands {
 			if (Object.keys(debugConfig).length === 0)
 				return { status: 'initialConfiguration' };
 
-			setupDebugConfig(debugConfig, this.sdks);
+			setupDebugConfig(debugConfig, this.sdks, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
 
 			if (isFlutterProject)
 				debugConfig.program = debugConfig.program || "${workspaceRoot}/lib/main.dart";
