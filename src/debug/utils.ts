@@ -156,4 +156,5 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 export interface FlutterLaunchRequestArguments extends DartLaunchRequestArguments {
 	flutterPath: string;
 	flutterRunLogFile: string;
+	deviceId: string;
 }
