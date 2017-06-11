@@ -36,6 +36,11 @@ export class FlutterDebugSession extends DartDebugSession {
 			appArgs.push(this.sourceFile);
 		}
 
+		if (this.args.deviceId) {
+			appArgs.push("-d")
+			appArgs.push(this.args.deviceId);
+		}
+
 		if (debug) {
 			appArgs.push("--observatory-port=0");
 			appArgs.push("--start-paused");
