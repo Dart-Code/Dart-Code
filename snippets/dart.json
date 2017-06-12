@@ -100,6 +100,22 @@
 		"typedef": {
 			"prefix": "typedef",
 			"body": "typedef ${1:Type} ${2:Name}(${3:params});"
+		},
+		"test": {
+			"prefix": "test",
+			"body": [
+				"test('$1', () {",
+				"",
+				"});"
+			]
+		},
+		"group": {
+			"prefix": "group",
+			"body": [
+				"group('$1', () {",
+				"",
+				"});"
+			]
 		}
 	}
 }
