@@ -154,7 +154,7 @@ export abstract class StdIOService implements Disposable {
 			if (message.length > max)
 				this.logStream.write(message.substring(0, max) + "...\r\n");
 			else
-				this.logStream.write(message);
+				this.logStream.write(message.trim() + "\r\n");
 		} else if (!this.logFile && this.logStream) {
 			// Turn off logging.
 			this.logStream.close();

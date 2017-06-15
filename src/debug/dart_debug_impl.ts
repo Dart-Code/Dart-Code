@@ -142,7 +142,7 @@ export class DartDebugSession extends DebugSession {
 				if (message.length > max)
 					this.observatoryLogStream.write(message.substring(0, max) + "...\r\n");
 				else
-					this.observatoryLogStream.write(message);
+					this.observatoryLogStream.write(message.trim() + "\r\n");
 			}
 		});
 		this.observatory.onOpen(() => {
