@@ -70,7 +70,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				completionText = escapeSnippetString(suggestion.completion) + `(${argPlaceholders})$0`;
 			}
 			else
-				completionText = escapeSnippetString(suggestion.completion) + `($0)`;
+				completionText = escapeSnippetString(suggestion.completion) + (hasParams ? `($0)` : `()`);
 		}
 		// If it's a named arg, also add placeholders for the value (but only if it ends with ": ", otherwise the value already exists).
 		else if (config.insertArgumentPlaceholders && suggestion.kind == "NAMED_ARGUMENT" && suggestion.parameterName && suggestion.completion.endsWith(": ")) {
