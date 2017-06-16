@@ -40,7 +40,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 	private convertResult(
 		document: TextDocument, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion
 	): CompletionItem {
-		let start = document.positionAt(suggestion.selectionOffset);
 		let element = suggestion.element;
 		let elementKind = element ? this.getElementKind(element.kind) : null;
 
