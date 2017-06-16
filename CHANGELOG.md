@@ -1,3 +1,17 @@
+# v1.4.2
+
+**Note:** This version requires Visual Studio Code 1.13.
+
+- Code completion will now show types for named arguments more reliably
+- Argument placeholders will now (again) insert placeholder text instead of empty strings
+- Completing methods that take no arguments will no longer place the cursor between the parens as if there are arguments to type
+- When selecting items from the code completion list the cursor will now more reliably move to the expected location after insertion
+- New snippets have been added for `test` and `group` methods defined in the `test` package
+- Dart Code will now activate when opening workspaces that include a `pubspec.yaml` anywhere in the tree, not just in the workspace root folder
+- Debug logging will no longer appear in the `Debug Output` window when launching a debug session
+- Snippets now have *slightly* more verbose descriptions of their functionality
+
+
 # v1.4.1
 
 - Identifiers that start or end with `$` symbols will now highlight correctly
@@ -74,9 +88,9 @@
 
 # v0.14.7
 
-- Code completion will no longer insert underscore characters after upgrading to Code 1.8.
-
 **Note:** This version requires Visual Studio Code 1.8.
+
+- Code completion will no longer insert underscore characters after upgrading to Code 1.8.
 
 # v0.14.6
 
