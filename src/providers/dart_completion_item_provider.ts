@@ -56,12 +56,14 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			label += element.parameters.length == 2 ? "()" : "(…)";
 			detail = element.parameters;
 
+			const hasParams = suggestion.parameterNames && suggestion.parameterNames.length > 0;
+
 			// Add placeholders for params to the completion.
-			if (config.insertArgumentPlaceholders && suggestion.parameterNames) {
+			if (config.insertArgumentPlaceholders && hasParams) {
 				let args = suggestion.parameterNames.slice(0, suggestion.requiredParameterCount);
 				let argPlaceholders = args.map((n, i) => `\${${i + 1}:${n}}`).join(", ");
 
-				// If blank, force in a dummy tabstop to go between the parents.
+				// If blank, force in a dummy tabstop to go between the parens.
 				if (argPlaceholders == "")
 					argPlaceholders = "$1";
 
