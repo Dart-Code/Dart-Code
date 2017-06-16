@@ -69,7 +69,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: DartLaunchRequestArguments): void {
-		this.log(JSON.stringify(args));
+		//this.log(JSON.stringify(args));
 		this.cwd = args.cwd;
 		this.sdkPath = args.sdkPath;
 		this.debugSdkLibraries = args.debugSdkLibraries;
