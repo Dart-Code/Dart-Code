@@ -72,9 +72,13 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			else
 				completionText = escapeSnippetString(suggestion.completion) + (hasParams ? `($0)` : `()`);
 		}
-		// If it's a named arg, also add placeholders for the value (but only if it ends with ": ", otherwise the value already exists).
-		else if (config.insertArgumentPlaceholders && suggestion.kind == "NAMED_ARGUMENT" && suggestion.parameterName && suggestion.completion.endsWith(": ")) {
-			completionText = escapeSnippetString(suggestion.completion) + `\${${suggestion.parameterName}}`;
+		// Otherwise, if we have some selection, inject it.
+		else if (suggestion.selectionOffset > 0) {
+			const before = suggestion.completion.slice(0, suggestion.selectionOffset);
+			const selection = suggestion.completion.slice(suggestion.selectionOffset, suggestion.selectionLength) || suggestion.parameterName;
+			const after = suggestion.completion.slice(suggestion.selectionOffset + suggestion.selectionLength);
+
+			completionText = escapeSnippetString(before) + `\${0:${escapeSnippetString(selection)}}` + escapeSnippetString(after);
 		}
 		// Otherwise, just use the raw text.	
 		else {
