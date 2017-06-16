@@ -47,7 +47,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		let elementKind = element ? this.getElementKind(element.kind) : null;
 
 		let label = suggestion.completion;
-		let completionText = escapeSnippetString(suggestion.completion);
+		let completionText = "";
 		let detail = "";
 
 		// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its
@@ -65,14 +65,18 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				if (argPlaceholders == "")
 					argPlaceholders = "$1";
 
-				completionText += `(${argPlaceholders})$0`;
+				completionText = escapeSnippetString(suggestion.completion) + `(${argPlaceholders})$0`;
 			}
 			else
-				completionText += `($0)`;
+				completionText = escapeSnippetString(suggestion.completion) + `($0)`;
 		}
 		// If it's a named arg, also add placeholders for the value (but only if it ends with ": ", otherwise the value already exists).
 		else if (config.insertArgumentPlaceholders && suggestion.kind == "NAMED_ARGUMENT" && suggestion.parameterName && suggestion.completion.endsWith(": ")) {
-			completionText += `\${${suggestion.parameterName}}`;
+			completionText = escapeSnippetString(suggestion.completion) + `\${${suggestion.parameterName}}`;
+		}
+		// Otherwise, just use the raw text.	
+		else {
+			completionText = escapeSnippetString(suggestion.completion);
 		}
 
 		// If we're a property, work out the type. 
