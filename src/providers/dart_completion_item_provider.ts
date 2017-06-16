@@ -41,7 +41,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		document: TextDocument, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion
 	): CompletionItem {
 		// Since we're using SnippetString we need to escape some characters in the completion.
-		const escapeSnippetString = (s: string) => s.replace('$', '\\$').replace('{', '\\{').replace('}', '\\}');
+		const escapeSnippetString = (s: string) => (s || "").replace('$', '\\$').replace('{', '\\{').replace('}', '\\}');
 
 		let element = suggestion.element;
 		let elementKind = element ? this.getElementKind(element.kind) : null;
