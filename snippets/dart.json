@@ -2,6 +2,7 @@
 	".source.dart": {
 		"main": {
 			"prefix": "main",
+			"description": "Insert a main method, used as an entry point.",
 			"body": [
 				"main(List<String> args) {",
 				"  $1",
@@ -10,6 +11,7 @@
 		},
 		"try": {
 			"prefix": "try",
+			"description": "Insert a try/catch block.",
 			"body": [
 				"try {",
 				"  $2",
@@ -19,6 +21,7 @@
 		},
 		"if": {
 			"prefix": "if",
+			"description": "Insert an if statement.",
 			"body": [
 				"if ($1) {",
 				"  $2",
@@ -27,6 +30,7 @@
 		},
 		"if else": {
 			"prefix": "ife",
+			"description": "Insert an if statement with an else block.",
 			"body": [
 				"if ($1) {",
 				"  $2",
@@ -36,6 +40,7 @@
 		},
 		"switch case": {
 			"prefix": "switch",
+			"description": "Insert a switch statement.",
 			"body": [
 				"switch ($1) {",
 				"  case $2:",
@@ -47,6 +52,7 @@
 		},
 		"for": {
 			"prefix": "for",
+			"description": "Insert a for loop.",
 			"body": [
 				"for (var i = 0; i < ${1:count}; i++) {",
 				"  $2",
@@ -55,6 +61,7 @@
 		},
 		"for in": {
 			"prefix": "fori",
+			"description": "Insert a for-in loop.",
 			"body": [
 				"for (var ${1:item} in ${2:items}) {",
 				"  $3",
@@ -63,6 +70,7 @@
 		},
 		"while": {
 			"prefix": "while",
+			"description": "Insert a while loop.",
 			"body": [
 				"while ($1) {",
 				"  $2",
@@ -71,6 +79,7 @@
 		},
 		"do while": {
 			"prefix": "do",
+			"description": "Insert a do-while loop.",
 			"body": [
 				"do {",
 				"  $2",
@@ -79,18 +88,16 @@
 		},
 		"fun": {
 			"prefix": "fun",
+			"description": "Insert a function definition.",
 			"body": [
 				"${3:void} ${1:name}(${2:args}) {",
 				"  $4",
 				"}"
 			]
 		},
-		"import": {
-			"prefix": "import",
-			"body": "import '$1';"
-		},
 		"class": {
 			"prefix": "class",
+			"description": "Insert a class definition.",
 			"body": [
 				"class ${1:Name} {",
 				"  $2",
@@ -99,10 +106,12 @@
 		},
 		"typedef": {
 			"prefix": "typedef",
+			"description": "Insert a typedef.",
 			"body": "typedef ${1:Type} ${2:Name}(${3:params});"
 		},
 		"test": {
 			"prefix": "test",
+			"description": "Insert a test block.",
 			"body": [
 				"test('$1', () {",
 				"  $2",
@@ -111,6 +120,7 @@
 		},
 		"group": {
 			"prefix": "group",
+			"description": "Insert a test group block.",
 			"body": [
 				"group('$1', () {",
 				"  $2",
