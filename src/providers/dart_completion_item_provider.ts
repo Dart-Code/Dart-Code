@@ -94,11 +94,14 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				// See https://github.com/dart-lang/sdk/issues/27747
 				: element.parameters ? element.parameters.substring(1, element.parameters.lastIndexOf(" ")) : "";
 			// Otherwise, get return type from method.
-		} else if (element && element.returnType)
+		} else if (element && element.returnType) {
 			detail =
 				detail == ""
 					? element.returnType
 					: detail + " → " + element.returnType;
+		} else if (suggestion.parameterType) {
+			detail = suggestion.parameterType;
+		}
 
 		let kind = suggestion.element
 			? this.getElementKind(suggestion.element.kind)
