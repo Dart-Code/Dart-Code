@@ -12,6 +12,7 @@ export class FlutterDebugSession extends DartDebugSession {
 	protected args: FlutterLaunchRequestArguments;
 	flutter: FlutterRun;
 	currentRunningAppId: string;
+	observatoryUri: string;
 
 	constructor() {
 		super();
@@ -55,7 +56,8 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		// Set up subscriptions.
 		this.flutter.registerForAppStart(n => this.currentRunningAppId = n.appId);
-		this.flutter.registerForAppDebugPort(n => this.initObservatory(n.wsUri));
+		this.flutter.registerForAppDebugPort(n => this.observatoryUri = n.wsUri);
+		this.flutter.registerForAppStarted(n => this.initObservatory(this.observatoryUri));
 
 		return this.flutter.process;
 	}
