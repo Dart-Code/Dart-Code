@@ -857,7 +857,7 @@ class ThreadManager {
 		if (promise)
 			return promise;
 
-		let completer = new PromiseCompleter();
+		let completer = new PromiseCompleter<boolean[]>();
 		let result = [];
 		for (let i = 0; i < breakpoints.length; i++) {
 			result.push(true);
