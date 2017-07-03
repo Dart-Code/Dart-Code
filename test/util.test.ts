@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import * as util from '../src/utils';
 
 describe("util.isOutOfDate", () => {
-    it("should not consider build numbers when compariing versions", () => {
+    it("should not consider build numbers when comparing versions", () => {
         assert.equal(util.isOutOfDate("1.2.3", "1.2.3"), false);
         assert.equal(util.isOutOfDate("1.2.3+012345", "1.2.3"), false);
     });
