@@ -65,14 +65,22 @@ export interface VMObjectRef extends VMResponse {
 
 export interface VMStack extends VMResponse {
 	frames: VMFrame[];
+	asyncCausalFrames?: VMFrame[];
 }
 
 export interface VMFrame extends VMResponse {
 	index: number;
-	function: VMFuncRef;
-	// CodeRef code;
-	location: VMSourceLocation;
-	vars: VMBoundVariable[];
+	kind: string;
+	code?: VMCodeRef;
+	function?: VMFuncRef;
+	location?: VMSourceLocation;
+	vars?: VMBoundVariable[];
+}
+
+export interface VMCodeRef extends VMObjectRef {
+  name: string;
+  // CodeKind: Dart, Native, Stub, Tag, Collected
+  kind: string;
 }
 
 export interface VMSourceLocation extends VMResponse {

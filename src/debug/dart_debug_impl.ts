@@ -13,7 +13,7 @@ import { PackageMap, uriToFilePath, fileToUri, PromiseCompleter, getLocalPackage
 import {
 	ObservatoryConnection, VMEvent, VMIsolateRef, RPCError, DebuggerResult, VMStack, VMSentinel, VMObj,
 	VMFrame, VMFuncRef, VMInstanceRef, VMScriptRef, VMScript, VMSourceLocation, VMErrorRef, VMBreakpoint,
-	VMInstance, VMResponse, VMClassRef, VM, VMIsolate, VMLibraryRef
+	VMInstance, VMResponse, VMClassRef, VM, VMIsolate, VMLibraryRef, VMCodeRef
 } from "./dart_debug_protocol";
 
 // TODO: supportsSetVariable
@@ -330,7 +330,9 @@ export class DartDebugSession extends DebugSession {
 
 		this.observatory.getStack(thread.ref.id).then((result: DebuggerResult) => {
 			let stack: VMStack = <VMStack>result.result;
-			let vmFrames: VMFrame[] = stack.frames;
+			let vmFrames: VMFrame[] = stack.asyncCausalFrames;
+			if (vmFrames == null)
+				vmFrames = stack.frames;
 			let totalFrames = vmFrames.length;
 
 			if (!startFrame)
@@ -346,7 +348,22 @@ export class DartDebugSession extends DebugSession {
 
 			vmFrames.forEach((frame: VMFrame) => {
 				let frameId = thread.storeData(frame);
+
+				if (frame.kind == "AsyncSuspensionMarker") {
+					let stackFrame: StackFrame = new StackFrame(frameId, "<asynchronous gap>");
+					stackFrames.push(stackFrame);
+					return;
+				}
+
+				let frameName = frame.code.name;
 				let location: VMSourceLocation = frame.location;
+
+				if (location == null) {
+					let stackFrame: StackFrame = new StackFrame(frameId, frameName);
+					stackFrames.push(stackFrame);
+					return;
+				}
+
 				let uri = location.script.uri;
 				let shortName = this.convertVMUriToUserName(uri);
 				let sourcePath = this.convertVMUriToSourcePath(uri);
@@ -356,13 +373,6 @@ export class DartDebugSession extends DebugSession {
 				if (uri.startsWith("dart:")) {
 					sourcePath = null;
 					sourceReference = thread.storeData(location.script);
-				}
-
-				let func: VMFuncRef = frame.function;
-				let frameName = func.name;
-				if (func.owner.type == "@Class") {
-					let owner = <VMClassRef>func.owner;
-					frameName = owner.name + "." + frameName;
 				}
 
 				let stackFrame: StackFrame = new StackFrame(

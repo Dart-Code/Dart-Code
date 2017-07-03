@@ -3,3 +3,4 @@ node_modules
 analyzer.log
 .vscode/.browse.VC.db*
 .vscode-test/
+.DS_Store
