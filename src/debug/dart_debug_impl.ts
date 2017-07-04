@@ -246,7 +246,7 @@ export class DartDebugSession extends DebugSession {
 	 * a filesystem uri (this can vary depending on how it was
 	 * imported by the user).
 	 */
-	private getPossibleSourceUris(sourcePath: string): string[] {
+	protected getPossibleSourceUris(sourcePath: string): string[] {
 		let uris = [];
 
 		// Add the raw file path.
@@ -638,7 +638,13 @@ export class DartDebugSession extends DebugSession {
 	handleDebugEvent(event: VMEvent) {
 		let kind = event.kind;
 
-		if (kind == "PauseStart") {
+		// For PausePostRequest we need to re-send all breakpoints; this happens after a flutter restart		
+		if (kind == "PausePostRequest") {
+			this.threadManager.resetBreakpoints()
+				.then(_ => this.observatory.resume(event.isolate.id))
+				.catch(e => { if (e.code != 106) throw e; }); // Ignore failed-to-resume errors https://github.com/flutter/flutter/issues/10934
+		}
+		else if (kind == "PauseStart") {
 			// "PauseStart" should auto-resume after breakpoints are set.
 			let thread = this.threadManager.getThreadInfoFromRef(event.isolate);
 			thread.receivedPauseStart();
@@ -798,13 +804,7 @@ class ThreadManager {
 
 			this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, this.exceptionMode);
 
-			let promises = []
-			for (let uri of Object.keys(this.bps)) {
-				promises.push(thread.setBreakpoints(uri, this.bps[uri]));
-			}
-			Promise.all(promises).then((_) => {
-				thread.setInitialBreakpoints();
-			});
+			this.resetBreakpoints().then((_) => thread.setInitialBreakpoints());
 		}
 	}
 
@@ -842,6 +842,15 @@ class ThreadManager {
 			if (thread.runnable)
 				this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, mode);
 		}
+	}
+
+	// Just resents existing breakpoints	
+	resetBreakpoints() {
+		let promises = []
+		for (let uri of Object.keys(this.bps)) {
+			promises.push(this.setBreakpoints(uri, this.bps[uri]));
+		}
+		return Promise.all(promises);
 	}
 
 	setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {
@@ -927,34 +936,38 @@ class ThreadInfo {
 	}
 
 	setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {
+		let removeBreakpointPromises = [];
+
 		// Remove all current bps.
 		let oldbps = this.vmBps[uri];
 		if (oldbps) {
 			for (let bp of oldbps) {
-				this.manager.debugSession.observatory.removeBreakpoint(this.ref.id, bp.id);
+				removeBreakpointPromises.push(this.manager.debugSession.observatory.removeBreakpoint(this.ref.id, bp.id).then(_ => console.log("removed")));
 			}
 		}
 
 		this.vmBps[uri] = [];
 
-		// Set new ones.
-		let promises = [];
+		return Promise.all(removeBreakpointPromises).then(() => {
+			// Set new ones.
+			let promises = [];
 
-		for (let bp of breakpoints) {
-			let promise = this.manager.debugSession.observatory.addBreakpointWithScriptUri(
-				this.ref.id, uri, bp.line, bp.column
-			).then((result: DebuggerResult) => {
-				let vmBp: VMBreakpoint = <VMBreakpoint>result.result;
-				this.vmBps[uri].push(vmBp);
-				return true;
-			}).catch((error) => {
-				return false;
-			});
+			for (let bp of breakpoints) {
+				let promise = this.manager.debugSession.observatory.addBreakpointWithScriptUri(
+					this.ref.id, uri, bp.line, bp.column
+				).then((result: DebuggerResult) => {
+					let vmBp: VMBreakpoint = <VMBreakpoint>result.result;
+					this.vmBps[uri].push(vmBp);
+					return true;
+				}).catch((error) => {
+					return false;
+				});
 
-			promises.push(promise);
-		}
+				promises.push(promise);
+			}
 
-		return Promise.all(promises);
+			return Promise.all(promises);
+		})
 	}
 
 	private gotPauseStart = false;
