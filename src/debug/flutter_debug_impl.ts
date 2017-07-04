@@ -101,7 +101,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		response: DebugProtocol.RestartResponse,
 		args: DebugProtocol.RestartArguments
 	): void {
-		this.flutter.restart(this.currentRunningAppId);
+		this.flutter.restart(this.currentRunningAppId, !this.args.noDebug)
 		super.restartRequest(response, args);
 	}
 }

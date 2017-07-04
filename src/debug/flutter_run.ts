@@ -58,8 +58,8 @@ export class FlutterRun extends StdIOService {
 
 	// Request methods.
 
-	restart(appId: string): Thenable<UnknownResponse> {
-		return this.sendRequest("app.restart", { "appId": appId, fullRestart: false });
+	restart(appId: string, pause: boolean): Thenable<any> {
+		return this.sendRequest("app.restart", { "appId": appId, fullRestart: false, pause: pause });
 	}
 
 	stop(appId: string): Thenable<UnknownResponse> {
