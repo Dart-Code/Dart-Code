@@ -21,4 +21,4 @@ build_script:
     npm run vscode:prepublish --silent
 
 test_script:
-- cmd: npm test --silent
+- cmd: npm test
