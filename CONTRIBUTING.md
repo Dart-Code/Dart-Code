@@ -11,6 +11,8 @@ If you're going to work on an issue, please add a comment to the issue so others
 There are some "hidden" configuration settings that allow you to enable diagnostic logging in order to debug/develop Dart Code more easily. These should be set to full filesystem paths of where to log. The folders must exist:
 
 - `"dart.analyzerLogFile"`: Logs communication between Dart Code and the analysis server from the Dart SDK
+- `"dart.flutterDaemonLogFile"`: Logs communication with the Flutter daemon used for device management in Dart Code
+- `"dart.flutterRunLogFile"`: Logs communication with the Flutter run process used for launching and reloading Flutter applications
 - `"dart.observatoryLogFile"`: Logs communication with Observatory, the Dart debugger service
 - `"dart.analyzerInstrumentationLogFile"`: Instructs the analysis server to log its own instrumentation data (this is very detailed and can become very large)
 
@@ -46,7 +48,7 @@ You'll now have two versions of Code open - the standard instance that has the D
 In order to debug the debug adapters you need to run them in a `"server mode"`. This mode starts the debug adapters at extension activation time and keeps them open for the whole session. You'll also need to ensure that when you start the debug session from within Dart Code you have configured it to connect to this debug session.
 
 1. In the main Code instance, switch to the `Debug` pane
-2. In the configuration dropdown, choose the configuration named `Extension + Server`
+2. In the configuration dropdown, choose the configuration named `Extension + Dart Server` or `Extension + Flutter Server`
 3. Press `F5` to launch the extension development host running the extension and also the debug server
 4. In the extension development host, open the `launch.json` file for the Dart project you're going to debug
 5. Add `"debugServer": 4711` to the debug configuration to instruct Dart Code to use the debug server (note: don't forget to remove this later, otherwise you'll get errors when trying to debug if there's no debug server running)
