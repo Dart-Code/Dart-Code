@@ -287,7 +287,7 @@ export class ObservatoryConnection {
 	}
 
 	removeBreakpoint(isolateId: string, breakpointId: string) {
-		this.callMethod("removeBreakpoint", { "isolateId": isolateId, "breakpointId": breakpointId })
+		return this.callMethod("removeBreakpoint", { "isolateId": isolateId, "breakpointId": breakpointId })
 	}
 
 	pause(isolateId: string): Promise<DebuggerResult> {
