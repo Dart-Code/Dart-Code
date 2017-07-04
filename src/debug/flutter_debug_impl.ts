@@ -2,7 +2,7 @@
 
 import { DartDebugSession } from "./dart_debug_impl";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { FlutterLaunchRequestArguments, isWin } from "./utils";
+import { FlutterLaunchRequestArguments, isWin, fileToUri } from "./utils";
 import { FlutterRun } from "./flutter_run";
 import { TerminatedEvent } from "vscode-debugadapter";
 import * as child_process from "child_process";
@@ -13,6 +13,7 @@ export class FlutterDebugSession extends DartDebugSession {
 	flutter: FlutterRun;
 	currentRunningAppId: string;
 	observatoryUri: string;
+	baseUri: string;
 
 	constructor() {
 		super();
@@ -56,10 +57,35 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		// Set up subscriptions.
 		this.flutter.registerForAppStart(n => this.currentRunningAppId = n.appId);
-		this.flutter.registerForAppDebugPort(n => this.observatoryUri = n.wsUri);
+		this.flutter.registerForAppDebugPort(n => { this.observatoryUri = n.wsUri; this.baseUri = n.baseUri; });
 		this.flutter.registerForAppStarted(n => this.initObservatory(this.observatoryUri));
 
 		return this.flutter.process;
+	}
+
+	/***
+	 * Converts a source path to an array of possible uris.
+	 *
+	 * For flutter we need to extend the Dart implementation by also providing uris
+	 * using the baseUri value returned from `flutter run` to match the fs path
+	 * on the device running the application in order for breakpoints to match the
+	 * patched `hot reload` code. 
+	 */
+	protected getPossibleSourceUris(sourcePath: string): string[] {
+		const originalUris = super.getPossibleSourceUris(sourcePath);
+		const allUris = originalUris.slice();
+		const projectUri = fileToUri(this.args.cwd);
+
+		originalUris.forEach(uri => {
+			if (uri.startsWith(projectUri)) {
+				const relativePath = uri.substr(projectUri.length);
+				const mappedPath = path.join(this.baseUri, relativePath);
+				const newUri = fileToUri(mappedPath);
+				allUris.push(newUri);
+			}
+		});
+
+		return allUris;
 	}
 
 	protected disconnectRequest(
