@@ -4,7 +4,7 @@
 [![Windows build status](https://ci.appveyor.com/api/projects/status/github/Dart-Code/Dart-Code?branch=master&svg=true)](https://ci.appveyor.com/project/DanTup/dart-code)
 [![Gitter Chat](https://img.shields.io/badge/chat-online-brightgreen.svg)](https://gitter.im/dart-code/Dart-Code)
 
-If you're going to work on an issue, please add a comment to the issue so others know it's being looked at. If there isn't an issue for the work you want to do, please create one. The [up-for-grabs](https://github.com/Dart-Code/Dart-Code/labels/up-for-grabs) issues might make good starting points for new contributors.
+If you're going to work on an issue, please add a comment to the issue so others know it's being looked at. If there isn't an issue for the work you want to do, please create one. The [up-for-grabs](https://github.com/Dart-Code/Dart-Code/labels/up%20for%20grabs) issues might make good starting points for new contributors.
 
 ## Enable Logging
 
