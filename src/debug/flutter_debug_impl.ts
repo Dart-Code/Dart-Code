@@ -88,6 +88,16 @@ export class FlutterDebugSession extends DartDebugSession {
 		return allUris;
 	}
 
+	protected convertVMUriToSourcePath(uri: string): string {
+		let localPath = super.convertVMUriToSourcePath(uri);
+
+		// If the path is the baseUri given by flutter, we need to rewrite it into a local path for this machine.		
+		if (localPath.startsWith(this.baseUri))
+			localPath = path.join(this.args.cwd, path.relative(this.baseUri, localPath));
+
+		return localPath;
+	}
+
 	protected disconnectRequest(
 		response: DebugProtocol.DisconnectResponse,
 		args: DebugProtocol.DisconnectArguments
