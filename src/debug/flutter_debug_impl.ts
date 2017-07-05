@@ -2,7 +2,7 @@
 
 import { DartDebugSession } from "./dart_debug_impl";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { FlutterLaunchRequestArguments, isWin, fileToUri } from "./utils";
+import { FlutterLaunchRequestArguments, isWin, fileToUri, uriToFilePath } from "./utils";
 import { FlutterRun } from "./flutter_run";
 import { TerminatedEvent } from "vscode-debugadapter";
 import * as child_process from "child_process";
@@ -90,10 +90,11 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	protected convertVMUriToSourcePath(uri: string): string {
 		let localPath = super.convertVMUriToSourcePath(uri);
+		const basePath = uriToFilePath(this.baseUri);
 
 		// If the path is the baseUri given by flutter, we need to rewrite it into a local path for this machine.		
-		if (localPath.startsWith(this.baseUri))
-			localPath = path.join(this.args.cwd, path.relative(this.baseUri, localPath));
+		if (localPath.startsWith(basePath))
+			localPath = path.join(this.args.cwd, path.relative(basePath, localPath));
 
 		return localPath;
 	}
