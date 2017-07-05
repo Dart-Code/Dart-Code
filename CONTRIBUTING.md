@@ -57,7 +57,7 @@ In this mode, you should be able to hit breakpoints in the debug adapters too. T
 ## Code Etiquette and Style
 
 - If you end up with a large number of commits for tidying up/fixing, consider squashing
-- If your branch lives for a long time, rebase on top of amster before sending pull requests to ensure any conflicts are dealt with
+- If your branch lives for a long time, rebase on top of `master` before sending pull requests to ensure any conflicts are dealt with
 - Try to keep the bulk of work out of `extension.ts` by creating new files/classes but do keep the wire-up code in `extension.ts` as a central place to track what's set up
 - Code Style
   - All files should start with `"use strict";`
