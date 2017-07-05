@@ -82,6 +82,9 @@ export class FlutterDebugSession extends DartDebugSession {
 				const mappedPath = path.join(this.baseUri, relativePath);
 				const newUri = fileToUri(mappedPath);
 				allUris.push(newUri);
+				// HACK: See https://github.com/flutter/flutter/issues/11040
+				if (newUri.startsWith("file:///"))
+					allUris.push(newUri.substring("file://".length));
 			}
 		});
 
