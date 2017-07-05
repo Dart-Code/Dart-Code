@@ -692,7 +692,7 @@ export class DartDebugSession extends DebugSession {
 		return uri;
 	}
 
-	private convertVMUriToSourcePath(uri: string): string {
+	protected convertVMUriToSourcePath(uri: string): string {
 		if (uri.startsWith("file:"))
 			return uriToFilePath(uri);
 
