@@ -21,9 +21,9 @@ export abstract class StdIOService implements Disposable {
 		this.messagesWrappedInBrackets = wrappedMessages;
 	}
 
-	protected createProcess(workingDirectory: string, binPath: string, args: string[]) {
-		//log(`Starting ${binPath} with args: ${args.join(' ')} ${workingDirectory ? `in ${workingDirectory}` : ''}`);
-		this.process = child_process.spawn(binPath, args, { cwd: workingDirectory });
+	protected createProcess(workingDirectory: string, binPath: string, args: string[], env: any) {
+		console.log(JSON.stringify(env));
+		this.process = child_process.spawn(binPath, args, { cwd: workingDirectory, env: env });
 
 		this.process.stdout.on("data", (data: Buffer) => {
 			let message = data.toString();

@@ -6,6 +6,9 @@ import { DebugProtocol } from "vscode-debugprotocol";
 
 export const isWin = /^win/.test(process.platform);
 
+export const flutter_env = Object.create(process.env);
+flutter_env.FLUTTER_HOST = "VSCode";
+
 // TODO: improve
 export function uriToFilePath(uri: string): string {
 	if (uri.startsWith("file://"))

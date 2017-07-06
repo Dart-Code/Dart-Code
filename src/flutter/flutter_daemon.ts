@@ -8,6 +8,7 @@ import * as child_process from "child_process";
 import * as f from "./flutter_types";
 import * as fs from "fs";
 import * as vs from "vscode";
+import { flutter_env } from "../debug/utils";
 
 export class FlutterDaemon extends StdIOService {
 	deviceManager: FlutterDeviceManager;
@@ -15,7 +16,7 @@ export class FlutterDaemon extends StdIOService {
 	constructor(flutterBinPath: string, projectFolder: string) {
 		super(config.flutterDaemonLogFile, true);
 
-		this.createProcess(projectFolder, flutterBinPath, ["daemon"]);
+		this.createProcess(projectFolder, flutterBinPath, ["daemon"], flutter_env);
 
 		this.deviceManager = new FlutterDeviceManager(this);
 

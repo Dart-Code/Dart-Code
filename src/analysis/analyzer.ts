@@ -45,7 +45,7 @@ export class Analyzer extends AnalyzerGen {
 
 		this.launchArgs = args.slice(1); // Trim the first one as it's just snapshot path.
 
-		this.createProcess(undefined, dartVMPath, args);
+		this.createProcess(undefined, dartVMPath, args, undefined);
 
 		this.serverSetSubscriptions({
 			subscriptions: ["STATUS"]
