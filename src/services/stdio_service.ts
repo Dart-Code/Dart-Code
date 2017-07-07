@@ -22,7 +22,6 @@ export abstract class StdIOService implements Disposable {
 	}
 
 	protected createProcess(workingDirectory: string, binPath: string, args: string[], env: any) {
-		console.log(JSON.stringify(env));
 		this.process = child_process.spawn(binPath, args, { cwd: workingDirectory, env: env });
 
 		this.process.stdout.on("data", (data: Buffer) => {
