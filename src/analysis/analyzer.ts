@@ -6,8 +6,18 @@ import * as as from "./analysis_server_types";
 import * as fs from "fs";
 import { AnalyzerGen } from "./analyzer_gen";
 import { config } from "../config";
-import { log, logError, extensionVersion } from "../utils";
+import { log, logError, extensionVersion, versionIsAtLeast } from "../utils";
 import { Request, UnknownResponse, UnknownNotification } from "../services/stdio_service";
+
+class AnalyzerCapabilities {
+	version: string;
+
+	constructor(analyzerVersion: string) {
+		this.version = analyzerVersion;
+	}
+
+	get supportsPriorityFilesOutsideAnalysisRoots() { return versionIsAtLeast(this.version, "1.18.2"); }
+}
 
 export class Analyzer extends AnalyzerGen {
 	private observatoryPort = config.analyzerObservatoryPort;
@@ -16,6 +26,7 @@ export class Analyzer extends AnalyzerGen {
 	private lastDiagnostics: as.ContextData[];
 	private launchArgs: string[];
 	private version: string;
+	capabilities: AnalyzerCapabilities = new AnalyzerCapabilities("0.0.1");
 
 	constructor(dartVMPath: string, analyzerPath: string) {
 		super(config.analyzerLogFile);
@@ -51,7 +62,7 @@ export class Analyzer extends AnalyzerGen {
 		this.registerForRequestError(e => this.requestDiagnosticsUpdate());
 
 		// Register for version.
-		this.registerForServerConnected(e => this.version = e.version);
+		this.registerForServerConnected(e => { this.version = e.version; this.capabilities = new AnalyzerCapabilities(this.version); });
 
 		this.createProcess(undefined, dartVMPath, args, undefined);
 
