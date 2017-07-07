@@ -58,6 +58,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.flutter.registerForAppStart(n => this.currentRunningAppId = n.appId);
 		this.flutter.registerForAppDebugPort(n => { this.observatoryUri = n.wsUri; this.baseUri = n.baseUri; });
 		this.flutter.registerForAppStarted(n => { if (!args.noDebug) this.initObservatory(this.observatoryUri); });
+		this.flutter.registerForAppStop(n => { this.currentRunningAppId = undefined; this.flutter.dispose(); });
 
 		return this.flutter.process;
 	}
