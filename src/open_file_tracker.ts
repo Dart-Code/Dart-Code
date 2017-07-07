@@ -18,7 +18,9 @@ export class OpenFileTracker {
 		let visibleDocuments = window.visibleTextEditors.map(e => e.document).sort((d1, d2) => d1.fileName.localeCompare(d2.fileName));
 		let otherOpenDocuments = workspace.textDocuments.filter(doc => visibleDocuments.indexOf(doc) == -1).sort((d1, d2) => d1.fileName.localeCompare(d2.fileName));
 
-		let priorityDocuments = visibleDocuments.concat(otherOpenDocuments).filter(d => util.isAnalyzable(d));
+
+
+		let priorityDocuments = visibleDocuments.concat(otherOpenDocuments).filter(d => util.isAnalyzableAndInWorkspace(d));
 		let priorityFiles = priorityDocuments.map(doc => doc.fileName);
 
 		// Check the files have changed before sending the results.

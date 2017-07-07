@@ -13,7 +13,7 @@ export class FileChangeHandler {
 	}
 
 	onDidOpenTextDocument(document: vs.TextDocument) {
-		if (!util.isAnalyzable(document))
+		if (!util.isAnalyzableAndInWorkspace(document))
 			return;
 
 		let files: { [key: string]: as.AddContentOverlay } = {};
@@ -27,7 +27,7 @@ export class FileChangeHandler {
 	}
 
 	onDidChangeTextDocument(e: vs.TextDocumentChangeEvent) {
-		if (!util.isAnalyzable(e.document))
+		if (!util.isAnalyzableAndInWorkspace(e.document))
 			return;
 
 		// TODO: Fix this...
@@ -62,7 +62,7 @@ export class FileChangeHandler {
 	}
 
 	onDidCloseTextDocument(document: vs.TextDocument) {
-		if (!util.isAnalyzable(document))
+		if (!util.isAnalyzableAndInWorkspace(document))
 			return;
 
 		let files: { [key: string]: as.RemoveContentOverlay } = {};

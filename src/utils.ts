@@ -171,14 +171,18 @@ export function isAnalyzable(document: TextDocument): boolean {
 	if (document.isUntitled || !document.fileName)
 		return false;
 
-	if (!isWithinRootPath(document.fileName))
-		return false;
-
 	const analyzableLanguages = ["dart", "html"];
 	const analyzableFilenames = [".analysis_options", "analysis_options.yaml"];
 
 	return analyzableLanguages.indexOf(document.languageId) >= 0
 		|| analyzableFilenames.indexOf(path.basename(document.fileName)) >= 0;
+}
+
+export function isAnalyzableAndInWorkspace(document: TextDocument): boolean {
+	if (document.isUntitled || !document.fileName)
+		return false;
+
+	return isAnalyzable(document) && isWithinRootPath(document.fileName);
 }
 
 export function isWithinRootPath(file: string) {

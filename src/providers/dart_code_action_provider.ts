@@ -5,7 +5,7 @@ import {
 	TextEdit, Range, Command
 } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
-import { logError, isAnalyzable } from "../utils";
+import { logError, isAnalyzableAndInWorkspace } from "../utils";
 import * as as from "../analysis/analysis_server_types";
 
 export class DartCodeActionProvider implements CodeActionProvider {
@@ -15,7 +15,7 @@ export class DartCodeActionProvider implements CodeActionProvider {
 	}
 
 	provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Thenable<Command[]> {
-		if (!isAnalyzable(document))
+		if (!isAnalyzableAndInWorkspace(document))
 			return null;
 		return new Promise<Command[]>((resolve, reject) => {
 			Promise.all([
