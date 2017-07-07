@@ -44,7 +44,6 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 
 		if (debug) {
-			appArgs.push("--observatory-port=0");
 			appArgs.push("--start-paused");
 		}
 
@@ -58,7 +57,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		// Set up subscriptions.
 		this.flutter.registerForAppStart(n => this.currentRunningAppId = n.appId);
 		this.flutter.registerForAppDebugPort(n => { this.observatoryUri = n.wsUri; this.baseUri = n.baseUri; });
-		this.flutter.registerForAppStarted(n => this.initObservatory(this.observatoryUri));
+		this.flutter.registerForAppStarted(n => { if (!args.noDebug) this.initObservatory(this.observatoryUri); });
 
 		return this.flutter.process;
 	}
