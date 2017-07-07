@@ -7,6 +7,7 @@ install:
     $env:PATH = "$pwd\dart-sdk\bin;" + $env:PATH
 
     $env:ELECTRON_NO_ATTACH_CONSOLE = 1
+    $env:CODE_VERSION = 1.12.2
 - cmd: >-
     dart --version
 
