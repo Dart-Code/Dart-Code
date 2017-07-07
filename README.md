@@ -76,4 +76,4 @@ This can be disabled via the `dart.allowAnalytics` setting.
 
 ## Release Notes
 
-Full release notes can be found [on GitHub](https://github.com/Dart-Code/Dart-Code/releases).
+For full release notes, see [the changelog](https://github.com/Dart-Code/Dart-Code/blob/master/CHANGELOG.md).
