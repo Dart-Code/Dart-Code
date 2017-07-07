@@ -1,7 +1,10 @@
-[![Gitter Chat](https://img.shields.io/badge/chat-online-blue.svg)](https://gitter.im/dart-code/Dart-Code)
-[![Follow on Twitter](https://img.shields.io/badge/twitter-dartcode-blue.svg)](https://twitter.com/DartCode)
 [![Linux & Mac build status](https://travis-ci.org/Dart-Code/Dart-Code.svg?branch=master)](https://travis-ci.org/Dart-Code/Dart-Code)
 [![Windows build status](https://ci.appveyor.com/api/projects/status/github/Dart-Code/Dart-Code?branch=master&svg=true)](https://ci.appveyor.com/project/DanTup/dart-code)
+[![Gitter Chat](https://img.shields.io/badge/chat-online-blue.svg)](https://gitter.im/dart-code/Dart-Code)
+[![Follow on Twitter](https://img.shields.io/badge/twitter-dartcode-blue.svg)](https://twitter.com/DartCode)
+[![Contribute to Dart Code](https://img.shields.io/badge/help-contribute-551A8B.svg)](https://github.com/Dart-Code/Dart-Code/blob/master/CONTRIBUTING.md)
+[![Contribute to Dart Code](https://img.shields.io/badge/help-donate-551A8B.svg)](https://www.paypal.me/DanTup)
+
 
 ## Installation
 
@@ -9,34 +12,39 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
     ext install dart-code
 
+
 ## Features
 
-- Support for Flutter projects
+- Debug Dart command line apps (`F5`)
+- Debug Flutter mobile apps (`F5`)
+- Support for flutter `hot reload` (use the debugger `Restart` button or `Ctrl+Shift+F5`)
+- Select from multiple devices for Flutter debugging (select from the status bar)
+- Support for debugging "just my code" or SDK/libraries too (`dart.debugSdkLibraries` and `dart.debugExternalLibraries`)
+- Automatically finds Dart and Flutter SDKs from `PATH` or workspace folders
+- Notification of new stable Dart SDK releases
 - Syntax highlighting
 - Code completion
+- Snippets
 - Realtime errors/warnings/TODOs reported in problems window (`Ctrl`+`Shift`+`M`) and with squiggles
 - Hovers/tooltip information
 - Go to Definition (`F12`)
 - Find References (`Shift`+`F12`)
-- Excute Dart command line apps (`F5`)
-- Debugging support for command line apps (`F5`)
-- Support for debugging just user code or SDK/libraries too
 - Code fixes/lightbulb (`Ctrl`+`.` and `F8`)
-- Notification of new stable Dart SDK releases
 - Type hierarchy (`F4`)
 - Rename refactoring (`F2`)
 - Organise directives (`Ctrl`+`Alt`+`O`)
-- Format document with custom line length (`Alt`+`Shift`+`F`)
-- Support for formatting-during-typing
+- Format document (`Alt`+`Shift`+`F`)
+- Support for format-on-save (`editor.formatOnSave`)
+- Support for format-on-type (`editor.formatOnType`)
 - Workspace-wide symbol search (`Ctrl`+`T`)
-- Auto-closing braces/quotes
+- Automatic closing braces/quotes
 - Document symbol list/search with highlighting (`Ctrl`+`Shift`+`O`)
 - Generation of analysis error reports for easy reporting to the Dart team 
-- `pub get` and `pub upgrade` commands
+- `pub get` and `pub upgrade` commands (and flutter equivilents)
 - Automatically run `pub get` when `pubspec.yaml` is saved
 - Supports strong mode and linting (configured in `analysis_options.yaml` or `.analysis_options`)
 - Other references to symbol under cursor are highlighted
-- Automatically finds Dart SDK if it is in your `PATH` environment variable
+
 
 ## Extension Settings
 
@@ -51,6 +59,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - `dart.sdkPath`: If the Dart SDK is not automatically found on your machine from your `PATH` you can enter the path to it here.
 - `dart.showTodos`: Whether to show TODOs in the Problems list. Defaults to `true`.
 
+
 ## Analytics
 
 This extension reports some basic events and timings to help inform development decisions, such as:
@@ -63,6 +72,7 @@ This extension reports some basic events and timings to help inform development 
 Included in the event is your platform (Win/Linux/Mac) and extension/Dart version numbers.
 
 This can be disabled via the `dart.allowAnalytics` setting.  
+
 
 ## Release Notes
 
