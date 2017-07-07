@@ -65,6 +65,11 @@ export class EditCommands implements vs.Disposable {
 	}
 
 	private applyEdits(document: vs.TextDocument, change: as.SourceChange) {
+		// We can only apply with snippets if there's a single change.
+		if (change.edits.length === 1 && change.linkedEditGroups != null && change.linkedEditGroups.length !== 0)
+			return this.applyEditsWithSnippets(document, change);
+
+		// Otherwise, just make all the edits without the snippets.
 		const changes = new vs.WorkspaceEdit();
 
 		change.edits.forEach((edit) => {
@@ -88,6 +93,54 @@ export class EditCommands implements vs.Disposable {
 				const selection = new vs.Selection(pos, pos);
 				vs.window.showTextDocument(document).then((ed) => ed.selection = selection);
 			}
+		});
+	}
+
+	private applyEditsWithSnippets(document: vs.TextDocument, change: as.SourceChange) {
+		const edit = change.edits[0];
+		vs.window.showTextDocument(document).then((editor) => {
+			// Apply of all of the edits.
+			editor.edit((eb) => {
+				edit.edits.forEach((e) => {
+					eb.replace(
+						new vs.Range(document.positionAt(e.offset), document.positionAt(e.offset + e.length)),
+						e.replacement,
+					);
+				});
+			}).then((_) => {
+				const documentText = editor.document.getText();
+
+				// Create a list of all the placeholders.
+				const placeholders: Array<{ offset: number, length: number, value: string, placeholderNumber: number }> = [];
+				let num = 1;
+				change.linkedEditGroups.forEach((leg) => {
+					leg.positions.forEach((pos) => {
+						placeholders.push({ offset: pos.offset, length: leg.length, value: documentText.substr(pos.offset, leg.length), placeholderNumber: num });
+					});
+					num++;
+				});
+
+				// Ensure they're in offset order so the next maths works!
+				placeholders.sort((p1, p2) => p1.offset - p2.offset);
+
+				const snippet = new vs.SnippetString();
+				const firstPlaceholder = placeholders[0];
+				const lastPlaceholder = placeholders[placeholders.length - 1];
+				const startPos = firstPlaceholder.offset;
+				const endPos = lastPlaceholder.offset + lastPlaceholder.length;
+				let currentPos = startPos;
+				placeholders.forEach((p) => {
+					// Add the text from where we last were up to current placeholder.
+					if (currentPos !== p.offset)
+						snippet.appendText(documentText.substring(currentPos, p.offset));
+					// Add the placeholder.
+					snippet.appendPlaceholder(p.value, p.placeholderNumber);
+					currentPos = p.offset + p.length;
+				});
+
+				// Replace the document.
+				editor.insertSnippet(snippet, new vs.Range(document.positionAt(startPos), document.positionAt(endPos)));
+			});
 		});
 	}
 }
