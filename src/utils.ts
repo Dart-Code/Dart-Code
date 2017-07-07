@@ -7,6 +7,7 @@ import * as as from "./analysis/analysis_server_types";
 import { env, workspace, window, Position, Range, TextDocument, commands, Uri } from "vscode";
 import { config } from "./config";
 import { PackageMap } from "./debug/utils";
+import * as semver from "semver";
 
 const isWin = /^win/.test(process.platform);
 const dartExecutableName = isWin ? "dart.exe" : "dart";
@@ -192,6 +193,10 @@ export function isWithinRootPath(file: string) {
 function getExtensionVersion(): string {
 	let packageJson = require("../../package.json");
 	return packageJson.version;
+}
+
+export function versionIsAtLeast(inputVersion: string, requiredVersion: string): boolean {
+	return semver.gte(inputVersion, requiredVersion);
 }
 
 function checkIsDevelopment() {

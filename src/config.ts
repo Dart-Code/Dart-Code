@@ -1,6 +1,7 @@
 "use strict";
 
 import { workspace, WorkspaceConfiguration, version as codeVersion } from "vscode";
+import { versionIsAtLeast } from "./utils";
 
 class Config {
 	config: WorkspaceConfiguration;
@@ -47,13 +48,13 @@ class Config {
 }
 
 export class CodeCapabilities {
-	version: number;
+	version: string;
 
 	constructor(codeVersion: string) {
-		this.version = parseFloat(codeVersion.split('.').slice(0, 2).join('.'));
+		this.version = codeVersion;
 	}
 
-	get hasScrollableHovers() { return this.version >= 1.6; }
+	get hasScrollableHovers() { return versionIsAtLeast(this.version, "1.6.0"); }
 }
 
 export const config = new Config();
