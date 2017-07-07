@@ -103,6 +103,10 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			detail = suggestion.parameterType;
 		}
 
+		// If we have trailing commas (flutter) they look weird in the list, so trim the off (for display label only).
+		if (label.endsWith(","))
+			label = label.substr(0, label.length - 1).trim();
+
 		let kind = suggestion.element
 			? this.getElementKind(suggestion.element.kind)
 			: this.getSuggestionKind(suggestion.kind);
