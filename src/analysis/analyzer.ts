@@ -15,6 +15,7 @@ export class Analyzer extends AnalyzerGen {
 	private additionalArgs = config.analyzerAdditionalArgs;
 	private lastDiagnostics: as.ContextData[];
 	private launchArgs: string[];
+	private version: string;
 
 	constructor(dartVMPath: string, analyzerPath: string) {
 		super(config.analyzerLogFile);
@@ -45,15 +46,18 @@ export class Analyzer extends AnalyzerGen {
 
 		this.launchArgs = args.slice(1); // Trim the first one as it's just snapshot path.
 
+		// Hook error subscriptions so we can try and get diagnostic info if this happens.
+		this.registerForServerError(e => this.requestDiagnosticsUpdate());
+		this.registerForRequestError(e => this.requestDiagnosticsUpdate());
+
+		// Register for version.
+		this.registerForServerConnected(e => this.version = e.version);
+
 		this.createProcess(undefined, dartVMPath, args, undefined);
 
 		this.serverSetSubscriptions({
 			subscriptions: ["STATUS"]
 		});
-
-		// Hook error subscriptions so we can try and get diagnostic info if this happens.
-		this.registerForServerError(e => this.requestDiagnosticsUpdate());
-		this.registerForRequestError(e => this.requestDiagnosticsUpdate());
 	}
 
 	protected sendMessage<T>(json: string) {
