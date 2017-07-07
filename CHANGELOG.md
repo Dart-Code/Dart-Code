@@ -10,6 +10,7 @@
 - [Flutter] Code completion for Widgets will no longer show trailing commas in the list (though they will still be inserted)
 - Clicking the debugger's restart button for a Dart CLI app will no longer crash but instead provide a more useful message about being unable to restart when VS Code does not supply toe correct configuration (this issue is fixed for VS Code 1.14 coming soon)
 - Stack frame text when stopped in the debugger is now improved and will show async gaps
+- Cursor placement after code fixes and assists should now be more accurate
 
 The [contriburing](https://github.com/Dart-Code/Dart-Code/blob/master/CONTRIBUTING.md) file has also been updated to make it easier to get started with contributing to Dart Code.
 
