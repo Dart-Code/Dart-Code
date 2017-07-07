@@ -1,3 +1,18 @@
+# v2.0 - Flutter Run/Debug/Reload Support!
+
+**Note:** If you previously installed a beta version of Dart Code to help with testing Flutter integration, please uninstall it and close **all** Code instances before installing v2.0 from the marketplace.
+
+- [Flutter] When opening a Flutter project your selected device will be shown in the status bar
+- [Flutter] If you have more than one connected device you will be able to switch between them by clicking on the device in the status bar
+- [Flutter] Pressing `F5` will build and launch your app on the selected device
+- [Flutter] The usual debugging experience is available for Flutter apps, including breakpoints, call stacks, watch window etc.
+- [Flutter] The debugger's `Restart` button (or `Ctrl+Shift+F5`) has been mapped to Flutter's `hot reload` and will update the running application without needing to rebuild
+- [Flutter] Code completion for Widgets will no longer show trailing commas in the list (though they will still be inserted)
+- Clicking the debugger's restart button for a Dart CLI app will no longer crash but instead provide a more useful message about being unable to restart when VS Code does not supply toe correct configuration (this issue is fixed for VS Code 1.14 coming soon)
+- Stack frame text when stopped in the debugger is now improved and will show async gaps
+
+The [contriburing](https://github.com/Dart-Code/Dart-Code/blob/master/CONTRIBUTING.md) file has also been updated to make it easier to get started with contributing to Dart Code.
+
 # v1.4.2
 
 **Note:** This version requires Visual Studio Code 1.13.
