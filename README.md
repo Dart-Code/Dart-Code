@@ -1,5 +1,5 @@
 [![Linux & Mac build status](https://travis-ci.org/Dart-Code/Dart-Code.svg?branch=master)](https://travis-ci.org/Dart-Code/Dart-Code)
-[![Windows build status](https://ci.appveyor.com/api/projects/status/github/Dart-Code/Dart-Code?branch=master&svg=true)](https://ci.appveyor.com/project/DanTup/dart-code)
+<!--[![Windows build status](https://ci.appveyor.com/api/projects/status/github/Dart-Code/Dart-Code?branch=master&svg=true)](https://ci.appveyor.com/project/DanTup/dart-code)-->
 [![Gitter Chat](https://img.shields.io/badge/chat-online-blue.svg)](https://gitter.im/dart-code/Dart-Code)
 [![Follow on Twitter](https://img.shields.io/badge/twitter-dartcode-blue.svg)](https://twitter.com/DartCode)
 [![Contribute to Dart Code](https://img.shields.io/badge/help-contribute-551A8B.svg)](https://github.com/Dart-Code/Dart-Code/blob/master/CONTRIBUTING.md)
