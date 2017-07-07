@@ -73,12 +73,11 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Show the SDK version in the status bar.
 	let sdkVersion = util.getDartSdkVersion(sdks.dart);
-	let versionStatusItem: vs.StatusBarItem;
 	if (sdkVersion) {
-		versionStatusItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
+		let versionStatusItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
 		const suffix = util.isFlutterProject ? " (Flutter)" : "";
 		versionStatusItem.text = sdkVersion + suffix;
-		versionStatusItem.tooltip = "Dart Version" + suffix;
+		versionStatusItem.tooltip = "Dart SDK Version" + suffix;
 		versionStatusItem.show();
 		context.subscriptions.push(versionStatusItem);
 
@@ -116,9 +115,6 @@ export function activate(context: vs.ExtensionContext) {
 		let analyzerEndTime = new Date();
 		analytics.logAnalyzerStartupTime(analyzerEndTime.getTime() - analyzerStartTime.getTime());
 		connectedEvents.dispose();
-
-		if (versionStatusItem)
-			versionStatusItem.text += ` (${sc.version})`;
 	});
 
 	// Log analysis server first analysis completion time when it completes.
