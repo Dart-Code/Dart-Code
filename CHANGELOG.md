@@ -12,7 +12,7 @@
 - Stack frame text when stopped in the debugger is now improved and will show async gaps
 - Cursor placement after code fixes and assists should now be more accurate
 
-The [contriburing](https://github.com/Dart-Code/Dart-Code/blob/master/CONTRIBUTING.md) file has also been updated to make it easier to get started with contributing to Dart Code.
+The [contributing](https://github.com/Dart-Code/Dart-Code/blob/master/CONTRIBUTING.md) file has also been updated to make it easier to get started with contributing to Dart Code.
 
 # v1.4.2
 
