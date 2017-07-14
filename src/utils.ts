@@ -2,6 +2,7 @@
 
 import * as path from "path";
 import * as fs from "fs";
+import * as os from "os";
 import * as https from "https";
 import * as as from "./analysis/analysis_server_types";
 import { env, workspace, window, Position, Range, TextDocument, commands, Uri } from "vscode";
@@ -45,6 +46,9 @@ function findDartSdk(): string {
 	if (userDefinedSdkPath)
 		paths.unshift(path.join(userDefinedSdkPath, "bin"));
 
+	// Resolve all paths to allow things like ~
+	paths = paths.map(fixPaths);
+
 	// Find which path has a Dart executable in it.
 	let dartPath = paths.find(hasDartExecutable);
 	if (!dartPath)
@@ -84,6 +88,9 @@ function findFlutterSdk(): string {
 
 	// Add on PATH, since we might find the SDK there too.
 	paths = paths.concat((<string>process.env.PATH).split(path.delimiter));
+
+	// Resolve all paths to allow things like ~
+	paths = paths.map(fixPaths);
 
 	let flutterHome = paths.find(hasFlutterExecutable);
 	if (!flutterHome)
@@ -141,6 +148,12 @@ function hasExecutable(pathToTest: string, executableName: string): boolean {
 	catch (e) { }
 
 	return false;
+}
+
+function fixPaths(p: string) {
+	if (p.startsWith("~/"))
+		return path.join(os.homedir(), p.substr(2));
+	return p;
 }
 
 export interface Location {
