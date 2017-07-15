@@ -47,7 +47,7 @@ function findDartSdk(): string {
 		paths.unshift(path.join(userDefinedSdkPath, "bin"));
 
 	// Resolve all paths to allow things like ~
-	paths = paths.map(fixPaths);
+	paths = paths.map(resolveHomePath);
 
 	// Find which path has a Dart executable in it.
 	let dartPath = paths.find(hasDartExecutable);
@@ -90,7 +90,7 @@ function findFlutterSdk(): string {
 	paths = paths.concat((<string>process.env.PATH).split(path.delimiter));
 
 	// Resolve all paths to allow things like ~
-	paths = paths.map(fixPaths);
+	paths = paths.map(resolveHomePath);
 
 	let flutterHome = paths.find(hasFlutterExecutable);
 	if (!flutterHome)
@@ -150,7 +150,8 @@ function hasExecutable(pathToTest: string, executableName: string): boolean {
 	return false;
 }
 
-function fixPaths(p: string) {
+export function resolveHomePath(p: string) {
+	if (p == null) return null;
 	if (p.startsWith("~/"))
 		return path.join(os.homedir(), p.substr(2));
 	return p;
