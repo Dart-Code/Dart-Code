@@ -22,14 +22,14 @@ export class EditCommands implements vs.Disposable {
 	}
 
 	private organizeDirectives(editor: vs.TextEditor, editBuilder: vs.TextEditorEdit) {
-		this.sendEdit(this.analyzer.editOrganizeDirectives, editor, editBuilder);
+		this.sendEdit(this.analyzer.editOrganizeDirectives, "Organize Directives", editor, editBuilder);
 	}
 
 	private sortMembers(editor: vs.TextEditor, editBuilder: vs.TextEditorEdit) {
-		this.sendEdit(this.analyzer.editSortMembers, editor, editBuilder);
+		this.sendEdit(this.analyzer.editSortMembers, "Sort Members", editor, editBuilder);
 	}
 
-	private sendEdit(f: (a: { file: string }) => Thenable<{edit: as.SourceFileEdit}>, editor: vs.TextEditor, editBuilder: vs.TextEditorEdit) {
+	private sendEdit(f: (a: { file: string }) => Thenable<{edit: as.SourceFileEdit}>, commandName: string, editor: vs.TextEditor, editBuilder: vs.TextEditorEdit) {
 		if (!editors.hasActiveDartEditor()) {
 			vs.window.showWarningMessage("No active Dart editor.");
 			return;
@@ -52,10 +52,10 @@ export class EditCommands implements vs.Disposable {
 				});
 			}).then((result) => {
 				if (!result)
-					vs.window.showWarningMessage("Unable to apply organize directives edits.");
+					vs.window.showWarningMessage(`Unable to apply ${commandName} edits.`);
 			});
 		}, (error) => {
-			vs.window.showErrorMessage(`Error running organize directives: ${error.message}.`);
+			vs.window.showErrorMessage(`Error running ${commandName}: ${error.message}.`);
 		});
 	}
 
