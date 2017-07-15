@@ -1,4 +1,12 @@
-# v2.0 - Flutter Run/Debug/Reload Support!
+# v2.1.0
+
+- [Flutter] A new command has been added to the command palette to run `flutter doctor`
+- Dart and Flutter SDKs are now found in `PATH` even when they start with `~/` for a users home directory
+- All path names in config (log files, analyzer path, SDK path) now support starting with `~/` for a users home directory
+- When enabled, debug logging should now flush correctly before terminating to reduce the changes of data not being recorded
+- A new option has been introduced (`showLintNames`) which will prefix lint/hint names into messages in the `Problems` pane to make it easier to `// ignore` them if you wish
+
+# v2.0.0 - Flutter Run/Debug/Reload Support!
 
 **Note:** If you previously installed a beta version of Dart Code to help with testing Flutter integration, please uninstall it and close **all** Code instances before installing v2.0 from the marketplace.
 
