@@ -162,12 +162,12 @@ export abstract class StdIOService implements Disposable {
 	}
 
 	dispose() {
-		this.process.kill();
-
 		if (this.logStream) {
 			this.logStream.close();
 			this.logStream = null;
 		}
+
+		this.process.kill();
 	}
 }
 
