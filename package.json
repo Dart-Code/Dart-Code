@@ -269,7 +269,7 @@
 				"dart.showLintNames": {
 					"type": "boolean",
 					"default": false,
-					"description": "Shows the names of linters in the problems panel, for `// ignore:`"
+					"description": "Whether to show the names of linter rules in the problems panel to make it easier to `// ignore:`."
 				}
 			}
 		},
