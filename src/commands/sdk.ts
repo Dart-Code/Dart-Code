@@ -72,12 +72,16 @@ export class SdkCommands {
 			}
 		}));
 
+		// Flutter commands.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", selection => {
 			this.runFlutter("packages get");
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", selection => {
 			this.runFlutter("packages upgrade", selection);
 		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", selection => {
+			this.runFlutter("doctor", selection);
+		}));		
 
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {

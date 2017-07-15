@@ -108,6 +108,11 @@
 					"light": "./media/commands/pull.svg",
 					"dark": "./media/commands/pull-inverse.svg"
 				}
+			},
+			{
+				"command": "flutter.doctor",
+				"title": "Run Flutter Doctor",
+				"category": "Flutter"
 			}
 		],
 		"keybindings": [
@@ -148,6 +153,10 @@
 				},
 				{
 					"command": "flutter.packages.upgrade",
+					"when": "dart-code:flutterProjectLoaded"
+				},
+				{
+					"command": "flutter.doctor",
 					"when": "dart-code:flutterProjectLoaded"
 				}
 			],
