@@ -28,6 +28,7 @@ import { OpenFileTracker } from "./open_file_tracker";
 import { SdkCommands } from "./commands/sdk";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { ServerStatusNotification } from "./analysis/analysis_server_types";
+import { DartPackagesProvider } from "./views/packages_view";
 import { upgradeProject } from "./project_upgrade";
 import { promptUserForConfigs } from "./user_config_prompts";
 
@@ -102,7 +103,7 @@ export function activate(context: vs.ExtensionContext) {
 	analyzer = new Analyzer(path.join(sdks.dart, util.dartVMPath), analyzerPath);
 	context.subscriptions.push(analyzer);
 
-	// Fire up Flutter daemon if required.	
+	// Fire up Flutter daemon if required.
 	if (util.isFlutterProject) {
 		// TODO: finish wiring this up so we can manage the selected device from the status bar (eventualy - use first for now)
 		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, util.flutterPath), vs.workspace.rootPath);
@@ -194,13 +195,24 @@ export function activate(context: vs.ExtensionContext) {
 	// Register misc commands.
 	context.subscriptions.push(new TypeHierarchyCommand(context, analyzer));
 
+	// Register our view providers.
+	const dartPackagesProvider = new DartPackagesProvider(vs.workspace.rootPath);
+	vs.window.registerTreeDataProvider('dartPackages', dartPackagesProvider);
+	context.subscriptions.push(vs.commands.registerCommand('dart.package.openFile', filePath => {
+		if (!filePath) return;
+
+		vs.workspace.openTextDocument(filePath).then(document => {
+			vs.window.showTextDocument(document, { preview: true });
+		}, error => { });
+	}));
+
 	// Perform any required project upgrades.
 	upgradeProject();
 
 	// Prompt user for any special config we might want to set.
 	promptUserForConfigs(context);
 
-	// Turn on all the commands.	
+	// Turn on all the commands.
 	setCommandVisiblity(true);
 
 	// Log how long all this startup took.
