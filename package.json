@@ -87,6 +87,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.sortMembers",
+				"title": "Sort Members",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.showTypeHierarchy",
 				"title": "Show Type Hierarchy",
 				"category": "Dart"
@@ -141,6 +146,10 @@
 				},
 				{
 					"command": "dart.organizeDirectives",
+					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
+				},
+				{
+					"command": "dart.sortMembers",
 					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
 				},
 				{

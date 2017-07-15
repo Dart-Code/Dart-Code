@@ -16,17 +16,28 @@ export class EditCommands implements vs.Disposable {
 
 		this.commands.push(
 			vs.commands.registerTextEditorCommand("dart.organizeDirectives", this.organizeDirectives, this),
+			vs.commands.registerTextEditorCommand("dart.sortMembers", this.sortMembers, this),
 			vs.commands.registerCommand("dart.applySourceChange", this.applyEdits, this)
 		);
 	}
 
 	private organizeDirectives(editor: vs.TextEditor, editBuilder: vs.TextEditorEdit) {
+		this.sendEdit(this.analyzer.editOrganizeDirectives, editor, editBuilder);
+	}
+
+	private sortMembers(editor: vs.TextEditor, editBuilder: vs.TextEditorEdit) {
+		this.sendEdit(this.analyzer.editSortMembers, editor, editBuilder);
+	}
+
+	private sendEdit(f: (a: { file: string }) => Thenable<{edit: as.SourceFileEdit}>, editor: vs.TextEditor, editBuilder: vs.TextEditorEdit) {
 		if (!editors.hasActiveDartEditor()) {
 			vs.window.showWarningMessage("No active Dart editor.");
 			return;
 		}
 
-		this.analyzer.editOrganizeDirectives({ file: editor.document.fileName }).then((response) => {
+		f = f.bind(this.analyzer); // Yay JavaScript!
+
+		f({ file: editor.document.fileName }).then((response) => {
 			let edit: as.SourceFileEdit = response.edit;
 			if (edit.edits.length == 0)
 				return;
