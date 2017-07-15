@@ -32,7 +32,7 @@ export class DartDiagnosticProvider {
 	private createDiagnostic(error: as.AnalysisError): Diagnostic {
 		return {
 			code: error.code,
-			message: error.message,
+			message: ((error.type == "HINT" || error.type == "LINT") && config.showLintNames ? `${error.code}: ` : "") + error.message,
 			range: toRange(error.location),
 			severity: this.getSeverity(error.severity),
 			source: "dart"
