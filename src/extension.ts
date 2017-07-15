@@ -42,7 +42,7 @@ export let sdks: util.Sdks;
 export let analyzer: Analyzer;
 export let flutterDaemon: FlutterDaemon;
 
-let showTodos: boolean = config.showTodos;
+let showTodos: boolean = config.showTodos, showLintNames: boolean = config.showLintNames;
 let analyzerSettings: string = getAnalyzerSettings();
 
 export function activate(context: vs.ExtensionContext) {
@@ -259,6 +259,11 @@ function handleConfigurationChange() {
 	let todoSettingChanged = showTodos != newShowTodoSetting;
 	showTodos = newShowTodoSetting;
 
+	// Lint names.
+	let newShowLintNameSetting = config.showLintNames;
+	let showLintNameSettingChanged = showLintNames != newShowLintNameSetting;
+	showLintNames = newShowLintNameSetting;
+
 	// SDK
 	let newAnalyzerSettings = getAnalyzerSettings();
 	let analyzerSettingsChanged = analyzerSettings != newAnalyzerSettings;
@@ -268,9 +273,12 @@ function handleConfigurationChange() {
 	let newFlutterSetting = util.checkIsFlutterProject();
 	let flutterSettingChanged = util.isFlutterProject != newFlutterSetting;
 
-	if (todoSettingChanged) {
+	if (todoSettingChanged || showLintNameSettingChanged) {
 		let packageRoots = findPackageRoots(vs.workspace.rootPath);
-		analytics.logShowTodosToggled(showTodos);
+		if (todoSettingChanged)
+			analytics.logShowTodosToggled(showTodos);
+		else if (showLintNameSettingChanged)
+			analytics.logLintNamesToggled(showLintNames);
 		analyzer.analysisReanalyze({
 			roots: packageRoots
 		});
