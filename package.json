@@ -265,6 +265,11 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Automatically runs `pub get` whenever pubspec.yaml is saved."
+				},
+				"dart.showLintNames": {
+					"type": "boolean",
+					"default": false,
+					"description": "Shows the names of linters in the problems panel, for `// ignore:`"
 				}
 			}
 		},
