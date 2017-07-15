@@ -19,6 +19,8 @@ There are some "hidden" configuration settings that allow you to enable diagnost
 - `"dart.observatoryLogFile"`: Logs communication with Observatory, the Dart debugger service
 - `"dart.analyzerInstrumentationLogFile"`: Instructs the analysis server to log its own instrumentation data (this is very detailed and can become very large)
 
+Note: It is expected that Code will report that these are unknown configuration options - this is because they're not listed in the package manifest since they're not normally used by end users.
+
 ## Project Structure
 
 Dart Code is currently written in TypeScript. There's a lot of configuration for how Code interacts with Dart Code in `package.json` though the main entry point is the `activate` method in `src/extension.ts`. Functionality is split into classes that provide small pieces of functionality via the Code APIs ([which are documented here](https://code.visualstudio.com/docs/extensionAPI/vscode-api)).
