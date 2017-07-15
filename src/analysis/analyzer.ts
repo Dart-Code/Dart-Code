@@ -17,6 +17,7 @@ class AnalyzerCapabilities {
 	}
 
 	get supportsPriorityFilesOutsideAnalysisRoots() { return versionIsAtLeast(this.version, "1.18.2"); }
+	get supportsDiagnostics() { return versionIsAtLeast(this.version, "1.18.1"); }
 }
 
 export class Analyzer extends AnalyzerGen {
@@ -93,12 +94,11 @@ export class Analyzer extends AnalyzerGen {
 	private requestDiagnosticsUpdate() {
 		this.lastDiagnostics = null;
 
-		// New drive is default in SDK 1.22, so just skip this until it has diagnostics implemented.
-		// See https://github.com/Dart-Code/Dart-Code/issues/244
-		return;
+		if (!this.capabilities.supportsDiagnostics)
+			return;
 
-		// this.diagnosticGetDiagnostics()
-		// 	.then(resp => this.lastDiagnostics = resp.contexts);
+		this.diagnosticGetDiagnostics()
+			.then(resp => this.lastDiagnostics = resp.contexts);
 	}
 
 	getLastDiagnostics(): as.ContextData[] {
