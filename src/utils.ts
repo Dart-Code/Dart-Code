@@ -98,7 +98,7 @@ function findFlutterSdk(): string {
 
 	let realFlutterHome = fs.realpathSync(path.join(flutterHome, flutterExecutableName));
 
-	console.log(`Found flutter at ${realFlutterHome}`);
+	//console.log(`Found flutter at ${realFlutterHome}`);
 
 	return path.join(path.dirname(realFlutterHome), "..");
 
@@ -137,8 +137,8 @@ function findFlutterSdk(): string {
 	}
 }
 
-let hasDartExecutable = (pathToTest: string) => hasExecutable(pathToTest, dartExecutableName);
-let hasFlutterExecutable = (pathToTest: string) => hasExecutable(pathToTest, flutterExecutableName);
+export const hasDartExecutable = (pathToTest: string) => hasExecutable(pathToTest, dartExecutableName);
+const hasFlutterExecutable = (pathToTest: string) => hasExecutable(pathToTest, flutterExecutableName);
 
 function hasExecutable(pathToTest: string, executableName: string): boolean {
 	try {
@@ -200,6 +200,7 @@ export function isAnalyzableAndInWorkspace(document: TextDocument): boolean {
 }
 
 export function isWithinRootPath(file: string) {
+	// TODO: Is this fixed?
 	// asRelativePath returns the input if it's outside of the rootPath.
 	// Edit: Doesn't actually work properly:
 	//   https://github.com/Microsoft/vscode/issues/10446

@@ -11,6 +11,7 @@ import { config } from "../config";
 import { dartPubPath, isFlutterProject, flutterPath, Sdks } from "../utils";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
+import { SdkManager } from "../sdk/sdk_manager";
 
 export class SdkCommands {
 	private sdks: Sdks;
@@ -41,6 +42,10 @@ export class SdkCommands {
 			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || config.flutterRunLogFile;
 			debugConfig.deviceId = debugConfig.deviceId || deviceId;
 		}
+
+		// SDK commands.
+		const sdkManager = new SdkManager();
+		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => sdkManager.changeSdk(this.sdks.dart)));
 
 		// Debug commands.
 		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugSession", (debugConfig: FlutterLaunchRequestArguments) => {

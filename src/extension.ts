@@ -81,6 +81,11 @@ export function activate(context: vs.ExtensionContext) {
 		versionStatusItem.show();
 		context.subscriptions.push(versionStatusItem);
 
+		// If we're set up for multiple versions, set up the command.
+		if (config.sdkPaths && fs.existsSync(config.sdkPaths))
+			versionStatusItem.command = "dart.changeSdk";
+
+		// Do update-check.
 		if (config.checkForSdkUpdates && !util.isFlutterProject) {
 			util.getLatestSdkVersion().then(version => {
 				if (util.isOutOfDate(sdkVersion, version))
@@ -93,6 +98,7 @@ export function activate(context: vs.ExtensionContext) {
 					});
 			}, util.logError);
 		}
+
 		analytics.sdkVersion = sdkVersion;
 	}
 
@@ -309,6 +315,7 @@ function getAnalyzerSettings() {
 	// It doesn't matter how these are combined; it just gets called on every config change and compared.
 	// Only options that requier an analyzer restart should be included.
 	return config.userDefinedSdkPath
+		+ config.sdkPaths
 		+ config.analyzerLogFile
 		+ config.analyzerPath
 		+ config.analyzerDiagnosticsPort

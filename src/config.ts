@@ -46,6 +46,8 @@ class Config {
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
 	get reportAnalyzerErrors() { return this.getConfig<boolean>("reportAnalyzerErrors"); }
 	get userDefinedSdkPath() { return resolveHomePath(this.getConfig<string>("sdkPath")); }
+	setUserDefinedSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value); }
+	get sdkPaths() { return resolveHomePath(this.getConfig<string>("sdkPaths")); }
 }
 
 export class CodeCapabilities {
