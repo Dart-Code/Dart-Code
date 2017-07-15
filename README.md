@@ -26,7 +26,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - Code fixes/lightbulb (`Ctrl`+`.` and `F8`)
 - Type hierarchy (`F4`)
 - Rename refactoring (`F2`)
-- Organise directives (`Ctrl`+`Alt`+`O`)
+- Organize directives (`Ctrl`+`Alt`+`O`)
 - Format document (`Alt`+`Shift`+`F`)
 - Support for format-on-save (`editor.formatOnSave`)
 - Support for format-on-type (`editor.formatOnType`)

@@ -100,7 +100,7 @@ The [contributing](https://github.com/Dart-Code/Dart-Code/blob/master/CONTRIBUTI
 # v0.15.0
 
 - Tooltips will now show include the name of the library that a type comes from.
-- When the `Organise Directives` command fails (eg. due to a compile error) the correct message will be displayed instead of `[Object object]`
+- When the `Organize Directives` command fails (eg. due to a compile error) the correct message will be displayed instead of `[Object object]`
 
 # v0.14.9
 
@@ -233,7 +233,7 @@ Many bugs have been fixed by Microsoft and the Dart team that affect Dart Code s
 - The display of symbols in the workspace symbol search (`Ctrl+T`) has been improved \*
 - The Dart language service will no longer crash when you enter symbols into the (`Ctrl+T`) search box
 - Pressing `F5` will now allow you to run a Dart command line application (you will need to set the path in `.vscode\launch.json`) \*\*
-- Organise Directives (`ctrl+alt+o`) has been added
+- Organize Directives (`ctrl+alt+o`) has been added
 
 # v0.7.0
 
