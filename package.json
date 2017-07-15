@@ -33,6 +33,7 @@
 	"icon": "media/icon.png",
 	"activationEvents": [
 		"onLanguage:dart",
+		"onView:dartPackages",
 		"workspaceContains:**/pubspec.yaml"
 	],
 	"main": "./out/src/extension",
@@ -301,6 +302,15 @@
 				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:flutterProjectLoaded",
 					"command": "flutter.packages.upgrade"
+				}
+			]
+		},
+		"views": {
+			"explorer": [
+				{
+					"id": "dartPackages",
+					"name": "Dart Packages",
+					"when": "resourceLangId == 'dart'"
 				}
 			]
 		},
