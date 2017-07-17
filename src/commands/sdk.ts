@@ -48,7 +48,7 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => sdkManager.changeSdk(this.sdks.dart)));
 
 		// Debug commands.
-		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugSession", (debugConfig: FlutterLaunchRequestArguments) => {
+		context.subscriptions.push(vs.commands.registerCommand("_dart.startDebugSession", (debugConfig: FlutterLaunchRequestArguments) => {
 			if (Object.keys(debugConfig).length === 0)
 				return { status: 'initialConfiguration' };
 

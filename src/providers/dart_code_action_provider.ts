@@ -42,7 +42,7 @@ export class DartCodeActionProvider implements CodeActionProvider {
 	private convertResult(document: TextDocument, change: as.SourceChange): Command {
 		return {
 			title: change.message,
-			command: "dart.applySourceChange",
+			command: "_dart.applySourceChange",
 			arguments: [document, change]
 		};
 	}

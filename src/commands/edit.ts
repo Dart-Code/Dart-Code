@@ -17,7 +17,7 @@ export class EditCommands implements vs.Disposable {
 		this.commands.push(
 			vs.commands.registerTextEditorCommand("dart.organizeDirectives", this.organizeDirectives, this),
 			vs.commands.registerTextEditorCommand("dart.sortMembers", this.sortMembers, this),
-			vs.commands.registerCommand("dart.applySourceChange", this.applyEdits, this)
+			vs.commands.registerCommand("_dart.applySourceChange", this.applyEdits, this)
 		);
 	}
 
