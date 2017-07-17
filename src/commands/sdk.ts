@@ -49,7 +49,8 @@ export class SdkCommands {
 
 		// Debug commands.
 		context.subscriptions.push(vs.commands.registerCommand("_dart.startDebugSession", (debugConfig: FlutterLaunchRequestArguments) => {
-			if (Object.keys(debugConfig).length === 0)
+			const keys = Object.keys(debugConfig);
+			if (keys.length == 0 || (keys.length == 1 && keys[0] == "noDebug"))
 				return { status: 'initialConfiguration' };
 
 			setupDebugConfig(debugConfig, this.sdks, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
