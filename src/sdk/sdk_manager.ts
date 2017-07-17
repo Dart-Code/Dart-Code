@@ -8,7 +8,10 @@ import { config } from "../config";
 
 export class SdkManager {
 	changeSdk(currentSdk: string) {
-		this.searchForSdks(currentSdk, config.sdkPaths);
+		if (config.sdkPaths)
+			this.searchForSdks(currentSdk, config.sdkPaths);
+		else
+			vs.window.showWarningMessage("Set `dart.sdkPaths` to enable fast SDK switching.");
 	}
 
 	searchForSdks(currentSdk: string, sdkContainerFolder: string) {
