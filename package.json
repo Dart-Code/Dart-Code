@@ -97,6 +97,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.changeSdk",
+				"title": "Change SDK",
+				"category": "Dart"
+			},
+			{
 				"command": "flutter.packages.get",
 				"title": "Get Flutter Packages",
 				"category": "Flutter",
@@ -117,6 +122,11 @@
 			{
 				"command": "flutter.doctor",
 				"title": "Run Flutter Doctor",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.changeDevice",
+				"title": "Change Device",
 				"category": "Flutter"
 			}
 		],
@@ -157,6 +167,10 @@
 					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
 				},
 				{
+					"command": "dart.changeSdk",
+					"when": "dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded"
+				},
+				{
 					"command": "flutter.packages.get",
 					"when": "dart-code:flutterProjectLoaded"
 				},
@@ -166,6 +180,10 @@
 				},
 				{
 					"command": "flutter.doctor",
+					"when": "dart-code:flutterProjectLoaded"
+				},
+				{
+					"command": "flutter.changeDevice",
 					"when": "dart-code:flutterProjectLoaded"
 				}
 			],
@@ -306,7 +324,7 @@
 				},
 				"program": "./out/src/debug/dart_debug_entry.js",
 				"runtime": "node",
-				"startSessionCommand": "dart.startDebugSession",
+				"startSessionCommand": "_dart.startDebugSession",
 				"configurationAttributes": {
 					"launch": {
 						"required": [
@@ -368,7 +386,7 @@
 				},
 				"program": "./out/src/debug/flutter_debug_entry.js",
 				"runtime": "node",
-				"startSessionCommand": "dart.startDebugSession",
+				"startSessionCommand": "_dart.startDebugSession",
 				"configurationAttributes": {
 					"launch": {
 						"properties": {
