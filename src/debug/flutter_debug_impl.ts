@@ -72,20 +72,24 @@ export class FlutterDebugSession extends DartDebugSession {
 	 * patched `hot reload` code. 
 	 */
 	protected getPossibleSourceUris(sourcePath: string): string[] {
-		const originalUris = super.getPossibleSourceUris(sourcePath);
-		const allUris = originalUris.slice();
+		const allUris = super.getPossibleSourceUris(sourcePath);
 		const projectUri = fileToUri(this.args.cwd);
 
-		originalUris.forEach(uri => {
+		// Map any paths over to the device-local paths.
+		allUris.slice().forEach(uri => {
 			if (uri.startsWith(projectUri)) {
 				const relativePath = uri.substr(projectUri.length);
 				const mappedPath = path.join(this.baseUri, relativePath);
 				const newUri = fileToUri(mappedPath);
 				allUris.push(newUri);
-				// HACK: See https://github.com/flutter/flutter/issues/11040
-				if (newUri.startsWith("file:///"))
-					allUris.push(newUri.substring("file://".length));
 			}
+		});
+
+		// Handle non-file:/// versions (Mac OS), see #357
+		allUris.slice().forEach(uri => {
+			// HACK: See https://github.com/flutter/flutter/issues/11040
+			if (uri.startsWith("file:///"))
+				allUris.push(uri.substring("file://".length));
 		});
 
 		return allUris;
