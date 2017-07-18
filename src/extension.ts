@@ -30,6 +30,7 @@ import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { ServerStatusNotification } from "./analysis/analysis_server_types";
 import { upgradeProject } from "./project_upgrade";
 import { promptUserForConfigs } from "./user_config_prompts";
+import { FlutterWidgetConstructorDecoratorProvider } from "./providers/flutter_widget_constructor_decoration";
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
 const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
@@ -209,6 +210,17 @@ export function activate(context: vs.ExtensionContext) {
 	// Turn on all the commands.	
 	setCommandVisiblity(true);
 
+	// Enable editor decorations.
+	if (config.previewFlutterCloseTagDecorations) {
+		vs.window.showInformationMessage("Flutter \"closing tag\" decorations prototype is enabled - please give feedback!",
+			"Give Feedback"
+		).then(selectedItem => {
+			if (selectedItem)
+				util.openInBrowser("https://github.com/Dart-Code/Dart-Code/issues/383");
+		});
+		context.subscriptions.push(new FlutterWidgetConstructorDecoratorProvider(analyzer));
+	}
+
 	// Log how long all this startup took.
 	let extensionEndTime = new Date();
 	analytics.logExtensionStartup(extensionEndTime.getTime() - extensionStartTime.getTime());
@@ -311,10 +323,11 @@ function handleConfigurationChange() {
 }
 
 function getAnalyzerSettings() {
-	// The return value here is used to detect when any config option changes that affects the analyzer.
+	// The return value here is used to detect when any config option changes that requires a project reload.
 	// It doesn't matter how these are combined; it just gets called on every config change and compared.
 	// Only options that requier an analyzer restart should be included.
-	return config.userDefinedSdkPath
+	return "CONF-"
+		+ config.userDefinedSdkPath
 		+ config.sdkContainer
 		+ config.analyzerLogFile
 		+ config.analyzerPath
@@ -322,7 +335,8 @@ function getAnalyzerSettings() {
 		+ config.analyzerObservatoryPort
 		+ config.analyzerInstrumentationLogFile
 		+ config.analyzerAdditionalArgs
-		+ config.flutterDaemonLogFile;
+		+ config.flutterDaemonLogFile
+		+ config.previewFlutterCloseTagDecorations;
 }
 
 export function deactivate() {

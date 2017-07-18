@@ -48,6 +48,9 @@ class Config {
 	get userDefinedSdkPath() { return resolveHomePath(this.getConfig<string>("sdkPath")); }
 	setUserDefinedSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value); }
 	get sdkContainer() { return resolveHomePath(this.getConfig<string>("sdkContainer")); }
+
+	// Preview features.
+	get previewFlutterCloseTagDecorations() { return this.getConfig<boolean>("previewFlutterCloseTagDecorations"); }
 }
 
 export class CodeCapabilities {
