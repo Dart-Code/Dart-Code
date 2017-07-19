@@ -1,3 +1,11 @@
+# v2.2.0
+
+- When running on Mac OS + iOS breakpoints should work from first launch without having to `hot reload` first
+- A new `Sort Members` command has been added
+- `Start without debugging` will no longer error if this is the first time running a project (where the `.vscode\launch.json` file does not exist)
+- A new option `sdkContainer` has been added which can be used for fast SDK switching - set to a folder that contains multiple SDKs and the Dart SDK version in the status bar will become clickable
+
+
 # v2.1.0
 
 - [Flutter] A new command has been added to the command palette to run `flutter doctor`
