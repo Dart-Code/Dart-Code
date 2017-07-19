@@ -82,7 +82,7 @@ export function activate(context: vs.ExtensionContext) {
 		context.subscriptions.push(versionStatusItem);
 
 		// If we're set up for multiple versions, set up the command.
-		if (config.sdkPaths && fs.existsSync(config.sdkPaths))
+		if (config.sdkContainer && fs.existsSync(config.sdkContainer))
 			versionStatusItem.command = "dart.changeSdk";
 
 		// Do update-check.
@@ -315,7 +315,7 @@ function getAnalyzerSettings() {
 	// It doesn't matter how these are combined; it just gets called on every config change and compared.
 	// Only options that requier an analyzer restart should be included.
 	return config.userDefinedSdkPath
-		+ config.sdkPaths
+		+ config.sdkContainer
 		+ config.analyzerLogFile
 		+ config.analyzerPath
 		+ config.analyzerDiagnosticsPort

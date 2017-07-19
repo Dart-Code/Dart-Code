@@ -262,7 +262,7 @@
 					"type": "string",
 					"description": "The location of the Dart SDK to use for analyzing and executing code. If blank, Dart Code will attempt to find it from the PATH environment variable."
 				},
-				"dart.sdkPaths": {
+				"dart.sdkContainer": {
 					"type": "string",
 					"description": "The location of a folder that contains multiple Dart SDKs in sub-folders. When set, the version number in the status bar will be clickable to quickly switch between SDKs."
 				},

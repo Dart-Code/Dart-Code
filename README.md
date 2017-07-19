@@ -53,7 +53,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - `dart.pubAdditionalArgs`: Additional args to pass to `pub get` and `pub upgrade` commands (eg. `--packages-dir`).
 - `dart.runPubGetOnPubspecChanges`: Whether to automatically run `pub get` whenever pubspec.yaml is saved. Defaults to `true`.
 - `dart.sdkPath`: If the Dart SDK is not automatically found on your machine from your `PATH` you can enter the path to it here.
-- `dart.sdkPaths`: If you often switch between multiple Dart SDKs, setting this option to a folder that contains multiple Dart SDKs in sub-folders will allow fast switching by clicking the Dart SDK version in the status bar.
+- `dart.sdkContainer`: If you often switch between multiple Dart SDKs, setting this option to a folder that contains multiple Dart SDKs in sub-folders will allow fast switching by clicking the Dart SDK version in the status bar.
 - `dart.showLintNames`: Whether to show the names of linter rules in the problems panel to make it easier to `// ignore:`.
 - `dart.showTodos`: Whether to show TODOs in the Problems list. Defaults to `true`.
 
