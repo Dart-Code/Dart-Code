@@ -122,4 +122,16 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.flutter.restart(this.currentRunningAppId, !this.args.noDebug)
 		super.restartRequest(response, args);
 	}
+
+	protected customRequest(request: string, response: DebugProtocol.Response, args: any): void {
+		switch (request) {
+			case "serviceExtension":
+				this.flutter.callServiceExtension(this.currentRunningAppId, args.type, args.params);
+				break;
+
+			default:
+				super.customRequest(request, response, args);
+				break;
+		}
+	}
 }
