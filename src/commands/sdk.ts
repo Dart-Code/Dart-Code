@@ -87,7 +87,13 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", selection => {
 			this.runFlutter("doctor", selection);
-		}));		
+		}));
+
+		// Debug service commands.
+		let debugPaintingEnabled = false;
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => {
+			vs.commands.executeCommand('workbench.customDebugRequest', "serviceExtension", { type: "ext.flutter.debugPaint", params: { enabled: debugPaintingEnabled = !debugPaintingEnabled } });
+		}));
 
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {

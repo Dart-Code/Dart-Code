@@ -125,6 +125,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.toggleDebugPainting",
+				"title": "Toggle Debug Painting",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.changeDevice",
 				"title": "Change Device",
 				"category": "Flutter"
@@ -181,6 +186,10 @@
 				{
 					"command": "flutter.doctor",
 					"when": "dart-code:flutterProjectLoaded"
+				},
+				{
+					"command": "flutter.toggleDebugPainting",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				},
 				{
 					"command": "flutter.changeDevice",
