@@ -90,16 +90,19 @@ export class SdkCommands {
 		}));
 
 		// Debug service commands.
-		let debugPaintingEnabled = false;
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => {
-			vs.commands.executeCommand('workbench.customDebugRequest', "serviceExtension", { type: "ext.flutter.debugPaint", params: { enabled: debugPaintingEnabled = !debugPaintingEnabled } });
-		}));
+		let debugPaintingEnabled = false, performanceOverlayEnabled = false;
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.runBoolServiceCommand("ext.flutter.debugPaint", debugPaintingEnabled = !debugPaintingEnabled)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.runBoolServiceCommand("ext.flutter.showPerformanceOverlay", performanceOverlayEnabled = !performanceOverlayEnabled)));
 
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {
 			if (config.runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() == "pubspec.yaml")
 				vs.commands.executeCommand("pub.get", td.uri);
 		}));
+	}
+
+	private runBoolServiceCommand(method: string, enabled: boolean) {
+		vs.commands.executeCommand('workbench.customDebugRequest', "serviceExtension", { type: method, params: { enabled: enabled } });
 	}
 
 	private runFlutter(command: string, selection?: vs.Uri) {

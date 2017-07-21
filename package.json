@@ -130,6 +130,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.togglePerformanceOverlay",
+				"title": "Toggle Performance Overlay",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.changeDevice",
 				"title": "Change Device",
 				"category": "Flutter"
@@ -189,6 +194,10 @@
 				},
 				{
 					"command": "flutter.toggleDebugPainting",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.togglePerformanceOverlay",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				},
 				{
