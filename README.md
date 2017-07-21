@@ -9,9 +9,9 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
 ## Features
 
-- Debug Dart command line apps (`F5`)
-- Debug Flutter mobile apps (`F5`)
-- Support for flutter `hot reload` (use the debugger `Restart` button or `Ctrl+Shift+F5`)
+- Debug Dart command line apps
+- Debug Flutter mobile apps
+- Support for flutter `hot reload` (use the debugger `Restart` button)
 - Select from multiple devices for Flutter debugging (select from the status bar)
 - Support for debugging "just my code" or SDK/libraries too (`dart.debugSdkLibraries` and `dart.debugExternalLibraries`)
 - Automatically finds Dart and Flutter SDKs from `PATH` or workspace folders
@@ -19,22 +19,22 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - Syntax highlighting
 - Code completion
 - Snippets
-- Realtime errors/warnings/TODOs reported in problems window (`Ctrl`+`Shift`+`M`) and with squiggles
+- Realtime errors/warnings/TODOs reported in problems window and with squiggles
 - Hovers/tooltip information
-- Go to Definition (`F12`)
-- Find References (`Shift`+`F12`)
-- Code fixes/lightbulb (`Ctrl`+`.` and `F8`)
-- Type hierarchy (`F4`)
-- Rename refactoring (`F2`)
-- Format document (`Alt`+`Shift`+`F`)
-- Organize directives (`Ctrl`+`Alt`+`O`)
+- Go to Definition
+- Find References
+- Code fixes/lightbulb
+- Type hierarchy
+- Rename refactoring
+- Organize directives
 - Sort members
 - Flutter Doctor command
+- Format document
 - Support for format-on-save (`editor.formatOnSave`)
 - Support for format-on-type (`editor.formatOnType`)
-- Workspace-wide symbol search (`Ctrl`+`T`)
+- Workspace-wide symbol search
 - Automatic closing braces/quotes
-- Document symbol list/search with highlighting (`Ctrl`+`Shift`+`O`)
+- Document symbol list/search with highlighting
 - Generation of analysis error reports for easy reporting to the Dart team 
 - `pub get` and `pub upgrade` commands (and flutter equivilents)
 - Automatically run `pub get` when `pubspec.yaml` is saved
