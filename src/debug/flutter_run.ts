@@ -67,7 +67,7 @@ export class FlutterRun extends StdIOService {
 		return this.sendRequest("app.stop", { "appId": appId });
 	}
 
-	callServiceExtension(appId: string, methodName: string, params: any): Thenable<UnknownResponse> {
+	callServiceExtension(appId: string, methodName: string, params: any): Thenable<any> {
 		return this.sendRequest("app.callServiceExtension", { "appId": appId, methodName: methodName, params: params });
 	}
 

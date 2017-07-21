@@ -135,6 +135,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.togglePlatform",
+				"title": "Toggle Platform",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.changeDevice",
 				"title": "Change Device",
 				"category": "Flutter"
@@ -198,6 +203,10 @@
 				},
 				{
 					"command": "flutter.togglePerformanceOverlay",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.togglePlatform",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				},
 				{

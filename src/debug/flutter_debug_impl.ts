@@ -129,6 +129,11 @@ export class FlutterDebugSession extends DartDebugSession {
 				this.flutter.callServiceExtension(this.currentRunningAppId, args.type, args.params);
 				break;
 
+			case "togglePlatform":
+				this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", null)
+					.then(result => this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", { value: result.value == "android" ? "iOS" : "android" }));
+				break;
+
 			default:
 				super.customRequest(request, response, args);
 				break;
