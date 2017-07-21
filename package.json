@@ -150,6 +150,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.toggleSlowModeBanner",
+				"title": "Toggle Slow-Mode Banner",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.changeDevice",
 				"title": "Change Device",
 				"category": "Flutter"
@@ -225,6 +230,10 @@
 				},
 				{
 					"command": "flutter.toggleSlowAnimations",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.toggleSlowModeBanner",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				},
 				{

@@ -90,11 +90,12 @@ export class SdkCommands {
 		}));
 
 		// Debug service commands.
-		let debugPaintingEnabled = false, performanceOverlayEnabled = false, repaintRainbowEnabled = false, timeDilation = 1.0;
+		let debugPaintingEnabled = false, performanceOverlayEnabled = false, repaintRainbowEnabled = false, timeDilation = 1.0, slowModeBannerEnabled = true;
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.runBoolServiceCommand("ext.flutter.debugPaint", debugPaintingEnabled = !debugPaintingEnabled)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.runBoolServiceCommand("ext.flutter.showPerformanceOverlay", performanceOverlayEnabled = !performanceOverlayEnabled)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.runBoolServiceCommand("ext.flutter.repaintRainbow", repaintRainbowEnabled = !repaintRainbowEnabled)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.runServiceCommand("ext.flutter.timeDilation", { timeDilation: timeDilation = 6.0 - timeDilation })));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowModeBanner", () => this.runBoolServiceCommand("ext.flutter.debugAllowBanner", slowModeBannerEnabled = !slowModeBannerEnabled)));
 
 		// Flutter toggle platform.
 		// We can't just use a service command here, as we need to call it twice (once to get, once to change) and
