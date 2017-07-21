@@ -1,3 +1,17 @@
+# v2.3.0 - Flutter Debugging Commands
+
+Several new commands have been added to aid Flutter debugging. These appear in the command palette but can be bound to keys in the Keyboard Shortcuts window in Code.
+
+- Toggle Debug Painting
+- Toggle Performance Overlay
+- Toggle Slow Animations
+- Toggle Repaint Rainbow
+- Toggle Platform (Android/iOS)
+- Toggle Baseline Painting
+- Toggle Slow-Mode Banner
+
+Additionally the default hotkey for `Organize Directives` has been removed to avoid a warning from Code about modifier keys. You can rebind this command in Code's Keyboard Shortcuts window.
+
 # v2.2.0
 
 - When running on Mac OS + iOS breakpoints should work from first launch without having to `hot reload` first
