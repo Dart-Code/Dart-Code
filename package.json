@@ -145,6 +145,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.toggleSlowAnimations",
+				"title": "Toggle Slow Animations",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.changeDevice",
 				"title": "Change Device",
 				"category": "Flutter"
@@ -216,6 +221,10 @@
 				},
 				{
 					"command": "flutter.toggleRepaintRainbow",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.toggleSlowAnimations",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				},
 				{
