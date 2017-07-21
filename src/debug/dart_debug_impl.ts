@@ -614,8 +614,6 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected customRequest(request: string, response: DebugProtocol.Response, args: any): void {
-		this.log("[customRequest]");
-
 		switch (request) {
 			default:
 				super.customRequest(request, response, args);
