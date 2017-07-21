@@ -155,6 +155,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.togglePaintBaselines",
+				"title": "Toggle Baseline Painting",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.changeDevice",
 				"title": "Change Device",
 				"category": "Flutter"
@@ -234,6 +239,10 @@
 				},
 				{
 					"command": "flutter.toggleSlowModeBanner",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.togglePaintBaselines",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				},
 				{
