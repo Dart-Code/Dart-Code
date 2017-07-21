@@ -140,6 +140,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.toggleRepaintRainbow",
+				"title": "Toggle Repaint Rainbow",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.changeDevice",
 				"title": "Change Device",
 				"category": "Flutter"
@@ -207,6 +212,10 @@
 				},
 				{
 					"command": "flutter.togglePlatform",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.toggleRepaintRainbow",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				},
 				{
