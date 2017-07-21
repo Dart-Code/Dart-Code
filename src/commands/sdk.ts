@@ -55,8 +55,10 @@ export class SdkCommands {
 
 			setupDebugConfig(debugConfig, this.sdks, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
 
-			if (isFlutterProject)
-				debugConfig.program = debugConfig.program || "${workspaceRoot}/lib/main.dart";
+			if (isFlutterProject) {
+				resetFlutterSettings();
+				debugConfig.program = debugConfig.program || "${workspaceRoot}/lib/main.dart"; // Set Flutter default path.
+			}
 
 			vs.commands.executeCommand('vscode.startDebug', debugConfig);
 			return { status: 'ok' };
@@ -91,6 +93,10 @@ export class SdkCommands {
 
 		// Debug service commands.
 		let debugPaintingEnabled = false, performanceOverlayEnabled = false, repaintRainbowEnabled = false, timeDilation = 1.0, slowModeBannerEnabled = true, paintBaselinesEnabled = false;
+		function resetFlutterSettings() {
+			// TODO: Make this better? We need to reset on new debug sessions, but copy/pasting the above is a bit naff.
+			debugPaintingEnabled = false, performanceOverlayEnabled = false, repaintRainbowEnabled = false, timeDilation = 1.0, slowModeBannerEnabled = true, paintBaselinesEnabled = false;
+		}
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.runBoolServiceCommand("ext.flutter.debugPaint", debugPaintingEnabled = !debugPaintingEnabled)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.runBoolServiceCommand("ext.flutter.showPerformanceOverlay", performanceOverlayEnabled = !performanceOverlayEnabled)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.runBoolServiceCommand("ext.flutter.repaintRainbow", repaintRainbowEnabled = !repaintRainbowEnabled)));
