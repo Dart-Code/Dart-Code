@@ -108,6 +108,16 @@ export class Analyzer extends AnalyzerGen {
 	getAnalyzerLaunchArgs(): string[] {
 		return this.launchArgs;
 	}
+
+	sendDummyEdit(file: string) {
+		// Send a dummy edit (https://github.com/dart-lang/sdk/issues/30238)
+		let files: { [key: string]: as.ChangeContentOverlay } = {};
+		files[file] = {
+			type: "change",
+			edits: [{ offset: 0, length: 0, replacement: "", id: "" }]
+		};
+		this.analysisUpdateContent({ files: files });
+	}
 }
 
 export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind {
