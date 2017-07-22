@@ -24,7 +24,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	dispose() {
-		this.statusBarItem.dispose();
+		this.subscriptions.forEach(s => s.dispose());
 	}
 
 	deviceAdded(dev: f.Device) {
