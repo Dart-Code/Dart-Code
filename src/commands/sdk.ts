@@ -104,6 +104,9 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowModeBanner", () => this.runBoolServiceCommand("ext.flutter.debugAllowBanner", slowModeBannerEnabled = !slowModeBannerEnabled)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.runBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", paintBaselinesEnabled = !paintBaselinesEnabled)));
 
+		// Misc custom debug commands.
+		context.subscriptions.push(vs.commands.registerCommand("flutter.fullRestart", () => vs.commands.executeCommand('workbench.customDebugRequest', "fullRestart")));
+
 		// Flutter toggle platform.
 		// We can't just use a service command here, as we need to call it twice (once to get, once to change) and
 		// currently it seems like the DA can't return responses to us here, so we'll have to do them both inside the DA.

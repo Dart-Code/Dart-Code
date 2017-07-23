@@ -160,6 +160,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.fullRestart",
+				"title": "Full Restart",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.changeDevice",
 				"title": "Change Device",
 				"category": "Flutter"
@@ -237,6 +242,10 @@
 				},
 				{
 					"command": "flutter.togglePaintBaselines",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.fullRestart",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				},
 				{
