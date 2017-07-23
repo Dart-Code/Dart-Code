@@ -163,6 +163,13 @@ export function activate(context: vs.ExtensionContext) {
 		});
 	}
 
+	// Hook editor changes to send updated contents to analyzer.
+	let fileChangeHandler = new FileChangeHandler(analyzer);
+	context.subscriptions.push(vs.workspace.onDidOpenTextDocument(td => fileChangeHandler.onDidOpenTextDocument(td)));
+	context.subscriptions.push(vs.workspace.onDidChangeTextDocument(e => fileChangeHandler.onDidChangeTextDocument(e)));
+	context.subscriptions.push(vs.workspace.onDidCloseTextDocument(td => fileChangeHandler.onDidCloseTextDocument(td)));
+	vs.workspace.textDocuments.forEach(td => fileChangeHandler.onDidOpenTextDocument(td)); // Handle already-open files.
+
 	// Fire up Flutter daemon if required.	
 	if (util.isFlutterProject) {
 		// TODO: finish wiring this up so we can manage the selected device from the status bar (eventualy - use first for now)
@@ -194,13 +201,6 @@ export function activate(context: vs.ExtensionContext) {
 			context.subscriptions.push(new FlutterWidgetConstructorDecoratorProvider(analyzer));
 		}
 	}
-
-	// Hook editor changes to send updated contents to analyzer.
-	let fileChangeHandler = new FileChangeHandler(analyzer);
-	context.subscriptions.push(vs.workspace.onDidOpenTextDocument(td => fileChangeHandler.onDidOpenTextDocument(td)));
-	context.subscriptions.push(vs.workspace.onDidChangeTextDocument(e => fileChangeHandler.onDidChangeTextDocument(e)));
-	context.subscriptions.push(vs.workspace.onDidCloseTextDocument(td => fileChangeHandler.onDidCloseTextDocument(td)));
-	vs.workspace.textDocuments.forEach(td => fileChangeHandler.onDidOpenTextDocument(td)); // Handle already-open files.
 
 	// Hook open/active file changes so we can set priority files with the analyzer.
 	let openFileTracker = new OpenFileTracker(analyzer);
