@@ -182,6 +182,17 @@ export function activate(context: vs.ExtensionContext) {
 
 			vs.commands.executeCommand('workbench.customDebugRequest', "hotReload");
 		}));
+
+		// Enable editor decorations.
+		if (config.previewFlutterCloseTagDecorations) {
+			vs.window.showInformationMessage("Flutter \"closing tag\" decorations prototype is enabled - please give feedback!",
+				"Give Feedback"
+			).then(selectedItem => {
+				if (selectedItem)
+					util.openInBrowser("https://github.com/Dart-Code/Dart-Code/issues/383");
+			});
+			context.subscriptions.push(new FlutterWidgetConstructorDecoratorProvider(analyzer));
+		}
 	}
 
 	// Hook editor changes to send updated contents to analyzer.
@@ -223,17 +234,6 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Turn on all the commands.	
 	setCommandVisiblity(true);
-
-	// Enable editor decorations.
-	if (config.previewFlutterCloseTagDecorations) {
-		vs.window.showInformationMessage("Flutter \"closing tag\" decorations prototype is enabled - please give feedback!",
-			"Give Feedback"
-		).then(selectedItem => {
-			if (selectedItem)
-				util.openInBrowser("https://github.com/Dart-Code/Dart-Code/issues/383");
-		});
-		context.subscriptions.push(new FlutterWidgetConstructorDecoratorProvider(analyzer));
-	}
 
 	// Log how long all this startup took.
 	let extensionEndTime = new Date();
