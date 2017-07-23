@@ -23,7 +23,6 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 				if (n.file != file)
 					return;
 
-				this.analyzer.analysisSetSubscriptions({ subscriptions: { "OUTLINE": [] } });
 				disposable.dispose();
 
 				let symbols: SymbolInformation[] = [];
@@ -32,8 +31,7 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 				resolve(symbols);
 			});
 
-			// Send the request to trigger the update.
-			this.analyzer.analysisSetSubscriptions({ subscriptions: { "OUTLINE": [file] } });
+			// Send a dummy edit to force an OCURRENCES notification.
 			this.analyzer.sendDummyEdit(file);
 		});
 	}

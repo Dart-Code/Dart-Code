@@ -18,18 +18,15 @@ export class DartDocumentHighlightProvider implements DocumentHighlightProvider 
 		let file = document.fileName;
 		let offset = document.offsetAt(position);
 
-		this.analyzer.analysisSetSubscriptions({ subscriptions: { "OCCURRENCES": [file] } });
-
 		return new Promise<DocumentHighlight[]>((resolve, reject) => {
 			let disposable = this.analyzer.registerForAnalysisOccurrences(n => {
 				if (n.file != file)
 					return;
 
-				this.analyzer.analysisSetSubscriptions({ subscriptions: { "OCCURRENCES": [] } });
 				disposable.dispose();
 
 				let highlights: DocumentHighlight[] = [];
-				
+
 				// The analysis server returns all items in the file that can have occurances, and
 				// for each item, all the occurances of it in the file. We loop through each item
 				// seeing if there's a match for the current cursor position. If there is, we create
@@ -43,6 +40,9 @@ export class DartDocumentHighlightProvider implements DocumentHighlightProvider 
 				}
 				resolve(highlights);
 			});
+
+			// Send a dummy edit to force an OCURRENCES notification.
+			this.analyzer.sendDummyEdit(file);
 		});
 	}
 

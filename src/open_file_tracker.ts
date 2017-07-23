@@ -32,8 +32,18 @@ export class OpenFileTracker {
 		// Keep track of files to compare next time.
 		this.lastPriorityFiles = priorityFiles;
 
+		// Set priority files.
 		this.analyzer.analysisSetPriorityFiles({
 			files: priorityFiles
 		}).then(() => { }, util.logError);
+
+		// Set subscriptions.
+		this.analyzer.analysisSetSubscriptions({
+			subscriptions: {
+				"OUTLINE": priorityFiles,
+				"OCCURRENCES": priorityFiles,
+				"HIGHLIGHTS": priorityFiles
+			}
+		});
 	}
 }
