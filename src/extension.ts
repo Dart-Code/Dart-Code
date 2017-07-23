@@ -170,12 +170,13 @@ export function activate(context: vs.ExtensionContext) {
 		context.subscriptions.push(flutterDaemon);
 
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {
+			// Don't do if setting is not enabled.
 			if (!config.flutterHotReloadOnSave)
 				return;
 
+			// Don't do if we have errors.
 			let hasErrors = false;
 			diagnostics.forEach((uri, ds) => hasErrors = hasErrors || ds.find(d => d.severity == vs.DiagnosticSeverity.Error) != null);
-			console.log(hasErrors);
 			if (hasErrors)
 				return;
 
