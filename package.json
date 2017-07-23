@@ -376,6 +376,11 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Whether to show the names of linter rules in the problems panel to make it easier to `// ignore:`."
+				},
+				"dart.flutterHotReloadOnSave": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to automatically send a 'hot reload' request during a Flutter debug session when saving files."
 				}
 			}
 		},

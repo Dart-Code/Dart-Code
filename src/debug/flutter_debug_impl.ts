@@ -126,16 +126,24 @@ export class FlutterDebugSession extends DartDebugSession {
 	protected customRequest(request: string, response: DebugProtocol.Response, args: any): void {
 		switch (request) {
 			case "serviceExtension":
-				this.flutter.callServiceExtension(this.currentRunningAppId, args.type, args.params);
+				if (this.currentRunningAppId)
+					this.flutter.callServiceExtension(this.currentRunningAppId, args.type, args.params);
 				break;
 
 			case "togglePlatform":
-				this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", null)
-					.then(result => this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", { value: result.value == "android" ? "iOS" : "android" }));
+				if (this.currentRunningAppId)
+					this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", null)
+						.then(result => this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", { value: result.value == "android" ? "iOS" : "android" }));
+				break;
+
+			case "hotReload":
+				if (this.currentRunningAppId)
+					this.flutter.restart(this.currentRunningAppId, !this.args.noDebug)
 				break;
 
 			case "fullRestart":
-				this.flutter.restart(this.currentRunningAppId, !this.args.noDebug, true)
+				if (this.currentRunningAppId)
+					this.flutter.restart(this.currentRunningAppId, !this.args.noDebug, true)
 				break;
 
 			default:

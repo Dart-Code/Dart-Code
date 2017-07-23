@@ -109,13 +109,6 @@ export function activate(context: vs.ExtensionContext) {
 	analyzer = new Analyzer(path.join(sdks.dart, util.dartVMPath), analyzerPath);
 	context.subscriptions.push(analyzer);
 
-	// Fire up Flutter daemon if required.	
-	if (util.isFlutterProject) {
-		// TODO: finish wiring this up so we can manage the selected device from the status bar (eventualy - use first for now)
-		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, util.flutterPath), vs.workspace.rootPath);
-		context.subscriptions.push(flutterDaemon);
-	}
-
 	// Log analysis server startup time when we get the welcome message/version.
 	let connectedEvents = analyzer.registerForServerConnected(sc => {
 		analytics.analysisServerVersion = sc.version;
@@ -168,6 +161,26 @@ export function activate(context: vs.ExtensionContext) {
 			included: packageRoots,
 			excluded: []
 		});
+	}
+
+	// Fire up Flutter daemon if required.	
+	if (util.isFlutterProject) {
+		// TODO: finish wiring this up so we can manage the selected device from the status bar (eventualy - use first for now)
+		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, util.flutterPath), vs.workspace.rootPath);
+		context.subscriptions.push(flutterDaemon);
+
+		context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {
+			if (!config.flutterHotReloadOnSave)
+				return;
+
+			let hasErrors = false;
+			diagnostics.forEach((uri, ds) => hasErrors = hasErrors || ds.find(d => d.severity == vs.DiagnosticSeverity.Error) != null);
+			console.log(hasErrors);
+			if (hasErrors)
+				return;
+
+			vs.commands.executeCommand('workbench.customDebugRequest', "hotReload");
+		}));
 	}
 
 	// Hook editor changes to send updated contents to analyzer.

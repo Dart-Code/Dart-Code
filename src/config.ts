@@ -36,6 +36,7 @@ class Config {
 	get debugExternalLibraries() { return this.getConfig<boolean>("debugExternalLibraries"); }
 	setDebugExternalLibraries(value: boolean): Thenable<void> { return this.setConfig("debugExternalLibraries", value); }
 	get flutterDaemonLogFile() { return resolveHomePath(this.getConfig<string>("flutterDaemonLogFile")); }
+	get flutterHotReloadOnSave() { return this.getConfig<boolean>("flutterHotReloadOnSave"); }
 	get flutterRunLogFile() { return resolveHomePath(this.getConfig<string>("flutterRunLogFile")); }
 	get insertArgumentPlaceholders() { return this.getConfig<boolean>("insertArgumentPlaceholders"); }
 	get lineLength() { return this.getConfig<number>("lineLength"); }
