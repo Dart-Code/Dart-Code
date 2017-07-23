@@ -181,9 +181,8 @@ export function activate(context: vs.ExtensionContext) {
 			if (!config.flutterHotReloadOnSave)
 				return;
 
-			// Don't do if we have errors.
-			let hasErrors = false;
-			diagnostics.forEach((uri, ds) => hasErrors = hasErrors || ds.find(d => d.severity == vs.DiagnosticSeverity.Error) != null);
+			// Don't do if we have errors for the saved file.
+			let hasErrors = diagnostics.get(td.uri).find(d => d.severity == vs.DiagnosticSeverity.Error) != null;
 			if (hasErrors)
 				return;
 
