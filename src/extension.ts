@@ -31,6 +31,7 @@ import { ServerStatusNotification } from "./analysis/analysis_server_types";
 import { DartPackagesProvider } from "./views/packages_view";
 import { upgradeProject } from "./project_upgrade";
 import { promptUserForConfigs } from "./user_config_prompts";
+import { FlutterWidgetConstructorDecoratorProvider } from "./providers/flutter_widget_constructor_decoration";
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
 const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
@@ -43,7 +44,7 @@ export let sdks: util.Sdks;
 export let analyzer: Analyzer;
 export let flutterDaemon: FlutterDaemon;
 
-let showTodos: boolean = config.showTodos;
+let showTodos: boolean = config.showTodos, showLintNames: boolean = config.showLintNames;
 let analyzerSettings: string = getAnalyzerSettings();
 
 export function activate(context: vs.ExtensionContext) {
@@ -82,6 +83,11 @@ export function activate(context: vs.ExtensionContext) {
 		versionStatusItem.show();
 		context.subscriptions.push(versionStatusItem);
 
+		// If we're set up for multiple versions, set up the command.
+		if (!util.isFlutterProject && config.sdkContainer && fs.existsSync(config.sdkContainer))
+			versionStatusItem.command = "dart.changeSdk";
+
+		// Do update-check.
 		if (config.checkForSdkUpdates && !util.isFlutterProject) {
 			util.getLatestSdkVersion().then(version => {
 				if (util.isOutOfDate(sdkVersion, version))
@@ -94,6 +100,7 @@ export function activate(context: vs.ExtensionContext) {
 					});
 			}, util.logError);
 		}
+
 		analytics.sdkVersion = sdkVersion;
 	}
 
@@ -102,13 +109,6 @@ export function activate(context: vs.ExtensionContext) {
 	const analyzerPath = config.analyzerPath || path.join(sdks.dart, util.analyzerPath);
 	analyzer = new Analyzer(path.join(sdks.dart, util.dartVMPath), analyzerPath);
 	context.subscriptions.push(analyzer);
-
-	// Fire up Flutter daemon if required.
-	if (util.isFlutterProject) {
-		// TODO: finish wiring this up so we can manage the selected device from the status bar (eventualy - use first for now)
-		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, util.flutterPath), vs.workspace.rootPath);
-		context.subscriptions.push(flutterDaemon);
-	}
 
 	// Log analysis server startup time when we get the welcome message/version.
 	let connectedEvents = analyzer.registerForServerConnected(sc => {
@@ -170,6 +170,37 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.workspace.onDidChangeTextDocument(e => fileChangeHandler.onDidChangeTextDocument(e)));
 	context.subscriptions.push(vs.workspace.onDidCloseTextDocument(td => fileChangeHandler.onDidCloseTextDocument(td)));
 	vs.workspace.textDocuments.forEach(td => fileChangeHandler.onDidOpenTextDocument(td)); // Handle already-open files.
+
+	// Fire up Flutter daemon if required.	
+	if (util.isFlutterProject) {
+		// TODO: finish wiring this up so we can manage the selected device from the status bar (eventualy - use first for now)
+		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, util.flutterPath), vs.workspace.rootPath);
+		context.subscriptions.push(flutterDaemon);
+
+		context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {
+			// Don't do if setting is not enabled.
+			if (!config.flutterHotReloadOnSave)
+				return;
+
+			// Don't do if we have errors for the saved file.
+			let hasErrors = diagnostics.get(td.uri).find(d => d.severity == vs.DiagnosticSeverity.Error) != null;
+			if (hasErrors)
+				return;
+
+			vs.commands.executeCommand('workbench.customDebugRequest', "hotReload");
+		}));
+
+		// Enable editor decorations.
+		if (config.previewFlutterCloseTagDecorations) {
+			vs.window.showInformationMessage("Flutter \"closing tag\" decorations prototype is enabled - please give feedback!",
+				"Give Feedback"
+			).then(selectedItem => {
+				if (selectedItem)
+					util.openInBrowser("https://github.com/Dart-Code/Dart-Code/issues/383");
+			});
+			context.subscriptions.push(new FlutterWidgetConstructorDecoratorProvider(analyzer));
+		}
+	}
 
 	// Hook open/active file changes so we can set priority files with the analyzer.
 	let openFileTracker = new OpenFileTracker(analyzer);
@@ -271,6 +302,11 @@ function handleConfigurationChange() {
 	let todoSettingChanged = showTodos != newShowTodoSetting;
 	showTodos = newShowTodoSetting;
 
+	// Lint names.
+	let newShowLintNameSetting = config.showLintNames;
+	let showLintNameSettingChanged = showLintNames != newShowLintNameSetting;
+	showLintNames = newShowLintNameSetting;
+
 	// SDK
 	let newAnalyzerSettings = getAnalyzerSettings();
 	let analyzerSettingsChanged = analyzerSettings != newAnalyzerSettings;
@@ -280,9 +316,12 @@ function handleConfigurationChange() {
 	let newFlutterSetting = util.checkIsFlutterProject();
 	let flutterSettingChanged = util.isFlutterProject != newFlutterSetting;
 
-	if (todoSettingChanged) {
+	if (todoSettingChanged || showLintNameSettingChanged) {
 		let packageRoots = findPackageRoots(vs.workspace.rootPath);
-		analytics.logShowTodosToggled(showTodos);
+		if (todoSettingChanged)
+			analytics.logShowTodosToggled(showTodos);
+		else if (showLintNameSettingChanged)
+			analytics.logLintNamesToggled(showLintNames);
 		analyzer.analysisReanalyze({
 			roots: packageRoots
 		});
@@ -309,17 +348,20 @@ function handleConfigurationChange() {
 }
 
 function getAnalyzerSettings() {
-	// The return value here is used to detect when any config option changes that affects the analyzer.
+	// The return value here is used to detect when any config option changes that requires a project reload.
 	// It doesn't matter how these are combined; it just gets called on every config change and compared.
 	// Only options that requier an analyzer restart should be included.
-	return config.userDefinedSdkPath
+	return "CONF-"
+		+ config.userDefinedSdkPath
+		+ config.sdkContainer
 		+ config.analyzerLogFile
 		+ config.analyzerPath
 		+ config.analyzerDiagnosticsPort
 		+ config.analyzerObservatoryPort
 		+ config.analyzerInstrumentationLogFile
 		+ config.analyzerAdditionalArgs
-		+ config.flutterDaemonLogFile;
+		+ config.flutterDaemonLogFile
+		+ config.previewFlutterCloseTagDecorations;
 }
 
 export function deactivate() {

@@ -47,7 +47,7 @@ function findDartSdk(): string {
 		paths.unshift(path.join(userDefinedSdkPath, "bin"));
 
 	// Resolve all paths to allow things like ~
-	paths = paths.map(fixPaths);
+	paths = paths.map(resolveHomePath);
 
 	// Find which path has a Dart executable in it.
 	let dartPath = paths.find(hasDartExecutable);
@@ -90,7 +90,7 @@ function findFlutterSdk(): string {
 	paths = paths.concat((<string>process.env.PATH).split(path.delimiter));
 
 	// Resolve all paths to allow things like ~
-	paths = paths.map(fixPaths);
+	paths = paths.map(resolveHomePath);
 
 	let flutterHome = paths.find(hasFlutterExecutable);
 	if (!flutterHome)
@@ -98,7 +98,7 @@ function findFlutterSdk(): string {
 
 	let realFlutterHome = fs.realpathSync(path.join(flutterHome, flutterExecutableName));
 
-	console.log(`Found flutter at ${realFlutterHome}`);
+	//console.log(`Found flutter at ${realFlutterHome}`);
 
 	return path.join(path.dirname(realFlutterHome), "..");
 
@@ -137,8 +137,8 @@ function findFlutterSdk(): string {
 	}
 }
 
-let hasDartExecutable = (pathToTest: string) => hasExecutable(pathToTest, dartExecutableName);
-let hasFlutterExecutable = (pathToTest: string) => hasExecutable(pathToTest, flutterExecutableName);
+export const hasDartExecutable = (pathToTest: string) => hasExecutable(pathToTest, dartExecutableName);
+const hasFlutterExecutable = (pathToTest: string) => hasExecutable(pathToTest, flutterExecutableName);
 
 function hasExecutable(pathToTest: string, executableName: string): boolean {
 	try {
@@ -150,7 +150,8 @@ function hasExecutable(pathToTest: string, executableName: string): boolean {
 	return false;
 }
 
-function fixPaths(p: string) {
+export function resolveHomePath(p: string) {
+	if (p == null) return null;
 	if (p.startsWith("~/"))
 		return path.join(os.homedir(), p.substr(2));
 	return p;
@@ -199,6 +200,7 @@ export function isAnalyzableAndInWorkspace(document: TextDocument): boolean {
 }
 
 export function isWithinRootPath(file: string) {
+	// TODO: Is this fixed?
 	// asRelativePath returns the input if it's outside of the rootPath.
 	// Edit: Doesn't actually work properly:
 	//   https://github.com/Microsoft/vscode/issues/10446

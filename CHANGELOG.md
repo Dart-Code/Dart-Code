@@ -1,4 +1,41 @@
-# v2.0 - Flutter Run/Debug/Reload Support!
+# v2.3.1
+
+- An issue with searching symbols in a file being unreliable (appearing to hang) has been fixed
+- A new setting `flutterHotReloadOnSave` has been added to force a hot reload upon saving (if there are no errors in the file being saved)
+- A new `Full Restart` command is now available during Flutter debugging sessions for a full restart
+
+Additionally, a new prototype editor feature is available for Flutter projects to improve readability of `build` methods, see #383 for details.
+
+# v2.3.0 - Flutter Debugging Commands
+
+Several new commands have been added to aid Flutter debugging. These appear in the command palette but can be bound to keys in the Keyboard Shortcuts window in Code.
+
+- Toggle Debug Painting
+- Toggle Performance Overlay
+- Toggle Slow Animations
+- Toggle Repaint Rainbow
+- Toggle Platform (Android/iOS)
+- Toggle Baseline Painting
+- Toggle Slow-Mode Banner
+
+Additionally the default hotkey for `Organize Directives` has been removed to avoid a warning from Code about modifier keys. You can rebind this command in Code's Keyboard Shortcuts window.
+
+# v2.2.0
+
+- When running on Mac OS + iOS breakpoints should work from first launch without having to `hot reload` first
+- A new `Sort Members` command has been added
+- `Start without debugging` will no longer error if this is the first time running a project (where the `.vscode\launch.json` file does not exist)
+- A new setting `sdkContainer` has been added which can be used for fast SDK switching - set to a folder that contains multiple SDKs and the Dart SDK version in the status bar will become clickable
+
+# v2.1.0
+
+- [Flutter] A new command has been added to the command palette to run `flutter doctor`
+- Dart and Flutter SDKs are now found in `PATH` even when they start with `~/` for a users home directory
+- All path names in config (log files, analyzer path, SDK path) now support starting with `~/` for a users home directory
+- When enabled, debug logging should now flush correctly before terminating to reduce the changes of data not being recorded
+- A new setting has been introduced (`showLintNames`) which will prefix lint/hint names into messages in the `Problems` pane to make it easier to `// ignore` them if you wish
+
+# v2.0.0 - Flutter Run/Debug/Reload Support!
 
 **Note:** If you previously installed a beta version of Dart Code to help with testing Flutter integration, please uninstall it and close **all** Code instances before installing v2.0 from the marketplace.
 
@@ -82,7 +119,7 @@ The [contributing](https://github.com/Dart-Code/Dart-Code/blob/master/CONTRIBUTI
 
 - Pressing F5 to launch Dart programs after upgrading to Code 1.10 will no longer fail with an error about an unexpected token in `launch.json`
 - Pressing F5 to launch Dart programs will now use Dart's `checked mode` by default
-- A new option has been introduced (`pubAdditionalArgs`) that allows additional arguments to be passed to `pub` in the `Pub Get` and `Pub Upgrade` commands (this may be useful if you wish to use `--packages-dir`)
+- A new setting has been introduced (`pubAdditionalArgs`) that allows additional arguments to be passed to `pub` in the `Pub Get` and `Pub Upgrade` commands (this may be useful if you wish to use `--packages-dir`)
 - The order of items in error reports have been tweaked slightly to move more useful stuff further up
 
 # v0.15.1
@@ -92,7 +129,7 @@ The [contributing](https://github.com/Dart-Code/Dart-Code/blob/master/CONTRIBUTI
 # v0.15.0
 
 - Tooltips will now show include the name of the library that a type comes from.
-- When the `Organise Directives` command fails (eg. due to a compile error) the correct message will be displayed instead of `[Object object]`
+- When the `Organize Directives` command fails (eg. due to a compile error) the correct message will be displayed instead of `[Object object]`
 
 # v0.14.9
 
@@ -147,7 +184,7 @@ Note: Due to use of new APIs, Dart Code v0.14 requires Visual Studio Code v1.6 o
 
 ## Debug Just My Code
 
-New options have been added controlling whether to step into SDK and external library code when debugging. When first opening Dart Code with this change you will be prompted to choose whether to "Debug just my code" or "Debug all code". You can change this at any time with the `dart.debugSdkLibraries` and `dart.debugExternalLibraries` options.
+New settings have been added controlling whether to step into SDK and external library code when debugging. When first opening Dart Code with this change you will be prompted to choose whether to "Debug just my code" or "Debug all code". You can change this at any time with the `dart.debugSdkLibraries` and `dart.debugExternalLibraries` settings.
 
 ## Analysis Server Error Reporting
 
@@ -180,7 +217,7 @@ If the analysis server encounters an error you will now be prompted (up to 3 tim
 
 # v0.11.1
 
-- An option has been added (`dart.insertArgumentPlaceholders`) to turn off placeholder insertion during completion operations
+- A new setting has been added (`dart.insertArgumentPlaceholders`) to turn off placeholder insertion during completion operations
 - More improvements have been made to hovers (these appear best in Code 1.6, currently the Insiders build)
 - Large lists will now be "paged" in the debugger locals/watch windows to improve performance
 - The SDK update notification now has a button to jump directly to the Dart SDK download page
@@ -207,7 +244,7 @@ Many bugs have been fixed by Microsoft and the Dart team that affect Dart Code s
 - Debug support has been added! Breakpoints, hover evaluation, watch window, call stack etc. should all work (with some minor known issues)
 - Rename (`F2`) now works for most items
 - The update check for SDKs now connects to the internet to check for updates instead of using a hard-coded last-known-update value
-- A new option has been added to disable SDK update checks/notifications (`dart.checkForSdkUpdates`)
+- A new setting has been added to disable SDK update checks/notifications (`dart.checkForSdkUpdates`)
 - Properties will now display better in completion/symbol lists and not as callable methods
 - SDK paths that have been removed from settings will no longer continue to be searched at startup
 - Indent settings for `pubspec.yaml` and `analysis_options.yaml` will now also be forced into 2-spaces at load (if `dart.setIndentation` has not been set to `false`)
@@ -225,7 +262,7 @@ Many bugs have been fixed by Microsoft and the Dart team that affect Dart Code s
 - The display of symbols in the workspace symbol search (`Ctrl+T`) has been improved \*
 - The Dart language service will no longer crash when you enter symbols into the (`Ctrl+T`) search box
 - Pressing `F5` will now allow you to run a Dart command line application (you will need to set the path in `.vscode\launch.json`) \*\*
-- Organise Directives (`ctrl+alt+o`) has been added
+- Organize Directives (`ctrl+alt+o`) has been added
 
 # v0.7.0
 
@@ -245,12 +282,12 @@ Additionally, a new option `dart.allowAnalytics` was added to control if analyti
 
 # v0.6.1
 
-- A new option `dart.showTodos` (default: `true`) has been added to show/hide TODO messages from the Problems list
+- A new setting `dart.showTodos` (default: `true`) has been added to show/hide TODO messages from the Problems list
 - "Analyzing…" will now show in the status bar when files are being analyzed
 - Go to Definition is now supported within your project (though does not yet work with SDK classes)
 - The Dart SDK version number will now show in the bottom right status bar
 - Dart files will automatically be set to 2-space indenting when you open them
-- A new option `dart.setIndentation` (default: `true`) has been added to enable/disable automatic indent settings 
+- A new setting `dart.setIndentation` (default: `true`) has been added to enable/disable automatic indent settings 
 - Symbol search is now case-insensitive and also supports better filtering (eg. "TA" will match "TwitterApi")
 - Tooltips reading `undefined` will no longer appear for some items (eg. string literals)
 - Tooltip formatting/display has been greatly improved

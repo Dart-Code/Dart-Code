@@ -2,7 +2,7 @@
 	"name": "dart-code",
 	"displayName": "Dart Code",
 	"description": "Dart and Flutter support for Visual Studio Code.",
-	"version": "2.0.0",
+	"version": "2.4.0-dev",
 	"publisher": "DanTup",
 	"engines": {
 		"vscode": "^1.13.0"
@@ -88,8 +88,18 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.sortMembers",
+				"title": "Sort Members",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.showTypeHierarchy",
 				"title": "Show Type Hierarchy",
+				"category": "Dart"
+			},
+			{
+				"command": "dart.changeSdk",
+				"title": "Change SDK",
 				"category": "Dart"
 			},
 			{
@@ -109,15 +119,59 @@
 					"light": "./media/commands/pull.svg",
 					"dark": "./media/commands/pull-inverse.svg"
 				}
+			},
+			{
+				"command": "flutter.doctor",
+				"title": "Run Flutter Doctor",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.toggleDebugPainting",
+				"title": "Toggle Debug Painting",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.togglePerformanceOverlay",
+				"title": "Toggle Performance Overlay",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.togglePlatform",
+				"title": "Toggle Platform",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.toggleRepaintRainbow",
+				"title": "Toggle Repaint Rainbow",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.toggleSlowAnimations",
+				"title": "Toggle Slow Animations",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.toggleSlowModeBanner",
+				"title": "Toggle Slow-Mode Banner",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.togglePaintBaselines",
+				"title": "Toggle Baseline Painting",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.fullRestart",
+				"title": "Full Restart",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.changeDevice",
+				"title": "Change Device",
+				"category": "Flutter"
 			}
 		],
 		"keybindings": [
-			{
-				"command": "dart.organizeDirectives",
-				"key": "ctrl+alt+o",
-				"mac": "cmd+alt+o",
-				"when": "editorLangId == dart"
-			},
 			{
 				"command": "dart.showTypeHierarchy",
 				"key": "f4",
@@ -140,8 +194,16 @@
 					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
 				},
 				{
+					"command": "dart.sortMembers",
+					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
+				},
+				{
 					"command": "dart.showTypeHierarchy",
 					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
+				},
+				{
+					"command": "dart.changeSdk",
+					"when": "dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded"
 				},
 				{
 					"command": "flutter.packages.get",
@@ -149,6 +211,46 @@
 				},
 				{
 					"command": "flutter.packages.upgrade",
+					"when": "dart-code:flutterProjectLoaded"
+				},
+				{
+					"command": "flutter.doctor",
+					"when": "dart-code:flutterProjectLoaded"
+				},
+				{
+					"command": "flutter.toggleDebugPainting",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.togglePerformanceOverlay",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.togglePlatform",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.toggleRepaintRainbow",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.toggleSlowAnimations",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.toggleSlowModeBanner",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.togglePaintBaselines",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.fullRestart",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.changeDevice",
 					"when": "dart-code:flutterProjectLoaded"
 				}
 			],
@@ -236,6 +338,10 @@
 					"type": "string",
 					"description": "The location of the Dart SDK to use for analyzing and executing code. If blank, Dart Code will attempt to find it from the PATH environment variable."
 				},
+				"dart.sdkContainer": {
+					"type": "string",
+					"description": "The location of a folder that contains multiple Dart SDKs in sub-folders. When set, the version number in the status bar will be clickable to quickly switch between SDKs."
+				},
 				"dart.lineLength": {
 					"type": "integer",
 					"default": 80,
@@ -275,6 +381,16 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Automatically runs `pub get` whenever pubspec.yaml is saved."
+				},
+				"dart.showLintNames": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to show the names of linter rules in the problems panel to make it easier to `// ignore:`."
+				},
+				"dart.flutterHotReloadOnSave": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to automatically send a 'hot reload' request during a Flutter debug session when saving files."
 				}
 			}
 		},
@@ -289,7 +405,7 @@
 				},
 				"program": "./out/src/debug/dart_debug_entry.js",
 				"runtime": "node",
-				"startSessionCommand": "dart.startDebugSession",
+				"startSessionCommand": "_dart.startDebugSession",
 				"configurationAttributes": {
 					"launch": {
 						"required": [
@@ -351,7 +467,7 @@
 				},
 				"program": "./out/src/debug/flutter_debug_entry.js",
 				"runtime": "node",
-				"startSessionCommand": "dart.startDebugSession",
+				"startSessionCommand": "_dart.startDebugSession",
 				"configurationAttributes": {
 					"launch": {
 						"properties": {

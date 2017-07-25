@@ -17,14 +17,12 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 
 	provideDocumentSymbols(document: TextDocument, token: CancellationToken): Thenable<SymbolInformation[]> {
 		let file = document.fileName;
-		this.analyzer.analysisSetSubscriptions({ subscriptions: { "OUTLINE": [file] } });
 
 		return new Promise<SymbolInformation[]>((resolve, reject) => {
 			let disposable = this.analyzer.registerForAnalysisOutline(n => {
 				if (n.file != file)
 					return;
 
-				this.analyzer.analysisSetSubscriptions({ subscriptions: { "OUTLINE": [] } });
 				disposable.dispose();
 
 				let symbols: SymbolInformation[] = [];
@@ -32,6 +30,9 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 					this.transcribeOutline(document, symbols, null, element);
 				resolve(symbols);
 			});
+
+			// Send a dummy edit to force an OCURRENCES notification.
+			this.analyzer.sendDummyEdit(file);
 		});
 	}
 

@@ -51,14 +51,16 @@ export class AnalyzerStatusReporter extends Disposable {
 		}
 	}
 
-	handleRequestError(error: RequestError & { method?: string }) {
+	private handleRequestError(error: RequestError & { method?: string }) {
 		// Map this request error to a server error to reuse the shared code.
-		this.handleServerError({
-			isFatal: false,
-			message: error.message,
-			stackTrace: error.stackTrace
-		},
-			error.method);
+		this.handleServerError(
+			{
+				isFatal: false,
+				message: error.message,
+				stackTrace: error.stackTrace
+			},
+			error.method
+		);
 	}
 
 	private handleServerError(error: ServerErrorNotification, method?: string) {

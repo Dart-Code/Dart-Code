@@ -30,6 +30,9 @@ export class FileChangeHandler {
 		if (!util.isAnalyzableAndInWorkspace(e.document))
 			return;
 
+		if (e.contentChanges.length == 0) // This event fires for metadata changes (dirty?) so don't need to notify AS then.
+			return;
+
 		// TODO: Fix this...
 		// HACK: e.document.offsetAt appears to return the wrong offset when there are
 		// multiple edits (since it uses the current document state which can include

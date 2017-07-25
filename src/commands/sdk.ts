@@ -11,6 +11,7 @@ import { config } from "../config";
 import { dartPubPath, isFlutterProject, flutterPath, Sdks } from "../utils";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
+import { SdkManager } from "../sdk/sdk_manager";
 
 export class SdkCommands {
 	private sdks: Sdks;
@@ -42,15 +43,22 @@ export class SdkCommands {
 			debugConfig.deviceId = debugConfig.deviceId || deviceId;
 		}
 
+		// SDK commands.
+		const sdkManager = new SdkManager();
+		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => sdkManager.changeSdk(this.sdks.dart)));
+
 		// Debug commands.
-		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugSession", (debugConfig: FlutterLaunchRequestArguments) => {
-			if (Object.keys(debugConfig).length === 0)
+		context.subscriptions.push(vs.commands.registerCommand("_dart.startDebugSession", (debugConfig: FlutterLaunchRequestArguments) => {
+			const keys = Object.keys(debugConfig);
+			if (keys.length == 0 || (keys.length == 1 && keys[0] == "noDebug"))
 				return { status: 'initialConfiguration' };
 
 			setupDebugConfig(debugConfig, this.sdks, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
 
-			if (isFlutterProject)
-				debugConfig.program = debugConfig.program || "${workspaceRoot}/lib/main.dart";
+			if (isFlutterProject) {
+				resetFlutterSettings();
+				debugConfig.program = debugConfig.program || "${workspaceRoot}/lib/main.dart"; // Set Flutter default path.
+			}
 
 			vs.commands.executeCommand('vscode.startDebug', debugConfig);
 			return { status: 'ok' };
@@ -72,18 +80,51 @@ export class SdkCommands {
 			}
 		}));
 
+		// Flutter commands.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", selection => {
 			this.runFlutter("packages get");
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", selection => {
 			this.runFlutter("packages upgrade", selection);
 		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", selection => {
+			this.runFlutter("doctor", selection);
+		}));
+
+		// Debug service commands.
+		let debugPaintingEnabled = false, performanceOverlayEnabled = false, repaintRainbowEnabled = false, timeDilation = 1.0, slowModeBannerEnabled = true, paintBaselinesEnabled = false;
+		function resetFlutterSettings() {
+			// TODO: Make this better? We need to reset on new debug sessions, but copy/pasting the above is a bit naff.
+			debugPaintingEnabled = false, performanceOverlayEnabled = false, repaintRainbowEnabled = false, timeDilation = 1.0, slowModeBannerEnabled = true, paintBaselinesEnabled = false;
+		}
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.runBoolServiceCommand("ext.flutter.debugPaint", debugPaintingEnabled = !debugPaintingEnabled)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.runBoolServiceCommand("ext.flutter.showPerformanceOverlay", performanceOverlayEnabled = !performanceOverlayEnabled)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.runBoolServiceCommand("ext.flutter.repaintRainbow", repaintRainbowEnabled = !repaintRainbowEnabled)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.runServiceCommand("ext.flutter.timeDilation", { timeDilation: timeDilation = 6.0 - timeDilation })));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowModeBanner", () => this.runBoolServiceCommand("ext.flutter.debugAllowBanner", slowModeBannerEnabled = !slowModeBannerEnabled)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.runBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", paintBaselinesEnabled = !paintBaselinesEnabled)));
+
+		// Misc custom debug commands.
+		context.subscriptions.push(vs.commands.registerCommand("flutter.fullRestart", () => vs.commands.executeCommand('workbench.customDebugRequest', "fullRestart")));
+
+		// Flutter toggle platform.
+		// We can't just use a service command here, as we need to call it twice (once to get, once to change) and
+		// currently it seems like the DA can't return responses to us here, so we'll have to do them both inside the DA.
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => vs.commands.executeCommand('workbench.customDebugRequest', "togglePlatform")));
 
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {
 			if (config.runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() == "pubspec.yaml")
 				vs.commands.executeCommand("pub.get", td.uri);
 		}));
+	}
+
+	private runServiceCommand(method: string, params: any) {
+		vs.commands.executeCommand('workbench.customDebugRequest', "serviceExtension", { type: method, params: params });
+	}
+
+	private runBoolServiceCommand(method: string, enabled: boolean) {
+		this.runServiceCommand(method, { enabled: enabled });
 	}
 
 	private runFlutter(command: string, selection?: vs.Uri) {
