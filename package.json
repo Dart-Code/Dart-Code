@@ -310,7 +310,7 @@
 				{
 					"id": "dartPackages",
 					"name": "Dart Packages",
-					"when": "resourceLangId == 'dart'"
+					"when": "dart-code:dartProjectLoaded"
 				}
 			]
 		},
