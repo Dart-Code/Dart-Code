@@ -34,7 +34,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 							return new PackageDep(name, null, vs.TreeItemCollapsibleState.None, {
 								command: 'dart.package.openFile',
 								title: 'Open File',
-								arguments: [filePath]
+								arguments: [vs.Uri.file(filePath).with({ scheme: "dart-package" })]
 							});
 						} else if (stat.isDirectory()) {
 							return new PackageDep(name, filePath, vs.TreeItemCollapsibleState.Collapsed);

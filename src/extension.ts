@@ -32,6 +32,7 @@ import { DartPackagesProvider } from "./views/packages_view";
 import { upgradeProject } from "./project_upgrade";
 import { promptUserForConfigs } from "./user_config_prompts";
 import { FlutterWidgetConstructorDecoratorProvider } from "./providers/flutter_widget_constructor_decoration";
+import { DartPackageFileContentProvider } from "./providers/dart_package_file_content_provider";
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
 const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
@@ -148,6 +149,7 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, new DartCodeActionProvider(analyzer)));
 	context.subscriptions.push(vs.languages.registerRenameProvider(DART_MODE, new DartRenameProvider(analyzer)));
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE.language, new DartLanguageConfiguration()));
+	context.subscriptions.push(vs.workspace.registerTextDocumentContentProvider("dart-package", new DartPackageFileContentProvider()));
 	context.subscriptions.push(new AnalyzerStatusReporter(analyzer));
 
 	// Set up diagnostics.
