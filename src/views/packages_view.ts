@@ -57,7 +57,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 
 		if (this.pathExists(packagesPath)) {
 			var lines = fs.readFileSync(packagesPath).toString().split("\n");
-			lines = lines.filter(l => !l.startsWith('#') && l.trim().length > 0);
+			lines = lines.filter(l => !l.startsWith('#') && l.trim().length > 0 && !l.endsWith(":lib/"));
 			lines.sort();
 
 			const deps = lines.map(line => {
