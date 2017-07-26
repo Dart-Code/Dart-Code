@@ -188,17 +188,17 @@ export function activate(context: vs.ExtensionContext) {
 
 			vs.commands.executeCommand('workbench.customDebugRequest', "hotReload");
 		}));
+	}
 
-		// Enable editor decorations.
-		if (config.previewFlutterCloseTagDecorations) {
-			vs.window.showInformationMessage("Flutter \"closing tag\" decorations prototype is enabled - please give feedback!",
-				"Give Feedback"
-			).then(selectedItem => {
-				if (selectedItem)
-					util.openInBrowser("https://github.com/Dart-Code/Dart-Code/issues/383");
-			});
-			context.subscriptions.push(new FlutterWidgetConstructorDecoratorProvider(analyzer));
-		}
+	// Enable editor decorations.
+	if ((util.isFlutterProject || util.isFuchsiaProject) && config.previewFlutterCloseTagDecorations) {
+		vs.window.showInformationMessage("Flutter \"closing tag\" decorations prototype is enabled - please give feedback!",
+			"Give Feedback"
+		).then(selectedItem => {
+			if (selectedItem)
+				util.openInBrowser("https://github.com/Dart-Code/Dart-Code/issues/383");
+		});
+		context.subscriptions.push(new FlutterWidgetConstructorDecoratorProvider(analyzer));
 	}
 
 	// Hook open/active file changes so we can set priority files with the analyzer.
@@ -304,6 +304,10 @@ function handleConfigurationChange() {
 	let newFlutterSetting = util.checkIsFlutterProject();
 	let flutterSettingChanged = util.isFlutterProject != newFlutterSetting;
 
+	// Fuchsia
+	let newFuchsiaSetting = util.checkIsFuchsiaProject();
+	let fuchsiaSettingChanged = util.isFuchsiaProject != newFuchsiaSetting;
+
 	if (todoSettingChanged || showLintNameSettingChanged) {
 		let packageRoots = findPackageRoots(vs.workspace.rootPath);
 		if (todoSettingChanged)
@@ -328,6 +332,17 @@ function handleConfigurationChange() {
 		const msg = newFlutterSetting
 			? "Your project now uses Flutter. Save your changes then reload the project to load the Flutter SDK."
 			: "Your project no longer uses Flutter. Save your changes then reload the project to switch back to the standard Dart SDK.";
+		vs.window.showWarningMessage(msg, reloadAction).then(res => {
+			if (res == reloadAction)
+				vs.commands.executeCommand("workbench.action.reloadWindow");
+		});
+	}
+
+	if (fuchsiaSettingChanged) {
+		const reloadAction: string = "Reload Project";
+		const msg = newFuchsiaSetting
+			? "Your project now uses Fuchsia. Save your changes then reload the project to load the Fuchsia Dart SDK."
+			: "Your project no longer uses Fuchsia. Save your changes then reload the project to switch back to the standard Dart SDK.";
 		vs.window.showWarningMessage(msg, reloadAction).then(res => {
 			if (res == reloadAction)
 				vs.commands.executeCommand("workbench.action.reloadWindow");
