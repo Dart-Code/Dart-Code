@@ -21,6 +21,7 @@ export const flutterPath = "bin/" + flutterExecutableName;
 export const extensionVersion = getExtensionVersion();
 export const isDevelopment = checkIsDevelopment();
 export let isFlutterProject: boolean = checkIsFlutterProject();
+export let isFuchsiaProject: boolean = checkIsFuchsiaProject();
 
 export function checkIsFlutterProject(): boolean {
 	if (workspace.rootPath)  // If VS Code has a project open
@@ -32,8 +33,10 @@ export function checkIsFlutterProject(): boolean {
 }
 
 export function findSdks(): Sdks {
-	const flutterSdk = isFlutterProject ? findFlutterSdk() : null;
-	const dartSdk = isFlutterProject ? findFlutterDartSdk(flutterSdk) : findDartSdk();
+	const fuchsiaRoot = findFuchsiaRoot();
+
+	const flutterSdk = isFuchsiaProject ? findFuchsiaFlutterSdk(fuchsiaRoot) : isFlutterProject ? findFlutterSdk() : null;
+	const dartSdk = isFuchsiaProject ? findFuchsiaDartSdk(fuchsiaRoot) : isFlutterProject ? findFlutterDartSdk(flutterSdk) : findDartSdk();
 
 	return { dart: dartSdk, flutter: flutterSdk };
 }
@@ -135,6 +138,63 @@ function findFlutterSdk(): string {
 
 		return path;
 	}
+}
+
+export function checkIsFuchsiaProject(): boolean {
+	return findFuchsiaRoot() != null;
+}
+
+function findFuchsiaRoot(): string {
+	if (workspace.rootPath) {
+		// Walk up the directories from the workspace root, and see if there
+		// exists a directory which has ".jiri_root" directory as a child.
+		// If such directory is found, that is our fuchsia root.
+		let dir = workspace.rootPath;
+		while (dir != null) {
+			try {
+				if (fs.statSync(path.join(dir, ".jiri_root")).isDirectory()) {
+					return dir;
+				}
+			}
+			catch (e) { }
+
+			const parentDir = path.dirname(dir);
+			if (dir == parentDir)
+				break;
+
+			dir = parentDir;
+		}
+	}
+
+	return null;
+}
+
+function findFuchsiaFlutterSdk(fuchsiaRoot: string): string {
+	if (!fuchsiaRoot)
+		return null;
+
+	const fuchsiaFlutterPath = path.join(fuchsiaRoot, "lib/flutter");
+	if (hasFlutterExecutable(path.join(fuchsiaFlutterPath, "bin")))
+		return fuchsiaFlutterPath;
+
+	return null;
+}
+
+function findFuchsiaDartSdk(fuchsiaRoot: string): string {
+	if (!fuchsiaRoot)
+		return null;
+
+	let platformName = "linux";
+	if (isWin)
+		platformName = "win";
+	else if (process.platform == "darwin")
+		platformName = "mac";
+
+	const fuchsiaDartSdkPath = path.join(fuchsiaRoot, "dart/tools/sdks", platformName, "dart-sdk");
+	if (hasDartExecutable(path.join(fuchsiaDartSdkPath, "bin")))
+		return fuchsiaDartSdkPath;
+
+	return null;
 }
 
 export const hasDartExecutable = (pathToTest: string) => hasExecutable(pathToTest, dartExecutableName);
