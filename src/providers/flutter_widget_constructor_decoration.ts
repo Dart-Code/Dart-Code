@@ -105,7 +105,10 @@ export class FlutterWidgetConstructorDecoratorProvider implements vs.Disposable 
 	private async handleConstructor(editor: vs.TextEditor, outline: as.Outline, highlight: as.HighlightRegion): Promise<{ name: string, offset: number }> {
 		const hover = await this.analyzer.analysisGetHover({ file: this.activeEditor.document.fileName, offset: highlight.offset });
 		if (hover && hover.hovers && hover.hovers.length >= 1) {
-			if (this.activeEditor.document.positionAt(hover.hovers[0].offset).line != this.activeEditor.document.positionAt(hover.hovers[0].offset + hover.hovers[0].length).line)
+			const startPosition = this.activeEditor.document.positionAt(hover.hovers[0].offset);
+			const endPosition = this.activeEditor.document.positionAt(hover.hovers[0].offset + hover.hovers[0].length);
+			const lastCharacter = this.activeEditor.document.getText(new vs.Range(endPosition.translate(0, -1), endPosition));
+			if (startPosition.line != endPosition.line && lastCharacter == ")")
 				return { name: hover.hovers[0].containingClassDescription, offset: hover.hovers[0].offset + hover.hovers[0].length };
 		}
 		return null; // Shouldn't happen!
