@@ -71,9 +71,9 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 					p = p.substring(0, p.length - 5);
 					packageName = p.substring(p.lastIndexOf('/') + 1);
 					p = vs.Uri.parse(p).fsPath
-					return new PackageDep(`package:${packageName}`, p, vs.TreeItemCollapsibleState.Collapsed);
+					return new PackageDep(`${packageName}`, p, vs.TreeItemCollapsibleState.Collapsed);
 				} else {
-					return new PackageDep(`package:${packageName}`, null);
+					return new PackageDep(`${packageName}`, null);
 				}
 			});
 			return deps;
