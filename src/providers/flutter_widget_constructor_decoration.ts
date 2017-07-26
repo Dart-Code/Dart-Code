@@ -92,7 +92,9 @@ export class FlutterWidgetConstructorDecoratorProvider implements vs.Disposable 
 			if (h.type == "CLASS" && prevIsNewKeyword)
 				results.push(this.handleConstructor(editor, outline, h));
 
-			prevIsNewKeyword = h.type == "KEYWORD" && this.activeEditor.document.getText().substr(h.offset, h.length) == "new";
+			// Keep track of this for next iteration.
+			const tokenText = this.activeEditor.document.getText().substr(h.offset, h.length);
+			prevIsNewKeyword = h.type == "KEYWORD" && (tokenText == "new" || tokenText == "const");
 		});
 
 		return results;
