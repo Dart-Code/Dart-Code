@@ -85,7 +85,7 @@ export function activate(context: vs.ExtensionContext) {
 		context.subscriptions.push(versionStatusItem);
 
 		// If we're set up for multiple versions, set up the command.
-		if (!util.isFlutterProject && config.sdkContainer && fs.existsSync(config.sdkContainer))
+		if (!util.isFlutterProject && !util.isFuchsiaProject && config.sdkContainer && fs.existsSync(config.sdkContainer))
 			versionStatusItem.command = "dart.changeSdk";
 
 		// Do update-check.
