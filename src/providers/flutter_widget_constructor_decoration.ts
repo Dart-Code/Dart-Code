@@ -63,7 +63,7 @@ export class FlutterWidgetConstructorDecoratorProvider implements vs.Disposable 
 			return;
 
 		const currentEditor = this.activeEditor; // Stash this because the active editor may change during this await.
-		const results = (await Promise.all(this.searchForBuildMethod(this.activeEditor, this.outline, this.highlights))).filter(r => r != null);
+		const results = (await Promise.all(this.searchForBuildMethods(this.activeEditor, this.outline, this.highlights))).filter(r => r != null);
 		if (currentEditor != this.activeEditor)
 			return;
 
@@ -75,12 +75,12 @@ export class FlutterWidgetConstructorDecoratorProvider implements vs.Disposable 
 		}));
 	}
 
-	private searchForBuildMethod(editor: vs.TextEditor, outline: as.Outline, highlights: as.HighlightRegion[]): Promise<{ name: string, offset: number }>[] {
-		if (outline.element.kind == "METHOD" && outline.element.name == "build")
+	private searchForBuildMethods(editor: vs.TextEditor, outline: as.Outline, highlights: as.HighlightRegion[]): Promise<{ name: string, offset: number }>[] {
+		if (outline.element.kind == "METHOD" && outline.element.returnType == "Widget")
 			return this.scanBuildMethod(editor, outline);
 		else if (outline.children) {
 			let results: Promise<{ name: string, offset: number }>[] = [];
-			outline.children.forEach(c => results = results.concat(this.searchForBuildMethod(editor, c, highlights)));
+			outline.children.forEach(c => results = results.concat(this.searchForBuildMethods(editor, c, highlights)));
 			return results;
 		}
 		else
