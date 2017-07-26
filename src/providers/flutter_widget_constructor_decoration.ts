@@ -65,7 +65,7 @@ export class FlutterWidgetConstructorDecoratorProvider implements vs.Disposable 
 		currentEditor.setDecorations(this.decorationType, results.map((r) => {
 			return {
 				range: new vs.Range(currentEditor.document.positionAt(r.offset - 1), currentEditor.document.positionAt(r.offset)),
-				renderOptions: { after: { contentText: "/" + r.name } }
+				renderOptions: { after: { contentText: "//" + r.name } }
 			}
 		}));
 	}
