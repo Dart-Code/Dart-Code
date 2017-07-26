@@ -1,10 +1,29 @@
+# v2.3.2
+
+- A new "Packages Tree" has been added to the explorer which lists your projects depencies and allows you to browse them in a read-only view
+- The ability to switch SDKs has been removed for Flutter and Fuchsia projects where it does not make sense
+- Fuchsia projects are now detected and will use the correct Dart SDK from Fuchsia
+- The [`dart.previewFlutterCloseTagDecorations`](https://github.com/Dart-Code/Dart-Code/issues/383) preview feature has had several improvements
+  - Decorations now appear in Fuchsia projects as well as Flutter projects
+  - Decorations now appear for any `Widget`-returning method instead of only methods named `build`
+  - Decorations will update less frequently to avoid flickering during quick typing
+  - Decorations should no longer appear in invalid places (probably)
+  - Decorations now look more like comments, prefixed with `//` instead of `/`
+  - Decorations now apply to `const` constructor calls as well as those using `new`
+
+### Preview Features
+
+- [`dart.previewFlutterCloseTagDecorations`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against Flutter/Fuchsia widget constructor calls that span multiple lines
+
 # v2.3.1
 
 - An issue with searching symbols in a file being unreliable (appearing to hang) has been fixed
 - A new setting `flutterHotReloadOnSave` has been added to force a hot reload upon saving (if there are no errors in the file being saved)
 - A new `Full Restart` command is now available during Flutter debugging sessions for a full restart
 
-Additionally, a new prototype editor feature is available for Flutter projects to improve readability of `build` methods, see #383 for details.
+### Preview Features
+
+- [`dart.previewFlutterCloseTagDecorations`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against Flutter widget constructor calls that span multiple lines
 
 # v2.3.0 - Flutter Debugging Commands
 
