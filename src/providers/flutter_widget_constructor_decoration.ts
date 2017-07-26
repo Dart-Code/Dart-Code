@@ -12,6 +12,7 @@ export class FlutterWidgetConstructorDecoratorProvider implements vs.Disposable 
 	private activeEditor: vs.TextEditor;
 	private outline: as.Outline;
 	private highlights: as.HighlightRegion[];
+	private scanTimeout: NodeJS.Timer;
 
 	private readonly decorationType = vs.window.createTextEditorDecorationType({
 		after: {
@@ -32,14 +33,16 @@ export class FlutterWidgetConstructorDecoratorProvider implements vs.Disposable 
 			if (n.file == this.activeEditor.document.fileName) {
 				this.outline = n.outline;
 				// Delay this so if we're getting lots of updates we don't flicker.
-				setTimeout(() => this.scan(), 500);
+				clearTimeout(this.scanTimeout);
+				this.scanTimeout = setTimeout(() => this.scan(), 1000);
 			}
 		}));
 		this.subscriptions.push(this.analyzer.registerForAnalysisHighlights(n => {
 			if (n.file == this.activeEditor.document.fileName) {
 				this.highlights = n.regions;
 				// Delay this so if we're getting lots of updates we don't flicker.
-				setTimeout(() => this.scan(), 500);
+				clearTimeout(this.scanTimeout);
+				this.scanTimeout = setTimeout(() => this.scan(), 1000);
 			}
 		}));
 	}
