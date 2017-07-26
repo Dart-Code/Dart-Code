@@ -31,13 +31,15 @@ export class FlutterWidgetConstructorDecoratorProvider implements vs.Disposable 
 		this.subscriptions.push(this.analyzer.registerForAnalysisOutline(n => {
 			if (n.file == this.activeEditor.document.fileName) {
 				this.outline = n.outline;
-				this.scan();
+				// Delay this so if we're getting lots of updates we don't flicker.
+				setTimeout(() => this.scan(), 500);
 			}
 		}));
 		this.subscriptions.push(this.analyzer.registerForAnalysisHighlights(n => {
 			if (n.file == this.activeEditor.document.fileName) {
 				this.highlights = n.regions;
-				this.scan();
+				// Delay this so if we're getting lots of updates we don't flicker.
+				setTimeout(() => this.scan(), 500);
 			}
 		}));
 	}
