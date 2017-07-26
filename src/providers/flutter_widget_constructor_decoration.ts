@@ -16,7 +16,7 @@ export class FlutterWidgetConstructorDecoratorProvider implements vs.Disposable 
 	private readonly decorationType = vs.window.createTextEditorDecorationType({
 		after: {
 			margin: "2px",
-			color: new vs.ThemeColor("editor.selectionBackground"),
+			color: new vs.ThemeColor("tab.inactiveForeground"),
 		},
 		rangeBehavior: vs.DecorationRangeBehavior.ClosedClosed
 	});
