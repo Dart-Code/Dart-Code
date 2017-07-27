@@ -269,6 +269,12 @@ export function isWithinRootPath(file: string) {
 	return workspace.rootPath != null && file.startsWith(workspace.rootPath + path.sep);
 }
 
+export function toReadonlyUriIfExternal(file: string) {
+	return isWithinRootPath(file)
+		? Uri.file(file)
+		: Uri.file(file).with({ scheme: "dart-package" });
+}
+
 function getExtensionVersion(): string {
 	let packageJson = require("../../package.json");
 	return packageJson.version;
