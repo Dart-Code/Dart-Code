@@ -230,6 +230,7 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Register our view providers.
 	const dartPackagesProvider = new DartPackagesProvider(vs.workspace.rootPath);
+	context.subscriptions.push(dartPackagesProvider);
 	vs.window.registerTreeDataProvider('dartPackages', dartPackagesProvider);
 	context.subscriptions.push(vs.commands.registerCommand('dart.package.openFile', filePath => {
 		if (!filePath) return;

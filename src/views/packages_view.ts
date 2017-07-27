@@ -6,11 +6,19 @@ import * as path from 'path';
 
 // TODO: Listen for changes to the .packages file.
 
-export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
+export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataProvider<PackageDep> {
+	private watcher: vs.FileSystemWatcher;
 	private _onDidChangeTreeData: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
 	readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this._onDidChangeTreeData.event;
 
 	constructor(private workspaceRoot: string) {
+		super(() => this.watcher.dispose());
+		if (workspaceRoot) {
+			this.watcher = vs.workspace.createFileSystemWatcher("**/.packages");
+			this.watcher.onDidChange(this.refresh, this);
+			this.watcher.onDidCreate(this.refresh, this);
+			this.watcher.onDidDelete(this.refresh, this);
+		}
 	}
 
 	refresh(): void {
