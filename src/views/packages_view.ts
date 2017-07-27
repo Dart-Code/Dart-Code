@@ -46,6 +46,9 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 				if (this.pathExists(packagesPath)) {
 					resolve(this.getDepsInPackages(packagesPath));
 				}
+				else {
+					return resolve([]);
+				}
 			} else {
 				return resolve([]);
 			}
