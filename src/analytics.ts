@@ -4,7 +4,7 @@ import { env, extensions, Extension, workspace, version as codeVersion } from "v
 import * as https from "https";
 import * as querystring from "querystring";
 import { config } from "./config";
-import { log, isDevelopment, extensionVersion, isFlutterProject } from "./utils";
+import { log, isDevelopment, extensionVersion, isFuchsiaProject, isFlutterProject } from "./utils";
 
 // Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.
 // This is only required for debugging analytics and needn't be sent for standard Dart Code development (dev hits are already filtered with isDevelopment).
@@ -58,7 +58,7 @@ class Analytics {
 			data.sc = "start";
 
 		// Include project type.
-		data.cd7 = isFlutterProject ? "Flutter" : "Dart";
+		data.cd7 = isFuchsiaProject ? "Fuchsia" : isFlutterProject ? "Flutter" : "Dart";
 
 		// Include debug preference if it's a debugger start.
 		if (category == Category.Debugger && action == EventAction.Activated)
