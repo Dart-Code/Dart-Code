@@ -309,7 +309,7 @@
 			"explorer": [
 				{
 					"id": "dartPackages",
-					"name": "Dart Packages",
+					"name": "Dependencies",
 					"when": "dart-code:dartProjectLoaded"
 				}
 			]
