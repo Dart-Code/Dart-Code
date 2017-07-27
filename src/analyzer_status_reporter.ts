@@ -127,7 +127,7 @@ ${diagnostics ? '\nDiagnostics requested after the error occurred are:\n\n```js\
 
 		let fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.md`;
 		let tempPath = path.join(os.tmpdir(), fileName);
-		fs.writeFileSync(tempPath, data, 'utf8');
+		fs.writeFileSync(tempPath, data);
 		workspace.openTextDocument(tempPath).then(document => {
 			window.showTextDocument(document);
 		});
