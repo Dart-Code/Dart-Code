@@ -7,5 +7,6 @@
 		"out": true,
 		"**/node_modules": true,
 		".vscode-test": true
-	}
+	},
+	"files.insertFinalNewline": true
 }
