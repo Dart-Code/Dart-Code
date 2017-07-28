@@ -35,6 +35,7 @@ import { FlutterWidgetConstructorDecoratorProvider } from "./providers/flutter_w
 import { DartPackageFileContentProvider } from "./providers/dart_package_file_content_provider";
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
+const HTML_MODE: vs.DocumentFilter = { language: "html", scheme: "file" };
 const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
 const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
 
@@ -137,17 +138,44 @@ export function activate(context: vs.ExtensionContext) {
 	// TODO: Check if EventEmitter<T> would be more appropriate than our own.
 
 	// Set up providers.
-	context.subscriptions.push(vs.languages.registerHoverProvider(DART_MODE, new DartHoverProvider(analyzer)));
-	context.subscriptions.push(vs.languages.registerDocumentFormattingEditProvider(DART_MODE, new DartFormattingEditProvider(analyzer)));
-	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, new DartTypeFormattingEditProvider(analyzer), "}", ";"));
-	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new DartCompletionItemProvider(analyzer), ".", ":", " ", "=", "("));
-	context.subscriptions.push(vs.languages.registerDefinitionProvider(DART_MODE, new DartDefinitionProvider(analyzer)));
-	context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(DART_MODE, new DartDocumentSymbolProvider(analyzer)));
-	context.subscriptions.push(vs.languages.registerReferenceProvider(DART_MODE, new DartReferenceProvider(analyzer)));
+	let hoverProvider = new DartHoverProvider(analyzer);
+	let formattingEditProvider = new DartFormattingEditProvider(analyzer);
+	let typeFormattingEditProvider = new DartTypeFormattingEditProvider(analyzer);
+	let completionItemProvider = new DartCompletionItemProvider(analyzer);
+	let definitionProvider = new DartDefinitionProvider(analyzer);
+	let documentSymbolProvider = new DartDocumentSymbolProvider(analyzer);
+	let referenceProvider = new DartReferenceProvider(analyzer);
+	let documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
+	let codeActionProvider = new DartCodeActionProvider(analyzer);
+	let renameProvider = new DartRenameProvider(analyzer);
+
+	context.subscriptions.push(vs.languages.registerHoverProvider(DART_MODE, hoverProvider));
+	context.subscriptions.push(vs.languages.registerDocumentFormattingEditProvider(DART_MODE, formattingEditProvider));
+	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, typeFormattingEditProvider, "}", ";"));
+	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, completionItemProvider, ".", ":", " ", "=", "("));
+	context.subscriptions.push(vs.languages.registerDefinitionProvider(DART_MODE, definitionProvider));
+	context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(DART_MODE, documentSymbolProvider));
+	context.subscriptions.push(vs.languages.registerReferenceProvider(DART_MODE, referenceProvider));
+	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(DART_MODE, documentHighlightProvider));
+	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, codeActionProvider));
+	context.subscriptions.push(vs.languages.registerRenameProvider(DART_MODE, renameProvider));
+
+	// Analyze Angular2 templates, requires the angular_analyzer_plugin.
+	if (config.analyzeAngularTemplates) {
+		context.subscriptions.push(vs.languages.registerHoverProvider(HTML_MODE, hoverProvider));
+		context.subscriptions.push(vs.languages.registerDocumentFormattingEditProvider(HTML_MODE, formattingEditProvider));
+		// Don't register a formatting provider for now, the analyzer doesn't
+		// support it, and it might not make sense in an HTML context anyway.
+		context.subscriptions.push(vs.languages.registerCompletionItemProvider(HTML_MODE, completionItemProvider, ".", ":", " ", "=", "("));
+		context.subscriptions.push(vs.languages.registerDefinitionProvider(HTML_MODE, definitionProvider));
+		context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(HTML_MODE, documentSymbolProvider));
+		context.subscriptions.push(vs.languages.registerReferenceProvider(HTML_MODE, referenceProvider));
+		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(HTML_MODE, documentHighlightProvider));
+		context.subscriptions.push(vs.languages.registerCodeActionsProvider(HTML_MODE, codeActionProvider));
+		context.subscriptions.push(vs.languages.registerRenameProvider(HTML_MODE, renameProvider));
+	}
+
 	context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
-	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(DART_MODE, new DartDocumentHighlightProvider(analyzer)));
-	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, new DartCodeActionProvider(analyzer)));
-	context.subscriptions.push(vs.languages.registerRenameProvider(DART_MODE, new DartRenameProvider(analyzer)));
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE.language, new DartLanguageConfiguration()));
 	context.subscriptions.push(vs.workspace.registerTextDocumentContentProvider("dart-package", new DartPackageFileContentProvider()));
 	context.subscriptions.push(new AnalyzerStatusReporter(analyzer));
