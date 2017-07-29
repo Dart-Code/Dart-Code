@@ -1,3 +1,9 @@
+# v2.4.0
+
+### Preview Features in this version
+
+- [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/pull/393) - Surfaces analysis results on AngularDart templates. Requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin).
+
 # v2.3.3
 
 - The dependency tree will now update after packages are changed/updated
