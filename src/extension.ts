@@ -149,31 +149,27 @@ export function activate(context: vs.ExtensionContext) {
 	let codeActionProvider = new DartCodeActionProvider(analyzer);
 	let renameProvider = new DartRenameProvider(analyzer);
 
-	context.subscriptions.push(vs.languages.registerHoverProvider(DART_MODE, hoverProvider));
-	context.subscriptions.push(vs.languages.registerDocumentFormattingEditProvider(DART_MODE, formattingEditProvider));
-	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, typeFormattingEditProvider, "}", ";"));
-	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, completionItemProvider, ".", ":", " ", "=", "("));
-	context.subscriptions.push(vs.languages.registerDefinitionProvider(DART_MODE, definitionProvider));
-	context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(DART_MODE, documentSymbolProvider));
-	context.subscriptions.push(vs.languages.registerReferenceProvider(DART_MODE, referenceProvider));
-	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(DART_MODE, documentHighlightProvider));
-	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, codeActionProvider));
-	context.subscriptions.push(vs.languages.registerRenameProvider(DART_MODE, renameProvider));
-
-	// Analyze Angular2 templates, requires the angular_analyzer_plugin.
-	if (config.analyzeAngularTemplates) {
-		context.subscriptions.push(vs.languages.registerHoverProvider(HTML_MODE, hoverProvider));
-		context.subscriptions.push(vs.languages.registerDocumentFormattingEditProvider(HTML_MODE, formattingEditProvider));
-		// Don't register a formatting provider for now, the analyzer doesn't
-		// support it, and it might not make sense in an HTML context anyway.
-		context.subscriptions.push(vs.languages.registerCompletionItemProvider(HTML_MODE, completionItemProvider, ".", ":", " ", "=", "("));
-		context.subscriptions.push(vs.languages.registerDefinitionProvider(HTML_MODE, definitionProvider));
-		context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(HTML_MODE, documentSymbolProvider));
-		context.subscriptions.push(vs.languages.registerReferenceProvider(HTML_MODE, referenceProvider));
-		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(HTML_MODE, documentHighlightProvider));
-		context.subscriptions.push(vs.languages.registerCodeActionsProvider(HTML_MODE, codeActionProvider));
-		context.subscriptions.push(vs.languages.registerRenameProvider(HTML_MODE, renameProvider));
+	var activeFileFilters = [DART_MODE];
+	if (config.previewAnalyzeAngularTemplates) {
+		// Analyze Angular2 templates, requires the angular_analyzer_plugin.
+		activeFileFilters.push(HTML_MODE);
 	}
+
+	activeFileFilters.forEach((filter) => {
+		context.subscriptions.push(vs.languages.registerHoverProvider(filter, hoverProvider));
+		context.subscriptions.push(vs.languages.registerDocumentFormattingEditProvider(filter, formattingEditProvider));
+		context.subscriptions.push(vs.languages.registerCompletionItemProvider(filter, completionItemProvider, ".", ":", " ", "=", "("));
+		context.subscriptions.push(vs.languages.registerDefinitionProvider(filter, definitionProvider));
+		context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
+		context.subscriptions.push(vs.languages.registerReferenceProvider(filter, referenceProvider));
+		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(filter, documentHighlightProvider));
+		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, codeActionProvider));
+		context.subscriptions.push(vs.languages.registerRenameProvider(filter, renameProvider));
+	});
+
+	// Even with the angular_analyzer_plugin, the analysis server only supports
+	// formatting for dart files.
+	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, typeFormattingEditProvider, "}", ";"));
 
 	context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE.language, new DartLanguageConfiguration()));
@@ -408,7 +404,8 @@ function getAnalyzerSettings() {
 		+ config.analyzerInstrumentationLogFile
 		+ config.analyzerAdditionalArgs
 		+ config.flutterDaemonLogFile
-		+ config.previewFlutterCloseTagDecorations;
+		+ config.previewFlutterCloseTagDecorations
+		+ config.previewAnalyzeAngularTemplates;
 }
 
 export function deactivate() {

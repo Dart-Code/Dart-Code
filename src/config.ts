@@ -24,7 +24,6 @@ class Config {
 	}
 
 	get allowAnalytics() { return this.getConfig<boolean>("allowAnalytics"); }
-	get analyzeAngularTemplates() { return this.getConfig<boolean>("analyzeAngularTemplates"); }
 	get analyzerDiagnosticsPort() { return this.getConfig<number>("analyzerDiagnosticsPort"); }
 	get analyzerObservatoryPort() { return this.getConfig<number>("analyzerObservatoryPort"); }
 	get analyzerLogFile() { return resolveHomePath(this.getConfig<string>("analyzerLogFile")); }
@@ -52,6 +51,7 @@ class Config {
 	get sdkContainer() { return resolveHomePath(this.getConfig<string>("sdkContainer")); }
 
 	// Preview features.
+	get previewAnalyzeAngularTemplates() { return this.getConfig<boolean>("previewAnalyzeAngularTemplates"); }
 	get previewFlutterCloseTagDecorations() { return this.getConfig<boolean>("previewFlutterCloseTagDecorations"); }
 }
 
