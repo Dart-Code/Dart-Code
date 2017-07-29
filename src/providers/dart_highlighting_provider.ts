@@ -42,7 +42,7 @@ export class DartDocumentHighlightProvider implements DocumentHighlightProvider 
 			});
 
 			// Send a dummy edit to force an OCURRENCES notification.
-			this.analyzer.sendDummyEdit(file);
+			this.analyzer.sendDummyEditIfRequired(file);
 		});
 	}
 

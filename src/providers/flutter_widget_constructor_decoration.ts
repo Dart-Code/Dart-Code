@@ -54,7 +54,7 @@ export class FlutterWidgetConstructorDecoratorProvider implements vs.Disposable 
 			this.highlights = null;
 
 			// Send a dummy edit to force an OUTLINE & HIGHLIGHTS notifications.
-			this.analyzer.sendDummyEdit(editor.document.fileName);
+			this.analyzer.sendDummyEditIfRequired(editor.document.fileName);
 		}
 	}
 
