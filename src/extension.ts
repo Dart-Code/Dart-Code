@@ -368,7 +368,8 @@ function handleConfigurationChange() {
 function getAnalyzerSettings() {
 	// The return value here is used to detect when any config option changes that requires a project reload.
 	// It doesn't matter how these are combined; it just gets called on every config change and compared.
-	// Only options that requier an analyzer restart should be included.
+	// Usually these are options that affect the analyzer and need a reload, but config options used at
+	// activation time will also need to be included.
 	return "CONF-"
 		+ config.userDefinedSdkPath
 		+ config.sdkContainer
