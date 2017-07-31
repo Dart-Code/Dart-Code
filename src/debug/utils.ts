@@ -138,6 +138,10 @@ export class PackageMap {
 			let dir = this.map[name];
 			if (file.startsWith(dir)) {
 				let rest = file.substring(dir.length);
+				// Ensure we don't start with a slash if the map didn't have a trailing slash,
+				// else we'll end up with doubles. See https://github.com/Dart-Code/Dart-Code/issues/398
+				if (rest.startsWith('/'))
+					rest = rest.substr(1)
 				// package: uri should always use forward slashes.
 				if (isWin)
 					rest = rest.replace(/\\/g, '/');
