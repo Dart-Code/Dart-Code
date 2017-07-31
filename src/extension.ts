@@ -34,8 +34,8 @@ import { promptUserForConfigs } from "./user_config_prompts";
 import { FlutterWidgetConstructorDecoratorProvider } from "./providers/flutter_widget_constructor_decoration";
 import { DartPackageFileContentProvider } from "./providers/dart_package_file_content_provider";
 
-const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
-const HTML_MODE: vs.DocumentFilter = { language: "html", scheme: "file" };
+const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }, { language: "dart", scheme: "dart-package" }];
+const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }, { language: "html", scheme: "dart-package" }];
 const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
 const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
 
@@ -178,7 +178,7 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, typeFormattingEditProvider, "}", ";"));
 
 	context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
-	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE.language, new DartLanguageConfiguration()));
+	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE[0].language, new DartLanguageConfiguration()));
 	context.subscriptions.push(vs.workspace.registerTextDocumentContentProvider("dart-package", new DartPackageFileContentProvider()));
 	context.subscriptions.push(new AnalyzerStatusReporter(analyzer));
 
