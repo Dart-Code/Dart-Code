@@ -1,8 +1,9 @@
 # v2.4.0
 
-### Preview Features in this version
+### Preview Features available in this version
 
-- [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/pull/393) - Surfaces analysis results on AngularDart templates. Requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin).
+- **NEW** [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Surfaces analysis results on AngularDart templates. Requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin).
+- [`dart.previewFlutterCloseTagDecorations`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against Flutter/Fuchsia widget constructor calls that span multiple lines
 
 # v2.3.3
 
@@ -10,7 +11,7 @@
 - When opening a Fuchsia project, the explorer will no longer indefinitely show a progress bar caused by trying to read dependencies
 - When using Go to Definition, files that are outside of your workspace root (eg. packages, SDK sources) will now be readonly to avoid accidental modification
 
-### Preview Features in this version
+### Preview Features available in this version
 
 - [`dart.previewFlutterCloseTagDecorations`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against Flutter/Fuchsia widget constructor calls that span multiple lines
 
@@ -27,7 +28,7 @@
   - Decorations now look more like comments, prefixed with `//` instead of `/`
   - Decorations now apply to `const` constructor calls as well as those using `new`
 
-### Preview Features in this version
+### Preview Features available in this version
 
 - [`dart.previewFlutterCloseTagDecorations`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against Flutter/Fuchsia widget constructor calls that span multiple lines
 
@@ -37,9 +38,9 @@
 - A new setting `flutterHotReloadOnSave` has been added to force a hot reload upon saving (if there are no errors in the file being saved)
 - A new `Full Restart` command is now available during Flutter debugging sessions for a full restart
 
-### Preview Features in this version
+### Preview Features available in this version
 
-- [`dart.previewFlutterCloseTagDecorations`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against Flutter widget constructor calls that span multiple lines
+- **NEW** [`dart.previewFlutterCloseTagDecorations`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against Flutter widget constructor calls that span multiple lines
 
 # v2.3.0 - Flutter Debugging Commands
 
