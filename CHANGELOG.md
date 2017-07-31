@@ -1,8 +1,10 @@
-# v2.4.0
+# v2.3.4
+
+- Go-to-Definition now works in read-only files (eg. SDK or external files opened using Go-to-Definition)
 
 ### Preview Features available in this version
 
-- **NEW** [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Surfaces analysis results on AngularDart templates. Requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin).
+- **NEW** [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
 - [`dart.previewFlutterCloseTagDecorations`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against Flutter/Fuchsia widget constructor calls that span multiple lines
 
 # v2.3.3
