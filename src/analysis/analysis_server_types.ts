@@ -156,14 +156,65 @@ export interface AnalysisGetReachableSourcesRequest {
  */
 export interface AnalysisGetReachableSourcesResponse {
 	/**
-	 * A mapping from source URIs to directly reachable source URIs. For example,
-	 * a file "foo.dart" that imports "bar.dart" would have the corresponding mapping
-	 * { "file:///foo.dart" : ["file:///bar.dart"] }.  If "bar.dart" has further imports
-	 * (or exports) there will be a mapping from the URI "file:///bar.dart" to them.
-	 * To check if a specific URI is reachable from a given file, clients can check
+	 * A mapping from source URIs to directly reachable source URIs. For
+	 * example,
+	 * a file "foo.dart" that imports "bar.dart" would have the corresponding
+	 * mapping
+	 * { "file:///foo.dart" : ["file:///bar.dart"] }. If "bar.dart" has
+	 * further imports
+	 * (or exports) there will be a mapping from the URI "file:///bar.dart"
+	 * to them.
+	 * To check if a specific URI is reachable from a given file, clients can
+	 * check
 	 * for its presence in the resulting key set.
 	 */
 	sources: { [key: string]: string[]; };
+}
+
+/**
+ * Return a description of all of the elements referenced in a given region
+ * of a given file that come from imported libraries.
+ * 
+ * If a request is made for a file that does not exist, or that is not
+ * currently subject to analysis (e.g. because it is not associated with any
+ * analysis root specified via analysis.setAnalysisRoots), an error of type
+ * GET_IMPORTED_ELEMENTS_INVALID_FILE will be generated.
+ */
+export interface AnalysisGetImportedElementsRequest {
+	/**
+	 * The file in which import information is being requested.
+	 */
+	file: FilePath;
+
+	/**
+	 * The offset of the region for which import information is being
+	 * requested.
+	 */
+	offset: number;
+
+	/**
+	 * The length of the region for which import information is being
+	 * requested.
+	 */
+	length: number;
+}
+
+/**
+ * Return a description of all of the elements referenced in a given region
+ * of a given file that come from imported libraries.
+ * 
+ * If a request is made for a file that does not exist, or that is not
+ * currently subject to analysis (e.g. because it is not associated with any
+ * analysis root specified via analysis.setAnalysisRoots), an error of type
+ * GET_IMPORTED_ELEMENTS_INVALID_FILE will be generated.
+ */
+export interface AnalysisGetImportedElementsResponse {
+	/**
+	 * The information about the elements that are referenced in the
+	 * specified region of the specified file that come from imported
+	 * libraries.
+	 */
+	elements: ImportedElements[];
 }
 
 /**
@@ -344,7 +395,7 @@ export interface AnalysisSetAnalysisRootsRequest {
 	 * the analyzer will behave as though the associated
 	 * source directory in the map contains a special
 	 * pubspec.yaml file which resolves any package: URI to the
-	 * corresponding path within that package root directory.  The
+	 * corresponding path within that package root directory. The
 	 * effect is the same as specifying the package root directory as
 	 * a "--package_root" parameter to the Dart VM when
 	 * executing any Dart file inside the source directory.
@@ -357,7 +408,7 @@ export interface AnalysisSetAnalysisRootsRequest {
 	 * 
 	 * Files in any directories that are not overridden by this
 	 * mapping have their package: URI's resolved using the
-	 * normal pubspec.yaml mechanism.  If this field is absent,
+	 * normal pubspec.yaml mechanism. If this field is absent,
 	 * or the empty map is specified, that indicates that the
 	 * normal pubspec.yaml mechanism should always be used.
 	 */
@@ -467,6 +518,9 @@ export interface AnalysisUpdateContentRequest {
 }
 
 /**
+ * Deprecated: all of the options can be set by users in
+ * an analysis options file.
+ * 
  * Update the options controlling analysis based on the given
  * set of options. Any options that are not included in the
  * analysis options will not be changed. If there are options
@@ -890,6 +944,38 @@ export interface EditGetFixesResponse {
 }
 
 /**
+ * Get the changes required to convert the postfix template at the given
+ * location into the template's expanded form.
+ */
+export interface EditGetPostfixCompletionRequest {
+	/**
+	 * The file containing the postfix template to be expanded.
+	 */
+	file: FilePath;
+
+	/**
+	 * The unique name that identifies the template in use.
+	 */
+	key: string;
+
+	/**
+	 * The offset used to identify the code to which the template will be applied.
+	 */
+	offset: number;
+}
+
+/**
+ * Get the changes required to convert the postfix template at the given
+ * location into the template's expanded form.
+ */
+export interface EditGetPostfixCompletionResponse {
+	/**
+	 * The change to be applied in order to complete the statement.
+	 */
+	change: SourceChange;
+}
+
+/**
  * Get the changes required to perform a refactoring.
  * 
  * If another refactoring request is received during the processing
@@ -929,7 +1015,7 @@ export interface EditGetRefactoringRequest {
 	 * structure of the data is dependent on the kind of
 	 * refactoring being performed. The data that is expected is
 	 * documented in the section titled Refactorings, labeled as
-	 * “Options”. This field can be omitted if the refactoring
+	 * "Options". This field can be omitted if the refactoring
 	 * does not require any options or if the values of those
 	 * options are not known.
 	 */
@@ -972,7 +1058,7 @@ export interface EditGetRefactoringResponse {
 	 * of the data is dependent on the kind of refactoring
 	 * being created. The data that is returned is documented
 	 * in the section titled Refactorings, labeled as
-	 * “Feedback”.
+	 * "Feedback".
 	 */
 	feedback?: RefactoringFeedback;
 
@@ -996,6 +1082,131 @@ export interface EditGetRefactoringResponse {
 	 * potential edits for the refactoring.
 	 */
 	potentialEdits?: string[];
+}
+
+/**
+ * Get the changes required to convert the partial statement at the given
+ * location into a syntactically valid statement. If the current statement
+ * is already valid the change will insert a newline plus appropriate
+ * indentation at the end of the line containing the offset.
+ * If a change that makes the statement valid cannot be determined (perhaps
+ * because it has not yet been implemented) the statement will be considered
+ * already valid and the appropriate change returned.
+ */
+export interface EditGetStatementCompletionRequest {
+	/**
+	 * The file containing the statement to be completed.
+	 */
+	file: FilePath;
+
+	/**
+	 * The offset used to identify the statement to be completed.
+	 */
+	offset: number;
+}
+
+/**
+ * Get the changes required to convert the partial statement at the given
+ * location into a syntactically valid statement. If the current statement
+ * is already valid the change will insert a newline plus appropriate
+ * indentation at the end of the line containing the offset.
+ * If a change that makes the statement valid cannot be determined (perhaps
+ * because it has not yet been implemented) the statement will be considered
+ * already valid and the appropriate change returned.
+ */
+export interface EditGetStatementCompletionResponse {
+	/**
+	 * The change to be applied in order to complete the statement.
+	 */
+	change: SourceChange;
+
+	/**
+	 * Will be true if the change contains nothing but whitespace
+	 * characters, or is empty.
+	 */
+	whitespaceOnly: boolean;
+}
+
+/**
+ * Determine if the request postfix completion template is applicable at
+ * the given location in the given file.
+ */
+export interface EditIsPostfixCompletionApplicableRequest {
+	/**
+	 * The file containing the postfix template to be expanded.
+	 */
+	file: FilePath;
+
+	/**
+	 * The unique name that identifies the template in use.
+	 */
+	key: string;
+
+	/**
+	 * The offset used to identify the code to which the template will be applied.
+	 */
+	offset: number;
+}
+
+/**
+ * Determine if the request postfix completion template is applicable at
+ * the given location in the given file.
+ */
+export interface EditIsPostfixCompletionApplicableResponse {
+	/**
+	 * True if the template can be expanded at the given location.
+	 */
+	value: boolean;
+}
+
+/**
+ * Return a list of all postfix templates currently available.
+ */
+export interface EditListPostfixCompletionTemplatesResponse {
+	/**
+	 * The list of available templates.
+	 */
+	templates: PostfixTemplateDescriptor[];
+}
+
+/**
+ * Return a list of edits that would need to be applied in order to ensure
+ * that all of the elements in the specified list of imported elements are
+ * accessible within the library.
+ * 
+ * If a request is made for a file that does not exist, or that is not
+ * currently subject to analysis (e.g. because it is not associated with any
+ * analysis root specified via analysis.setAnalysisRoots), an error of type
+ * IMPORT_ELEMENTS_INVALID_FILE will be generated.
+ */
+export interface EditImportElementsRequest {
+	/**
+	 * The file in which the specified elements are to be made accessible.
+	 */
+	file: FilePath;
+
+	/**
+	 * The elements to be made accessible in the specified file.
+	 */
+	elements: ImportedElements[];
+}
+
+/**
+ * Return a list of edits that would need to be applied in order to ensure
+ * that all of the elements in the specified list of imported elements are
+ * accessible within the library.
+ * 
+ * If a request is made for a file that does not exist, or that is not
+ * currently subject to analysis (e.g. because it is not associated with any
+ * analysis root specified via analysis.setAnalysisRoots), an error of type
+ * IMPORT_ELEMENTS_INVALID_FILE will be generated.
+ */
+export interface EditImportElementsResponse {
+	/**
+	 * The edit(s) to be applied in order to make the specified elements
+	 * accessible.
+	 */
+	edits: SourceEdit[];
 }
 
 /**
@@ -1038,7 +1249,8 @@ export interface EditSortMembersResponse {
 /**
  * Organizes all of the directives - removes unused imports and sorts
  * directives of the given Dart file according to the
- * Dart Style Guide.
+ * Dart Style
+ * Guide.
  * 
  * If a request is made for a file that does not exist, does not belong
  * to an analysis root or is not a Dart file,
@@ -1059,7 +1271,8 @@ export interface EditOrganizeDirectivesRequest {
 /**
  * Organizes all of the directives - removes unused imports and sorts
  * directives of the given Dart file according to the
- * Dart Style Guide.
+ * Dart Style
+ * Guide.
  * 
  * If a request is made for a file that does not exist, does not belong
  * to an analysis root or is not a Dart file,
@@ -1199,6 +1412,9 @@ export interface ExecutionMapUriResponse {
 }
 
 /**
+ * Deprecated: the analysis server no longer fires
+ * LAUNCH_DATA events.
+ * 
  * Subscribe for services. All previous subscriptions are replaced by the
  * given set of services.
  * 
@@ -1224,6 +1440,104 @@ export interface DiagnosticGetDiagnosticsResponse {
 }
 
 /**
+ * Return the port of the diagnostic web server. If the server is not running
+ * this call will start the server. If unable to start the diagnostic web
+ * server,
+ * this call will return an error of DEBUG_PORT_COULD_NOT_BE_OPENED.
+ */
+export interface DiagnosticGetServerPortResponse {
+	/**
+	 * The diagnostic server port.
+	 */
+	port: number;
+}
+
+/**
+ * Query whether analytics is enabled.
+ * 
+ * This flag controls whether the analysis server sends any analytics data to
+ * the cloud. If disabled, the analysis server does not send any analytics
+ * data, and any data sent to it by clients (from sendEvent and
+ * sendTiming) will be ignored.
+ * 
+ * The value of this flag can be changed by other tools outside of the
+ * analysis server's process. When you query the flag, you get the value of
+ * the flag at a given moment. Clients should not use the value returned to
+ * decide whether or not to send the sendEvent and sendTiming
+ * requests. Those requests should be used unconditionally and server will
+ * determine whether or not it is appropriate to forward the information to
+ * the cloud at the time each request is received.
+ */
+export interface AnalyticsIsEnabledResponse {
+	/**
+	 * Whether sending analytics is enabled or not.
+	 */
+	enabled: boolean;
+}
+
+/**
+ * Enable or disable the sending of analytics data. Note that there are other
+ * ways for users to change this setting, so clients cannot assume that they
+ * have complete control over this setting. In particular, there is no
+ * guarantee that the result returned by the isEnabled request will
+ * match the last value set via this request.
+ */
+export interface AnalyticsEnableRequest {
+	/**
+	 * Enable or disable analytics.
+	 */
+	value: boolean;
+}
+
+/**
+ * Send information about client events.
+ * 
+ * Ask the analysis server to include the fact that an action was performed
+ * in the client as part of the analytics data being sent. The data will only
+ * be included if the sending of analytics data is enabled at the time the
+ * request is processed. The action that was performed is indicated by the
+ * value of the action field.
+ * 
+ * The value of the action field should not include the identity of the
+ * client. The analytics data sent by server will include the client id
+ * passed in using the --client-id command-line argument. The
+ * request will be ignored if the client id was not provided when server was
+ * started.
+ */
+export interface AnalyticsSendEventRequest {
+	/**
+	 * The value used to indicate which action was performed.
+	 */
+	action: string;
+}
+
+/**
+ * Send timing information for client events (e.g. code completions).
+ * 
+ * Ask the analysis server to include the fact that a timed event occurred as
+ * part of the analytics data being sent. The data will only be included if
+ * the sending of analytics data is enabled at the time the request is
+ * processed.
+ * 
+ * The value of the event field should not include the identity of the
+ * client. The analytics data sent by server will include the client id
+ * passed in using the --client-id command-line argument. The
+ * request will be ignored if the client id was not provided when server was
+ * started.
+ */
+export interface AnalyticsSendTimingRequest {
+	/**
+	 * The name of the event.
+	 */
+	event: string;
+
+	/**
+	 * The duration of the event in milliseconds.
+	 */
+	millis: number;
+}
+
+/**
  * Reports that the server is running. This notification is
  * issued once after the server has started running but before
  * any requests are processed to let the client know that it
@@ -1242,6 +1556,11 @@ export interface ServerConnectedNotification {
 	 * The process id of the analysis server process.
 	 */
 	pid: number;
+
+	/**
+	 * The session id for this session.
+	 */
+	sessionId?: string;
 }
 
 /**
@@ -1319,9 +1638,6 @@ export interface AnalysisAnalyzedFilesNotification {
  * Reports the errors associated with a given file. The set of
  * errors included in the notification is always a complete
  * list that supersedes any previously reported errors.
- * 
- * It is only possible to unsubscribe from this notification by
- * using the command-line flag --no-error-notification.
  */
 export interface AnalysisErrorsNotification {
 	/**
@@ -1615,10 +1931,10 @@ export interface CompletionResultsNotification {
 	replacementLength: number;
 
 	/**
-	 * The completion suggestions being reported.  The
+	 * The completion suggestions being reported. The
 	 * notification contains all possible completions at the
 	 * requested cursor position, even those that do not match
-	 * the characters the user has already typed.  This allows
+	 * the characters the user has already typed. This allows
 	 * the client to respond to further keystrokes from the
 	 * user without having to make additional requests.
 	 */
@@ -1683,14 +1999,14 @@ export interface ExecutionLaunchDataNotification {
 	referencedFiles?: FilePath[];
 }
 
+
 /**
- * A directive to begin overlaying the contents of a file.  The
- * supplied content will be used for analysis in place of the
- * file contents in the filesystem.
+ * A directive to begin overlaying the contents of a file. The supplied
+ * content will be used for analysis in place of the file contents in the
+ * filesystem.
  * 
- * If this directive is used on a file that already has a file
- * content overlay, the old overlay is discarded and replaced
- * with the new one.
+ * If this directive is used on a file that already has a file content
+ * overlay, the old overlay is discarded and replaced with the new one.
  */
 export interface AddContentOverlay {
 	/**
@@ -1705,8 +2021,8 @@ export interface AddContentOverlay {
 }
 
 /**
- * An indication of an error, warning, or hint that was produced
- * by the analysis.
+ * An indication of an error, warning, or hint that was produced by the
+ * analysis.
  */
 export interface AnalysisError {
 	/**
@@ -1725,17 +2041,16 @@ export interface AnalysisError {
 	location: Location;
 
 	/**
-	 * The message to be displayed for this error. The message
-	 * should indicate what is wrong with the code and why it is
-	 * wrong.
+	 * The message to be displayed for this error. The message should
+	 * indicate what is wrong with the code and why it is wrong.
 	 */
 	message: string;
 
 	/**
-	 * The correction message to be displayed for this error. The
-	 * correction message should indicate how the user can fix
-	 * the error. The field is omitted if there is no correction
-	 * message associated with the error code.
+	 * The correction message to be displayed for this error. The correction
+	 * message should indicate how the user can fix the error. The field is
+	 * omitted if there is no correction message associated with the error
+	 * code.
 	 */
 	correction?: string;
 
@@ -1745,22 +2060,21 @@ export interface AnalysisError {
 	code: string;
 
 	/**
-	 * A hint to indicate to interested clients that this error has
-	 * an associated fix (or fixes).  The absence of this field implies
-	 * there are not known to be fixes.  Note that since the operation
-	 * to calculate whether fixes apply needs to be performant it is
-	 * possible that complicated tests will be skipped and a false
-	 * negative returned.  For this reason, this attribute should be
-	 * treated as a "hint".  Despite the possibility of false negatives,
-	 * no false positives should be returned.  If a client sees this
-	 * flag set they can proceed with the confidence that there are in
-	 * fact associated fixes.
+	 * A hint to indicate to interested clients that this error has an
+	 * associated fix (or fixes). The absence of this field implies there
+	 * are not known to be fixes. Note that since the operation to calculate
+	 * whether fixes apply needs to be performant it is possible that
+	 * complicated tests will be skipped and a false negative returned. For
+	 * this reason, this attribute should be treated as a "hint". Despite the
+	 * possibility of false negatives, no false positives should be returned.
+	 * If a client sees this flag set they can proceed with the confidence
+	 * that there are in fact associated fixes.
 	 */
 	hasFix?: boolean;
 }
 
 /**
- * A list of fixes associated with a specific error
+ * A list of fixes associated with a specific error.
  */
 export interface AnalysisErrorFixes {
 	/**
@@ -1775,8 +2089,7 @@ export interface AnalysisErrorFixes {
 }
 
 /**
- * An enumeration of the possible severities of analysis
- * errors.
+ * An enumeration of the possible severities of analysis errors.
  */
 export type AnalysisErrorSeverity =
 	"INFO"
@@ -1796,7 +2109,11 @@ export type AnalysisErrorType =
 	| "SYNTACTIC_ERROR"
 	| "TODO";
 
+
 /**
+ * Deprecated: the only reference to this type has been
+ * deprecated.
+ * 
  * A set of options controlling what kind of analysis is to be
  * performed. If the value of a field is omitted the value of the
  * option will not be changed.
@@ -1890,21 +2207,20 @@ export interface AnalysisStatus {
 }
 
 /**
- * A directive to modify an existing file content overlay. One or more
- * ranges of text are deleted from the old file content overlay and
- * replaced with new text.
+ * A directive to modify an existing file content overlay. One or more ranges
+ * of text are deleted from the old file content overlay and replaced with
+ * new text.
  * 
- * The edits are applied in the order in which they occur in the list.
- * This means that the offset of each edit must be correct under the
- * assumption that all previous edits have been applied.
+ * The edits are applied in the order in which they occur in the list. This
+ * means that the offset of each edit must be correct under the assumption
+ * that all previous edits have been applied.
  * 
- * It is an error to use this overlay on a file that does not yet have
- * a file content overlay or that has had its overlay removed via
+ * It is an error to use this overlay on a file that does not yet have a file
+ * content overlay or that has had its overlay removed via
  * RemoveContentOverlay.
  * 
- * If any of the edits cannot be applied due to its offset or
- * length being out of range, an INVALID_OVERLAY_CHANGE error
- * will be reported.
+ * If any of the edits cannot be applied due to its offset or length being
+ * out of range, an INVALID_OVERLAY_CHANGE error will be reported.
  */
 export interface ChangeContentOverlay {
 	/**
@@ -1925,9 +2241,8 @@ export interface ChangeContentOverlay {
 export type CompletionId = string;
 
 /**
- * A suggestion for how to complete partially entered text. Many
- * of the fields are optional, depending on the kind of element
- * being suggested.
+ * A suggestion for how to complete partially entered text. Many of the
+ * fields are optional, depending on the kind of element being suggested.
  */
 export interface CompletionSuggestion {
 	/**
@@ -1936,29 +2251,27 @@ export interface CompletionSuggestion {
 	kind: CompletionSuggestionKind;
 
 	/**
-	 * The relevance of this completion suggestion
-	 * where a higher number indicates a higher relevance.
+	 * The relevance of this completion suggestion where a higher number
+	 * indicates a higher relevance.
 	 */
 	relevance: number;
 
 	/**
-	 * The identifier to be inserted if the suggestion is
-	 * selected. If the suggestion is for a method or function,
-	 * the client might want to additionally insert a template
-	 * for the parameters. The information required in order to
-	 * do so is contained in other fields.
+	 * The identifier to be inserted if the suggestion is selected. If the
+	 * suggestion is for a method or function, the client might want to
+	 * additionally insert a template for the parameters. The information
+	 * required in order to do so is contained in other fields.
 	 */
 	completion: string;
 
 	/**
-	 * The offset, relative to the beginning of the completion,
-	 * of where the selection should be placed after insertion.
+	 * The offset, relative to the beginning of the completion, of where the
+	 * selection should be placed after insertion.
 	 */
 	selectionOffset: number;
 
 	/**
-	 * The number of characters that should be selected after
-	 * insertion.
+	 * The number of characters that should be selected after insertion.
 	 */
 	selectionLength: number;
 
@@ -1968,31 +2281,46 @@ export interface CompletionSuggestion {
 	isDeprecated: boolean;
 
 	/**
-	 * True if the element is not known to be valid for the
-	 * target. This happens if the type of the target is dynamic.
+	 * True if the element is not known to be valid for the target. This
+	 * happens if the type of the target is dynamic.
 	 */
 	isPotential: boolean;
 
 	/**
-	 * An abbreviated version of the Dartdoc associated with the
-	 * element being suggested, This field is omitted if there is
-	 * no Dartdoc associated with the element.
+	 * An abbreviated version of the Dartdoc associated with the element
+	 * being suggested, This field is omitted if there is no Dartdoc
+	 * associated with the element.
 	 */
 	docSummary?: string;
 
 	/**
-	 * The Dartdoc associated with the element being suggested,
-	 * This field is omitted if there is no Dartdoc associated
-	 * with the element.
+	 * The Dartdoc associated with the element being suggested. This field is
+	 * omitted if there is no Dartdoc associated with the element.
 	 */
 	docComplete?: string;
 
 	/**
-	 * The class that declares the element being suggested. This
-	 * field is omitted if the suggested element is not a member
-	 * of a class.
+	 * The class that declares the element being suggested. This field is
+	 * omitted if the suggested element is not a member of a class.
 	 */
 	declaringType?: string;
+
+	/**
+	 * A default String for use in generating argument list source contents
+	 * on the client side.
+	 */
+	defaultArgumentListString?: string;
+
+	/**
+	 * Pairs of offsets and lengths describing 'defaultArgumentListString'
+	 * text ranges suitable for use by clients to set up linked edits of
+	 * default argument source contents. For example, given an argument list
+	 * string 'x, y', the corresponding text range [0, 1, 3, 1], indicates
+	 * two text ranges of length 1, starting at offsets 0 and 3. Clients can
+	 * use these ranges to treat the 'x' and 'y' values specially for linked
+	 * edits.
+	 */
+	defaultArgumentListTextRanges?: number[];
 
 	/**
 	 * Information about the element reference being suggested.
@@ -2000,64 +2328,62 @@ export interface CompletionSuggestion {
 	element?: Element;
 
 	/**
-	 * The return type of the getter, function or method
-	 * or the type of the field being suggested.
-	 * This field is omitted if the suggested element
+	 * The return type of the getter, function or method or the type of the
+	 * field being suggested. This field is omitted if the suggested element
 	 * is not a getter, function or method.
 	 */
 	returnType?: string;
 
 	/**
-	 * The names of the parameters of the function or method
-	 * being suggested. This field is omitted if the suggested
-	 * element is not a setter, function or method.
+	 * The names of the parameters of the function or method being suggested.
+	 * This field is omitted if the suggested element is not a setter,
+	 * function or method.
 	 */
 	parameterNames?: string[];
 
 	/**
-	 * The types of the parameters of the function or method
-	 * being suggested. This field is omitted if the
-	 * parameterNames field is omitted.
+	 * The types of the parameters of the function or method being suggested.
+	 * This field is omitted if the parameterNames field is omitted.
 	 */
 	parameterTypes?: string[];
 
 	/**
-	 * The number of required parameters for the function or
-	 * method being suggested. This field is omitted if the
-	 * parameterNames field is omitted.
+	 * The number of required parameters for the function or method being
+	 * suggested. This field is omitted if the parameterNames field is
+	 * omitted.
 	 */
 	requiredParameterCount?: number;
 
 	/**
-	 * True if the function or method being suggested has at
-	 * least one named parameter. This field is omitted if the
-	 * parameterNames field is omitted.
+	 * True if the function or method being suggested has at least one named
+	 * parameter. This field is omitted if the parameterNames field is
+	 * omitted.
 	 */
 	hasNamedParameters?: boolean;
 
 	/**
-	 * The name of the optional parameter being suggested. This
-	 * field is omitted if the suggestion is not the addition of
-	 * an optional argument within an argument list.
+	 * The name of the optional parameter being suggested. This field is
+	 * omitted if the suggestion is not the addition of an optional argument
+	 * within an argument list.
 	 */
 	parameterName?: string;
 
 	/**
-	 * The type of the options parameter being suggested. This
-	 * field is omitted if the parameterName field is omitted.
+	 * The type of the options parameter being suggested. This field is
+	 * omitted if the parameterName field is omitted.
 	 */
 	parameterType?: string;
 
 	/**
-	 * The import to be added if the suggestion is out of scope
-	 * and needs an import to be added to be in scope.
+	 * The import to be added if the suggestion is out of scope and needs
+	 * an import to be added to be in scope.
 	 */
 	importUri?: string;
 }
 
 /**
- * An enumeration of the kinds of elements that can be included
- * in a completion suggestion.
+ * An enumeration of the kinds of elements that can be included in a
+ * completion suggestion.
  */
 export type CompletionSuggestionKind =
 	"ARGUMENT_LIST"
@@ -2100,8 +2426,7 @@ export interface ContextData {
 }
 
 /**
- * Information about an element (something that can be declared
- * in code).
+ * Information about an element (something that can be declared in code).
  */
 export interface Element {
 	/**
@@ -2110,14 +2435,13 @@ export interface Element {
 	kind: ElementKind;
 
 	/**
-	 * The name of the element. This is typically used as the
-	 * label in the outline.
+	 * The name of the element. This is typically used as the label in the
+	 * outline.
 	 */
 	name: string;
 
 	/**
-	 * The location of the name in the declaration of the
-	 * element.
+	 * The location of the name in the declaration of the element.
 	 */
 	location?: Location;
 
@@ -2127,25 +2451,23 @@ export interface Element {
 	flags: number;
 
 	/**
-	 * The parameter list for the element. If the element is not
-	 * a method or function this field will not be defined. If
-	 * the element doesn't have parameters (e.g. getter), this field
-	 * will not be defined. If the element has zero parameters, this
-	 * field will have a value of "()".
+	 * The parameter list for the element. If the element is not a method or
+	 * function this field will not be defined. If the element doesn't have
+	 * parameters (e.g. getter), this field will not be defined. If the
+	 * element has zero parameters, this field will have a value of "()".
 	 */
 	parameters?: string;
 
 	/**
-	 * The return type of the element. If the element is not a
-	 * method or function this field will not be defined. If the
-	 * element does not have a declared return type, this field
-	 * will contain an empty string.
+	 * The return type of the element. If the element is not a method or
+	 * function this field will not be defined. If the element does not have
+	 * a declared return type, this field will contain an empty string.
 	 */
 	returnType?: string;
 
 	/**
-	 * The type parameter list for the element. If the element doesn't
-	 * have type parameters, this field will not be defined.
+	 * The type parameter list for the element. If the element doesn't have
+	 * type parameters, this field will not be defined.
 	 */
 	typeParameters?: string;
 }
@@ -2177,6 +2499,7 @@ export type ElementKind =
 	| "UNIT_TEST_GROUP"
 	| "UNIT_TEST_TEST"
 	| "UNKNOWN";
+
 
 /**
  * A description of an executable file.
@@ -2224,8 +2547,8 @@ export type FileKind =
 /**
  * The absolute, normalized path of a file.
  * 
- * If the format of a file path in a request is not valid, e.g. the
- * path is not absolute or is not normalized, then an error of type
+ * If the format of a file path in a request is not valid, e.g. the path is
+ * not absolute or is not normalized, then an error of type
  * INVALID_FILE_PATH_FORMAT will be generated.
  */
 export type FilePath = string;
@@ -2268,8 +2591,8 @@ export type GeneralAnalysisService =
 	"ANALYZED_FILES";
 
 /**
- * A description of a region that could have special highlighting
- * associated with it.
+ * A description of a region that could have special highlighting associated
+ * with it.
  */
 export interface HighlightRegion {
 	/**
@@ -2289,8 +2612,7 @@ export interface HighlightRegion {
 }
 
 /**
- * An enumeration of the kinds of highlighting that can be
- * applied to files.
+ * An enumeration of the kinds of highlighting that can be applied to files.
  */
 export type HighlightRegionType =
 	"ANNOTATION"
@@ -2427,8 +2749,8 @@ export interface HoverInformation {
 
 	/**
 	 * A human-readable description of the kind of element being
-	 * referenced (such as “class” or “function type
-	 * alias”). This data is omitted if there is no referenced
+	 * referenced (such as "class" or "function type
+	 * alias"). This data is omitted if there is no referenced
 	 * element.
 	 */
 	elementKind?: string;
@@ -2492,42 +2814,61 @@ export interface ImplementedMember {
 }
 
 /**
- * A collection of positions that should be linked (edited
- * simultaneously) for the purposes of updating code after a
- * source change. For example, if a set of edits introduced a
- * new variable name, the group would contain all of the
- * positions of the variable name so that if the client wanted
- * to let the user edit the variable name after the operation,
- * all occurrences of the name could be edited simultaneously.
+ * A description of the elements that are referenced in a region of a file
+ * that come from a single imported library.
+ */
+export interface ImportedElements {
+	/**
+	 * The absolute and normalized path of the file containing the library.
+	 */
+	path: FilePath;
+
+	/**
+	 * The prefix that was used when importing the library into the original
+	 * source.
+	 */
+	prefix: string;
+
+	/**
+	 * The names of the elements imported from the library.
+	 */
+	elements: string[];
+}
+
+/**
+ * A collection of positions that should be linked (edited simultaneously)
+ * for the purposes of updating code after a source change. For example, if a
+ * set of edits introduced a new variable name, the group would contain all
+ * of the positions of the variable name so that if the client wanted to let
+ * the user edit the variable name after the operation, all occurrences of
+ * the name could be edited simultaneously.
  */
 export interface LinkedEditGroup {
 	/**
-	 * The positions of the regions that should be edited
-	 * simultaneously.
+	 * The positions of the regions that should be edited simultaneously.
 	 */
 	positions: Position[];
 
 	/**
-	 * The length of the regions that should be edited
-	 * simultaneously.
+	 * The length of the regions that should be edited simultaneously.
 	 */
 	length: number;
 
 	/**
-	 * Pre-computed suggestions for what every region might
-	 * want to be changed to.
+	 * Pre-computed suggestions for what every region might want to be
+	 * changed to.
 	 */
 	suggestions: LinkedEditSuggestion[];
 }
 
 /**
- * A suggestion of a value that could be used to replace all of
- * the linked edit regions in a LinkedEditGroup.
+ * A suggestion of a value that could be used to replace all of the linked
+ * edit regions in a LinkedEditGroup.
  */
 export interface LinkedEditSuggestion {
 	/**
-	 * The value that could be used to replace all of the linked
-	 * edit regions.
+	 * The value that could be used to replace all of the linked edit
+	 * regions.
 	 */
 	value: string;
 
@@ -2538,8 +2879,8 @@ export interface LinkedEditSuggestion {
 }
 
 /**
- * An enumeration of the kind of values that can be suggested
- * for a linked edit.
+ * An enumeration of the kind of values that can be suggested for a linked
+ * edit.
  */
 export type LinkedEditSuggestionKind =
 	"METHOD"
@@ -2567,21 +2908,21 @@ export interface Location {
 	length: number;
 
 	/**
-	 * The one-based index of the line containing the first
-	 * character of the range.
+	 * The one-based index of the line containing the first character of the
+	 * range.
 	 */
 	startLine: number;
 
 	/**
-	 * The one-based index of the column containing the first
-	 * character of the range.
+	 * The one-based index of the column containing the first character of
+	 * the range.
 	 */
 	startColumn: number;
 }
 
 /**
- * A description of a region from which the user can navigate to
- * the declaration of an element.
+ * A description of a region from which the user can navigate to the
+ * declaration of an element.
  */
 export interface NavigationRegion {
 	/**
@@ -2595,9 +2936,9 @@ export interface NavigationRegion {
 	length: number;
 
 	/**
-	 * The indexes of the targets (in the enclosing navigation response)
-	 * to which the given region is bound. By opening the target, clients
-	 * can implement one form of navigation. This list cannot be empty.
+	 * The indexes of the targets (in the enclosing navigation response) to
+	 * which the given region is bound. By opening the target, clients can
+	 * implement one form of navigation. This list cannot be empty.
 	 */
 	targets: number[];
 }
@@ -2618,31 +2959,30 @@ export interface NavigationTarget {
 	fileIndex: number;
 
 	/**
-	 * The offset of the region from which the user can navigate.
+	 * The offset of the region to which the user can navigate.
 	 */
 	offset: number;
 
 	/**
-	 * The length of the region from which the user can navigate.
+	 * The length of the region to which the user can navigate.
 	 */
 	length: number;
 
 	/**
-	 * The one-based index of the line containing the first
-	 * character of the region.
+	 * The one-based index of the line containing the first character of the
+	 * region.
 	 */
 	startLine: number;
 
 	/**
-	 * The one-based index of the column containing the first
-	 * character of the region.
+	 * The one-based index of the column containing the first character of
+	 * the region.
 	 */
 	startColumn: number;
 }
 
 /**
- * A description of the references to a single element within a
- * single file.
+ * A description of the references to a single element within a single file.
  */
 export interface Occurrences {
 	/**
@@ -2651,8 +2991,7 @@ export interface Occurrences {
 	element: Element;
 
 	/**
-	 * The offsets of the name of the referenced element within
-	 * the file.
+	 * The offsets of the name of the referenced element within the file.
 	 */
 	offsets: number[];
 
@@ -2672,10 +3011,10 @@ export interface Outline {
 	element: Element;
 
 	/**
-	 * The offset of the first character of the element. This is
-	 * different than the offset in the Element, which if the
-	 * offset of the name of the element. It can be used, for
-	 * example, to map locations in the file back to an outline.
+	 * The offset of the first character of the element. This is different
+	 * than the offset in the Element, which is the offset of the name of the
+	 * element. It can be used, for example, to map locations in the file
+	 * back to an outline.
 	 */
 	offset: number;
 
@@ -2685,8 +3024,8 @@ export interface Outline {
 	length: number;
 
 	/**
-	 * The children of the node. The field will be omitted if the
-	 * node has no children.
+	 * The children of the node. The field will be omitted if the node has no
+	 * children.
 	 */
 	children?: Outline[];
 }
@@ -2738,6 +3077,26 @@ export interface OverriddenMember {
 }
 
 /**
+ * The description of a postfix completion template.
+ */
+export interface PostfixTemplateDescriptor {
+	/**
+	 * The template name, shown in the UI.
+	 */
+	name: string;
+
+	/**
+	 * The unique template key, not shown in the UI.
+	 */
+	key: string;
+
+	/**
+	 * A short example of the transformation performed when the template is applied.
+	 */
+	example: string;
+}
+
+/**
  * A position within a file.
  */
 export interface Position {
@@ -2764,8 +3123,7 @@ export interface PubStatus {
 }
 
 /**
- * An enumeration of the kinds of refactorings that can be
- * created.
+ * An enumeration of the kinds of refactorings that can be created.
  */
 export type RefactoringKind =
 	"CONVERT_GETTER_TO_METHOD"
@@ -2783,8 +3141,8 @@ export type RefactoringKind =
  */
 export interface RefactoringMethodParameter {
 	/**
-	 * The unique identifier of the parameter.
-	 * Clients may omit this field for the parameters they want to add.
+	 * The unique identifier of the parameter. Clients may omit this field
+	 * for the parameters they want to add.
 	 */
 	id?: string;
 
@@ -2794,8 +3152,8 @@ export interface RefactoringMethodParameter {
 	kind: RefactoringMethodParameterKind;
 
 	/**
-	 * The type that should be given to the parameter, or the return type
-	 * of the parameter's function type.
+	 * The type that should be given to the parameter, or the return type of
+	 * the parameter's function type.
 	 */
 	type: string;
 
@@ -2805,10 +3163,10 @@ export interface RefactoringMethodParameter {
 	name: string;
 
 	/**
-	 * The parameter list of the parameter's function type.
-	 * If the parameter is not of a function type, this field will
-	 * not be defined. If the function type has zero parameters, this
-	 * field will have a value of "()".
+	 * The parameter list of the parameter's function type. If the parameter
+	 * is not of a function type, this field will not be defined. If the
+	 * function type has zero parameters, this field will have a value of
+	 * '()'.
 	 */
 	parameters?: string;
 }
@@ -2841,23 +3199,21 @@ export interface RefactoringProblem {
 	severity: RefactoringProblemSeverity;
 
 	/**
-	 * A human-readable description of the problem being
-	 * represented.
+	 * A human-readable description of the problem being represented.
 	 */
 	message: string;
 
 	/**
-	 * The location of the problem being represented.
-	 * This field is omitted unless there is a specific location
-	 * associated with the problem (such as a location where an element
-	 * being renamed will be shadowed).
+	 * The location of the problem being represented. This field is omitted
+	 * unless there is a specific location associated with the problem (such
+	 * as a location where an element being renamed will be shadowed).
 	 */
 	location?: Location;
 }
 
 /**
- * An enumeration of the severities of problems that can be
- * returned by the refactoring requests.
+ * An enumeration of the severities of problems that can be returned by the
+ * refactoring requests.
  */
 export type RefactoringProblemSeverity =
 	"INFO"
@@ -2866,12 +3222,12 @@ export type RefactoringProblemSeverity =
 	| "FATAL";
 
 /**
- * A directive to remove an existing file content overlay.
- * After processing this directive, the file contents will once
- * again be read from the file system.
+ * A directive to remove an existing file content overlay. After processing
+ * this directive, the file contents will once again be read from the file
+ * system.
  * 
- * If this directive is used on a file that doesn't currently
- * have a content overlay, it has no effect.
+ * If this directive is used on a file that doesn't currently have a content
+ * overlay, it has no effect.
  */
 export interface RemoveContentOverlay {
 	/**
@@ -2908,19 +3264,21 @@ export interface RequestError {
  */
 export type RequestErrorCode =
 	"CONTENT_MODIFIED"
+	| "DEBUG_PORT_COULD_NOT_BE_OPENED"
 	| "FILE_NOT_ANALYZED"
 	| "FORMAT_INVALID_FILE"
 	| "FORMAT_WITH_ERRORS"
 	| "GET_ERRORS_INVALID_FILE"
+	| "GET_IMPORTED_ELEMENTS_INVALID_FILE"
 	| "GET_NAVIGATION_INVALID_FILE"
 	| "GET_REACHABLE_SOURCES_INVALID_FILE"
+	| "IMPORT_ELEMENTS_INVALID_FILE"
 	| "INVALID_ANALYSIS_ROOT"
 	| "INVALID_EXECUTION_CONTEXT"
 	| "INVALID_FILE_PATH_FORMAT"
 	| "INVALID_OVERLAY_CHANGE"
 	| "INVALID_PARAMETER"
 	| "INVALID_REQUEST"
-	| "NO_INDEX_GENERATED"
 	| "ORGANIZE_DIRECTIVES_ERROR"
 	| "REFACTORING_REQUEST_CANCELLED"
 	| "SERVER_ALREADY_STARTED"
@@ -2989,9 +3347,9 @@ export type SearchResultKind =
 export type ServerService =
 	"STATUS";
 
+
 /**
- * A description of a set of edits that implement a single
- * conceptual change.
+ * A description of a set of edits that implement a single conceptual change.
  */
 export interface SourceChange {
 	/**
@@ -3000,20 +3358,19 @@ export interface SourceChange {
 	message: string;
 
 	/**
-	 * A list of the edits used to effect the change, grouped by
-	 * file.
+	 * A list of the edits used to effect the change, grouped by file.
 	 */
 	edits: SourceFileEdit[];
 
 	/**
-	 * A list of the linked editing groups used to customize
-	 * the changes that were made.
+	 * A list of the linked editing groups used to customize the changes that
+	 * were made.
 	 */
 	linkedEditGroups: LinkedEditGroup[];
 
 	/**
-	 * The position that should be selected after the edits
-	 * have been applied.
+	 * The position that should be selected after the edits have been
+	 * applied.
 	 */
 	selection?: Position;
 }
@@ -3033,22 +3390,19 @@ export interface SourceEdit {
 	length: number;
 
 	/**
-	 * The code that is to replace the specified region in the
-	 * original code.
+	 * The code that is to replace the specified region in the original code.
 	 */
 	replacement: string;
 
 	/**
 	 * An identifier that uniquely identifies this source edit from other
-	 * edits in the same response. This field is omitted unless a
-	 * containing structure needs to be able to identify the edit for
-	 * some reason.
+	 * edits in the same response. This field is omitted unless a containing
+	 * structure needs to be able to identify the edit for some reason.
 	 * 
-	 * For example, some refactoring operations can produce edits that
-	 * might not be appropriate (referred to as potential edits). Such
-	 * edits will have an id so that they can be referenced. Edits in
-	 * the same response that do not need to be referenced will not have
-	 * an id.
+	 * For example, some refactoring operations can produce edits that might
+	 * not be appropriate (referred to as potential edits). Such edits will
+	 * have an id so that they can be referenced. Edits in the same response
+	 * that do not need to be referenced will not have an id.
 	 */
 	id?: string;
 }
@@ -3063,11 +3417,11 @@ export interface SourceFileEdit {
 	file: FilePath;
 
 	/**
-	 * The modification stamp of the file at the moment when the change
-	 * was created, in milliseconds since the "Unix epoch". Will be -1 if
-	 * the file did not exist and should be created. The client may use
-	 * this field to make sure that the file was not changed since then,
-	 * so it is safe to apply the change.
+	 * The modification stamp of the file at the moment when the change was
+	 * created, in milliseconds since the "Unix epoch". Will be -1 if the
+	 * file did not exist and should be created. The client may use this
+	 * field to make sure that the file was not changed since then, so it is
+	 * safe to apply the change.
 	 */
 	fileStamp: number;
 
@@ -3133,6 +3487,7 @@ export interface TypeHierarchyItem {
 	subclasses: number[];
 }
 
+
 /**
  * Create a local variable initialized by the expression that covers
  * the specified selection.
@@ -3168,8 +3523,8 @@ export interface ExtractLocalVariableFeedback extends RefactoringFeedback {
 	 * The lengths of the expressions that would be replaced by
 	 * a reference to the variable. The lengths correspond to
 	 * the offsets. In other words, for a given expression, if
-	 * the offset of that expression is offsets[i], then the
-	 * length of that expression is lengths[i].
+	 * the offset of that expression is offsets[i], then
+	 * the length of that expression is lengths[i].
 	 */
 	lengths: number[];
 }
@@ -3229,8 +3584,8 @@ export interface ExtractMethodFeedback extends RefactoringFeedback {
 	 * be replaced by an invocation of the method. The lengths
 	 * correspond to the offsets. In other words, for a given
 	 * expression (or block of statements), if the offset of
-	 * that expression is offsets[i], then the length of that
-	 * expression is lengths[i].
+	 * that expression is offsets[i], then the length
+	 * of that expression is lengths[i].
 	 */
 	lengths: number[];
 }
@@ -3303,8 +3658,8 @@ export interface RenameFeedback extends RefactoringFeedback {
 
 	/**
 	 * The human-readable description of the kind of element being
-	 * renamed (such as “class” or “function type
-	 * alias”).
+	 * renamed (such as "class" or "function type
+	 * alias").
 	 */
 	elementKindName: string;
 
