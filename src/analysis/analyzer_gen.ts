@@ -139,8 +139,6 @@ export abstract class AnalyzerGen extends StdIOService {
 	Reports the errors associated with a given file. The set of
 	errors included in the notification is always a complete
 	list that supersedes any previously reported errors.
-	It is only possible to unsubscribe from this notification by
-	using the command-line flag --no-error-notification.
 	*/
 	registerForAnalysisErrors(subscriber: (notification: as.AnalysisErrorsNotification) => void): vs.Disposable {
 		return this.subscribe(this.analysisErrorsSubscriptions, subscriber);
@@ -356,15 +354,15 @@ export abstract class AnalyzerGen extends StdIOService {
 	}
 
 	/**
-	Return the transitive closure of reachable sources for a given file.
-	If a request is made for a file which does not exist, or
-	which is not currently subject to analysis (e.g. because it
-	is not associated with any analysis root specified to
-	analysis.setAnalysisRoots), an error of type
-	GET_REACHABLE_SOURCES_INVALID_FILE will be generated.
+	Return a description of all of the elements referenced in a given region
+	of a given file that come from imported libraries.
+	If a request is made for a file that does not exist, or that is not
+	currently subject to analysis (e.g. because it is not associated with any
+	analysis root specified via analysis.setAnalysisRoots), an error of type
+	GET_IMPORTED_ELEMENTS_INVALID_FILE will be generated.
 	*/
-	analysisGetReachableSources(request: as.AnalysisGetReachableSourcesRequest): Thenable<as.AnalysisGetReachableSourcesResponse> {
-		return this.sendRequest("analysis.getReachableSources", request);
+	analysisGetImportedElements(request: as.AnalysisGetImportedElementsRequest): Thenable<as.AnalysisGetImportedElementsResponse> {
+		return this.sendRequest("analysis.getImportedElements", request);
 	}
 
 	/**
@@ -400,6 +398,18 @@ export abstract class AnalyzerGen extends StdIOService {
 	*/
 	analysisGetNavigation(request: as.AnalysisGetNavigationRequest): Thenable<as.AnalysisGetNavigationResponse> {
 		return this.sendRequest("analysis.getNavigation", request);
+	}
+
+	/**
+	Return the transitive closure of reachable sources for a given file.
+	If a request is made for a file which does not exist, or
+	which is not currently subject to analysis (e.g. because it
+	is not associated with any analysis root specified to
+	analysis.setAnalysisRoots), an error of type
+	GET_REACHABLE_SOURCES_INVALID_FILE will be generated.
+	*/
+	analysisGetReachableSources(request: as.AnalysisGetReachableSourcesRequest): Thenable<as.AnalysisGetReachableSourcesResponse> {
+		return this.sendRequest("analysis.getReachableSources", request);
 	}
 
 	/**
@@ -527,11 +537,13 @@ export abstract class AnalyzerGen extends StdIOService {
 	if the file path represents the path to a directory on the
 	filesystem.
 	*/
-	analysisUpdateContent(request: as.AnalysisUpdateContentRequest): Thenable<UnknownResponse> {
+	analysisUpdateContent(request: as.AnalysisUpdateContentRequest): Thenable<as.AnalysisUpdateContentResponse> {
 		return this.sendRequest("analysis.updateContent", request);
 	}
 
 	/**
+	Deprecated: all of the options can be set by users in
+	an analysis options file.
 	Update the options controlling analysis based on the given
 	set of options. Any options that are not included in the
 	analysis options will not be changed. If there are options
@@ -651,6 +663,14 @@ export abstract class AnalyzerGen extends StdIOService {
 	}
 
 	/**
+	Get the changes required to convert the postfix template at the given
+	location into the template's expanded form.
+	*/
+	editGetPostfixCompletion(request: as.EditGetPostfixCompletionRequest): Thenable<as.EditGetPostfixCompletionResponse> {
+		return this.sendRequest("edit.getPostfixCompletion", request);
+	}
+
+	/**
 	Get the changes required to perform a refactoring.
 	If another refactoring request is received during the processing
 	of this one, an error of type REFACTORING_REQUEST_CANCELLED
@@ -658,6 +678,47 @@ export abstract class AnalyzerGen extends StdIOService {
 	*/
 	editGetRefactoring(request: as.EditGetRefactoringRequest): Thenable<as.EditGetRefactoringResponse> {
 		return this.sendRequest("edit.getRefactoring", request);
+	}
+
+	/**
+	Get the changes required to convert the partial statement at the given
+	location into a syntactically valid statement. If the current statement
+	is already valid the change will insert a newline plus appropriate
+	indentation at the end of the line containing the offset.
+	If a change that makes the statement valid cannot be determined (perhaps
+	because it has not yet been implemented) the statement will be considered
+	already valid and the appropriate change returned.
+	*/
+	editGetStatementCompletion(request: as.EditGetStatementCompletionRequest): Thenable<as.EditGetStatementCompletionResponse> {
+		return this.sendRequest("edit.getStatementCompletion", request);
+	}
+
+	/**
+	Determine if the request postfix completion template is applicable at
+	the given location in the given file.
+	*/
+	editIsPostfixCompletionApplicable(request: as.EditIsPostfixCompletionApplicableRequest): Thenable<as.EditIsPostfixCompletionApplicableResponse> {
+		return this.sendRequest("edit.isPostfixCompletionApplicable", request);
+	}
+
+	/**
+	Return a list of all postfix templates currently available.
+	*/
+	editListPostfixCompletionTemplates(): Thenable<as.EditListPostfixCompletionTemplatesResponse> {
+		return this.sendRequest("edit.listPostfixCompletionTemplates");
+	}
+
+	/**
+	Return a list of edits that would need to be applied in order to ensure
+	that all of the elements in the specified list of imported elements are
+	accessible within the library.
+	If a request is made for a file that does not exist, or that is not
+	currently subject to analysis (e.g. because it is not associated with any
+	analysis root specified via analysis.setAnalysisRoots), an error of type
+	IMPORT_ELEMENTS_INVALID_FILE will be generated.
+	*/
+	editImportElements(request: as.EditImportElementsRequest): Thenable<as.EditImportElementsResponse> {
+		return this.sendRequest("edit.importElements", request);
 	}
 
 	/**
@@ -676,7 +737,8 @@ export abstract class AnalyzerGen extends StdIOService {
 	/**
 	Organizes all of the directives - removes unused imports and sorts
 	directives of the given Dart file according to the
-	Dart Style Guide.
+	Dart Style
+	Guide.
 	If a request is made for a file that does not exist, does not belong
 	to an analysis root or is not a Dart file,
 	FILE_NOT_ANALYZED will be generated.
@@ -733,6 +795,8 @@ export abstract class AnalyzerGen extends StdIOService {
 	}
 
 	/**
+	Deprecated: the analysis server no longer fires
+	LAUNCH_DATA events.
 	Subscribe for services. All previous subscriptions are replaced by the
 	given set of services.
 	It is an error if any of the elements in the list are not valid
@@ -748,5 +812,77 @@ export abstract class AnalyzerGen extends StdIOService {
 	*/
 	diagnosticGetDiagnostics(): Thenable<as.DiagnosticGetDiagnosticsResponse> {
 		return this.sendRequest("diagnostic.getDiagnostics");
+	}
+
+	/**
+	Return the port of the diagnostic web server. If the server is not running
+	this call will start the server. If unable to start the diagnostic web
+	server,
+	this call will return an error of DEBUG_PORT_COULD_NOT_BE_OPENED.
+	*/
+	diagnosticGetServerPort(): Thenable<as.DiagnosticGetServerPortResponse> {
+		return this.sendRequest("diagnostic.getServerPort");
+	}
+
+	/**
+	Query whether analytics is enabled.
+	This flag controls whether the analysis server sends any analytics data to
+	the cloud. If disabled, the analysis server does not send any analytics
+	data, and any data sent to it by clients (from sendEvent and
+	sendTiming) will be ignored.
+	The value of this flag can be changed by other tools outside of the
+	analysis server's process. When you query the flag, you get the value of
+	the flag at a given moment. Clients should not use the value returned to
+	decide whether or not to send the sendEvent and sendTiming
+	requests. Those requests should be used unconditionally and server will
+	determine whether or not it is appropriate to forward the information to
+	the cloud at the time each request is received.
+	*/
+	analyticsIsEnabled(): Thenable<as.AnalyticsIsEnabledResponse> {
+		return this.sendRequest("analytics.isEnabled");
+	}
+
+	/**
+	Enable or disable the sending of analytics data. Note that there are other
+	ways for users to change this setting, so clients cannot assume that they
+	have complete control over this setting. In particular, there is no
+	guarantee that the result returned by the isEnabled request will
+	match the last value set via this request.
+	*/
+	analyticsEnable(request: as.AnalyticsEnableRequest): Thenable<UnknownResponse> {
+		return this.sendRequest("analytics.enable", request);
+	}
+
+	/**
+	Send information about client events.
+	Ask the analysis server to include the fact that an action was performed
+	in the client as part of the analytics data being sent. The data will only
+	be included if the sending of analytics data is enabled at the time the
+	request is processed. The action that was performed is indicated by the
+	value of the action field.
+	The value of the action field should not include the identity of the
+	client. The analytics data sent by server will include the client id
+	passed in using the --client-id command-line argument. The
+	request will be ignored if the client id was not provided when server was
+	started.
+	*/
+	analyticsSendEvent(request: as.AnalyticsSendEventRequest): Thenable<UnknownResponse> {
+		return this.sendRequest("analytics.sendEvent", request);
+	}
+
+	/**
+	Send timing information for client events (e.g. code completions).
+	Ask the analysis server to include the fact that a timed event occurred as
+	part of the analytics data being sent. The data will only be included if
+	the sending of analytics data is enabled at the time the request is
+	processed.
+	The value of the event field should not include the identity of the
+	client. The analytics data sent by server will include the client id
+	passed in using the --client-id command-line argument. The
+	request will be ignored if the client id was not provided when server was
+	started.
+	*/
+	analyticsSendTiming(request: as.AnalyticsSendTimingRequest): Thenable<UnknownResponse> {
+		return this.sendRequest("analytics.sendTiming", request);
 	}
 }
