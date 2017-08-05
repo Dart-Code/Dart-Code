@@ -130,48 +130,6 @@ export interface AnalysisGetHoverResponse {
 }
 
 /**
- * Return the transitive closure of reachable sources for a given file.
- * 
- * If a request is made for a file which does not exist, or
- * which is not currently subject to analysis (e.g. because it
- * is not associated with any analysis root specified to
- * analysis.setAnalysisRoots), an error of type
- * GET_REACHABLE_SOURCES_INVALID_FILE will be generated.
- */
-export interface AnalysisGetReachableSourcesRequest {
-	/**
-	 * The file for which reachable source information is being requested.
-	 */
-	file: FilePath;
-}
-
-/**
- * Return the transitive closure of reachable sources for a given file.
- * 
- * If a request is made for a file which does not exist, or
- * which is not currently subject to analysis (e.g. because it
- * is not associated with any analysis root specified to
- * analysis.setAnalysisRoots), an error of type
- * GET_REACHABLE_SOURCES_INVALID_FILE will be generated.
- */
-export interface AnalysisGetReachableSourcesResponse {
-	/**
-	 * A mapping from source URIs to directly reachable source URIs. For
-	 * example,
-	 * a file "foo.dart" that imports "bar.dart" would have the corresponding
-	 * mapping
-	 * { "file:///foo.dart" : ["file:///bar.dart"] }. If "bar.dart" has
-	 * further imports
-	 * (or exports) there will be a mapping from the URI "file:///bar.dart"
-	 * to them.
-	 * To check if a specific URI is reachable from a given file, clients can
-	 * check
-	 * for its presence in the resulting key set.
-	 */
-	sources: { [key: string]: string[]; };
-}
-
-/**
  * Return a description of all of the elements referenced in a given region
  * of a given file that come from imported libraries.
  * 
@@ -322,6 +280,48 @@ export interface AnalysisGetNavigationResponse {
 	 * the file.
 	 */
 	regions: NavigationRegion[];
+}
+
+/**
+ * Return the transitive closure of reachable sources for a given file.
+ * 
+ * If a request is made for a file which does not exist, or
+ * which is not currently subject to analysis (e.g. because it
+ * is not associated with any analysis root specified to
+ * analysis.setAnalysisRoots), an error of type
+ * GET_REACHABLE_SOURCES_INVALID_FILE will be generated.
+ */
+export interface AnalysisGetReachableSourcesRequest {
+	/**
+	 * The file for which reachable source information is being requested.
+	 */
+	file: FilePath;
+}
+
+/**
+ * Return the transitive closure of reachable sources for a given file.
+ * 
+ * If a request is made for a file which does not exist, or
+ * which is not currently subject to analysis (e.g. because it
+ * is not associated with any analysis root specified to
+ * analysis.setAnalysisRoots), an error of type
+ * GET_REACHABLE_SOURCES_INVALID_FILE will be generated.
+ */
+export interface AnalysisGetReachableSourcesResponse {
+	/**
+	 * A mapping from source URIs to directly reachable source URIs. For
+	 * example,
+	 * a file "foo.dart" that imports "bar.dart" would have the corresponding
+	 * mapping
+	 * { "file:///foo.dart" : ["file:///bar.dart"] }. If "bar.dart" has
+	 * further imports
+	 * (or exports) there will be a mapping from the URI "file:///bar.dart"
+	 * to them.
+	 * To check if a specific URI is reachable from a given file, clients can
+	 * check
+	 * for its presence in the resulting key set.
+	 */
+	sources: { [key: string]: string[]; };
 }
 
 /**
@@ -1999,80 +1999,6 @@ export interface ExecutionLaunchDataNotification {
 	referencedFiles?: FilePath[];
 }
 
-
-/**
- * A directive to begin overlaying the contents of a file. The supplied
- * content will be used for analysis in place of the file contents in the
- * filesystem.
- * 
- * If this directive is used on a file that already has a file content
- * overlay, the old overlay is discarded and replaced with the new one.
- */
-export interface AddContentOverlay {
-	/**
-	 * 
-	 */
-	type: string;
-
-	/**
-	 * The new content of the file.
-	 */
-	content: string;
-}
-
-/**
- * An indication of an error, warning, or hint that was produced by the
- * analysis.
- */
-export interface AnalysisError {
-	/**
-	 * The severity of the error.
-	 */
-	severity: AnalysisErrorSeverity;
-
-	/**
-	 * The type of the error.
-	 */
-	type: AnalysisErrorType;
-
-	/**
-	 * The location associated with the error.
-	 */
-	location: Location;
-
-	/**
-	 * The message to be displayed for this error. The message should
-	 * indicate what is wrong with the code and why it is wrong.
-	 */
-	message: string;
-
-	/**
-	 * The correction message to be displayed for this error. The correction
-	 * message should indicate how the user can fix the error. The field is
-	 * omitted if there is no correction message associated with the error
-	 * code.
-	 */
-	correction?: string;
-
-	/**
-	 * The name, as a string, of the error code associated with this error.
-	 */
-	code: string;
-
-	/**
-	 * A hint to indicate to interested clients that this error has an
-	 * associated fix (or fixes). The absence of this field implies there
-	 * are not known to be fixes. Note that since the operation to calculate
-	 * whether fixes apply needs to be performant it is possible that
-	 * complicated tests will be skipped and a false negative returned. For
-	 * this reason, this attribute should be treated as a "hint". Despite the
-	 * possibility of false negatives, no false positives should be returned.
-	 * If a client sees this flag set they can proceed with the confidence
-	 * that there are in fact associated fixes.
-	 */
-	hasFix?: boolean;
-}
-
 /**
  * A list of fixes associated with a specific error.
  */
@@ -2087,28 +2013,6 @@ export interface AnalysisErrorFixes {
 	 */
 	fixes: SourceChange[];
 }
-
-/**
- * An enumeration of the possible severities of analysis errors.
- */
-export type AnalysisErrorSeverity =
-	"INFO"
-	| "WARNING"
-	| "ERROR";
-
-/**
- * An enumeration of the possible types of analysis errors.
- */
-export type AnalysisErrorType =
-	"CHECKED_MODE_COMPILE_TIME_ERROR"
-	| "COMPILE_TIME_ERROR"
-	| "HINT"
-	| "LINT"
-	| "STATIC_TYPE_WARNING"
-	| "STATIC_WARNING"
-	| "SYNTACTIC_ERROR"
-	| "TODO";
-
 
 /**
  * Deprecated: the only reference to this type has been
@@ -2207,6 +2111,767 @@ export interface AnalysisStatus {
 }
 
 /**
+ * An identifier used to associate completion results with a
+ * completion request.
+ */
+export type CompletionId = string;
+
+/**
+ * Information about an analysis context.
+ */
+export interface ContextData {
+	/**
+	 * The name of the context.
+	 */
+	name: string;
+
+	/**
+	 * Explicitly analyzed files.
+	 */
+	explicitFileCount: number;
+
+	/**
+	 * Implicitly analyzed files.
+	 */
+	implicitFileCount: number;
+
+	/**
+	 * The number of work items in the queue.
+	 */
+	workItemQueueLength: number;
+
+	/**
+	 * Exceptions associated with cache entries.
+	 */
+	cacheEntryExceptions: string[];
+}
+
+/**
+ * A description of an executable file.
+ */
+export interface ExecutableFile {
+	/**
+	 * The path of the executable file.
+	 */
+	file: FilePath;
+
+	/**
+	 * The kind of the executable file.
+	 */
+	kind: ExecutableKind;
+}
+
+/**
+ * An enumeration of the kinds of executable files.
+ */
+export type ExecutableKind =
+	"CLIENT"
+	| "EITHER"
+	| "NOT_EXECUTABLE"
+	| "SERVER";
+
+/**
+ * The identifier for a execution context.
+ */
+export type ExecutionContextId = string;
+
+/**
+ * An enumeration of the services provided by the execution
+ * domain.
+ */
+export type ExecutionService =
+	"LAUNCH_DATA";
+
+/**
+ * An enumeration of the kinds of files.
+ */
+export type FileKind =
+	"LIBRARY"
+	| "PART";
+
+/**
+ * An enumeration of the services provided by the analysis domain that are
+ * general in nature (that is, are not specific to some list of files).
+ */
+export type GeneralAnalysisService =
+	"ANALYZED_FILES";
+
+/**
+ * The hover information associated with a specific location.
+ */
+export interface HoverInformation {
+	/**
+	 * The offset of the range of characters that encompasses the
+	 * cursor position and has the same hover information as the
+	 * cursor position.
+	 */
+	offset: number;
+
+	/**
+	 * The length of the range of characters that encompasses the
+	 * cursor position and has the same hover information as the
+	 * cursor position.
+	 */
+	length: number;
+
+	/**
+	 * The path to the defining compilation unit of the library
+	 * in which the referenced element is declared. This data is
+	 * omitted if there is no referenced element, or if the
+	 * element is declared inside an HTML file.
+	 */
+	containingLibraryPath?: string;
+
+	/**
+	 * The name of the library in which the referenced element is
+	 * declared. This data is omitted if there is no referenced
+	 * element, or if the element is declared inside an HTML
+	 * file.
+	 */
+	containingLibraryName?: string;
+
+	/**
+	 * A human-readable description of the class declaring the element
+	 * being referenced. This data is omitted if there is no referenced
+	 * element, or if the element is not a class member.
+	 */
+	containingClassDescription?: string;
+
+	/**
+	 * The dartdoc associated with the referenced element. Other
+	 * than the removal of the comment delimiters, including
+	 * leading asterisks in the case of a block comment, the
+	 * dartdoc is unprocessed markdown. This data is omitted if
+	 * there is no referenced element, or if the element has no
+	 * dartdoc.
+	 */
+	dartdoc?: string;
+
+	/**
+	 * A human-readable description of the element being
+	 * referenced. This data is omitted if there is no referenced
+	 * element.
+	 */
+	elementDescription?: string;
+
+	/**
+	 * A human-readable description of the kind of element being
+	 * referenced (such as "class" or "function type
+	 * alias"). This data is omitted if there is no referenced
+	 * element.
+	 */
+	elementKind?: string;
+
+	/**
+	 * True if the referenced element is deprecated.
+	 */
+	isDeprecated?: boolean;
+
+	/**
+	 * A human-readable description of the parameter
+	 * corresponding to the expression being hovered over. This
+	 * data is omitted if the location is not in an argument to a
+	 * function.
+	 */
+	parameter?: string;
+
+	/**
+	 * The name of the propagated type of the expression. This
+	 * data is omitted if the location does not correspond to an
+	 * expression or if there is no propagated type information.
+	 */
+	propagatedType?: string;
+
+	/**
+	 * The name of the static type of the expression. This data
+	 * is omitted if the location does not correspond to an
+	 * expression.
+	 */
+	staticType?: string;
+}
+
+/**
+ * A description of a class that is implemented or extended.
+ */
+export interface ImplementedClass {
+	/**
+	 * The offset of the name of the implemented class.
+	 */
+	offset: number;
+
+	/**
+	 * The length of the name of the implemented class.
+	 */
+	length: number;
+}
+
+/**
+ * A description of a class member that is implemented or overridden.
+ */
+export interface ImplementedMember {
+	/**
+	 * The offset of the name of the implemented member.
+	 */
+	offset: number;
+
+	/**
+	 * The length of the name of the implemented member.
+	 */
+	length: number;
+}
+
+/**
+ * A description of the elements that are referenced in a region of a file
+ * that come from a single imported library.
+ */
+export interface ImportedElements {
+	/**
+	 * The absolute and normalized path of the file containing the library.
+	 */
+	path: FilePath;
+
+	/**
+	 * The prefix that was used when importing the library into the original
+	 * source.
+	 */
+	prefix: string;
+
+	/**
+	 * The names of the elements imported from the library.
+	 */
+	elements: string[];
+}
+
+/**
+ * A description of a member that overrides an inherited member.
+ */
+export interface Override {
+	/**
+	 * The offset of the name of the overriding member.
+	 */
+	offset: number;
+
+	/**
+	 * The length of the name of the overriding member.
+	 */
+	length: number;
+
+	/**
+	 * The member inherited from a superclass that is overridden
+	 * by the overriding member. The field is omitted if there is
+	 * no superclass member, in which case there must be at least
+	 * one interface member.
+	 */
+	superclassMember?: OverriddenMember;
+
+	/**
+	 * The members inherited from interfaces that are overridden
+	 * by the overriding member. The field is omitted if there
+	 * are no interface members, in which case there must be a
+	 * superclass member.
+	 */
+	interfaceMembers?: OverriddenMember[];
+}
+
+/**
+ * A description of a member that is being overridden.
+ */
+export interface OverriddenMember {
+	/**
+	 * The element that is being overridden.
+	 */
+	element: Element;
+
+	/**
+	 * The name of the class in which the member is defined.
+	 */
+	className: string;
+}
+
+/**
+ * The description of a postfix completion template.
+ */
+export interface PostfixTemplateDescriptor {
+	/**
+	 * The template name, shown in the UI.
+	 */
+	name: string;
+
+	/**
+	 * The unique template key, not shown in the UI.
+	 */
+	key: string;
+
+	/**
+	 * A short example of the transformation performed when the template is applied.
+	 */
+	example: string;
+}
+
+/**
+ * An indication of the current state of pub execution.
+ */
+export interface PubStatus {
+	/**
+	 * True if the server is currently running pub to produce a list of
+	 * package directories.
+	 */
+	isListingPackageDirs: boolean;
+}
+
+/**
+ * An abstract superclass of all refactoring feedbacks.
+ */
+export interface RefactoringFeedback { }
+
+/**
+ * An abstract superclass of all refactoring options.
+ */
+export interface RefactoringOptions { }
+
+/**
+ * An indication of a problem with the execution of the server,
+ * typically in response to a request.
+ */
+export interface RequestError {
+	/**
+	 * A code that uniquely identifies the error that occurred.
+	 */
+	code: RequestErrorCode;
+
+	/**
+	 * A short description of the error.
+	 */
+	message: string;
+
+	/**
+	 * The stack trace associated with processing the request,
+	 * used for debugging the server.
+	 */
+	stackTrace?: string;
+}
+
+/**
+ * An enumeration of the types of errors that can occur in the
+ * execution of the server.
+ */
+export type RequestErrorCode =
+	"CONTENT_MODIFIED"
+	| "DEBUG_PORT_COULD_NOT_BE_OPENED"
+	| "FILE_NOT_ANALYZED"
+	| "FORMAT_INVALID_FILE"
+	| "FORMAT_WITH_ERRORS"
+	| "GET_ERRORS_INVALID_FILE"
+	| "GET_IMPORTED_ELEMENTS_INVALID_FILE"
+	| "GET_NAVIGATION_INVALID_FILE"
+	| "GET_REACHABLE_SOURCES_INVALID_FILE"
+	| "IMPORT_ELEMENTS_INVALID_FILE"
+	| "INVALID_ANALYSIS_ROOT"
+	| "INVALID_EXECUTION_CONTEXT"
+	| "INVALID_FILE_PATH_FORMAT"
+	| "INVALID_OVERLAY_CHANGE"
+	| "INVALID_PARAMETER"
+	| "INVALID_REQUEST"
+	| "ORGANIZE_DIRECTIVES_ERROR"
+	| "REFACTORING_REQUEST_CANCELLED"
+	| "SERVER_ALREADY_STARTED"
+	| "SERVER_ERROR"
+	| "SORT_MEMBERS_INVALID_FILE"
+	| "SORT_MEMBERS_PARSE_ERRORS"
+	| "UNANALYZED_PRIORITY_FILES"
+	| "UNKNOWN_REQUEST"
+	| "UNKNOWN_SOURCE"
+	| "UNSUPPORTED_FEATURE";
+
+/**
+ * An identifier used to associate search results with a search
+ * request.
+ */
+export type SearchId = string;
+
+/**
+ * A single result from a search request.
+ */
+export interface SearchResult {
+	/**
+	 * The location of the code that matched the search criteria.
+	 */
+	location: Location;
+
+	/**
+	 * The kind of element that was found or the kind of
+	 * reference that was found.
+	 */
+	kind: SearchResultKind;
+
+	/**
+	 * True if the result is a potential match but cannot be
+	 * confirmed to be a match. For example, if all references to
+	 * a method m defined in some class were requested, and a
+	 * reference to a method m from an unknown class were found,
+	 * it would be marked as being a potential match.
+	 */
+	isPotential: boolean;
+
+	/**
+	 * The elements that contain the result, starting with the
+	 * most immediately enclosing ancestor and ending with the
+	 * library.
+	 */
+	path: Element[];
+}
+
+/**
+ * An enumeration of the kinds of search results returned by the
+ * search domain.
+ */
+export type SearchResultKind =
+	"DECLARATION"
+	| "INVOCATION"
+	| "READ"
+	| "READ_WRITE"
+	| "REFERENCE"
+	| "UNKNOWN"
+	| "WRITE";
+
+/**
+ * An enumeration of the services provided by the server domain.
+ */
+export type ServerService =
+	"STATUS";
+
+/**
+ * A representation of a class in a type hierarchy.
+ */
+export interface TypeHierarchyItem {
+	/**
+	 * The class element represented by this item.
+	 */
+	classElement: Element;
+
+	/**
+	 * The name to be displayed for the class. This field will be
+	 * omitted if the display name is the same as the name of the
+	 * element. The display name is different if there is
+	 * additional type information to be displayed, such as type
+	 * arguments.
+	 */
+	displayName?: string;
+
+	/**
+	 * The member in the class corresponding to the member on
+	 * which the hierarchy was requested. This field will be
+	 * omitted if the hierarchy was not requested for a member or
+	 * if the class does not have a corresponding member.
+	 */
+	memberElement?: Element;
+
+	/**
+	 * The index of the item representing the superclass of
+	 * this class. This field will be omitted if this item
+	 * represents the class Object.
+	 */
+	superclass?: number;
+
+	/**
+	 * The indexes of the items representing the interfaces
+	 * implemented by this class. The list will be empty if
+	 * there are no implemented interfaces.
+	 */
+	interfaces: number[];
+
+	/**
+	 * The indexes of the items representing the mixins
+	 * referenced by this class. The list will be empty if
+	 * there are no classes mixed in to this class.
+	 */
+	mixins: number[];
+
+	/**
+	 * The indexes of the items representing the subtypes of
+	 * this class. The list will be empty if there are no
+	 * subtypes or if this item represents a supertype of the
+	 * pivot type.
+	 */
+	subclasses: number[];
+}
+
+/**
+ * Create a local variable initialized by the expression that covers
+ * the specified selection.
+ * 
+ * It is an error if the selection range is not covered by a
+ * complete expression.
+ */
+export interface ExtractLocalVariableFeedback extends RefactoringFeedback {
+	/**
+	 * The offsets of the expressions that cover the specified
+	 * selection, from the down most to the up most.
+	 */
+	coveringExpressionOffsets?: number[];
+
+	/**
+	 * The lengths of the expressions that cover the specified
+	 * selection, from the down most to the up most.
+	 */
+	coveringExpressionLengths?: number[];
+
+	/**
+	 * The proposed names for the local variable.
+	 */
+	names: string[];
+
+	/**
+	 * The offsets of the expressions that would be replaced by
+	 * a reference to the variable.
+	 */
+	offsets: number[];
+
+	/**
+	 * The lengths of the expressions that would be replaced by
+	 * a reference to the variable. The lengths correspond to
+	 * the offsets. In other words, for a given expression, if
+	 * the offset of that expression is offsets[i], then
+	 * the length of that expression is lengths[i].
+	 */
+	lengths: number[];
+}
+
+/**
+ * Create a method whose body is the specified expression or
+ * list of statements, possibly augmented with a return
+ * statement.
+ * 
+ * It is an error if the range contains anything other than a
+ * complete expression (no partial expressions are allowed) or
+ * a complete sequence of statements.
+ */
+export interface ExtractMethodFeedback extends RefactoringFeedback {
+	/**
+	 * The offset to the beginning of the expression or
+	 * statements that will be extracted.
+	 */
+	offset: number;
+
+	/**
+	 * The length of the expression or statements that will be
+	 * extracted.
+	 */
+	length: number;
+
+	/**
+	 * The proposed return type for the method.
+	 * If the returned element does not have a declared return type,
+	 * this field will contain an empty string.
+	 */
+	returnType: string;
+
+	/**
+	 * The proposed names for the method.
+	 */
+	names: string[];
+
+	/**
+	 * True if a getter could be created rather than a method.
+	 */
+	canCreateGetter: boolean;
+
+	/**
+	 * The proposed parameters for the method.
+	 */
+	parameters: RefactoringMethodParameter[];
+
+	/**
+	 * The offsets of the expressions or statements that would
+	 * be replaced by an invocation of the method.
+	 */
+	offsets: number[];
+
+	/**
+	 * The lengths of the expressions or statements that would
+	 * be replaced by an invocation of the method. The lengths
+	 * correspond to the offsets. In other words, for a given
+	 * expression (or block of statements), if the offset of
+	 * that expression is offsets[i], then the length
+	 * of that expression is lengths[i].
+	 */
+	lengths: number[];
+}
+
+/**
+ * Inline the initializer expression of a local variable in
+ * place of any references to that variable.
+ * 
+ * It is an error if the range contains anything other than all
+ * or part of the name of a single local variable.
+ */
+export interface InlineLocalVariableFeedback extends RefactoringFeedback {
+	/**
+	 * The name of the variable being inlined.
+	 */
+	name: string;
+
+	/**
+	 * The number of times the variable occurs.
+	 */
+	occurrences: number;
+}
+
+/**
+ * Inline a method in place of one or all references to that
+ * method.
+ * 
+ * It is an error if the range contains anything other than all
+ * or part of the name of a single method.
+ */
+export interface InlineMethodFeedback extends RefactoringFeedback {
+	/**
+	 * The name of the class enclosing the method being inlined.
+	 * If not a class member is being inlined, this field will be absent.
+	 */
+	className?: string;
+
+	/**
+	 * The name of the method (or function) being inlined.
+	 */
+	methodName: string;
+
+	/**
+	 * True if the declaration of the method is selected.
+	 * So all references should be inlined.
+	 */
+	isDeclaration: boolean;
+}
+
+/**
+ * Rename a given element and all of the references to that
+ * element.
+ * 
+ * It is an error if the range contains anything other than all
+ * or part of the name of a single function (including methods,
+ * getters and setters), variable (including fields, parameters
+ * and local variables), class or function type.
+ */
+export interface RenameFeedback extends RefactoringFeedback {
+	/**
+	 * The offset to the beginning of the name selected to be
+	 * renamed.
+	 */
+	offset: number;
+
+	/**
+	 * The length of the name selected to be renamed.
+	 */
+	length: number;
+
+	/**
+	 * The human-readable description of the kind of element being
+	 * renamed (such as "class" or "function type
+	 * alias").
+	 */
+	elementKindName: string;
+
+	/**
+	 * The old name of the element before the refactoring.
+	 */
+	oldName: string;
+}
+
+/**
+ * A directive to begin overlaying the contents of a file. The supplied
+ * content will be used for analysis in place of the file contents in the
+ * filesystem.
+ * 
+ * If this directive is used on a file that already has a file content
+ * overlay, the old overlay is discarded and replaced with the new one.
+ */
+export interface AddContentOverlay {
+	/**
+	 * 
+	 */
+	type: string;
+
+	/**
+	 * The new content of the file.
+	 */
+	content: string;
+}
+
+/**
+ * An indication of an error, warning, or hint that was produced by the
+ * analysis.
+ */
+export interface AnalysisError {
+	/**
+	 * The severity of the error.
+	 */
+	severity: AnalysisErrorSeverity;
+
+	/**
+	 * The type of the error.
+	 */
+	type: AnalysisErrorType;
+
+	/**
+	 * The location associated with the error.
+	 */
+	location: Location;
+
+	/**
+	 * The message to be displayed for this error. The message should
+	 * indicate what is wrong with the code and why it is wrong.
+	 */
+	message: string;
+
+	/**
+	 * The correction message to be displayed for this error. The correction
+	 * message should indicate how the user can fix the error. The field is
+	 * omitted if there is no correction message associated with the error
+	 * code.
+	 */
+	correction?: string;
+
+	/**
+	 * The name, as a string, of the error code associated with this error.
+	 */
+	code: string;
+
+	/**
+	 * A hint to indicate to interested clients that this error has an
+	 * associated fix (or fixes). The absence of this field implies there
+	 * are not known to be fixes. Note that since the operation to calculate
+	 * whether fixes apply needs to be performant it is possible that
+	 * complicated tests will be skipped and a false negative returned. For
+	 * this reason, this attribute should be treated as a "hint". Despite the
+	 * possibility of false negatives, no false positives should be returned.
+	 * If a client sees this flag set they can proceed with the confidence
+	 * that there are in fact associated fixes.
+	 */
+	hasFix?: boolean;
+}
+
+/**
+ * An enumeration of the possible severities of analysis errors.
+ */
+export type AnalysisErrorSeverity =
+	"INFO"
+	| "WARNING"
+	| "ERROR";
+
+/**
+ * An enumeration of the possible types of analysis errors.
+ */
+export type AnalysisErrorType =
+	"CHECKED_MODE_COMPILE_TIME_ERROR"
+	| "COMPILE_TIME_ERROR"
+	| "HINT"
+	| "LINT"
+	| "STATIC_TYPE_WARNING"
+	| "STATIC_WARNING"
+	| "SYNTACTIC_ERROR"
+	| "TODO";
+
+/**
  * A directive to modify an existing file content overlay. One or more ranges
  * of text are deleted from the old file content overlay and replaced with
  * new text.
@@ -2233,12 +2898,6 @@ export interface ChangeContentOverlay {
 	 */
 	edits: SourceEdit[];
 }
-
-/**
- * An identifier used to associate completion results with a
- * completion request.
- */
-export type CompletionId = string;
 
 /**
  * A suggestion for how to complete partially entered text. Many of the
@@ -2396,36 +3055,6 @@ export type CompletionSuggestionKind =
 	| "PARAMETER";
 
 /**
- * Information about an analysis context.
- */
-export interface ContextData {
-	/**
-	 * The name of the context.
-	 */
-	name: string;
-
-	/**
-	 * Explicitly analyzed files.
-	 */
-	explicitFileCount: number;
-
-	/**
-	 * Implicitly analyzed files.
-	 */
-	implicitFileCount: number;
-
-	/**
-	 * The number of work items in the queue.
-	 */
-	workItemQueueLength: number;
-
-	/**
-	 * Exceptions associated with cache entries.
-	 */
-	cacheEntryExceptions: string[];
-}
-
-/**
  * Information about an element (something that can be declared in code).
  */
 export interface Element {
@@ -2500,50 +3129,6 @@ export type ElementKind =
 	| "UNIT_TEST_TEST"
 	| "UNKNOWN";
 
-
-/**
- * A description of an executable file.
- */
-export interface ExecutableFile {
-	/**
-	 * The path of the executable file.
-	 */
-	file: FilePath;
-
-	/**
-	 * The kind of the executable file.
-	 */
-	kind: ExecutableKind;
-}
-
-/**
- * An enumeration of the kinds of executable files.
- */
-export type ExecutableKind =
-	"CLIENT"
-	| "EITHER"
-	| "NOT_EXECUTABLE"
-	| "SERVER";
-
-/**
- * The identifier for a execution context.
- */
-export type ExecutionContextId = string;
-
-/**
- * An enumeration of the services provided by the execution
- * domain.
- */
-export type ExecutionService =
-	"LAUNCH_DATA";
-
-/**
- * An enumeration of the kinds of files.
- */
-export type FileKind =
-	"LIBRARY"
-	| "PART";
-
 /**
  * The absolute, normalized path of a file.
  * 
@@ -2582,13 +3167,6 @@ export interface FoldingRegion {
 	 */
 	length: number;
 }
-
-/**
- * An enumeration of the services provided by the analysis domain that are
- * general in nature (that is, are not specific to some list of files).
- */
-export type GeneralAnalysisService =
-	"ANALYZED_FILES";
 
 /**
  * A description of a region that could have special highlighting associated
@@ -2688,152 +3266,6 @@ export type HighlightRegionType =
 	| "TYPE_PARAMETER"
 	| "UNRESOLVED_INSTANCE_MEMBER_REFERENCE"
 	| "VALID_STRING_ESCAPE";
-
-/**
- * The hover information associated with a specific location.
- */
-export interface HoverInformation {
-	/**
-	 * The offset of the range of characters that encompasses the
-	 * cursor position and has the same hover information as the
-	 * cursor position.
-	 */
-	offset: number;
-
-	/**
-	 * The length of the range of characters that encompasses the
-	 * cursor position and has the same hover information as the
-	 * cursor position.
-	 */
-	length: number;
-
-	/**
-	 * The path to the defining compilation unit of the library
-	 * in which the referenced element is declared. This data is
-	 * omitted if there is no referenced element, or if the
-	 * element is declared inside an HTML file.
-	 */
-	containingLibraryPath?: string;
-
-	/**
-	 * The name of the library in which the referenced element is
-	 * declared. This data is omitted if there is no referenced
-	 * element, or if the element is declared inside an HTML
-	 * file.
-	 */
-	containingLibraryName?: string;
-
-	/**
-	 * A human-readable description of the class declaring the element
-	 * being referenced. This data is omitted if there is no referenced
-	 * element, or if the element is not a class member.
-	 */
-	containingClassDescription?: string;
-
-	/**
-	 * The dartdoc associated with the referenced element. Other
-	 * than the removal of the comment delimiters, including
-	 * leading asterisks in the case of a block comment, the
-	 * dartdoc is unprocessed markdown. This data is omitted if
-	 * there is no referenced element, or if the element has no
-	 * dartdoc.
-	 */
-	dartdoc?: string;
-
-	/**
-	 * A human-readable description of the element being
-	 * referenced. This data is omitted if there is no referenced
-	 * element.
-	 */
-	elementDescription?: string;
-
-	/**
-	 * A human-readable description of the kind of element being
-	 * referenced (such as "class" or "function type
-	 * alias"). This data is omitted if there is no referenced
-	 * element.
-	 */
-	elementKind?: string;
-
-	/**
-	 * True if the referenced element is deprecated.
-	 */
-	isDeprecated?: boolean;
-
-	/**
-	 * A human-readable description of the parameter
-	 * corresponding to the expression being hovered over. This
-	 * data is omitted if the location is not in an argument to a
-	 * function.
-	 */
-	parameter?: string;
-
-	/**
-	 * The name of the propagated type of the expression. This
-	 * data is omitted if the location does not correspond to an
-	 * expression or if there is no propagated type information.
-	 */
-	propagatedType?: string;
-
-	/**
-	 * The name of the static type of the expression. This data
-	 * is omitted if the location does not correspond to an
-	 * expression.
-	 */
-	staticType?: string;
-}
-
-/**
- * A description of a class that is implemented or extended.
- */
-export interface ImplementedClass {
-	/**
-	 * The offset of the name of the implemented class.
-	 */
-	offset: number;
-
-	/**
-	 * The length of the name of the implemented class.
-	 */
-	length: number;
-}
-
-/**
- * A description of a class member that is implemented or overridden.
- */
-export interface ImplementedMember {
-	/**
-	 * The offset of the name of the implemented member.
-	 */
-	offset: number;
-
-	/**
-	 * The length of the name of the implemented member.
-	 */
-	length: number;
-}
-
-/**
- * A description of the elements that are referenced in a region of a file
- * that come from a single imported library.
- */
-export interface ImportedElements {
-	/**
-	 * The absolute and normalized path of the file containing the library.
-	 */
-	path: FilePath;
-
-	/**
-	 * The prefix that was used when importing the library into the original
-	 * source.
-	 */
-	prefix: string;
-
-	/**
-	 * The names of the elements imported from the library.
-	 */
-	elements: string[];
-}
 
 /**
  * A collection of positions that should be linked (edited simultaneously)
@@ -3031,72 +3463,6 @@ export interface Outline {
 }
 
 /**
- * A description of a member that overrides an inherited member.
- */
-export interface Override {
-	/**
-	 * The offset of the name of the overriding member.
-	 */
-	offset: number;
-
-	/**
-	 * The length of the name of the overriding member.
-	 */
-	length: number;
-
-	/**
-	 * The member inherited from a superclass that is overridden
-	 * by the overriding member. The field is omitted if there is
-	 * no superclass member, in which case there must be at least
-	 * one interface member.
-	 */
-	superclassMember?: OverriddenMember;
-
-	/**
-	 * The members inherited from interfaces that are overridden
-	 * by the overriding member. The field is omitted if there
-	 * are no interface members, in which case there must be a
-	 * superclass member.
-	 */
-	interfaceMembers?: OverriddenMember[];
-}
-
-/**
- * A description of a member that is being overridden.
- */
-export interface OverriddenMember {
-	/**
-	 * The element that is being overridden.
-	 */
-	element: Element;
-
-	/**
-	 * The name of the class in which the member is defined.
-	 */
-	className: string;
-}
-
-/**
- * The description of a postfix completion template.
- */
-export interface PostfixTemplateDescriptor {
-	/**
-	 * The template name, shown in the UI.
-	 */
-	name: string;
-
-	/**
-	 * The unique template key, not shown in the UI.
-	 */
-	key: string;
-
-	/**
-	 * A short example of the transformation performed when the template is applied.
-	 */
-	example: string;
-}
-
-/**
  * A position within a file.
  */
 export interface Position {
@@ -3109,17 +3475,6 @@ export interface Position {
 	 * The offset of the position.
 	 */
 	offset: number;
-}
-
-/**
- * An indication of the current state of pub execution.
- */
-export interface PubStatus {
-	/**
-	 * True if the server is currently running pub to produce a list of
-	 * package directories.
-	 */
-	isListingPackageDirs: boolean;
 }
 
 /**
@@ -3170,16 +3525,6 @@ export interface RefactoringMethodParameter {
 	 */
 	parameters?: string;
 }
-
-/**
- * An abstract superclass of all refactoring feedbacks.
- */
-export interface RefactoringFeedback { }
-
-/**
- * An abstract superclass of all refactoring options.
- */
-export interface RefactoringOptions { }
 
 /**
  * An enumeration of the kinds of parameters.
@@ -3235,118 +3580,6 @@ export interface RemoveContentOverlay {
 	 */
 	type: string;
 }
-
-/**
- * An indication of a problem with the execution of the server,
- * typically in response to a request.
- */
-export interface RequestError {
-	/**
-	 * A code that uniquely identifies the error that occurred.
-	 */
-	code: RequestErrorCode;
-
-	/**
-	 * A short description of the error.
-	 */
-	message: string;
-
-	/**
-	 * The stack trace associated with processing the request,
-	 * used for debugging the server.
-	 */
-	stackTrace?: string;
-}
-
-/**
- * An enumeration of the types of errors that can occur in the
- * execution of the server.
- */
-export type RequestErrorCode =
-	"CONTENT_MODIFIED"
-	| "DEBUG_PORT_COULD_NOT_BE_OPENED"
-	| "FILE_NOT_ANALYZED"
-	| "FORMAT_INVALID_FILE"
-	| "FORMAT_WITH_ERRORS"
-	| "GET_ERRORS_INVALID_FILE"
-	| "GET_IMPORTED_ELEMENTS_INVALID_FILE"
-	| "GET_NAVIGATION_INVALID_FILE"
-	| "GET_REACHABLE_SOURCES_INVALID_FILE"
-	| "IMPORT_ELEMENTS_INVALID_FILE"
-	| "INVALID_ANALYSIS_ROOT"
-	| "INVALID_EXECUTION_CONTEXT"
-	| "INVALID_FILE_PATH_FORMAT"
-	| "INVALID_OVERLAY_CHANGE"
-	| "INVALID_PARAMETER"
-	| "INVALID_REQUEST"
-	| "ORGANIZE_DIRECTIVES_ERROR"
-	| "REFACTORING_REQUEST_CANCELLED"
-	| "SERVER_ALREADY_STARTED"
-	| "SERVER_ERROR"
-	| "SORT_MEMBERS_INVALID_FILE"
-	| "SORT_MEMBERS_PARSE_ERRORS"
-	| "UNANALYZED_PRIORITY_FILES"
-	| "UNKNOWN_REQUEST"
-	| "UNKNOWN_SOURCE"
-	| "UNSUPPORTED_FEATURE";
-
-/**
- * An identifier used to associate search results with a search
- * request.
- */
-export type SearchId = string;
-
-/**
- * A single result from a search request.
- */
-export interface SearchResult {
-	/**
-	 * The location of the code that matched the search criteria.
-	 */
-	location: Location;
-
-	/**
-	 * The kind of element that was found or the kind of
-	 * reference that was found.
-	 */
-	kind: SearchResultKind;
-
-	/**
-	 * True if the result is a potential match but cannot be
-	 * confirmed to be a match. For example, if all references to
-	 * a method m defined in some class were requested, and a
-	 * reference to a method m from an unknown class were found,
-	 * it would be marked as being a potential match.
-	 */
-	isPotential: boolean;
-
-	/**
-	 * The elements that contain the result, starting with the
-	 * most immediately enclosing ancestor and ending with the
-	 * library.
-	 */
-	path: Element[];
-}
-
-/**
- * An enumeration of the kinds of search results returned by the
- * search domain.
- */
-export type SearchResultKind =
-	"DECLARATION"
-	| "INVOCATION"
-	| "READ"
-	| "READ_WRITE"
-	| "REFERENCE"
-	| "UNKNOWN"
-	| "WRITE";
-
-/**
- * An enumeration of the services provided by the server domain.
- */
-export type ServerService =
-	"STATUS";
-
 
 /**
  * A description of a set of edits that implement a single conceptual change.
@@ -3429,243 +3662,5 @@ export interface SourceFileEdit {
 	 * A list of the edits used to effect the change.
 	 */
 	edits: SourceEdit[];
-}
-
-/**
- * A representation of a class in a type hierarchy.
- */
-export interface TypeHierarchyItem {
-	/**
-	 * The class element represented by this item.
-	 */
-	classElement: Element;
-
-	/**
-	 * The name to be displayed for the class. This field will be
-	 * omitted if the display name is the same as the name of the
-	 * element. The display name is different if there is
-	 * additional type information to be displayed, such as type
-	 * arguments.
-	 */
-	displayName?: string;
-
-	/**
-	 * The member in the class corresponding to the member on
-	 * which the hierarchy was requested. This field will be
-	 * omitted if the hierarchy was not requested for a member or
-	 * if the class does not have a corresponding member.
-	 */
-	memberElement?: Element;
-
-	/**
-	 * The index of the item representing the superclass of
-	 * this class. This field will be omitted if this item
-	 * represents the class Object.
-	 */
-	superclass?: number;
-
-	/**
-	 * The indexes of the items representing the interfaces
-	 * implemented by this class. The list will be empty if
-	 * there are no implemented interfaces.
-	 */
-	interfaces: number[];
-
-	/**
-	 * The indexes of the items representing the mixins
-	 * referenced by this class. The list will be empty if
-	 * there are no classes mixed in to this class.
-	 */
-	mixins: number[];
-
-	/**
-	 * The indexes of the items representing the subtypes of
-	 * this class. The list will be empty if there are no
-	 * subtypes or if this item represents a supertype of the
-	 * pivot type.
-	 */
-	subclasses: number[];
-}
-
-
-/**
- * Create a local variable initialized by the expression that covers
- * the specified selection.
- * 
- * It is an error if the selection range is not covered by a
- * complete expression.
- */
-export interface ExtractLocalVariableFeedback extends RefactoringFeedback {
-	/**
-	 * The offsets of the expressions that cover the specified
-	 * selection, from the down most to the up most.
-	 */
-	coveringExpressionOffsets?: number[];
-
-	/**
-	 * The lengths of the expressions that cover the specified
-	 * selection, from the down most to the up most.
-	 */
-	coveringExpressionLengths?: number[];
-
-	/**
-	 * The proposed names for the local variable.
-	 */
-	names: string[];
-
-	/**
-	 * The offsets of the expressions that would be replaced by
-	 * a reference to the variable.
-	 */
-	offsets: number[];
-
-	/**
-	 * The lengths of the expressions that would be replaced by
-	 * a reference to the variable. The lengths correspond to
-	 * the offsets. In other words, for a given expression, if
-	 * the offset of that expression is offsets[i], then
-	 * the length of that expression is lengths[i].
-	 */
-	lengths: number[];
-}
-
-/**
- * Create a method whose body is the specified expression or
- * list of statements, possibly augmented with a return
- * statement.
- * 
- * It is an error if the range contains anything other than a
- * complete expression (no partial expressions are allowed) or
- * a complete sequence of statements.
- */
-export interface ExtractMethodFeedback extends RefactoringFeedback {
-	/**
-	 * The offset to the beginning of the expression or
-	 * statements that will be extracted.
-	 */
-	offset: number;
-
-	/**
-	 * The length of the expression or statements that will be
-	 * extracted.
-	 */
-	length: number;
-
-	/**
-	 * The proposed return type for the method.
-	 * If the returned element does not have a declared return type,
-	 * this field will contain an empty string.
-	 */
-	returnType: string;
-
-	/**
-	 * The proposed names for the method.
-	 */
-	names: string[];
-
-	/**
-	 * True if a getter could be created rather than a method.
-	 */
-	canCreateGetter: boolean;
-
-	/**
-	 * The proposed parameters for the method.
-	 */
-	parameters: RefactoringMethodParameter[];
-
-	/**
-	 * The offsets of the expressions or statements that would
-	 * be replaced by an invocation of the method.
-	 */
-	offsets: number[];
-
-	/**
-	 * The lengths of the expressions or statements that would
-	 * be replaced by an invocation of the method. The lengths
-	 * correspond to the offsets. In other words, for a given
-	 * expression (or block of statements), if the offset of
-	 * that expression is offsets[i], then the length
-	 * of that expression is lengths[i].
-	 */
-	lengths: number[];
-}
-
-/**
- * Inline the initializer expression of a local variable in
- * place of any references to that variable.
- * 
- * It is an error if the range contains anything other than all
- * or part of the name of a single local variable.
- */
-export interface InlineLocalVariableFeedback extends RefactoringFeedback {
-	/**
-	 * The name of the variable being inlined.
-	 */
-	name: string;
-
-	/**
-	 * The number of times the variable occurs.
-	 */
-	occurrences: number;
-}
-
-/**
- * Inline a method in place of one or all references to that
- * method.
- * 
- * It is an error if the range contains anything other than all
- * or part of the name of a single method.
- */
-export interface InlineMethodFeedback extends RefactoringFeedback {
-	/**
-	 * The name of the class enclosing the method being inlined.
-	 * If not a class member is being inlined, this field will be absent.
-	 */
-	className?: string;
-
-	/**
-	 * The name of the method (or function) being inlined.
-	 */
-	methodName: string;
-
-	/**
-	 * True if the declaration of the method is selected.
-	 * So all references should be inlined.
-	 */
-	isDeclaration: boolean;
-}
-
-/**
- * Rename a given element and all of the references to that
- * element.
- * 
- * It is an error if the range contains anything other than all
- * or part of the name of a single function (including methods,
- * getters and setters), variable (including fields, parameters
- * and local variables), class or function type.
- */
-export interface RenameFeedback extends RefactoringFeedback {
-	/**
-	 * The offset to the beginning of the name selected to be
-	 * renamed.
-	 */
-	offset: number;
-
-	/**
-	 * The length of the name selected to be renamed.
-	 */
-	length: number;
-
-	/**
-	 * The human-readable description of the kind of element being
-	 * renamed (such as "class" or "function type
-	 * alias").
-	 */
-	elementKindName: string;
-
-	/**
-	 * The old name of the element before the refactoring.
-	 */
-	oldName: string;
 }
 
