@@ -1635,6 +1635,34 @@ export interface AnalysisAnalyzedFilesNotification {
 }
 
 /**
+ * Reports closing labels relevant to a given file.
+ * 
+ * This notification is not subscribed to by default. Clients
+ * can subscribe by including the value "CLOSING_LABELS"
+ * in the list of services passed in an
+ * analysis.setSubscriptions request.
+ */
+export interface AnalysisClosingLabelsNotification {
+	/**
+	 * The file the closing labels relate to.
+	 */
+	file: FilePath;
+
+	/**
+	 * Closing labels relevant to the file. Each item
+	 * represents a useful label associated with some range
+	 * with may be useful to display to the user within the editor
+	 * at the end of the range to indicate what construct is closed
+	 * at that location. Closing labels include constructor/method
+	 * calls and List arguments that span multiple lines.
+	 * Note that the ranges that are returned can overlap
+	 * each other because they may be associated with
+	 * constructs that can be nested.
+	 */
+	labels: ClosingLabel[];
+}
+
+/**
  * Reports the errors associated with a given file. The set of
  * errors included in the notification is always a complete
  * list that supersedes any previously reported errors.
@@ -2085,7 +2113,8 @@ export interface AnalysisOptions {
  * are related to a specific list of files.
  */
 export type AnalysisService =
-	"FOLDING"
+	"CLOSING_LABELS"
+	| "FOLDING"
 	| "HIGHLIGHTS"
 	| "IMPLEMENTED"
 	| "INVALIDATE"
@@ -2108,6 +2137,29 @@ export interface AnalysisStatus {
 	 * omitted if analyzing is false.
 	 */
 	analysisTarget?: string;
+}
+
+/**
+ * A label that is associated with a range of code that may be useful to render at the end
+ * of the range to aid code readability. For example, a constructor call that spans multiple
+ * lines may result in a closing label to allow the constructor type/name to be rendered
+ * alongside the closing parenthesis.
+ */
+export interface ClosingLabel {
+	/**
+	 * The offset of the construct being labelled.
+	 */
+	offset: number;
+
+	/**
+	 * The length of the whole construct to be labelled.
+	 */
+	length: number;
+
+	/**
+	 * The label associated with this range that should be displayed to the user.
+	 */
+	label: string;
 }
 
 /**

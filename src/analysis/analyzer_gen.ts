@@ -16,6 +16,7 @@ export abstract class AnalyzerGen extends StdIOService {
 	private serverErrorSubscriptions: ((notification: as.ServerErrorNotification) => void)[] = [];
 	private serverStatusSubscriptions: ((notification: as.ServerStatusNotification) => void)[] = [];
 	private analysisAnalyzedFilesSubscriptions: ((notification: as.AnalysisAnalyzedFilesNotification) => void)[] = [];
+	private analysisClosingLabelsSubscriptions: ((notification: as.AnalysisClosingLabelsNotification) => void)[] = [];
 	private analysisErrorsSubscriptions: ((notification: as.AnalysisErrorsNotification) => void)[] = [];
 	private analysisFlushResultsSubscriptions: ((notification: as.AnalysisFlushResultsNotification) => void)[] = [];
 	private analysisFoldingSubscriptions: ((notification: as.AnalysisFoldingNotification) => void)[] = [];
@@ -43,6 +44,9 @@ export abstract class AnalyzerGen extends StdIOService {
 				break;
 			case "analysis.analyzedFiles":
 				this.notify(this.analysisAnalyzedFilesSubscriptions, <as.AnalysisAnalyzedFilesNotification>evt.params);
+				break;
+			case "analysis.closingLabels":
+				this.notify(this.analysisClosingLabelsSubscriptions, <as.AnalysisClosingLabelsNotification>evt.params);
 				break;
 			case "analysis.errors":
 				this.notify(this.analysisErrorsSubscriptions, <as.AnalysisErrorsNotification>evt.params);
@@ -133,6 +137,17 @@ export abstract class AnalyzerGen extends StdIOService {
 	*/
 	registerForAnalysisAnalyzedFiles(subscriber: (notification: as.AnalysisAnalyzedFilesNotification) => void): vs.Disposable {
 		return this.subscribe(this.analysisAnalyzedFilesSubscriptions, subscriber);
+	}
+
+	/**
+	Reports closing labels relevant to a given file.
+	This notification is not subscribed to by default. Clients
+	can subscribe by including the value "CLOSING_LABELS"
+	in the list of services passed in an
+	analysis.setSubscriptions request.
+	*/
+	registerForAnalysisClosingLabels(subscriber: (notification: as.AnalysisClosingLabelsNotification) => void): vs.Disposable {
+		return this.subscribe(this.analysisClosingLabelsSubscriptions, subscriber);
 	}
 
 	/**
