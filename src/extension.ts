@@ -33,6 +33,7 @@ import { upgradeProject } from "./project_upgrade";
 import { promptUserForConfigs } from "./user_config_prompts";
 import { FlutterWidgetConstructorDecoratorProvider } from "./providers/flutter_widget_constructor_decoration";
 import { DartPackageFileContentProvider } from "./providers/dart_package_file_content_provider";
+import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }, { language: "dart", scheme: "dart-package" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }, { language: "html", scheme: "dart-package" }];
@@ -223,16 +224,22 @@ export function activate(context: vs.ExtensionContext) {
 		}));
 	}
 
-	// Enable editor decorations.
-	if ((util.isFlutterProject || util.isFuchsiaProject) && config.previewFlutterCloseTagDecorations) {
-		vs.window.showInformationMessage("Flutter \"closing tag\" decorations prototype is enabled - please give feedback!",
-			"Give Feedback"
-		).then(selectedItem => {
-			if (selectedItem)
-				util.openInBrowser("https://github.com/Dart-Code/Dart-Code/issues/383");
-		});
-		context.subscriptions.push(new FlutterWidgetConstructorDecoratorProvider(analyzer));
-	}
+	// Setup that requires server version/capabilities.
+	let connectedSetup = analyzer.registerForServerConnected(sc => {
+		connectedSetup.dispose();
+
+		if (analyzer.capabilities.supportsClosingLabels)
+			context.subscriptions.push(new ClosingLabelsDecorations(analyzer));
+		else if ((util.isFlutterProject || util.isFuchsiaProject) && config.previewFlutterCloseTagDecorations) {
+			vs.window.showInformationMessage("Flutter \"closing tag\" decorations prototype is enabled - please give feedback!",
+				"Give Feedback"
+			).then(selectedItem => {
+				if (selectedItem)
+					util.openInBrowser("https://github.com/Dart-Code/Dart-Code/issues/383");
+			});
+			context.subscriptions.push(new FlutterWidgetConstructorDecoratorProvider(analyzer));
+		}
+	});
 
 	// Hook open/active file changes so we can set priority files with the analyzer.
 	let openFileTracker = new OpenFileTracker(analyzer);

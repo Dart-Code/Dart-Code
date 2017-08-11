@@ -10,6 +10,7 @@ import { log, logError, extensionVersion, versionIsAtLeast } from "../utils";
 import { Request, UnknownResponse, UnknownNotification } from "../services/stdio_service";
 
 class AnalyzerCapabilities {
+
 	version: string;
 
 	constructor(analyzerVersion: string) {
@@ -19,6 +20,7 @@ class AnalyzerCapabilities {
 	get supportsPriorityFilesOutsideAnalysisRoots() { return versionIsAtLeast(this.version, "1.18.2"); }
 	get supportsDiagnostics() { return versionIsAtLeast(this.version, "1.18.1"); }
 	get requiresDummyModificationToGetOutlines() { return versionIsAtLeast(this.version, "1.18.3") == false; }
+	get supportsClosingLabels() { return false /*versionIsAtLeast(this.version, "1.18.4")*/; } // TODO: MAY NEED UPDATING.
 }
 
 export class Analyzer extends AnalyzerGen {
