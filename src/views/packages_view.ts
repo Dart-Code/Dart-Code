@@ -3,6 +3,7 @@
 import * as vs from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { PackageMap } from "../debug/utils";
 
 // TODO: Listen for changes to the .packages file.
 
@@ -50,8 +51,8 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 					}));
 				}
 			} else if (this.workspaceRoot) {
-				const packagesPath = path.join(this.workspaceRoot, '.packages');
-				if (this.pathExists(packagesPath)) {
+				const packagesPath = PackageMap.findPackagesFile(path.join(this.workspaceRoot, '.packages'));
+				if (packagesPath && this.pathExists(packagesPath)) {
 					resolve(this.getDepsInPackages(packagesPath));
 				}
 				else {
@@ -64,6 +65,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 	}
 
 	private getDepsInPackages(packagesPath: string): PackageDep[] {
+		const packageRoot = path.dirname(packagesPath);
 		// yaml:file:///Users/foo/.pub-cache/hosted/pub.dartlang.org/yaml-2.1.12/lib/
 
 		if (this.pathExists(packagesPath)) {
@@ -78,15 +80,21 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 				var packageName = line.substring(0, pos);
 				var p = line.substring(pos + 1);
 
-				if (p.startsWith('file:') && p.endsWith('/lib/')) {
-					p = p.substring(0, p.length - 5);
-					packageName = p.substring(p.lastIndexOf('/') + 1);
+				if (p.endsWith('/'))
+					p = p.substring(0, p.length - 1);
+
+				if (p.endsWith('/lib'))
+					p = p.substring(0, p.length - 4);
+
+				if (!p.startsWith('file:'))
+					p = path.join(packageRoot, p);
+
+				if (this.workspaceRoot != p) {
+					packageName = line.substring(0, line.indexOf(':'));
 					p = vs.Uri.parse(p).fsPath
 					return new PackageDep(`${packageName}`, p, vs.TreeItemCollapsibleState.Collapsed);
-				} else {
-					return new PackageDep(`${packageName}`, null);
 				}
-			});
+			}).filter(d => d);
 			return deps;
 		} else {
 			return [];
