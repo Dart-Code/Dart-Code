@@ -10,7 +10,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
 	private trackingFile: string;
 	private activeEditor: vs.TextEditor;
-	private closingLabels: as.ClosingLabel[];
+	private closingLabels: as.AnalysisClosingLabelsNotification;
 	private updateTimeout: NodeJS.Timer;
 
 	private readonly decorationType = vs.window.createTextEditorDecorationType({
@@ -31,7 +31,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 
 		this.subscriptions.push(this.analyzer.registerForAnalysisClosingLabels(n => {
 			if (n.file == this.activeEditor.document.fileName) {
-				this.closingLabels = n.labels;
+				this.closingLabels = n;
 				// Delay this so if we're getting lots of updates we don't flicker.
 				clearTimeout(this.updateTimeout);
 				this.updateTimeout = setTimeout(() => this.update(), 500);
@@ -40,12 +40,15 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	}
 
 	private update() {
+		if (this.closingLabels.file != this.activeEditor.document.fileName)
+			return;
+
 		const decorations: { [key: number]: vs.DecorationOptions } = [];
 		// Becuase syntax errors result in lots of labels ending on the same character, we'll
 		// track any offsets that have been used and use them to remove the labels.
 		const offsetUsed: { [key: number]: boolean } = [];
 
-		this.closingLabels.forEach((r) => {
+		this.closingLabels.labels.forEach((r) => {
 			const endOfLine = this.activeEditor.document.lineAt(this.activeEditor.document.positionAt(r.offset + r.length)).range.end;
 
 			// If this offset already had a label, this is likely an error and we should discount both.
