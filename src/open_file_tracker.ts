@@ -38,13 +38,22 @@ export class OpenFileTracker {
 		}).then(() => { }, util.logError);
 
 		// Set subscriptions.
-		this.analyzer.analysisSetSubscriptions({
-			subscriptions: {
-				"OUTLINE": priorityFiles,
-				"OCCURRENCES": priorityFiles,
-				"HIGHLIGHTS": priorityFiles,
-				"CLOSING_LABELS": priorityFiles
-			}
-		});
+		if (this.analyzer.capabilities.supportsClosingLabels) {
+			this.analyzer.analysisSetSubscriptions({
+				subscriptions: {
+					"OUTLINE": priorityFiles,
+					"OCCURRENCES": priorityFiles,
+					"CLOSING_LABELS": priorityFiles
+				}
+			});
+		} else {
+			this.analyzer.analysisSetSubscriptions({
+				subscriptions: {
+					"OUTLINE": priorityFiles,
+					"OCCURRENCES": priorityFiles,
+					"HIGHLIGHTS": priorityFiles
+				}
+			});
+		}
 	}
 }

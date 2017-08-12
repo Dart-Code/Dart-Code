@@ -246,14 +246,14 @@ export function activate(context: vs.ExtensionContext) {
 			});
 			context.subscriptions.push(new FlutterWidgetConstructorDecoratorProvider(analyzer));
 		}
-	});
 
-	// Hook open/active file changes so we can set priority files with the analyzer.
-	let openFileTracker = new OpenFileTracker(analyzer);
-	context.subscriptions.push(vs.workspace.onDidOpenTextDocument(td => openFileTracker.updatePriorityFiles()));
-	context.subscriptions.push(vs.workspace.onDidCloseTextDocument(td => openFileTracker.updatePriorityFiles()));
-	context.subscriptions.push(vs.window.onDidChangeActiveTextEditor(e => openFileTracker.updatePriorityFiles()));
-	openFileTracker.updatePriorityFiles(); // Handle already-open files.
+		// Hook open/active file changes so we can set priority files with the analyzer.
+		let openFileTracker = new OpenFileTracker(analyzer);
+		context.subscriptions.push(vs.workspace.onDidOpenTextDocument(td => openFileTracker.updatePriorityFiles()));
+		context.subscriptions.push(vs.workspace.onDidCloseTextDocument(td => openFileTracker.updatePriorityFiles()));
+		context.subscriptions.push(vs.window.onDidChangeActiveTextEditor(e => openFileTracker.updatePriorityFiles()));
+		openFileTracker.updatePriorityFiles(); // Handle already-open files.
+	});
 
 	// Handle config changes so we can reanalyze if necessary.
 	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(handleConfigurationChange));
