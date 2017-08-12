@@ -85,14 +85,8 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 		if (isAnalyzable(editor.document)) {
 			this.activeEditor = editor;
 
-			this.analyzer.analysisSetSubscriptions({
-				subscriptions: {
-					"CLOSING_LABELS": [editor.document.fileName]
-				}
-			});
-
 			// Send a dummy edit to force an CLOSING_LABELS notifications.
-			this.analyzer.sendDummyEditIfRequired(editor.document.fileName);
+			this.analyzer.forceNotificationsFor(editor.document.fileName);
 		}
 	}
 

@@ -19,7 +19,6 @@ class AnalyzerCapabilities {
 
 	get supportsPriorityFilesOutsideAnalysisRoots() { return versionIsAtLeast(this.version, "1.18.2"); }
 	get supportsDiagnostics() { return versionIsAtLeast(this.version, "1.18.1"); }
-	get requiresDummyModificationToGetOutlines() { return versionIsAtLeast(this.version, "1.18.3") == false; }
 	get supportsClosingLabels() { return versionIsAtLeast(this.version, "1.18.4"); }
 }
 
@@ -112,10 +111,7 @@ export class Analyzer extends AnalyzerGen {
 		return this.launchArgs;
 	}
 
-	sendDummyEditIfRequired(file: string) {
-		if (this.capabilities.requiresDummyModificationToGetOutlines == false)
-			return;
-
+	forceNotificationsFor(file: string) {
 		// Send a dummy edit (https://github.com/dart-lang/sdk/issues/30238)
 		let files: { [key: string]: as.ChangeContentOverlay } = {};
 		files[file] = {

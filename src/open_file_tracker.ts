@@ -42,7 +42,8 @@ export class OpenFileTracker {
 			subscriptions: {
 				"OUTLINE": priorityFiles,
 				"OCCURRENCES": priorityFiles,
-				"HIGHLIGHTS": priorityFiles
+				"HIGHLIGHTS": priorityFiles,
+				"CLOSING_LABELS": priorityFiles
 			}
 		});
 	}

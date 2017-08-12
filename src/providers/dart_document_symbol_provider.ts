@@ -31,8 +31,7 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 				resolve(symbols);
 			});
 
-			// Send a dummy edit to force an OCURRENCES notification.
-			this.analyzer.sendDummyEditIfRequired(file);
+			this.analyzer.forceNotificationsFor(file);
 		});
 	}
 
