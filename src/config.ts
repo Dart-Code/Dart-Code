@@ -53,6 +53,7 @@ class Config {
 	// Preview features.
 	get previewAnalyzeAngularTemplates() { return this.getConfig<boolean>("previewAnalyzeAngularTemplates"); }
 	get previewFlutterCloseTagDecorations() { return this.getConfig<boolean>("previewFlutterCloseTagDecorations"); }
+	get previewClosingLabels() { return this.getConfig<boolean>("previewClosingLabels"); }
 }
 
 export class CodeCapabilities {
