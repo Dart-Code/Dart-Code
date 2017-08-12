@@ -12,15 +12,6 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	private closingLabels: as.AnalysisClosingLabelsNotification;
 	private updateTimeout: NodeJS.Timer;
 
-	private readonly decorationType = vs.window.createTextEditorDecorationType({
-		after: {
-			margin: "2px",
-			// TODO: Pick a good base, but have a new colour for theming?
-			color: new vs.ThemeColor("tab.inactiveForeground"),
-		},
-		rangeBehavior: vs.DecorationRangeBehavior.ClosedClosed
-	});
-
 	constructor(analyzer: Analyzer) {
 		this.analyzer = analyzer;
 
@@ -42,6 +33,15 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	private update() {
 		if (!this.closingLabels || this.closingLabels.file != this.activeEditor.document.fileName)
 			return;
+
+		const decorationType = vs.window.createTextEditorDecorationType({
+			after: {
+				margin: "2px",
+				// TODO: Pick a good base, but have a new colour for theming?
+				color: this.getClosingLabelTheme()
+			},
+			rangeBehavior: vs.DecorationRangeBehavior.ClosedClosed
+		});
 
 		const decorations: { [key: number]: vs.DecorationOptions } = [];
 
@@ -71,7 +71,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 			}
 		});
 
-		this.activeEditor.setDecorations(this.decorationType, Object.keys(decorations).map(k => parseInt(k)).map(k => decorations[k]));
+		this.activeEditor.setDecorations(decorationType, Object.keys(decorations).map(k => parseInt(k)).map(k => decorations[k]));
 	}
 
 	private setTrackingFile(editor: vs.TextEditor) {
@@ -81,6 +81,16 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 
 			this.analyzer.forceNotificationsFor(editor.document.fileName);
 		}
+	}
+
+	private getClosingLabelTheme() {
+		const workbench = vs.workspace.getConfiguration("workbench");
+		const customColour: any = workbench.get("colorCustomizations");
+		const hasCustomColour = customColour && customColour["dart.closingLabels"];
+		if (hasCustomColour)
+			return new vs.ThemeColor("dart.closingLabels");
+		else
+			return new vs.ThemeColor("tab.inactiveForeground");
 	}
 
 	dispose() {
