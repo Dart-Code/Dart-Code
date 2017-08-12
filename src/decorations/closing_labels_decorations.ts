@@ -9,6 +9,8 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	private analyzer: Analyzer;
 	private subscriptions: vs.Disposable[] = [];
 	private activeEditor: vs.TextEditor;
+	private closingLabels: as.AnalysisClosingLabelsNotification;
+	private updateTimeout: NodeJS.Timer;
 
 	private readonly decorationType = vs.window.createTextEditorDecorationType({
 		after: {
@@ -24,7 +26,10 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 
 		this.subscriptions.push(this.analyzer.registerForAnalysisClosingLabels(n => {
 			if (n.file == this.activeEditor.document.fileName) {
-				this.update(n);
+				this.closingLabels = n;
+				// Delay this so if we're getting lots of updates we don't flicker.
+				clearTimeout(this.updateTimeout);
+				this.updateTimeout = setTimeout(() => this.update(), 500);
 			}
 		}));
 
@@ -34,10 +39,13 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 
 	}
 
-	private update(notification: as.AnalysisClosingLabelsNotification) {
+	private update() {
+		if (!this.closingLabels || this.closingLabels.file != this.activeEditor.document.fileName)
+			return;
+
 		const decorations: { [key: number]: vs.DecorationOptions } = [];
 
-		notification.labels.forEach((r) => {
+		this.closingLabels.labels.forEach((r) => {
 			const finalCharacterPosition = this.activeEditor.document.positionAt(r.offset + r.length);
 			const finalCharacterRange =
 				finalCharacterPosition.character > 0
@@ -69,8 +77,8 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	private setTrackingFile(editor: vs.TextEditor) {
 		if (isAnalyzable(editor.document)) {
 			this.activeEditor = editor;
+			this.closingLabels = null;
 
-			// Send a dummy edit to force an CLOSING_LABELS notifications.
 			this.analyzer.forceNotificationsFor(editor.document.fileName);
 		}
 	}
