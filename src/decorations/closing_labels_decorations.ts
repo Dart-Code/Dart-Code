@@ -36,11 +36,6 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 
 	private update(notification: as.AnalysisClosingLabelsNotification) {
 		const decorations: { [key: number]: vs.DecorationOptions } = [];
-		// Becuase syntax errors result in lots of labels ending on the same character, we'll
-		// track any offsets that have been used and use them to remove the labels.
-		const offsetUsed: { [key: number]: boolean } = [];
-
-		var hasBadNotifications = false;
 
 		notification.labels.forEach((r) => {
 			const finalCharacterPosition = this.activeEditor.document.positionAt(r.offset + r.length);
@@ -54,15 +49,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 			// We won't update if we had any bad notifications as this usually means either bad code resulted
 			// in wonky results or the document was updated before the notification came back.
 			if (finalCharacterText != ']' && finalCharacterText != ')')
-				hasBadNotifications = true;
-
-			// If this offset already had a label, this is likely an error and we should discount both.
-			if (offsetUsed[r.offset + r.length]) {
-				delete decorations[endOfLine.line];
 				return;
-			}
-			else
-				offsetUsed[r.offset + r.length] = true;
 
 			const existingDecorationForLine = decorations[endOfLine.line];
 			if (existingDecorationForLine) {
@@ -75,10 +62,8 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 				decorations[endOfLine.line] = dec;
 			}
 		});
-		// Don't update if we had any bad notifications as this usually means either bad code resulted
-		// in wonky results, or it's because of the document updating before the notification came back.
-		if (!hasBadNotifications)
-			this.activeEditor.setDecorations(this.decorationType, Object.keys(decorations).map(k => parseInt(k)).map(k => decorations[k]));
+
+		this.activeEditor.setDecorations(this.decorationType, Object.keys(decorations).map(k => parseInt(k)).map(k => decorations[k]));
 	}
 
 	private setTrackingFile(editor: vs.TextEditor) {
