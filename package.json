@@ -33,6 +33,7 @@
 	"icon": "media/icon.png",
 	"activationEvents": [
 		"onLanguage:dart",
+		"onLanguage:html",
 		"onView:dartPackages",
 		"workspaceContains:**/pubspec.yaml",
 		"workspaceContains:**/*.dart"
