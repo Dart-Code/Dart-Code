@@ -4,7 +4,7 @@ import { DartDebugSession } from "./dart_debug_impl";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { FlutterLaunchRequestArguments, isWin, fileToUri, uriToFilePath } from "./utils";
 import { FlutterRun } from "./flutter_run";
-import { TerminatedEvent } from "vscode-debugadapter";
+import { TerminatedEvent, OutputEvent } from "vscode-debugadapter";
 import * as child_process from "child_process";
 import * as path from "path";
 
@@ -127,23 +127,31 @@ export class FlutterDebugSession extends DartDebugSession {
 		switch (request) {
 			case "serviceExtension":
 				if (this.currentRunningAppId)
-					this.flutter.callServiceExtension(this.currentRunningAppId, args.type, args.params);
+					this.flutter.callServiceExtension(this.currentRunningAppId, args.type, args.params)
+						.then(result => { }, error => this.sendEvent(new OutputEvent(error, "stderr")));
 				break;
 
 			case "togglePlatform":
 				if (this.currentRunningAppId)
-					this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", null)
-						.then(result => this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", { value: result.value == "android" ? "iOS" : "android" }));
+					this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", null).then(
+						result => {
+							this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", { value: result.value == "android" ? "iOS" : "android" })
+								.then(result => { }, error => this.sendEvent(new OutputEvent(error, "stderr")));
+						},
+						error => this.sendEvent(new OutputEvent(error, "stderr"))
+					);
 				break;
 
 			case "hotReload":
 				if (this.currentRunningAppId)
 					this.flutter.restart(this.currentRunningAppId, !this.args.noDebug)
+						.then(result => { }, error => this.sendEvent(new OutputEvent(error, "stderr")));
 				break;
 
 			case "fullRestart":
 				if (this.currentRunningAppId)
 					this.flutter.restart(this.currentRunningAppId, !this.args.noDebug, true)
+						.then(result => { }, error => this.sendEvent(new OutputEvent(error, "stderr")));
 				break;
 
 			default:
