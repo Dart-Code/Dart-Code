@@ -34,7 +34,8 @@
 	"activationEvents": [
 		"onLanguage:dart",
 		"onView:dartPackages",
-		"workspaceContains:**/pubspec.yaml"
+		"workspaceContains:**/pubspec.yaml",
+		"workspaceContains:**/*.dart"
 	],
 	"main": "./out/src/extension",
 	"contributes": {
