@@ -8,7 +8,7 @@
 ### Preview Features available in this version
 
 - [`dart.previewClosingLabels`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against constructor, method invocations and lists that span multiple lines
-- **NEW** [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
+- [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
 
 # v2.3.5
 
