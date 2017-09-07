@@ -34,19 +34,24 @@ export class DartDiagnosticProvider {
 			code: error.code,
 			message: ((error.type == "HINT" || error.type == "LINT") && config.showLintNames ? `${error.code}: ` : "") + error.message,
 			range: toRange(error.location),
-			severity: this.getSeverity(error.severity),
+			severity: this.getSeverity(error.severity, error.type),
 			source: "dart"
 		};
 	}
 
-	private getSeverity(severity: as.AnalysisErrorSeverity): DiagnosticSeverity {
+	private getSeverity(severity: as.AnalysisErrorSeverity, type: as.AnalysisErrorType): DiagnosticSeverity {
 		switch (severity) {
 			case "ERROR":
 				return DiagnosticSeverity.Error;
 			case "WARNING":
 				return DiagnosticSeverity.Warning;
 			case "INFO":
-				return DiagnosticSeverity.Information;
+				switch (type) {
+					case "TODO":
+						return DiagnosticSeverity.Hint;
+					default:
+						return DiagnosticSeverity.Information;
+				}
 			default:
 				throw new Error("Unknown severity type: " + severity);
 		}
