@@ -265,8 +265,11 @@ export function isWithinRootPath(file: string) {
 	// Edit: Doesn't actually work properly:
 	//   https://github.com/Microsoft/vscode/issues/10446
 	//return workspace.asRelativePath(document.fileName) != document.fileName;
+	// Edit: Still doesn't work properly!
+	//   https://github.com/Microsoft/vscode/issues/33709
 
-	return workspace.rootPath != null && file.startsWith(workspace.rootPath + path.sep);
+	const relative = path.relative(workspace.rootPath, file);
+	return !!relative && !relative.startsWith('..') && !path.isAbsolute(relative);
 }
 
 export function toReadonlyUriIfExternal(file: string) {
