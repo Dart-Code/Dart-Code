@@ -64,6 +64,17 @@
 				"path": "./snippets/dart.json"
 			}
 		],
+		"colors": [
+			{
+				"id": "dart.closingLabels",
+				"description": "Color of closing labels rendered for nested Dart constructs.",
+				"defaults": {
+					"dark": "tab.inactiveForeground",
+					"light": "tab.inactiveForeground",
+					"highContrast": "tab.inactiveForeground"
+				}
+			}
+		],
 		"commands": [
 			{
 				"command": "pub.get",
