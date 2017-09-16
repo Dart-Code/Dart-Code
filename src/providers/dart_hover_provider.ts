@@ -29,7 +29,7 @@ export class DartHoverProvider implements HoverProvider {
 							document.positionAt(hover.offset + hover.length)
 						);
 						resolve(new Hover(
-							[{ language: 'dart', value: data.displayString }, data.documentation],
+							[{ language: 'dart', value: data.displayString }, data.documentation || undefined],
 							range
 						));
 					} else {
@@ -60,7 +60,7 @@ export class DartHoverProvider implements HoverProvider {
 
 		let documentation = DartHoverProvider.cleanDartdoc(dartdoc);
 		if (containingLibraryName) documentation = `_${containingLibraryName}_\r\n\r\n` + (documentation != null ? documentation : "");
-		
+
 		return {
 			displayString: displayString.trim(),
 			documentation: documentation
