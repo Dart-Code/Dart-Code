@@ -1,3 +1,18 @@
+# v2.4.1
+
+**Note:** This version requires Visual Studio Code 1.16.
+
+- Tooltips for items with no dartdocs will now appear correctly (a breaking change in Code 1.16 resulted in these disappearing)
+- The text colour for [`Closing Labels preview`](https://github.com/Dart-Code/Dart-Code/issues/383) can now be controlled using the `dart.closingLabels` colour (you can set this in your settings, inside the `workbench.colorCustomizations` section - [see here](https://github.com/Dart-Code/Dart-Code/issues/408#issuecomment-321996305))
+- Go-to-Definition will no longer sometimes open some files inside your own project as read-only on Windows because of path casing differences
+- TODOs will now appear with lower priority than lints and hints in the Problems pane
+- The error message shown when the Flutter SDK cannot be find will now correctly refer to the `FLUTTER_ROOT` environment variable instead of `FLUTTER_HOME`
+
+### Preview Features available in this version
+
+- [`dart.previewClosingLabels`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against constructor, method invocations and lists that span multiple lines
+- [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
+
 # v2.4.0
 
 - Dart Code will now activate if a workspace contains a `.dart` file rather than only if it contains a `pubspec.yaml` file or when a `.dart` file is specifically opened
