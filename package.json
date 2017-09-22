@@ -2,7 +2,7 @@
 	"name": "dart-code",
 	"displayName": "Dart Code",
 	"description": "Dart and Flutter support for Visual Studio Code.",
-	"version": "2.4.2",
+	"version": "2.4.3-dev",
 	"publisher": "DanTup",
 	"engines": {
 		"vscode": "^1.16.0"
