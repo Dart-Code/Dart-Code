@@ -1,3 +1,12 @@
+# v2.4.2
+
+- The [`Closing Labels preview`](https://github.com/Dart-Code/Dart-Code/issues/383) feature will no longer show a toast popup asking for feedback every time it activates
+
+### Preview Features available in this version
+
+- [`dart.previewClosingLabels`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against constructor, method invocations and lists that span multiple lines
+- [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
+
 # v2.4.1
 
 **Note:** This version requires Visual Studio Code 1.16.
