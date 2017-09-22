@@ -229,21 +229,9 @@ export function activate(context: vs.ExtensionContext) {
 		connectedSetup.dispose();
 
 		if (analyzer.capabilities.supportsClosingLabels && (config.previewClosingLabels || config.previewFlutterCloseTagDecorations)) {
-			vs.window.showInformationMessage("\"Closing label\" preview feature is enabled - please give feedback!",
-				"Give Feedback"
-			).then(selectedItem => {
-				if (selectedItem)
-					util.openInBrowser("https://github.com/Dart-Code/Dart-Code/issues/383");
-			});
 			context.subscriptions.push(new ClosingLabelsDecorations(analyzer));
 		}
 		else if ((util.isFlutterProject || util.isFuchsiaProject) && (config.previewClosingLabels || config.previewFlutterCloseTagDecorations)) {
-			vs.window.showInformationMessage("Flutter \"closing tag\" decorations prototype is enabled - please give feedback!",
-				"Give Feedback"
-			).then(selectedItem => {
-				if (selectedItem)
-					util.openInBrowser("https://github.com/Dart-Code/Dart-Code/issues/383");
-			});
 			context.subscriptions.push(new FlutterWidgetConstructorDecoratorProvider(analyzer));
 		}
 
