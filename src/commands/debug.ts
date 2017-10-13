@@ -44,24 +44,28 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.runBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", this.paintBaselinesEnabled = !this.paintBaselinesEnabled)));
 
 		// Misc custom debug commands.
-		context.subscriptions.push(vs.commands.registerCommand("flutter.fullRestart", () => vs.commands.executeCommand('workbench.customDebugRequest', "fullRestart")));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.fullRestart", () => this.sendCustomFlutterDebugCommand("fullRestart")));
 
 		// Flutter toggle platform.
 		// We can't just use a service command here, as we need to call it twice (once to get, once to change) and
 		// currently it seems like the DA can't return responses to us here, so we'll have to do them both inside the DA.
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => vs.commands.executeCommand('workbench.customDebugRequest', "togglePlatform")));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => this.sendCustomFlutterDebugCommand("togglePlatform")));
 	}
 
 	private runServiceCommand(method: string, params: any) {
-		vs.commands.executeCommand('workbench.customDebugRequest', "serviceExtension", { type: method, params: params });
+		this.sendCustomFlutterDebugCommand("serviceExtension", { type: method, params: params });
 	}
 
 	private runBoolServiceCommand(method: string, enabled: boolean) {
 		this.runServiceCommand(method, { enabled: enabled });
 	}
 
+	private sendCustomFlutterDebugCommand(type: string, args: any = undefined) {
+		if (this.currentFlutterDebugSession)
+			this.currentFlutterDebugSession.customRequest(type, args);
+	}
+
 	public resetFlutterSettings() {
-		// TODO: Make this better? We need to reset on new debug sessions, but copy/pasting the above is a bit naff.
 		this.debugPaintingEnabled = false, this.performanceOverlayEnabled = false, this.repaintRainbowEnabled = false, this.timeDilation = 1.0, this.slowModeBannerEnabled = true, this.paintBaselinesEnabled = false;
 	}
 }
