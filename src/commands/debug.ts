@@ -12,6 +12,7 @@ import { dartPubPath, isFlutterProject, flutterPath, Sdks } from "../utils";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { SdkManager } from "../sdk/sdk_manager";
+import { FLUTTER_DEBUG_TYPE } from "../providers/debug_config_provider";
 
 export class DebugCommands {
 	private debugPaintingEnabled = false;
@@ -20,8 +21,21 @@ export class DebugCommands {
 	private timeDilation = 1.0;
 	private slowModeBannerEnabled = true;
 	private paintBaselinesEnabled = false;
+	private currentFlutterDebugSession: vs.DebugSession;
 
 	constructor(context: vs.ExtensionContext) {
+		vs.debug.onDidStartDebugSession(s => {
+			if (s.type == FLUTTER_DEBUG_TYPE) {
+				this.currentFlutterDebugSession = s;
+				this.resetFlutterSettings();
+			}
+		});
+		vs.debug.onDidTerminateDebugSession(s => {
+			if (s == this.currentFlutterDebugSession) {
+				this.currentFlutterDebugSession = null;
+			}
+		});
+
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.runBoolServiceCommand("ext.flutter.debugPaint", this.debugPaintingEnabled = !this.debugPaintingEnabled)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.runBoolServiceCommand("ext.flutter.showPerformanceOverlay", this.performanceOverlayEnabled = !this.performanceOverlayEnabled)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.runBoolServiceCommand("ext.flutter.repaintRainbow", this.repaintRainbowEnabled = !this.repaintRainbowEnabled)));
