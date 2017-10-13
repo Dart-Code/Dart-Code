@@ -5,7 +5,7 @@
 	"version": "2.4.3-dev",
 	"publisher": "DanTup",
 	"engines": {
-		"vscode": "^1.16.0"
+		"vscode": "^1.17.0"
 	},
 	"license": "SEE LICENSE IN LICENSE",
 	"bugs": {
@@ -417,7 +417,6 @@
 				},
 				"program": "./out/src/debug/dart_debug_entry.js",
 				"runtime": "node",
-				"startSessionCommand": "_dart.startDebugSession",
 				"configurationAttributes": {
 					"launch": {
 						"required": [
@@ -448,14 +447,6 @@
 						}
 					}
 				},
-				"initialConfigurations": [
-					{
-						"name": "Dart command line",
-						"type": "dart-cli",
-						"request": "launch",
-						"program": "${workspaceRoot}/bin/main.dart"
-					}
-				],
 				"configurationSnippets": [
 					{
 						"label": "Dart command line",
@@ -479,7 +470,6 @@
 				},
 				"program": "./out/src/debug/flutter_debug_entry.js",
 				"runtime": "node",
-				"startSessionCommand": "_dart.startDebugSession",
 				"configurationAttributes": {
 					"launch": {
 						"properties": {
@@ -490,13 +480,6 @@
 						}
 					}
 				},
-				"initialConfigurations": [
-					{
-						"name": "Flutter mobile app",
-						"type": "flutter",
-						"request": "launch"
-					}
-				],
 				"configurationSnippets": [
 					{
 						"label": "Flutter mobile app",

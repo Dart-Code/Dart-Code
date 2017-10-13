@@ -34,9 +34,11 @@ import { promptUserForConfigs } from "./user_config_prompts";
 import { FlutterWidgetConstructorDecoratorProvider } from "./providers/flutter_widget_constructor_decoration";
 import { DartPackageFileContentProvider } from "./providers/dart_package_file_content_provider";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
+import { DebugConfigProvider, DART_CLI_DEBUG_TYPE, FLUTTER_DEBUG_TYPE } from "./providers/debug_config_provider";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }, { language: "dart", scheme: "dart-package" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }, { language: "html", scheme: "dart-package" }];
+
 const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
 const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
 
@@ -223,6 +225,10 @@ export function activate(context: vs.ExtensionContext) {
 			vs.commands.executeCommand('workbench.customDebugRequest', "hotReload");
 		}));
 	}
+
+	// Set up debug stuff.
+	let debugType = util.isFlutterProject ? FLUTTER_DEBUG_TYPE : DART_CLI_DEBUG_TYPE;
+	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider(debugType, new DebugConfigProvider(debugType, sdks, flutterDaemon && flutterDaemon.deviceManager)));
 
 	// Setup that requires server version/capabilities.
 	let connectedSetup = analyzer.registerForServerConnected(sc => {

@@ -22,47 +22,25 @@ export class SdkCommands {
 		this.deviceManager = deviceManager;
 	}
 
+	// TODO: This is probably a bad place for these... They were pulled up here and made static as part of moving debug config
+	// out from hee to a DebugConfigProvider. Possibly they should all go into the DebugConfigProvider now (which should probably
+	// have a Flutter-specific one rather than the if statements in it).
+	static debugPaintingEnabled = false;
+	static performanceOverlayEnabled = false;
+	static repaintRainbowEnabled = false;
+	static timeDilation = 1.0;
+	static slowModeBannerEnabled = true;
+	static paintBaselinesEnabled = false;
+
+	public static resetFlutterSettings() {
+		// TODO: Make this better? We need to reset on new debug sessions, but copy/pasting the above is a bit naff.
+		this.debugPaintingEnabled = false, this.performanceOverlayEnabled = false, this.repaintRainbowEnabled = false, this.timeDilation = 1.0, this.slowModeBannerEnabled = true, this.paintBaselinesEnabled = false;
+	}
+
 	registerCommands(context: vs.ExtensionContext) {
-		function setupDebugConfig(debugConfig: FlutterLaunchRequestArguments, sdks: Sdks, deviceId: string) {
-			analytics.logDebuggerStart();
-
-			const dartExec = isWin ? "dart.exe" : "dart";
-			const flutterExec = isWin ? "flutter.bat" : "flutter";
-
-			// Attach any properties that weren't explicitly set.
-			debugConfig.cwd = debugConfig.cwd || "${workspaceRoot}";
-			debugConfig.args = debugConfig.args || [];
-			debugConfig.dartPath = debugConfig.dartPath || path.join(sdks.dart, "bin", dartExec);
-			debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || config.observatoryLogFile;
-			debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || config.debugSdkLibraries;
-			debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || config.debugExternalLibraries;
-			if (debugConfig.checkedMode === undefined)
-				debugConfig.checkedMode = true;
-			debugConfig.flutterPath = debugConfig.flutterPath || (sdks.flutter ? path.join(sdks.flutter, "bin", flutterExec) : null);
-			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || config.flutterRunLogFile;
-			debugConfig.deviceId = debugConfig.deviceId || deviceId;
-		}
-
 		// SDK commands.
 		const sdkManager = new SdkManager();
 		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => sdkManager.changeSdk(this.sdks.dart)));
-
-		// Debug commands.
-		context.subscriptions.push(vs.commands.registerCommand("_dart.startDebugSession", (debugConfig: FlutterLaunchRequestArguments) => {
-			const keys = Object.keys(debugConfig);
-			if (keys.length == 0 || (keys.length == 1 && keys[0] == "noDebug"))
-				return { status: 'initialConfiguration' };
-
-			setupDebugConfig(debugConfig, this.sdks, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
-
-			if (isFlutterProject) {
-				resetFlutterSettings();
-				debugConfig.program = debugConfig.program || "${workspaceRoot}/lib/main.dart"; // Set Flutter default path.
-			}
-
-			vs.commands.executeCommand('vscode.startDebug', debugConfig);
-			return { status: 'ok' };
-		}));
 
 		// Pub commands.
 		context.subscriptions.push(vs.commands.registerCommand("pub.get", selection => {
@@ -92,17 +70,13 @@ export class SdkCommands {
 		}));
 
 		// Debug service commands.
-		let debugPaintingEnabled = false, performanceOverlayEnabled = false, repaintRainbowEnabled = false, timeDilation = 1.0, slowModeBannerEnabled = true, paintBaselinesEnabled = false;
-		function resetFlutterSettings() {
-			// TODO: Make this better? We need to reset on new debug sessions, but copy/pasting the above is a bit naff.
-			debugPaintingEnabled = false, performanceOverlayEnabled = false, repaintRainbowEnabled = false, timeDilation = 1.0, slowModeBannerEnabled = true, paintBaselinesEnabled = false;
-		}
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.runBoolServiceCommand("ext.flutter.debugPaint", debugPaintingEnabled = !debugPaintingEnabled)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.runBoolServiceCommand("ext.flutter.showPerformanceOverlay", performanceOverlayEnabled = !performanceOverlayEnabled)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.runBoolServiceCommand("ext.flutter.repaintRainbow", repaintRainbowEnabled = !repaintRainbowEnabled)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.runServiceCommand("ext.flutter.timeDilation", { timeDilation: timeDilation = 6.0 - timeDilation })));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowModeBanner", () => this.runBoolServiceCommand("ext.flutter.debugAllowBanner", slowModeBannerEnabled = !slowModeBannerEnabled)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.runBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", paintBaselinesEnabled = !paintBaselinesEnabled)));
+
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.runBoolServiceCommand("ext.flutter.debugPaint", SdkCommands.debugPaintingEnabled = !SdkCommands.debugPaintingEnabled)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.runBoolServiceCommand("ext.flutter.showPerformanceOverlay", SdkCommands.performanceOverlayEnabled = !SdkCommands.performanceOverlayEnabled)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.runBoolServiceCommand("ext.flutter.repaintRainbow", SdkCommands.repaintRainbowEnabled = !SdkCommands.repaintRainbowEnabled)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.runServiceCommand("ext.flutter.timeDilation", { timeDilation: SdkCommands.timeDilation = 6.0 - SdkCommands.timeDilation })));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowModeBanner", () => this.runBoolServiceCommand("ext.flutter.debugAllowBanner", SdkCommands.slowModeBannerEnabled = !SdkCommands.slowModeBannerEnabled)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.runBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", SdkCommands.paintBaselinesEnabled = !SdkCommands.paintBaselinesEnabled)));
 
 		// Misc custom debug commands.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.fullRestart", () => vs.commands.executeCommand('workbench.customDebugRequest', "fullRestart")));
