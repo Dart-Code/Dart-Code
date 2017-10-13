@@ -15,29 +15,10 @@ import { SdkManager } from "../sdk/sdk_manager";
 
 export class SdkCommands {
 	private sdks: Sdks;
-	private deviceManager: FlutterDeviceManager;
 
-	constructor(sdks: Sdks, deviceManager: FlutterDeviceManager) {
+	constructor(context: vs.ExtensionContext, sdks: Sdks) {
 		this.sdks = sdks;
-		this.deviceManager = deviceManager;
-	}
 
-	// TODO: This is probably a bad place for these... They were pulled up here and made static as part of moving debug config
-	// out from hee to a DebugConfigProvider. Possibly they should all go into the DebugConfigProvider now (which should probably
-	// have a Flutter-specific one rather than the if statements in it).
-	static debugPaintingEnabled = false;
-	static performanceOverlayEnabled = false;
-	static repaintRainbowEnabled = false;
-	static timeDilation = 1.0;
-	static slowModeBannerEnabled = true;
-	static paintBaselinesEnabled = false;
-
-	public static resetFlutterSettings() {
-		// TODO: Make this better? We need to reset on new debug sessions, but copy/pasting the above is a bit naff.
-		this.debugPaintingEnabled = false, this.performanceOverlayEnabled = false, this.repaintRainbowEnabled = false, this.timeDilation = 1.0, this.slowModeBannerEnabled = true, this.paintBaselinesEnabled = false;
-	}
-
-	registerCommands(context: vs.ExtensionContext) {
 		// SDK commands.
 		const sdkManager = new SdkManager();
 		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => sdkManager.changeSdk(this.sdks.dart)));
@@ -69,36 +50,11 @@ export class SdkCommands {
 			this.runFlutter("doctor", selection);
 		}));
 
-		// Debug service commands.
-
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.runBoolServiceCommand("ext.flutter.debugPaint", SdkCommands.debugPaintingEnabled = !SdkCommands.debugPaintingEnabled)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.runBoolServiceCommand("ext.flutter.showPerformanceOverlay", SdkCommands.performanceOverlayEnabled = !SdkCommands.performanceOverlayEnabled)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.runBoolServiceCommand("ext.flutter.repaintRainbow", SdkCommands.repaintRainbowEnabled = !SdkCommands.repaintRainbowEnabled)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.runServiceCommand("ext.flutter.timeDilation", { timeDilation: SdkCommands.timeDilation = 6.0 - SdkCommands.timeDilation })));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowModeBanner", () => this.runBoolServiceCommand("ext.flutter.debugAllowBanner", SdkCommands.slowModeBannerEnabled = !SdkCommands.slowModeBannerEnabled)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.runBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", SdkCommands.paintBaselinesEnabled = !SdkCommands.paintBaselinesEnabled)));
-
-		// Misc custom debug commands.
-		context.subscriptions.push(vs.commands.registerCommand("flutter.fullRestart", () => vs.commands.executeCommand('workbench.customDebugRequest', "fullRestart")));
-
-		// Flutter toggle platform.
-		// We can't just use a service command here, as we need to call it twice (once to get, once to change) and
-		// currently it seems like the DA can't return responses to us here, so we'll have to do them both inside the DA.
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => vs.commands.executeCommand('workbench.customDebugRequest', "togglePlatform")));
-
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {
 			if (config.runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() == "pubspec.yaml")
 				vs.commands.executeCommand("pub.get", td.uri);
 		}));
-	}
-
-	private runServiceCommand(method: string, params: any) {
-		vs.commands.executeCommand('workbench.customDebugRequest', "serviceExtension", { type: method, params: params });
-	}
-
-	private runBoolServiceCommand(method: string, enabled: boolean) {
-		this.runServiceCommand(method, { enabled: enabled });
 	}
 
 	private runFlutter(command: string, selection?: vs.Uri) {

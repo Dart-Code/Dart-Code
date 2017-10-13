@@ -26,6 +26,7 @@ import { FileChangeHandler } from "./file_change_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { OpenFileTracker } from "./open_file_tracker";
 import { SdkCommands } from "./commands/sdk";
+import { DebugCommands } from "./commands/debug";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { ServerStatusNotification } from "./analysis/analysis_server_types";
 import { DartPackagesProvider } from "./views/packages_view";
@@ -257,8 +258,8 @@ export function activate(context: vs.ExtensionContext) {
 	}));
 
 	// Register SDK commands.
-	let sdkCommands = new SdkCommands(sdks, flutterDaemon && flutterDaemon.deviceManager);
-	sdkCommands.registerCommands(context);
+	let sdkCommands = new SdkCommands(context, sdks);
+	let debugCommands = new DebugCommands(context);
 
 	// Set up commands for Dart editors.
 	context.subscriptions.push(new EditCommands(context, analyzer));

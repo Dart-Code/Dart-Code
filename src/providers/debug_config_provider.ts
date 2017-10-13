@@ -47,10 +47,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// TODO: This cast feels nasty?
 		this.setupDebugConfig(<FlutterLaunchRequestArguments><any>debugConfig, this.sdks, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
 
-		if (isFlutterProject) {
-			SdkCommands.resetFlutterSettings();
+		if (isFlutterProject)
 			debugConfig.program = debugConfig.program || "${workspaceRoot}/lib/main.dart"; // Set Flutter default path.
-		}
 
 		return debugConfig;
 	}
