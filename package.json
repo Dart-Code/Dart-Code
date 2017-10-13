@@ -178,6 +178,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.hotReload",
+				"title": "Hot Reload",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.changeDevice",
 				"title": "Change Device",
 				"category": "Flutter"
@@ -259,6 +264,10 @@
 				},
 				{
 					"command": "flutter.fullRestart",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.hotReload",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				},
 				{

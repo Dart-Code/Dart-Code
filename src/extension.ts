@@ -223,7 +223,7 @@ export function activate(context: vs.ExtensionContext) {
 			if (hasErrors)
 				return;
 
-			vs.commands.executeCommand('workbench.customDebugRequest', "hotReload");
+			vs.commands.executeCommand('flutter.hotReload');
 		}));
 	}
 

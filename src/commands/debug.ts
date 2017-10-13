@@ -44,6 +44,7 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.runBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", this.paintBaselinesEnabled = !this.paintBaselinesEnabled)));
 
 		// Misc custom debug commands.
+		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", () => this.sendCustomFlutterDebugCommand("hotReload")));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.fullRestart", () => this.sendCustomFlutterDebugCommand("fullRestart")));
 
 		// Flutter toggle platform.
