@@ -190,7 +190,7 @@ function findFuchsiaDartSdk(fuchsiaRoot: string): string {
 	else if (process.platform == "darwin")
 		platformName = "mac";
 
-	const fuchsiaDartSdkPath = path.join(fuchsiaRoot, "dart/tools/sdks", platformName, "dart-sdk");
+	const fuchsiaDartSdkPath = path.join(fuchsiaRoot, "third_party/dart/tools/sdks", platformName, "dart-sdk");
 	if (hasDartExecutable(path.join(fuchsiaDartSdkPath, "bin")))
 		return fuchsiaDartSdkPath;
 
