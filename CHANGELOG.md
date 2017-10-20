@@ -1,3 +1,18 @@
+# v2.4.3
+
+**Note:** This version requires Visual Studio Code 1.17.
+
+- The search path for the Dart SDK in Fuchsia projects has been updated to reflect the new location in a `third_party` folder
+- Several debug APIs are being removed in Code 1.18 so Dart Code has been moved off them - these should have no visible effects but since there was a lot of refactoring there is risk of new bugs in:
+  - Code that provides debug configurations for new projects that do not have a `.vscode/launch.json` file
+  - Code that supplements the launch config with things like SDK paths before passing to the debug adapter
+  - Code that passes custom commands (like Flutter's hot reload, toggle debug painting, etc.) from the IDE to the debug adapter
+
+### Preview Features available in this version
+
+- [`dart.previewClosingLabels`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against constructor, method invocations and lists that span multiple lines
+- [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
+
 # v2.4.2
 
 - The [`Closing Labels preview`](https://github.com/Dart-Code/Dart-Code/issues/383) feature will no longer show a toast popup asking for feedback every time it activates
