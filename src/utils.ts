@@ -36,19 +36,28 @@ export function findSdks(): Sdks {
 	const fuchsiaRoot = findFuchsiaRoot();
 
 	const flutterSdk = isFuchsiaProject ? findFuchsiaFlutterSdk(fuchsiaRoot) : isFlutterProject ? findFlutterSdk() : null;
-	const dartSdk = isFuchsiaProject ? findFuchsiaDartSdk(fuchsiaRoot) : isFlutterProject ? findFlutterDartSdk(flutterSdk) : findDartSdk();
+
+	// The user defined Dart SDK should override the auto-detected ones.
+	let dartSdk: string;
+	if (config.userDefinedSdkPath) {
+		// We don't expect the user to add .\bin in config, but it would be in the PATHs
+		dartSdk = findDartSdkInPaths([path.join(config.userDefinedSdkPath, "bin")]);
+	}
+
+	// Failed to find the Dart SDK from the user defined path. Try to auto-detect one.
+	if (dartSdk == null) {
+		dartSdk = isFuchsiaProject ? findFuchsiaDartSdk(fuchsiaRoot) : isFlutterProject ? findFlutterDartSdk(flutterSdk) : findDartSdk();
+	}
 
 	return { dart: dartSdk, flutter: flutterSdk };
 }
 
 function findDartSdk(): string {
 	let paths = (<string>process.env.PATH).split(path.delimiter);
+	return findDartSdkInPaths(paths);
+}
 
-	// We don't expect the user to add .\bin in config, but it would be in the PATHs
-	let userDefinedSdkPath = config.userDefinedSdkPath;
-	if (userDefinedSdkPath)
-		paths.unshift(path.join(userDefinedSdkPath, "bin"));
-
+function findDartSdkInPaths(paths: string[]): string {
 	// Resolve all paths to allow things like ~
 	paths = paths.map(resolveHomePath);
 
@@ -173,7 +182,7 @@ function findFuchsiaFlutterSdk(fuchsiaRoot: string): string {
 	if (!fuchsiaRoot)
 		return null;
 
-	const fuchsiaFlutterPath = path.join(fuchsiaRoot, "lib/flutter");
+	const fuchsiaFlutterPath = path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter");
 	if (hasFlutterExecutable(path.join(fuchsiaFlutterPath, "bin")))
 		return fuchsiaFlutterPath;
 
@@ -184,15 +193,26 @@ function findFuchsiaDartSdk(fuchsiaRoot: string): string {
 	if (!fuchsiaRoot)
 		return null;
 
-	let platformName = "linux";
-	if (isWin)
-		platformName = "win";
-	else if (process.platform == "darwin")
-		platformName = "mac";
+	// Default build directories to include, in the order of precedence.
+	let buildDirs = ["out/release-x86-64", "out/debug-x86-64"];
+	
+	// Check if .config file exists, and read the build directory from it.
+	const configPath = path.join(fuchsiaRoot, ".config");
+	if (fs.existsSync(configPath)) {
+		const regex = new RegExp('^FUCHSIA_BUILD_DIR="(.+)"$', 'm');
+		const matches = regex.exec(fs.readFileSync(configPath).toString());
+		if (matches != null && matches.length >= 2) {
+			// The build directory appears in the config file should take precedence over the default ones.
+			buildDirs.unshift(matches[1]);
+		}
+	}
 
-	const fuchsiaDartSdkPath = path.join(fuchsiaRoot, "third_party/dart/tools/sdks", platformName, "dart-sdk");
-	if (hasDartExecutable(path.join(fuchsiaDartSdkPath, "bin")))
-		return fuchsiaDartSdkPath;
+	// For each build dir, see if <build_dir>/dart_host/dart-sdk exists with the dart executable under bin/.
+	for (let i = 0; i < buildDirs.length; i++) {
+		const fuchsiaDartSdkPath = path.join(fuchsiaRoot, buildDirs[i], "dart_host/dart-sdk");
+		if (hasDartExecutable(path.join(fuchsiaDartSdkPath, "bin")))
+			return fuchsiaDartSdkPath;
+	}		
 
 	return null;
 }
