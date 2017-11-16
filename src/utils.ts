@@ -36,19 +36,28 @@ export function findSdks(): Sdks {
 	const fuchsiaRoot = findFuchsiaRoot();
 
 	const flutterSdk = isFuchsiaProject ? findFuchsiaFlutterSdk(fuchsiaRoot) : isFlutterProject ? findFlutterSdk() : null;
-	const dartSdk = isFuchsiaProject ? findFuchsiaDartSdk(fuchsiaRoot) : isFlutterProject ? findFlutterDartSdk(flutterSdk) : findDartSdk();
+
+	// The user defined Dart SDK should override the auto-detected ones.
+	let dartSdk: string;
+	if (config.userDefinedSdkPath) {
+		// We don't expect the user to add .\bin in config, but it would be in the PATHs
+		dartSdk = findDartSdkInPaths([path.join(config.userDefinedSdkPath, "bin")]);
+	}
+
+	// Failed to find the Dart SDK from the user defined path. Try to auto-detect one.
+	if (dartSdk == null) {
+		dartSdk = isFuchsiaProject ? findFuchsiaDartSdk(fuchsiaRoot) : isFlutterProject ? findFlutterDartSdk(flutterSdk) : findDartSdk();
+	}
 
 	return { dart: dartSdk, flutter: flutterSdk };
 }
 
 function findDartSdk(): string {
 	let paths = (<string>process.env.PATH).split(path.delimiter);
+	return findDartSdkInPaths(paths);
+}
 
-	// We don't expect the user to add .\bin in config, but it would be in the PATHs
-	let userDefinedSdkPath = config.userDefinedSdkPath;
-	if (userDefinedSdkPath)
-		paths.unshift(path.join(userDefinedSdkPath, "bin"));
-
+function findDartSdkInPaths(paths: string[]): string {
 	// Resolve all paths to allow things like ~
 	paths = paths.map(resolveHomePath);
 
@@ -173,7 +182,7 @@ function findFuchsiaFlutterSdk(fuchsiaRoot: string): string {
 	if (!fuchsiaRoot)
 		return null;
 
-	const fuchsiaFlutterPath = path.join(fuchsiaRoot, "lib/flutter");
+	const fuchsiaFlutterPath = path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter");
 	if (hasFlutterExecutable(path.join(fuchsiaFlutterPath, "bin")))
 		return fuchsiaFlutterPath;
 
