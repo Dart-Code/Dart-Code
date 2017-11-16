@@ -1,6 +1,6 @@
 # v2.4.4
 
-- The search path for the Dark SDK cached by Fuchsia has been updated in line with the latest Fuchsia code
+- The search path for the Flutter SDK cached by Fuchsia has been updated in line with the latest Fuchsia code
 - The `dart.userDefinedSdkPath` setting will now override the Dart SDK used for Fuchsia projects (this is temporary [until Fuchsia and Flutter get their own override](https://github.com/Dart-Code/Dart-Code/issues/440))
 
 ### Preview Features available in this version
