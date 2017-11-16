@@ -1,3 +1,13 @@
+# v2.4.4
+
+- The search path for the Dark SDK cached by Fuchsia has been updated in line with the latest Fuchsia code
+- The `dart.userDefinedSdkPath` setting will now override the Dart SDK used for Fuchsia projects (this is temporary [until Fuchsia and Flutter get their own override](https://github.com/Dart-Code/Dart-Code/issues/440))
+
+### Preview Features available in this version
+
+- [`dart.previewClosingLabels`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against constructor, method invocations and lists that span multiple lines
+- [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
+
 # v2.4.3
 
 **Note:** This version requires Visual Studio Code 1.17.
