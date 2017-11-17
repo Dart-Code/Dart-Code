@@ -511,18 +511,18 @@
 		"postinstall": "node ./node_modules/vscode/bin/install"
 	},
 	"dependencies": {
-		"vscode-debugadapter": "^1.20.0",
-		"vscode-debugprotocol": "^1.20.0",
-		"ws": "^1.1.1",
-		"semver": "^5.3.0"
+		"vscode-debugadapter": "^1.24.0",
+		"vscode-debugprotocol": "^1.24.0",
+		"ws": "^1.1.5",
+		"semver": "^5.4.1"
 	},
 	"devDependencies": {
-		"typescript": "^2.4.2",
-		"vscode": "^1.1.0",
-		"mocha": "^3.2.0",
-		"@types/node": "^6.0.63",
-		"@types/mocha": "^2.2.39",
+		"typescript": "^2.6.1",
+		"vscode": "^1.1.7",
+		"mocha": "^3.5.3",
+		"@types/node": "^6.0.92",
+		"@types/mocha": "^2.2.44",
 		"@types/ws": "^0.0.38",
-		"@types/semver": "^5.3.32"
+		"@types/semver": "^5.4.0"
 	}
 }
