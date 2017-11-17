@@ -22,8 +22,20 @@ export class DebugCommands {
 	private slowModeBannerEnabled = true;
 	private paintBaselinesEnabled = false;
 	private currentFlutterDebugSession: vs.DebugSession;
+	private debugStatus = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left);
 
 	constructor(context: vs.ExtensionContext) {
+		context.subscriptions.push(this.debugStatus);
+		vs.debug.onDidReceiveDebugSessionCustomEvent(e => {
+			if (e.event == "dart.progress") {
+				if (e.body.message) {
+					this.debugStatus.text = e.body.message;
+					this.debugStatus.show();
+				}
+				if (e.body.finished)
+					this.debugStatus.hide();
+			}
+		});
 		vs.debug.onDidStartDebugSession(s => {
 			if (s.type == FLUTTER_DEBUG_TYPE) {
 				this.currentFlutterDebugSession = s;

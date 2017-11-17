@@ -4,7 +4,7 @@ import { DartDebugSession } from "./dart_debug_impl";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { FlutterLaunchRequestArguments, isWin, fileToUri, uriToFilePath } from "./utils";
 import { FlutterRun } from "./flutter_run";
-import { TerminatedEvent, OutputEvent } from "vscode-debugadapter";
+import { TerminatedEvent, OutputEvent, Event } from "vscode-debugadapter";
 import * as child_process from "child_process";
 import * as path from "path";
 
@@ -59,6 +59,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.flutter.registerForAppDebugPort(n => { this.observatoryUri = n.wsUri; this.baseUri = n.baseUri; });
 		this.flutter.registerForAppStarted(n => { if (!args.noDebug) this.initObservatory(this.observatoryUri); });
 		this.flutter.registerForAppStop(n => { this.currentRunningAppId = undefined; this.flutter.dispose(); });
+		this.flutter.registerForAppProgress(e => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished })));
 
 		return this.flutter.process;
 	}

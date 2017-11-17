@@ -46,6 +46,9 @@ export class FlutterRun extends StdIOService {
 			case "app.stop":
 				this.notify(this.appStopSubscriptions, <f.AppEvent>evt.params);
 				break;
+			case "app.progress":
+				this.notify(this.appProgressSubscriptions, <f.AppEvent>evt.params);
+				break;
 		}
 	}
 
@@ -55,6 +58,7 @@ export class FlutterRun extends StdIOService {
 	private appDebugPortSubscriptions: ((notification: f.AppDebugPort) => void)[] = [];
 	private appStartedSubscriptions: ((notification: f.AppEvent) => void)[] = [];
 	private appStopSubscriptions: ((notification: f.AppEvent) => void)[] = [];
+	private appProgressSubscriptions: ((notification: f.AppProgress) => void)[] = [];
 
 
 	// Request methods.
@@ -88,5 +92,9 @@ export class FlutterRun extends StdIOService {
 
 	registerForAppStop(subscriber: (notification: f.AppEvent) => void): Disposable {
 		return this.subscribe(this.appStopSubscriptions, subscriber);
+	}
+
+	registerForAppProgress(subscriber: (notification: f.AppProgress) => void): Disposable {
+		return this.subscribe(this.appProgressSubscriptions, subscriber);
 	}
 }

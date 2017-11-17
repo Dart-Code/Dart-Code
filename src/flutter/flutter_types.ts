@@ -7,8 +7,7 @@ export interface Device {
 	emulator: boolean;
 }
 
-export interface AppStart {
-	appId: string;
+export interface AppStart extends AppEvent {
 	deviceId: string;
 	directory: string;
 	supportsRestart?: boolean;
@@ -21,4 +20,9 @@ export interface AppEvent {
 export interface AppDebugPort extends AppEvent {
 	wsUri: string;
 	baseUri?: string;
+}
+
+export interface AppProgress extends AppEvent {
+	message?: string;
+	finished?: boolean;
 }
