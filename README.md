@@ -44,7 +44,8 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
 ## Extension Settings
 
-- `dart.allowAnalytics`: Note: We only send a few basic events and version numbers (see below) :-)
+- `dart.allowAnalytics`: Note: We only send a few basic events, feature toggles and version numbers (see below) :-)
+- `dart.closingLabels`: Whether to show annotations against constructor, method invocations and lists that span multiple lines. Defaults to `true`. 
 - `dart.checkForSdkUpdates`: Whether to check you are using the latest version of the Dart SDK at startup. Defaults to `true`.
 - `dart.debugSdkLibraries`: Whether SDK libraries should be marked as debuggable. Defaults to `false`.
 - `dart.debugExternalLibraries`: Whether libraries should be marked as debuggable. Defaults to `false`.

@@ -31,6 +31,7 @@ class Config {
 	get analyzerInstrumentationLogFile() { return resolveHomePath(this.getConfig<string>("analyzerInstrumentationLogFile")); }
 	get analyzerAdditionalArgs() { return this.getConfig<string[]>("analyzerAdditionalArgs"); }
 	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
+	get closingLabels() { return this.getConfig<boolean>("closingLabels"); }
 	get debugSdkLibraries() { return this.getConfig<boolean>("debugSdkLibraries"); }
 	setDebugSdkLibraries(value: boolean): Thenable<void> { return this.setConfig("debugSdkLibraries", value); }
 	get debugExternalLibraries() { return this.getConfig<boolean>("debugExternalLibraries"); }
@@ -52,8 +53,6 @@ class Config {
 
 	// Preview features.
 	get previewAnalyzeAngularTemplates() { return this.getConfig<boolean>("previewAnalyzeAngularTemplates"); }
-	get previewFlutterCloseTagDecorations() { return this.getConfig<boolean>("previewFlutterCloseTagDecorations"); }
-	get previewClosingLabels() { return this.getConfig<boolean>("previewClosingLabels"); }
 }
 
 export class CodeCapabilities {

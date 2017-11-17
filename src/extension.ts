@@ -235,10 +235,10 @@ export function activate(context: vs.ExtensionContext) {
 	let connectedSetup = analyzer.registerForServerConnected(sc => {
 		connectedSetup.dispose();
 
-		if (analyzer.capabilities.supportsClosingLabels && (config.previewClosingLabels || config.previewFlutterCloseTagDecorations)) {
+		if (analyzer.capabilities.supportsClosingLabels && config.closingLabels) {
 			context.subscriptions.push(new ClosingLabelsDecorations(analyzer));
 		}
-		else if ((util.isFlutterProject || util.isFuchsiaProject) && (config.previewClosingLabels || config.previewFlutterCloseTagDecorations)) {
+		else if ((util.isFlutterProject || util.isFuchsiaProject) && config.closingLabels) {
 			context.subscriptions.push(new FlutterWidgetConstructorDecoratorProvider(analyzer));
 		}
 
@@ -419,7 +419,7 @@ function getAnalyzerSettings() {
 		+ config.analyzerInstrumentationLogFile
 		+ config.analyzerAdditionalArgs
 		+ config.flutterDaemonLogFile
-		+ config.previewFlutterCloseTagDecorations
+		+ config.closingLabels
 		+ config.previewAnalyzeAngularTemplates;
 }
 

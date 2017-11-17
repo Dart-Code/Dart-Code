@@ -346,6 +346,11 @@
 			"type": "object",
 			"title": "Dart Configuration",
 			"properties": {
+				"dart.closingLabels": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to show annotations against constructor, method invocations and lists that span multiple lines."
+				},
 				"dart.debugSdkLibraries": {
 					"type": "boolean",
 					"default": false,
