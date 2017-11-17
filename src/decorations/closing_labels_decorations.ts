@@ -17,7 +17,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 			margin: "2px",
 			color: new vs.ThemeColor("dart.closingLabels"),
 		},
-		rangeBehavior: vs.DecorationRangeBehavior.ClosedClosed
+		rangeBehavior: vs.DecorationRangeBehavior.ClosedOpen
 	});
 
 	constructor(analyzer: Analyzer) {
