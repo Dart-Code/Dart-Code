@@ -364,10 +364,6 @@ function handleConfigurationChange() {
 
 	if (todoSettingChanged || showLintNameSettingChanged) {
 		let packageRoots = findPackageRoots(vs.workspace.rootPath);
-		if (todoSettingChanged)
-			analytics.logShowTodosToggled(showTodos);
-		else if (showLintNameSettingChanged)
-			analytics.logLintNamesToggled(showLintNames);
 		analyzer.analysisReanalyze({
 			roots: packageRoots
 		});

@@ -12,10 +12,8 @@ let debug = false;
 
 enum Category {
 	Extension,
-	TODOs,
 	Analyzer,
-	Debugger,
-	LintNames
+	Debugger
 }
 
 enum EventAction {
@@ -39,8 +37,6 @@ class Analytics {
 		this.time(Category.Extension, TimingVariable.Startup, timeInMS);
 	};
 	logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
-	logShowTodosToggled(enabled: boolean) { this.event(Category.TODOs, enabled ? EventAction.Enabled : EventAction.Disabled); }
-	logLintNamesToggled(enabled: boolean) { this.event(Category.LintNames, enabled ? EventAction.Enabled : EventAction.Disabled); }
 	logAnalyzerError(description: string, fatal: boolean) { this.error("AS: " + description, fatal); }
 	logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
 	logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS); }
@@ -62,6 +58,8 @@ class Analytics {
 		data.cd8 = config.closingLabels ? "On" : "Off";
 		if (isFlutterProject)
 			data.cd9 = config.flutterHotReloadOnSave ? "On" : "Off";
+		data.cd10 = config.showTodos ? "On" : "Off";
+		data.cd11 = config.showLintNames ? "On" : "Off";
 
 		// Include debug preference if it's a debugger start.
 		if (category == Category.Debugger && action == EventAction.Activated)
