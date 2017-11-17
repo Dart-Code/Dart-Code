@@ -1,3 +1,10 @@
+# v2.5.0
+
+(TODO)
+
+- req Code 1.18
+- https://github.com/Dart-Code/Dart-Code/issues?utf8=%E2%9C%93&q=milestone%3Av2.5.0%20
+
 # v2.4.4
 
 - The search path for the Flutter SDK cached by Fuchsia has been updated in line with the latest Fuchsia code
