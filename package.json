@@ -416,7 +416,7 @@
 				},
 				"dart.flutterHotReloadOnSave": {
 					"type": "boolean",
-					"default": false,
+					"default": true,
 					"description": "Whether to automatically send a 'hot reload' request during a Flutter debug session when saving files."
 				}
 			}

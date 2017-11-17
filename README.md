@@ -49,7 +49,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - `dart.checkForSdkUpdates`: Whether to check you are using the latest version of the Dart SDK at startup. Defaults to `true`.
 - `dart.debugSdkLibraries`: Whether SDK libraries should be marked as debuggable. Defaults to `false`.
 - `dart.debugExternalLibraries`: Whether libraries should be marked as debuggable. Defaults to `false`.
-- `dart.flutterHotReloadOnSave`: Whether to automatically send a 'hot reload' request during a Flutter debug session when saving files. Defaults to `false`.
+- `dart.flutterHotReloadOnSave`: Whether to automatically send a 'hot reload' request during a Flutter debug session when saving files. Defaults to `true`.
 - `dart.insertArgumentPlaceholders`: Whether to insert argument placeholders during code completions. Defaults to `true`.
 - `dart.lineLength`: The maximum length of a line of code. This is used by the document formatter. Defaults to `80`.
 - `dart.pubAdditionalArgs`: Additional args to pass to `pub get` and `pub upgrade` commands (eg. `--packages-dir`).

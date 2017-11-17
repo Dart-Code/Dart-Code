@@ -60,6 +60,8 @@ class Analytics {
 		// Include additional project/setting info.
 		data.cd7 = isFuchsiaProject ? "Fuchsia" : isFlutterProject ? "Flutter" : "Dart";
 		data.cd8 = config.closingLabels ? "On" : "Off";
+		if (isFlutterProject)
+			data.cd9 = config.flutterHotReloadOnSave ? "On" : "Off";
 
 		// Include debug preference if it's a debugger start.
 		if (category == Category.Debugger && action == EventAction.Activated)
