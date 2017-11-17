@@ -18,9 +18,7 @@ enum Category {
 
 enum EventAction {
 	Activated,
-	SdkDetectionFailure,
-	Enabled,
-	Disabled
+	SdkDetectionFailure
 }
 
 enum TimingVariable {
