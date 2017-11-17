@@ -19,6 +19,10 @@ export class SdkManager {
 			if (err)
 				return;
 
+			// Add the folder itself, so if it was pointing directly at a Dart SDK, it just appears
+			// as the only one.
+			files.push(""); // The path is relative because it's path.join'd below.
+
 			const sdkFolders = files
 				.map(f => path.join(sdkContainerFolder, f))
 				.filter(f => fs.statSync(f).isDirectory()) // Only directories.
