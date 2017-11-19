@@ -4,10 +4,11 @@ import { openInBrowser } from "./utils";
 
 export function promptUserForConfigs(context: vs.ExtensionContext) {
 	// Ensure we only prompt with one question max per session!
-	prompt(context, 'debugJustMyCode', promptForDebugJustMyCode);
+	prompt(context, 'debugJustMyCode', promptForDebugJustMyCode)
+		|| (!config.closingLabels && prompt(context, 'closingLabelsDisabled', promptForClosingLabelsDisabled));
 }
 
-function prompt(context: vs.ExtensionContext, key: string, prompt: () => Thenable<boolean>) {
+function prompt(context: vs.ExtensionContext, key: string, prompt: () => Thenable<boolean>): boolean {
 	let stateKey = `hasPrompted.${key}`;
 
 	// Uncomment this to reset all state (useful for debugging).
@@ -17,7 +18,10 @@ function prompt(context: vs.ExtensionContext, key: string, prompt: () => Thenabl
 	if (context.globalState.get(stateKey) !== true) {
 		// Prompt, but only record if the user responded.
 		prompt().then(res => context.globalState.update(stateKey, res), error);
+		return true;
 	}
+
+	return false;
 }
 
 function promptForDebugJustMyCode(): PromiseLike<boolean> {
@@ -39,6 +43,19 @@ function promptForDebugJustMyCode(): PromiseLike<boolean> {
 			openInBrowser("https://github.com/Dart-Code/Dart-Code/releases/tag/v0.14.0");
 		}
 		return !!res;
+	});
+}
+
+
+function promptForClosingLabelsDisabled(): PromiseLike<boolean> {
+	return vs.window.showInformationMessage(
+		"Please consider providing feedback about Closing Labels so it may be improved",
+		"Open Feedback Issue on GitHub"
+	).then(res => {
+		if (res) {
+			openInBrowser("https://github.com/Dart-Code/Dart-Code/issues/445");
+		}
+		return true; // Always mark this as done; we don't want to re-prompt if the user clicks Close.
 	});
 }
 
