@@ -111,6 +111,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.openObservatory",
+				"title": "Open Observatory",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.changeSdk",
 				"title": "Change SDK",
 				"category": "Dart"
@@ -184,6 +189,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.openTimeline",
+				"title": "Open Observatory Timeline",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.changeDevice",
 				"title": "Change Device",
 				"category": "Flutter"
@@ -218,6 +228,10 @@
 				{
 					"command": "dart.showTypeHierarchy",
 					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
+				},
+				{
+					"command": "dart.openObservatory",
+					"when": "dart-code:dartProjectLoaded && inDebugMode"
 				},
 				{
 					"command": "dart.changeSdk",
@@ -269,6 +283,10 @@
 				},
 				{
 					"command": "flutter.hotReload",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.openTimeline",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				},
 				{

@@ -131,6 +131,13 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected initObservatory(uri: string) {
+		// Send the uri back to the editor so it can be used to launch browsers etc.
+		if (uri.endsWith('/ws')) {
+			var browserFriendlyUri = uri.substring(0, uri.length - 3);
+			if (browserFriendlyUri.startsWith('ws:'))
+				browserFriendlyUri = "http:" + browserFriendlyUri.substring(3);
+			this.sendEvent(new Event("dart.observatoryUri", { observatoryUri: browserFriendlyUri.toString() }));
+		}
 		this.observatory = new ObservatoryConnection(uri);
 		this.observatory.onLogging(message => {
 			const max: number = 2000;

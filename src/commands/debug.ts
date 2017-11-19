@@ -8,11 +8,12 @@ import * as path from "path";
 import * as project from "../project";
 import * as vs from "vscode";
 import { config } from "../config";
-import { dartPubPath, isFlutterProject, flutterPath, Sdks } from "../utils";
+import { dartPubPath, isFlutterProject, flutterPath, Sdks, openInBrowser } from "../utils";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { SdkManager } from "../sdk/sdk_manager";
 import { FLUTTER_DEBUG_TYPE } from "../providers/debug_config_provider";
+import { Uri } from "vscode";
 
 export class DebugCommands {
 	private debugPaintingEnabled = false;
@@ -23,6 +24,7 @@ export class DebugCommands {
 	private paintBaselinesEnabled = false;
 	private currentFlutterDebugSession: vs.DebugSession;
 	private debugStatus = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left);
+	private observatoryUri: string = null;
 
 	constructor(context: vs.ExtensionContext) {
 		context.subscriptions.push(this.debugStatus);
@@ -34,6 +36,8 @@ export class DebugCommands {
 				}
 				if (e.body.finished)
 					this.debugStatus.hide();
+			} else if (e.event == "dart.observatoryUri") {
+				this.observatoryUri = e.body.observatoryUri;
 			}
 		});
 		vs.debug.onDidStartDebugSession(s => {
@@ -54,6 +58,10 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.runServiceCommand("ext.flutter.timeDilation", { timeDilation: this.timeDilation = 6.0 - this.timeDilation })));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowModeBanner", () => this.runBoolServiceCommand("ext.flutter.debugAllowBanner", this.slowModeBannerEnabled = !this.slowModeBannerEnabled)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.runBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", this.paintBaselinesEnabled = !this.paintBaselinesEnabled)));
+
+		// Open Observatory.
+		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", () => { if (this.observatoryUri) openInBrowser(this.observatoryUri); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.openTimeline", () => { if (this.observatoryUri) openInBrowser(this.observatoryUri + "/#/timeline-dashboard"); }));
 
 		// Misc custom debug commands.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", () => this.sendCustomFlutterDebugCommand("hotReload")));
