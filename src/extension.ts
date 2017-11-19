@@ -32,7 +32,6 @@ import { ServerStatusNotification } from "./analysis/analysis_server_types";
 import { DartPackagesProvider } from "./views/packages_view";
 import { upgradeProject } from "./project_upgrade";
 import { promptUserForConfigs } from "./user_config_prompts";
-import { FlutterWidgetConstructorDecoratorProvider } from "./providers/flutter_widget_constructor_decoration";
 import { DartPackageFileContentProvider } from "./providers/dart_package_file_content_provider";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { DebugConfigProvider, DART_CLI_DEBUG_TYPE, FLUTTER_DEBUG_TYPE } from "./providers/debug_config_provider";
@@ -237,9 +236,6 @@ export function activate(context: vs.ExtensionContext) {
 
 		if (analyzer.capabilities.supportsClosingLabels && config.closingLabels) {
 			context.subscriptions.push(new ClosingLabelsDecorations(analyzer));
-		}
-		else if ((util.isFlutterProject || util.isFuchsiaProject) && config.closingLabels) {
-			context.subscriptions.push(new FlutterWidgetConstructorDecoratorProvider(analyzer));
 		}
 
 		// Hook open/active file changes so we can set priority files with the analyzer.
