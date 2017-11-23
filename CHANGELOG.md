@@ -1,3 +1,18 @@
+# v2.5.0
+
+- A new `Open Observatory` command is now available during Dart and Flutter debugging sessions to launch Observatory in a browser
+- A new `Open Timeline` command is now available during Flutter debugging sessions to launch the Observatory Timeline in a browser
+- Closing Labels are now enabled by default when you are using a version of the SDK that supports it
+  - A new option (`dart.closingLabels`) has been added to allow these to be disabled
+- The setting `dart.flutterHotReloadOnSave` now defaults to `true` and will force a hot reload upon saving (if there are no errors in the file being saved)
+- Progress messages will now be shown in the status bar when building/debugging Flutter projects
+- Characters typed at the end of a line will no longer appear after the Closing Labels
+- The `dart.sdkContainer` option (which adds a quick" SDK Picker") now works if pointing directly at an SDK instead of its parent
+
+### Preview Features available in this version
+
+- [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
+
 # v2.4.4
 
 - The search path for the Flutter SDK cached by Fuchsia has been updated in line with the latest Fuchsia code
