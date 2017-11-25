@@ -45,12 +45,45 @@ export class SdkCommands {
 		}));
 	}
 
+
+	private runCommandForWorkspace(
+		handler: (folder: string, command: string) => void,
+		placeHolder: string,
+		command: string,
+		selection?: vs.Uri
+	) {
+		let folder = selection && vs.workspace.getWorkspaceFolder(selection);
+
+		// If there's only one folder, just use it to avoid prompting the user.
+		if (!folder && vs.workspace.workspaceFolders) {
+			// TODO: Filter to Dart or Flutter projects.
+			const allowedProjects = vs.workspace.workspaceFolders.filter(f => f.uri.scheme == "file");
+			if (allowedProjects.length == 1)
+				folder = allowedProjects[0];
+		}
+
+		const folderPromise =
+			folder
+				? Promise.resolve(folder)
+				// TODO: Can we get this filtered?
+				// https://github.com/Microsoft/vscode/issues/39132
+				: vs.window.showWorkspaceFolderPick({ placeHolder: placeHolder });
+
+		folderPromise
+			.then(f => {
+				if (f && f.uri.scheme == "file") {
+					handler(f.uri.fsPath, command);
+				}
+			});
+	}
+
 	private runFlutter(command: string, selection?: vs.Uri) {
-		let root = vs.workspace.rootPath;
-		let projectPath = selection
-			? path.dirname(selection.fsPath)
-			: project.locateBestProjectRoot();
-		let shortPath = path.join(path.basename(root), path.relative(root, projectPath));
+		this.runCommandForWorkspace(this.runFlutterInFolder, `Select the folder to run "flutter ${command}" in`, command, selection);
+	}
+
+	private runFlutterInFolder(folder: string, command: string) {
+		let projectPath = project.locateBestProjectRoot(folder);
+		let shortPath = path.join(path.basename(folder), path.relative(folder, projectPath));
 		let channel = channels.createChannel("Flutter");
 		channel.show(true);
 
@@ -67,11 +100,12 @@ export class SdkCommands {
 	}
 
 	private runPub(command: string, selection?: vs.Uri) {
-		let root = vs.workspace.rootPath;
-		let projectPath = selection
-			? path.dirname(selection.fsPath)
-			: project.locateBestProjectRoot();
-		let shortPath = path.join(path.basename(root), path.relative(root, projectPath));
+		this.runCommandForWorkspace(this.runPubInFolder, `Select the folder to run "pub ${command}" in`, command, selection);
+	}
+
+	private runPubInFolder(folder: string, command: string) {
+		let projectPath = project.locateBestProjectRoot(folder);
+		let shortPath = path.join(path.basename(folder), path.relative(folder, projectPath));
 		let channel = channels.createChannel("Pub");
 		channel.show(true);
 
