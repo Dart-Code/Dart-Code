@@ -8,7 +8,7 @@ import * as path from "path";
 import * as project from "../project";
 import * as vs from "vscode";
 import { config } from "../config";
-import { dartPubPath, isFlutterProject, flutterPath, Sdks, openInBrowser } from "../utils";
+import { openInBrowser } from "../utils";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { SdkManager } from "../sdk/sdk_manager";
