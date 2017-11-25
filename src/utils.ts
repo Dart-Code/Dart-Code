@@ -20,145 +20,110 @@ export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
 export const flutterPath = "bin/" + flutterExecutableName;
 export const extensionVersion = getExtensionVersion();
 export const isDevelopment = checkIsDevelopment();
-export let isFlutterProject: boolean = checkIsFlutterProject();
-export let isFuchsiaProject: boolean = checkIsFuchsiaProject();
 
-export function checkIsFlutterProject(): boolean {
-	if (workspace.rootPath)  // If VS Code has a project open
-		if (fs.existsSync(path.join(workspace.rootPath, "pubspec.yaml"))) {
-			let regex = new RegExp('sdk\\s*:\\s*flutter', 'i');
-			return regex.test(fs.readFileSync((path.join(workspace.rootPath, "pubspec.yaml"))).toString());
-		}
+export function referencesFlutterSdk(folder: string): boolean {
+	if (folder && fs.existsSync(path.join(folder, "pubspec.yaml"))) {
+		const regex = new RegExp('sdk\\s*:\\s*flutter', 'i');
+		return regex.test(fs.readFileSync(path.join(folder, "pubspec.yaml")).toString());
+	}
 	return false;
 }
 
+export function searchPaths(searchPaths: string[], filter: (s: string) => boolean, executableName: string): string {
+	let sdkPath =
+		searchPaths
+			.filter(p => p)
+			.map(resolveHomePath)
+			.map(p => path.basename(p) != "bin" ? path.join(p, "bin") : p) // Ensure /bin on end.
+			.find(filter);
+
+	sdkPath = sdkPath && fs.realpathSync(sdkPath);
+	sdkPath = sdkPath && path.join(sdkPath, ".."); // Take /bin back off
+
+	return sdkPath;
+}
+
 export function findSdks(): Sdks {
-	const fuchsiaRoot = findFuchsiaRoot();
+	const folders = [workspace.rootPath];
+	const paths = (<string>process.env.PATH).split(path.delimiter);
+	const platformName = isWin ? "win" : process.platform == "darwin" ? "mac" : "linux";
 
-	const flutterSdk = isFuchsiaProject ? findFuchsiaFlutterSdk(fuchsiaRoot) : isFlutterProject ? findFlutterSdk() : null;
+	let fuchsiaRoot: string, flutterProject: string;
+	folders.forEach(folder => {
+		fuchsiaRoot = fuchsiaRoot || findFuchsiaRoot(folder);
+		flutterProject = flutterProject || (referencesFlutterSdk(folder) ? folder : null);
+	});
 
-	// The user defined Dart SDK should override the auto-detected ones.
-	let dartSdk: string;
-	if (config.userDefinedSdkPath) {
-		// We don't expect the user to add .\bin in config, but it would be in the PATHs
-		dartSdk = findDartSdkInPaths([path.join(config.userDefinedSdkPath, "bin")]);
-	}
+	const flutterSdkSearchPaths = [
+		// TODO: config.flutterSdkPath,
+		fuchsiaRoot && path.join(fuchsiaRoot, "lib/flutter"),
+		fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter"),
+		flutterProject,
+		flutterProject && extractFlutterSdkPathFromPackagesFile(path.join(flutterProject, ".packages")),
+		process.env.FLUTTER_ROOT
+	].concat(paths);
 
-	// Failed to find the Dart SDK from the user defined path. Try to auto-detect one.
-	if (dartSdk == null) {
-		dartSdk = isFuchsiaProject ? findFuchsiaDartSdk(fuchsiaRoot) : isFlutterProject ? findFlutterDartSdk(flutterSdk) : findDartSdk();
-	}
+	let flutterSdkPath = (fuchsiaRoot || flutterProject) &&
+		searchPaths(flutterSdkSearchPaths, hasFlutterExecutable, flutterExecutableName);
 
-	return { dart: dartSdk, flutter: flutterSdk };
-}
+	const dartSdkSearchPaths = [
+		config.userDefinedSdkPath,
+		fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart/tools/sdks", platformName, "dart-sdk"),
+		fuchsiaRoot && path.join(fuchsiaRoot, "dart/tools/sdks", platformName, "dart-sdk"),
+		flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk")
+	].concat(paths);
 
-function findDartSdk(): string {
-	let paths = (<string>process.env.PATH).split(path.delimiter);
-	return findDartSdkInPaths(paths);
-}
+	let dartSdkPath =
+		searchPaths(dartSdkSearchPaths, hasDartExecutable, dartExecutableName);
 
-function findDartSdkInPaths(paths: string[]): string {
-	// Resolve all paths to allow things like ~
-	paths = paths.map(resolveHomePath);
-
-	// Find which path has a Dart executable in it.
-	let dartPath = paths.find(hasDartExecutable);
-	if (!dartPath)
-		return null;
-
-	// To allow for symlinks, resolve the Dart executable to its real path.
-	let realDartPath = fs.realpathSync(path.join(dartPath, dartExecutableName));
-
-	// Return just the folder portion without the bin folder.
-	return path.join(path.dirname(realDartPath), "..");
-}
-
-function findFlutterDartSdk(flutterSdk: string): string {
-	if (!flutterSdk)
-		return null;
-
-	let flutterDartPath = path.join(flutterSdk, "bin/cache/dart-sdk");
-	if (hasDartExecutable(path.join(flutterDartPath, "bin")))
-		return flutterDartPath;
-
-	return null;
-}
-
-// TODO: Don't export?
-function findFlutterSdk(): string {
-	// Workspace takes priority.
-	let paths = [path.join(workspace.rootPath, "bin")];
-
-	// Next try .packages file.
-	let pathFromPackages = extractFlutterSdkPathFromPackagesFile(path.join(workspace.rootPath, ".packages"));
-	if (pathFromPackages)
-		paths = paths.concat(pathFromPackages);
-
-	// Next try FLUTTER_ROOT.
-	if (process.env.FLUTTER_ROOT)
-		paths = paths.concat(path.join(process.env.FLUTTER_ROOT, "bin"));
-
-	// Add on PATH, since we might find the SDK there too.
-	paths = paths.concat((<string>process.env.PATH).split(path.delimiter));
-
-	// Resolve all paths to allow things like ~
-	paths = paths.map(resolveHomePath);
-
-	let flutterHome = paths.find(hasFlutterExecutable);
-	if (!flutterHome)
-		return null;
-
-	let realFlutterHome = fs.realpathSync(path.join(flutterHome, flutterExecutableName));
-
-	//console.log(`Found flutter at ${realFlutterHome}`);
-
-	return path.join(path.dirname(realFlutterHome), "..");
-
-	function extractFlutterSdkPathFromPackagesFile(file: string): string {
-		if (!fs.existsSync(file))
-			return null;
-
-		let path = new PackageMap(file).getPackagePath("flutter");
-
-		if (!path)
-			return null;
-
-		// Trim suffix we don't need.
-		const pathSuffix = "/packages/flutter/lib/";
-		if (path.endsWith(pathSuffix)) {
-			path = path.substr(0, path.length - pathSuffix.length)
-		}
-
-		// Make sure ends with a slash.
-		if (!path.endsWith('/'))
-			path = path + '/';
-
-		// Append bin if required.
-		if (!path.endsWith('/bin/')) {
-			path = path + 'bin/';
-		}
-
-		// Windows fixup.		
-		if (isWin) {
-			path = path.replace(/\//g, '\\');
-			if (path[0] == '\\')
-				path = path.substring(1);
-		}
-
-		return path;
+	return {
+		dart: dartSdkPath,
+		flutter: (fuchsiaRoot || flutterProject) && flutterSdkPath,
+		fuchsia: fuchsiaRoot,
+		projectType: fuchsiaRoot ? ProjectType.Fuchsia : flutterProject ? ProjectType.Flutter : ProjectType.Dart
 	}
 }
 
-export function checkIsFuchsiaProject(): boolean {
-	return findFuchsiaRoot() != null;
+function extractFlutterSdkPathFromPackagesFile(file: string): string {
+	if (!fs.existsSync(file))
+		return null;
+
+	let path = new PackageMap(file).getPackagePath("flutter");
+
+	if (!path)
+		return null;
+
+	// Trim suffix we don't need.
+	const pathSuffix = "/packages/flutter/lib/";
+	if (path.endsWith(pathSuffix)) {
+		path = path.substr(0, path.length - pathSuffix.length)
+	}
+
+	// Make sure ends with a slash.
+	if (!path.endsWith('/'))
+		path = path + '/';
+
+	// Append bin if required.
+	if (!path.endsWith('/bin/')) {
+		path = path + 'bin/';
+	}
+
+	// Windows fixup.		
+	if (isWin) {
+		path = path.replace(/\//g, '\\');
+		if (path[0] == '\\')
+			path = path.substring(1);
+	}
+
+	return path;
 }
 
-function findFuchsiaRoot(): string {
-	if (workspace.rootPath) {
+function findFuchsiaRoot(folder: string): string {
+	if (folder) {
 		// Walk up the directories from the workspace root, and see if there
 		// exists a directory which has ".jiri_root" directory as a child.
 		// If such directory is found, that is our fuchsia root.
-		let dir = workspace.rootPath;
+		let dir = folder;
 		while (dir != null) {
 			try {
 				if (fs.statSync(path.join(dir, ".jiri_root")).isDirectory()) {
@@ -174,34 +139,6 @@ function findFuchsiaRoot(): string {
 			dir = parentDir;
 		}
 	}
-
-	return null;
-}
-
-function findFuchsiaFlutterSdk(fuchsiaRoot: string): string {
-	if (!fuchsiaRoot)
-		return null;
-
-	const fuchsiaFlutterPath = path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter");
-	if (hasFlutterExecutable(path.join(fuchsiaFlutterPath, "bin")))
-		return fuchsiaFlutterPath;
-
-	return null;
-}
-
-function findFuchsiaDartSdk(fuchsiaRoot: string): string {
-	if (!fuchsiaRoot)
-		return null;
-
-	let platformName = "linux";
-	if (isWin)
-		platformName = "win";
-	else if (process.platform == "darwin")
-		platformName = "mac";
-
-	const fuchsiaDartSdkPath = path.join(fuchsiaRoot, "third_party/dart/tools/sdks", platformName, "dart-sdk");
-	if (hasDartExecutable(path.join(fuchsiaDartSdkPath, "bin")))
-		return fuchsiaDartSdkPath;
 
 	return null;
 }
@@ -365,4 +302,16 @@ export function openInBrowser(url: string) {
 export class Sdks {
 	dart: string;
 	flutter: string;
+	fuchsia: string;
+	projectType: ProjectType;
 }
+
+export enum ProjectType {
+	Dart,
+	Flutter,
+	Fuchsia
+}
+
+// TODO: Feels wonky putting this at bottom, but it reads from config which calls back to util.resolveHomePaths
+// so if it's at the top, it "compiles" but fails at runtime because resolveHomePaths isn't yet defined.
+export let sdks = findSdks();

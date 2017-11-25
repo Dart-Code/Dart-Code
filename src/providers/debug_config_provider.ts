@@ -5,7 +5,7 @@ import { analytics } from "../analytics";
 import { config } from "../config";
 import { DebugConfigurationProvider, WorkspaceFolder, CancellationToken, DebugConfiguration, ProviderResult } from "vscode";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
-import { Sdks, isFlutterProject } from "../utils";
+import { sdks, ProjectType } from "../utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { SdkCommands } from "../commands/sdk";
 
@@ -14,12 +14,10 @@ export const FLUTTER_DEBUG_TYPE = "flutter";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugType: String;
-	private sdks: Sdks;
 	private deviceManager: FlutterDeviceManager;
 
-	constructor(debugType: String, sdks: Sdks, deviceManager: FlutterDeviceManager) {
+	constructor(debugType: String, deviceManager: FlutterDeviceManager) {
 		this.debugType = debugType;
-		this.sdks = sdks;
 		this.deviceManager = deviceManager;
 	}
 
@@ -45,15 +43,15 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
 		// TODO: This cast feels nasty?
-		this.setupDebugConfig(<FlutterLaunchRequestArguments><any>debugConfig, this.sdks, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
+		this.setupDebugConfig(<FlutterLaunchRequestArguments><any>debugConfig, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
 
-		if (isFlutterProject)
+		if (sdks.projectType == ProjectType.Flutter)
 			debugConfig.program = debugConfig.program || "${workspaceRoot}/lib/main.dart"; // Set Flutter default path.
 
 		return debugConfig;
 	}
 
-	private setupDebugConfig(debugConfig: FlutterLaunchRequestArguments, sdks: Sdks, deviceId: string) {
+	private setupDebugConfig(debugConfig: FlutterLaunchRequestArguments, deviceId: string) {
 		analytics.logDebuggerStart();
 
 		const dartExec = isWin ? "dart.exe" : "dart";

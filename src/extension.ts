@@ -45,7 +45,6 @@ const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
 const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
 
-export let sdks: util.Sdks;
 export let analyzer: Analyzer;
 export let flutterDaemon: FlutterDaemon;
 
@@ -53,10 +52,10 @@ let showTodos: boolean = config.showTodos, showLintNames: boolean = config.showL
 let analyzerSettings: string = getAnalyzerSettings();
 
 export function activate(context: vs.ExtensionContext) {
-	let extensionStartTime = new Date();
-	sdks = util.findSdks();
+	const extensionStartTime = new Date();
+	const sdks = util.sdks;
 	if (sdks.dart == null) {
-		if (util.isFlutterProject) {
+		if (sdks.projectType == util.ProjectType.Flutter) {
 			vs.window.showErrorMessage("Could not find a Flutter SDK to use. " +
 				"Please add it to your PATH or set FLUTTER_ROOT and reload.",
 				"Go to Flutter Downloads"
@@ -83,16 +82,16 @@ export function activate(context: vs.ExtensionContext) {
 	if (sdkVersion) {
 		let versionStatusItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
 		versionStatusItem.text = sdkVersion;
-		versionStatusItem.tooltip = "Dart SDK Version";
+		versionStatusItem.tooltip = "Dart SDK Version" + ` (${util.ProjectType[sdks.projectType]})`;
 		versionStatusItem.show();
 		context.subscriptions.push(versionStatusItem);
 
 		// If we're set up for multiple versions, set up the command.
-		if (!util.isFlutterProject && !util.isFuchsiaProject && config.sdkContainer && fs.existsSync(config.sdkContainer))
+		if (util.sdks.projectType == util.ProjectType.Dart && config.sdkContainer && fs.existsSync(config.sdkContainer))
 			versionStatusItem.command = "dart.changeSdk";
 
 		// Do update-check.
-		if (config.checkForSdkUpdates && !util.isFlutterProject) {
+		if (config.checkForSdkUpdates && util.sdks.projectType == util.ProjectType.Dart) {
 			util.getLatestSdkVersion().then(version => {
 				if (util.isOutOfDate(sdkVersion, version))
 					vs.window.showWarningMessage(
@@ -206,7 +205,7 @@ export function activate(context: vs.ExtensionContext) {
 	vs.workspace.textDocuments.forEach(td => fileChangeHandler.onDidOpenTextDocument(td)); // Handle already-open files.
 
 	// Fire up Flutter daemon if required.	
-	if (util.isFlutterProject) {
+	if (util.sdks.projectType == util.ProjectType.Flutter) {
 		// TODO: finish wiring this up so we can manage the selected device from the status bar (eventualy - use first for now)
 		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, util.flutterPath), vs.workspace.rootPath);
 		context.subscriptions.push(flutterDaemon);
@@ -227,8 +226,8 @@ export function activate(context: vs.ExtensionContext) {
 	}
 
 	// Set up debug stuff.
-	let debugType = util.isFlutterProject ? FLUTTER_DEBUG_TYPE : DART_CLI_DEBUG_TYPE;
-	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider(debugType, new DebugConfigProvider(debugType, sdks, flutterDaemon && flutterDaemon.deviceManager)));
+	let debugType = util.sdks.projectType == util.ProjectType.Flutter ? FLUTTER_DEBUG_TYPE : DART_CLI_DEBUG_TYPE;
+	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider(debugType, new DebugConfigProvider(debugType, flutterDaemon && flutterDaemon.deviceManager)));
 
 	// Setup that requires server version/capabilities.
 	let connectedSetup = analyzer.registerForServerConnected(sc => {
@@ -254,7 +253,7 @@ export function activate(context: vs.ExtensionContext) {
 	}));
 
 	// Register SDK commands.
-	let sdkCommands = new SdkCommands(context, sdks);
+	let sdkCommands = new SdkCommands(context);
 	let debugCommands = new DebugCommands(context);
 
 	// Set up commands for Dart editors.
@@ -350,13 +349,8 @@ function handleConfigurationChange() {
 	let analyzerSettingsChanged = analyzerSettings != newAnalyzerSettings;
 	analyzerSettings = newAnalyzerSettings;
 
-	// Flutter
-	let newFlutterSetting = util.checkIsFlutterProject();
-	let flutterSettingChanged = util.isFlutterProject != newFlutterSetting;
-
-	// Fuchsia
-	let newFuchsiaSetting = util.checkIsFuchsiaProject();
-	let fuchsiaSettingChanged = util.isFuchsiaProject != newFuchsiaSetting;
+	// Project Type
+	let projectTypeChanged = util.sdks.projectType != util.findSdks().projectType;
 
 	if (todoSettingChanged || showLintNameSettingChanged) {
 		let packageRoots = findPackageRoots(vs.workspace.rootPath);
@@ -365,31 +359,9 @@ function handleConfigurationChange() {
 		});
 	}
 
-	if (analyzerSettingsChanged) {
+	if (analyzerSettingsChanged || projectTypeChanged) {
 		const reloadAction: string = "Reload Project";
-		vs.window.showWarningMessage("The Dart SDK/Analyzer settings have been changed. Save your changes then reload the project to restart the analyzer.", reloadAction).then(res => {
-			if (res == reloadAction)
-				vs.commands.executeCommand("workbench.action.reloadWindow");
-		});
-	}
-
-	if (flutterSettingChanged) {
-		const reloadAction: string = "Reload Project";
-		const msg = newFlutterSetting
-			? "Your project now uses Flutter. Save your changes then reload the project to load the Flutter SDK."
-			: "Your project no longer uses Flutter. Save your changes then reload the project to switch back to the standard Dart SDK.";
-		vs.window.showWarningMessage(msg, reloadAction).then(res => {
-			if (res == reloadAction)
-				vs.commands.executeCommand("workbench.action.reloadWindow");
-		});
-	}
-
-	if (fuchsiaSettingChanged) {
-		const reloadAction: string = "Reload Project";
-		const msg = newFuchsiaSetting
-			? "Your project now uses Fuchsia. Save your changes then reload the project to load the Fuchsia Dart SDK."
-			: "Your project no longer uses Fuchsia. Save your changes then reload the project to switch back to the standard Dart SDK.";
-		vs.window.showWarningMessage(msg, reloadAction).then(res => {
+		vs.window.showWarningMessage("The Dart SDK settings have been changed. Save your changes then reload the project to restart the analyzer.", reloadAction).then(res => {
 			if (res == reloadAction)
 				vs.commands.executeCommand("workbench.action.reloadWindow");
 		});
@@ -421,5 +393,5 @@ export function deactivate() {
 
 function setCommandVisiblity(enable: boolean) {
 	vs.commands.executeCommand('setContext', DART_PROJECT_LOADED, enable);
-	vs.commands.executeCommand('setContext', FLUTTER_PROJECT_LOADED, enable && util.isFlutterProject);
+	vs.commands.executeCommand('setContext', FLUTTER_PROJECT_LOADED, enable && util.sdks.projectType == util.ProjectType.Flutter);
 }
