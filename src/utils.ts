@@ -44,7 +44,9 @@ export function searchPaths(searchPaths: string[], filter: (s: string) => boolea
 }
 
 export function findSdks(): Sdks {
-	const folders = [workspace.rootPath];
+	const folders = workspace.workspaceFolders
+		.filter(w => w.uri.scheme == "file")
+		.map(w => w.uri.fsPath);
 	const paths = (<string>process.env.PATH).split(path.delimiter);
 	const platformName = isWin ? "win" : process.platform == "darwin" ? "mac" : "linux";
 
