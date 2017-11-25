@@ -217,7 +217,8 @@ export function activate(context: vs.ExtensionContext) {
 				return;
 
 			// Don't do if we have errors for the saved file.
-			let hasErrors = diagnostics.get(td.uri).find(d => d.severity == vs.DiagnosticSeverity.Error) != null;
+			let errors = diagnostics.get(td.uri);
+			let hasErrors = errors && errors.find(d => d.severity == vs.DiagnosticSeverity.Error) != null;
 			if (hasErrors)
 				return;
 
