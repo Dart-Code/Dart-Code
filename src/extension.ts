@@ -252,6 +252,11 @@ export function activate(context: vs.ExtensionContext) {
 			handleConfigurationChange();
 	}));
 
+	// Handle project changes that might affect SDKs.
+	vs.workspace.onDidChangeWorkspaceFolders(f => {
+		handleConfigurationChange();
+	});
+
 	// Register SDK commands.
 	let sdkCommands = new SdkCommands(context);
 	let debugCommands = new DebugCommands(context);
