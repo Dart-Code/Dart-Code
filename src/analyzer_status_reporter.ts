@@ -8,8 +8,7 @@ import { window, workspace, env, commands, extensions, StatusBarItem, Disposable
 import { Analyzer } from "./analysis/analyzer";
 import { ServerStatusNotification, ServerErrorNotification, RequestError } from "./analysis/analysis_server_types";
 import { config } from "./config";
-import { sdks } from "./extension";
-import { getDartSdkVersion } from "./utils";
+import { sdks, getDartSdkVersion } from "./utils";
 
 const maxErrorReportCount = 3;
 

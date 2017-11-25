@@ -8,35 +8,23 @@ import * as path from "path";
 import * as project from "../project";
 import * as vs from "vscode";
 import { config } from "../config";
-import { dartPubPath, isFlutterProject, flutterPath, Sdks } from "../utils";
+import { dartPubPath, flutterPath, sdks } from "../utils";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { SdkManager } from "../sdk/sdk_manager";
 
 export class SdkCommands {
-	private sdks: Sdks;
-
-	constructor(context: vs.ExtensionContext, sdks: Sdks) {
-		this.sdks = sdks;
-
+	constructor(context: vs.ExtensionContext) {
 		// SDK commands.
 		const sdkManager = new SdkManager();
-		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => sdkManager.changeSdk(this.sdks.dart)));
+		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => sdkManager.changeSdk()));
 
 		// Pub commands.
 		context.subscriptions.push(vs.commands.registerCommand("pub.get", selection => {
-			if (isFlutterProject) {
-				vs.commands.executeCommand("flutter.packages.get");
-			} else {
-				this.runPub("get", selection);
-			}
+			this.runPub("get", selection);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("pub.upgrade", selection => {
-			if (isFlutterProject) {
-				vs.commands.executeCommand("flutter.packages.upgrade");
-			} else {
-				this.runPub("upgrade", selection);
-			}
+			this.runPub("upgrade", selection);
 		}));
 
 		// Flutter commands.
@@ -71,7 +59,7 @@ export class SdkCommands {
 			args.push(option);
 		});
 
-		let flutterBinPath = path.join(this.sdks.flutter, flutterPath);
+		let flutterBinPath = path.join(sdks.flutter, flutterPath);
 		channel.appendLine(`[${shortPath}] flutter ${args.join(" ")}`);
 
 		let process = child_process.spawn(flutterBinPath, args, { "cwd": projectPath });
@@ -96,7 +84,7 @@ export class SdkCommands {
 
 		// TODO: Add a wrapper around the Dart SDK? It could do things like
 		// return the paths for tools in the bin/ dir. 
-		let pubPath = path.join(this.sdks.dart, dartPubPath);
+		let pubPath = path.join(sdks.dart, dartPubPath);
 		channel.appendLine(`[${shortPath}] pub ${args.join(" ")}`);
 
 		let process = child_process.spawn(pubPath, args, { "cwd": projectPath });

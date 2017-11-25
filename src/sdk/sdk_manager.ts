@@ -3,18 +3,19 @@
 import * as vs from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { hasDartExecutable, getDartSdkVersion } from "../utils";
+import { hasDartExecutable, getDartSdkVersion, sdks } from "../utils";
 import { config } from "../config";
 
 export class SdkManager {
-	changeSdk(currentSdk: string) {
+	changeSdk() {
 		if (config.sdkContainer)
-			this.searchForSdks(currentSdk, config.sdkContainer);
+			this.searchForSdks(config.sdkContainer);
 		else
 			vs.window.showWarningMessage("Set `dart.sdkContainer` to enable fast SDK switching.");
 	}
 
-	searchForSdks(currentSdk: string, sdkContainerFolder: string) {
+	searchForSdks(sdkContainerFolder: string) {
+		const currentSdk = sdks.dart;
 		const paths = fs.readdir(sdkContainerFolder, (err: any, files: string[]) => {
 			if (err)
 				return;
