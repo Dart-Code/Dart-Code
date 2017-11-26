@@ -20,7 +20,7 @@ export function uriToFilePath(uri: string): string {
 
 function findFile(file: string, startLocation: string) {
 	let lastParent;
-	let parent = path.dirname(startLocation);
+	let parent = startLocation;
 
 	while (parent && parent.length > 1 && parent != lastParent) {
 		let packages = path.join(parent, file);
@@ -34,7 +34,7 @@ function findFile(file: string, startLocation: string) {
 }
 
 export function getLocalPackageName(entryPoint: string) {
-	let pubspec = findFile("pubspec.yaml", entryPoint);
+	let pubspec = findFile("pubspec.yaml", path.dirname(entryPoint));
 	if (!pubspec)
 		return null;
 
@@ -80,7 +80,7 @@ export class PromiseCompleter<T> {
 
 export class PackageMap {
 	static findPackagesFile(entryPoint: string): string {
-		return findFile(".packages", entryPoint);
+		return findFile(".packages", path.dirname(entryPoint));
 	}
 
 	private map: { [name: string]: string } = {};
