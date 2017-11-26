@@ -41,8 +41,8 @@ export class SdkManager {
 
 			const items = [{
 				folder: undefined,
-				label: "Use the Dart SDK found in PATH",
-				description: undefined,
+				label: "Auto-detect Dart SDK location",
+				description: config.userDefinedSdkPath ? undefined : `Found at ${sdks.dart}`,
 				detail: !config.userDefinedSdkPath ? "Current setting" : ""
 			}].concat(sdkItems);
 
