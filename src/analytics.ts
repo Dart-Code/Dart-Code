@@ -5,7 +5,6 @@ import * as https from "https";
 import * as querystring from "querystring";
 import { config } from "./config";
 import { log, isDevelopment, extensionVersion, sdks, ProjectType } from "./utils";
-import { resolve } from "dns";
 
 // Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.
 // This is only required for debugging analytics and needn't be sent for standard Dart Code development (dev hits are already filtered with isDevelopment).
