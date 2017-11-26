@@ -316,7 +316,7 @@ function findPackageRoots(root: string): string[] {
 	//   https://github.com/Dart-Code/Dart-Code/issues/280 - Issue introduced by the workaround
 	//   https://github.com/dart-lang/sdk/issues/29414 - Analyzer issue (where the real fix will be)
 
-	if (!isPackageRootWorkaroundRequired())
+	if (!isPackageRootWorkaroundRequired(root))
 		return [root];
 
 	console.log('Workspace root appears to need package root workaround...');
@@ -344,11 +344,11 @@ function findPackageRoots(root: string): string[] {
 	}
 }
 
-function isPackageRootWorkaroundRequired(): boolean {
+function isPackageRootWorkaroundRequired(root: string): boolean {
 	// It's hard to tell if the packages folder is actually a real one (--packages-dir) or
 	// this is a repo like Flutter, so we'll use the presence of a file we know exists only
 	// in the flutter one. This is very fragile, but hopefully a very temporary workaround.
-	return fs.existsSync(path.join(vs.workspace.rootPath, "packages", ".gitignore"));
+	return fs.existsSync(path.join(root, "packages", ".gitignore"));
 }
 
 function handleConfigurationChange() {
