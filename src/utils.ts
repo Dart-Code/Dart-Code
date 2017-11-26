@@ -153,8 +153,7 @@ export function isDartWorkspaceFolder(folder: WorkspaceFolder): boolean {
 		return false;
 
 	// TODO: Filter to only Dart projects.
-
-	return false;
+	return true;
 }
 
 export const hasDartExecutable = (pathToTest: string) => hasExecutable(pathToTest, dartExecutableName);
