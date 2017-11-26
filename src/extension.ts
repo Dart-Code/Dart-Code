@@ -47,6 +47,7 @@ const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
 
 let analyzer: Analyzer;
 let flutterDaemon: FlutterDaemon;
+let analysisRoots: string[] = [];
 
 let showTodos: boolean = config.showTodos, showLintNames: boolean = config.showLintNames;
 let analyzerSettings: string = getAnalyzerSettings();
@@ -189,10 +190,10 @@ export function activate(context: vs.ExtensionContext) {
 	let diagnosticsProvider = new DartDiagnosticProvider(analyzer, diagnostics);
 
 	// Set the root...
-	if (vs.workspace.rootPath) {
-		let packageRoots = findPackageRoots(vs.workspace.rootPath);
+	if (vs.workspace.workspaceFolders) {
+		calculateAnalysisRoots();
 		analyzer.analysisSetAnalysisRoots({
-			included: packageRoots,
+			included: analysisRoots,
 			excluded: []
 		});
 	}
@@ -293,6 +294,14 @@ export function activate(context: vs.ExtensionContext) {
 	analytics.logExtensionStartup(extensionEndTime.getTime() - extensionStartTime.getTime());
 }
 
+function calculateAnalysisRoots() {
+	let newRoots: string[] = [];
+	util.getDartWorkspaceFolders().forEach(f => {
+		newRoots = newRoots.concat(findPackageRoots(f.uri.fsPath));
+	});
+	analysisRoots = newRoots;
+}
+
 function findPackageRoots(root: string): string[] {
 	// For repos with code inside a "packages" folder, the analyzer doesn't resolve package paths
 	// correctly. Until this is fixed in the analyzer, detect this and perform a workaround.
@@ -358,9 +367,8 @@ function handleConfigurationChange() {
 	let projectTypeChanged = util.sdks.projectType != util.findSdks().projectType;
 
 	if (todoSettingChanged || showLintNameSettingChanged) {
-		let packageRoots = findPackageRoots(vs.workspace.rootPath);
 		analyzer.analysisReanalyze({
-			roots: packageRoots
+			roots: analysisRoots
 		});
 	}
 

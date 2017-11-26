@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as https from "https";
 import * as as from "./analysis/analysis_server_types";
-import { env, workspace, window, Position, Range, TextDocument, commands, Uri } from "vscode";
+import { env, workspace, window, Position, Range, TextDocument, commands, Uri, WorkspaceFolder } from "vscode";
 import { config } from "./config";
 import { PackageMap } from "./debug/utils";
 import * as semver from "semver";
@@ -44,8 +44,7 @@ export function searchPaths(searchPaths: string[], filter: (s: string) => boolea
 }
 
 export function findSdks(): Sdks {
-	const folders = workspace.workspaceFolders
-		.filter(w => w.uri.scheme == "file")
+	const folders = getDartWorkspaceFolders()
 		.map(w => w.uri.fsPath);
 	const paths = (<string>process.env.PATH).split(path.delimiter);
 	const platformName = isWin ? "win" : process.platform == "darwin" ? "mac" : "linux";
@@ -143,6 +142,19 @@ function findFuchsiaRoot(folder: string): string {
 	}
 
 	return null;
+}
+
+export function getDartWorkspaceFolders(): WorkspaceFolder[] {
+	return workspace.workspaceFolders.filter(isDartWorkspaceFolder);
+}
+
+export function isDartWorkspaceFolder(folder: WorkspaceFolder): boolean {
+	if (!folder || folder.uri.scheme != "file")
+		return false;
+
+	// TODO: Filter to only Dart projects.
+
+	return false;
 }
 
 export const hasDartExecutable = (pathToTest: string) => hasExecutable(pathToTest, dartExecutableName);
