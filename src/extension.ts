@@ -226,8 +226,9 @@ export function activate(context: vs.ExtensionContext) {
 	}
 
 	// Set up debug stuff.
-	let debugType = util.sdks.projectType == util.ProjectType.Flutter ? FLUTTER_DEBUG_TYPE : DART_CLI_DEBUG_TYPE;
-	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider(debugType, new DebugConfigProvider(debugType, flutterDaemon && flutterDaemon.deviceManager)));
+	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider(DART_CLI_DEBUG_TYPE, new DebugConfigProvider(DART_CLI_DEBUG_TYPE, flutterDaemon && flutterDaemon.deviceManager)));
+	if (util.sdks.projectType! + util.ProjectType.Dart)
+		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider(FLUTTER_DEBUG_TYPE, new DebugConfigProvider(FLUTTER_DEBUG_TYPE, flutterDaemon && flutterDaemon.deviceManager)));
 
 	// Setup that requires server version/capabilities.
 	let connectedSetup = analyzer.registerForServerConnected(sc => {
