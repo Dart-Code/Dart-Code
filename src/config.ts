@@ -1,6 +1,6 @@
 "use strict";
 
-import { workspace, WorkspaceConfiguration, version as codeVersion, Uri } from "vscode";
+import { workspace, WorkspaceConfiguration, version as codeVersion, Uri, ConfigurationTarget } from "vscode";
 import { versionIsAtLeast, resolveHomePath } from "./utils";
 
 class Config {
@@ -19,8 +19,8 @@ class Config {
 		return this.config.get<T>(key);
 	}
 
-	private setConfig<T>(key: string, value: T): Thenable<void> {
-		return this.config.update(key, value, true).then(() => this.loadConfig());
+	private setConfig<T>(key: string, value: T, target: ConfigurationTarget): Thenable<void> {
+		return this.config.update(key, value, target).then(() => this.loadConfig());
 	}
 
 	get allowAnalytics() { return this.getConfig<boolean>("allowAnalytics"); }
@@ -39,7 +39,7 @@ class Config {
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
 	get reportAnalyzerErrors() { return this.getConfig<boolean>("reportAnalyzerErrors"); }
 	get userDefinedSdkPath() { return resolveHomePath(this.getConfig<string>("sdkPath")); }
-	setUserDefinedSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value); }
+	setUserDefinedSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
 	get sdkContainer() { return resolveHomePath(this.getConfig<string>("sdkContainer")); }
 
 	// Preview features.
