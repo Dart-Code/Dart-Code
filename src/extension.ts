@@ -45,8 +45,8 @@ const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
 const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
 
-export let analyzer: Analyzer;
-export let flutterDaemon: FlutterDaemon;
+let analyzer: Analyzer;
+let flutterDaemon: FlutterDaemon;
 
 let showTodos: boolean = config.showTodos, showLintNames: boolean = config.showLintNames;
 let analyzerSettings: string = getAnalyzerSettings();
