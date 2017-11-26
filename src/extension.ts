@@ -304,7 +304,7 @@ function findPackageRoots(root: string): string[] {
 	//   https://github.com/dart-lang/sdk/issues/29414 - Analyzer issue (where the real fix will be)
 
 	if (!isPackageRootWorkaroundRequired())
-		return [vs.workspace.rootPath];
+		return [root];
 
 	console.log('Workspace root appears to need package root workaround...');
 
