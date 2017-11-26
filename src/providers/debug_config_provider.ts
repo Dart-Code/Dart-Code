@@ -52,22 +52,24 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	private setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, deviceId: string) {
-		analytics.logDebuggerStart();
+		analytics.logDebuggerStart(folder.uri);
 
 		const dartExec = isWin ? "dart.exe" : "dart";
 		const flutterExec = isWin ? "flutter.bat" : "flutter";
+
+		const conf = config.for(folder.uri);
 
 		// Attach any properties that weren't explicitly set.
 		debugConfig.cwd = debugConfig.cwd || "${workspaceRoot}";
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.dartPath = debugConfig.dartPath || path.join(sdks.dart, "bin", dartExec);
-		debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || config.for(folder.uri).observatoryLogFile;
-		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || config.debugSdkLibraries;
-		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || config.debugExternalLibraries;
+		debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || conf.observatoryLogFile;
+		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || conf.debugSdkLibraries;
+		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || conf.debugExternalLibraries;
 		if (debugConfig.checkedMode === undefined)
 			debugConfig.checkedMode = true;
 		debugConfig.flutterPath = debugConfig.flutterPath || (sdks.flutter ? path.join(sdks.flutter, "bin", flutterExec) : null);
-		debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || config.for(folder.uri).flutterRunLogFile;
+		debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || conf.flutterRunLogFile;
 		debugConfig.deviceId = debugConfig.deviceId || deviceId;
 	}
 }
