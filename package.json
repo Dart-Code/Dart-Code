@@ -233,7 +233,7 @@
 				},
 				{
 					"command": "dart.changeSdk",
-					"when": "dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded"
+					"when": "dart-code:dartProjectLoaded"
 				},
 				{
 					"command": "flutter.packages.get",
