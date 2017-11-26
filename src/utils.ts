@@ -57,7 +57,7 @@ export function findSdks(): Sdks {
 	});
 
 	const flutterSdkSearchPaths = [
-		// TODO: config.flutterSdkPath,
+		config.flutterSdkPath,
 		fuchsiaRoot && path.join(fuchsiaRoot, "lib/flutter"),
 		fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter"),
 		flutterProject,

@@ -57,7 +57,7 @@ export function activate(context: vs.ExtensionContext) {
 	if (sdks.dart == null) {
 		if (sdks.projectType == util.ProjectType.Flutter) {
 			vs.window.showErrorMessage("Could not find a Flutter SDK to use. " +
-				"Please add it to your PATH or set FLUTTER_ROOT and reload.",
+				"Please add it to your PATH, set FLUTTER_ROOT or configure the 'dart.flutterSdkPath' and reload.",
 				"Go to Flutter Downloads"
 			).then(selectedItem => {
 				if (selectedItem)
@@ -387,6 +387,7 @@ function getAnalyzerSettings() {
 		+ config.analyzerObservatoryPort
 		+ config.analyzerInstrumentationLogFile
 		+ config.analyzerAdditionalArgs
+		+ config.flutterSdkPath
 		+ config.flutterDaemonLogFile
 		+ config.closingLabels
 		+ config.previewAnalyzeAngularTemplates;
