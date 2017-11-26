@@ -88,7 +88,7 @@ export function activate(context: vs.ExtensionContext) {
 		context.subscriptions.push(versionStatusItem);
 
 		// If we're set up for multiple versions, set up the command.
-		if (config.sdkContainer && fs.existsSync(config.sdkContainer))
+		if (config.sdkPaths && config.sdkPaths.length > 0)
 			versionStatusItem.command = "dart.changeSdk";
 
 		// Do update-check.
@@ -393,7 +393,7 @@ function getAnalyzerSettings() {
 	// activation time will also need to be included.
 	return "CONF-"
 		+ config.userDefinedSdkPath
-		+ config.sdkContainer
+		+ config.sdkPaths
 		+ config.analyzerLogFile
 		+ config.analyzerPath
 		+ config.analyzerDiagnosticsPort

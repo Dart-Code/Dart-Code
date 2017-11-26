@@ -40,7 +40,7 @@ class Config {
 	get reportAnalyzerErrors() { return this.getConfig<boolean>("reportAnalyzerErrors"); }
 	get userDefinedSdkPath() { return resolveHomePath(this.getConfig<string>("sdkPath")); }
 	setUserDefinedSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
-	get sdkContainer() { return resolveHomePath(this.getConfig<string>("sdkContainer")); }
+	get sdkPaths() { return (this.getConfig<string[]>("sdkPaths") || []).map(resolveHomePath); }
 
 	// Preview features.
 	get previewAnalyzeAngularTemplates() { return this.getConfig<boolean>("previewAnalyzeAngularTemplates"); }
