@@ -152,7 +152,8 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 			// Return 'package:foo/bar.dart'.
 			inputPath = `package:${pathComponents[0]}/${pathComponents.slice(1).join('/')}`;
 		} else {
-			inputPath = path.relative(workspace.rootPath, inputPath);
+			const root = workspace.getWorkspaceFolder(Uri.file(inputPath));
+			inputPath = root && path.relative(root.uri.fsPath, inputPath);
 		}
 
 		return inputPath;
