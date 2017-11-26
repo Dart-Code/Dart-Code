@@ -26,7 +26,8 @@
 	"keywords": [
 		"dart",
 		"flutter",
-		"fuchsia"
+		"fuchsia",
+		"multi-root ready"
 	],
 	"icon": "media/icon.png",
 	"activationEvents": [
