@@ -190,13 +190,12 @@ export function activate(context: vs.ExtensionContext) {
 	let diagnosticsProvider = new DartDiagnosticProvider(analyzer, diagnostics);
 
 	// Set the root...
-	if (vs.workspace.workspaceFolders) {
-		calculateAnalysisRoots();
-		analyzer.analysisSetAnalysisRoots({
-			included: analysisRoots,
-			excluded: []
-		});
-	}
+	// Handle project changes that might affect SDKs.
+	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders(f => {
+		recalculateAnalysisRoots();
+	}));
+	if (vs.workspace.workspaceFolders)
+		recalculateAnalysisRoots();
 
 	// Hook editor changes to send updated contents to analyzer.
 	let fileChangeHandler = new FileChangeHandler(analyzer);
@@ -254,9 +253,9 @@ export function activate(context: vs.ExtensionContext) {
 	}));
 
 	// Handle project changes that might affect SDKs.
-	vs.workspace.onDidChangeWorkspaceFolders(f => {
+	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders(f => {
 		handleConfigurationChange();
-	});
+	}));
 
 	// Register SDK commands.
 	let sdkCommands = new SdkCommands(context);
@@ -294,12 +293,17 @@ export function activate(context: vs.ExtensionContext) {
 	analytics.logExtensionStartup(extensionEndTime.getTime() - extensionStartTime.getTime());
 }
 
-function calculateAnalysisRoots() {
+function recalculateAnalysisRoots() {
 	let newRoots: string[] = [];
 	util.getDartWorkspaceFolders().forEach(f => {
 		newRoots = newRoots.concat(findPackageRoots(f.uri.fsPath));
 	});
 	analysisRoots = newRoots;
+
+	analyzer.analysisSetAnalysisRoots({
+		included: analysisRoots,
+		excluded: []
+	});
 }
 
 function findPackageRoots(root: string): string[] {
