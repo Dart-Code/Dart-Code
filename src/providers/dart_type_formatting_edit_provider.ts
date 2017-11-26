@@ -18,7 +18,7 @@ export class DartTypeFormattingEditProvider implements OnTypeFormattingEditProvi
 				file: document.fileName,
 				selectionOffset: 0,
 				selectionLength: 0,
-				lineLength: config.lineLength
+				lineLength: config.for(document.uri).lineLength
 			}).then(resp => {
 				if (resp.edits.length == 0)
 					resolve(null);

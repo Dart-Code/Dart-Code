@@ -365,79 +365,95 @@
 				"dart.closingLabels": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to show annotations against constructor, method invocations and lists that span multiple lines."
+					"description": "Whether to show annotations against constructor, method invocations and lists that span multiple lines.",
+					"scope": "window"
 				},
 				"dart.debugSdkLibraries": {
 					"type": "boolean",
 					"default": false,
-					"description": "Whether SDK libraries should be marked as debuggable."
+					"description": "Whether SDK libraries should be marked as debuggable.",
+					"scope": "window"
 				},
 				"dart.debugExternalLibraries": {
 					"type": "boolean",
 					"default": false,
-					"description": "Whether external libraries should be marked as debuggable."
+					"description": "Whether external libraries should be marked as debuggable.",
+					"scope": "window"
 				},
 				"dart.sdkPath": {
 					"type": "string",
-					"description": "The location of the Dart SDK to use for analyzing and executing code. If blank, Dart Code will attempt to find it from the PATH environment variable."
+					"description": "The location of the Dart SDK to use for analyzing and executing code. If blank, Dart Code will attempt to find it from the PATH environment variable.",
+					"scope": "window"
 				},
 				"dart.sdkContainer": {
 					"type": "string",
-					"description": "The location of a folder that contains multiple Dart SDKs in sub-folders. When set, the version number in the status bar will be clickable to quickly switch between SDKs."
+					"description": "The location of a folder that contains multiple Dart SDKs in sub-folders. When set, the version number in the status bar will be clickable to quickly switch between SDKs.",
+					"scope": "window"
 				},
 				"dart.lineLength": {
 					"type": "integer",
 					"default": 80,
-					"description": "The maximum length of a line of code. This is used by the document formatter."
+					"description": "The maximum length of a line of code. This is used by the document formatter.",
+					"scope": "resource"
 				},
 				"dart.insertArgumentPlaceholders": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to insert argument placeholders during code completions."
+					"description": "Whether to insert argument placeholders during code completions.",
+					"scope": "resource"
 				},
 				"dart.showTodos": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to show TODOs in the Problems list."
+					"description": "Whether to show TODOs in the Problems list.",
+					"scope": "window"
 				},
 				"dart.reportAnalyzerErrors": {
 					"type": "boolean",
 					"default": true,
-					"description": "Offer to report analysis server exceptions when they occur."
+					"description": "Offer to report analysis server exceptions when they occur.",
+					"scope": "window"
 				},
 				"dart.allowAnalytics": {
 					"type": "boolean",
 					"default": true,
-					"description": "Note: We only send a few very basic events and the platform and extension/Dart version numbers :-)"
+					"description": "Note: We only send a few very basic events and the platform and extension/Dart version numbers :-)",
+					"scope": "window"
 				},
 				"dart.checkForSdkUpdates": {
 					"type": "boolean",
 					"default": true,
-					"description": "Checks whether you are using the latest version of the Dart SDK at startup."
+					"description": "Checks whether you are using the latest version of the Dart SDK at startup.",
+					"scope": "window"
 				},
 				"dart.pubAdditionalArgs": {
 					"type": "array",
 					"default": [],
-					"description": "Additional args to pass to pub get and pub upgrade commands (eg. --packages-dir)."
+					"description": "Additional args to pass to pub get and pub upgrade commands (eg. --packages-dir).",
+					"scope": "resource"
 				},
 				"dart.runPubGetOnPubspecChanges": {
 					"type": "boolean",
 					"default": true,
-					"description": "Automatically runs `pub get` whenever pubspec.yaml is saved."
+					"description": "Automatically runs `pub get` whenever pubspec.yaml is saved.",
+					"scope": "resource"
 				},
 				"dart.showLintNames": {
 					"type": "boolean",
 					"default": false,
-					"description": "Whether to show the names of linter rules in the problems panel to make it easier to `// ignore:`."
+					"description": "Whether to show the names of linter rules in the problems panel to make it easier to `// ignore:`.",
+					"scope": "window"
 				},
 				"dart.flutterSdkPath": {
 					"type": "string",
-					"description": "The location of the Flutter SDK to use. If blank, Dart Code will attempt to find it from the project folder, FLUTTER_ROOT environment variable and the PATH environment variable."
+					"description": "The location of the Flutter SDK to use. If blank, Dart Code will attempt to find it from the project folder, FLUTTER_ROOT environment variable and the PATH environment variable.",
+					"scope": "window"
 				},
 				"dart.flutterHotReloadOnSave": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to automatically send a 'hot reload' request during a Flutter debug session when saving files."
+					"description": "Whether to automatically send a 'hot reload' request during a Flutter debug session when saving files.",
+					"scope": "window"
 				}
 			}
 		},

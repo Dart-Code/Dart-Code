@@ -1,6 +1,6 @@
 "use strict";
 
-import { workspace, WorkspaceConfiguration, version as codeVersion } from "vscode";
+import { workspace, WorkspaceConfiguration, version as codeVersion, Uri } from "vscode";
 import { versionIsAtLeast, resolveHomePath } from "./utils";
 
 class Config {
@@ -40,11 +40,7 @@ class Config {
 	get flutterHotReloadOnSave() { return this.getConfig<boolean>("flutterHotReloadOnSave"); }
 	get flutterRunLogFile() { return resolveHomePath(this.getConfig<string>("flutterRunLogFile")); }
 	get flutterSdkPath() { return resolveHomePath(this.getConfig<string>("flutterSdkPath")); }
-	get insertArgumentPlaceholders() { return this.getConfig<boolean>("insertArgumentPlaceholders"); }
-	get lineLength() { return this.getConfig<number>("lineLength"); }
 	get observatoryLogFile() { return resolveHomePath(this.getConfig<string>("observatoryLogFile")); }
-	get pubAdditionalArgs() { return this.getConfig<string[]>("pubAdditionalArgs"); }
-	get runPubGetOnPubspecChanges() { return this.getConfig<boolean>("runPubGetOnPubspecChanges"); }
 	get showLintNames() { return this.getConfig<boolean>("showLintNames"); }
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
 	get reportAnalyzerErrors() { return this.getConfig<boolean>("reportAnalyzerErrors"); }
@@ -54,6 +50,34 @@ class Config {
 
 	// Preview features.
 	get previewAnalyzeAngularTemplates() { return this.getConfig<boolean>("previewAnalyzeAngularTemplates"); }
+
+	for(uri: Uri): ResourceConfig {
+		return new ResourceConfig(uri);
+	}
+}
+
+class ResourceConfig {
+	uri: Uri;
+	config: WorkspaceConfiguration;
+
+	constructor(uri: Uri) {
+		this.uri = uri;
+		workspace.onDidChangeConfiguration(e => this.loadConfig());
+		this.loadConfig();
+	}
+
+	private loadConfig() {
+		this.config = workspace.getConfiguration("dart", this.uri);
+	}
+
+	private getConfig<T>(key: string): T {
+		return this.config.get<T>(key);
+	}
+
+	get insertArgumentPlaceholders() { return this.getConfig<boolean>("insertArgumentPlaceholders"); }
+	get lineLength() { return this.getConfig<number>("lineLength"); }
+	get pubAdditionalArgs() { return this.getConfig<string[]>("pubAdditionalArgs"); }
+	get runPubGetOnPubspecChanges() { return this.getConfig<boolean>("runPubGetOnPubspecChanges"); }
 }
 
 export class CodeCapabilities {
