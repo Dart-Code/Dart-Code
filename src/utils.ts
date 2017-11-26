@@ -215,10 +215,10 @@ export function isAnalyzableAndInWorkspace(document: TextDocument): boolean {
 	if (document.isUntitled || !document.fileName)
 		return false;
 
-	return isAnalyzable(document) && isWithinRootPath(document.fileName);
+	return isAnalyzable(document) && isWithinWorkspace(document.fileName);
 }
 
-export function isWithinRootPath(file: string) {
+export function isWithinWorkspace(file: string) {
 	// TODO: Is this fixed?
 	// asRelativePath returns the input if it's outside of the rootPath.
 	// Edit: Doesn't actually work properly:
@@ -227,12 +227,13 @@ export function isWithinRootPath(file: string) {
 	// Edit: Still doesn't work properly!
 	//   https://github.com/Microsoft/vscode/issues/33709
 
-	const relative = path.relative(workspace.rootPath, file);
+	const w = workspace.getWorkspaceFolder(Uri.file(file));
+	const relative = w && path.relative(w.uri.fsPath, file);
 	return !!relative && !relative.startsWith('..') && !path.isAbsolute(relative);
 }
 
 export function toReadonlyUriIfExternal(file: string) {
-	return isWithinRootPath(file)
+	return isWithinWorkspace(file)
 		? Uri.file(file)
 		: Uri.file(file).with({ scheme: "dart-package" });
 }

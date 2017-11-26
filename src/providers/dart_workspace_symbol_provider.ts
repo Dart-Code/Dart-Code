@@ -4,7 +4,7 @@ import { WorkspaceSymbolProvider, SymbolInformation, CancellationToken, SymbolKi
 import * as path from "path";
 import * as fs from "fs";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
-import { toRange, isWithinRootPath, logError } from "../utils";
+import { toRange, isWithinWorkspace, logError } from "../utils";
 import * as as from "../analysis/analysis_server_types";
 
 export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
@@ -92,7 +92,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		//   2. In our project.
 		let isPrivate = result.path[0].name.startsWith("_") || result.path[1].name.startsWith("_");
 
-		return isWithinRootPath(result.location.file) || !isPrivate;
+		return isWithinWorkspace(result.location.file) || !isPrivate;
 	}
 
 	private convertResult(result: as.SearchResult): SymbolInformation {
