@@ -1,3 +1,7 @@
+# v2.6.0
+
+TODO: Requires Code 1.18.
+
 # v2.5.1
 
 - Chinese characters in paths should no longer result in breakpoints not being hit during debugging
