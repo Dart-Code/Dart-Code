@@ -8,7 +8,7 @@ import * as path from "path";
 import * as project from "../project";
 import * as vs from "vscode";
 import { config } from "../config";
-import { dartPubPath, flutterPath, sdks } from "../utils";
+import { dartPubPath, flutterPath, sdks, getDartWorkspaceFolders, isDartWorkspaceFolder } from "../utils";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { SdkManager } from "../sdk/sdk_manager";
@@ -57,7 +57,7 @@ export class SdkCommands {
 		// If there's only one folder, just use it to avoid prompting the user.
 		if (!folder && vs.workspace.workspaceFolders) {
 			// TODO: Filter to Dart or Flutter projects.
-			const allowedProjects = vs.workspace.workspaceFolders.filter(f => f.uri.scheme == "file");
+			const allowedProjects = getDartWorkspaceFolders();
 			if (allowedProjects.length == 1)
 				folder = allowedProjects[0];
 		}
@@ -71,7 +71,7 @@ export class SdkCommands {
 
 		folderPromise
 			.then(f => {
-				if (f && f.uri.scheme == "file") {
+				if (isDartWorkspaceFolder(f)) {
 					handler(f.uri.fsPath, command);
 				}
 			});
