@@ -52,7 +52,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	private setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, deviceId: string) {
-		analytics.logDebuggerStart(folder.uri);
+		analytics.logDebuggerStart(folder && folder.uri);
 
 		const dartExec = isWin ? "dart.exe" : "dart";
 		const flutterExec = isWin ? "flutter.bat" : "flutter";
