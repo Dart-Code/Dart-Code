@@ -59,7 +59,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			const hasParams = suggestion.parameterNames && suggestion.parameterNames.length > 0;
 
 			// Add placeholders for params to the completion.
-			if (config.insertArgumentPlaceholders && hasParams) {
+			if (config.for(document.uri).insertArgumentPlaceholders && hasParams) {
 				let args = suggestion.parameterNames.slice(0, suggestion.requiredParameterCount);
 				let argPlaceholders = args.map((n, i) => `\${${i + 1}:${n}}`).join(", ");
 

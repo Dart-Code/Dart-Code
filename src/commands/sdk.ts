@@ -40,7 +40,7 @@ export class SdkCommands {
 
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {
-			if (config.runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() == "pubspec.yaml")
+			if (config.for(td.uri).runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() == "pubspec.yaml")
 				vs.commands.executeCommand("pub.get", td.uri);
 		}));
 	}
@@ -113,8 +113,8 @@ export class SdkCommands {
 		args.push(command);
 
 		// Allow arbitrary args to be passed.
-		if (config.pubAdditionalArgs)
-			args = args.concat(config.pubAdditionalArgs);
+		if (config.for(vs.Uri.file(folder)).pubAdditionalArgs)
+			args = args.concat(config.for(vs.Uri.file(folder)).pubAdditionalArgs);
 
 		// TODO: Add a wrapper around the Dart SDK? It could do things like
 		// return the paths for tools in the bin/ dir. 
