@@ -88,7 +88,7 @@ export function activate(context: vs.ExtensionContext) {
 		context.subscriptions.push(versionStatusItem);
 
 		// If we're set up for multiple versions, set up the command.
-		if (util.sdks.projectType == util.ProjectType.Dart && config.sdkContainer && fs.existsSync(config.sdkContainer))
+		if (config.sdkContainer && fs.existsSync(config.sdkContainer))
 			versionStatusItem.command = "dart.changeSdk";
 
 		// Do update-check.
