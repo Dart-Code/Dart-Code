@@ -1,10 +1,11 @@
 "use strict";
 
-import { env, extensions, Extension, workspace, version as codeVersion } from "vscode";
+import { env, extensions, Extension, workspace, version as codeVersion, Uri } from "vscode";
 import * as https from "https";
 import * as querystring from "querystring";
 import { config } from "./config";
 import { log, isDevelopment, extensionVersion, sdks, ProjectType } from "./utils";
+import { resolve } from "dns";
 
 // Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.
 // This is only required for debugging analytics and needn't be sent for standard Dart Code development (dev hits are already filtered with isDevelopment).
@@ -38,9 +39,9 @@ class Analytics {
 	logAnalyzerError(description: string, fatal: boolean) { this.error("AS: " + description, fatal); }
 	logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
 	logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS); }
-	logDebuggerStart() { this.event(Category.Debugger, EventAction.Activated); }
+	logDebuggerStart(resourceUri: Uri) { this.event(Category.Debugger, EventAction.Activated, resourceUri); }
 
-	private event(category: Category, action: EventAction) {
+	private event(category: Category, action: EventAction, resourceUri?: Uri) {
 		let data: any = {
 			t: "event",
 			ec: Category[category],
@@ -61,7 +62,7 @@ class Analytics {
 
 		// Include debug preference if it's a debugger start.
 		if (category == Category.Debugger && action == EventAction.Activated)
-			data.cd6 = this.getDebuggerPreference();
+			data.cd6 = this.getDebuggerPreference(resourceUri);
 
 		this.send(data);
 	}
@@ -145,12 +146,13 @@ class Analytics {
 		req.end();
 	}
 
-	private getDebuggerPreference(): string {
-		if (config.debugSdkLibraries && config.debugExternalLibraries)
+	private getDebuggerPreference(resourceUri: Uri): string {
+		const conf = config.for(resourceUri);
+		if (conf.debugSdkLibraries && conf.debugExternalLibraries)
 			return "All code";
-		else if (config.debugSdkLibraries)
+		else if (conf.debugSdkLibraries)
 			return "My code + SDK";
-		else if (config.debugExternalLibraries)
+		else if (conf.debugExternalLibraries)
 			return "My code + Libraries";
 		else
 			return "My code";

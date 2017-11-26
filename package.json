@@ -372,13 +372,13 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Whether SDK libraries should be marked as debuggable.",
-					"scope": "window"
+					"scope": "resource"
 				},
 				"dart.debugExternalLibraries": {
 					"type": "boolean",
 					"default": false,
 					"description": "Whether external libraries should be marked as debuggable.",
-					"scope": "window"
+					"scope": "resource"
 				},
 				"dart.sdkPath": {
 					"type": "string",

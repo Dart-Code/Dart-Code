@@ -32,10 +32,6 @@ class Config {
 	get analyzerAdditionalArgs() { return this.getConfig<string[]>("analyzerAdditionalArgs"); }
 	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
 	get closingLabels() { return this.getConfig<boolean>("closingLabels"); }
-	get debugSdkLibraries() { return this.getConfig<boolean>("debugSdkLibraries"); }
-	setDebugSdkLibraries(value: boolean): Thenable<void> { return this.setConfig("debugSdkLibraries", value); }
-	get debugExternalLibraries() { return this.getConfig<boolean>("debugExternalLibraries"); }
-	setDebugExternalLibraries(value: boolean): Thenable<void> { return this.setConfig("debugExternalLibraries", value); }
 	get flutterDaemonLogFile() { return resolveHomePath(this.getConfig<string>("flutterDaemonLogFile")); }
 	get flutterHotReloadOnSave() { return this.getConfig<boolean>("flutterHotReloadOnSave"); }
 	get flutterSdkPath() { return resolveHomePath(this.getConfig<string>("flutterSdkPath")); }
@@ -72,6 +68,8 @@ class ResourceConfig {
 		return this.config.get<T>(key);
 	}
 
+	get debugSdkLibraries() { return this.getConfig<boolean>("debugSdkLibraries"); }
+	get debugExternalLibraries() { return this.getConfig<boolean>("debugExternalLibraries"); }
 	get insertArgumentPlaceholders() { return this.getConfig<boolean>("insertArgumentPlaceholders"); }
 	get lineLength() { return this.getConfig<number>("lineLength"); }
 	get pubAdditionalArgs() { return this.getConfig<string[]>("pubAdditionalArgs"); }
