@@ -207,7 +207,7 @@ export function activate(context: vs.ExtensionContext) {
 	// Fire up Flutter daemon if required.	
 	if (util.sdks.projectType == util.ProjectType.Flutter) {
 		// TODO: finish wiring this up so we can manage the selected device from the status bar (eventualy - use first for now)
-		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, util.flutterPath), vs.workspace.rootPath);
+		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, util.flutterPath), sdks.flutter);
 		context.subscriptions.push(flutterDaemon);
 
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {
