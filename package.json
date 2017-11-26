@@ -46,7 +46,7 @@
 				"aliases": [
 					"Dart"
 				],
-				"configuration": "./syntaxes/dart-configuration.json"
+				"configuration": "./syntaxes/dart-language-configuration.json"
 			}
 		],
 		"grammars": [
