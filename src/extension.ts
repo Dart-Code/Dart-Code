@@ -308,6 +308,13 @@ function findPackageRoots(root: string): string[] {
 
 	console.log('Workspace root appears to need package root workaround...');
 
+	var roots = getChildren(root, 3);
+
+	if (roots.length == 0 || fs.existsSync(path.join(root, "pubspec.yaml")))
+		roots.push(root);
+
+	return roots;
+
 	function getChildren(parent: string, numLevels: number): string[] {
 		let packageRoots: string[] = [];
 		let dirs = fs.readdirSync(parent).filter(item => fs.statSync(path.join(parent, item)).isDirectory());
@@ -322,13 +329,6 @@ function findPackageRoots(root: string): string[] {
 		});
 		return packageRoots;
 	}
-
-	var roots = getChildren(root, 3);
-
-	if (roots.length == 0 || fs.existsSync(path.join(root, "pubspec.yaml")))
-		roots.push(root);
-
-	return roots;
 }
 
 function isPackageRootWorkaroundRequired(): boolean {
