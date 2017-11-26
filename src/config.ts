@@ -38,9 +38,7 @@ class Config {
 	setDebugExternalLibraries(value: boolean): Thenable<void> { return this.setConfig("debugExternalLibraries", value); }
 	get flutterDaemonLogFile() { return resolveHomePath(this.getConfig<string>("flutterDaemonLogFile")); }
 	get flutterHotReloadOnSave() { return this.getConfig<boolean>("flutterHotReloadOnSave"); }
-	get flutterRunLogFile() { return resolveHomePath(this.getConfig<string>("flutterRunLogFile")); }
 	get flutterSdkPath() { return resolveHomePath(this.getConfig<string>("flutterSdkPath")); }
-	get observatoryLogFile() { return resolveHomePath(this.getConfig<string>("observatoryLogFile")); }
 	get showLintNames() { return this.getConfig<boolean>("showLintNames"); }
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
 	get reportAnalyzerErrors() { return this.getConfig<boolean>("reportAnalyzerErrors"); }
@@ -78,6 +76,8 @@ class ResourceConfig {
 	get lineLength() { return this.getConfig<number>("lineLength"); }
 	get pubAdditionalArgs() { return this.getConfig<string[]>("pubAdditionalArgs"); }
 	get runPubGetOnPubspecChanges() { return this.getConfig<boolean>("runPubGetOnPubspecChanges"); }
+	get flutterRunLogFile() { return resolveHomePath(this.getConfig<string>("flutterRunLogFile")); }
+	get observatoryLogFile() { return resolveHomePath(this.getConfig<string>("observatoryLogFile")); }
 }
 
 export class CodeCapabilities {

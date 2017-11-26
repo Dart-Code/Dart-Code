@@ -43,7 +43,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
 		// TODO: This cast feels nasty?
-		this.setupDebugConfig(<FlutterLaunchRequestArguments><any>debugConfig, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
+		this.setupDebugConfig(folder, <FlutterLaunchRequestArguments><any>debugConfig, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
 
 		if (sdks.projectType == ProjectType.Flutter)
 			debugConfig.program = debugConfig.program || "${workspaceRoot}/lib/main.dart"; // Set Flutter default path.
@@ -51,7 +51,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return debugConfig;
 	}
 
-	private setupDebugConfig(debugConfig: FlutterLaunchRequestArguments, deviceId: string) {
+	private setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, deviceId: string) {
 		analytics.logDebuggerStart();
 
 		const dartExec = isWin ? "dart.exe" : "dart";
@@ -61,13 +61,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.cwd = debugConfig.cwd || "${workspaceRoot}";
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.dartPath = debugConfig.dartPath || path.join(sdks.dart, "bin", dartExec);
-		debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || config.observatoryLogFile;
+		debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || config.for(folder.uri).observatoryLogFile;
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || config.debugSdkLibraries;
 		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || config.debugExternalLibraries;
 		if (debugConfig.checkedMode === undefined)
 			debugConfig.checkedMode = true;
 		debugConfig.flutterPath = debugConfig.flutterPath || (sdks.flutter ? path.join(sdks.flutter, "bin", flutterExec) : null);
-		debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || config.flutterRunLogFile;
+		debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || config.for(folder.uri).flutterRunLogFile;
 		debugConfig.deviceId = debugConfig.deviceId || deviceId;
 	}
 }
