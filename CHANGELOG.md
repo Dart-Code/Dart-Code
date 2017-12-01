@@ -1,3 +1,11 @@
+# v2.5.1
+
+- Chinese characters in paths should no longer result in breakpoints not being hit during debugging
+
+### Preview Features available in this version
+
+- [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
+
 # v2.5.0
 
 - A new `Open Observatory` command is now available during Dart and Flutter debugging sessions to launch Observatory in a browser
