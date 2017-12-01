@@ -12,9 +12,9 @@ flutter_env.FLUTTER_HOST = "VSCode";
 // TODO: improve
 export function uriToFilePath(uri: string): string {
 	if (uri.startsWith("file://"))
-		return uri.substring(7);
+		return decodeURI(uri.substring(7));
 	if (uri.startsWith("file:"))
-		return uri.substring(5);
+		return decodeURI(uri.substring(5)); // TODO: Does this case ever get hit? Will it be over-decoded?
 	return uri;
 }
 
@@ -56,13 +56,13 @@ export function fileToUri(file: string): string {
 	file = file.replace(/\\/g, "/");
 
 	// Remove any existing file:/(//) prefixes.
-	file = file.replace(/^file:\/+/, "");
+	file = file.replace(/^file:\/+/, ""); // TODO: Does this case ever get hit? Will it be over-encoded?
 
 	// Remove any remaining leading slashes.
 	file = file.replace(/^\/+/, "");
 
 	// Return with file:/// prefix.	
-	return `file:///${file}`;
+	return `file:///${encodeURI(file)}`;
 }
 
 export class PromiseCompleter<T> {
