@@ -45,7 +45,7 @@ export class AnalyzerStatusReporter extends Disposable {
 			setTimeout(() => {
 				if (this.statusShowing)
 					this.statusBarItem.show();
-			}, 250);
+			}, 500);
 		} else {
 			this.statusBarItem.hide();
 		}
