@@ -160,13 +160,7 @@ export const hasDartExecutable = (pathToTest: string) => hasExecutable(pathToTes
 const hasFlutterExecutable = (pathToTest: string) => hasExecutable(pathToTest, flutterExecutableName);
 
 function hasExecutable(pathToTest: string, executableName: string): boolean {
-	try {
-		fs.accessSync(path.join(pathToTest, executableName), fs.constants.X_OK);
-		return true;
-	}
-	catch (e) { }
-
-	return false;
+	return fs.existsSync(path.join(pathToTest, executableName));
 }
 
 export function resolveHomePath(p: string) {

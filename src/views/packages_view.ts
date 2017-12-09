@@ -50,7 +50,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 				}
 			} else if (this.workspaceRoot) {
 				const packagesPath = PackageMap.findPackagesFile(path.join(this.workspaceRoot, '.packages'));
-				if (packagesPath && this.pathExists(packagesPath)) {
+				if (packagesPath && fs.existsSync(packagesPath)) {
 					resolve(this.getDepsInPackages(packagesPath));
 				}
 				else {
@@ -66,7 +66,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 		const packageRoot = path.dirname(packagesPath);
 		// yaml:file:///Users/foo/.pub-cache/hosted/pub.dartlang.org/yaml-2.1.12/lib/
 
-		if (this.pathExists(packagesPath)) {
+		if (fs.existsSync(packagesPath)) {
 			var lines = fs.readFileSync(packagesPath).toString().split("\n");
 			lines = lines.filter(l => !l.startsWith('#') && l.trim().length > 0 && !l.endsWith(":lib/"));
 			lines.sort();
@@ -96,15 +96,6 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 			return deps;
 		} else {
 			return [];
-		}
-	}
-
-	private pathExists(p: string): boolean {
-		try {
-			fs.accessSync(p);
-			return true;
-		} catch (err) {
-			return false;
 		}
 	}
 }
