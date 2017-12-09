@@ -1,6 +1,37 @@
 # v2.6.0
 
-TODO: Requires Code 1.18.
+**Note:** This version requires Visual Studio Code 1.18.
+
+### Multi-root support
+
+VS Code 1.18 gained support for multi-root workspaces, which allows multiple folders to opened at the same time. Perviously, much of Dart Code's functionality would just act on the first folder in the list. Now, all functionality should work as you would expect.
+
+- When adding a Flutter or Fuchsia project to a multi-root workspace that didn't previously have one, you will be prompted to reload to allow switching to the correct SDK
+- When running Flutter/Pub commands with multiple projects open, you will be prompted to select which folder to execute them for
+- Several settings have been promoted to resource-level which allows them to be set at a folder level even inside a multi-root workspace:
+  - `dart.insertArgumentPlaceholders`
+  - `dart.lineLength`
+  - `dart.pubAdditionalArgs`
+  - `dart.runPubGetOnPubspecChanges`
+  - `dart.flutterRunLogFile`
+  - `dart.debugSdkLibraries`
+  - `dart.debugExternalLibraries`
+  - `dart.observatoryLogFile`
+- Settings not listed above as resource-level must now be set at a User or Workspace level (VS Code will highlight such settings if you set them at a folder level)
+- The Dependency tree is hidden when you are working in a multi-rook workspace
+
+### Other Changes
+
+- SDK search paths have been simplified to make them easy to understand when trying to diagnose missing SDK issues
+- The `dart.sdkContainer` setting has been renamed to `dart.sdkPaths` and an array of multiple paths (this allows you to list several SDKs or folders full of SDKs can quickly switch between them using the SDK Version in the status bar)
+- The SDK Version switcher is now available for Flutter and Fuchsia projects
+- A new setting has been added to override the Flutter SDK location (`dart.flutterSdkPath`)
+- SDK overrides now apply to all project type (Fuchsia, Flutter, Dart)
+- The depdency tree will no longer appear in the explorer pane when there are no dependencies to show
+
+### Preview Features available in this version
+
+- [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
 
 # v2.5.1
 
