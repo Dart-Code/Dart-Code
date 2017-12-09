@@ -1,6 +1,3 @@
-"use strict";
-
-import * as path from "path";;
 import * as assert from 'assert';
 import * as util from '../src/utils';
 
@@ -24,65 +21,5 @@ describe("util.isOutOfDate", () => {
 		assert.equal(util.isOutOfDate("1.19.0-dev.0.0", "1.18.1"), false);
 		assert.equal(util.isOutOfDate("1.19.0-dev.5.0", "1.18.1"), false);
 		assert.equal(util.isOutOfDate("1.19.0-dev.7.0", "1.18.1"), false);
-	});
-});
-
-describe("util.removeDescendants", () => {
-	const isWin = /^win/.test(process.platform);
-	const sampleFolderPath = (isWin ? "X:\\" : "/tmp/");
-	it("should leave distinct paths intact", () => {
-		const input = [
-			path.join(sampleFolderPath, "a"),
-			path.join(sampleFolderPath, "b"),
-			path.join(sampleFolderPath, "c"),
-			path.join(sampleFolderPath, "d", "e")
-		];
-		const expected = input;
-		assert.deepEqual(
-			util.removeDescendants(input),
-			expected
-		);
-	});
-
-	it("should remove duplicates", () => {
-		const input = [
-			path.join(sampleFolderPath, "a"),
-			path.join(sampleFolderPath, "b"),
-			path.join(sampleFolderPath, "c"),
-			path.join(sampleFolderPath, "d", "e"),
-			path.join(sampleFolderPath, "d", "e"),
-			path.join(sampleFolderPath, "b")
-		];
-		const expected = [
-			path.join(sampleFolderPath, "a"),
-			path.join(sampleFolderPath, "b"),
-			path.join(sampleFolderPath, "c"),
-			path.join(sampleFolderPath, "d", "e")
-		];
-		assert.deepEqual(
-			util.removeDescendants(input),
-			expected
-		);
-	});
-
-	it("should remove paths already covered by ancestors", () => {
-		const input = [
-			path.join(sampleFolderPath, "a"),
-			path.join(sampleFolderPath, "b"),
-			path.join(sampleFolderPath, "c"),
-			path.join(sampleFolderPath, "d", "e"),
-			path.join(sampleFolderPath, "d"),
-			path.join(sampleFolderPath, "c", "d", "e")
-		];
-		const expected = [
-			path.join(sampleFolderPath, "a"),
-			path.join(sampleFolderPath, "b"),
-			path.join(sampleFolderPath, "c"),
-			path.join(sampleFolderPath, "d")
-		];
-		assert.deepEqual(
-			util.removeDescendants(input),
-			expected
-		);
 	});
 });
