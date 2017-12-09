@@ -348,7 +348,7 @@
 				{
 					"id": "dartPackages",
 					"name": "Dependencies",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:dartProjectLoaded && !dart-code:hidePackageTree"
 				}
 			]
 		},
