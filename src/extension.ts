@@ -300,7 +300,7 @@ function recalculateAnalysisRoots() {
 	util.getDartWorkspaceFolders().forEach(f => {
 		newRoots = newRoots.concat(findPackageRoots(f.uri.fsPath));
 	});
-	analysisRoots = util.removeDescendants(newRoots);
+	analysisRoots = newRoots;
 
 	analyzer.analysisSetAnalysisRoots({
 		included: analysisRoots,
