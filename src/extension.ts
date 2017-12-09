@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as util from "./utils";
 import * as vs from "vscode";
-import { analytics } from "./analytics";
+import { Analytics } from "./analytics";
 import { Analyzer } from "./analysis/analyzer";
 import { AnalyzerStatusReporter } from "./analyzer_status_reporter";
 import { config } from "./config";
@@ -54,7 +54,8 @@ let analyzerSettings: string = getAnalyzerSettings();
 
 export function activate(context: vs.ExtensionContext) {
 	const extensionStartTime = new Date();
-	const sdks = util.sdks;
+	const sdks = util.findSdks();
+	const analytics = new Analytics(sdks);
 	if (sdks.dart == null) {
 		if (sdks.projectType == util.ProjectType.Flutter) {
 			vs.window.showErrorMessage("Could not find a Flutter SDK to use. " +
@@ -92,7 +93,7 @@ export function activate(context: vs.ExtensionContext) {
 			versionStatusItem.command = "dart.changeSdk";
 
 		// Do update-check.
-		if (config.checkForSdkUpdates && util.sdks.projectType == util.ProjectType.Dart) {
+		if (config.checkForSdkUpdates && sdks.projectType == util.ProjectType.Dart) {
 			util.getLatestSdkVersion().then(version => {
 				if (util.isOutOfDate(sdkVersion, version))
 					vs.window.showWarningMessage(
@@ -182,7 +183,7 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE[0].language, new DartLanguageConfiguration()));
 	context.subscriptions.push(vs.workspace.registerTextDocumentContentProvider("dart-package", new DartPackageFileContentProvider()));
-	context.subscriptions.push(new AnalyzerStatusReporter(analyzer));
+	context.subscriptions.push(new AnalyzerStatusReporter(analyzer, sdks, analytics));
 
 	// Set up diagnostics.
 	let diagnostics = vs.languages.createDiagnosticCollection("dart");
@@ -205,7 +206,7 @@ export function activate(context: vs.ExtensionContext) {
 	vs.workspace.textDocuments.forEach(td => fileChangeHandler.onDidOpenTextDocument(td)); // Handle already-open files.
 
 	// Fire up Flutter daemon if required.	
-	if (util.sdks.projectType == util.ProjectType.Flutter) {
+	if (sdks.projectType == util.ProjectType.Flutter) {
 		// TODO: finish wiring this up so we can manage the selected device from the status bar (eventualy - use first for now)
 		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, util.flutterPath), sdks.flutter);
 		context.subscriptions.push(flutterDaemon);
@@ -226,9 +227,9 @@ export function activate(context: vs.ExtensionContext) {
 	}
 
 	// Set up debug stuff.
-	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider(DART_CLI_DEBUG_TYPE, new DebugConfigProvider(DART_CLI_DEBUG_TYPE, flutterDaemon && flutterDaemon.deviceManager)));
-	if (util.sdks.projectType! + util.ProjectType.Dart)
-		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider(FLUTTER_DEBUG_TYPE, new DebugConfigProvider(FLUTTER_DEBUG_TYPE, flutterDaemon && flutterDaemon.deviceManager)));
+	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider(DART_CLI_DEBUG_TYPE, new DebugConfigProvider(sdks, analytics, DART_CLI_DEBUG_TYPE, flutterDaemon && flutterDaemon.deviceManager)));
+	if (sdks.projectType != util.ProjectType.Dart)
+		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider(FLUTTER_DEBUG_TYPE, new DebugConfigProvider(sdks, analytics, FLUTTER_DEBUG_TYPE, flutterDaemon && flutterDaemon.deviceManager)));
 
 	// Setup that requires server version/capabilities.
 	let connectedSetup = analyzer.registerForServerConnected(sc => {
@@ -247,20 +248,20 @@ export function activate(context: vs.ExtensionContext) {
 	});
 
 	// Handle config changes so we can reanalyze if necessary.
-	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(handleConfigurationChange));
+	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(() => handleConfigurationChange(sdks)));
 	context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {
 		if (path.basename(td.fileName).toLowerCase() == "pubspec.yaml")
-			handleConfigurationChange();
+			handleConfigurationChange(sdks);
 	}));
 
 	// Handle project changes that might affect SDKs.
 	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders(f => {
-		handleConfigurationChange();
+		handleConfigurationChange(sdks);
 	}));
 
 	// Register SDK commands.
-	let sdkCommands = new SdkCommands(context);
-	let debugCommands = new DebugCommands(context);
+	let sdkCommands = new SdkCommands(context, sdks, analytics);
+	let debugCommands = new DebugCommands(context, analytics);
 
 	// Set up commands for Dart editors.
 	context.subscriptions.push(new EditCommands(context, analyzer));
@@ -287,7 +288,7 @@ export function activate(context: vs.ExtensionContext) {
 	promptUserForConfigs(context);
 
 	// Turn on all the commands.
-	setCommandVisiblity(true);
+	setCommandVisiblity(true, sdks.projectType);
 
 	// Log how long all this startup took.
 	let extensionEndTime = new Date();
@@ -352,7 +353,7 @@ function isPackageRootWorkaroundRequired(root: string): boolean {
 	return fs.existsSync(path.join(root, "packages", ".gitignore"));
 }
 
-function handleConfigurationChange() {
+function handleConfigurationChange(sdks: util.Sdks) {
 	// TODOs
 	let newShowTodoSetting = config.showTodos;
 	let todoSettingChanged = showTodos != newShowTodoSetting;
@@ -369,7 +370,7 @@ function handleConfigurationChange() {
 	analyzerSettings = newAnalyzerSettings;
 
 	// Project Type
-	let projectTypeChanged = util.sdks.projectType != util.findSdks().projectType;
+	let projectTypeChanged = sdks.projectType != util.findSdks().projectType;
 
 	if (todoSettingChanged || showLintNameSettingChanged) {
 		analyzer.analysisReanalyze({
@@ -407,10 +408,10 @@ function getAnalyzerSettings() {
 }
 
 export function deactivate() {
-	setCommandVisiblity(false);
+	setCommandVisiblity(false, null);
 }
 
-function setCommandVisiblity(enable: boolean) {
+function setCommandVisiblity(enable: boolean, projectType: util.ProjectType) {
 	vs.commands.executeCommand('setContext', DART_PROJECT_LOADED, enable);
-	vs.commands.executeCommand('setContext', FLUTTER_PROJECT_LOADED, enable && util.sdks.projectType == util.ProjectType.Flutter);
+	vs.commands.executeCommand('setContext', FLUTTER_PROJECT_LOADED, enable && projectType == util.ProjectType.Flutter);
 }

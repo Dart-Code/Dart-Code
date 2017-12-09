@@ -4,7 +4,7 @@ import { env, extensions, Extension, workspace, version as codeVersion, Uri } fr
 import * as https from "https";
 import * as querystring from "querystring";
 import { config } from "./config";
-import { log, isDevelopment, extensionVersion, sdks, ProjectType } from "./utils";
+import { log, isDevelopment, extensionVersion, ProjectType, Sdks } from "./utils";
 
 // Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.
 // This is only required for debugging analytics and needn't be sent for standard Dart Code development (dev hits are already filtered with isDevelopment).
@@ -26,9 +26,14 @@ enum TimingVariable {
 	FirstAnalysis
 }
 
-class Analytics {
+export class Analytics {
+	sdks: Sdks;
 	sdkVersion: string;
 	analysisServerVersion: string;
+
+	constructor(sdks: Sdks) {
+		this.sdks = sdks;
+	}
 
 	logExtensionStartup(timeInMS: number) {
 		this.event(Category.Extension, EventAction.Activated);
@@ -52,9 +57,9 @@ class Analytics {
 			data.sc = "start";
 
 		// Include additional project/setting info.
-		data.cd7 = ProjectType[sdks.projectType];
+		data.cd7 = ProjectType[this.sdks.projectType];
 		data.cd8 = config.closingLabels ? "On" : "Off";
-		if (sdks.projectType == ProjectType.Flutter)
+		if (this.sdks.projectType == ProjectType.Flutter)
 			data.cd9 = config.flutterHotReloadOnSave ? "On" : "Off";
 		data.cd10 = config.showTodos ? "On" : "Off";
 		data.cd11 = config.showLintNames ? "On" : "Off";
@@ -157,5 +162,3 @@ class Analytics {
 			return "My code";
 	}
 }
-
-export let analytics = new Analytics();

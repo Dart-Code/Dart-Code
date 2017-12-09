@@ -3,12 +3,12 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { analytics } from "./analytics";
 import { window, workspace, env, commands, extensions, StatusBarItem, Disposable, TextDocument, version as codeVersion } from "vscode";
 import { Analyzer } from "./analysis/analyzer";
 import { ServerStatusNotification, ServerErrorNotification, RequestError } from "./analysis/analysis_server_types";
 import { config } from "./config";
-import { sdks, getDartSdkVersion } from "./utils";
+import { getDartSdkVersion, Sdks } from "./utils";
+import { Analytics } from "./analytics";
 
 const maxErrorReportCount = 3;
 
@@ -20,14 +20,18 @@ export class AnalyzerStatusReporter extends Disposable {
 	private statusBarItem: StatusBarItem;
 	private statusShowing: boolean;
 	private analyzer: Analyzer;
+	private sdks: Sdks;
+	private analytics: Analytics;
 
-	constructor(analyzer: Analyzer) {
+	constructor(analyzer: Analyzer, sdks: Sdks, analytics: Analytics) {
 		super(() => this.statusBarItem.dispose());
 
 		this.statusBarItem = window.createStatusBarItem();
 		this.statusBarItem.text = "Analyzing…";
 
 		this.analyzer = analyzer;
+		this.sdks = sdks;
+		this.analytics = analytics;
 		analyzer.registerForServerStatus(n => this.handleServerStatus(n));
 		analyzer.registerForServerError(e => this.handleServerError(e));
 		analyzer.registerForRequestError(e => this.handleRequestError(e));
@@ -68,7 +72,7 @@ export class AnalyzerStatusReporter extends Disposable {
 		if (error.stackTrace)
 			console.error(error.stackTrace);
 
-		analytics.logAnalyzerError((method ? `(${method}) ` : "") + error.message, error.isFatal);
+		this.analytics.logAnalyzerError((method ? `(${method}) ` : "") + error.message, error.isFatal);
 
 		errorCount++;
 
@@ -83,7 +87,7 @@ export class AnalyzerStatusReporter extends Disposable {
 	}
 
 	private reportError(error: ServerErrorNotification, method?: string) {
-		let sdkVersion = getDartSdkVersion(sdks.dart);
+		let sdkVersion = getDartSdkVersion(this.sdks.dart);
 		let dartCodeVersion = extensions.getExtension('DanTup.dart-code').packageJSON.version;
 
 		// Attempt to get the last diagnostics

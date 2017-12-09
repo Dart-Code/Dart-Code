@@ -1,6 +1,6 @@
 "use strict";
 
-import { analytics } from "../analytics";
+import { Analytics } from "../analytics";
 import * as channels from "./channels";
 import * as child_process from "child_process";
 import * as os from "os";
@@ -8,15 +8,19 @@ import * as path from "path";
 import * as project from "../project";
 import * as vs from "vscode";
 import { config } from "../config";
-import { dartPubPath, flutterPath, sdks, getDartWorkspaceFolders, isDartWorkspaceFolder } from "../utils";
+import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolder, Sdks } from "../utils";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { SdkManager } from "../sdk/sdk_manager";
 
 export class SdkCommands {
-	constructor(context: vs.ExtensionContext) {
+	private sdks: Sdks;
+	private analytics: Analytics;
+	constructor(context: vs.ExtensionContext, sdks: Sdks, analytics: Analytics) {
+		this.sdks = sdks;
+		this.analytics = analytics;
 		// SDK commands.
-		const sdkManager = new SdkManager();
+		const sdkManager = new SdkManager(sdks);
 		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => sdkManager.changeSdk()));
 
 		// Pub commands.
@@ -92,7 +96,7 @@ export class SdkCommands {
 			args.push(option);
 		});
 
-		let flutterBinPath = path.join(sdks.flutter, flutterPath);
+		let flutterBinPath = path.join(this.sdks.flutter, flutterPath);
 		channel.appendLine(`[${shortPath}] flutter ${args.join(" ")}`);
 
 		let process = child_process.spawn(flutterBinPath, args, { "cwd": projectPath });
@@ -118,7 +122,7 @@ export class SdkCommands {
 
 		// TODO: Add a wrapper around the Dart SDK? It could do things like
 		// return the paths for tools in the bin/ dir. 
-		let pubPath = path.join(sdks.dart, dartPubPath);
+		let pubPath = path.join(this.sdks.dart, dartPubPath);
 		channel.appendLine(`[${shortPath}] pub ${args.join(" ")}`);
 
 		let process = child_process.spawn(pubPath, args, { "cwd": projectPath });
