@@ -270,9 +270,14 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(new TypeHierarchyCommand(context, analyzer));
 
 	// Register our view providers.
-	const dartPackagesProvider = new DartPackagesProvider(vs.workspace.rootPath);
+	const dartPackagesProvider = new DartPackagesProvider();
+	dartPackagesProvider.setWorkspaces(util.getDartWorkspaceFolders());
 	context.subscriptions.push(dartPackagesProvider);
 	vs.window.registerTreeDataProvider('dartPackages', dartPackagesProvider);
+	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders(f => {
+		dartPackagesProvider.setWorkspaces(util.getDartWorkspaceFolders());
+	}));
+
 	context.subscriptions.push(vs.commands.registerCommand('dart.package.openFile', filePath => {
 		if (!filePath) return;
 
