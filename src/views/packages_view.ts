@@ -5,6 +5,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { PackageMap } from "../debug/utils";
 
+const DART_HIDE_PACKAGE_TREE = "dart-code:hidePackageTree";
+
 export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataProvider<PackageDep> {
 	private watcher: vs.FileSystemWatcher;
 	private _onDidChangeTreeData: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
@@ -49,14 +51,19 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 					}));
 				}
 			} else if (this.workspaceRoot) {
+				// When we're re-parsing from root, un-hide the tree. It'll be hidden if we find nothing.
+				vs.commands.executeCommand('setContext', DART_HIDE_PACKAGE_TREE, false);
 				const packagesPath = PackageMap.findPackagesFile(path.join(this.workspaceRoot, '.packages'));
 				if (packagesPath && fs.existsSync(packagesPath)) {
 					resolve(this.getDepsInPackages(packagesPath));
 				}
 				else {
+					vs.commands.executeCommand('setContext', DART_HIDE_PACKAGE_TREE, true);
 					return resolve([]);
 				}
 			} else {
+				// Hide the tree in the case there's no root.
+				vs.commands.executeCommand('setContext', DART_HIDE_PACKAGE_TREE, true);
 				return resolve([]);
 			}
 		});
@@ -93,8 +100,12 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 					return new PackageDep(`${packageName}`, p, vs.TreeItemCollapsibleState.Collapsed);
 				}
 			}).filter(d => d);
+			// Hide the tree if we had no dependencies to show.
+			vs.commands.executeCommand('setContext', DART_HIDE_PACKAGE_TREE, !deps || !deps.length);
 			return deps;
 		} else {
+			// Hide the tree in the case of no packages file.
+			vs.commands.executeCommand('setContext', DART_HIDE_PACKAGE_TREE, true);
 			return [];
 		}
 	}
