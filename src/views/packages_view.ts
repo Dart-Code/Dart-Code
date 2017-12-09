@@ -5,8 +5,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { PackageMap } from "../debug/utils";
 
-// TODO: Listen for changes to the .packages file.
-
 export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataProvider<PackageDep> {
 	private watcher: vs.FileSystemWatcher;
 	private _onDidChangeTreeData: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
