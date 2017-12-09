@@ -325,7 +325,3 @@ export enum ProjectType {
 	Flutter,
 	Fuchsia
 }
-
-// TODO: Feels wonky putting this at bottom, but it reads from config which calls back to util.resolveHomePaths
-// so if it's at the top, it "compiles" but fails at runtime because resolveHomePaths isn't yet defined.
-export let sdks = findSdks();

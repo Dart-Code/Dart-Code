@@ -1,6 +1,6 @@
 "use strict";
 
-import { analytics } from "../analytics";
+import { Analytics } from "../analytics";
 import * as channels from "./channels";
 import * as child_process from "child_process";
 import * as os from "os";
@@ -16,6 +16,7 @@ import { FLUTTER_DEBUG_TYPE } from "../providers/debug_config_provider";
 import { Uri } from "vscode";
 
 export class DebugCommands {
+	private analytics: Analytics;
 	private debugPaintingEnabled = false;
 	private performanceOverlayEnabled = false;
 	private repaintRainbowEnabled = false;
@@ -26,7 +27,8 @@ export class DebugCommands {
 	private debugStatus = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left);
 	private observatoryUri: string = null;
 
-	constructor(context: vs.ExtensionContext) {
+	constructor(context: vs.ExtensionContext, analytics: Analytics) {
+		this.analytics = analytics;
 		context.subscriptions.push(this.debugStatus);
 		vs.debug.onDidReceiveDebugSessionCustomEvent(e => {
 			if (e.event == "dart.progress") {
