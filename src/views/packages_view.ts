@@ -11,15 +11,19 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 	private watcher: vs.FileSystemWatcher;
 	private _onDidChangeTreeData: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
 	readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this._onDidChangeTreeData.event;
+	public workspaceRoot: string;
 
-	constructor(private workspaceRoot: string) {
+	constructor() {
 		super(() => this.watcher.dispose());
-		if (workspaceRoot) {
-			this.watcher = vs.workspace.createFileSystemWatcher("**/.packages");
-			this.watcher.onDidChange(this.refresh, this);
-			this.watcher.onDidCreate(this.refresh, this);
-			this.watcher.onDidDelete(this.refresh, this);
-		}
+		this.watcher = vs.workspace.createFileSystemWatcher("**/.packages");
+		this.watcher.onDidChange(this.refresh, this);
+		this.watcher.onDidCreate(this.refresh, this);
+		this.watcher.onDidDelete(this.refresh, this);
+	}
+
+	setWorkspaces(workspaces: vs.WorkspaceFolder[]) {
+		this.workspaceRoot = workspaces && workspaces.length == 1 ? workspaces[0].uri.fsPath : null;
+		this.refresh();
 	}
 
 	refresh(): void {
