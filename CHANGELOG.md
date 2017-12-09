@@ -2,7 +2,7 @@
 
 **Note:** This version requires Visual Studio Code 1.18.
 
-### Multi-root support
+## Multi-root support
 
 VS Code 1.18 gained support for multi-root workspaces, which allows multiple folders to opened at the same time. Perviously, much of Dart Code's functionality would just act on the first folder in the list. Now, all functionality should work as you would expect.
 
@@ -20,7 +20,7 @@ VS Code 1.18 gained support for multi-root workspaces, which allows multiple fol
 - Settings not listed above as resource-level must now be set at a User or Workspace level (VS Code will highlight such settings if you set them at a folder level)
 - The Dependency tree is hidden when you are working in a multi-rook workspace
 
-### Other Changes
+## Other Changes
 
 - SDK search paths have been simplified to make them easy to understand when trying to diagnose missing SDK issues
 - The `dart.sdkContainer` setting has been renamed to `dart.sdkPaths` and an array of multiple paths (this allows you to list several SDKs or folders full of SDKs can quickly switch between them using the SDK Version in the status bar)
@@ -29,7 +29,7 @@ VS Code 1.18 gained support for multi-root workspaces, which allows multiple fol
 - SDK overrides now apply to all project type (Fuchsia, Flutter, Dart)
 - The depdency tree will no longer appear in the explorer pane when there are no dependencies to show
 
-### Preview Features available in this version
+## Preview Features available in this version
 
 - [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
 
@@ -37,7 +37,7 @@ VS Code 1.18 gained support for multi-root workspaces, which allows multiple fol
 
 - Chinese characters in paths should no longer result in breakpoints not being hit during debugging
 
-### Preview Features available in this version
+## Preview Features available in this version
 
 - [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
 
@@ -52,7 +52,7 @@ VS Code 1.18 gained support for multi-root workspaces, which allows multiple fol
 - Characters typed at the end of a line will no longer appear after the Closing Labels
 - The `dart.sdkContainer` option (which adds a quick" SDK Picker") now works if pointing directly at an SDK instead of its parent
 
-### Preview Features available in this version
+## Preview Features available in this version
 
 - [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
 
@@ -61,7 +61,7 @@ VS Code 1.18 gained support for multi-root workspaces, which allows multiple fol
 - The search path for the Flutter SDK cached by Fuchsia has been updated in line with the latest Fuchsia code
 - The `dart.userDefinedSdkPath` setting will now override the Dart SDK used for Fuchsia projects (this is temporary [until Fuchsia and Flutter get their own override](https://github.com/Dart-Code/Dart-Code/issues/440))
 
-### Preview Features available in this version
+## Preview Features available in this version
 
 - [`dart.previewClosingLabels`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against constructor, method invocations and lists that span multiple lines
 - [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
@@ -76,7 +76,7 @@ VS Code 1.18 gained support for multi-root workspaces, which allows multiple fol
   - Code that supplements the launch config with things like SDK paths before passing to the debug adapter
   - Code that passes custom commands (like Flutter's hot reload, toggle debug painting, etc.) from the IDE to the debug adapter
 
-### Preview Features available in this version
+## Preview Features available in this version
 
 - [`dart.previewClosingLabels`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against constructor, method invocations and lists that span multiple lines
 - [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
@@ -85,7 +85,7 @@ VS Code 1.18 gained support for multi-root workspaces, which allows multiple fol
 
 - The [`Closing Labels preview`](https://github.com/Dart-Code/Dart-Code/issues/383) feature will no longer show a toast popup asking for feedback every time it activates
 
-### Preview Features available in this version
+## Preview Features available in this version
 
 - [`dart.previewClosingLabels`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against constructor, method invocations and lists that span multiple lines
 - [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
@@ -100,7 +100,7 @@ VS Code 1.18 gained support for multi-root workspaces, which allows multiple fol
 - TODOs will now appear with lower priority than lints and hints in the Problems pane
 - The error message shown when the Flutter SDK cannot be find will now correctly refer to the `FLUTTER_ROOT` environment variable instead of `FLUTTER_HOME`
 
-### Preview Features available in this version
+## Preview Features available in this version
 
 - [`dart.previewClosingLabels`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against constructor, method invocations and lists that span multiple lines
 - [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
@@ -112,7 +112,7 @@ VS Code 1.18 gained support for multi-root workspaces, which allows multiple fol
 - Errors that occur when running Flutter debug commands will now be shown in the debug console
 - The [`Closing Labels preview`](https://github.com/Dart-Code/Dart-Code/issues/383) has been updated to use functionality provided by the Dart SDK which will result in better performance and improved labels (this requires SDK `v1.25.0-dev.11.0` or later)
 
-### Preview Features available in this version
+## Preview Features available in this version
 
 - [`dart.previewClosingLabels`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against constructor, method invocations and lists that span multiple lines
 - [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
@@ -121,7 +121,7 @@ VS Code 1.18 gained support for multi-root workspaces, which allows multiple fol
 
 - When working with a project that does not have trailing slashes on paths in the `.packages` file (such as dart-lang/sdk) breakpoints in packages should now work as expected.
 
-### Preview Features available in this version
+## Preview Features available in this version
 
 - **NEW** [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
 - [`dart.previewFlutterCloseTagDecorations`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against Flutter/Fuchsia widget constructor calls that span multiple lines
@@ -130,7 +130,7 @@ VS Code 1.18 gained support for multi-root workspaces, which allows multiple fol
 
 - Go-to-Definition now works in read-only files (eg. SDK or external files opened using Go-to-Definition)
 
-### Preview Features available in this version
+## Preview Features available in this version
 
 - **NEW** [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
 - [`dart.previewFlutterCloseTagDecorations`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against Flutter/Fuchsia widget constructor calls that span multiple lines
@@ -141,7 +141,7 @@ VS Code 1.18 gained support for multi-root workspaces, which allows multiple fol
 - When opening a Fuchsia project, the explorer will no longer indefinitely show a progress bar caused by trying to read dependencies
 - When using Go to Definition, files that are outside of your workspace root (eg. packages, SDK sources) will now be readonly to avoid accidental modification
 
-### Preview Features available in this version
+## Preview Features available in this version
 
 - [`dart.previewFlutterCloseTagDecorations`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against Flutter/Fuchsia widget constructor calls that span multiple lines
 
@@ -158,7 +158,7 @@ VS Code 1.18 gained support for multi-root workspaces, which allows multiple fol
   - Decorations now look more like comments, prefixed with `//` instead of `/`
   - Decorations now apply to `const` constructor calls as well as those using `new`
 
-### Preview Features available in this version
+## Preview Features available in this version
 
 - [`dart.previewFlutterCloseTagDecorations`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against Flutter/Fuchsia widget constructor calls that span multiple lines
 
@@ -168,7 +168,7 @@ VS Code 1.18 gained support for multi-root workspaces, which allows multiple fol
 - A new setting `flutterHotReloadOnSave` has been added to force a hot reload upon saving (if there are no errors in the file being saved)
 - A new `Full Restart` command is now available during Flutter debugging sessions for a full restart
 
-### Preview Features available in this version
+## Preview Features available in this version
 
 - **NEW** [`dart.previewFlutterCloseTagDecorations`](https://github.com/Dart-Code/Dart-Code/issues/383) - Show annotations against Flutter widget constructor calls that span multiple lines
 
