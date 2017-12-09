@@ -176,6 +176,15 @@ export function resolveHomePath(p: string) {
 	return p;
 }
 
+export function removeDescendants(input: string[]): string[] {
+	return input.filter((s1, i1) => !input.find((s2, i2) => {
+		let rel = path.relative(s2, s1);
+		// Return true if it's a dupe (with one that comes after; not before, else both will go)
+		// Or if its relative path doesn't start ".." (eg. if's a descendant)
+		return (s1 == s2 && i1 > i2) || (!!rel && !rel.startsWith(".."));
+	}));
+}
+
 export interface Location {
 	startLine: number;
 	startColumn: number;
