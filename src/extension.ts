@@ -48,6 +48,7 @@ const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
 let analyzer: Analyzer;
 let flutterDaemon: FlutterDaemon;
 let analysisRoots: string[] = [];
+let analytics: Analytics;
 
 let showTodos: boolean = config.showTodos, showLintNames: boolean = config.showLintNames;
 let analyzerSettings: string = getAnalyzerSettings();
@@ -55,7 +56,7 @@ let analyzerSettings: string = getAnalyzerSettings();
 export function activate(context: vs.ExtensionContext) {
 	const extensionStartTime = new Date();
 	const sdks = util.findSdks();
-	const analytics = new Analytics(sdks);
+	analytics = new Analytics(sdks);
 	if (sdks.dart == null) {
 		if (sdks.projectType == util.ProjectType.Flutter) {
 			vs.window.showErrorMessage("Could not find a Flutter SDK to use. " +
@@ -417,6 +418,7 @@ function getAnalyzerSettings() {
 }
 
 export function deactivate() {
+	analytics.logExtensionShutdown();
 	setCommandVisiblity(false, null);
 }
 

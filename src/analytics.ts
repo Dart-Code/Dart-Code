@@ -18,7 +18,8 @@ enum Category {
 
 enum EventAction {
 	Activated,
-	SdkDetectionFailure
+	SdkDetectionFailure,
+	Deactivated
 }
 
 enum TimingVariable {
@@ -39,6 +40,7 @@ export class Analytics {
 		this.event(Category.Extension, EventAction.Activated);
 		this.time(Category.Extension, TimingVariable.Startup, timeInMS);
 	};
+	logExtensionShutdown() { this.event(Category.Extension, EventAction.Deactivated); };
 	logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
 	logAnalyzerError(description: string, fatal: boolean) { this.error("AS: " + description, fatal); }
 	logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
@@ -55,6 +57,10 @@ export class Analytics {
 		// Force a session start if this is extension activation.		
 		if (category == Category.Extension && action == EventAction.Activated)
 			data.sc = "start";
+
+		// Force a session end if this is extension deactivation.		
+		if (category == Category.Extension && action == EventAction.Deactivated)
+			data.sc = "end";
 
 		// Include additional project/setting info.
 		data.cd7 = ProjectType[this.sdks.projectType];
