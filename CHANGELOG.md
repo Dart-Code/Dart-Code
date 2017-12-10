@@ -1,3 +1,12 @@
+# v2.6.1
+
+- The error message displayed when the analysis server cannot be found is more useful (previously it incorrectly reported that it had terminated)
+- An issue where the analysis server was not found if the `dart` executable in your `PATH` is a symlink (introduced in v2.6.0) has been fixed
+
+## Preview Features available in this version
+
+- [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
+
 # v2.6.0
 
 **Note:** This version requires Visual Studio Code 1.18.
