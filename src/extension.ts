@@ -112,6 +112,10 @@ export function activate(context: vs.ExtensionContext) {
 	// Fire up the analyzer process.
 	let analyzerStartTime = new Date();
 	const analyzerPath = config.analyzerPath || path.join(sdks.dart, util.analyzerPath);
+	if (!fs.existsSync(analyzerPath)) {
+		vs.window.showErrorMessage("Could not find a Dart Analysis Server at " + analyzerPath);
+		return;
+	}
 	analyzer = new Analyzer(path.join(sdks.dart, util.dartVMPath), analyzerPath);
 	context.subscriptions.push(analyzer);
 
