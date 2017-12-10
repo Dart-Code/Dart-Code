@@ -37,8 +37,11 @@ export function searchPaths(searchPaths: string[], filter: (s: string) => boolea
 			.map(p => path.basename(p) != "bin" ? path.join(p, "bin") : p) // Ensure /bin on end.
 			.find(filter);
 
-	sdkPath = sdkPath && fs.realpathSync(sdkPath);
-	sdkPath = sdkPath && path.join(sdkPath, ".."); // Take /bin back off
+	// In order to handle symlinks on the binary (not folder), we need to add the executableName and then realpath.
+	sdkPath = sdkPath && fs.realpathSync(path.join(sdkPath, executableName));
+
+	// Then we need to take the executable name and /bin back off
+	sdkPath = sdkPath && path.dirname(path.dirname(sdkPath));
 
 	return sdkPath;
 }
