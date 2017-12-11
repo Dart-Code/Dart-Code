@@ -5,7 +5,7 @@ import * as channels from "./channels";
 import * as child_process from "child_process";
 import * as os from "os";
 import * as path from "path";
-import * as project from "../project";
+import { locateBestProjectRoot } from "../project";
 import * as vs from "vscode";
 import { config } from "../config";
 import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolder, Sdks } from "../utils";
@@ -51,19 +51,21 @@ export class SdkCommands {
 
 
 	private runCommandForWorkspace(
-		handler: (folder: string, command: string) => void,
+		handler: (folder: string, command: string, shortPath: string) => void,
 		placeHolder: string,
 		command: string,
 		selection?: vs.Uri
 	) {
-		let folder = selection && vs.workspace.getWorkspaceFolder(selection);
+		let file = selection && selection.fsPath;
+		file = file || (vs.window.activeTextEditor && vs.window.activeTextEditor.document.fileName);
+		let folder = file && locateBestProjectRoot(file);
 
 		// If there's only one folder, just use it to avoid prompting the user.
 		if (!folder && vs.workspace.workspaceFolders) {
 			// TODO: Filter to Dart or Flutter projects.
 			const allowedProjects = getDartWorkspaceFolders();
 			if (allowedProjects.length == 1)
-				folder = allowedProjects[0];
+				folder = allowedProjects[0].uri.fsPath;
 		}
 
 		const folderPromise =
@@ -71,23 +73,20 @@ export class SdkCommands {
 				? Promise.resolve(folder)
 				// TODO: Can we get this filtered?
 				// https://github.com/Microsoft/vscode/issues/39132
-				: vs.window.showWorkspaceFolderPick({ placeHolder: placeHolder });
+				: vs.window.showWorkspaceFolderPick({ placeHolder: placeHolder }).then(f => f && isDartWorkspaceFolder(f) && f.uri.fsPath);
 
-		folderPromise
-			.then(f => {
-				if (isDartWorkspaceFolder(f)) {
-					handler(f.uri.fsPath, command);
-				}
-			});
+		folderPromise.then(f => {
+			let workspacePath = vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri.fsPath;
+			let shortPath = path.join(path.basename(f), path.relative(f, workspacePath));
+			handler(f, command, shortPath);
+		});
 	}
 
 	private runFlutter(command: string, selection?: vs.Uri) {
 		this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${command}" in`, command, selection);
 	}
 
-	private runFlutterInFolder(folder: string, command: string) {
-		let projectPath = project.locateBestProjectRoot(folder);
-		let shortPath = path.join(path.basename(folder), path.relative(folder, projectPath));
+	private runFlutterInFolder(folder: string, command: string, shortPath: string) {
 		let channel = channels.createChannel("Flutter");
 		channel.show(true);
 
@@ -99,7 +98,7 @@ export class SdkCommands {
 		let flutterBinPath = path.join(this.sdks.flutter, flutterPath);
 		channel.appendLine(`[${shortPath}] flutter ${args.join(" ")}`);
 
-		let process = child_process.spawn(flutterBinPath, args, { "cwd": projectPath });
+		let process = child_process.spawn(flutterBinPath, args, { "cwd": folder });
 		channels.runProcessInChannel(process, channel);
 	}
 
@@ -107,9 +106,7 @@ export class SdkCommands {
 		this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${command}" in`, command, selection);
 	}
 
-	private runPubInFolder(folder: string, command: string) {
-		let projectPath = project.locateBestProjectRoot(folder);
-		let shortPath = path.join(path.basename(folder), path.relative(folder, projectPath));
+	private runPubInFolder(folder: string, command: string, shortPath: string) {
 		let channel = channels.createChannel("Pub");
 		channel.show(true);
 
@@ -125,7 +122,7 @@ export class SdkCommands {
 		let pubPath = path.join(this.sdks.dart, dartPubPath);
 		channel.appendLine(`[${shortPath}] pub ${args.join(" ")}`);
 
-		let process = child_process.spawn(pubPath, args, { "cwd": projectPath });
+		let process = child_process.spawn(pubPath, args, { "cwd": folder });
 		channels.runProcessInChannel(process, channel);
 	}
 }

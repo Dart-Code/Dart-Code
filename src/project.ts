@@ -6,23 +6,15 @@ import * as vs from "vscode";
 import * as util from "./utils";
 
 export function locateBestProjectRoot(folder: string): string {
-	if (!folder)
+	if (!folder || !util.isWithinWorkspace(folder))
 		return null;
 
-	let editor = vs.window.activeTextEditor;
-	if (!editor)
-		return folder;
-
-	if (!util.isWithinWorkspace(editor.document.fileName))
-		return folder;
-
-	let dir = path.dirname(editor.document.fileName);
-	while (dir != folder && dir.length > 1) {
-		// TODO: existsSync is deprecated. 
+	let dir = folder;
+	while (dir.length > 1) {
 		if (fs.existsSync(path.join(dir, "pubspec.yaml")))
 			return dir;
 		dir = path.dirname(dir);
 	}
 
-	return folder;
+	return null;
 }
