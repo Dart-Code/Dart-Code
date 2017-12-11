@@ -82,7 +82,7 @@ export class SdkCommands {
 	}
 
 	private runFlutter(command: string, selection?: vs.Uri) {
-		this.runCommandForWorkspace(this.runFlutterInFolder, `Select the folder to run "flutter ${command}" in`, command, selection);
+		this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${command}" in`, command, selection);
 	}
 
 	private runFlutterInFolder(folder: string, command: string) {
@@ -104,7 +104,7 @@ export class SdkCommands {
 	}
 
 	private runPub(command: string, selection?: vs.Uri) {
-		this.runCommandForWorkspace(this.runPubInFolder, `Select the folder to run "pub ${command}" in`, command, selection);
+		this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${command}" in`, command, selection);
 	}
 
 	private runPubInFolder(folder: string, command: string) {
