@@ -959,7 +959,8 @@ export interface EditGetPostfixCompletionRequest {
 	key: string;
 
 	/**
-	 * The offset used to identify the code to which the template will be applied.
+	 * The offset used to identify the code to which the template will be
+	 * applied.
 	 */
 	offset: number;
 }
@@ -1143,7 +1144,8 @@ export interface EditIsPostfixCompletionApplicableRequest {
 	key: string;
 
 	/**
-	 * The offset used to identify the code to which the template will be applied.
+	 * The offset used to identify the code to which the template will be
+	 * applied.
 	 */
 	offset: number;
 }
@@ -1203,10 +1205,13 @@ export interface EditImportElementsRequest {
  */
 export interface EditImportElementsResponse {
 	/**
-	 * The edit(s) to be applied in order to make the specified elements
-	 * accessible.
+	 * The edits to be applied in order to make the specified elements
+	 * accessible. The file to be edited will be the defining compilation
+	 * unit of the library containing the file specified in the request,
+	 * which can be different than the file specified in the request if the
+	 * specified file is a part file.
 	 */
-	edits: SourceEdit[];
+	edit: SourceFileEdit;
 }
 
 /**
@@ -1463,10 +1468,11 @@ export interface DiagnosticGetServerPortResponse {
  * The value of this flag can be changed by other tools outside of the
  * analysis server's process. When you query the flag, you get the value of
  * the flag at a given moment. Clients should not use the value returned to
- * decide whether or not to send the sendEvent and sendTiming
- * requests. Those requests should be used unconditionally and server will
- * determine whether or not it is appropriate to forward the information to
- * the cloud at the time each request is received.
+ * decide whether or not to send the sendEvent and
+ * sendTiming requests. Those requests should be used
+ * unconditionally and server will determine whether or not it is appropriate
+ * to forward the information to the cloud at the time each request is
+ * received.
  */
 export interface AnalyticsIsEnabledResponse {
 	/**
@@ -1535,6 +1541,47 @@ export interface AnalyticsSendTimingRequest {
 	 * The duration of the event in milliseconds.
 	 */
 	millis: number;
+}
+
+/**
+ * Return the list of KytheEntry objects for some file, given the
+ * current state of the file system populated by "analysis.updateContent".
+ * 
+ * If a request is made for a file that does not exist, or that is not
+ * currently subject to analysis (e.g. because it is not associated with any
+ * analysis root specified to analysis.setAnalysisRoots), an error of type
+ * GET_KYTHE_ENTRIES_INVALID_FILE will be generated.
+ */
+export interface KytheGetKytheEntriesRequest {
+	/**
+	 * The file containing the code for which the Kythe Entry objects are
+	 * being requested.
+	 */
+	file: FilePath;
+}
+
+/**
+ * Return the list of KytheEntry objects for some file, given the
+ * current state of the file system populated by "analysis.updateContent".
+ * 
+ * If a request is made for a file that does not exist, or that is not
+ * currently subject to analysis (e.g. because it is not associated with any
+ * analysis root specified to analysis.setAnalysisRoots), an error of type
+ * GET_KYTHE_ENTRIES_INVALID_FILE will be generated.
+ */
+export interface KytheGetKytheEntriesResponse {
+	/**
+	 * The list of KytheEntry objects for the queried file.
+	 */
+	entries: KytheEntry[];
+
+	/**
+	 * The set of files paths that were required, but not in the file system,
+	 * to give a complete and accurate Kythe graph for the file. This could
+	 * be due to a referenced file that does not exist or generated files not
+	 * being generated or passed before the call to "getKytheEntries".
+	 */
+	files: FilePath[];
 }
 
 /**
@@ -2140,10 +2187,11 @@ export interface AnalysisStatus {
 }
 
 /**
- * A label that is associated with a range of code that may be useful to render at the end
- * of the range to aid code readability. For example, a constructor call that spans multiple
- * lines may result in a closing label to allow the constructor type/name to be rendered
- * alongside the closing parenthesis.
+ * A label that is associated with a range of code that may be useful to
+ * render at the end of the range to aid code readability. For example, a
+ * constructor call that spans multiple lines may result in a closing label
+ * to allow the constructor type/name to be rendered alongside the closing
+ * parenthesis.
  */
 export interface ClosingLabel {
 	/**
@@ -2157,7 +2205,8 @@ export interface ClosingLabel {
 	length: number;
 
 	/**
-	 * The label associated with this range that should be displayed to the user.
+	 * The label associated with this range that should be displayed to the
+	 * user.
 	 */
 	label: string;
 }
@@ -2455,7 +2504,8 @@ export interface PostfixTemplateDescriptor {
 	key: string;
 
 	/**
-	 * A short example of the transformation performed when the template is applied.
+	 * A short example of the transformation performed when the template is
+	 * applied.
 	 */
 	example: string;
 }
@@ -2515,6 +2565,7 @@ export type RequestErrorCode =
 	| "FORMAT_WITH_ERRORS"
 	| "GET_ERRORS_INVALID_FILE"
 	| "GET_IMPORTED_ELEMENTS_INVALID_FILE"
+	| "GET_KYTHE_ENTRIES_INVALID_FILE"
 	| "GET_NAVIGATION_INVALID_FILE"
 	| "GET_REACHABLE_SOURCES_INVALID_FILE"
 	| "IMPORT_ELEMENTS_INVALID_FILE"
@@ -3161,11 +3212,13 @@ export type ElementKind =
 	| "CLASS_TYPE_ALIAS"
 	| "COMPILATION_UNIT"
 	| "CONSTRUCTOR"
+	| "CONSTRUCTOR_INVOCATION"
 	| "ENUM"
 	| "ENUM_CONSTANT"
 	| "FIELD"
 	| "FILE"
 	| "FUNCTION"
+	| "FUNCTION_INVOCATION"
 	| "FUNCTION_TYPE_ALIAS"
 	| "GETTER"
 	| "LABEL"
@@ -3318,6 +3371,77 @@ export type HighlightRegionType =
 	| "TYPE_PARAMETER"
 	| "UNRESOLVED_INSTANCE_MEMBER_REFERENCE"
 	| "VALID_STRING_ESCAPE";
+
+/**
+ * This object matches the format and documentation of the Entry object
+ * documented in the
+ * Kythe Storage
+ * Model.
+ */
+export interface KytheEntry {
+	/**
+	 * The ticket of the source node.
+	 */
+	source: KytheVName;
+
+	/**
+	 * An edge label. The schema defines which labels are meaningful.
+	 */
+	kind?: string;
+
+	/**
+	 * The ticket of the target node.
+	 */
+	target?: KytheVName;
+
+	/**
+	 * A fact label. The schema defines which fact labels are meaningful.
+	 */
+	fact: string;
+
+	/**
+	 * The String value of the fact.
+	 */
+	value?: number[];
+}
+
+/**
+ * This object matches the format and documentation of the Vector-Name object
+ * documented in the
+ * Kythe
+ * Storage Model.
+ */
+export interface KytheVName {
+	/**
+	 * An opaque signature generated by the analyzer.
+	 */
+	signature: string;
+
+	/**
+	 * The corpus of source code this KytheVName belongs to.
+	 * Loosely, a corpus is a collection of related files, such as the
+	 * contents of a given source repository.
+	 */
+	corpus: string;
+
+	/**
+	 * A corpus-specific root label, typically a directory path or project
+	 * identifier, denoting a distinct subset of the corpus. This may also be
+	 * used to designate virtual collections like generated files.
+	 */
+	root: string;
+
+	/**
+	 * A path-structured label describing the “location” of the named object
+	 * relative to the corpus and the root.
+	 */
+	path: string;
+
+	/**
+	 * The language this name belongs to.
+	 */
+	language: string;
+}
 
 /**
  * A collection of positions that should be linked (edited simultaneously)
