@@ -159,12 +159,6 @@ export function activate(context: vs.ExtensionContext) {
 
 	var activeFileFilters = [DART_MODE];
 	if (config.previewAnalyzeAngularTemplates) {
-		vs.window.showInformationMessage("Angular analyzer plugin preview is enabled - please give feedback!",
-			"Give Feedback"
-		).then(selectedItem => {
-			if (selectedItem)
-				util.openInBrowser("https://github.com/Dart-Code/Dart-Code/issues/396");
-		});
 		// Analyze Angular2 templates, requires the angular_analyzer_plugin.
 		activeFileFilters.push(HTML_MODE);
 	}
