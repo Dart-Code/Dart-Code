@@ -126,6 +126,38 @@
 				"  $2",
 				"});"
 			]
+		},
+		"Flutter StatelessWidget": {
+			"prefix": "stless",
+			"description": "Insert a StatelessWidget",
+			"body": [
+				"class $1 extends StatelessWidget {",
+					"",
+					"\t@override",
+					"\tWidget build(BuildContext context) {",
+						"\t\t// TODO: implement",
+					"\t}",
+				  "}"
+			]
+		},
+		"Flutter StatefulWidget": {
+			"prefix": "stful",
+			"description": "Insert a StatefulWidget",
+			"body": [
+				"class $1 extends StatefulWidget {",
+					"",
+					"\t@override",
+					"\t_$1State createState() => new _$1State();",
+				"}",
+				"",
+				"class _$1State extends State<$1> {",
+					"",
+					"\t@override",
+					"\tWidget build(BuildContext context) {",
+						"\t\t// TODO: implement",
+					"\t}",
+				"}"
+			]
 		}
 	}
 }
