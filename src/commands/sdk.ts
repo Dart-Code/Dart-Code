@@ -8,7 +8,7 @@ import * as path from "path";
 import { locateBestProjectRoot } from "../project";
 import * as vs from "vscode";
 import { config } from "../config";
-import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolder, Sdks } from "../utils";
+import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolder, ProjectType, Sdks } from "../utils";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { SdkManager } from "../sdk/sdk_manager";
@@ -44,8 +44,13 @@ export class SdkCommands {
 
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {
-			if (config.for(td.uri).runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() == "pubspec.yaml")
-				vs.commands.executeCommand("pub.get", td.uri);
+			if (config.for(td.uri).runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() == "pubspec.yaml"){
+				if (sdks.projectType == ProjectType.Flutter || sdks.projectType == ProjectType.Fuchsia) {
+					vs.commands.executeCommand("flutter.packages.get");
+				} else {
+					vs.commands.executeCommand("pub.get", td.uri);
+				}
+			}
 		}));
 	}
 
