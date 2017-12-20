@@ -166,7 +166,7 @@ export function activate(context: vs.ExtensionContext) {
 	activeFileFilters.forEach((filter) => {
 		context.subscriptions.push(vs.languages.registerHoverProvider(filter, hoverProvider));
 		context.subscriptions.push(vs.languages.registerDocumentFormattingEditProvider(filter, formattingEditProvider));
-		context.subscriptions.push(vs.languages.registerCompletionItemProvider(filter, completionItemProvider, ".", ":", " ", "=", "("));
+		context.subscriptions.push(vs.languages.registerCompletionItemProvider(filter, completionItemProvider, ".", ":", " ", "=", "(", "$", "{"));
 		context.subscriptions.push(vs.languages.registerDefinitionProvider(filter, definitionProvider));
 		context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
 		context.subscriptions.push(vs.languages.registerReferenceProvider(filter, referenceProvider));
