@@ -11,11 +11,20 @@ flutter_env.FLUTTER_HOST = "VSCode";
 
 // TODO: improve
 export function uriToFilePath(uri: string): string {
+	let filePath = uri;
 	if (uri.startsWith("file://"))
-		return decodeURI(uri.substring(7));
-	if (uri.startsWith("file:"))
-		return decodeURI(uri.substring(5)); // TODO: Does this case ever get hit? Will it be over-decoded?
-	return uri;
+		filePath = decodeURI(uri.substring(7));
+	else if (uri.startsWith("file:"))
+		filePath = decodeURI(uri.substring(5)); // TODO: Does this case ever get hit? Will it be over-decoded?
+
+	// Windows fixup.
+	if (isWin) {
+		filePath = filePath.replace(/\//g, '\\');
+		if (filePath[0] == '\\')
+			filePath = filePath.substring(1);
+	}
+
+	return filePath;
 }
 
 function findFile(file: string, startLocation: string) {
