@@ -10,7 +10,7 @@ import {
 	Module
 } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { PackageMap, uriToFilePath, fileToUri, PromiseCompleter, getLocalPackageName, isWin, DartLaunchRequestArguments } from "./utils";
+import { PackageMap, uriToFilePath, PromiseCompleter, getLocalPackageName, isWin, DartLaunchRequestArguments, formatPathForVm } from "./utils";
 import {
 	ObservatoryConnection, VMEvent, VMIsolateRef, RPCError, DebuggerResult, VMStack, VMSentinel, VMObj,
 	VMFrame, VMFuncRef, VMInstanceRef, VMScriptRef, VMScript, VMSourceLocation, VMErrorRef, VMBreakpoint,
@@ -257,7 +257,7 @@ export class DartDebugSession extends DebugSession {
 		let uris = [];
 
 		// Add the raw file path.
-		uris.push(fileToUri(sourcePath));
+		uris.push(formatPathForVm(sourcePath));
 
 		// Convert to package path and add that too.
 		let packageUri = this.packageMap.convertFileToPackageUri(sourcePath);

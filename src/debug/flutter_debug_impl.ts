@@ -2,7 +2,7 @@
 
 import { DartDebugSession } from "./dart_debug_impl";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { FlutterLaunchRequestArguments, isWin, fileToUri, uriToFilePath } from "./utils";
+import { FlutterLaunchRequestArguments, isWin, uriToFilePath, formatPathForVm } from "./utils";
 import { FlutterRun } from "./flutter_run";
 import { TerminatedEvent, OutputEvent, Event } from "vscode-debugadapter";
 import * as child_process from "child_process";
@@ -74,23 +74,16 @@ export class FlutterDebugSession extends DartDebugSession {
 	 */
 	protected getPossibleSourceUris(sourcePath: string): string[] {
 		const allUris = super.getPossibleSourceUris(sourcePath);
-		const projectUri = fileToUri(this.args.cwd);
+		const projectUri = formatPathForVm(this.args.cwd);
 
 		// Map any paths over to the device-local paths.
 		allUris.slice().forEach(uri => {
 			if (uri.startsWith(projectUri)) {
 				const relativePath = uri.substr(projectUri.length);
 				const mappedPath = path.join(this.baseUri, relativePath);
-				const newUri = fileToUri(mappedPath);
+				const newUri = formatPathForVm(mappedPath);
 				allUris.push(newUri);
 			}
-		});
-
-		// Handle non-file:/// versions (Mac OS), see #357
-		allUris.slice().forEach(uri => {
-			// HACK: See https://github.com/flutter/flutter/issues/11040
-			if (uri.startsWith("file:///"))
-				allUris.push(uri.substring("file://".length));
 		});
 
 		return allUris;

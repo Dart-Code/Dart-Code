@@ -51,7 +51,7 @@ export function getLocalPackageName(entryPoint: string) {
 		return null;
 }
 
-export function fileToUri(file: string): string {
+export function formatPathForVm(file: string): string {
 	// Convert any Windows backslashes to forward slashes.
 	file = file.replace(/\\/g, "/");
 
@@ -61,8 +61,8 @@ export function fileToUri(file: string): string {
 	// Remove any remaining leading slashes.
 	file = file.replace(/^\/+/, "");
 
-	// Return with file:/// prefix.	
-	return `file:///${encodeURI(file)}`;
+	// Ensure a single slash prefix.
+	return `/${encodeURI(file)}`;
 }
 
 export class PromiseCompleter<T> {
