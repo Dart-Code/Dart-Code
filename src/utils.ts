@@ -224,9 +224,7 @@ export function isWithinWorkspace(file: string) {
 	// Edit: Still doesn't work properly!
 	//   https://github.com/Microsoft/vscode/issues/33709
 
-	const w = workspace.getWorkspaceFolder(Uri.file(file));
-	const relative = w && path.relative(w.uri.fsPath, file);
-	return !!relative && !relative.startsWith('..') && !path.isAbsolute(relative);
+	return !!workspace.getWorkspaceFolder(Uri.file(file));
 }
 
 export function toReadonlyUriIfExternal(file: string) {
