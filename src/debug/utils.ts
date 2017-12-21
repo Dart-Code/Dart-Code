@@ -73,7 +73,15 @@ export function formatPathForVm(file: string): string {
 	file = file.replace(/^\/+/, "");
 
 	// Ensure a single slash prefix.
-	return `/${encodeURI(file)}`;
+	if (file.startsWith("dart:"))
+		return file;
+	else
+		return `/${encodeURI(file)}`;
+}
+
+export function isWithinPath(file: string, folder: string) {
+	const relative = path.relative(folder, file);
+	return !!relative && !relative.startsWith('..') && !path.isAbsolute(relative);
 }
 
 export class PromiseCompleter<T> {
@@ -147,7 +155,7 @@ export class PackageMap {
 	convertFileToPackageUri(file: string): string {
 		for (let name of Object.keys(this.map)) {
 			let dir = this.map[name];
-			if (file.startsWith(dir)) {
+			if (isWithinPath(file, dir)) {
 				let rest = file.substring(dir.length);
 				// Ensure we don't start with a slash if the map didn't have a trailing slash,
 				// else we'll end up with doubles. See https://github.com/Dart-Code/Dart-Code/issues/398
