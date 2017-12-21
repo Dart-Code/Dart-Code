@@ -9,8 +9,7 @@ export const isWin = /^win/.test(process.platform);
 export const flutter_env = Object.create(process.env);
 flutter_env.FLUTTER_HOST = "VSCode";
 
-// TODO: improve
-export function uriToFilePath(uri: string): string {
+export function uriToFilePath(uri: string, returnWindowsPath: boolean = isWin): string {
 	let filePath = uri;
 	if (uri.startsWith("file://"))
 		filePath = decodeURI(uri.substring(7));
@@ -18,10 +17,13 @@ export function uriToFilePath(uri: string): string {
 		filePath = decodeURI(uri.substring(5)); // TODO: Does this case ever get hit? Will it be over-decoded?
 
 	// Windows fixup.
-	if (isWin) {
+	if (returnWindowsPath) {
 		filePath = filePath.replace(/\//g, '\\');
 		if (filePath[0] == '\\')
 			filePath = filePath.substring(1);
+	} else {
+		if (filePath[0] != '/')
+			filePath = `/${filePath}`;
 	}
 
 	return filePath;
