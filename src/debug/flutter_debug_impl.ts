@@ -90,12 +90,16 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	protected convertVMUriToSourcePath(uri: string): string {
+		// Note: Flutter device paths (and baseUri) are always linux-y (not Windows) so we need to
+		// force Linux format for remote paths.
+
 		let localPath = super.convertVMUriToSourcePath(uri);
-		const basePath = uriToFilePath(this.baseUri);
+		let localPathLinux = super.convertVMUriToSourcePath(uri, false);
 
 		// If the path is the baseUri given by flutter, we need to rewrite it into a local path for this machine.		
-		if (localPath.startsWith(basePath))
-			localPath = path.join(this.args.cwd, path.relative(basePath, localPath));
+		const basePath = uriToFilePath(this.baseUri, false);
+		if (localPathLinux.startsWith(basePath))
+			localPath = path.join(this.args.cwd, path.relative(basePath, localPathLinux));
 
 		return localPath;
 	}

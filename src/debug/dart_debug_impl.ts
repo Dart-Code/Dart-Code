@@ -697,9 +697,9 @@ export class DartDebugSession extends DebugSession {
 		return uri;
 	}
 
-	protected convertVMUriToSourcePath(uri: string): string {
+	protected convertVMUriToSourcePath(uri: string, returnWindowsPath: boolean = undefined): string {
 		if (uri.startsWith("file:"))
-			return uriToFilePath(uri);
+			return uriToFilePath(uri, returnWindowsPath);
 
 		if (uri.startsWith("package:"))
 			return this.packageMap.resolvePackageUri(uri);
@@ -849,7 +849,7 @@ class ThreadManager {
 		}
 	}
 
-	// Just resents existing breakpoints	
+	// Just resends existing breakpoints	
 	resetBreakpoints() {
 		let promises = []
 		for (let uri of Object.keys(this.bps)) {
