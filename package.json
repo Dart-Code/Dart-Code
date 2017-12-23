@@ -568,6 +568,7 @@
 		"@types/semver": "^5.4.0",
 		"@types/ws": "^0.0.38",
 		"mocha": "^3.5.3",
+		"tslint": "^5.8.0",
 		"typescript": "^2.6.2",
 		"vscode": "^1.1.10"
 	}
