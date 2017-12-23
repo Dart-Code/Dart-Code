@@ -75,7 +75,7 @@ export function findSdks(): Sdks {
 		config.userDefinedSdkPath,
 		fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart/tools/sdks", platformName, "dart-sdk"),
 		fuchsiaRoot && path.join(fuchsiaRoot, "dart/tools/sdks", platformName, "dart-sdk"),
-		flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk")
+		flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk"),
 	].concat(paths);
 
 	const dartSdkPath =
@@ -191,8 +191,7 @@ export function toRange(location: Location): Range {
 export function getDartSdkVersion(sdkRoot: string): string {
 	try {
 		return fs.readFileSync(path.join(sdkRoot, "version"), "utf8").trim();
-	}
-	catch (e) {
+	} catch (e) {
 		return null;
 	}
 }

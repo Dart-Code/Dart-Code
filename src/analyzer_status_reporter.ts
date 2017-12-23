@@ -60,9 +60,9 @@ export class AnalyzerStatusReporter extends Disposable {
 			{
 				isFatal: false,
 				message: error.message,
-				stackTrace: error.stackTrace
+				stackTrace: error.stackTrace,
 			},
-			error.method
+			error.method,
 		);
 	}
 

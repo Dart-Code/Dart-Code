@@ -4,10 +4,10 @@ import { workspace, WorkspaceConfiguration, version as codeVersion, Uri, Configu
 import { versionIsAtLeast, resolveHomePath } from "./utils";
 
 class Config {
-	config: WorkspaceConfiguration;
+	public config: WorkspaceConfiguration;
 
 	constructor() {
-		workspace.onDidChangeConfiguration(e => this.loadConfig());
+		workspace.onDidChangeConfiguration((e) => this.loadConfig());
 		this.loadConfig();
 	}
 
@@ -39,24 +39,24 @@ class Config {
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
 	get reportAnalyzerErrors() { return this.getConfig<boolean>("reportAnalyzerErrors"); }
 	get userDefinedSdkPath() { return resolveHomePath(this.getConfig<string>("sdkPath")); }
-	setUserDefinedSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
+	public setUserDefinedSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
 	get sdkPaths() { return (this.getConfig<string[]>("sdkPaths") || []).map(resolveHomePath); }
 
 	// Preview features.
 	get previewAnalyzeAngularTemplates() { return this.getConfig<boolean>("previewAnalyzeAngularTemplates"); }
 
-	for(uri: Uri): ResourceConfig {
+	public for(uri: Uri): ResourceConfig {
 		return new ResourceConfig(uri);
 	}
 }
 
 class ResourceConfig {
-	uri: Uri;
-	config: WorkspaceConfiguration;
+	public uri: Uri;
+	public config: WorkspaceConfiguration;
 
 	constructor(uri: Uri) {
 		this.uri = uri;
-		workspace.onDidChangeConfiguration(e => this.loadConfig());
+		workspace.onDidChangeConfiguration((e) => this.loadConfig());
 		this.loadConfig();
 	}
 
@@ -79,10 +79,10 @@ class ResourceConfig {
 }
 
 export class CodeCapabilities {
-	version: string;
+	public version: string;
 
-	constructor(codeVersion: string) {
-		this.version = codeVersion;
+	constructor(version: string) {
+		this.version = version;
 	}
 
 	get hasScrollableHovers() { return versionIsAtLeast(this.version, "1.6.0"); }

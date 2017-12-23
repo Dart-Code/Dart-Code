@@ -50,7 +50,8 @@ let flutterDaemon: FlutterDaemon;
 let analysisRoots: string[] = [];
 let analytics: Analytics;
 
-let showTodos: boolean = config.showTodos, showLintNames: boolean = config.showLintNames;
+let showTodos: boolean = config.showTodos;
+let showLintNames: boolean = config.showLintNames;
 let analyzerSettings: string = getAnalyzerSettings();
 
 export function activate(context: vs.ExtensionContext) {
@@ -58,20 +59,19 @@ export function activate(context: vs.ExtensionContext) {
 	const sdks = util.findSdks();
 	analytics = new Analytics(sdks);
 	if (sdks.dart == null) {
-		if (sdks.projectType == util.ProjectType.Flutter) {
+		if (sdks.projectType === util.ProjectType.Flutter) {
 			vs.window.showErrorMessage("Could not find a Flutter SDK to use. " +
 				"Please add it to your PATH, set FLUTTER_ROOT or configure the 'dart.flutterSdkPath' and reload.",
-				"Go to Flutter Downloads"
-			).then(selectedItem => {
+				"Go to Flutter Downloads",
+			).then((selectedItem) => {
 				if (selectedItem)
 					util.openInBrowser(FLUTTER_DOWNLOAD_URL);
 			});
-		}
-		else {
+		} else {
 			vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
 				"Please add it to your PATH or configure the 'dart.sdkPath' setting and reload.",
-				"Go to Dart Downloads"
-			).then(selectedItem => {
+				"Go to Dart Downloads",
+			).then((selectedItem) => {
 				if (selectedItem)
 					util.openInBrowser(DART_DOWNLOAD_URL);
 			});
@@ -81,9 +81,9 @@ export function activate(context: vs.ExtensionContext) {
 	}
 
 	// Show the SDK version in the status bar.
-	let sdkVersion = util.getDartSdkVersion(sdks.dart);
+	const sdkVersion = util.getDartSdkVersion(sdks.dart);
 	if (sdkVersion) {
-		let versionStatusItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
+		const versionStatusItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
 		versionStatusItem.text = sdkVersion;
 		versionStatusItem.tooltip = "Dart SDK Version" + ` (${util.ProjectType[sdks.projectType]})`;
 		versionStatusItem.show();
@@ -94,13 +94,13 @@ export function activate(context: vs.ExtensionContext) {
 			versionStatusItem.command = "dart.changeSdk";
 
 		// Do update-check.
-		if (config.checkForSdkUpdates && sdks.projectType == util.ProjectType.Dart) {
-			util.getLatestSdkVersion().then(version => {
+		if (config.checkForSdkUpdates && sdks.projectType === util.ProjectType.Dart) {
+			util.getLatestSdkVersion().then((version) => {
 				if (util.isOutOfDate(sdkVersion, version))
 					vs.window.showWarningMessage(
 						`Version ${version} of the Dart SDK is available (you have ${sdkVersion}). Some features of Dart Code may not work correctly with an old SDK.`,
-						"Go to Dart Downloads"
-					).then(selectedItem => {
+						"Go to Dart Downloads",
+					).then((selectedItem) => {
 						if (selectedItem)
 							util.openInBrowser(DART_DOWNLOAD_URL);
 					});
@@ -111,7 +111,7 @@ export function activate(context: vs.ExtensionContext) {
 	}
 
 	// Fire up the analyzer process.
-	let analyzerStartTime = new Date();
+	const analyzerStartTime = new Date();
 	const analyzerPath = config.analyzerPath || path.join(sdks.dart, util.analyzerPath);
 	if (!fs.existsSync(analyzerPath)) {
 		vs.window.showErrorMessage("Could not find a Dart Analysis Server at " + analyzerPath);
@@ -121,23 +121,23 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(analyzer);
 
 	// Log analysis server startup time when we get the welcome message/version.
-	let connectedEvents = analyzer.registerForServerConnected(sc => {
+	const connectedEvents = analyzer.registerForServerConnected((sc) => {
 		analytics.analysisServerVersion = sc.version;
-		let analyzerEndTime = new Date();
+		const analyzerEndTime = new Date();
 		analytics.logAnalyzerStartupTime(analyzerEndTime.getTime() - analyzerStartTime.getTime());
 		connectedEvents.dispose();
 	});
 
 	// Log analysis server first analysis completion time when it completes.
-	var analysisStartTime: Date;
-	let analysisCompleteEvents = analyzer.registerForServerStatus(ss => {
+	let analysisStartTime: Date;
+	const analysisCompleteEvents = analyzer.registerForServerStatus((ss) => {
 		// Analysis started for the first time.
 		if (ss.analysis && ss.analysis.isAnalyzing && !analysisStartTime)
 			analysisStartTime = new Date();
 
 		// Analysis ends for the first time.
 		if (ss.analysis && !ss.analysis.isAnalyzing && analysisStartTime) {
-			let analysisEndTime = new Date();
+			const analysisEndTime = new Date();
 			analytics.logAnalyzerFirstAnalysisTime(analysisEndTime.getTime() - analysisStartTime.getTime());
 			analysisCompleteEvents.dispose();
 		}
@@ -146,18 +146,18 @@ export function activate(context: vs.ExtensionContext) {
 	// TODO: Check if EventEmitter<T> would be more appropriate than our own.
 
 	// Set up providers.
-	let hoverProvider = new DartHoverProvider(analyzer);
-	let formattingEditProvider = new DartFormattingEditProvider(analyzer);
-	let typeFormattingEditProvider = new DartTypeFormattingEditProvider(analyzer);
-	let completionItemProvider = new DartCompletionItemProvider(analyzer);
-	let definitionProvider = new DartDefinitionProvider(analyzer);
-	let documentSymbolProvider = new DartDocumentSymbolProvider(analyzer);
-	let referenceProvider = new DartReferenceProvider(analyzer);
-	let documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
-	let codeActionProvider = new DartCodeActionProvider(analyzer);
-	let renameProvider = new DartRenameProvider(analyzer);
+	const hoverProvider = new DartHoverProvider(analyzer);
+	const formattingEditProvider = new DartFormattingEditProvider(analyzer);
+	const typeFormattingEditProvider = new DartTypeFormattingEditProvider(analyzer);
+	const completionItemProvider = new DartCompletionItemProvider(analyzer);
+	const definitionProvider = new DartDefinitionProvider(analyzer);
+	const documentSymbolProvider = new DartDocumentSymbolProvider(analyzer);
+	const referenceProvider = new DartReferenceProvider(analyzer);
+	const documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
+	const codeActionProvider = new DartCodeActionProvider(analyzer);
+	const renameProvider = new DartRenameProvider(analyzer);
 
-	var activeFileFilters = [DART_MODE];
+	const activeFileFilters = [DART_MODE];
 	if (config.previewAnalyzeAngularTemplates) {
 		// Analyze Angular2 templates, requires the angular_analyzer_plugin.
 		activeFileFilters.push(HTML_MODE);
@@ -185,53 +185,53 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(new AnalyzerStatusReporter(analyzer, sdks, analytics));
 
 	// Set up diagnostics.
-	let diagnostics = vs.languages.createDiagnosticCollection("dart");
+	const diagnostics = vs.languages.createDiagnosticCollection("dart");
 	context.subscriptions.push(diagnostics);
-	let diagnosticsProvider = new DartDiagnosticProvider(analyzer, diagnostics);
+	const diagnosticsProvider = new DartDiagnosticProvider(analyzer, diagnostics);
 
 	// Set the root...
 	// Handle project changes that might affect SDKs.
-	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders(f => {
+	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => {
 		recalculateAnalysisRoots();
 	}));
 	if (vs.workspace.workspaceFolders)
 		recalculateAnalysisRoots();
 
 	// Hook editor changes to send updated contents to analyzer.
-	let fileChangeHandler = new FileChangeHandler(analyzer);
-	context.subscriptions.push(vs.workspace.onDidOpenTextDocument(td => fileChangeHandler.onDidOpenTextDocument(td)));
-	context.subscriptions.push(vs.workspace.onDidChangeTextDocument(e => fileChangeHandler.onDidChangeTextDocument(e)));
-	context.subscriptions.push(vs.workspace.onDidCloseTextDocument(td => fileChangeHandler.onDidCloseTextDocument(td)));
-	vs.workspace.textDocuments.forEach(td => fileChangeHandler.onDidOpenTextDocument(td)); // Handle already-open files.
+	const fileChangeHandler = new FileChangeHandler(analyzer);
+	context.subscriptions.push(vs.workspace.onDidOpenTextDocument((td) => fileChangeHandler.onDidOpenTextDocument(td)));
+	context.subscriptions.push(vs.workspace.onDidChangeTextDocument((e) => fileChangeHandler.onDidChangeTextDocument(e)));
+	context.subscriptions.push(vs.workspace.onDidCloseTextDocument((td) => fileChangeHandler.onDidCloseTextDocument(td)));
+	vs.workspace.textDocuments.forEach((td) => fileChangeHandler.onDidOpenTextDocument(td)); // Handle already-open files.
 
-	// Fire up Flutter daemon if required.	
-	if (sdks.projectType == util.ProjectType.Flutter) {
+	// Fire up Flutter daemon if required.
+	if (sdks.projectType === util.ProjectType.Flutter) {
 		// TODO: finish wiring this up so we can manage the selected device from the status bar (eventualy - use first for now)
 		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, util.flutterPath), sdks.flutter);
 		context.subscriptions.push(flutterDaemon);
 
-		context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {
+		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
 			// Don't do if setting is not enabled.
 			if (!config.flutterHotReloadOnSave)
 				return;
 
 			// Don't do if we have errors for the saved file.
-			let errors = diagnostics.get(td.uri);
-			let hasErrors = errors && errors.find(d => d.severity == vs.DiagnosticSeverity.Error) != null;
+			const errors = diagnostics.get(td.uri);
+			const hasErrors = errors && errors.find((d) => d.severity === vs.DiagnosticSeverity.Error) != null;
 			if (hasErrors)
 				return;
 
-			vs.commands.executeCommand('flutter.hotReload');
+			vs.commands.executeCommand("flutter.hotReload");
 		}));
 	}
 
 	// Set up debug stuff.
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider(DART_CLI_DEBUG_TYPE, new DebugConfigProvider(sdks, analytics, DART_CLI_DEBUG_TYPE, flutterDaemon && flutterDaemon.deviceManager)));
-	if (sdks.projectType != util.ProjectType.Dart)
+	if (sdks.projectType !== util.ProjectType.Dart)
 		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider(FLUTTER_DEBUG_TYPE, new DebugConfigProvider(sdks, analytics, FLUTTER_DEBUG_TYPE, flutterDaemon && flutterDaemon.deviceManager)));
 
 	// Setup that requires server version/capabilities.
-	let connectedSetup = analyzer.registerForServerConnected(sc => {
+	const connectedSetup = analyzer.registerForServerConnected((sc) => {
 		connectedSetup.dispose();
 
 		if (analyzer.capabilities.supportsClosingLabels && config.closingLabels) {
@@ -239,28 +239,28 @@ export function activate(context: vs.ExtensionContext) {
 		}
 
 		// Hook open/active file changes so we can set priority files with the analyzer.
-		let openFileTracker = new OpenFileTracker(analyzer);
-		context.subscriptions.push(vs.workspace.onDidOpenTextDocument(td => openFileTracker.updatePriorityFiles()));
-		context.subscriptions.push(vs.workspace.onDidCloseTextDocument(td => openFileTracker.updatePriorityFiles()));
-		context.subscriptions.push(vs.window.onDidChangeActiveTextEditor(e => openFileTracker.updatePriorityFiles()));
+		const openFileTracker = new OpenFileTracker(analyzer);
+		context.subscriptions.push(vs.workspace.onDidOpenTextDocument((td) => openFileTracker.updatePriorityFiles()));
+		context.subscriptions.push(vs.workspace.onDidCloseTextDocument((td) => openFileTracker.updatePriorityFiles()));
+		context.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => openFileTracker.updatePriorityFiles()));
 		openFileTracker.updatePriorityFiles(); // Handle already-open files.
 	});
 
 	// Handle config changes so we can reanalyze if necessary.
 	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(() => handleConfigurationChange(sdks)));
-	context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {
-		if (path.basename(td.fileName).toLowerCase() == "pubspec.yaml")
+	context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
+		if (path.basename(td.fileName).toLowerCase() === "pubspec.yaml")
 			handleConfigurationChange(sdks);
 	}));
 
 	// Handle project changes that might affect SDKs.
-	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders(f => {
+	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => {
 		handleConfigurationChange(sdks);
 	}));
 
 	// Register SDK commands.
-	let sdkCommands = new SdkCommands(context, sdks, analytics);
-	let debugCommands = new DebugCommands(context, analytics);
+	const sdkCommands = new SdkCommands(context, sdks, analytics);
+	const debugCommands = new DebugCommands(context, analytics);
 
 	// Set up commands for Dart editors.
 	context.subscriptions.push(new EditCommands(context, analyzer));
@@ -272,17 +272,17 @@ export function activate(context: vs.ExtensionContext) {
 	const dartPackagesProvider = new DartPackagesProvider();
 	dartPackagesProvider.setWorkspaces(util.getDartWorkspaceFolders());
 	context.subscriptions.push(dartPackagesProvider);
-	vs.window.registerTreeDataProvider('dartPackages', dartPackagesProvider);
-	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders(f => {
+	vs.window.registerTreeDataProvider("dartPackages", dartPackagesProvider);
+	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => {
 		dartPackagesProvider.setWorkspaces(util.getDartWorkspaceFolders());
 	}));
 
-	context.subscriptions.push(vs.commands.registerCommand('dart.package.openFile', filePath => {
+	context.subscriptions.push(vs.commands.registerCommand("dart.package.openFile", (filePath) => {
 		if (!filePath) return;
 
-		vs.workspace.openTextDocument(filePath).then(document => {
+		vs.workspace.openTextDocument(filePath).then((document) => {
 			vs.window.showTextDocument(document, { preview: true });
-		}, error => { });
+		}, (error) => { });
 	}));
 
 	// Perform any required project upgrades.
@@ -295,20 +295,20 @@ export function activate(context: vs.ExtensionContext) {
 	setCommandVisiblity(true, sdks.projectType);
 
 	// Log how long all this startup took.
-	let extensionEndTime = new Date();
+	const extensionEndTime = new Date();
 	analytics.logExtensionStartup(extensionEndTime.getTime() - extensionStartTime.getTime());
 }
 
 function recalculateAnalysisRoots() {
 	let newRoots: string[] = [];
-	util.getDartWorkspaceFolders().forEach(f => {
+	util.getDartWorkspaceFolders().forEach((f) => {
 		newRoots = newRoots.concat(findPackageRoots(f.uri.fsPath));
 	});
 	analysisRoots = newRoots;
 
 	analyzer.analysisSetAnalysisRoots({
+		excluded: [],
 		included: analysisRoots,
-		excluded: []
 	});
 }
 
@@ -325,25 +325,24 @@ function findPackageRoots(root: string): string[] {
 	if (!isPackageRootWorkaroundRequired(root))
 		return [root];
 
-	console.log('Workspace root appears to need package root workaround...');
+	console.log("Workspace root appears to need package root workaround...");
 
-	var roots = getChildren(root, 3);
+	const roots = getChildren(root, 3);
 
-	if (roots.length == 0 || fs.existsSync(path.join(root, "pubspec.yaml")))
+	if (roots.length === 0 || fs.existsSync(path.join(root, "pubspec.yaml")))
 		roots.push(root);
 
 	return roots;
 
 	function getChildren(parent: string, numLevels: number): string[] {
 		let packageRoots: string[] = [];
-		let dirs = fs.readdirSync(parent).filter(item => fs.statSync(path.join(parent, item)).isDirectory());
-		dirs.forEach(folder => {
-			let folderPath = path.join(parent, folder);
+		const dirs = fs.readdirSync(parent).filter((item) => fs.statSync(path.join(parent, item)).isDirectory());
+		dirs.forEach((folder) => {
+			const folderPath = path.join(parent, folder);
 			// If this is a package, add it. Else, recurse (if we still have levels to go).
 			if (fs.existsSync(path.join(folderPath, "pubspec.yaml"))) {
 				packageRoots.push(folderPath);
-			}
-			else if (numLevels > 1)
+			} else if (numLevels > 1)
 				packageRoots = packageRoots.concat(getChildren(folderPath, numLevels - 1));
 		});
 		return packageRoots;
@@ -359,33 +358,33 @@ function isPackageRootWorkaroundRequired(root: string): boolean {
 
 function handleConfigurationChange(sdks: util.Sdks) {
 	// TODOs
-	let newShowTodoSetting = config.showTodos;
-	let todoSettingChanged = showTodos != newShowTodoSetting;
+	const newShowTodoSetting = config.showTodos;
+	const todoSettingChanged = showTodos !== newShowTodoSetting;
 	showTodos = newShowTodoSetting;
 
 	// Lint names.
-	let newShowLintNameSetting = config.showLintNames;
-	let showLintNameSettingChanged = showLintNames != newShowLintNameSetting;
+	const newShowLintNameSetting = config.showLintNames;
+	const showLintNameSettingChanged = showLintNames !== newShowLintNameSetting;
 	showLintNames = newShowLintNameSetting;
 
 	// SDK
-	let newAnalyzerSettings = getAnalyzerSettings();
-	let analyzerSettingsChanged = analyzerSettings != newAnalyzerSettings;
+	const newAnalyzerSettings = getAnalyzerSettings();
+	const analyzerSettingsChanged = analyzerSettings !== newAnalyzerSettings;
 	analyzerSettings = newAnalyzerSettings;
 
 	// Project Type
-	let projectTypeChanged = sdks.projectType != util.findSdks().projectType;
+	const projectTypeChanged = sdks.projectType !== util.findSdks().projectType;
 
 	if (todoSettingChanged || showLintNameSettingChanged) {
 		analyzer.analysisReanalyze({
-			roots: analysisRoots
+			roots: analysisRoots,
 		});
 	}
 
 	if (analyzerSettingsChanged || projectTypeChanged) {
 		const reloadAction: string = "Reload Project";
-		vs.window.showWarningMessage("The Dart SDK settings have been changed. Save your changes then reload the project to restart the analyzer.", reloadAction).then(res => {
-			if (res == reloadAction)
+		vs.window.showWarningMessage("The Dart SDK settings have been changed. Save your changes then reload the project to restart the analyzer.", reloadAction).then((res) => {
+			if (res === reloadAction)
 				vs.commands.executeCommand("workbench.action.reloadWindow");
 		});
 	}
@@ -417,6 +416,6 @@ export function deactivate() {
 }
 
 function setCommandVisiblity(enable: boolean, projectType: util.ProjectType) {
-	vs.commands.executeCommand('setContext', DART_PROJECT_LOADED, enable);
-	vs.commands.executeCommand('setContext', FLUTTER_PROJECT_LOADED, enable && projectType == util.ProjectType.Flutter);
+	vs.commands.executeCommand("setContext", DART_PROJECT_LOADED, enable);
+	vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && projectType === util.ProjectType.Flutter);
 }

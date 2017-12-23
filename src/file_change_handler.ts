@@ -12,25 +12,25 @@ export class FileChangeHandler {
 		this.analyzer = analyzer;
 	}
 
-	onDidOpenTextDocument(document: vs.TextDocument) {
+	public onDidOpenTextDocument(document: vs.TextDocument) {
 		if (!util.isAnalyzableAndInWorkspace(document))
 			return;
 
-		let files: { [key: string]: as.AddContentOverlay } = {};
+		const files: { [key: string]: as.AddContentOverlay } = {};
 
 		files[document.fileName] = {
+			content: document.getText(),
 			type: "add",
-			content: document.getText()
 		};
 
-		this.analyzer.analysisUpdateContent({ files: files });
+		this.analyzer.analysisUpdateContent({ files });
 	}
 
-	onDidChangeTextDocument(e: vs.TextDocumentChangeEvent) {
+	public onDidChangeTextDocument(e: vs.TextDocumentChangeEvent) {
 		if (!util.isAnalyzableAndInWorkspace(e.document))
 			return;
 
-		if (e.contentChanges.length == 0) // This event fires for metadata changes (dirty?) so don't need to notify AS then.
+		if (e.contentChanges.length === 0) // This event fires for metadata changes (dirty?) so don't need to notify AS then.
 			return;
 
 		// TODO: Fix this...
@@ -41,48 +41,47 @@ export class FileChangeHandler {
 		//
 		// As a workaround, we just send the full contents if there was more than one edit.
 
-		if (e.contentChanges.length == 1) {
-			let files: { [key: string]: as.ChangeContentOverlay } = {};
+		if (e.contentChanges.length === 1) {
+			const files: { [key: string]: as.ChangeContentOverlay } = {};
 
 			files[e.document.fileName] = {
+				edits: e.contentChanges.map((c) => this.convertChange(e.document, c)),
 				type: "change",
-				edits: e.contentChanges.map(c => this.convertChange(e.document, c))
 			};
 
-			this.analyzer.analysisUpdateContent({ files: files });
-		}
-		else {
+			this.analyzer.analysisUpdateContent({ files });
+		} else {
 			// TODO: Remove this block when the bug is fixed (or we figure out it's not a bug).
-			let files: { [key: string]: as.AddContentOverlay } = {};
+			const files: { [key: string]: as.AddContentOverlay } = {};
 
 			files[e.document.fileName] = {
+				content: e.document.getText(),
 				type: "add",
-				content: e.document.getText()
 			};
 
-			this.analyzer.analysisUpdateContent({ files: files });
+			this.analyzer.analysisUpdateContent({ files });
 		}
 	}
 
-	onDidCloseTextDocument(document: vs.TextDocument) {
+	public onDidCloseTextDocument(document: vs.TextDocument) {
 		if (!util.isAnalyzableAndInWorkspace(document))
 			return;
 
-		let files: { [key: string]: as.RemoveContentOverlay } = {};
+		const files: { [key: string]: as.RemoveContentOverlay } = {};
 
 		files[document.fileName] = {
-			type: "remove"
+			type: "remove",
 		};
 
-		this.analyzer.analysisUpdateContent({ files: files });
+		this.analyzer.analysisUpdateContent({ files });
 	}
 
 	private convertChange(document: vs.TextDocument, change: vs.TextDocumentContentChangeEvent): as.SourceEdit {
 		return {
-			offset: document.offsetAt(change.range.start),
+			id: "",
 			length: change.rangeLength,
+			offset: document.offsetAt(change.range.start),
 			replacement: change.text,
-			id: ""
-		}
+		};
 	}
 }
