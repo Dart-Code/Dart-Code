@@ -20,5 +20,7 @@ build_script:
 
     npm run vscode:prepublish --silent
 
+    npm run lint --silent
+
 test_script:
 - cmd: npm test

@@ -29,4 +29,5 @@ install:
 
 script:
   - npm run vscode:prepublish
+  - npm run lint
   - npm test
