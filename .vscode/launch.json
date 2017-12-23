@@ -14,7 +14,7 @@
 			"outFiles": [
 				"${workspaceRoot}/out/src/**/*.js"
 			],
-			"preLaunchTask": "npm"
+			"preLaunchTask": "npm: watch"
 		},
 		{
 			"name": "Dart Debug Server",
@@ -58,7 +58,7 @@
 			"outFiles": [
 				"${workspaceRoot}/out/test/**/*.js"
 			],
-			"preLaunchTask": "npm"
+			"preLaunchTask": "npm: watch"
 		}
 	],
 	"compounds": [
