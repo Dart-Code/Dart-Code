@@ -134,7 +134,7 @@ function findFuchsiaRoot(folder: string): string {
 				if (fs.statSync(path.join(dir, ".jiri_root")).isDirectory()) {
 					return dir;
 				}
-			} catch (e) { }
+			} catch { }
 
 			const parentDir = path.dirname(dir);
 			if (dir === parentDir)

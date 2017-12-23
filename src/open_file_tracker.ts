@@ -35,6 +35,7 @@ export class OpenFileTracker {
 		// Set priority files.
 		this.analyzer.analysisSetPriorityFiles({
 			files: priorityFiles,
+			// tslint:disable-next-line:no-empty
 		}).then(() => { }, util.logError);
 
 		// Set subscriptions.

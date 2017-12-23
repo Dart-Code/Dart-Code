@@ -4,7 +4,7 @@ import { openInBrowser } from "./utils";
 
 export function promptUserForConfigs(context: vs.ExtensionContext) {
 	// Ensure we only prompt with one question max per session!
-	(!config.closingLabels && prompt(context, "closingLabelsDisabled", promptForClosingLabelsDisabled));
+	return (!config.closingLabels && prompt(context, "closingLabelsDisabled", promptForClosingLabelsDisabled));
 }
 
 function prompt(context: vs.ExtensionContext, key: string, prompt: () => Thenable<boolean>): boolean {

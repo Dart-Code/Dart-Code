@@ -282,7 +282,7 @@ export function activate(context: vs.ExtensionContext) {
 
 		vs.workspace.openTextDocument(filePath).then((document) => {
 			vs.window.showTextDocument(document, { preview: true });
-		}, (error) => { });
+		}, (error) => util.logError);
 	}));
 
 	// Perform any required project upgrades.
