@@ -1,3 +1,10 @@
 {
-	"extends": []
+	"extends": [
+		"tslint:recommended"
+	],
+	"rules": {
+		"indent": {
+			"options": "tabs"
+		}
+	}
 }
