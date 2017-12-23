@@ -1,5 +1,7 @@
 {
-	"extends": [],
+	"extends": [
+		"tslint:recommended"
+	],
 	"linterOptions": {
 		"exclude": [
 			"src/analysis/analysis_server_types.ts",
@@ -12,6 +14,15 @@
 		},
 		"curly": false,
 		"no-console": false,
-		"max-classes-per-file": false
+		"max-classes-per-file": false,
+		"interface-name": false,
+		"member-ordering": false,
+		"no-empty": {
+			"options": "allow-empty-catch"
+		},
+		// TODO: Consider re-enabling these?
+		"max-line-length": false,
+		"ordered-imports": false,
+		"no-shadowed-variable": false
 	}
 }
