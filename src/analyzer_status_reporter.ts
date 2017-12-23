@@ -32,9 +32,9 @@ export class AnalyzerStatusReporter extends Disposable {
 		this.analyzer = analyzer;
 		this.sdks = sdks;
 		this.analytics = analytics;
-		analyzer.registerForServerStatus(n => this.handleServerStatus(n));
-		analyzer.registerForServerError(e => this.handleServerError(e));
-		analyzer.registerForRequestError(e => this.handleRequestError(e));
+		analyzer.registerForServerStatus((n) => this.handleServerStatus(n));
+		analyzer.registerForServerError((e) => this.handleServerError(e));
+		analyzer.registerForRequestError((e) => this.handleRequestError(e));
 	}
 
 	private handleServerStatus(status: ServerStatusNotification) {
@@ -79,22 +79,22 @@ export class AnalyzerStatusReporter extends Disposable {
 		// Offer to report the error.
 		if (config.reportAnalyzerErrors && errorCount <= maxErrorReportCount) {
 			const shouldReport: string = "Generate error report";
-			window.showErrorMessage(`Exception from the Dart analysis server: ${error.message}`, shouldReport).then(res => {
-				if (res == shouldReport)
+			window.showErrorMessage(`Exception from the Dart analysis server: ${error.message}`, shouldReport).then((res) => {
+				if (res === shouldReport)
 					this.reportError(error, method);
 			});
 		}
 	}
 
 	private reportError(error: ServerErrorNotification, method?: string) {
-		let sdkVersion = getDartSdkVersion(this.sdks.dart);
-		let dartCodeVersion = extensions.getExtension('DanTup.dart-code').packageJSON.version;
+		const sdkVersion = getDartSdkVersion(this.sdks.dart);
+		const dartCodeVersion = extensions.getExtension("DanTup.dart-code").packageJSON.version;
 
 		// Attempt to get the last diagnostics
-		let diagnostics = this.analyzer.getLastDiagnostics();
-		let analyzerArgs = this.analyzer.getAnalyzerLaunchArgs();
+		const diagnostics = this.analyzer.getLastDiagnostics();
+		const analyzerArgs = this.analyzer.getAnalyzerLaunchArgs();
 
-		let data = `
+		const data = `
 Please review the below report for any information you do not wish to share and report to
   https://github.com/dart-lang/sdk/issues/new
 
@@ -103,7 +103,7 @@ Exception from analysis server (running from VSCode / Dart Code)
 ### What I was doing
 
 (please describe what you were doing when this exception occurred)
-${method ? '\n### Request\n\nWhile responding to request: `' + method + '`\n' : ''}
+${method ? "\n### Request\n\nWhile responding to request: `" + method + "`\n" : ""}
 ### Versions
 
 - Dart SDK ${sdkVersion}
@@ -115,23 +115,23 @@ ${method ? '\n### Request\n\nWhile responding to request: `' + method + '`\n' : 
 The analyzer was launched with the arguments:
 
 \`\`\`text
-${analyzerArgs.join('\n')}
+${analyzerArgs.join("\n")}
 \`\`\`
 
-### Exception${error.isFatal ? ' (fatal)' : ''}
+### Exception${error.isFatal ? " (fatal)" : ""}
 
 ${error.message}
 
 \`\`\`text
 ${error.stackTrace.trim()}
 \`\`\`
-${diagnostics ? '\nDiagnostics requested after the error occurred are:\n\n```js\n' + JSON.stringify(diagnostics, null, 4) + '\n```\n' : ''}
+${diagnostics ? "\nDiagnostics requested after the error occurred are:\n\n```js\n" + JSON.stringify(diagnostics, null, 4) + "\n```\n" : ""}
 `;
 
-		let fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.md`;
-		let tempPath = path.join(os.tmpdir(), fileName);
+		const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.md`;
+		const tempPath = path.join(os.tmpdir(), fileName);
 		fs.writeFileSync(tempPath, data);
-		workspace.openTextDocument(tempPath).then(document => {
+		workspace.openTextDocument(tempPath).then((document) => {
 			window.showTextDocument(document);
 		});
 	}

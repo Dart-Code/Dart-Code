@@ -8,91 +8,91 @@ import { log, isDevelopment, extensionVersion, ProjectType, Sdks } from "./utils
 
 // Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.
 // This is only required for debugging analytics and needn't be sent for standard Dart Code development (dev hits are already filtered with isDevelopment).
-let debug = false;
+const debug = false;
 
 enum Category {
 	Extension,
 	Analyzer,
-	Debugger
+	Debugger,
 }
 
 enum EventAction {
 	Activated,
 	SdkDetectionFailure,
-	Deactivated
+	Deactivated,
 }
 
 enum TimingVariable {
 	Startup,
-	FirstAnalysis
+	FirstAnalysis,
 }
 
 export class Analytics {
-	sdks: Sdks;
-	sdkVersion: string;
-	analysisServerVersion: string;
+	public sdks: Sdks;
+	public sdkVersion: string;
+	public analysisServerVersion: string;
 
 	constructor(sdks: Sdks) {
 		this.sdks = sdks;
 	}
 
-	logExtensionStartup(timeInMS: number) {
+	public logExtensionStartup(timeInMS: number) {
 		this.event(Category.Extension, EventAction.Activated);
 		this.time(Category.Extension, TimingVariable.Startup, timeInMS);
-	};
-	logExtensionShutdown() { this.event(Category.Extension, EventAction.Deactivated); };
-	logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
-	logAnalyzerError(description: string, fatal: boolean) { this.error("AS: " + description, fatal); }
-	logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
-	logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS); }
-	logDebuggerStart(resourceUri: Uri) { this.event(Category.Debugger, EventAction.Activated, resourceUri); }
+	}
+	public logExtensionShutdown() { this.event(Category.Extension, EventAction.Deactivated); }
+	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
+	public logAnalyzerError(description: string, fatal: boolean) { this.error("AS: " + description, fatal); }
+	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
+	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS); }
+	public logDebuggerStart(resourceUri: Uri) { this.event(Category.Debugger, EventAction.Activated, resourceUri); }
 
 	private event(category: Category, action: EventAction, resourceUri?: Uri) {
-		let data: any = {
-			t: "event",
-			ec: Category[category],
+		const data: any = {
 			ea: EventAction[action],
+			ec: Category[category],
+			t: "event",
 		};
 
-		// Force a session start if this is extension activation.		
-		if (category == Category.Extension && action == EventAction.Activated)
+		// Force a session start if this is extension activation.
+		if (category === Category.Extension && action === EventAction.Activated)
 			data.sc = "start";
 
-		// Force a session end if this is extension deactivation.		
-		if (category == Category.Extension && action == EventAction.Deactivated)
+		// Force a session end if this is extension deactivation.
+		if (category === Category.Extension && action === EventAction.Deactivated)
 			data.sc = "end";
 
 		// Include additional project/setting info.
 		data.cd7 = ProjectType[this.sdks.projectType];
 		data.cd8 = config.closingLabels ? "On" : "Off";
-		if (this.sdks.projectType == ProjectType.Flutter)
+		if (this.sdks.projectType === ProjectType.Flutter)
 			data.cd9 = config.flutterHotReloadOnSave ? "On" : "Off";
 		data.cd10 = config.showTodos ? "On" : "Off";
 		data.cd11 = config.showLintNames ? "On" : "Off";
 
 		// Include debug preference if it's a debugger start.
-		if (category == Category.Debugger && action == EventAction.Activated)
+		if (category === Category.Debugger && action === EventAction.Activated)
 			data.cd6 = this.getDebuggerPreference(resourceUri);
 
 		this.send(data);
 	}
 
 	private time(category: Category, timingVariable: TimingVariable, timeInMS: number) {
-		let data: any = {
+		const data: any = {
 			t: "timing",
 			utc: Category[category],
+			utt: Math.round(timeInMS),
 			utv: TimingVariable[timingVariable],
-			utt: Math.round(timeInMS)
 		};
 
 		this.send(data);
 	}
 
 	private error(description: string, fatal: boolean) {
-		let data: any = {
-			t: "exception",
+		const data: any = {
 			exd: description.split(/[\n\{\/\\]/)[0].substring(0, 150).trim(),
-			exf: fatal ? 1 : 0
+			exf: fatal ? 1 : 0,
+			t: "exception",
 		};
 
 		this.send(data);
@@ -102,11 +102,7 @@ export class Analytics {
 		if (!config.allowAnalytics)
 			return;
 
-		let data: any = {
-			v: "1", // API Version.
-			tid: "UA-2201586-19",
-			cid: env.machineId,
-			ul: env.language,
+		const data: any = {
 			an: "Dart Code",
 			av: extensionVersion,
 			cd1: isDevelopment,
@@ -114,29 +110,33 @@ export class Analytics {
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,
 			cd5: codeVersion,
+			cid: env.machineId,
+			tid: "UA-2201586-19",
+			ul: env.language,
+			v: "1", // API Version.
 		};
 
-		// Copy custom data over.		
+		// Copy custom data over.
 		Object.assign(data, customData);
 
 		if (debug)
 			console.log("Sending analytic: " + JSON.stringify(data));
 
 		const options: https.RequestOptions = {
-			hostname: "www.google-analytics.com",
-			port: 443,
-			path: debug ? "/debug/collect" : "/collect",
-			method: "POST",
 			headers: {
-				"Content-Type": "application/x-www-form-urlencoded"
-			}
+				"Content-Type": "application/x-www-form-urlencoded",
+			},
+			hostname: "www.google-analytics.com",
+			method: "POST",
+			path: debug ? "/debug/collect" : "/collect",
+			port: 443,
 		};
 
-		let req = https.request(options, resp => {
+		const req = https.request(options, (resp) => {
 			if (debug)
-				resp.on("data", c => {
+				resp.on("data", (c) => {
 					try {
-						var gaDebugResp = JSON.parse(c.toString());
+						const gaDebugResp = JSON.parse(c.toString());
 						if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
 							console.log("Sent OK!");
 						else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
