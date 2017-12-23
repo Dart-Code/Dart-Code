@@ -23,7 +23,7 @@ export const isDevelopment = checkIsDevelopment();
 
 export function referencesFlutterSdk(folder: string): boolean {
 	if (folder && fs.existsSync(path.join(folder, "pubspec.yaml"))) {
-		const regex = new RegExp('sdk\\s*:\\s*flutter', 'i');
+		const regex = new RegExp("sdk\\s*:\\s*flutter", "i");
 		return regex.test(fs.readFileSync(path.join(folder, "pubspec.yaml")).toString());
 	}
 	return false;
@@ -32,9 +32,9 @@ export function referencesFlutterSdk(folder: string): boolean {
 export function searchPaths(searchPaths: string[], filter: (s: string) => boolean, executableName: string): string {
 	let sdkPath =
 		searchPaths
-			.filter(p => p)
+			.filter((p) => p)
 			.map(resolveHomePath)
-			.map(p => path.basename(p) != "bin" ? path.join(p, "bin") : p) // Ensure /bin on end.
+			.map((p) => path.basename(p) !== "bin" ? path.join(p, "bin") : p) // Ensure /bin on end.
 			.find(filter);
 
 	// In order to handle symlinks on the binary (not folder), we need to add the executableName and then realpath.
@@ -48,12 +48,13 @@ export function searchPaths(searchPaths: string[], filter: (s: string) => boolea
 
 export function findSdks(): Sdks {
 	const folders = getDartWorkspaceFolders()
-		.map(w => w.uri.fsPath);
-	const paths = (<string>process.env.PATH).split(path.delimiter);
-	const platformName = isWin ? "win" : process.platform == "darwin" ? "mac" : "linux";
+		.map((w) => w.uri.fsPath);
+	const paths = (process.env.PATH as string).split(path.delimiter);
+	const platformName = isWin ? "win" : process.platform === "darwin" ? "mac" : "linux";
 
-	let fuchsiaRoot: string, flutterProject: string;
-	folders.forEach(folder => {
+	let fuchsiaRoot: string;
+	let flutterProject: string;
+	folders.forEach((folder) => {
 		fuchsiaRoot = fuchsiaRoot || findFuchsiaRoot(folder);
 		flutterProject = flutterProject || (referencesFlutterSdk(folder) ? folder : null);
 	});
@@ -64,10 +65,10 @@ export function findSdks(): Sdks {
 		fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter"),
 		flutterProject,
 		flutterProject && extractFlutterSdkPathFromPackagesFile(path.join(flutterProject, ".packages")),
-		process.env.FLUTTER_ROOT
+		process.env.FLUTTER_ROOT,
 	].concat(paths);
 
-	let flutterSdkPath = (fuchsiaRoot || flutterProject) &&
+	const flutterSdkPath = (fuchsiaRoot || flutterProject) &&
 		searchPaths(flutterSdkSearchPaths, hasFlutterExecutable, flutterExecutableName);
 
 	const dartSdkSearchPaths = [
@@ -77,15 +78,15 @@ export function findSdks(): Sdks {
 		flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk")
 	].concat(paths);
 
-	let dartSdkPath =
+	const dartSdkPath =
 		searchPaths(dartSdkSearchPaths, hasDartExecutable, dartExecutableName);
 
 	return {
 		dart: dartSdkPath,
 		flutter: (fuchsiaRoot || flutterProject) && flutterSdkPath,
 		fuchsia: fuchsiaRoot,
-		projectType: fuchsiaRoot ? ProjectType.Fuchsia : flutterProject ? ProjectType.Flutter : ProjectType.Dart
-	}
+		projectType: fuchsiaRoot ? ProjectType.Fuchsia : flutterProject ? ProjectType.Flutter : ProjectType.Dart,
+	};
 }
 
 function extractFlutterSdkPathFromPackagesFile(file: string): string {
@@ -100,22 +101,22 @@ function extractFlutterSdkPathFromPackagesFile(file: string): string {
 	// Trim suffix we don't need.
 	const pathSuffix = "/packages/flutter/lib/";
 	if (path.endsWith(pathSuffix)) {
-		path = path.substr(0, path.length - pathSuffix.length)
+		path = path.substr(0, path.length - pathSuffix.length);
 	}
 
 	// Make sure ends with a slash.
-	if (!path.endsWith('/'))
-		path = path + '/';
+	if (!path.endsWith("/"))
+		path = path + "/";
 
 	// Append bin if required.
-	if (!path.endsWith('/bin/')) {
-		path = path + 'bin/';
+	if (!path.endsWith("/bin/")) {
+		path = path + "bin/";
 	}
 
-	// Windows fixup.		
+	// Windows fixup.
 	if (isWin) {
-		path = path.replace(/\//g, '\\');
-		if (path[0] == '\\')
+		path = path.replace(/\//g, "\\");
+		if (path[0] === "\\")
 			path = path.substring(1);
 	}
 
@@ -133,11 +134,10 @@ function findFuchsiaRoot(folder: string): string {
 				if (fs.statSync(path.join(dir, ".jiri_root")).isDirectory()) {
 					return dir;
 				}
-			}
-			catch (e) { }
+			} catch (e) { }
 
 			const parentDir = path.dirname(dir);
-			if (dir == parentDir)
+			if (dir === parentDir)
 				break;
 
 			dir = parentDir;
@@ -152,7 +152,7 @@ export function getDartWorkspaceFolders(): WorkspaceFolder[] {
 }
 
 export function isDartWorkspaceFolder(folder: WorkspaceFolder): boolean {
-	if (!folder || folder.uri.scheme != "file")
+	if (!folder || folder.uri.scheme !== "file")
 		return false;
 
 	// TODO: Filter to only Dart projects.
@@ -184,7 +184,7 @@ export function toPosition(location: Location): Position {
 }
 
 export function toRange(location: Location): Range {
-	let startPos = toPosition(location);
+	const startPos = toPosition(location);
 	return new Range(startPos, startPos.translate(0, location.length));
 }
 
@@ -220,7 +220,7 @@ export function isWithinWorkspace(file: string) {
 	// asRelativePath returns the input if it's outside of the rootPath.
 	// Edit: Doesn't actually work properly:
 	//   https://github.com/Microsoft/vscode/issues/10446
-	//return workspace.asRelativePath(document.fileName) != document.fileName;
+	// return workspace.asRelativePath(document.fileName) != document.fileName;
 	// Edit: Still doesn't work properly!
 	//   https://github.com/Microsoft/vscode/issues/33709
 
@@ -234,7 +234,7 @@ export function toReadonlyUriIfExternal(file: string) {
 }
 
 function getExtensionVersion(): string {
-	let packageJson = require("../../package.json");
+	const packageJson = require("../../package.json");
 	return packageJson.version;
 }
 
@@ -243,7 +243,7 @@ export function versionIsAtLeast(inputVersion: string, requiredVersion: string):
 }
 
 function checkIsDevelopment() {
-	return extensionVersion.endsWith("-dev") || env.machineId == "someValue.machineId";
+	return extensionVersion.endsWith("-dev") || env.machineId === "someValue.machineId";
 }
 
 export function log(message: any): void {
@@ -260,16 +260,16 @@ export function getLatestSdkVersion(): PromiseLike<string> {
 	return new Promise<string>((resolve, reject) => {
 		const options: https.RequestOptions = {
 			hostname: "storage.googleapis.com",
-			port: 443,
-			path: "/dart-archive/channels/stable/release/latest/VERSION",
 			method: "GET",
+			path: "/dart-archive/channels/stable/release/latest/VERSION",
+			port: 443,
 		};
 
-		let req = https.request(options, resp => {
+		const req = https.request(options, (resp) => {
 			if (resp.statusCode < 200 || resp.statusCode > 300) {
 				reject({ message: `Failed to get Dart SDK Version ${resp.statusCode}: ${resp.statusMessage}` });
 			} else {
-				resp.on('data', (d) => {
+				resp.on("data", (d) => {
 					resolve(JSON.parse(d.toString()).version);
 				});
 			}
@@ -284,14 +284,14 @@ export function isOutOfDate(versionToCheck: string, expectedVersion: string): bo
 	// The +bbb is ignored for checking versions
 	// All -aaa's come before the same version without
 	function split(version: string): number[] {
-		let parts = version.split('-');
-		let numbers = parts[0].split(".").map(v => parseInt(v)); // Get x.y.z
+		const parts = version.split("-");
+		const numbers = parts[0].split(".").map((v) => parseInt(v, 10)); // Get x.y.z
 		numbers.push(parts.length > 1 ? 0 : 1); // Push a .10 for -something or .1 for nothing so we can sort easily.
 		return numbers;
 	}
 
-	let vCheck = split(versionToCheck);
-	let vExpected = split(expectedVersion);
+	const vCheck = split(versionToCheck);
+	const vExpected = split(expectedVersion);
 
 	for (let i = 0; i < vCheck.length; i++) {
 		if (vExpected[i] > vCheck[i])
@@ -309,14 +309,14 @@ export function openInBrowser(url: string) {
 }
 
 export class Sdks {
-	dart: string;
-	flutter: string;
-	fuchsia: string;
-	projectType: ProjectType;
+	public dart: string;
+	public flutter: string;
+	public fuchsia: string;
+	public projectType: ProjectType;
 }
 
 export enum ProjectType {
 	Dart,
 	Flutter,
-	Fuchsia
+	Fuchsia,
 }

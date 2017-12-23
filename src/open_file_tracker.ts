@@ -41,18 +41,18 @@ export class OpenFileTracker {
 		if (this.analyzer.capabilities.supportsClosingLabels) {
 			this.analyzer.analysisSetSubscriptions({
 				subscriptions: {
-					"OUTLINE": priorityFiles,
-					"OCCURRENCES": priorityFiles,
-					"CLOSING_LABELS": priorityFiles
-				}
+					CLOSING_LABELS: priorityFiles,
+					OCCURRENCES: priorityFiles,
+					OUTLINE: priorityFiles,
+				},
 			});
 		} else {
 			this.analyzer.analysisSetSubscriptions({
 				subscriptions: {
-					"OUTLINE": priorityFiles,
-					"OCCURRENCES": priorityFiles,
-					"HIGHLIGHTS": priorityFiles
-				}
+					HIGHLIGHTS: priorityFiles,
+					OCCURRENCES: priorityFiles,
+					OUTLINE: priorityFiles,
+				},
 			});
 		}
 	}

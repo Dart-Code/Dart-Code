@@ -3,6 +3,8 @@
 	"rules": {
 		"indent": {
 			"options": "tabs"
-		}
+		},
+		"curly": false,
+		"no-console": false
 	}
 }
