@@ -2,7 +2,7 @@
 
 import {
 	TextDocument, Position, CancellationToken, CodeActionProvider, CodeActionContext,
-	TextEdit, Range, Command
+	TextEdit, Range, Command,
 } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import { logError, isAnalyzableAndInWorkspace } from "../utils";
@@ -14,28 +14,28 @@ export class DartCodeActionProvider implements CodeActionProvider {
 		this.analyzer = analyzer;
 	}
 
-	provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Thenable<Command[]> {
+	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Thenable<Command[]> {
 		if (!isAnalyzableAndInWorkspace(document))
 			return null;
 		return new Promise<Command[]>((resolve, reject) => {
 			Promise.all([
 				this.analyzer.editGetFixes({
 					file: document.fileName,
-					offset: document.offsetAt(range.start)
+					offset: document.offsetAt(range.start),
 				}),
 				this.analyzer.editGetAssists({
 					file: document.fileName,
 					offset: document.offsetAt(range.start),
-					length: range.end.character - range.start.character
-				})
-			]).then(results => {
-				let fixes = <as.EditGetFixesResponse>results[0];
-				let assists = <as.EditGetAssistsResponse>results[1];
+					length: range.end.character - range.start.character,
+				}),
+			]).then((results) => {
+				const fixes = results[0] as as.EditGetFixesResponse;
+				const assists = results[1] as as.EditGetAssistsResponse;
 
-				let allEdits = new Array<as.SourceChange>().concat(...fixes.fixes.map(fix => fix.fixes)).concat(...assists.assists);
+				const allEdits = new Array<as.SourceChange>().concat(...fixes.fixes.map((fix) => fix.fixes)).concat(...assists.assists);
 
-				resolve(allEdits.map(edit => this.convertResult(document, edit)));
-			}, e => { logError(e); reject(); });
+				resolve(allEdits.map((edit) => this.convertResult(document, edit)));
+			}, (e) => { logError(e); reject(); });
 		});
 	}
 
@@ -43,7 +43,7 @@ export class DartCodeActionProvider implements CodeActionProvider {
 		return {
 			title: change.message,
 			command: "_dart.applySourceChange",
-			arguments: [document, change]
+			arguments: [document, change],
 		};
 	}
 }
