@@ -1,8 +1,8 @@
 "use strict";
 
-import * as vs from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as vs from "vscode";
+import * as fs from "fs";
+import * as path from "path";
 import { PackageMap } from "../debug/utils";
 
 const DART_HIDE_PACKAGE_TREE = "dart-code:hidePackageTree";
@@ -10,7 +10,7 @@ const DART_HIDE_PACKAGE_TREE = "dart-code:hidePackageTree";
 export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataProvider<PackageDep> {
 	private watcher: vs.FileSystemWatcher;
 	private _onDidChangeTreeData: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
-	readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this._onDidChangeTreeData.event;
+	public readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this._onDidChangeTreeData.event;
 	public workspaceRoot: string;
 
 	constructor() {
@@ -21,33 +21,33 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 		this.watcher.onDidDelete(this.refresh, this);
 	}
 
-	setWorkspaces(workspaces: vs.WorkspaceFolder[]) {
-		this.workspaceRoot = workspaces && workspaces.length == 1 ? workspaces[0].uri.fsPath : null;
+	public setWorkspaces(workspaces: vs.WorkspaceFolder[]) {
+		this.workspaceRoot = workspaces && workspaces.length === 1 ? workspaces[0].uri.fsPath : null;
 		this.refresh();
 	}
 
-	refresh(): void {
+	public refresh(): void {
 		this._onDidChangeTreeData.fire();
 	}
 
-	getTreeItem(element: PackageDep): vs.TreeItem {
+	public getTreeItem(element: PackageDep): vs.TreeItem {
 		return element;
 	}
 
-	getChildren(element?: PackageDep): Thenable<PackageDep[]> {
-		return new Promise(resolve => {
+	public getChildren(element?: PackageDep): Thenable<PackageDep[]> {
+		return new Promise((resolve) => {
 			if (element) {
 				if (!element.depPath) {
 					return resolve([]);
 				} else {
-					resolve(fs.readdirSync(element.depPath).map(name => {
-						var filePath = path.join(element.depPath, name);
-						var stat = fs.statSync(filePath);
+					resolve(fs.readdirSync(element.depPath).map((name) => {
+						const filePath = path.join(element.depPath, name);
+						const stat = fs.statSync(filePath);
 						if (stat.isFile()) {
 							return new PackageDep(name, null, vs.TreeItemCollapsibleState.None, {
-								command: 'dart.package.openFile',
-								title: 'Open File',
-								arguments: [vs.Uri.file(filePath).with({ scheme: "dart-package" })]
+								arguments: [vs.Uri.file(filePath).with({ scheme: "dart-package" })],
+								command: "dart.package.openFile",
+								title: "Open File",
 							});
 						} else if (stat.isDirectory()) {
 							return new PackageDep(name, filePath, vs.TreeItemCollapsibleState.Collapsed);
@@ -57,11 +57,10 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 			} else if (this.workspaceRoot) {
 				// When we're re-parsing from root, un-hide the tree. It'll be hidden if we find nothing.
 				DartPackagesProvider.showTree();
-				const packagesPath = PackageMap.findPackagesFile(path.join(this.workspaceRoot, '.packages'));
+				const packagesPath = PackageMap.findPackagesFile(path.join(this.workspaceRoot, ".packages"));
 				if (packagesPath && fs.existsSync(packagesPath)) {
 					resolve(this.getDepsInPackages(packagesPath));
-				}
-				else {
+				} else {
 					DartPackagesProvider.hideTree();
 					return resolve([]);
 				}
@@ -78,32 +77,32 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 		// yaml:file:///Users/foo/.pub-cache/hosted/pub.dartlang.org/yaml-2.1.12/lib/
 
 		if (fs.existsSync(packagesPath)) {
-			var lines = fs.readFileSync(packagesPath).toString().split("\n");
-			lines = lines.filter(l => !l.startsWith('#') && l.trim().length > 0 && !l.endsWith(":lib/"));
+			let lines = fs.readFileSync(packagesPath).toString().split("\n");
+			lines = lines.filter((l) => !l.startsWith("#") && l.trim().length > 0 && !l.endsWith(":lib/"));
 			lines.sort();
 
-			const deps = lines.map(line => {
-				var pos = line.indexOf(':');
-				if (pos == -1) return new PackageDep(line, null);
+			const deps = lines.map((line) => {
+				const pos = line.indexOf(":");
+				if (pos === -1) return new PackageDep(line, null);
 
-				var packageName = line.substring(0, pos);
-				var p = line.substring(pos + 1);
+				let packageName = line.substring(0, pos);
+				let p = line.substring(pos + 1);
 
-				if (p.endsWith('/'))
+				if (p.endsWith("/"))
 					p = p.substring(0, p.length - 1);
 
-				if (p.endsWith('/lib'))
+				if (p.endsWith("/lib"))
 					p = p.substring(0, p.length - 4);
 
-				if (!p.startsWith('file:'))
+				if (!p.startsWith("file:"))
 					p = path.join(packageRoot, p);
 
-				if (this.workspaceRoot != p) {
-					packageName = line.substring(0, line.indexOf(':'));
-					p = vs.Uri.parse(p).fsPath
+				if (this.workspaceRoot !== p) {
+					packageName = line.substring(0, line.indexOf(":"));
+					p = vs.Uri.parse(p).fsPath;
 					return new PackageDep(`${packageName}`, p, vs.TreeItemCollapsibleState.Collapsed);
 				}
-			}).filter(d => d);
+			}).filter((d) => d);
 			// Hide the tree if we had no dependencies to show.
 			DartPackagesProvider.setTreeVisible(!!deps && !!deps.length);
 			return deps;
@@ -115,11 +114,11 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 	}
 
 	private static setTreeVisible(visible: boolean) {
-		vs.commands.executeCommand('setContext', DART_HIDE_PACKAGE_TREE, !visible);
+		vs.commands.executeCommand("setContext", DART_HIDE_PACKAGE_TREE, !visible);
 	}
 
-	static showTree() { this.setTreeVisible(true); }
-	static hideTree() { this.setTreeVisible(false); }
+	public static showTree() { this.setTreeVisible(true); }
+	public static hideTree() { this.setTreeVisible(false); }
 }
 
 class PackageDep extends vs.TreeItem {
@@ -127,10 +126,10 @@ class PackageDep extends vs.TreeItem {
 		public readonly label: string,
 		public readonly depPath: string,
 		public readonly collapsibleState?: vs.TreeItemCollapsibleState,
-		public readonly command?: vs.Command
+		public readonly command?: vs.Command,
 	) {
 		super(label, collapsibleState);
 	}
 
-	contextValue = 'dependency';
+	public contextValue = "dependency";
 }
