@@ -17,13 +17,13 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 			margin: "2px",
 			color: new vs.ThemeColor("dart.closingLabels"),
 		},
-		rangeBehavior: vs.DecorationRangeBehavior.ClosedOpen
+		rangeBehavior: vs.DecorationRangeBehavior.ClosedOpen,
 	});
 
 	constructor(analyzer: Analyzer) {
 		this.analyzer = analyzer;
 
-		this.subscriptions.push(this.analyzer.registerForAnalysisClosingLabels(n => {
+		this.subscriptions.push(this.analyzer.registerForAnalysisClosingLabels((n) => {
 			if (n.file == this.activeEditor.document.fileName) {
 				this.closingLabels = n;
 				// Delay this so if we're getting lots of updates we don't flicker.
@@ -32,7 +32,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 			}
 		}));
 
-		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor(e => this.setTrackingFile(e)));
+		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.setTrackingFile(e)));
 		if (vs.window.activeTextEditor)
 			this.setTrackingFile(vs.window.activeTextEditor);
 
@@ -55,7 +55,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 
 			// We won't update if we had any bad notifications as this usually means either bad code resulted
 			// in wonky results or the document was updated before the notification came back.
-			if (finalCharacterText != ']' && finalCharacterText != ')')
+			if (finalCharacterText != "]" && finalCharacterText != ")")
 				return;
 
 			const existingDecorationForLine = decorations[endOfLine.line];
@@ -64,13 +64,13 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 			} else {
 				const dec = {
 					range: new vs.Range(this.activeEditor.document.positionAt(r.offset), endOfLine),
-					renderOptions: { after: { contentText: " // " + r.label } }
+					renderOptions: { after: { contentText: " // " + r.label } },
 				};
 				decorations[endOfLine.line] = dec;
 			}
 		});
 
-		this.activeEditor.setDecorations(this.decorationType, Object.keys(decorations).map(k => parseInt(k)).map(k => decorations[k]));
+		this.activeEditor.setDecorations(this.decorationType, Object.keys(decorations).map((k) => parseInt(k)).map((k) => decorations[k]));
 	}
 
 	private setTrackingFile(editor: vs.TextEditor) {
@@ -82,7 +82,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 		}
 	}
 
-	dispose() {
-		this.subscriptions.forEach(s => s.dispose());
+	public dispose() {
+		this.subscriptions.forEach((s) => s.dispose());
 	}
 }

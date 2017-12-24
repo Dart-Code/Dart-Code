@@ -11,7 +11,7 @@ import * as vs from "vscode";
 import { flutter_env } from "../debug/utils";
 
 export class FlutterDaemon extends StdIOService {
-	deviceManager: FlutterDeviceManager;
+	public deviceManager: FlutterDeviceManager;
 
 	constructor(flutterBinPath: string, projectFolder: string) {
 		super(config.flutterDaemonLogFile, true);
@@ -24,7 +24,7 @@ export class FlutterDaemon extends StdIOService {
 		this.deviceEnable();
 	}
 
-	dispose() {
+	public dispose() {
 		this.deviceManager.dispose();
 		super.dispose();
 	}
@@ -32,10 +32,9 @@ export class FlutterDaemon extends StdIOService {
 	protected sendMessage<T>(json: string) {
 		try {
 			super.sendMessage(json);
-		}
-		catch (e) {
+		} catch (e) {
 			const reloadAction: string = "Reload Project";
-			vs.window.showErrorMessage(`The Flutter Daemon has terminated. Save your changes then reload the project to resume.`, reloadAction).then(res => {
+			vs.window.showErrorMessage(`The Flutter Daemon has terminated. Save your changes then reload the project to resume.`, reloadAction).then((res) => {
 				if (res == reloadAction)
 					vs.commands.executeCommand("workbench.action.reloadWindow");
 			});
@@ -45,7 +44,7 @@ export class FlutterDaemon extends StdIOService {
 
 	protected shouldHandleMessage(message: string): boolean {
 		// Everything in flutter is wrapped in [] so we can tell what to handle.
-		return message.startsWith('[') && message.endsWith(']');
+		return message.startsWith("[") && message.endsWith("]");
 	}
 
 	// TODO: Can we code-gen all this like the analysis server?
@@ -53,34 +52,32 @@ export class FlutterDaemon extends StdIOService {
 	protected handleNotification(evt: UnknownNotification) {
 		switch (evt.event) {
 			case "device.added":
-				this.notify(this.deviceAddedSubscriptions, <f.Device>evt.params);
+				this.notify(this.deviceAddedSubscriptions, evt.params as f.Device);
 				break;
 			case "device.removed":
-				this.notify(this.deviceRemovedSubscriptions, <f.Device>evt.params);
+				this.notify(this.deviceRemovedSubscriptions, evt.params as f.Device);
 				break;
 		}
 	}
 
-	// Subscription lists.	
+	// Subscription lists.
 
-	private deviceAddedSubscriptions: ((notification: f.Device) => void)[] = [];
-	private deviceRemovedSubscriptions: ((notification: f.Device) => void)[] = [];
-
+	private deviceAddedSubscriptions: Array<(notification: f.Device) => void> = [];
+	private deviceRemovedSubscriptions: Array<(notification: f.Device) => void> = [];
 
 	// Request methods.
 
-	deviceEnable(): Thenable<UnknownResponse> {
+	public deviceEnable(): Thenable<UnknownResponse> {
 		return this.sendRequest("device.enable");
 	}
 
-
 	// Subscription methods.
 
-	registerForDeviceAdded(subscriber: (notification: f.Device) => void): vs.Disposable {
+	public registerForDeviceAdded(subscriber: (notification: f.Device) => void): vs.Disposable {
 		return this.subscribe(this.deviceAddedSubscriptions, subscriber);
 	}
 
-	registerForDeviceRemoved(subscriber: (notification: f.Device) => void): vs.Disposable {
+	public registerForDeviceRemoved(subscriber: (notification: f.Device) => void): vs.Disposable {
 		return this.subscribe(this.deviceRemovedSubscriptions, subscriber);
 	}
 }
