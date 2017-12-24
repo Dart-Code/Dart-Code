@@ -29,7 +29,7 @@ export class EditCommands implements vs.Disposable {
 		this.sendEdit(this.analyzer.editSortMembers, "Sort Members", editor, editBuilder);
 	}
 
-	private sendEdit(f: (a: { file: string }) => Thenable<{edit: as.SourceFileEdit}>, commandName: string, editor: vs.TextEditor, editBuilder: vs.TextEditorEdit) {
+	private sendEdit(f: (a: { file: string }) => Thenable<{ edit: as.SourceFileEdit }>, commandName: string, editor: vs.TextEditor, editBuilder: vs.TextEditorEdit) {
 		if (!editors.hasActiveDartEditor()) {
 			vs.window.showWarningMessage("No active Dart editor.");
 			return;
@@ -39,7 +39,7 @@ export class EditCommands implements vs.Disposable {
 
 		f({ file: editor.document.fileName }).then((response) => {
 			const edit: as.SourceFileEdit = response.edit;
-			if (edit.edits.length == 0)
+			if (edit.edits.length === 0)
 				return;
 
 			editor.edit((editBuilder: vs.TextEditorEdit) => {

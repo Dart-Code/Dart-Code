@@ -24,7 +24,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 		this.analyzer = analyzer;
 
 		this.subscriptions.push(this.analyzer.registerForAnalysisClosingLabels((n) => {
-			if (n.file == this.activeEditor.document.fileName) {
+			if (n.file === this.activeEditor.document.fileName) {
 				this.closingLabels = n;
 				// Delay this so if we're getting lots of updates we don't flicker.
 				clearTimeout(this.updateTimeout);
@@ -39,7 +39,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	}
 
 	private update() {
-		if (!this.closingLabels || this.closingLabels.file != this.activeEditor.document.fileName)
+		if (!this.closingLabels || this.closingLabels.file !== this.activeEditor.document.fileName)
 			return;
 
 		const decorations: { [key: number]: vs.DecorationOptions } = [];
@@ -55,7 +55,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 
 			// We won't update if we had any bad notifications as this usually means either bad code resulted
 			// in wonky results or the document was updated before the notification came back.
-			if (finalCharacterText != "]" && finalCharacterText != ")")
+			if (finalCharacterText !== "]" && finalCharacterText !== ")")
 				return;
 
 			const existingDecorationForLine = decorations[endOfLine.line];

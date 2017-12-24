@@ -167,7 +167,7 @@ export class DartDebugSession extends DebugSession {
 							isolate.runnable ? "IsolateRunnable" : "IsolateStart",
 						);
 
-						if (isolate.pauseEvent.kind == "PauseStart") {
+						if (isolate.pauseEvent.kind === "PauseStart") {
 							const thread = this.threadManager.getThreadInfoFromRef(isolateRef);
 							thread.receivedPauseStart();
 						}
@@ -274,9 +274,9 @@ export class DartDebugSession extends DebugSession {
 		const filters: string[] = args.filters;
 
 		let mode = "None";
-		if (filters.indexOf("Unhandled") != -1)
+		if (filters.indexOf("Unhandled") !== -1)
 			mode = "Unhandled";
-		if (filters.indexOf("All") != -1)
+		if (filters.indexOf("All") !== -1)
 			mode = "All";
 
 		this.threadManager.setExceptionPauseMode(mode);
@@ -353,7 +353,7 @@ export class DartDebugSession extends DebugSession {
 			vmFrames.forEach((frame: VMFrame) => {
 				const frameId = thread.storeData(frame);
 
-				if (frame.kind == "AsyncSuspensionMarker") {
+				if (frame.kind === "AsyncSuspensionMarker") {
 					const stackFrame: StackFrame = new StackFrame(frameId, "<asynchronous gap>");
 					stackFrames.push(stackFrame);
 					return;
@@ -436,7 +436,7 @@ export class DartDebugSession extends DebugSession {
 		const data = this.threadManager.getStoredData(variablesReference);
 		const thread = data.thread;
 
-		if (data.data.type == "Frame") {
+		if (data.data.type === "Frame") {
 			const frame: VMFrame = data.data as VMFrame;
 			const variables: DebugProtocol.Variable[] = [];
 			for (const variable of frame.vars)
@@ -451,7 +451,7 @@ export class DartDebugSession extends DebugSession {
 				) => {
 					const variables: DebugProtocol.Variable[] = [];
 
-					if (result.result.type == "Sentinel") {
+					if (result.result.type === "Sentinel") {
 						variables.push({
 							name: "evalError",
 							value: (result.result as VMSentinel).valueAsString,
@@ -460,7 +460,7 @@ export class DartDebugSession extends DebugSession {
 					} else {
 						const obj: VMObj = result.result as VMObj;
 
-						if (obj.type == "Instance") {
+						if (obj.type === "Instance") {
 							const instance = obj as VMInstance;
 
 							// TODO: show by kind instead
@@ -476,7 +476,7 @@ export class DartDebugSession extends DebugSession {
 								for (const association of instance.associations) {
 									let keyName = this.valueAsString(association.key);
 									if (!keyName) {
-										if (association.key.type == "Sentinel")
+										if (association.key.type === "Sentinel")
 											keyName = "<evalError>";
 										else
 											keyName = (association.key as VMInstanceRef).id;
@@ -504,7 +504,7 @@ export class DartDebugSession extends DebugSession {
 
 	private callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef): Promise<string> {
 		return this.observatory.evaluate(isolate.id, instanceRef.id, "toString()").then((result: DebuggerResult) => {
-			if (result.result.type == "@Error") {
+			if (result.result.type === "@Error") {
 				return null;
 			} else {
 				const evalResult: VMInstanceRef = result.result as VMInstanceRef;
@@ -596,7 +596,7 @@ export class DartDebugSession extends DebugSession {
 
 		this.observatory.evaluateInFrame(thread.ref.id, frame.index, expression).then((result: DebuggerResult) => {
 			// InstanceRef or ErrorRef
-			if (result.result.type == "@Error") {
+			if (result.result.type === "@Error") {
 				const error: VMErrorRef = result.result as VMErrorRef;
 				let str: string = error.message;
 				if (str && str.length > 100)
@@ -631,9 +631,9 @@ export class DartDebugSession extends DebugSession {
 	// IsolateStart, IsolateRunnable, IsolateExit, IsolateUpdate, ServiceExtensionAdded
 	public handleIsolateEvent(event: VMEvent) {
 		const kind = event.kind;
-		if (kind == "IsolateStart" || kind == "IsolateRunnable") {
+		if (kind === "IsolateStart" || kind === "IsolateRunnable") {
 			this.threadManager.registerThread(event.isolate, kind);
-		} else if (kind == "IsolateExit") {
+		} else if (kind === "IsolateExit") {
 			this.threadManager.handleIsolateExit(event.isolate);
 		}
 	}
@@ -644,11 +644,11 @@ export class DartDebugSession extends DebugSession {
 		const kind = event.kind;
 
 		// For PausePostRequest we need to re-send all breakpoints; this happens after a flutter restart
-		if (kind == "PausePostRequest") {
+		if (kind === "PausePostRequest") {
 			this.threadManager.resetBreakpoints()
 				.then((_) => this.observatory.resume(event.isolate.id))
-				.catch((e) => { if (e.code != 106) throw e; }); // Ignore failed-to-resume errors https://github.com/flutter/flutter/issues/10934
-		} else if (kind == "PauseStart") {
+				.catch((e) => { if (e.code !== 106) throw e; }); // Ignore failed-to-resume errors https://github.com/flutter/flutter/issues/10934
+		} else if (kind === "PauseStart") {
 			// "PauseStart" should auto-resume after breakpoints are set.
 			const thread = this.threadManager.getThreadInfoFromRef(event.isolate);
 			thread.receivedPauseStart();
@@ -659,14 +659,14 @@ export class DartDebugSession extends DebugSession {
 			let reason = "pause";
 			let exceptionText = null;
 
-			if (kind == "PauseBreakpoint") {
+			if (kind === "PauseBreakpoint") {
 				reason = "breakpoint";
-				if (event.pauseBreakpoints == null || event.pauseBreakpoints.length == 0) {
+				if (event.pauseBreakpoints == null || event.pauseBreakpoints.length === 0) {
 					reason = "step";
 				}
 			}
 
-			if (kind == "PauseException") {
+			if (kind === "PauseException") {
 				reason = "exception";
 				exceptionText = this.valueAsString(event.exception);
 				if (!exceptionText)
@@ -707,7 +707,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private valueAsString(ref: VMInstanceRef | VMSentinel): string {
-		if (ref.type == "Sentinel")
+		if (ref.type === "Sentinel")
 			return ref.valueAsString;
 
 		const instanceRef = ref as VMInstanceRef;
@@ -716,12 +716,12 @@ export class DartDebugSession extends DebugSession {
 			let str: string = instanceRef.valueAsString;
 			if (instanceRef.valueAsStringIsTruncated)
 				str += "…";
-			if (instanceRef.kind == "String")
+			if (instanceRef.kind === "String")
 				str = `'${str}'`;
 			return str;
-		} else if (ref.kind == "List") {
+		} else if (ref.kind === "List") {
 			return `[${instanceRef.length}]`;
-		} else if (ref.kind == "Map") {
+		} else if (ref.kind === "Map") {
 			return `{${instanceRef.length}}`;
 		} else {
 			return instanceRef.class.name;
@@ -731,7 +731,7 @@ export class DartDebugSession extends DebugSession {
 	private instanceRefToVariable(
 		thread: ThreadInfo, name: string, ref: VMInstanceRef | VMSentinel,
 	): DebugProtocol.Variable {
-		if (ref.type == "Sentinel") {
+		if (ref.type === "Sentinel") {
 			return {
 				name,
 				value: (ref as VMSentinel).valueAsString,
@@ -759,7 +759,7 @@ export class DartDebugSession extends DebugSession {
 		for (const entry of table) {
 			// [lineNumber, (tokenPos, columnNumber)*]
 			for (let index = 1; index < entry.length; index += 2) {
-				if (entry[index] == tokenPos) {
+				if (entry[index] === tokenPos) {
 					const line = entry[0];
 					return new FileLocation(line, entry[index + 1]);
 				}
@@ -803,7 +803,7 @@ class ThreadManager {
 		}
 
 		// If it's just become runnable (IsolateRunnable), then set breakpoints.
-		if (eventKind == "IsolateRunnable" && !thread.runnable) {
+		if (eventKind === "IsolateRunnable" && !thread.runnable) {
 			thread.runnable = true;
 
 			this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, this.exceptionMode);
@@ -821,7 +821,7 @@ class ThreadManager {
 
 	public getThreadInfoFromRef(ref: VMIsolateRef): ThreadInfo {
 		for (const thread of this.threads) {
-			if (thread.ref.id == ref.id)
+			if (thread.ref.id === ref.id)
 				return thread;
 		}
 		return null;
@@ -829,7 +829,7 @@ class ThreadManager {
 
 	public getThreadInfoFromNumber(num: number): ThreadInfo {
 		for (const thread of this.threads) {
-			if (thread.number == num)
+			if (thread.number === num)
 				return thread;
 		}
 		return null;
@@ -859,7 +859,7 @@ class ThreadManager {
 
 	public setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {
 		// Remember these bps for when new threads start.
-		if (breakpoints.length == 0)
+		if (breakpoints.length === 0)
 			delete this.bps[uri];
 		else
 			this.bps[uri] = breakpoints;

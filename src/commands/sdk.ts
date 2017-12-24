@@ -44,8 +44,8 @@ export class SdkCommands {
 
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
-			if (config.for(td.uri).runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() == "pubspec.yaml") {
-				if (sdks.projectType == ProjectType.Flutter || sdks.projectType == ProjectType.Fuchsia) {
+			if (config.for(td.uri).runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() === "pubspec.yaml") {
+				if (sdks.projectType === ProjectType.Flutter || sdks.projectType === ProjectType.Fuchsia) {
 					vs.commands.executeCommand("flutter.packages.get");
 				} else {
 					vs.commands.executeCommand("pub.get", td.uri);
@@ -68,7 +68,7 @@ export class SdkCommands {
 		if (!folder && vs.workspace.workspaceFolders) {
 			// TODO: Filter to Dart or Flutter projects.
 			const allowedProjects = getDartWorkspaceFolders();
-			if (allowedProjects.length == 1)
+			if (allowedProjects.length === 1)
 				folder = allowedProjects[0].uri.fsPath;
 		}
 

@@ -34,9 +34,9 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	public deviceRemoved(dev: f.Device) {
-		this.devices = this.devices.filter((d) => d.id != dev.id);
-		if (this.currentDevice.id == dev.id)
-			this.currentDevice = this.devices.length == 0 ? null : this.devices[this.devices.length - 1];
+		this.devices = this.devices.filter((d) => d.id !== dev.id);
+		if (this.currentDevice.id === dev.id)
+			this.currentDevice = this.devices.length === 0 ? null : this.devices[this.devices.length - 1];
 		this.updateStatusBar();
 	}
 
@@ -44,10 +44,10 @@ export class FlutterDeviceManager implements vs.Disposable {
 		const devices = this.devices
 			.sort(this.deviceSortComparer.bind(this))
 			.map((d) => ({
+				description: d.platform,
+				detail: d === this.currentDevice ? "Current Device" : (d.emulator ? "Emulator" : "Physical Device"),
 				device: d,
 				label: d.name,
-				description: d.platform,
-				detail: d == this.currentDevice ? "Current Device" : (d.emulator ? "Emulator" : "Physical Device"),
 			}));
 		vs.window.showQuickPick(devices, { placeHolder: "Select a device to use" })
 			.then((d) => { if (d) { this.currentDevice = d.device; this.updateStatusBar(); } });
@@ -55,8 +55,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	public deviceSortComparer(d1: f.Device, d2: f.Device): number {
 		// Always consider current device to be first.
-		if (d1 == this.currentDevice) return -1;
-		if (d2 == this.currentDevice) return 1;
+		if (d1 === this.currentDevice) return -1;
+		if (d2 === this.currentDevice) return 1;
 		// Otherwise, sort by name.
 		return d1.name.localeCompare(d2.name);
 	}

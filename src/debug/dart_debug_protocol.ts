@@ -75,9 +75,9 @@ export interface VMFrame extends VMResponse {
 }
 
 export interface VMCodeRef extends VMObjectRef {
-  name: string;
-  // CodeKind: Dart, Native, Stub, Tag, Collected
-  kind: string;
+	name: string;
+	// CodeKind: Dart, Native, Stub, Tag, Collected
+	kind: string;
 }
 
 export interface VMSourceLocation extends VMResponse {

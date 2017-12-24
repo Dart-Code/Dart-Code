@@ -31,25 +31,25 @@ export class DebugCommands {
 		this.analytics = analytics;
 		context.subscriptions.push(this.debugStatus);
 		vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
-			if (e.event == "dart.progress") {
+			if (e.event === "dart.progress") {
 				if (e.body.message) {
 					this.debugStatus.text = e.body.message;
 					this.debugStatus.show();
 				}
 				if (e.body.finished)
 					this.debugStatus.hide();
-			} else if (e.event == "dart.observatoryUri") {
+			} else if (e.event === "dart.observatoryUri") {
 				this.observatoryUri = e.body.observatoryUri;
 			}
 		});
 		vs.debug.onDidStartDebugSession((s) => {
-			if (s.type == FLUTTER_DEBUG_TYPE) {
+			if (s.type === FLUTTER_DEBUG_TYPE) {
 				this.currentFlutterDebugSession = s;
 				this.resetFlutterSettings();
 			}
 		});
 		vs.debug.onDidTerminateDebugSession((s) => {
-			if (s == this.currentFlutterDebugSession) {
+			if (s === this.currentFlutterDebugSession) {
 				this.currentFlutterDebugSession = null;
 			}
 		});

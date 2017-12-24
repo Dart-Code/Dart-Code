@@ -6,23 +6,23 @@ import * as vs from "vscode";
 const channels: { [key: string]: vs.OutputChannel } = {};
 
 export function createChannel(name: string): vs.OutputChannel {
-    if (channels[name] == null)
-        channels[name] = vs.window.createOutputChannel(name);
-    else
-        channels[name].clear();
+	if (channels[name] == null)
+		channels[name] = vs.window.createOutputChannel(name);
+	else
+		channels[name].clear();
 
-    return channels[name];
+	return channels[name];
 }
 
 export function getChannel(name: string): vs.OutputChannel {
-    if (channels[name] == null)
-        return createChannel(name);
+	if (channels[name] == null)
+		return createChannel(name);
 
-    return channels[name];
+	return channels[name];
 }
 
 export function runProcessInChannel(process: child_process.ChildProcess, channel: vs.OutputChannel) {
-    process.stdout.on("data", (data) => channel.append(data.toString()));
-    process.stderr.on("data", (data) => channel.append(data.toString()));
-    process.on("close", (code) => channel.appendLine(`exit code ${code}`));
+	process.stdout.on("data", (data) => channel.append(data.toString()));
+	process.stderr.on("data", (data) => channel.append(data.toString()));
+	process.on("close", (code) => channel.appendLine(`exit code ${code}`));
 }

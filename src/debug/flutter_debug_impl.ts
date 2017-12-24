@@ -133,7 +133,7 @@ export class FlutterDebugSession extends DartDebugSession {
 				if (this.currentRunningAppId)
 					this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", null).then(
 						(result) => {
-							this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", { value: result.value == "android" ? "iOS" : "android" })
+							this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", { value: result.value === "android" ? "iOS" : "android" })
 								.then((result) => { }, (error) => this.sendEvent(new OutputEvent(error, "stderr")));
 						},
 						(error) => this.sendEvent(new OutputEvent(error, "stderr")),

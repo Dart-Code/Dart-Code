@@ -73,7 +73,7 @@ function addParents(items: as.TypeHierarchyItem[], tree: as.TypeHierarchyItem[],
 	if (item.superclass) {
 		const parent = items[item.superclass];
 
-		if (parent.classElement.name != "Object") {
+		if (parent.classElement.name !== "Object") {
 			tree.unshift(parent);
 			addParents(items, tree, parent);
 		}
@@ -99,7 +99,7 @@ function itemToPick(item: as.TypeHierarchyItem, items: as.TypeHierarchyItem[]): 
 	let desc = "";
 
 	// extends
-	if (item.superclass !== undefined && name(items, item.superclass) != "Object")
+	if (item.superclass !== undefined && name(items, item.superclass) !== "Object")
 		desc += `extends ${name(items, item.superclass)}`;
 
 	// implements
@@ -117,8 +117,8 @@ function itemToPick(item: as.TypeHierarchyItem, items: as.TypeHierarchyItem[]): 
 	}
 
 	const result = {
-		label: item.classElement.name,
 		description: desc,
+		label: item.classElement.name,
 		location: item.classElement.location,
 	};
 

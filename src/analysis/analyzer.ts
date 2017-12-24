@@ -80,7 +80,7 @@ export class Analyzer extends AnalyzerGen {
 		} catch (e) {
 			const reloadAction: string = "Reload Project";
 			vs.window.showErrorMessage(`The Dart Analyzer has terminated. Save your changes then reload the project to resume.`, reloadAction).then((res) => {
-				if (res == reloadAction)
+				if (res === reloadAction)
 					vs.commands.executeCommand("workbench.action.reloadWindow");
 			});
 			throw e;
@@ -114,8 +114,8 @@ export class Analyzer extends AnalyzerGen {
 		// Send a dummy edit (https://github.com/dart-lang/sdk/issues/30238)
 		const files: { [key: string]: as.ChangeContentOverlay } = {};
 		files[file] = {
-			type: "change",
 			edits: [{ offset: 0, length: 0, replacement: "", id: "" }],
+			type: "change",
 		};
 		this.analysisUpdateContent({ files });
 	}

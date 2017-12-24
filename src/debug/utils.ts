@@ -19,10 +19,10 @@ export function uriToFilePath(uri: string, returnWindowsPath: boolean = isWin): 
 	// Windows fixup.
 	if (returnWindowsPath) {
 		filePath = filePath.replace(/\//g, "\\");
-		if (filePath[0] == "\\")
+		if (filePath[0] === "\\")
 			filePath = filePath.substring(1);
 	} else {
-		if (filePath[0] != "/")
+		if (filePath[0] !== "/")
 			filePath = `/${filePath}`;
 	}
 
@@ -33,7 +33,7 @@ function findFile(file: string, startLocation: string) {
 	let lastParent;
 	let parent = startLocation;
 
-	while (parent && parent.length > 1 && parent != lastParent) {
+	while (parent && parent.length > 1 && parent !== lastParent) {
 		const packages = path.join(parent, file);
 		if (fs.existsSync(packages))
 			return packages;
@@ -54,7 +54,7 @@ export function getLocalPackageName(entryPoint: string) {
 	// (most have several dependencies, full issue trackers and/or are not being maintained).
 	const lines = fs.readFileSync(pubspec).toString().split("\n");
 	const values = lines.filter((l) => l.indexOf(":") > -1).map((l) => l.split(":"));
-	const namePair = values.find((v) => v[0].trim() == "name");
+	const namePair = values.find((v) => v[0].trim() === "name");
 
 	if (namePair)
 		return namePair[1].trim();
@@ -111,11 +111,11 @@ export class PackageMap {
 		for (let line of lines) {
 			line = line.trim();
 
-			if (line.length == 0 || line.startsWith("#"))
+			if (line.length === 0 || line.startsWith("#"))
 				continue;
 
 			const index = line.indexOf(":");
-			if (index != -1) {
+			if (index !== -1) {
 				const name = line.substr(0, index);
 				const rest = line.substring(index + 1);
 
@@ -139,7 +139,7 @@ export class PackageMap {
 		if (name.startsWith("package:"))
 			name = name.substring(8);
 		const index = name.indexOf("/");
-		if (index == -1)
+		if (index === -1)
 			return null;
 
 		const rest = name.substring(index + 1);
