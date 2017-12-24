@@ -9,8 +9,8 @@ const DART_HIDE_PACKAGE_TREE = "dart-code:hidePackageTree";
 
 export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataProvider<PackageDep> {
 	private watcher: vs.FileSystemWatcher;
-	private _onDidChangeTreeData: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
-	public readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this._onDidChangeTreeData.event;
+	private onDidChangeTreeDataEmitter: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
+	public readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this.onDidChangeTreeDataEmitter.event;
 	public workspaceRoot: string;
 
 	constructor() {
@@ -27,7 +27,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 	}
 
 	public refresh(): void {
-		this._onDidChangeTreeData.fire();
+		this.onDidChangeTreeDataEmitter.fire();
 	}
 
 	public getTreeItem(element: PackageDep): vs.TreeItem {

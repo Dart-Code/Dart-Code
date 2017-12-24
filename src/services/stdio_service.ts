@@ -142,7 +142,7 @@ export abstract class StdIOService implements Disposable {
 		return this.subscribe(this.requestErrorSubscriptions, subscriber);
 	}
 
-	protected logTraffic(message: String): void {
+	protected logTraffic(message: string): void {
 		const max: number = 2000;
 
 		if (this.logFile) {

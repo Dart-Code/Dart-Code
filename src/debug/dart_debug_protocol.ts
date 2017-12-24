@@ -318,7 +318,7 @@ export class ObservatoryConnection {
 		return this.callMethod("getObject", data);
 	}
 
-	public evaluate(isolateId: string, targetId: String, expression: string): Promise<DebuggerResult> {
+	public evaluate(isolateId: string, targetId: string, expression: string): Promise<DebuggerResult> {
 		return this.callMethod("evaluate", {
 			expression,
 			isolateId,

@@ -6,13 +6,13 @@ import * as f from "../flutter/flutter_types";
 import * as fs from "fs";
 import { Disposable } from "vscode";
 import { OutputEvent } from "vscode-debugadapter";
-import { flutter_env } from "./utils";
+import { flutterEnv } from "./utils";
 
 export class FlutterRun extends StdIOService {
 	constructor(flutterBinPath: string, projectFolder: string, args: string[], logFile: string) {
 		super(logFile, true);
 
-		this.createProcess(projectFolder, flutterBinPath, ["run", "--machine"].concat(args), flutter_env);
+		this.createProcess(projectFolder, flutterBinPath, ["run", "--machine"].concat(args), flutterEnv);
 	}
 
 	protected shouldHandleMessage(message: string): boolean {

@@ -696,7 +696,7 @@ export class DartDebugSession extends DebugSession {
 		return uri;
 	}
 
-	protected convertVMUriToSourcePath(uri: string, returnWindowsPath: boolean = undefined): string {
+	protected convertVMUriToSourcePath(uri: string, returnWindowsPath?: boolean): string {
 		if (uri.startsWith("file:"))
 			return uriToFilePath(uri, returnWindowsPath);
 

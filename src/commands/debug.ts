@@ -83,7 +83,7 @@ export class DebugCommands {
 		this.runServiceCommand(method, { enabled });
 	}
 
-	private sendCustomFlutterDebugCommand(type: string, args: any = undefined) {
+	private sendCustomFlutterDebugCommand(type: string, args?: any) {
 		if (this.currentFlutterDebugSession)
 			this.currentFlutterDebugSession.customRequest(type, args);
 	}

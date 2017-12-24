@@ -70,7 +70,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 			}
 		});
 
-		this.activeEditor.setDecorations(this.decorationType, Object.keys(decorations).map((k) => parseInt(k)).map((k) => decorations[k]));
+		this.activeEditor.setDecorations(this.decorationType, Object.keys(decorations).map((k) => parseInt(k, 10)).map((k) => decorations[k]));
 	}
 
 	private setTrackingFile(editor: vs.TextEditor) {

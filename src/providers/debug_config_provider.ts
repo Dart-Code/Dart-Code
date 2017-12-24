@@ -15,10 +15,10 @@ export const FLUTTER_DEBUG_TYPE = "flutter";
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private sdks: Sdks;
 	private analytics: Analytics;
-	private debugType: String;
+	private debugType: string;
 	private deviceManager: FlutterDeviceManager;
 
-	constructor(sdks: Sdks, analytics: Analytics, debugType: String, deviceManager: FlutterDeviceManager) {
+	constructor(sdks: Sdks, analytics: Analytics, debugType: string, deviceManager: FlutterDeviceManager) {
 		this.sdks = sdks;
 		this.analytics = analytics;
 		this.debugType = debugType;
