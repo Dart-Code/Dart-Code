@@ -23,14 +23,14 @@ export class DartRenameProvider implements RenameProvider {
 			outputChannel.appendLine("");
 
 			this.analyzer.editGetRefactoring({
-				kind: "RENAME",
 				file: document.fileName,
-				offset: document.offsetAt(wordRange.start),
+				kind: "RENAME",
 				length: wordRange.end.character - wordRange.start.character,
-				validateOnly: false,
+				offset: document.offsetAt(wordRange.start),
 				options: {
 					newName,
 				},
+				validateOnly: false,
 			}).then((resp) => {
 				const workspaceEdit = new WorkspaceEdit();
 

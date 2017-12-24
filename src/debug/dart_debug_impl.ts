@@ -745,11 +745,11 @@ export class DartDebugSession extends DebugSession {
 				str = "";
 
 			return {
+				indexedVariables: (val.kind.endsWith("List") ? val.length : null),
 				name,
 				type: val.class.name,
 				value: str,
 				variablesReference: val.valueAsString ? 0 : thread.storeData(val),
-				indexedVariables: (val.kind.endsWith("List") ? val.length : null),
 			};
 		}
 	}

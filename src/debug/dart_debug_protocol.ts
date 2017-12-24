@@ -320,17 +320,17 @@ export class ObservatoryConnection {
 
 	public evaluate(isolateId: string, targetId: String, expression: string): Promise<DebuggerResult> {
 		return this.callMethod("evaluate", {
+			expression,
 			isolateId,
 			targetId,
-			expression,
 		});
 	}
 
 	public evaluateInFrame(isolateId: string, frameIndex: number, expression: string): Promise<DebuggerResult> {
 		return this.callMethod("evaluateInFrame", {
-			isolateId,
-			frameIndex,
 			expression,
+			frameIndex,
+			isolateId,
 		});
 	}
 

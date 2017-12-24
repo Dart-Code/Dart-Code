@@ -74,7 +74,7 @@ export abstract class StdIOService implements Disposable {
 		}
 
 		// Process the complete messages in the buffer.
-		fullBuffer.split("\n").filter((m) => m.trim() != "").forEach((m) => this.handleMessage(m));
+		fullBuffer.split("\n").filter((m) => m.trim() !== "").forEach((m) => this.handleMessage(m));
 	}
 
 	protected abstract shouldHandleMessage(message: string): boolean;
@@ -110,7 +110,7 @@ export abstract class StdIOService implements Disposable {
 		const method: string = handler[2];
 		const error = evt.error;
 
-		if (error && error.code == "SERVER_ERROR") {
+		if (error && error.code === "SERVER_ERROR") {
 			error.method = method;
 			this.notify(this.requestErrorSubscriptions, error);
 		}

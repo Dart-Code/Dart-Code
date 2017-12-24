@@ -34,20 +34,20 @@ export class SdkManager {
 			.filter((f) => hasDartExecutable(path.join(f, "bin"))); // Only those that look like Dart SDKs.
 
 		const sdkItems = sdkFolders.map((f) => ({
+			description: f,
+			detail: fs.realpathSync(f) === currentSdk && config.userDefinedSdkPath ? "Current setting" : "",
 			folder: f,
 			label: "Dart SDK v" + getDartSdkVersion(f),
-			description: f,
-			detail: fs.realpathSync(f) == currentSdk && config.userDefinedSdkPath ? "Current setting" : "",
 		}));
 
-		if (sdkItems.length == 0)
+		if (sdkItems.length === 0)
 			return;
 
 		const items = [{
-			folder: undefined,
-			label: "Auto-detect Dart SDK location",
 			description: config.userDefinedSdkPath ? undefined : `Found at ${this.sdks.dart}`,
 			detail: !config.userDefinedSdkPath ? "Current setting" : "",
+			folder: undefined,
+			label: "Auto-detect Dart SDK location",
 		}].concat(sdkItems);
 
 		vs.window.showQuickPick(items, { placeHolder: "Select an SDK to use" })

@@ -31,7 +31,7 @@ export class FlutterRun extends StdIOService {
 	// TODO: Can we code-gen all this like the analysis server?
 
 	protected handleNotification(evt: UnknownNotification) {
-		//console.log(JSON.stringify(evt));
+		// console.log(JSON.stringify(evt));
 		switch (evt.event) {
 			case "app.start":
 				this.notify(this.appStartSubscriptions, evt.params as f.AppStart);

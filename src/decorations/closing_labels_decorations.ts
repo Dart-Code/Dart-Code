@@ -14,8 +14,8 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 
 	private readonly decorationType = vs.window.createTextEditorDecorationType({
 		after: {
-			margin: "2px",
 			color: new vs.ThemeColor("dart.closingLabels"),
+			margin: "2px",
 		},
 		rangeBehavior: vs.DecorationRangeBehavior.ClosedOpen,
 	});

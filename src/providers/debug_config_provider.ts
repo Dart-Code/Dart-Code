@@ -30,18 +30,18 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	// do something to consolidate these and/or reject when the launch config doesn't match the proejct type.
 
 	public provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
-		if (this.debugType == DART_CLI_DEBUG_TYPE)
+		if (this.debugType === DART_CLI_DEBUG_TYPE)
 			return [{
 				name: "Dart command line",
-				type: "dart-cli",
-				request: "launch",
 				program: "${workspaceRoot}/bin/main.dart",
+				request: "launch",
+				type: "dart-cli",
 			}];
-		else if (this.debugType == FLUTTER_DEBUG_TYPE)
+		else if (this.debugType === FLUTTER_DEBUG_TYPE)
 			return [{
 				name: "Flutter mobile app",
-				type: "flutter",
 				request: "launch",
+				type: "flutter",
 			}];
 	}
 
@@ -49,7 +49,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// TODO: This cast feels nasty?
 		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
 
-		if (this.sdks.projectType == ProjectType.Flutter)
+		if (this.sdks.projectType === ProjectType.Flutter)
 			debugConfig.program = debugConfig.program || "${workspaceRoot}/lib/main.dart"; // Set Flutter default path.
 
 		return debugConfig;
