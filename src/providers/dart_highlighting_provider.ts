@@ -20,7 +20,7 @@ export class DartDocumentHighlightProvider implements DocumentHighlightProvider 
 
 		return new Promise<DocumentHighlight[]>((resolve, reject) => {
 			const disposable = this.analyzer.registerForAnalysisOccurrences((n) => {
-				if (n.file != file)
+				if (n.file !== file)
 					return;
 
 				disposable.dispose();

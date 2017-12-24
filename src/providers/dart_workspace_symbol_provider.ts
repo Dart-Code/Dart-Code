@@ -34,7 +34,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 			this.analyzer.searchFindTopLevelDeclarations({ pattern }).then((resp) => {
 				const disposable = this.analyzer.registerForSearchResults((notification) => {
 					// Skip any results that are not ours (or are not the final results).
-					if (notification.id != resp.id || !notification.isLast)
+					if (notification.id !== resp.id || !notification.isLast)
 						return;
 
 					disposable.dispose();
@@ -54,7 +54,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 			}).then((resp) => {
 				const disposable = this.analyzer.registerForSearchResults((notification) => {
 					// Skip any results that are not ours (or are not the final results).
-					if (notification.id != resp.id || !notification.isLast)
+					if (notification.id !== resp.id || !notification.isLast)
 						return;
 
 					disposable.dispose();
@@ -70,7 +70,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		// searchFindTopLevelDeclarations supports regex, but we build the pattern with the output of this.
 		// searchMemberDeclarations is not intended to support regex but does.
 		chars = chars.filter((c) => {
-			return "[](){}\\|./<>?+".indexOf(c) == -1;
+			return "[](){}\\|./<>?+".indexOf(c) === -1;
 		});
 		return chars.join("");
 	}
@@ -78,7 +78,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	private makeCaseInsensitiveFuzzyRegex(query: string): string {
 		let chars = Array.from(query);
 		chars = chars.map((c: string) => {
-			if (c.toUpperCase() == c.toLowerCase())
+			if (c.toUpperCase() === c.toLowerCase())
 				return c;
 			return `[${c.toUpperCase()}${c.toLowerCase()}]`;
 		});
@@ -107,23 +107,23 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 			.join(".");
 
 		// For properties, show if get/set.
-		if (result.path[0].kind == "SETTER")
+		if (result.path[0].kind === "SETTER")
 			elementPathDescription += " set";
-		if (result.path[0].kind == "GETTER")
+		if (result.path[0].kind === "GETTER")
 			elementPathDescription += " get";
 
-		const parameters = result.path[0].parameters && result.path[0].kind != "SETTER"
+		const parameters = result.path[0].parameters && result.path[0].kind !== "SETTER"
 			? result.path[0].parameters
 			: "";
 
 		return {
-			name: elementPathDescription + parameters,
+			containerName,
 			kind: getSymbolKindForElementKind(result.path[0].kind),
 			location: {
-				uri: Uri.file(result.location.file),
 				range: toRange(result.location),
+				uri: Uri.file(result.location.file),
 			},
-			containerName,
+			name: elementPathDescription + parameters,
 		};
 	}
 
@@ -146,7 +146,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 			pathComponents[0] = pathComponents[0].split("-")[0];
 
 			// Symlink goes into the lib folder, so strip that out of the path.
-			if (pathComponents[1] == "lib")
+			if (pathComponents[1] === "lib")
 				pathComponents.splice(1, 1);
 
 			// Return 'package:foo/bar.dart'.

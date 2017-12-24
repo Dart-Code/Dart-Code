@@ -22,7 +22,7 @@ export class DartDiagnosticProvider {
 	private handleErrors(notification: as.AnalysisErrorsNotification) {
 		let errors = notification.errors;
 		if (!config.showTodos)
-			errors = errors.filter((error) => error.type != "TODO");
+			errors = errors.filter((error) => error.type !== "TODO");
 		this.diagnostics.set(
 			Uri.file(notification.file),
 			errors.map((e) => this.createDiagnostic(e)),
@@ -32,7 +32,7 @@ export class DartDiagnosticProvider {
 	private createDiagnostic(error: as.AnalysisError): Diagnostic {
 		return {
 			code: error.code,
-			message: ((error.type == "HINT" || error.type == "LINT") && config.showLintNames ? `${error.code}: ` : "") + error.message,
+			message: ((error.type === "HINT" || error.type === "LINT") && config.showLintNames ? `${error.code}: ` : "") + error.message,
 			range: toRange(error.location),
 			severity: this.getSeverity(error.severity, error.type),
 			source: "dart",

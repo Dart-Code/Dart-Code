@@ -25,8 +25,8 @@ export class DartCodeActionProvider implements CodeActionProvider {
 				}),
 				this.analyzer.editGetAssists({
 					file: document.fileName,
-					offset: document.offsetAt(range.start),
 					length: range.end.character - range.start.character,
+					offset: document.offsetAt(range.start),
 				}),
 			]).then((results) => {
 				const fixes = results[0] as as.EditGetFixesResponse;

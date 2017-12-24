@@ -18,12 +18,12 @@ export class DartReferenceProvider implements ReferenceProvider {
 		return new Promise<Location[]>((resolve, reject) => {
 			this.analyzer.searchFindElementReferences({
 				file: document.fileName,
-				offset: document.offsetAt(position),
 				includePotential: true,
+				offset: document.offsetAt(position),
 			}).then((resp) => {
 				const disposable = this.analyzer.registerForSearchResults((notification) => {
 					// Skip any results that are not ours (or are not the final results).
-					if (notification.id != resp.id || !notification.isLast)
+					if (notification.id !== resp.id || !notification.isLast)
 						return;
 
 					disposable.dispose();
@@ -35,8 +35,8 @@ export class DartReferenceProvider implements ReferenceProvider {
 
 	private convertResult(result: as.SearchResult): Location {
 		return {
-			uri: util.toReadonlyUriIfExternal(result.location.file),
 			range: util.toRange(result.location),
+			uri: util.toReadonlyUriIfExternal(result.location.file),
 		};
 	}
 }

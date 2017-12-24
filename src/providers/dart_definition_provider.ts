@@ -18,10 +18,10 @@ export class DartDefinitionProvider implements DefinitionProvider {
 		return new Promise<Definition>((resolve, reject) => {
 			this.analyzer.analysisGetNavigation({
 				file: document.fileName,
-				offset: document.offsetAt(position),
 				length: 0,
+				offset: document.offsetAt(position),
 			}).then((resp) => {
-				if (resp.targets.length == 0)
+				if (resp.targets.length === 0)
 					resolve(null);
 				else
 					resolve(resp.targets.map((t) => this.convertResult(t, resp.files[t.fileIndex])));
@@ -32,12 +32,12 @@ export class DartDefinitionProvider implements DefinitionProvider {
 	private convertResult(target: as.NavigationTarget, file: string): Location {
 		// HACK: We sometimes get a startColumn of 0 (should be 1-based). Just treat this as 1 for now.
 		//     See https://github.com/Dart-Code/Dart-Code/issues/200
-		if (target.startColumn == 0)
+		if (target.startColumn === 0)
 			target.startColumn = 1;
 
 		return {
-			uri: util.toReadonlyUriIfExternal(file),
 			range: util.toRange(target),
+			uri: util.toReadonlyUriIfExternal(file),
 		};
 	}
 }

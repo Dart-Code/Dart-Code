@@ -25,7 +25,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			}).then((resp) => {
 				const disposable = this.analyzer.registerForCompletionResults((notification) => {
 					// Skip any results that are not ours (or are not the final results).
-					if (notification.id != resp.id || !notification.isLast)
+					if (notification.id !== resp.id || !notification.isLast)
 						return;
 
 					disposable.dispose();
@@ -52,8 +52,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 
 		// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its
 		// parameters.
-		if (element && element.parameters && elementKind != CompletionItemKind.Property) {
-			label += element.parameters.length == 2 ? "()" : "(…)";
+		if (element && element.parameters && elementKind !== CompletionItemKind.Property) {
+			label += element.parameters.length === 2 ? "()" : "(…)";
 			detail = element.parameters;
 
 			const hasParams = suggestion.parameterNames && suggestion.parameterNames.length > 0;
@@ -64,7 +64,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				let argPlaceholders = args.map((n, i) => `\${${i + 1}:${n}}`).join(", ");
 
 				// If blank, force in a dummy tabstop to go between the parens.
-				if (argPlaceholders == "")
+				if (argPlaceholders === "")
 					argPlaceholders = "$1";
 
 				completionText = escapeSnippetString(suggestion.completion) + `(${argPlaceholders})$0`;
@@ -81,17 +81,17 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		}
 
 		// If we're a property, work out the type.
-		if (elementKind == CompletionItemKind.Property) {
+		if (elementKind === CompletionItemKind.Property) {
 			// Setters appear as methods with one arg (and cause getters to not appear),
 			// so treat them both the same and just display with the properties type.
-			detail = element.kind == "GETTER"
+			detail = element.kind === "GETTER"
 				? element.returnType
 				// See https://github.com/dart-lang/sdk/issues/27747
 				: element.parameters ? element.parameters.substring(1, element.parameters.lastIndexOf(" ")) : "";
 			// Otherwise, get return type from method.
 		} else if (element && element.returnType) {
 			detail =
-				detail == ""
+				detail === ""
 					? element.returnType
 					: detail + " → " + element.returnType;
 		} else if (suggestion.parameterType) {

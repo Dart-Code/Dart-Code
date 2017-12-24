@@ -20,7 +20,7 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 
 		return new Promise<SymbolInformation[]>((resolve, reject) => {
 			const disposable = this.analyzer.registerForAnalysisOutline((n) => {
-				if (n.file != file)
+				if (n.file !== file)
 					return;
 
 				disposable.dispose();
@@ -39,23 +39,23 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 		const element = outline.element;
 		let name = element.name;
 
-		if (element.parameters && element.kind != "SETTER")
+		if (element.parameters && element.kind !== "SETTER")
 			name = `${name}${element.parameters}`;
 
 		if (parent && parent.name)
 			name = `${parent.name}.${name}`;
 
 		// For properties, show if get/set.
-		const propertyType = element.kind == "SETTER" ? "set" : element.kind == "GETTER" ? "get" : null;
+		const propertyType = element.kind === "SETTER" ? "set" : element.kind === "GETTER" ? "get" : null;
 
 		symbols.push({
-			name,
+			containerName: propertyType, // HACK: Not really correct, but renders nicely.
 			kind: getSymbolKindForElementKind(element.kind),
 			location: {
-				uri: Uri.file(element.location.file),
 				range: this.getRange(document, outline),
+				uri: Uri.file(element.location.file),
 			},
-			containerName: propertyType, // HACK: Not really correct, but renders nicely.
+			name,
 		});
 
 		if (outline.children) {

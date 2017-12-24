@@ -18,7 +18,7 @@ export class DartHoverProvider implements HoverProvider {
 				file: document.fileName,
 				offset: document.offsetAt(position),
 			}).then((resp) => {
-				if (resp.hovers.length == 0) {
+				if (resp.hovers.length === 0) {
 					resolve(null);
 				} else {
 					const hover = resp.hovers[0];
@@ -48,8 +48,8 @@ export class DartHoverProvider implements HoverProvider {
 		const dartdoc: string = hover.dartdoc;
 		const containingClassDescription = hover.containingClassDescription;
 		const propagatedType = hover.propagatedType;
-		const callable = (elementKind == "function" || elementKind == "method");
-		const field = (elementKind == "getter" || elementKind == "setter" || elementKind == "field");
+		const callable = (elementKind === "function" || elementKind === "method");
+		const field = (elementKind === "getter" || elementKind === "setter" || elementKind === "field");
 		const containingLibraryName = hover.containingLibraryName;
 
 		let displayString: string = "";
@@ -73,7 +73,7 @@ export class DartHoverProvider implements HoverProvider {
 
 		// Clean up some dart.core dartdoc.
 		const index = doc.indexOf("## Other resources");
-		if (index != -1)
+		if (index !== -1)
 			doc = doc.substring(0, index);
 
 		// Remove colons from old-style references like [:foo:].

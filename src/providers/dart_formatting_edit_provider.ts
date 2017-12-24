@@ -16,11 +16,11 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 		return new Promise<TextEdit[]>((resolve, reject) => {
 			this.analyzer.editFormat({
 				file: document.fileName,
-				selectionOffset: 0,
-				selectionLength: 0,
 				lineLength: config.for(document.uri).lineLength,
+				selectionLength: 0,
+				selectionOffset: 0,
 			}).then((resp) => {
-				if (resp.edits.length == 0)
+				if (resp.edits.length === 0)
 					resolve(null);
 				else
 					resolve(resp.edits.map((e) => this.convertData(document, e)));
