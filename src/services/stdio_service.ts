@@ -7,14 +7,14 @@ import * as fs from "fs";
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
 export abstract class StdIOService implements Disposable {
-	process: child_process.ChildProcess;
+	public process: child_process.ChildProcess;
 	protected messagesWrappedInBrackets = false;
 	private nextRequestID = 1;
 	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] } = {};
 	private messageBuffer: string[] = [];
 	private logFile: string;
 	private logStream: fs.WriteStream;
-	private requestErrorSubscriptions: ((notification: any) => void)[] = [];
+	private requestErrorSubscriptions: Array<(notification: any) => void> = [];
 
 	constructor(logFile: string, wrappedMessages: boolean = false) {
 		this.logFile = logFile;
@@ -22,10 +22,10 @@ export abstract class StdIOService implements Disposable {
 	}
 
 	protected createProcess(workingDirectory: string, binPath: string, args: string[], env: any) {
-		this.process = child_process.spawn(binPath, args, { cwd: workingDirectory, env: env });
+		this.process = child_process.spawn(binPath, args, { cwd: workingDirectory, env });
 
 		this.process.stdout.on("data", (data: Buffer) => {
-			let message = data.toString();
+			const message = data.toString();
 
 			// Add this message to the buffer for processing.
 			this.messageBuffer.push(message);
@@ -38,18 +38,18 @@ export abstract class StdIOService implements Disposable {
 
 	protected sendRequest<TReq, TResp>(method: string, params?: TReq): Thenable<TResp> {
 		// Generate an ID for this request so we can match up the response.
-		let id = this.nextRequestID++;
+		const id = this.nextRequestID++;
 
 		return new Promise<TResp>((resolve, reject) => {
 			// Stash the callbacks so we can call them later.
 			this.activeRequests[id.toString()] = [resolve, reject, method];
 
-			let req = {
+			const req = {
 				id: id.toString(),
-				method: method,
-				params: params
+				method,
+				params,
 			};
-			let json = this.messagesWrappedInBrackets
+			const json = this.messagesWrappedInBrackets
 				? "[" + JSON.stringify(req) + "]\r\n"
 				: JSON.stringify(req) + "\r\n";
 			this.sendMessage(json);
@@ -67,19 +67,19 @@ export abstract class StdIOService implements Disposable {
 
 		// If the message doesn't end with \n then put the last part back into the buffer.
 		if (!fullBuffer.endsWith("\n")) {
-			let lastNewline = fullBuffer.lastIndexOf("\n");
-			let incompleteMessage = fullBuffer.substring(lastNewline + 1);
+			const lastNewline = fullBuffer.lastIndexOf("\n");
+			const incompleteMessage = fullBuffer.substring(lastNewline + 1);
 			fullBuffer = fullBuffer.substring(0, lastNewline);
 			this.messageBuffer.push(incompleteMessage);
 		}
 
 		// Process the complete messages in the buffer.
-		fullBuffer.split("\n").filter(m => m.trim() != "").forEach(m => this.handleMessage(m));
+		fullBuffer.split("\n").filter((m) => m.trim() != "").forEach((m) => this.handleMessage(m));
 	}
 
 	protected abstract shouldHandleMessage(message: string): boolean;
 
-	handleMessage(message: string): void {
+	public handleMessage(message: string): void {
 		message = message.trim();
 		this.logTraffic(`<== ${message}\r\n`);
 
@@ -92,24 +92,23 @@ export abstract class StdIOService implements Disposable {
 
 			if (this.messagesWrappedInBrackets)
 				msg = msg[0];
-		}
-		catch (e) {
+		} catch (e) {
 			console.error(`Unable to parse message (${e}): ${message}`);
 			return;
 		}
 
 		if (msg.event)
-			this.handleNotification(<UnknownNotification>msg);
+			this.handleNotification(msg as UnknownNotification);
 		else
-			this.handleResponse(<UnknownResponse>msg);
+			this.handleResponse(msg as UnknownResponse);
 	}
 
 	protected abstract handleNotification(evt: UnknownNotification): void;
 
 	private handleResponse(evt: UnknownResponse) {
-		let handler = this.activeRequests[evt.id];
-		let method: string = handler[2];
-		let error = evt.error;
+		const handler = this.activeRequests[evt.id];
+		const method: string = handler[2];
+		const error = evt.error;
 
 		if (error && error.code == "SERVER_ERROR") {
 			error.method = method;
@@ -123,23 +122,23 @@ export abstract class StdIOService implements Disposable {
 		}
 	}
 
-	protected notify<T>(subscriptions: ((notification: T) => void)[], notification: T) {
-		subscriptions.slice().forEach(sub => sub(notification));
+	protected notify<T>(subscriptions: Array<(notification: T) => void>, notification: T) {
+		subscriptions.slice().forEach((sub) => sub(notification));
 	}
 
-	protected subscribe<T>(subscriptions: ((notification: T) => void)[], subscriber: (notification: T) => void): Disposable {
+	protected subscribe<T>(subscriptions: Array<(notification: T) => void>, subscriber: (notification: T) => void): Disposable {
 		subscriptions.push(subscriber);
 		return {
 			dispose: () => {
-				let index = subscriptions.indexOf(subscriber);
+				const index = subscriptions.indexOf(subscriber);
 				if (index >= 0) {
 					subscriptions.splice(index, 1);
 				}
-			}
+			},
 		};
 	}
 
-	registerForRequestError(subscriber: (notification: any) => void): Disposable {
+	public registerForRequestError(subscriber: (notification: any) => void): Disposable {
 		return this.subscribe(this.requestErrorSubscriptions, subscriber);
 	}
 
@@ -161,7 +160,7 @@ export abstract class StdIOService implements Disposable {
 		}
 	}
 
-	dispose() {
+	public dispose() {
 		if (this.logStream) {
 			this.logStream.close();
 			this.logStream = null;
@@ -172,22 +171,22 @@ export abstract class StdIOService implements Disposable {
 }
 
 export class Request<T> {
-	id: string;
-	method: string;
-	params: T;
+	public id: string;
+	public method: string;
+	public params: T;
 }
 
 export class Response<T> {
-	id: string;
-	error: any;
-	result: T;
+	public id: string;
+	public error: any;
+	public result: T;
 }
 
 export class UnknownResponse extends Response<any> { }
 
 export class Notification<T> {
-	event: string;
-	params: T;
+	public event: string;
+	public params: T;
 }
 
 export class UnknownNotification extends Notification<any> { }
