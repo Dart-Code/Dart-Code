@@ -1,5 +1,7 @@
 {
-	"extends": [],
+	"extends": [
+		"tslint:recommended"
+	],
 	"linterOptions": {
 		"exclude": [
 			"src/analysis/analysis_server_types.ts",
