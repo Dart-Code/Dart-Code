@@ -30,7 +30,7 @@ export class DebugCommands {
 	constructor(context: vs.ExtensionContext, analytics: Analytics) {
 		this.analytics = analytics;
 		context.subscriptions.push(this.debugStatus);
-		vs.debug.onDidReceiveDebugSessionCustomEvent(e => {
+		vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
 			if (e.event == "dart.progress") {
 				if (e.body.message) {
 					this.debugStatus.text = e.body.message;
@@ -42,13 +42,13 @@ export class DebugCommands {
 				this.observatoryUri = e.body.observatoryUri;
 			}
 		});
-		vs.debug.onDidStartDebugSession(s => {
+		vs.debug.onDidStartDebugSession((s) => {
 			if (s.type == FLUTTER_DEBUG_TYPE) {
 				this.currentFlutterDebugSession = s;
 				this.resetFlutterSettings();
 			}
 		});
-		vs.debug.onDidTerminateDebugSession(s => {
+		vs.debug.onDidTerminateDebugSession((s) => {
 			if (s == this.currentFlutterDebugSession) {
 				this.currentFlutterDebugSession = null;
 			}
@@ -76,11 +76,11 @@ export class DebugCommands {
 	}
 
 	private runServiceCommand(method: string, params: any) {
-		this.sendCustomFlutterDebugCommand("serviceExtension", { type: method, params: params });
+		this.sendCustomFlutterDebugCommand("serviceExtension", { type: method, params });
 	}
 
 	private runBoolServiceCommand(method: string, enabled: boolean) {
-		this.runServiceCommand(method, { enabled: enabled });
+		this.runServiceCommand(method, { enabled });
 	}
 
 	private sendCustomFlutterDebugCommand(type: string, args: any = undefined) {

@@ -8,7 +8,7 @@ import { Analyzer } from "../analysis/analyzer";
 export class EditCommands implements vs.Disposable {
 	private context: vs.ExtensionContext;
 	private analyzer: Analyzer;
-	private commands: Array<vs.Disposable> = [];
+	private commands: vs.Disposable[] = [];
 
 	constructor(context: vs.ExtensionContext, analyzer: Analyzer) {
 		this.context = context;
@@ -17,7 +17,7 @@ export class EditCommands implements vs.Disposable {
 		this.commands.push(
 			vs.commands.registerTextEditorCommand("dart.organizeDirectives", this.organizeDirectives, this),
 			vs.commands.registerTextEditorCommand("dart.sortMembers", this.sortMembers, this),
-			vs.commands.registerCommand("_dart.applySourceChange", this.applyEdits, this)
+			vs.commands.registerCommand("_dart.applySourceChange", this.applyEdits, this),
 		);
 	}
 
@@ -38,15 +38,15 @@ export class EditCommands implements vs.Disposable {
 		f = f.bind(this.analyzer); // Yay JavaScript!
 
 		f({ file: editor.document.fileName }).then((response) => {
-			let edit: as.SourceFileEdit = response.edit;
+			const edit: as.SourceFileEdit = response.edit;
 			if (edit.edits.length == 0)
 				return;
 
 			editor.edit((editBuilder: vs.TextEditorEdit) => {
 				edit.edits.forEach((edit) => {
-					let range = new vs.Range(
+					const range = new vs.Range(
 						editor.document.positionAt(edit.offset),
-						editor.document.positionAt(edit.offset + edit.length)
+						editor.document.positionAt(edit.offset + edit.length),
 					);
 					editBuilder.replace(range, edit.replacement);
 				});
@@ -59,34 +59,34 @@ export class EditCommands implements vs.Disposable {
 		});
 	}
 
-	dispose(): any {
-		for (let command of this.commands)
+	public dispose(): any {
+		for (const command of this.commands)
 			command.dispose();
 	}
 
 	private applyEdits(document: vs.TextDocument, change: as.SourceChange) {
-		let changes = new vs.WorkspaceEdit();
+		const changes = new vs.WorkspaceEdit();
 
-		change.edits.forEach(edit => {
-			edit.edits.forEach(e => {
+		change.edits.forEach((edit) => {
+			edit.edits.forEach((e) => {
 				changes.replace(
 					vs.Uri.file(edit.file),
 					new vs.Range(
 						document.positionAt(e.offset),
-						document.positionAt(e.offset + e.length)
+						document.positionAt(e.offset + e.length),
 					),
-					e.replacement
-				)
-			})
+					e.replacement,
+				);
+			});
 		});
 
-		// Apply the edits.		
-		vs.workspace.applyEdit(changes).then(success => {
+		// Apply the edits.
+		vs.workspace.applyEdit(changes).then((success) => {
 			// Set the cursor position.
 			if (change.selection) {
-				let pos = document.positionAt(change.selection.offset);
-				let selection = new vs.Selection(pos, pos);
-				vs.window.showTextDocument(document).then(ed => ed.selection = selection);
+				const pos = document.positionAt(change.selection.offset);
+				const selection = new vs.Selection(pos, pos);
+				vs.window.showTextDocument(document).then((ed) => ed.selection = selection);
 			}
 		});
 	}

@@ -24,27 +24,27 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => sdkManager.changeSdk()));
 
 		// Pub commands.
-		context.subscriptions.push(vs.commands.registerCommand("pub.get", selection => {
+		context.subscriptions.push(vs.commands.registerCommand("pub.get", (selection) => {
 			this.runPub("get", selection);
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("pub.upgrade", selection => {
+		context.subscriptions.push(vs.commands.registerCommand("pub.upgrade", (selection) => {
 			this.runPub("upgrade", selection);
 		}));
 
 		// Flutter commands.
-		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", selection => {
+		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", (selection) => {
 			this.runFlutter("packages get");
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", selection => {
+		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => {
 			this.runFlutter("packages upgrade", selection);
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", selection => {
+		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", (selection) => {
 			this.runFlutter("doctor", selection);
 		}));
 
 		// Hook saving pubspec to run pub.get.
-		context.subscriptions.push(vs.workspace.onDidSaveTextDocument(td => {
-			if (config.for(td.uri).runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() == "pubspec.yaml"){
+		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
+			if (config.for(td.uri).runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() == "pubspec.yaml") {
 				if (sdks.projectType == ProjectType.Flutter || sdks.projectType == ProjectType.Fuchsia) {
 					vs.commands.executeCommand("flutter.packages.get");
 				} else {
@@ -54,12 +54,11 @@ export class SdkCommands {
 		}));
 	}
 
-
 	private runCommandForWorkspace(
 		handler: (folder: string, command: string, shortPath: string) => void,
 		placeHolder: string,
 		command: string,
-		selection?: vs.Uri
+		selection?: vs.Uri,
 	) {
 		let file = selection && selection.fsPath;
 		file = file || (vs.window.activeTextEditor && vs.window.activeTextEditor.document.fileName);
@@ -78,11 +77,11 @@ export class SdkCommands {
 				? Promise.resolve(folder)
 				// TODO: Can we get this filtered?
 				// https://github.com/Microsoft/vscode/issues/39132
-				: vs.window.showWorkspaceFolderPick({ placeHolder: placeHolder }).then(f => f && isDartWorkspaceFolder(f) && f.uri.fsPath);
+				: vs.window.showWorkspaceFolderPick({ placeHolder }).then((f) => f && isDartWorkspaceFolder(f) && f.uri.fsPath);
 
-		folderPromise.then(f => {
-			let workspacePath = vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri.fsPath;
-			let shortPath = path.join(path.basename(f), path.relative(f, workspacePath));
+		folderPromise.then((f) => {
+			const workspacePath = vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri.fsPath;
+			const shortPath = path.join(path.basename(f), path.relative(f, workspacePath));
 			handler(f, command, shortPath);
 		});
 	}
@@ -92,18 +91,18 @@ export class SdkCommands {
 	}
 
 	private runFlutterInFolder(folder: string, command: string, shortPath: string) {
-		let channel = channels.createChannel("Flutter");
+		const channel = channels.createChannel("Flutter");
 		channel.show(true);
 
-		let args = new Array();
-		command.split(' ').forEach(option => {
+		const args = new Array();
+		command.split(" ").forEach((option) => {
 			args.push(option);
 		});
 
-		let flutterBinPath = path.join(this.sdks.flutter, flutterPath);
+		const flutterBinPath = path.join(this.sdks.flutter, flutterPath);
 		channel.appendLine(`[${shortPath}] flutter ${args.join(" ")}`);
 
-		let process = child_process.spawn(flutterBinPath, args, { "cwd": folder });
+		const process = child_process.spawn(flutterBinPath, args, { cwd: folder });
 		channels.runProcessInChannel(process, channel);
 	}
 
@@ -112,7 +111,7 @@ export class SdkCommands {
 	}
 
 	private runPubInFolder(folder: string, command: string, shortPath: string) {
-		let channel = channels.createChannel("Pub");
+		const channel = channels.createChannel("Pub");
 		channel.show(true);
 
 		let args = [];
@@ -123,11 +122,11 @@ export class SdkCommands {
 			args = args.concat(config.for(vs.Uri.file(folder)).pubAdditionalArgs);
 
 		// TODO: Add a wrapper around the Dart SDK? It could do things like
-		// return the paths for tools in the bin/ dir. 
-		let pubPath = path.join(this.sdks.dart, dartPubPath);
+		// return the paths for tools in the bin/ dir.
+		const pubPath = path.join(this.sdks.dart, dartPubPath);
 		channel.appendLine(`[${shortPath}] pub ${args.join(" ")}`);
 
-		let process = child_process.spawn(pubPath, args, { "cwd": folder });
+		const process = child_process.spawn(pubPath, args, { cwd: folder });
 		channels.runProcessInChannel(process, channel);
 	}
 }

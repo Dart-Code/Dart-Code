@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 import * as fs from "fs";
 import * as path from "path";
@@ -18,11 +18,11 @@ export function uriToFilePath(uri: string, returnWindowsPath: boolean = isWin): 
 
 	// Windows fixup.
 	if (returnWindowsPath) {
-		filePath = filePath.replace(/\//g, '\\');
-		if (filePath[0] == '\\')
+		filePath = filePath.replace(/\//g, "\\");
+		if (filePath[0] == "\\")
 			filePath = filePath.substring(1);
 	} else {
-		if (filePath[0] != '/')
+		if (filePath[0] != "/")
 			filePath = `/${filePath}`;
 	}
 
@@ -34,7 +34,7 @@ function findFile(file: string, startLocation: string) {
 	let parent = startLocation;
 
 	while (parent && parent.length > 1 && parent != lastParent) {
-		let packages = path.join(parent, file);
+		const packages = path.join(parent, file);
 		if (fs.existsSync(packages))
 			return packages;
 		lastParent = parent;
@@ -45,16 +45,16 @@ function findFile(file: string, startLocation: string) {
 }
 
 export function getLocalPackageName(entryPoint: string) {
-	let pubspec = findFile("pubspec.yaml", path.dirname(entryPoint));
+	const pubspec = findFile("pubspec.yaml", path.dirname(entryPoint));
 	if (!pubspec)
 		return null;
 
 	// TODO: This could fail if a nested "name:" property exists above the main "name:" property..
 	// The proper fix is to use a proper YAML parser but none of those on npm look very appealing
-	// (most have several dependencies, full issue trackers and/or are not being maintained). 
-	let lines = fs.readFileSync(pubspec).toString().split("\n");
-	let values = lines.filter(l => l.indexOf(":") > -1).map(l => l.split(":"));
-	let namePair = values.find(v => v[0].trim() == "name");
+	// (most have several dependencies, full issue trackers and/or are not being maintained).
+	const lines = fs.readFileSync(pubspec).toString().split("\n");
+	const values = lines.filter((l) => l.indexOf(":") > -1).map((l) => l.split(":"));
+	const namePair = values.find((v) => v[0].trim() == "name");
 
 	if (namePair)
 		return namePair[1].trim();
@@ -81,13 +81,13 @@ export function formatPathForVm(file: string): string {
 
 export function isWithinPath(file: string, folder: string) {
 	const relative = path.relative(folder, file);
-	return !!relative && !relative.startsWith('..') && !path.isAbsolute(relative);
+	return !!relative && !relative.startsWith("..") && !path.isAbsolute(relative);
 }
 
 export class PromiseCompleter<T> {
-	promise: Promise<T>;
-	resolve: (value?: T | PromiseLike<T>) => void;
-	reject: (error?: any, stackTrace?: string) => void;
+	public promise: Promise<T>;
+	public resolve: (value?: T | PromiseLike<T>) => void;
+	public reject: (error?: any, stackTrace?: string) => void;
 
 	constructor() {
 		this.promise = new Promise((res, rej) => {
@@ -98,7 +98,7 @@ export class PromiseCompleter<T> {
 }
 
 export class PackageMap {
-	static findPackagesFile(entryPoint: string): string {
+	public static findPackagesFile(entryPoint: string): string {
 		return findFile(".packages", path.dirname(entryPoint));
 	}
 
@@ -107,17 +107,17 @@ export class PackageMap {
 	constructor(file?: string) {
 		if (!file) return;
 
-		let lines: string[] = fs.readFileSync(file, { encoding: "utf8" }).split("\n");
+		const lines: string[] = fs.readFileSync(file, { encoding: "utf8" }).split("\n");
 		for (let line of lines) {
 			line = line.trim();
 
 			if (line.length == 0 || line.startsWith("#"))
 				continue;
 
-			let index = line.indexOf(":");
+			const index = line.indexOf(":");
 			if (index != -1) {
-				let name = line.substr(0, index);
-				let rest = line.substring(index + 1);
+				const name = line.substr(0, index);
+				const rest = line.substring(index + 1);
 
 				if (rest.startsWith("file:"))
 					this.map[name] = uriToFilePath(rest);
@@ -127,43 +127,43 @@ export class PackageMap {
 		}
 	}
 
-	getPackagePath(name: string): string {
+	public getPackagePath(name: string): string {
 		return this.map[name];
 	}
 
-	resolvePackageUri(uri: string): string {
+	public resolvePackageUri(uri: string): string {
 		if (!uri)
 			return null;
 
 		let name: string = uri;
 		if (name.startsWith("package:"))
 			name = name.substring(8);
-		let index = name.indexOf("/");
+		const index = name.indexOf("/");
 		if (index == -1)
 			return null;
 
-		let rest = name.substring(index + 1);
+		const rest = name.substring(index + 1);
 		name = name.substring(0, index);
 
-		let location = this.getPackagePath(name);
+		const location = this.getPackagePath(name);
 		if (location)
 			return path.join(location, rest);
 		else
 			return null;
 	}
 
-	convertFileToPackageUri(file: string): string {
-		for (let name of Object.keys(this.map)) {
-			let dir = this.map[name];
+	public convertFileToPackageUri(file: string): string {
+		for (const name of Object.keys(this.map)) {
+			const dir = this.map[name];
 			if (isWithinPath(file, dir)) {
 				let rest = file.substring(dir.length);
 				// Ensure we don't start with a slash if the map didn't have a trailing slash,
 				// else we'll end up with doubles. See https://github.com/Dart-Code/Dart-Code/issues/398
-				if (rest.startsWith('/'))
-					rest = rest.substr(1)
+				if (rest.startsWith("/"))
+					rest = rest.substr(1);
 				// package: uri should always use forward slashes.
 				if (isWin)
-					rest = rest.replace(/\\/g, '/');
+					rest = rest.replace(/\\/g, "/");
 				return `package:${name}/${rest}`;
 			}
 		}
@@ -179,7 +179,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	debugSdkLibraries: boolean;
 	debugExternalLibraries: boolean;
 	program: string;
-	args: Array<string>;
+	args: string[];
 	observatoryLogFile: string;
 }
 

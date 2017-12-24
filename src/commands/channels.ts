@@ -3,7 +3,7 @@
 import * as child_process from "child_process";
 import * as vs from "vscode";
 
-let channels: { [key: string]: vs.OutputChannel } = {};
+const channels: { [key: string]: vs.OutputChannel } = {};
 
 export function createChannel(name: string): vs.OutputChannel {
     if (channels[name] == null)

@@ -17,17 +17,16 @@ export class FlutterRun extends StdIOService {
 
 	protected shouldHandleMessage(message: string): boolean {
 		// Everything in flutter is wrapped in [] so we can tell what to handle.
-		if (message.startsWith('[') && message.endsWith(']'))
+		if (message.startsWith("[") && message.endsWith("]"))
 			return true;
 		else
 			this.notify(this.unhandledMessageSubscriptions, message);
 	}
 
-	private unhandledMessageSubscriptions: ((notification: string) => void)[] = [];
-	registerForUnhandledMessages(subscriber: (notification: string) => void): Disposable {
+	private unhandledMessageSubscriptions: Array<(notification: string) => void> = [];
+	public registerForUnhandledMessages(subscriber: (notification: string) => void): Disposable {
 		return this.subscribe(this.unhandledMessageSubscriptions, subscriber);
 	}
-
 
 	// TODO: Can we code-gen all this like the analysis server?
 
@@ -35,66 +34,64 @@ export class FlutterRun extends StdIOService {
 		//console.log(JSON.stringify(evt));
 		switch (evt.event) {
 			case "app.start":
-				this.notify(this.appStartSubscriptions, <f.AppStart>evt.params);
+				this.notify(this.appStartSubscriptions, evt.params as f.AppStart);
 				break;
 			case "app.debugPort":
-				this.notify(this.appDebugPortSubscriptions, <f.AppDebugPort>evt.params);
+				this.notify(this.appDebugPortSubscriptions, evt.params as f.AppDebugPort);
 				break;
 			case "app.started":
-				this.notify(this.appStartedSubscriptions, <f.AppEvent>evt.params);
+				this.notify(this.appStartedSubscriptions, evt.params as f.AppEvent);
 				break;
 			case "app.stop":
-				this.notify(this.appStopSubscriptions, <f.AppEvent>evt.params);
+				this.notify(this.appStopSubscriptions, evt.params as f.AppEvent);
 				break;
 			case "app.progress":
-				this.notify(this.appProgressSubscriptions, <f.AppEvent>evt.params);
+				this.notify(this.appProgressSubscriptions, evt.params as f.AppEvent);
 				break;
 		}
 	}
 
-	// Subscription lists.	
+	// Subscription lists.
 
-	private appStartSubscriptions: ((notification: f.AppStart) => void)[] = [];
-	private appDebugPortSubscriptions: ((notification: f.AppDebugPort) => void)[] = [];
-	private appStartedSubscriptions: ((notification: f.AppEvent) => void)[] = [];
-	private appStopSubscriptions: ((notification: f.AppEvent) => void)[] = [];
-	private appProgressSubscriptions: ((notification: f.AppProgress) => void)[] = [];
-
+	private appStartSubscriptions: Array<(notification: f.AppStart) => void> = [];
+	private appDebugPortSubscriptions: Array<(notification: f.AppDebugPort) => void> = [];
+	private appStartedSubscriptions: Array<(notification: f.AppEvent) => void> = [];
+	private appStopSubscriptions: Array<(notification: f.AppEvent) => void> = [];
+	private appProgressSubscriptions: Array<(notification: f.AppProgress) => void> = [];
 
 	// Request methods.
 
-	restart(appId: string, pause: boolean, fullRestart?: boolean): Thenable<any> {
-		return this.sendRequest("app.restart", { "appId": appId, fullRestart: fullRestart === true, pause: pause });
+	public restart(appId: string, pause: boolean, fullRestart?: boolean): Thenable<any> {
+		return this.sendRequest("app.restart", { appId, fullRestart: fullRestart === true, pause });
 	}
 
-	stop(appId: string): Thenable<UnknownResponse> {
-		return this.sendRequest("app.stop", { "appId": appId });
+	public stop(appId: string): Thenable<UnknownResponse> {
+		return this.sendRequest("app.stop", { appId });
 	}
 
-	callServiceExtension(appId: string, methodName: string, params: any): Thenable<any> {
-		return this.sendRequest("app.callServiceExtension", { "appId": appId, methodName: methodName, params: params });
+	public callServiceExtension(appId: string, methodName: string, params: any): Thenable<any> {
+		return this.sendRequest("app.callServiceExtension", { appId, methodName, params });
 	}
-
 
 	// Subscription methods.
 
-	registerForAppStart(subscriber: (notification: f.AppStart) => void): Disposable {
+	public registerForAppStart(subscriber: (notification: f.AppStart) => void): Disposable {
 		return this.subscribe(this.appStartSubscriptions, subscriber);
 	}
 
-	registerForAppDebugPort(subscriber: (notification: f.AppDebugPort) => void): Disposable {
+	public registerForAppDebugPort(subscriber: (notification: f.AppDebugPort) => void): Disposable {
 		return this.subscribe(this.appDebugPortSubscriptions, subscriber);
 	}
 
-	registerForAppStarted(subscriber: (notification: f.AppEvent) => void): Disposable {
+	public registerForAppStarted(subscriber: (notification: f.AppEvent) => void): Disposable {
 		return this.subscribe(this.appStartedSubscriptions, subscriber);
 	}
 
-	registerForAppStop(subscriber: (notification: f.AppEvent) => void): Disposable {
+	public registerForAppStop(subscriber: (notification: f.AppEvent) => void): Disposable {
 		return this.subscribe(this.appStopSubscriptions, subscriber);
 	}
 
-	registerForAppProgress(subscriber: (notification: f.AppProgress) => void): Disposable {
+	public registerForAppProgress(subscriber: (notification: f.AppProgress) => void): Disposable {
 		return this.subscribe(this.appProgressSubscriptions, subscriber);
 	}
 }

@@ -9,14 +9,14 @@ import { toRange } from "../utils";
 export class TypeHierarchyCommand implements vs.Disposable {
 	private context: vs.ExtensionContext;
 	private analyzer: Analyzer;
-	private commands: Array<vs.Disposable> = [];
+	private commands: vs.Disposable[] = [];
 
 	constructor(context: vs.ExtensionContext, analyzer: Analyzer) {
 		this.context = context;
 		this.analyzer = analyzer;
 
 		this.commands.push(
-			vs.commands.registerTextEditorCommand("dart.showTypeHierarchy", this.showTypeHierarchy, this)
+			vs.commands.registerTextEditorCommand("dart.showTypeHierarchy", this.showTypeHierarchy, this),
 		);
 	}
 
@@ -26,34 +26,34 @@ export class TypeHierarchyCommand implements vs.Disposable {
 			return;
 		}
 
-		let document = editor.document;
+		const document = editor.document;
 
 		this.analyzer.searchGetTypeHierarchy({
 			file: document.fileName,
-			offset: document.offsetAt(editor.selection.active)
-		}).then(response => {
-			let items = response.hierarchyItems;
+			offset: document.offsetAt(editor.selection.active),
+		}).then((response) => {
+			const items = response.hierarchyItems;
 			if (!items) {
-				vs.window.showInformationMessage('Type hierarchy not available.');
+				vs.window.showInformationMessage("Type hierarchy not available.");
 				return;
 			}
 
-			let options = { placeHolder: name(items, 0) };
+			const options = { placeHolder: name(items, 0) };
 
 			// TODO: How / where to show implements?
-			let tree = [];
-			let startItem = items[0];
+			const tree = [];
+			const startItem = items[0];
 
 			tree.push(startItem);
 			addParents(items, tree, startItem);
 			addChildren(items, tree, startItem);
 
-			vs.window.showQuickPick(tree.map(item => itemToPick(item, items)), options).then((result: vs.QuickPickItem & { location?: as.Location }) => {
+			vs.window.showQuickPick(tree.map((item) => itemToPick(item, items)), options).then((result: vs.QuickPickItem & { location?: as.Location }) => {
 				if (result) {
-					let location: as.Location = result.location;
-					vs.workspace.openTextDocument(location.file).then(document => {
-						vs.window.showTextDocument(document).then(editor => {
-							let range = toRange(location);
+					const location: as.Location = result.location;
+					vs.workspace.openTextDocument(location.file).then((document) => {
+						vs.window.showTextDocument(document).then((editor) => {
+							const range = toRange(location);
 							editor.revealRange(range, vs.TextEditorRevealType.InCenterIfOutsideViewport);
 							editor.selection = new vs.Selection(range.end, range.start);
 						});
@@ -63,17 +63,17 @@ export class TypeHierarchyCommand implements vs.Disposable {
 		});
 	}
 
-	dispose(): any {
-		for (let command of this.commands)
+	public dispose(): any {
+		for (const command of this.commands)
 			command.dispose();
 	}
 }
 
 function addParents(items: as.TypeHierarchyItem[], tree: as.TypeHierarchyItem[], item: as.TypeHierarchyItem) {
 	if (item.superclass) {
-		let parent = items[item.superclass];
+		const parent = items[item.superclass];
 
-		if (parent.classElement.name != 'Object') {
+		if (parent.classElement.name != "Object") {
 			tree.unshift(parent);
 			addParents(items, tree, parent);
 		}
@@ -82,44 +82,44 @@ function addParents(items: as.TypeHierarchyItem[], tree: as.TypeHierarchyItem[],
 
 function addChildren(items: as.TypeHierarchyItem[], tree: as.TypeHierarchyItem[], item: as.TypeHierarchyItem) {
 	// Handle direct children.
-	for (let index of item.subclasses) {
-		let child = items[index];
+	for (const index of item.subclasses) {
+		const child = items[index];
 		tree.push(child);
 	}
 
 	// Handle grandchildren.
-	for (let index of item.subclasses) {
-		let child = items[index];
+	for (const index of item.subclasses) {
+		const child = items[index];
 		if (child.subclasses.length > 0)
 			addChildren(items, tree, child);
 	}
 }
 
 function itemToPick(item: as.TypeHierarchyItem, items: as.TypeHierarchyItem[]): vs.QuickPickItem {
-	let desc = '';
+	let desc = "";
 
 	// extends
-	if (item.superclass !== undefined && name(items, item.superclass) != 'Object')
+	if (item.superclass !== undefined && name(items, item.superclass) != "Object")
 		desc += `extends ${name(items, item.superclass)}`;
 
 	// implements
 	if (item.interfaces.length > 0) {
 		if (desc.length > 0)
-			desc += ', ';
-		desc += `implements ${item.interfaces.map(i => name(items, i)).join(', ')}`;
+			desc += ", ";
+		desc += `implements ${item.interfaces.map((i) => name(items, i)).join(", ")}`;
 	}
 
 	// with
 	if (item.mixins.length > 0) {
 		if (desc.length > 0)
-			desc += ', ';
-		desc += `with ${item.mixins.map(i => name(items, i)).join(', ')}`;
+			desc += ", ";
+		desc += `with ${item.mixins.map((i) => name(items, i)).join(", ")}`;
 	}
 
-	let result = {
+	const result = {
 		label: item.classElement.name,
 		description: desc,
-		location: item.classElement.location
+		location: item.classElement.location,
 	};
 
 	return result;

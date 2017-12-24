@@ -7,14 +7,14 @@ import {
 	DebugSession,
 	InitializedEvent, TerminatedEvent, StoppedEvent, BreakpointEvent, OutputEvent, Event,
 	Thread, StackFrame, Scope, Source, Handles, Breakpoint, ThreadEvent, Variable, ModuleEvent,
-	Module
+	Module,
 } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { PackageMap, uriToFilePath, PromiseCompleter, getLocalPackageName, isWin, DartLaunchRequestArguments, formatPathForVm } from "./utils";
 import {
 	ObservatoryConnection, VMEvent, VMIsolateRef, RPCError, DebuggerResult, VMStack, VMSentinel, VMObj,
 	VMFrame, VMFuncRef, VMInstanceRef, VMScriptRef, VMScript, VMSourceLocation, VMErrorRef, VMBreakpoint,
-	VMInstance, VMResponse, VMClassRef, VM, VMIsolate, VMLibraryRef, VMCodeRef
+	VMInstance, VMResponse, VMClassRef, VM, VMIsolate, VMLibraryRef, VMCodeRef,
 } from "./dart_debug_protocol";
 
 // TODO: supportsSetVariable
@@ -30,7 +30,7 @@ export class DartDebugSession extends DebugSession {
 	protected sourceFile: string;
 	protected childProcess: child_process.ChildProcess;
 	private processExited: boolean = false;
-	observatory: ObservatoryConnection;
+	public observatory: ObservatoryConnection;
 	private observatoryLogStream: fs.WriteStream;
 	private threadManager: ThreadManager;
 	private packageMap: PackageMap;
@@ -45,13 +45,13 @@ export class DartDebugSession extends DebugSession {
 
 	protected initializeRequest(
 		response: DebugProtocol.InitializeResponse,
-		args: DebugProtocol.InitializeRequestArguments
+		args: DebugProtocol.InitializeRequestArguments,
 	): void {
 		response.body.supportsConfigurationDoneRequest = true;
 		response.body.supportsEvaluateForHovers = true;
 		response.body.exceptionBreakpointFilters = [
 			{ filter: "All", label: "All Exceptions", default: false },
-			{ filter: "Unhandled", label: "Uncaught Exceptions", default: true }
+			{ filter: "Unhandled", label: "Uncaught Exceptions", default: true },
 		];
 		this.sendResponse(response);
 	}
@@ -84,8 +84,8 @@ export class DartDebugSession extends DebugSession {
 				let uri = match[1].trim();
 
 				// In SDK 1.22, trailing slash was added to the url (see #215).
-				if (!uri.endsWith('/'))
-					uri = uri + '/';
+				if (!uri.endsWith("/"))
+					uri = uri + "/";
 
 				this.initObservatory(`${uri}ws`);
 			} else if (this.sendStdOutToConsole)
@@ -112,7 +112,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected spawnProcess(args: DartLaunchRequestArguments) {
-		let debug = !args.noDebug;
+		const debug = !args.noDebug;
 		let appArgs = [];
 		if (debug) {
 			appArgs.push("--enable-vm-service=0");
@@ -125,21 +125,21 @@ export class DartDebugSession extends DebugSession {
 		if (args.args)
 			appArgs = appArgs.concat(args.args);
 
-		let process = child_process.spawn(this.args.dartPath, appArgs, { cwd: args.cwd });
+		const process = child_process.spawn(this.args.dartPath, appArgs, { cwd: args.cwd });
 
 		return process;
 	}
 
 	protected initObservatory(uri: string) {
 		// Send the uri back to the editor so it can be used to launch browsers etc.
-		if (uri.endsWith('/ws')) {
-			var browserFriendlyUri = uri.substring(0, uri.length - 3);
-			if (browserFriendlyUri.startsWith('ws:'))
+		if (uri.endsWith("/ws")) {
+			let browserFriendlyUri = uri.substring(0, uri.length - 3);
+			if (browserFriendlyUri.startsWith("ws:"))
 				browserFriendlyUri = "http:" + browserFriendlyUri.substring(3);
 			this.sendEvent(new Event("dart.observatoryUri", { observatoryUri: browserFriendlyUri.toString() }));
 		}
 		this.observatory = new ObservatoryConnection(uri);
-		this.observatory.onLogging(message => {
+		this.observatory.onLogging((message) => {
 			const max: number = 2000;
 
 			if (this.args.observatoryLogFile) {
@@ -155,39 +155,39 @@ export class DartDebugSession extends DebugSession {
 		this.observatory.onOpen(() => {
 			this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event));
 			this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event));
-			this.observatory.getVM().then(result => {
-				let vm: VM = <VM>result.result;
-				let promises = [];
+			this.observatory.getVM().then((result) => {
+				const vm: VM = result.result as VM;
+				const promises = [];
 
-				for (let isolateRef of vm.isolates) {
-					promises.push(this.observatory.getIsolate(isolateRef.id).then(response => {
-						let isolate: VMIsolate = <VMIsolate>response.result;
+				for (const isolateRef of vm.isolates) {
+					promises.push(this.observatory.getIsolate(isolateRef.id).then((response) => {
+						const isolate: VMIsolate = response.result as VMIsolate;
 						this.threadManager.registerThread(
 							isolateRef,
-							isolate.runnable ? "IsolateRunnable" : "IsolateStart"
+							isolate.runnable ? "IsolateRunnable" : "IsolateStart",
 						);
 
 						if (isolate.pauseEvent.kind == "PauseStart") {
-							let thread = this.threadManager.getThreadInfoFromRef(isolateRef);
+							const thread = this.threadManager.getThreadInfoFromRef(isolateRef);
 							thread.receivedPauseStart();
 						}
 
 						// Helpers to categories libraries as SDK/ExternalLibrary/not.
-						let isValidToDebug = (l: VMLibraryRef) => !l.uri.startsWith("dart:_"); // TODO: See https://github.com/dart-lang/sdk/issues/29813
-						let isSdkLibrary = (l: VMLibraryRef) => l.uri.startsWith("dart:");
-						let isExternalLibrary = (l: VMLibraryRef) => l.uri.startsWith("package:") && !l.uri.startsWith(`package:${this.localPackageName}/`);
+						const isValidToDebug = (l: VMLibraryRef) => !l.uri.startsWith("dart:_"); // TODO: See https://github.com/dart-lang/sdk/issues/29813
+						const isSdkLibrary = (l: VMLibraryRef) => l.uri.startsWith("dart:");
+						const isExternalLibrary = (l: VMLibraryRef) => l.uri.startsWith("package:") && !l.uri.startsWith(`package:${this.localPackageName}/`);
 
 						// Set whether libraries should be debuggable based on user settings.
 						return Promise.all(
-							isolate.libraries.filter(isValidToDebug).map(library => {
+							isolate.libraries.filter(isValidToDebug).map((library) => {
 								// Note: Condition is negated.
-								let shouldDebug = !(
+								const shouldDebug = !(
 									// Inside here is shouldNotDebug!
 									(isSdkLibrary(library) && !this.args.debugSdkLibraries)
 									|| (isExternalLibrary(library) && !this.args.debugExternalLibraries)
-								)
+								);
 								this.observatory.setLibraryDebuggable(isolateRef.id, library.id, shouldDebug);
-							})
+							}),
 						);
 					}));
 				}
@@ -213,7 +213,7 @@ export class DartDebugSession extends DebugSession {
 
 	protected disconnectRequest(
 		response: DebugProtocol.DisconnectResponse,
-		args: DebugProtocol.DisconnectArguments
+		args: DebugProtocol.DisconnectArguments,
 	): void {
 		if (this.childProcess != null)
 			this.childProcess.kill();
@@ -222,27 +222,27 @@ export class DartDebugSession extends DebugSession {
 
 	protected setBreakPointsRequest(
 		response: DebugProtocol.SetBreakpointsResponse,
-		args: DebugProtocol.SetBreakpointsArguments
+		args: DebugProtocol.SetBreakpointsArguments,
 	): void {
-		let source: DebugProtocol.Source = args.source;
+		const source: DebugProtocol.Source = args.source;
 		let breakpoints: DebugProtocol.SourceBreakpoint[] = args.breakpoints;
 		if (!breakpoints)
 			breakpoints = [];
 
 		// Get all possible valid source uris for the given path.
-		let uris = this.getPossibleSourceUris(source.path);
+		const uris = this.getPossibleSourceUris(source.path);
 
-		uris.forEach(uri => {
+		uris.forEach((uri) => {
 			this.threadManager.setBreakpoints(uri, breakpoints).then((result: boolean[]) => {
-				let bpResponse = [];
-				for (let verified of result) {
-					bpResponse.push({ verified: verified });
+				const bpResponse = [];
+				for (const verified of result) {
+					bpResponse.push({ verified });
 				}
 
 				response.body = { breakpoints: bpResponse };
 				this.sendResponse(response);
 			}).catch((error) => this.errorResponse(response, `${error}`));
-		})
+		});
 	}
 
 	/***
@@ -254,13 +254,13 @@ export class DartDebugSession extends DebugSession {
 	 * imported by the user).
 	 */
 	protected getPossibleSourceUris(sourcePath: string): string[] {
-		let uris = [];
+		const uris = [];
 
 		// Add the raw file path.
 		uris.push(formatPathForVm(sourcePath));
 
 		// Convert to package path and add that too.
-		let packageUri = this.packageMap.convertFileToPackageUri(sourcePath);
+		const packageUri = this.packageMap.convertFileToPackageUri(sourcePath);
 		if (packageUri)
 			uris.push(packageUri);
 
@@ -269,9 +269,9 @@ export class DartDebugSession extends DebugSession {
 
 	protected setExceptionBreakPointsRequest(
 		response: DebugProtocol.SetExceptionBreakpointsResponse,
-		args: DebugProtocol.SetExceptionBreakpointsArguments
+		args: DebugProtocol.SetExceptionBreakpointsArguments,
 	): void {
-		let filters: string[] = args.filters;
+		const filters: string[] = args.filters;
 
 		let mode = "None";
 		if (filters.indexOf("Unhandled") != -1)
@@ -286,7 +286,7 @@ export class DartDebugSession extends DebugSession {
 
 	protected configurationDoneRequest(
 		response: DebugProtocol.ConfigurationDoneResponse,
-		args: DebugProtocol.ConfigurationDoneArguments
+		args: DebugProtocol.ConfigurationDoneArguments,
 	): void {
 		this.sendResponse(response);
 
@@ -294,7 +294,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments): void {
-		let thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
+		const thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
 
 		if (!thread) {
 			this.errorResponse(response, `No thread with id ${args.threadId}`);
@@ -307,9 +307,9 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected sourceRequest(response: DebugProtocol.SourceResponse, args: DebugProtocol.SourceArguments): void {
-		let sourceReference = args.sourceReference;
-		let data = this.threadManager.getStoredData(sourceReference);
-		let scriptRef: VMScriptRef = <VMScriptRef>data.data;
+		const sourceReference = args.sourceReference;
+		const data = this.threadManager.getStoredData(sourceReference);
+		const scriptRef: VMScriptRef = data.data as VMScriptRef;
 
 		data.thread.getScript(scriptRef).then((script: VMScript) => {
 			response.body = { content: script.source };
@@ -323,7 +323,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
-		let thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
+		const thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
 		let startFrame: number = args.startFrame;
 		let levels: number = args.levels;
 
@@ -333,11 +333,11 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		this.observatory.getStack(thread.ref.id).then((result: DebuggerResult) => {
-			let stack: VMStack = <VMStack>result.result;
+			const stack: VMStack = result.result as VMStack;
 			let vmFrames: VMFrame[] = stack.asyncCausalFrames;
 			if (vmFrames == null)
 				vmFrames = stack.frames;
-			let totalFrames = vmFrames.length;
+			const totalFrames = vmFrames.length;
 
 			if (!startFrame)
 				startFrame = 0;
@@ -347,29 +347,29 @@ export class DartDebugSession extends DebugSession {
 				levels = totalFrames - startFrame;
 			vmFrames = vmFrames.slice(startFrame, startFrame + levels);
 
-			let stackFrames: StackFrame[] = [];
-			let promises: Promise<void>[] = [];
+			const stackFrames: StackFrame[] = [];
+			const promises: Array<Promise<void>> = [];
 
 			vmFrames.forEach((frame: VMFrame) => {
-				let frameId = thread.storeData(frame);
+				const frameId = thread.storeData(frame);
 
 				if (frame.kind == "AsyncSuspensionMarker") {
-					let stackFrame: StackFrame = new StackFrame(frameId, "<asynchronous gap>");
+					const stackFrame: StackFrame = new StackFrame(frameId, "<asynchronous gap>");
 					stackFrames.push(stackFrame);
 					return;
 				}
 
-				let frameName = frame.code.name;
-				let location: VMSourceLocation = frame.location;
+				const frameName = frame.code.name;
+				const location: VMSourceLocation = frame.location;
 
 				if (location == null) {
-					let stackFrame: StackFrame = new StackFrame(frameId, frameName);
+					const stackFrame: StackFrame = new StackFrame(frameId, frameName);
 					stackFrames.push(stackFrame);
 					return;
 				}
 
-				let uri = location.script.uri;
-				let shortName = this.convertVMUriToUserName(uri);
+				const uri = location.script.uri;
+				const shortName = this.convertVMUriToUserName(uri);
 				let sourcePath = this.convertVMUriToSourcePath(uri);
 
 				// Download the source if from a "dart:" uri.
@@ -379,17 +379,17 @@ export class DartDebugSession extends DebugSession {
 					sourceReference = thread.storeData(location.script);
 				}
 
-				let stackFrame: StackFrame = new StackFrame(
+				const stackFrame: StackFrame = new StackFrame(
 					frameId,
 					frameName,
 					new Source(shortName, sourcePath, sourceReference, null, location.script),
-					0, 0
+					0, 0,
 				);
 				stackFrames.push(stackFrame);
 
 				// Resolve the line and column information.
-				let promise = thread.getScript(location.script).then((script: VMScript) => {
-					let fileLocation: FileLocation = this.resolveFileLocation(script, location.tokenPos);
+				const promise = thread.getScript(location.script).then((script: VMScript) => {
+					const fileLocation: FileLocation = this.resolveFileLocation(script, location.tokenPos);
 					if (fileLocation) {
 						stackFrame.line = fileLocation.line;
 						stackFrame.column = fileLocation.column;
@@ -399,8 +399,8 @@ export class DartDebugSession extends DebugSession {
 			});
 
 			response.body = {
-				stackFrames: stackFrames,
-				totalFrames: totalFrames
+				stackFrames,
+				totalFrames,
 			};
 
 			Promise.all(promises).then((_) => {
@@ -412,79 +412,79 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
-		let frameId = args.frameId;
-		let data = this.threadManager.getStoredData(frameId);
-		let frame: VMFrame = <VMFrame>data.data;
+		const frameId = args.frameId;
+		const data = this.threadManager.getStoredData(frameId);
+		const frame: VMFrame = data.data as VMFrame;
 
 		// TODO: class variables? library variables?
 
-		let variablesReference = data.thread.storeData(frame);
+		const variablesReference = data.thread.storeData(frame);
 		response.body = {
-			scopes: [new Scope("Locals", variablesReference)]
+			scopes: [new Scope("Locals", variablesReference)],
 		};
 		this.sendResponse(response);
 	}
 
 	protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void {
-		let variablesReference = args.variablesReference;
+		const variablesReference = args.variablesReference;
 
 		// implement paged arrays
 		// let filter = args.filter; // optional; either "indexed" or "named"
 		let start = args.start; // (optional) index of the first variable to return; if omitted children start at 0
-		let count = args.count; // (optional) number of variables to return. If count is missing or 0, all variables are returned
+		const count = args.count; // (optional) number of variables to return. If count is missing or 0, all variables are returned
 
-		let data = this.threadManager.getStoredData(variablesReference);
-		let thread = data.thread;
+		const data = this.threadManager.getStoredData(variablesReference);
+		const thread = data.thread;
 
 		if (data.data.type == "Frame") {
-			let frame: VMFrame = <VMFrame>data.data;
-			let variables: DebugProtocol.Variable[] = [];
-			for (let variable of frame.vars)
+			const frame: VMFrame = data.data as VMFrame;
+			const variables: DebugProtocol.Variable[] = [];
+			for (const variable of frame.vars)
 				variables.push(this.instanceRefToVariable(thread, variable.name, variable.value));
-			response.body = { variables: variables };
+			response.body = { variables };
 			this.sendResponse(response);
 		} else {
-			let instanceRef = <VMInstanceRef>data.data;
+			const instanceRef = data.data as VMInstanceRef;
 
 			this.observatory.getObject(thread.ref.id, instanceRef.id, start, count).then(
-				(result: DebuggerResult
+				(result: DebuggerResult,
 				) => {
-					let variables: DebugProtocol.Variable[] = [];
+					const variables: DebugProtocol.Variable[] = [];
 
 					if (result.result.type == "Sentinel") {
 						variables.push({
 							name: "evalError",
-							value: (<VMSentinel>result.result).valueAsString,
-							variablesReference: 0
+							value: (result.result as VMSentinel).valueAsString,
+							variablesReference: 0,
 						});
 					} else {
-						let obj: VMObj = <VMObj>result.result;
+						const obj: VMObj = result.result as VMObj;
 
 						if (obj.type == "Instance") {
-							let instance = <VMInstance>obj;
+							const instance = obj as VMInstance;
 
 							// TODO: show by kind instead
 							if (instance.elements) {
-								let len = instance.elements.length;
+								const len = instance.elements.length;
 								if (!start)
 									start = 0;
 								for (let i = 0; i < len; i++) {
-									let element = instance.elements[i];
+									const element = instance.elements[i];
 									variables.push(this.instanceRefToVariable(thread, `[${i + start}]`, element));
 								}
 							} else if (instance.associations) {
-								for (let association of instance.associations) {
+								for (const association of instance.associations) {
 									let keyName = this.valueAsString(association.key);
 									if (!keyName) {
 										if (association.key.type == "Sentinel")
 											keyName = "<evalError>";
 										else
-											keyName = (<VMInstanceRef>association.key).id;
+											keyName = (association.key as VMInstanceRef).id;
 									}
 									variables.push(this.instanceRefToVariable(thread, keyName, association.value));
 								}
 							} else if (instance.fields) {
-								for (let field of instance.fields)
+								for (const field of instance.fields)
 									variables.push(this.instanceRefToVariable(thread, field.decl.name, field.value));
 							} else {
 								// TODO: unhandled kind
@@ -496,7 +496,7 @@ export class DartDebugSession extends DebugSession {
 						}
 					}
 
-					response.body = { variables: variables };
+					response.body = { variables };
 					this.sendResponse(response);
 				}).catch((error) => this.errorResponse(response, `${error}`));
 		}
@@ -507,25 +507,25 @@ export class DartDebugSession extends DebugSession {
 			if (result.result.type == "@Error") {
 				return null;
 			} else {
-				let evalResult: VMInstanceRef = <VMInstanceRef>result.result;
+				const evalResult: VMInstanceRef = result.result as VMInstanceRef;
 				return this.valueAsString(evalResult);
 			}
 		}).catch((e) => null);
 	}
 
 	protected setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments): void {
-		let variablesReference: number = args.variablesReference;
+		const variablesReference: number = args.variablesReference;
 		// The name of the variable.
-		let name: string = args.name;
+		const name: string = args.name;
 		// The value of the variable.
-		let value: string = args.value;
+		const value: string = args.value;
 
 		// TODO: Use eval to implement this.
 		this.errorResponse(response, "not supported");
 	}
 
 	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
-		let thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
+		const thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
 		if (!thread) {
 			this.errorResponse(response, `No thread with id ${args.threadId}`);
 			return;
@@ -538,12 +538,12 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-		let thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
+		const thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
 		if (!thread) {
 			this.errorResponse(response, `No thread with id ${args.threadId}`);
 			return;
 		}
-		let type = thread.atAsyncSuspension ? "OverAsyncSuspension" : "Over";
+		const type = thread.atAsyncSuspension ? "OverAsyncSuspension" : "Over";
 		this.observatory.resume(thread.ref.id, type).then((_) => {
 			thread.handleResumed();
 			this.sendResponse(response);
@@ -551,7 +551,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void {
-		let thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
+		const thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
 		if (!thread) {
 			this.errorResponse(response, `No thread with id ${args.threadId}`);
 			return;
@@ -563,7 +563,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void {
-		let thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
+		const thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
 		if (!thread) {
 			this.errorResponse(response, `No thread with id ${args.threadId}`);
 			return;
@@ -579,40 +579,40 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
-		let expression: string = args.expression;
+		const expression: string = args.expression;
 		// Stack frame scope; if not specified, the expression is evaluated in the global scope.
-		let frameId: number = args.frameId;
+		const frameId: number = args.frameId;
 		// Values are "watch", "repl", and "hover".
-		let context: string = args.context;
+		const context: string = args.context;
 
 		if (!frameId) {
 			this.errorResponse(response, "global evaluation not supported");
 			return;
 		}
 
-		let data = this.threadManager.getStoredData(frameId);
-		let thread = data.thread;
-		let frame: VMFrame = <VMFrame>data.data;
+		const data = this.threadManager.getStoredData(frameId);
+		const thread = data.thread;
+		const frame: VMFrame = data.data as VMFrame;
 
 		this.observatory.evaluateInFrame(thread.ref.id, frame.index, expression).then((result: DebuggerResult) => {
 			// InstanceRef or ErrorRef
 			if (result.result.type == "@Error") {
-				let error: VMErrorRef = <VMErrorRef>result.result;
+				const error: VMErrorRef = result.result as VMErrorRef;
 				let str: string = error.message;
 				if (str && str.length > 100)
 					str = str.substring(0, 100) + "…";
 				this.errorResponse(response, str);
 			} else {
-				let instanceRef: VMInstanceRef = <VMInstanceRef>result.result;
+				const instanceRef: VMInstanceRef = result.result as VMInstanceRef;
 				if (instanceRef.valueAsString) {
 					response.body = {
 						result: this.valueAsString(instanceRef),
-						variablesReference: 0
+						variablesReference: 0,
 					};
 				} else {
 					response.body = {
 						result: instanceRef.class.name,
-						variablesReference: thread.storeData(instanceRef)
+						variablesReference: thread.storeData(instanceRef),
 					};
 				}
 				this.sendResponse(response);
@@ -629,8 +629,8 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	// IsolateStart, IsolateRunnable, IsolateExit, IsolateUpdate, ServiceExtensionAdded
-	handleIsolateEvent(event: VMEvent) {
-		let kind = event.kind;
+	public handleIsolateEvent(event: VMEvent) {
+		const kind = event.kind;
 		if (kind == "IsolateStart" || kind == "IsolateRunnable") {
 			this.threadManager.registerThread(event.isolate, kind);
 		} else if (kind == "IsolateExit") {
@@ -640,21 +640,20 @@ export class DartDebugSession extends DebugSession {
 
 	// PauseStart, PauseExit, PauseBreakpoint, PauseInterrupted, PauseException, Resume,
 	// BreakpointAdded, BreakpointResolved, BreakpointRemoved, Inspect, None
-	handleDebugEvent(event: VMEvent) {
-		let kind = event.kind;
+	public handleDebugEvent(event: VMEvent) {
+		const kind = event.kind;
 
-		// For PausePostRequest we need to re-send all breakpoints; this happens after a flutter restart		
+		// For PausePostRequest we need to re-send all breakpoints; this happens after a flutter restart
 		if (kind == "PausePostRequest") {
 			this.threadManager.resetBreakpoints()
-				.then(_ => this.observatory.resume(event.isolate.id))
-				.catch(e => { if (e.code != 106) throw e; }); // Ignore failed-to-resume errors https://github.com/flutter/flutter/issues/10934
-		}
-		else if (kind == "PauseStart") {
+				.then((_) => this.observatory.resume(event.isolate.id))
+				.catch((e) => { if (e.code != 106) throw e; }); // Ignore failed-to-resume errors https://github.com/flutter/flutter/issues/10934
+		} else if (kind == "PauseStart") {
 			// "PauseStart" should auto-resume after breakpoints are set.
-			let thread = this.threadManager.getThreadInfoFromRef(event.isolate);
+			const thread = this.threadManager.getThreadInfoFromRef(event.isolate);
 			thread.receivedPauseStart();
 		} else if (kind.startsWith("Pause")) {
-			let thread = this.threadManager.getThreadInfoFromRef(event.isolate);
+			const thread = this.threadManager.getThreadInfoFromRef(event.isolate);
 
 			// PauseStart, PauseExit, PauseBreakpoint, PauseInterrupted, PauseException
 			let reason = "pause";
@@ -682,7 +681,7 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	errorResponse(response: DebugProtocol.Response, message: string) {
+	public errorResponse(response: DebugProtocol.Response, message: string) {
 		response.success = false;
 		response.message = message;
 		this.sendResponse(response);
@@ -711,18 +710,18 @@ export class DartDebugSession extends DebugSession {
 		if (ref.type == "Sentinel")
 			return ref.valueAsString;
 
-		let instanceRef = <VMInstanceRef>ref;
+		const instanceRef = ref as VMInstanceRef;
 
 		if (ref.valueAsString) {
 			let str: string = instanceRef.valueAsString;
 			if (instanceRef.valueAsStringIsTruncated)
 				str += "…";
-			if (instanceRef.kind == 'String')
+			if (instanceRef.kind == "String")
 				str = `'${str}'`;
 			return str;
-		} else if (ref.kind == 'List') {
+		} else if (ref.kind == "List") {
 			return `[${instanceRef.length}]`;
-		} else if (ref.kind == 'Map') {
+		} else if (ref.kind == "Map") {
 			return `{${instanceRef.length}}`;
 		} else {
 			return instanceRef.class.name;
@@ -730,38 +729,38 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private instanceRefToVariable(
-		thread: ThreadInfo, name: string, ref: VMInstanceRef | VMSentinel
+		thread: ThreadInfo, name: string, ref: VMInstanceRef | VMSentinel,
 	): DebugProtocol.Variable {
 		if (ref.type == "Sentinel") {
 			return {
-				name: name,
-				value: (<VMSentinel>ref).valueAsString,
-				variablesReference: 0
+				name,
+				value: (ref as VMSentinel).valueAsString,
+				variablesReference: 0,
 			};
 		} else {
-			let val = <VMInstanceRef>ref;
+			const val = ref as VMInstanceRef;
 
 			let str = this.valueAsString(val);
 			if (!val.valueAsString && !str)
-				str = '';
+				str = "";
 
 			return {
-				name: name,
+				name,
 				type: val.class.name,
 				value: str,
 				variablesReference: val.valueAsString ? 0 : thread.storeData(val),
-				indexedVariables: (val.kind.endsWith('List') ? val.length : null)
+				indexedVariables: (val.kind.endsWith("List") ? val.length : null),
 			};
 		}
 	}
 
 	private resolveFileLocation(script: VMScript, tokenPos: number): FileLocation {
-		let table: number[][] = script.tokenPosTable;
-		for (let entry of table) {
+		const table: number[][] = script.tokenPosTable;
+		for (const entry of table) {
 			// [lineNumber, (tokenPos, columnNumber)*]
 			for (let index = 1; index < entry.length; index += 2) {
 				if (entry[index] == tokenPos) {
-					let line = entry[0];
+					const line = entry[0];
 					return new FileLocation(line, entry[index + 1]);
 				}
 			}
@@ -776,11 +775,11 @@ export class DartDebugSession extends DebugSession {
 }
 
 class ThreadManager {
-	nextThreadId: number = 0;
+	public nextThreadId: number = 0;
 
-	threads: ThreadInfo[] = [];
-	debugSession: DartDebugSession;
-	bps: { [uri: string]: DebugProtocol.SourceBreakpoint[] } = {};
+	public threads: ThreadInfo[] = [];
+	public debugSession: DartDebugSession;
+	public bps: { [uri: string]: DebugProtocol.SourceBreakpoint[] } = {};
 	private hasConfigurationDone = false;
 	private exceptionMode = "Unhandled";
 
@@ -788,7 +787,7 @@ class ThreadManager {
 		this.debugSession = debugSession;
 	}
 
-	registerThread(ref: VMIsolateRef, eventKind: string) {
+	public registerThread(ref: VMIsolateRef, eventKind: string) {
 		let thread: ThreadInfo = this.getThreadInfoFromRef(ref);
 
 		if (!thread) {
@@ -813,52 +812,52 @@ class ThreadManager {
 		}
 	}
 
-	receivedConfigurationDone() {
+	public receivedConfigurationDone() {
 		this.hasConfigurationDone = true;
 
-		for (let thread of this.threads)
+		for (const thread of this.threads)
 			thread.receivedConfigurationDone();
 	}
 
-	getThreadInfoFromRef(ref: VMIsolateRef): ThreadInfo {
-		for (let thread of this.threads) {
+	public getThreadInfoFromRef(ref: VMIsolateRef): ThreadInfo {
+		for (const thread of this.threads) {
 			if (thread.ref.id == ref.id)
 				return thread;
 		}
 		return null;
 	}
 
-	getThreadInfoFromNumber(num: number): ThreadInfo {
-		for (let thread of this.threads) {
+	public getThreadInfoFromNumber(num: number): ThreadInfo {
+		for (const thread of this.threads) {
 			if (thread.number == num)
 				return thread;
 		}
 		return null;
 	}
 
-	getThreads(): Thread[] {
+	public getThreads(): Thread[] {
 		return this.threads.map((thread: ThreadInfo) => new Thread(thread.number, thread.ref.name));
 	}
 
-	setExceptionPauseMode(mode: string) {
+	public setExceptionPauseMode(mode: string) {
 		this.exceptionMode = mode;
 
-		for (let thread of this.threads) {
+		for (const thread of this.threads) {
 			if (thread.runnable)
 				this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, mode);
 		}
 	}
 
-	// Just resends existing breakpoints	
-	resetBreakpoints() {
-		let promises = []
-		for (let uri of Object.keys(this.bps)) {
+	// Just resends existing breakpoints
+	public resetBreakpoints() {
+		const promises = [];
+		for (const uri of Object.keys(this.bps)) {
 			promises.push(this.setBreakpoints(uri, this.bps[uri]));
 		}
 		return Promise.all(promises);
 	}
 
-	setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {
+	public setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {
 		// Remember these bps for when new threads start.
 		if (breakpoints.length == 0)
 			delete this.bps[uri];
@@ -867,9 +866,9 @@ class ThreadManager {
 
 		let promise;
 
-		for (let thread of this.threads) {
+		for (const thread of this.threads) {
 			if (thread.runnable) {
-				let result = thread.setBreakpoints(uri, breakpoints);
+				const result = thread.setBreakpoints(uri, breakpoints);
 				if (!promise)
 					promise = result;
 			}
@@ -878,8 +877,8 @@ class ThreadManager {
 		if (promise)
 			return promise;
 
-		let completer = new PromiseCompleter<boolean[]>();
-		let result = [];
+		const completer = new PromiseCompleter<boolean[]>();
+		const result = [];
 		for (let i = 0; i < breakpoints.length; i++) {
 			result.push(true);
 		}
@@ -887,36 +886,36 @@ class ThreadManager {
 		return completer.promise;
 	}
 
-	nextDataId: number = 1;
-	storedData: { [id: number]: StoredData } = {};
+	public nextDataId: number = 1;
+	public storedData: { [id: number]: StoredData } = {};
 
-	storeData(thread: ThreadInfo, data: VMResponse): number {
-		let id = this.nextDataId;
+	public storeData(thread: ThreadInfo, data: VMResponse): number {
+		const id = this.nextDataId;
 		this.nextDataId++;
 		this.storedData[id] = new StoredData(thread, data);
 		return id;
 	}
 
-	getStoredData(id: number): StoredData {
+	public getStoredData(id: number): StoredData {
 		return this.storedData[id];
 	}
 
-	removeStoredIds(ids: number[]) {
-		for (let id of ids) {
+	public removeStoredIds(ids: number[]) {
+		for (const id of ids) {
 			delete this.storedData[id];
 		}
 	}
 
-	handleIsolateExit(ref: VMIsolateRef) {
-		let threadInfo: ThreadInfo = this.getThreadInfoFromRef(ref);
+	public handleIsolateExit(ref: VMIsolateRef) {
+		const threadInfo: ThreadInfo = this.getThreadInfoFromRef(ref);
 		this.debugSession.sendEvent(new ThreadEvent("exited", threadInfo.number));
 		this.threads.splice(this.threads.indexOf(threadInfo), 1);
 	}
 }
 
 class StoredData {
-	thread: ThreadInfo;
-	data: VMResponse;
+	public thread: ThreadInfo;
+	public data: VMResponse;
 
 	constructor(thread: ThreadInfo, data: VMResponse) {
 		this.thread = thread;
@@ -925,14 +924,14 @@ class StoredData {
 }
 
 class ThreadInfo {
-	manager: ThreadManager;
-	ref: VMIsolateRef;
-	number: number;
-	storedIds: number[] = [];
-	scriptCompleters: { [key: string]: PromiseCompleter<VMScript> } = {};
-	runnable: boolean = false;
-	vmBps: { [uri: string]: VMBreakpoint[] } = {};
-	atAsyncSuspension: boolean = false;
+	public manager: ThreadManager;
+	public ref: VMIsolateRef;
+	public number: number;
+	public storedIds: number[] = [];
+	public scriptCompleters: { [key: string]: PromiseCompleter<VMScript> } = {};
+	public runnable: boolean = false;
+	public vmBps: { [uri: string]: VMBreakpoint[] } = {};
+	public atAsyncSuspension: boolean = false;
 
 	constructor(manager: ThreadManager, ref: VMIsolateRef, number: number) {
 		this.manager = manager;
@@ -940,14 +939,14 @@ class ThreadInfo {
 		this.number = number;
 	}
 
-	setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {
-		let removeBreakpointPromises = [];
+	public setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {
+		const removeBreakpointPromises = [];
 
 		// Remove all current bps.
-		let oldbps = this.vmBps[uri];
+		const oldbps = this.vmBps[uri];
 		if (oldbps) {
-			for (let bp of oldbps) {
-				removeBreakpointPromises.push(this.manager.debugSession.observatory.removeBreakpoint(this.ref.id, bp.id).then(_ => console.log("removed")));
+			for (const bp of oldbps) {
+				removeBreakpointPromises.push(this.manager.debugSession.observatory.removeBreakpoint(this.ref.id, bp.id).then((_) => console.log("removed")));
 			}
 		}
 
@@ -955,13 +954,13 @@ class ThreadInfo {
 
 		return Promise.all(removeBreakpointPromises).then(() => {
 			// Set new ones.
-			let promises = [];
+			const promises = [];
 
-			for (let bp of breakpoints) {
-				let promise = this.manager.debugSession.observatory.addBreakpointWithScriptUri(
-					this.ref.id, uri, bp.line, bp.column
+			for (const bp of breakpoints) {
+				const promise = this.manager.debugSession.observatory.addBreakpointWithScriptUri(
+					this.ref.id, uri, bp.line, bp.column,
 				).then((result: DebuggerResult) => {
-					let vmBp: VMBreakpoint = <VMBreakpoint>result.result;
+					const vmBp: VMBreakpoint = result.result as VMBreakpoint;
 					this.vmBps[uri].push(vmBp);
 					return true;
 				}).catch((error) => {
@@ -972,53 +971,53 @@ class ThreadInfo {
 			}
 
 			return Promise.all(promises);
-		})
+		});
 	}
 
 	private gotPauseStart = false;
 	private initialBreakpoints = false;
 	private hasConfigurationDone = false;
 
-	receivedPauseStart() {
+	public receivedPauseStart() {
 		this.gotPauseStart = true;
 		this.checkResume();
 	}
 
-	setInitialBreakpoints() {
+	public setInitialBreakpoints() {
 		this.initialBreakpoints = true;
 		this.checkResume();
 	}
 
-	receivedConfigurationDone() {
+	public receivedConfigurationDone() {
 		this.hasConfigurationDone = true;
 		this.checkResume();
 	}
 
-	checkResume() {
+	public checkResume() {
 		if (this.gotPauseStart && this.initialBreakpoints && this.hasConfigurationDone)
 			this.manager.debugSession.observatory.resume(this.ref.id);
 	}
 
-	handleResumed() {
+	public handleResumed() {
 		// TODO: I don"t think we want to do this...
 		// this.manager.removeStoredIds(this.storedIds);
 		// this.storedIds = [];
 		this.atAsyncSuspension = false;
 	}
 
-	getScript(scriptRef: VMScriptRef): Promise<VMScript> {
-		let scriptId = scriptRef.id;
+	public getScript(scriptRef: VMScriptRef): Promise<VMScript> {
+		const scriptId = scriptRef.id;
 
 		if (this.scriptCompleters[scriptId]) {
-			let completer: PromiseCompleter<VMScript> = this.scriptCompleters[scriptId];
+			const completer: PromiseCompleter<VMScript> = this.scriptCompleters[scriptId];
 			return completer.promise;
 		} else {
-			let completer: PromiseCompleter<VMScript> = new PromiseCompleter();;
+			const completer: PromiseCompleter<VMScript> = new PromiseCompleter();
 			this.scriptCompleters[scriptId] = completer;
 
-			let observatory = this.manager.debugSession.observatory;
+			const observatory = this.manager.debugSession.observatory;
 			observatory.getObject(this.ref.id, scriptRef.id).then((result: DebuggerResult) => {
-				let script: VMScript = <VMScript>result.result;
+				const script: VMScript = result.result as VMScript;
 				completer.resolve(script);
 			}).catch((error) => {
 				completer.reject(error);
@@ -1028,18 +1027,18 @@ class ThreadInfo {
 		}
 	}
 
-	storeData(data: VMResponse): number {
+	public storeData(data: VMResponse): number {
 		return this.manager.storeData(this, data);
 	}
 
-	handlePaused(atAsyncSuspension?: boolean) {
+	public handlePaused(atAsyncSuspension?: boolean) {
 		this.atAsyncSuspension = atAsyncSuspension;
 	}
 }
 
 class FileLocation {
-	line: number;
-	column: number;
+	public line: number;
+	public column: number;
 
 	constructor(line: number, column: number) {
 		this.line = line;

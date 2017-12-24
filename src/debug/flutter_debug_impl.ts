@@ -10,10 +10,10 @@ import * as path from "path";
 
 export class FlutterDebugSession extends DartDebugSession {
 	protected args: FlutterLaunchRequestArguments;
-	flutter: FlutterRun;
-	currentRunningAppId: string;
-	observatoryUri: string;
-	baseUri: string;
+	public flutter: FlutterRun;
+	public currentRunningAppId: string;
+	public observatoryUri: string;
+	public baseUri: string;
 
 	constructor() {
 		super();
@@ -23,23 +23,23 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	protected initializeRequest(
 		response: DebugProtocol.InitializeResponse,
-		args: DebugProtocol.InitializeRequestArguments
+		args: DebugProtocol.InitializeRequestArguments,
 	): void {
 		response.body.supportsRestartRequest = true;
 		super.initializeRequest(response, args);
 	}
 
 	protected spawnProcess(args: FlutterLaunchRequestArguments): any {
-		let debug = !args.noDebug;
+		const debug = !args.noDebug;
 		let appArgs = [];
 
 		if (this.sourceFile) {
-			appArgs.push("-t")
+			appArgs.push("-t");
 			appArgs.push(this.sourceFile);
 		}
 
 		if (this.args.deviceId) {
-			appArgs.push("-d")
+			appArgs.push("-d");
 			appArgs.push(this.args.deviceId);
 		}
 
@@ -52,14 +52,14 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		// TODO: Add log file.
 		this.flutter = new FlutterRun(this.args.flutterPath, args.cwd, appArgs, this.args.flutterRunLogFile);
-		this.flutter.registerForUnhandledMessages(msg => this.log(msg));
+		this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
 
 		// Set up subscriptions.
-		this.flutter.registerForAppStart(n => this.currentRunningAppId = n.appId);
-		this.flutter.registerForAppDebugPort(n => { this.observatoryUri = n.wsUri; this.baseUri = n.baseUri; });
-		this.flutter.registerForAppStarted(n => { if (!args.noDebug) this.initObservatory(this.observatoryUri); });
-		this.flutter.registerForAppStop(n => { this.currentRunningAppId = undefined; this.flutter.dispose(); });
-		this.flutter.registerForAppProgress(e => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished })));
+		this.flutter.registerForAppStart((n) => this.currentRunningAppId = n.appId);
+		this.flutter.registerForAppDebugPort((n) => { this.observatoryUri = n.wsUri; this.baseUri = n.baseUri; });
+		this.flutter.registerForAppStarted((n) => { if (!args.noDebug) this.initObservatory(this.observatoryUri); });
+		this.flutter.registerForAppStop((n) => { this.currentRunningAppId = undefined; this.flutter.dispose(); });
+		this.flutter.registerForAppProgress((e) => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished })));
 
 		return this.flutter.process;
 	}
@@ -70,14 +70,14 @@ export class FlutterDebugSession extends DartDebugSession {
 	 * For flutter we need to extend the Dart implementation by also providing uris
 	 * using the baseUri value returned from `flutter run` to match the fs path
 	 * on the device running the application in order for breakpoints to match the
-	 * patched `hot reload` code. 
+	 * patched `hot reload` code.
 	 */
 	protected getPossibleSourceUris(sourcePath: string): string[] {
 		const allUris = super.getPossibleSourceUris(sourcePath);
 		const projectUri = formatPathForVm(this.args.cwd);
 
 		// Map any paths over to the device-local paths.
-		allUris.slice().forEach(uri => {
+		allUris.slice().forEach((uri) => {
 			if (uri.startsWith(projectUri)) {
 				const relativePath = uri.substr(projectUri.length);
 				const mappedPath = path.join(this.baseUri, relativePath);
@@ -94,9 +94,9 @@ export class FlutterDebugSession extends DartDebugSession {
 		// force Linux format for remote paths.
 
 		let localPath = super.convertVMUriToSourcePath(uri);
-		let localPathLinux = super.convertVMUriToSourcePath(uri, false);
+		const localPathLinux = super.convertVMUriToSourcePath(uri, false);
 
-		// If the path is the baseUri given by flutter, we need to rewrite it into a local path for this machine.		
+		// If the path is the baseUri given by flutter, we need to rewrite it into a local path for this machine.
 		const basePath = uriToFilePath(this.baseUri, false);
 		if (localPathLinux.startsWith(basePath))
 			localPath = path.join(this.args.cwd, path.relative(basePath, localPathLinux));
@@ -106,7 +106,7 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	protected disconnectRequest(
 		response: DebugProtocol.DisconnectResponse,
-		args: DebugProtocol.DisconnectArguments
+		args: DebugProtocol.DisconnectArguments,
 	): void {
 		if (this.currentRunningAppId)
 			this.flutter.stop(this.currentRunningAppId);
@@ -115,9 +115,9 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	protected restartRequest(
 		response: DebugProtocol.RestartResponse,
-		args: DebugProtocol.RestartArguments
+		args: DebugProtocol.RestartArguments,
 	): void {
-		this.flutter.restart(this.currentRunningAppId, !this.args.noDebug)
+		this.flutter.restart(this.currentRunningAppId, !this.args.noDebug);
 		super.restartRequest(response, args);
 	}
 
@@ -126,30 +126,30 @@ export class FlutterDebugSession extends DartDebugSession {
 			case "serviceExtension":
 				if (this.currentRunningAppId)
 					this.flutter.callServiceExtension(this.currentRunningAppId, args.type, args.params)
-						.then(result => { }, error => this.sendEvent(new OutputEvent(error, "stderr")));
+						.then((result) => { }, (error) => this.sendEvent(new OutputEvent(error, "stderr")));
 				break;
 
 			case "togglePlatform":
 				if (this.currentRunningAppId)
 					this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", null).then(
-						result => {
+						(result) => {
 							this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", { value: result.value == "android" ? "iOS" : "android" })
-								.then(result => { }, error => this.sendEvent(new OutputEvent(error, "stderr")));
+								.then((result) => { }, (error) => this.sendEvent(new OutputEvent(error, "stderr")));
 						},
-						error => this.sendEvent(new OutputEvent(error, "stderr"))
+						(error) => this.sendEvent(new OutputEvent(error, "stderr")),
 					);
 				break;
 
 			case "hotReload":
 				if (this.currentRunningAppId)
 					this.flutter.restart(this.currentRunningAppId, !this.args.noDebug)
-						.then(result => { }, error => this.sendEvent(new OutputEvent(error, "stderr")));
+						.then((result) => { }, (error) => this.sendEvent(new OutputEvent(error, "stderr")));
 				break;
 
 			case "fullRestart":
 				if (this.currentRunningAppId)
 					this.flutter.restart(this.currentRunningAppId, !this.args.noDebug, true)
-						.then(result => { }, error => this.sendEvent(new OutputEvent(error, "stderr")));
+						.then((result) => { }, (error) => this.sendEvent(new OutputEvent(error, "stderr")));
 				break;
 
 			default:

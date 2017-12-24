@@ -11,7 +11,7 @@ import { Request, UnknownResponse, UnknownNotification } from "../services/stdio
 
 class AnalyzerCapabilities {
 
-	version: string;
+	public version: string;
 
 	constructor(analyzerVersion: string) {
 		this.version = analyzerVersion;
@@ -29,7 +29,7 @@ export class Analyzer extends AnalyzerGen {
 	private lastDiagnostics: as.ContextData[];
 	private launchArgs: string[];
 	private version: string;
-	capabilities: AnalyzerCapabilities = new AnalyzerCapabilities("0.0.1");
+	public capabilities: AnalyzerCapabilities = new AnalyzerCapabilities("0.0.1");
 
 	constructor(dartVMPath: string, analyzerPath: string) {
 		super(config.analyzerLogFile);
@@ -61,26 +61,25 @@ export class Analyzer extends AnalyzerGen {
 		this.launchArgs = args.slice(1); // Trim the first one as it's just snapshot path.
 
 		// Hook error subscriptions so we can try and get diagnostic info if this happens.
-		this.registerForServerError(e => this.requestDiagnosticsUpdate());
-		this.registerForRequestError(e => this.requestDiagnosticsUpdate());
+		this.registerForServerError((e) => this.requestDiagnosticsUpdate());
+		this.registerForRequestError((e) => this.requestDiagnosticsUpdate());
 
 		// Register for version.
-		this.registerForServerConnected(e => { this.version = e.version; this.capabilities = new AnalyzerCapabilities(this.version); });
+		this.registerForServerConnected((e) => { this.version = e.version; this.capabilities = new AnalyzerCapabilities(this.version); });
 
 		this.createProcess(undefined, dartVMPath, args, undefined);
 
 		this.serverSetSubscriptions({
-			subscriptions: ["STATUS"]
+			subscriptions: ["STATUS"],
 		});
 	}
 
 	protected sendMessage<T>(json: string) {
 		try {
 			super.sendMessage(json);
-		}
-		catch (e) {
+		} catch (e) {
 			const reloadAction: string = "Reload Project";
-			vs.window.showErrorMessage(`The Dart Analyzer has terminated. Save your changes then reload the project to resume.`, reloadAction).then(res => {
+			vs.window.showErrorMessage(`The Dart Analyzer has terminated. Save your changes then reload the project to resume.`, reloadAction).then((res) => {
 				if (res == reloadAction)
 					vs.commands.executeCommand("workbench.action.reloadWindow");
 			});
@@ -90,7 +89,7 @@ export class Analyzer extends AnalyzerGen {
 
 	protected shouldHandleMessage(message: string): boolean {
 		// This will include things like Observatory output and some analyzer logging code.
-		return !message.startsWith('--- ') && !message.startsWith('+++ ');
+		return !message.startsWith("--- ") && !message.startsWith("+++ ");
 	}
 
 	private requestDiagnosticsUpdate() {
@@ -100,25 +99,25 @@ export class Analyzer extends AnalyzerGen {
 			return;
 
 		this.diagnosticGetDiagnostics()
-			.then(resp => this.lastDiagnostics = resp.contexts);
+			.then((resp) => this.lastDiagnostics = resp.contexts);
 	}
 
-	getLastDiagnostics(): as.ContextData[] {
+	public getLastDiagnostics(): as.ContextData[] {
 		return this.lastDiagnostics;
 	}
 
-	getAnalyzerLaunchArgs(): string[] {
+	public getAnalyzerLaunchArgs(): string[] {
 		return this.launchArgs;
 	}
 
-	forceNotificationsFor(file: string) {
+	public forceNotificationsFor(file: string) {
 		// Send a dummy edit (https://github.com/dart-lang/sdk/issues/30238)
-		let files: { [key: string]: as.ChangeContentOverlay } = {};
+		const files: { [key: string]: as.ChangeContentOverlay } = {};
 		files[file] = {
 			type: "change",
-			edits: [{ offset: 0, length: 0, replacement: "", id: "" }]
+			edits: [{ offset: 0, length: 0, replacement: "", id: "" }],
 		};
-		this.analysisUpdateContent({ files: files });
+		this.analysisUpdateContent({ files });
 	}
 }
 

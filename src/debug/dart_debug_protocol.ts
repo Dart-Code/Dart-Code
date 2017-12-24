@@ -5,7 +5,7 @@ import * as WebSocket from "ws";
 import { PromiseCompleter } from "./utils";
 
 export class DebuggerResult {
-	result: VMResponse;
+	public result: VMResponse;
 
 	constructor(result: VMResponse) {
 		this.result = result;
@@ -207,9 +207,9 @@ export interface VMClassRef extends VMObjectRef {
 }
 
 export class RPCError {
-	code: number;
-	message: string;
-	data: any;
+	public code: number;
+	public message: string;
+	public data: any;
 
 	constructor(code: number, message: string, data?: any) {
 		this.code = code;
@@ -217,19 +217,19 @@ export class RPCError {
 		this.data = data;
 	}
 
-	details(): string {
+	public details(): string {
 		return this.data == null ? null : this.data.details;
 	}
 
-	toString(): string {
+	public toString(): string {
 		return `${this.code} ${this.message}`;
 	}
 }
 
 export class ObservatoryConnection {
-	static portRegex: RegExp = new RegExp("Observatory listening on (http:.+)");
+	public static portRegex: RegExp = new RegExp("Observatory listening on (http:.+)");
 
-	socket: WebSocket;
+	public socket: WebSocket;
 	private completers: { [key: string]: PromiseCompleter<DebuggerResult> } = {};
 	private logging?: (message: string) => void;
 	private eventListeners: { [key: string]: (message: VMEvent) => void } = {};
@@ -239,78 +239,78 @@ export class ObservatoryConnection {
 		this.socket.on("message", (data) => this.handleData(data));
 	}
 
-	onOpen(cb: () => void) {
+	public onOpen(cb: () => void) {
 		this.socket.on("open", cb);
 	}
 
-	onLogging(callback: (message: string) => void) {
+	public onLogging(callback: (message: string) => void) {
 		this.logging = callback;
 	}
 
-	getVersion(): Promise<DebuggerResult> {
+	public getVersion(): Promise<DebuggerResult> {
 		return this.callMethod("getVersion");
 	}
 
-	getVM(): Promise<DebuggerResult> {
+	public getVM(): Promise<DebuggerResult> {
 		return this.callMethod("getVM");
 	}
 
-	getIsolate(isolateId: string): Promise<DebuggerResult> {
-		return this.callMethod("getIsolate", { "isolateId": isolateId });
+	public getIsolate(isolateId: string): Promise<DebuggerResult> {
+		return this.callMethod("getIsolate", { isolateId });
 	}
 
-	on(streamId: string, callback: (event: VMEvent) => void) {
+	public on(streamId: string, callback: (event: VMEvent) => void) {
 		this.streamListen(streamId);
 		this.eventListeners[streamId] = callback;
 	}
 
-	streamListen(streamId: string) {
-		this.callMethod("streamListen", { "streamId": streamId })
+	public streamListen(streamId: string) {
+		this.callMethod("streamListen", { streamId });
 	}
 
-	addBreakpointWithScriptUri(isolateId: string, scriptUri: string, line: number, column?: number): Promise<DebuggerResult> {
+	public addBreakpointWithScriptUri(isolateId: string, scriptUri: string, line: number, column?: number): Promise<DebuggerResult> {
 		let data: {
 			isolateId: string,
 			scriptUri: string,
 			line: number,
-			column?: number
+			column?: number,
 		};
-		data = { isolateId: isolateId, scriptUri: scriptUri, line: line };
+		data = { isolateId, scriptUri, line };
 		if (column)
 			data.column = column;
 		return this.callMethod("addBreakpointWithScriptUri", data);
 	}
 
 	// None, Unhandled, and All
-	setExceptionPauseMode(isolateId: string, mode: string): Promise<DebuggerResult> {
-		return this.callMethod("setExceptionPauseMode", { isolateId: isolateId, mode: mode });
+	public setExceptionPauseMode(isolateId: string, mode: string): Promise<DebuggerResult> {
+		return this.callMethod("setExceptionPauseMode", { isolateId, mode });
 	}
 
-	removeBreakpoint(isolateId: string, breakpointId: string) {
-		return this.callMethod("removeBreakpoint", { "isolateId": isolateId, "breakpointId": breakpointId })
+	public removeBreakpoint(isolateId: string, breakpointId: string) {
+		return this.callMethod("removeBreakpoint", { isolateId, breakpointId });
 	}
 
-	pause(isolateId: string): Promise<DebuggerResult> {
-		return this.callMethod("pause", { isolateId: isolateId });
+	public pause(isolateId: string): Promise<DebuggerResult> {
+		return this.callMethod("pause", { isolateId });
 	}
 
 	// Into, Over, OverAsyncSuspension, and Out
-	resume(isolateId: string, step?: string): Promise<DebuggerResult> {
-		return this.callMethod("resume", { isolateId: isolateId, step: step });
+	public resume(isolateId: string, step?: string): Promise<DebuggerResult> {
+		return this.callMethod("resume", { isolateId, step });
 	}
 
-	getStack(isolateId: string): Promise<DebuggerResult> {
-		return this.callMethod("getStack", { isolateId: isolateId });
+	public getStack(isolateId: string): Promise<DebuggerResult> {
+		return this.callMethod("getStack", { isolateId });
 	}
 
-	getObject(isolateId: string, objectId: string, offset?: number, count?: number): Promise<DebuggerResult> {
+	public getObject(isolateId: string, objectId: string, offset?: number, count?: number): Promise<DebuggerResult> {
 		let data: {
 			isolateId: string,
 			objectId: string,
 			offset?: number,
-			count?: number
+			count?: number,
 		};
-		data = { isolateId: isolateId, objectId: objectId };
+		data = { isolateId, objectId };
 		if (offset)
 			data.offset = offset;
 		if (count)
@@ -318,69 +318,69 @@ export class ObservatoryConnection {
 		return this.callMethod("getObject", data);
 	}
 
-	evaluate(isolateId: string, targetId: String, expression: string): Promise<DebuggerResult> {
+	public evaluate(isolateId: string, targetId: String, expression: string): Promise<DebuggerResult> {
 		return this.callMethod("evaluate", {
-			isolateId: isolateId,
-			targetId: targetId,
-			expression: expression
+			isolateId,
+			targetId,
+			expression,
 		});
 	}
 
-	evaluateInFrame(isolateId: string, frameIndex: number, expression: string): Promise<DebuggerResult> {
+	public evaluateInFrame(isolateId: string, frameIndex: number, expression: string): Promise<DebuggerResult> {
 		return this.callMethod("evaluateInFrame", {
-			isolateId: isolateId,
-			frameIndex: frameIndex,
-			expression: expression
+			isolateId,
+			frameIndex,
+			expression,
 		});
 	}
 
-	setLibraryDebuggable(isolateId: string, libraryId: string, isDebuggable: boolean): Promise<DebuggerResult> {
-		return this.callMethod("setLibraryDebuggable", { "isolateId": isolateId, "libraryId": libraryId, "isDebuggable": isDebuggable });
+	public setLibraryDebuggable(isolateId: string, libraryId: string, isDebuggable: boolean): Promise<DebuggerResult> {
+		return this.callMethod("setLibraryDebuggable", { isolateId, libraryId, isDebuggable });
 	}
 
-	nextId: number = 0;
+	public nextId: number = 0;
 
-	callMethod(method: string, params?: any): Promise<DebuggerResult> {
-		let id = `${this.nextId++}`;
-		let completer = new PromiseCompleter<DebuggerResult>();
+	public callMethod(method: string, params?: any): Promise<DebuggerResult> {
+		const id = `${this.nextId++}`;
+		const completer = new PromiseCompleter<DebuggerResult>();
 		this.completers[id] = completer;
 
 		let json: {
 			id: string,
 			method: string,
-			params?: any
+			params?: any,
 		};
-		json = { id: id, method: method };
+		json = { id, method };
 		if (params)
 			json.params = params;
-		let str = JSON.stringify(json);
+		const str = JSON.stringify(json);
 		this.logTraffic(`==> ${str}\n`);
 		this.socket.send(str);
 
 		return completer.promise;
 	}
 
-	handleData(data: string) {
+	public handleData(data: string) {
 		this.logTraffic(`<== ${data}\n`);
 		let json: {
 			id: string,
 			error: {
 				code: number,
 				message: string,
-				data: any
+				data: any,
 			},
 			method: any,
 			result: VMResponse,
 			params: {
 				streamId: string,
-				event: VMEvent
-			}
+				event: VMEvent,
+			},
 		};
 		json = JSON.parse(data);
-		let id = json.id;
-		let method = json.method;
-		let error = json.error;
-		let completer: PromiseCompleter<DebuggerResult> = this.completers[id];
+		const id = json.id;
+		const method = json.method;
+		const error = json.error;
+		const completer: PromiseCompleter<DebuggerResult> = this.completers[id];
 
 		if (completer) {
 			delete this.completers[id];
@@ -390,25 +390,25 @@ export class ObservatoryConnection {
 			else
 				completer.resolve(new DebuggerResult(json.result));
 		} else if (method) {
-			let params = json.params;
-			let streamId = params.streamId;
+			const params = json.params;
+			const streamId = params.streamId;
 
-			let callback = this.eventListeners[streamId];
+			const callback = this.eventListeners[streamId];
 			if (callback)
 				callback(params.event);
 		}
 	}
 
-	onError(cb: (err: Error) => void) {
+	public onError(cb: (err: Error) => void) {
 		this.socket.on("error", cb);
 	}
 
-	onClose(cb: (code: number, message: string) => void) {
+	public onClose(cb: (code: number, message: string) => void) {
 		this.socket.on("close", cb);
 	}
 
 	private logTraffic(message: string): void {
-		let callback = this.logging;
+		const callback = this.logging;
 		if (callback) {
 			const max: number = 2000;
 			if (message.length > max)
@@ -417,7 +417,7 @@ export class ObservatoryConnection {
 		}
 	}
 
-	close() {
+	public close() {
 		this.socket.close();
 	}
 }
