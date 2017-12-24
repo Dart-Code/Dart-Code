@@ -932,10 +932,10 @@ class ThreadInfo {
 	public vmBps: { [uri: string]: VMBreakpoint[] } = {};
 	public atAsyncSuspension: boolean = false;
 
-	constructor(manager: ThreadManager, ref: VMIsolateRef, number: number) {
+	constructor(manager: ThreadManager, ref: VMIsolateRef, num: number) {
 		this.manager = manager;
 		this.ref = ref;
-		this.number = number;
+		this.number = num;
 	}
 
 	public setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {

@@ -126,6 +126,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			case "serviceExtension":
 				if (this.currentRunningAppId)
 					this.flutter.callServiceExtension(this.currentRunningAppId, args.type, args.params)
+						// tslint:disable-next-line:no-empty
 						.then((result) => { }, (error) => this.sendEvent(new OutputEvent(error, "stderr")));
 				break;
 
@@ -134,6 +135,7 @@ export class FlutterDebugSession extends DartDebugSession {
 					this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", null).then(
 						(result) => {
 							this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", { value: result.value === "android" ? "iOS" : "android" })
+								// tslint:disable-next-line:no-empty
 								.then((result) => { }, (error) => this.sendEvent(new OutputEvent(error, "stderr")));
 						},
 						(error) => this.sendEvent(new OutputEvent(error, "stderr")),
@@ -143,12 +145,14 @@ export class FlutterDebugSession extends DartDebugSession {
 			case "hotReload":
 				if (this.currentRunningAppId)
 					this.flutter.restart(this.currentRunningAppId, !this.args.noDebug)
+						// tslint:disable-next-line:no-empty
 						.then((result) => { }, (error) => this.sendEvent(new OutputEvent(error, "stderr")));
 				break;
 
 			case "fullRestart":
 				if (this.currentRunningAppId)
 					this.flutter.restart(this.currentRunningAppId, !this.args.noDebug, true)
+						// tslint:disable-next-line:no-empty
 						.then((result) => { }, (error) => this.sendEvent(new OutputEvent(error, "stderr")));
 				break;
 
