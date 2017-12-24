@@ -2,7 +2,7 @@
 
 import {
 	DefinitionProvider, Definition, TextDocument, Location, Uri, Position, CancellationToken,
-	CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range
+	CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range,
 } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
@@ -14,18 +14,18 @@ export class DartDefinitionProvider implements DefinitionProvider {
 		this.analyzer = analyzer;
 	}
 
-	provideDefinition(document: TextDocument, position: Position, token: CancellationToken): Thenable<Definition> {
+	public provideDefinition(document: TextDocument, position: Position, token: CancellationToken): Thenable<Definition> {
 		return new Promise<Definition>((resolve, reject) => {
 			this.analyzer.analysisGetNavigation({
 				file: document.fileName,
 				offset: document.offsetAt(position),
-				length: 0
-			}).then(resp => {
+				length: 0,
+			}).then((resp) => {
 				if (resp.targets.length == 0)
-					resolve(null)
+					resolve(null);
 				else
-					resolve(resp.targets.map(t => this.convertResult(t, resp.files[t.fileIndex])));
-			}, e => { util.logError(e); reject(); });
+					resolve(resp.targets.map((t) => this.convertResult(t, resp.files[t.fileIndex])));
+			}, (e) => { util.logError(e); reject(); });
 		});
 	}
 
@@ -37,7 +37,7 @@ export class DartDefinitionProvider implements DefinitionProvider {
 
 		return {
 			uri: util.toReadonlyUriIfExternal(file),
-			range: util.toRange(target)
+			range: util.toRange(target),
 		};
 	}
 }

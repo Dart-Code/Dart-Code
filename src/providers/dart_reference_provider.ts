@@ -2,7 +2,7 @@
 
 import {
 	ReferenceProvider, ReferenceContext, TextDocument, Location, Uri, Position, CancellationToken,
-	CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range
+	CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range,
 } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
@@ -14,29 +14,29 @@ export class DartReferenceProvider implements ReferenceProvider {
 		this.analyzer = analyzer;
 	}
 
-	provideReferences(document: TextDocument, position: Position, context: ReferenceContext, token: CancellationToken): Thenable<Location[]> {
+	public provideReferences(document: TextDocument, position: Position, context: ReferenceContext, token: CancellationToken): Thenable<Location[]> {
 		return new Promise<Location[]>((resolve, reject) => {
 			this.analyzer.searchFindElementReferences({
 				file: document.fileName,
 				offset: document.offsetAt(position),
-				includePotential: true
-			}).then(resp => {
-				let disposable = this.analyzer.registerForSearchResults(notification => {
+				includePotential: true,
+			}).then((resp) => {
+				const disposable = this.analyzer.registerForSearchResults((notification) => {
 					// Skip any results that are not ours (or are not the final results).
 					if (notification.id != resp.id || !notification.isLast)
 						return;
 
 					disposable.dispose();
-					resolve(notification.results.map(r => this.convertResult(r)));
+					resolve(notification.results.map((r) => this.convertResult(r)));
 				});
-			}, e => { util.logError(e); reject(); });
+			}, (e) => { util.logError(e); reject(); });
 		});
 	}
 
 	private convertResult(result: as.SearchResult): Location {
 		return {
 			uri: util.toReadonlyUriIfExternal(result.location.file),
-			range: util.toRange(result.location)
+			range: util.toRange(result.location),
 		};
 	}
 }

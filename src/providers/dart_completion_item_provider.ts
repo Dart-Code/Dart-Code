@@ -2,7 +2,7 @@
 
 import {
 	TextDocument, Position, CancellationToken, CompletionItemProvider, CompletionList,
-	CompletionItem, CompletionItemKind, TextEdit, Range, SnippetString
+	CompletionItem, CompletionItemKind, TextEdit, Range, SnippetString,
 } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import { logError } from "../utils";
@@ -15,36 +15,36 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		this.analyzer = analyzer;
 	}
 
-	provideCompletionItems(
-		document: TextDocument, position: Position, token: CancellationToken
+	public provideCompletionItems(
+		document: TextDocument, position: Position, token: CancellationToken,
 	): Thenable<CompletionList> {
 		return new Promise<CompletionList>((resolve, reject) => {
 			this.analyzer.completionGetSuggestions({
 				file: document.fileName,
-				offset: document.offsetAt(position)
-			}).then(resp => {
-				let disposable = this.analyzer.registerForCompletionResults(notification => {
+				offset: document.offsetAt(position),
+			}).then((resp) => {
+				const disposable = this.analyzer.registerForCompletionResults((notification) => {
 					// Skip any results that are not ours (or are not the final results).
 					if (notification.id != resp.id || !notification.isLast)
 						return;
 
 					disposable.dispose();
-					resolve(new CompletionList(notification.results.map(r => {
+					resolve(new CompletionList(notification.results.map((r) => {
 						return this.convertResult(document, notification, r);
 					})));
-				})
-			}, e => { logError(e); reject(); });
+				});
+			}, (e) => { logError(e); reject(); });
 		});
 	}
 
 	private convertResult(
-		document: TextDocument, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion
+		document: TextDocument, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion,
 	): CompletionItem {
 		// Since we're using SnippetString we need to escape some characters in the completion.
-		const escapeSnippetString = (s: string) => (s || "").replace('$', '\\$').replace('{', '\\{').replace('}', '\\}');
+		const escapeSnippetString = (s: string) => (s || "").replace("$", "\\$").replace("{", "\\{").replace("}", "\\}");
 
-		let element = suggestion.element;
-		let elementKind = element ? this.getElementKind(element.kind) : null;
+		const element = suggestion.element;
+		const elementKind = element ? this.getElementKind(element.kind) : null;
 
 		let label = suggestion.completion;
 		let completionText = "";
@@ -60,7 +60,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 
 			// Add placeholders for params to the completion.
 			if (config.for(document.uri).insertArgumentPlaceholders && hasParams) {
-				let args = suggestion.parameterNames.slice(0, suggestion.requiredParameterCount);
+				const args = suggestion.parameterNames.slice(0, suggestion.requiredParameterCount);
 				let argPlaceholders = args.map((n, i) => `\${${i + 1}:${n}}`).join(", ");
 
 				// If blank, force in a dummy tabstop to go between the parens.
@@ -68,24 +68,19 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 					argPlaceholders = "$1";
 
 				completionText = escapeSnippetString(suggestion.completion) + `(${argPlaceholders})$0`;
-			}
-			else
+			} else
 				completionText = escapeSnippetString(suggestion.completion) + (hasParams ? `($0)` : `()`);
-		}
-		// Otherwise, if we have some selection, inject it.
-		else if (suggestion.selectionOffset > 0) {
+		} else if (suggestion.selectionOffset > 0) {
 			const before = suggestion.completion.slice(0, suggestion.selectionOffset);
 			const selection = suggestion.completion.slice(suggestion.selectionOffset, suggestion.selectionLength) || suggestion.parameterName;
 			const after = suggestion.completion.slice(suggestion.selectionOffset + suggestion.selectionLength);
 
 			completionText = escapeSnippetString(before) + `\${0:${escapeSnippetString(selection)}}` + escapeSnippetString(after);
-		}
-		// Otherwise, just use the raw text.	
-		else {
+		} else {
 			completionText = escapeSnippetString(suggestion.completion);
 		}
 
-		// If we're a property, work out the type. 
+		// If we're a property, work out the type.
 		if (elementKind == CompletionItemKind.Property) {
 			// Setters appear as methods with one arg (and cause getters to not appear),
 			// so treat them both the same and just display with the properties type.
@@ -107,11 +102,11 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		if (label.endsWith(","))
 			label = label.substr(0, label.length - 1).trim();
 
-		let kind = suggestion.element
+		const kind = suggestion.element
 			? this.getElementKind(suggestion.element.kind)
 			: this.getSuggestionKind(suggestion.kind);
 
-		let completion = new CompletionItem(label, kind);
+		const completion = new CompletionItem(label, kind);
 		completion.label = label;
 		completion.kind = kind;
 		completion.detail = (suggestion.isDeprecated ? "(deprecated) " : "") + detail;
@@ -119,7 +114,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		completion.insertText = new SnippetString(completionText);
 		completion.range = new Range(
 			document.positionAt(notification.replacementOffset),
-			document.positionAt(notification.replacementOffset + notification.replacementLength)
+			document.positionAt(notification.replacementOffset + notification.replacementLength),
 		);
 		// Relevance is a number, highest being best. Code sorts by text, so subtract from a large number so that
 		// a text sort will result in the correct order.

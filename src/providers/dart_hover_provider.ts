@@ -12,45 +12,45 @@ export class DartHoverProvider implements HoverProvider {
 		this.analyzer = analyzer;
 	}
 
-	provideHover(document: TextDocument, position: Position, token: CancellationToken): Thenable<Hover> {
+	public provideHover(document: TextDocument, position: Position, token: CancellationToken): Thenable<Hover> {
 		return new Promise<Hover>((resolve, reject) => {
 			this.analyzer.analysisGetHover({
 				file: document.fileName,
-				offset: document.offsetAt(position)
-			}).then(resp => {
+				offset: document.offsetAt(position),
+			}).then((resp) => {
 				if (resp.hovers.length == 0) {
 					resolve(null);
 				} else {
-					let hover = resp.hovers[0];
-					let data = this.getHoverData(hover);
+					const hover = resp.hovers[0];
+					const data = this.getHoverData(hover);
 					if (data) {
-						let range = new Range(
+						const range = new Range(
 							document.positionAt(hover.offset),
-							document.positionAt(hover.offset + hover.length)
+							document.positionAt(hover.offset + hover.length),
 						);
 						resolve(new Hover(
-							[{ language: 'dart', value: data.displayString }, data.documentation || undefined],
-							range
+							[{ language: "dart", value: data.displayString }, data.documentation || undefined],
+							range,
 						));
 					} else {
 						resolve(null);
 					}
 				}
-			}, e => { logError(e); reject(); });
+			}, (e) => { logError(e); reject(); });
 		});
 	}
 
 	private getHoverData(hover: as.HoverInformation): any {
 		if (!hover.elementDescription) return null;
 
-		let elementDescription = hover.elementDescription;
-		let elementKind = hover.elementKind;
-		let dartdoc: string = hover.dartdoc;
-		let containingClassDescription = hover.containingClassDescription;
-		let propagatedType = hover.propagatedType;
-		let callable = (elementKind == "function" || elementKind == "method");
-		let field = (elementKind == "getter" || elementKind == "setter" || elementKind == "field");
-		let containingLibraryName = hover.containingLibraryName;
+		const elementDescription = hover.elementDescription;
+		const elementKind = hover.elementKind;
+		const dartdoc: string = hover.dartdoc;
+		const containingClassDescription = hover.containingClassDescription;
+		const propagatedType = hover.propagatedType;
+		const callable = (elementKind == "function" || elementKind == "method");
+		const field = (elementKind == "getter" || elementKind == "setter" || elementKind == "field");
+		const containingLibraryName = hover.containingLibraryName;
 
 		let displayString: string = "";
 		if (containingClassDescription && callable) displayString += containingClassDescription + ".";
@@ -63,8 +63,8 @@ export class DartHoverProvider implements HoverProvider {
 
 		return {
 			displayString: displayString.trim(),
-			documentation: documentation
-		}
+			documentation,
+		};
 	}
 
 	private static cleanDartdoc(doc: string): string {
@@ -72,7 +72,7 @@ export class DartHoverProvider implements HoverProvider {
 			return null;
 
 		// Clean up some dart.core dartdoc.
-		let index = doc.indexOf("## Other resources");
+		const index = doc.indexOf("## Other resources");
 		if (index != -1)
 			doc = doc.substring(0, index);
 

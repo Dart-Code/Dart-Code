@@ -12,26 +12,26 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 		this.analyzer = analyzer;
 	}
 
-	provideDocumentFormattingEdits(document: TextDocument, options: FormattingOptions, token: CancellationToken): Thenable<TextEdit[]> {
+	public provideDocumentFormattingEdits(document: TextDocument, options: FormattingOptions, token: CancellationToken): Thenable<TextEdit[]> {
 		return new Promise<TextEdit[]>((resolve, reject) => {
 			this.analyzer.editFormat({
 				file: document.fileName,
 				selectionOffset: 0,
 				selectionLength: 0,
-				lineLength: config.for(document.uri).lineLength
-			}).then(resp => {
+				lineLength: config.for(document.uri).lineLength,
+			}).then((resp) => {
 				if (resp.edits.length == 0)
 					resolve(null);
 				else
-					resolve(resp.edits.map(e => this.convertData(document, e)));
-			}, e => { logError(e); reject(); });
+					resolve(resp.edits.map((e) => this.convertData(document, e)));
+			}, (e) => { logError(e); reject(); });
 		});
 	}
 
 	private convertData(document: TextDocument, edit: as.SourceEdit): TextEdit {
 		return new TextEdit(
 			new Range(document.positionAt(edit.offset), document.positionAt(edit.offset + edit.length)),
-			edit.replacement
+			edit.replacement,
 		);
 	}
 }

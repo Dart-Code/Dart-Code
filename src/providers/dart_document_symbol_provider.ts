@@ -2,7 +2,7 @@
 
 import {
 	TextDocument, DocumentSymbolProvider, SymbolInformation, CancellationToken, SymbolKind,
-	Location, Uri, Range, Position
+	Location, Uri, Range, Position,
 } from "vscode";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { toRange } from "../utils";
@@ -15,18 +15,18 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 		this.analyzer = analyzer;
 	}
 
-	provideDocumentSymbols(document: TextDocument, token: CancellationToken): Thenable<SymbolInformation[]> {
-		let file = document.fileName;
+	public provideDocumentSymbols(document: TextDocument, token: CancellationToken): Thenable<SymbolInformation[]> {
+		const file = document.fileName;
 
 		return new Promise<SymbolInformation[]>((resolve, reject) => {
-			let disposable = this.analyzer.registerForAnalysisOutline(n => {
+			const disposable = this.analyzer.registerForAnalysisOutline((n) => {
 				if (n.file != file)
 					return;
 
 				disposable.dispose();
 
-				let symbols: SymbolInformation[] = [];
-				for (let element of n.outline.children)
+				const symbols: SymbolInformation[] = [];
+				for (const element of n.outline.children)
 					this.transcribeOutline(document, symbols, null, element);
 				resolve(symbols);
 			});
@@ -36,7 +36,7 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 	}
 
 	private transcribeOutline(document: TextDocument, symbols: SymbolInformation[], parent: as.Element, outline: as.Outline) {
-		let element = outline.element;
+		const element = outline.element;
 		let name = element.name;
 
 		if (element.parameters && element.kind != "SETTER")
@@ -46,20 +46,20 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 			name = `${parent.name}.${name}`;
 
 		// For properties, show if get/set.
-		let propertyType = element.kind == "SETTER" ? "set" : element.kind == "GETTER" ? "get" : null;
+		const propertyType = element.kind == "SETTER" ? "set" : element.kind == "GETTER" ? "get" : null;
 
 		symbols.push({
-			name: name,
+			name,
 			kind: getSymbolKindForElementKind(element.kind),
 			location: {
 				uri: Uri.file(element.location.file),
-				range: this.getRange(document, outline)
+				range: this.getRange(document, outline),
 			},
-			containerName: propertyType // HACK: Not really correct, but renders nicely. 
+			containerName: propertyType, // HACK: Not really correct, but renders nicely.
 		});
 
 		if (outline.children) {
-			for (let child of outline.children)
+			for (const child of outline.children)
 				this.transcribeOutline(document, symbols, element, child);
 		}
 	}
@@ -70,8 +70,8 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 		// experience to the user (perfectly highlight the range) we take the start point
 		// from the element but the end point from the outline.
 
-		let startPos = document.positionAt(outline.element.location.offset);
-		let endPos = document.positionAt(outline.offset + outline.length);
+		const startPos = document.positionAt(outline.element.location.offset);
+		const endPos = document.positionAt(outline.offset + outline.length);
 
 		return new Range(startPos, endPos);
 	}

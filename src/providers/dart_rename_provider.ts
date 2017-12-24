@@ -3,8 +3,8 @@
 import { window, workspace, RenameProvider, OutputChannel, WorkspaceEdit, TextDocument, Position, CancellationToken, Uri, TextEdit, Range } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
-import * as channels from "../commands/channels"
-import * as utils from "../utils"
+import * as channels from "../commands/channels";
+import * as utils from "../utils";
 
 export class DartRenameProvider implements RenameProvider {
 	private analyzer: Analyzer;
@@ -12,14 +12,14 @@ export class DartRenameProvider implements RenameProvider {
 		this.analyzer = analyzer;
 	}
 
-	provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): Thenable<WorkspaceEdit> {
+	public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): Thenable<WorkspaceEdit> {
 		return this.doRename(document, position, newName, token);
 	}
 
 	private doRename(document: TextDocument, position: Position, newName: string, token: CancellationToken): Thenable<WorkspaceEdit> {
 		return new Promise<WorkspaceEdit>((resolve, reject) => {
-			let wordRange = document.getWordRangeAtPosition(position);
-			let outputChannel = channels.getChannel("Refactorings");
+			const wordRange = document.getWordRangeAtPosition(position);
+			const outputChannel = channels.getChannel("Refactorings");
 			outputChannel.appendLine("");
 
 			this.analyzer.editGetRefactoring({
@@ -29,17 +29,17 @@ export class DartRenameProvider implements RenameProvider {
 				length: wordRange.end.character - wordRange.start.character,
 				validateOnly: false,
 				options: {
-					newName: newName
-				}
-			}).then(resp => {
-				let workspaceEdit = new WorkspaceEdit();
+					newName,
+				},
+			}).then((resp) => {
+				const workspaceEdit = new WorkspaceEdit();
 
 				// Check that the thing we're refactoring macthes up with what the AS says the oldName is. This
 				// allows us to abort (even though it's a bit late) if it seems like we're doing something unexpected.
 				// See https://github.com/Dart-Code/Dart-Code/issues/144
 				if (resp.feedback) {
-					let expectedOldName = document.getText(wordRange);
-					let actualOldName = (<as.RenameFeedback>resp.feedback).oldName; // TODO: Does the API spec have enough for us to make these generics? 
+					const expectedOldName = document.getText(wordRange);
+					const actualOldName = (resp.feedback as as.RenameFeedback).oldName; // TODO: Does the API spec have enough for us to make these generics?
 					if (actualOldName != null && actualOldName != expectedOldName) {
 						window.showErrorMessage("This type of rename is not yet supported.");
 						outputChannel.appendLine(`[ERROR] Rename aborting due to rename mismatch (expected: ${expectedOldName}, got: ${actualOldName}). This rename will be supported in a future version.`);
@@ -51,11 +51,11 @@ export class DartRenameProvider implements RenameProvider {
 				if (resp.change && resp.change.message)
 					outputChannel.appendLine(`[INFO] ${resp.change.message}...`);
 
-				let hasError = this.handleProblem(
+				const hasError = this.handleProblem(
 					resp.initialProblems
 						.concat(resp.optionsProblems)
 						.concat(resp.finalProblems),
-					outputChannel
+					outputChannel,
 				);
 
 				if (hasError) {
@@ -64,19 +64,19 @@ export class DartRenameProvider implements RenameProvider {
 					return;
 				}
 
-				let promises: Thenable<TextDocument>[] = [];
-				resp.change.edits.forEach(changeEdit => {
-					changeEdit.edits.forEach(fileEdit => {
-						let uri = Uri.file(changeEdit.file);
-						let promise = workspace.openTextDocument(uri)
+				const promises: Array<Thenable<TextDocument>> = [];
+				resp.change.edits.forEach((changeEdit) => {
+					changeEdit.edits.forEach((fileEdit) => {
+						const uri = Uri.file(changeEdit.file);
+						const promise = workspace.openTextDocument(uri);
 						promises.push(promise);
-						promise.then(document => {
+						promise.then((document) => {
 							workspaceEdit.replace(
 								uri,
 								new Range(
 									document.positionAt(fileEdit.offset),
 									document.positionAt(fileEdit.offset + fileEdit.length)),
-								fileEdit.replacement
+								fileEdit.replacement,
 							);
 						});
 					});
@@ -85,19 +85,19 @@ export class DartRenameProvider implements RenameProvider {
 				// Wait all openTextDocument to finish
 				Promise.all(promises).then(() => {
 					outputChannel.appendLine("[INFO] Rename successful.");
-					resolve(workspaceEdit)
+					resolve(workspaceEdit);
 				});
 
-			}, e => console.warn(e.message));
+			}, (e) => console.warn(e.message));
 		});
 	}
 
 	private handleProblem(problems: as.RefactoringProblem[], outputChannel: OutputChannel): boolean {
 		// Log all in output channel.
-		problems.forEach(problem => outputChannel.appendLine(`[${problem.severity}] ${problem.message}`));
+		problems.forEach((problem) => outputChannel.appendLine(`[${problem.severity}] ${problem.message}`));
 
-		let errors = problems
-			.filter(p => p.severity != "INFO" && p.severity != "WARNING")
+		const errors = problems
+			.filter((p) => p.severity != "INFO" && p.severity != "WARNING")
 			.sort((p1, p2) => p2.severity.localeCompare(p1.severity));
 
 		if (errors.length == 0)

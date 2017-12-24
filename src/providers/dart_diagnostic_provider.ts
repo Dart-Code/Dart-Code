@@ -13,10 +13,10 @@ export class DartDiagnosticProvider {
 		this.analyzer = analyzer;
 		this.diagnostics = diagnostics;
 
-		this.analyzer.registerForAnalysisErrors(es => this.handleErrors(es));
+		this.analyzer.registerForAnalysisErrors((es) => this.handleErrors(es));
 
 		// Fired when files are deleted
-		this.analyzer.registerForAnalysisFlushResults(es => this.flushResults(es));
+		this.analyzer.registerForAnalysisFlushResults((es) => this.flushResults(es));
 	}
 
 	private handleErrors(notification: as.AnalysisErrorsNotification) {
@@ -25,7 +25,7 @@ export class DartDiagnosticProvider {
 			errors = errors.filter((error) => error.type != "TODO");
 		this.diagnostics.set(
 			Uri.file(notification.file),
-			errors.map(e => this.createDiagnostic(e))
+			errors.map((e) => this.createDiagnostic(e)),
 		);
 	}
 
@@ -35,7 +35,7 @@ export class DartDiagnosticProvider {
 			message: ((error.type == "HINT" || error.type == "LINT") && config.showLintNames ? `${error.code}: ` : "") + error.message,
 			range: toRange(error.location),
 			severity: this.getSeverity(error.severity, error.type),
-			source: "dart"
+			source: "dart",
 		};
 	}
 
@@ -58,7 +58,7 @@ export class DartDiagnosticProvider {
 	}
 
 	private flushResults(notification: as.AnalysisFlushResultsNotification) {
-		let entries = notification.files.map<[Uri, Diagnostic[]]>(file => [Uri.file(file), undefined]);
+		const entries = notification.files.map<[Uri, Diagnostic[]]>((file) => [Uri.file(file), undefined]);
 		this.diagnostics.set(entries);
 	}
 }

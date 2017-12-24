@@ -13,54 +13,54 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		this.analyzer = analyzer;
 	}
 
-	provideWorkspaceSymbols(query: string, token: CancellationToken): Thenable<SymbolInformation[]> {
+	public provideWorkspaceSymbols(query: string, token: CancellationToken): Thenable<SymbolInformation[]> {
 		query = this.sanitizeUserQuery(query);
 		return new Promise<SymbolInformation[]>((resolve, reject) => {
 			Promise.all([
 				this.searchTopLevelSymbols(query),
-				this.searchMemberDeclarations(query)
-			]).then(results => resolve(this.combineResults(results)), e => { logError(e); reject(); });
+				this.searchMemberDeclarations(query),
+			]).then((results) => resolve(this.combineResults(results)), (e) => { logError(e); reject(); });
 		});
 	}
 
 	private combineResults(results: as.SearchResult[][]): SymbolInformation[] {
-		return results[0].concat(results[1]).filter(r => this.shouldIncludeResult(r)).map(r => this.convertResult(r));
+		return results[0].concat(results[1]).filter((r) => this.shouldIncludeResult(r)).map((r) => this.convertResult(r));
 	}
 
 	private searchTopLevelSymbols(query: string): PromiseLike<as.SearchResult[]> {
-		let pattern = this.makeCaseInsensitiveFuzzyRegex(query);
+		const pattern = this.makeCaseInsensitiveFuzzyRegex(query);
 
 		return new Promise<as.SearchResult[]>((resolve, reject) => {
-			this.analyzer.searchFindTopLevelDeclarations({ pattern: pattern }).then(resp => {
-				let disposable = this.analyzer.registerForSearchResults(notification => {
+			this.analyzer.searchFindTopLevelDeclarations({ pattern }).then((resp) => {
+				const disposable = this.analyzer.registerForSearchResults((notification) => {
 					// Skip any results that are not ours (or are not the final results).
 					if (notification.id != resp.id || !notification.isLast)
 						return;
 
 					disposable.dispose();
 					resolve(notification.results);
-				})
-			}, e => { logError(e); reject(); });
+				});
+			}, (e) => { logError(e); reject(); });
 		});
 	}
 
 	private searchMemberDeclarations(query: string): PromiseLike<as.SearchResult[]> {
 		return new Promise<as.SearchResult[]>((resolve, reject) => {
 			// TODO: Change this if the regex "support" gets fixed.
-			let pattern = this.makeCaseInsensitiveFuzzyRegex(query);
+			const pattern = this.makeCaseInsensitiveFuzzyRegex(query);
 
 			this.analyzer.searchFindMemberDeclarations({
-				name: pattern
-			}).then(resp => {
-				let disposable = this.analyzer.registerForSearchResults(notification => {
+				name: pattern,
+			}).then((resp) => {
+				const disposable = this.analyzer.registerForSearchResults((notification) => {
 					// Skip any results that are not ours (or are not the final results).
 					if (notification.id != resp.id || !notification.isLast)
 						return;
 
 					disposable.dispose();
 					resolve(notification.results);
-				})
-			}, e => { logError(e); reject(); });
+				});
+			}, (e) => { logError(e); reject(); });
 		});
 	}
 
@@ -82,7 +82,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 				return c;
 			return `[${c.toUpperCase()}${c.toLowerCase()}]`;
 		});
-		let pattern = chars.join(".*");
+		const pattern = chars.join(".*");
 		return `.*${pattern}.*`;
 	}
 
@@ -90,20 +90,20 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		// Must be either:
 		//   1. Public (not start with an underscore).
 		//   2. In our project.
-		let isPrivate = result.path[0].name.startsWith("_") || result.path[1].name.startsWith("_");
+		const isPrivate = result.path[0].name.startsWith("_") || result.path[1].name.startsWith("_");
 
 		return isWithinWorkspace(result.location.file) || !isPrivate;
 	}
 
 	private convertResult(result: as.SearchResult): SymbolInformation {
 		// Rewrite the filename for best display.
-		let containerName = this.createDisplayPath(result.location.file);
+		const containerName = this.createDisplayPath(result.location.file);
 
 		// Remove the library and compilation unit parent elements; concatenate names.
 		let elementPathDescription = result.path
 			.slice(0, result.path.length - 2)
 			.reverse()
-			.map(e => e.name)
+			.map((e) => e.name)
 			.join(".");
 
 		// For properties, show if get/set.
@@ -112,7 +112,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		if (result.path[0].kind == "GETTER")
 			elementPathDescription += " get";
 
-		let parameters = result.path[0].parameters && result.path[0].kind != "SETTER"
+		const parameters = result.path[0].parameters && result.path[0].kind != "SETTER"
 			? result.path[0].parameters
 			: "";
 
@@ -121,9 +121,9 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 			kind: getSymbolKindForElementKind(result.path[0].kind),
 			location: {
 				uri: Uri.file(result.location.file),
-				range: toRange(result.location)
+				range: toRange(result.location),
 			},
-			containerName: containerName
+			containerName,
 		};
 	}
 
@@ -137,12 +137,12 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		// rules for these paths!
 
 		const pubCachePath = "hosted" + path.sep + "pub.dartlang.org";
-		let pubCachePathIndex = inputPath.indexOf(pubCachePath);
+		const pubCachePathIndex = inputPath.indexOf(pubCachePath);
 		if (pubCachePathIndex > -1) {
-			let relativePath = inputPath.substring(pubCachePathIndex + pubCachePath.length + 1);
+			const relativePath = inputPath.substring(pubCachePathIndex + pubCachePath.length + 1);
 
 			// Packages in pubcache are versioned so trim the "-x.x.x" off the end of the foldername.
-			let pathComponents = relativePath.split(path.sep);
+			const pathComponents = relativePath.split(path.sep);
 			pathComponents[0] = pathComponents[0].split("-")[0];
 
 			// Symlink goes into the lib folder, so strip that out of the path.
@@ -150,7 +150,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 				pathComponents.splice(1, 1);
 
 			// Return 'package:foo/bar.dart'.
-			inputPath = `package:${pathComponents[0]}/${pathComponents.slice(1).join('/')}`;
+			inputPath = `package:${pathComponents[0]}/${pathComponents.slice(1).join("/")}`;
 		} else {
 			const root = workspace.getWorkspaceFolder(Uri.file(inputPath));
 			inputPath = root && path.relative(root.uri.fsPath, inputPath);
