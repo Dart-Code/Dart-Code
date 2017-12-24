@@ -52,14 +52,12 @@ export class DartDocumentHighlightProvider implements DocumentHighlightProvider 
 		const offsets: number[] = occurrences.offsets;
 		const length: number = occurrences.length;
 
-		for (let i = 0; i < offsets.length; i++) {
-			const offset = offsets[i];
+		for (const offset of offsets) {
 
 			// Look for a match in any of the occurance ranges.
 			if ((offset <= position) && (position < (offset + length))) {
 				// If we get a match, then create highlights for all the items in the matching occurance.
-				for (let i = 0; i < offsets.length; i++) {
-					const offset = offsets[i];
+				for (const offset of offsets) {
 					const range = new Range(
 						document.positionAt(offset),
 						document.positionAt(offset + length),
