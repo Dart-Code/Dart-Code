@@ -945,7 +945,7 @@ class ThreadInfo {
 		const oldbps = this.vmBps[uri];
 		if (oldbps) {
 			for (const bp of oldbps) {
-				removeBreakpointPromises.push(this.manager.debugSession.observatory.removeBreakpoint(this.ref.id, bp.id).then((_) => console.log("removed")));
+				removeBreakpointPromises.push(this.manager.debugSession.observatory.removeBreakpoint(this.ref.id, bp.id));
 			}
 		}
 
