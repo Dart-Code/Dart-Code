@@ -353,7 +353,13 @@ function isPackageRootWorkaroundRequired(root: string): boolean {
 	// It's hard to tell if the packages folder is actually a real one (--packages-dir) or
 	// this is a repo like Flutter, so we'll use the presence of a file we know exists only
 	// in the flutter one. This is very fragile, but hopefully a very temporary workaround.
-	return fs.existsSync(path.join(root, "packages", ".gitignore"));
+	return fs.existsSync(path.join(root, "packages", ".gitignore"))
+		|| (
+			// Since Flutter repro removed the .gitignore, also check if there are any non-symlinks.
+			fs.existsSync(path.join(root, "packages"))
+			&& !!fs.readdirSync(path.join(root, "packages"))
+				.find((d) => path.join(root, "packages", d) === fs.realpathSync(path.join(root, "packages", d)))
+		);
 }
 
 function handleConfigurationChange(sdks: util.Sdks) {
