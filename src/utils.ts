@@ -54,9 +54,13 @@ export function findSdks(): Sdks {
 
 	let fuchsiaRoot: string;
 	let flutterProject: string;
+	// Keep track of whether we have Fuchsia projects that are not "vanilla Flutter" because
+	// if not we will set project type to Flutter to allow daemon to run (and debugging support).
+	let hasFuchsiaProjectThatIsNotVanillaFlutter: boolean;
 	folders.forEach((folder) => {
 		fuchsiaRoot = fuchsiaRoot || findFuchsiaRoot(folder);
 		flutterProject = flutterProject || (referencesFlutterSdk(folder) ? folder : null);
+		hasFuchsiaProjectThatIsNotVanillaFlutter = hasFuchsiaProjectThatIsNotVanillaFlutter || !referencesFlutterSdk(folder);
 	});
 
 	const flutterSdkSearchPaths = [
@@ -85,7 +89,7 @@ export function findSdks(): Sdks {
 		dart: dartSdkPath,
 		flutter: (fuchsiaRoot || flutterProject) && flutterSdkPath,
 		fuchsia: fuchsiaRoot,
-		projectType: fuchsiaRoot ? ProjectType.Fuchsia : flutterProject ? ProjectType.Flutter : ProjectType.Dart,
+		projectType: fuchsiaRoot && hasFuchsiaProjectThatIsNotVanillaFlutter ? ProjectType.Fuchsia : flutterProject ? ProjectType.Flutter : ProjectType.Dart,
 	};
 }
 
