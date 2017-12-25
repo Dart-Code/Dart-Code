@@ -78,13 +78,17 @@ export abstract class StdIOService implements Disposable {
 	}
 
 	protected abstract shouldHandleMessage(message: string): boolean;
+	// tslint:disable-next-line:no-empty
+	protected processUnhandledMessage(message: string): void { }
 
 	public handleMessage(message: string): void {
 		message = message.trim();
 		this.logTraffic(`<== ${message}\r\n`);
 
-		if (!this.shouldHandleMessage(message))
+		if (!this.shouldHandleMessage(message)) {
+			this.processUnhandledMessage(message);
 			return;
+		}
 
 		let msg: any;
 		try {

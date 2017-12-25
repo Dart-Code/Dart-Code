@@ -17,10 +17,11 @@ export class FlutterRun extends StdIOService {
 
 	protected shouldHandleMessage(message: string): boolean {
 		// Everything in flutter is wrapped in [] so we can tell what to handle.
-		if (message.startsWith("[") && message.endsWith("]"))
-			return true;
-		else
-			this.notify(this.unhandledMessageSubscriptions, message);
+		return message.startsWith("[") && message.endsWith("]");
+	}
+
+	protected processUnhandledMessage(message: string): void {
+		this.notify(this.unhandledMessageSubscriptions, message);
 	}
 
 	private unhandledMessageSubscriptions: Array<(notification: string) => void> = [];
