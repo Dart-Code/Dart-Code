@@ -107,7 +107,7 @@ export abstract class StdIOService implements Disposable {
 		else if (msg.id)
 			this.handleResponse(msg as UnknownResponse);
 		else {
-			console.error(`Unexpected non-JSON message, assuming normal stdout : ${message}`);
+			console.error(`Unexpected JSON message, assuming normal stdout : ${message}`);
 			this.processUnhandledMessage(message);
 		}
 	}
