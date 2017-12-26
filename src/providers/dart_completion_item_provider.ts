@@ -19,20 +19,11 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		document: TextDocument, position: Position, token: CancellationToken,
 	): Thenable<CompletionList> {
 		return new Promise<CompletionList>((resolve, reject) => {
-			this.analyzer.completionGetSuggestions({
+			this.analyzer.completionGetSuggestionsResults({
 				file: document.fileName,
 				offset: document.offsetAt(position),
 			}).then((resp) => {
-				const disposable = this.analyzer.registerForCompletionResults((notification) => {
-					// Skip any results that are not ours (or are not the final results).
-					if (notification.id !== resp.id || !notification.isLast)
-						return;
-
-					disposable.dispose();
-					resolve(new CompletionList(notification.results.map((r) => {
-						return this.convertResult(document, notification, r);
-					})));
-				});
+				resolve(new CompletionList(resp.results.map((r) => this.convertResult(document, resp, r))));
 			}, (e) => { logError(e); reject(); });
 		});
 	}

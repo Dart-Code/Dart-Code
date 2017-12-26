@@ -119,6 +119,51 @@ export class Analyzer extends AnalyzerGen {
 		};
 		this.analysisUpdateContent({ files });
 	}
+
+	// Wraps completionGetSuggestions to return the final result automatically in the original promise
+	// to avoid race conditions.
+	// https://github.com/Dart-Code/Dart-Code/issues/471
+	public completionGetSuggestionsResults(request: as.CompletionGetSuggestionsRequest): Promise<as.CompletionResultsNotification> {
+		return this.requestWithStreamedResults(
+			() => this.completionGetSuggestions(request),
+			this.registerForCompletionResults,
+		);
+	}
+
+	// We need to subscribe before we send the request to avoid races in registering
+	// for results (see https://github.com/Dart-Code/Dart-Code/issues/471).
+	// Since we don't have the ID yet, we'll have to buffer them for the duration
+	// and check inside the buffer when we get the ID back.
+	private requestWithStreamedResults<TResponse extends { id: string; isLast: boolean }>(
+		sendRequest: () => Thenable<{ id: string }>,
+		registerForResults: (subscriber: (notification: TResponse) => void) => vs.Disposable,
+	): Promise<TResponse> {
+		return new Promise<TResponse>((resolve, reject) => {
+			const buffer: TResponse[] = []; // Buffer to store results that come in before we're ready.
+			let searchResultsID: string = null; // ID that'll be set once we get it back.
+
+			const disposable = registerForResults.bind(this)((notification: TResponse) => {
+				// If we know our ID and this is it, and it's the last result, then resolve.
+				if (searchResultsID && notification.id === searchResultsID && notification.isLast) {
+					disposable.dispose();
+					resolve(notification);
+				} else if (!searchResultsID && notification.isLast) // Otherwise if we didn't know our ID and this might be what we want, stash it.
+					buffer.push(notification);
+			});
+
+			// Now we have the above handler set up, send the actual request.
+			sendRequest.bind(this)().then((resp: { id: string }) => {
+				// When the ID comes back, stash it...
+				searchResultsID = resp.id;
+				// And also check the buffer.
+				const result = buffer.find((b) => b.id === searchResultsID);
+				if (result) {
+					disposable.dispose();
+					resolve(result);
+				}
+			}, (e: any) => reject(e));
+		});
+	}
 }
 
 export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind {
