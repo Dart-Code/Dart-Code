@@ -140,6 +140,26 @@ export class Analyzer extends AnalyzerGen {
 		);
 	}
 
+	// Wraps searchFindTopLevelDeclarations to return the final result automatically in the original promise
+	// to avoid race conditions.
+	// https://github.com/Dart-Code/Dart-Code/issues/471
+	public searchFindTopLevelDeclarationsResults(request: as.SearchFindTopLevelDeclarationsRequest): Promise<as.SearchResultsNotification> {
+		return this.requestWithStreamedResults(
+			() => this.searchFindTopLevelDeclarations(request),
+			this.registerForSearchResults,
+		);
+	}
+
+	// Wraps searchFindMemberDeclarations to return the final result automatically in the original promise
+	// to avoid race conditions.
+	// https://github.com/Dart-Code/Dart-Code/issues/471
+	public searchFindMemberDeclarationsResults(request: as.SearchFindMemberDeclarationsRequest): Promise<as.SearchResultsNotification> {
+		return this.requestWithStreamedResults(
+			() => this.searchFindMemberDeclarations(request),
+			this.registerForSearchResults,
+		);
+	}
+
 	// We need to subscribe before we send the request to avoid races in registering
 	// for results (see https://github.com/Dart-Code/Dart-Code/issues/471).
 	// Since we don't have the ID yet, we'll have to buffer them for the duration

@@ -17,53 +17,32 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		if (query.length === 0)
 			return null;
 		query = this.sanitizeUserQuery(query);
+		const pattern = this.makeCaseInsensitiveFuzzyRegex(query);
 		return new Promise<SymbolInformation[]>((resolve, reject) => {
 			Promise.all([
-				this.searchTopLevelSymbols(query),
-				this.searchMemberDeclarations(query),
-			]).then((results) => resolve(this.combineResults(results)), (e) => { logError(e); reject(); });
+				this.analyzer.searchFindTopLevelDeclarationsResults({ pattern }),
+				this.analyzer.searchFindMemberDeclarationsResults({ name: pattern }),
+			]).then((results) => resolve(this.combineResults(results)), () => reject());
 		});
 	}
 
-	private combineResults(results: as.SearchResult[][]): SymbolInformation[] {
-		return results[0].concat(results[1]).filter((r) => this.shouldIncludeResult(r)).map((r) => this.convertResult(r));
+	private combineResults(results: as.SearchResultsNotification[]): SymbolInformation[] {
+		return results[0].results.concat(results[1].results)
+			.filter((r) => this.shouldIncludeResult(r))
+			.map((r) => this.convertResult(r));
 	}
 
 	private searchTopLevelSymbols(query: string): PromiseLike<as.SearchResult[]> {
 		const pattern = this.makeCaseInsensitiveFuzzyRegex(query);
 
-		return new Promise<as.SearchResult[]>((resolve, reject) => {
-			this.analyzer.searchFindTopLevelDeclarations({ pattern }).then((resp) => {
-				const disposable = this.analyzer.registerForSearchResults((notification) => {
-					// Skip any results that are not ours (or are not the final results).
-					if (notification.id !== resp.id || !notification.isLast)
-						return;
-
-					disposable.dispose();
-					resolve(notification.results);
-				});
-			}, (e) => { logError(e); reject(); });
-		});
+		return this.analyzer.searchFindTopLevelDeclarationsResults({ pattern })
+			.then((resp) => resp.results);
 	}
 
 	private searchMemberDeclarations(query: string): PromiseLike<as.SearchResult[]> {
-		return new Promise<as.SearchResult[]>((resolve, reject) => {
-			// TODO: Change this if the regex "support" gets fixed.
-			const pattern = this.makeCaseInsensitiveFuzzyRegex(query);
-
-			this.analyzer.searchFindMemberDeclarations({
-				name: pattern,
-			}).then((resp) => {
-				const disposable = this.analyzer.registerForSearchResults((notification) => {
-					// Skip any results that are not ours (or are not the final results).
-					if (notification.id !== resp.id || !notification.isLast)
-						return;
-
-					disposable.dispose();
-					resolve(notification.results);
-				});
-			}, (e) => { logError(e); reject(); });
-		});
+		const pattern = this.makeCaseInsensitiveFuzzyRegex(query);
+		return this.analyzer.searchFindMemberDeclarationsResults({ name: pattern })
+			.then((resp) => resp.results);
 	}
 
 	private sanitizeUserQuery(query: string): string {
@@ -117,6 +96,10 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		const parameters = result.path[0].parameters && result.path[0].kind !== "SETTER"
 			? result.path[0].parameters
 			: "";
+
+		if (elementPathDescription + parameters === "") {
+			const i = 0;
+		}
 
 		return {
 			containerName,
