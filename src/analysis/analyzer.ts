@@ -130,12 +130,22 @@ export class Analyzer extends AnalyzerGen {
 		);
 	}
 
+	// Wraps completionGetSuggestions to return the final result automatically in the original promise
+	// to avoid race conditions.
+	// https://github.com/Dart-Code/Dart-Code/issues/471
+	public searchFindElementReferencesResults(request: as.SearchFindElementReferencesRequest): Promise<as.SearchResultsNotification> {
+		return this.requestWithStreamedResults(
+			() => this.searchFindElementReferences(request),
+			this.registerForSearchResults,
+		);
+	}
+
 	// We need to subscribe before we send the request to avoid races in registering
 	// for results (see https://github.com/Dart-Code/Dart-Code/issues/471).
 	// Since we don't have the ID yet, we'll have to buffer them for the duration
 	// and check inside the buffer when we get the ID back.
 	private requestWithStreamedResults<TResponse extends { id: string; isLast: boolean }>(
-		sendRequest: () => Thenable<{ id: string }>,
+		sendRequest: () => Thenable<{ id?: string }>,
 		registerForResults: (subscriber: (notification: TResponse) => void) => vs.Disposable,
 	): Promise<TResponse> {
 		return new Promise<TResponse>((resolve, reject) => {
@@ -152,7 +162,11 @@ export class Analyzer extends AnalyzerGen {
 			});
 
 			// Now we have the above handler set up, send the actual request.
-			sendRequest.bind(this)().then((resp: { id: string }) => {
+			sendRequest.bind(this)().then((resp: { id?: string }) => {
+				if (!resp.id) {
+					disposable.dispose();
+					reject();
+				}
 				// When the ID comes back, stash it...
 				searchResultsID = resp.id;
 				// And also check the buffer.
@@ -161,7 +175,7 @@ export class Analyzer extends AnalyzerGen {
 					disposable.dispose();
 					resolve(result);
 				}
-			}, (e: any) => reject(e));
+			}, () => reject());
 		});
 	}
 }

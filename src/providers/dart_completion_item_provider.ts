@@ -24,7 +24,9 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				offset: document.offsetAt(position),
 			}).then((resp) => {
 				resolve(new CompletionList(resp.results.map((r) => this.convertResult(document, resp, r))));
-			}, (e) => { logError(e); reject(); });
+			},
+				() => reject(),
+			);
 		});
 	}
 
