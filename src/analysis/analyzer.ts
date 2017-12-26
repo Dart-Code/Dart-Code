@@ -130,7 +130,7 @@ export class Analyzer extends AnalyzerGen {
 		);
 	}
 
-	// Wraps completionGetSuggestions to return the final result automatically in the original promise
+	// Wraps searchFindElementReferences to return the final result automatically in the original promise
 	// to avoid race conditions.
 	// https://github.com/Dart-Code/Dart-Code/issues/471
 	public searchFindElementReferencesResults(request: as.SearchFindElementReferencesRequest): Promise<as.SearchResultsNotification> {
