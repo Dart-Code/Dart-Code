@@ -14,6 +14,8 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	}
 
 	public provideWorkspaceSymbols(query: string, token: CancellationToken): Thenable<SymbolInformation[]> {
+		if (query.length === 0)
+			return null;
 		query = this.sanitizeUserQuery(query);
 		return new Promise<SymbolInformation[]>((resolve, reject) => {
 			Promise.all([
