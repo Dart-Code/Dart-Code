@@ -40,6 +40,11 @@ export class DebugCommands {
 					this.debugStatus.hide();
 			} else if (e.event === "dart.observatoryUri") {
 				this.observatoryUri = e.body.observatoryUri;
+			} else if (e.event === "dart.restartRequest") {
+				// This event comes back when the user restarts with the Restart button
+				// (eg. it wasn't intiated from our extension, so we don't get to log it
+				// in the hotReload command).
+				analytics.logDebuggerHotReload();
 			}
 		});
 		vs.debug.onDidStartDebugSession((s) => {
@@ -66,8 +71,14 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.openTimeline", () => { if (this.observatoryUri) openInBrowser(this.observatoryUri + "/#/timeline-dashboard"); }));
 
 		// Misc custom debug commands.
-		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", () => this.sendCustomFlutterDebugCommand("hotReload")));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.fullRestart", () => this.sendCustomFlutterDebugCommand("fullRestart")));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", () => {
+			this.sendCustomFlutterDebugCommand("hotReload");
+			analytics.logDebuggerHotReload();
+		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.fullRestart", () => {
+			this.sendCustomFlutterDebugCommand("fullRestart");
+			analytics.logDebuggerRestart();
+		}));
 
 		// Flutter toggle platform.
 		// We can't just use a service command here, as we need to call it twice (once to get, once to change) and

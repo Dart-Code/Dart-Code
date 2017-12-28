@@ -20,6 +20,8 @@ enum EventAction {
 	Activated,
 	SdkDetectionFailure,
 	Deactivated,
+	Restart,
+	HotReload,
 }
 
 enum TimingVariable {
@@ -46,6 +48,8 @@ export class Analytics {
 	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
 	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS); }
 	public logDebuggerStart(resourceUri: Uri) { this.event(Category.Debugger, EventAction.Activated, resourceUri); }
+	public logDebuggerRestart() { this.event(Category.Debugger, EventAction.Restart); }
+	public logDebuggerHotReload() { this.event(Category.Debugger, EventAction.HotReload); }
 
 	private event(category: Category, action: EventAction, resourceUri?: Uri): PromiseLike<void> {
 		const data: any = {

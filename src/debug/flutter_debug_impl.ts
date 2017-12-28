@@ -118,6 +118,9 @@ export class FlutterDebugSession extends DartDebugSession {
 		args: DebugProtocol.RestartArguments,
 	): void {
 		this.flutter.restart(this.currentRunningAppId, !this.args.noDebug);
+		// Notify the Extension we had a restart request so it's able to
+		// log the hotReload.
+		this.sendEvent(new Event("dart.restartRequest"));
 		super.restartRequest(response, args);
 	}
 
