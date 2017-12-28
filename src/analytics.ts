@@ -40,14 +40,14 @@ export class Analytics {
 		this.event(Category.Extension, EventAction.Activated);
 		this.time(Category.Extension, TimingVariable.Startup, timeInMS);
 	}
-	public logExtensionShutdown() { this.event(Category.Extension, EventAction.Deactivated); }
+	public logExtensionShutdown(): PromiseLike<void> { return this.event(Category.Extension, EventAction.Deactivated); }
 	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
 	public logAnalyzerError(description: string, fatal: boolean) { this.error("AS: " + description, fatal); }
 	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
 	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS); }
 	public logDebuggerStart(resourceUri: Uri) { this.event(Category.Debugger, EventAction.Activated, resourceUri); }
 
-	private event(category: Category, action: EventAction, resourceUri?: Uri) {
+	private event(category: Category, action: EventAction, resourceUri?: Uri): PromiseLike<void> {
 		const data: any = {
 			ea: EventAction[action],
 			ec: Category[category],
@@ -62,7 +62,7 @@ export class Analytics {
 		if (category === Category.Extension && action === EventAction.Deactivated)
 			data.sc = "end";
 
-		this.send(data, resourceUri);
+		return this.send(data, resourceUri);
 	}
 
 	private time(category: Category, timingVariable: TimingVariable, timeInMS: number) {
@@ -86,7 +86,7 @@ export class Analytics {
 		this.send(data);
 	}
 
-	private send(customData: any, resourceUri?: Uri) {
+	private send(customData: any, resourceUri?: Uri): PromiseLike<void> {
 		if (!config.allowAnalytics)
 			return;
 
@@ -126,28 +126,31 @@ export class Analytics {
 			port: 443,
 		};
 
-		const req = https.request(options, (resp) => {
-			if (debug)
-				resp.on("data", (c) => {
-					try {
-						const gaDebugResp = JSON.parse(c.toString());
-						if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
-							console.log("Sent OK!");
-						else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
-							console.warn(c.toString());
-						else
-							console.warn("Unexpected GA debug response: " + c.toString());
-					} catch (e) {
-						console.warn("Error in GA debug response: " + c.toString());
-					}
-				});
+		return new Promise((resolve, reject) => {
+			const req = https.request(options, (resp) => {
+				if (debug)
+					resp.on("data", (c) => {
+						try {
+							const gaDebugResp = JSON.parse(c.toString());
+							if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
+								console.log("Sent OK!");
+							else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
+								console.warn(c.toString());
+							else
+								console.warn("Unexpected GA debug response: " + c.toString());
+						} catch (e) {
+							console.warn("Error in GA debug response: " + c.toString());
+						}
+					});
 
-			if (resp.statusCode < 200 || resp.statusCode > 300) {
-				log(`Failed to send analytics ${resp.statusCode}: ${resp.statusMessage}`);
-			}
+				if (resp.statusCode < 200 || resp.statusCode > 300) {
+					log(`Failed to send analytics ${resp.statusCode}: ${resp.statusMessage}`);
+				}
+				resolve();
+			});
+			req.write(querystring.stringify(data));
+			req.end();
 		});
-		req.write(querystring.stringify(data));
-		req.end();
 	}
 
 	private getDebuggerPreference(resourceUri: Uri): string {

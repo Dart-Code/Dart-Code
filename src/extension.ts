@@ -416,9 +416,9 @@ function getAnalyzerSettings() {
 		+ config.previewAnalyzeAngularTemplates;
 }
 
-export function deactivate() {
-	analytics.logExtensionShutdown();
+export function deactivate(): PromiseLike<void> {
 	setCommandVisiblity(false, null);
+	return analytics.logExtensionShutdown();
 }
 
 function setCommandVisiblity(enable: boolean, projectType: util.ProjectType) {
