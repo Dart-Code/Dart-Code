@@ -100,7 +100,7 @@ export class Analytics {
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,
 			cd5: codeVersion,
-			cd6: this.getDebuggerPreference(resourceUri),
+			cd6: resourceUri ? this.getDebuggerPreference(resourceUri) : null,
 			cd7: ProjectType[this.sdks.projectType],
 			cd8: config.closingLabels ? "On" : "Off",
 			cd9: this.sdks.projectType === ProjectType.Flutter ? (config.flutterHotReloadOnSave ? "On" : "Off") : null,
