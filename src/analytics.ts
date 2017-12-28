@@ -62,19 +62,7 @@ export class Analytics {
 		if (category === Category.Extension && action === EventAction.Deactivated)
 			data.sc = "end";
 
-		// Include additional project/setting info.
-		data.cd7 = ProjectType[this.sdks.projectType];
-		data.cd8 = config.closingLabels ? "On" : "Off";
-		if (this.sdks.projectType === ProjectType.Flutter)
-			data.cd9 = config.flutterHotReloadOnSave ? "On" : "Off";
-		data.cd10 = config.showTodos ? "On" : "Off";
-		data.cd11 = config.showLintNames ? "On" : "Off";
-
-		// Include debug preference if it's a debugger start.
-		if (category === Category.Debugger && action === EventAction.Activated)
-			data.cd6 = this.getDebuggerPreference(resourceUri);
-
-		this.send(data);
+		this.send(data, resourceUri);
 	}
 
 	private time(category: Category, timingVariable: TimingVariable, timeInMS: number) {
@@ -98,7 +86,7 @@ export class Analytics {
 		this.send(data);
 	}
 
-	private send(customData: any) {
+	private send(customData: any, resourceUri?: Uri) {
 		if (!config.allowAnalytics)
 			return;
 
@@ -106,10 +94,16 @@ export class Analytics {
 			an: "Dart Code",
 			av: extensionVersion,
 			cd1: isDevelopment,
+			cd10: config.showTodos ? "On" : "Off",
+			cd11: config.showLintNames ? "On" : "Off",
 			cd2: process.platform,
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,
 			cd5: codeVersion,
+			cd6: this.getDebuggerPreference(resourceUri),
+			cd7: ProjectType[this.sdks.projectType],
+			cd8: config.closingLabels ? "On" : "Off",
+			cd9: this.sdks.projectType === ProjectType.Flutter ? (config.flutterHotReloadOnSave ? "On" : "Off") : null,
 			cid: env.machineId,
 			tid: "UA-2201586-19",
 			ul: env.language,
