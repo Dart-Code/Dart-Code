@@ -22,6 +22,8 @@ enum EventAction {
 	Deactivated,
 	Restart,
 	HotReload,
+	OpenObservatory,
+	OpenTimeline,
 }
 
 enum TimingVariable {
@@ -50,6 +52,8 @@ export class Analytics {
 	public logDebuggerStart(resourceUri: Uri) { this.event(Category.Debugger, EventAction.Activated, resourceUri); }
 	public logDebuggerRestart() { this.event(Category.Debugger, EventAction.Restart); }
 	public logDebuggerHotReload() { this.event(Category.Debugger, EventAction.HotReload); }
+	public logDebuggerOpenObservatory() { this.event(Category.Debugger, EventAction.OpenObservatory); }
+	public logDebuggerOpenTimeline() { this.event(Category.Debugger, EventAction.OpenTimeline); }
 
 	private event(category: Category, action: EventAction, resourceUri?: Uri): PromiseLike<void> {
 		const data: any = {

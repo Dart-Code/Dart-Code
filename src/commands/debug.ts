@@ -67,8 +67,18 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.runBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", this.paintBaselinesEnabled = !this.paintBaselinesEnabled)));
 
 		// Open Observatory.
-		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", () => { if (this.observatoryUri) openInBrowser(this.observatoryUri); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.openTimeline", () => { if (this.observatoryUri) openInBrowser(this.observatoryUri + "/#/timeline-dashboard"); }));
+		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", () => {
+			if (this.observatoryUri) {
+				openInBrowser(this.observatoryUri);
+				analytics.logDebuggerOpenObservatory();
+			}
+		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.openTimeline", () => {
+			if (this.observatoryUri) {
+				openInBrowser(this.observatoryUri + "/#/timeline-dashboard");
+				analytics.logDebuggerOpenTimeline();
+			}
+		}));
 
 		// Misc custom debug commands.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", () => {
