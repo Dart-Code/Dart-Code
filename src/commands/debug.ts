@@ -12,7 +12,7 @@ import { openInBrowser } from "../utils";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { SdkManager } from "../sdk/sdk_manager";
-import { FLUTTER_DEBUG_TYPE } from "../providers/debug_config_provider";
+import { FLUTTER_DEBUG_TYPE, DART_CLI_DEBUG_TYPE } from "../providers/debug_config_provider";
 import { Uri } from "vscode";
 
 export class DebugCommands {
@@ -47,15 +47,23 @@ export class DebugCommands {
 				analytics.logDebuggerHotReload();
 			}
 		});
+		let debugSessionStart: Date;
 		vs.debug.onDidStartDebugSession((s) => {
 			if (s.type === FLUTTER_DEBUG_TYPE) {
 				this.currentFlutterDebugSession = s;
 				this.resetFlutterSettings();
 			}
+			if (s.type === FLUTTER_DEBUG_TYPE || s.type === DART_CLI_DEBUG_TYPE) {
+				debugSessionStart = new Date();
+			}
 		});
 		vs.debug.onDidTerminateDebugSession((s) => {
 			if (s === this.currentFlutterDebugSession) {
 				this.currentFlutterDebugSession = null;
+			}
+			if (s.type === FLUTTER_DEBUG_TYPE || s.type === DART_CLI_DEBUG_TYPE) {
+				const debugSessionEnd = new Date();
+				analytics.logDebugSessionDuration(debugSessionEnd.getTime() - debugSessionStart.getTime());
 			}
 		});
 

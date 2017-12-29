@@ -29,6 +29,7 @@ enum EventAction {
 enum TimingVariable {
 	Startup,
 	FirstAnalysis,
+	SessionDuration,
 }
 
 export class Analytics {
@@ -48,6 +49,7 @@ export class Analytics {
 	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
 	public logAnalyzerError(description: string, fatal: boolean) { this.error("AS: " + description, fatal); }
 	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
+	public logDebugSessionDuration(timeInMS: number) { this.time(Category.Debugger, TimingVariable.SessionDuration, timeInMS); }
 	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS); }
 	public logDebuggerStart(resourceUri: Uri) { this.event(Category.Debugger, EventAction.Activated, resourceUri); }
 	public logDebuggerRestart() { this.event(Category.Debugger, EventAction.Restart); }
