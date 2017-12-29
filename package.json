@@ -420,7 +420,7 @@
 				"dart.allowAnalytics": {
 					"type": "boolean",
 					"default": true,
-					"description": "Note: We only send a few very basic events and the platform and extension/Dart version numbers :-)",
+					"description": "Sends analytics such as startup timings, frequency of use of features and analysis server crashes.",
 					"scope": "window"
 				},
 				"dart.checkForSdkUpdates": {
