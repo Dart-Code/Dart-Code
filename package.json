@@ -57,12 +57,6 @@
 				"path": "./syntaxes/dart.json"
 			}
 		],
-		"snippets": [
-			{
-				"language": "dart",
-				"path": "./snippets/dart.json"
-			}
-		],
 		"colors": [
 			{
 				"id": "dart.closingLabels",
