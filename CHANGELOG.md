@@ -1,3 +1,16 @@
+# v2.7.0
+
+- When debugging, call stacks on Windows should no longer show long (incorrect) relative paths
+- Find references will no longer hang with `Loading...` if invoked somewhere that has no results (eg. keywords)
+- Code completion will no longer hang with `Loading...` when using the Angular plugin and there are no results
+- Code completion will now trigger automatically after typing `$` or `{` inside strings
+- Saving `pubspac.yaml` in a Flutter project will no longer run `pub get` but instead run the Flutter eqvuilent
+- Executing SDK commands will now pick a more appropriate workspace (or prompt for one if it cannot)
+- Folders named `packages` that contain real projects (like inside the Flutter repo) will now be detected more accurately (reducing package path resolution issues)
+- The Flutter debugger will no longer crash if you `print` a JSON array
+- The Flutter debugger will no longer hang if you create breakpoinst prior to launching the debug session
+- Vanilla Flutter projects inside the Fuchsia tree should now be treated like Flutter and not Fuchsia, enabling the Flutter deamon and debugging support
+
 # v2.6.2
 
 - An issue with `pub` and `flutter` commands not working from the command palette (introduced in v2.6.0) has been fixed
