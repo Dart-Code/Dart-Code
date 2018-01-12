@@ -117,11 +117,23 @@ export class FlutterDebugSession extends DartDebugSession {
 		response: DebugProtocol.RestartResponse,
 		args: DebugProtocol.RestartArguments,
 	): void {
-		this.flutter.restart(this.currentRunningAppId, !this.args.noDebug);
+		this.performHotReload();
 		// Notify the Extension we had a restart request so it's able to
 		// log the hotReload.
 		this.sendEvent(new Event("dart.restartRequest"));
 		super.restartRequest(response, args);
+	}
+
+	private performHotReload() {
+		this.flutter.restart(this.currentRunningAppId, !this.args.noDebug)
+			.then(
+			(result) => {
+				// If we get a hint, send it back over to the UI to do something appropriate.
+				if (result && result.hintId)
+					this.sendEvent(new Event("dart.hint", { hintId: result.hintId, hintMessage: result.hintMessage }));
+			},
+			(error) => this.sendEvent(new OutputEvent(error, "stderr")),
+		);
 	}
 
 	protected customRequest(request: string, response: DebugProtocol.Response, args: any): void {
@@ -147,9 +159,7 @@ export class FlutterDebugSession extends DartDebugSession {
 
 			case "hotReload":
 				if (this.currentRunningAppId)
-					this.flutter.restart(this.currentRunningAppId, !this.args.noDebug)
-						// tslint:disable-next-line:no-empty
-						.then((result) => { }, (error) => this.sendEvent(new OutputEvent(error, "stderr")));
+					this.performHotReload();
 				break;
 
 			case "fullRestart":

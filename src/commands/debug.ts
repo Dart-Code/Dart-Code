@@ -8,7 +8,7 @@ import * as path from "path";
 import * as project from "../project";
 import * as vs from "vscode";
 import { config } from "../config";
-import { openInBrowser } from "../utils";
+import { openInBrowser, logError } from "../utils";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { SdkManager } from "../sdk/sdk_manager";
@@ -45,6 +45,17 @@ export class DebugCommands {
 				// (eg. it wasn't intiated from our extension, so we don't get to log it
 				// in the hotReload command).
 				analytics.logDebuggerHotReload();
+			} else if (e.event === "dart.hint" && e.body && e.body.hintId) {
+				switch (e.body.hintId) {
+					case "restartRecommended":
+						this.promptForFullRestart();
+						break;
+					default:
+						if (e.body.hintMessage)
+							vs.window.showInformationMessage(e.body.hintMessage);
+						else
+							logError({ message: `Unexpected hint from debugger: ${e.body.hintId}, ${e.body.hintId}` });
+				}
 			}
 		});
 		let debugSessionStart: Date;
@@ -102,6 +113,17 @@ export class DebugCommands {
 		// We can't just use a service command here, as we need to call it twice (once to get, once to change) and
 		// currently it seems like the DA can't return responses to us here, so we'll have to do them both inside the DA.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => this.sendCustomFlutterDebugCommand("togglePlatform")));
+	}
+
+	private promptForFullRestart() {
+		const fullRestartText = "Full Restart";
+		vs.window.showInformationMessage(
+			"Some program elements were changed during reload but did not run when the view was reassembled",
+			fullRestartText,
+		).then((r) => {
+			if (r === fullRestartText)
+				this.sendCustomFlutterDebugCommand("fullRestart");
+		});
 	}
 
 	private runServiceCommand(method: string, params: any) {
