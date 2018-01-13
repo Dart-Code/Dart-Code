@@ -1,3 +1,9 @@
+# v2.7.1
+
+- Further improvements have been made to reduce the chances of `print`ing JSON from Flutter apps from crashing the debugger
+- If during a hot reload, code that has changed was not re-executed (for example if you change the `main` method) you will now see a notification with an option to perform a full restart
+- Long Dart SDK version numbers (git hashes) will now be truncated in the status bar (the full version is available in the tooltip)
+
 # v2.7.0
 
 - When debugging, call stacks on Windows should no longer show long (incorrect) relative paths
