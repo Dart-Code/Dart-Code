@@ -1,3 +1,7 @@
+# v2.7.2
+
+This version contains no functional changes but updates some internal references to the extension's publisher ID which has been changed from DanTup to Dart-Code.
+
 # v2.7.1
 
 - Further improvements have been made to reduce the chances of `print`ing JSON from Flutter apps from crashing the debugger
