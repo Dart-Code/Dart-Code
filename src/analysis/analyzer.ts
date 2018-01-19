@@ -47,7 +47,7 @@ export class Analyzer extends AnalyzerGen {
 			args.push(`--port=${this.diagnosticsPort}`);
 
 		// Add info about the extension that will be collected for crash reports etc.
-		args.push(`--client-id=DanTup.dart-code`);
+		args.push(`--client-id=Dart-Code.dart-code`);
 		args.push(`--client-version=${extensionVersion}`);
 
 		// The analysis server supports a verbose instrumentation log file.

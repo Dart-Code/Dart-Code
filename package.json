@@ -3,7 +3,7 @@
 	"displayName": "Dart Code",
 	"description": "Dart, Flutter and Fuchsia support for Visual Studio Code.",
 	"version": "2.7.1",
-	"publisher": "DanTup",
+	"publisher": "Dart-Code",
 	"engines": {
 		"vscode": "^1.18.0"
 	},

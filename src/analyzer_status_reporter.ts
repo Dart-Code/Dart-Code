@@ -88,7 +88,7 @@ export class AnalyzerStatusReporter extends Disposable {
 
 	private reportError(error: ServerErrorNotification, method?: string) {
 		const sdkVersion = getDartSdkVersion(this.sdks.dart);
-		const dartCodeVersion = extensions.getExtension("DanTup.dart-code").packageJSON.version;
+		const dartCodeVersion = extensions.getExtension("Dart-Code.dart-code").packageJSON.version;
 
 		// Attempt to get the last diagnostics
 		const diagnostics = this.analyzer.getLastDiagnostics();
