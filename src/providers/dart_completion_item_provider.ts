@@ -2,7 +2,7 @@
 
 import {
 	TextDocument, Position, CancellationToken, CompletionItemProvider, CompletionList,
-	CompletionItem, CompletionItemKind, TextEdit, Range, SnippetString,
+	CompletionItem, CompletionItemKind, TextEdit, Range, SnippetString, CompletionContext, CompletionTriggerKind,
 } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import { logError } from "../utils";
@@ -16,8 +16,10 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 	}
 
 	public provideCompletionItems(
-		document: TextDocument, position: Position, token: CancellationToken,
+		document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext,
 	): Thenable<CompletionList> {
+		if (!this.shouldAllowCompletion(document, position, context))
+			return;
 		return new Promise<CompletionList>((resolve, reject) => {
 			this.analyzer.completionGetSuggestionsResults({
 				file: document.fileName,
@@ -28,6 +30,21 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				() => reject(),
 			);
 		});
+	}
+
+	private shouldAllowCompletion(document: TextDocument, position: Position, context: CompletionContext): boolean {
+		// Filter out auto triggered completions on { unless immediately after a $.
+		// This is to allow completion to trigger on variables in strings
+		// but nowhere else.
+		// https://github.com/Dart-Code/Dart-Code/issues/476
+		// https://github.com/Dart-Code/Dart-Code/issues/504
+		if (context.triggerKind === CompletionTriggerKind.TriggerCharacter && context.triggerCharacter === "{") {
+			return position.character >= 2
+				&& document.getText(new Range(position.translate(0, -2), position)) === "${";
+		}
+
+		// Otherwise, allow through.
+		return true;
 	}
 
 	private convertResult(
