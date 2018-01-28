@@ -1,3 +1,7 @@
+# v2.7.3
+
+- Typing a `{` will no longer cause code completion to automatically appear unless it was immediately preceeded by a `$`
+
 # v2.7.2
 
 This version contains no functional changes but updates some internal references to the extension's publisher ID which has been changed from DanTup to Dart-Code.
