@@ -33,14 +33,14 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 	}
 
 	private shouldAllowCompletion(document: TextDocument, position: Position, context: CompletionContext): boolean {
-		// Filter out auto triggered completions on { unless immediately after a $.
-		// This is to allow completion to trigger on variables in strings
-		// but nowhere else.
-		// https://github.com/Dart-Code/Dart-Code/issues/476
-		// https://github.com/Dart-Code/Dart-Code/issues/504
-		if (context.triggerKind === CompletionTriggerKind.TriggerCharacter && context.triggerCharacter === "{") {
-			return position.character >= 2
-				&& document.getText(new Range(position.translate(0, -2), position)) === "${";
+		// Filter out auto triggered completions on certain characters based on the previous
+		// characters (eg. to allow completion on " if it's part of an import).
+		if (context.triggerKind === CompletionTriggerKind.TriggerCharacter) {
+			const line = document.lineAt(position.line).text.slice(0, position.character);
+			switch (context.triggerCharacter) {
+				case "{":
+					return line.endsWith("${");
+			}
 		}
 
 		// Otherwise, allow through.
