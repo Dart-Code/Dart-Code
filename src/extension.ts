@@ -163,7 +163,7 @@ export function activate(context: vs.ExtensionContext) {
 		activeFileFilters.push(HTML_MODE);
 	}
 
-	const triggerCharacters = ".: =(${'\"abcdefghijklmnopqrstuvwxyz".split("");
+	const triggerCharacters = ".: =(${'\"".split("");
 	activeFileFilters.forEach((filter) => {
 		context.subscriptions.push(vs.languages.registerHoverProvider(filter, hoverProvider));
 		context.subscriptions.push(vs.languages.registerDocumentFormattingEditProvider(filter, formattingEditProvider));

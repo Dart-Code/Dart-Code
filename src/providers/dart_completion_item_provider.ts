@@ -40,6 +40,10 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			switch (context.triggerCharacter) {
 				case "{":
 					return line.endsWith("${");
+				case "'":
+					return line.endsWith("import '") || line.endsWith("export '");
+				case "\"":
+					return line.endsWith("import \"") || line.endsWith("export \"");
 			}
 		}
 
