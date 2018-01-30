@@ -130,6 +130,16 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			document.positionAt(notification.replacementOffset),
 			document.positionAt(notification.replacementOffset + notification.replacementLength),
 		);
+
+		switch (label) {
+			case "import '';":
+				completion.command = {
+					command: "editor.action.triggerSuggest",
+					title: "Suggest",
+				};
+				break;
+		}
+
 		// Relevance is a number, highest being best. Code sorts by text, so subtract from a large number so that
 		// a text sort will result in the correct order.
 		// 555 -> 999455
