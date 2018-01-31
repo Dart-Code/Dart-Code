@@ -2,7 +2,7 @@
 
 # Contributing to Dart Code
 
-If you're going to work on an issue, please add a comment to the issue so others know it's being looked at. If there isn't an issue for the work you want to do, please create one. The [up-for-grabs](https://github.com/Dart-Code/Dart-Code/labels/up%20for%20grabs) issues might make good starting points for new contributors.
+If you're going to work on an issue, please add a comment to the issue so others know it's being looked at. If there isn't an issue for the work you want to do, please create one. The [good first issue](https://github.com/Dart-Code/Dart-Code/labels/good%20first%20issue) issues might make good starting points for new contributors.
 
 ## Enable Logging
 
