@@ -112,7 +112,7 @@ ${method ? "\n### Request\n\nWhile responding to request: `" + method + "`\n" : 
 
 ### Analyzer Info
 
-The analyzer was launched with the arguments:
+The analyzer was launched using the arguments:
 
 \`\`\`text
 ${analyzerArgs.join("\n")}

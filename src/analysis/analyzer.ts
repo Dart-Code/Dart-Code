@@ -58,7 +58,7 @@ export class Analyzer extends AnalyzerGen {
 		if (this.additionalArgs)
 			args = args.concat(this.additionalArgs);
 
-		this.launchArgs = args.slice(1); // Trim the first one as it's just snapshot path.
+		this.launchArgs = args;
 
 		// Hook error subscriptions so we can try and get diagnostic info if this happens.
 		this.registerForServerError((e) => this.requestDiagnosticsUpdate());
