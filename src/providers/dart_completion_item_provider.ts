@@ -173,15 +173,14 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 	private getElementKind(kind: as.ElementKind): CompletionItemKind {
 		switch (kind) {
 			case "CLASS":
-				return CompletionItemKind.Class;
 			case "CLASS_TYPE_ALIAS":
 				return CompletionItemKind.Class;
 			case "COMPILATION_UNIT":
 				return CompletionItemKind.Module;
 			case "CONSTRUCTOR":
+			case "CONSTRUCTOR_INVOCATION":
 				return CompletionItemKind.Constructor;
 			case "ENUM":
-				return CompletionItemKind.Enum;
 			case "ENUM_CONSTANT":
 				return CompletionItemKind.Enum;
 			case "FIELD":
@@ -189,13 +188,11 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			case "FILE":
 				return CompletionItemKind.File;
 			case "FUNCTION":
-				return CompletionItemKind.Function;
 			case "FUNCTION_TYPE_ALIAS":
 				return CompletionItemKind.Function;
 			case "GETTER":
 				return CompletionItemKind.Property;
 			case "LABEL":
-				return CompletionItemKind.Module;
 			case "LIBRARY":
 				return CompletionItemKind.Module;
 			case "LOCAL_VARIABLE":
@@ -203,13 +200,11 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			case "METHOD":
 				return CompletionItemKind.Method;
 			case "PARAMETER":
-				return CompletionItemKind.Variable;
 			case "PREFIX":
 				return CompletionItemKind.Variable;
 			case "SETTER":
 				return CompletionItemKind.Property;
 			case "TOP_LEVEL_VARIABLE":
-				return CompletionItemKind.Variable;
 			case "TYPE_PARAMETER":
 				return CompletionItemKind.Variable;
 			case "UNIT_TEST_GROUP":

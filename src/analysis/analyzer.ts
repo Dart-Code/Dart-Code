@@ -232,13 +232,11 @@ export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind
 		case "METHOD":
 			return vs.SymbolKind.Method;
 		case "PARAMETER":
-			return vs.SymbolKind.Variable;
 		case "PREFIX":
 			return vs.SymbolKind.Variable;
 		case "SETTER":
 			return vs.SymbolKind.Property;
 		case "TOP_LEVEL_VARIABLE":
-			return vs.SymbolKind.Variable;
 		case "TYPE_PARAMETER":
 			return vs.SymbolKind.Variable;
 		case "UNIT_TEST_GROUP":
