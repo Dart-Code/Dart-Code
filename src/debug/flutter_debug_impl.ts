@@ -44,6 +44,10 @@ export class FlutterDebugSession extends DartDebugSession {
 			appArgs.push(args.deviceId);
 		}
 
+		if (args.previewDart2) {
+			appArgs.push("--preview-dart-2");
+		}
+
 		if (debug) {
 			appArgs.push("--start-paused");
 		}

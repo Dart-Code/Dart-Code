@@ -183,6 +183,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	program: string;
 	args: string[];
 	observatoryLogFile: string;
+	previewDart2: boolean;
 }
 
 export interface FlutterLaunchRequestArguments extends DartLaunchRequestArguments {

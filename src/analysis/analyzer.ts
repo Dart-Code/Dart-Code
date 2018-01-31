@@ -51,6 +51,9 @@ export class Analyzer extends AnalyzerGen {
 		if (config.analyzerInstrumentationLogFile)
 			args.push(`--instrumentation-log-file=${config.analyzerInstrumentationLogFile}`);
 
+		if (config.previewDart2)
+			args.push(`--preview-dart-2`);
+
 		// Allow arbitrary args to be passed to the analysis server.
 		if (config.analyzerAdditionalArgs)
 			args = args.concat(config.analyzerAdditionalArgs);

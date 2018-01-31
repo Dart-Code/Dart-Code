@@ -463,6 +463,12 @@
 					"default": false,
 					"description": "Whether to enable analysis for AngularDart templates (requires the angular_analyzer_plugin).",
 					"scope": "window"
+				},
+				"dart.previewDart2": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to enable previewing Dart 2.0 functionality such as optional new/const.",
+					"scope": "window"
 				}
 			}
 		},

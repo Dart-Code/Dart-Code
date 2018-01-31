@@ -106,6 +106,7 @@ export class Analytics {
 			cd1: isDevelopment,
 			cd10: config.showTodos ? "On" : "Off",
 			cd11: config.showLintNames ? "On" : "Off",
+			cd12: config.previewDart2 ? "On" : "Off",
 			cd2: process.platform,
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,
