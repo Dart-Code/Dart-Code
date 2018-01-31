@@ -38,9 +38,9 @@ export class FlutterDebugSession extends DartDebugSession {
 			appArgs.push(this.sourceFile);
 		}
 
-		if (this.args.deviceId) {
+		if (args.deviceId) {
 			appArgs.push("-d");
-			appArgs.push(this.args.deviceId);
+			appArgs.push(args.deviceId);
 		}
 
 		if (debug) {
