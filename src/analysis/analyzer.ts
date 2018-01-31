@@ -23,9 +23,6 @@ class AnalyzerCapabilities {
 }
 
 export class Analyzer extends AnalyzerGen {
-	private observatoryPort = config.analyzerObservatoryPort;
-	private diagnosticsPort = config.analyzerDiagnosticsPort;
-	private additionalArgs = config.analyzerAdditionalArgs;
 	private lastDiagnostics: as.ContextData[];
 	private launchArgs: string[];
 	private version: string;
@@ -37,14 +34,14 @@ export class Analyzer extends AnalyzerGen {
 		let args = [];
 
 		// Optionally start Observatory for the analyzer.
-		if (this.observatoryPort)
-			args.push(`--observe=${this.observatoryPort}`);
+		if (config.analyzerObservatoryPort)
+			args.push(`--observe=${config.analyzerObservatoryPort}`);
 
 		args.push(analyzerPath);
 
 		// Optionally start the analyzer's diagnostic web server on the given port.
-		if (this.diagnosticsPort)
-			args.push(`--port=${this.diagnosticsPort}`);
+		if (config.analyzerDiagnosticsPort)
+			args.push(`--port=${config.analyzerDiagnosticsPort}`);
 
 		// Add info about the extension that will be collected for crash reports etc.
 		args.push(`--client-id=Dart-Code.dart-code`);
@@ -55,8 +52,8 @@ export class Analyzer extends AnalyzerGen {
 			args.push(`--instrumentation-log-file=${config.analyzerInstrumentationLogFile}`);
 
 		// Allow arbitrary args to be passed to the analysis server.
-		if (this.additionalArgs)
-			args = args.concat(this.additionalArgs);
+		if (config.analyzerAdditionalArgs)
+			args = args.concat(config.analyzerAdditionalArgs);
 
 		this.launchArgs = args;
 
