@@ -210,6 +210,7 @@ export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind
 		case "COMPILATION_UNIT":
 			return vs.SymbolKind.Module;
 		case "CONSTRUCTOR":
+		case "CONSTRUCTOR_INVOCATION":
 			return vs.SymbolKind.Constructor;
 		case "ENUM":
 			return vs.SymbolKind.Enum;
