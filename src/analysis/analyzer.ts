@@ -204,7 +204,6 @@ export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind
 	// TODO: Review if these are all mapped as well as possible.
 	switch (kind) {
 		case "CLASS":
-			return vs.SymbolKind.Class;
 		case "CLASS_TYPE_ALIAS":
 			return vs.SymbolKind.Class;
 		case "COMPILATION_UNIT":
@@ -213,7 +212,6 @@ export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind
 		case "CONSTRUCTOR_INVOCATION":
 			return vs.SymbolKind.Constructor;
 		case "ENUM":
-			return vs.SymbolKind.Enum;
 		case "ENUM_CONSTANT":
 			return vs.SymbolKind.Enum;
 		case "FIELD":
@@ -221,7 +219,6 @@ export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind
 		case "FILE":
 			return vs.SymbolKind.File;
 		case "FUNCTION":
-			return vs.SymbolKind.Function;
 		case "FUNCTION_TYPE_ALIAS":
 			return vs.SymbolKind.Function;
 		case "GETTER":
@@ -251,6 +248,7 @@ export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind
 		case "UNKNOWN":
 			return vs.SymbolKind.Object;
 		default:
-			throw new Error("Unknown kind: " + kind);
+			logError({ message: "Unknown kind: " + kind });
+			return vs.SymbolKind.Object;
 	}
 }
