@@ -43,6 +43,7 @@ class Config {
 	get sdkPaths() { return (this.getConfig<string[]>("sdkPaths") || []).map(resolveHomePath); }
 
 	// Preview features.
+	get previewDart2() { return this.getConfig<boolean>("previewDart2"); }
 	get previewAnalyzeAngularTemplates() { return this.getConfig<boolean>("previewAnalyzeAngularTemplates"); }
 
 	public for(uri: Uri): ResourceConfig {
