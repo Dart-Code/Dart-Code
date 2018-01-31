@@ -457,6 +457,12 @@
 					"default": true,
 					"description": "Whether to automatically send a 'hot reload' request during a Flutter debug session when saving files.",
 					"scope": "window"
+				},
+				"dart.previewAnalyzeAngularTemplates": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to enable analysis for AngularDart templates (requires the angular_analyzer_plugin).",
+					"scope": "window"
 				}
 			}
 		},
