@@ -1,5 +1,12 @@
 [![Linux & Mac build status](https://img.shields.io/travis/Dart-Code/Dart-Code/master.svg?label=mac+%26+linux)](https://travis-ci.org/Dart-Code/Dart-Code) [![Windows build status](https://img.shields.io/appveyor/ci/DanTup/Dart-Code/master.svg?label=windows&logoWidth=-1)](https://ci.appveyor.com/project/DanTup/dart-code) [![Gitter Chat](https://img.shields.io/badge/chat-online-blue.svg)](https://gitter.im/dart-code/Dart-Code) [![Follow on Twitter](https://img.shields.io/badge/twitter-dartcode-blue.svg)](https://twitter.com/DartCode) [![Contribute to Dart Code](https://img.shields.io/badge/help-contribute-551A8B.svg)](https://github.com/Dart-Code/Dart-Code/blob/master/CONTRIBUTING.md) [![Contribute to Dart Code](https://img.shields.io/badge/help-donate-551A8B.svg)](https://www.paypal.me/DanTup)
 
+## Introduction
+
+Dart Code extends [VS Code](https://code.visualstudio.com/) with support for the
+[Dart](https://www.dartlang.org/) programming language, and provides tools for
+effectively editing, refactoring, running, and reloading [Flutter](https://flutter.io/)
+mobile apps, and [AngularDart](https://angulardart.org) web apps.
+
 ## Installation
 
 Dart Code can be [installed from the Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=Dart-Code.dart-code). Open VS Code Quick Open (`Ctrl+P`) and paste the following and press enter:
