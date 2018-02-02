@@ -14,6 +14,7 @@ export class FlutterDebugSession extends DartDebugSession {
 	public currentRunningAppId: string;
 	public observatoryUri: string;
 	public baseUri: string;
+	private isReloadInProgress: boolean;
 
 	constructor() {
 		super();
@@ -117,15 +118,20 @@ export class FlutterDebugSession extends DartDebugSession {
 		response: DebugProtocol.RestartResponse,
 		args: DebugProtocol.RestartArguments,
 	): void {
-		this.performHotReload();
+		this.performReload(false);
 		// Notify the Extension we had a restart request so it's able to
 		// log the hotReload.
 		this.sendEvent(new Event("dart.restartRequest"));
 		super.restartRequest(response, args);
 	}
 
-	private performHotReload() {
-		this.flutter.restart(this.currentRunningAppId, !this.args.noDebug)
+	private performReload(fullRestart: boolean): Thenable<any> {
+		if (this.isReloadInProgress) {
+			this.sendEvent(new OutputEvent("Reload already in progress, ignoring request", "stderr"));
+			return;
+		}
+		this.isReloadInProgress = true;
+		return this.flutter.restart(this.currentRunningAppId, !this.args.noDebug, fullRestart)
 			.then(
 			(result) => {
 				// If we get a hint, send it back over to the UI to do something appropriate.
@@ -133,7 +139,8 @@ export class FlutterDebugSession extends DartDebugSession {
 					this.sendEvent(new Event("dart.hint", { hintId: result.hintId, hintMessage: result.hintMessage }));
 			},
 			(error) => this.sendEvent(new OutputEvent(error, "stderr")),
-		);
+		)
+			.then(() => this.isReloadInProgress = false);
 	}
 
 	protected customRequest(request: string, response: DebugProtocol.Response, args: any): void {
@@ -159,14 +166,12 @@ export class FlutterDebugSession extends DartDebugSession {
 
 			case "hotReload":
 				if (this.currentRunningAppId)
-					this.performHotReload();
+					this.performReload(false);
 				break;
 
 			case "fullRestart":
 				if (this.currentRunningAppId)
-					this.flutter.restart(this.currentRunningAppId, !this.args.noDebug, true)
-						// tslint:disable-next-line:no-empty
-						.then((result) => { }, (error) => this.sendEvent(new OutputEvent(error, "stderr")));
+					this.performReload(true);
 				break;
 
 			default:
