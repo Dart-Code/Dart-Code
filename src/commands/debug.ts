@@ -71,6 +71,7 @@ export class DebugCommands {
 		vs.debug.onDidTerminateDebugSession((s) => {
 			if (s === this.currentFlutterDebugSession) {
 				this.currentFlutterDebugSession = null;
+				this.debugStatus.hide();
 			}
 			if (s.type === FLUTTER_DEBUG_TYPE || s.type === DART_CLI_DEBUG_TYPE) {
 				const debugSessionEnd = new Date();
