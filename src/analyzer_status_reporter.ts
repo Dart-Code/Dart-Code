@@ -7,7 +7,7 @@ import { window, workspace, env, commands, extensions, StatusBarItem, Disposable
 import { Analyzer } from "./analysis/analyzer";
 import { ServerStatusNotification, ServerErrorNotification, RequestError } from "./analysis/analysis_server_types";
 import { config } from "./config";
-import { getDartSdkVersion, Sdks } from "./utils";
+import { getDartSdkVersion, Sdks, extensionVersion } from "./utils";
 import { Analytics } from "./analytics";
 
 const maxErrorReportCount = 3;
@@ -88,7 +88,6 @@ export class AnalyzerStatusReporter extends Disposable {
 
 	private reportError(error: ServerErrorNotification, method?: string) {
 		const sdkVersion = getDartSdkVersion(this.sdks.dart);
-		const dartCodeVersion = extensions.getExtension("Dart-Code.dart-code").packageJSON.version;
 
 		// Attempt to get the last diagnostics
 		const diagnostics = this.analyzer.getLastDiagnostics();
@@ -108,7 +107,7 @@ ${method ? "\n### Request\n\nWhile responding to request: `" + method + "`\n" : 
 
 - Dart SDK ${sdkVersion}
 - ${env.appName} ${codeVersion}
-- Dart Code ${dartCodeVersion}
+- Dart Code ${extensionVersion}
 
 ### Analyzer Info
 
