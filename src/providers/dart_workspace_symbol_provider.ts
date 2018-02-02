@@ -97,10 +97,6 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 			? result.path[0].parameters
 			: "";
 
-		if (elementPathDescription + parameters === "") {
-			const i = 0;
-		}
-
 		return {
 			containerName,
 			kind: getSymbolKindForElementKind(result.path[0].kind),
