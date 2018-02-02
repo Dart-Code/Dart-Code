@@ -25,11 +25,13 @@ export class DebugCommands {
 	private paintBaselinesEnabled = false;
 	private currentFlutterDebugSession: vs.DebugSession;
 	private debugStatus = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left);
+	private reloadStatus = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left);
 	private observatoryUri: string = null;
 
 	constructor(context: vs.ExtensionContext, analytics: Analytics) {
 		this.analytics = analytics;
 		context.subscriptions.push(this.debugStatus);
+		context.subscriptions.push(this.reloadStatus);
 		vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
 			if (e.event === "dart.progress") {
 				if (e.body.message) {
@@ -45,16 +47,17 @@ export class DebugCommands {
 				// (eg. it wasn't intiated from our extension, so we don't get to log it
 				// in the hotReload command).
 				analytics.logDebuggerHotReload();
+				this.reloadStatus.hide(); // Also remove stale reload status when this happened.
 			} else if (e.event === "dart.hint" && e.body && e.body.hintId) {
 				switch (e.body.hintId) {
 					case "restartRecommended":
-						this.promptForFullRestart();
+						this.promptForFullRestart(e.body.hintMessage);
 						break;
 					default:
 						if (e.body.hintMessage)
 							vs.window.showInformationMessage(e.body.hintMessage);
 						else
-							logError({ message: `Unexpected hint from debugger: ${e.body.hintId}, ${e.body.hintId}` });
+							logError({ message: `Unexpected hint from debugger: ${e.body.hintId}, ${e.body.hintMessage}` });
 				}
 			}
 		});
@@ -72,6 +75,7 @@ export class DebugCommands {
 			if (s === this.currentFlutterDebugSession) {
 				this.currentFlutterDebugSession = null;
 				this.debugStatus.hide();
+				this.reloadStatus.hide();
 			}
 			if (s.type === FLUTTER_DEBUG_TYPE || s.type === DART_CLI_DEBUG_TYPE) {
 				const debugSessionEnd = new Date();
@@ -102,10 +106,12 @@ export class DebugCommands {
 
 		// Misc custom debug commands.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", () => {
+			this.reloadStatus.hide();
 			this.sendCustomFlutterDebugCommand("hotReload");
 			analytics.logDebuggerHotReload();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.fullRestart", () => {
+			this.reloadStatus.hide();
 			this.sendCustomFlutterDebugCommand("fullRestart");
 			analytics.logDebuggerRestart();
 		}));
@@ -116,15 +122,11 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => this.sendCustomFlutterDebugCommand("togglePlatform")));
 	}
 
-	private promptForFullRestart() {
-		const fullRestartText = "Full Restart";
-		vs.window.showInformationMessage(
-			"Some program elements were changed during reload but did not run when the view was reassembled",
-			fullRestartText,
-		).then((r) => {
-			if (r === fullRestartText)
-				this.sendCustomFlutterDebugCommand("fullRestart");
-		});
+	private promptForFullRestart(message: string) {
+		this.reloadStatus.text = "Full restart may be required";
+		this.reloadStatus.tooltip = message + "\r\n\r\nClick to restart";
+		this.reloadStatus.command = "flutter.fullRestart";
+		this.reloadStatus.show();
 	}
 
 	private runServiceCommand(method: string, params: any) {
