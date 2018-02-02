@@ -112,7 +112,7 @@ export abstract class StdIOService implements Disposable {
 				this.processUnhandledMessage(message);
 			}
 		} catch (e) {
-			console.error(`Failled to handle JSON message, assuming normal stdout (${e}): ${message}`);
+			console.error(`Failed to handle JSON message, assuming normal stdout (${e}): ${message}`);
 			this.processUnhandledMessage(message);
 		}
 	}
