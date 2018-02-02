@@ -102,12 +102,17 @@ export abstract class StdIOService implements Disposable {
 			return;
 		}
 
-		if (msg && msg.event)
-			this.handleNotification(msg as UnknownNotification);
-		else if (msg && msg.id)
-			this.handleResponse(msg as UnknownResponse);
-		else {
-			console.error(`Unexpected JSON message, assuming normal stdout : ${message}`);
+		try {
+			if (msg && msg.event)
+				this.handleNotification(msg as UnknownNotification);
+			else if (msg && msg.id)
+				this.handleResponse(msg as UnknownResponse);
+			else {
+				console.error(`Unexpected JSON message, assuming normal stdout : ${message}`);
+				this.processUnhandledMessage(message);
+			}
+		} catch (e) {
+			console.error(`Failled to handle JSON message, assuming normal stdout (${e}): ${message}`);
 			this.processUnhandledMessage(message);
 		}
 	}
