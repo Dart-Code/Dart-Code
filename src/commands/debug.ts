@@ -128,7 +128,7 @@ export class DebugCommands {
 	}
 
 	private promptForFullRestart(message: string) {
-		this.reloadStatus.text = "Full restart may be required";
+		this.reloadStatus.text = "↻ Full restart may be required";
 		this.reloadStatus.tooltip = message + "\r\n\r\nClick to restart";
 		this.reloadStatus.command = "flutter.fullRestart";
 		this.reloadStatus.show();
