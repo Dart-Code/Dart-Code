@@ -74,6 +74,7 @@ export class DebugCommands {
 		vs.debug.onDidTerminateDebugSession((s) => {
 			if (s === this.currentFlutterDebugSession) {
 				this.currentFlutterDebugSession = null;
+				this.observatoryUri = null;
 				this.debugStatus.hide();
 				this.reloadStatus.hide();
 			}
