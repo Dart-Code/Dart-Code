@@ -211,6 +211,7 @@ export function activate(context: vs.ExtensionContext) {
 		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, util.flutterPath), sdks.flutter);
 		context.subscriptions.push(flutterDaemon);
 
+		let hotReloadDelayTimer: NodeJS.Timer;
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
 			// Don't do if setting is not enabled.
 			if (!config.flutterHotReloadOnSave)
@@ -222,7 +223,16 @@ export function activate(context: vs.ExtensionContext) {
 			if (hasErrors)
 				return;
 
-			vs.commands.executeCommand("flutter.hotReload");
+			// Debounce to avoid reloading multiple times during multi-file-save (Save All).
+			// Hopefully we can improve in future: https://github.com/Microsoft/vscode/issues/42913
+			if (hotReloadDelayTimer) {
+				clearTimeout(hotReloadDelayTimer);
+				hotReloadDelayTimer = null;
+			}
+			hotReloadDelayTimer = setTimeout(() => {
+				hotReloadDelayTimer = null;
+				vs.commands.executeCommand("flutter.hotReload");
+			}, 200);
 		}));
 	}
 
