@@ -107,11 +107,15 @@ export class DebugCommands {
 
 		// Misc custom debug commands.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", () => {
+			if (!this.currentFlutterDebugSession)
+				return;
 			this.reloadStatus.hide();
 			this.sendCustomFlutterDebugCommand("hotReload");
 			analytics.logDebuggerHotReload();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.fullRestart", () => {
+			if (!this.currentFlutterDebugSession)
+				return;
 			this.reloadStatus.hide();
 			this.sendCustomFlutterDebugCommand("fullRestart");
 			analytics.logDebuggerRestart();
