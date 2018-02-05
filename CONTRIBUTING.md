@@ -119,9 +119,9 @@ To release Dart Code you will need access to the Publisher account on the VS mar
 
 - Run `vsce ls` to preview files that will be included in the release (ensure there are no artifacts/log files/etc. hanging around in your directory that haven't been excluded by `.vscodeignore`)
 - **Run `vsce publish` to publish the extension**
-- Increase the version number in `packages.json` including adding a `-dev` suffix back and commit/push
 - Open your stable version of Code (which should have Dart Code installed) and ensure it shows the update/auto-updates
   - This may take a few minutes due to caching (and stuff)
 - Do some basic testing of the published release
   - If significant issues are found, they either need fixing or a new version of the extension to be re-published from the previous releases tag
 - Announce the new release in [Gitter](https://gitter.im/dart-code/Dart-Code)/Twitter/etc.!
+- Increase the version number in `packages.json` including adding a `-dev` suffix back and commit/push
