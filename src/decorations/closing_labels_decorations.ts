@@ -39,7 +39,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	}
 
 	private update() {
-		if (!this.closingLabels || this.closingLabels.file !== this.activeEditor.document.fileName)
+		if (!this.closingLabels || !this.activeEditor || this.closingLabels.file !== this.activeEditor.document.fileName)
 			return;
 
 		const decorations: { [key: number]: vs.DecorationOptions } = [];
@@ -79,10 +79,12 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 			this.closingLabels = null;
 
 			this.analyzer.forceNotificationsFor(editor.document.fileName);
-		}
+		} else
+			this.activeEditor = null;
 	}
 
 	public dispose() {
+		this.activeEditor = null;
 		this.subscriptions.forEach((s) => s.dispose());
 	}
 }
