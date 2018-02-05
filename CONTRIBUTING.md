@@ -76,3 +76,52 @@ In this mode, you should be able to hit breakpoints in the debug adapters too. T
   - Reformat files (`Alt+Shift+F`) before committing (or enabled `editor.formatOnSave`)
   - Use arrow functions over anonymous function expressions
   - Only surround arrow function parameters with parens when necessary
+
+## Release Procedure
+
+### Testing
+
+- Before testing/deploying, ensure you have run `npm install` recently so that your local dependencies match those listed in the dependencies list (in case they have been upgraded)
+- Ensure all local changes are committed and your local folder is free of artifacts/log files/etc.
+- Ensure all automated tests pass (including on Travis and AppVeyor)
+- Ensure extension behaves correctly for a Dart project
+  - Activates correctly (SDK version appears in status bar)
+  - No errors in dev console (Help -> Toggle Developer Tools)
+  - Code completion, go-to-definition and other basic functionality work
+  - Able to create a launch config and debug
+    - Delete .vscode/launch.json
+	- Press F5 and accept creation of Dart CLI config
+	- Add a breakpoint to user code
+	- Press F5 to begin debugging and ensure breakpoint is hit
+- Ensure extension behaves correctly for a Flutter project
+  - Activates correctly (SDK version appears in status bar, tooltip shows "(Flutter)")
+  - No errors in dev console (Help -> Toggle Developer Tools)
+  - Code completion, go-to-definition and other basic functionality work
+  - Able to create a launch config and debug
+    - Delete .vscode/launch.json
+	- Press F5 and accept creation of Flutter mobile app config
+	- Add a breakpoint to user code
+	- Press F5 to begin debugging and ensure breakpoint is hit
+    - Hot reload and ensure breakpoint hit again
+
+### Deploying
+
+- Set the version number correctly in `packages.json` (in the repository it is usually set with a `-dev` suffix)
+- Add a new section to CHANGELOG.md for the new version
+  - Review the GitHub milestone for completed cases
+  - Scan the commit history for anything significant that didn't have a GH issue (ideally nothing)
+- Commit theses changes and push to GitHub (pushing before completing the next step is important for the tag to be against the correct version)
+- Create a new Release on GitHub with the title "Dart Code v{x.y.z}" where `{x.y.z}` is the correct version number
+- Copy the installation instructions header and any preview features footer from a previous GitHub release into the release description
+- Copy the changes from the CHANGELOG.md file into the release description
+
+To release Dart Code you will need access to the Publisher account on the VS marketplace and will need to install vsce. Follow [these instructions](https://code.visualstudio.com/docs/extensions/publish-extension) to get vsce set up and authorised with a personal access token.
+
+- Run `vsce ls` to preview files that will be included in the release (ensure there are no artifacts/log files/etc. hanging around in your directory that haven't been excluded by `.vscodeignore`)
+- **Run `vsce publish` to publish the extension**
+- Increase the version number in `packages.json` including adding a `-dev` suffix back and commit/push
+- Open your stable version of Code (which should have Dart Code installed) and ensure it shows the update/auto-updates
+  - This may take a few minutes due to caching (and stuff)
+- Do some basic testing of the published release
+  - If significant issues are found, they either need fixing or a new version of the extension to be re-published from the previous releases tag
+- Announce the new release in [Gitter](https://gitter.im/dart-code/Dart-Code)/Twitter/etc.!
