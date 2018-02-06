@@ -1,3 +1,16 @@
+# v2.8.0
+
+- Code completion will automatically trigger when manually typing `import "` to help complete package/filenames
+- Code completion will automatically trigger in the correct location when completing the `import "";` snippet to help complete package/filenames
+- The document symbol list will no longer fail to load for documents returning `CONSTRUCTOR_INVOCATION` symbols in results
+- Code completion will no longer fail to load for documents returning `CONSTRUCTOR_INVOCATION` symbols in results
+- The debug adapter should no longer crash if you `print()` JSON that looks like a flutter command while debugging a flutter application (additional improvements over those already made in previous releases)
+-  Debug status text like "Initializing hot reload" will no longer remain visible if you terminate a debugging session while it is visible
+- The "Full restart recommended" hint has been moved from an information bar at the top of the window to the status bar
+- Pressing the debuggers Restart button to perform a hot reload will no longer crash if you have unsaved changes
+- Invoking Save All will no longer cause multiple hot reload requests which could result in crashes
+- If a hot reload is requested while another is in progress, the message "Reload already in progress" will be displayed in the debug output and the request ignored
+
 # v2.7.3
 
 - Typing a `{` will no longer cause code completion to automatically appear unless it was immediately preceeded by a `$`
