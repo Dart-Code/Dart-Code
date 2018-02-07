@@ -3,7 +3,7 @@
 import * as path from "path";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { DebugConfigurationProvider, WorkspaceFolder, CancellationToken, DebugConfiguration, ProviderResult } from "vscode";
+import { DebugConfigurationProvider, WorkspaceFolder, CancellationToken, DebugConfiguration, ProviderResult, commands } from "vscode";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { ProjectType, Sdks } from "../utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
@@ -51,6 +51,19 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		if (this.sdks.projectType === ProjectType.Flutter)
 			debugConfig.program = debugConfig.program || "${workspaceRoot}/lib/main.dart"; // Set Flutter default path.
+
+		if (!debugConfig.type) {
+			// Workaround for https://github.com/Microsoft/vscode/issues/43133
+			// In Code 1.20, launch.json no longer opens automatically when we return from this
+			// methods, it just launches the debugger. There are two issues with this:
+			// 1. We don't know the launch script (for Dart, at least)
+			// 2. It doesn't write a launch.json, so the user is asked for Dart/Flutter each time
+			// As a workaround, when type is null (which is a bug we will fix) we force the launch.json
+			// to open, which avoids the extra prompts in future. Unfortuantely this results in two
+			// prompts of the debug type (environment?) selection but it's the best we have until
+			// the bug above is fixed.
+			commands.executeCommand("workbench.action.debug.configure");
+		}
 
 		return debugConfig;
 	}
