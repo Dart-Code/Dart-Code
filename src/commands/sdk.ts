@@ -8,10 +8,11 @@ import * as path from "path";
 import { locateBestProjectRoot } from "../project";
 import * as vs from "vscode";
 import { config } from "../config";
-import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolder, ProjectType, Sdks } from "../utils";
+import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolder, ProjectType, Sdks, isFlutterProject } from "../utils";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { SdkManager } from "../sdk/sdk_manager";
+import { Uri } from "vscode";
 
 export class SdkCommands {
 	private sdks: Sdks;
@@ -22,6 +23,14 @@ export class SdkCommands {
 		// SDK commands.
 		const sdkManager = new SdkManager(sdks);
 		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => sdkManager.changeSdk()));
+		context.subscriptions.push(vs.commands.registerCommand("dart.fetchPackages", (uri) => {
+			if (!uri || !(uri instanceof Uri))
+				return;
+			if (isFlutterProject(vs.workspace.getWorkspaceFolder(uri)))
+				return vs.commands.executeCommand("flutter.packages.get", uri);
+			else
+				return vs.commands.executeCommand("pub.get", uri);
+		}));
 
 		// Pub commands.
 		context.subscriptions.push(vs.commands.registerCommand("pub.get", (selection) => {
@@ -44,13 +53,8 @@ export class SdkCommands {
 
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
-			if (config.for(td.uri).runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() === "pubspec.yaml") {
-				if (sdks.projectType === ProjectType.Flutter || sdks.projectType === ProjectType.Fuchsia) {
-					vs.commands.executeCommand("flutter.packages.get");
-				} else {
-					vs.commands.executeCommand("pub.get", td.uri);
-				}
-			}
+			if (config.for(td.uri).runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() === "pubspec.yaml")
+				vs.commands.executeCommand("dart.fetchPackages", td.uri);
 		}));
 	}
 

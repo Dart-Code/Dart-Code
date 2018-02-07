@@ -21,7 +21,11 @@ export const flutterPath = "bin/" + flutterExecutableName;
 export const extensionVersion = getExtensionVersion();
 export const isDevelopment = checkIsDevelopment();
 
-export function referencesFlutterSdk(folder: string): boolean {
+export function isFlutterProject(folder: WorkspaceFolder): boolean {
+	return referencesFlutterSdk(folder.uri.fsPath);
+}
+
+function referencesFlutterSdk(folder: string): boolean {
 	if (folder && fs.existsSync(path.join(folder, "pubspec.yaml"))) {
 		const regex = new RegExp("sdk\\s*:\\s*flutter", "i");
 		return regex.test(fs.readFileSync(path.join(folder, "pubspec.yaml")).toString());
