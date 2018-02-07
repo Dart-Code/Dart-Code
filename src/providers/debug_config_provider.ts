@@ -77,6 +77,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const conf = config.for(folder.uri);
 
 		// Attach any properties that weren't explicitly set.
+		// debugConfig.type = debugConfig.type || this.debugType;
+		// debugConfig.request = debugConfig.request || "launch";
 		debugConfig.cwd = debugConfig.cwd || "${workspaceRoot}";
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, "bin", dartExec);
