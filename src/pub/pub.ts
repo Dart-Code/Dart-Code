@@ -9,28 +9,20 @@ export function isPubGetProbablyRequired(ws: WorkspaceFolder): boolean {
 	const folder = ws.uri.fsPath;
 	const pubspecPath = path.join(folder, "pubspec.yaml");
 	const packagesPath = path.join(folder, ".packages");
-	if (!folder || !fs.existsSync(pubspecPath)) {
-		console.log("no pubspec");
+	if (!folder || !fs.existsSync(pubspecPath))
 		return false;
-	}
 
 	// If we don't appear to have deps listed in pubspec, then no point prompting.
 	const regex = new RegExp("dependencies\\s*:", "i");
-	if (!regex.test(fs.readFileSync(pubspecPath).toString())) {
-		console.log("no deps");
+	if (!regex.test(fs.readFileSync(pubspecPath).toString()))
 		return false;
-	}
 
 	// If we don't have .packages, we probably need running.
-	if (!fs.existsSync(packagesPath)) {
-		console.log("no packages");
+	if (!fs.existsSync(packagesPath))
 		return true;
-	}
 
 	const pubspecModified = fs.statSync(pubspecPath).mtime;
 	const packagesModified = fs.statSync(packagesPath).mtime;
-
-	console.log(pubspecModified + " vs " + packagesModified);
 
 	return pubspecModified > packagesModified;
 }
