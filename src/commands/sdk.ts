@@ -34,21 +34,21 @@ export class SdkCommands {
 
 		// Pub commands.
 		context.subscriptions.push(vs.commands.registerCommand("pub.get", (selection) => {
-			this.runPub("get", selection);
+			return this.runPub("get", selection);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("pub.upgrade", (selection) => {
-			this.runPub("upgrade", selection);
+			return this.runPub("upgrade", selection);
 		}));
 
 		// Flutter commands.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", (selection) => {
-			this.runFlutter("packages get");
+			return this.runFlutter("packages get");
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => {
-			this.runFlutter("packages upgrade", selection);
+			return this.runFlutter("packages upgrade", selection);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", (selection) => {
-			this.runFlutter("doctor", selection);
+			return this.runFlutter("doctor", selection);
 		}));
 
 		// Hook saving pubspec to run pub.get.
@@ -59,11 +59,11 @@ export class SdkCommands {
 	}
 
 	private runCommandForWorkspace(
-		handler: (folder: string, command: string, shortPath: string) => void,
+		handler: (folder: string, command: string, shortPath: string) => Thenable<number>,
 		placeHolder: string,
 		command: string,
 		selection?: vs.Uri,
-	) {
+	): Thenable<number> {
 		let file = selection && selection.fsPath;
 		file = file || (vs.window.activeTextEditor && vs.window.activeTextEditor.document.fileName);
 		let folder = file && locateBestProjectRoot(file);
@@ -83,54 +83,62 @@ export class SdkCommands {
 				// https://github.com/Microsoft/vscode/issues/39132
 				: vs.window.showWorkspaceFolderPick({ placeHolder }).then((f) => f && isDartWorkspaceFolder(f) && f.uri.fsPath);
 
-		folderPromise.then((f) => {
+		return folderPromise.then((f) => {
 			const workspacePath = vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri.fsPath;
 			const shortPath = path.join(path.basename(f), path.relative(f, workspacePath));
-			handler(f, command, shortPath);
+			return handler(f, command, shortPath);
 		});
 	}
 
-	private runFlutter(command: string, selection?: vs.Uri) {
-		this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${command}" in`, command, selection);
+	private runFlutter(command: string, selection?: vs.Uri): Thenable<number> {
+		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${command}" in`, command, selection);
 	}
 
-	private runFlutterInFolder(folder: string, command: string, shortPath: string) {
-		const channel = channels.createChannel("Flutter");
-		channel.show(true);
+	private runFlutterInFolder(folder: string, command: string, shortPath: string): Thenable<number> {
+		return new Promise((resolve, reject) => {
+			const channel = channels.createChannel("Flutter");
+			channel.show(true);
 
-		const args = new Array();
-		command.split(" ").forEach((option) => {
-			args.push(option);
+			const args = new Array();
+			command.split(" ").forEach((option) => {
+				args.push(option);
+			});
+
+			const flutterBinPath = path.join(this.sdks.flutter, flutterPath);
+			channel.appendLine(`[${shortPath}] flutter ${args.join(" ")}`);
+
+			const process = child_process.spawn(flutterBinPath, args, { cwd: folder });
+			channels.runProcessInChannel(process, channel);
+
+			process.on("close", (code) => resolve(code));
 		});
-
-		const flutterBinPath = path.join(this.sdks.flutter, flutterPath);
-		channel.appendLine(`[${shortPath}] flutter ${args.join(" ")}`);
-
-		const process = child_process.spawn(flutterBinPath, args, { cwd: folder });
-		channels.runProcessInChannel(process, channel);
 	}
 
-	private runPub(command: string, selection?: vs.Uri) {
-		this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${command}" in`, command, selection);
+	private runPub(command: string, selection?: vs.Uri): Thenable<number> {
+		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${command}" in`, command, selection);
 	}
 
-	private runPubInFolder(folder: string, command: string, shortPath: string) {
-		const channel = channels.createChannel("Pub");
-		channel.show(true);
+	private runPubInFolder(folder: string, command: string, shortPath: string): Thenable<number> {
+		return new Promise((resolve, reject) => {
+			const channel = channels.createChannel("Pub");
+			channel.show(true);
 
-		let args = [];
-		args.push(command);
+			let args = [];
+			args.push(command);
 
-		// Allow arbitrary args to be passed.
-		if (config.for(vs.Uri.file(folder)).pubAdditionalArgs)
-			args = args.concat(config.for(vs.Uri.file(folder)).pubAdditionalArgs);
+			// Allow arbitrary args to be passed.
+			if (config.for(vs.Uri.file(folder)).pubAdditionalArgs)
+				args = args.concat(config.for(vs.Uri.file(folder)).pubAdditionalArgs);
 
-		// TODO: Add a wrapper around the Dart SDK? It could do things like
-		// return the paths for tools in the bin/ dir.
-		const pubPath = path.join(this.sdks.dart, dartPubPath);
-		channel.appendLine(`[${shortPath}] pub ${args.join(" ")}`);
+			// TODO: Add a wrapper around the Dart SDK? It could do things like
+			// return the paths for tools in the bin/ dir.
+			const pubPath = path.join(this.sdks.dart, dartPubPath);
+			channel.appendLine(`[${shortPath}] pub ${args.join(" ")}`);
 
-		const process = child_process.spawn(pubPath, args, { cwd: folder });
-		channels.runProcessInChannel(process, channel);
+			const process = child_process.spawn(pubPath, args, { cwd: folder });
+			channels.runProcessInChannel(process, channel);
+
+			process.on("close", (code) => resolve(code));
+		});
 	}
 }
