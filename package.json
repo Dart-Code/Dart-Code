@@ -470,6 +470,9 @@
 			{
 				"type": "dart-cli",
 				"label": "Dart command line",
+				"languages": [
+					"dart"
+				],
 				"enableBreakpointsFor": {
 					"languageIds": [
 						"dart"
@@ -523,6 +526,9 @@
 			{
 				"type": "flutter",
 				"label": "Flutter mobile app",
+				"languages": [
+					"dart"
+				],
 				"enableBreakpointsFor": {
 					"languageIds": [
 						"dart"
