@@ -3,14 +3,16 @@
 import * as path from "path";
 import {
 	TextDocument, Position, CancellationToken, CompletionItemProvider, CompletionList,
-	CompletionItem, CompletionItemKind, SnippetString, MarkdownString,
+	CompletionItem, CompletionItemKind, SnippetString, MarkdownString, Uri,
 } from "vscode";
 import { isArray } from "util";
 
 export class SnippetCompletionItemProvider implements CompletionItemProvider {
 	private completions = new CompletionList();
+	private shouldRender: (uri: Uri) => boolean;
 
-	constructor(filename: string) {
+	constructor(filename: string, shouldRender: (uri: Uri) => boolean) {
+		this.shouldRender = shouldRender;
 		const snippets = require(path.join("../../..", filename));
 		for (const snippetType of Object.keys(snippets)) {
 			for (const snippetName of Object.keys(snippets[snippetType])) {
@@ -32,6 +34,7 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 	public provideCompletionItems(
 		document: TextDocument, position: Position, token: CancellationToken,
 	): CompletionList {
-		return this.completions;
+		if (this.shouldRender(document.uri))
+			return this.completions;
 	}
 }
