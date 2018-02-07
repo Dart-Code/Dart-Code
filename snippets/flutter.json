@@ -1,0 +1,33 @@
+{
+	".source.dart": {
+		"Flutter StatelessWidget": {
+			"prefix": "stless",
+			"description": "Insert a StatelessWidget",
+			"body": [
+				"class $1 extends StatelessWidget {",
+				"  @override",
+				"  Widget build(BuildContext context) {",
+				"    // TODO: implement",
+				"  }",
+				"}"
+			]
+		},
+		"Flutter StatefulWidget": {
+			"prefix": "stful",
+			"description": "Insert a StatefulWidget",
+			"body": [
+				"class $1 extends StatefulWidget {",
+				"  @override",
+				"  _$1State createState() => new _$1State();",
+				"}",
+				"",
+				"class _$1State extends State<$1> {",
+				"  @override",
+				"  Widget build(BuildContext context) {",
+				"    // TODO: implement",
+				"  }",
+				"}"
+			]
+		}
+	}
+}
