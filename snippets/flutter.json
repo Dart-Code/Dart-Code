@@ -1,18 +1,20 @@
 {
 	".source.dart": {
-		"Flutter StatelessWidget": {
+		"Flutter stateless widget": {
 			"prefix": "stless",
 			"description": "Insert a StatelessWidget",
 			"body": [
 				"class $1 extends StatelessWidget {",
 				"  @override",
 				"  Widget build(BuildContext context) {",
-				"    // TODO: implement",
+				"    return new Container(",
+				"      $2",
+				"    );",
 				"  }",
 				"}"
 			]
 		},
-		"Flutter StatefulWidget": {
+		"Flutter stateful widget": {
 			"prefix": "stful",
 			"description": "Insert a StatefulWidget",
 			"body": [
@@ -24,7 +26,43 @@
 				"class _$1State extends State<$1> {",
 				"  @override",
 				"  Widget build(BuildContext context) {",
-				"    // TODO: implement",
+				"    return new Container(",
+				"      $2",
+				"    );",
+				"  }",
+				"}"
+			]
+		},
+		"Flutter widget with AnimationController": {
+			"prefix": "stanim",
+			"description": "Insert a StatefulWidget with an AnimationController",
+			"body": [
+				"class $1 extends StatefulWidget {",
+				"  @override",
+				"  _$1State createState() => new _$1State();",
+				"}",
+				"",
+				"class _$1State extends State<$1>",
+				"    with SingleTickerProviderStateMixin {",
+				"  AnimationController _controller;",
+				"",
+				"  @override",
+				"  void initState() {",
+				"    super.initState();",
+				"    _controller = new AnimationController(vsync: this);",
+				"  }",
+				"",
+				"  @override",
+				"  void dispose() {",
+				"    super.dispose();",
+				"    _controller.dispose();",
+				"  }",
+				"",
+				"  @override",
+				"  Widget build(BuildContext context) {",
+				"    return new Container(",
+				"      $2",
+				"    );",
 				"  }",
 				"}"
 			]
