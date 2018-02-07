@@ -42,7 +42,7 @@ export class SdkCommands {
 
 		// Flutter commands.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", (selection) => {
-			return this.runFlutter("packages get");
+			return this.runFlutter("packages get", selection);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => {
 			return this.runFlutter("packages upgrade", selection);
