@@ -441,6 +441,12 @@
 					"description": "Automatically runs `pub get` whenever pubspec.yaml is saved.",
 					"scope": "resource"
 				},
+				"dart.promptToFetchPackages": {
+					"type": "boolean",
+					"default": true,
+					"description": "Prompt to fetch packages when opening a project with out of date packages.",
+					"scope": "resource"
+				},
 				"dart.showLintNames": {
 					"type": "boolean",
 					"default": false,

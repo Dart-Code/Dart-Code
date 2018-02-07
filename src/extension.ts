@@ -35,6 +35,8 @@ import { promptUserForConfigs } from "./user_config_prompts";
 import { DartPackageFileContentProvider } from "./providers/dart_package_file_content_provider";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { DebugConfigProvider, DART_CLI_DEBUG_TYPE, FLUTTER_DEBUG_TYPE } from "./providers/debug_config_provider";
+import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
+import { WorkspaceFolder } from "vscode";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }, { language: "dart", scheme: "dart-package" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }, { language: "html", scheme: "dart-package" }];
@@ -304,6 +306,16 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Turn on all the commands.
 	setCommandVisiblity(true, sdks.projectType);
+
+	// Prompt for pub get if required
+	function checkForPackages() {
+		const folders = util.getDartWorkspaceFolders();
+		const foldersRequiringPackageFetch = folders.filter((ws: WorkspaceFolder) => config.for(ws.uri).promptToFetchPackages).filter(isPubGetProbablyRequired);
+		if (foldersRequiringPackageFetch.length > 0)
+			promptToRunPubGet(foldersRequiringPackageFetch);
+	}
+	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => checkForPackages()));
+	checkForPackages();
 
 	// Log how long all this startup took.
 	const extensionEndTime = new Date();
