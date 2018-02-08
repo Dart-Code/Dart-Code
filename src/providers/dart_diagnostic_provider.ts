@@ -25,21 +25,21 @@ export class DartDiagnosticProvider {
 			errors = errors.filter((error) => error.type !== "TODO");
 		this.diagnostics.set(
 			Uri.file(notification.file),
-			errors.map((e) => this.createDiagnostic(e)),
+			errors.map((e) => DartDiagnosticProvider.createDiagnostic(e)),
 		);
 	}
 
-	private createDiagnostic(error: as.AnalysisError): Diagnostic {
+	public static createDiagnostic(error: as.AnalysisError): Diagnostic {
 		return {
 			code: error.code,
 			message: ((error.type === "HINT" || error.type === "LINT") && config.showLintNames ? `${error.code}: ` : "") + error.message,
 			range: toRange(error.location),
-			severity: this.getSeverity(error.severity, error.type),
+			severity: DartDiagnosticProvider.getSeverity(error.severity, error.type),
 			source: "dart",
 		};
 	}
 
-	private getSeverity(severity: as.AnalysisErrorSeverity, type: as.AnalysisErrorType): DiagnosticSeverity {
+	public static getSeverity(severity: as.AnalysisErrorSeverity, type: as.AnalysisErrorType): DiagnosticSeverity {
 		switch (severity) {
 			case "ERROR":
 				return DiagnosticSeverity.Error;
