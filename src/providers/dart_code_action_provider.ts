@@ -2,7 +2,7 @@
 
 import {
 	TextDocument, Position, CancellationToken, CodeActionProvider, CodeActionContext,
-	TextEdit, Range, Command, CodeAction, Diagnostic,
+	TextEdit, Range, Command, CodeAction, Diagnostic, CodeActionKind,
 } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import { logError, isAnalyzableAndInWorkspace } from "../utils";
@@ -34,10 +34,9 @@ export class DartCodeActionProvider implements CodeActionProvider {
 				const assists = results[1] as as.EditGetAssistsResponse;
 
 				const allActions = new Array<CodeAction>();
-				for (const errorFix of fixes.fixes) {
-					allActions.push(...errorFix.fixes.map((fix) => this.convertResult(document, fix, errorFix.error)));
-				}
-				allActions.push(...assists.assists.map((assist) => this.convertResult(document, assist)));
+				for (const errorFix of fixes.fixes)
+					allActions.push(...errorFix.fixes.map((fix) => this.convertResult(document, fix, CodeActionKind.QuickFix, errorFix.error)));
+				allActions.push(...assists.assists.map((assist) => this.convertResult(document, assist, CodeActionKind.Refactor)));
 
 				console.log(JSON.stringify(allActions));
 				resolve(allActions);
@@ -45,16 +44,18 @@ export class DartCodeActionProvider implements CodeActionProvider {
 		});
 	}
 
-	private convertResult(document: TextDocument, change: as.SourceChange, error?: as.AnalysisError): CodeAction {
-		const diag = error ? [DartDiagnosticProvider.createDiagnostic(error)] : undefined;
+	private convertResult(document: TextDocument, change: as.SourceChange, kind: CodeActionKind, error?: as.AnalysisError): CodeAction {
+		const title = change.message;
+		const diagnostics = error ? [DartDiagnosticProvider.createDiagnostic(error)] : undefined;
 		return {
 			command: {
 				arguments: [document, change],
 				command: "_dart.applySourceChange",
-				title: change.message,
+				title,
 			},
-			diagnostics: diag,
-			title: change.message,
+			diagnostics,
+			kind,
+			title,
 		};
 	}
 }
