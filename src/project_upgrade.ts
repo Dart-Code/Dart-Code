@@ -2,6 +2,7 @@ import * as vs from "vscode";
 
 export function upgradeProject() {
 	remove_legacy_debug_settings();
+	convert_legacy_debug_types();
 }
 
 function remove_legacy_debug_settings() {
@@ -51,6 +52,27 @@ function remove_legacy_debug_settings() {
 			d.args = undefined;
 			hasChanged = true;
 		}
+	});
+
+	if (hasChanged)
+		launchFile.update("configurations", configs);
+}
+
+function convert_legacy_debug_types() {
+	// Read launch.json config.
+	const launchFile = vs.workspace.getConfiguration("launch");
+
+	const configs = launchFile.get<any[]>("configurations");
+	if (!configs)
+		return;
+
+	let hasChanged = false;
+
+	// Find Dart CLI items that might need upgrading.
+	configs.filter((c) => c.type === "dart-cli" || c.type === "flutter").map((d) => {
+		console.log("Found old dart-cli/flutter debug type, setting to dart...");
+		d.type = "dart";
+		hasChanged = true;
 	});
 
 	if (hasChanged)
