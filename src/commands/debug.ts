@@ -12,7 +12,6 @@ import { openInBrowser, logError } from "../utils";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { SdkManager } from "../sdk/sdk_manager";
-import { FLUTTER_DEBUG_TYPE, DART_CLI_DEBUG_TYPE } from "../providers/debug_config_provider";
 import { Uri } from "vscode";
 
 export class DebugCommands {
@@ -63,11 +62,9 @@ export class DebugCommands {
 		});
 		let debugSessionStart: Date;
 		vs.debug.onDidStartDebugSession((s) => {
-			if (s.type === FLUTTER_DEBUG_TYPE) {
+			if (s.type === "dart") {
 				this.currentFlutterDebugSession = s;
 				this.resetFlutterSettings();
-			}
-			if (s.type === FLUTTER_DEBUG_TYPE || s.type === DART_CLI_DEBUG_TYPE) {
 				debugSessionStart = new Date();
 			}
 		});
@@ -77,8 +74,6 @@ export class DebugCommands {
 				this.observatoryUri = null;
 				this.debugStatus.hide();
 				this.reloadStatus.hide();
-			}
-			if (s.type === FLUTTER_DEBUG_TYPE || s.type === DART_CLI_DEBUG_TYPE) {
 				const debugSessionEnd = new Date();
 				analytics.logDebugSessionDuration(debugSessionEnd.getTime() - debugSessionStart.getTime());
 			}

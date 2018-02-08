@@ -468,8 +468,9 @@
 		},
 		"debuggers": [
 			{
-				"type": "dart-cli",
-				"label": "Dart command line",
+				"type": "dart",
+				"label": "Dart & Flutter",
+				"adapterExecutableCommand": "dart.getDebuggerExecutable",
 				"languages": [
 					"dart"
 				],
@@ -478,8 +479,6 @@
 						"dart"
 					]
 				},
-				"program": "./out/src/debug/dart_debug_entry.js",
-				"runtime": "node",
 				"configurationAttributes": {
 					"launch": {
 						"required": [
@@ -497,7 +496,7 @@
 							},
 							"program": {
 								"type": "string",
-								"description": "Path to a Dart file.",
+								"description": "Path to the script to start (eg. bin/main.dart or lib/main.dart).",
 								"default": "${workspaceRoot}/bin/main.dart"
 							},
 							"args": {
@@ -512,48 +511,23 @@
 				},
 				"configurationSnippets": [
 					{
-						"label": "Dart command line",
-						"description": "Launch and debug Dart command line applications",
+						"label": "Dart",
+						"description": "Launch and debug Dart applications",
 						"body": {
-							"name": "Dart command line",
-							"type": "dart-cli",
+							"name": "Dart",
+							"type": "dart",
 							"request": "launch",
 							"program": "^\"\\${workspaceRoot}/bin/main.dart\""
 						}
-					}
-				]
-			},
-			{
-				"type": "flutter",
-				"label": "Flutter mobile app",
-				"languages": [
-					"dart"
-				],
-				"enableBreakpointsFor": {
-					"languageIds": [
-						"dart"
-					]
-				},
-				"program": "./out/src/debug/flutter_debug_entry.js",
-				"runtime": "node",
-				"configurationAttributes": {
-					"launch": {
-						"properties": {
-							"cwd": {
-								"type": "string",
-								"description": "Workspace root."
-							}
-						}
-					}
-				},
-				"configurationSnippets": [
+					},
 					{
-						"label": "Flutter mobile app",
-						"description": "Launch and debug Flutter mobile applications",
+						"label": "Flutter",
+						"description": "Launch and debug Flutter applications",
 						"body": {
-							"name": "Flutter mobile app",
-							"type": "flutter",
-							"request": "launch"
+							"name": "Flutter",
+							"type": "dart",
+							"request": "launch",
+							"program": "^\"\\${workspaceRoot}/lib/main.dart\""
 						}
 					}
 				]
