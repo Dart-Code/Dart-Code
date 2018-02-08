@@ -2,7 +2,7 @@
 
 import {
 	TextDocument, Position, CancellationToken, CodeActionProvider, CodeActionContext,
-	TextEdit, Range, Command,
+	TextEdit, Range, Command, CodeAction,
 } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import { logError, isAnalyzableAndInWorkspace } from "../utils";
@@ -14,10 +14,10 @@ export class DartCodeActionProvider implements CodeActionProvider {
 		this.analyzer = analyzer;
 	}
 
-	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Thenable<Command[]> {
+	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Thenable<CodeAction[]> {
 		if (!isAnalyzableAndInWorkspace(document))
 			return null;
-		return new Promise<Command[]>((resolve, reject) => {
+		return new Promise<CodeAction[]>((resolve, reject) => {
 			Promise.all([
 				this.analyzer.editGetFixes({
 					file: document.fileName,
@@ -39,10 +39,13 @@ export class DartCodeActionProvider implements CodeActionProvider {
 		});
 	}
 
-	private convertResult(document: TextDocument, change: as.SourceChange): Command {
+	private convertResult(document: TextDocument, change: as.SourceChange): CodeAction {
 		return {
-			arguments: [document, change],
-			command: "_dart.applySourceChange",
+			command: {
+				arguments: [document, change],
+				command: "_dart.applySourceChange",
+				title: change.message,
+			},
 			title: change.message,
 		};
 	}
