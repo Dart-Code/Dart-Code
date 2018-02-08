@@ -5,63 +5,42 @@ import { Analytics } from "../analytics";
 import { config } from "../config";
 import { DebugConfigurationProvider, WorkspaceFolder, CancellationToken, DebugConfiguration, ProviderResult, commands } from "vscode";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
-import { ProjectType, Sdks } from "../utils";
+import { ProjectType, Sdks, isFlutterProject } from "../utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { SdkCommands } from "../commands/sdk";
-
-export const DART_CLI_DEBUG_TYPE = "dart-cli";
-export const FLUTTER_DEBUG_TYPE = "flutter";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private sdks: Sdks;
 	private analytics: Analytics;
-	private debugType: string;
 	private deviceManager: FlutterDeviceManager;
 
-	constructor(sdks: Sdks, analytics: Analytics, debugType: string, deviceManager: FlutterDeviceManager) {
+	constructor(sdks: Sdks, analytics: Analytics, deviceManager: FlutterDeviceManager) {
 		this.sdks = sdks;
 		this.analytics = analytics;
-		this.debugType = debugType;
 		this.deviceManager = deviceManager;
 	}
 
-	// TODO: This file has two ways of knowing whether it's a Flutter debug session - this.debugType and util.isFlutterProject.
-	// Hopefully these will always match, but since a user can edit launch.json it's not guaranteed. We should probably
-	// do something to consolidate these and/or reject when the launch config doesn't match the proejct type.
-
 	public provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
-		if (this.debugType === DART_CLI_DEBUG_TYPE)
-			return [{
-				name: "Dart command line",
-				program: "${workspaceRoot}/bin/main.dart",
-				request: "launch",
-				type: "dart-cli",
-			}];
-		else if (this.debugType === FLUTTER_DEBUG_TYPE)
-			return [{
-				name: "Flutter mobile app",
-				request: "launch",
-				type: "flutter",
-			}];
+		const isFlutter = isFlutterProject(folder);
+		return [{
+			name: isFlutter ? "Flutter" : "Dart",
+			program: isFlutter ? undefined : "${workspaceRoot}/bin/main.dart",
+			request: "launch",
+			type: "dart",
+		}];
 	}
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
 		// TODO: This cast feels nasty?
 		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
 
-		if (this.sdks.projectType === ProjectType.Flutter)
+		if (isFlutterProject(folder))
 			debugConfig.program = debugConfig.program || "${workspaceRoot}/lib/main.dart"; // Set Flutter default path.
-
-		if (!debugConfig.type) {
-			// Workaround for https://github.com/Microsoft/vscode/issues/43133
-			// In Code 1.20, launch.json no longer opens automatically when we return from this
-			// methods, it just launches the debugger. There are two issues with this:
-			// 1. We don't know the launch script (for Dart, at least)
-			// 2. It doesn't write a launch.json, so the user is asked for Dart/Flutter each time
-			// As a workaround, when type is null (which is a bug we will fix) we force the launch.json
-			// to open, which avoids the extra prompts in future. Unfortuantely this results in two
-			// prompts of the debug type (environment?) selection but it's the best we have until
-			// the bug above is fixed.
+		else if (!debugConfig.program) {
+			// For Dart projects that don't have a program, we can't launch, so we perform this hack to get the launch.json
+			// to open. Really we should somehow prompt the user for a file here (or if the current file is inside bin/test/tool
+			// assume that it's good).
+			debugConfig.type = null;
 			commands.executeCommand("workbench.action.debug.configure");
 		}
 
@@ -77,8 +56,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const conf = config.for(folder.uri);
 
 		// Attach any properties that weren't explicitly set.
-		// debugConfig.type = debugConfig.type || this.debugType;
-		// debugConfig.request = debugConfig.request || "launch";
+		debugConfig.type = debugConfig.type || "dart";
+		debugConfig.request = debugConfig.request || "launch";
 		debugConfig.cwd = debugConfig.cwd || "${workspaceRoot}";
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, "bin", dartExec);

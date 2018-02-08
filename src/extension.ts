@@ -34,7 +34,7 @@ import { upgradeProject } from "./project_upgrade";
 import { promptUserForConfigs } from "./user_config_prompts";
 import { DartPackageFileContentProvider } from "./providers/dart_package_file_content_provider";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
-import { DebugConfigProvider, DART_CLI_DEBUG_TYPE, FLUTTER_DEBUG_TYPE } from "./providers/debug_config_provider";
+import { DebugConfigProvider } from "./providers/debug_config_provider";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
 import { WorkspaceFolder } from "vscode";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
@@ -245,9 +245,18 @@ export function activate(context: vs.ExtensionContext) {
 	}
 
 	// Set up debug stuff.
-	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider(DART_CLI_DEBUG_TYPE, new DebugConfigProvider(sdks, analytics, DART_CLI_DEBUG_TYPE, flutterDaemon && flutterDaemon.deviceManager)));
-	if (sdks.projectType !== util.ProjectType.Dart)
-		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider(FLUTTER_DEBUG_TYPE, new DebugConfigProvider(sdks, analytics, FLUTTER_DEBUG_TYPE, flutterDaemon && flutterDaemon.deviceManager)));
+	// Remove all this when migrating to debugAdapterExecutable!
+	context.subscriptions.push(vs.commands.registerCommand("dart.getDebuggerExecutable", (path: string) => {
+		const entry = (path && isFlutterProject(vs.workspace.getWorkspaceFolder(vs.Uri.parse(path))))
+			? context.asAbsolutePath("./out/src/debug/flutter_debug_entry.js")
+			: context.asAbsolutePath("./out/src/debug/dart_debug_entry.js");
+
+		return {
+			args: [entry],
+			command: "node",
+		};
+	}));
+	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new DebugConfigProvider(sdks, analytics, flutterDaemon && flutterDaemon.deviceManager)));
 
 	// Setup that requires server version/capabilities.
 	const connectedSetup = analyzer.registerForServerConnected((sc) => {
