@@ -38,7 +38,6 @@ export class DartCodeActionProvider implements CodeActionProvider {
 					allActions.push(...errorFix.fixes.map((fix) => this.convertResult(document, fix, CodeActionKind.QuickFix, errorFix.error)));
 				allActions.push(...assists.assists.map((assist) => this.convertResult(document, assist, CodeActionKind.Refactor)));
 
-				console.log(JSON.stringify(allActions));
 				resolve(allActions);
 			}, (e) => { logError(e); reject(); });
 		});
