@@ -1,3 +1,7 @@
+# v2.8.1
+
+Code 1.20.0 included a change that broke debugging for projects without a `launch.json`. A fix is on its way but in the meantime a workaround has been added to restore the ability to debug. As a consequence you will need to select the correct debug type *twice* when first debugging a project with no `launch.json` but this will be addressed in a future update (after Code's fixes are live).
+
 # v2.8.0
 
 - Code completion will automatically trigger when manually typing `import "` to help complete package/filenames
