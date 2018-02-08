@@ -256,7 +256,10 @@ export function activate(context: vs.ExtensionContext) {
 			command: "node",
 		};
 	}));
-	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new DebugConfigProvider(sdks, analytics, flutterDaemon && flutterDaemon.deviceManager)));
+	const debugProvider = new DebugConfigProvider(sdks, analytics, flutterDaemon && flutterDaemon.deviceManager);
+	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
+	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("flutter", debugProvider));
+	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart-cli", debugProvider));
 
 	// Setup that requires server version/capabilities.
 	const connectedSetup = analyzer.registerForServerConnected((sc) => {
