@@ -317,6 +317,7 @@ export function activate(context: vs.ExtensionContext) {
 	}));
 
 	// Perform any required project upgrades.
+	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => upgradeProject(f.added.filter(util.isDartWorkspaceFolder))));
 	upgradeProject(util.getDartWorkspaceFolders());
 
 	// Prompt user for any special config we might want to set.
