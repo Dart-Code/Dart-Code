@@ -1,13 +1,15 @@
 import * as vs from "vscode";
 
-export function upgradeProject() {
-	remove_legacy_debug_settings();
-	convert_legacy_debug_types();
+export function upgradeProject(workspaces: vs.WorkspaceFolder[]) {
+	for (const workspace of workspaces) {
+		remove_legacy_debug_settings(workspace);
+		convert_legacy_debug_types(workspace);
+	}
 }
 
-function remove_legacy_debug_settings() {
+function remove_legacy_debug_settings(workspace: vs.WorkspaceFolder) {
 	// Read launch.json config.
-	const launchFile = vs.workspace.getConfiguration("launch");
+	const launchFile = vs.workspace.getConfiguration("launch", workspace.uri);
 
 	const configs = launchFile.get<any[]>("configurations");
 	if (!configs)
@@ -55,12 +57,12 @@ function remove_legacy_debug_settings() {
 	});
 
 	if (hasChanged)
-		launchFile.update("configurations", configs);
+		launchFile.update("configurations", configs, vs.ConfigurationTarget.WorkspaceFolder);
 }
 
-function convert_legacy_debug_types() {
+function convert_legacy_debug_types(workspace: vs.WorkspaceFolder) {
 	// Read launch.json config.
-	const launchFile = vs.workspace.getConfiguration("launch");
+	const launchFile = vs.workspace.getConfiguration("launch", workspace.uri);
 
 	const configs = launchFile.get<any[]>("configurations");
 	if (!configs)
@@ -76,5 +78,5 @@ function convert_legacy_debug_types() {
 	});
 
 	if (hasChanged)
-		launchFile.update("configurations", configs);
+		launchFile.update("configurations", configs, vs.ConfigurationTarget.WorkspaceFolder);
 }
