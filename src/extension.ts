@@ -317,7 +317,7 @@ export function activate(context: vs.ExtensionContext) {
 	}));
 
 	// Perform any required project upgrades.
-	upgradeProject();
+	upgradeProject(util.getDartWorkspaceFolders());
 
 	// Prompt user for any special config we might want to set.
 	promptUserForConfigs(context);
