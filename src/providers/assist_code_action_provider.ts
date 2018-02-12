@@ -24,13 +24,13 @@ export class AssistCodeActionProvider implements CodeActionProvider {
 				length: range.end.character - range.start.character,
 				offset: document.offsetAt(range.start),
 			}).then((assists) => {
-				const actions = assists.assists.map((assist) => this.convertResult(document, assist, CodeActionKind.Refactor));
+				const actions = assists.assists.map((assist) => this.convertResult(document, assist));
 				resolve(actions);
 			}, (e) => { logError(e); reject(); });
 		});
 	}
 
-	private convertResult(document: TextDocument, change: as.SourceChange, kind: CodeActionKind): CodeAction {
+	private convertResult(document: TextDocument, change: as.SourceChange): CodeAction {
 		const title = change.message;
 		return {
 			command: {
@@ -38,7 +38,7 @@ export class AssistCodeActionProvider implements CodeActionProvider {
 				command: "_dart.applySourceChange",
 				title,
 			},
-			kind,
+			kind: CodeActionKind.Refactor,
 			title,
 		};
 	}
