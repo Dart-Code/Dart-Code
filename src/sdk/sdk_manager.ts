@@ -3,7 +3,7 @@
 import * as vs from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { hasDartExecutable, getDartSdkVersion, Sdks } from "../utils";
+import { hasDartExecutable, getDartSdkVersion, Sdks, versionIsAtLeast } from "../utils";
 import { config } from "../config";
 
 export class SdkManager {
@@ -33,12 +33,17 @@ export class SdkManager {
 			.filter((f) => fs.statSync(f).isDirectory()) // Only directories.
 			.filter((f) => hasDartExecutable(path.join(f, "bin"))); // Only those that look like Dart SDKs.
 
-		const sdkItems = sdkFolders.map((f) => ({
-			description: f,
-			detail: fs.realpathSync(f) === currentSdk && config.userDefinedSdkPath ? "Current setting" : "",
-			folder: f,
-			label: "Dart SDK v" + getDartSdkVersion(f),
-		}));
+		const sdkItems = sdkFolders.map((f) => {
+			const version = getDartSdkVersion(f);
+			return {
+				description: f,
+				detail: fs.realpathSync(f) === currentSdk && config.userDefinedSdkPath ? "Current setting" : "",
+				folder: f,
+				label: "Dart SDK v" + version,
+				version,
+			};
+		})
+			.sort((a, b) => versionIsAtLeast(a.version, b.version) ? 1 : -1);
 
 		if (sdkItems.length === 0)
 			return;
