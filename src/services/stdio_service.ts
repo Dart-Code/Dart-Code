@@ -22,6 +22,12 @@ export abstract class StdIOService implements Disposable {
 	}
 
 	protected createProcess(workingDirectory: string, binPath: string, args: string[], env: any) {
+		this.logTraffic(`Spawning ${binPath} with args ${JSON.stringify(args)}`);
+		if (workingDirectory)
+			this.logTraffic(`..  in ${workingDirectory}`);
+		if (env)
+			this.logTraffic(`..  in ${JSON.stringify(env)}`);
+
 		this.process = child_process.spawn(binPath, args, { cwd: workingDirectory, env });
 
 		this.process.stdout.on("data", (data: Buffer) => {
@@ -35,7 +41,7 @@ export abstract class StdIOService implements Disposable {
 				this.processMessageBuffer();
 		});
 		this.process.stderr.on("data", (data: Buffer) => {
-			this.logTraffic("ERR " + data.toString());
+			this.logTraffic(`ERR ${data.toString()}`);
 		});
 	}
 
