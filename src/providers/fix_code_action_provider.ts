@@ -26,14 +26,14 @@ export class FixCodeActionProvider implements CodeActionProvider {
 				const allActions = new Array<CodeAction>();
 
 				for (const errorFix of result.fixes)
-					allActions.push(...errorFix.fixes.map((fix) => this.convertResult(document, fix, CodeActionKind.QuickFix, errorFix.error)));
+					allActions.push(...errorFix.fixes.map((fix) => this.convertResult(document, fix, errorFix.error)));
 
 				resolve(allActions);
 			}, (e) => { logError(e); reject(); });
 		});
 	}
 
-	private convertResult(document: TextDocument, change: as.SourceChange, kind: CodeActionKind, error: as.AnalysisError): CodeAction {
+	private convertResult(document: TextDocument, change: as.SourceChange, error: as.AnalysisError): CodeAction {
 		const title = change.message;
 		const diagnostics = error ? [DartDiagnosticProvider.createDiagnostic(error)] : undefined;
 		return {
@@ -43,7 +43,7 @@ export class FixCodeActionProvider implements CodeActionProvider {
 				title,
 			},
 			diagnostics,
-			kind,
+			kind: CodeActionKind.QuickFix,
 			title,
 		};
 	}
