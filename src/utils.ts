@@ -156,6 +156,8 @@ function findFuchsiaRoot(folder: string): string {
 }
 
 export function getDartWorkspaceFolders(): WorkspaceFolder[] {
+	if (!workspace.workspaceFolders)
+		return [];
 	return workspace.workspaceFolders.filter(isDartWorkspaceFolder);
 }
 
