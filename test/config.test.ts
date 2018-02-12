@@ -1,5 +1,5 @@
-import * as assert from 'assert';
-import * as config from '../src/config';
+import * as assert from "assert";
+import * as config from "../src/config";
 
 describe("config.vsCodeVersion", () => {
 	it("should consider scrollable hovers for >= code 1.6", () => {

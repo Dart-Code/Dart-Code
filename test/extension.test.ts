@@ -1,4 +1,4 @@
-import * as assert from 'assert';
+import * as assert from "assert";
 import * as vs from "vscode";
 import * as extension from "../src/extension";
 
