@@ -1,5 +1,5 @@
-import * as assert from 'assert';
-import * as util from '../src/debug/utils';
+import * as assert from "assert";
+import * as util from "../src/debug/utils";
 
 describe("util.uriToFilePath", () => {
 	it("should handle all path formats for Windows", () => {
