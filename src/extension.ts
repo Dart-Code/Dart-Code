@@ -39,6 +39,7 @@ import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
 import { WorkspaceFolder } from "vscode";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
 import { isFlutterProject } from "./utils";
+import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }, { language: "dart", scheme: "dart-package" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }, { language: "html", scheme: "dart-package" }];
@@ -159,6 +160,7 @@ export function activate(context: vs.ExtensionContext) {
 	const referenceProvider = new DartReferenceProvider(analyzer);
 	const documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
 	const codeActionProvider = new DartCodeActionProvider(analyzer);
+	const fixCodeActionProvider = new FixCodeActionProvider(analyzer);
 	const renameProvider = new DartRenameProvider(analyzer);
 
 	const activeFileFilters = [DART_MODE];
@@ -177,6 +179,7 @@ export function activate(context: vs.ExtensionContext) {
 		context.subscriptions.push(vs.languages.registerReferenceProvider(filter, referenceProvider));
 		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(filter, documentHighlightProvider));
 		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, codeActionProvider));
+		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, fixCodeActionProvider));
 		context.subscriptions.push(vs.languages.registerRenameProvider(filter, renameProvider));
 	});
 
