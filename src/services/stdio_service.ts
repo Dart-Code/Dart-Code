@@ -34,6 +34,9 @@ export abstract class StdIOService implements Disposable {
 			if (message.indexOf("\n") >= 0)
 				this.processMessageBuffer();
 		});
+		this.process.stderr.on("data", (data: Buffer) => {
+			this.logTraffic("ERR " + data.toString());
+		});
 	}
 
 	protected sendRequest<TReq, TResp>(method: string, params?: TReq): Thenable<TResp> {
