@@ -285,32 +285,6 @@ export function getLatestSdkVersion(): PromiseLike<string> {
 	});
 }
 
-export function isOutOfDate(versionToCheck: string, expectedVersion: string): boolean {
-	// Versions can be in form:
-	//   x.y.z-aaa+bbb
-	// The +bbb is ignored for checking versions
-	// All -aaa's come before the same version without
-	function split(version: string): number[] {
-		const parts = version.split("-");
-		const numbers = parts[0].split(".").map((v) => parseInt(v, 10)); // Get x.y.z
-		numbers.push(parts.length > 1 ? 0 : 1); // Push a .10 for -something or .1 for nothing so we can sort easily.
-		return numbers;
-	}
-
-	const vCheck = split(versionToCheck);
-	const vExpected = split(expectedVersion);
-
-	for (let i = 0; i < vCheck.length; i++) {
-		if (vExpected[i] > vCheck[i])
-			return true;
-		else if (vExpected[i] < vCheck[i])
-			return false;
-	}
-
-	// If we got here, they're the same.
-	return false;
-}
-
 export function openInBrowser(url: string) {
 	commands.executeCommand("vscode.open", Uri.parse(url));
 }

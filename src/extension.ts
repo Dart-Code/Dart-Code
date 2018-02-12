@@ -101,7 +101,7 @@ export function activate(context: vs.ExtensionContext) {
 		// Do update-check.
 		if (config.checkForSdkUpdates && sdks.projectType === util.ProjectType.Dart) {
 			util.getLatestSdkVersion().then((version) => {
-				if (util.isOutOfDate(sdkVersion, version))
+				if (!util.versionIsAtLeast(sdkVersion, version))
 					vs.window.showWarningMessage(
 						`Version ${version} of the Dart SDK is available (you have ${sdkVersion}). Some features of Dart Code may not work correctly with an old SDK.`,
 						"Go to Dart Downloads",
