@@ -9,7 +9,7 @@ import { logError, isAnalyzableAndInWorkspace } from "../utils";
 import * as as from "../analysis/analysis_server_types";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
 
-export class DartCodeActionProvider implements CodeActionProvider {
+export class AssistCodeActionProvider implements CodeActionProvider {
 	private analyzer: Analyzer;
 	constructor(analyzer: Analyzer) {
 		this.analyzer = analyzer;

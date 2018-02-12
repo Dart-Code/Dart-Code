@@ -10,7 +10,6 @@ import { AnalyzerStatusReporter } from "./analyzer_status_reporter";
 import { config } from "./config";
 import { EditCommands } from "./commands/edit";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
-import { DartCodeActionProvider } from "./providers/dart_code_action_provider";
 import { DartDefinitionProvider } from "./providers/dart_definition_provider";
 import { DartReferenceProvider } from "./providers/dart_reference_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
@@ -40,6 +39,7 @@ import { WorkspaceFolder } from "vscode";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
 import { isFlutterProject } from "./utils";
 import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
+import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }, { language: "dart", scheme: "dart-package" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }, { language: "html", scheme: "dart-package" }];
@@ -159,7 +159,7 @@ export function activate(context: vs.ExtensionContext) {
 	const documentSymbolProvider = new DartDocumentSymbolProvider(analyzer);
 	const referenceProvider = new DartReferenceProvider(analyzer);
 	const documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
-	const codeActionProvider = new DartCodeActionProvider(analyzer);
+	const assistCodeActionProvider = new AssistCodeActionProvider(analyzer);
 	const fixCodeActionProvider = new FixCodeActionProvider(analyzer);
 	const renameProvider = new DartRenameProvider(analyzer);
 
@@ -178,7 +178,7 @@ export function activate(context: vs.ExtensionContext) {
 		context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
 		context.subscriptions.push(vs.languages.registerReferenceProvider(filter, referenceProvider));
 		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(filter, documentHighlightProvider));
-		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, codeActionProvider));
+		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, assistCodeActionProvider));
 		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, fixCodeActionProvider));
 		context.subscriptions.push(vs.languages.registerRenameProvider(filter, renameProvider));
 	});
