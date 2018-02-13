@@ -25,7 +25,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				file: document.fileName,
 				offset: document.offsetAt(position),
 			}).then((resp) => {
-				resolve(new CompletionList(resp.results.map((r) => this.convertResult(document, resp, r))));
+				resolve(new CompletionList(resp.results.map((r) => this.convertResult(document, position, resp, r))));
 			},
 				() => reject(),
 			);
@@ -52,7 +52,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 	}
 
 	private convertResult(
-		document: TextDocument, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion,
+		document: TextDocument, position: Position, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion,
 	): CompletionItem {
 		// Since we're using SnippetString we need to escape some characters in the completion.
 		const escapeSnippetString = (s: string) => (s || "").replace("$", "\\$").replace("{", "\\{").replace("}", "\\}");
@@ -70,9 +70,12 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			detail = element.parameters;
 
 			const hasParams = suggestion.parameterNames && suggestion.parameterNames.length > 0;
+			// Use the replacement range to find out whether the character immediately following the completion would be a paren.
+			console.log("--" + document.getText().substr(notification.replacementOffset + notification.replacementLength, 1) + "--");
+			const nextCharacterIsOpenParen = document.getText().substr(notification.replacementOffset + notification.replacementLength, 1) === "(";
 
 			// Add placeholders for params to the completion.
-			if (config.for(document.uri).insertArgumentPlaceholders && hasParams) {
+			if (config.for(document.uri).insertArgumentPlaceholders && hasParams && !nextCharacterIsOpenParen) {
 				const args = suggestion.parameterNames.slice(0, suggestion.requiredParameterCount);
 				let argPlaceholders = args.map((n, i) => `\${${i + 1}:${n}}`).join(", ");
 
@@ -81,8 +84,11 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 					argPlaceholders = "$1";
 
 				completionText = escapeSnippetString(suggestion.completion) + `(${argPlaceholders})$0`;
-			} else
+			} else if (!nextCharacterIsOpenParen) {
 				completionText = escapeSnippetString(suggestion.completion) + (hasParams ? `($0)` : `()`);
+			} else {
+				completionText = escapeSnippetString(suggestion.completion);
+			}
 		} else if (suggestion.selectionOffset > 0) {
 			const before = suggestion.completion.slice(0, suggestion.selectionOffset);
 			const selection = suggestion.completion.slice(suggestion.selectionOffset, suggestion.selectionLength) || suggestion.parameterName;
