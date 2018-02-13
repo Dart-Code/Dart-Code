@@ -40,6 +40,7 @@ import { SnippetCompletionItemProvider } from "./providers/snippet_completion_it
 import { isFlutterProject } from "./utils";
 import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
+import { LegacyDebugConfigProvider } from "./providers/legacy_debug_config_provider";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }, { language: "dart", scheme: "dart-package" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }, { language: "html", scheme: "dart-package" }];
@@ -260,9 +261,10 @@ export function activate(context: vs.ExtensionContext) {
 		};
 	}));
 	const debugProvider = new DebugConfigProvider(sdks, analytics, flutterDaemon && flutterDaemon.deviceManager);
+	const dummyDebugProvider = new LegacyDebugConfigProvider(debugProvider);
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
-	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("flutter", debugProvider));
-	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart-cli", debugProvider));
+	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("flutter", dummyDebugProvider));
+	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart-cli", dummyDebugProvider));
 
 	// Setup that requires server version/capabilities.
 	const connectedSetup = analyzer.registerForServerConnected((sc) => {
