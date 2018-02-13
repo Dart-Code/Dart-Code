@@ -3790,6 +3790,12 @@ export interface SourceChange {
 	 * applied.
 	 */
 	selection?: Position;
+
+	/**
+	 * The optional identifier of the change kind. The identifier remains
+	 * stable even if the message changes, or is parameterized.
+	 */
+	id?: string;
 }
 
 /**
