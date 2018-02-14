@@ -3,6 +3,7 @@
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolder, ProjectType, Sdks, isFlutterProject } from "../utils";
+import { FLUTTER_DOWNLOAD_URL } from "../extension";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { locateBestProjectRoot } from "../project";
@@ -14,6 +15,8 @@ import * as os from "os";
 import * as path from "path";
 import * as util from "../utils";
 import * as vs from "vscode";
+
+const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
 
 export class SdkCommands {
 	private sdks: Sdks;
@@ -53,6 +56,7 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", (selection) => {
 			return this.runFlutter("doctor", selection);
 		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
 
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
@@ -152,5 +156,43 @@ export class SdkCommands {
 				channels.runProcessInChannel(process, channel);
 			});
 		});
+	}
+
+	private async createFlutterProject(): Promise<number> {
+		if (!this.sdks || !this.sdks.flutter) {
+			vs.window.showErrorMessage("Could not find a Flutter SDK to use. " +
+				"Please add it to your PATH, set FLUTTER_ROOT or configure the 'dart.flutterSdkPath' setting and try again.",
+				"Go to Flutter Downloads",
+			).then((selectedItem) => {
+				if (selectedItem)
+					util.openInBrowser(FLUTTER_DOWNLOAD_URL);
+			});
+			return;
+		}
+
+		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: "hello_world", validateInput: this.validateFlutterProjectName });
+		if (!name)
+			return;
+
+		// If already in a workspace, set the default folder to somethign nearby.
+		const folders = await vs.window.showOpenDialog({ canSelectFolders: true, openLabel: "Select a folder to create the project in" });
+		if (!folders || folders.length !== 1)
+			return;
+		const folderUri = folders[0];
+		const folder = folderUri.fsPath;
+
+		const code = await this.runFlutterInFolder(folder, `create ${name}`, path.basename(folder));
+
+		if (code === 0) {
+			// TODO: Add to workspace if we're in one.
+			await vs.commands.executeCommand("vscode.openFolder", folderUri);
+			// TODO: Is this just brokn, or can we not run code across the open?
+			// await vs.commands.executeCommand("vscode.open", Uri.file(path.join(folderUri.fsPath, "lib/main.dart")));
+		}
+	}
+
+	private validateFlutterProjectName(input: string) {
+		if (!flutterNameRegex.test(input))
+			return "Flutter project names should be all lowercase, with underscores to separate words";
 	}
 }

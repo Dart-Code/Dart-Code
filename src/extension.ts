@@ -45,7 +45,7 @@ const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
 
 const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
-const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
+export const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
 
 const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
