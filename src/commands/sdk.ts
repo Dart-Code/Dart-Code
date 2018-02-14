@@ -1,18 +1,19 @@
 "use strict";
 
 import { Analytics } from "../analytics";
+import { config } from "../config";
+import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolder, ProjectType, Sdks, isFlutterProject } from "../utils";
+import { FlutterDeviceManager } from "../flutter/device_manager";
+import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
+import { locateBestProjectRoot } from "../project";
+import { SdkManager } from "../sdk/sdk_manager";
+import { Uri, ProgressLocation } from "vscode";
 import * as channels from "./channels";
 import * as child_process from "child_process";
 import * as os from "os";
 import * as path from "path";
-import { locateBestProjectRoot } from "../project";
+import * as util from "../utils";
 import * as vs from "vscode";
-import { config } from "../config";
-import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolder, ProjectType, Sdks, isFlutterProject } from "../utils";
-import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
-import { FlutterDeviceManager } from "../flutter/device_manager";
-import { SdkManager } from "../sdk/sdk_manager";
-import { Uri, ProgressLocation } from "vscode";
 
 export class SdkCommands {
 	private sdks: Sdks;
