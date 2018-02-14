@@ -54,15 +54,12 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 	private convertResult(
 		document: TextDocument, position: Position, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion,
 	): CompletionItem {
-		// Since we're using SnippetString we need to escape some characters in the completion.
-		const escapeSnippetString = (s: string) => (s || "").replace("$", "\\$").replace("{", "\\{").replace("}", "\\}");
-
 		const element = suggestion.element;
 		const elementKind = element ? this.getElementKind(element.kind) : null;
 
 		let label = suggestion.displayText || suggestion.completion;
-		let completionText = "";
 		let detail = "";
+		const completionText = new SnippetString();
 
 		// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its parameters.
 		if (element && element.parameters && elementKind !== CompletionItemKind.Property && suggestion.kind !== "OVERRIDE") {
@@ -75,27 +72,38 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 
 			// Add placeholders for params to the completion.
 			if (config.for(document.uri).insertArgumentPlaceholders && hasParams && !nextCharacterIsOpenParen) {
+				completionText.appendText(suggestion.completion);
 				const args = suggestion.parameterNames.slice(0, suggestion.requiredParameterCount);
-				let argPlaceholders = args.map((n, i) => `\${${i + 1}:${n}}`).join(", ");
-
-				// If blank, force in a dummy tabstop to go between the parens.
-				if (argPlaceholders === "")
-					argPlaceholders = "$1";
-
-				completionText = escapeSnippetString(suggestion.completion) + `(${argPlaceholders})$0`;
+				if (args.length) {
+					completionText.appendText("(");
+					completionText.appendPlaceholder(args[0]);
+					for (const arg of args.slice(1)) {
+						completionText.appendText(", ");
+						completionText.appendPlaceholder(arg);
+					}
+					completionText.appendText(")");
+					completionText.appendPlaceholder("", 0); // TODO: Always do this??
+				} else
+					completionText.appendPlaceholder("");
 			} else if (!nextCharacterIsOpenParen) {
-				completionText = escapeSnippetString(suggestion.completion) + (hasParams ? `($0)` : `()`);
+				completionText.appendText(suggestion.completion);
+				completionText.appendText("(");
+				if (hasParams)
+					completionText.appendPlaceholder("");
+				completionText.appendText(")");
 			} else {
-				completionText = escapeSnippetString(suggestion.completion);
+				completionText.appendText(suggestion.completion);
 			}
 		} else if (suggestion.selectionOffset > 0) {
 			const before = suggestion.completion.slice(0, suggestion.selectionOffset);
 			const selection = suggestion.completion.slice(suggestion.selectionOffset, suggestion.selectionLength) || suggestion.parameterName;
 			const after = suggestion.completion.slice(suggestion.selectionOffset + suggestion.selectionLength);
 
-			completionText = escapeSnippetString(before) + `\${0:${escapeSnippetString(selection)}}` + escapeSnippetString(after);
+			completionText.appendText(before);
+			completionText.appendPlaceholder(selection || "");
+			completionText.appendText(after);
 		} else {
-			completionText = escapeSnippetString(suggestion.completion);
+			completionText.appendText(suggestion.completion);
 		}
 
 		// If we're a property, work out the type.
@@ -129,7 +137,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		completion.kind = kind;
 		completion.detail = (suggestion.isDeprecated ? "(deprecated) " : "") + detail;
 		completion.documentation = suggestion.docSummary;
-		completion.insertText = new SnippetString(completionText);
+		completion.insertText = completionText;
 		completion.range = new Range(
 			document.positionAt(notification.replacementOffset),
 			document.positionAt(notification.replacementOffset + notification.replacementLength),
