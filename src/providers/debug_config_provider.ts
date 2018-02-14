@@ -37,11 +37,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (isFlutterProject(folder))
 			debugConfig.program = debugConfig.program || "${workspaceRoot}/lib/main.dart"; // Set Flutter default path.
 		else if (!debugConfig.program) {
-			// For Dart projects that don't have a program, we can't launch, so we perform this hack to get the launch.json
-			// to open. Really we should somehow prompt the user for a file here (or if the current file is inside bin/test/tool
-			// assume that it's good).
+			// For Dart projects that don't have a program, we can't launch, so we perform set type=null which causes launch.json
+			// to open.
 			debugConfig.type = null;
-			commands.executeCommand("workbench.action.debug.configure");
 		}
 
 		return debugConfig;
