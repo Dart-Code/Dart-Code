@@ -115,7 +115,7 @@ VS Code 1.18 gained support for multi-root workspaces, which allows multiple fol
 - The setting `dart.flutterHotReloadOnSave` now defaults to `true` and will force a hot reload upon saving (if there are no errors in the file being saved)
 - Progress messages will now be shown in the status bar when building/debugging Flutter projects
 - Characters typed at the end of a line will no longer appear after the Closing Labels
-- The `dart.sdkContainer` option (which adds a quick" SDK Picker") now works if pointing directly at an SDK instead of its parent
+- The `dart.sdkContainer` option (which adds a quick "SDK Picker") now works if pointing directly at an SDK instead of its parent
 
 ## Preview Features available in this version
 
