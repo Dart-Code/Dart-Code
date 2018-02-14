@@ -76,8 +76,7 @@ export function findSdks(): Sdks {
 		process.env.FLUTTER_ROOT,
 	].concat(paths);
 
-	const flutterSdkPath = (fuchsiaRoot || flutterProject) &&
-		searchPaths(flutterSdkSearchPaths, hasFlutterExecutable, flutterExecutableName);
+	const flutterSdkPath = searchPaths(flutterSdkSearchPaths, hasFlutterExecutable, flutterExecutableName);
 
 	const dartSdkSearchPaths = [
 		config.userDefinedSdkPath,
@@ -91,7 +90,7 @@ export function findSdks(): Sdks {
 
 	return {
 		dart: dartSdkPath,
-		flutter: (fuchsiaRoot || flutterProject) && flutterSdkPath,
+		flutter: flutterSdkPath,
 		fuchsia: fuchsiaRoot,
 		projectType: fuchsiaRoot && hasFuchsiaProjectThatIsNotVanillaFlutter ? ProjectType.Fuchsia : flutterProject ? ProjectType.Flutter : ProjectType.Dart,
 	};
