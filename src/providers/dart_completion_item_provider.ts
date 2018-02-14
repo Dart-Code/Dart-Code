@@ -71,7 +71,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 
 			const hasParams = suggestion.parameterNames && suggestion.parameterNames.length > 0;
 			// Use the replacement range to find out whether the character immediately following the completion would be a paren.
-			console.log("--" + document.getText().substr(notification.replacementOffset + notification.replacementLength, 1) + "--");
 			const nextCharacterIsOpenParen = document.getText().substr(notification.replacementOffset + notification.replacementLength, 1) === "(";
 
 			// Add placeholders for params to the completion.
