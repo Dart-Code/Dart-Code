@@ -178,16 +178,18 @@ export class SdkCommands {
 		const folders = await vs.window.showOpenDialog({ canSelectFolders: true, openLabel: "Select a folder to create the project in" });
 		if (!folders || folders.length !== 1)
 			return;
-		const folderUri = folders[0];
-		const folder = folderUri.fsPath;
+		let folderUri = folders[0];
 
-		const code = await this.runFlutterInFolder(folder, `create ${name}`, path.basename(folder));
+		const code = await this.runFlutterInFolder(folderUri.fsPath, `create ${name}`, path.basename(folderUri.fsPath));
 
 		if (code === 0) {
+			folderUri = Uri.file(path.join(folderUri.fsPath, name));
 			// TODO: Add to workspace if we're in one.
 			await vs.commands.executeCommand("vscode.openFolder", folderUri);
-			// TODO: Is this just brokn, or can we not run code across the open?
+			// TODO: Is this just broken, or can we not run code across the open?
 			// await vs.commands.executeCommand("vscode.open", Uri.file(path.join(folderUri.fsPath, "lib/main.dart")));
+			// TODO: Doesn't this work?
+			// vs.window.showInformationMessage("Your flutter project has been created. Connected a device and press F5 to run it!");
 		}
 	}
 
