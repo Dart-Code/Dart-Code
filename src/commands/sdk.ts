@@ -17,6 +17,8 @@ import { Uri } from "vscode";
 export class SdkCommands {
 	private sdks: Sdks;
 	private analytics: Analytics;
+	// A map of any in-progress commands so we can terminate them if we want to run another.
+	private runningCommands: { [workspaceUriAndCommand: string]: child_process.ChildProcess; } = {};
 	constructor(context: vs.ExtensionContext, sdks: Sdks, analytics: Analytics) {
 		this.sdks = sdks;
 		this.analytics = analytics;
@@ -42,7 +44,7 @@ export class SdkCommands {
 
 		// Flutter commands.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", (selection) => {
-			return this.runFlutter("packages get", selection);
+			return this.runFlutter("packages get --verbose", selection);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => {
 			return this.runFlutter("packages upgrade", selection);
@@ -114,18 +116,41 @@ export class SdkCommands {
 		});
 	}
 
-	private runCommandInFolder(shortPath: string, commandName: string, folder: string, binPath: string, args: string[], closeHandler: (code: number) => void) {
+	private runCommandInFolder(shortPath: string, commandName: string, folder: string, binPath: string, args: string[], closeHandler: (code: number) => void, isStartingBecauseOfTermination: boolean = false) {
+
 		const channelName = commandName.substr(0, 1).toUpperCase() + commandName.substr(1);
 		const channel = channels.createChannel(channelName);
 		channel.show(true);
 
-		channel.clear();
+		// Create an ID to use so we can look whether there's already a running process for this command to terminate/restart.
+		const commandId = `${folder}|${commandName}|${args}`;
+
+		const existingProcess = this.runningCommands[commandId];
+		if (existingProcess) {
+			channel.appendLine(`${commandName} ${args.join(" ")} was already running; terminating...`);
+
+			// Queue up a request to re-do this when it terminates
+			// Wrap in a setTimeout to ensure all the other close handlers are processed (such as writing that the process
+			// exited) before we start up.
+			existingProcess.on("close", () => this.runCommandInFolder(shortPath, commandName, folder, binPath, args, closeHandler, true));
+			existingProcess.kill();
+
+			this.runningCommands[commandId] = null;
+			return;
+		} else if (!isStartingBecauseOfTermination) {
+			channel.clear();
+		}
 
 		channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
 
 		const process = child_process.spawn(binPath, args, { cwd: folder });
-		channels.runProcessInChannel(process, channel);
-
+		this.runningCommands[commandId] = process;
+		process.on("close", (code) => {
+			// Check it's still the same process before nulling out, in case our replacement has already been inserted.
+			if (this.runningCommands[commandId] === process)
+				this.runningCommands[commandId] = null;
+		});
 		process.on("close", (code) => closeHandler(code));
+		channels.runProcessInChannel(process, channel);
 	}
 }
