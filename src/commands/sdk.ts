@@ -118,6 +118,9 @@ export class SdkCommands {
 		const channelName = commandName.substr(0, 1).toUpperCase() + commandName.substr(1);
 		const channel = channels.createChannel(channelName);
 		channel.show(true);
+
+		channel.clear();
+
 		channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
 
 		const process = child_process.spawn(binPath, args, { cwd: folder });
