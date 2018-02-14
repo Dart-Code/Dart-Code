@@ -111,13 +111,15 @@ export class EditCommands implements vs.Disposable {
 				const documentText = editor.document.getText();
 
 				// Create a list of all the placeholders.
-				const placeholders: Array<{ offset: number, length: number, value: string, placeholderNumber: number }> = [];
-				let num = 1;
+				const placeholders: Array<{ offset: number, length: number, defaultValue: string, choices?: string[], placeholderNumber: number }> = [];
+				let placeholderNumber = 1;
 				change.linkedEditGroups.forEach((leg) => {
 					leg.positions.forEach((pos) => {
-						placeholders.push({ offset: pos.offset, length: leg.length, value: documentText.substr(pos.offset, leg.length), placeholderNumber: num });
+						const defaultValue = documentText.substr(pos.offset, leg.length);
+						const choices = leg.suggestions ? leg.suggestions.map((s) => s.value) : null;
+						placeholders.push({ offset: pos.offset, length: leg.length, defaultValue, choices, placeholderNumber });
 					});
-					num++;
+					placeholderNumber++;
 				});
 
 				// Ensure they're in offset order so the next maths works!
@@ -133,8 +135,12 @@ export class EditCommands implements vs.Disposable {
 					// Add the text from where we last were up to current placeholder.
 					if (currentPos !== p.offset)
 						snippet.appendText(documentText.substring(currentPos, p.offset));
-					// Add the placeholder.
-					snippet.appendPlaceholder(p.value, p.placeholderNumber);
+					// Add the choices / placeholder.
+					// Uncomment for https://github.com/Dart-Code/Dart-Code/issues/569 when there's an API we can use
+					// if (p.choices && p.choices.length)
+					// ???
+					// else
+					snippet.appendPlaceholder(p.defaultValue, p.placeholderNumber);
 					currentPos = p.offset + p.length;
 				});
 
