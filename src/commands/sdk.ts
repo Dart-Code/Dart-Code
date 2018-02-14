@@ -96,21 +96,9 @@ export class SdkCommands {
 
 	private runFlutterInFolder(folder: string, command: string, shortPath: string): Thenable<number> {
 		return new Promise((resolve, reject) => {
-			const channel = channels.createChannel("Flutter");
-			channel.show(true);
-
-			const args = new Array();
-			command.split(" ").forEach((option) => {
-				args.push(option);
-			});
-
-			const flutterBinPath = path.join(this.sdks.flutter, flutterPath);
-			channel.appendLine(`[${shortPath}] flutter ${args.join(" ")}`);
-
-			const process = child_process.spawn(flutterBinPath, args, { cwd: folder });
-			channels.runProcessInChannel(process, channel);
-
-			process.on("close", (code) => resolve(code));
+			const binPath = path.join(this.sdks.flutter, flutterPath);
+			const args = command.split(" ");
+			this.runCommandInFolder(shortPath, "flutter", folder, binPath, args, resolve);
 		});
 	}
 
@@ -120,25 +108,21 @@ export class SdkCommands {
 
 	private runPubInFolder(folder: string, command: string, shortPath: string): Thenable<number> {
 		return new Promise((resolve, reject) => {
-			const channel = channels.createChannel("Pub");
-			channel.show(true);
-
-			let args = [];
-			args.push(command);
-
-			// Allow arbitrary args to be passed.
-			if (config.for(vs.Uri.file(folder)).pubAdditionalArgs)
-				args = args.concat(config.for(vs.Uri.file(folder)).pubAdditionalArgs);
-
-			// TODO: Add a wrapper around the Dart SDK? It could do things like
-			// return the paths for tools in the bin/ dir.
-			const pubPath = path.join(this.sdks.dart, dartPubPath);
-			channel.appendLine(`[${shortPath}] pub ${args.join(" ")}`);
-
-			const process = child_process.spawn(pubPath, args, { cwd: folder });
-			channels.runProcessInChannel(process, channel);
-
-			process.on("close", (code) => resolve(code));
+			const binPath = path.join(this.sdks.dart, dartPubPath);
+			const args = command.split(" ").concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
+			this.runCommandInFolder(shortPath, "pub", folder, binPath, args, resolve);
 		});
+	}
+
+	private runCommandInFolder(shortPath: string, commandName: string, folder: string, binPath: string, args: string[], closeHandler: (code: number) => void) {
+		const channelName = commandName.substr(0, 1).toUpperCase() + commandName.substr(1);
+		const channel = channels.createChannel(channelName);
+		channel.show(true);
+		channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
+
+		const process = child_process.spawn(binPath, args, { cwd: folder });
+		channels.runProcessInChannel(process, channel);
+
+		process.on("close", (code) => closeHandler(code));
 	}
 }
