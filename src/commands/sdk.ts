@@ -12,7 +12,7 @@ import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolde
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { SdkManager } from "../sdk/sdk_manager";
-import { Uri } from "vscode";
+import { Uri, ProgressLocation } from "vscode";
 
 export class SdkCommands {
 	private sdks: Sdks;
@@ -97,11 +97,9 @@ export class SdkCommands {
 	}
 
 	private runFlutterInFolder(folder: string, command: string, shortPath: string): Thenable<number> {
-		return new Promise((resolve, reject) => {
-			const binPath = path.join(this.sdks.flutter, flutterPath);
-			const args = command.split(" ");
-			this.runCommandInFolder(shortPath, "flutter", folder, binPath, args, resolve);
-		});
+		const binPath = path.join(this.sdks.flutter, flutterPath);
+		const args = command.split(" ");
+		return this.runCommandInFolder(shortPath, "flutter", folder, binPath, args);
 	}
 
 	private runPub(command: string, selection?: vs.Uri): Thenable<number> {
@@ -109,48 +107,49 @@ export class SdkCommands {
 	}
 
 	private runPubInFolder(folder: string, command: string, shortPath: string): Thenable<number> {
-		return new Promise((resolve, reject) => {
-			const binPath = path.join(this.sdks.dart, dartPubPath);
-			const args = command.split(" ").concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
-			this.runCommandInFolder(shortPath, "pub", folder, binPath, args, resolve);
-		});
+		const binPath = path.join(this.sdks.dart, dartPubPath);
+		const args = command.split(" ").concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
+		return this.runCommandInFolder(shortPath, "pub", folder, binPath, args);
 	}
 
-	private runCommandInFolder(shortPath: string, commandName: string, folder: string, binPath: string, args: string[], closeHandler: (code: number) => void, isStartingBecauseOfTermination: boolean = false) {
+	private runCommandInFolder(shortPath: string, commandName: string, folder: string, binPath: string, args: string[], isStartingBecauseOfTermination: boolean = false): Thenable<number> {
+		return vs.window.withProgress({ location: ProgressLocation.Window, title: `Running ${commandName} ${args.join(" ")}` }, (progress) => {
+			return new Promise((resolve, reject) => {
+				const channelName = commandName.substr(0, 1).toUpperCase() + commandName.substr(1);
+				const channel = channels.createChannel(channelName);
+				channel.show(true);
 
-		const channelName = commandName.substr(0, 1).toUpperCase() + commandName.substr(1);
-		const channel = channels.createChannel(channelName);
-		channel.show(true);
+				// Create an ID to use so we can look whether there's already a running process for this command to terminate/restart.
+				const commandId = `${folder}|${commandName}|${args}`;
 
-		// Create an ID to use so we can look whether there's already a running process for this command to terminate/restart.
-		const commandId = `${folder}|${commandName}|${args}`;
+				const existingProcess = this.runningCommands[commandId];
+				if (existingProcess) {
+					channel.appendLine(`${commandName} ${args.join(" ")} was already running; terminating...`);
 
-		const existingProcess = this.runningCommands[commandId];
-		if (existingProcess) {
-			channel.appendLine(`${commandName} ${args.join(" ")} was already running; terminating...`);
+					// Queue up a request to re-do this when it terminates
+					// Wrap in a setTimeout to ensure all the other close handlers are processed (such as writing that the process
+					// exited) before we start up.
+					existingProcess.on("close", () => this.runCommandInFolder(shortPath, commandName, folder, binPath, args, true).then(resolve, reject));
+					existingProcess.kill();
 
-			// Queue up a request to re-do this when it terminates
-			// Wrap in a setTimeout to ensure all the other close handlers are processed (such as writing that the process
-			// exited) before we start up.
-			existingProcess.on("close", () => this.runCommandInFolder(shortPath, commandName, folder, binPath, args, closeHandler, true));
-			existingProcess.kill();
+					this.runningCommands[commandId] = null;
+					return;
+				} else if (!isStartingBecauseOfTermination) {
+					channel.clear();
+				}
 
-			this.runningCommands[commandId] = null;
-			return;
-		} else if (!isStartingBecauseOfTermination) {
-			channel.clear();
-		}
+				channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
 
-		channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
-
-		const process = child_process.spawn(binPath, args, { cwd: folder });
-		this.runningCommands[commandId] = process;
-		process.on("close", (code) => {
-			// Check it's still the same process before nulling out, in case our replacement has already been inserted.
-			if (this.runningCommands[commandId] === process)
-				this.runningCommands[commandId] = null;
+				const process = child_process.spawn(binPath, args, { cwd: folder });
+				this.runningCommands[commandId] = process;
+				process.on("close", (code) => {
+					// Check it's still the same process before nulling out, in case our replacement has already been inserted.
+					if (this.runningCommands[commandId] === process)
+						this.runningCommands[commandId] = null;
+				});
+				process.on("close", (code) => resolve(code));
+				channels.runProcessInChannel(process, channel);
+			});
 		});
-		process.on("close", (code) => closeHandler(code));
-		channels.runProcessInChannel(process, channel);
 	}
 }
