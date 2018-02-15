@@ -2,7 +2,7 @@ import * as vs from "vscode";
 import { config } from "./config";
 import { openInBrowser } from "./utils";
 
-export function promptUserForConfigs(context: vs.ExtensionContext) {
+export function showUserPrompts(context: vs.ExtensionContext) {
 	// Ensure we only prompt with one question max per session!
 	return (!config.closingLabels && prompt(context, "closingLabelsDisabled", promptForClosingLabelsDisabled));
 }

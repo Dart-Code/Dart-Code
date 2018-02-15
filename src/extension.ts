@@ -30,7 +30,7 @@ import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { ServerStatusNotification } from "./analysis/analysis_server_types";
 import { DartPackagesProvider } from "./views/packages_view";
 import { upgradeProject } from "./project_upgrade";
-import { promptUserForConfigs } from "./user_config_prompts";
+import { showUserPrompts } from "./user_prompts";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { DebugConfigProvider } from "./providers/debug_config_provider";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
@@ -324,7 +324,7 @@ export function activate(context: vs.ExtensionContext) {
 	upgradeProject(util.getDartWorkspaceFolders());
 
 	// Prompt user for any special config we might want to set.
-	promptUserForConfigs(context);
+	showUserPrompts(context);
 
 	// Turn on all the commands.
 	setCommandVisiblity(true, sdks.projectType);
