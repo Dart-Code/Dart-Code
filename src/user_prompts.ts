@@ -2,9 +2,10 @@ import * as path from "path";
 import * as vs from "vscode";
 import { config } from "./config";
 import { openInBrowser, getDartWorkspaceFolders } from "./utils";
+import { Context } from "./context";
 
 export function showUserPrompts(context: vs.ExtensionContext) {
-	handleNewProjects(context);
+	handleNewProjects(Context.for(context));
 	// Ensure we only prompt with one question max per session!
 	return (!config.closingLabels && prompt(context, "closingLabelsDisabled", promptForClosingLabelsDisabled));
 }
@@ -41,11 +42,11 @@ function error(err: any) {
 	vs.window.showErrorMessage(err.message);
 }
 
-function handleNewProjects(context: vs.ExtensionContext) {
+function handleNewProjects(context: Context) {
 	getDartWorkspaceFolders().find((wf) => {
 		const conf = config.for(wf.uri);
-		if (context.globalState.get("newFlutterProject") === wf.uri.fsPath) {
-			context.globalState.update("newFlutterProject", undefined);
+		if (context.newFlutterProject === wf.uri.fsPath) {
+			context.newFlutterProject = undefined;
 			handleFlutterWelcome(wf);
 			// Bail out of find so we only do this at most once.
 			return true;
