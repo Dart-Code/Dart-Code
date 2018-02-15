@@ -189,12 +189,7 @@ export class SdkCommands {
 
 		const code = await this.runFlutterInFolder(folderUri.fsPath, `create ${name}`, path.basename(folderUri.fsPath));
 
-		// Tidy up the folder for VS Code user.
-		try {
-			util.
-				deleteFolderRecursively(path.join(projectFolderUri.fsPath, ".idea"));
-			util.deleteFilesByExtensionRecursively(projectFolderUri.fsPath, "iml");
-		} catch { }
+		this.prepareProjectFolder(projectFolderUri.fsPath);
 
 		if (code === 0) {
 			// TODO: Add to workspace if we're in one.
@@ -209,5 +204,23 @@ export class SdkCommands {
 	private validateFlutterProjectName(input: string) {
 		if (!flutterNameRegex.test(input))
 			return "Flutter project names should be all lowercase, with underscores to separate words";
+	}
+
+	private prepareProjectFolder(projectFolder: string) {
+		// Tidy up the folder for VS Code user.
+		try {
+			util.deleteFolderRecursively(path.join(projectFolder, ".idea"));
+			util.deleteFilesByExtensionRecursively(projectFolder, "iml");
+		} catch { }
+
+		// Write the isNewFlutterProject setting so we can prompt the user when the open up.
+		try {
+			const vsCodeFolder = path.join(projectFolder, ".vscode");
+			if (!fs.existsSync(vsCodeFolder))
+				fs.mkdirSync(vsCodeFolder);
+			const vsCodeSettingsFile = path.join(projectFolder, ".vscode", "settings.json");
+			if (!fs.existsSync(vsCodeSettingsFile))
+				fs.writeFileSync(vsCodeSettingsFile, JSON.stringify({ "dart.isNewFlutterProject": true }, null, "\t"));
+		} catch { }
 	}
 }
