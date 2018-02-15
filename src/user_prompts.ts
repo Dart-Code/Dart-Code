@@ -1,8 +1,10 @@
+import * as path from "path";
 import * as vs from "vscode";
 import { config } from "./config";
-import { openInBrowser } from "./utils";
+import { openInBrowser, getDartWorkspaceFolders } from "./utils";
 
 export function showUserPrompts(context: vs.ExtensionContext) {
+	handleNewProjects(context);
 	// Ensure we only prompt with one question max per session!
 	return (!config.closingLabels && prompt(context, "closingLabelsDisabled", promptForClosingLabelsDisabled));
 }
@@ -37,4 +39,23 @@ function promptForClosingLabelsDisabled(): PromiseLike<boolean> {
 
 function error(err: any) {
 	vs.window.showErrorMessage(err.message);
+}
+
+function handleNewProjects(context: vs.ExtensionContext) {
+	getDartWorkspaceFolders().find((wf) => {
+		const conf = config.for(wf.uri);
+		if (context.globalState.get("newFlutterProject") === wf.uri.fsPath) {
+			context.globalState.update("newFlutterProject", undefined);
+			handleFlutterWelcome(wf);
+			// Bail out of find so we only do this at most once.
+			return true;
+		}
+	});
+}
+
+function handleFlutterWelcome(workspaceFolder: vs.WorkspaceFolder) {
+	vs.commands.executeCommand("vscode.open", vs.Uri.file(path.join(workspaceFolder.uri.fsPath, "lib/main.dart")));
+	// TODO: Check text.
+	// TODO: Do we need an option to suppress this (or should we only ever do it once?)
+	vs.window.showInformationMessage("Your Flutter project has been created! Connect a device and press F5 to start running.");
 }

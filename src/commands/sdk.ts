@@ -57,7 +57,7 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", (selection) => {
 			return this.runFlutter("doctor", selection);
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject(context)));
 
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
@@ -159,7 +159,7 @@ export class SdkCommands {
 		});
 	}
 
-	private async createFlutterProject(): Promise<number> {
+	private async createFlutterProject(context: vs.ExtensionContext): Promise<number> {
 		if (!this.sdks || !this.sdks.flutter) {
 			vs.window.showErrorMessage("Could not find a Flutter SDK to use. " +
 				"Please add it to your PATH, set FLUTTER_ROOT or configure the 'dart.flutterSdkPath' setting and try again.",
@@ -189,7 +189,7 @@ export class SdkCommands {
 
 		const code = await this.runFlutterInFolder(folderUri.fsPath, `create ${name}`, path.basename(folderUri.fsPath));
 
-		this.prepareProjectFolder(projectFolderUri.fsPath);
+		this.prepareProjectFolder(context, projectFolderUri.fsPath);
 
 		if (code === 0) {
 			// TODO: Add to workspace if we're in one.
@@ -206,21 +206,15 @@ export class SdkCommands {
 			return "Flutter project names should be all lowercase, with underscores to separate words";
 	}
 
-	private prepareProjectFolder(projectFolder: string) {
+	private prepareProjectFolder(context: vs.ExtensionContext, projectFolder: string) {
 		// Tidy up the folder for VS Code user.
 		try {
 			util.deleteFolderRecursively(path.join(projectFolder, ".idea"));
 			util.deleteFilesByExtensionRecursively(projectFolder, "iml");
 		} catch { }
 
-		// Write the isNewFlutterProject setting so we can prompt the user when the open up.
-		try {
-			const vsCodeFolder = path.join(projectFolder, ".vscode");
-			if (!fs.existsSync(vsCodeFolder))
-				fs.mkdirSync(vsCodeFolder);
-			const vsCodeSettingsFile = path.join(projectFolder, ".vscode", "settings.json");
-			if (!fs.existsSync(vsCodeSettingsFile))
-				fs.writeFileSync(vsCodeSettingsFile, JSON.stringify({ "dart.isNewFlutterProject": true }, null, "\t"));
-		} catch { }
+		// Stash the path to this new project in context and when we open it up we can perform some welcome actions.
+		// TODO: Wrap this!
+		context.globalState.update("newFlutterProject", projectFolder);
 	}
 }

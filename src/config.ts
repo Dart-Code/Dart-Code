@@ -47,16 +47,18 @@ class Config {
 	get previewAnalyzeAngularTemplates() { return this.getConfig<boolean>("previewAnalyzeAngularTemplates"); }
 
 	public for(uri: Uri): ResourceConfig {
-		return new ResourceConfig(uri);
+		return new ResourceConfig(uri, this.setConfig.bind(this));
 	}
 }
 
 class ResourceConfig {
 	public uri: Uri;
 	public config: WorkspaceConfiguration;
+	private setConfig: <T>(key: string, value: T, target: ConfigurationTarget) => Thenable<void>;
 
-	constructor(uri: Uri) {
+	constructor(uri: Uri, setConfig: <T>(key: string, value: T, target: ConfigurationTarget) => Thenable<void>) {
 		this.uri = uri;
+		this.setConfig = setConfig;
 		workspace.onDidChangeConfiguration((e) => this.loadConfig());
 		this.loadConfig();
 	}
