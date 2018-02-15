@@ -124,7 +124,7 @@ export class SdkCommands {
 
 				const existingProcess = this.runningCommands[commandId];
 				if (existingProcess) {
-					channel.appendLine(`${commandName} ${args.join(" ")} was already running; terminating...`);
+					channel.appendLine(`${commandName} ${args.join(" ")} was already running; terminating…`);
 
 					// Queue up a request to re-do this when it terminates
 					// Wrap in a setTimeout to ensure all the other close handlers are processed (such as writing that the process

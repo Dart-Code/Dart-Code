@@ -49,7 +49,7 @@ export class DartRenameProvider implements RenameProvider {
 				}
 
 				if (resp.change && resp.change.message)
-					outputChannel.appendLine(`[INFO] ${resp.change.message}...`);
+					outputChannel.appendLine(`[INFO] ${resp.change.message}…`);
 
 				const hasError = this.handleProblem(
 					resp.initialProblems

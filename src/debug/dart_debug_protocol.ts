@@ -412,7 +412,7 @@ export class ObservatoryConnection {
 		if (callback) {
 			const max: number = 2000;
 			if (message.length > max)
-				message = message.substring(0, max) + "...";
+				message = message.substring(0, max) + "…";
 			callback(message);
 		}
 	}

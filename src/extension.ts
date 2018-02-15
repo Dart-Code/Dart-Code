@@ -90,7 +90,7 @@ export function activate(context: vs.ExtensionContext) {
 	const sdkVersion = util.getDartSdkVersion(sdks.dart);
 	if (sdkVersion) {
 		const versionStatusItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
-		versionStatusItem.text = sdkVersion.length > 20 ? sdkVersion.substr(0, 17) + "..." : sdkVersion;
+		versionStatusItem.text = sdkVersion.length > 20 ? sdkVersion.substr(0, 17) + "…" : sdkVersion;
 		versionStatusItem.tooltip = "Dart SDK Version" + ` (${util.ProjectType[sdks.projectType]}) v` + sdkVersion;
 		versionStatusItem.show();
 		context.subscriptions.push(versionStatusItem);

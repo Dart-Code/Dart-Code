@@ -173,7 +173,7 @@ export abstract class StdIOService implements Disposable {
 				this.logStream = fs.createWriteStream(this.logFile);
 			this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
 			if (message.length > max)
-				this.logStream.write(message.substring(0, max) + "...\r\n");
+				this.logStream.write(message.substring(0, max) + "…\r\n");
 			else
 				this.logStream.write(message.trim() + "\r\n");
 		} else if (!this.logFile && this.logStream) {
