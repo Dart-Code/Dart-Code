@@ -64,9 +64,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		let completionText = "";
 		let detail = "";
 
-		// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its
-		// parameters.
-		if (element && element.parameters && elementKind !== CompletionItemKind.Property) {
+		// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its parameters.
+		if (element && element.parameters && elementKind !== CompletionItemKind.Property && suggestion.kind !== "OVERRIDE") {
 			label += element.parameters.length === 2 ? "()" : "(…)";
 			detail = element.parameters;
 
