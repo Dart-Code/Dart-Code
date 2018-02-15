@@ -1,3 +1,7 @@
+# v2.8.2
+
+- Code completion has been updated to use a new field provided by the analysis server that allows the text to be inserted to be different from the text displayed in the completion
+
 # v2.8.1
 
 Code 1.20.0 included a change that broke debugging for projects without a `launch.json`. A fix is on its way but in the meantime a workaround has been added to restore the ability to debug. As a consequence you will need to select the correct debug type *twice* when first debugging a project with no `launch.json` but this will be addressed in a future update (after Code's fixes are live).
