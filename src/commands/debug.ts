@@ -9,7 +9,7 @@ import * as project from "../project";
 import * as vs from "vscode";
 import { config } from "../config";
 import { openInBrowser, logError } from "../utils";
-import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
+import { FlutterLaunchRequestArguments, isWin, PromiseCompleter } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { SdkManager } from "../sdk/sdk_manager";
 import { Uri } from "vscode";
@@ -26,6 +26,8 @@ export class DebugCommands {
 	private debugStatus = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left);
 	private reloadStatus = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left);
 	private observatoryUri: string = null;
+	// Awaiting response from: https://github.com/Microsoft/vscode/issues/43752
+	// private startingDebugPromise: PromiseCompleter<void>;
 
 	constructor(context: vs.ExtensionContext, analytics: Analytics) {
 		this.analytics = analytics;
@@ -41,6 +43,10 @@ export class DebugCommands {
 					this.debugStatus.hide();
 			} else if (e.event === "dart.observatoryUri") {
 				this.observatoryUri = e.body.observatoryUri;
+				// if (this.startingDebugPromise) {
+				// 	this.startingDebugPromise.resolve();
+				// 	this.startingDebugPromise = null;
+				// }
 			} else if (e.event === "dart.restartRequest") {
 				// This event comes back when the user restarts with the Restart button
 				// (eg. it wasn't intiated from our extension, so we don't get to log it
@@ -66,6 +72,10 @@ export class DebugCommands {
 				this.currentDebugSession = s;
 				this.resetFlutterSettings();
 				debugSessionStart = new Date();
+				// if (!this.startingDebugPromise) {
+				// 	this.startingDebugPromise = new PromiseCompleter<void>();
+				// 	vs.window.withProgress({ location: vs.ProgressLocation.Window, title: "Launching…" }, (_) => this.startingDebugPromise.promise);
+				// }
 			}
 		});
 		vs.debug.onDidTerminateDebugSession((s) => {
@@ -74,6 +84,10 @@ export class DebugCommands {
 				this.observatoryUri = null;
 				this.debugStatus.hide();
 				this.reloadStatus.hide();
+				// if (this.startingDebugPromise) {
+				// 	this.startingDebugPromise.resolve();
+				// 	this.startingDebugPromise = null;
+				// }
 				const debugSessionEnd = new Date();
 				analytics.logDebugSessionDuration(debugSessionEnd.getTime() - debugSessionStart.getTime());
 			}
