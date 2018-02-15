@@ -3,12 +3,13 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { window, workspace, env, commands, extensions, StatusBarItem, Disposable, TextDocument, version as codeVersion } from "vscode";
+import { window, workspace, env, commands, extensions, TextDocument, version as codeVersion, ProgressLocation } from "vscode";
 import { Analyzer } from "./analysis/analyzer";
 import { ServerStatusNotification, ServerErrorNotification, RequestError } from "./analysis/analysis_server_types";
 import { config } from "./config";
 import { getDartSdkVersion, Sdks, extensionVersion } from "./utils";
 import { Analytics } from "./analytics";
+import { PromiseCompleter } from "./debug/utils";
 
 const maxErrorReportCount = 3;
 
@@ -16,19 +17,14 @@ let errorCount = 0;
 
 // TODO: We should show in the status line when the analysis server's process is dead.
 
-export class AnalyzerStatusReporter extends Disposable {
-	private statusBarItem: StatusBarItem;
-	private statusShowing: boolean;
+export class AnalyzerStatusReporter {
+	private analysisInProgress: boolean;
 	private analyzer: Analyzer;
 	private sdks: Sdks;
 	private analytics: Analytics;
+	private analyzingPromise: PromiseCompleter<void>;
 
 	constructor(analyzer: Analyzer, sdks: Sdks, analytics: Analytics) {
-		super(() => this.statusBarItem.dispose());
-
-		this.statusBarItem = window.createStatusBarItem();
-		this.statusBarItem.text = "Analyzing…";
-
 		this.analyzer = analyzer;
 		this.sdks = sdks;
 		this.analytics = analytics;
@@ -41,16 +37,23 @@ export class AnalyzerStatusReporter extends Disposable {
 		if (!status.analysis)
 			return;
 
-		this.statusShowing = status.analysis.isAnalyzing;
+		this.analysisInProgress = status.analysis.isAnalyzing;
 
-		if (this.statusShowing) {
+		if (this.analysisInProgress) {
 			// Debounce short analysis times.
 			setTimeout(() => {
-				if (this.statusShowing)
-					this.statusBarItem.show();
+				// When the timeout fires, we need to check statusShowing again in case
+				// analysis has already finished.
+				if (this.analysisInProgress && !this.analyzingPromise) {
+					this.analyzingPromise = new PromiseCompleter();
+					window.withProgress({ location: ProgressLocation.Window, title: "Analyzing…" }, (_) => this.analyzingPromise.promise);
+				}
 			}, 500);
 		} else {
-			this.statusBarItem.hide();
+			if (this.analyzingPromise) {
+				this.analyzingPromise.resolve();
+				this.analyzingPromise = null;
+			}
 		}
 	}
 

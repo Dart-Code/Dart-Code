@@ -195,7 +195,7 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE[0].language, new DartLanguageConfiguration()));
 	context.subscriptions.push(vs.workspace.registerTextDocumentContentProvider("dart-package", new DartPackageFileContentProvider()));
-	context.subscriptions.push(new AnalyzerStatusReporter(analyzer, sdks, analytics));
+	const statusReporter = new AnalyzerStatusReporter(analyzer, sdks, analytics);
 
 	// Set up diagnostics.
 	const diagnostics = vs.languages.createDiagnosticCollection("dart");
