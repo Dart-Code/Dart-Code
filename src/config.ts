@@ -4,7 +4,7 @@ import { workspace, WorkspaceConfiguration, version as codeVersion, Uri, Configu
 import { versionIsAtLeast, resolveHomePath } from "./utils";
 
 class Config {
-	public config: WorkspaceConfiguration;
+	private config: WorkspaceConfiguration;
 
 	constructor() {
 		workspace.onDidChangeConfiguration((e) => this.loadConfig());
