@@ -3027,6 +3027,13 @@ export interface CompletionSuggestion {
 	completion: string;
 
 	/**
+	 * Text to be displayed in, for example, a completion pop-up. This field
+	 * is only defined if the displayed text should be different than the
+	 * completion.  Otherwise it is omitted.
+	 */
+	displayText?: string;
+
+	/**
 	 * The offset, relative to the beginning of the completion, of where the
 	 * selection should be placed after insertion.
 	 */
@@ -3050,7 +3057,7 @@ export interface CompletionSuggestion {
 
 	/**
 	 * An abbreviated version of the Dartdoc associated with the element
-	 * being suggested, This field is omitted if there is no Dartdoc
+	 * being suggested. This field is omitted if there is no Dartdoc
 	 * associated with the element.
 	 */
 	docSummary?: string;
@@ -3155,6 +3162,7 @@ export type CompletionSuggestionKind =
 	| "KEYWORD"
 	| "NAMED_ARGUMENT"
 	| "OPTIONAL_ARGUMENT"
+	| "OVERRIDE"
 	| "PARAMETER";
 
 /**
