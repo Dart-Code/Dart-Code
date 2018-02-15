@@ -22,7 +22,7 @@ export class DebugCommands {
 	private timeDilation = 1.0;
 	private slowModeBannerEnabled = true;
 	private paintBaselinesEnabled = false;
-	private currentFlutterDebugSession: vs.DebugSession;
+	private currentDebugSession: vs.DebugSession;
 	private debugStatus = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left);
 	private reloadStatus = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left);
 	private observatoryUri: string = null;
@@ -63,14 +63,14 @@ export class DebugCommands {
 		let debugSessionStart: Date;
 		vs.debug.onDidStartDebugSession((s) => {
 			if (s.type === "dart") {
-				this.currentFlutterDebugSession = s;
+				this.currentDebugSession = s;
 				this.resetFlutterSettings();
 				debugSessionStart = new Date();
 			}
 		});
 		vs.debug.onDidTerminateDebugSession((s) => {
-			if (s === this.currentFlutterDebugSession) {
-				this.currentFlutterDebugSession = null;
+			if (s === this.currentDebugSession) {
+				this.currentDebugSession = null;
 				this.observatoryUri = null;
 				this.debugStatus.hide();
 				this.reloadStatus.hide();
@@ -102,14 +102,14 @@ export class DebugCommands {
 
 		// Misc custom debug commands.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", () => {
-			if (!this.currentFlutterDebugSession)
+			if (!this.currentDebugSession)
 				return;
 			this.reloadStatus.hide();
 			this.sendCustomFlutterDebugCommand("hotReload");
 			analytics.logDebuggerHotReload();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.fullRestart", () => {
-			if (!this.currentFlutterDebugSession)
+			if (!this.currentDebugSession)
 				return;
 			this.reloadStatus.hide();
 			this.sendCustomFlutterDebugCommand("fullRestart");
@@ -138,8 +138,8 @@ export class DebugCommands {
 	}
 
 	private sendCustomFlutterDebugCommand(type: string, args?: any) {
-		if (this.currentFlutterDebugSession)
-			this.currentFlutterDebugSession.customRequest(type, args);
+		if (this.currentDebugSession)
+			this.currentDebugSession.customRequest(type, args);
 	}
 
 	public resetFlutterSettings() {
