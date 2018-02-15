@@ -284,6 +284,35 @@ export function openInBrowser(url: string) {
 	commands.executeCommand("vscode.open", Uri.parse(url));
 }
 
+export function deleteFolderRecursively(folder: string) {
+	if (fs.existsSync(folder)) {
+		fs.readdirSync(folder).forEach((child: string) => {
+			const childPath = path.join(folder, child);
+			if (fs.lstatSync(childPath).isDirectory()) {
+				deleteFolderRecursively(childPath);
+			} else {
+				fs.unlinkSync(childPath);
+			}
+		});
+		fs.rmdirSync(folder);
+	}
+}
+
+export function deleteFilesByExtensionRecursively(folder: string, extension: string) {
+	if (fs.existsSync(folder)) {
+		fs.readdirSync(folder).forEach((child: string) => {
+			const childPath = path.join(folder, child);
+			if (fs.lstatSync(childPath).isDirectory()) {
+				deleteFilesByExtensionRecursively(childPath, extension);
+			} else {
+				if (path.extname(childPath) === `.${extension}`) {
+					fs.unlinkSync(childPath);
+				}
+			}
+		});
+	}
+}
+
 export class Sdks {
 	public dart: string;
 	public flutter: string;

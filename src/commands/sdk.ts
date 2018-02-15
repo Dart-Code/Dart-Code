@@ -11,6 +11,7 @@ import { SdkManager } from "../sdk/sdk_manager";
 import { Uri, ProgressLocation } from "vscode";
 import * as channels from "./channels";
 import * as child_process from "child_process";
+import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as util from "../utils";
@@ -178,14 +179,26 @@ export class SdkCommands {
 		const folders = await vs.window.showOpenDialog({ canSelectFolders: true, openLabel: "Select a folder to create the project in" });
 		if (!folders || folders.length !== 1)
 			return;
-		let folderUri = folders[0];
+		const folderUri = folders[0];
+		const projectFolderUri = Uri.file(path.join(folderUri.fsPath, name));
+
+		if (fs.existsSync(projectFolderUri.fsPath)) {
+			vs.window.showErrorMessage(`A folder named ${name} already exists in ${folderUri.fsPath}`);
+			return;
+		}
 
 		const code = await this.runFlutterInFolder(folderUri.fsPath, `create ${name}`, path.basename(folderUri.fsPath));
 
+		// Tidy up the folder for VS Code user.
+		try {
+			util.
+				deleteFolderRecursively(path.join(projectFolderUri.fsPath, ".idea"));
+			util.deleteFilesByExtensionRecursively(projectFolderUri.fsPath, "iml");
+		} catch { }
+
 		if (code === 0) {
-			folderUri = Uri.file(path.join(folderUri.fsPath, name));
 			// TODO: Add to workspace if we're in one.
-			await vs.commands.executeCommand("vscode.openFolder", folderUri);
+			await vs.commands.executeCommand("vscode.openFolder", projectFolderUri);
 			// TODO: Is this just broken, or can we not run code across the open?
 			// await vs.commands.executeCommand("vscode.open", Uri.file(path.join(folderUri.fsPath, "lib/main.dart")));
 			// TODO: Doesn't this work?
