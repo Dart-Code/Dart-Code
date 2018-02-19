@@ -61,17 +61,21 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		let detail = "";
 		const completionText = new SnippetString();
 
+		const insertArgumentPlaceholders = config.for(document.uri).insertArgumentPlaceholders;
+		// Use the replacement range to find out whether the character immediately following the completion would be a paren/colon to avoid inserting where
+		// there's already the following text. Note: We take two characters and trim just in case there's an extra space there.
+		const nextCharacterIsOpenParen = document.getText().substr(notification.replacementOffset + notification.replacementLength, 2).trim().substr(0, 1) === "(";
+		const nextCharacterIsColon = document.getText().substr(notification.replacementOffset + notification.replacementLength, 2).trim().substr(0, 1) === ":";
+
 		// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its parameters.
 		if (element && element.parameters && elementKind !== CompletionItemKind.Property && suggestion.kind !== "OVERRIDE") {
 			label += element.parameters.length === 2 ? "()" : "(…)";
 			detail = element.parameters;
 
 			const hasParams = suggestion.parameterNames && suggestion.parameterNames.length > 0;
-			// Use the replacement range to find out whether the character immediately following the completion would be a paren.
-			const nextCharacterIsOpenParen = document.getText().substr(notification.replacementOffset + notification.replacementLength, 1) === "(";
 
 			// Add placeholders for params to the completion.
-			if (config.for(document.uri).insertArgumentPlaceholders && hasParams && !nextCharacterIsOpenParen) {
+			if (insertArgumentPlaceholders && hasParams && !nextCharacterIsOpenParen) {
 				completionText.appendText(suggestion.completion);
 				const args = suggestion.parameterNames.slice(0, suggestion.requiredParameterCount);
 				completionText.appendText("(");
@@ -96,7 +100,9 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			}
 		} else if (suggestion.selectionOffset > 0) {
 			const before = suggestion.completion.slice(0, suggestion.selectionOffset);
-			const selection = suggestion.completion.slice(suggestion.selectionOffset, suggestion.selectionLength) || suggestion.parameterName;
+			let selection = suggestion.completion.slice(suggestion.selectionOffset, suggestion.selectionLength);
+			if (!selection && insertArgumentPlaceholders && !nextCharacterIsColon)
+				selection = suggestion.parameterName;
 			const after = suggestion.completion.slice(suggestion.selectionOffset + suggestion.selectionLength);
 
 			completionText.appendText(before);
