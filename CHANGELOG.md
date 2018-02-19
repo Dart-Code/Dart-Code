@@ -10,7 +10,7 @@
 - Flutter projects no longer require a `launch.json` file if being launched with default arguments; if you hit F5 in a project without one it will just launch immediately
 - Snippets have been added for Flutter widgets (`stless`, `stful`, `stanim`) and will show only inside Flutter projects
 - If your packages are missing or out of date you will be prompted to run `pub get`/`flutter packages get` upon loading your project (this can be disabled with the new `dart.promptToFetchPackages` setting, which can be set at the folder level)
-- An issue with breakpoints sometimes not being hit for Dart projects on Windows has been resolved
+- A workaround for a change (bug?) in VS Code 1.20 that causes breakpoints to not be hit on Windows has been implemented
 - Package restore commands will now be terminated and re-run if you invoke them again while they are already running (this includes if you change `pubspec.yaml` and save)
 - A spinner will be shown in the status bar during analysis
 - A spinner will be shown in the status bar while Flutter/Pub commands are running
