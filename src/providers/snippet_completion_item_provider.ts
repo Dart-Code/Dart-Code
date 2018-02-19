@@ -26,6 +26,7 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 				);
 				completionItem.detail = snippet.description;
 				completionItem.documentation = new MarkdownString().appendCodeblock(completionItem.insertText.value);
+				completionItem.sortText = "zzzzzzzzzzzzzzzzzzzzzz";
 				this.completions.items.push(completionItem);
 			}
 		}
