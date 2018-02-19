@@ -63,6 +63,9 @@ export function getLocalPackageName(entryPoint: string) {
 }
 
 export function formatPathForVm(file: string): string {
+	// Handle drive letter inconsistencies.
+	file = forceWindowsDriveLetterToUppercase(file);
+
 	// Convert any Windows backslashes to forward slashes.
 	file = file.replace(/\\/g, "/");
 
@@ -77,6 +80,12 @@ export function formatPathForVm(file: string): string {
 		return file;
 	else
 		return `/${encodeURI(file)}`;
+}
+
+function forceWindowsDriveLetterToUppercase(p: string): string {
+	if (isWin && path.isAbsolute(p) && p.charAt(0) === p.charAt(0).toLowerCase())
+		p = p.substr(0, 1).toUpperCase() + p.substr(1);
+	return p;
 }
 
 export function isWithinPath(file: string, folder: string) {
