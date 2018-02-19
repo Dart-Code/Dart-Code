@@ -1,13 +1,19 @@
 # v2.9.0 (BETA)
 
 - A new setting (`dart.previewDart2`) has been added which allows you to opt-in to Dart 2 behaviour such as optional `new`/`const` (you must be using an SDK that supports this!)
-- Code completions will no longer insert parentheses/arguments if they are already present
+- Code completions will no longer insert parentheses/argument placeholders if they are already present
+- Code completions will now longer insert named argument placeholders if a value is already present
+- Due to a number of issues with the implementation, external files (SDK, packages) will no longer open read-only (this behaviour may be restored in some form in future)
+- Snippets will no longer be prioritised over other completions in the completions list
 - Flutter and Dart debuggers have been merged, you will no longer be asked to choose between Flutter and Dart when running new projects!
    - As part of this, the `type` attribute on launch configurations in your `launch.json` will be automatically changed from `dart-cli`/`flutter` to `dart` upon opening the project
 - Flutter projects no longer require a `launch.json` file if being launched with default arguments; if you hit F5 in a project without one it will just launch immediately
 - Snippets have been added for Flutter widgets (`stless`, `stful`, `stanim`) and will show only inside Flutter projects
 - If your packages are missing or out of date you will be prompted to run `pub get`/`flutter packages get` upon loading your project (this can be disabled with the new `dart.promptToFetchPackages` setting, which can be set at the folder level)
-- Package restore commands will now be terminated and re-run if you invoke them again  while they are already running (this includes if you change `pubspec.yaml` and save)
+- An issue with breakpoints sometimes not being hit for Dart projects on Windows has been resolved
+- Package restore commands will now be terminated and re-run if you invoke them again while they are already running (this includes if you change `pubspec.yaml` and save)
+- A spinner will be shown in the status bar during analysis
+- A spinner will be shown in the status bar while Flutter/Pub commands are running
 - Executing package restore commands in a workspace that has no `pubspec.yaml` on Windows will no longer get the extension stuck in a loop
 - Saving `pubspec.yaml` in a Dart project will no longer run `flutter packages get` if you have a Flutter project in the same workspace
 - Fetching flutter packages will no longer sometimes unexpectedly ask you for the workspace folder to run the command in
