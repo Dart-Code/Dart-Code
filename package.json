@@ -567,7 +567,7 @@
 		"@types/ws": "^0.0.38",
 		"mocha": "^3.5.3",
 		"tslint": "^5.9.1",
-		"typescript": "^2.7.1",
+		"typescript": "^2.7.2",
 		"vscode": "^1.1.10"
 	}
 }
