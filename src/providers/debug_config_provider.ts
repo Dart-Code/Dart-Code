@@ -3,7 +3,7 @@
 import * as path from "path";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { DebugConfigurationProvider, WorkspaceFolder, CancellationToken, DebugConfiguration, ProviderResult, commands } from "vscode";
+import { DebugConfigurationProvider, WorkspaceFolder, CancellationToken, DebugConfiguration, ProviderResult, commands, window } from "vscode";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { ProjectType, Sdks, isFlutterProject } from "../utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
@@ -40,6 +40,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			// For Dart projects that don't have a program, we can't launch, so we perform set type=null which causes launch.json
 			// to open.
 			debugConfig.type = null;
+			window.showInformationMessage("Set the 'program' value in your launch config (eg ${workspaceRoot}/bin/main.dart) then launch again");
 		}
 
 		return debugConfig;

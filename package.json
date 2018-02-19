@@ -487,9 +487,6 @@
 				},
 				"configurationAttributes": {
 					"launch": {
-						"required": [
-							"program"
-						],
 						"properties": {
 							"cwd": {
 								"type": "string",
@@ -502,8 +499,7 @@
 							},
 							"program": {
 								"type": "string",
-								"description": "Path to the script to start (eg. bin/main.dart or lib/main.dart).",
-								"default": "${workspaceRoot}/bin/main.dart"
+								"description": "Path to the script to start (eg. bin/main.dart or lib/main.dart)."
 							},
 							"args": {
 								"type": "array",
