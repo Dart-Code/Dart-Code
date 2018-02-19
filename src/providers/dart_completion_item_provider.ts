@@ -74,17 +74,17 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			if (config.for(document.uri).insertArgumentPlaceholders && hasParams && !nextCharacterIsOpenParen) {
 				completionText.appendText(suggestion.completion);
 				const args = suggestion.parameterNames.slice(0, suggestion.requiredParameterCount);
+				completionText.appendText("(");
 				if (args.length) {
-					completionText.appendText("(");
 					completionText.appendPlaceholder(args[0]);
 					for (const arg of args.slice(1)) {
 						completionText.appendText(", ");
 						completionText.appendPlaceholder(arg);
 					}
-					completionText.appendText(")");
-					completionText.appendPlaceholder("", 0); // TODO: Always do this??
 				} else
-					completionText.appendPlaceholder("");
+					completionText.appendPlaceholder(""); // Put a tap stop between parens since there are optional args.
+				completionText.appendText(")");
+				completionText.appendPlaceholder("");
 			} else if (!nextCharacterIsOpenParen) {
 				completionText.appendText(suggestion.completion);
 				completionText.appendText("(");
