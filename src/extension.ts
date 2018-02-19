@@ -31,7 +31,6 @@ import { ServerStatusNotification } from "./analysis/analysis_server_types";
 import { DartPackagesProvider } from "./views/packages_view";
 import { upgradeProject } from "./project_upgrade";
 import { promptUserForConfigs } from "./user_config_prompts";
-import { DartPackageFileContentProvider } from "./providers/dart_package_file_content_provider";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { DebugConfigProvider } from "./providers/debug_config_provider";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
@@ -42,8 +41,8 @@ import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { LegacyDebugConfigProvider } from "./providers/legacy_debug_config_provider";
 
-const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }, { language: "dart", scheme: "dart-package" }];
-const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }, { language: "html", scheme: "dart-package" }];
+const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }];
+const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
 
 const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
 const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
@@ -194,7 +193,6 @@ export function activate(context: vs.ExtensionContext) {
 
 	context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE[0].language, new DartLanguageConfiguration()));
-	context.subscriptions.push(vs.workspace.registerTextDocumentContentProvider("dart-package", new DartPackageFileContentProvider()));
 	const statusReporter = new AnalyzerStatusReporter(analyzer, sdks, analytics);
 
 	// Set up diagnostics.

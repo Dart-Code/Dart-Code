@@ -37,7 +37,7 @@ export class DartDefinitionProvider implements DefinitionProvider {
 
 		return {
 			range: util.toRange(target),
-			uri: util.toReadonlyUriIfExternal(file),
+			uri: Uri.file(file),
 		};
 	}
 }

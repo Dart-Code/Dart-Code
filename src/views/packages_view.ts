@@ -45,7 +45,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 						const stat = fs.statSync(filePath);
 						if (stat.isFile()) {
 							return new PackageDep(name, null, vs.TreeItemCollapsibleState.None, {
-								arguments: [vs.Uri.file(filePath).with({ scheme: "dart-package" })],
+								arguments: [vs.Uri.file(filePath)],
 								command: "dart.package.openFile",
 								title: "Open File",
 							});

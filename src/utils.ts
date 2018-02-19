@@ -236,12 +236,6 @@ export function isWithinWorkspace(file: string) {
 	return !!workspace.getWorkspaceFolder(Uri.file(file));
 }
 
-export function toReadonlyUriIfExternal(file: string) {
-	return isWithinWorkspace(file)
-		? Uri.file(file)
-		: Uri.file(file).with({ scheme: "dart-package" });
-}
-
 function getExtensionVersion(): string {
 	const packageJson = require("../../package.json");
 	return packageJson.version;

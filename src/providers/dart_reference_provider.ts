@@ -30,7 +30,7 @@ export class DartReferenceProvider implements ReferenceProvider {
 	private convertResult(result: as.SearchResult): Location {
 		return {
 			range: util.toRange(result.location),
-			uri: util.toReadonlyUriIfExternal(result.location.file),
+			uri: Uri.file(result.location.file),
 		};
 	}
 }
