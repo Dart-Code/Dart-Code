@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { config } from "./config";
-import { openInBrowser, getDartWorkspaceFolders } from "./utils";
+import { openInBrowser, getDartWorkspaceFolders, FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "./utils";
 import { Context } from "./context";
 
 export function showUserPrompts(context: vs.ExtensionContext) {
@@ -45,7 +45,7 @@ function error(err: any) {
 
 function handleNewProjects(context: Context) {
 	getDartWorkspaceFolders().find((wf) => {
-		const triggerFile = path.join(wf.uri.fsPath, "dart_code_flutter_create.dart");
+		const triggerFile = path.join(wf.uri.fsPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
 		if (fs.existsSync(triggerFile)) {
 			fs.unlinkSync(triggerFile);
 			createFlutterProject(wf.uri.fsPath).then((success) => {

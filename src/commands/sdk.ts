@@ -195,7 +195,7 @@ export class SdkCommands {
 		// Create the empty folder so we can open it.
 		fs.mkdirSync(projectFolderUri.fsPath);
 		// Create a temp dart file to force extension to load when we open this folder.
-		fs.writeFileSync(path.join(projectFolderUri.fsPath, "dart_code_flutter_create.dart"), "");
+		fs.writeFileSync(path.join(projectFolderUri.fsPath, util.FLUTTER_CREATE_PROJECT_TRIGGER_FILE), "");
 
 		// Set the URI in state - this is what we use as a trigger to kick off `flutter create` (as the
 		// extension is unloaded once we call openFolder).

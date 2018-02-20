@@ -20,6 +20,7 @@ export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
 export const flutterPath = "bin/" + flutterExecutableName;
 export const extensionVersion = getExtensionVersion();
 export const isDevelopment = checkIsDevelopment();
+export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "dart_code_flutter_create.dart";
 
 export function isFlutterProject(folder: WorkspaceFolder): boolean {
 	return referencesFlutterSdk(folder.uri.fsPath);
