@@ -13,6 +13,6 @@ export class Context {
 		return new Context(context);
 	}
 
-	get newFlutterProject() { return this.context.globalState.get("newFlutterProject") as string; }
-	set newFlutterProject(value: string) { this.context.globalState.update("newFlutterProject", value); }
+	// get newFlutterProject() { return this.context.globalState.get("newFlutterProject") as string; }
+	// set newFlutterProject(value: string) { this.context.globalState.update("newFlutterProject", value); }
 }

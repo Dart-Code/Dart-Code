@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { config } from "./config";
@@ -44,19 +45,27 @@ function error(err: any) {
 
 function handleNewProjects(context: Context) {
 	getDartWorkspaceFolders().find((wf) => {
-		const conf = config.for(wf.uri);
-		if (context.newFlutterProject === wf.uri.fsPath) {
-			context.newFlutterProject = undefined;
-			handleFlutterWelcome(wf);
+		const triggerFile = path.join(wf.uri.fsPath, "dart_code_flutter_create.dart");
+		if (fs.existsSync(triggerFile)) {
+			fs.unlinkSync(triggerFile);
+			createFlutterProject(wf.uri.fsPath).then((success) => {
+				if (success)
+					handleFlutterWelcome(wf);
+			});
 			// Bail out of find so we only do this at most once.
 			return true;
 		}
 	});
 }
 
+async function createFlutterProject(projectPath: string): Promise<boolean> {
+	const code = await vs.commands.executeCommand("_flutter.create", projectPath) as number;
+	return code === 0;
+}
+
 function handleFlutterWelcome(workspaceFolder: vs.WorkspaceFolder) {
 	vs.commands.executeCommand("vscode.open", vs.Uri.file(path.join(workspaceFolder.uri.fsPath, "lib/main.dart")));
 	// TODO: Check text.
 	// TODO: Do we need an option to suppress this (or should we only ever do it once?)
-	vs.window.showInformationMessage("Your Flutter project has been created! Connect a device and press F5 to start running.");
+	vs.window.showInformationMessage("Your Flutter project is ready! Connect a device and press F5 to start running.");
 }

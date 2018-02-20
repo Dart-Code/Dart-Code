@@ -58,6 +58,11 @@ export class SdkCommands {
 			return this.runFlutter("doctor", selection);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject(context)));
+		// Internal command that's fired in user_prompts to actually do the creation.
+		context.subscriptions.push(vs.commands.registerCommand("_flutter.create", (projectPath: string) => {
+			const projectName = path.basename(projectPath);
+			return this.runFlutterInFolder(path.dirname(projectPath), `create ${projectName}`, projectName);
+		}));
 
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
@@ -187,31 +192,22 @@ export class SdkCommands {
 			return;
 		}
 
-		const code = await this.runFlutterInFolder(folderUri.fsPath, `create ${name}`, path.basename(folderUri.fsPath));
+		// Create the empty folder so we can open it.
+		fs.mkdirSync(projectFolderUri.fsPath);
+		// Create a temp dart file to force extension to load when we open this folder.
+		fs.writeFileSync(path.join(projectFolderUri.fsPath, "dart_code_flutter_create.dart"), "");
 
-		this.prepareProjectFolder(context, projectFolderUri.fsPath);
+		// Set the URI in state - this is what we use as a trigger to kick off `flutter create` (as the
+		// extension is unloaded once we call openFolder).
+		context.globalState.update("newFlutterProject", projectFolderUri.fsPath);
 
-		if (code === 0) {
-			const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
-			const openInNewWindow = hasFoldersOpen;
-			vs.commands.executeCommand("vscode.openFolder", projectFolderUri, openInNewWindow);
-		}
+		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
+		const openInNewWindow = hasFoldersOpen;
+		vs.commands.executeCommand("vscode.openFolder", projectFolderUri, openInNewWindow);
 	}
 
 	private validateFlutterProjectName(input: string) {
 		if (!flutterNameRegex.test(input))
 			return "Flutter project names should be all lowercase, with underscores to separate words";
-	}
-
-	private prepareProjectFolder(context: vs.ExtensionContext, projectFolder: string) {
-		// Tidy up the folder for VS Code user.
-		try {
-			util.deleteFolderRecursively(path.join(projectFolder, ".idea"));
-			util.deleteFilesByExtensionRecursively(projectFolder, "iml");
-		} catch { }
-
-		// Stash the path to this new project in context and when we open it up we can perform some welcome actions.
-		// TODO: Wrap this!
-		context.globalState.update("newFlutterProject", projectFolder);
 	}
 }
