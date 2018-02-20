@@ -1,6 +1,7 @@
 # v2.9.0 (BETA)
 
 - A new setting (`dart.previewDart2`) has been added which allows you to opt-in to Dart 2 behaviour such as optional `new`/`const` (you must be using an SDK that supports this!)
+- A new command (`Flutter: New Project`) has been created to simplify the process of creating and opening a new Flutter project (unlike others, this command is in the palette even without a project open)
 - Code completions will no longer insert parentheses/argument placeholders if they are already present
 - Code completions will now longer insert named argument placeholders if a value is already present
 - Due to a number of issues with the implementation, external files (SDK, packages) will no longer open read-only (this behaviour may be restored in some form in future)
