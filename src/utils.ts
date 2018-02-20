@@ -64,7 +64,9 @@ export function findSdks(): Sdks {
 	let hasFuchsiaProjectThatIsNotVanillaFlutter: boolean;
 	folders.forEach((folder) => {
 		fuchsiaRoot = fuchsiaRoot || findFuchsiaRoot(folder);
-		flutterProject = flutterProject || (referencesFlutterSdk(folder) ? folder : null);
+		flutterProject = flutterProject
+			|| (referencesFlutterSdk(folder) ? folder : null)
+			|| (fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE)) ? folder : null);
 		hasFuchsiaProjectThatIsNotVanillaFlutter = hasFuchsiaProjectThatIsNotVanillaFlutter || !referencesFlutterSdk(folder);
 	});
 
