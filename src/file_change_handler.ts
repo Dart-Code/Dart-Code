@@ -13,7 +13,7 @@ export class FileChangeHandler {
 	}
 
 	public onDidOpenTextDocument(document: vs.TextDocument) {
-		if (!util.isAnalyzableAndInWorkspace(document))
+		if (!util.isAnalyzable(document))
 			return;
 
 		const files: { [key: string]: as.AddContentOverlay } = {};
@@ -27,7 +27,7 @@ export class FileChangeHandler {
 	}
 
 	public onDidChangeTextDocument(e: vs.TextDocumentChangeEvent) {
-		if (!util.isAnalyzableAndInWorkspace(e.document))
+		if (!util.isAnalyzable(e.document))
 			return;
 
 		if (e.contentChanges.length === 0) // This event fires for metadata changes (dirty?) so don't need to notify AS then.
@@ -64,7 +64,7 @@ export class FileChangeHandler {
 	}
 
 	public onDidCloseTextDocument(document: vs.TextDocument) {
-		if (!util.isAnalyzableAndInWorkspace(document))
+		if (!util.isAnalyzable(document))
 			return;
 
 		const files: { [key: string]: as.RemoveContentOverlay } = {};

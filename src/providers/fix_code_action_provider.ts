@@ -16,6 +16,7 @@ export class FixCodeActionProvider implements CodeActionProvider {
 	}
 
 	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Thenable<CodeAction[]> {
+		// TODO: Should this just be isAnalyzable?
 		if (!isAnalyzableAndInWorkspace(document))
 			return null;
 		return new Promise<CodeAction[]>((resolve, reject) => {
