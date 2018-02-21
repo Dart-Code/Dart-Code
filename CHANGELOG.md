@@ -22,6 +22,7 @@
 - SDKs will now be listed by version number in the SDK picker
 - Quick fixes will now be sorted in the lighbulb menu by the severity of the error that they fix
 - Quick fixes and code assists are now categorised as QuickFix and Refactor in Code to allow for keybinding a specific type
+- Opening a Dart file outside of a folder will no longer show errors in the developer console
 
 # v2.8.2
 
