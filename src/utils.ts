@@ -23,7 +23,7 @@ export const isDevelopment = checkIsDevelopment();
 export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "dart_code_flutter_create.dart";
 
 export function isFlutterProject(folder: WorkspaceFolder): boolean {
-	return referencesFlutterSdk(folder.uri.fsPath);
+	return isDartWorkspaceFolder(folder) && referencesFlutterSdk(folder.uri.fsPath);
 }
 
 function referencesFlutterSdk(folder: string): boolean {
