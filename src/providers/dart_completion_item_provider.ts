@@ -100,7 +100,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			}
 		} else if (suggestion.selectionOffset > 0) {
 			const before = suggestion.completion.slice(0, suggestion.selectionOffset);
-			let selection = suggestion.completion.slice(suggestion.selectionOffset, suggestion.selectionLength);
+			let selection = suggestion.completion.slice(suggestion.selectionOffset, suggestion.selectionOffset + suggestion.selectionLength);
 			if (!selection && insertArgumentPlaceholders && !nextCharacterIsColon)
 				selection = suggestion.parameterName;
 			const after = suggestion.completion.slice(suggestion.selectionOffset + suggestion.selectionLength);
