@@ -85,7 +85,7 @@ export function findSdks(): Sdks {
 		config.userDefinedSdkPath,
 		fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart/tools/sdks", platformName, "dart-sdk"),
 		fuchsiaRoot && path.join(fuchsiaRoot, "dart/tools/sdks", platformName, "dart-sdk"),
-		flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk"),
+		flutterProject && flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk"),
 	].concat(paths);
 
 	const dartSdkPath =
