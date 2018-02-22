@@ -723,6 +723,21 @@ export interface SearchFindTopLevelDeclarationsResponse {
 }
 
 /**
+ * Return top-level and class member declarations.
+ */
+export interface SearchGetElementDeclarationsResponse {
+	/**
+	 * The list of declarations.
+	 */
+	declarations: ElementDeclaration[];
+
+	/**
+	 * The list of the paths of files with declarations.
+	 */
+	files: FilePath[];
+}
+
+/**
  * Return the type hierarchy of the class declared or
  * referenced at the given location.
  */
@@ -2245,6 +2260,48 @@ export interface ContextData {
 	 * Exceptions associated with cache entries.
 	 */
 	cacheEntryExceptions: string[];
+}
+
+/**
+ * A declaration - top-level (class, field, etc) or a class member (method,
+ * field, etc).
+ */
+export interface ElementDeclaration {
+	/**
+	 * The name of the declaration.
+	 */
+	name: string;
+
+	/**
+	 * The kind of the element that corresponds to the declaration.
+	 */
+	kind: ElementKind;
+
+	/**
+	 * The index of the file (in the enclosing response).
+	 */
+	fileIndex: number;
+
+	/**
+	 * The offset of the declaration name in the file.
+	 */
+	offset: number;
+
+	/**
+	 * The one-based index of the line containing the declaration name.
+	 */
+	line: number;
+
+	/**
+	 * The one-based index of the column containing the declaration name.
+	 */
+	column: number;
+
+	/**
+	 * The name of the class enclosing this declaration. If the declaration
+	 * is not a class member, this field will be absent.
+	 */
+	className?: string;
 }
 
 /**
