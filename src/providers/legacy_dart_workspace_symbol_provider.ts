@@ -7,7 +7,7 @@ import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { toRange, isWithinWorkspace, logError } from "../utils";
 import * as as from "../analysis/analysis_server_types";
 
-export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
+export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	private analyzer: Analyzer;
 	constructor(analyzer: Analyzer) {
 		this.analyzer = analyzer;
