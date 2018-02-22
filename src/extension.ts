@@ -434,7 +434,7 @@ function handleConfigurationChange(sdks: util.Sdks) {
 
 	if (analyzerSettingsChanged || projectTypeChanged) {
 		const reloadAction: string = "Reload Project";
-		vs.window.showWarningMessage("The Dart SDK settings have been changed. Save your changes then reload the project to restart the analyzer.", reloadAction).then((res) => {
+		vs.window.showWarningMessage("Dart/Flutter SDK settings have changed. Save your work and reload to apply the new settings.", reloadAction).then((res) => {
 			if (res === reloadAction)
 				vs.commands.executeCommand("workbench.action.reloadWindow");
 		});
