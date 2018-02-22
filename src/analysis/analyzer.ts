@@ -20,6 +20,7 @@ class AnalyzerCapabilities {
 	get supportsPriorityFilesOutsideAnalysisRoots() { return versionIsAtLeast(this.version, "1.18.2"); }
 	get supportsDiagnostics() { return versionIsAtLeast(this.version, "1.18.1"); }
 	get supportsClosingLabels() { return versionIsAtLeast(this.version, "1.18.4"); }
+	get supportsGetDeclerations() { return versionIsAtLeast(this.version, "5.5.5"); } // TODO: Confirm
 }
 
 export class Analyzer extends AnalyzerGen {

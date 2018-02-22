@@ -290,6 +290,11 @@ export function getLatestSdkVersion(): PromiseLike<string> {
 	});
 }
 
+export function escapeRegExp(input: string) {
+	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
+	return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+}
+
 export function openInBrowser(url: string) {
 	commands.executeCommand("vscode.open", Uri.parse(url));
 }

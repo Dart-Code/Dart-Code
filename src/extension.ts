@@ -19,6 +19,7 @@ import { DartDocumentHighlightProvider } from "./providers/dart_highlighting_pro
 import { DartHoverProvider } from "./providers/dart_hover_provider";
 import { DartLanguageConfiguration } from "./providers/dart_language_configuration";
 import { DartDocumentSymbolProvider } from "./providers/dart_document_symbol_provider";
+import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
 import { LegacyDartWorkspaceSymbolProvider } from "./providers/legacy_dart_workspace_symbol_provider";
 import { DartRenameProvider } from "./providers/dart_rename_provider";
 import { FileChangeHandler } from "./file_change_handler";
@@ -191,7 +192,10 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => isFlutterProject(vs.workspace.getWorkspaceFolder(uri)))));
 
-	context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(analyzer)));
+	if (analyzer.capabilities.supportsGetDeclerations)
+		context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
+	else
+		context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(analyzer)));
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE[0].language, new DartLanguageConfiguration()));
 	const statusReporter = new AnalyzerStatusReporter(analyzer, sdks, analytics);
 
