@@ -625,6 +625,13 @@ export abstract class AnalyzerGen extends StdIOService {
 	}
 
 	/**
+	Return top-level and class member declarations.
+	*/
+	searchGetElementDeclarations(): Thenable<as.SearchGetElementDeclarationsResponse> {
+		return this.sendRequest("search.getElementDeclarations");
+	}
+
+	/**
 	Return the type hierarchy of the class declared or
 	referenced at the given location.
 	*/
