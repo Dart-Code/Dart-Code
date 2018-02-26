@@ -107,12 +107,18 @@ export class DebugCommands {
 			}
 		});
 
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.runBoolServiceCommand("ext.flutter.debugPaint", this.debugPaintingEnabled = !this.debugPaintingEnabled)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.runBoolServiceCommand("ext.flutter.showPerformanceOverlay", this.performanceOverlayEnabled = !this.performanceOverlayEnabled)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.runBoolServiceCommand("ext.flutter.repaintRainbow", this.repaintRainbowEnabled = !this.repaintRainbowEnabled)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.runServiceCommand("ext.flutter.timeDilation", { timeDilation: this.timeDilation = 6.0 - this.timeDilation })));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowModeBanner", () => this.runBoolServiceCommand("ext.flutter.debugAllowBanner", this.slowModeBannerEnabled = !this.slowModeBannerEnabled)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.runBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", this.paintBaselinesEnabled = !this.paintBaselinesEnabled)));
+		this.registerBoolServiceCommand("ext.flutter.debugPaint", () => this.debugPaintingEnabled);
+		this.registerBoolServiceCommand("ext.flutter.showPerformanceOverlay", () => this.performanceOverlayEnabled);
+		this.registerBoolServiceCommand("ext.flutter.repaintRainbow", () => this.repaintRainbowEnabled);
+		this.registerServiceCommand("ext.flutter.timeDilation", () => ({ timeDilation: this.timeDilation }));
+		this.registerBoolServiceCommand("ext.flutter.debugAllowBanner", () => this.slowModeBannerEnabled);
+		this.registerBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", () => this.paintBaselinesEnabled);
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => { this.debugPaintingEnabled = !this.debugPaintingEnabled; this.sendServiceSetting("ext.flutter.debugPaint"); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => { this.performanceOverlayEnabled = !this.performanceOverlayEnabled; this.sendServiceSetting("ext.flutter.showPerformanceOverlay"); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => { this.repaintRainbowEnabled = !this.repaintRainbowEnabled; this.sendServiceSetting("ext.flutter.repaintRainbow"); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => { this.timeDilation = 6.0 - this.timeDilation; this.sendServiceSetting("ext.flutter.timeDilation"); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowModeBanner", () => { this.slowModeBannerEnabled = !this.slowModeBannerEnabled; this.sendServiceSetting("ext.flutter.debugAllowBanner"); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => { this.paintBaselinesEnabled = !this.paintBaselinesEnabled; this.sendServiceSetting("ext.flutter.debugPaintBaselinesEnabled"); }));
 
 		// Open Observatory.
 		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", () => {
@@ -148,6 +154,22 @@ export class DebugCommands {
 		// We can't just use a service command here, as we need to call it twice (once to get, once to change) and
 		// currently it seems like the DA can't return responses to us here, so we'll have to do them both inside the DA.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => this.sendCustomFlutterDebugCommand("togglePlatform")));
+	}
+
+	private serviceSettings: { [id: string]: () => void } = {};
+	private sendServiceSetting(id: string) {
+		if (this.serviceSettings[id])
+			this.serviceSettings[id]();
+		else
+			console.warn(`Could not find service setting handler for ${id}`);
+	}
+
+	private registerBoolServiceCommand(id: string, getValue: () => boolean): void {
+		this.serviceSettings[id] = () => this.runBoolServiceCommand(id, getValue());
+	}
+
+	private registerServiceCommand(id: string, getValue: () => any): void {
+		this.serviceSettings[id] = () => this.runServiceCommand(id, getValue());
 	}
 
 	private promptForFullRestart(message: string) {
