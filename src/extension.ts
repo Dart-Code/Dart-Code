@@ -46,6 +46,7 @@ const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
 
 const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
+export const SERVICE_EXTENSION_CONTEXT_PREFIX = "dart-code:serviceExtension.";
 
 let analyzer: Analyzer;
 let flutterDaemon: FlutterDaemon;

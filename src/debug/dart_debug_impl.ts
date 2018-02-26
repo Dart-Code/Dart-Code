@@ -635,6 +635,8 @@ export class DartDebugSession extends DebugSession {
 			this.threadManager.registerThread(event.isolate, kind);
 		} else if (kind === "IsolateExit") {
 			this.threadManager.handleIsolateExit(event.isolate);
+		} else if (kind === "ServiceExtensionAdded") {
+			this.handleServiceExtensionAdded(event);
 		}
 	}
 
@@ -680,6 +682,12 @@ export class DartDebugSession extends DebugSession {
 
 			thread.handlePaused(event.atAsyncSuspension);
 			this.sendEvent(new StoppedEvent(reason, thread.number, exceptionText));
+		}
+	}
+
+	public handleServiceExtensionAdded(event: VMEvent) {
+		if (event && event.extensionRPC) {
+			this.sendEvent(new Event("dart.serviceExtensionAdded", { id: event.extensionRPC }));
 		}
 	}
 

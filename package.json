@@ -252,31 +252,31 @@
 				},
 				{
 					"command": "flutter.toggleDebugPainting",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+					"when": "dart-code:serviceExtension.ext.flutter.debugPaint"
 				},
 				{
 					"command": "flutter.togglePerformanceOverlay",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+					"when": "dart-code:serviceExtension.ext.flutter.showPerformanceOverlay"
 				},
 				{
 					"command": "flutter.togglePlatform",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+					"when": "dart-code:serviceExtension.ext.flutter.platformOverride"
 				},
 				{
 					"command": "flutter.toggleRepaintRainbow",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+					"when": "dart-code:serviceExtension.ext.flutter.repaintRainbow"
 				},
 				{
 					"command": "flutter.toggleSlowAnimations",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+					"when": "dart-code:serviceExtension.ext.flutter.timeDilation"
 				},
 				{
 					"command": "flutter.toggleSlowModeBanner",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+					"when": "dart-code:serviceExtension.ext.flutter.debugAllowBanner"
 				},
 				{
 					"command": "flutter.togglePaintBaselines",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+					"when": "dart-code:serviceExtension.ext.flutter.debugPaintBaselinesEnabled"
 				},
 				{
 					"command": "flutter.fullRestart",

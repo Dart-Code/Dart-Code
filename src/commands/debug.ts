@@ -13,6 +13,7 @@ import { FlutterLaunchRequestArguments, isWin, PromiseCompleter } from "../debug
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { SdkManager } from "../sdk/sdk_manager";
 import { Uri } from "vscode";
+import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
 
 export class DebugCommands {
 	private analytics: Analytics;
@@ -73,6 +74,8 @@ export class DebugCommands {
 						else
 							logError({ message: `Unexpected hint from debugger: ${e.body.hintId}, ${e.body.hintMessage}` });
 				}
+			} else if (e.event === "dart.serviceExtensionAdded") {
+				this.enableServiceExtension(e.body.id);
 			}
 		});
 		let debugSessionStart: Date;
@@ -99,6 +102,7 @@ export class DebugCommands {
 				// 	this.startingDebugPromise = null;
 				// }
 				const debugSessionEnd = new Date();
+				this.disableAllServiceExtensions();
 				analytics.logDebugSessionDuration(debugSessionEnd.getTime() - debugSessionStart.getTime());
 			}
 		});
@@ -168,5 +172,18 @@ export class DebugCommands {
 
 	public resetFlutterSettings() {
 		this.debugPaintingEnabled = false, this.performanceOverlayEnabled = false, this.repaintRainbowEnabled = false, this.timeDilation = 1.0, this.slowModeBannerEnabled = true, this.paintBaselinesEnabled = false;
+	}
+
+	private enabledServiceExtensions: string[] = [];
+	private enableServiceExtension(id: string) {
+		this.enabledServiceExtensions.push(id);
+		vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${id}`, true);
+	}
+
+	private disableAllServiceExtensions() {
+		for (const id of this.enabledServiceExtensions) {
+			vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${id}`, undefined);
+		}
+		this.enabledServiceExtensions.length = 0;
 	}
 }
