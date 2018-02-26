@@ -436,7 +436,10 @@
 					"type": "array",
 					"default": [],
 					"description": "Additional args to pass to pub get and pub upgrade commands (eg. --packages-dir).",
-					"scope": "resource"
+					"scope": "resource",
+					"items": {
+						"type": "string"
+					}
 				},
 				"dart.runPubGetOnPubspecChanges": {
 					"type": "boolean",
@@ -477,6 +480,54 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Whether to enable previewing Dart 2.0 functionality such as optional new/const.",
+					"scope": "window"
+				},
+				"dart.analyzerAdditionalArgs": {
+					"type": "array",
+					"description": "Additional arguments to pass to the Dart analysis server.\nThis is a diagnostic setting that should not normally be set.",
+					"scope": "window",
+					"items": {
+						"type": "string"
+					}
+				},
+				"dart.analyzerDiagnosticsPort": {
+					"type": "number",
+					"description": "The port number to be used for the Dart analysis server diagnostics.\nThis is a diagnostic setting that should not normally be set.",
+					"scope": "window"
+				},
+				"dart.analyzerInstrumentationLogFile": {
+					"type": "string",
+					"description": "The path to a log file for the Dart analysis server built-in instrumentation.\nThis is a diagnostic setting that should not normally be set.",
+					"scope": "window"
+				},
+				"dart.analyzerLogFile": {
+					"type": "string",
+					"description": "The path to a log file for the Dart analysis server communication.\nThis is a diagnostic setting that should not normally be set.",
+					"scope": "window"
+				},
+				"dart.analyzerObservatoryPort": {
+					"type": "number",
+					"description": "The port number to be used for the Dart analysis server observatory.\nThis is a diagnostic setting that should not normally be set.",
+					"scope": "window"
+				},
+				"dart.analyzerPath": {
+					"type": "string",
+					"description": "The path to a custom Dart analysis server.\nThis is a diagnostic setting that should not normally be set.",
+					"scope": "window"
+				},
+				"dart.flutterDaemonLogFile": {
+					"type": "string",
+					"description": "The path to a log file for `flutter daemon` communication.\nThis is a diagnostic setting that should not normally be set.",
+					"scope": "window"
+				},
+				"dart.flutterRunLogFile": {
+					"type": "string",
+					"description": "The path to a log file for `flutter run` communication.\nThis is a diagnostic setting that should not normally be set.",
+					"scope": "window"
+				},
+				"dart.observatoryLogFile": {
+					"type": "string",
+					"description": "The path to a log file for Observatory communication.\nThis is a diagnostic setting that should not normally be set.",
 					"scope": "window"
 				}
 			}
