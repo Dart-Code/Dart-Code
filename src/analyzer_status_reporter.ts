@@ -42,7 +42,7 @@ export class AnalyzerStatusReporter {
 		if (this.analysisInProgress) {
 			// Debounce short analysis times.
 			setTimeout(() => {
-				// When the timeout fires, we need to check statusShowing again in case
+				// When the timeout fires, we need to check analysisInProgress again in case
 				// analysis has already finished.
 				if (this.analysisInProgress && !this.analyzingPromise) {
 					this.analyzingPromise = new PromiseCompleter();
