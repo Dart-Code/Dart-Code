@@ -611,7 +611,7 @@
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
 		"postinstall": "node ./node_modules/vscode/bin/install",
-		"test": "npm run compile && node ./node_modules/vscode/bin/test",
+		"test": "set CODE_TESTS_WORKSPACE=./test/test_projects/hello_world && npm run compile && node ./node_modules/vscode/bin/test",
 		"lint": "tslint src/**/*.ts -t verbose"
 	},
 	"dependencies": {
