@@ -76,6 +76,9 @@ export class DebugCommands {
 				}
 			} else if (e.event === "dart.serviceExtensionAdded") {
 				this.enableServiceExtension(e.body.id);
+				// Re-send the current value to ensure it's persisted for the user.
+				// TODO: This causes a crash for performance overlay
+				// this.sendServiceSetting(e.body.id);
 			}
 		});
 		let debugSessionStart: Date;
@@ -160,8 +163,6 @@ export class DebugCommands {
 	private sendServiceSetting(id: string) {
 		if (this.serviceSettings[id])
 			this.serviceSettings[id]();
-		else
-			console.warn(`Could not find service setting handler for ${id}`);
 	}
 
 	private registerBoolServiceCommand(id: string, getValue: () => boolean): void {
@@ -192,7 +193,7 @@ export class DebugCommands {
 			this.currentDebugSession.customRequest(type, args);
 	}
 
-	public resetFlutterSettings() {
+	private resetFlutterSettings() {
 		this.debugPaintingEnabled = false, this.performanceOverlayEnabled = false, this.repaintRainbowEnabled = false, this.timeDilation = 1.0, this.slowModeBannerEnabled = true, this.paintBaselinesEnabled = false;
 	}
 
