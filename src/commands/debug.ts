@@ -23,7 +23,7 @@ export class DebugCommands {
 	private slowModeBannerEnabled = true;
 	private paintBaselinesEnabled = false;
 	private currentDebugSession: vs.DebugSession;
-	private debugStatus = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left);
+	private progressPromise: PromiseCompleter<void>;
 	private reloadStatus = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left);
 	private observatoryUri: string = null;
 	// Awaiting response from: https://github.com/Microsoft/vscode/issues/43752
@@ -31,16 +31,25 @@ export class DebugCommands {
 
 	constructor(context: vs.ExtensionContext, analytics: Analytics) {
 		this.analytics = analytics;
-		context.subscriptions.push(this.debugStatus);
 		context.subscriptions.push(this.reloadStatus);
 		vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
 			if (e.event === "dart.progress") {
 				if (e.body.message) {
-					this.debugStatus.text = e.body.message;
-					this.debugStatus.show();
+					// Clear any old progress first
+					if (this.progressPromise)
+						this.progressPromise.resolve();
+					this.progressPromise = new PromiseCompleter();
+					vs.window.withProgress(
+						{ location: vs.ProgressLocation.Window, title: e.body.message },
+						(_) => this.progressPromise.promise,
+					);
 				}
-				if (e.body.finished)
-					this.debugStatus.hide();
+				if (e.body.finished) {
+					if (this.progressPromise) {
+						this.progressPromise.resolve();
+						this.progressPromise = null;
+					}
+				}
 			} else if (e.event === "dart.observatoryUri") {
 				this.observatoryUri = e.body.observatoryUri;
 				// if (this.startingDebugPromise) {
@@ -82,7 +91,8 @@ export class DebugCommands {
 			if (s === this.currentDebugSession) {
 				this.currentDebugSession = null;
 				this.observatoryUri = null;
-				this.debugStatus.hide();
+				if (this.progressPromise)
+					this.progressPromise.resolve();
 				this.reloadStatus.hide();
 				// if (this.startingDebugPromise) {
 				// 	this.startingDebugPromise.resolve();
