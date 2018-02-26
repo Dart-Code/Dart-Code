@@ -4,8 +4,9 @@ import * as fs from "fs";
 import * as vs from "vscode";
 
 const ext = vs.extensions.getExtension("Dart-Code.dart-code");
-const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/hello_world"));
-const emptyFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "lib/empty.dart"));
+export const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/hello_world"));
+export const emptyFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "lib/empty.dart"));
+export const everythingFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "lib/everything.dart"));
 
 export let doc: vs.TextDocument;
 export let editor: vs.TextEditor;
@@ -17,7 +18,6 @@ export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 }
 
 export async function setTestContent(content: string): Promise<boolean> {
-
 	const all = new vs.Range(
 		doc.positionAt(0),
 		doc.positionAt(doc.getText().length),

@@ -2,11 +2,11 @@ import * as assert from "assert";
 import * as path from "path";
 import * as fs from "fs";
 import * as vs from "vscode";
-import { activate, doc, getPositionOf, setTestContent, rangeOf } from "../helpers";
+import { activate, doc, getPositionOf, setTestContent, rangeOf, everythingFile } from "../helpers";
 
 describe("dart_hover_provider", () => {
 
-	before(async () => activate());
+	before(async () => activate(everythingFile));
 
 	async function getHoversAt(searchText: string): Promise<Array<{ displayText: string, documentation?: string, range: vs.Range }>> {
 		const position = getPositionOf(searchText);
@@ -38,19 +38,14 @@ describe("dart_hover_provider", () => {
 	}
 
 	it("does not return hovers for blank areas of the document", async () => {
-		await setTestContent(" \n \n");
-		const hovers = await getHoversAt("\n^");
+		const hovers = await getHoversAt("\n^\n");
 		assert.equal(hovers.length, 0);
 	});
 
 	it("returns expected information for a class", async () => {
-		await setTestContent(`
-		/// A Person.
-		class Person {}
-		`);
-		const hover = await getHoverAt("class Pe^rson");
-		assert.equal(hover.displayText, "class Person");
-		assert.equal(hover.documentation, "A Person.");
-		assert.deepStrictEqual(hover.range, rangeOf("class |Person|"));
+		const hover = await getHoverAt("class My^Class");
+		assert.equal(hover.displayText, "class MyClass");
+		assert.equal(hover.documentation, "This is my class.");
+		assert.deepStrictEqual(hover.range, rangeOf("class |MyClass|"));
 	});
 });
