@@ -23,13 +23,17 @@ describe("dart_hover_provider", () => {
 		return editor.edit((eb) => eb.replace(all, content));
 	}
 
-	async function getHoversAt(searchText: string): Promise<Array<{ displayText: string, documentation?: string, range: vs.Range }>> {
+	function getPositionOf(searchText: string): vs.Position {
 		const caretOffset = searchText.indexOf("^");
 		assert.notEqual(caretOffset, -1, `Couldn't find a ^ in search text (${searchText})`);
 		const matchedTextIndex = doc.getText().indexOf(searchText.replace("^", ""));
-		assert.notEqual(matchedTextIndex, -1, `Couldn't find string ${searchText.replace("^", "")} in the document to send hovers for`);
+		assert.notEqual(matchedTextIndex, -1, `Couldn't find string ${searchText.replace("^", "")} in the document to get position of`);
 
-		const position = doc.positionAt(matchedTextIndex + caretOffset);
+		return doc.positionAt(matchedTextIndex + caretOffset);
+	}
+
+	async function getHoversAt(searchText: string): Promise<Array<{ displayText: string, documentation?: string, range: vs.Range }>> {
+		const position = getPositionOf(searchText);
 		const hoverResult = await (vs.commands.executeCommand("vscode.executeHoverProvider", doc.uri, position) as Thenable<vs.Hover[]>);
 
 		// Our hovers are aways in the form:
@@ -50,6 +54,13 @@ describe("dart_hover_provider", () => {
 		});
 	}
 
+	// Helper to get just a single hover when exactly one is expected.
+	async function getHoverAt(searchText: string): Promise<{ displayText: string, documentation?: string, range: vs.Range }> {
+		const hovers = await getHoversAt(searchText);
+		assert.equal(hovers.length, 1);
+		return hovers[0];
+	}
+
 	function rangeOf(searchText: string): vs.Range {
 		const startOffset = searchText.indexOf("|");
 		assert.notEqual(startOffset, -1, `Couldn't find a | in search text (${searchText})`);
@@ -57,7 +68,7 @@ describe("dart_hover_provider", () => {
 		assert.notEqual(endOffset, -1, `Couldn't find a second | in search text (${searchText})`);
 
 		const matchedTextIndex = doc.getText().indexOf(searchText.replace(/\|/g, ""));
-		assert.notEqual(matchedTextIndex, -1, `Couldn't find string ${searchText.replace(/\|/g, "")} in the document to expect range for`);
+		assert.notEqual(matchedTextIndex, -1, `Couldn't find string ${searchText.replace(/\|/g, "")} in the document to get range of`);
 
 		return new vs.Range(
 			doc.positionAt(matchedTextIndex + startOffset),
@@ -71,26 +82,14 @@ describe("dart_hover_provider", () => {
 		assert.equal(hovers.length, 0);
 	});
 
-	it("returns a hover for a function call", async () => {
-		await setTestContent("main() { print('Hello, world!'); }");
-		const hovers = await getHoversAt("pri^nt");
-		assert.equal(hovers.length, 1);
-	});
-
 	it("returns expected information for a class", async () => {
 		await setTestContent(`
 		/// A Person.
 		class Person {}
 		`);
-		const hovers = await getHoversAt("class Pe^rson");
-		assert.equal(hovers.length, 1);
-		const hover = hovers[0];
+		const hover = await getHoverAt("class Pe^rson");
 		assert.equal(hover.displayText, "class Person");
 		assert.equal(hover.documentation, "A Person.");
-		const expectedRange = rangeOf("class |Person|");
-		assert.equal(hover.range.start.line, expectedRange.start.line);
-		assert.equal(hover.range.start.character, expectedRange.start.character);
-		assert.equal(hover.range.end.line, expectedRange.end.line);
-		assert.equal(hover.range.end.character, expectedRange.end.character);
+		assert.deepStrictEqual(hover.range, rangeOf("class |Person|"));
 	});
 });
