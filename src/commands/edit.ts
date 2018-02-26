@@ -137,16 +137,21 @@ export class EditCommands implements vs.Disposable {
 						snippet.appendText(documentText.substring(currentPos, p.offset));
 					// Add the choices / placeholder.
 					// Uncomment for https://github.com/Dart-Code/Dart-Code/issues/569 when there's an API we can use
-					// if (p.choices && p.choices.length)
-					// ???
-					// else
-					snippet.appendPlaceholder(p.defaultValue, p.placeholderNumber);
+					if (p.choices && p.choices.length > 1)
+						snippet.appendText("").value += "${" + p.placeholderNumber + "|" + p.choices.map((c) => this.snippetStringEscape(c)).join(",") + "|}";
+					else
+						snippet.appendPlaceholder(p.defaultValue, p.placeholderNumber);
 					currentPos = p.offset + p.length;
 				});
 
+				console.log(snippet.value);
 				// Replace the document.
 				editor.insertSnippet(snippet, new vs.Range(document.positionAt(startPos), document.positionAt(endPos)));
 			});
 		});
+	}
+
+	private snippetStringEscape(value: string): string {
+		return value.replace(/\$|}|\\|,/g, "\\$&");
 	}
 }
