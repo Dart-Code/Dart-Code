@@ -7,6 +7,7 @@ import { FlutterRun } from "./flutter_run";
 import { TerminatedEvent, OutputEvent, Event } from "vscode-debugadapter";
 import * as child_process from "child_process";
 import * as path from "path";
+import { VMEvent } from "./dart_debug_protocol";
 
 export class FlutterDebugSession extends DartDebugSession {
 	protected args: FlutterLaunchRequestArguments;
@@ -181,6 +182,15 @@ export class FlutterDebugSession extends DartDebugSession {
 			default:
 				super.customRequest(request, response, args);
 				break;
+		}
+	}
+
+	// Extension
+	public handleExtensionEvent(event: VMEvent) {
+		if (event.kind === "Extension" && event.extensionKind === "Flutter.FirstFrame") {
+			this.sendEvent(new Event("dart.flutter.firstFrame", {}));
+		} else {
+			super.handleExtensionEvent(event);
 		}
 	}
 }

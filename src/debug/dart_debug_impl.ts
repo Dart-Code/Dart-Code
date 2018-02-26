@@ -154,6 +154,7 @@ export class DartDebugSession extends DebugSession {
 		});
 		this.observatory.onOpen(() => {
 			this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event));
+			this.observatory.on("Extension", (event: VMEvent) => this.handleExtensionEvent(event));
 			this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event));
 			this.observatory.getVM().then((result) => {
 				const vm: VM = result.result as VM;
@@ -638,6 +639,11 @@ export class DartDebugSession extends DebugSession {
 		} else if (kind === "ServiceExtensionAdded") {
 			this.handleServiceExtensionAdded(event);
 		}
+	}
+
+	// Extension
+	public handleExtensionEvent(event: VMEvent) {
+		// Nothing Dart-specific, but Flutter overrides this
 	}
 
 	// PauseStart, PauseExit, PauseBreakpoint, PauseInterrupted, PauseException, Resume,

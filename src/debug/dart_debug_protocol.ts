@@ -20,6 +20,7 @@ export interface VMEvent {
 	pauseBreakpoints?: VMBreakpoint[];
 	atAsyncSuspension?: boolean;
 	extensionRPC?: string;
+	extensionKind?: string;
 }
 
 export interface VMBreakpoint extends VMObj {

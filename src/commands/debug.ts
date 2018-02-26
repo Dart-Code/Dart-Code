@@ -76,9 +76,9 @@ export class DebugCommands {
 				}
 			} else if (e.event === "dart.serviceExtensionAdded") {
 				this.enableServiceExtension(e.body.id);
-				// Re-send the current value to ensure it's persisted for the user.
-				// TODO: This causes a crash for performance overlay
-				// this.sendServiceSetting(e.body.id);
+			} else if (e.event === "dart.flutter.firstFrame") {
+				// Send the current value to ensure it persists for the user.
+				this.sendAllServiceSettings();
 			}
 		});
 		let debugSessionStart: Date;
@@ -163,6 +163,11 @@ export class DebugCommands {
 	private sendServiceSetting(id: string) {
 		if (this.serviceSettings[id])
 			this.serviceSettings[id]();
+	}
+
+	private sendAllServiceSettings() {
+		for (const id in this.serviceSettings)
+			this.sendServiceSetting(id);
 	}
 
 	private registerBoolServiceCommand(id: string, getValue: () => boolean): void {
