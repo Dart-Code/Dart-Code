@@ -48,4 +48,80 @@ describe("dart_hover_provider", () => {
 		assert.equal(hover.documentation, "This is my class.");
 		assert.deepStrictEqual(hover.range, rangeOf("class |MyClass|"));
 	});
+
+	it("returns expected information for a field", async () => {
+		const hover = await getHoverAt("num my^NumField");
+		// TODO: We don't want this
+		// https://github.com/Dart-Code/Dart-Code/issues/555
+		assert.equal(hover.displayText, "MyClass num myNumField");
+		assert.equal(hover.documentation, "This is my num field.");
+		assert.deepStrictEqual(hover.range, rangeOf("num |myNumField|"));
+	});
+
+	it("returns expected information for a getter", async () => {
+		const hover = await getHoverAt("get my^NumGetter");
+		// TODO: We don't want this
+		// https://github.com/Dart-Code/Dart-Code/issues/555
+		assert.equal(hover.displayText, "MyClass get myNumGetter → num");
+		assert.equal(hover.documentation, "This is my num getter.");
+		assert.deepStrictEqual(hover.range, rangeOf("get |myNumGetter|"));
+	});
+
+	it("returns expected information for a setter", async () => {
+		const hover = await getHoverAt("my^NumSetter(");
+		// TODO: We don't want this
+		// https://github.com/Dart-Code/Dart-Code/issues/555
+		assert.equal(hover.displayText, "MyClass set myNumSetter(num value) → dynamic");
+		assert.equal(hover.documentation, "This is my num setter.");
+		assert.deepStrictEqual(hover.range, rangeOf("|myNumSetter|"));
+	});
+
+	it("returns expected information for a constructor", async () => {
+		const hover = await getHoverAt("My^Class()");
+		assert.equal(hover.displayText, "MyClass() → MyClass");
+		assert.equal(hover.documentation, "This is my class constructor.");
+		assert.deepStrictEqual(hover.range, rangeOf("|MyClass|()"));
+	});
+
+	it("returns expected information for a named constructor", async () => {
+		// TODO: Currently server seeems to return two different ranges for
+		// MyClass and named.
+		let hover = await getHoverAt("My^Class.named()");
+		assert.equal(hover.displayText, "MyClass.named() → MyClass");
+		assert.equal(hover.documentation, "This is my class named constructor.");
+		assert.deepStrictEqual(hover.range, rangeOf("|MyClass|.named()"));
+		// Check second part... ideally this would be rolled into above.
+		hover = await getHoverAt("MyClass.n^amed()");
+		assert.equal(hover.displayText, "MyClass.named() → MyClass");
+		assert.equal(hover.documentation, "This is my class named constructor.");
+		assert.deepStrictEqual(hover.range, rangeOf("MyClass.|named|()"));
+	});
+
+	it("returns expected information for a void returning method", async () => {
+		const hover = await getHoverAt("my^VoidReturningMethod()");
+		assert.equal(hover.displayText, "MyClass.myVoidReturningMethod() → void");
+		assert.equal(hover.documentation, "This is my void returning method.");
+		assert.deepStrictEqual(hover.range, rangeOf("|myVoidReturningMethod|()"));
+	});
+
+	it("returns expected information for a string returning method", async () => {
+		const hover = await getHoverAt("my^StringReturningMethod()");
+		assert.equal(hover.displayText, "MyClass.myStringReturningMethod() → String");
+		assert.equal(hover.documentation, "This is my string returning method.");
+		assert.deepStrictEqual(hover.range, rangeOf("|myStringReturningMethod|()"));
+	});
+
+	it("returns expected information for a method taking a string", async () => {
+		const hover = await getHoverAt("me^thodTakingString(");
+		assert.equal(hover.displayText, "MyClass.methodTakingString(String a) → void");
+		assert.equal(hover.documentation, "This is my method taking a string.");
+		assert.deepStrictEqual(hover.range, rangeOf("|methodTakingString|"));
+	});
+
+	it("returns expected information for a method taking a function", async () => {
+		const hover = await getHoverAt("me^thodTakingFunction(");
+		assert.equal(hover.displayText, "MyClass.methodTakingFunction((String) → int myFunc) → void");
+		assert.equal(hover.documentation, "This is my method taking a function.");
+		assert.deepStrictEqual(hover.range, rangeOf("|methodTakingFunction|("));
+	});
 });
