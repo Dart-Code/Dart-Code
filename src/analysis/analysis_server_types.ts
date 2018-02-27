@@ -725,6 +725,23 @@ export interface SearchFindTopLevelDeclarationsResponse {
 /**
  * Return top-level and class member declarations.
  */
+export interface SearchGetElementDeclarationsRequest {
+	/**
+	 * The regular expression used to match the names of declarations.
+	 * If this field is missing, return all declarations.
+	 */
+	pattern?: string;
+
+	/**
+	 * The maximum number of declarations to return.
+	 * If this field is missing, return all matching declarations.
+	 */
+	maxResults?: number;
+}
+
+/**
+ * Return top-level and class member declarations.
+ */
 export interface SearchGetElementDeclarationsResponse {
 	/**
 	 * The list of declarations.
@@ -2298,10 +2315,31 @@ export interface ElementDeclaration {
 	column: number;
 
 	/**
+	 * The offset of the first character of the declaration code in the file.
+	 */
+	codeOffset: number;
+
+	/**
+	 * The length of the declaration code in the file.
+	 */
+	codeLength: number;
+
+	/**
 	 * The name of the class enclosing this declaration. If the declaration
 	 * is not a class member, this field will be absent.
 	 */
 	className?: string;
+
+	/**
+	 * The parameter list for the element. If the element is not a method or
+	 * function this field will not be defined. If the element doesn't have
+	 * parameters (e.g. getter), this field will not be defined. If the
+	 * element has zero parameters, this field will have a value of "()".
+	 * 
+	 * The value should not be treated as exact presentation of parameters,
+	 * it is just approximation of parameters to give the user general idea.
+	 */
+	parameters?: string;
 }
 
 /**
