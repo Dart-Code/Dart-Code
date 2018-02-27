@@ -9,8 +9,7 @@ import * as as from "../analysis/analysis_server_types";
 
 export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	private analyzer: Analyzer;
-	private lastResults: as.SearchGetElementDeclarationsResponse;
-	private resultsLastFetched: Date;
+	private badChars: RegExp = new RegExp("[^0-9a-z\-]", "gi");
 	constructor(analyzer: Analyzer) {
 		this.analyzer = analyzer;
 	}
@@ -19,16 +18,11 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		if (query.length === 0)
 			return null;
 
-		const thirtySecondsInMS = 30000;
-		const resultsCacheIsGood = this.resultsLastFetched && (new Date().getTime() - this.resultsLastFetched.getTime()) < thirtySecondsInMS;
-		if (!resultsCacheIsGood) {
-			this.lastResults = await this.analyzer.searchGetElementDeclarations();
-			this.resultsLastFetched = new Date();
-		}
+		// Turn query into a case-insensitive fuzzy search.
+		const pattern = ".*" + query.replace(this.badChars, "").split("").map((c) => `[${c.toUpperCase()}${c.toLowerCase()}]`).join(".*") + ".*";
+		const results = await this.analyzer.searchGetElementDeclarations({ pattern });
 
-		const pattern = new RegExp(escapeRegExp(query).split("").join(".*"), "gi");
-
-		return this.lastResults.declarations.filter((d) => pattern.test(d.name)).map((d) => this.convertResult(d, this.lastResults.files[d.fileIndex]));
+		return results.declarations.map((d) => this.convertResult(d, results.files[d.fileIndex]));
 	}
 
 	private convertResult(result: as.ElementDeclaration, file: string): SymbolInformation {

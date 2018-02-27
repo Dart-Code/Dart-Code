@@ -192,10 +192,6 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => isFlutterProject(vs.workspace.getWorkspaceFolder(uri)))));
 
-	if (analyzer.capabilities.supportsGetDeclerations)
-		context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
-	else
-		context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(analyzer)));
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE[0].language, new DartLanguageConfiguration()));
 	const statusReporter = new AnalyzerStatusReporter(analyzer, sdks, analytics);
 
@@ -274,6 +270,12 @@ export function activate(context: vs.ExtensionContext) {
 
 		if (analyzer.capabilities.supportsClosingLabels && config.closingLabels) {
 			context.subscriptions.push(new ClosingLabelsDecorations(analyzer));
+		}
+
+		if (analyzer.capabilities.supportsGetDeclerations) {
+			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
+		} else {
+			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(analyzer)));
 		}
 
 		// Hook open/active file changes so we can set priority files with the analyzer.
