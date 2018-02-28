@@ -3,7 +3,6 @@
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolder, ProjectType, Sdks, isFlutterProject } from "../utils";
-import { FLUTTER_DOWNLOAD_URL } from "../extension";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { locateBestProjectRoot } from "../project";
@@ -166,13 +165,7 @@ export class SdkCommands {
 
 	private async createFlutterProject(context: vs.ExtensionContext): Promise<number> {
 		if (!this.sdks || !this.sdks.flutter) {
-			vs.window.showErrorMessage("Could not find a Flutter SDK to use. " +
-				"Please add it to your PATH, set FLUTTER_ROOT or configure the 'dart.flutterSdkPath' setting and try again.",
-				"Go to Flutter Downloads",
-			).then((selectedItem) => {
-				if (selectedItem)
-					util.openInBrowser(FLUTTER_DOWNLOAD_URL);
-			});
+			util.showFlutterActivationFailure();
 			return;
 		}
 

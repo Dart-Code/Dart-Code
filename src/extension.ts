@@ -44,9 +44,6 @@ import { LegacyDebugConfigProvider } from "./providers/legacy_debug_config_provi
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
 
-const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
-export const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
-
 const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
 
@@ -65,21 +62,9 @@ export function activate(context: vs.ExtensionContext) {
 	analytics = new Analytics(sdks);
 	if (sdks.dart == null) {
 		if (sdks.projectType === util.ProjectType.Flutter) {
-			vs.window.showErrorMessage("Could not find a Flutter SDK to use. " +
-				"Please add it to your PATH, set FLUTTER_ROOT or configure the 'dart.flutterSdkPath' setting and reload.",
-				"Go to Flutter Downloads",
-			).then((selectedItem) => {
-				if (selectedItem)
-					util.openInBrowser(FLUTTER_DOWNLOAD_URL);
-			});
+			util.showFlutterActivationFailure();
 		} else {
-			vs.window.showErrorMessage("Could not find a Dart SDK to use. " +
-				"Please add it to your PATH or configure the 'dart.sdkPath' setting and reload.",
-				"Go to Dart Downloads",
-			).then((selectedItem) => {
-				if (selectedItem)
-					util.openInBrowser(DART_DOWNLOAD_URL);
-			});
+			util.showDartActivationFailure();
 		}
 		analytics.logSdkDetectionFailure();
 		return; // Don't set anything else up; we can't work like this!
@@ -107,7 +92,7 @@ export function activate(context: vs.ExtensionContext) {
 						"Go to Dart Downloads",
 					).then((selectedItem) => {
 						if (selectedItem)
-							util.openInBrowser(DART_DOWNLOAD_URL);
+							util.openInBrowser(util.DART_DOWNLOAD_URL);
 					});
 			}, util.logError);
 		}
