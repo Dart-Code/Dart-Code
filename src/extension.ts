@@ -81,8 +81,8 @@ export function activate(context: vs.ExtensionContext) {
 			} else {
 				util.showDartActivationFailure();
 			}
+			analytics.logSdkDetectionFailure();
 		}, 250);
-		analytics.logSdkDetectionFailure();
 		return; // Don't set anything else up; we can't work like this!
 	}
 
