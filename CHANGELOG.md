@@ -1,3 +1,7 @@
+# v2.9.2
+
+- Running `Flutter: New Project` will no longer complain about missing SDKs if `dart` is not in your `PATH`
+
 # v2.9.1
 
 - A more appropriate error message is now shown when running `Flutter: New Project` when Flutter is not found
