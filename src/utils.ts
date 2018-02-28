@@ -88,7 +88,12 @@ export function findSdks(): Sdks {
 		fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart/tools/sdks", platformName, "dart-sdk"),
 		fuchsiaRoot && path.join(fuchsiaRoot, "dart/tools/sdks", platformName, "dart-sdk"),
 		flutterProject && flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk"),
-	].concat(paths);
+	].concat(paths)
+		// The above array only has the Flutter SDK	in the search path if we KNOW it's a flutter
+		// project, however this doesn't cover the activating-to-run-flutter.createProject so
+		// we need to always look in the flutter SDK, but only AFTER the users PATH so that
+		// we don't prioritise it over any real Dart versions.
+		.concat([flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk")]);
 
 	const dartSdkPath =
 		searchPaths(dartSdkSearchPaths, hasDartExecutable, dartExecutableName);
