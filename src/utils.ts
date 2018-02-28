@@ -304,7 +304,7 @@ export enum ProjectType {
 
 export function showFlutterActivationFailure() {
 	window.showErrorMessage("Could not find a Flutter SDK. " +
-		"Please ensure flutter is in your PATH (you may need to restart).",
+		"Please ensure flutter is installed and in your PATH (you may need to restart).",
 		"Download Flutter",
 	).then((selectedItem) => {
 		if (selectedItem)
@@ -313,7 +313,7 @@ export function showFlutterActivationFailure() {
 }
 export function showDartActivationFailure() {
 	window.showErrorMessage("Could not find a Dart SDK. " +
-		"Please ensure dart is in your PATH (you may need to restart).",
+		"Please ensure dart is installed and in your PATH (you may need to restart).",
 		"Download Dart",
 	).then((selectedItem) => {
 		if (selectedItem)
