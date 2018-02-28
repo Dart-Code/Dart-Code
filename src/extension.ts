@@ -61,11 +61,21 @@ export function activate(context: vs.ExtensionContext) {
 	const sdks = util.findSdks();
 	analytics = new Analytics(sdks);
 	if (sdks.dart == null) {
-		if (sdks.projectType === util.ProjectType.Flutter) {
-			util.showFlutterActivationFailure();
-		} else {
-			util.showDartActivationFailure();
-		}
+		// HACK: In order to provide a more useful message if the user was trying to fun flutter.newProject
+		// we need to hook the command and force the project type to Flutter to get the correct error message.
+		// This can be reverted and improved if Code adds support for providing activation context:
+		//     https://github.com/Microsoft/vscode/issues/44711
+		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => {
+			sdks.projectType = util.ProjectType.Flutter;
+		}));
+		// Wait a while before showing the error to allow the code above to have run.
+		setTimeout(() => {
+			if (sdks.projectType === util.ProjectType.Flutter) {
+				util.showFlutterActivationFailure();
+			} else {
+				util.showDartActivationFailure();
+			}
+		}, 250);
 		analytics.logSdkDetectionFailure();
 		return; // Don't set anything else up; we can't work like this!
 	}
