@@ -1,3 +1,7 @@
+# v2.9.1
+
+- A more appropriate error message is now shown when running `Flutter: New Project` when Flutter is not found
+
 # v2.9.0
 
 - A new command (`Flutter: New Project`) has been created to simplify the process of creating and opening a new Flutter project (unlike others, this command is in the palette even without a project open)
