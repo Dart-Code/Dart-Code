@@ -303,18 +303,18 @@ export enum ProjectType {
 }
 
 export function showFlutterActivationFailure() {
-	window.showErrorMessage("Could not find a Flutter SDK to use. " +
-		"Please add it to your PATH, set FLUTTER_ROOT or configure the 'dart.flutterSdkPath' setting and reload.",
-		"Go to Flutter Downloads",
+	window.showErrorMessage("Could not find a Flutter SDK. " +
+		"Please ensure flutter is in your PATH (you may need to restart).",
+		"Download Flutter",
 	).then((selectedItem) => {
 		if (selectedItem)
 			openInBrowser(FLUTTER_DOWNLOAD_URL);
 	});
 }
 export function showDartActivationFailure() {
-	window.showErrorMessage("Could not find a Dart SDK to use. " +
-		"Please add it to your PATH or configure the 'dart.sdkPath' setting and reload.",
-		"Go to Dart Downloads",
+	window.showErrorMessage("Could not find a Dart SDK. " +
+		"Please ensure dart is in your PATH (you may need to restart).",
+		"Download Dart",
 	).then((selectedItem) => {
 		if (selectedItem)
 			openInBrowser(DART_DOWNLOAD_URL);
