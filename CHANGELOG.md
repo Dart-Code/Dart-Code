@@ -4,7 +4,7 @@
 
 # v2.9.1
 
-- A more appropriate error message is now shown when running `Flutter: New Project` when Flutter is not found
+- A more appropriate error message is now shown when running `Flutter: New Project` when Flutter cannot be found
 
 # v2.9.0
 
