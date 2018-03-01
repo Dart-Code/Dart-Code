@@ -675,8 +675,7 @@ export class DartDebugSession extends DebugSession {
 				reason = "exception";
 				exceptionText = this.valueAsString(event.exception, false);
 				if (!exceptionText)
-					exceptionText = event.exception.class.name;
-				// TODO: Call toString()?
+					exceptionText = await this.callToString(event.isolate, event.exception);
 			}
 
 			thread.handlePaused(event.atAsyncSuspension);
