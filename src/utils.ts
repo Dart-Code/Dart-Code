@@ -307,6 +307,16 @@ export enum ProjectType {
 	Fuchsia,
 }
 
+export function showFluttersDartSdkActivationFailure() {
+	const reloadAction: string = "Reload Project";
+	window.showErrorMessage("Could not find Dart in your Flutter SDK. " +
+		"Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
+		reloadAction,
+	).then((selectedItem) => {
+		if (selectedItem === reloadAction)
+			commands.executeCommand("workbench.action.reloadWindow");
+	});
+}
 export function showFlutterActivationFailure() {
 	window.showErrorMessage("Could not find a Flutter SDK. " +
 		"Please ensure flutter is installed and in your PATH (you may need to restart).",

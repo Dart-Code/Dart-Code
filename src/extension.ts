@@ -71,7 +71,11 @@ export function activate(context: vs.ExtensionContext) {
 		// Wait a while before showing the error to allow the code above to have run.
 		setTimeout(() => {
 			if (sdks.projectType === util.ProjectType.Flutter) {
-				util.showFlutterActivationFailure();
+				if (sdks.flutter && !sdks.dart) {
+					util.showFluttersDartSdkActivationFailure();
+				} else {
+					util.showFlutterActivationFailure();
+				}
 			} else {
 				util.showDartActivationFailure();
 			}
