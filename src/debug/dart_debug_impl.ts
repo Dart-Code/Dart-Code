@@ -677,7 +677,6 @@ export class DartDebugSession extends DebugSession {
 				if (!exceptionText)
 					exceptionText = event.exception.class.name;
 				// TODO: Call toString()?
-				this.sendEvent(new OutputEvent(`breaking at exception: ${exceptionText}\n`));
 			}
 
 			thread.handlePaused(event.atAsyncSuspension);
