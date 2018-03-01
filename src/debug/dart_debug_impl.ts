@@ -673,7 +673,7 @@ export class DartDebugSession extends DebugSession {
 
 			if (kind === "PauseException") {
 				reason = "exception";
-				exceptionText = this.valueAsString(event.exception);
+				exceptionText = this.valueAsString(event.exception, false);
 				if (!exceptionText)
 					exceptionText = event.exception.class.name;
 				// TODO: Call toString()?
@@ -709,7 +709,7 @@ export class DartDebugSession extends DebugSession {
 		return uri;
 	}
 
-	private valueAsString(ref: VMInstanceRef | VMSentinel): string {
+	private valueAsString(ref: VMInstanceRef | VMSentinel, useClassNameAsFallback = true): string {
 		if (ref.type === "Sentinel")
 			return ref.valueAsString;
 
@@ -726,8 +726,10 @@ export class DartDebugSession extends DebugSession {
 			return `[${instanceRef.length}]`;
 		} else if (ref.kind === "Map") {
 			return `{${instanceRef.length}}`;
-		} else {
+		} else if (useClassNameAsFallback) {
 			return instanceRef.class.name;
+		} else {
+			return null;
 		}
 	}
 
