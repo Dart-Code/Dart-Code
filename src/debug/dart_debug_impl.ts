@@ -96,7 +96,7 @@ export class DartDebugSession extends DebugSession {
 			this.sendEvent(new OutputEvent(data.toString(), "stderr"));
 		});
 		process.on("error", (error) => {
-			this.sendEvent(new OutputEvent(`error: ${error}\n`));
+			this.sendEvent(new OutputEvent(`Error: ${error}\n`));
 		});
 		process.on("exit", (code, signal) => {
 			this.processExited = true;
@@ -640,14 +640,19 @@ export class DartDebugSession extends DebugSession {
 
 	// PauseStart, PauseExit, PauseBreakpoint, PauseInterrupted, PauseException, Resume,
 	// BreakpointAdded, BreakpointResolved, BreakpointRemoved, Inspect, None
-	public handleDebugEvent(event: VMEvent) {
+	public async handleDebugEvent(event: VMEvent) {
 		const kind = event.kind;
 
 		// For PausePostRequest we need to re-send all breakpoints; this happens after a flutter restart
 		if (kind === "PausePostRequest") {
-			this.threadManager.resetBreakpoints()
-				.then((_) => this.observatory.resume(event.isolate.id))
-				.catch((e) => { if (e.code !== 106) throw e; }); // Ignore failed-to-resume errors https://github.com/flutter/flutter/issues/10934
+			await this.threadManager.resetBreakpoints();
+			try {
+				await this.observatory.resume(event.isolate.id);
+			} catch (e) {
+				// Ignore failed-to-resume errors https://github.com/flutter/flutter/issues/10934
+				if (e.code !== 106)
+					throw e;
+			}
 		} else if (kind === "PauseStart") {
 			// "PauseStart" should auto-resume after breakpoints are set.
 			const thread = this.threadManager.getThreadInfoFromRef(event.isolate);
@@ -676,7 +681,6 @@ export class DartDebugSession extends DebugSession {
 			}
 
 			thread.handlePaused(event.atAsyncSuspension);
-
 			this.sendEvent(new StoppedEvent(reason, thread.number, exceptionText));
 		}
 	}
