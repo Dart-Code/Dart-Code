@@ -7,6 +7,17 @@ const ext = vs.extensions.getExtension("Dart-Code.dart-code");
 const sampleFilePath = (isWin ? "X:\\" : "/tmp/") + "sample.dart";
 const sampleFileUri = vs.Uri.parse(`untitled:${sampleFilePath}`);
 
+describe("Test environment", () => {
+	it("has open the correct folder", () => {
+		const wfs = vs.workspace.workspaceFolders;
+		assert.equal(wfs.length, 1);
+		assert.ok(
+			wfs[0].uri.path.endsWith("hello_world"),
+			wfs[0].uri.path + " doesn't end with hello_world",
+		);
+	});
+});
+
 /*
 TODO: In Code 1.14 it seems openTextDocument is returning before the extension is activate?
 describe("Extension", () => {
