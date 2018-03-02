@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import * as util from "../src/utils";
+import * as util from "../../src/utils";
 
 describe("util.versionIsAtLeast", () => {
 	it("should not consider build numbers when comparing versions", () => {

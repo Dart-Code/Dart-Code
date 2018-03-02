@@ -52,7 +52,7 @@
 			"args": [
 				"${workspaceRoot}/test/test_projects/hello_world",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/test"
+				"--extensionTestsPath=${workspaceRoot}/out/test/general"
 			],
 			"stopOnEntry": false,
 			"sourceMaps": true,

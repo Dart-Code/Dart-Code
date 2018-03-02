@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import * as extension from "../src/extension";
+import * as extension from "../../src/extension";
 
 const isWin = /^win/.test(process.platform);
 const ext = vs.extensions.getExtension("Dart-Code.dart-code");
