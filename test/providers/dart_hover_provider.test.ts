@@ -118,6 +118,15 @@ describe("dart_hover_provider", () => {
 		assert.deepStrictEqual(hover.range, rangeOf("|methodTakingString|"));
 	});
 
+	it("returns expected information for a method argument", async () => {
+		const hover = await getHoverAt("methodTakingString(String ^a");
+		assert.equal(hover.displayText, "String a");
+		// TODO: This feels like a bug?
+		// https://github.com/dart-lang/sdk/issues/32390
+		assert.equal(hover.documentation, "This is my method taking a string.");
+		assert.deepStrictEqual(hover.range, rangeOf("methodTakingString(String |a|)"));
+	});
+
 	it("returns expected information for a method taking a function", async () => {
 		const hover = await getHoverAt("me^thodTakingFunction(");
 		assert.equal(hover.displayText, "MyClass.methodTakingFunction((String) → int myFunc) → void");
