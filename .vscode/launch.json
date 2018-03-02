@@ -45,7 +45,7 @@
 			]
 		},
 		{
-			"name": "Launch Tests",
+			"name": "Launch Tests (General)",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
@@ -53,6 +53,23 @@
 				"${workspaceRoot}/test/test_projects/hello_world",
 				"--extensionDevelopmentPath=${workspaceRoot}",
 				"--extensionTestsPath=${workspaceRoot}/out/test/general"
+			],
+			"stopOnEntry": false,
+			"sourceMaps": true,
+			"outFiles": [
+				"${workspaceRoot}/out/test/**/*.js"
+			],
+			"preLaunchTask": "npm: watch"
+		},
+		{
+			"name": "Launch Tests (Flutter)",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"${workspaceRoot}/test/test_projects/flutter_hello_world",
+				"--extensionDevelopmentPath=${workspaceRoot}",
+				"--extensionTestsPath=${workspaceRoot}/out/test/flutter"
 			],
 			"stopOnEntry": false,
 			"sourceMaps": true,
