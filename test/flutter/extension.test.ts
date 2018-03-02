@@ -1,6 +1,9 @@
 import * as assert from "assert";
 import * as vs from "vscode";
 
+const isWin = /^win/.test(process.platform);
+const ext = vs.extensions.getExtension("Dart-Code.dart-code");
+
 describe("Test environment", () => {
 	it("has opened the correct folder", () => {
 		const wfs = vs.workspace.workspaceFolders;
@@ -9,5 +12,12 @@ describe("Test environment", () => {
 			wfs[0].uri.path.endsWith("flutter_hello_world"),
 			wfs[0].uri.path + " doesn't end with flutter_hello_world",
 		);
+	});
+});
+
+describe("Extension", () => {
+	it("activated", async () => {
+		await ext.activate();
+		assert.equal(ext.isActive, true);
 	});
 });
