@@ -17,7 +17,7 @@ export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	editor = await vs.window.showTextDocument(doc);
 }
 
-export async function setTestContent(content: string): Promise<boolean> {
+export function setTestContent(content: string): Thenable<boolean> {
 	const all = new vs.Range(
 		doc.positionAt(0),
 		doc.positionAt(doc.getText().length),

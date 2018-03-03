@@ -16,9 +16,8 @@ describe("dart_formatting_edit_provider", () => {
 	}
 
 	it("formats the document", async () => {
-		setTestContent("   main ( ) {\n\n}");
+		await setTestContent("   main ( ) {\n\n}");
 		await formatDocument();
-		// insertFinalNewline is on for test project
 		assert.equal(doc.getText(), "main() {}\n");
 	});
 });
