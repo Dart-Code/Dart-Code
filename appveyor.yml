@@ -1,28 +1,17 @@
 install:
-- ps: >-
-    Install-Product node ''
-
-    Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
-
-    7z.exe x dart.zip | out-null
-
-    $env:PATH = "$pwd\dart-sdk\bin;" + $env:PATH
-
-    $env:ELECTRON_NO_ATTACH_CONSOLE = 1
-- cmd: >-
-    dart --version
-
-    node --version
-
-    npm --version
+  - ps: Install-Product node ''
+  - ps: Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
+  - ps: 7z.exe x dart.zip | out-null
+  - ps: $env:PATH = "$pwd\dart-sdk\bin;" + $env:PATH
+  - ps: $env:ELECTRON_NO_ATTACH_CONSOLE = 1
+  - dart --version
+  - node --version
+  - npm --version
 
 build_script:
-- cmd: >-
-    npm install --depth 0 --silent
-
-    npm run vscode:prepublish --silent
-
-    npm run lint --silent
+  - npm install --depth 0 --silent
+  - npm run vscode:prepublish --silent
+  - npm run lint --silent
 
 test_script:
-- cmd: npm test
+- npm test
