@@ -7,7 +7,8 @@ const env = Object.create(process.env);
 const args = ["node_modules/vscode/bin/test"];
 let exitCode = 0;
 
-function runTests(testFolder: string, workspaceFolder: string) {
+function runTests(testFolder: string, workspaceFolder: string, codeVersion: string = "*") {
+	env.CODE_VERSION = codeVersion;
 	env.CODE_TESTS_WORKSPACE = path.join(process.cwd(), "test", "test_projects", workspaceFolder);
 	env.CODE_TESTS_PATH = path.join(process.cwd(), "out", "test", testFolder);
 	const res = childProcess.spawnSync("node", args, { env, stdio: "pipe", cwd: process.cwd() });
@@ -22,4 +23,8 @@ function runTests(testFolder: string, workspaceFolder: string) {
 
 runTests("general", "hello_world");
 runTests("flutter", "flutter_hello_world");
+// Can't run insiders until this is fixed:
+// https://github.com/Microsoft/vscode-extension-vscode/issues/94
+// runTests("general", "hello_world", "insiders");
+// runTests("flutter", "flutter_hello_world", "insiders");
 process.exit(exitCode);
