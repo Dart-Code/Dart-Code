@@ -43,6 +43,14 @@ This will compile Dart Code and launch the Code `"Extension Development Host"`. 
 
 You'll now have two versions of Code open - the standard instance that has the Dart Code source code open and the extension development host which is running the extension. In the standard instance you should be able to add breakpoints in the Dart Code source code and hit them by using Dart Code in the extension development host, with the exception of the debug adapters (see below). If you make code changes you'll want to click the `Restart` button in the standard instance (or press `Ctrl+Shift+F5`) in order to reload changes.
 
+## Automated Tests
+
+Automated tests live in the `test` folder and have launch configurations you can select form the debug menu to run them. You can also use `npm test` to run the whole suite in one go (without the debugging). Running the test suite may spawn Code windows multiple times during execution as multiple workspaces are tested in stable and insiders versions of Code.
+
+Each test suite consists of a folder of tests (for ex. `general` and `flutter`) and a workspace folder that is loaded at the start of the test runs (at the time of writing there's a `hello_world` and a `flutter_hello_world` app). Config for these lives in two places - the `test_all.ts` script and also the `launch.json` file (one is used for command line running and the other for launching in a way that the debugger can be attached).
+
+All tests will be run on all platforms by Travis and AppVeyor when you submit a PR and the status shown alongside the PR.
+
 ## Debugging the Debug Adapters
 
 In order to debug the debug adapters you need to run them in a `"server mode"`. This mode starts the debug adapters at extension activation time and keeps them open for the whole session. You'll also need to ensure that when you start the debug session from within Dart Code you have configured it to connect to this debug session.
