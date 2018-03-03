@@ -3,8 +3,11 @@ install:
   - ps: Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
   - ps: 7z.exe x dart.zip | out-null
   - ps: $env:PATH = "$pwd\dart-sdk\bin;" + $env:PATH
+  - git clone -b beta https://github.com/flutter/flutter.git
+  - ps: $env:PATH = "$pwd\flutter\bin;" + $env:PATH
   - ps: $env:ELECTRON_NO_ATTACH_CONSOLE = 1
   - dart --version
+  - flutter --version
   - node --version
   - npm --version
 
