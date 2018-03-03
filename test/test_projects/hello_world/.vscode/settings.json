@@ -1,3 +1,4 @@
 {
-	"dart.allowAnalytics": false
+	"dart.allowAnalytics": false,
+	"files.insertFinalNewline": true
 }
