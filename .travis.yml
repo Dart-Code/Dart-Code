@@ -20,7 +20,11 @@ before_install:
       sleep 3;
     fi
   - nvm install 6
+  - git clone -b beta https://github.com/flutter/flutter.git
+  - export PATH=`pwd`/flutter/bin:$PATH
+  - flutter config --no-analytics
   - dart --version
+  - flutter --version
   - node --version
   - npm --version
 

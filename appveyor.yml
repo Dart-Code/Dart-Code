@@ -5,6 +5,7 @@ install:
   - ps: $env:PATH = "$pwd\dart-sdk\bin;" + $env:PATH
   - git clone -b beta https://github.com/flutter/flutter.git
   - ps: $env:PATH = "$pwd\flutter\bin;" + $env:PATH
+  - flutter config --no-analytics
   - ps: $env:ELECTRON_NO_ATTACH_CONSOLE = 1
   - dart --version
   - flutter --version
