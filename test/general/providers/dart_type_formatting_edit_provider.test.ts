@@ -20,6 +20,6 @@ describe("dart_type_formatting_edit_provider", () => {
 		// Currently we just format the whole doc on format as out formatter doesn't support ranges.
 		await setTestContent("   main ( ) { }");
 		await formatAtLocation("{ ^", "}");
-		assert.equal(doc.getText(), "main() {}\n");
+		assert.equal(doc.getText(), `main() {}${doc.eol}`);
 	});
 });

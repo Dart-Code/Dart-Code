@@ -16,8 +16,8 @@ describe("dart_formatting_edit_provider", () => {
 	}
 
 	it("formats the document", async () => {
-		await setTestContent("   main ( ) {\n\n}");
+		await setTestContent("   main ( ) {     }");
 		await formatDocument();
-		assert.equal(doc.getText(), "main() {}\n");
+		assert.equal(doc.getText(), `main() {}${doc.eol}`);
 	});
 });
