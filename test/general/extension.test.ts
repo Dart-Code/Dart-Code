@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
+import { Sdks } from "../../src/utils";
 
 const isWin = /^win/.test(process.platform);
 const ext = vs.extensions.getExtension("Dart-Code.dart-code");
@@ -21,5 +22,10 @@ describe("Extension", () => {
 	it("activated", async () => {
 		await ext.activate();
 		assert.equal(ext.isActive, true);
+	});
+	it("found the Dart SDK", async () => {
+		await ext.activate();
+		const sdks: Sdks = ext.exports.sdks;
+		assert.ok(sdks.dart);
 	});
 });

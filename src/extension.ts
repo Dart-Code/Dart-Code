@@ -348,6 +348,8 @@ export function activate(context: vs.ExtensionContext) {
 	// Log how long all this startup took.
 	const extensionEndTime = new Date();
 	analytics.logExtensionStartup(extensionEndTime.getTime() - extensionStartTime.getTime());
+
+	return { sdks };
 }
 
 function recalculateAnalysisRoots() {
