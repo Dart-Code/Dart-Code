@@ -17,5 +17,5 @@ function runTests(testFolder, workspaceFolder) {
 }
 
 runTests('general', 'hello_world');
-runTests('flutter', 'flutter_hello_world');
+//runTests('flutter', 'flutter_hello_world');
 process.exit(exitCode);
