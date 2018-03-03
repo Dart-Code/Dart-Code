@@ -29,4 +29,11 @@ describe("Extension", () => {
 		assert.ok(sdks.dart);
 		assert.ok(sdks.flutter);
 	});
+	it("did used Flutter's version of the Dart SDK", async () => {
+		await ext.activate();
+		assert.ok(ext.exports);
+		const sdks: Sdks = ext.exports.sdks;
+		assert.ok(sdks);
+		assert.notEqual(sdks.dart.indexOf("flutter"), -1);
+	});
 });
