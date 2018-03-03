@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as fs from "fs";
 import * as vs from "vscode";
-import { activate, doc, setTestContent, editor } from "../../helpers";
+import { activate, doc, setTestContent, editor, eol } from "../../helpers";
 
 describe("dart_formatting_edit_provider", () => {
 
@@ -18,6 +18,6 @@ describe("dart_formatting_edit_provider", () => {
 	it("formats the document", async () => {
 		await setTestContent("   main ( ) {     }");
 		await formatDocument();
-		assert.equal(doc.getText(), `main() {}${doc.eol}`);
+		assert.equal(doc.getText(), `main() {}${eol}`);
 	});
 });

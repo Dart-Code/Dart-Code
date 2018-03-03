@@ -2,6 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as fs from "fs";
 import * as vs from "vscode";
+import { EOL } from "os";
 
 const ext = vs.extensions.getExtension("Dart-Code.dart-code");
 export const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/hello_world"));
@@ -10,11 +11,13 @@ export const everythingFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "li
 
 export let doc: vs.TextDocument;
 export let editor: vs.TextEditor;
+export let eol: string;
 
 export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	await ext.activate();
 	doc = await vs.workspace.openTextDocument(file);
 	editor = await vs.window.showTextDocument(doc);
+	eol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
 }
 
 export function setTestContent(content: string): Thenable<boolean> {
