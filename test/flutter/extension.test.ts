@@ -23,7 +23,9 @@ describe("Extension", () => {
 	});
 	it("found the Dart and Flutter SDK", async () => {
 		await ext.activate();
+		assert.ok(ext.exports);
 		const sdks: Sdks = ext.exports.sdks;
+		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.ok(sdks.flutter);
 	});
