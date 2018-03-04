@@ -7,7 +7,9 @@ install:
   - ps: 7z.exe x dart.zip | out-null
   - ps: 7z.exe x -odev dart-dev.zip | out-null
   - git clone -b beta https://github.com/flutter/flutter.git
-  - git clone https://github.com/flutter/flutter.git dev\flutter
+  - pushd flutter
+  - git worktree add ..\dev\flutter origin\master
+  - popd
   - ps: $env:PATH = "$pwd\dart-sdk\bin;$pwd\flutter\bin;" + $env:PATH
   - ps: $env:PATH_UNSTABLE = "$pwd\dev\dart-sdk\bin;$pwd\dev\flutter\bin"
   - flutter config --no-analytics
