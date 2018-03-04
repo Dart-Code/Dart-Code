@@ -20,7 +20,7 @@ function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string,
 	if (res.output)
 		res.output
 			.filter((l) => l)
-			.forEach((l) => console.log(l.toString().trim()));
+			.forEach((l) => console.log(l.toString().trim().replace(/\n\s*\n/g, "\n")));
 	exitCode = exitCode || res.status;
 }
 
