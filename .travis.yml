@@ -32,7 +32,9 @@ before_install:
   - git worktree add ../dev/flutter origin/master
   - cd ..
   - export PATH=`pwd`/dart-sdk/bin:`pwd`/flutter/bin:$PATH
+  - export PATH_UNSTABLE=`pwd`/dev/dart-sdk/bin:`pwd`/dev/flutter/bin:$PATH
   - flutter config --no-analytics
+  - export ELECTRON_NO_ATTACH_CONSOLE=1
   - dart --version
   - flutter --version
   - dev/dart-sdk/bin/dart --version
