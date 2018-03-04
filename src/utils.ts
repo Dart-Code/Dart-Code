@@ -56,7 +56,9 @@ export function searchPaths(searchPaths: string[], filter: (s: string) => boolea
 export function findSdks(): Sdks {
 	const folders = getDartWorkspaceFolders()
 		.map((w) => w.uri.fsPath);
-	const paths = (process.env.PATH as string).split(path.delimiter);
+	const pathOverride = (process.env.DART_PATH_OVERRIDE as string) || "";
+	const normalPath = (process.env.PATH as string) || "";
+	const paths = (pathOverride + path.delimiter + normalPath).split(path.delimiter);
 	const platformName = isWin ? "win" : process.platform === "darwin" ? "mac" : "linux";
 
 	let fuchsiaRoot: string;
