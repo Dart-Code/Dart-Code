@@ -19,9 +19,9 @@ before_install:
       sleep 3;
     fi
   - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-      export DART_OS=macos
+      export DART_OS=macos;
     else
-      export DART_OS=linux
+      export DART_OS=linux;
     fi
   - curl https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
   - curl https://storage.googleapis.com/dart-archive/channels/dev/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk-dev.zip
