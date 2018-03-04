@@ -19,11 +19,12 @@ describe("Test environment", () => {
 });
 
 describe("Extension", () => {
-	before(ext.activate);
 	it("activated", async () => {
+		await ext.activate();
 		assert.equal(ext.isActive, true);
 	});
 	it("found the Dart SDK", async () => {
+		await ext.activate();
 		assert.ok(ext.exports);
 		const sdks: Sdks = ext.exports.sdks;
 		assert.ok(sdks);
@@ -31,6 +32,7 @@ describe("Extension", () => {
 		console.log(JSON.stringify(sdks, undefined, 4).trim().slice(1, -1));
 	});
 	it("did not try to use Flutter's version of the Dart SDK", async () => {
+		await ext.activate();
 		assert.ok(ext.exports);
 		const sdks: Sdks = ext.exports.sdks;
 		assert.ok(sdks);
