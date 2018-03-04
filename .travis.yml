@@ -31,7 +31,7 @@ before_install:
   - pushd flutter
   - git worktree add ..\dev\flutter origin/master
   - popd
-  - export PATH=`pwd`/flutter/bin:$PATH
+  - export PATH=`pwd`/dart-sdk/bin:`pwd`/flutter/bin:$PATH
   - flutter config --no-analytics
   - dart --version
   - flutter --version
