@@ -29,7 +29,7 @@ before_install:
   - unzip dart-sdk-dev.zip -d dev > /dev/null
   - git clone -b beta https://github.com/flutter/flutter.git
   - pushd flutter
-  - git worktree add ..\dev\flutter origin/master
+  - git worktree add ../dev/flutter origin/master
   - popd
   - export PATH=`pwd`/dart-sdk/bin:`pwd`/flutter/bin:$PATH
   - flutter config --no-analytics
