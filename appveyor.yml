@@ -14,6 +14,8 @@ install:
   - flutter --version
   - node --version
   - npm --version
+  - ps: $env:package_version = (Get-Content -Raw -Path package.json | ConvertFrom-Json).version
+  - ps: Update-AppveyorBuild -Version "$env:package_version.$env:APPVEYOR_BUILD_NUMBER"
 
 build_script:
   - npm install --depth 0 --silent
