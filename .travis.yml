@@ -9,10 +9,6 @@ addons:
     packages:
       - libsecret-1-dev
 
-language: dart
-dart:
-  - stable
-
 before_install:
   - if [ $TRAVIS_OS_NAME == "linux" ]; then
       export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
@@ -20,11 +16,25 @@ before_install:
       sleep 3;
     fi
   - nvm install 6
+  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+      export DART_OS=macos
+    else
+      export DART_OS=linux
+    fi
+  - curl https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
+  - curl https://storage.googleapis.com/dart-archive/channels/dev/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk-dev.zip
+  - unzip dart-sdk.zip > /dev/null
+  - unzip dart-sdk-dev.zip -d dev > /dev/null
   - git clone -b beta https://github.com/flutter/flutter.git
+  - pushd flutter
+  - git worktree add ..\dev\flutter origin/master
+  - popd
   - export PATH=`pwd`/flutter/bin:$PATH
   - flutter config --no-analytics
   - dart --version
   - flutter --version
+  - dev/dart-sdk/bin/dart --version
+  - dev/flutter/bin/flutter --version
   - node --version
   - npm --version
 
