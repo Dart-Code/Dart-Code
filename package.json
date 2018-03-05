@@ -35,7 +35,8 @@
 		"onView:dartPackages",
 		"workspaceContains:**/pubspec.yaml",
 		"workspaceContains:**/*.dart",
-		"onCommand:flutter.createProject"
+		"onCommand:flutter.createProject",
+		"onCommand:flutter.doctor"
 	],
 	"main": "./out/src/extension",
 	"contributes": {
@@ -247,8 +248,7 @@
 					"when": "dart-code:flutterProjectLoaded"
 				},
 				{
-					"command": "flutter.doctor",
-					"when": "dart-code:flutterProjectLoaded"
+					"command": "flutter.doctor"
 				},
 				{
 					"command": "flutter.toggleDebugPainting",

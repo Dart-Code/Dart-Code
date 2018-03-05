@@ -329,16 +329,16 @@ export function showFluttersDartSdkActivationFailure() {
 			commands.executeCommand("workbench.action.reloadWindow");
 	});
 }
-export function showFlutterActivationFailure(isCreatingProject: boolean = false) {
+export function showFlutterActivationFailure(runningFlutterCommand: string = null) {
 	showSdkActivationFailure(
 		"Flutter",
 		(paths) => searchPaths(paths, hasFlutterExecutable, flutterExecutableName),
 		FLUTTER_DOWNLOAD_URL,
 		(p) => config.setGlobalFlutterSdkPath(p),
-		isCreatingProject
+		runningFlutterCommand
 			? async () => {
 				await window.showInformationMessage(
-					"Your SDK path has been saved. Please reload and then re-execute the 'Flutter: New Project' command.",
+					`Your SDK path has been saved. Please reload and then re-execute the "${runningFlutterCommand}" command.`,
 					{
 						isCloseAffordance: true,
 						title: "Reload Window",

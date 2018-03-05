@@ -67,10 +67,14 @@ export function activate(context: vs.ExtensionContext) {
 		// we need to hook the command and force the project type to Flutter to get the correct error message.
 		// This can be reverted and improved if Code adds support for providing activation context:
 		//     https://github.com/Microsoft/vscode/issues/44711
-		let isCreatingProject = false;
+		let runningFlutterCommand: string;
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => {
 			sdks.projectType = util.ProjectType.Flutter;
-			isCreatingProject = true;
+			runningFlutterCommand = "Flutter: New Project";
+		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", (_) => {
+			sdks.projectType = util.ProjectType.Flutter;
+			runningFlutterCommand = "Run Flutter Doctor";
 		}));
 		// Wait a while before showing the error to allow the code above to have run.
 		setTimeout(() => {
@@ -78,7 +82,7 @@ export function activate(context: vs.ExtensionContext) {
 				if (sdks.flutter && !sdks.dart) {
 					util.showFluttersDartSdkActivationFailure();
 				} else {
-					util.showFlutterActivationFailure(isCreatingProject);
+					util.showFlutterActivationFailure(runningFlutterCommand);
 				}
 			} else {
 				util.showDartActivationFailure();
