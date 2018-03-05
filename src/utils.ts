@@ -117,6 +117,11 @@ function extractFlutterSdkPathFromPackagesFile(file: string): string {
 	if (!path)
 		return null;
 
+	// Set windows slashes to / while manipulating.
+	if (isWin) {
+		path = path.replace(/\\/g, "/");
+	}
+
 	// Trim suffix we don't need.
 	const pathSuffix = "/packages/flutter/lib/";
 	if (path.endsWith(pathSuffix)) {
@@ -132,7 +137,7 @@ function extractFlutterSdkPathFromPackagesFile(file: string): string {
 		path = path + "bin/";
 	}
 
-	// Windows fixup.
+	// Set windows paths back.
 	if (isWin) {
 		path = path.replace(/\//g, "\\");
 		if (path[0] === "\\")
