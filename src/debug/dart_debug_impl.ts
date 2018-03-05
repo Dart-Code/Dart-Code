@@ -509,7 +509,7 @@ export class DartDebugSession extends DebugSession {
 				return null;
 			} else {
 				const evalResult: VMInstanceRef = result.result as VMInstanceRef;
-				return this.valueAsString(evalResult);
+				return this.valueAsString(evalResult, undefined, true);
 			}
 		}).catch((e) => null);
 	}
@@ -722,7 +722,7 @@ export class DartDebugSession extends DebugSession {
 		return uri;
 	}
 
-	private valueAsString(ref: VMInstanceRef | VMSentinel, useClassNameAsFallback = true): string {
+	private valueAsString(ref: VMInstanceRef | VMSentinel, useClassNameAsFallback = true, suppressQuotesAroundStrings: boolean = false): string {
 		if (ref.type === "Sentinel")
 			return ref.valueAsString;
 
@@ -732,8 +732,8 @@ export class DartDebugSession extends DebugSession {
 			let str: string = instanceRef.valueAsString;
 			if (instanceRef.valueAsStringIsTruncated)
 				str += "…";
-			if (instanceRef.kind === "String")
-				str = `'${str}'`;
+			if (instanceRef.kind === "String" && !suppressQuotesAroundStrings)
+				str = `"${str}"`;
 			return str;
 		} else if (ref.kind === "List") {
 			return `[${instanceRef.length}]`;
