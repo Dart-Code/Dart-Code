@@ -325,20 +325,49 @@ export function showFluttersDartSdkActivationFailure() {
 	});
 }
 export function showFlutterActivationFailure() {
-	window.showErrorMessage("Could not find a Flutter SDK. " +
-		"Please ensure flutter is installed and in your PATH (you may need to restart).",
-		"Download Flutter",
-	).then((selectedItem) => {
-		if (selectedItem)
-			openInBrowser(FLUTTER_DOWNLOAD_URL);
-	});
+	showSdkActivationFailure(
+		"Flutter",
+		(paths) => searchPaths(paths, hasFlutterExecutable, flutterExecutableName),
+		FLUTTER_DOWNLOAD_URL,
+		(p) => config.setGlobalFlutterSdkPath(p),
+	);
 }
 export function showDartActivationFailure() {
-	window.showErrorMessage("Could not find a Dart SDK. " +
-		"Please ensure dart is installed and in your PATH (you may need to restart).",
-		"Download Dart",
-	).then((selectedItem) => {
-		if (selectedItem)
-			openInBrowser(DART_DOWNLOAD_URL);
-	});
+	showSdkActivationFailure(
+		"Dart",
+		(paths) => searchPaths(paths, hasDartExecutable, dartExecutableName),
+		DART_DOWNLOAD_URL,
+		(p) => config.setGlobalDartSdkPath(p),
+	);
+}
+
+export async function showSdkActivationFailure(sdkType: string, search: (path: string[]) => string, downloadUrl: string, saveSdkPath: (path: string) => void) {
+	const locateAction = "Locate SDK";
+	const downloadAction = "Download SDK";
+	let displayMessage = `Could not find a ${sdkType} SDK. ` +
+		`Please ensure ${sdkType.toLowerCase()} is installed and in your PATH (you may need to restart).`;
+	while (true) {
+		const selectedItem = await window.showErrorMessage(displayMessage,
+			locateAction,
+			downloadAction,
+		);
+		if (selectedItem === locateAction) {
+			const selectedFolders = await window.showOpenDialog({ canSelectFolders: true, openLabel: `Set ${sdkType} SDK folder` });
+			if (selectedFolders && selectedFolders.length > 0) {
+				const matchingSdkFolder = search(selectedFolders.map((f) => f.fsPath));
+				if (matchingSdkFolder) {
+					saveSdkPath(matchingSdkFolder);
+					commands.executeCommand("workbench.action.reloadWindow");
+					break;
+				} else {
+					displayMessage = `That folder does not appear to be a ${sdkType} SDK.`;
+				}
+			}
+		} else if (selectedItem === downloadAction) {
+			openInBrowser(downloadUrl);
+			break;
+		} else {
+			break;
+		}
+	}
 }
