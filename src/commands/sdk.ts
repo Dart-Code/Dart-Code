@@ -56,7 +56,7 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", (selection) => {
 			return this.runFlutter("doctor", selection);
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject(context)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
 		// Internal command that's fired in user_prompts to actually do the creation.
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.create", (projectPath: string) => {
 			const projectName = path.basename(projectPath);
@@ -163,7 +163,7 @@ export class SdkCommands {
 		});
 	}
 
-	private async createFlutterProject(context: vs.ExtensionContext): Promise<number> {
+	private async createFlutterProject(): Promise<number> {
 		if (!this.sdks || !this.sdks.flutter) {
 			util.showFlutterActivationFailure();
 			return;
@@ -189,10 +189,6 @@ export class SdkCommands {
 		fs.mkdirSync(projectFolderUri.fsPath);
 		// Create a temp dart file to force extension to load when we open this folder.
 		fs.writeFileSync(path.join(projectFolderUri.fsPath, util.FLUTTER_CREATE_PROJECT_TRIGGER_FILE), "");
-
-		// Set the URI in state - this is what we use as a trigger to kick off `flutter create` (as the
-		// extension is unloaded once we call openFolder).
-		context.globalState.update("newFlutterProject", projectFolderUri.fsPath);
 
 		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
 		const openInNewWindow = hasFoldersOpen;
