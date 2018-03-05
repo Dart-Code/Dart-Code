@@ -1,3 +1,16 @@
+# v2.10.0 (BETA)
+
+- When the Dart or Flutter SDK could not be located, a "Locate SDK" button is shown to allow browsing to the SDK manually
+- The `Run Flutter Doctor` command is now available outside of having a Flutter project open
+- Many Flutter debug toggles (debug painting, performance overlay, slow mode banner, slow animations) will now persist across a `Full Restart`
+- Exception tooltips will now show the `toString()` of the exception rather than just the type name
+- Searching for symbols across the workspace now uses a much faster API (this requires a *very* recent SDK build and will fall back to the slower method for older SDKs)
+- The Flutter SDK is now correctly detected from the `.packages` file of a project on Windows
+- If your Flutter SDK does not yet have a cached Dart SDK a more appropriate message will now be shown
+- Code completion tabstops may now provide more specific completion suggestions for some actions
+- A spinner will now be shown in the status bar during Flutter build progress messages
+- Previously hidden settings for debug log files are now visible to aid completion/validation when setting them
+
 # v2.9.2
 
 - Running `Flutter: New Project` will no longer complain about missing SDKs if `dart` is not in your `PATH`
