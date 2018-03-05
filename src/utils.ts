@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as https from "https";
 import * as as from "./analysis/analysis_server_types";
-import { env, workspace, window, Position, Range, TextDocument, commands, Uri, WorkspaceFolder } from "vscode";
+import { env, workspace, window, Position, Range, TextDocument, commands, Uri, WorkspaceFolder, MessageItem } from "vscode";
 import { config } from "./config";
 import { PackageMap } from "./debug/utils";
 import * as semver from "semver";
@@ -324,12 +324,23 @@ export function showFluttersDartSdkActivationFailure() {
 			commands.executeCommand("workbench.action.reloadWindow");
 	});
 }
-export function showFlutterActivationFailure() {
+export function showFlutterActivationFailure(isCreatingProject: boolean = false) {
 	showSdkActivationFailure(
 		"Flutter",
 		(paths) => searchPaths(paths, hasFlutterExecutable, flutterExecutableName),
 		FLUTTER_DOWNLOAD_URL,
 		(p) => config.setGlobalFlutterSdkPath(p),
+		isCreatingProject
+			? async () => {
+				await window.showInformationMessage(
+					"Your SDK path has been saved. Please reload and then re-execute the 'Flutter: New Project' command.",
+					{
+						isCloseAffordance: true,
+						title: "Reload Window",
+					},
+				);
+			}
+			: null,
 	);
 }
 export function showDartActivationFailure() {
@@ -341,7 +352,7 @@ export function showDartActivationFailure() {
 	);
 }
 
-export async function showSdkActivationFailure(sdkType: string, search: (path: string[]) => string, downloadUrl: string, saveSdkPath: (path: string) => void) {
+export async function showSdkActivationFailure(sdkType: string, search: (path: string[]) => string, downloadUrl: string, saveSdkPath: (path: string) => void, beforeReload: () => Promise<void> = null) {
 	const locateAction = "Locate SDK";
 	const downloadAction = "Download SDK";
 	let displayMessage = `Could not find a ${sdkType} SDK. ` +
@@ -357,6 +368,8 @@ export async function showSdkActivationFailure(sdkType: string, search: (path: s
 				const matchingSdkFolder = search(selectedFolders.map((f) => f.fsPath));
 				if (matchingSdkFolder) {
 					saveSdkPath(matchingSdkFolder);
+					if (beforeReload)
+						await beforeReload();
 					commands.executeCommand("workbench.action.reloadWindow");
 					break;
 				} else {
