@@ -54,7 +54,10 @@ export class SdkCommands {
 			return this.runFlutter("packages upgrade", selection);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", (selection) => {
-			return this.runFlutter("doctor", selection);
+			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
+			if (!fs.existsSync(tempDir))
+				fs.mkdirSync(tempDir);
+			return this.runFlutterInFolder(tempDir, "doctor", "flutter");
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
 		// Internal command that's fired in user_prompts to actually do the creation.
