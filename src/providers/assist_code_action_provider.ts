@@ -37,7 +37,7 @@ export class AssistCodeActionProvider implements CodeActionProvider {
 				command: "_dart.applySourceChange",
 				title,
 			},
-			kind: CodeActionKind.Refactor,
+			kind: CodeActionKind.Refactor.append(change.id),
 			title,
 		};
 	}
