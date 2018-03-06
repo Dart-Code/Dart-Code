@@ -83,6 +83,13 @@ These events will include your platform (Win/Linux/Mac) and also extension/SDK v
 This can be disabled via the `dart.allowAnalytics` setting.
 
 
+## Custom Colors
+
+Some colors in Dart Code can be customised using the `workbench.colourCustomizations` section in settings. Supported colors are:
+
+- `dart.closingLabels` - The color of the "closing label" annotations against constructor, method invocations and lists that span multiple lines
+
+
 ## Refactoring Kinds
 
 Code v1.20 [gained the ability to keybind quickfixes](https://code.visualstudio.com/updates/v1_20#_keybindings-for-quick-fixes-and-code-actions). To do this you should edit your `keybindings.json` file and include the ID of the refactor as found below. If the `kind` for the keybind is set to just a segment of the ID (for example 'refactor.surround') then all actions sharing that prefix will appear in a filtered menu (or if only one, the action invoked immediately). You can control this behaviour with the `apply` argument [see docs](https://code.visualstudio.com/updates/v1_20#_keybindings-for-quick-fixes-and-code-actions).
