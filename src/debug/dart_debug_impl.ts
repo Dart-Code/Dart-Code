@@ -418,9 +418,15 @@ export class DartDebugSession extends DebugSession {
 		// TODO: class variables? library variables?
 
 		const variablesReference = data.thread.storeData(frame);
-		response.body = {
-			scopes: [new Scope("Locals", variablesReference)],
-		};
+		const scopes: Scope[] = [];
+
+		if (data.thread.exceptionReference) {
+			scopes.push(new Scope("Exception", data.thread.exceptionReference));
+		}
+
+		scopes.push(new Scope("Locals", variablesReference));
+
+		response.body = { scopes };
 		this.sendResponse(response);
 	}
 
@@ -452,7 +458,7 @@ export class DartDebugSession extends DebugSession {
 
 					if (result.result.type === "Sentinel") {
 						variables.push({
-							name: "evalError",
+							name: "<evalError>",
 							value: (result.result as VMSentinel).valueAsString,
 							variablesReference: 0,
 						});
@@ -684,7 +690,7 @@ export class DartDebugSession extends DebugSession {
 					exceptionText = await this.callToString(event.isolate, event.exception);
 			}
 
-			thread.handlePaused(event.atAsyncSuspension);
+			thread.handlePaused(event.atAsyncSuspension, event.exception);
 			this.sendEvent(new StoppedEvent(reason, thread.number, exceptionText));
 		}
 	}
@@ -947,6 +953,7 @@ class ThreadInfo {
 	public runnable: boolean = false;
 	public vmBps: { [uri: string]: VMBreakpoint[] } = {};
 	public atAsyncSuspension: boolean = false;
+	public exceptionReference = 0;
 
 	constructor(manager: ThreadManager, ref: VMIsolateRef, num: number) {
 		this.manager = manager;
@@ -1018,6 +1025,7 @@ class ThreadInfo {
 		// this.manager.removeStoredIds(this.storedIds);
 		// this.storedIds = [];
 		this.atAsyncSuspension = false;
+		this.exceptionReference = 0;
 	}
 
 	public getScript(scriptRef: VMScriptRef): Promise<VMScript> {
@@ -1046,8 +1054,10 @@ class ThreadInfo {
 		return this.manager.storeData(this, data);
 	}
 
-	public handlePaused(atAsyncSuspension?: boolean) {
+	public handlePaused(atAsyncSuspension?: boolean, exception?: VMInstanceRef) {
 		this.atAsyncSuspension = atAsyncSuspension;
+		if (exception)
+			this.exceptionReference = this.storeData(exception);
 	}
 }
 
