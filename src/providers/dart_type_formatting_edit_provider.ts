@@ -1,5 +1,3 @@
-"use strict";
-
 import { OnTypeFormattingEditProvider, TextDocument, Position, FormattingOptions, CancellationToken, TextEdit, Range } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";

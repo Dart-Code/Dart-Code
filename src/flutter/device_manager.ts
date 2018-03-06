@@ -1,5 +1,3 @@
-"use strict";
-
 import * as vs from "vscode";
 import { FlutterDaemon } from "./flutter_daemon";
 import * as f from "./flutter_types";

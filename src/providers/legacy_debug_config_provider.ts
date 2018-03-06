@@ -1,5 +1,3 @@
-"use strict";
-
 import { DebugConfigurationProvider, WorkspaceFolder, CancellationToken, DebugConfiguration, ProviderResult } from "vscode";
 import { DebugConfigProvider } from "./debug_config_provider";
 

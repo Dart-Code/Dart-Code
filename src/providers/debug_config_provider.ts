@@ -1,5 +1,3 @@
-"use strict";
-
 import * as path from "path";
 import { Analytics } from "../analytics";
 import { config } from "../config";

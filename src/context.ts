@@ -1,5 +1,3 @@
-"use strict";
-
 import { ExtensionContext } from "vscode";
 
 export class Context {

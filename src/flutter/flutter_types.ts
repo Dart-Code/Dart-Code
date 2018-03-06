@@ -1,5 +1,3 @@
-"use strict";
-
 export interface Device {
 	id: string;
 	name: string;

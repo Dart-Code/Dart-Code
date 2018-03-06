@@ -1,5 +1,3 @@
-"use strict";
-
 import * as editors from "../editors";
 import * as vs from "vscode";
 import * as as from "../analysis/analysis_server_types";

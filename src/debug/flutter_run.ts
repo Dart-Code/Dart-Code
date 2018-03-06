@@ -1,5 +1,3 @@
-"use strict";
-
 import { StdIOService, Request, UnknownResponse, UnknownNotification } from "../services/stdio_service";
 import * as child_process from "child_process";
 import * as f from "../flutter/flutter_types";

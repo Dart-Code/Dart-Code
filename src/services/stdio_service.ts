@@ -1,5 +1,3 @@
-"use strict";
-
 import { Disposable } from "vscode";
 import * as child_process from "child_process";
 import * as fs from "fs";

@@ -1,5 +1,3 @@
-"use strict";
-
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolder, ProjectType, Sdks, isFlutterProject } from "../utils";

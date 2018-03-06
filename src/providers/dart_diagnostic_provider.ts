@@ -1,5 +1,3 @@
-"use strict";
-
 import { Analyzer } from "../analysis/analyzer";
 import { DiagnosticCollection, Diagnostic, DiagnosticSeverity, Uri, Range, Position } from "vscode";
 import { toRange } from "../utils";

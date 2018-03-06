@@ -1,5 +1,3 @@
-"use strict";
-
 import { DartDebugSession } from "./dart_debug_impl";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { FlutterLaunchRequestArguments, isWin, uriToFilePath, formatPathForVm } from "./utils";
@@ -138,12 +136,12 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.isReloadInProgress = true;
 		return this.flutter.restart(this.currentRunningAppId, !this.args.noDebug, fullRestart)
 			.then(
-			(result) => {
-				// If we get a hint, send it back over to the UI to do something appropriate.
-				if (result && result.hintId)
-					this.sendEvent(new Event("dart.hint", { hintId: result.hintId, hintMessage: result.hintMessage }));
-			},
-			(error) => this.sendEvent(new OutputEvent(error, "stderr")),
+				(result) => {
+					// If we get a hint, send it back over to the UI to do something appropriate.
+					if (result && result.hintId)
+						this.sendEvent(new Event("dart.hint", { hintId: result.hintId, hintMessage: result.hintMessage }));
+				},
+				(error) => this.sendEvent(new OutputEvent(error, "stderr")),
 		)
 			.then(() => this.isReloadInProgress = false);
 	}

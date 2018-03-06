@@ -1,5 +1,3 @@
-"use strict";
-
 import * as vs from "vscode";
 import * as child_process from "child_process";
 import * as as from "./analysis_server_types";

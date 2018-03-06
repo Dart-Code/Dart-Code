@@ -1,5 +1,3 @@
-"use strict";
-
 import * as vs from "vscode";
 import * as path from "path";
 import { Analyzer } from "./analysis/analyzer";

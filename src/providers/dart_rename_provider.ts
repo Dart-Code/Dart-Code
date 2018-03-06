@@ -1,5 +1,3 @@
-"use strict";
-
 import { window, workspace, RenameProvider, OutputChannel, WorkspaceEdit, TextDocument, Position, CancellationToken, Uri, TextEdit, Range } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";

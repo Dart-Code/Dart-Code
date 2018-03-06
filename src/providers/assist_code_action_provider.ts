@@ -1,5 +1,3 @@
-"use strict";
-
 import {
 	TextDocument, Position, CancellationToken, CodeActionProvider, CodeActionContext,
 	TextEdit, Range, Command, CodeAction, Diagnostic, CodeActionKind,

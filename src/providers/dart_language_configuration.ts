@@ -1,5 +1,3 @@
-"use strict";
-
 import { LanguageConfiguration, IndentAction } from "vscode";
 
 export class DartLanguageConfiguration implements LanguageConfiguration {

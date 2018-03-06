@@ -1,5 +1,3 @@
-"use strict";
-
 import {
 	TextDocument, DocumentSymbolProvider, SymbolInformation, CancellationToken, SymbolKind,
 	Location, Uri, Range, Position,

@@ -1,5 +1,3 @@
-"use strict";
-
 import { workspace, WorkspaceConfiguration, version as codeVersion, Uri, ConfigurationTarget } from "vscode";
 import { versionIsAtLeast, resolveHomePath } from "./utils";
 

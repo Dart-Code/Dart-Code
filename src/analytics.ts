@@ -1,5 +1,3 @@
-"use strict";
-
 import { env, extensions, Extension, workspace, version as codeVersion, Uri } from "vscode";
 import * as https from "https";
 import * as querystring from "querystring";

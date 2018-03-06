@@ -1,5 +1,3 @@
-"use strict";
-
 import { config } from "../config";
 import { FlutterDeviceManager } from "./device_manager";
 import { log, logError, extensionVersion } from "../utils";

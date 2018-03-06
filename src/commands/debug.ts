@@ -1,5 +1,3 @@
-"use strict";
-
 import { Analytics } from "../analytics";
 import * as channels from "./channels";
 import * as child_process from "child_process";

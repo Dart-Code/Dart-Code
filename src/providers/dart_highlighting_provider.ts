@@ -1,5 +1,3 @@
-"use strict";
-
 import {
 	DocumentHighlightProvider, DocumentHighlight, TextDocument, Position, CancellationToken, Range,
 } from "vscode";

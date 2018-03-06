@@ -1,5 +1,3 @@
-"use strict";
-
 import {
 	ReferenceProvider, ReferenceContext, TextDocument, Location, Uri, Position, CancellationToken,
 	CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range,

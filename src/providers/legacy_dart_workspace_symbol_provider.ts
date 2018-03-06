@@ -1,5 +1,3 @@
-"use strict";
-
 import { WorkspaceSymbolProvider, SymbolInformation, CancellationToken, SymbolKind, Location, Uri, Range, Position, workspace } from "vscode";
 import * as path from "path";
 import * as fs from "fs";

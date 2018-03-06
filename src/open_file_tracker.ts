@@ -1,5 +1,3 @@
-"use strict";
-
 import { window, workspace, TextDocument } from "vscode";
 import { Analyzer } from "./analysis/analyzer";
 import * as util from "./utils";

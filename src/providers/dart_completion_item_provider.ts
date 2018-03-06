@@ -1,5 +1,3 @@
-"use strict";
-
 import {
 	TextDocument, Position, CancellationToken, CompletionItemProvider, CompletionList,
 	CompletionItem, CompletionItemKind, TextEdit, Range, SnippetString, CompletionContext, CompletionTriggerKind,

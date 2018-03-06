@@ -1,5 +1,3 @@
-"use strict";
-
 import * as vs from "vscode";
 
 export function hasActiveDartEditor(): boolean {
