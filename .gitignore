@@ -5,3 +5,4 @@ node_modules
 .vscode-test/
 logs/**
 .DS_Store
+.nyc_output/
