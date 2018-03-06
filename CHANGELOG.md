@@ -7,6 +7,7 @@
 - Exception information will now show in the `Variables` debugger pane
 - Searching for symbols across the workspace now uses a much faster API (this requires a *very* recent SDK build and will fall back to the slower method for older SDKs)
 - The dependency tree explorer now shows file icons
+- Refactorings from the lightbulb menu are now keybindable! See the readme for full details
 - The Flutter SDK is now correctly detected from the `.packages` file of a project on Windows
 - If your Flutter SDK does not yet have a cached Dart SDK a more appropriate message will now be shown
 - Code completion tabstops may now provide more specific completion suggestions for some actions
