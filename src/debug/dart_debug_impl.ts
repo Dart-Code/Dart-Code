@@ -444,8 +444,10 @@ export class DartDebugSession extends DebugSession {
 		if (data.data.type === "Frame") {
 			const frame: VMFrame = data.data as VMFrame;
 			const variables: DebugProtocol.Variable[] = [];
-			for (const variable of frame.vars)
-				variables.push(this.instanceRefToVariable(thread, variable.name, variable.value));
+			if (frame.vars) {
+				for (const variable of frame.vars)
+					variables.push(this.instanceRefToVariable(thread, variable.name, variable.value));
+			}
 			response.body = { variables };
 			this.sendResponse(response);
 		} else {
