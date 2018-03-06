@@ -35,20 +35,20 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 	public getChildren(element?: PackageDep): Thenable<PackageDep[]> {
 		return new Promise((resolve) => {
 			if (element) {
-				if (!element.depPath) {
+				if (!element.collapsibleState && !element.resourceUri) {
 					return resolve([]);
 				} else {
-					resolve(fs.readdirSync(element.depPath).map((name) => {
-						const filePath = path.join(element.depPath, name);
+					resolve(fs.readdirSync(element.resourceUri.fsPath).map((name) => {
+						const filePath = path.join(element.resourceUri.fsPath, name);
 						const stat = fs.statSync(filePath);
 						if (stat.isFile()) {
-							return new PackageDep(name, null, vs.TreeItemCollapsibleState.None, {
+							return new PackageDep(name, vs.Uri.file(filePath), vs.TreeItemCollapsibleState.None, {
 								arguments: [vs.Uri.file(filePath)],
 								command: "dart.package.openFile",
 								title: "Open File",
 							});
 						} else if (stat.isDirectory()) {
-							return new PackageDep(name, filePath, vs.TreeItemCollapsibleState.Collapsed);
+							return new PackageDep(name, vs.Uri.file(filePath), vs.TreeItemCollapsibleState.Collapsed);
 						}
 					}));
 				}
@@ -81,7 +81,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 
 			const deps = lines.map((line) => {
 				const pos = line.indexOf(":");
-				if (pos === -1) return new PackageDep(line, null);
+				if (pos === -1) return new PackageDep(line, null, vs.TreeItemCollapsibleState.None);
 
 				let packageName = line.substring(0, pos);
 				let p = line.substring(pos + 1);
@@ -98,7 +98,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 				if (this.workspaceRoot !== p) {
 					packageName = line.substring(0, line.indexOf(":"));
 					p = vs.Uri.parse(p).fsPath;
-					return new PackageDep(`${packageName}`, p, vs.TreeItemCollapsibleState.Collapsed);
+					return new PackageDep(`${packageName}`, vs.Uri.file(p), vs.TreeItemCollapsibleState.Collapsed);
 				}
 			}).filter((d) => d);
 			// Hide the tree if we had no dependencies to show.
@@ -122,7 +122,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 class PackageDep extends vs.TreeItem {
 	constructor(
 		public readonly label: string,
-		public readonly depPath: string,
+		public readonly resourceUri?: vs.Uri,
 		public readonly collapsibleState?: vs.TreeItemCollapsibleState,
 		public readonly command?: vs.Command,
 	) {
