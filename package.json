@@ -611,7 +611,10 @@
 		"compile": "echo Compiling... && tsc -p ./",
 		"watch": "tsc -watch -p ./",
 		"postinstall": "node ./node_modules/vscode/bin/install",
-		"test": "npm run compile && echo Running tests... && node ./out/test/test_all.js",
+		"test": "npm run compile && npm run test-only",
+		"test-only": "node ./out/test/test_all.js",
+		"instrument": "nyc instrument --cwd=out . .",
+		"test-with-coverage": "npm run compile && npm run instrument && nyc --clean npm run test-only",
 		"lint": "tslint src/**/*.ts -t verbose"
 	},
 	"dependencies": {
@@ -626,6 +629,9 @@
 		"@types/semver": "^5.5.0",
 		"@types/ws": "^0.0.38",
 		"mocha": "^3.5.3",
+		"nyc": "^11.4.1",
+		"signal-exit": "^3.0.2",
+		"source-map-support": "^0.5.3",
 		"tslint": "^5.9.1",
 		"typescript": "^2.7.2",
 		"vscode": "^1.1.11"

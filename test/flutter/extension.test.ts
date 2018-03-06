@@ -4,6 +4,7 @@ import { Sdks } from "../../src/utils";
 
 const isWin = /^win/.test(process.platform);
 const ext = vs.extensions.getExtension("Dart-Code.dart-code");
+declare let __coverage__: any;
 
 describe("Test environment", () => {
 	it("has opened the correct folder", () => {
@@ -13,6 +14,9 @@ describe("Test environment", () => {
 			wfs[0].uri.path.endsWith("flutter_hello_world"),
 			wfs[0].uri.path + " doesn't end with flutter_hello_world",
 		);
+	});
+	it("is gathering coverage data", () => {
+		assert.ok(__coverage__);
 	});
 });
 

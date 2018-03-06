@@ -1,19 +1,15 @@
-//
-// PLEASE DO NOT MODIFY / DELETE UNLESS YOU KNOW WHAT YOU ARE DOING
-//
-// This file is providing the test runner to use when running extension tests.
-// By default the test runner in use is Mocha based.
-//
-// You can provide your own test runner if you want to override it by exporting
-// a function run(testRoot: string, clb: (error:Error) => void) that the extension
-// host can call to run the tests. The test runner is expected to use console.log
-// to report the results back to the caller. When the tests are finished, return
-// a possible error to the callback or null if none.
-
+import * as fs from "fs";
 import testRunner = require("vscode/lib/testrunner");
+const onExit = require("signal-exit"); // tslint:disable-line:no-var-requires
 
-// You can directly control Mocha options by uncommenting the following lines
-// See https://github.com/mochajs/mocha/wiki/Using-mocha-programmatically#set-options for more info
+// Ensure we write coverage on exit.
+declare const __coverage__: any;
+onExit(() => {
+	if (!fs.existsSync("./.nyc_output"))
+		fs.mkdirSync("./.nyc_output");
+	fs.writeFileSync("./.nyc_output/" + new Date().getTime() + ".json", JSON.stringify(__coverage__));
+});
+
 testRunner.configure({
 	slow: 1500,       // increased threshold before marking a test as slow
 	timeout: 30000,   // increased timeout because starting up Code, Analyzer, etc. is slooow
