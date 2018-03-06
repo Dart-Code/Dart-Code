@@ -4,6 +4,7 @@
 - The `Run Flutter Doctor` command is now available outside of having a Flutter project open
 - Many Flutter debug toggles (debug painting, performance overlay, slow mode banner, slow animations) will now persist across a `Full Restart`
 - Exception tooltips will now show the `toString()` of the exception rather than just the type name
+- Exception information will now show in the `Variables` debugger pane
 - Searching for symbols across the workspace now uses a much faster API (this requires a *very* recent SDK build and will fall back to the slower method for older SDKs)
 - The dependency tree explorer now shows file icons
 - The Flutter SDK is now correctly detected from the `.packages` file of a project on Windows
