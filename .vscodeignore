@@ -14,3 +14,5 @@ logs/**
 *.log
 appveyor.yml
 CONTRIBUTING.md
+tslint.json
+package-lock.json
