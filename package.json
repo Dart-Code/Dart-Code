@@ -613,7 +613,7 @@
 		"postinstall": "node ./node_modules/vscode/bin/install",
 		"test": "npm run compile && npm run test-only",
 		"test-only": "node ./out/test/test_all.js",
-		"instrument": "nyc instrument --source-map false out/src out/src",
+		"instrument": "pushd out/src && nyc instrument . . && popd",
 		"test-with-coverage": "rm -rf ./.nyc_output && npm run compile && npm run instrument && npm run test-only && nyc report",
 		"lint": "tslint src/**/*.ts -t verbose"
 	},
