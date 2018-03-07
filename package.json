@@ -613,7 +613,7 @@
 		"postinstall": "node ./node_modules/vscode/bin/install",
 		"test": "npm run compile && npm run test-only",
 		"test-only": "node ./out/test/test_all.js",
-		"instrument": "cd out/src && nyc instrument . . && cd ..",
+		"instrument": "cd out/src && nyc instrument . . && cd ../..",
 		"test-with-coverage": "rm -rf ./.nyc_output && npm run compile && npm run instrument && npm run test-only && nyc report",
 		"lint": "tslint src/**/*.ts -t verbose"
 	},
@@ -630,6 +630,7 @@
 		"@types/ws": "^0.0.38",
 		"mocha": "^3.5.3",
 		"nyc": "^11.4.1",
+		"remap-istanbul": "^0.10.1",
 		"signal-exit": "^3.0.2",
 		"tslint": "^5.9.1",
 		"typescript": "^2.7.2",

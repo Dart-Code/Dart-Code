@@ -5,10 +5,8 @@ const onExit = require("signal-exit"); // tslint:disable-line:no-var-requires
 // Ensure we write coverage on exit.
 declare const __coverage__: any;
 onExit(() => {
-	if (typeof __coverage__ !== "undefined") {
-		if (!fs.existsSync("./.nyc_output"))
-			fs.mkdirSync("./.nyc_output");
-		fs.writeFileSync("./.nyc_output/" + new Date().getTime() + ".json", JSON.stringify(__coverage__));
+	if (typeof __coverage__ !== "undefined" && process.env.COVERAGE_OUTPUT) {
+		fs.writeFileSync(process.env.COVERAGE_OUTPUT, JSON.stringify(__coverage__));
 	}
 });
 
