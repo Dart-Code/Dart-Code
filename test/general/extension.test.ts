@@ -6,7 +6,6 @@ const isWin = /^win/.test(process.platform);
 const ext = vs.extensions.getExtension("Dart-Code.dart-code");
 const sampleFilePath = (isWin ? "X:\\" : "/tmp/") + "sample.dart";
 const sampleFileUri = vs.Uri.parse(`untitled:${sampleFilePath}`);
-declare let __coverage__: any;
 
 describe("Test environment", () => {
 	it("has opened the correct folder", () => {
@@ -16,9 +15,6 @@ describe("Test environment", () => {
 			wfs[0].uri.path.endsWith("hello_world"),
 			wfs[0].uri.path + " doesn't end with hello_world",
 		);
-	});
-	it("is gathering coverage data", () => {
-		assert.ok(__coverage__);
 	});
 });
 
