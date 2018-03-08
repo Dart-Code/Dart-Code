@@ -95,8 +95,7 @@ export class Analytics {
 	}
 
 	private send(customData: any, resourceUri?: Uri): PromiseLike<void> {
-		// TODO: Find a better way to disable (and test) analytics for tests.
-		if (!config.allowAnalytics)
+		if (!config.allowAnalytics || process.env.DART_CODE_DISABLE_ANALYTICS)
 			return;
 
 		const data: any = {

@@ -54,6 +54,9 @@
 				"--extensionDevelopmentPath=${workspaceRoot}",
 				"--extensionTestsPath=${workspaceRoot}/out/test/general"
 			],
+			"env": {
+				"DART_CODE_DISABLE_ANALYTICS": "true"
+			},
 			"stopOnEntry": false,
 			"sourceMaps": true,
 			"outFiles": [
@@ -71,6 +74,9 @@
 				"--extensionDevelopmentPath=${workspaceRoot}",
 				"--extensionTestsPath=${workspaceRoot}/out/test/flutter"
 			],
+			"env": {
+				"DART_CODE_DISABLE_ANALYTICS": "true"
+			},
 			"stopOnEntry": false,
 			"sourceMaps": true,
 			"outFiles": [

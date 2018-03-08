@@ -10,6 +10,7 @@ function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string,
 	// even though other env vars do! 😢
 	env.DART_PATH_OVERRIDE = sdkPaths;
 	env.CODE_VERSION = codeVersion;
+	env.DART_CODE_DISABLE_ANALYTICS = true;
 	env.CODE_TESTS_WORKSPACE = path.join(process.cwd(), "test", "test_projects", workspaceFolder);
 	env.CODE_TESTS_PATH = path.join(process.cwd(), "out", "test", testFolder);
 	const res = childProcess.spawnSync("node", args, { env, stdio: "pipe", cwd: process.cwd() });
