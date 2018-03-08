@@ -339,13 +339,11 @@ export function showFlutterActivationFailure(runningFlutterCommand: string = nul
 		(p) => config.setGlobalFlutterSdkPath(p),
 		runningFlutterCommand
 			? async () => {
-				await window.showInformationMessage(
-					`Your SDK path has been saved. Please reload and then re-execute the "${runningFlutterCommand}" command.`,
-					{
-						isCloseAffordance: true,
-						title: "Reload Window",
-					},
-				);
+				const reloadAction = "Reload Window";
+				return await window.showInformationMessage(
+					`Your SDK path has been saved. Please reload and then re-run the "${runningFlutterCommand}" command.`,
+					reloadAction,
+				) === reloadAction;
 			}
 			: null,
 	);
@@ -364,7 +362,7 @@ export async function showSdkActivationFailure(
 	search: (path: string[]) => string,
 	downloadUrl: string,
 	saveSdkPath: (path: string) => void,
-	beforeReload: () => Promise<void> = null,
+	shouldReload: () => Promise<boolean> = null,
 ) {
 	const locateAction = "Locate SDK";
 	const downloadAction = "Download SDK";
@@ -382,9 +380,8 @@ export async function showSdkActivationFailure(
 				const matchingSdkFolder = search(selectedFolders.map((f) => f.fsPath));
 				if (matchingSdkFolder) {
 					saveSdkPath(matchingSdkFolder);
-					if (beforeReload)
-						await beforeReload();
-					commands.executeCommand("workbench.action.reloadWindow");
+					if (shouldReload === null || await shouldReload())
+						commands.executeCommand("workbench.action.reloadWindow");
 					break;
 				} else {
 					displayMessage = `That folder does not appear to be a ${sdkType} SDK.`;
