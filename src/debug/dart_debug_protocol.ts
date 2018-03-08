@@ -122,8 +122,6 @@ export interface VMInstance extends VMObj {
 	elements?: any[];
 	// The elements of a Map instance. Provided for instance kinds: Map.
 	associations?: VMMapAssociation[];
-	// TODO: fill in more types
-
 }
 
 export interface VMBoundField {

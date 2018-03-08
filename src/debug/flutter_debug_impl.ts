@@ -54,7 +54,6 @@ export class FlutterDebugSession extends DartDebugSession {
 		if (args.args)
 			appArgs = appArgs.concat(args.args);
 
-		// TODO: Add log file.
 		this.flutter = new FlutterRun(this.args.flutterPath, args.cwd, appArgs, this.args.flutterRunLogFile);
 		this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
 

@@ -200,7 +200,6 @@ export class Analyzer extends AnalyzerGen {
 }
 
 export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind {
-	// TODO: Review if these are all mapped as well as possible.
 	switch (kind) {
 		case "CLASS":
 		case "CLASS_TYPE_ALIAS":
@@ -218,6 +217,7 @@ export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind
 		case "FILE":
 			return vs.SymbolKind.File;
 		case "FUNCTION":
+		case "FUNCTION_INVOCATION":
 		case "FUNCTION_TYPE_ALIAS":
 			return vs.SymbolKind.Function;
 		case "GETTER":

@@ -65,7 +65,5 @@ async function createFlutterProject(projectPath: string): Promise<boolean> {
 
 function handleFlutterWelcome(workspaceFolder: vs.WorkspaceFolder) {
 	vs.commands.executeCommand("vscode.open", vs.Uri.file(path.join(workspaceFolder.uri.fsPath, "lib/main.dart")));
-	// TODO: Check text.
-	// TODO: Do we need an option to suppress this (or should we only ever do it once?)
 	vs.window.showInformationMessage("Your Flutter project is ready! Connect a device and press F5 to start running.");
 }

@@ -153,8 +153,6 @@ export function activate(context: vs.ExtensionContext) {
 		}
 	});
 
-	// TODO: Check if EventEmitter<T> would be more appropriate than our own.
-
 	// Set up providers.
 	const hoverProvider = new DartHoverProvider(analyzer);
 	const formattingEditProvider = new DartFormattingEditProvider(analyzer);
@@ -221,7 +219,6 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Fire up Flutter daemon if required.
 	if (sdks.projectType === util.ProjectType.Flutter) {
-		// TODO: finish wiring this up so we can manage the selected device from the status bar (eventualy - use first for now)
 		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, util.flutterPath), sdks.flutter);
 		context.subscriptions.push(flutterDaemon);
 

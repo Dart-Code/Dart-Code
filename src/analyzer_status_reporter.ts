@@ -13,8 +13,6 @@ const maxErrorReportCount = 3;
 
 let errorCount = 0;
 
-// TODO: We should show in the status line when the analysis server's process is dead.
-
 export class AnalyzerStatusReporter {
 	private analysisInProgress: boolean;
 	private analyzer: Analyzer;

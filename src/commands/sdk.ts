@@ -83,7 +83,6 @@ export class SdkCommands {
 
 		// If there's only one folder, just use it to avoid prompting the user.
 		if (!folder && vs.workspace.workspaceFolders) {
-			// TODO: Filter to Dart or Flutter projects.
 			const allowedProjects = getDartWorkspaceFolders();
 			if (allowedProjects.length === 1)
 				folder = allowedProjects[0].uri.fsPath;
