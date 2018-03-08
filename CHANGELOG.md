@@ -1,4 +1,4 @@
-# v2.10.0 (BETA)
+# v2.10.0
 
 - When the Dart or Flutter SDK could not be located, a "Locate SDK" button is shown to allow browsing to the SDK manually
 - The `Run Flutter Doctor` command is now available outside of having a Flutter project open
