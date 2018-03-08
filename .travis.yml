@@ -2,7 +2,7 @@ sudo: false
 
 os:
   - osx
-  - linux
+#  - linux
 
 language: node_js
 node_js: lts/*
