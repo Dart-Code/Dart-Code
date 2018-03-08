@@ -616,8 +616,8 @@
 	},
 	"dependencies": {
 		"semver": "^5.5.0",
-		"vscode-debugadapter": "^1.26.0",
-		"vscode-debugprotocol": "^1.26.0",
+		"vscode-debugadapter": "^1.27.0",
+		"vscode-debugprotocol": "^1.27.0",
 		"ws": "^1.1.5"
 	},
 	"devDependencies": {
@@ -628,6 +628,6 @@
 		"mocha": "^3.5.3",
 		"tslint": "^5.9.1",
 		"typescript": "^2.7.2",
-		"vscode": "^1.1.10"
+		"vscode": "^1.1.11"
 	}
 }
