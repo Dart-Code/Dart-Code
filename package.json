@@ -628,11 +628,11 @@
 		"@types/semver": "^5.5.0",
 		"@types/ws": "^0.0.38",
 		"mocha": "^3.5.3",
-		"nyc": "^11.4.1",
+		"nyc": "^11.5.0",
 		"remap-istanbul": "^0.10.1",
 		"signal-exit": "^3.0.2",
 		"tslint": "^5.9.1",
 		"typescript": "^2.7.2",
-		"vscode": "^1.1.11"
+		"vscode": "^1.1.12"
 	}
 }
