@@ -22,11 +22,8 @@
 		},
 		// TODO: Re-enable these (currently it seems hit-and-miss whether the IDE notices them
 		// so sometimes it reports no errors, then later complains?!)
-		// "max-line-length": [
-		// 	true,
-		// 	120
-		// ],
-		// "ordered-imports": true,
-		// "no-shadowed-variable": true
+		"max-line-length": false,
+		"ordered-imports": false,
+		"no-shadowed-variable": false
 	}
 }
