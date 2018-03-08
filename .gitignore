@@ -1,9 +1,10 @@
-out
-node_modules
-*.log
-.vscode/.browse.VC.db*
-.vscode-test/
-logs/**
 .DS_Store
 .nyc_output/
 .packages
+.vscode-test/
+.vscode/.browse.VC.db*
+*.log
+logs/**
+node_modules
+out
+pubspec.lock
