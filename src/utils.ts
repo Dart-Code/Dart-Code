@@ -1,12 +1,12 @@
-import * as path from "path";
 import * as fs from "fs";
-import * as os from "os";
 import * as https from "https";
+import * as os from "os";
+import * as path from "path";
+import * as semver from "semver";
+import { commands, env, MessageItem, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import * as as from "./analysis/analysis_server_types";
-import { env, workspace, window, Position, Range, TextDocument, commands, Uri, WorkspaceFolder, MessageItem } from "vscode";
 import { config } from "./config";
 import { PackageMap } from "./debug/utils";
-import * as semver from "semver";
 
 const isWin = /^win/.test(process.platform);
 const dartExecutableName = isWin ? "dart.exe" : "dart";

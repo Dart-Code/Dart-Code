@@ -1,11 +1,11 @@
-import * as vs from "vscode";
 import * as child_process from "child_process";
-import * as as from "./analysis_server_types";
 import * as fs from "fs";
-import { AnalyzerGen } from "./analyzer_gen";
+import * as vs from "vscode";
 import { config } from "../config";
-import { log, logError, extensionVersion, versionIsAtLeast } from "../utils";
-import { Request, UnknownResponse, UnknownNotification } from "../services/stdio_service";
+import { Request, UnknownNotification, UnknownResponse } from "../services/stdio_service";
+import { extensionVersion, log, logError, versionIsAtLeast } from "../utils";
+import * as as from "./analysis_server_types";
+import { AnalyzerGen } from "./analyzer_gen";
 
 class AnalyzerCapabilities {
 

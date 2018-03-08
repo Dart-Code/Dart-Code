@@ -2,8 +2,8 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { config } from "./config";
-import { openInBrowser, getDartWorkspaceFolders, FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "./utils";
 import { Context } from "./context";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, getDartWorkspaceFolders, openInBrowser } from "./utils";
 
 export function showUserPrompts(context: vs.ExtensionContext) {
 	handleNewProjects(Context.for(context));

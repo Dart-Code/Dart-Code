@@ -1,10 +1,10 @@
 import {
-	TextDocument, Position, CancellationToken, CodeActionProvider, CodeActionContext,
-	TextEdit, Range, Command, CodeAction, Diagnostic, CodeActionKind,
+	CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider,
+	Command, Diagnostic, Position, Range, TextDocument, TextEdit,
 } from "vscode";
-import { Analyzer } from "../analysis/analyzer";
-import { logError, isAnalyzableAndInWorkspace } from "../utils";
 import * as as from "../analysis/analysis_server_types";
+import { Analyzer } from "../analysis/analyzer";
+import { isAnalyzableAndInWorkspace, logError } from "../utils";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
 
 export class AssistCodeActionProvider implements CodeActionProvider {

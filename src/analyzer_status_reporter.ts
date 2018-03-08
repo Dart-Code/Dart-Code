@@ -1,13 +1,13 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { window, workspace, env, commands, extensions, TextDocument, version as codeVersion, ProgressLocation } from "vscode";
+import { commands, env, extensions, ProgressLocation, TextDocument, version as codeVersion, window, workspace } from "vscode";
+import { RequestError, ServerErrorNotification, ServerStatusNotification } from "./analysis/analysis_server_types";
 import { Analyzer } from "./analysis/analyzer";
-import { ServerStatusNotification, ServerErrorNotification, RequestError } from "./analysis/analysis_server_types";
-import { config } from "./config";
-import { getDartSdkVersion, Sdks, extensionVersion } from "./utils";
 import { Analytics } from "./analytics";
+import { config } from "./config";
 import { PromiseCompleter } from "./debug/utils";
+import { extensionVersion, getDartSdkVersion, Sdks } from "./utils";
 
 const maxErrorReportCount = 3;
 

@@ -22,7 +22,7 @@
 		},
 		// TODO: Consider re-enabling these?
 		"max-line-length": false,
-		"ordered-imports": false,
+		"ordered-imports": true,
 		"no-shadowed-variable": false
 	}
 }

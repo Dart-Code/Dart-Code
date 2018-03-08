@@ -1,11 +1,11 @@
-import { DartDebugSession } from "./dart_debug_impl";
-import { DebugProtocol } from "vscode-debugprotocol";
-import { FlutterLaunchRequestArguments, isWin, uriToFilePath, formatPathForVm } from "./utils";
-import { FlutterRun } from "./flutter_run";
-import { TerminatedEvent, OutputEvent, Event } from "vscode-debugadapter";
 import * as child_process from "child_process";
 import * as path from "path";
+import { Event, OutputEvent, TerminatedEvent } from "vscode-debugadapter";
+import { DebugProtocol } from "vscode-debugprotocol";
+import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
+import { FlutterRun } from "./flutter_run";
+import { FlutterLaunchRequestArguments, formatPathForVm, isWin, uriToFilePath } from "./utils";
 
 export class FlutterDebugSession extends DartDebugSession {
 	protected args: FlutterLaunchRequestArguments;
