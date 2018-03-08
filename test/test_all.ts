@@ -5,6 +5,7 @@ const args = ["node_modules/vscode/bin/test"];
 let exitCode = 0;
 
 function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string, codeVersion: string) {
+	console.log(`Running tests from '${testFolder}' in workspace '${workspaceFolder}' using version ${codeVersion} of Code and PATH: ${sdkPaths}`);
 	const env = Object.create(process.env);
 	// For some reason, updating PATH here doesn't get through to Code
 	// even though other env vars do! 😢
