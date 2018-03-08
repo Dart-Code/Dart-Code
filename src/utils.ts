@@ -322,7 +322,7 @@ export enum ProjectType {
 }
 
 export function showFluttersDartSdkActivationFailure() {
-	const reloadAction: string = "Reload Project";
+	const reloadAction: string = "Reload Window";
 	window.showErrorMessage("Could not find Dart in your Flutter SDK. " +
 		"Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
 		reloadAction,
