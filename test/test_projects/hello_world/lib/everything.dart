@@ -33,3 +33,15 @@ class MyClass {
   /// This is my method taking a function.
   void methodTakingFunction(int Function(String) myFunc) {}
 }
+
+void doSomeStuff() {
+  var a = new MyClass();
+  var b = new MyClass.named();
+  print(a.myNumField);
+  print(a.myNumGetter);
+  a.myNumSetter = 1;
+  print(b.myStringReturningMethod());
+  b.myVoidReturningMethod();
+  b.methodTakingString("Hello");
+  b.methodTakingFunction((s) => print(s));
+}

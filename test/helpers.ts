@@ -37,6 +37,10 @@ export function getPositionOf(searchText: string): vs.Position {
 	return doc.positionAt(matchedTextIndex + caretOffset);
 }
 
+export function rangeAt(startLine: number, startCharacter: number, endLine: number, endCharacter: number): vs.Range {
+	return new vs.Range(new vs.Position(startLine, startCharacter), new vs.Position(endLine, endCharacter));
+}
+
 export function rangeOf(searchText: string): vs.Range {
 	const startOffset = searchText.indexOf("|");
 	assert.notEqual(startOffset, -1, `Couldn't find a | in search text (${searchText})`);

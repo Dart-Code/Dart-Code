@@ -6,3 +6,4 @@ node_modules
 logs/**
 .DS_Store
 .nyc_output/
+.packages
