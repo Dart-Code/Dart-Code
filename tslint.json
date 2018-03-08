@@ -20,11 +20,13 @@
 		"no-empty": {
 			"options": "allow-empty-catch"
 		},
-		"max-line-length": [
-			true,
-			120
-		],
-		"ordered-imports": true,
-		"no-shadowed-variable": true
+		// TODO: Re-enable these (currently it seems hit-and-miss whether the IDE notices them
+		// so sometimes it reports no errors, then later complains?!)
+		// "max-line-length": [
+		// 	true,
+		// 	120
+		// ],
+		// "ordered-imports": true,
+		// "no-shadowed-variable": true
 	}
 }
