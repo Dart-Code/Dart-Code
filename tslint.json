@@ -20,8 +20,10 @@
 		"no-empty": {
 			"options": "allow-empty-catch"
 		},
-		// TODO: Consider re-enabling these?
-		"max-line-length": false,
+		"max-line-length": [
+			true,
+			120
+		],
 		"ordered-imports": true,
 		"no-shadowed-variable": true
 	}

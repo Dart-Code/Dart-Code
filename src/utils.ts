@@ -3,7 +3,9 @@ import * as https from "https";
 import * as os from "os";
 import * as path from "path";
 import * as semver from "semver";
-import { commands, env, MessageItem, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
+import {
+	commands, env, MessageItem, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder,
+} from "vscode";
 import * as as from "./analysis/analysis_server_types";
 import { config } from "./config";
 import { PackageMap } from "./debug/utils";
@@ -102,7 +104,9 @@ export function findSdks(): Sdks {
 		dart: dartSdkPath,
 		flutter: flutterSdkPath,
 		fuchsia: fuchsiaRoot,
-		projectType: fuchsiaRoot && hasFuchsiaProjectThatIsNotVanillaFlutter ? ProjectType.Fuchsia : flutterProject ? ProjectType.Flutter : ProjectType.Dart,
+		projectType: fuchsiaRoot && hasFuchsiaProjectThatIsNotVanillaFlutter
+			? ProjectType.Fuchsia
+			: (flutterProject ? ProjectType.Flutter : ProjectType.Dart),
 	};
 }
 
@@ -355,7 +359,13 @@ export function showDartActivationFailure() {
 	);
 }
 
-export async function showSdkActivationFailure(sdkType: string, search: (path: string[]) => string, downloadUrl: string, saveSdkPath: (path: string) => void, beforeReload: () => Promise<void> = null) {
+export async function showSdkActivationFailure(
+	sdkType: string,
+	search: (path: string[]) => string,
+	downloadUrl: string,
+	saveSdkPath: (path: string) => void,
+	beforeReload: () => Promise<void> = null,
+) {
 	const locateAction = "Locate SDK";
 	const downloadAction = "Download SDK";
 	let displayMessage = `Could not find a ${sdkType} SDK. ` +
@@ -366,7 +376,8 @@ export async function showSdkActivationFailure(sdkType: string, search: (path: s
 			downloadAction,
 		);
 		if (selectedItem === locateAction) {
-			const selectedFolders = await window.showOpenDialog({ canSelectFolders: true, openLabel: `Set ${sdkType} SDK folder` });
+			const selectedFolders =
+				await window.showOpenDialog({ canSelectFolders: true, openLabel: `Set ${sdkType} SDK folder` });
 			if (selectedFolders && selectedFolders.length > 0) {
 				const matchingSdkFolder = search(selectedFolders.map((f) => f.fsPath));
 				if (matchingSdkFolder) {
