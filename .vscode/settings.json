@@ -6,7 +6,8 @@
 	"files.exclude": {
 		"out": true,
 		"**/node_modules": true,
-		".vscode-test": true
+		".vscode-test": true,
+		".nyc_output": true
 	},
 	"files.insertFinalNewline": true
 }

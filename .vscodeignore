@@ -16,3 +16,4 @@ appveyor.yml
 CONTRIBUTING.md
 tslint.json
 package-lock.json
+.nyc_output/**
