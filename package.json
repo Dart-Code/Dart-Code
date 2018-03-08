@@ -608,10 +608,10 @@
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
-		"compile": "tsc -p ./",
+		"compile": "echo Compiling... && tsc -p ./",
 		"watch": "tsc -watch -p ./",
 		"postinstall": "node ./node_modules/vscode/bin/install",
-		"test": "npm run compile && node ./out/test/test_all.js",
+		"test": "npm run compile && echo Running tests... && node ./out/test/test_all.js",
 		"lint": "tslint src/**/*.ts -t verbose"
 	},
 	"dependencies": {
