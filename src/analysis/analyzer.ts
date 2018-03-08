@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as vs from "vscode";
 import { config } from "../config";
 import { Request, UnknownNotification, UnknownResponse } from "../services/stdio_service";
-import { extensionVersion, log, logError, versionIsAtLeast } from "../utils";
+import { extensionVersion, log, logError, versionIsAtLeast, promptForReload } from "../utils";
 import * as as from "./analysis_server_types";
 import { AnalyzerGen } from "./analyzer_gen";
 
@@ -77,9 +77,8 @@ export class Analyzer extends AnalyzerGen {
 		try {
 			super.sendMessage(json);
 		} catch (e) {
-			const reloadAction: string = "Reload Window";
-			vs.window.showErrorMessage(`The Dart Analyzer has terminated. Save your changes then reload the project to resume.`, reloadAction).then((res) => {
-				if (res === reloadAction)
+			promptForReload("The Dart Analyzer has terminated. Save your changes then reload the project to resume.").then((res) => {
+				if (res)
 					vs.commands.executeCommand("workbench.action.reloadWindow");
 			});
 			throw e;

@@ -322,12 +322,10 @@ export enum ProjectType {
 }
 
 export function showFluttersDartSdkActivationFailure() {
-	const reloadAction: string = "Reload Window";
-	window.showErrorMessage("Could not find Dart in your Flutter SDK. " +
+	promptForReload("Could not find Dart in your Flutter SDK. " +
 		"Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
-		reloadAction,
-	).then((selectedItem) => {
-		if (selectedItem === reloadAction)
+	).then((res) => {
+		if (res)
 			commands.executeCommand("workbench.action.reloadWindow");
 	});
 }
@@ -338,13 +336,7 @@ export function showFlutterActivationFailure(runningFlutterCommand: string = nul
 		FLUTTER_DOWNLOAD_URL,
 		(p) => config.setGlobalFlutterSdkPath(p),
 		runningFlutterCommand
-			? async () => {
-				const reloadAction = "Reload Window";
-				return await window.showInformationMessage(
-					`Your SDK path has been saved. Please reload and then re-run the "${runningFlutterCommand}" command.`,
-					reloadAction,
-				) === reloadAction;
-			}
+			? () => promptForReload(`Your SDK path has been saved. Please reload and then re-run the "${runningFlutterCommand}" command.`)
 			: null,
 	);
 }
@@ -394,4 +386,9 @@ export async function showSdkActivationFailure(
 			break;
 		}
 	}
+}
+
+export async function promptForReload(message: string): Promise<boolean> {
+	const reloadAction = "Reload Window";
+	return await window.showInformationMessage(message, reloadAction) === reloadAction;
 }

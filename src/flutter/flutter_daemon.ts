@@ -1,6 +1,6 @@
 import { config } from "../config";
 import { FlutterDeviceManager } from "./device_manager";
-import { log, logError, extensionVersion } from "../utils";
+import { log, logError, extensionVersion, promptForReload } from "../utils";
 import { StdIOService, Request, UnknownResponse, UnknownNotification } from "../services/stdio_service";
 import * as child_process from "child_process";
 import * as f from "./flutter_types";
@@ -31,9 +31,8 @@ export class FlutterDaemon extends StdIOService {
 		try {
 			super.sendMessage(json);
 		} catch (e) {
-			const reloadAction: string = "Reload Window";
-			vs.window.showErrorMessage(`The Flutter Daemon has terminated. Save your changes then reload the project to resume.`, reloadAction).then((res) => {
-				if (res === reloadAction)
+			promptForReload("The Flutter Daemon has terminated. Save your changes then reload the project to resume.").then((res) => {
+				if (res)
 					vs.commands.executeCommand("workbench.action.reloadWindow");
 			});
 			throw e;
