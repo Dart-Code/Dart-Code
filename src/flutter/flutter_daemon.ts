@@ -31,10 +31,7 @@ export class FlutterDaemon extends StdIOService {
 		try {
 			super.sendMessage(json);
 		} catch (e) {
-			promptForReload("The Flutter Daemon has terminated. Save your changes then reload the project to resume.").then((res) => {
-				if (res)
-					vs.commands.executeCommand("workbench.action.reloadWindow");
-			});
+			promptForReload("The Flutter Daemon has terminated. Save your changes then reload the project to resume.");
 			throw e;
 		}
 	}

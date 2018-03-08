@@ -324,10 +324,7 @@ export enum ProjectType {
 export function showFluttersDartSdkActivationFailure() {
 	promptForReload("Could not find Dart in your Flutter SDK. " +
 		"Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
-	).then((res) => {
-		if (res)
-			commands.executeCommand("workbench.action.reloadWindow");
-	});
+	);
 }
 export function showFlutterActivationFailure(runningFlutterCommand: string = null) {
 	showSdkActivationFailure(
@@ -336,7 +333,7 @@ export function showFlutterActivationFailure(runningFlutterCommand: string = nul
 		FLUTTER_DOWNLOAD_URL,
 		(p) => config.setGlobalFlutterSdkPath(p),
 		runningFlutterCommand
-			? () => promptForReload(`Your SDK path has been saved. Please reload and then re-run the "${runningFlutterCommand}" command.`)
+			? `Your SDK path has been saved. Please reload and then re-run the "${runningFlutterCommand}" command.`
 			: null,
 	);
 }
@@ -354,7 +351,7 @@ export async function showSdkActivationFailure(
 	search: (path: string[]) => string,
 	downloadUrl: string,
 	saveSdkPath: (path: string) => void,
-	shouldReload: () => Promise<boolean> = null,
+	reloadPrompt: string = null,
 ) {
 	const locateAction = "Locate SDK";
 	const downloadAction = "Download SDK";
@@ -365,6 +362,7 @@ export async function showSdkActivationFailure(
 			locateAction,
 			downloadAction,
 		);
+		// TODO: Refactor/reformat/comment this code - it's messy and hard to understand!
 		if (selectedItem === locateAction) {
 			const selectedFolders =
 				await window.showOpenDialog({ canSelectFolders: true, openLabel: `Set ${sdkType} SDK folder` });
@@ -372,7 +370,9 @@ export async function showSdkActivationFailure(
 				const matchingSdkFolder = search(selectedFolders.map((f) => f.fsPath));
 				if (matchingSdkFolder) {
 					saveSdkPath(matchingSdkFolder);
-					if (shouldReload === null || await shouldReload())
+					if (reloadPrompt)
+						promptForReload(reloadPrompt);
+					else
 						commands.executeCommand("workbench.action.reloadWindow");
 					break;
 				} else {
@@ -388,7 +388,9 @@ export async function showSdkActivationFailure(
 	}
 }
 
-export async function promptForReload(message: string): Promise<boolean> {
+export async function promptForReload(message: string) {
 	const reloadAction = "Reload Window";
-	return await window.showInformationMessage(message, reloadAction) === reloadAction;
+	if (await window.showInformationMessage(message, reloadAction) === reloadAction) {
+		commands.executeCommand("workbench.action.reloadWindow");
+	}
 }

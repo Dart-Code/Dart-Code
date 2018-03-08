@@ -442,10 +442,7 @@ function handleConfigurationChange(sdks: util.Sdks) {
 	}
 
 	if (analyzerSettingsChanged || projectTypeChanged) {
-		util.promptForReload("Dart/Flutter SDK settings have changed. Save your work and reload to apply the new settings.").then((res) => {
-			if (res)
-				vs.commands.executeCommand("workbench.action.reloadWindow");
-		});
+		util.promptForReload("Dart/Flutter SDK settings have changed. Save your work and reload to apply the new settings.");
 	}
 }
 

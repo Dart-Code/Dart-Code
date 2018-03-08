@@ -77,10 +77,7 @@ export class Analyzer extends AnalyzerGen {
 		try {
 			super.sendMessage(json);
 		} catch (e) {
-			promptForReload("The Dart Analyzer has terminated. Save your changes then reload the project to resume.").then((res) => {
-				if (res)
-					vs.commands.executeCommand("workbench.action.reloadWindow");
-			});
+			promptForReload("The Dart Analyzer has terminated. Save your changes then reload the project to resume.");
 			throw e;
 		}
 	}
