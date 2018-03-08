@@ -23,9 +23,7 @@ function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string,
 	exitCode = exitCode || res.status;
 }
 
-// Can't run insiders until this is fixed:
-// https://github.com/Microsoft/vscode-extension-vscode/issues/94
-const codeVersions = ["*"/*, "insiders"*/];
+const codeVersions = ["*", "insiders"];
 const sdkPaths = process.env.PATH_UNSTABLE ? [null, process.env.PATH_UNSTABLE] : [null];
 for (const codeVersion of codeVersions) {
 	for (const sdkPath of sdkPaths) {
