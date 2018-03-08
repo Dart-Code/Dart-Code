@@ -1,10 +1,14 @@
 .DS_Store
+.flutter-plugins/
 .nyc_output/
 .packages
+.pub/
 .vscode-test/
 .vscode/.browse.VC.db*
 *.log
-logs/**
-node_modules
-out
+build/
+ios/.generated/
+logs/
+node_modules/
+out/
 pubspec.lock
