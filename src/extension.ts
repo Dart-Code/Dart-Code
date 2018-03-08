@@ -249,8 +249,8 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Set up debug stuff.
 	// Remove all this when migrating to debugAdapterExecutable!
-	context.subscriptions.push(vs.commands.registerCommand("dart.getDebuggerExecutable", (path: string) => {
-		const entry = (path && isFlutterProject(vs.workspace.getWorkspaceFolder(vs.Uri.parse(path))))
+	context.subscriptions.push(vs.commands.registerCommand("dart.getDebuggerExecutable", (workspacePath: string) => {
+		const entry = (path && isFlutterProject(vs.workspace.getWorkspaceFolder(vs.Uri.parse(workspacePath))))
 			? context.asAbsolutePath("./out/src/debug/flutter_debug_entry.js")
 			: context.asAbsolutePath("./out/src/debug/dart_debug_entry.js");
 

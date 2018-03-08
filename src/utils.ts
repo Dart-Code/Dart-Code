@@ -34,9 +34,9 @@ function referencesFlutterSdk(folder: string): boolean {
 	return false;
 }
 
-export function searchPaths(searchPaths: string[], filter: (s: string) => boolean, executableName: string): string {
+export function searchPaths(paths: string[], filter: (s: string) => boolean, executableName: string): string {
 	let sdkPath =
-		searchPaths
+		paths
 			.filter((p) => p)
 			.map(resolveHomePath)
 			.map((p) => path.basename(p) !== "bin" ? path.join(p, "bin") : p) // Ensure /bin on end.
@@ -110,39 +110,39 @@ function extractFlutterSdkPathFromPackagesFile(file: string): string {
 	if (!fs.existsSync(file))
 		return null;
 
-	let path = new PackageMap(file).getPackagePath("flutter");
+	let packagePath = new PackageMap(file).getPackagePath("flutter");
 
-	if (!path)
+	if (!packagePath)
 		return null;
 
 	// Set windows slashes to / while manipulating.
 	if (isWin) {
-		path = path.replace(/\\/g, "/");
+		packagePath = packagePath.replace(/\\/g, "/");
 	}
 
 	// Trim suffix we don't need.
 	const pathSuffix = "/packages/flutter/lib/";
-	if (path.endsWith(pathSuffix)) {
-		path = path.substr(0, path.length - pathSuffix.length);
+	if (packagePath.endsWith(pathSuffix)) {
+		packagePath = packagePath.substr(0, packagePath.length - pathSuffix.length);
 	}
 
 	// Make sure ends with a slash.
-	if (!path.endsWith("/"))
-		path = path + "/";
+	if (!packagePath.endsWith("/"))
+		packagePath = packagePath + "/";
 
 	// Append bin if required.
-	if (!path.endsWith("/bin/")) {
-		path = path + "bin/";
+	if (!packagePath.endsWith("/bin/")) {
+		packagePath = packagePath + "bin/";
 	}
 
 	// Set windows paths back.
 	if (isWin) {
-		path = path.replace(/\//g, "\\");
-		if (path[0] === "\\")
-			path = path.substring(1);
+		packagePath = packagePath.replace(/\//g, "\\");
+		if (packagePath[0] === "\\")
+			packagePath = packagePath.substring(1);
 	}
 
-	return path;
+	return packagePath;
 }
 
 function findFuchsiaRoot(folder: string): string {
