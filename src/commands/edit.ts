@@ -142,7 +142,6 @@ export class EditCommands implements vs.Disposable {
 					currentPos = p.offset + p.length;
 				});
 
-				console.log(snippet.value);
 				// Replace the document.
 				editor.insertSnippet(snippet, new vs.Range(document.positionAt(startPos), document.positionAt(endPos)));
 			});
