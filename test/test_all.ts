@@ -5,18 +5,16 @@ import * as childProcess from "child_process";
 const args = ["node_modules/vscode/bin/test"];
 let exitCode = 0;
 
-function runNode(cwd: string, args: string[], env: any) {
-	const res = childProcess.spawnSync("node", args, { env, stdio: "pipe", cwd });
-	if (res.error)
-		throw res.error;
-	if (res.output)
-		res.output
-			.filter((l) => l)
-			.forEach((l) => console.log(l.toString().trim().replace(/\n\s*\n/g, "\n")));
-	return res.status;
+function runNode(cwd: string, args: string[], env: any): Promise<number> {
+	return new Promise<number>((resolve, reject) => {
+		const proc = childProcess.spawn("node", args, { env, stdio: "inherit", cwd });
+		proc.on("data", (data: Buffer | string) => console.log("!!!" + data.toString()));
+		proc.on("error", (data: Buffer | string) => console.warn(data.toString()));
+		proc.on("close", (code: number) => resolve(code));
+	});
 }
 
-function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string, codeVersion: string) {
+async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string, codeVersion: string): Promise<void> {
 	console.log(`Running tests from '${testFolder}' in workspace '${workspaceFolder}' using version ${codeVersion} of Code and PATH: ${sdkPaths}`);
 	const cwd = process.cwd();
 	const env = Object.create(process.env);
@@ -32,13 +30,13 @@ function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string,
 	if (!fs.existsSync(".nyc_output"))
 		fs.mkdirSync(".nyc_output");
 	env.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testFolder}_${codeVersion}_${(new Date()).getTime()}.json`);
-	let res = runNode(cwd, args, env);
+	let res = await runNode(cwd, args, env);
 	exitCode = exitCode || res;
 
 	// Remap coverage output.
 	if (fs.existsSync(env.COVERAGE_OUTPUT)) {
 		// Note: Path wonkiness - only seems to work from out/src even if supplying -b!
-		res = runNode(
+		res = await runNode(
 			path.join(cwd, "out", "src"),
 			[
 				"../../node_modules/remap-istanbul/bin/remap-istanbul",
@@ -53,12 +51,15 @@ function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string,
 	}
 }
 
-const codeVersions = ["*", "insiders"];
-const sdkPaths = [process.env.PATH_STABLE, process.env.PATH_UNSTABLE].filter((p) => p);
-for (const codeVersion of codeVersions) {
-	for (const sdkPath of sdkPaths) {
-		runTests("general", "hello_world", sdkPath, codeVersion);
-		runTests("flutter", "flutter_hello_world", sdkPath, codeVersion);
+async function runAllTests(): Promise<void> {
+	const codeVersions = ["*", "insiders"];
+	const sdkPaths = [process.env.PATH_STABLE || process.env.PATH, process.env.PATH_UNSTABLE].filter((p) => p);
+	for (const codeVersion of codeVersions) {
+		for (const sdkPath of sdkPaths) {
+			await runTests("general", "hello_world", sdkPath, codeVersion);
+			await runTests("flutter", "flutter_hello_world", sdkPath, codeVersion);
+		}
 	}
 }
-process.exit(exitCode);
+
+runAllTests().then(() => process.exit(exitCode));
