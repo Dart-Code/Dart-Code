@@ -10,12 +10,12 @@ install:
   - cd flutter
   - git worktree add ..\dev\flutter origin/master
   - cd ..
-  - ps: $env:PATH = "$pwd\dart-sdk\bin;$pwd\flutter\bin;" + $env:PATH
+  - ps: $env:PATH_STABLE = "$pwd\dart-sdk\bin;$pwd\flutter\bin;"
   - ps: $env:PATH_UNSTABLE = "$pwd\dev\dart-sdk\bin;$pwd\dev\flutter\bin"
   - flutter config --no-analytics
   - ps: $env:ELECTRON_NO_ATTACH_CONSOLE = 1
-  - dart --version
-  - flutter --version
+  - dart-sdk\bin\dart --version
+  - flutter\bin\flutter --version
   - dev\dart-sdk\bin\dart --version
   - dev\flutter\bin\flutter --version
   - node --version

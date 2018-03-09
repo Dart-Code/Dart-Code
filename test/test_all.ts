@@ -54,7 +54,7 @@ function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string,
 }
 
 const codeVersions = ["*", "insiders"];
-const sdkPaths = process.env.PATH_UNSTABLE ? [null, process.env.PATH_UNSTABLE] : [null];
+const sdkPaths = [process.env.PATH_STABLE, process.env.PATH_UNSTABLE].filter((p) => p);
 for (const codeVersion of codeVersions) {
 	for (const sdkPath of sdkPaths) {
 		runTests("general", "hello_world", sdkPath, codeVersion);
