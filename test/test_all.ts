@@ -8,7 +8,7 @@ let exitCode = 0;
 function runNode(cwd: string, args: string[], env: any): Promise<number> {
 	return new Promise<number>((resolve, reject) => {
 		const proc = childProcess.spawn("node", args, { env, stdio: "inherit", cwd });
-		proc.on("data", (data: Buffer | string) => console.log("!!!" + data.toString()));
+		proc.on("data", (data: Buffer | string) => console.log(data.toString()));
 		proc.on("error", (data: Buffer | string) => console.warn(data.toString()));
 		proc.on("close", (code: number) => resolve(code));
 	});

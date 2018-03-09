@@ -1,6 +1,6 @@
 import { config } from "../config";
 import { FlutterDeviceManager } from "./device_manager";
-import { log, logError, extensionVersion, promptForReload } from "../utils";
+import { logError, extensionVersion, promptForReload } from "../utils";
 import { StdIOService, Request, UnknownResponse, UnknownNotification } from "../services/stdio_service";
 import * as child_process from "child_process";
 import * as f from "./flutter_types";

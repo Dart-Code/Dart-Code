@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as vs from "vscode";
 import { config } from "../config";
 import { Request, UnknownNotification, UnknownResponse } from "../services/stdio_service";
-import { extensionVersion, log, logError, versionIsAtLeast, promptForReload } from "../utils";
+import { extensionVersion, logError, versionIsAtLeast, promptForReload } from "../utils";
 import * as as from "./analysis_server_types";
 import { AnalyzerGen } from "./analyzer_gen";
 

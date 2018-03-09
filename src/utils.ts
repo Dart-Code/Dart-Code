@@ -267,10 +267,6 @@ function checkIsDevelopment() {
 	return extensionVersion.endsWith("-dev") || env.machineId === "someValue.machineId";
 }
 
-export function log(message: any): void {
-	console.log(message);
-}
-
 export function logError(error: { message: string }): void {
 	if (isDevelopment)
 		window.showErrorMessage("DEBUG: " + error.message);
