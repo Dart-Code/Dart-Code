@@ -2,6 +2,7 @@ install:
   - ps: $env:package_version = (Get-Content -Raw -Path package.json | ConvertFrom-Json).version
   - ps: Update-AppveyorBuild -Version "$env:package_version.$env:APPVEYOR_BUILD_NUMBER"
   - ps: Install-Product node ''
+  - ps: $env:ELECTRON_NO_ATTACH_CONSOLE = 1
   - ps: Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
   - ps: Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/dev/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart-dev.zip"
   - ps: 7z.exe x dart.zip | out-null
@@ -12,8 +13,7 @@ install:
   - cd ..
   - ps: $env:PATH_STABLE = "$pwd\dart-sdk\bin;$pwd\flutter\bin;"
   - ps: $env:PATH_UNSTABLE = "$pwd\dev\dart-sdk\bin;$pwd\dev\flutter\bin"
-  - flutter config --no-analytics
-  - ps: $env:ELECTRON_NO_ATTACH_CONSOLE = 1
+  - flutter\bin\flutter config --no-analytics
   - dart-sdk\bin\dart --version
   - flutter\bin\flutter --version
   - dev\dart-sdk\bin\dart --version
