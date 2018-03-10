@@ -33,8 +33,13 @@ export class LegacyDartDocumentSymbolProvider implements DocumentSymbolProvider 
 		});
 	}
 
-	private transcribeOutline(document: TextDocument, symbols: SymbolInformation[], parent: as.Element, outline: as.Outline) {
+	private transcribeOutline(document: TextDocument, symbols: SymbolInformation[], parent: as.Element, outline: as.Outline): void {
 		const element = outline.element;
+
+		// Don't show these (#656).
+		if (element.kind === "CONSTRUCTOR_INVOCATION" || element.kind === "FUNCTION_INVOCATION")
+			return;
+
 		let name = element.name;
 
 		if (element.parameters && element.kind !== "SETTER")
