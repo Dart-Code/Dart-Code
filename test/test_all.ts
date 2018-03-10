@@ -16,12 +16,26 @@ function color(col: number, message: string) {
 	return "\u001b[" + col + "m" + message + "\u001b[0m";
 }
 
+// 9 Minutes timeout since Travis kills us at 10m without output.
+const timeoutInMilliseconds = 1000 * 60 * 9;
 function runNode(cwd: string, args: string[], env: any): Promise<number> {
 	return new Promise<number>((resolve, reject) => {
+		let hasClosed = false;
 		const proc = childProcess.spawn("node", args, { env, stdio: "inherit", cwd });
 		proc.on("data", (data: Buffer | string) => console.log(data.toString()));
 		proc.on("error", (data: Buffer | string) => console.warn(data.toString()));
-		proc.on("close", (code: number) => resolve(code));
+		proc.on("close", (code: number) => {
+			hasClosed = true;
+			resolve(code);
+		});
+		setTimeout(() => {
+			if (proc && !hasClosed && !proc.killed) {
+				proc.kill();
+				console.log(red("Terminating process for taking too long!"));
+				console.log(yellow("    " + JSON.stringify(args)));
+				resolve(1);
+			}
+		}, timeoutInMilliseconds);
 	});
 }
 
