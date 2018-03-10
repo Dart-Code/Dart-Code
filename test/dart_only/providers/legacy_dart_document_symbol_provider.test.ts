@@ -41,7 +41,6 @@ describe("dart_document_symbol_provider", () => {
 		const symbols = await getDocumentSymbols();
 
 		assert.equal(symbols.length, 11);
-		// TODO: Are these ranges on the end going to be fragile?
 		ensureSymbol(symbols, "MyClass", vs.SymbolKind.Class, "");
 		ensureSymbol(symbols, "myNumField", vs.SymbolKind.Field, "MyClass");
 		ensureSymbol(symbols, "myNumGetter", vs.SymbolKind.Property, "MyClass");
