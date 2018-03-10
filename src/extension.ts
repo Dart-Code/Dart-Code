@@ -20,7 +20,6 @@ import { AssistCodeActionProvider } from "./providers/assist_code_action_provide
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
 import { DartDefinitionProvider } from "./providers/dart_definition_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
-import { DartDocumentSymbolProvider } from "./providers/dart_document_symbol_provider";
 import { DartFormattingEditProvider } from "./providers/dart_formatting_edit_provider";
 import { DartDocumentHighlightProvider } from "./providers/dart_highlighting_provider";
 import { DartHoverProvider } from "./providers/dart_hover_provider";
@@ -31,6 +30,7 @@ import { DartTypeFormattingEditProvider } from "./providers/dart_type_formatting
 import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
 import { DebugConfigProvider } from "./providers/debug_config_provider";
 import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
+import { LegacyDartDocumentSymbolProvider } from "./providers/legacy_dart_document_symbol_provider";
 import { LegacyDartWorkspaceSymbolProvider } from "./providers/legacy_dart_workspace_symbol_provider";
 import { LegacyDebugConfigProvider } from "./providers/legacy_debug_config_provider";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
@@ -159,7 +159,7 @@ export function activate(context: vs.ExtensionContext) {
 	const typeFormattingEditProvider = new DartTypeFormattingEditProvider(analyzer);
 	const completionItemProvider = new DartCompletionItemProvider(analyzer);
 	const definitionProvider = new DartDefinitionProvider(analyzer);
-	const documentSymbolProvider = new DartDocumentSymbolProvider(analyzer);
+	const documentSymbolProvider = new LegacyDartDocumentSymbolProvider(analyzer);
 	const referenceProvider = new DartReferenceProvider(analyzer);
 	const documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
 	const assistCodeActionProvider = new AssistCodeActionProvider(analyzer);

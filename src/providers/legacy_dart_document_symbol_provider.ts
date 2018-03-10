@@ -6,7 +6,7 @@ import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { toRange } from "../utils";
 import * as as from "../analysis/analysis_server_types";
 
-export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
+export class LegacyDartDocumentSymbolProvider implements DocumentSymbolProvider {
 	private analyzer: Analyzer;
 
 	constructor(analyzer: Analyzer) {
