@@ -1,9 +1,20 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as childProcess from "child_process";
+const supportsColor = require("supports-color"); // tslint:disable-line:no-var-requires
 
 const args = ["node_modules/vscode/bin/test"];
 let exitCode = 0;
+
+function red(message: string): string { return color(91, message); }
+function yellow(message: string): string { return color(93, message); }
+function green(message: string): string { return color(92, message); }
+function color(col: number, message: string) {
+	if (!supportsColor) {
+		return message;
+	}
+	return "\u001b[" + col + "m" + message + "\u001b[0m";
+}
 
 function runNode(cwd: string, args: string[], env: any): Promise<number> {
 	return new Promise<number>((resolve, reject) => {
@@ -14,8 +25,22 @@ function runNode(cwd: string, args: string[], env: any): Promise<number> {
 	});
 }
 
-async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string, codeVersion: string): Promise<void> {
-	console.log(`Running tests from '${testFolder}' in workspace '${workspaceFolder}' using version ${codeVersion} of Code and PATH: ${sdkPaths}`);
+async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string, codeVersion: string, allowFailures: boolean = false): Promise<void> {
+	console.log("\n\n");
+	console.log(red("############################################################"));
+	console.log(
+		red("## ")
+		+ `Running tests from ${yellow(testFolder)}`
+		+ ` in workspace ${yellow(workspaceFolder)}`
+		+ ` using version ${yellow(codeVersion)} of Code`);
+	console.log(`${red("##")} Looking for SDKs in:`);
+	sdkPaths
+		.split(path.delimiter)
+		.filter((p) => p && p.toLowerCase().indexOf("dart") !== -1 || p.toLowerCase().indexOf("flutter") !== -1)
+		.forEach((p) => console.log(`${red("##")}    ${p}`));
+	if (allowFailures)
+		console.log(`${red("## Failures")} are ${green("allowed")} for this run.`);
+	console.log(red("############################################################"));
 	const cwd = process.cwd();
 	const env = Object.create(process.env);
 	// For some reason, updating PATH here doesn't get through to Code
@@ -31,7 +56,8 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 		fs.mkdirSync(".nyc_output");
 	env.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testFolder}_${codeVersion}_${(new Date()).getTime()}.json`);
 	let res = await runNode(cwd, args, env);
-	exitCode = exitCode || res;
+	if (!allowFailures)
+		exitCode = exitCode || res;
 
 	// Remap coverage output.
 	if (fs.existsSync(env.COVERAGE_OUTPUT)) {
@@ -49,15 +75,21 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 		);
 		exitCode = exitCode || res;
 	}
+
+	console.log(red("############################################################"));
+	console.log("\n\n");
 }
 
 async function runAllTests(): Promise<void> {
-	const codeVersions = ["*"/*, "insiders"*/];
+	const codeVersions = ["*", "insiders"];
 	const sdkPaths = [process.env.PATH_STABLE || process.env.PATH, process.env.PATH_UNSTABLE].filter((p) => p);
 	for (const codeVersion of codeVersions) {
 		for (const sdkPath of sdkPaths) {
-			await runTests("dart_only", "hello_world", sdkPath, codeVersion);
-			await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion);
+			// Allow failures from Insiders because it's often bad (we'll still get reports).
+			const allowFailures = codeVersion === "insiders";
+			await runTests("dart_only", "hello_world", sdkPath, codeVersion, allowFailures);
+			await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion, allowFailures);
+			await runTests("multi_root", "projects.code-workspace", sdkPath, codeVersion, allowFailures);
 		}
 	}
 }

@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "flutter_hello_world"
+		},
+		{
+			"path": "hello_world"
+		}
+	],
+	"settings": {
+		"files.insertFinalNewline": true
+	}
+}
