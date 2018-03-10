@@ -12,3 +12,4 @@ logs/
 node_modules/
 out/
 pubspec.lock
+Generated.xcconfig
