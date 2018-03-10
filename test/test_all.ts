@@ -56,8 +56,8 @@ async function runAllTests(): Promise<void> {
 	const sdkPaths = [process.env.PATH_STABLE || process.env.PATH, process.env.PATH_UNSTABLE].filter((p) => p);
 	for (const codeVersion of codeVersions) {
 		for (const sdkPath of sdkPaths) {
-			await runTests("general", "hello_world", sdkPath, codeVersion);
-			await runTests("flutter", "flutter_hello_world", sdkPath, codeVersion);
+			await runTests("dart_only", "hello_world", sdkPath, codeVersion);
+			await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion);
 		}
 	}
 }
