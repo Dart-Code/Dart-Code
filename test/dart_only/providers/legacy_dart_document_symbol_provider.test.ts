@@ -19,7 +19,11 @@ describe("dart_document_symbol_provider", () => {
 			&& f.kind === kind
 			&& f.containerName === containerName,
 		);
-		assert.ok(symbol, `Couldn't find symbol for ${name}/${vs.SymbolKind[kind]}/${containerName}`);
+		assert.ok(
+			symbol,
+			`Couldn't find symbol for ${name}/${vs.SymbolKind[kind]}/${containerName} in\n`
+			+ symbols.map((s) => `        ${s.name}/${vs.SymbolKind[s.kind]}/${s.containerName}`).join("\n"),
+		);
 		assert.deepStrictEqual(symbol.location.uri, doc.uri);
 		assert.ok(symbol.location);
 		// Ensure we have a range, but don't check specifically what it is (this will make the test fragile and the range mapping is trivial)
@@ -33,7 +37,7 @@ describe("dart_document_symbol_provider", () => {
 	// TODO: Re-enable this, move it to amulti-root workspace so we can have
 	// a few Flutter-specific and Dart-specific tests, but mostly tests in a shared
 	// multi-root with them both (so we can access both sides)
-	xit("returns expected items for 'everything.dart'", async () => {
+	it("returns expected items for 'everything.dart'", async () => {
 		const symbols = await getDocumentSymbols();
 
 		assert.equal(symbols.length, 11);
@@ -42,14 +46,12 @@ describe("dart_document_symbol_provider", () => {
 		ensureSymbol(symbols, "myNumField", vs.SymbolKind.Field, "MyClass");
 		ensureSymbol(symbols, "myNumGetter", vs.SymbolKind.Property, "MyClass");
 		ensureSymbol(symbols, "myNumSetter", vs.SymbolKind.Property, "MyClass");
-		ensureSymbol(symbols, "MyClass()", vs.SymbolKind.Constructor, "");
-		ensureSymbol(symbols, "MyClass.named()", vs.SymbolKind.Constructor, "");
-		// ensureSymbol(symbols, "()", vs.SymbolKind.Constructor, "MyClass");
-		// ensureSymbol(symbols, "named()", vs.SymbolKind.Constructor, "MyClass");
+		ensureSymbol(symbols, "MyClass()", vs.SymbolKind.Constructor, "MyClass");
+		ensureSymbol(symbols, "MyClass.named()", vs.SymbolKind.Constructor, "MyClass");
 		ensureSymbol(symbols, "myVoidReturningMethod()", vs.SymbolKind.Method, "MyClass");
 		ensureSymbol(symbols, "myStringReturningMethod()", vs.SymbolKind.Method, "MyClass");
-		ensureSymbol(symbols, "myStringReturningMethod(String a)", vs.SymbolKind.Method, "MyClass");
+		ensureSymbol(symbols, "methodTakingString(String a)", vs.SymbolKind.Method, "MyClass");
 		ensureSymbol(symbols, "methodTakingFunction(int Function(String) myFunc)", vs.SymbolKind.Method, "MyClass");
-		ensureSymbol(symbols, "doSomeStuff()", vs.SymbolKind.Method, "");
+		ensureSymbol(symbols, "doSomeStuff()", vs.SymbolKind.Function, "");
 	});
 });

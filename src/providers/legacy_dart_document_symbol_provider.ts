@@ -40,14 +40,8 @@ export class LegacyDartDocumentSymbolProvider implements DocumentSymbolProvider 
 		if (element.parameters && element.kind !== "SETTER")
 			name = `${name}${element.parameters}`;
 
-		if (parent && parent.name)
-			name = `${parent.name}.${name}`;
-
-		// For properties, show if get/set.
-		const propertyType = element.kind === "SETTER" ? "set" : element.kind === "GETTER" ? "get" : null;
-
 		symbols.push({
-			containerName: propertyType, // HACK: Not really correct, but renders nicely.
+			containerName: parent && parent.name,
 			kind: getSymbolKindForElementKind(element.kind),
 			location: {
 				range: this.getRange(document, outline),
