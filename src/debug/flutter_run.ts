@@ -8,7 +8,7 @@ import { flutterEnv } from "./utils";
 
 export class FlutterRun extends StdIOService {
 	constructor(flutterBinPath: string, projectFolder: string, args: string[], logFile: string) {
-		super(logFile, true);
+		super(logFile, true, true);
 
 		this.createProcess(projectFolder, flutterBinPath, ["run", "--machine"].concat(args), flutterEnv);
 	}

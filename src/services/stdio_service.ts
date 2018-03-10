@@ -7,6 +7,7 @@ import * as fs from "fs";
 export abstract class StdIOService implements Disposable {
 	public process: child_process.ChildProcess;
 	protected messagesWrappedInBrackets = false;
+	protected treatHandlingErrorsAsUnhandledMessages = false;
 	private nextRequestID = 1;
 	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] } = {};
 	private messageBuffer: string[] = [];
@@ -14,9 +15,10 @@ export abstract class StdIOService implements Disposable {
 	private logStream: fs.WriteStream;
 	private requestErrorSubscriptions: Array<(notification: any) => void> = [];
 
-	constructor(logFile: string, wrappedMessages: boolean = false) {
+	constructor(logFile: string, wrappedMessages: boolean = false, treatHandlingErrorsAsUnhandledMessages: boolean = false) {
 		this.logFile = logFile;
 		this.messagesWrappedInBrackets = wrappedMessages;
+		this.treatHandlingErrorsAsUnhandledMessages = treatHandlingErrorsAsUnhandledMessages;
 	}
 
 	protected createProcess(workingDirectory: string, binPath: string, args: string[], env: any) {
@@ -104,9 +106,13 @@ export abstract class StdIOService implements Disposable {
 			if (this.messagesWrappedInBrackets && msg && msg.length === 1)
 				msg = msg[0];
 		} catch (e) {
-			console.error(`Unexpected non-JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
-			this.processUnhandledMessage(message);
-			return;
+			if (this.treatHandlingErrorsAsUnhandledMessages) {
+				console.error(`Unexpected non-JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
+				this.processUnhandledMessage(message);
+				return;
+			} else {
+				throw e;
+			}
 		}
 
 		try {
@@ -119,8 +125,12 @@ export abstract class StdIOService implements Disposable {
 				this.processUnhandledMessage(message);
 			}
 		} catch (e) {
-			console.error(`Failed to handle JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
-			this.processUnhandledMessage(message);
+			if (this.treatHandlingErrorsAsUnhandledMessages) {
+				console.error(`Failed to handle JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
+				this.processUnhandledMessage(message);
+			} else {
+				throw e;
+			}
 		}
 	}
 
