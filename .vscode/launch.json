@@ -52,7 +52,7 @@
 			"args": [
 				"${workspaceRoot}/test/test_projects/hello_world",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/test/general"
+				"--extensionTestsPath=${workspaceRoot}/out/test/dart_only"
 			],
 			"env": {
 				"DART_CODE_DISABLE_ANALYTICS": "true"
@@ -72,7 +72,7 @@
 			"args": [
 				"${workspaceRoot}/test/test_projects/flutter_hello_world",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/test/flutter"
+				"--extensionTestsPath=${workspaceRoot}/out/test/flutter_only"
 			],
 			"env": {
 				"DART_CODE_DISABLE_ANALYTICS": "true"
