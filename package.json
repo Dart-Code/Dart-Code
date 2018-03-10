@@ -204,6 +204,11 @@
 				"key": "f4",
 				"mac": "f4",
 				"when": "editorLangId == dart"
+			},
+			{
+				"command": "flutter.fullRestart",
+				"when": "dart-code:flutterProjectLoaded && inDebugMode",
+				"key": "ctrl+f5"
 			}
 		],
 		"menus": {
