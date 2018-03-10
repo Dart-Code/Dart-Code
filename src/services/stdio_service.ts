@@ -104,7 +104,7 @@ export abstract class StdIOService implements Disposable {
 			if (this.messagesWrappedInBrackets && msg && msg.length === 1)
 				msg = msg[0];
 		} catch (e) {
-			console.error(`Unexpected non-JSON message, assuming normal stdout (${e}): ${message}`);
+			console.error(`Unexpected non-JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
 			this.processUnhandledMessage(message);
 			return;
 		}
@@ -119,7 +119,7 @@ export abstract class StdIOService implements Disposable {
 				this.processUnhandledMessage(message);
 			}
 		} catch (e) {
-			console.error(`Failed to handle JSON message, assuming normal stdout (${e}): ${message}`);
+			console.error(`Failed to handle JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
 			this.processUnhandledMessage(message);
 		}
 	}
