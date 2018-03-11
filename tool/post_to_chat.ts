@@ -54,7 +54,7 @@ async function send_summary_message() {
 
 		const message =
 			`*${buildName} ${hasFailed ? "FAILURE" : "SUCCESS"}*\n\n`
-			+ `*${commitAuthor}* - _${branchName}_\n`
+			+ `*${commitAuthor}* _${branchName}_\n`
 			+ `${commitMessage}\n\n`
 			+ `<${buildUrl}|Build Report>`;
 
