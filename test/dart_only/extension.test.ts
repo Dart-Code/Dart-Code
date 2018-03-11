@@ -1,4 +1,5 @@
 import * as assert from "assert";
+import * as path from "path";
 import * as vs from "vscode";
 import { Sdks } from "../../src/utils";
 
@@ -12,8 +13,8 @@ describe("Test environment", () => {
 		const wfs = vs.workspace.workspaceFolders;
 		assert.equal(wfs.length, 1);
 		assert.ok(
-			wfs[0].uri.path.endsWith("hello_world"),
-			wfs[0].uri.path + " doesn't end with hello_world",
+			wfs[0].uri.path.endsWith(path.sep + "hello_world"),
+			`${wfs[0].uri.path} doesn't end with ${path.sep}hello_world`,
 		);
 	});
 });
