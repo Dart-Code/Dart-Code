@@ -11,8 +11,8 @@ describe("Test environment", () => {
 		const wfs = vs.workspace.workspaceFolders;
 		assert.equal(wfs.length, 1);
 		assert.ok(
-			wfs[0].uri.path.endsWith(path.sep + "flutter_hello_world"),
-			`${wfs[0].uri.path} doesn't end with ${path.sep}flutter_hello_world`,
+			wfs[0].uri.fsPath.endsWith(path.sep + "flutter_hello_world"),
+			`${wfs[0].uri.fsPath} doesn't end with ${path.sep}flutter_hello_world`,
 		);
 	});
 });
