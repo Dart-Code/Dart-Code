@@ -1,3 +1,7 @@
+// This script is called by Travis/AppVeyor and posts the build status to a
+// Hangouts Chat room. It requires an endpoint which is set in a secure variable
+// (and thus will not run for PRs).
+
 import * as https from "https";
 
 const chatWebHookPath = process.env.CHAT_WEBHOOK_PATH;
@@ -37,8 +41,6 @@ async function send_summary_message() {
 	const pEnv = process.env;
 	if (pEnv.CI) {
 		const hasFailed = pEnv.TRAVIS_TEST_RESULT === "1" || pEnv.APPVEYOR_RESULT;
-		if (!hasFailed)
-			return;
 
 		let buildUrl: string;
 		if (process.env.TRAVIS) {
@@ -53,7 +55,7 @@ async function send_summary_message() {
 		const buildName = `${flavor} BUILD`.trim().toUpperCase();
 
 		const message =
-			`*${buildName} ${hasFailed ? "FAILURE" : "SUCCESS"}*\n\n`
+			`*${buildName} ${hasFailed ? "FAILURE <users/all>" : "SUCCESS"}*\n\n`
 			+ `*${commitAuthor}* _${branchName}_\n`
 			+ `${commitMessage}\n\n`
 			+ `<${buildUrl}|Build Report>`;
