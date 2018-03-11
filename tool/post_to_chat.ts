@@ -56,7 +56,7 @@ async function send_summary_message() {
 			`*${buildName} ${hasFailed ? "FAILURE" : "SUCCESS"}*\n\n`
 			+ `*${commitAuthor}* - _${branchName}_\n`
 			+ `${commitMessage}\n\n`
-			+ buildUrl;
+			+ `<${buildUrl}|Build Report>`;
 
 		await sendToChat(message);
 	}
