@@ -29,6 +29,11 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 	}
 
 	private convertResult(result: as.ElementDeclaration, file: string): SymbolInformation {
+		let name = result.name;
+
+		if (result.parameters && result.kind !== "SETTER")
+			name += result.parameters;
+
 		return {
 			containerName: result.className,
 			kind: getSymbolKindForElementKind(result.kind),
@@ -36,7 +41,7 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 				range: toRange({ startLine: result.line, startColumn: result.column, length: 0 }),
 				uri: Uri.file(file),
 			},
-			name: result.name + (result.parameters || ""),
+			name,
 		};
 	}
 }
