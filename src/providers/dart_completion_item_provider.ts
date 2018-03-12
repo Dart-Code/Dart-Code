@@ -150,10 +150,9 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			document.positionAt(notification.replacementOffset + notification.replacementLength),
 		);
 
-		switch (label) {
-			case "import '';":
-				triggerCompletion = true;
-				break;
+		const triggerCompletionsFor = ["import '';"];
+		if (triggerCompletionsFor.indexOf(label) !== -1) {
+			triggerCompletion = true;
 		}
 
 		if (triggerCompletion) {
