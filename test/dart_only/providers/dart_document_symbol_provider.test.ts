@@ -4,14 +4,13 @@ import * as fs from "fs";
 import * as vs from "vscode";
 import { activate, doc, getPositionOf, rangeOf, everythingFile, rangeAt, ensureSymbol, getDocumentSymbols } from "../../helpers";
 
-describe("dart_document_symbol_provider", () => {
+describe("document_symbol_provider", () => {
 
 	before(async () => activate(everythingFile));
 
 	it("returns expected items for 'everything.dart'", async () => {
 		const symbols = await getDocumentSymbols();
 
-		assert.equal(symbols.length, 11);
 		ensureSymbol(symbols, "MyClass", vs.SymbolKind.Class, "");
 		ensureSymbol(symbols, "myNumField", vs.SymbolKind.Field, "MyClass");
 		ensureSymbol(symbols, "myNumGetter", vs.SymbolKind.Property, "MyClass");
@@ -23,5 +22,6 @@ describe("dart_document_symbol_provider", () => {
 		ensureSymbol(symbols, "methodTakingString(String a)", vs.SymbolKind.Method, "MyClass");
 		ensureSymbol(symbols, "methodTakingFunction(int Function(String) myFunc)", vs.SymbolKind.Method, "MyClass");
 		ensureSymbol(symbols, "doSomeStuff()", vs.SymbolKind.Function, "");
+		assert.equal(symbols.length, 11);
 	});
 });

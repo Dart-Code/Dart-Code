@@ -11,9 +11,9 @@ describe("dart_document_symbol_provider", () => {
 	it("returns expected items for 'flutter/hello_world'", async () => {
 		const symbols = await getDocumentSymbols();
 
-		assert.equal(symbols.length, 3);
 		ensureSymbol(symbols, "main()", vs.SymbolKind.Function, "");
 		ensureSymbol(symbols, "MySampleHome", vs.SymbolKind.Class, "");
 		ensureSymbol(symbols, "build(BuildContext context)", vs.SymbolKind.Method, "MySampleHome");
+		assert.equal(symbols.length, 3);
 	});
 });
