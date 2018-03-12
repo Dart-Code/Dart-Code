@@ -70,7 +70,9 @@ export function findSdks(): Sdks {
 		fuchsiaRoot = fuchsiaRoot || findFuchsiaRoot(folder);
 		flutterProject = flutterProject
 			|| (referencesFlutterSdk(folder) ? folder : null)
-			|| (fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE)) ? folder : null);
+			|| (fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE)) ? folder : null)
+			// Special case to detect the Flutter repo root, so we always consider it a Flutter project and will use the local SDK
+			|| (fs.existsSync(path.join(folder, "bin/flutter")) && fs.existsSync(path.join(folder, "bin/cache/dart-sdk")) ? folder : null);
 		hasFuchsiaProjectThatIsNotVanillaFlutter = hasFuchsiaProjectThatIsNotVanillaFlutter || !referencesFlutterSdk(folder);
 	});
 
