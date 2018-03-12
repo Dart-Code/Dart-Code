@@ -163,7 +163,7 @@ export class SdkCommands {
 		});
 	}
 
-	private async createFlutterProject(): Promise<number> {
+	private async createFlutterProject(): Promise<void> {
 		if (!this.sdks || !this.sdks.flutter) {
 			util.showFlutterActivationFailure();
 			return;

@@ -42,20 +42,15 @@ describe("Command", () => {
 		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves(null);
 		executeCommand.callThrough();
 
-		vs.commands.executeCommand("flutter.createProject");
-		// Allow time for the box to open - we can't await the command since
-		// it's never going to complete. We need to wait long enough to allow for
-		// the extension to activate and then run the command.
-		await waitFor(() =>
-			fs.existsSync(path.join(tempFolder, "my_test_flutter_proj", FLUTTER_CREATE_PROJECT_TRIGGER_FILE)),
-			2000,
-		);
+		await vs.commands.executeCommand("flutter.createProject");
 
 		assert.ok(showInputBox.calledOnce);
-		showInputBox.restore();
 		assert.ok(showOpenDialog.calledOnce);
-		showInputBox.restore();
 		assert.ok(openFolder.calledOnce);
+		assert.ok(fs.existsSync(path.join(tempFolder, "my_test_flutter_proj", FLUTTER_CREATE_PROJECT_TRIGGER_FILE)));
+
+		showInputBox.restore();
+		showOpenDialog.restore();
 		executeCommand.restore();
 	});
 });
