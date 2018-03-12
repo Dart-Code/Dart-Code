@@ -103,6 +103,26 @@
 				"${workspaceRoot}/out/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch"
+		},
+		{
+			"name": "Launch Tests (Not Activated / Flutter Create)",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"${workspaceRoot}/test/test_projects/empty",
+				"--extensionDevelopmentPath=${workspaceRoot}",
+				"--extensionTestsPath=${workspaceRoot}/out/test/not_activated/flutter_create"
+			],
+			"env": {
+				"DART_CODE_DISABLE_ANALYTICS": "true"
+			},
+			"stopOnEntry": false,
+			"sourceMaps": true,
+			"outFiles": [
+				"${workspaceRoot}/out/test/**/*.js"
+			],
+			"preLaunchTask": "npm: watch"
 		}
 	],
 	"compounds": [

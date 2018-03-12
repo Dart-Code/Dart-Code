@@ -104,6 +104,7 @@ async function runAllTests(): Promise<void> {
 			await runTests("dart_only", "hello_world", sdkPath, codeVersion, allowFailures);
 			await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion, allowFailures);
 			await runTests("multi_root", "projects.code-workspace", sdkPath, codeVersion, allowFailures);
+			await runTests("not_activated/flutter_create", "empty", sdkPath, codeVersion, allowFailures);
 		}
 	}
 }
