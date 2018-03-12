@@ -18,6 +18,7 @@ addons:
   apt:
     packages:
       - libsecret-1-dev
+      - libstdc++6
 
 before_install:
   - export TRAVIS_COMMIT_AUTHOR="$(git log -1 $TRAVIS_COMMIT --pretty="%aN")"
