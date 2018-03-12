@@ -58,6 +58,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		let label = suggestion.displayText || suggestion.completion;
 		let detail = "";
 		const completionText = new SnippetString();
+		let triggerCompletion = false;
 
 		const insertArgumentPlaceholders = config.for(document.uri).insertArgumentPlaceholders;
 		// Use the replacement range to find out whether the character immediately following the completion would be a paren/colon to avoid inserting where
@@ -99,6 +100,10 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		} else if (suggestion.selectionOffset > 0) {
 			const before = suggestion.completion.slice(0, suggestion.selectionOffset);
 			const selection = suggestion.completion.slice(suggestion.selectionOffset, suggestion.selectionOffset + suggestion.selectionLength);
+			// If we have a selection offset (eg. a place to put the cursor) but not any text to pre-select then
+			// pop open the completion to help the user type the value.
+			if (!selection)
+				triggerCompletion = true;
 			const after = suggestion.completion.slice(suggestion.selectionOffset + suggestion.selectionLength);
 
 			completionText.appendText(before);
@@ -147,11 +152,15 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 
 		switch (label) {
 			case "import '';":
-				completion.command = {
-					command: "editor.action.triggerSuggest",
-					title: "Suggest",
-				};
+				triggerCompletion = true;
 				break;
+		}
+
+		if (triggerCompletion) {
+			completion.command = {
+				command: "editor.action.triggerSuggest",
+				title: "Suggest",
+			};
 		}
 
 		// Relevance is a number, highest being best. Code sorts by text, so subtract from a large number so that
