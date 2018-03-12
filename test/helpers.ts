@@ -84,3 +84,7 @@ export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind
 	assert.ok(symbol.location.range.end);
 	assert.ok(symbol.location.range.end.line);
 }
+
+export function delay(milliseconds: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
