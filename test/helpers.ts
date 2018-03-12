@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as fs from "fs";
 import * as vs from "vscode";
-import { EOL } from "os";
+import { EOL, tmpdir } from "os";
 
 const ext = vs.extensions.getExtension("Dart-Code.dart-code");
 export const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/hello_world"));
@@ -87,4 +87,26 @@ export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind
 
 export function delay(milliseconds: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+export function getRandomTempFolder(): string {
+	const r = Math.floor(Math.random() * 100000);
+	const base = path.join(tmpdir(), "dart-code-tests");
+	if (!fs.existsSync(base))
+		fs.mkdirSync(base);
+	const tmpPath = path.join(base, r.toString());
+	if (!fs.existsSync(tmpPath))
+		fs.mkdirSync(tmpPath);
+	return tmpPath;
+}
+
+export async function waitFor(action: () => boolean, milliseconds: number): Promise<void> {
+	let timeRemaining = milliseconds;
+	while (timeRemaining > 0) {
+		if (action())
+			return;
+		await new Promise((resolve) => setTimeout(resolve, 100));
+		timeRemaining -= 100;
+	}
+	throw new Error("Action didn't return true within specified timeout");
 }
