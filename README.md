@@ -63,6 +63,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - `dart.pubAdditionalArgs`: Additional args to pass to `pub get` and `pub upgrade` commands (eg. `--packages-dir`).
 - `dart.runPubGetOnPubspecChanges`: Whether to automatically run `pub get` whenever pubspec.yaml is saved. Defaults to `true`.
 - `dart.promptToGetPackages`: Whether to prompt to get packages when opening a project with out of date packages. Defaults to `true`.
+- `dart.promptToUpgradeWorkspace`: Whether to prompt to upgrade folders to Workspace Folders when projects are detected in sub-folders. Defaults to `true`.
 - `dart.sdkPath`: If the Dart SDK is not automatically found on your machine from your `PATH` you can enter the path to it here.
 - `dart.sdkPaths`: If you often switch between multiple Dart SDKs, setting this option to an array of Dart SDK folders or folders that contain multiple Dart SDKs in sub-folders will allow fast switching by clicking the Dart SDK version in the status bar.
 - `dart.flutterSdkPaths`: If you often switch between multiple Flutter SDKs/channels, setting this option to an array of Flutter SDK folders or folders that contain multiple Flutter SDKs in sub-folders will allow fast switching by clicking the Flutter SDK version in the status bar.

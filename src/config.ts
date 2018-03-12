@@ -50,18 +50,16 @@ class Config {
 	get previewAnalyzeAngularTemplates() { return this.getConfig<boolean>("previewAnalyzeAngularTemplates"); }
 
 	public for(uri: Uri): ResourceConfig {
-		return new ResourceConfig(uri, this.setConfig.bind(this));
+		return new ResourceConfig(uri);
 	}
 }
 
 class ResourceConfig {
 	public uri: Uri;
 	public config: WorkspaceConfiguration;
-	private setConfig: <T>(key: string, value: T, target: ConfigurationTarget) => Thenable<void>;
 
-	constructor(uri: Uri, setConfig: <T>(key: string, value: T, target: ConfigurationTarget) => Thenable<void>) {
+	constructor(uri: Uri) {
 		this.uri = uri;
-		this.setConfig = setConfig;
 		workspace.onDidChangeConfiguration((e) => this.loadConfig());
 		this.loadConfig();
 	}
@@ -72,6 +70,10 @@ class ResourceConfig {
 
 	private getConfig<T>(key: string): T {
 		return this.config.get<T>(key);
+	}
+
+	private setConfig<T>(key: string, value: T, target: ConfigurationTarget): Thenable<void> {
+		return this.config.update(key, value, target).then(() => this.loadConfig());
 	}
 
 	get debugSdkLibraries() { return this.getConfig<boolean>("debugSdkLibraries"); }
@@ -85,6 +87,8 @@ class ResourceConfig {
 	get observatoryLogFile() { return resolveHomePath(this.getConfig<string>("observatoryLogFile")); }
 	get promptToGetPackages() { return this.getConfig<boolean>("promptToGetPackages"); }
 	get vmAdditionalArgs() { return this.getConfig<string[]>("vmAdditionalArgs"); }
+	get promptToUpgradeWorkspace() { return this.getConfig<boolean>("promptToUpgradeWorkspace"); }
+	public setPromptToUpgradeWorkspace(value: boolean): Thenable<void> { return this.setConfig("promptToUpgradeWorkspace", value, ConfigurationTarget.WorkspaceFolder); }
 }
 
 export class CodeCapabilities {

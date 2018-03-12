@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import * as util from "./utils";
+import { config } from "./config";
 
 export function locateBestProjectRoot(folder: string): string {
 	if (!folder || !util.isWithinWorkspace(folder))
@@ -42,15 +43,19 @@ export async function checkForProjectsInSubFolders() {
 		projects = projects.concat(getChildProjects(workspaceFolder.uri.fsPath));
 	}
 
-	// Filter to those that aren't already roots.
 	const projectsToAdd = projects
-		.filter((f) => vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri.fsPath !== f);
+		// Filter to those that aren't already roots.
+		.filter((f) => vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri.fsPath !== f)
+		// Or if we're opted-out.
+		.filter((f) => config.for(vs.Uri.file(f)).promptToUpgradeWorkspace);
 
 	if (projectsToAdd.length > 0) {
 		const updateWorkspaceAction = "Mark Projects as Workspace Folders";
+		const notForThisFolderAction = "Don't ask for this Folder";
 		const res = await vs.window.showWarningMessage(
 			`This folder contains ${projectsToAdd.length} projects in sub-folders. Would you like to mark them as Workspace Folders to enable all functionality?`,
 			updateWorkspaceAction,
+			notForThisFolderAction,
 		);
 		if (res === updateWorkspaceAction) {
 			vs.workspace.updateWorkspaceFolders(
@@ -61,6 +66,13 @@ export async function checkForProjectsInSubFolders() {
 					uri: vs.Uri.file(p),
 				})),
 			);
+		} else {
+			if (res === notForThisFolderAction) {
+				for (const f of projectsToAdd) {
+					await config.for(vs.Uri.file(f)).setPromptToUpgradeWorkspace(false);
+				}
+			}
+			vs.window.showWarningMessage("Some functionality may not work correctly for projects that are in sub-folders.");
 		}
 	}
 }
