@@ -40,6 +40,7 @@ import { isFlutterProject } from "./utils";
 import * as util from "./utils";
 import { DartPackagesProvider } from "./views/packages_view";
 import { PromiseCompleter } from "./debug/utils";
+import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
@@ -95,15 +96,13 @@ export function activate(context: vs.ExtensionContext) {
 	// Show the SDK version in the status bar.
 	const sdkVersion = util.getDartSdkVersion(sdks.dart);
 	if (sdkVersion) {
-		const versionStatusItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
-		versionStatusItem.text = sdkVersion.length > 20 ? sdkVersion.substr(0, 17) + "…" : sdkVersion;
-		versionStatusItem.tooltip = "Dart SDK Version" + ` (${util.ProjectType[sdks.projectType]}) v` + sdkVersion;
-		versionStatusItem.show();
-		context.subscriptions.push(versionStatusItem);
-
-		// If we're set up for multiple versions, set up the command.
-		if (config.sdkPaths && config.sdkPaths.length > 0)
-			versionStatusItem.command = "dart.changeSdk";
+		const statusBarVersionTracker = new StatusBarVersionTracker(
+			sdkVersion.length > 20 ? sdkVersion.substr(0, 17) + "…" : sdkVersion,
+			"Dart SDK Version" + ` (${util.ProjectType[sdks.projectType]}) v` + sdkVersion,
+			// If we're set up for multiple versions, set up the command.
+			config.sdkPaths && config.sdkPaths.length > 0 ? "dart.changeSdk" : null,
+		);
+		context.subscriptions.push(statusBarVersionTracker);
 
 		// Do update-check.
 		if (config.checkForSdkUpdates && sdks.projectType === util.ProjectType.Dart) {
