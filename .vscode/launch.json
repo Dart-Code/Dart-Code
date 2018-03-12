@@ -10,7 +10,6 @@
 			"args": [
 				"--extensionDevelopmentPath=${workspaceRoot}"
 			],
-			"sourceMaps": true,
 			"outFiles": [
 				"${workspaceRoot}/out/src/**/*.js"
 			],
@@ -25,7 +24,6 @@
 			"args": [
 				"--server=4711"
 			],
-			"sourceMaps": true,
 			"outFiles": [
 				"${workspaceRoot}/out/src/**/*.js"
 			]
@@ -39,7 +37,6 @@
 			"args": [
 				"--server=4711"
 			],
-			"sourceMaps": true,
 			"outFiles": [
 				"${workspaceRoot}/out/src/**/*.js"
 			]
@@ -57,8 +54,6 @@
 			"env": {
 				"DART_CODE_DISABLE_ANALYTICS": "true"
 			},
-			"stopOnEntry": false,
-			"sourceMaps": true,
 			"outFiles": [
 				"${workspaceRoot}/out/test/**/*.js"
 			],
@@ -77,8 +72,6 @@
 			"env": {
 				"DART_CODE_DISABLE_ANALYTICS": "true"
 			},
-			"stopOnEntry": false,
-			"sourceMaps": true,
 			"outFiles": [
 				"${workspaceRoot}/out/test/**/*.js"
 			],
@@ -97,8 +90,6 @@
 			"env": {
 				"DART_CODE_DISABLE_ANALYTICS": "true"
 			},
-			"stopOnEntry": false,
-			"sourceMaps": true,
 			"outFiles": [
 				"${workspaceRoot}/out/test/**/*.js"
 			],
@@ -117,8 +108,6 @@
 			"env": {
 				"DART_CODE_DISABLE_ANALYTICS": "true"
 			},
-			"stopOnEntry": false,
-			"sourceMaps": true,
 			"outFiles": [
 				"${workspaceRoot}/out/test/**/*.js"
 			],
