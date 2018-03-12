@@ -1,6 +1,6 @@
 import { window, workspace, TextDocument } from "vscode";
-import { Analyzer } from "./analysis/analyzer";
-import * as util from "./utils";
+import { Analyzer } from "./analyzer";
+import * as util from "../utils";
 
 export class OpenFileTracker {
 	private analyzer: Analyzer;
