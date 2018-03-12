@@ -218,7 +218,9 @@ export function toRange(location: Location): Range {
 	return new Range(startPos, startPos.translate(0, location.length));
 }
 
-export function getDartSdkVersion(sdkRoot: string): string {
+export function getSdkVersion(sdkRoot: string): string {
+	if (!sdkRoot)
+		return null;
 	try {
 		return fs.readFileSync(path.join(sdkRoot, "version"), "utf8").trim();
 	} catch (e) {

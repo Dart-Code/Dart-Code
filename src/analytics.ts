@@ -33,6 +33,7 @@ enum TimingVariable {
 export class Analytics {
 	public sdks: Sdks;
 	public sdkVersion: string;
+	public flutterSdkVersion: string;
 	public analysisServerVersion: string;
 
 	constructor(sdks: Sdks) {
@@ -105,6 +106,7 @@ export class Analytics {
 			cd10: config.showTodos ? "On" : "Off",
 			cd11: config.showLintNames ? "On" : "Off",
 			cd12: config.previewDart2 ? "On" : "Off",
+			cd13: this.flutterSdkVersion,
 			cd2: process.platform,
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,

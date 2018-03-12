@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { hasDartExecutable, getDartSdkVersion, Sdks, versionIsAtLeast } from "../utils";
+import { hasDartExecutable, getSdkVersion, Sdks, versionIsAtLeast } from "../utils";
 import { config } from "../config";
 
 export class SdkManager {
@@ -32,7 +32,7 @@ export class SdkManager {
 			.filter((f) => hasDartExecutable(path.join(f, "bin"))); // Only those that look like Dart SDKs.
 
 		const sdkItems = sdkFolders.map((f) => {
-			const version = getDartSdkVersion(f);
+			const version = getSdkVersion(f);
 			return {
 				description: f,
 				detail: fs.realpathSync(f) === currentSdk && config.userDefinedSdkPath ? "Current setting" : "",

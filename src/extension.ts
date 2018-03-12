@@ -94,22 +94,18 @@ export function activate(context: vs.ExtensionContext) {
 	}
 
 	// Show the SDK version in the status bar.
-	const sdkVersion = util.getDartSdkVersion(sdks.dart);
-	if (sdkVersion) {
-		const statusBarVersionTracker = new StatusBarVersionTracker(
-			sdkVersion.length > 20 ? sdkVersion.substr(0, 17) + "…" : sdkVersion,
-			"Dart SDK Version" + ` (${util.ProjectType[sdks.projectType]}) v` + sdkVersion,
-			// If we're set up for multiple versions, set up the command.
-			config.sdkPaths && config.sdkPaths.length > 0 ? "dart.changeSdk" : null,
-		);
+	const dartSdkVersion = util.getSdkVersion(sdks.dart);
+	const flutterSdkVersion = util.getSdkVersion(sdks.flutter);
+	if (dartSdkVersion) {
+		const statusBarVersionTracker = new StatusBarVersionTracker(dartSdkVersion, flutterSdkVersion);
 		context.subscriptions.push(statusBarVersionTracker);
 
 		// Do update-check.
 		if (config.checkForSdkUpdates && sdks.projectType === util.ProjectType.Dart) {
 			util.getLatestSdkVersion().then((version) => {
-				if (!util.versionIsAtLeast(sdkVersion, version))
+				if (!util.versionIsAtLeast(dartSdkVersion, version))
 					vs.window.showWarningMessage(
-						`Version ${version} of the Dart SDK is available (you have ${sdkVersion}). Some features of Dart Code may not work correctly with an old SDK.`,
+						`Version ${version} of the Dart SDK is available (you have ${dartSdkVersion}). Some features of Dart Code may not work correctly with an old SDK.`,
 						"Go to Dart Downloads",
 					).then((selectedItem) => {
 						if (selectedItem)
@@ -118,7 +114,7 @@ export function activate(context: vs.ExtensionContext) {
 			}, util.logError);
 		}
 
-		analytics.sdkVersion = sdkVersion;
+		analytics.sdkVersion = dartSdkVersion;
 	}
 
 	// Fire up the analyzer process.

@@ -7,7 +7,7 @@ import { Analyzer } from "./analyzer";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PromiseCompleter } from "../debug/utils";
-import { extensionVersion, getDartSdkVersion, Sdks } from "../utils";
+import { extensionVersion, getSdkVersion, Sdks } from "../utils";
 
 const maxErrorReportCount = 3;
 
@@ -86,7 +86,8 @@ export class AnalyzerStatusReporter {
 	}
 
 	private reportError(error: ServerErrorNotification, method?: string) {
-		const sdkVersion = getDartSdkVersion(this.sdks.dart);
+		const sdkVersion = getSdkVersion(this.sdks.dart);
+		const flutterSdkVersion = getSdkVersion(this.sdks.flutter);
 
 		// Attempt to get the last diagnostics
 		const diagnostics = this.analyzer.getLastDiagnostics();
@@ -104,7 +105,7 @@ Exception from analysis server (running from VSCode / Dart Code)
 ${method ? "\n### Request\n\nWhile responding to request: `" + method + "`\n" : ""}
 ### Versions
 
-- Dart SDK ${sdkVersion}
+- Dart SDK ${sdkVersion}${flutterSdkVersion ? `\n- Flutter SDK ${flutterSdkVersion}` : ""}
 - ${env.appName} ${codeVersion}
 - Dart Code ${extensionVersion}
 
