@@ -727,6 +727,12 @@ export interface SearchFindTopLevelDeclarationsResponse {
  */
 export interface SearchGetElementDeclarationsRequest {
 	/**
+	 * If this field is provided, return only declarations in this file.
+	 * If this field is missing, return declarations in all files.
+	 */
+	file?: FilePath;
+
+	/**
 	 * The regular expression used to match the names of declarations.
 	 * If this field is missing, return all declarations.
 	 */
