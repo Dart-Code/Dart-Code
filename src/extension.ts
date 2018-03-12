@@ -41,6 +41,7 @@ import * as util from "./utils";
 import { DartPackagesProvider } from "./views/packages_view";
 import { PromiseCompleter } from "./debug/utils";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
+import { checkForProjectsInSubFolders } from "./project";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
@@ -78,6 +79,7 @@ export function activate(context: vs.ExtensionContext) {
 
 	const analysisCompleteCompleter = new PromiseCompleter<void>();
 	const extensionStartTime = new Date();
+	checkForProjectsInSubFolders();
 	const sdks = util.findSdks();
 	analytics = new Analytics(sdks);
 	if (!sdks.dart || (sdks.projectType === util.ProjectType.Flutter && !sdks.flutter)) {
