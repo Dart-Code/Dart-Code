@@ -67,6 +67,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - `dart.sdkPaths`: If you often switch between multiple Dart SDKs, setting this option to an array of Dart SDK folders or folders that contain multiple Dart SDKs in sub-folders will allow fast switching by clicking the Dart SDK version in the status bar.
 - `dart.showLintNames`: Whether to show the names of linter rules in the problems panel to make it easier to `// ignore:`.
 - `dart.showTodos`: Whether to show TODOs in the Problems list. Defaults to `true`.
+- `dart.vmAdditionalArgs`: Additional args to pass to the Dart VM when running/debugging apps.
 
 
 ## Analytics

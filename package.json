@@ -534,6 +534,15 @@
 					"type": "string",
 					"description": "The path to a log file for Observatory communication.\nThis is a diagnostic setting that should not normally be set.",
 					"scope": "resource"
+				},
+				"dart.vmAdditionalArgs": {
+					"type": "array",
+					"default": [],
+					"description": "Additional args to pass to the Dart VM when running/debugging apps.",
+					"scope": "resource",
+					"items": {
+						"type": "string"
+					}
 				}
 			}
 		},

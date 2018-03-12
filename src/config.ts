@@ -81,6 +81,7 @@ class ResourceConfig {
 	get flutterRunLogFile() { return resolveHomePath(this.getConfig<string>("flutterRunLogFile")); }
 	get observatoryLogFile() { return resolveHomePath(this.getConfig<string>("observatoryLogFile")); }
 	get promptToFetchPackages() { return this.getConfig<boolean>("promptToFetchPackages"); }
+	get vmAdditionalArgs() { return this.getConfig<string[]>("vmAdditionalArgs"); }
 }
 
 export class CodeCapabilities {
