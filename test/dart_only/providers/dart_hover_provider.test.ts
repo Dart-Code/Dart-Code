@@ -6,7 +6,7 @@ import { activate, doc, getPositionOf, rangeOf, everythingFile } from "../../hel
 
 describe("dart_hover_provider", () => {
 
-	before(async () => activate(everythingFile));
+	before(() => activate(everythingFile));
 
 	async function getHoversAt(searchText: string): Promise<Array<{ displayText: string, documentation?: string, range: vs.Range }>> {
 		const position = getPositionOf(searchText);

@@ -6,7 +6,7 @@ import { activate, doc, setTestContent, editor, eol } from "../../helpers";
 
 describe("debug_config_provider", () => {
 
-	before(async () => activate());
+	before(() => activate());
 
 	it("returns the dart debug entry script", async () => {
 		const entry = await vs.commands.executeCommand("dart.getDebuggerExecutable", vs.workspace.workspaceFolders[0].uri.toString()) as { args: string[], command: string };

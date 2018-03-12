@@ -6,7 +6,7 @@ import { activate, doc, getPositionOf, rangeOf, everythingFile, rangeAt, ensureS
 
 describe("document_symbol_provider", () => {
 
-	before(async () => activate(everythingFile));
+	before(() => activate(everythingFile));
 
 	it("returns expected items for 'everything.dart'", async () => {
 		const symbols = await getDocumentSymbols();

@@ -6,7 +6,7 @@ import { activate, doc, setTestContent, editor, getPositionOf, eol } from "../..
 
 describe("dart_type_formatting_edit_provider", () => {
 
-	before(async () => activate());
+	before(() => activate());
 
 	async function formatAtLocation(searchText: string, character: string): Promise<void> {
 		const position = getPositionOf(searchText);
