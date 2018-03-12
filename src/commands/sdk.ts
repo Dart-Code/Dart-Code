@@ -198,5 +198,8 @@ export class SdkCommands {
 	private validateFlutterProjectName(input: string) {
 		if (!flutterNameRegex.test(input))
 			return "Flutter project names should be all lowercase, with underscores to separate words";
+		const bannedNames = ["flutter", "flutter_test"];
+		if (bannedNames.find((b) => b === input.trim()))
+			return `You may not use ${input} as the name for a flutter project`;
 	}
 }
