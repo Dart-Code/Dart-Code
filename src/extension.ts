@@ -159,7 +159,6 @@ export function activate(context: vs.ExtensionContext) {
 	const typeFormattingEditProvider = new DartTypeFormattingEditProvider(analyzer);
 	const completionItemProvider = new DartCompletionItemProvider(analyzer);
 	const definitionProvider = new DartDefinitionProvider(analyzer);
-	const documentSymbolProvider = new LegacyDartDocumentSymbolProvider(analyzer);
 	const referenceProvider = new DartReferenceProvider(analyzer);
 	const documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
 	const assistCodeActionProvider = new AssistCodeActionProvider(analyzer);
@@ -178,7 +177,6 @@ export function activate(context: vs.ExtensionContext) {
 		context.subscriptions.push(vs.languages.registerDocumentFormattingEditProvider(filter, formattingEditProvider));
 		context.subscriptions.push(vs.languages.registerCompletionItemProvider(filter, completionItemProvider, ...triggerCharacters));
 		context.subscriptions.push(vs.languages.registerDefinitionProvider(filter, definitionProvider));
-		context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
 		context.subscriptions.push(vs.languages.registerReferenceProvider(filter, referenceProvider));
 		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(filter, documentHighlightProvider));
 		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, assistCodeActionProvider));
@@ -278,6 +276,11 @@ export function activate(context: vs.ExtensionContext) {
 		} else {
 			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(analyzer)));
 		}
+
+		const documentSymbolProvider = new LegacyDartDocumentSymbolProvider(analyzer);
+		activeFileFilters.forEach((filter) => {
+			context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
+		});
 
 		// Hook open/active file changes so we can set priority files with the analyzer.
 		const openFileTracker = new OpenFileTracker(analyzer);
