@@ -120,8 +120,9 @@ export class DartDebugSession extends DebugSession {
 			appArgs.push("--checked");
 		}
 		appArgs.push(this.sourceFile);
-		if (args.args)
+		if (args.args) {
 			appArgs = appArgs.concat(args.args);
+		}
 
 		const process = child_process.spawn(this.args.dartPath, appArgs, { cwd: args.cwd });
 
