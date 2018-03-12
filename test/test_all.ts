@@ -68,7 +68,7 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 		codeVersion = "stable";
 	if (!fs.existsSync(".nyc_output"))
 		fs.mkdirSync(".nyc_output");
-	env.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testFolder}_${codeVersion}_${(new Date()).getTime()}.json`);
+	env.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testFolder.replace("/", "_")}_${codeVersion}_${(new Date()).getTime()}.json`);
 	let res = await runNode(cwd, args, env);
 	if (!allowFailures)
 		exitCode = exitCode || res;
