@@ -277,7 +277,9 @@ export function activate(context: vs.ExtensionContext) {
 			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(analyzer)));
 		}
 
-		const documentSymbolProvider = new LegacyDartDocumentSymbolProvider(analyzer);
+		const documentSymbolProvider = analyzer.capabilities.supportsGetDeclerationsForFile
+			? new DartSymbolProvider(analyzer)
+			: new LegacyDartDocumentSymbolProvider(analyzer);
 		activeFileFilters.forEach((filter) => {
 			context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
 		});
