@@ -5,7 +5,7 @@ import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { toRange, isWithinWorkspace, logError, escapeRegExp } from "../utils";
 import * as as from "../analysis/analysis_server_types";
 
-export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
+export class DartSymbolProvider implements WorkspaceSymbolProvider {
 	private analyzer: Analyzer;
 	private badChars: RegExp = new RegExp("[^0-9a-z\-]", "gi");
 	constructor(analyzer: Analyzer) {

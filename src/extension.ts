@@ -27,7 +27,7 @@ import { DartLanguageConfiguration } from "./providers/dart_language_configurati
 import { DartReferenceProvider } from "./providers/dart_reference_provider";
 import { DartRenameProvider } from "./providers/dart_rename_provider";
 import { DartTypeFormattingEditProvider } from "./providers/dart_type_formatting_edit_provider";
-import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
+import { DartSymbolProvider } from "./providers/dart_symbol_provider";
 import { DebugConfigProvider } from "./providers/debug_config_provider";
 import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
 import { LegacyDartDocumentSymbolProvider } from "./providers/legacy_dart_document_symbol_provider";
@@ -274,7 +274,7 @@ export function activate(context: vs.ExtensionContext) {
 		}
 
 		if (analyzer.capabilities.supportsGetDeclerations) {
-			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
+			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartSymbolProvider(analyzer)));
 		} else {
 			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(analyzer)));
 		}
