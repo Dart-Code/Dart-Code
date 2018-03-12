@@ -53,8 +53,9 @@ export class FlutterDebugSession extends DartDebugSession {
 			appArgs.push("--start-paused");
 		}
 
-		if (args.args)
+		if (args.args) {
 			appArgs = appArgs.concat(args.args);
+		}
 
 		this.flutter = new FlutterRun(this.args.flutterPath, args.cwd, appArgs, this.args.flutterRunLogFile);
 		this.flutter.registerForUnhandledMessages((msg) => this.log(msg));

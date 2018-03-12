@@ -264,7 +264,7 @@ export class DartDebugSession extends DebugSession {
 	protected getPossibleSourceUris(sourcePath: string): string[] {
 		const uris = [];
 
-		// Add the raw file path.
+		// Add the raw file path as a URI.
 		uris.push(formatPathForVm(sourcePath));
 
 		// Convert to package path and add that too.
