@@ -36,7 +36,7 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 				range: toRange({ startLine: result.line, startColumn: result.column, length: 0 }),
 				uri: Uri.file(file),
 			},
-			name: result.name,
+			name: result.name + (result.parameters || ""),
 		};
 	}
 }
