@@ -2,12 +2,12 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { commands, env, extensions, ProgressLocation, TextDocument, version as codeVersion, window, workspace } from "vscode";
-import { RequestError, ServerErrorNotification, ServerStatusNotification } from "./analysis/analysis_server_types";
-import { Analyzer } from "./analysis/analyzer";
-import { Analytics } from "./analytics";
-import { config } from "./config";
-import { PromiseCompleter } from "./debug/utils";
-import { extensionVersion, getDartSdkVersion, Sdks } from "./utils";
+import { RequestError, ServerErrorNotification, ServerStatusNotification } from "./analysis_server_types";
+import { Analyzer } from "./analyzer";
+import { Analytics } from "../analytics";
+import { config } from "../config";
+import { PromiseCompleter } from "../debug/utils";
+import { extensionVersion, getDartSdkVersion, Sdks } from "../utils";
 
 const maxErrorReportCount = 3;
 

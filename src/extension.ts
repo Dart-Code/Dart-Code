@@ -5,7 +5,7 @@ import { WorkspaceFolder } from "vscode";
 import { ServerStatusNotification } from "./analysis/analysis_server_types";
 import { Analyzer } from "./analysis/analyzer";
 import { Analytics } from "./analytics";
-import { AnalyzerStatusReporter } from "./analyzer_status_reporter";
+import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
 import { DebugCommands } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
 import { SdkCommands } from "./commands/sdk";
