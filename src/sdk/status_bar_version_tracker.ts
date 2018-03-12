@@ -12,7 +12,6 @@ export class StatusBarVersionTracker implements vs.Disposable {
 		this.statusBarItem.command = command;
 		this.subscriptions.push(this.statusBarItem);
 		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => {
-			console.log(e && e.document && e.document.uri);
 			if (e && e.document && isAnalyzable(e.document))
 				this.statusBarItem.show();
 			else
