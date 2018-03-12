@@ -39,6 +39,7 @@ import { showUserPrompts } from "./user_prompts";
 import { isFlutterProject } from "./utils";
 import * as util from "./utils";
 import { DartPackagesProvider } from "./views/packages_view";
+import { PromiseCompleter } from "./debug/utils";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
@@ -57,6 +58,7 @@ let showLintNames: boolean = config.showLintNames;
 let analyzerSettings: string = getAnalyzerSettings();
 
 export function activate(context: vs.ExtensionContext) {
+	const analysisCompleteCompleter = new PromiseCompleter<void>();
 	const extensionStartTime = new Date();
 	const sdks = util.findSdks();
 	analytics = new Analytics(sdks);
@@ -148,6 +150,7 @@ export function activate(context: vs.ExtensionContext) {
 		// Analysis ends for the first time.
 		if (ss.analysis && !ss.analysis.isAnalyzing && analysisStartTime) {
 			const analysisEndTime = new Date();
+			analysisCompleteCompleter.resolve();
 			analytics.logAnalyzerFirstAnalysisTime(analysisEndTime.getTime() - analysisStartTime.getTime());
 			analysisCompleteEvents.dispose();
 		}
@@ -355,7 +358,10 @@ export function activate(context: vs.ExtensionContext) {
 	const extensionEndTime = new Date();
 	analytics.logExtensionStartup(extensionEndTime.getTime() - extensionStartTime.getTime());
 
-	return { sdks };
+	return {
+		analysisComplete: analysisCompleteCompleter.promise,
+		sdks,
+	};
 }
 
 function recalculateAnalysisRoots() {
