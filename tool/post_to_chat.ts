@@ -60,7 +60,8 @@ async function send_summary_message() {
 			+ `${commitMessage}\n\n`
 			+ `<${buildUrl}|Build Report>`;
 
-		await sendToChat(message);
+		if (hasFailed)
+			await sendToChat(message);
 	}
 }
 
