@@ -31,21 +31,33 @@ export class SdkCommands {
 			const flutterSdkManager = new FlutterSdkManager(sdks);
 			context.subscriptions.push(vs.commands.registerCommand("dart.changeFlutterSdk", () => flutterSdkManager.changeSdk()));
 		}
-		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", (uri) => {
+		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", async (uri) => {
 			if (!uri || !(uri instanceof Uri))
-				return;
+				uri = await this.getWorkspace("Select the which folder to get packages for");
+			if (typeof uri === "string")
+				uri = vs.Uri.file(uri);
 			if (isFlutterProject(vs.workspace.getWorkspaceFolder(uri)))
-				return vs.commands.executeCommand("flutter.packages.get", uri);
+				return this.runFlutter("packages get", uri);
 			else
-				return vs.commands.executeCommand("pub.get", uri);
+				return this.runPub("get", uri);
+		}));
+		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages", async (uri) => {
+			if (!uri || !(uri instanceof Uri))
+				uri = await this.getWorkspace("Select the which folder to get packages for");
+			if (typeof uri === "string")
+				uri = vs.Uri.file(uri);
+			if (isFlutterProject(vs.workspace.getWorkspaceFolder(uri)))
+				return this.runFlutter("packages upgrade", uri);
+			else
+				return this.runPub("upgrade", uri);
 		}));
 
 		// Pub commands.
 		context.subscriptions.push(vs.commands.registerCommand("pub.get", (selection) => {
-			return this.runPub("get", selection);
+			return vs.commands.executeCommand("dart.getPackages", selection);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("pub.upgrade", (selection) => {
-			return this.runPub("upgrade", selection);
+			return vs.commands.executeCommand("dart.upgradePackages", selection);
 		}));
 
 		// Flutter commands.
@@ -53,7 +65,7 @@ export class SdkCommands {
 			return this.runFlutter("packages get", selection);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => {
-			return this.runFlutter("packages upgrade", selection);
+			return vs.commands.executeCommand("dart.upgradePackages", selection);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", (selection) => {
 			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
@@ -81,6 +93,15 @@ export class SdkCommands {
 		command: string,
 		selection?: vs.Uri,
 	): Thenable<number> {
+
+		return this.getWorkspace(placeHolder, selection).then((f) => {
+			const workspacePath = vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri.fsPath;
+			const shortPath = path.join(path.basename(f), path.relative(f, workspacePath));
+			return handler(f, command, shortPath);
+		});
+	}
+
+	private async getWorkspace(placeHolder: string, selection?: vs.Uri): Promise<string> {
 		let file = selection && selection.fsPath;
 		file = file || (vs.window.activeTextEditor && vs.window.activeTextEditor.document.fileName);
 		let folder = file && locateBestProjectRoot(file);
@@ -92,18 +113,11 @@ export class SdkCommands {
 				folder = allowedProjects[0].uri.fsPath;
 		}
 
-		const folderPromise =
-			folder
-				? Promise.resolve(folder)
-				// TODO: Can we get this filtered?
-				// https://github.com/Microsoft/vscode/issues/39132
-				: vs.window.showWorkspaceFolderPick({ placeHolder }).then((f) => f && isDartWorkspaceFolder(f) && f.uri.fsPath);
-
-		return folderPromise.then((f) => {
-			const workspacePath = vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri.fsPath;
-			const shortPath = path.join(path.basename(f), path.relative(f, workspacePath));
-			return handler(f, command, shortPath);
-		});
+		return folder
+			? Promise.resolve(folder)
+			// TODO: Can we get this filtered?
+			// https://github.com/Microsoft/vscode/issues/39132
+			: vs.window.showWorkspaceFolderPick({ placeHolder }).then((f) => f && isDartWorkspaceFolder(f) && f.uri.fsPath); // TODO: What if the user didn't pick anything?
 	}
 
 	private runFlutter(command: string, selection?: vs.Uri): Thenable<number> {
