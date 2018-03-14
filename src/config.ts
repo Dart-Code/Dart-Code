@@ -36,8 +36,8 @@ class Config {
 	get showLintNames() { return this.getConfig<boolean>("showLintNames"); }
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
 	get reportAnalyzerErrors() { return this.getConfig<boolean>("reportAnalyzerErrors"); }
-	get userDefinedSdkPath() { return resolveHomePath(this.getConfig<string>("sdkPath")); }
-	public setUserDefinedSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
+	get sdkPath() { return resolveHomePath(this.getConfig<string>("sdkPath")); }
+	public setSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
 	get sdkPaths() { return (this.getConfig<string[]>("sdkPaths") || []).map(resolveHomePath); }
 
 	public setGlobalDartSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Global); }

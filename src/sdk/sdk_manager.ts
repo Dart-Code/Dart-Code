@@ -35,7 +35,7 @@ export class SdkManager {
 			const version = getSdkVersion(f);
 			return {
 				description: f,
-				detail: fs.realpathSync(f) === currentSdk && config.userDefinedSdkPath ? "Current setting" : "",
+				detail: fs.realpathSync(f) === currentSdk && config.sdkPath ? "Current setting" : "",
 				folder: f,
 				label: "Dart SDK v" + version,
 				version,
@@ -47,13 +47,13 @@ export class SdkManager {
 			return;
 
 		const items = [{
-			description: config.userDefinedSdkPath ? undefined : `Found at ${this.sdks.dart}`,
-			detail: !config.userDefinedSdkPath ? "Current setting" : "",
+			description: config.sdkPath ? undefined : `Found at ${this.sdks.dart}`,
+			detail: !config.sdkPath ? "Current setting" : "",
 			folder: undefined,
 			label: "Auto-detect Dart SDK location",
 		}].concat(sdkItems);
 
 		vs.window.showQuickPick(items, { placeHolder: "Select an SDK to use" })
-			.then((sdk) => { if (sdk) config.setUserDefinedSdkPath(sdk.folder); });
+			.then((sdk) => { if (sdk) config.setSdkPath(sdk.folder); });
 	}
 }

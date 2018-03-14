@@ -458,7 +458,7 @@ function getAnalyzerSettings() {
 	// Usually these are options that affect the analyzer and need a reload, but config options used at
 	// activation time will also need to be included.
 	return "CONF-"
-		+ config.userDefinedSdkPath
+		+ config.sdkPath
 		+ config.sdkPaths
 		+ config.analyzerLogFile
 		+ config.analyzerPath
