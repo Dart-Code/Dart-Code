@@ -9,7 +9,6 @@ import { config } from "../config";
 import { openInBrowser, logError } from "../utils";
 import { FlutterLaunchRequestArguments, isWin, PromiseCompleter } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
-import { SdkManager } from "../sdk/sdk_manager";
 import { Uri } from "vscode";
 import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
 

@@ -9,7 +9,7 @@ import { config } from "../config";
 import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
-import { SdkManager } from "../sdk/sdk_manager";
+import { DartSdkManager } from "../sdk/sdk_manager";
 import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolder, isFlutterProject, ProjectType, Sdks } from "../utils";
 import * as util from "../utils";
 import * as channels from "./channels";
@@ -25,7 +25,7 @@ export class SdkCommands {
 		this.sdks = sdks;
 		this.analytics = analytics;
 		// SDK commands.
-		const sdkManager = new SdkManager(sdks);
+		const sdkManager = new DartSdkManager(sdks);
 		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => sdkManager.changeSdk()));
 		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", (uri) => {
 			if (!uri || !(uri instanceof Uri))

@@ -4,23 +4,29 @@ import * as path from "path";
 import { hasDartExecutable, getSdkVersion, Sdks, versionIsAtLeast } from "../utils";
 import { config } from "../config";
 
-export class SdkManager {
-	private sdks: Sdks;
+abstract class SdkManager {
+	protected sdks: Sdks;
 
 	constructor(sdks: Sdks) {
 		this.sdks = sdks;
 	}
 
+	protected abstract get sdkPaths(): string[];
+	protected abstract get currentSdk(): string;
+	protected abstract get configuredSdk(): string;
+	protected abstract get configName(): string;
+	protected abstract hasExecutable(path: string): boolean;
+	protected abstract getLabel(path: string): string;
+	protected abstract setSdk(folder: string): void;
+
 	public changeSdk() {
-		if (config.sdkPaths)
-			this.searchForSdks(config.sdkPaths);
+		if (this.sdkPaths)
+			this.searchForSdks(this.sdkPaths);
 		else
-			vs.window.showWarningMessage("Set `dart.sdkPaths` to enable fast SDK switching.");
+			vs.window.showWarningMessage("Set `${configName}` to enable fast SDK switching.");
 	}
 
 	public searchForSdks(sdkPaths: string[]) {
-		const currentSdk = this.sdks.dart;
-
 		let allPaths: string[] = [];
 		sdkPaths.filter(fs.existsSync).forEach((sdkPath) => {
 			allPaths.push(sdkPath);
@@ -29,15 +35,15 @@ export class SdkManager {
 
 		const sdkFolders = allPaths
 			.filter((f) => fs.statSync(f).isDirectory()) // Only directories.
-			.filter((f) => hasDartExecutable(path.join(f, "bin"))); // Only those that look like Dart SDKs.
+			.filter((f) => this.hasExecutable(path.join(f, "bin"))); // Only those that look like SDKs.
 
 		const sdkItems = sdkFolders.map((f) => {
 			const version = getSdkVersion(f);
 			return {
 				description: f,
-				detail: fs.realpathSync(f) === currentSdk && config.sdkPath ? "Current setting" : "",
+				detail: fs.realpathSync(f) === this.currentSdk && this.configuredSdk ? "Current setting" : "",
 				folder: f,
-				label: "Dart SDK v" + version,
+				label: this.getLabel(version),
 				version,
 			};
 		})
@@ -47,13 +53,25 @@ export class SdkManager {
 			return;
 
 		const items = [{
-			description: config.sdkPath ? undefined : `Found at ${this.sdks.dart}`,
-			detail: !config.sdkPath ? "Current setting" : "",
+			description: !this.configuredSdk ? `Found at ${this.currentSdk}` : undefined,
+			detail: !this.configuredSdk ? "Current setting" : "",
 			folder: undefined,
-			label: "Auto-detect Dart SDK location",
+			label: "Auto-detect SDK location",
 		}].concat(sdkItems);
 
 		vs.window.showQuickPick(items, { placeHolder: "Select an SDK to use" })
-			.then((sdk) => { if (sdk) config.setSdkPath(sdk.folder); });
+			.then((sdk) => { if (sdk) this.setSdk(sdk.folder); });
 	}
+}
+
+export class DartSdkManager extends SdkManager {
+	protected get sdkPaths(): string[] { return config.sdkPaths; }
+	protected get currentSdk(): string { return this.sdks.dart; }
+	protected get configuredSdk(): string { return config.sdkPath; }
+	protected get configName(): string { return "dart.sdkPaths"; }
+	protected hasExecutable(path: string) { return hasDartExecutable(path); }
+	protected getLabel(version: string) {
+		return `Dart SDK v${version}`;
+	}
+	protected setSdk(folder: string) { config.setSdkPath(folder); }
 }
