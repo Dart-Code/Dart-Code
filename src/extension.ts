@@ -97,7 +97,7 @@ export function activate(context: vs.ExtensionContext) {
 	const dartSdkVersion = util.getSdkVersion(sdks.dart);
 	const flutterSdkVersion = util.getSdkVersion(sdks.flutter);
 	if (dartSdkVersion) {
-		const statusBarVersionTracker = new StatusBarVersionTracker(dartSdkVersion, flutterSdkVersion);
+		const statusBarVersionTracker = new StatusBarVersionTracker(sdks.projectType, dartSdkVersion, flutterSdkVersion);
 		context.subscriptions.push(statusBarVersionTracker);
 
 		// Do update-check.

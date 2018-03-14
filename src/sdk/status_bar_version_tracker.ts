@@ -5,8 +5,8 @@ import { config } from "../config";
 export class StatusBarVersionTracker implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
 
-	constructor(dartSdkVersion: string, flutterSdkVersion: string) {
-		if (flutterSdkVersion) {
+	constructor(projectType: ProjectType, dartSdkVersion: string, flutterSdkVersion: string) {
+		if (projectType === ProjectType.Flutter && flutterSdkVersion) {
 			this.addStatusBarItem(
 				"Flutter: " + (flutterSdkVersion.length > 20 ? flutterSdkVersion.substr(0, 17) + "…" : flutterSdkVersion),
 				`Flutter SDK: ${flutterSdkVersion}`,
