@@ -70,20 +70,6 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - `dart.vmAdditionalArgs`: Additional args to pass to the Dart VM when running/debugging apps.
 
 
-## Analytics
-
-This extension reports some basic events and timings to help inform development decisions, such as:
-
-- Extension load and analysis times
-- Whether you have disabled some settings (such as showing TODOs in Problems Window or Closing Labels)
-- Frequency of use of features like Hot Reload, Full Restart and Open Observatory
-- Crashes in the Dart analysis server
-
-These events will include your platform (Win/Linux/Mac) and also extension/SDK version numbers.
-
-This can be disabled via the `dart.allowAnalytics` setting.
-
-
 ## Custom Colors
 
 Some colors in Dart Code can be customised using the `workbench.colourCustomizations` section in settings. Supported colors are:
@@ -91,13 +77,13 @@ Some colors in Dart Code can be customised using the `workbench.colourCustomizat
 - `dart.closingLabels` - The color of the "closing label" annotations against constructor, method invocations and lists that span multiple lines
 
 
-## Refactoring Kinds
+## Refactorings and Code Fixes
 
-Code v1.20 [gained the ability to keybind quickfixes](https://code.visualstudio.com/updates/v1_20#_keybindings-for-quick-fixes-and-code-actions). To do this you should edit your `keybindings.json` file and include the ID of the refactor as found below. If the `kind` for the keybind is set to just a segment of the ID (for example 'refactor.surround') then all actions sharing that prefix will appear in a filtered menu (or if only one, the action invoked immediately). You can control this behaviour with the `apply` argument [see docs](https://code.visualstudio.com/updates/v1_20#_keybindings-for-quick-fixes-and-code-actions).
+`Ctrl`+`.` in Code opens the "lightbulb" menu showing all code fixes/refactors. Code v1.20 [gained the ability to keybind quickfixes](https://code.visualstudio.com/updates/v1_20#_keybindings-for-quick-fixes-and-code-actions). To do this you should edit your `keybindings.json` file and include the ID of the refactor as found below. If the `kind` for the keybind is set to just a segment of the ID (for example 'refactor.surround') then all actions sharing that prefix will appear in a filtered menu (or if only one, the action invoked immediately). You can control this behaviour with the `apply` argument [see docs](https://code.visualstudio.com/updates/v1_20#_keybindings-for-quick-fixes-and-code-actions).
 
 The list of refactors comes from the Dart analysis server and therefore may change over time. Once this list is available somewhere centrally the readme will be updated to link there.
 
-Note: These IDs are only provided by recent versions of the Dart analysis server and will not work with older v1 builds.
+Note: These IDs are only provided by recent versions of the Dart analysis server and will not work with older/v1 builds.
 
 - `refactor.addPartDirective` - Add 'part' directive  
 - `refactor.addTypeAnnotation` - Add type annotation  
@@ -152,6 +138,19 @@ Note: These IDs are only provided by recent versions of the Dart analysis server
 - `refactor.surround.tryCatch` - Surround with 'try-catch'  
 - `refactor.surround.tryFinally` - Surround with 'try-finally'  
 - `refactor.surround.while` - Surround with 'while'
+
+
+## Analytics
+
+This extension reports some analytics such as:
+
+- Extension load and analysis times
+- Whether you have disabled some settings (such as showing TODOs in Problems Window or Closing Labels)
+- Frequency of use of features like Hot Reload, Full Restart and Open Observatory
+- Crashes in the Dart analysis server
+- Platform and Dart/Flutter SDK versions
+
+Reporting can be disabled via the `dart.allowAnalytics` setting.
 
 
 ## Release Notes
