@@ -25,8 +25,8 @@ export class SdkCommands {
 		this.sdks = sdks;
 		this.analytics = analytics;
 		// SDK commands.
-		const sdkManager = new DartSdkManager(sdks);
-		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => sdkManager.changeSdk()));
+		const dartSdkManager = new DartSdkManager(sdks);
+		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => dartSdkManager.changeSdk()));
 		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", (uri) => {
 			if (!uri || !(uri instanceof Uri))
 				return;
