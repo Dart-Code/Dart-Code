@@ -78,8 +78,8 @@
 			},
 			{
 				"command": "pub.get",
-				"title": "Pub Get",
-				"category": "Dart",
+				"title": "Get Packages",
+				"category": "Pub",
 				"icon": {
 					"light": "./media/commands/pull.svg",
 					"dark": "./media/commands/pull-inverse.svg"
@@ -87,8 +87,8 @@
 			},
 			{
 				"command": "pub.upgrade",
-				"title": "Pub Upgrade",
-				"category": "Dart",
+				"title": "Upgrade Packages",
+				"category": "Pub",
 				"icon": {
 					"light": "./media/commands/pull.svg",
 					"dark": "./media/commands/pull-inverse.svg"
