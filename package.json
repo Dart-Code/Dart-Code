@@ -121,7 +121,7 @@
 			},
 			{
 				"command": "flutter.packages.get",
-				"title": "Get Flutter Packages",
+				"title": "Get Packages",
 				"category": "Flutter",
 				"icon": {
 					"light": "./media/commands/pull.svg",
@@ -130,7 +130,7 @@
 			},
 			{
 				"command": "flutter.packages.upgrade",
-				"title": "Upgrade Flutter Packages",
+				"title": "Upgrade Packages",
 				"category": "Flutter",
 				"icon": {
 					"light": "./media/commands/pull.svg",
@@ -452,10 +452,10 @@
 					"description": "Automatically runs `pub get` whenever pubspec.yaml is saved.",
 					"scope": "resource"
 				},
-				"dart.promptToFetchPackages": {
+				"dart.promptToGetPackages": {
 					"type": "boolean",
 					"default": true,
-					"description": "Prompt to fetch packages when opening a project with out of date packages.",
+					"description": "Prompt to get packages when opening a project with out of date packages.",
 					"scope": "resource"
 				},
 				"dart.showLintNames": {

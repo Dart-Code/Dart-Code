@@ -27,7 +27,7 @@ export class SdkCommands {
 		// SDK commands.
 		const sdkManager = new SdkManager(sdks);
 		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => sdkManager.changeSdk()));
-		context.subscriptions.push(vs.commands.registerCommand("dart.fetchPackages", (uri) => {
+		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", (uri) => {
 			if (!uri || !(uri instanceof Uri))
 				return;
 			if (isFlutterProject(vs.workspace.getWorkspaceFolder(uri)))
@@ -67,7 +67,7 @@ export class SdkCommands {
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
 			if (config.for(td.uri).runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() === "pubspec.yaml")
-				vs.commands.executeCommand("dart.fetchPackages", td.uri);
+				vs.commands.executeCommand("dart.getPackages", td.uri);
 		}));
 	}
 

@@ -80,7 +80,7 @@ class ResourceConfig {
 	get runPubGetOnPubspecChanges() { return this.getConfig<boolean>("runPubGetOnPubspecChanges"); }
 	get flutterRunLogFile() { return resolveHomePath(this.getConfig<string>("flutterRunLogFile")); }
 	get observatoryLogFile() { return resolveHomePath(this.getConfig<string>("observatoryLogFile")); }
-	get promptToFetchPackages() { return this.getConfig<boolean>("promptToFetchPackages"); }
+	get promptToGetPackages() { return this.getConfig<boolean>("promptToGetPackages"); }
 	get vmAdditionalArgs() { return this.getConfig<string[]>("vmAdditionalArgs"); }
 }
 

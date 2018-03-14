@@ -28,7 +28,7 @@
 - Flutter and Dart debuggers have been merged, you will no longer be asked to choose between Flutter and Dart when running new projects!
    - As part of this, the `type` attribute on launch configurations in your `launch.json` will be automatically changed from `dart-cli`/`flutter` to `dart` upon opening the project
 - Flutter projects no longer require a `launch.json` file if being launched with default arguments; if you hit F5 in a project without one it will just launch immediately
-- If your packages are missing or out of date you will be prompted to run `pub get`/`flutter packages get` upon loading your project (this can be disabled with the new `dart.promptToFetchPackages` setting, which can be set at the folder level)
+- If your packages are missing or out of date you will be prompted to run `pub get`/`flutter packages get` upon loading your project (this can be disabled with the new `dart.promptToGetPackages` setting, which can be set at the folder level)
 - Snippets have been added for Flutter widgets (`stless`, `stful`, `stanim`) and will show only inside Flutter projects
 - Quick Fixes and other code actions that insert code now support tab stops and selections (for example the `Wrap with new widget` assist will now select the text `widget` for you to type over)
 - Code completions will no longer insert parentheses/argument placeholders if they are already present
@@ -44,7 +44,7 @@
 - Due to a number of issues with the implementation, external files (SDK, packages) will no longer open read-only (this behaviour may be restored in some form in future)
 - Executing package restore commands in a workspace that has no `pubspec.yaml` on Windows will no longer get the extension stuck in a loop
 - Saving `pubspec.yaml` in a Dart project will no longer run `flutter packages get` if you have a Flutter project in the same workspace
-- Fetching flutter packages will no longer sometimes unexpectedly ask you for the workspace folder to run the command in
+- Running `Flutter: Get Packages` will no longer sometimes unexpectedly ask you for the workspace folder to run the command in
 - Opening a Dart file outside of a folder will no longer show errors in the developer console
 - A new setting (`dart.previewDart2`) has been added which allows you to opt-in to Dart 2 behaviour such as optional `new`/`const` (you must be using an SDK that supports this!)
 

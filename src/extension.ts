@@ -342,9 +342,9 @@ export function activate(context: vs.ExtensionContext) {
 	// Prompt for pub get if required
 	function checkForPackages() {
 		const folders = util.getDartWorkspaceFolders();
-		const foldersRequiringPackageFetch = folders.filter((ws: WorkspaceFolder) => config.for(ws.uri).promptToFetchPackages).filter(isPubGetProbablyRequired);
-		if (foldersRequiringPackageFetch.length > 0)
-			promptToRunPubGet(foldersRequiringPackageFetch);
+		const foldersRequiringPackageGet = folders.filter((ws: WorkspaceFolder) => config.for(ws.uri).promptToGetPackages).filter(isPubGetProbablyRequired);
+		if (foldersRequiringPackageGet.length > 0)
+			promptToRunPubGet(foldersRequiringPackageGet);
 	}
 	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => checkForPackages()));
 	checkForPackages();

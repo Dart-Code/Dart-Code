@@ -35,7 +35,7 @@ The `src/services` folder contains some plumbing code for services, such as a ba
 Running Dart Code from source is relatively straight forward. You should:
 
 1. Clone the Dart Code repository (or your own fork)
-2. Run `npm install` to fetch dependencies
+2. Run `npm install` to install dependencies
 3. Open the repository root folder in Visual Studio Code
 4. Press F5
 
