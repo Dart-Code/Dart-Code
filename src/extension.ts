@@ -459,6 +459,7 @@ function getAnalyzerSettings() {
 	// activation time will also need to be included.
 	return "CONF-"
 		+ config.sdkPath
+		+ config.sdkPaths
 		+ config.analyzerLogFile
 		+ config.analyzerPath
 		+ config.analyzerDiagnosticsPort
@@ -466,6 +467,7 @@ function getAnalyzerSettings() {
 		+ config.analyzerInstrumentationLogFile
 		+ config.analyzerAdditionalArgs
 		+ config.flutterSdkPath
+		+ config.flutterSdkPaths
 		+ config.flutterDaemonLogFile
 		+ config.closingLabels
 		+ config.previewAnalyzeAngularTemplates

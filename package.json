@@ -120,6 +120,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.changeFlutterSdk",
+				"title": "Change SDK",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.packages.get",
 				"title": "Get Packages",
 				"category": "Flutter",
@@ -243,6 +248,10 @@
 				{
 					"command": "dart.changeSdk",
 					"when": "dart-code:dartProjectLoaded"
+				},
+				{
+					"command": "dart.changeFlutterSdk",
+					"when": "dart-code:flutterProjectLoaded"
 				},
 				{
 					"command": "flutter.packages.get",
@@ -467,6 +476,14 @@
 				"dart.flutterSdkPath": {
 					"type": "string",
 					"description": "The location of the Flutter SDK to use. If blank, Dart Code will attempt to find it from the project folder, FLUTTER_ROOT environment variable and the PATH environment variable.",
+					"scope": "window"
+				},
+				"dart.flutterSdkPaths": {
+					"type": "array",
+					"description": "An array of strings that are either Flutter SDKs or folders that contains multiple Flutter SDKs in sub-folders. When set, the version number in the status bar will be clickable to quickly switch between SDKs.",
+					"items": {
+						"type": "string"
+					},
 					"scope": "window"
 				},
 				"dart.flutterHotReloadOnSave": {

@@ -190,7 +190,7 @@ export function isDartWorkspaceFolder(folder: WorkspaceFolder): boolean {
 }
 
 export const hasDartExecutable = (pathToTest: string) => hasExecutable(pathToTest, dartExecutableName);
-const hasFlutterExecutable = (pathToTest: string) => hasExecutable(pathToTest, flutterExecutableName);
+export const hasFlutterExecutable = (pathToTest: string) => hasExecutable(pathToTest, flutterExecutableName);
 
 function hasExecutable(pathToTest: string, executableName: string): boolean {
 	return fs.existsSync(path.join(pathToTest, executableName));
@@ -222,7 +222,14 @@ export function getSdkVersion(sdkRoot: string): string {
 	if (!sdkRoot)
 		return null;
 	try {
-		return fs.readFileSync(path.join(sdkRoot, "version"), "utf8").trim();
+		return fs
+			.readFileSync(path.join(sdkRoot, "version"), "utf8")
+			.trim()
+			.split("\n")
+			.filter((l) => l)
+			.filter((l) => l.trim().substr(0, 1) !== "#")
+			.join("\n")
+			.trim();
 	} catch (e) {
 		return null;
 	}

@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { hasDartExecutable, getSdkVersion, Sdks, versionIsAtLeast } from "../utils";
+import { hasDartExecutable, getSdkVersion, Sdks, versionIsAtLeast, hasFlutterExecutable } from "../utils";
 import { config } from "../config";
 
 abstract class SdkManager {
@@ -71,7 +71,19 @@ export class DartSdkManager extends SdkManager {
 	protected get configName(): string { return "dart.sdkPaths"; }
 	protected hasExecutable(path: string) { return hasDartExecutable(path); }
 	protected getLabel(version: string) {
-		return `Dart SDK v${version}`;
+		return `Dart SDK ${version}`;
 	}
 	protected setSdk(folder: string) { config.setSdkPath(folder); }
+}
+
+export class FlutterSdkManager extends SdkManager {
+	protected get sdkPaths(): string[] { return config.flutterSdkPaths; }
+	protected get currentSdk(): string { return this.sdks.flutter; }
+	protected get configuredSdk(): string { return config.flutterSdkPath; }
+	protected get configName(): string { return "dart.flutterSdkPaths"; }
+	protected hasExecutable(path: string) { return hasFlutterExecutable(path); }
+	protected getLabel(version: string) {
+		return `Flutter SDK ${version}`;
+	}
+	protected setSdk(folder: string) { config.setFlutterSdkPath(folder); }
 }

@@ -10,7 +10,7 @@ export class StatusBarVersionTracker implements vs.Disposable {
 			this.addStatusBarItem(
 				"Flutter: " + (flutterSdkVersion.length > 20 ? flutterSdkVersion.substr(0, 17) + "…" : flutterSdkVersion),
 				`Flutter SDK: ${flutterSdkVersion}`,
-				null, // config.flutterSdkPaths && config.flutterSdkPaths.length > 0 ? "dart.changeFlutterSdk" : null,
+				config.flutterSdkPaths && config.flutterSdkPaths.length > 0 ? "dart.changeFlutterSdk" : null,
 			);
 		}
 		if (dartSdkVersion) {
