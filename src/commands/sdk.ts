@@ -33,7 +33,7 @@ export class SdkCommands {
 		}
 		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", async (uri) => {
 			if (!uri || !(uri instanceof Uri))
-				uri = await this.getWorkspace("Select the which folder to get packages for");
+				uri = await this.getWorkspace("Select which folder to get packages for");
 			if (typeof uri === "string")
 				uri = vs.Uri.file(uri);
 			if (isFlutterProject(vs.workspace.getWorkspaceFolder(uri)))
@@ -43,7 +43,7 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages", async (uri) => {
 			if (!uri || !(uri instanceof Uri))
-				uri = await this.getWorkspace("Select the which folder to get packages for");
+				uri = await this.getWorkspace("Select which folder to get packages for");
 			if (typeof uri === "string")
 				uri = vs.Uri.file(uri);
 			if (isFlutterProject(vs.workspace.getWorkspaceFolder(uri)))
