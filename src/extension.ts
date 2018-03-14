@@ -459,7 +459,6 @@ function getAnalyzerSettings() {
 	// activation time will also need to be included.
 	return "CONF-"
 		+ config.sdkPath
-		+ config.sdkPaths
 		+ config.analyzerLogFile
 		+ config.analyzerPath
 		+ config.analyzerDiagnosticsPort
