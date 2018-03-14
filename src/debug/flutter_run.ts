@@ -30,7 +30,10 @@ export class FlutterRun extends StdIOService {
 	// TODO: Can we code-gen all this like the analysis server?
 
 	protected handleNotification(evt: UnknownNotification) {
-		// console.log(JSON.stringify(evt));
+		// Always send errors up, no matter where they're from.
+		if (evt.params.error) {
+			this.notify(this.errorSubscriptions, evt.params.error as string);
+		}
 		switch (evt.event) {
 			case "app.start":
 				this.notify(this.appStartSubscriptions, evt.params as f.AppStart);
@@ -57,6 +60,7 @@ export class FlutterRun extends StdIOService {
 	private appStartedSubscriptions: Array<(notification: f.AppEvent) => void> = [];
 	private appStopSubscriptions: Array<(notification: f.AppEvent) => void> = [];
 	private appProgressSubscriptions: Array<(notification: f.AppProgress) => void> = [];
+	private errorSubscriptions: Array<(notification: string) => void> = [];
 
 	// Request methods.
 
@@ -92,5 +96,9 @@ export class FlutterRun extends StdIOService {
 
 	public registerForAppProgress(subscriber: (notification: f.AppProgress) => void): Disposable {
 		return this.subscribe(this.appProgressSubscriptions, subscriber);
+	}
+
+	public registerForError(subscriber: (error: string) => void): Disposable {
+		return this.subscribe(this.errorSubscriptions, subscriber);
 	}
 }

@@ -65,6 +65,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.flutter.registerForAppStarted((n) => { if (!args.noDebug) this.initObservatory(this.observatoryUri); });
 		this.flutter.registerForAppStop((n) => { this.currentRunningAppId = undefined; this.flutter.dispose(); });
 		this.flutter.registerForAppProgress((e) => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished })));
+		this.flutter.registerForError((err) => this.sendEvent(new OutputEvent(err, "stderr")));
 
 		return this.flutter.process;
 	}
