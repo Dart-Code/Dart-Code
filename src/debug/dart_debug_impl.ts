@@ -132,7 +132,7 @@ export class DartDebugSession extends DebugSession {
 			appArgs = appArgs.concat(args.args);
 		}
 
-		const process = child_process.spawn(this.args.dartPath, appArgs, { cwd: args.cwd });
+		const process = child_process.spawn(`"${this.args.dartPath}"`, appArgs, { cwd: args.cwd });
 
 		return process;
 	}

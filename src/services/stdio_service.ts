@@ -28,7 +28,7 @@ export abstract class StdIOService implements Disposable {
 		if (env)
 			this.logTraffic(`..  in ${JSON.stringify(env)}`);
 
-		this.process = child_process.spawn(binPath, args, { cwd: workingDirectory, env });
+		this.process = child_process.spawn(`"${binPath}"`, args, { cwd: workingDirectory, env, shell: true });
 
 		this.process.stdout.on("data", (data: Buffer) => {
 			const message = data.toString();
