@@ -34,6 +34,24 @@
 			"preLaunchTask": "npm: watch"
 		},
 		{
+			"name": "Launch Tests (Multi-root upgraded)",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"${workspaceRoot}/test/test_projects/",
+				"--extensionDevelopmentPath=${workspaceRoot}",
+				"--extensionTestsPath=${workspaceRoot}/out/test/multi_root_upgraded"
+			],
+			"env": {
+				"DART_CODE_DISABLE_ANALYTICS": "true"
+			},
+			"outFiles": [
+				"${workspaceRoot}/out/test/**/*.js"
+			],
+			"preLaunchTask": "npm: watch"
+		},
+		{
 			"name": "Launch Tests (Dart)",
 			"type": "extensionHost",
 			"request": "launch",
