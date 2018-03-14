@@ -18,12 +18,14 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 	): Thenable<CompletionList> {
 		if (!this.shouldAllowCompletion(document, position, context))
 			return;
+		// Stash the next character so that we can avoid inserted additional parens if they already exist immediately after the cursor.
+		const nextCharacter = document.getText(new Range(position, position.translate({ characterDelta: 200 }))).trim().substr(0, 1);
 		return new Promise<CompletionList>((resolve, reject) => {
 			this.analyzer.completionGetSuggestionsResults({
 				file: document.fileName,
 				offset: document.offsetAt(position),
 			}).then((resp) => {
-				resolve(new CompletionList(resp.results.map((r) => this.convertResult(document, position, resp, r))));
+				resolve(new CompletionList(resp.results.map((r) => this.convertResult(document, nextCharacter, resp, r))));
 			},
 				() => reject(),
 			);
@@ -50,7 +52,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 	}
 
 	private convertResult(
-		document: TextDocument, position: Position, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion,
+		document: TextDocument, nextCharacter: string, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion,
 	): CompletionItem {
 		const element = suggestion.element;
 		const elementKind = element ? this.getElementKind(element.kind) : null;
@@ -61,10 +63,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		let triggerCompletion = false;
 
 		const insertArgumentPlaceholders = config.for(document.uri).insertArgumentPlaceholders;
-		// Use the replacement range to find out whether the character immediately following the completion would be a paren/colon to avoid inserting where
-		// there's already the following text. Note: We take two characters and trim just in case there's an extra space there.
-		const nextCharacterIsOpenParen = document.getText().substr(notification.replacementOffset + notification.replacementLength, 2).trim().substr(0, 1) === "(";
-		const nextCharacterIsColon = document.getText().substr(notification.replacementOffset + notification.replacementLength, 2).trim().substr(0, 1) === ":";
+		const nextCharacterIsOpenParen = nextCharacter === "(";
+		const nextCharacterIsColon = nextCharacter === ":";
 
 		// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its parameters.
 		if (element && element.parameters && elementKind !== CompletionItemKind.Property && suggestion.kind !== "OVERRIDE") {
