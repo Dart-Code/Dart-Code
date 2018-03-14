@@ -31,6 +31,16 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 	private convertResult(result: as.ElementDeclaration, file: string): SymbolInformation {
 		let name = result.name;
 
+		// Constructors don't come prefixed with class name, so add them for a nice display:
+		//    () => MyClass()
+		//    named() => MyClass.named()
+		if (result.kind === "CONSTRUCTOR" && result.className) {
+			if (name)
+				name = `${result.className}.${name}`;
+			else
+				name = result.className;
+		}
+
 		if (result.parameters && result.kind !== "SETTER")
 			name += result.parameters;
 
