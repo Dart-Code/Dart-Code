@@ -119,8 +119,10 @@ export class DartDebugSession extends DebugSession {
 		if (args.checkedMode) {
 			appArgs.push("--checked");
 		}
-		if (args.previewDart2) {
+		if (args.previewDart2 === true) {
 			appArgs.push("--preview-dart-2");
+		} else if (args.previewDart2 === false) {
+			appArgs.push(`--no-preview-dart-2`);
 		}
 		if (args.vmArgs) {
 			appArgs = appArgs.concat(args.vmArgs);

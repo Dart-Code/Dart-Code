@@ -482,9 +482,7 @@
 					"scope": "window"
 				},
 				"dart.previewDart2": {
-					"type": "boolean",
-					"default": false,
-					"description": "Whether to enable previewing Dart 2.0 functionality such as optional new/const.",
+					"description": "Whether to enable previewing Dart 2.0 functionality such as optional new/const.\n\ntrue: send --preview-dart-2\nfalse: send --no-preview-dart-2\nundefined: do not send a flag",
 					"scope": "window"
 				},
 				"dart.analyzerAdditionalArgs": {
@@ -574,6 +572,9 @@
 							"program": {
 								"type": "string",
 								"description": "Path to the script to start (eg. bin/main.dart or lib/main.dart)."
+							},
+							"previewDart2": {
+								"description": "Whether to enable previewing Dart 2.0 functionality such as optional new/const.\n\ntrue: send --preview-dart-2\nfalse: send --no-preview-dart-2\nnull: do not send a flag"
 							},
 							"args": {
 								"type": "array",

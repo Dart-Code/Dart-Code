@@ -45,6 +45,8 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		if (args.previewDart2) {
 			appArgs.push("--preview-dart-2");
+		} else if (args.previewDart2 === false) {
+			appArgs.push(`--no-preview-dart-2`);
 		}
 
 		if (debug) {

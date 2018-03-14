@@ -61,7 +61,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.vmArgs = debugConfig.vmArgs || conf.vmAdditionalArgs;
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, "bin", dartExec);
 		debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || conf.observatoryLogFile;
-		debugConfig.previewDart2 = debugConfig.previewDart2 || config.previewDart2;
+		if (debugConfig.previewDart2 !== undefined) {
+			debugConfig.previewDart2 = debugConfig.previewDart2;
+		} else {
+			debugConfig.previewDart2 = config.previewDart2;
+		}
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || conf.debugSdkLibraries;
 		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || conf.debugExternalLibraries;
 		if (debugConfig.checkedMode === undefined)
