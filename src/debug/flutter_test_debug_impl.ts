@@ -63,6 +63,8 @@ export class FlutterTestDebugSession extends DartDebugSession {
 	}
 
 	private writeTestResult(testDone: TestDoneNotification) {
+		if (testDone.hidden)
+			return;
 		const test = this.tests[testDone.testID];
 		const symbol = testDone.result === "success" ? tick : cross;
 		this.sendEvent(new OutputEvent(`${symbol} ${test.name}\n`, "stdout"));
