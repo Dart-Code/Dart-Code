@@ -34,19 +34,23 @@ export class FlutterTestDebugSession extends DartDebugSession {
 			appArgs.push(`--no-preview-dart-2`);
 		}
 
-		// TODO: xxx
-		// if (debug) {
-		// 	appArgs.push("--start-paused");
-		// }
+		if (debug) {
+			appArgs.push("--start-paused");
+		}
+
+		if (this.sourceFile) {
+			appArgs.push(this.sourceFile);
+		}
 
 		if (args.args) {
 			appArgs = appArgs.concat(args.args);
 		}
 
 		this.flutter = new FlutterTest(this.args.flutterPath, args.cwd, appArgs, this.args.flutterRunLogFile);
-		this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
+		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
 
 		// Set up subscriptions.
+		this.flutter.registerForTestStartedProcess((n) => this.initObservatory(`${n.observatoryUri}ws`));
 		// this.flutter.registerForStart((n) => this.log(JSON.stringify(n)));
 		// this.flutter.registerForAllSuites((n) => this.log(JSON.stringify(n)));
 		this.flutter.registerForSuite((n) => this.suites[n.suite.id] = n.suite);

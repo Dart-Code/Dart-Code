@@ -1,4 +1,4 @@
-import { StdIOService, Request, UnknownResponse, UnknownNotification } from "../services/stdio_service";
+import { StdIOService, Request, UnknownResponse, UnknownNotification, Notification as ioNotification } from "../services/stdio_service";
 import { Disposable } from "vscode";
 import { flutterEnv } from "./utils";
 
@@ -11,9 +11,10 @@ export class FlutterTest extends StdIOService<Notification> {
 
 	protected shouldHandleMessage(message: string): boolean {
 		// Everything in flutter is wrapped in [] so we can tell what to handle.
-		return message.startsWith("{") && message.endsWith("}");
+		return (message.startsWith("{") && message.endsWith("}"))
+			|| (message.startsWith("[") && message.endsWith("]"));
 	}
-	protected isNotification(msg: any): boolean { return !!msg.type; }
+	protected isNotification(msg: any): boolean { return !!(msg.type || msg.event); }
 	protected isResponse(msg: any): boolean { return false; }
 
 	protected processUnhandledMessage(message: string): void {
@@ -25,8 +26,13 @@ export class FlutterTest extends StdIOService<Notification> {
 		return this.subscribe(this.unhandledMessageSubscriptions, subscriber);
 	}
 
-	protected handleNotification(evt: Notification) {
+	protected handleNotification(evt: any) {
 		// console.log(JSON.stringify(evt));
+		switch (evt.event) {
+			case "test.startedProcess":
+				this.notify(this.testStartedProcessSubscriptions, evt.params as TestStartedProcess);
+				break;
+		}
 		switch (evt.type) {
 			case "start":
 				this.notify(this.startSubscriptions, evt as StartNotification);
@@ -54,6 +60,7 @@ export class FlutterTest extends StdIOService<Notification> {
 
 	// Subscription lists.
 
+	private testStartedProcessSubscriptions: Array<(notification: TestStartedProcess) => void> = [];
 	private startSubscriptions: Array<(notification: StartNotification) => void> = [];
 	private allSuitesSubscriptions: Array<(notification: AllSuitesNotification) => void> = [];
 	private suiteSubscriptions: Array<(notification: SuiteNotification) => void> = [];
@@ -63,6 +70,10 @@ export class FlutterTest extends StdIOService<Notification> {
 	private doneSubscriptions: Array<(notification: DoneNotification) => void> = [];
 
 	// Subscription methods.
+
+	public registerForTestStartedProcess(subscriber: (notification: TestStartedProcess) => void): Disposable {
+		return this.subscribe(this.testStartedProcessSubscriptions, subscriber);
+	}
 
 	public registerForStart(subscriber: (notification: StartNotification) => void): Disposable {
 		return this.subscribe(this.startSubscriptions, subscriber);
@@ -93,6 +104,10 @@ export class FlutterTest extends StdIOService<Notification> {
 	}
 }
 
+export interface TestStartedProcess {
+	observatoryUri: string;
+}
+
 export interface Notification {
 	type: string;
 	time: number;
@@ -102,6 +117,7 @@ export interface StartNotification extends Notification {
 	protocolVersion: string;
 	runnerVersion?: string;
 }
+
 export interface AllSuitesNotification extends Notification {
 	count: number;
 }
