@@ -116,9 +116,9 @@ export abstract class StdIOService<T> implements Disposable {
 		}
 
 		try {
-			if (msg && msg.event)
+			if (msg && this.isNotification(msg))
 				this.handleNotification(msg as T);
-			else if (msg && msg.id)
+			else if (msg && this.isResponse(msg))
 				this.handleResponse(msg as UnknownResponse);
 			else {
 				console.error(`Unexpected JSON message, assuming normal stdout : ${message}`);
@@ -135,6 +135,8 @@ export abstract class StdIOService<T> implements Disposable {
 	}
 
 	protected abstract handleNotification(evt: T): void;
+	protected isNotification(msg: any): boolean { return !!msg.event; }
+	protected isResponse(msg: any): boolean { return !!msg.id; }
 
 	private handleResponse(evt: UnknownResponse) {
 		const handler = this.activeRequests[evt.id];
