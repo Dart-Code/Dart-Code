@@ -565,7 +565,8 @@
 			{
 				"type": "dart",
 				"label": "Dart & Flutter",
-				"adapterExecutableCommand": "dart.getDebuggerExecutable",
+				"program": "./out/src/debug/dart_debug_entry.js",
+				"runtime": "node",
 				"languages": [
 					"dart"
 				],

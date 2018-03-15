@@ -41,7 +41,7 @@ Running Dart Code from source is relatively straight forward. You should:
 
 This will compile Dart Code and launch the Code `"Extension Development Host"`. You may see a warning in the top of the screen telling you the extension has been overwritten - this is normal; it's Code informing you that the normal installed version of the extension has been replaced by the version you just compiled. This only affects that particular session of the extension development host.
 
-You'll now have two versions of Code open - the standard instance that has the Dart Code source code open and the extension development host which is running the extension. In the standard instance you should be able to add breakpoints in the Dart Code source code and hit them by using Dart Code in the extension development host, with the exception of the debug adapters (see below). If you make code changes you'll want to click the `Restart` button in the standard instance (or press `Ctrl+Shift+F5`) in order to reload changes.
+You'll now have two versions of Code open - the standard instance that has the Dart Code source code open and the extension development host which is running the extension. In the standard instance you should be able to add breakpoints in the Dart Code source code and hit them by using Dart Code in the extension development host. If you make code changes you'll want to click the `Restart` button in the standard instance (or press `Ctrl+Shift+F5`) in order to reload changes.
 
 ## Automated Tests
 
@@ -53,16 +53,7 @@ All tests will be run on all platforms by Travis and AppVeyor when you submit a 
 
 ## Debugging the Debug Adapters
 
-In order to debug the debug adapters you need to run them in a `"server mode"`. This mode starts the debug adapters at extension activation time and keeps them open for the whole session. You'll also need to ensure that when you start the debug session from within Dart Code you have configured it to connect to this debug session.
-
-1. In the main Code instance, switch to the `Debug` pane
-2. In the configuration dropdown, choose the configuration named `Extension + Dart Server` or `Extension + Flutter Server`
-3. Press `F5` to launch the extension development host running the extension and also the debug server
-4. In the extension development host, open the `launch.json` file for the Dart project you're going to debug
-5. Add `"debugServer": 4711` to the debug configuration to instruct Dart Code to use the debug server (note: don't forget to remove this later, otherwise you'll get errors when trying to debug if there's no debug server running)
-6. Press `F5` in the extension development host to begin debugging
-
-In this mode, you should be able to hit breakpoints in the debug adapters too. The debug toolbar in the main instance will allow you to switch between the extension/debug server processes and you should see the status of both in the debugging panes.
+Debug adapters now run in-process and debugging them should be the same as any other extension code.
 
 ## Code Etiquette and Style
 
