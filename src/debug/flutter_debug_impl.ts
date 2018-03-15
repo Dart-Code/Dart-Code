@@ -9,10 +9,10 @@ import { FlutterLaunchRequestArguments, formatPathForVm, isWin, uriToFilePath } 
 
 export class FlutterDebugSession extends DartDebugSession {
 	protected args: FlutterLaunchRequestArguments;
-	public flutter: FlutterRun;
-	public currentRunningAppId: string;
-	public observatoryUri: string;
-	public baseUri: string;
+	private flutter: FlutterRun;
+	private currentRunningAppId: string;
+	private observatoryUri: string;
+	private baseUri: string;
 	private isReloadInProgress: boolean;
 
 	constructor() {
