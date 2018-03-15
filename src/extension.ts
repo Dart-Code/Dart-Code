@@ -63,7 +63,7 @@ export function activate(context: vs.ExtensionContext) {
 	const extensionStartTime = new Date();
 	const sdks = util.findSdks();
 	analytics = new Analytics(sdks);
-	if (sdks.dart == null) {
+	if (!sdks.dart || (sdks.projectType === util.ProjectType.Flutter && !sdks.flutter)) {
 		// HACK: In order to provide a more useful message if the user was trying to fun flutter.createProject
 		// we need to hook the command and force the project type to Flutter to get the correct error message.
 		// This can be reverted and improved if Code adds support for providing activation context:
