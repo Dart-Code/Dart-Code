@@ -54,11 +54,28 @@ let flutterDaemon: FlutterDaemon;
 let analysisRoots: string[] = [];
 let analytics: Analytics;
 
-let showTodos: boolean = config.showTodos;
-let showLintNames: boolean = config.showLintNames;
-let analyzerSettings: string = getAnalyzerSettings();
+let showTodos: boolean;
+let showLintNames: boolean;
+let analyzerSettings: string;
 
 export function activate(context: vs.ExtensionContext) {
+	// Wire up a reload command that will re-initialise everything.
+	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", (_) => {
+		deactivate();
+		for (const sub of context.subscriptions) {
+			try {
+				sub.dispose();
+			} catch (e) {
+				console.error(e);
+			}
+		}
+		activate(context);
+	}));
+
+	showTodos = config.showTodos;
+	showLintNames = config.showLintNames;
+	analyzerSettings = getAnalyzerSettings();
+
 	const analysisCompleteCompleter = new PromiseCompleter<void>();
 	const extensionStartTime = new Date();
 	const sdks = util.findSdks();
