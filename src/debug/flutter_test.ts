@@ -13,6 +13,8 @@ export class FlutterTest extends StdIOService<Notification> {
 		// Everything in flutter is wrapped in [] so we can tell what to handle.
 		return message.startsWith("{") && message.endsWith("}");
 	}
+	protected isNotification(msg: any): boolean { return !!msg.type; }
+	protected isResponse(msg: any): boolean { return false; }
 
 	protected processUnhandledMessage(message: string): void {
 		this.notify(this.unhandledMessageSubscriptions, message);
@@ -91,34 +93,34 @@ export class FlutterTest extends StdIOService<Notification> {
 	}
 }
 
-interface Notification {
+export interface Notification {
 	type: string;
 	time: number;
 }
 
-interface StartNotification extends Notification {
+export interface StartNotification extends Notification {
 	protocolVersion: string;
 	runnerVersion?: string;
 }
-interface AllSuitesNotification extends Notification {
+export interface AllSuitesNotification extends Notification {
 	count: number;
 }
 
-interface SuiteNotification extends Notification {
+export interface SuiteNotification extends Notification {
 	suite: Suite;
 }
 
-interface Suite {
+export interface Suite {
 	id: number;
 	platform: string;
 	path: string;
 }
 
-interface TestNotification extends Notification {
+export interface TestNotification extends Notification {
 	test: Test;
 }
 
-interface Item {
+export interface Item {
 	id: number;
 	name?: string;
 	suiteID: number;
@@ -128,42 +130,35 @@ interface Item {
 	url?: string;
 }
 
-interface Test extends Item {
+export interface Test extends Item {
 	groupIDs: Group[];
 }
 
-interface Metadata {
+export interface Metadata {
 	skip: boolean;
 	skipReason?: string;
 }
 
-interface TestDoneNotification extends Notification {
-	testID: number;
-	result: string;
-	skipped: boolean;
-	hidden: boolean;
-}
-
-interface GroupNotification extends Notification {
+export interface GroupNotification extends Notification {
 	group: Group;
 }
 
-interface Group extends Item {
+export interface Group extends Item {
 	parentID?: number;
 	testCount: number;
 }
 
-interface TestStartNotification extends Notification {
+export interface TestStartNotification extends Notification {
 	test: Test;
 }
 
-interface TestDoneNotification extends Notification {
+export interface TestDoneNotification extends Notification {
 	testID: number;
 	result: string;
 	skipped: boolean;
 	hidden: boolean;
 }
 
-interface DoneNotification extends Notification {
+export interface DoneNotification extends Notification {
 	success: boolean;
 }
