@@ -6,7 +6,7 @@ import { Disposable } from "vscode";
 import { OutputEvent } from "vscode-debugadapter";
 import { flutterEnv } from "./utils";
 
-export class FlutterRun extends StdIOService {
+export class FlutterRun extends StdIOService<UnknownNotification> {
 	constructor(flutterBinPath: string, projectFolder: string, args: string[], logFile: string) {
 		super(logFile, true, true);
 

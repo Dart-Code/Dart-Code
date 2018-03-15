@@ -4,7 +4,7 @@ import * as fs from "fs";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
-export abstract class StdIOService implements Disposable {
+export abstract class StdIOService<T> implements Disposable {
 	public process: child_process.ChildProcess;
 	protected messagesWrappedInBrackets = false;
 	protected treatHandlingErrorsAsUnhandledMessages = false;
@@ -117,7 +117,7 @@ export abstract class StdIOService implements Disposable {
 
 		try {
 			if (msg && msg.event)
-				this.handleNotification(msg as UnknownNotification);
+				this.handleNotification(msg as T);
 			else if (msg && msg.id)
 				this.handleResponse(msg as UnknownResponse);
 			else {
@@ -134,7 +134,7 @@ export abstract class StdIOService implements Disposable {
 		}
 	}
 
-	protected abstract handleNotification(evt: UnknownNotification): void;
+	protected abstract handleNotification(evt: T): void;
 
 	private handleResponse(evt: UnknownResponse) {
 		const handler = this.activeRequests[evt.id];

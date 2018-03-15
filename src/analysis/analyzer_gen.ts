@@ -5,9 +5,9 @@
 
 import * as vs from "vscode";
 import * as as from "./analysis_server_types";
-import { StdIOService, UnknownResponse, UnknownNotification } from "../services/stdio_service";
+import { StdIOService, UnknownResponse, UnknownNotification, Notification } from "../services/stdio_service";
 
-export abstract class AnalyzerGen extends StdIOService {
+export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	constructor(logFile: string) {
 		super(logFile);
 	}

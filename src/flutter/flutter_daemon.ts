@@ -8,7 +8,7 @@ import * as fs from "fs";
 import * as vs from "vscode";
 import { flutterEnv } from "../debug/utils";
 
-export class FlutterDaemon extends StdIOService {
+export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	public deviceManager: FlutterDeviceManager;
 
 	constructor(flutterBinPath: string, projectFolder: string) {
