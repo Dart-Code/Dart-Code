@@ -68,6 +68,10 @@ export class SdkCommands {
 			return vs.commands.executeCommand("dart.upgradePackages", selection);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", (selection) => {
+			if (!sdks.flutter) {
+				util.showFlutterActivationFailure("flutter.doctor");
+				return;
+			}
 			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
 			if (!fs.existsSync(tempDir))
 				fs.mkdirSync(tempDir);
