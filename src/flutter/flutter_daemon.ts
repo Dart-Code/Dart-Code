@@ -1,6 +1,6 @@
 import { config } from "../config";
 import { FlutterDeviceManager } from "./device_manager";
-import { logError, extensionVersion, promptForReload } from "../utils";
+import { logError, extensionVersion, reloadExtension } from "../utils";
 import { StdIOService, Request, UnknownResponse, UnknownNotification } from "../services/stdio_service";
 import * as child_process from "child_process";
 import * as f from "./flutter_types";
@@ -31,7 +31,7 @@ export class FlutterDaemon extends StdIOService {
 		try {
 			super.sendMessage(json);
 		} catch (e) {
-			promptForReload("The Flutter Daemon has terminated. Save your changes then reload the project to resume.");
+			reloadExtension("The Flutter Daemon has terminated.");
 			throw e;
 		}
 	}

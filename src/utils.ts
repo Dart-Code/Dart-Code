@@ -329,19 +329,18 @@ export enum ProjectType {
 }
 
 export function showFluttersDartSdkActivationFailure() {
-	promptForReload("Could not find Dart in your Flutter SDK. " +
+	reloadExtension("Could not find Dart in your Flutter SDK. " +
 		"Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
+		"Reload",
 	);
 }
-export function showFlutterActivationFailure(runningFlutterCommand: string = null) {
+export function showFlutterActivationFailure(commandToReRun: string = null) {
 	showSdkActivationFailure(
 		"Flutter",
 		(paths) => searchPaths(paths, hasFlutterExecutable, flutterExecutableName),
 		FLUTTER_DOWNLOAD_URL,
 		(p) => config.setGlobalFlutterSdkPath(p),
-		runningFlutterCommand
-			? `Your SDK path has been saved. Please reload and then re-run the "${runningFlutterCommand}" command.`
-			: null,
+		commandToReRun,
 	);
 }
 export function showDartActivationFailure() {
@@ -357,8 +356,8 @@ export async function showSdkActivationFailure(
 	sdkType: string,
 	search: (path: string[]) => string,
 	downloadUrl: string,
-	saveSdkPath: (path: string) => void,
-	reloadPrompt: string = null,
+	saveSdkPath: (path: string) => Thenable<void>,
+	commandToReRun: string = null,
 ) {
 	const locateAction = "Locate SDK";
 	const downloadAction = "Download SDK";
@@ -376,11 +375,11 @@ export async function showSdkActivationFailure(
 			if (selectedFolders && selectedFolders.length > 0) {
 				const matchingSdkFolder = search(selectedFolders.map((f) => f.fsPath));
 				if (matchingSdkFolder) {
-					saveSdkPath(matchingSdkFolder);
-					if (reloadPrompt)
-						promptForReload(reloadPrompt);
-					else
-						commands.executeCommand("workbench.action.reloadWindow");
+					await saveSdkPath(matchingSdkFolder);
+					await reloadExtension();
+					if (commandToReRun) {
+						commands.executeCommand(commandToReRun);
+					}
 					break;
 				} else {
 					displayMessage = `That folder does not appear to be a ${sdkType} SDK.`;
@@ -395,9 +394,9 @@ export async function showSdkActivationFailure(
 	}
 }
 
-export async function promptForReload(message: string) {
-	const reloadAction = "Reload Window";
-	if (await window.showInformationMessage(message, reloadAction) === reloadAction) {
-		commands.executeCommand("workbench.action.reloadWindow");
+export async function reloadExtension(prompt?: string, buttonText?: string) {
+	const restartAction = buttonText || "Restart";
+	if (!prompt || await window.showInformationMessage(prompt, restartAction) === restartAction) {
+		commands.executeCommand("_dart.reloadExtension");
 	}
 }

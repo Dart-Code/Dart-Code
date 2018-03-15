@@ -183,7 +183,7 @@ export class SdkCommands {
 
 	private async createFlutterProject(): Promise<void> {
 		if (!this.sdks || !this.sdks.flutter) {
-			util.showFlutterActivationFailure("Flutter: New Project");
+			util.showFlutterActivationFailure("flutter.newProject");
 			return;
 		}
 
