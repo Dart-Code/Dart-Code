@@ -277,6 +277,7 @@ export function activate(context: vs.ExtensionContext) {
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("flutter", dummyDebugProvider));
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart-cli", dummyDebugProvider));
+	context.subscriptions.push(debugProvider);
 
 	// Setup that requires server version/capabilities.
 	const connectedSetup = analyzer.registerForServerConnected((sc) => {
