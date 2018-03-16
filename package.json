@@ -643,10 +643,11 @@
 		"compile": "echo Compiling... && tsc -p ./",
 		"watch": "tsc -watch -p ./",
 		"postinstall": "node ./node_modules/vscode/bin/install",
+		"lint": "tslint src/**/*.ts -t verbose",
+		"test": "rm -rf ./.nyc_output && npm run compile && npm run instrument && npm run test-only && nyc report -r lcov",
 		"test-only": "node ./out/test/test_all.js",
 		"instrument": "cd out/src && nyc instrument . . && cd ../..",
-		"test": "rm -rf ./.nyc_output && npm run compile && npm run instrument && npm run test-only && nyc report",
-		"lint": "tslint src/**/*.ts -t verbose",
+		"send_coverage": "cd out/src && codeclimate-test-reporter < ../../coverage/lcov.info && cd ../..",
 		"post_result_to_chat": "node ./out/tool/post_to_chat.js"
 	},
 	"dependencies": {
@@ -661,6 +662,7 @@
 		"@types/semver": "^5.5.0",
 		"@types/sinon": "^4.3.0",
 		"@types/ws": "^0.0.38",
+		"codeclimate-test-reporter": "^0.5.0",
 		"mocha": "^3.5.3",
 		"nyc": "^11.6.0",
 		"remap-istanbul": "^0.11.0",
