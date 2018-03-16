@@ -1,8 +1,9 @@
 environment:
   CHAT_WEBHOOK_PATH:
     secure: Oawgup4p18hTqsE2qGz07QLvtL/xrDiGFmqs9ebmXATs6t/Mp6L/sVS0XbAgmXhuOtZ8Q3KDC//q0ViBEnNiaEcZg3cI3GGPchtIQYjAozEC+3d3SXQY9zcSymAPgYsmc1TOsC+3BbuYXskoTu6myDbRPfh2i0YuU2lr0SRRbGS+68fGhBiPhZtkS6DOfDfu
-  CODECLIMATE_REPO_TOKEN: ce2080fef9cb5a2b24b602b8d49daa2914e9fd9de3dc42f7ec92508fa7633303
-
+  CODECLIMATE_REPO_TOKEN:
+    secure: pMIJ8GEQ1YcQ5vMgZhZyTzaX444RjsjR5JWaaM463YYBxj1lJdm8S1C3N5Od39FQxyxOS9NW+P6qppcN+RehXbhCJ+AGA8ob4cs9HxYBulo=
+    
 install:
   - ps: Install-Product node ''
   - ps: $env:ELECTRON_NO_ATTACH_CONSOLE = 1
