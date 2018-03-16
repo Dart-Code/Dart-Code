@@ -39,12 +39,12 @@ function runNode(cwd: string, args: string[], env: any): Promise<number> {
 	});
 }
 
-async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string, codeVersion: string, allowFailures: boolean = false): Promise<void> {
+async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string, codeVersion: string, allowFailures: boolean, runInfo: string): Promise<void> {
 	console.log("\n\n");
 	console.log(red("############################################################"));
 	console.log(
 		red("## ")
-		+ `Running tests from ${yellow(testFolder)}`
+		+ `Running ${runInfo} using ${yellow(testFolder)}`
 		+ ` in workspace ${yellow(workspaceFolder)}`
 		+ ` using version ${yellow(codeVersion)} of Code`);
 	console.log(`${red("##")} Looking for SDKs in:`);
@@ -97,14 +97,16 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 async function runAllTests(): Promise<void> {
 	const codeVersions = ["*", "insiders"];
 	const sdkPaths = [process.env.PATH_STABLE || process.env.PATH, process.env.PATH_UNSTABLE].filter((p) => p);
+	let runNumber = 1;
 	for (const codeVersion of codeVersions) {
 		for (const sdkPath of sdkPaths) {
 			// Allow failures from Insiders because it's often bad (we'll still get reports).
 			const allowFailures = codeVersion === "insiders" || sdkPath === process.env.PATH_UNSTABLE;
-			await runTests("dart_only", "hello_world", sdkPath, codeVersion, allowFailures);
-			await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion, allowFailures);
-			await runTests("multi_root", "projects.code-workspace", sdkPath, codeVersion, allowFailures);
-			await runTests("not_activated/flutter_create", "empty", sdkPath, codeVersion, allowFailures);
+			const totalRuns = 4 * sdkPaths.length * codeVersions.length;
+			await runTests("dart_only", "hello_world", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
+			await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
+			await runTests("multi_root", "projects.code-workspace", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
+			await runTests("not_activated/flutter_create", "empty", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 		}
 	}
 }
