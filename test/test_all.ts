@@ -101,7 +101,7 @@ async function runAllTests(): Promise<void> {
 	for (const codeVersion of codeVersions) {
 		for (const sdkPath of sdkPaths) {
 			// Allow failures from Insiders because it's often bad (we'll still get reports).
-			const allowFailures = codeVersion === "insiders" || sdkPath === process.env.PATH_UNSTABLE;
+			const allowFailures = codeVersion === "insiders";
 			const totalRuns = 4 * sdkPaths.length * codeVersions.length;
 			await runTests("dart_only", "hello_world", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 			await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
