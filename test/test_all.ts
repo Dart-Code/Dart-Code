@@ -41,20 +41,20 @@ function runNode(cwd: string, args: string[], env: any): Promise<number> {
 
 async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string, codeVersion: string, allowFailures: boolean, runInfo: string): Promise<void> {
 	console.log("\n\n");
-	console.log(red("############################################################"));
+	console.log(yellow("############################################################"));
 	console.log(
-		red("## ")
+		yellow("## ")
 		+ `Running ${runInfo} using ${yellow(testFolder)}`
 		+ ` in workspace ${yellow(workspaceFolder)}`
 		+ ` using version ${yellow(codeVersion)} of Code`);
-	console.log(`${red("##")} Looking for SDKs in:`);
+	console.log(`${yellow("##")} Looking for SDKs in:`);
 	sdkPaths
 		.split(path.delimiter)
 		.filter((p) => p && p.toLowerCase().indexOf("dart") !== -1 || p.toLowerCase().indexOf("flutter") !== -1)
-		.forEach((p) => console.log(`${red("##")}    ${p}`));
+		.forEach((p) => console.log(`${yellow("##")}    ${p}`));
 	if (allowFailures)
-		console.log(`${red("## Failures")} are ${green("allowed")} for this run.`);
-	console.log(red("############################################################"));
+		console.log(`${yellow("##")} ${red("Failures")} are ${green("allowed")} for this run.`);
+	console.log(yellow("############################################################"));
 	const cwd = process.cwd();
 	const env = Object.create(process.env);
 	// For some reason, updating PATH here doesn't get through to Code
@@ -90,7 +90,7 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 		exitCode = exitCode || res;
 	}
 
-	console.log(red("############################################################"));
+	console.log(yellow("############################################################"));
 	console.log("\n\n");
 }
 
