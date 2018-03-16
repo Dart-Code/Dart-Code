@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as fs from "fs";
 import * as vs from "vscode";
-import { activate, doc, getPositionOf, rangeOf, everythingFile } from "../../helpers";
+import { activate, doc, getPositionOf, rangeOf, everythingFile, ext } from "../../helpers";
 
 describe("dart_hover_provider", () => {
 
@@ -71,7 +71,11 @@ describe("dart_hover_provider", () => {
 		const hover = await getHoverAt("my^NumSetter(");
 		// TODO: We don't want this
 		// https://github.com/Dart-Code/Dart-Code/issues/555
-		assert.equal(hover.displayText, "MyClass set myNumSetter(num value) → void");
+		if (ext.exports.analyzerCapabilities.isDart2) {
+			assert.equal(hover.displayText, "MyClass set myNumSetter(num value) → void");
+		} else {
+			assert.equal(hover.displayText, "MyClass set myNumSetter(num value) → dynamic");
+		}
 		assert.equal(hover.documentation, "This is my num setter.");
 		assert.deepStrictEqual(hover.range, rangeOf("|myNumSetter|"));
 	});
