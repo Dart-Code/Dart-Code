@@ -71,7 +71,7 @@ describe("dart_hover_provider", () => {
 		const hover = await getHoverAt("my^NumSetter(");
 		// TODO: We don't want this
 		// https://github.com/Dart-Code/Dart-Code/issues/555
-		assert.equal(hover.displayText, "MyClass set myNumSetter(num value) → dynamic");
+		assert.equal(hover.displayText, "MyClass set myNumSetter(num value) → void");
 		assert.equal(hover.documentation, "This is my num setter.");
 		assert.deepStrictEqual(hover.range, rangeOf("|myNumSetter|"));
 	});
@@ -86,15 +86,15 @@ describe("dart_hover_provider", () => {
 	it("returns expected information for a named constructor", async () => {
 		// TODO: Currently server seeems to return two different ranges for
 		// MyClass and named.
-		let hover = await getHoverAt("My^Class.named()");
-		assert.equal(hover.displayText, "MyClass.named() → MyClass");
+		let hover = await getHoverAt("My^Class.myNamed()");
+		assert.equal(hover.displayText, "MyClass.myNamed() → MyClass");
 		assert.equal(hover.documentation, "This is my class named constructor.");
-		assert.deepStrictEqual(hover.range, rangeOf("|MyClass|.named()"));
+		assert.deepStrictEqual(hover.range, rangeOf("|MyClass|.myNamed()"));
 		// Check second part... ideally this would be rolled into above.
-		hover = await getHoverAt("MyClass.n^amed()");
-		assert.equal(hover.displayText, "MyClass.named() → MyClass");
+		hover = await getHoverAt("MyClass.myN^amed()");
+		assert.equal(hover.displayText, "MyClass.myNamed() → MyClass");
 		assert.equal(hover.documentation, "This is my class named constructor.");
-		assert.deepStrictEqual(hover.range, rangeOf("MyClass.|named|()"));
+		assert.deepStrictEqual(hover.range, rangeOf("MyClass.|myNamed|()"));
 	});
 
 	it("returns expected information for a void returning method", async () => {

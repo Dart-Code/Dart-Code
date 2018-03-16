@@ -17,7 +17,7 @@ class MyClass {
   MyClass();
 
   /// This is my class named constructor.
-  MyClass.named();
+  MyClass.myNamed();
 
   /// This is my void returning method.
   void myVoidReturningMethod() {}
@@ -36,7 +36,7 @@ class MyClass {
 
 void doSomeStuff() {
   var a = new MyClass();
-  var b = new MyClass.named();
+  var b = new MyClass.myNamed();
   print(a.myNumField);
   print(a.myNumGetter);
   a.myNumSetter = 1;

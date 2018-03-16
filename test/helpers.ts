@@ -64,7 +64,12 @@ export async function getDocumentSymbols(): Promise<vs.SymbolInformation[]> {
 	return documentSymbolResult || [];
 }
 
-export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName: string): void {
+export async function getWorkspaceSymbols(query: string): Promise<vs.SymbolInformation[]> {
+	const workspaceSymbolResult = await (vs.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query) as Thenable<vs.SymbolInformation[]>);
+	return workspaceSymbolResult || [];
+}
+
+export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName: string, uri: vs.Uri = doc.uri): void {
 	const symbol = symbols.find((f) =>
 		f.name === name
 		&& f.kind === kind
@@ -75,7 +80,7 @@ export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind
 		`Couldn't find symbol for ${name}/${vs.SymbolKind[kind]}/${containerName} in\n`
 		+ symbols.map((s) => `        ${s.name}/${vs.SymbolKind[s.kind]}/${s.containerName}`).join("\n"),
 	);
-	assert.deepStrictEqual(symbol.location.uri, doc.uri);
+	assert.deepStrictEqual(symbol.location.uri.fsPath, uri.fsPath);
 	assert.ok(symbol.location);
 	// Ensure we have a range, but don't check specifically what it is (this will make the test fragile and the range mapping is trivial)
 	assert.ok(symbol.location.range);

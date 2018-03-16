@@ -16,7 +16,7 @@ describe("document_symbol_provider", () => {
 		ensureSymbol(symbols, "myNumGetter", vs.SymbolKind.Property, "MyClass");
 		ensureSymbol(symbols, "myNumSetter", vs.SymbolKind.Property, "MyClass");
 		ensureSymbol(symbols, "MyClass()", vs.SymbolKind.Constructor, "MyClass");
-		ensureSymbol(symbols, "MyClass.named()", vs.SymbolKind.Constructor, "MyClass");
+		ensureSymbol(symbols, "MyClass.myNamed()", vs.SymbolKind.Constructor, "MyClass");
 		ensureSymbol(symbols, "myVoidReturningMethod()", vs.SymbolKind.Method, "MyClass");
 		ensureSymbol(symbols, "myStringReturningMethod()", vs.SymbolKind.Method, "MyClass");
 		ensureSymbol(symbols, "methodTakingString(String a)", vs.SymbolKind.Method, "MyClass");
