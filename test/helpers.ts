@@ -3,8 +3,14 @@ import * as path from "path";
 import * as fs from "fs";
 import * as vs from "vscode";
 import { EOL, tmpdir } from "os";
+import { Sdks } from "../src/utils";
+import { AnalyzerCapabilities } from "../src/analysis/analyzer";
 
-const ext = vs.extensions.getExtension("Dart-Code.dart-code");
+export const ext = vs.extensions.getExtension<{
+	analysisComplete: Promise<void>,
+	analyzerCapabilities: AnalyzerCapabilities,
+	sdks: Sdks,
+}>("Dart-Code.dart-code");
 export const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/hello_world"));
 export const emptyFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "lib/empty.dart"));
 export const everythingFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "lib/everything.dart"));

@@ -372,6 +372,7 @@ export function activate(context: vs.ExtensionContext) {
 
 	return {
 		analysisComplete: analysisCompleteCompleter.promise,
+		analyzerCapabilities: analyzer.capabilities,
 		sdks,
 	};
 }

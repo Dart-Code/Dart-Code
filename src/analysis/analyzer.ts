@@ -7,7 +7,7 @@ import { extensionVersion, logError, versionIsAtLeast, reloadExtension } from ".
 import * as as from "./analysis_server_types";
 import { AnalyzerGen } from "./analyzer_gen";
 
-class AnalyzerCapabilities {
+export class AnalyzerCapabilities {
 
 	public version: string;
 
@@ -20,6 +20,7 @@ class AnalyzerCapabilities {
 	get supportsClosingLabels() { return versionIsAtLeast(this.version, "1.18.4"); }
 	get supportsGetDeclerations() { return versionIsAtLeast(this.version, "1.18.7"); }
 	get supportsGetDeclerationsForFile() { return versionIsAtLeast(this.version, "1.19.0"); }
+	get isDart2() { return versionIsAtLeast(this.version, "1.19.0"); }
 }
 
 export class Analyzer extends AnalyzerGen {
