@@ -17,7 +17,7 @@ function color(col: number, message: string) {
 }
 
 // 1 min timeout (Travis kills us at 10 min without output).
-const timeoutInMilliseconds = 1000 * 60;
+const timeoutInMilliseconds = 1000 * 60 * 8;
 function runNode(cwd: string, args: string[], env: any): Promise<number> {
 	return new Promise<number>((resolve, reject) => {
 		let hasClosed = false;
