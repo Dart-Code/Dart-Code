@@ -15,6 +15,7 @@ export const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/t
 export const emptyFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "lib/empty.dart"));
 export const everythingFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "lib/everything.dart"));
 export const flutterHelloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/flutter_hello_world"));
+export const flutterEmptyFile = vs.Uri.file(path.join(flutterHelloWorldFolder.fsPath, "lib/empty.dart"));
 export const flutterHelloWorldMainFile = vs.Uri.file(path.join(flutterHelloWorldFolder.fsPath, "lib/main.dart"));
 
 export let doc: vs.TextDocument;
@@ -96,6 +97,52 @@ export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind
 	assert.ok(symbol.location.range.start.line);
 	assert.ok(symbol.location.range.end);
 	assert.ok(symbol.location.range.end.line);
+}
+
+export async function getCompletionsAt(searchText: string, triggerCharacter?: string): Promise<vs.CompletionItem[]> {
+	const position = getPositionOf(searchText);
+	const results = await (vs.commands.executeCommand("vscode.executeCompletionItemProvider", doc.uri, position, triggerCharacter) as Thenable<vs.CompletionList>);
+	return results.items;
+}
+
+export async function getSnippetCompletionsAt(searchText: string, triggerCharacter?: string): Promise<vs.CompletionItem[]> {
+	const completions = await getCompletionsAt(searchText, triggerCharacter);
+	return completions.filter((c) => c.kind === vs.CompletionItemKind.Snippet);
+}
+
+export function ensureCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind, label: string, filterText: string, documentation?: string): void {
+	const completion = items.find((item) =>
+		item.label === label
+		&& item.filterText === filterText
+		&& item.kind === kind,
+	);
+	assert.ok(
+		completion,
+		`Couldn't find completion for ${label}/${filterText} in\n`
+		+ items.map((item) => `        ${vs.CompletionItemKind[item.kind]}/${item.label}/${item.filterText}`).join("\n"),
+	);
+	if (documentation) {
+		assert.equal(((completion.documentation as any).value as string).trim(), documentation);
+	}
+}
+
+export function ensureSnippet(items: vs.CompletionItem[], label: string, filterText: string, documentation?: string): void {
+	ensureCompletion(items, vs.CompletionItemKind.Snippet, label, filterText, documentation);
+}
+
+export function ensureNoCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind, label: string): void {
+	const completion = items.find((item) =>
+		(item.label === label || item.filterText === label)
+		&& item.kind === kind,
+	);
+	assert.ok(
+		!completion,
+		`Found unexpected completion for ${label}`,
+	);
+}
+
+export function ensureNoSnippet(items: vs.CompletionItem[], label: string): void {
+	ensureNoCompletion(items, vs.CompletionItemKind.Snippet, label);
 }
 
 export function delay(milliseconds: number): Promise<void> {
