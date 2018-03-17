@@ -36,31 +36,39 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
 		const isFlutter = isFlutterProject(folder);
+
 		// TODO: This cast feels nasty?
 		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isFlutter, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
 
-		if (isFlutter)
-			debugConfig.program = debugConfig.program || "${workspaceRoot}/lib/main.dart"; // Set Flutter default path.
-		else if (!debugConfig.program) {
-			// For Dart projects that don't have a program, we can't launch, so we perform set type=null which causes launch.json
-			// to open.
+		// Set Flutter default path.
+		if (isFlutter && !debugConfig.program)
+			debugConfig.program = "${workspaceRoot}/lib/main.dart";
+
+		// If we still don't have an entry point, the user will have to provide.
+		if (!debugConfig.program) {
+			// Set type=null which causes launch.json to open.
 			debugConfig.type = null;
 			window.showInformationMessage("Set the 'program' value in your launch config (eg ${workspaceRoot}/bin/main.dart) then launch again");
 			return debugConfig;
 		}
 
 		// Start port listener on launch of first debug session.
-		const debugServer = isFlutter
-			? this.getServer("flutter", () => new FlutterDebugSession())
-			: this.getServer("dart", () => new DartDebugSession());
+		const debugServer = this.getDebugServer(isFlutter);
 
 		// Make VS Code connect to debug server instead of launching debug adapter.
 		// TODO: Why do we need this cast? The node-mock-debug does not?
 		(debugConfig as any).debugServer = debugServer.address().port;
+
 		return debugConfig;
 	}
 
-	private getServer(type: string, create: () => DebugSession): net.Server {
+	private getDebugServer(isFlutter: boolean) {
+		return isFlutter
+			? this.spawnOrGetServer("flutter", () => new FlutterDebugSession())
+			: this.spawnOrGetServer("dart", () => new DartDebugSession());
+	}
+
+	private spawnOrGetServer(type: string, create: () => DebugSession): net.Server {
 		// Start port listener on launch of first debug session.
 		if (!this.debugServers[type]) {
 
