@@ -91,6 +91,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// TODO: Why do we need this cast? The node-mock-debug does not?
 		(debugConfig as any).debugServer = debugServer.address().port;
 
+		this.analytics.logDebuggerStart(folder && folder.uri);
+
 		return debugConfig;
 	}
 
@@ -123,8 +125,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	private setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, isFlutter: boolean, deviceId: string) {
-		this.analytics.logDebuggerStart(folder && folder.uri);
-
 		const dartExec = isWin ? "dart.exe" : "dart";
 		const flutterExec = isWin ? "flutter.bat" : "flutter";
 
