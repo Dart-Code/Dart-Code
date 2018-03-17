@@ -11,8 +11,8 @@ describe("snippet_provider", () => {
 	it("returns dart items", async () => {
 		await setTestContent("mai");
 		const snippets = await getSnippetCompletionsAt("mai^");
-		ensureSnippet(snippets, "class", "class", `\`\`\`${eol}class \${1:Name} {${eol}  $2${eol}}${eol}\`\`\``);
-		ensureSnippet(snippets, "main", "main", `\`\`\`${eol}main(List<String> args) {${eol}  $1${eol}}${eol}\`\`\``);
+		ensureSnippet(snippets, "class", "class", `\`\`\`\nclass \${1:Name} {\n  $2\n}\n\`\`\``);
+		ensureSnippet(snippets, "main", "main", `\`\`\`\nmain(List<String> args) {\n  $1\n}\n\`\`\``);
 	});
 
 	it("returns flutter items", async () => {
