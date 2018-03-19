@@ -6,7 +6,7 @@ If you're going to work on an issue, please add a comment to the issue so others
 
 ## Enable Logging
 
-There are some "hidden" configuration settings that allow you to enable diagnostic logging in order to debug/develop Dart Code more easily. These should be set to full filesystem paths of where to log. The folders must exist:
+There are some addigional configuration settings that allow you to enable diagnostic logging in order to debug/develop Dart Code more easily. These should be set to full filesystem paths of where to log. The folders must exist:
 
 - `"dart.analyzerLogFile"`: Logs communication between Dart Code and the analysis server from the Dart SDK
 - `"dart.flutterDaemonLogFile"`: Logs communication with the Flutter daemon used for device management in Dart Code
