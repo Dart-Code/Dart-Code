@@ -3,7 +3,7 @@ import * as net from "net";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { DartDebugSession } from "../debug/dart_debug_impl";
-import { DebugConfigurationProvider, WorkspaceFolder, CancellationToken, DebugConfiguration, ProviderResult, commands, window, workspace } from "vscode";
+import { DebugConfigurationProvider, WorkspaceFolder, CancellationToken, DebugConfiguration, ProviderResult, commands, window, workspace, debug } from "vscode";
 import { DebugSession } from "vscode-debugadapter";
 import { FlutterDebugSession } from "../debug/flutter_debug_impl";
 import { FlutterDeviceManager } from "../flutter/device_manager";
@@ -37,8 +37,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
 		const openFileUri = window.activeTextEditor && window.activeTextEditor.document ? window.activeTextEditor.document.uri : null;
-		// If we have an open file, override the folder that VS VCode gave us as it could be incorrect
-		if (openFileUri)
+		// If we're an empty config and have an open file, override the folder that VS VCode gave us as it could be incorrect
+		if (!debugConfig.type && openFileUri)
 			folder = workspace.getWorkspaceFolder(openFileUri) || folder;
 		const isFlutter = isFlutterProject(folder);
 		let debugType = isFlutter ? DebuggerType.Flutter : DebuggerType.Dart;
