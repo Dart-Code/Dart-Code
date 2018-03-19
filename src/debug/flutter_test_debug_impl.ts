@@ -4,7 +4,7 @@ import { Event, OutputEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
-import { FlutterTest, Test, TestDoneNotification, Group, Suite, DoneNotification } from "./flutter_test";
+import { FlutterTest, Test, TestDoneNotification, Group, Suite, DoneNotification, PrintNotification } from "./flutter_test";
 import { FlutterLaunchRequestArguments, formatPathForVm, isWin, uriToFilePath } from "./utils";
 
 const tick = "✓";
@@ -58,6 +58,7 @@ export class FlutterTestDebugSession extends DartDebugSession {
 		this.flutter.registerForTestDone((n) => this.writeTestResult(n));
 		this.flutter.registerForGroup((n) => this.groups[n.group.id] = n.group);
 		this.flutter.registerForDone((n) => this.writeResult(n));
+		this.flutter.registerForPrint((n) => this.print(n));
 
 		return this.flutter.process;
 	}
@@ -66,7 +67,8 @@ export class FlutterTestDebugSession extends DartDebugSession {
 		if (testDone.hidden)
 			return;
 		const test = this.tests[testDone.testID];
-		const symbol = testDone.result === "success" ? tick : cross;
+		const pass = testDone.result === "success";
+		const symbol = pass ? tick : cross;
 		this.sendEvent(new OutputEvent(`${symbol} ${test.name}\n`, "stdout"));
 	}
 
@@ -75,6 +77,10 @@ export class FlutterTestDebugSession extends DartDebugSession {
 			this.sendEvent(new OutputEvent(`All tests passed!\n`, "stdout"));
 		else
 			this.sendEvent(new OutputEvent(`Some tests failed.\n`, "stderr"));
+	}
+
+	private print(print: PrintNotification) {
+		this.sendEvent(new OutputEvent(`${print.message}\n`, "stdout"));
 	}
 
 	/***
