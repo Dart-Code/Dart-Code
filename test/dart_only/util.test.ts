@@ -24,3 +24,20 @@ describe("util.versionIsAtLeast", () => {
 		assert.equal(util.versionIsAtLeast("1.19.1-dev.0.0", "1.19.0"), true);
 	});
 });
+
+describe("util.isStableSdk", () => {
+	it("should consider missing versions as unstable", () => {
+		assert.equal(util.isStableSdk(null), false);
+		assert.equal(util.isStableSdk(undefined), false);
+	});
+	it("should consider anything without a hyphen as stable", () => {
+		assert.equal(util.isStableSdk("1"), true);
+		assert.equal(util.isStableSdk("1.2"), true);
+		assert.equal(util.isStableSdk("1.2.3"), true);
+	});
+	it("should consider anything with a hyphen as unstable", () => {
+		assert.equal(util.isStableSdk("1-dev"), false);
+		assert.equal(util.isStableSdk("1.2-beta"), false);
+		assert.equal(util.isStableSdk("1.2.3-alpha.3"), false);
+	});
+});
