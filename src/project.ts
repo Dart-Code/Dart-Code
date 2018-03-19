@@ -50,29 +50,41 @@ export async function checkForProjectsInSubFolders() {
 		.filter((f) => config.for(vs.Uri.file(f)).promptToUpgradeWorkspace);
 
 	if (projectsToAdd.length > 0) {
-		const updateWorkspaceAction = "Mark Projects as Workspace Folders";
-		const notForThisFolderAction = "Don't ask for this Folder";
-		const res = await vs.window.showWarningMessage(
-			`This folder contains ${projectsToAdd.length} projects in sub-folders. Would you like to mark them as Workspace Folders to enable all functionality?`,
-			updateWorkspaceAction,
-			notForThisFolderAction,
-		);
-		if (res === updateWorkspaceAction) {
-			vs.workspace.updateWorkspaceFolders(
-				vs.workspace.workspaceFolders.length,
-				undefined,
-				...projectsToAdd.map((p) => ({
-					name: path.basename(p),
-					uri: vs.Uri.file(p),
-				})),
-			);
-		} else {
-			if (res === notForThisFolderAction) {
-				for (const f of projectsToAdd) {
-					await config.for(vs.Uri.file(f)).setPromptToUpgradeWorkspace(false);
-				}
-			}
-			vs.window.showWarningMessage("Some functionality may not work correctly for projects that are in sub-folders.");
+		promptUserToUpgradeProjectFolders(projectsToAdd);
+	}
+}
+
+async function promptUserToUpgradeProjectFolders(projectsToAdd: string[]) {
+	const updateWorkspaceAction = "Mark Projects as Workspace Folders";
+	const notForThisFolderAction = "Don't ask for this Folder";
+	const res = await vs.window.showWarningMessage(
+		`This folder contains ${projectsToAdd.length} projects in sub-folders. Would you like to mark them as Workspace Folders to enable all functionality?`,
+		updateWorkspaceAction,
+		notForThisFolderAction,
+	);
+	if (res === updateWorkspaceAction) {
+		upgradeProjectFolders(projectsToAdd);
+	} else {
+		if (res === notForThisFolderAction) {
+			await disablePromptToUpgradeProjectFolders(projectsToAdd);
 		}
+		vs.window.showWarningMessage("Some functionality may not work correctly for projects that are in sub-folders.");
+	}
+}
+
+async function upgradeProjectFolders(projectsToAdd: string[]) {
+	vs.workspace.updateWorkspaceFolders(
+		vs.workspace.workspaceFolders.length,
+		undefined,
+		...projectsToAdd.map((p) => ({
+			name: path.basename(p),
+			uri: vs.Uri.file(p),
+		})),
+	);
+}
+
+async function disablePromptToUpgradeProjectFolders(projectsToAdd: string[]) {
+	for (const f of projectsToAdd) {
+		await config.for(vs.Uri.file(f)).setPromptToUpgradeWorkspace(false);
 	}
 }
