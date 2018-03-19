@@ -85,7 +85,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.cwd = forceWindowsDriveLetterToUppercase(debugConfig.cwd);
 
 		// Start port listener on launch of first debug session.
-		const debugServer = this.getDebugServer(debugType);
+		const debugServer = this.getDebugServer(debugType, debugConfig.debugServer);
 
 		// Make VS Code connect to debug server instead of launching debug adapter.
 		// TODO: Why do we need this cast? The node-mock-debug does not?
@@ -96,20 +96,20 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return debugConfig;
 	}
 
-	private getDebugServer(debugType: DebuggerType) {
+	private getDebugServer(debugType: DebuggerType, port?: number) {
 		switch (debugType) {
 			case DebuggerType.Flutter:
-				return this.spawnOrGetServer("flutter", () => new FlutterDebugSession());
+				return this.spawnOrGetServer("flutter", port, () => new FlutterDebugSession());
 			case DebuggerType.FlutterTest:
-				return this.spawnOrGetServer("flutterTest", () => new FlutterTestDebugSession());
+				return this.spawnOrGetServer("flutterTest", port, () => new FlutterTestDebugSession());
 			case DebuggerType.Dart:
-				return this.spawnOrGetServer("dart", () => new DartDebugSession());
+				return this.spawnOrGetServer("dart", port, () => new DartDebugSession());
 			default:
 				throw new Error("Unknown debugger type");
 		}
 	}
 
-	private spawnOrGetServer(type: string, create: () => DebugSession): net.Server {
+	private spawnOrGetServer(type: string, port: number = 0, create: () => DebugSession): net.Server {
 		// Start port listener on launch of first debug session.
 		if (!this.debugServers[type]) {
 
@@ -118,7 +118,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				const session = create();
 				session.setRunAsServer(true);
 				session.start(socket as NodeJS.ReadableStream, socket);
-			}).listen(0);
+			}).listen(port);
 		}
 
 		return this.debugServers[type];

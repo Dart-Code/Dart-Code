@@ -6,9 +6,12 @@ import { DebugClient } from "vscode-debugadapter-testsupport";
 import { activate, ext } from "../../helpers";
 import { FlutterLaunchRequestArguments } from "../../../src/debug/utils";
 
+const testDebugServerPortNumber = 4715;
+
 describe("debugger", () => {
 	const dc = new DebugClient("node", "./out/src/debug/dart_debug_entry.js", "dart");
 	const debugConfig: vs.DebugConfiguration = {
+		debugServer: testDebugServerPortNumber,
 		name: "Dart & Flutter",
 		program: "${workspaceFolder}/bin/main.dart",
 		request: "launch",
@@ -18,10 +21,12 @@ describe("debugger", () => {
 	before(() => activate());
 
 	it("runs a Dart script to completion", async () => {
-		const c = debugConfig as any as FlutterLaunchRequestArguments;
 		await vs.debug.startDebugging(vs.workspace.workspaceFolders[0], debugConfig);
-		// This fails because debugConfig doesn't appear to have the mutations made in the debugConfigProvider.
 		await dc.start(debugConfig.debugServer);
+
+		// TODO: Currently this just times out. My guess is that the test debug client didn't
+		// connect/initialise properly.
 		await dc.waitForEvent("terminated");
+
 	});
 });
