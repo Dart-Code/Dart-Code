@@ -7,7 +7,7 @@ import { DebugConfigurationProvider, WorkspaceFolder, CancellationToken, DebugCo
 import { DebugSession } from "vscode-debugadapter";
 import { FlutterDebugSession } from "../debug/flutter_debug_impl";
 import { FlutterDeviceManager } from "../flutter/device_manager";
-import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
+import { FlutterLaunchRequestArguments, isWin, forceWindowsDriveLetterToUppercase } from "../debug/utils";
 import { ProjectType, Sdks, isFlutterProject } from "../utils";
 import { SdkCommands } from "../commands/sdk";
 import { spawn } from "child_process";
@@ -49,10 +49,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Set Flutter default path.
 		if (isFlutter && !debugConfig.program) {
 			if (openFileUri && openFileUri.fsPath.indexOf(path.join(folder.uri.fsPath, "test")) !== -1) {
-				debugConfig.program = openFileUri.fsPath;
+				debugConfig.program = forceWindowsDriveLetterToUppercase(openFileUri.fsPath);
 				debugType = DebuggerType.FlutterTest;
 			} else {
-				debugConfig.program = path.join(folder.uri.fsPath, `lib${path.sep}main.dart`);
+				debugConfig.program = path.join(forceWindowsDriveLetterToUppercase(folder.uri.fsPath), `lib${path.sep}main.dart`);
 			}
 		}
 
@@ -113,7 +113,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Attach any properties that weren't explicitly set.
 		debugConfig.type = debugConfig.type || "dart";
 		debugConfig.request = debugConfig.request || "launch";
-		debugConfig.cwd = debugConfig.cwd || folder.uri.fsPath;
+		debugConfig.cwd = forceWindowsDriveLetterToUppercase(debugConfig.cwd || folder.uri.fsPath);
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.vmArgs = debugConfig.vmArgs || conf.vmAdditionalArgs;
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, "bin", dartExec);
