@@ -457,16 +457,13 @@ function handleConfigurationChange(sdks: util.Sdks) {
 	const analyzerSettingsChanged = analyzerSettings !== newAnalyzerSettings;
 	analyzerSettings = newAnalyzerSettings;
 
-	// Project Type
-	const projectTypeChanged = sdks.projectType !== util.findSdks().projectType;
-
 	if (todoSettingChanged || showLintNameSettingChanged) {
 		analyzer.analysisReanalyze({
 			roots: analysisRoots,
 		});
 	}
 
-	if (analyzerSettingsChanged || projectTypeChanged) {
+	if (analyzerSettingsChanged) {
 		util.reloadExtension();
 	}
 }
