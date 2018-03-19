@@ -10,7 +10,7 @@ describe("debugger", () => {
 	const dc = new DebugClient("node", "./out/src/debug/dart_debug_entry.js", "dart");
 	const debugConfig: vs.DebugConfiguration = {
 		name: "Dart & Flutter",
-		program: "${workspaceRoot}/bin/main.dart",
+		program: "${workspaceFolder}/bin/main.dart",
 		request: "launch",
 		type: "dart",
 	};
