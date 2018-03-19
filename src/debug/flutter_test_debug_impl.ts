@@ -46,7 +46,7 @@ export class FlutterTestDebugSession extends DartDebugSession {
 			appArgs = appArgs.concat(args.args);
 		}
 
-		this.flutter = new FlutterTest(this.args.flutterPath, args.cwd, appArgs, this.args.flutterRunLogFile);
+		this.flutter = new FlutterTest(this.args.flutterPath, args.cwd, appArgs, this.args.flutterTestLogFile);
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
 
 		// Set up subscriptions.

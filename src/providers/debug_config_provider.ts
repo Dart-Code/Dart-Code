@@ -127,6 +127,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (isFlutter) {
 			debugConfig.flutterPath = debugConfig.flutterPath || (this.sdks.flutter ? path.join(this.sdks.flutter, "bin", flutterExec) : null);
 			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || conf.flutterRunLogFile;
+			debugConfig.flutterTestLogFile = debugConfig.flutterTestLogFile || conf.flutterTestLogFile;
 			debugConfig.deviceId = debugConfig.deviceId || deviceId;
 		}
 	}
