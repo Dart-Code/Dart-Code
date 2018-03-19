@@ -7,9 +7,10 @@ import { Analyzer } from "./analyzer";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PromiseCompleter } from "../debug/utils";
-import { extensionVersion, getSdkVersion, Sdks } from "../utils";
+import { extensionVersion, getSdkVersion, Sdks, ProjectType, isStableSdk } from "../utils";
 
 const maxErrorReportCount = 3;
+const sendFakeErrorAtStartup = false;
 
 let errorCount = 0;
 
@@ -27,6 +28,19 @@ export class AnalyzerStatusReporter {
 		analyzer.registerForServerStatus((n) => this.handleServerStatus(n));
 		analyzer.registerForServerError((e) => this.handleServerError(e));
 		analyzer.registerForRequestError((e) => this.handleRequestError(e));
+
+		if (sendFakeErrorAtStartup) {
+			setTimeout(() => {
+				this.handleServerError(
+					{
+						isFatal: false,
+						message: "This is a fake error for testing the error reporting!",
+						stackTrace: new Error().stack,
+					},
+					"testError",
+				);
+			}, 5000);
+		}
 	}
 
 	private handleServerStatus(status: ServerStatusNotification) {
@@ -76,13 +90,22 @@ export class AnalyzerStatusReporter {
 		errorCount++;
 
 		// Offer to report the error.
-		if (config.reportAnalyzerErrors && errorCount <= maxErrorReportCount) {
+		if (config.reportAnalyzerErrors && errorCount <= maxErrorReportCount && this.shouldReportErrors()) {
 			const shouldReport: string = "Generate error report";
 			window.showErrorMessage(`Exception from the Dart analysis server: ${error.message}`, shouldReport).then((res) => {
 				if (res === shouldReport)
 					this.reportError(error, method);
 			});
 		}
+	}
+
+	private shouldReportErrors(): boolean {
+		// TODO: Confirm if we should be using Flutter SDK version in flutter
+		// (if we don't, won't all servers always be dev?)
+		if (this.sdks.projectType === ProjectType.Flutter && this.sdks.flutter)
+			return !isStableSdk(getSdkVersion(this.sdks.flutter));
+		else
+			return !isStableSdk(getSdkVersion(this.sdks.dart));
 	}
 
 	private reportError(error: ServerErrorNotification, method?: string) {
