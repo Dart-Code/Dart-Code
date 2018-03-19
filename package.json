@@ -623,7 +623,7 @@
 							"name": "Dart",
 							"type": "dart",
 							"request": "launch",
-							"program": "^\"\\${workspaceRoot}/bin/main.dart\""
+							"program": "^\"\\${workspaceFolder}/bin/main.dart\""
 						}
 					},
 					{
@@ -633,7 +633,7 @@
 							"name": "Flutter",
 							"type": "dart",
 							"request": "launch",
-							"program": "^\"\\${workspaceRoot}/lib/main.dart\""
+							"program": "^\"\\${workspaceFolder}/lib/main.dart\""
 						}
 					}
 				]
