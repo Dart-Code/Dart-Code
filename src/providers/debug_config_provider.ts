@@ -37,6 +37,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
 		const openFileUri = window.activeTextEditor && window.activeTextEditor.document ? window.activeTextEditor.document.uri : null;
+		// If we have an open file, override the folder that VS VCode gave us as it could be incorrect
+		if (openFileUri)
+			folder = workspace.getWorkspaceFolder(openFileUri) || folder;
 		const isFlutter = isFlutterProject(folder);
 		let debugType = isFlutter ? DebuggerType.Flutter : DebuggerType.Dart;
 
@@ -46,10 +49,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Set Flutter default path.
 		if (isFlutter && !debugConfig.program) {
 			if (openFileUri && openFileUri.fsPath.indexOf(path.join(folder.uri.fsPath, "test")) !== -1) {
-				debugConfig.program = `\${workspaceFolder}${path.sep}${path.relative(folder.uri.fsPath, openFileUri.fsPath)}`;
+				debugConfig.program = openFileUri.fsPath;
 				debugType = DebuggerType.FlutterTest;
 			} else {
-				debugConfig.program = `\${workspaceFolder}${path.sep}lib${path.sep}main.dart`;
+				debugConfig.program = path.join(folder.uri.fsPath, `lib${path.sep}main.dart`);
 			}
 		}
 
@@ -110,7 +113,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Attach any properties that weren't explicitly set.
 		debugConfig.type = debugConfig.type || "dart";
 		debugConfig.request = debugConfig.request || "launch";
-		debugConfig.cwd = debugConfig.cwd || "${workspaceRoot}";
+		debugConfig.cwd = debugConfig.cwd || folder.uri.fsPath;
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.vmArgs = debugConfig.vmArgs || conf.vmAdditionalArgs;
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, "bin", dartExec);
