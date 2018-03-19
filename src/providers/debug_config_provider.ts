@@ -29,7 +29,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const isFlutter = isFlutterProject(folder);
 		return [{
 			name: isFlutter ? "Flutter" : "Dart",
-			program: isFlutter ? undefined : "${workspaceRoot}/bin/main.dart",
+			program: isFlutter ? undefined : "${workspaceFolder}/bin/main.dart",
 			request: "launch",
 			type: "dart",
 		}];
@@ -45,11 +45,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// Set Flutter default path.
 		if (isFlutter && !debugConfig.program) {
-			if (openFileUri.fsPath.indexOf(path.join(folder.uri.fsPath, "test")) !== -1) {
-				debugConfig.program = `\${workspaceRoot}${path.sep}${path.relative(folder.uri.fsPath, openFileUri.fsPath)}`;
+			if (openFileUri && openFileUri.fsPath.indexOf(path.join(folder.uri.fsPath, "test")) !== -1) {
+				debugConfig.program = `\${workspaceFolder}${path.sep}${path.relative(folder.uri.fsPath, openFileUri.fsPath)}`;
 				debugType = DebuggerType.FlutterTest;
 			} else {
-				debugConfig.program = `\${workspaceRoot}${path.sep}lib${path.sep}main.dart`;
+				debugConfig.program = `\${workspaceFolder}${path.sep}lib${path.sep}main.dart`;
 			}
 		}
 
@@ -57,7 +57,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (!debugConfig.program) {
 			// Set type=null which causes launch.json to open.
 			debugConfig.type = null;
-			window.showInformationMessage("Set the 'program' value in your launch config (eg ${workspaceRoot}/bin/main.dart) then launch again");
+			window.showInformationMessage("Set the 'program' value in your launch config (eg ${workspaceFolder}/bin/main.dart) then launch again");
 			return debugConfig;
 		}
 
