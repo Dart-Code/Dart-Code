@@ -1,5 +1,11 @@
 # v2.11.0 (BETA)
 
+## Flutter Test
+
+Basic support for `flutter test` has been added. If you launch a file (by pressing `F5` with no launch config, or by setting `program` in your launch config) that is inside the `test` folder of a Flutter project, the script will be run using `flutter run`. Output will appear in the `Debug Console` pane. All debugging functionality (breakpoints, etc.) should work as normal.
+
+![Flutter Test](https://dart-code.github.io/Website/screenshots/release_notes/v2.11.0/flutter_test.png)
+
 ## Projects in Sub-Folders
 
 When projects are found in sub-folders you will now be prompted to mark them as `Workspace folders`. This will allow Dart Code to better understand which folders are projects when detecting which debugger to run when pressing F5.
@@ -7,12 +13,6 @@ When projects are found in sub-folders you will now be prompted to mark them as 
 ![Projects in Sub-Folders](https://dart-code.github.io/Website/screenshots/release_notes/v2.11.0/workspace_upgrade.png)
 
 **Note:** VS Code will duplicate these workspace folders in the top level of explorer - please +1 [this VS Code issue](https://github.com/Microsoft/vscode/issues/45470) to allow this to be configurable.
-
-## Flutter Test
-
-Basic support for `flutter test` has been added. If you launch a file (by pressing `F5` with no launch config, or by setting `program` in your launch config) that is inside the `test` folder of a Flutter project, the script will be run using `flutter run`. Output will appear in the `Debug Console` pane. All debugging functionality (breakpoints, etc.) should work as normal.
-
-![Flutter Test](https://dart-code.github.io/Website/screenshots/release_notes/v2.11.0/flutter_test.png)
 
 ## Silent Extension Reloads
 
