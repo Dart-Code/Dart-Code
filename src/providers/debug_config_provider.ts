@@ -3,7 +3,7 @@ import * as net from "net";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { DartDebugSession } from "../debug/dart_debug_impl";
-import { DebugConfigurationProvider, WorkspaceFolder, CancellationToken, DebugConfiguration, ProviderResult, commands, window } from "vscode";
+import { DebugConfigurationProvider, WorkspaceFolder, CancellationToken, DebugConfiguration, ProviderResult, commands, window, workspace } from "vscode";
 import { DebugSession } from "vscode-debugadapter";
 import { FlutterDebugSession } from "../debug/flutter_debug_impl";
 import { FlutterDeviceManager } from "../flutter/device_manager";
@@ -11,6 +11,7 @@ import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { ProjectType, Sdks, isFlutterProject } from "../utils";
 import { SdkCommands } from "../commands/sdk";
 import { spawn } from "child_process";
+import { FlutterTestDebugSession } from "../debug/flutter_test_debug_impl";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private sdks: Sdks;
@@ -35,14 +36,22 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
+		const openFileUri = window.activeTextEditor && window.activeTextEditor.document ? window.activeTextEditor.document.uri : null;
 		const isFlutter = isFlutterProject(folder);
+		let debugType = isFlutter ? DebuggerType.Flutter : DebuggerType.Dart;
 
 		// TODO: This cast feels nasty?
 		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isFlutter, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
 
 		// Set Flutter default path.
-		if (isFlutter && !debugConfig.program)
-			debugConfig.program = "${workspaceRoot}/lib/main.dart";
+		if (isFlutter && !debugConfig.program) {
+			if (openFileUri.fsPath.indexOf(path.join(folder.uri.fsPath, "test")) !== -1) {
+				debugConfig.program = `\${workspaceRoot}${path.sep}${path.relative(folder.uri.fsPath, openFileUri.fsPath)}`;
+				debugType = DebuggerType.FlutterTest;
+			} else {
+				debugConfig.program = `\${workspaceRoot}${path.sep}lib${path.sep}main.dart`;
+			}
+		}
 
 		// If we still don't have an entry point, the user will have to provide.
 		if (!debugConfig.program) {
@@ -53,7 +62,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		// Start port listener on launch of first debug session.
-		const debugServer = this.getDebugServer(isFlutter);
+		const debugServer = this.getDebugServer(debugType);
 
 		// Make VS Code connect to debug server instead of launching debug adapter.
 		// TODO: Why do we need this cast? The node-mock-debug does not?
@@ -62,10 +71,17 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return debugConfig;
 	}
 
-	private getDebugServer(isFlutter: boolean) {
-		return isFlutter
-			? this.spawnOrGetServer("flutter", () => new FlutterDebugSession())
-			: this.spawnOrGetServer("dart", () => new DartDebugSession());
+	private getDebugServer(debugType: DebuggerType) {
+		switch (debugType) {
+			case DebuggerType.Flutter:
+				return this.spawnOrGetServer("flutter", () => new FlutterDebugSession());
+			case DebuggerType.FlutterTest:
+				return this.spawnOrGetServer("flutterTest", () => new FlutterTestDebugSession());
+			case DebuggerType.Dart:
+				return this.spawnOrGetServer("dart", () => new DartDebugSession());
+			default:
+				throw new Error("Unknown debugger type");
+		}
 	}
 
 	private spawnOrGetServer(type: string, create: () => DebugSession): net.Server {
@@ -123,4 +139,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 		}
 	}
+}
+
+enum DebuggerType {
+	Dart,
+	Flutter,
+	FlutterTest,
 }
