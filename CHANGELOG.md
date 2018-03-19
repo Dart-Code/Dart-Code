@@ -6,7 +6,7 @@ When projects are found in sub-folders you will now be prompted to mark them as 
 
 ![Projects in Sub-Folders](https://dart-code.github.io/Website/screenshots/release_notes/v2.11.0/workspace_upgrade.png)
 
-**Note:**: VS Code will duplicate these workspace folders in the top level of explorer - please +1 [this VS Code issue](https://github.com/Microsoft/vscode/issues/45470) to allow this to be configurable.
+**Note:** VS Code will duplicate these workspace folders in the top level of explorer - please +1 [this VS Code issue](https://github.com/Microsoft/vscode/issues/45470) to allow this to be configurable.
 
 ## Flutter Test
 
