@@ -308,7 +308,7 @@ function checkIsDevExtension() {
 export function isStableSdk(sdkVersion: string): boolean {
 	// We'll consider empty versions as dev; stable versions will likely always
 	// be shipped with valid version files.
-	return !!(sdkVersion && sdkVersion.indexOf("-") === -1);
+	return !!(sdkVersion && !semver.prerelease(sdkVersion));
 }
 
 export function logError(error: { message: string }): void {

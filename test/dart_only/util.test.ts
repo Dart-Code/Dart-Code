@@ -31,13 +31,15 @@ describe("util.isStableSdk", () => {
 		assert.equal(util.isStableSdk(undefined), false);
 	});
 	it("should consider anything without a hyphen as stable", () => {
-		assert.equal(util.isStableSdk("1"), true);
-		assert.equal(util.isStableSdk("1.2"), true);
+		assert.equal(util.isStableSdk("1.0.0"), true);
+		assert.equal(util.isStableSdk("1.2.0"), true);
 		assert.equal(util.isStableSdk("1.2.3"), true);
 	});
 	it("should consider anything with a hyphen as unstable", () => {
-		assert.equal(util.isStableSdk("1-dev"), false);
-		assert.equal(util.isStableSdk("1.2-beta"), false);
+		assert.equal(util.isStableSdk("1.0.0-dev"), false);
+		assert.equal(util.isStableSdk("1.2.0-beta"), false);
 		assert.equal(util.isStableSdk("1.2.3-alpha.3"), false);
+		assert.equal(util.isStableSdk("0.2.2-pre.55"), false);
+		assert.equal(util.isStableSdk("2.0.0-dev.37.0.flutter-7328726088"), false);
 	});
 });
