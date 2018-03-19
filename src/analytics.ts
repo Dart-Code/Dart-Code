@@ -2,7 +2,7 @@ import { env, extensions, Extension, workspace, version as codeVersion, Uri } fr
 import * as https from "https";
 import * as querystring from "querystring";
 import { config } from "./config";
-import { isDevelopment, extensionVersion, ProjectType, Sdks } from "./utils";
+import { isDevExtension, extensionVersion, ProjectType, Sdks } from "./utils";
 
 // Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.
 // This is only required for debugging analytics and needn't be sent for standard Dart Code development (dev hits are already filtered with isDevelopment).
@@ -102,7 +102,7 @@ export class Analytics {
 		const data: any = {
 			an: "Dart Code",
 			av: extensionVersion,
-			cd1: isDevelopment,
+			cd1: isDevExtension,
 			cd10: config.showTodos ? "On" : "Off",
 			cd11: config.showLintNames ? "On" : "Off",
 			cd12: config.previewDart2 === true ? "On" : (config.previewDart2 === false ? "Off" : "Unspecified"),

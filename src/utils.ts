@@ -19,7 +19,7 @@ export const dartPubPath = "bin/" + pubExecutableName;
 export const analyzerPath = "bin/snapshots/analysis_server.dart.snapshot";
 export const flutterPath = "bin/" + flutterExecutableName;
 export const extensionVersion = getExtensionVersion();
-export const isDevelopment = checkIsDevelopment();
+export const isDevExtension = checkIsDevExtension();
 export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "dart_code_flutter_create.dart";
 export const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
 export const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
@@ -274,12 +274,12 @@ export function versionIsAtLeast(inputVersion: string, requiredVersion: string):
 	return semver.gte(inputVersion, requiredVersion);
 }
 
-function checkIsDevelopment() {
+function checkIsDevExtension() {
 	return extensionVersion.endsWith("-dev") || env.machineId === "someValue.machineId";
 }
 
 export function logError(error: { message: string }): void {
-	if (isDevelopment)
+	if (isDevExtension)
 		window.showErrorMessage("DEBUG: " + error.message);
 	console.error(error.message);
 }
