@@ -58,6 +58,9 @@ export class FlutterTest extends StdIOService<Notification> {
 			case "print":
 				this.notify(this.printSubscriptions, evt as PrintNotification);
 				break;
+			case "error":
+				this.notify(this.errorSubscriptions, evt as ErrorNotification);
+				break;
 		}
 	}
 
@@ -72,6 +75,7 @@ export class FlutterTest extends StdIOService<Notification> {
 	private groupSubscriptions: Array<(notification: GroupNotification) => void> = [];
 	private doneSubscriptions: Array<(notification: DoneNotification) => void> = [];
 	private printSubscriptions: Array<(notification: PrintNotification) => void> = [];
+	private errorSubscriptions: Array<(notification: ErrorNotification) => void> = [];
 
 	// Subscription methods.
 
@@ -109,6 +113,10 @@ export class FlutterTest extends StdIOService<Notification> {
 
 	public registerForPrint(subscriber: (notification: PrintNotification) => void): Disposable {
 		return this.subscribe(this.printSubscriptions, subscriber);
+	}
+
+	public registerForError(subscriber: (notification: ErrorNotification) => void): Disposable {
+		return this.subscribe(this.errorSubscriptions, subscriber);
 	}
 }
 
@@ -191,4 +199,11 @@ export interface PrintNotification extends Notification {
 	testID: number;
 	messageType: string;
 	message: string;
+}
+
+export interface ErrorNotification extends Notification {
+	testID: number;
+	error: string;
+	stackTrace: string;
+	isFailure: boolean;
 }

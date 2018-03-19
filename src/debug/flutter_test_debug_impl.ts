@@ -4,7 +4,7 @@ import { Event, OutputEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
-import { FlutterTest, Test, TestDoneNotification, Group, Suite, DoneNotification, PrintNotification } from "./flutter_test";
+import { FlutterTest, Test, TestDoneNotification, Group, Suite, DoneNotification, PrintNotification, ErrorNotification } from "./flutter_test";
 import { FlutterLaunchRequestArguments, formatPathForVm, isWin, uriToFilePath } from "./utils";
 
 const tick = "✓";
@@ -59,6 +59,7 @@ export class FlutterTestDebugSession extends DartDebugSession {
 		this.flutter.registerForGroup((n) => this.groups[n.group.id] = n.group);
 		this.flutter.registerForDone((n) => this.writeResult(n));
 		this.flutter.registerForPrint((n) => this.print(n));
+		this.flutter.registerForError((n) => this.error(n));
 
 		return this.flutter.process;
 	}
@@ -81,6 +82,12 @@ export class FlutterTestDebugSession extends DartDebugSession {
 
 	private print(print: PrintNotification) {
 		this.sendEvent(new OutputEvent(`${print.message}\n`, "stdout"));
+	}
+
+	private error(error: ErrorNotification) {
+		this.sendEvent(new OutputEvent(`${error.error}\n`, "stderr"));
+		if (error.stackTrace)
+			this.sendEvent(new OutputEvent(`${error.stackTrace}\n`, "stderr"));
 	}
 
 	/***
