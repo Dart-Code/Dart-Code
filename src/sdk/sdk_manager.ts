@@ -33,6 +33,10 @@ abstract class SdkManager {
 			allPaths = allPaths.concat(fs.readdirSync(sdkPath).map((p) => path.join(sdkPath, p)));
 		});
 
+		// Add in the current path if it's not there.
+		if (allPaths.indexOf(this.currentSdk) === -1)
+			allPaths.push(this.currentSdk);
+
 		const sdkFolders = allPaths
 			.filter((f) => fs.statSync(f).isDirectory()) // Only directories.
 			.filter((f) => this.hasExecutable(path.join(f, "bin"))); // Only those that look like SDKs.
