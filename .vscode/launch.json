@@ -88,6 +88,24 @@
 			"preLaunchTask": "npm: watch"
 		},
 		{
+			"name": "Launch Tests (Flutter Repository)",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"${env:FLUTTER_ROOT}",
+				"--extensionDevelopmentPath=${workspaceRoot}",
+				"--extensionTestsPath=${workspaceRoot}/out/test/flutter_repository"
+			],
+			"env": {
+				"DART_CODE_IS_TEST_RUN": "true"
+			},
+			"outFiles": [
+				"${workspaceRoot}/out/test/**/*.js"
+			],
+			"preLaunchTask": "npm: watch"
+		},
+		{
 			"name": "Launch Tests (Not Activated / Flutter Create)",
 			"type": "extensionHost",
 			"request": "launch",

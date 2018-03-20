@@ -63,7 +63,11 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	env.CODE_VERSION = codeVersion;
 	env.DART_CODE_IS_TEST_RUN = true;
 	env.MOCHA_FORBID_ONLY = true;
-	env.CODE_TESTS_WORKSPACE = path.join(cwd, "test", "test_projects", workspaceFolder);
+	if (path.isAbsolute(workspaceFolder)) {
+		env.CODE_TESTS_WORKSPACE = workspaceFolder;
+	} else {
+		env.CODE_TESTS_WORKSPACE = path.join(cwd, "test", "test_projects", workspaceFolder);
+	}
 	env.CODE_TESTS_PATH = path.join(cwd, "out", "test", testFolder);
 
 	// Figure out a filename for results...
@@ -129,12 +133,13 @@ async function runAllTests(): Promise<void> {
 
 		// Allow failures from unstable builds (we'll still see results in build logs).
 		const allowFailures = codeVersion === "insiders" || sdkPath === process.env.PATH_UNSTABLE;
-		const totalRuns = 5 * runConfigs.length;
+		const totalRuns = 6 * runConfigs.length;
 		await runTests("dart_only", "hello_world", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 		await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 		await runTests("multi_root", "projects.code-workspace", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 		await runTests("multi_root_upgraded", "", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 		await runTests("not_activated/flutter_create", "empty", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
+		await runTests("flutter_repository", process.env.FLUTTER_ROOT, sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 	}
 
 	if (process.env.CI) {
