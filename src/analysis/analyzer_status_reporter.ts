@@ -100,8 +100,6 @@ export class AnalyzerStatusReporter {
 	}
 
 	private shouldReportErrors(): boolean {
-		// TODO: Confirm if we should be using Flutter SDK version in flutter
-		// (if we don't, won't all servers always be dev?)
 		if (this.sdks.projectType === ProjectType.Flutter && this.sdks.flutter)
 			return !isStableSdk(getSdkVersion(this.sdks.flutter));
 		else
