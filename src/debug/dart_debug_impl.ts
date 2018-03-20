@@ -940,8 +940,12 @@ class ThreadManager {
 
 	public handleIsolateExit(ref: VMIsolateRef) {
 		const threadInfo: ThreadInfo = this.getThreadInfoFromRef(ref);
-		this.debugSession.sendEvent(new ThreadEvent("exited", threadInfo.number));
-		this.threads.splice(this.threads.indexOf(threadInfo), 1);
+		if (threadInfo) {
+			this.debugSession.sendEvent(new ThreadEvent("exited", threadInfo.number));
+			this.threads.splice(this.threads.indexOf(threadInfo), 1);
+		} else {
+			console.error(`Failed to find thread for ${ref.id} during exit`);
+		}
 	}
 }
 
