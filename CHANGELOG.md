@@ -28,6 +28,7 @@ The Flutter version number now appears on the status bar and allows quickly swit
 
 - `dart.previewDart2` now explicitly sends `--no-preview-dart-2` when set to `false` to allow opting-out of the Dart 2 preview once it becomes the default in Flutter Beta 2 (if undefined, neither flag will be sent)
 - The setting `dart.previewDart2` now works for Dart CLI apps in addition to Flutter (note: your Dart SDK must support it, which currently means you must be using a v2.0 dev release)
+- Pressing F5 without a `launch.json` will now launch more scripts without configuration (scripts inside `test`, `bin` and `tool`)
 - Errors when launching Flutter projects (such as when you have not accepted Android licenses) will now appear in the Debug Console
 - Flutter's `Full Restart` is now bound to `Ctrl`+`F5` by default during a debugging session
 - `Flutter: New Project` will now validate that you do not call your project `flutter` or `flutter_test` which would lead to confusing errors about depending on itself
@@ -42,6 +43,7 @@ The Flutter version number now appears on the status bar and allows quickly swit
 - Code completion for named arguments will no longer insert placeholders but instead automatically re-trigger code completion where the value should be provided
 - Dart and Flutter version numbers will no longer show in the status bar when the active file is not a Dart file
 - The SDK quick-picker will now include your current SDK even if it's not included via the `dart.sdkPaths`/`dart.flutterSdkPaths` settings
+- The SDK quick-picker will now longer show an error if configured folders contain symlinks to Dart binaries
 - A new option (`dart.vmAdditionalArgs`) has been added to pass custom arguments to the VM when launching Dart CLI apps
 
 ## Preview Features available in this version
