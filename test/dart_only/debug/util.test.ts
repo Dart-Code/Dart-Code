@@ -16,7 +16,7 @@ describe("util.uriToFilePath", () => {
 	});
 });
 
-describe.only("util.isWithinPath", () => {
+describe("util.isWithinPath", () => {
 	it("should return true for children", () => {
 		assert.equal(util.isWithinPath(helloWorldFolder.fsPath, ext.extensionPath), true);
 		assert.equal(util.isWithinPath(emptyFile.fsPath, ext.extensionPath), true);
