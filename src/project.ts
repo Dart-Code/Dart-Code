@@ -18,9 +18,11 @@ export function locateBestProjectRoot(folder: string): string {
 	return null;
 }
 
-function getChildProjects(folder: string): string[] {
+function getChildProjects(folder: string, levelsToGo: number): string[] {
 	const children = fs
 		.readdirSync(folder)
+		.filter((f) => f !== "bin") // Don't look in bin folders
+		.filter((f) => f !== "cache") // Don't look in cache folders
 		.map((f) => path.join(folder, f))
 		.filter((d) => fs.statSync(d).isDirectory());
 
@@ -29,7 +31,8 @@ function getChildProjects(folder: string): string[] {
 		if (fs.existsSync(path.join(dir, "pubspec.yaml"))) {
 			projects.push(dir);
 		}
-		projects = projects.concat(getChildProjects(dir));
+		if (levelsToGo > 0)
+			projects = projects.concat(getChildProjects(dir, levelsToGo - 1));
 	}
 
 	return projects;
@@ -40,7 +43,7 @@ export async function checkForProjectsInSubFolders() {
 		return;
 	let projects: string[] = [];
 	for (const workspaceFolder of vs.workspace.workspaceFolders) {
-		projects = projects.concat(getChildProjects(workspaceFolder.uri.fsPath));
+		projects = projects.concat(getChildProjects(workspaceFolder.uri.fsPath, 3));
 	}
 
 	const projectsToAdd = projects
