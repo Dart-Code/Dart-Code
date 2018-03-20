@@ -10,7 +10,7 @@ import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
-import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolder, isFlutterProject, ProjectType, Sdks } from "../utils";
+import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolder, isFlutterWorkspaceFolder, ProjectType, Sdks } from "../utils";
 import * as util from "../utils";
 import * as channels from "./channels";
 
@@ -36,7 +36,7 @@ export class SdkCommands {
 				uri = await this.getWorkspace("Select which folder to get packages for");
 			if (typeof uri === "string")
 				uri = vs.Uri.file(uri);
-			if (isFlutterProject(vs.workspace.getWorkspaceFolder(uri)))
+			if (isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(uri)))
 				return this.runFlutter("packages get", uri);
 			else
 				return this.runPub("get", uri);
@@ -46,7 +46,7 @@ export class SdkCommands {
 				uri = await this.getWorkspace("Select which folder to upgrade packages in");
 			if (typeof uri === "string")
 				uri = vs.Uri.file(uri);
-			if (isFlutterProject(vs.workspace.getWorkspaceFolder(uri)))
+			if (isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(uri)))
 				return this.runFlutter("packages upgrade", uri);
 			else
 				return this.runPub("upgrade", uri);

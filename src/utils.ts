@@ -24,8 +24,12 @@ export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "dart_code_flutter_create.dar
 export const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
 export const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
 
-export function isFlutterProject(folder: WorkspaceFolder): boolean {
-	return isDartWorkspaceFolder(folder) && referencesFlutterSdk(folder.uri.fsPath);
+export function isFlutterWorkspaceFolder(folder: WorkspaceFolder): boolean {
+	return isDartWorkspaceFolder(folder) && isFlutterProjectFolder(folder.uri.fsPath);
+}
+
+export function isFlutterProjectFolder(folder: string): boolean {
+	return referencesFlutterSdk(folder);
 }
 
 function referencesFlutterSdk(folder: string): boolean {
@@ -263,6 +267,25 @@ export function isWithinWorkspace(file: string) {
 	//   https://github.com/Microsoft/vscode/issues/33709
 
 	return !!workspace.getWorkspaceFolder(Uri.file(file));
+}
+
+export function isTestFile(file: string): boolean {
+	if (!file)
+		return false;
+
+	if (!file.toLowerCase().endsWith(".dart"))
+		return false;
+
+	const ws = workspace.getWorkspaceFolder(Uri.file(file));
+
+	if (!ws)
+		return false;
+
+	const relPath = path.sep + path.relative(ws.uri.fsPath, file);
+
+	// We only want to check the relative path from the workspace root so that if the whole project is inside a
+	// test folder (for ex. Dart Code's own tests) we don't falsely assume it's an end user test.
+	return relPath.toLowerCase().indexOf(`${path.sep}test${path.sep}`) !== -1;
 }
 
 function getExtensionVersion(): string {

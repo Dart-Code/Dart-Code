@@ -1,14 +1,15 @@
+import * as fs from "fs";
 import * as path from "path";
 import * as net from "net";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { DartDebugSession } from "../debug/dart_debug_impl";
-import { DebugConfigurationProvider, WorkspaceFolder, CancellationToken, DebugConfiguration, ProviderResult, commands, window, workspace, debug } from "vscode";
+import { DebugConfigurationProvider, WorkspaceFolder, CancellationToken, DebugConfiguration, ProviderResult, commands, window, workspace, debug, Uri } from "vscode";
 import { DebugSession } from "vscode-debugadapter";
 import { FlutterDebugSession } from "../debug/flutter_debug_impl";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { FlutterLaunchRequestArguments, isWin, forceWindowsDriveLetterToUppercase } from "../debug/utils";
-import { ProjectType, Sdks, isFlutterProject } from "../utils";
+import { ProjectType, Sdks, isFlutterWorkspaceFolder, isTestFile, isFlutterProjectFolder } from "../utils";
 import { SdkCommands } from "../commands/sdk";
 import { spawn } from "child_process";
 import { FlutterTestDebugSession } from "../debug/flutter_test_debug_impl";
@@ -26,7 +27,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	public provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
-		const isFlutter = isFlutterProject(folder);
+		const isFlutter = isFlutterWorkspaceFolder(folder);
 		return [{
 			name: isFlutter ? "Flutter" : "Dart",
 			program: isFlutter ? undefined : "${workspaceFolder}/bin/main.dart",
@@ -36,39 +37,55 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
-		// Only do magic if we don't already have a full populated config (eg. from clicking Restart).
-		if (!debugConfig.debugType) {
-			const openFileUri = window.activeTextEditor && window.activeTextEditor.document ? window.activeTextEditor.document.uri : null;
-			// If we're an empty config and have an open file, override the folder that VS VCode gave us as it could be incorrect
-			if (!debugConfig.type && openFileUri)
-				folder = workspace.getWorkspaceFolder(openFileUri) || folder;
-			const isFlutter = isFlutterProject(folder);
-			debugConfig.debugType = isFlutter ? DebuggerType.Flutter : DebuggerType.Dart;
-
-			// TODO: This cast feels nasty?
-			this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isFlutter, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
-
-			// Set Flutter default path.
-			if (isFlutter && !debugConfig.program) {
-				if (openFileUri && openFileUri.fsPath.indexOf(path.join(folder.uri.fsPath, "test")) !== -1) {
-					debugConfig.program = forceWindowsDriveLetterToUppercase(openFileUri.fsPath);
-					debugConfig.debugType = DebuggerType.FlutterTest;
-				} else {
-					debugConfig.program = path.join(forceWindowsDriveLetterToUppercase(folder.uri.fsPath), `lib${path.sep}main.dart`);
-				}
+		// If there's no program set, try to guess one.
+		if (!debugConfig.program) {
+			const openFile = window.activeTextEditor && window.activeTextEditor.document ? window.activeTextEditor.document.uri.fsPath : null;
+			// Overwrite the folder with a more appropriate workspace root (https://github.com/Microsoft/vscode/issues/45580)
+			if (openFile) {
+				folder = workspace.getWorkspaceFolder(Uri.file(openFile)) || folder;
 			}
-
-			// If we still don't have an entry point, the user will have to provide.
-			if (!debugConfig.program) {
-				// Set type=null which causes launch.json to open.
-				debugConfig.type = null;
-				window.showInformationMessage("Set the 'program' value in your launch config (eg ${workspaceFolder}/bin/main.dart) then launch again");
-				return debugConfig;
+			if (isTestFile(openFile)) {
+				debugConfig.program = openFile;
+			} else {
+				// Use the open file as a clue to find the best project root, then search from there.
+				const commonLaunchPaths = [
+					path.join(folder.uri.fsPath, "lib", "main.dart"),
+					path.join(folder.uri.fsPath, "bin", "main.dart"),
+				];
+				for (const launchPath of commonLaunchPaths) {
+					if (fs.existsSync(launchPath)) {
+						debugConfig.program = launchPath;
+					}
+				}
 			}
 		}
 
+		// If we still don't have an entry point, the user will have to provide it.
+		if (!debugConfig.program) {
+			// Set type=null which causes launch.json to open.
+			debugConfig.type = null;
+			window.showInformationMessage("Set the 'program' value in your launch config (eg ${workspaceFolder}/bin/main.dart) then launch again");
+			return debugConfig;
+		}
+
+		// If we don't have a cwd then find the best one from the project root.
+		debugConfig.cwd = debugConfig.cwd || folder.uri.fsPath;
+
+		const isFlutter = isFlutterProjectFolder(debugConfig.cwd as string);
+		const isTest = isTestFile(debugConfig.program as string);
+		const debugType = isFlutter
+			? (isTest ? DebuggerType.FlutterTest : DebuggerType.Flutter)
+			: DebuggerType.Dart;
+
+		// TODO: This cast feels nasty?
+		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isFlutter, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
+
+		// Debugger always uses uppercase drive letters to ensure our paths have them regardless of where they came from.
+		debugConfig.program = forceWindowsDriveLetterToUppercase(debugConfig.program);
+		debugConfig.cwd = forceWindowsDriveLetterToUppercase(debugConfig.cwd);
+
 		// Start port listener on launch of first debug session.
-		const debugServer = this.getDebugServer(debugConfig.debugType);
+		const debugServer = this.getDebugServer(debugType);
 
 		// Make VS Code connect to debug server instead of launching debug adapter.
 		// TODO: Why do we need this cast? The node-mock-debug does not?

@@ -36,7 +36,7 @@ import { LegacyDebugConfigProvider } from "./providers/legacy_debug_config_provi
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
 import { showUserPrompts } from "./user_prompts";
-import { isFlutterProject } from "./utils";
+import { isFlutterWorkspaceFolder } from "./utils";
 import * as util from "./utils";
 import { DartPackagesProvider } from "./views/packages_view";
 import { PromiseCompleter } from "./debug/utils";
@@ -207,7 +207,7 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Snippets are language-specific
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));
-	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => isFlutterProject(vs.workspace.getWorkspaceFolder(uri)))));
+	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(uri)))));
 
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE[0].language, new DartLanguageConfiguration()));
 	const statusReporter = new AnalyzerStatusReporter(analyzer, sdks, analytics);
@@ -265,7 +265,7 @@ export function activate(context: vs.ExtensionContext) {
 	// Set up debug stuff.
 	// Remove all this when migrating to debugAdapterExecutable!
 	context.subscriptions.push(vs.commands.registerCommand("dart.getDebuggerExecutable", (workspaceUriAsString: string) => {
-		const entry = (workspaceUriAsString && isFlutterProject(vs.workspace.getWorkspaceFolder(vs.Uri.parse(workspaceUriAsString))))
+		const entry = (workspaceUriAsString && isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(vs.Uri.parse(workspaceUriAsString))))
 			? context.asAbsolutePath("./out/src/debug/flutter_debug_entry.js")
 			: context.asAbsolutePath("./out/src/debug/dart_debug_entry.js");
 
