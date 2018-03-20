@@ -2,9 +2,9 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { Sdks } from "../../src/utils";
+import { ext } from "../helpers";
 
 const isWin = /^win/.test(process.platform);
-const ext = vs.extensions.getExtension("Dart-Code.dart-code");
 const sampleFilePath = (isWin ? "X:\\" : "/tmp/") + "sample.dart";
 const sampleFileUri = vs.Uri.parse(`untitled:${sampleFilePath}`);
 

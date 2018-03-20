@@ -7,7 +7,6 @@ import { checkForProjectsInSubFolders } from "../../src/project";
 import { waitFor } from "../helpers";
 
 const isWin = /^win/.test(process.platform);
-const ext = vs.extensions.getExtension("Dart-Code.dart-code");
 
 describe("Test environment", () => {
 	it("has opened the correct folder", () => {

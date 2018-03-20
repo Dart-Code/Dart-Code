@@ -2,9 +2,9 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { Sdks } from "../../src/utils";
+import { ext } from "../helpers";
 
 const isWin = /^win/.test(process.platform);
-const ext = vs.extensions.getExtension("Dart-Code.dart-code");
 
 describe("Test environment", () => {
 	it("has opened the correct folder", () => {

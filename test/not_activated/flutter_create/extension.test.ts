@@ -3,10 +3,8 @@ import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { delay, getRandomTempFolder, waitFor } from "../../helpers";
+import { delay, getRandomTempFolder, waitFor, ext } from "../../helpers";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../../src/utils";
-
-const ext = vs.extensions.getExtension("Dart-Code.dart-code");
 
 describe("Test environment", () => {
 	it("has opened the correct folder", () => {

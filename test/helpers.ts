@@ -23,9 +23,7 @@ export let editor: vs.TextEditor;
 export let eol: string;
 
 export async function activate(file: vs.Uri = emptyFile): Promise<void> {
-	if (!ext.isActive) {
-		await ext.activate();
-	}
+	await ext.activate();
 	await ext.exports.analysisComplete;
 	doc = await vs.workspace.openTextDocument(file);
 	editor = await vs.window.showTextDocument(doc);
