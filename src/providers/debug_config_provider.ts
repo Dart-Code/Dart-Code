@@ -9,7 +9,7 @@ import { DebugSession } from "vscode-debugadapter";
 import { FlutterDebugSession } from "../debug/flutter_debug_impl";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { FlutterLaunchRequestArguments, isWin, forceWindowsDriveLetterToUppercase } from "../debug/utils";
-import { ProjectType, Sdks, isFlutterWorkspaceFolder, isTestFile, isFlutterProjectFolder } from "../utils";
+import { ProjectType, Sdks, isFlutterWorkspaceFolder, isInsideFolderNamed, isFlutterProjectFolder, isTestFile } from "../utils";
 import { SdkCommands } from "../commands/sdk";
 import { spawn } from "child_process";
 import { FlutterTestDebugSession } from "../debug/flutter_test_debug_impl";
@@ -44,7 +44,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			if (openFile) {
 				folder = workspace.getWorkspaceFolder(Uri.file(openFile)) || folder;
 			}
-			if (isTestFile(openFile)) {
+			if (isTestFile(openFile) || isInsideFolderNamed(openFile, "bin") || isInsideFolderNamed(openFile, "tool")) {
 				debugConfig.program = openFile;
 			} else {
 				// Use the open file as a clue to find the best project root, then search from there.

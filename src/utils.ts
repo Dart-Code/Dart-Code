@@ -270,6 +270,10 @@ export function isWithinWorkspace(file: string) {
 }
 
 export function isTestFile(file: string): boolean {
+	return isInsideFolderNamed(file, "test");
+}
+
+export function isInsideFolderNamed(file: string, folderName: string): boolean {
 	if (!file)
 		return false;
 
@@ -284,8 +288,8 @@ export function isTestFile(file: string): boolean {
 	const relPath = path.sep + path.relative(ws.uri.fsPath, file);
 
 	// We only want to check the relative path from the workspace root so that if the whole project is inside a
-	// test folder (for ex. Dart Code's own tests) we don't falsely assume it's an end user test.
-	return relPath.toLowerCase().indexOf(`${path.sep}test${path.sep}`) !== -1;
+	// test (etc.) folder (for ex. Dart Code's own tests) we don't falsely assume it's an end user test.
+	return relPath.toLowerCase().indexOf(`${path.sep}${folderName}${path.sep}`) !== -1;
 }
 
 function getExtensionVersion(): string {
