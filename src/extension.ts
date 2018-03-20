@@ -32,7 +32,6 @@ import { DebugConfigProvider } from "./providers/debug_config_provider";
 import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
 import { LegacyDartDocumentSymbolProvider } from "./providers/legacy_dart_document_symbol_provider";
 import { LegacyDartWorkspaceSymbolProvider } from "./providers/legacy_dart_workspace_symbol_provider";
-import { LegacyDebugConfigProvider } from "./providers/legacy_debug_config_provider";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
 import { showUserPrompts } from "./user_prompts";
@@ -263,22 +262,8 @@ export function activate(context: vs.ExtensionContext) {
 	}
 
 	// Set up debug stuff.
-	// Remove all this when migrating to debugAdapterExecutable!
-	context.subscriptions.push(vs.commands.registerCommand("dart.getDebuggerExecutable", (workspaceUriAsString: string) => {
-		const entry = (workspaceUriAsString && isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(vs.Uri.parse(workspaceUriAsString))))
-			? context.asAbsolutePath("./out/src/debug/flutter_debug_entry.js")
-			: context.asAbsolutePath("./out/src/debug/dart_debug_entry.js");
-
-		return {
-			args: [entry],
-			command: "node",
-		};
-	}));
 	const debugProvider = new DebugConfigProvider(sdks, analytics, flutterDaemon && flutterDaemon.deviceManager);
-	const dummyDebugProvider = new LegacyDebugConfigProvider(debugProvider);
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
-	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("flutter", dummyDebugProvider));
-	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart-cli", dummyDebugProvider));
 	context.subscriptions.push(debugProvider);
 
 	// Setup that requires server version/capabilities.

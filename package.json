@@ -637,16 +637,6 @@
 						}
 					}
 				]
-			},
-			{
-				"type": "dart-cli",
-				"label": "Legacy Dart",
-				"adapterExecutableCommand": "dart.getDebuggerExecutable"
-			},
-			{
-				"type": "flutter",
-				"label": "Legacy Flutter",
-				"adapterExecutableCommand": "dart.getDebuggerExecutable"
 			}
 		]
 	},
