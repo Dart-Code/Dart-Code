@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { hasDartExecutable, getSdkVersion, Sdks, versionIsAtLeast, hasFlutterExecutable } from "../utils";
+import { hasDartExecutable, getSdkVersion, Sdks, versionIsAtLeast, hasFlutterExecutable, dartVMPath, flutterPath } from "../utils";
 import { config } from "../config";
 
 abstract class SdkManager {
@@ -15,7 +15,7 @@ abstract class SdkManager {
 	protected abstract get currentSdk(): string;
 	protected abstract get configuredSdk(): string;
 	protected abstract get configName(): string;
-	protected abstract hasExecutable(path: string): boolean;
+	protected abstract get executablePath(): string;
 	protected abstract getLabel(path: string): string;
 	protected abstract setSdk(folder: string): void;
 
@@ -39,13 +39,18 @@ abstract class SdkManager {
 
 		const sdkFolders = allPaths
 			.filter((f) => fs.statSync(f).isDirectory()) // Only directories.
-			.filter((f) => this.hasExecutable(path.join(f, "bin"))); // Only those that look like SDKs.
+			.filter((f) => fs.existsSync(path.join(f, this.executablePath))); // Only those that look like SDKs.
 
 		const sdkItems = sdkFolders.map((f) => {
-			const version = getSdkVersion(f);
+			// Resolve synlinks so we look in correct folder for version file.
+			const actualBinary = fs.realpathSync(path.join(f, this.executablePath));
+			// Then we need to take the executable name and /bin back off
+			const actualFolder = path.dirname(path.dirname(actualBinary));
+
+			const version = getSdkVersion(actualFolder);
 			return {
 				description: f,
-				detail: fs.realpathSync(f) === this.currentSdk && this.configuredSdk ? "Current setting" : "",
+				detail: f === this.currentSdk && this.configuredSdk ? "Current setting" : "",
 				folder: f,
 				label: this.getLabel(version),
 				version,
@@ -73,7 +78,7 @@ export class DartSdkManager extends SdkManager {
 	protected get currentSdk(): string { return this.sdks.dart; }
 	protected get configuredSdk(): string { return config.sdkPath; }
 	protected get configName(): string { return "dart.sdkPaths"; }
-	protected hasExecutable(path: string) { return hasDartExecutable(path); }
+	protected get executablePath() { return dartVMPath; }
 	protected getLabel(version: string) {
 		return `Dart SDK ${version}`;
 	}
@@ -85,7 +90,7 @@ export class FlutterSdkManager extends SdkManager {
 	protected get currentSdk(): string { return this.sdks.flutter; }
 	protected get configuredSdk(): string { return config.flutterSdkPath; }
 	protected get configName(): string { return "dart.flutterSdkPaths"; }
-	protected hasExecutable(path: string) { return hasFlutterExecutable(path); }
+	protected get executablePath() { return flutterPath; }
 	protected getLabel(version: string) {
 		return `Flutter SDK ${version}`;
 	}
