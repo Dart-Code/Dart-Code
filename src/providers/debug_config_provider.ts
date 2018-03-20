@@ -36,36 +36,39 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
-		const openFileUri = window.activeTextEditor && window.activeTextEditor.document ? window.activeTextEditor.document.uri : null;
-		// If we're an empty config and have an open file, override the folder that VS VCode gave us as it could be incorrect
-		if (!debugConfig.type && openFileUri)
-			folder = workspace.getWorkspaceFolder(openFileUri) || folder;
-		const isFlutter = isFlutterProject(folder);
-		let debugType = isFlutter ? DebuggerType.Flutter : DebuggerType.Dart;
+		// Only do magic if we don't already have a full populated config (eg. from clicking Restart).
+		if (!debugConfig.debugType) {
+			const openFileUri = window.activeTextEditor && window.activeTextEditor.document ? window.activeTextEditor.document.uri : null;
+			// If we're an empty config and have an open file, override the folder that VS VCode gave us as it could be incorrect
+			if (!debugConfig.type && openFileUri)
+				folder = workspace.getWorkspaceFolder(openFileUri) || folder;
+			const isFlutter = isFlutterProject(folder);
+			debugConfig.debugType = isFlutter ? DebuggerType.Flutter : DebuggerType.Dart;
 
-		// TODO: This cast feels nasty?
-		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isFlutter, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
+			// TODO: This cast feels nasty?
+			this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isFlutter, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
 
-		// Set Flutter default path.
-		if (isFlutter && !debugConfig.program) {
-			if (openFileUri && openFileUri.fsPath.indexOf(path.join(folder.uri.fsPath, "test")) !== -1) {
-				debugConfig.program = forceWindowsDriveLetterToUppercase(openFileUri.fsPath);
-				debugType = DebuggerType.FlutterTest;
-			} else {
-				debugConfig.program = path.join(forceWindowsDriveLetterToUppercase(folder.uri.fsPath), `lib${path.sep}main.dart`);
+			// Set Flutter default path.
+			if (isFlutter && !debugConfig.program) {
+				if (openFileUri && openFileUri.fsPath.indexOf(path.join(folder.uri.fsPath, "test")) !== -1) {
+					debugConfig.program = forceWindowsDriveLetterToUppercase(openFileUri.fsPath);
+					debugConfig.debugType = DebuggerType.FlutterTest;
+				} else {
+					debugConfig.program = path.join(forceWindowsDriveLetterToUppercase(folder.uri.fsPath), `lib${path.sep}main.dart`);
+				}
+			}
+
+			// If we still don't have an entry point, the user will have to provide.
+			if (!debugConfig.program) {
+				// Set type=null which causes launch.json to open.
+				debugConfig.type = null;
+				window.showInformationMessage("Set the 'program' value in your launch config (eg ${workspaceFolder}/bin/main.dart) then launch again");
+				return debugConfig;
 			}
 		}
 
-		// If we still don't have an entry point, the user will have to provide.
-		if (!debugConfig.program) {
-			// Set type=null which causes launch.json to open.
-			debugConfig.type = null;
-			window.showInformationMessage("Set the 'program' value in your launch config (eg ${workspaceFolder}/bin/main.dart) then launch again");
-			return debugConfig;
-		}
-
 		// Start port listener on launch of first debug session.
-		const debugServer = this.getDebugServer(debugType);
+		const debugServer = this.getDebugServer(debugConfig.debugType);
 
 		// Make VS Code connect to debug server instead of launching debug adapter.
 		// TODO: Why do we need this cast? The node-mock-debug does not?
