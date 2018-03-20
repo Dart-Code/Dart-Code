@@ -1,6 +1,6 @@
 import * as assert from "assert";
-import * as util from "../../src/debug/utils";
-import { helloWorldFolder, ext, flutterHelloWorldFolder, emptyFile, everythingFile, flutterHelloWorldMainFile, flutterEmptyFile } from "../helpers";
+import * as util from "../../../src/debug/utils";
+import { helloWorldFolder, ext, flutterHelloWorldFolder, emptyFile, everythingFile, flutterHelloWorldMainFile, flutterEmptyFile } from "../../helpers";
 
 describe("util.uriToFilePath", () => {
 	it("should handle all path formats for Windows", () => {
