@@ -143,6 +143,11 @@ export function ensureNoSnippet(items: vs.CompletionItem[], label: string): void
 	ensureNoCompletion(items, vs.CompletionItemKind.Snippet, label);
 }
 
+export function ensureTestContent(expected: string) {
+	const actual = doc.getText();
+	assert.equal(actual.replace(/\r/g, ""), expected.replace(/\r/g, ""));
+}
+
 export function delay(milliseconds: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
