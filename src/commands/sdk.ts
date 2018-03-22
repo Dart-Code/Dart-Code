@@ -146,7 +146,7 @@ export class SdkCommands {
 	}
 
 	private runCommandInFolder(shortPath: string, commandName: string, folder: string, binPath: string, args: string[], isStartingBecauseOfTermination: boolean = false): Thenable<number> {
-		return vs.window.withProgress({ location: ProgressLocation.Notification, title: `Running ${commandName} ${args.join(" ")}` }, (progress) => {
+		return vs.window.withProgress({ location: ProgressLocation.Notification, title: `Running ${commandName} ${args.join(" ")}` }, (progress, token) => {
 			return new Promise((resolve, reject) => {
 				const channelName = commandName.substr(0, 1).toUpperCase() + commandName.substr(1);
 				const channel = channels.createChannel(channelName);
@@ -174,6 +174,7 @@ export class SdkCommands {
 				channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
 
 				const process = safeSpawn(folder, binPath, args);
+				token.onCancellationRequested(() => process.kill());
 				this.runningCommands[commandId] = process;
 				process.on("close", (code) => {
 					// Check it's still the same process before nulling out, in case our replacement has already been inserted.
