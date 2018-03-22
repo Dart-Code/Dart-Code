@@ -44,6 +44,10 @@ export class Analytics {
 		this.event(Category.Extension, EventAction.Activated);
 		this.time(Category.Extension, TimingVariable.Startup, timeInMS);
 	}
+	public logExtensionRestart(timeInMS: number) {
+		this.event(Category.Extension, EventAction.Restart);
+		this.time(Category.Extension, TimingVariable.Startup, timeInMS);
+	}
 	public logExtensionShutdown(): PromiseLike<void> { return this.event(Category.Extension, EventAction.Deactivated); }
 	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
 	public logAnalyzerError(description: string, fatal: boolean) { this.error("AS: " + description, fatal); }

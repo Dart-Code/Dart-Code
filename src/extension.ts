@@ -58,10 +58,10 @@ let showTodos: boolean;
 let showLintNames: boolean;
 let analyzerSettings: string;
 
-export function activate(context: vs.ExtensionContext) {
+export function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
 	// Wire up a reload command that will re-initialise everything.
 	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", (_) => {
-		deactivate();
+		deactivate(true);
 		for (const sub of context.subscriptions) {
 			try {
 				sub.dispose();
@@ -69,7 +69,7 @@ export function activate(context: vs.ExtensionContext) {
 				console.error(e);
 			}
 		}
-		activate(context);
+		activate(context, true);
 	}));
 
 	showTodos = config.showTodos;
@@ -356,7 +356,11 @@ export function activate(context: vs.ExtensionContext) {
 
 	// Log how long all this startup took.
 	const extensionEndTime = new Date();
-	analytics.logExtensionStartup(extensionEndTime.getTime() - extensionStartTime.getTime());
+	if (isRestart) {
+		analytics.logExtensionRestart(extensionEndTime.getTime() - extensionStartTime.getTime());
+	} else {
+		analytics.logExtensionStartup(extensionEndTime.getTime() - extensionStartTime.getTime());
+	}
 
 	return {
 		analysisComplete: analysisCompleteCompleter.promise,
@@ -477,9 +481,11 @@ function getAnalyzerSettings() {
 		+ config.previewDart2;
 }
 
-export function deactivate(): PromiseLike<void> {
+export function deactivate(isRestart: boolean = false): PromiseLike<void> {
 	setCommandVisiblity(false, null);
-	return analytics.logExtensionShutdown();
+	if (!isRestart) {
+		return analytics.logExtensionShutdown();
+	}
 }
 
 function setCommandVisiblity(enable: boolean, projectType: util.ProjectType) {
