@@ -17,10 +17,11 @@ onExit(() => {
 });
 
 testRunner.configure({
+	forbidOnly: !!process.env.MOCHA_FORBID_ONLY,
 	slow: 1500,       // increased threshold before marking a test as slow
 	timeout: 20000,   // increased timeout because starting up Code, Analyzer, etc. is slooow
 	ui: "bdd",        // the TDD UI is being used in extension.test.ts (suite, test, etc.)
 	useColors: true,  // colored output from test results
-});
+} as any); // TODO: Remove cast once vscode extension is updated.
 
 module.exports = testRunner;
