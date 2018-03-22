@@ -8,6 +8,8 @@
 **/*.map
 appveyor.yml
 CONTRIBUTING.md
+coverage/**
+tool/**
 logs/**
 media/screenshots/**
 out/test/**
