@@ -21,12 +21,16 @@ export class FixCodeActionProvider implements CodeActionProvider {
 				file: document.fileName,
 				offset: document.offsetAt(range.start),
 			}).then((result) => {
-				const allActions = new Array<CodeAction>();
+				// Because fixes may be the same for multiple errors, we'll de-dupe them based on their edit.
+				const allActions: { [key: string]: CodeAction } = {};
 
-				for (const errorFix of result.fixes)
-					allActions.push(...errorFix.fixes.map((fix) => this.convertResult(document, fix, errorFix.error)));
+				for (const errorFix of result.fixes) {
+					for (const fix of errorFix.fixes) {
+						allActions[JSON.stringify(fix.edits)] = this.convertResult(document, fix, errorFix.error);
+					}
+				}
 
-				resolve(allActions);
+				resolve(Object.keys(allActions).map((a) => allActions[a]));
 			}, (e) => { logError(e); reject(); });
 		});
 	}
