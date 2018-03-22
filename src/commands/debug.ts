@@ -36,7 +36,7 @@ export class DebugCommands {
 						this.progressPromise.resolve();
 					this.progressPromise = new PromiseCompleter();
 					vs.window.withProgress(
-						{ location: vs.ProgressLocation.Window, title: e.body.message },
+						{ location: vs.ProgressLocation.Notification, title: e.body.message },
 						(_) => this.progressPromise.promise,
 					);
 				}
