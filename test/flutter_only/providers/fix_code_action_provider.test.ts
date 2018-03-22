@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { activate, doc, getPositionOf, setTestContent, editor, ensureTestContent, rangeOf, delay, flutterEmptyFile } from "../../helpers";
 import { SourceChange } from "../../../src/analysis/analysis_server_types";
 
-describe.only("fix_code_action_provider", () => {
+describe("fix_code_action_provider", () => {
 
 	before(async () => {
 		await activate(flutterEmptyFile);
@@ -29,14 +29,14 @@ describe.only("fix_code_action_provider", () => {
 		`);
 	});
 
-	it.only("returns expected items", async () => {
+	it("returns expected items", async () => {
 		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", doc.uri, rangeOf("Col||ors")) as Thenable<vs.CodeAction[]>);
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
 		assert.ok(fixResults.find((r) => r.title.indexOf("Create local variable 'Colors'") !== -1));
 	});
 
-	it.only("does not contain duplicates", async () => {
+	it("does not contain duplicates", async () => {
 		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", doc.uri, rangeOf("Col||ors")) as Thenable<vs.CodeAction[]>);
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
