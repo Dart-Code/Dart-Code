@@ -20,6 +20,9 @@
 		"no-empty": {
 			"options": "allow-empty-catch"
 		},
+		// TODO: These don't seem to work?
+		// "no-unused-expression": true,
+		// "no-floating-promises": true,
 		// TODO: Re-enable these (currently it seems hit-and-miss whether the IDE notices them
 		// so sometimes it reports no errors, then later complains?!)
 		"max-line-length": false,
