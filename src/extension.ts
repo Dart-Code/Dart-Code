@@ -41,6 +41,8 @@ import { DartPackagesProvider } from "./views/packages_view";
 import { PromiseCompleter } from "./debug/utils";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForProjectsInSubFolders } from "./project";
+import { RefactorCodeActionProvider } from "./providers/refactor_code_action_provider";
+import { RefactorCommands } from "./commands/refactor";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
@@ -179,6 +181,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
 	const assistCodeActionProvider = new AssistCodeActionProvider(analyzer);
 	const fixCodeActionProvider = new FixCodeActionProvider(analyzer);
+	const refactorCodeActionProvider = new RefactorCodeActionProvider(analyzer);
 	const renameProvider = new DartRenameProvider(analyzer);
 
 	const activeFileFilters = [DART_MODE];
@@ -197,6 +200,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(filter, documentHighlightProvider));
 		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, assistCodeActionProvider));
 		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, fixCodeActionProvider));
+		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, refactorCodeActionProvider));
 		context.subscriptions.push(vs.languages.registerRenameProvider(filter, renameProvider));
 	});
 
@@ -313,6 +317,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Set up commands for Dart editors.
 	context.subscriptions.push(new EditCommands(context, analyzer));
+	context.subscriptions.push(new RefactorCommands(context, analyzer));
 
 	// Register misc commands.
 	context.subscriptions.push(new TypeHierarchyCommand(context, analyzer));
