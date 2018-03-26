@@ -608,7 +608,16 @@
 								"description": "Path to the script to start (eg. bin/main.dart or lib/main.dart)."
 							},
 							"previewDart2": {
-								"description": "Whether to enable previewing Dart 2.0 functionality such as optional new/const.\n\ntrue: send --preview-dart-2\nfalse: send --no-preview-dart-2\nnull: do not send a flag"
+								"description": "Whether to enable previewing Dart 2.0 functionality such as optional new/const.\n\ntrue: send --preview-dart-2\n\nfalse: send --no-preview-dart-2\n\nnull: do not send a flag"
+							},
+							"flutterMode": {
+								"description": "The mode for launching the Flutter application:\n\ndebug: Turns on all assertions, includes all debug information, enables all debugger aids and optimizes for fast dev cycles\n\nrelease: Turns off all assertions, strips as much debug information as possible, turns of debugger aids and optimises for fast startup, fast execution and small package sizes.\n\nprofile: Same as release mode exept profiling aids and tracing are enabled.",
+								"enum": [
+									"debug",
+									"release",
+									"profile"
+								],
+								"default": "debug"
 							},
 							"args": {
 								"type": "array",
