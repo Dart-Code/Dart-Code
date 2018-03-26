@@ -28,13 +28,15 @@ export class DartDiagnosticProvider {
 	}
 
 	public static createDiagnostic(error: as.AnalysisError): Diagnostic {
-		return {
-			code: error.code,
-			message: ((error.type === "HINT" || error.type === "LINT") && config.showLintNames ? `${error.code}: ` : "") + error.message,
-			range: toRange(error.location),
-			severity: DartDiagnosticProvider.getSeverity(error.severity, error.type),
-			source: "dart",
-		};
+		const message = ((error.type === "HINT" || error.type === "LINT") && config.showLintNames ? `${error.code}: ` : "") + error.message;
+		const diag = new Diagnostic(
+			toRange(error.location),
+			message,
+			DartDiagnosticProvider.getSeverity(error.severity, error.type),
+		);
+		diag.code = error.code;
+		diag.source = "dart";
+		return diag;
 	}
 
 	public static getSeverity(severity: as.AnalysisErrorSeverity, type: as.AnalysisErrorType): DiagnosticSeverity {
