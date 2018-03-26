@@ -47,10 +47,6 @@ export function positionOf(searchText: string): vs.Position {
 	return doc.positionAt(matchedTextIndex + caretOffset);
 }
 
-export function rangeAt(startLine: number, startCharacter: number, endLine: number, endCharacter: number): vs.Range {
-	return new vs.Range(new vs.Position(startLine, startCharacter), new vs.Position(endLine, endCharacter));
-}
-
 export function rangeOf(searchText: string): vs.Range {
 	const startOffset = searchText.indexOf("|");
 	assert.notEqual(startOffset, -1, `Couldn't find a | in search text (${searchText})`);
@@ -143,9 +139,9 @@ export function ensureNoSnippet(items: vs.CompletionItem[], label: string): void
 	ensureNoCompletion(items, vs.CompletionItemKind.Snippet, label);
 }
 
-export async function ensureTestContent(expected: string) {
+export async function ensureTestContent(expected: string): Promise<void> {
 	// Wait for a short period before checking to reduce changes of flaky tests.
-	await delay(50);
+	await delay(100);
 	const actual = doc.getText();
 	assert.equal(actual.replace(/\r/g, "").trim(), expected.replace(/\r/g, "").trim());
 }
