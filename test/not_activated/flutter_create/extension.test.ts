@@ -47,6 +47,7 @@ describe("Command", () => {
 		assert.ok(openFolder.calledOnce);
 		assert.ok(fs.existsSync(path.join(tempFolder, "my_test_flutter_proj", FLUTTER_CREATE_PROJECT_TRIGGER_FILE)));
 
+		// TODO: This won't be restored if an error occurs
 		showInputBox.restore();
 		showOpenDialog.restore();
 		executeCommand.restore();
