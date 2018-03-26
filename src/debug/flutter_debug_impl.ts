@@ -49,6 +49,12 @@ export class FlutterDebugSession extends DartDebugSession {
 			appArgs.push(`--no-preview-dart-2`);
 		}
 
+		if (args.flutterMode === "profile") {
+			appArgs.push("--profile");
+		} else if (args.flutterMode === "release") {
+			appArgs.push("--release");
+		}
+
 		if (debug) {
 			appArgs.push("--start-paused");
 		}
@@ -63,7 +69,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		// Set up subscriptions.
 		this.flutter.registerForAppStart((n) => this.currentRunningAppId = n.appId);
 		this.flutter.registerForAppDebugPort((n) => { this.observatoryUri = n.wsUri; this.baseUri = n.baseUri; });
-		this.flutter.registerForAppStarted((n) => { if (!args.noDebug) this.initObservatory(this.observatoryUri); });
+		this.flutter.registerForAppStarted((n) => { if (!args.noDebug && this.observatoryUri) this.initObservatory(this.observatoryUri); });
 		this.flutter.registerForAppStop((n) => { this.currentRunningAppId = undefined; this.flutter.dispose(); });
 		this.flutter.registerForAppProgress((e) => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished })));
 		this.flutter.registerForError((err) => this.sendEvent(new OutputEvent(err, "stderr")));
