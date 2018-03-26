@@ -38,7 +38,7 @@ export function setTestContent(content: string): Thenable<boolean> {
 	return editor.edit((eb) => eb.replace(all, content));
 }
 
-export function getPositionOf(searchText: string): vs.Position {
+export function positionOf(searchText: string): vs.Position {
 	const caretOffset = searchText.indexOf("^");
 	assert.notEqual(caretOffset, -1, `Couldn't find a ^ in search text (${searchText})`);
 	const matchedTextIndex = doc.getText().indexOf(searchText.replace("^", "").replace(/\n/g, eol));
@@ -98,7 +98,7 @@ export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind
 }
 
 export async function getCompletionsAt(searchText: string, triggerCharacter?: string): Promise<vs.CompletionItem[]> {
-	const position = getPositionOf(searchText);
+	const position = positionOf(searchText);
 	const results = await (vs.commands.executeCommand("vscode.executeCompletionItemProvider", doc.uri, position, triggerCharacter) as Thenable<vs.CompletionList>);
 	return results.items;
 }

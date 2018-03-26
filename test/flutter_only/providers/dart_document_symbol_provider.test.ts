@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as fs from "fs";
 import * as vs from "vscode";
-import { activate, doc, getPositionOf, rangeOf, flutterHelloWorldMainFile, ensureSymbol, getDocumentSymbols } from "../../helpers";
+import { activate, doc, positionOf, rangeOf, flutterHelloWorldMainFile, ensureSymbol, getDocumentSymbols } from "../../helpers";
 
 describe("dart_document_symbol_provider", () => {
 

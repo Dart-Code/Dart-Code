@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as fs from "fs";
 import * as vs from "vscode";
-import { activate, doc, getPositionOf, setTestContent, editor, ensureTestContent } from "../../helpers";
+import { activate, doc, positionOf, setTestContent, editor, ensureTestContent } from "../../helpers";
 
 describe("rename_provider", () => {
 
@@ -19,7 +19,7 @@ describe("rename_provider", () => {
 			var a = new Danny();
 			print(Danny.myField);
 		`);
-		const renameResult = await (vs.commands.executeCommand("vscode.executeDocumentRenameProvider", doc.uri, getPositionOf("D^anny"), "NewDanny") as Thenable<vs.WorkspaceEdit>);
+		const renameResult = await (vs.commands.executeCommand("vscode.executeDocumentRenameProvider", doc.uri, positionOf("D^anny"), "NewDanny") as Thenable<vs.WorkspaceEdit>);
 		await vs.workspace.applyEdit(renameResult);
 		await ensureTestContent(`
 			class NewDanny {
