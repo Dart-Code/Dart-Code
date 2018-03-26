@@ -67,6 +67,7 @@ export class DartRenameProvider implements RenameProvider {
 					changeEdit.edits.forEach((fileEdit) => {
 						const uri = Uri.file(changeEdit.file);
 						const promise = workspace.openTextDocument(uri);
+						// TODO: This should push the child promise?
 						promises.push(promise);
 						promise.then((document) => {
 							workspaceEdit.replace(
@@ -79,6 +80,10 @@ export class DartRenameProvider implements RenameProvider {
 						});
 					});
 				});
+
+				// TODO: This class is inconsistent with other refactors (which are silent when they work, for ex).
+				// We should review what we can extract share (though note that this method must return the edit whereas
+				// the other refactors apply them).
 
 				// Wait all openTextDocument to finish
 				Promise.all(promises).then(() => {
