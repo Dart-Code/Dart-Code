@@ -102,7 +102,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			const selection = suggestion.completion.slice(suggestion.selectionOffset, suggestion.selectionOffset + suggestion.selectionLength);
 			// If we have a selection offset (eg. a place to put the cursor) but not any text to pre-select then
 			// pop open the completion to help the user type the value.
-			if (!selection)
+			// Only do this if it ends with a space (argument completion), see #730.
+			if (!selection && suggestion.completion.slice(suggestion.selectionOffset - 1, suggestion.selectionOffset) === " ")
 				triggerCompletion = true;
 			const after = suggestion.completion.slice(suggestion.selectionOffset + suggestion.selectionLength);
 
