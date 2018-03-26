@@ -148,6 +148,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (debugConfig.checkedMode === undefined)
 			debugConfig.checkedMode = true;
 		if (isFlutter) {
+			debugConfig.flutterMode = debugConfig.flutterMode || "debug";
 			debugConfig.flutterPath = debugConfig.flutterPath || (this.sdks.flutter ? path.join(this.sdks.flutter, "bin", flutterExec) : null);
 			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || conf.flutterRunLogFile;
 			debugConfig.flutterTestLogFile = debugConfig.flutterTestLogFile || conf.flutterTestLogFile;
