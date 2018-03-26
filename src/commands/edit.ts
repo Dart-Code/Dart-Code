@@ -78,6 +78,7 @@ export class EditCommands implements vs.Disposable {
 				changes.replace(
 					vs.Uri.file(edit.file),
 					new vs.Range(
+						// TODO: This is the wrong document and may do the wrong thing for multi-file edits.
 						document.positionAt(e.offset),
 						document.positionAt(e.offset + e.length),
 					),

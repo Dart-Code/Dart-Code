@@ -443,3 +443,7 @@ export function safeSpawn(workingDirectory: string, binPath: string, args: strin
 	// https://github.com/nodejs/node/issues/7367
 	return child_process.spawn(`"${binPath}"`, args.map((a) => `"${a}"`), { cwd: workingDirectory, env, shell: true });
 }
+
+export function unique<T>(items: T[]): T[] {
+	return Array.from(new Set(items));
+}
