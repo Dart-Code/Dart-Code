@@ -22,7 +22,7 @@ export class RefactorCommands implements vs.Disposable {
 		);
 	}
 
-	private async performRefactor(document: vs.TextDocument, range: vs.Range, refactorKind: as.RefactoringKind) {
+	private async performRefactor(document: vs.TextDocument, range: vs.Range, refactorKind: as.RefactoringKind): Promise<void> {
 		// Ensure the document is still valid.
 		if (!document || document.isClosed)
 			return;
@@ -87,7 +87,7 @@ export class RefactorCommands implements vs.Disposable {
 		}
 
 		if (applyEdits) {
-			vs.commands.executeCommand("_dart.applySourceChange", document, editResult.change);
+			await vs.commands.executeCommand("_dart.applySourceChange", document, editResult.change);
 		}
 	}
 
