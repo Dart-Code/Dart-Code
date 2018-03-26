@@ -5,7 +5,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { activate, doc, positionOf, setTestContent, editor, ensureTestContent, rangeOf, delay, waitFor } from "../../helpers";
 
-describe.only("refactor", () => {
+describe("refactor", () => {
 
 	before(() => activate());
 
