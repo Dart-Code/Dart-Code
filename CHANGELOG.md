@@ -4,13 +4,13 @@
 
 Basic support for `flutter test` has been added. If you launch a file (by pressing `F5` with no launch config, or by setting `program` in your launch config) that is inside the `test` folder of a Flutter project, the script will be run using `flutter run`. Output will appear in the `Debug Console` pane. All debugging functionality (breakpoints, etc.) should work as normal.
 
-![Flutter Test](https://dart-code.github.io/Website/screenshots/release_notes/v2.11.0/flutter_test.png)
+![Flutter Test](https://dartcode.org/images/release_notes/v2.11/flutter_test.png)
 
 ## Projects in Sub-Folders
 
 When projects are found in sub-folders you will now be prompted to mark them as `Workspace folders`. This will allow Dart Code to better understand which folders are projects when detecting which debugger to run when pressing F5.
 
-![Projects in Sub-Folders](https://dart-code.github.io/Website/screenshots/release_notes/v2.11.0/workspace_upgrade.png)
+![Projects in Sub-Folders](https://dartcode.org/images/release_notes/v2.11/workspace_upgrade.png)
 
 **Note:** VS Code will duplicate these workspace folders in the top level of explorer - please +1 [this VS Code issue](https://github.com/Microsoft/vscode/issues/45470) to allow this to be configurable.
 
@@ -22,7 +22,7 @@ Many operations in Dart Code require re-initialising the extension. This was pre
 
 The Flutter version number now appears on the status bar and allows quickly switching SDKs by clicking onit (this functionality already existed for Dart). Set the `dart.flutterSdkPaths` setting to an array of SDK folders (or folders containing SDKs) to use this. Note: This does not change your Flutter channel but relies on having multiple versions of the SDK in different folders (you can do this without multiple clones by using `git worktree` [as shown in our Travis script](https://github.com/Dart-Code/Dart-Code/blob/b5da182903119232eb74d1dc69d5ae878ca41341/.travis.yml#L39-L41)).
 
-![SDK Picker for Flutter](https://dart-code.github.io/Website/screenshots/release_notes/v2.11.0/flutter_sdk_switcher.png)
+![SDK Picker for Flutter](https://dartcode.org/images/release_notes/v2.11/flutter_sdk_switcher.png)
 
 ## Other Changes
 
