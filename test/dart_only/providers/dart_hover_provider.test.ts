@@ -2,14 +2,14 @@ import * as assert from "assert";
 import * as path from "path";
 import * as fs from "fs";
 import * as vs from "vscode";
-import { activate, doc, getPositionOf, rangeOf, everythingFile, ext } from "../../helpers";
+import { activate, doc, positionOf, rangeOf, everythingFile, ext } from "../../helpers";
 
 describe("dart_hover_provider", () => {
 
 	before(() => activate(everythingFile));
 
 	async function getHoversAt(searchText: string): Promise<Array<{ displayText: string, documentation?: string, range: vs.Range }>> {
-		const position = getPositionOf(searchText);
+		const position = positionOf(searchText);
 		const hoverResult = await (vs.commands.executeCommand("vscode.executeHoverProvider", doc.uri, position) as Thenable<vs.Hover[]>);
 
 		// Our hovers are aways in the form:
