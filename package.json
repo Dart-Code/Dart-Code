@@ -205,6 +205,11 @@
 		],
 		"keybindings": [
 			{
+				"command": "dart.organizeDirectives",
+				"key": "alt+shift+o",
+				"when": "editorLangId == dart"
+			},
+			{
 				"command": "dart.showTypeHierarchy",
 				"key": "f4",
 				"mac": "f4",
