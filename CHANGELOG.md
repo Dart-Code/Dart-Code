@@ -45,6 +45,7 @@ The Flutter version number now appears on the status bar and allows quickly swit
 - The SDK quick-picker will now include your current SDK even if it's not included via the `dart.sdkPaths`/`dart.flutterSdkPaths` settings
 - The SDK quick-picker will now longer show an error if configured folders contain symlinks to Dart binaries
 - A new option (`dart.vmAdditionalArgs`) has been added to pass custom arguments to the VM when launching Dart CLI apps
+- Code completion will no longer get stuck open after typing `@override`
 
 ## Preview Features available in this version
 
