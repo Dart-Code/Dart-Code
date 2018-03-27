@@ -172,7 +172,7 @@ export class SdkCommands {
 
 				channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
 
-				const process = child_process.spawn(`"${binPath}"`, args, { cwd: folder, shell: true });
+				const process = util.safeSpawn(folder, binPath, args);
 				this.runningCommands[commandId] = process;
 				process.on("close", (code) => {
 					// Check it's still the same process before nulling out, in case our replacement has already been inserted.

@@ -14,6 +14,7 @@ import {
 	VMFrame, VMFuncRef, VMInstanceRef, VMScriptRef, VMScript, VMSourceLocation, VMErrorRef, VMBreakpoint,
 	VMInstance, VMResponse, VMClassRef, VM, VMIsolate, VMLibraryRef, VMCodeRef,
 } from "./dart_debug_protocol";
+import { safeSpawn } from "../utils";
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -132,7 +133,7 @@ export class DartDebugSession extends DebugSession {
 			appArgs = appArgs.concat(args.args);
 		}
 
-		const process = child_process.spawn(`"${this.args.dartPath}"`, appArgs, { cwd: args.cwd, shell: true });
+		const process = safeSpawn(args.cwd, this.args.dartPath, appArgs);
 
 		return process;
 	}

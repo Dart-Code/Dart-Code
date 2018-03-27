@@ -1,6 +1,7 @@
 import { Disposable } from "vscode";
 import * as child_process from "child_process";
 import * as fs from "fs";
+import { safeSpawn } from "../utils";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
@@ -28,7 +29,7 @@ export abstract class StdIOService<T> implements Disposable {
 		if (env)
 			this.logTraffic(`..  in ${JSON.stringify(env)}`);
 
-		this.process = child_process.spawn(`"${binPath}"`, args, { cwd: workingDirectory, env, shell: true });
+		this.process = safeSpawn(workingDirectory, binPath, args, env);
 
 		this.process.stdout.on("data", (data: Buffer) => {
 			const message = data.toString();
