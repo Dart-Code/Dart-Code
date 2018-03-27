@@ -4,6 +4,8 @@ import * as vs from "vscode";
 import * as util from "./utils";
 import { config } from "./config";
 
+export const UPGRADE_TO_WORKSPACE_FOLDERS = "Mark Projects as Workspace Folders";
+
 export function locateBestProjectRoot(folder: string): string {
 	if (!folder || !util.isWithinWorkspace(folder))
 		return null;
@@ -58,14 +60,13 @@ export async function checkForProjectsInSubFolders() {
 }
 
 async function promptUserToUpgradeProjectFolders(projectsToAdd: string[]) {
-	const updateWorkspaceAction = "Mark Projects as Workspace Folders";
 	const notForThisFolderAction = "Don't ask for this Folder";
 	const res = await vs.window.showWarningMessage(
 		`This folder contains ${projectsToAdd.length} projects in sub-folders. Would you like to mark them as Workspace Folders to enable all functionality?`,
-		updateWorkspaceAction,
+		UPGRADE_TO_WORKSPACE_FOLDERS,
 		notForThisFolderAction,
 	);
-	if (res === updateWorkspaceAction) {
+	if (res === UPGRADE_TO_WORKSPACE_FOLDERS) {
 		upgradeProjectFolders(projectsToAdd);
 	} else {
 		if (res === notForThisFolderAction) {

@@ -3,7 +3,7 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { Sdks } from "../../src/utils";
-import { checkForProjectsInSubFolders } from "../../src/project";
+import { checkForProjectsInSubFolders, UPGRADE_TO_WORKSPACE_FOLDERS } from "../../src/project";
 import { waitFor } from "../helpers";
 
 const isWin = /^win/.test(process.platform);
@@ -23,8 +23,7 @@ describe("Extension", () => {
 	it("prompted the user to upgrade project folders", async () => {
 		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
 		const showWarningMessage = sinon.stub(vs.window, "showWarningMessage");
-		const updateWorkspaceAction = "Mark Projects as Workspace Folders";
-		const upgradeMessage = showWarningMessage.withArgs(sinon.match.any, updateWorkspaceAction, sinon.match.any).resolves();
+		const upgradeMessage = showWarningMessage.withArgs(sinon.match.any, UPGRADE_TO_WORKSPACE_FOLDERS, sinon.match.any).resolves();
 		showWarningMessage.callThrough();
 
 		// Force a call to detect them.
