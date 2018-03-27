@@ -3,7 +3,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { activate, doc, positionOf, setTestContent, editor, ensureTestContent, rangeOf, delay, waitFor } from "../../helpers";
+import { activate, doc, positionOf, setTestContent, editor, ensureTestContent, rangeOf, delay } from "../../helpers";
 
 describe("refactor", () => {
 
@@ -43,15 +43,13 @@ main() {
 		`);
 		await (vs.commands.executeCommand("_dart.performRefactor", doc, new vs.Range(positionOf("^main("), positionOf("world^")), "EXTRACT_METHOD"));
 
-		// Wait up to a second for the message to be called.
-		await waitFor(() => showErrorMessage.calledOnce, 1000);
-
 		// Ensure the content was not modified.
 		await ensureTestContent(`
 main() {
   print("Hello, world!");
 }
 		`);
+		assert(showErrorMessage.calledOnce);
 
 		// TODO: This won't be restored if an error occurs
 		showErrorMessage.restore();
@@ -69,15 +67,13 @@ main() {
 		`);
 		await (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
 
-		// Wait up to a second for the message to be called.
-		await waitFor(() => showErrorMessage.calledOnce, 1000);
-
 		// Ensure the content was not modified.
 		await ensureTestContent(`
 main() {
   print("Hello, world!");
 }
 		`);
+		assert(() => showErrorMessage.calledOnce);
 
 		// TODO: This won't be restored if an error occurs
 		showInputBox.restore();
@@ -89,7 +85,8 @@ main() {
 		showInputBox.resolves("Aaaa");
 		const showWarningMessage = sinon.stub(vs.window, "showWarningMessage");
 		const doItAnyway = "Refactor Anyway";
-		const refactorWarning = showWarningMessage.withArgs(sinon.match.any, doItAnyway);
+		const refactorWarning = showWarningMessage.withArgs(sinon.match.any, doItAnyway).resolves();
+		showWarningMessage.callThrough();
 
 		await setTestContent(`
 main() {
@@ -98,15 +95,13 @@ main() {
 		`);
 		await (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
 
-		// Wait up to a second for the message to be called.
-		await waitFor(() => refactorWarning.calledOnce, 1000);
-
 		// Ensure the content was not modified.
 		await ensureTestContent(`
 main() {
   print("Hello, world!");
 }
 		`);
+		assert(refactorWarning.calledOnce);
 
 		// TODO: This won't be restored if an error occurs
 		showInputBox.restore();
@@ -128,9 +123,6 @@ main() {
 		`);
 		await (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
 
-		// Wait up to a second for the message to be called.
-		await waitFor(() => refactorWarning.calledOnce, 1000);
-
 		// Ensure the content was modified.
 		await ensureTestContent(`
 main() {
@@ -141,6 +133,8 @@ void Aaaa() {
   print("Hello, world!");
 }
 		`);
+
+		assert(refactorWarning.calledOnce);
 
 		// TODO: This won't be restored if an error occurs
 		showInputBox.restore();
