@@ -1,3 +1,7 @@
+# v2.11.1
+
+- SDKs in paths that contain spaces will no longer report that the analysis server has terminated
+
 # v2.11.0
 
 ## Flutter Test
