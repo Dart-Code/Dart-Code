@@ -16,6 +16,7 @@ out/test/**
 package-lock.json
 src/**
 test/**
+tool/**
 tsconfig.json
 tslint.json
 typings/**
