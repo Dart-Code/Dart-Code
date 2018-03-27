@@ -85,7 +85,7 @@ export class RefactorCommands implements vs.Disposable {
 			applyEdits = (REFACTOR_ANYWAY === await show(unique(editWarnings.map((w) => w.message)).join("\n\n"), REFACTOR_ANYWAY));
 		}
 
-		if (document.version !== originalDocumentVersion) {
+		if (applyEdits && document.version !== originalDocumentVersion) {
 			vs.window.showErrorMessage(REFACTOR_FAILED_DOC_MODIFIED);
 			applyEdits = false;
 		}
