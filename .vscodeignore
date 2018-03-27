@@ -13,6 +13,7 @@ tool/**
 logs/**
 media/screenshots/**
 out/test/**
+out/tool/**
 package-lock.json
 src/**
 test/**
