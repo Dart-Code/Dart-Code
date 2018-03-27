@@ -10,7 +10,7 @@
 
 ## Flutter Test
 
-Basic support for `flutter test` has been added. If you launch a file (by pressing `F5` with no launch config, or by setting `program` in your launch config) that is inside the `test` folder of a Flutter project, the script will be run using `flutter run`. Output will appear in the `Debug Console` pane. All debugging functionality (breakpoints, etc.) should work as normal.
+Basic support for `flutter test` has been added. If you launch a file (by pressing `F5` with no launch config, or by setting `program` in your launch config) that is inside the `test` folder of a Flutter project, the script will be run using `flutter test`. Output will appear in the `Debug Console` pane. All debugging functionality (breakpoints, etc.) should work as normal.
 
 ![Flutter Test](https://dartcode.org/images/release_notes/v2.11/flutter_test.png)
 
