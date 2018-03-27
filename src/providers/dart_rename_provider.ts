@@ -62,22 +62,23 @@ export class DartRenameProvider implements RenameProvider {
 					return;
 				}
 
-				const promises: Array<Thenable<TextDocument>> = [];
+				const promises: Array<Thenable<void>> = [];
 				resp.change.edits.forEach((changeEdit) => {
 					changeEdit.edits.forEach((fileEdit) => {
 						const uri = Uri.file(changeEdit.file);
 						const promise = workspace.openTextDocument(uri);
-						// TODO: This should push the child promise?
-						promises.push(promise);
-						promise.then((document) => {
-							workspaceEdit.replace(
-								uri,
-								new Range(
-									document.positionAt(fileEdit.offset),
-									document.positionAt(fileEdit.offset + fileEdit.length)),
-								fileEdit.replacement,
-							);
-						});
+						promises.push(
+							promise.then((document) =>
+								workspaceEdit.replace(
+									uri,
+									new Range(
+										document.positionAt(fileEdit.offset),
+										document.positionAt(fileEdit.offset + fileEdit.length),
+									),
+									fileEdit.replacement,
+								),
+							),
+						);
 					});
 				});
 
