@@ -40,6 +40,7 @@ export class EditCommands implements vs.Disposable {
 			if (edit.edits.length === 0)
 				return;
 
+			// TODO: Should we be calling editor.edit when we already have an editBuilder?
 			editor.edit((editBuilder: vs.TextEditorEdit) => {
 				edit.edits.forEach((edit) => {
 					const range = new vs.Range(
