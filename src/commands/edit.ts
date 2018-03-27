@@ -19,15 +19,15 @@ export class EditCommands implements vs.Disposable {
 		);
 	}
 
-	private organizeDirectives(editor: vs.TextEditor, editBuilder: vs.TextEditorEdit) {
-		this.sendEdit(this.analyzer.editOrganizeDirectives, "Organize Directives", editor, editBuilder);
+	private organizeDirectives(editor: vs.TextEditor, editBuilder: vs.TextEditorEdit): Thenable<void> {
+		return this.sendEdit(this.analyzer.editOrganizeDirectives, "Organize Directives", editor, editBuilder);
 	}
 
-	private sortMembers(editor: vs.TextEditor, editBuilder: vs.TextEditorEdit) {
-		this.sendEdit(this.analyzer.editSortMembers, "Sort Members", editor, editBuilder);
+	private sortMembers(editor: vs.TextEditor, editBuilder: vs.TextEditorEdit): Thenable<void> {
+		return this.sendEdit(this.analyzer.editSortMembers, "Sort Members", editor, editBuilder);
 	}
 
-	private sendEdit(f: (a: { file: string }) => Thenable<{ edit: as.SourceFileEdit }>, commandName: string, editor: vs.TextEditor, editBuilder: vs.TextEditorEdit) {
+	private async sendEdit(f: (a: { file: string }) => Thenable<{ edit: as.SourceFileEdit }>, commandName: string, editor: vs.TextEditor, editBuilder: vs.TextEditorEdit): Promise<void> {
 		if (!editors.hasActiveDartEditor()) {
 			vs.window.showWarningMessage("No active Dart editor.");
 			return;
@@ -35,13 +35,15 @@ export class EditCommands implements vs.Disposable {
 
 		f = f.bind(this.analyzer); // Yay JavaScript!
 
-		f({ file: editor.document.fileName }).then((response) => {
+		try {
+			const response = await f({ file: editor.document.fileName });
+
 			const edit: as.SourceFileEdit = response.edit;
 			if (edit.edits.length === 0)
 				return;
 
 			// TODO: Should we be calling editor.edit when we already have an editBuilder?
-			editor.edit((editBuilder: vs.TextEditorEdit) => {
+			const result = await editor.edit((editBuilder: vs.TextEditorEdit) => {
 				edit.edits.forEach((edit) => {
 					const range = new vs.Range(
 						editor.document.positionAt(edit.offset),
@@ -49,13 +51,13 @@ export class EditCommands implements vs.Disposable {
 					);
 					editBuilder.replace(range, edit.replacement);
 				});
-			}).then((result) => {
-				if (!result)
-					vs.window.showWarningMessage(`Unable to apply ${commandName} edits.`);
 			});
-		}, (error) => {
+
+			if (!result)
+				vs.window.showWarningMessage(`Unable to apply ${commandName} edits.`);
+		} catch (error) {
 			vs.window.showErrorMessage(`Error running ${commandName}: ${error.message}.`);
-		});
+		}
 	}
 
 	public dispose(): any {
