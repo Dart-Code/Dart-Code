@@ -175,3 +175,9 @@ export async function waitFor(action: () => boolean, milliseconds: number): Prom
 	}
 	throw new Error("Action didn't return true within specified timeout");
 }
+
+export async function waitForEditorChange(action: () => Thenable<void>): Promise<void> {
+	const oldVersion = doc.version;
+	await action();
+	await waitFor(() => doc.version !== oldVersion, 1000);
+}
