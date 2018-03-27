@@ -67,18 +67,20 @@ export class RefactorCommands implements vs.Disposable {
 			.concat(editResult.optionsProblems)
 			.concat(editResult.finalProblems);
 
-		const editErrors = editProblems.filter((e) => e.severity === "FATAL" || e.severity === "ERROR");
-		const editWarnings = editProblems.filter((e) => e.severity === "WARNING");
+		const editFatals = editProblems.filter((e) => e.severity === "FATAL");
+		const editWarnings = editProblems.filter((e) => e.severity === "ERROR" || e.severity === "WARNING");
+		const hasErrors = editProblems.find((e) => e.severity === "ERROR");
 
 		let applyEdits = !!editResult.change;
 
-		if (editErrors.length) {
-			vs.window.showErrorMessage(unique(editErrors.map((e) => e.message)).join("\n\n") + "\n\nYour refactor was not applied.");
+		if (editFatals.length) {
+			vs.window.showErrorMessage(unique(editFatals.map((e) => e.message)).join("\n\n") + "\n\nYour refactor was not applied.");
 			applyEdits = false;
 			return;
 		} else if (editWarnings.length) {
 			const doItAnyway = "Refactor Anyway";
-			applyEdits = (doItAnyway === await vs.window.showWarningMessage(unique(editWarnings.map((w) => w.message)).join("\n\n"), doItAnyway));
+			const show = hasErrors ? vs.window.showErrorMessage : vs.window.showWarningMessage;
+			applyEdits = (doItAnyway === await show(unique(editWarnings.map((w) => w.message)).join("\n\n"), doItAnyway));
 		}
 
 		if (document.version !== originalDocumentVersion) {
