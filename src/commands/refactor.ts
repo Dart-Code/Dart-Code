@@ -33,44 +33,50 @@ export class RefactorCommands implements vs.Disposable {
 		const originalDocumentVersion = document.version;
 
 		// Validate that there are no problems if we execute this refactor.
-		const validationResult = await this.analyzer.editGetRefactoring({
+		const validationResult = await this.getRefactor(document, refactorKind, range, true);
+		if (this.shouldAbortRefactor(validationResult))
+			return;
+
+		// Request the options from the user.
+		const options = await refactorOptions[refactorKind](validationResult.feedback);
+		if (!options)
+			return;
+
+		// Send the request for the refactor edits and prompt to apply if required.
+		const editResult = await this.getRefactor(document, refactorKind, range, false, options);
+		const applyEdits = await this.shouldApplyEdits(editResult, document, originalDocumentVersion);
+
+		if (applyEdits)
+			await vs.commands.executeCommand("_dart.applySourceChange", document, editResult.change);
+	}
+
+	private getRefactor(
+		document: vs.TextDocument,
+		refactorKind: as.RefactoringKind,
+		range: vs.Range,
+		validateOnly: boolean,
+		options?: as.RefactoringOptions)
+		: Thenable<as.EditGetRefactoringResponse> {
+		return this.analyzer.editGetRefactoring({
 			file: document.fileName,
 			kind: refactorKind,
 			length: document.offsetAt(range.end) - document.offsetAt(range.start),
 			offset: document.offsetAt(range.start),
-			validateOnly: true,
+			options,
+			validateOnly,
 		});
+	}
 
+	private shouldAbortRefactor(validationResult: as.EditGetRefactoringResponse) {
 		const validationProblems = validationResult.initialProblems
 			.concat(validationResult.optionsProblems)
 			.concat(validationResult.finalProblems);
 
 		if (validationProblems.length) {
 			vs.window.showErrorMessage(validationProblems[0].message);
-			return;
+			return true;
 		}
-
-		// Request the options from the user.
-		const options = await refactorOptions[refactorKind](validationResult.feedback);
-
-		if (!options)
-			return;
-
-		// Send the request for the refactor edits.
-		const editResult = await this.analyzer.editGetRefactoring({
-			file: document.fileName,
-			kind: refactorKind,
-			length: document.offsetAt(range.end) - document.offsetAt(range.start),
-			offset: document.offsetAt(range.start),
-			options,
-			validateOnly: false,
-		});
-
-		const applyEdits = await this.shouldApplyEdits(editResult, document, originalDocumentVersion);
-
-		if (applyEdits) {
-			await vs.commands.executeCommand("_dart.applySourceChange", document, editResult.change);
-		}
+		return false;
 	}
 
 	private async shouldApplyEdits(editResult: as.EditGetRefactoringResponse, document: vs.TextDocument, originalDocumentVersion: number) {
