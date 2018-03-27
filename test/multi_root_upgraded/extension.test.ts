@@ -24,7 +24,8 @@ describe("Extension", () => {
 		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
 		const showWarningMessage = sinon.stub(vs.window, "showWarningMessage");
 		const updateWorkspaceAction = "Mark Projects as Workspace Folders";
-		const upgradeMessage = showWarningMessage.withArgs(sinon.match.any, updateWorkspaceAction, sinon.match.any);
+		const upgradeMessage = showWarningMessage.withArgs(sinon.match.any, updateWorkspaceAction, sinon.match.any).resolves();
+		showWarningMessage.callThrough();
 
 		// Force a call to detect them.
 		checkForProjectsInSubFolders();
