@@ -4,6 +4,7 @@ import * as fs from "fs";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { activate, doc, positionOf, setTestContent, editor, ensureTestContent, rangeOf, delay } from "../../helpers";
+import { REFACTOR_FAILED_DOC_MODIFIED, REFACTOR_ANYWAY } from "../../../src/commands/refactor";
 
 describe("refactor", () => {
 
@@ -84,8 +85,7 @@ main() {
 		const showInputBox = sinon.stub(vs.window, "showInputBox");
 		showInputBox.resolves("Aaaa");
 		const showWarningMessage = sinon.stub(vs.window, "showWarningMessage");
-		const doItAnyway = "Refactor Anyway";
-		const refactorWarning = showWarningMessage.withArgs(sinon.match.any, doItAnyway).resolves();
+		const refactorWarning = showWarningMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves();
 		showWarningMessage.callThrough();
 
 		await setTestContent(`
@@ -112,8 +112,7 @@ main() {
 		const showInputBox = sinon.stub(vs.window, "showInputBox");
 		showInputBox.resolves("Aaaa");
 		const showWarningMessage = sinon.stub(vs.window, "showWarningMessage");
-		const doItAnyway = "Refactor Anyway";
-		const refactorWarning = showWarningMessage.withArgs(sinon.match.any, doItAnyway).resolves(doItAnyway);
+		const refactorWarning = showWarningMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves(REFACTOR_ANYWAY);
 		showWarningMessage.callThrough();
 
 		await setTestContent(`
@@ -145,9 +144,7 @@ void Aaaa() {
 		const showInputBox = sinon.stub(vs.window, "showInputBox");
 		showInputBox.returns(delay(100).then(() => "printHelloWorld"));
 		const showErrorMessage = sinon.stub(vs.window, "showErrorMessage");
-		// TODO: Move these strings to constants
-		const error = "This refactor cannot be applied because the document has changed.";
-		const rejectMessage = showErrorMessage.withArgs(error).resolves();
+		const rejectMessage = showErrorMessage.withArgs(REFACTOR_FAILED_DOC_MODIFIED).resolves();
 		showErrorMessage.callThrough();
 
 		await setTestContent(`
