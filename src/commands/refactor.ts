@@ -4,6 +4,9 @@ import * as vs from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import { unique } from "../utils";
 
+export const REFACTOR_FAILED_DOC_MODIFIED = "This refactor cannot be applied because the document has changed.";
+export const REFACTOR_ANYWAY = "Refactor Anyway";
+
 const refactorOptions: { [key: string]: (feedback: as.RefactoringFeedback) => as.RefactoringOptions } = {
 	EXTRACT_METHOD: getExtractMethodArgs,
 };
@@ -78,13 +81,12 @@ export class RefactorCommands implements vs.Disposable {
 			applyEdits = false;
 			return;
 		} else if (editWarnings.length) {
-			const doItAnyway = "Refactor Anyway";
 			const show = hasErrors ? vs.window.showErrorMessage : vs.window.showWarningMessage;
-			applyEdits = (doItAnyway === await show(unique(editWarnings.map((w) => w.message)).join("\n\n"), doItAnyway));
+			applyEdits = (REFACTOR_ANYWAY === await show(unique(editWarnings.map((w) => w.message)).join("\n\n"), REFACTOR_ANYWAY));
 		}
 
 		if (document.version !== originalDocumentVersion) {
-			vs.window.showErrorMessage("This refactor cannot be applied because the document has changed.");
+			vs.window.showErrorMessage(REFACTOR_FAILED_DOC_MODIFIED);
 			applyEdits = false;
 		}
 
