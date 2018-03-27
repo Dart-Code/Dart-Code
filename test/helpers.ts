@@ -143,9 +143,11 @@ export function ensureNoSnippet(items: vs.CompletionItem[], label: string): void
 	ensureNoCompletion(items, vs.CompletionItemKind.Snippet, label);
 }
 
-export function ensureTestContent(expected: string) {
+export async function ensureTestContent(expected: string) {
+	// Wait for a short period before checking to reduce changes of flaky tests.
+	await delay(50);
 	const actual = doc.getText();
-	assert.equal(actual.replace(/\r/g, ""), expected.replace(/\r/g, ""));
+	assert.equal(actual.replace(/\r/g, "").trim(), expected.replace(/\r/g, "").trim());
 }
 
 export function delay(milliseconds: number): Promise<void> {
