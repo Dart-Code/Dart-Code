@@ -26,7 +26,7 @@ The Flutter version number now appears on the status bar and allows quickly swit
 
 ## Other Changes
 
-- `dart.previewDart2` now explicitly sends `--no-preview-dart-2` when set to `false` to allow opting-out of the Dart 2 preview once it becomes the default in Flutter Beta 2 (if undefined, neither flag will be sent)
+- `dart.previewDart2` now explicitly sends `--no-preview-dart-2` when set to `false` to allow opting-out of the Dart 2 preview once it becomes the default (if undefined, neither flag will be sent)
 - The setting `dart.previewDart2` now works for Dart CLI apps in addition to Flutter (note: your Dart SDK must support it, which currently means you must be using a v2.0 dev release)
 - Pressing F5 without a `launch.json` will now launch more scripts without configuration (scripts inside `test`, `bin` and `tool`)
 - Errors when launching Flutter projects (such as when you have not accepted Android licenses) will now appear in the Debug Console
