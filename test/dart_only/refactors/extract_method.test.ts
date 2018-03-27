@@ -146,4 +146,51 @@ void Aaaa() {
 		showInputBox.restore();
 		showWarningMessage.restore();
 	});
+
+	it("rejects the edit if the document has been modified", async () => {
+		const showInputBox = sinon.stub(vs.window, "showInputBox");
+		showInputBox.returns(delay(100).then(() => "printHelloWorld"));
+		const showErrorMessage = sinon.stub(vs.window, "showErrorMessage");
+		// TODO: Move these strings to constants
+		const error = "This refactor cannot be applied because the document has changed.";
+		const rejectMessage = showErrorMessage.withArgs(error).resolves();
+		showErrorMessage.callThrough();
+
+		await setTestContent(`
+main() {
+  print("Hello, world!");
+}
+		`);
+
+		// Start the command but don't await it.
+		const refactorCommand = (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
+
+		// Give the command time to start.
+		await delay(10);
+
+		// Change the document in the meantime.
+		await setTestContent(`
+main() {
+  print("Hello, world!");
+}
+// This comment was added
+		`);
+
+		// Wait for the command to complete.
+		await refactorCommand;
+
+		// Ensure nothing changed.
+		await ensureTestContent(`
+main() {
+  print("Hello, world!");
+}
+// This comment was added
+		`);
+
+		// Ensure we showed the messag.e
+		assert(rejectMessage.calledOnce);
+
+		// TODO: This won't be restored if an error occurs
+		showInputBox.restore();
+	});
 });
