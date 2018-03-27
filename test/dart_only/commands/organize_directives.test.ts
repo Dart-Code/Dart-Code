@@ -22,7 +22,7 @@ main() async {
 			await vs.commands.executeCommand("dart.organizeDirectives", vs.window.activeTextEditor, edit);
 		});
 
-		ensureTestContent(`
+		await ensureTestContent(`
 import "dart:async";
 import "dart:collection";
 
