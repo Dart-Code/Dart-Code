@@ -3,6 +3,8 @@ environment:
     secure: Oawgup4p18hTqsE2qGz07QLvtL/xrDiGFmqs9ebmXATs6t/Mp6L/sVS0XbAgmXhuOtZ8Q3KDC//q0ViBEnNiaEcZg3cI3GGPchtIQYjAozEC+3d3SXQY9zcSymAPgYsmc1TOsC+3BbuYXskoTu6myDbRPfh2i0YuU2lr0SRRbGS+68fGhBiPhZtkS6DOfDfu
     
 install:
+  - ps: mkdir "with spaces"
+  - ps: cd "with spaces"
   - ps: Install-Product node ''
   - ps: $env:ELECTRON_NO_ATTACH_CONSOLE = 1
   - ps: Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
