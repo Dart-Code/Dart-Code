@@ -66,33 +66,47 @@ export class RefactorCommands implements vs.Disposable {
 			validateOnly: false,
 		});
 
-		const editProblems = editResult.initialProblems
-			.concat(editResult.optionsProblems)
-			.concat(editResult.finalProblems);
-
-		const editFatals = editProblems.filter((e) => e.severity === "FATAL");
-		const editWarnings = editProblems.filter((e) => e.severity === "ERROR" || e.severity === "WARNING");
-		const hasErrors = editProblems.find((e) => e.severity === "ERROR");
-
-		let applyEdits = !!editResult.change;
-
-		if (editFatals.length) {
-			vs.window.showErrorMessage(unique(editFatals.map((e) => e.message)).join("\n\n") + "\n\nYour refactor was not applied.");
-			applyEdits = false;
-			return;
-		} else if (editWarnings.length) {
-			const show = hasErrors ? vs.window.showErrorMessage : vs.window.showWarningMessage;
-			applyEdits = (REFACTOR_ANYWAY === await show(unique(editWarnings.map((w) => w.message)).join("\n\n"), REFACTOR_ANYWAY));
-		}
-
-		if (applyEdits && document.version !== originalDocumentVersion) {
-			vs.window.showErrorMessage(REFACTOR_FAILED_DOC_MODIFIED);
-			applyEdits = false;
-		}
+		const applyEdits = await this.shouldApplyEdits(editResult, document, originalDocumentVersion);
 
 		if (applyEdits) {
 			await vs.commands.executeCommand("_dart.applySourceChange", document, editResult.change);
 		}
+	}
+
+	private async shouldApplyEdits(editResult: as.EditGetRefactoringResponse, document: vs.TextDocument, originalDocumentVersion: number) {
+		const allProblems = editResult.initialProblems
+			.concat(editResult.optionsProblems)
+			.concat(editResult.finalProblems);
+
+		const editFatals = allProblems.filter((e) => e.severity === "FATAL");
+		const editWarnings = allProblems.filter((e) => e.severity === "ERROR" || e.severity === "WARNING");
+		const hasErrors = !!allProblems.find((e) => e.severity === "ERROR");
+
+		// Fatal errors can never be applied, just tell the user and quit.
+		if (editFatals.length) {
+			vs.window.showErrorMessage(unique(editFatals.map((e) => e.message)).join("\n\n") + "\n\nYour refactor was not applied.");
+			return false;
+		}
+
+		// If we somehow got here with no change, we also cannot apply them.
+		if (!editResult.change)
+			return false;
+
+		let applyEdits = true;
+
+		// If we have warnings/errors, the user can decide whether to go ahead.
+		if (editWarnings.length) {
+			const show = hasErrors ? vs.window.showErrorMessage : vs.window.showWarningMessage;
+			applyEdits = (REFACTOR_ANYWAY === await show(unique(editWarnings.map((w) => w.message)).join("\n\n"), REFACTOR_ANYWAY));
+		}
+
+		// If we're trying to apply changes but the document is modified, we have to quit.
+		if (applyEdits && document.version !== originalDocumentVersion) {
+			vs.window.showErrorMessage(REFACTOR_FAILED_DOC_MODIFIED);
+			return false;
+		}
+
+		return applyEdits;
 	}
 
 	public dispose(): any {
