@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { delay, getRandomTempFolder, waitFor, ext } from "../../helpers";
+import { delay, getRandomTempFolder, ext } from "../../helpers";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../../src/utils";
 
 describe("Test environment", () => {
@@ -37,7 +37,7 @@ describe("Command", () => {
 
 		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
 		const executeCommand = sinon.stub(vs.commands, "executeCommand");
-		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves(null);
+		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves();
 		executeCommand.callThrough();
 
 		await vs.commands.executeCommand("flutter.createProject");
