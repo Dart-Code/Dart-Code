@@ -53,4 +53,4 @@ The Flutter version number now appears on the status bar and allows quickly swit
 
 # Past Versions
 
-For full release notes of previous versions, see [the changelog](https://dartcode.org/releases/).
+For full release notes of previous versions, see [dartcode.org/releases](https://dartcode.org/releases/).

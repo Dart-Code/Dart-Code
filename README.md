@@ -14,47 +14,48 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
 ## Features
 
-- Debug Dart command line apps
-- Debug Flutter mobile apps
-- Support for flutter `hot reload` (use the debugger `Restart` button)
-- Select from multiple devices for Flutter debugging (select from the status bar)
-- Support for debugging "just my code" or SDK/libraries too (`dart.debugSdkLibraries` and `dart.debugExternalLibraries`)
-- Automatically finds Dart and Flutter SDKs from `PATH` or workspace folders
-- Notification of new stable Dart SDK releases
+- Edit and Debug Flutter mobile apps
+- Edit and Debug Dart command line apps
+- [Automatic hot reloads for Flutter](https://dartcode.org/docs/settings/#dartflutterhotreloadonsave)
+- [Refactorings and Code fixes (lightbulb)](https://dartcode.org/docs/refactorings-and-code-fixes/)
+- [Quickly switch between devices for Flutter](https://dartcode.org/docs/quickly-switching-between-flutter-devices/)
+- [Flutter Doctor command](https://dartcode.org/docs/commands/#flutter-run-flutter-doctor)
+- [Flutter Get Packages command](https://dartcode.org/docs/commands/#flutter-get-packages)
+- [Flutter Upgrade Packages command](https://dartcode.org/docs/commands/#flutter-upgrade-packages)
+- [Automatically gets packages when `pubspec.yaml` is saved](https://dartcode.org/docs/settings/#dartrunpubgetonpubspecchanges)
+- Prompts for full restarts when a hot reload does not re-execute all code
+- [Automatically finds SDKs from `PATH`](https://dartcode.org/docs/configuring-path-and-environment-variables/)
+- [Notification of new stable Dart SDK releases](https://dartcode.org/docs/settings/#dartcheckforsdkupdates)
+- [Sort Members command](https://dartcode.org/docs/commands/#dart-sort-members)
+- Support for debugging "just my code" or SDK/libraries too ([`dart.debugSdkLibraries`](https://dartcode.org/docs/settings/#dartdebugsdklibraries) and [`dart.debugExternalLibraries`](https://dartcode.org/docs/settings/#dartdebugexternallibraries))
+- [Prompts to get packages when out of date](https://dartcode.org/docs/settings/#dartprompttogetpackages)
 - Syntax highlighting
 - Code completion
 - Snippets
-- Realtime errors/warnings/TODOs reported in problems window and with squiggles
-- Hovers/tooltip information
+- Realtime errors/warnings/TODOs
+- Documentation in hovers/tooltips
 - Go to Definition
 - Find References
-- Code fixes/lightbulb
-- Type hierarchy
 - Rename refactoring
-- Organize directives
-- Sort members
-- Flutter Doctor command
 - Format document
 - Support for format-on-save (`editor.formatOnSave`)
 - Support for format-on-type (`editor.formatOnType`)
-- Workspace-wide symbol search
-- Automatic closing braces/quotes
-- Document symbol list/search with highlighting
-- Generation of analysis error reports for easy reporting to the Dart team 
-- `pub get` and `pub upgrade` commands (and flutter equivilents)
-- Automatically run `pub get` when `pubspec.yaml` is saved
-- Supports strong mode and linting (configured in `analysis_options.yaml` or `.analysis_options`)
-- Other references to symbol under cursor are highlighted
+- Workspace symbol search
+- Document symbol search
+- [Organize Directives command](https://dartcode.org/docs/commands/#dart-organize-directives)
+- [Pub Get Packages command](https://dartcode.org/docs/commands/#pub-get-packages)
+- [Pub Upgrade Packages command](https://dartcode.org/docs/commands/#pub-upgrade-packages)
+- [Type Hierarchy](https://dartcode.org/docs/commands/#dart-show-type-hierarchy)
 
 
 ## Extension Settings
 
-A full list of settings is [available here](https://dartcode.org/docs/settings).
+A full list of settings is [available here](https://dartcode.org/docs/settings/).
 
 
 ## Refactorings and Code Fixes
 
-A full list of supported refactors is [available here](https://dartcode.org/docs/refactorings-and-code-fixes).
+A full list of supported refactors is [available here](https://dartcode.org/docs/refactorings-and-code-fixes/).
 
 
 ## Analytics
@@ -67,7 +68,7 @@ This extension reports some analytics such as:
 - Crashes in the Dart analysis server
 - Platform and Dart/Flutter SDK versions
 
-Reporting can be disabled via the `dart.allowAnalytics` setting.
+Reporting can be disabled via the [`dart.allowAnalytics` setting](https://dartcode.org/docs/settings/#dartallowanalytics).
 
 
 ## Release Notes
