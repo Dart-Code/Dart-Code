@@ -447,3 +447,19 @@ export function safeSpawn(workingDirectory: string, binPath: string, args: strin
 export function unique<T>(items: T[]): T[] {
 	return Array.from(new Set(items));
 }
+
+const shouldLogTimings = false;
+const start = process.hrtime();
+let last = start;
+function pad(str: string, length: number) {
+	while (str.length < length)
+		str = "0" + str;
+	return str;
+}
+export const logTime = (taskFinished?: string) => {
+	if (!shouldLogTimings)
+		return;
+	const diff = process.hrtime(start);
+	console.log(`${pad((diff[0] - last[0]).toString(), 5)}.${pad((diff[1] - last[1]).toString(), 10)} ${taskFinished ? "<== " + taskFinished : ""}`);
+	last = diff;
+};
