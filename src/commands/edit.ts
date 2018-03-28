@@ -13,48 +13,58 @@ export class EditCommands implements vs.Disposable {
 		this.analyzer = analyzer;
 
 		this.commands.push(
-			vs.commands.registerTextEditorCommand("dart.organizeDirectives", this.organizeDirectives, this),
-			vs.commands.registerTextEditorCommand("dart.sortMembers", this.sortMembers, this),
+			vs.commands.registerCommand("dart.organizeDirectives", this.organizeDirectives, this),
+			vs.commands.registerCommand("dart.sortMembers", this.sortMembers, this),
 			vs.commands.registerCommand("_dart.applySourceChange", this.applyEdits, this),
 		);
 	}
 
-	private organizeDirectives(editor: vs.TextEditor, editBuilder: vs.TextEditorEdit): Thenable<void> {
-		return this.sendEdit(this.analyzer.editOrganizeDirectives, "Organize Directives", editor, editBuilder);
+	private organizeDirectives(): Thenable<void> {
+		return this.sendEdit(this.analyzer.editOrganizeDirectives, "Organize Directives");
 	}
 
-	private sortMembers(editor: vs.TextEditor, editBuilder: vs.TextEditorEdit): Thenable<void> {
-		return this.sendEdit(this.analyzer.editSortMembers, "Sort Members", editor, editBuilder);
+	private sortMembers(): Thenable<void> {
+		return this.sendEdit(this.analyzer.editSortMembers, "Sort Members");
 	}
 
-	private async sendEdit(f: (a: { file: string }) => Thenable<{ edit: as.SourceFileEdit }>, commandName: string, editor: vs.TextEditor, editBuilder: vs.TextEditorEdit): Promise<void> {
+	private async sendEdit(f: (a: { file: string }) => Thenable<{ edit: as.SourceFileEdit }>, commandName: string): Promise<void> {
 		if (!editors.hasActiveDartEditor()) {
 			vs.window.showWarningMessage("No active Dart editor.");
 			return;
 		}
 
+		const editor = vs.window.activeTextEditor;
+		const document = editor.document;
+		const documentVersion = document.version;
+
 		f = f.bind(this.analyzer); // Yay JavaScript!
 
 		try {
-			const response = await f({ file: editor.document.fileName });
+			const response = await f({ file: document.fileName });
 
 			const edit: as.SourceFileEdit = response.edit;
 			if (edit.edits.length === 0)
 				return;
 
-			// TODO: Should we be calling editor.edit when we already have an editBuilder?
-			const result = await editor.edit((editBuilder: vs.TextEditorEdit) => {
+			if (document.isClosed) {
+				vs.window.showErrorMessage(`Error running ${commandName}: Document has been closed.`);
+				return;
+			}
+
+			if (document.version !== document.version) {
+				vs.window.showErrorMessage(`Error running ${commandName}: Document has been modified.`);
+				return;
+			}
+
+			await editor.edit((editBuilder) => {
 				edit.edits.forEach((edit) => {
 					const range = new vs.Range(
-						editor.document.positionAt(edit.offset),
-						editor.document.positionAt(edit.offset + edit.length),
+						document.positionAt(edit.offset),
+						document.positionAt(edit.offset + edit.length),
 					);
 					editBuilder.replace(range, edit.replacement);
 				});
 			});
-
-			if (!result)
-				vs.window.showWarningMessage(`Unable to apply ${commandName} edits.`);
 		} catch (error) {
 			vs.window.showErrorMessage(`Error running ${commandName}: ${error.message}.`);
 		}
