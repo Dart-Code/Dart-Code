@@ -173,8 +173,8 @@
 				"category": "Flutter"
 			},
 			{
-				"command": "flutter.toggleSlowModeBanner",
-				"title": "Toggle Slow-Mode Banner",
+				"command": "flutter.toggleDebugModeBanner",
+				"title": "Toggle Debug-Mode Banner",
 				"category": "Flutter"
 			},
 			{
@@ -290,7 +290,7 @@
 					"when": "dart-code:serviceExtension.ext.flutter.timeDilation"
 				},
 				{
-					"command": "flutter.toggleSlowModeBanner",
+					"command": "flutter.toggleDebugModeBanner",
 					"when": "dart-code:serviceExtension.ext.flutter.debugAllowBanner"
 				},
 				{
