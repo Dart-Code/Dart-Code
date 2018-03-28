@@ -30,6 +30,17 @@ export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	eol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
 }
 
+const deferredItems: Array<() => Promise<void> | void> = [];
+afterEach(async () => {
+	for (const d of deferredItems) {
+		await d();
+	}
+	deferredItems.length = 0;
+});
+export function defer(callback: () => Promise<void> | void): void {
+	deferredItems.push(callback);
+}
+
 export function setTestContent(content: string): Thenable<boolean> {
 	const all = new vs.Range(
 		doc.positionAt(0),
