@@ -18,7 +18,7 @@ export class DebugCommands {
 	private performanceOverlayEnabled = false;
 	private repaintRainbowEnabled = false;
 	private timeDilation = 1.0;
-	private slowModeBannerEnabled = true;
+	private debugModeBannerEnabled = true;
 	private paintBaselinesEnabled = false;
 	private currentDebugSession: vs.DebugSession;
 	private progressPromise: PromiseCompleter<void>;
@@ -97,13 +97,13 @@ export class DebugCommands {
 		this.registerBoolServiceCommand("ext.flutter.showPerformanceOverlay", () => this.performanceOverlayEnabled);
 		this.registerBoolServiceCommand("ext.flutter.repaintRainbow", () => this.repaintRainbowEnabled);
 		this.registerServiceCommand("ext.flutter.timeDilation", () => ({ timeDilation: this.timeDilation }));
-		this.registerBoolServiceCommand("ext.flutter.debugAllowBanner", () => this.slowModeBannerEnabled);
+		this.registerBoolServiceCommand("ext.flutter.debugAllowBanner", () => this.debugModeBannerEnabled);
 		this.registerBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", () => this.paintBaselinesEnabled);
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => { this.debugPaintingEnabled = !this.debugPaintingEnabled; this.sendServiceSetting("ext.flutter.debugPaint"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => { this.performanceOverlayEnabled = !this.performanceOverlayEnabled; this.sendServiceSetting("ext.flutter.showPerformanceOverlay"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => { this.repaintRainbowEnabled = !this.repaintRainbowEnabled; this.sendServiceSetting("ext.flutter.repaintRainbow"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => { this.timeDilation = 6.0 - this.timeDilation; this.sendServiceSetting("ext.flutter.timeDilation"); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowModeBanner", () => { this.slowModeBannerEnabled = !this.slowModeBannerEnabled; this.sendServiceSetting("ext.flutter.debugAllowBanner"); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => { this.debugModeBannerEnabled = !this.debugModeBannerEnabled; this.sendServiceSetting("ext.flutter.debugAllowBanner"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => { this.paintBaselinesEnabled = !this.paintBaselinesEnabled; this.sendServiceSetting("ext.flutter.debugPaintBaselinesEnabled"); }));
 
 		// Open Observatory.
@@ -182,7 +182,7 @@ export class DebugCommands {
 	}
 
 	private resetFlutterSettings() {
-		this.debugPaintingEnabled = false, this.performanceOverlayEnabled = false, this.repaintRainbowEnabled = false, this.timeDilation = 1.0, this.slowModeBannerEnabled = true, this.paintBaselinesEnabled = false;
+		this.debugPaintingEnabled = false, this.performanceOverlayEnabled = false, this.repaintRainbowEnabled = false, this.timeDilation = 1.0, this.debugModeBannerEnabled = true, this.paintBaselinesEnabled = false;
 	}
 
 	private enabledServiceExtensions: string[] = [];
