@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as fs from "fs";
 import * as vs from "vscode";
-import { activate, doc, getPositionOf, setTestContent, editor, ensureTestContent, delay, waitFor, waitForEditorChange } from "../../helpers";
+import { activate, doc, setTestContent, editor, ensureTestContent, delay, waitFor, waitForEditorChange } from "../../helpers";
 
 describe("organize directives", () => {
 
