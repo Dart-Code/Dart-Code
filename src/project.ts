@@ -41,6 +41,9 @@ function getChildProjects(folder: string, levelsToGo: number): string[] {
 }
 
 export async function checkForProjectsInSubFolders() {
+	// TODO: This method is super slow (10x slower than any other part of startup, including
+	// SDK searching). It's marked async but is actually all sync. Needs rewriting async (but
+	// sadly node's fs library doesn't use Promises :()
 	if (!vs.workspace.workspaceFolders)
 		return;
 	let projects: string[] = [];
