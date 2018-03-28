@@ -18,7 +18,6 @@ import { OpenFileTracker } from "./analysis/open_file_tracker";
 import { upgradeProject } from "./project_upgrade";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
-import { DartDefinitionProvider } from "./providers/dart_definition_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
 import { DartFormattingEditProvider } from "./providers/dart_formatting_edit_provider";
 import { DartDocumentHighlightProvider } from "./providers/dart_highlighting_provider";
@@ -176,7 +175,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const formattingEditProvider = new DartFormattingEditProvider(analyzer);
 	const typeFormattingEditProvider = new DartTypeFormattingEditProvider(analyzer);
 	const completionItemProvider = new DartCompletionItemProvider(analyzer);
-	const definitionProvider = new DartDefinitionProvider(analyzer);
 	const referenceProvider = new DartReferenceProvider(analyzer);
 	const documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
 	const assistCodeActionProvider = new AssistCodeActionProvider(analyzer);
@@ -195,7 +193,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		context.subscriptions.push(vs.languages.registerHoverProvider(filter, hoverProvider));
 		context.subscriptions.push(vs.languages.registerDocumentFormattingEditProvider(filter, formattingEditProvider));
 		context.subscriptions.push(vs.languages.registerCompletionItemProvider(filter, completionItemProvider, ...triggerCharacters));
-		context.subscriptions.push(vs.languages.registerDefinitionProvider(filter, definitionProvider));
+		context.subscriptions.push(vs.languages.registerDefinitionProvider(filter, referenceProvider));
 		context.subscriptions.push(vs.languages.registerReferenceProvider(filter, referenceProvider));
 		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(filter, documentHighlightProvider));
 		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, assistCodeActionProvider));
