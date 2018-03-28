@@ -12,17 +12,14 @@ export class DartReferenceProvider implements ReferenceProvider {
 		this.analyzer = analyzer;
 	}
 
-	public provideReferences(document: TextDocument, position: Position, context: ReferenceContext, token: CancellationToken): Thenable<Location[]> {
-		return new Promise<Location[]>((resolve, reject) => {
-			this.analyzer.searchFindElementReferencesResults({
-				file: document.fileName,
-				includePotential: true,
-				offset: document.offsetAt(position),
-			}).then(
-				(resp) => resolve(resp.results.map((r) => this.convertResult(r))),
-				() => reject(),
-			);
+	public async provideReferences(document: TextDocument, position: Position, context: ReferenceContext, token: CancellationToken): Promise<Location[]> {
+		const resp = await this.analyzer.searchFindElementReferencesResults({
+			file: document.fileName,
+			includePotential: true,
+			offset: document.offsetAt(position),
 		});
+
+		return resp.results.map((r) => this.convertResult(r));
 	}
 
 	private convertResult(result: as.SearchResult): Location {
