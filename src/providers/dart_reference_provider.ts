@@ -13,18 +13,27 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 	}
 
 	public async provideReferences(document: TextDocument, position: Position, context: ReferenceContext, token: CancellationToken): Promise<Location[]> {
+		// If we want to include the decleration, kick off a request for that.
+		const definition = context.includeDeclaration
+			? this.provideDefinition(document, position, token)
+			: null;
+
 		const resp = await this.analyzer.searchFindElementReferencesResults({
 			file: document.fileName,
 			includePotential: true,
 			offset: document.offsetAt(position),
 		});
 
-		return resp.results.map((result) => {
+		const locations = resp.results.map((result) => {
 			return {
 				range: util.toRange(result.location),
 				uri: Uri.file(result.location.file),
 			};
 		});
+
+		return definition
+			? locations.concat(await definition)
+			: locations;
 	}
 
 	public async provideDefinition(document: TextDocument, position: Position, token: CancellationToken): Promise<Definition> {
