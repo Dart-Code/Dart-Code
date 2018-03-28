@@ -75,10 +75,11 @@ export class EditCommands implements vs.Disposable {
 
 		for (const edit of change.edits) {
 			for (const e of edit.edits) {
+				const uri = vs.Uri.file(edit.file);
+				const document = await vs.workspace.openTextDocument(uri);
 				changes.replace(
 					vs.Uri.file(edit.file),
 					new vs.Range(
-						// TODO: This is the wrong document and may do the wrong thing for multi-file edits.
 						document.positionAt(e.offset),
 						document.positionAt(e.offset + e.length),
 					),
