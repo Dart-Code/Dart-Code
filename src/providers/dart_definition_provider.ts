@@ -12,19 +12,14 @@ export class DartDefinitionProvider implements DefinitionProvider {
 		this.analyzer = analyzer;
 	}
 
-	public provideDefinition(document: TextDocument, position: Position, token: CancellationToken): Thenable<Definition> {
-		return new Promise<Definition>((resolve, reject) => {
-			this.analyzer.analysisGetNavigation({
-				file: document.fileName,
-				length: 0,
-				offset: document.offsetAt(position),
-			}).then((resp) => {
-				if (resp.targets.length === 0)
-					resolve(null);
-				else
-					resolve(resp.targets.map((t) => this.convertResult(t, resp.files[t.fileIndex])));
-			}, (e) => { util.logError(e); reject(); });
+	public async provideDefinition(document: TextDocument, position: Position, token: CancellationToken): Promise<Definition> {
+		const resp = await this.analyzer.analysisGetNavigation({
+			file: document.fileName,
+			length: 0,
+			offset: document.offsetAt(position),
 		});
+
+		return resp.targets.map((t) => this.convertResult(t, resp.files[t.fileIndex]));
 	}
 
 	private convertResult(target: as.NavigationTarget, file: string): Location {
