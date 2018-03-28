@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as fs from "fs";
 import * as vs from "vscode";
-import { activate, doc, getPositionOf, setTestContent, editor, ensureTestContent, rangeOf, delay, flutterEmptyFile } from "../../helpers";
+import { activate, doc, setTestContent, editor, ensureTestContent, rangeOf, delay, flutterEmptyFile } from "../../helpers";
 import { SourceChange } from "../../../src/analysis/analysis_server_types";
 
 describe("fix_code_action_provider", () => {
