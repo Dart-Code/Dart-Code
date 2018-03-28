@@ -26,39 +26,36 @@ export class TypeHierarchyCommand implements vs.Disposable {
 
 		const document = editor.document;
 
-		this.analyzer.searchGetTypeHierarchy({
+		const response = await this.analyzer.searchGetTypeHierarchy({
 			file: document.fileName,
 			offset: document.offsetAt(editor.selection.active),
-		}).then((response) => {
-			const items = response.hierarchyItems;
-			if (!items) {
-				vs.window.showInformationMessage("Type hierarchy not available.");
-				return;
-			}
-
-			const options = { placeHolder: name(items, 0) };
-
-			// TODO: How / where to show implements?
-			const tree = [];
-			const startItem = items[0];
-
-			tree.push(startItem);
-			addParents(items, tree, startItem);
-			addChildren(items, tree, startItem);
-
-			vs.window.showQuickPick(tree.map((item) => itemToPick(item, items)), options).then((result: vs.QuickPickItem & { location?: as.Location }) => {
-				if (result) {
-					const location: as.Location = result.location;
-					vs.workspace.openTextDocument(location.file).then((document) => {
-						vs.window.showTextDocument(document).then((editor) => {
-							const range = toRange(location);
-							editor.revealRange(range, vs.TextEditorRevealType.InCenterIfOutsideViewport);
-							editor.selection = new vs.Selection(range.end, range.start);
-						});
-					});
-				}
-			});
 		});
+
+		const items = response.hierarchyItems;
+		if (!items) {
+			vs.window.showInformationMessage("Type hierarchy not available.");
+			return;
+		}
+
+		const options = { placeHolder: name(items, 0) };
+
+		// TODO: How / where to show implements?
+		const tree = [];
+		const startItem = items[0];
+
+		tree.push(startItem);
+		addParents(items, tree, startItem);
+		addChildren(items, tree, startItem);
+
+		const result = await vs.window.showQuickPick(tree.map((item) => itemToPick(item, items)), options);
+		if (result) {
+			const location: as.Location = result.location;
+			const document = await vs.workspace.openTextDocument(location.file);
+			const editor = await vs.window.showTextDocument(document);
+			const range = toRange(location);
+			editor.revealRange(range, vs.TextEditorRevealType.InCenterIfOutsideViewport);
+			editor.selection = new vs.Selection(range.end, range.start);
+		}
 	}
 
 	public dispose(): any {
@@ -93,7 +90,7 @@ function addChildren(items: as.TypeHierarchyItem[], tree: as.TypeHierarchyItem[]
 	}
 }
 
-function itemToPick(item: as.TypeHierarchyItem, items: as.TypeHierarchyItem[]): vs.QuickPickItem {
+function itemToPick(item: as.TypeHierarchyItem, items: as.TypeHierarchyItem[]): vs.QuickPickItem & { location?: as.Location } {
 	let desc = "";
 
 	// extends
