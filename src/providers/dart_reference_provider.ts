@@ -19,13 +19,11 @@ export class DartReferenceProvider implements ReferenceProvider {
 			offset: document.offsetAt(position),
 		});
 
-		return resp.results.map((r) => this.convertResult(r));
-	}
-
-	private convertResult(result: as.SearchResult): Location {
-		return {
-			range: util.toRange(result.location),
-			uri: Uri.file(result.location.file),
-		};
+		return resp.results.map((result) => {
+			return {
+				range: util.toRange(result.location),
+				uri: Uri.file(result.location.file),
+			};
+		});
 	}
 }

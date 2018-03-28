@@ -19,18 +19,16 @@ export class DartDefinitionProvider implements DefinitionProvider {
 			offset: document.offsetAt(position),
 		});
 
-		return resp.targets.map((t) => this.convertResult(t, resp.files[t.fileIndex]));
-	}
+		return resp.targets.map((target) => {
+			// HACK: We sometimes get a startColumn of 0 (should be 1-based). Just treat this as 1 for now.
+			//     See https://github.com/Dart-Code/Dart-Code/issues/200
+			if (target.startColumn === 0)
+				target.startColumn = 1;
 
-	private convertResult(target: as.NavigationTarget, file: string): Location {
-		// HACK: We sometimes get a startColumn of 0 (should be 1-based). Just treat this as 1 for now.
-		//     See https://github.com/Dart-Code/Dart-Code/issues/200
-		if (target.startColumn === 0)
-			target.startColumn = 1;
-
-		return {
-			range: util.toRange(target),
-			uri: Uri.file(file),
-		};
+			return {
+				range: util.toRange(target),
+				uri: Uri.file(resp.files[target.fileIndex]),
+			};
+		});
 	}
 }
