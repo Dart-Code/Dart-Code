@@ -81,7 +81,10 @@ export class Analyzer extends AnalyzerGen {
 		try {
 			super.sendMessage(json);
 		} catch (e) {
-			reloadExtension("The Dart Analyzer has terminated.");
+			const message = this.version
+				? "The Dart Analyzer has terminated."
+				: "The Dart Analyzer could not be started. Please set the `dart.analyzerLog` option and review the log file for errors.";
+			reloadExtension(message);
 			throw e;
 		}
 	}
