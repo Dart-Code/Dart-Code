@@ -3,7 +3,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { activate, doc, positionOf, setTestContent, editor, ensureTestContent, rangeOf, delay } from "../../helpers";
+import { activate, doc, positionOf, setTestContent, editor, ensureTestContent, rangeOf, delay, defer } from "../../helpers";
 import { REFACTOR_FAILED_DOC_MODIFIED, REFACTOR_ANYWAY } from "../../../src/commands/refactor";
 
 describe("refactor", () => {
@@ -12,6 +12,7 @@ describe("refactor", () => {
 
 	it("can extract simple code into a method", async () => {
 		const showInputBox = sinon.stub(vs.window, "showInputBox");
+		defer(showInputBox.restore);
 		showInputBox.resolves("printHelloWorld");
 
 		await setTestContent(`
@@ -29,13 +30,11 @@ void printHelloWorld() {
   print("Hello, world!");
 }
 		`);
-
-		// TODO: This won't be restored if an error occurs
-		showInputBox.restore();
 	});
 
 	it("displays an error if an invalid range is selected", async () => {
 		const showErrorMessage = sinon.stub(vs.window, "showErrorMessage");
+		defer(showErrorMessage.restore);
 
 		await setTestContent(`
 main() {
@@ -51,15 +50,14 @@ main() {
 }
 		`);
 		assert(showErrorMessage.calledOnce);
-
-		// TODO: This won't be restored if an error occurs
-		showErrorMessage.restore();
 	});
 
 	it("displays an error if an invalid new name is provided", async () => {
 		const showInputBox = sinon.stub(vs.window, "showInputBox");
+		defer(showInputBox.restore);
 		showInputBox.resolves("\"\"\"");
 		const showErrorMessage = sinon.stub(vs.window, "showErrorMessage");
+		defer(showErrorMessage.restore);
 
 		await setTestContent(`
 main() {
@@ -75,16 +73,14 @@ main() {
 }
 		`);
 		assert(() => showErrorMessage.calledOnce);
-
-		// TODO: This won't be restored if an error occurs
-		showInputBox.restore();
-		showErrorMessage.restore();
 	});
 
 	it("does not apply changes when there are warnings if the user does not approve", async () => {
 		const showInputBox = sinon.stub(vs.window, "showInputBox");
+		defer(showInputBox.restore);
 		showInputBox.resolves("Aaaa");
 		const showWarningMessage = sinon.stub(vs.window, "showWarningMessage");
+		defer(showWarningMessage.restore);
 		const refactorWarning = showWarningMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves();
 		showWarningMessage.callThrough();
 
@@ -102,16 +98,14 @@ main() {
 }
 		`);
 		assert(refactorWarning.calledOnce);
-
-		// TODO: This won't be restored if an error occurs
-		showInputBox.restore();
-		showWarningMessage.restore();
 	});
 
 	it("applies changes when there are warnings if the user approves", async () => {
 		const showInputBox = sinon.stub(vs.window, "showInputBox");
+		defer(showInputBox.restore);
 		showInputBox.resolves("Aaaa");
 		const showWarningMessage = sinon.stub(vs.window, "showWarningMessage");
+		defer(showWarningMessage.restore);
 		const refactorWarning = showWarningMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves(REFACTOR_ANYWAY);
 		showWarningMessage.callThrough();
 
@@ -134,16 +128,14 @@ void Aaaa() {
 		`);
 
 		assert(refactorWarning.calledOnce);
-
-		// TODO: This won't be restored if an error occurs
-		showInputBox.restore();
-		showWarningMessage.restore();
 	});
 
 	it("rejects the edit if the document has been modified", async () => {
 		const showInputBox = sinon.stub(vs.window, "showInputBox");
+		defer(showInputBox.restore);
 		showInputBox.returns(delay(100).then(() => "printHelloWorld"));
 		const showErrorMessage = sinon.stub(vs.window, "showErrorMessage");
+		defer(showErrorMessage.restore);
 		const rejectMessage = showErrorMessage.withArgs(REFACTOR_FAILED_DOC_MODIFIED).resolves();
 		showErrorMessage.callThrough();
 
@@ -177,11 +169,5 @@ main() {
 }
 // This comment was added
 		`);
-
-		// Ensure we showed the messag.e
-		assert(rejectMessage.calledOnce);
-
-		// TODO: This won't be restored if an error occurs
-		showInputBox.restore();
 	});
 });
