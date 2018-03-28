@@ -9,5 +9,6 @@
 		".vscode-test": true,
 		".nyc_output": true
 	},
-	"files.insertFinalNewline": true
+	"files.insertFinalNewline": true,
+	"typescript.tsdk": "node_modules/typescript/lib"
 }

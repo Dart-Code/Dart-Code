@@ -671,13 +671,13 @@
 	},
 	"dependencies": {
 		"semver": "^5.5.0",
-		"vscode-debugadapter": "^1.27.0",
-		"vscode-debugprotocol": "^1.27.0",
+		"vscode-debugadapter": "^1.28.0",
+		"vscode-debugprotocol": "^1.28.0",
 		"ws": "^1.1.5"
 	},
 	"devDependencies": {
 		"@types/mocha": "^2.2.48",
-		"@types/node": "^6.0.102",
+		"@types/node": "^6.0.103",
 		"@types/semver": "^5.5.0",
 		"@types/sinon": "^4.3.0",
 		"@types/ws": "^0.0.38",
@@ -687,10 +687,10 @@
 		"remap-istanbul": "^0.11.0",
 		"run-for-every-file": "^1.1.0",
 		"signal-exit": "^3.0.2",
-		"sinon": "^4.4.6",
+		"sinon": "^4.4.10",
 		"supports-color": "^5.3.0",
 		"tslint": "^5.9.1",
-		"typescript": "^2.7.2",
+		"typescript": "^2.8.1",
 		"vscode": "^1.1.14"
 	}
 }
