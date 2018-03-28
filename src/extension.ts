@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import * as util from "./utils";
 import * as vs from "vscode";
 import { WorkspaceFolder } from "vscode";
 import { ServerStatusNotification } from "./analysis/analysis_server_types";
@@ -34,8 +35,6 @@ import { LegacyDartWorkspaceSymbolProvider } from "./providers/legacy_dart_works
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
 import { showUserPrompts } from "./user_prompts";
-import { isFlutterWorkspaceFolder } from "./utils";
-import * as util from "./utils";
 import { DartPackagesProvider } from "./views/packages_view";
 import { PromiseCompleter } from "./debug/utils";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
@@ -60,6 +59,7 @@ let showLintNames: boolean;
 let analyzerSettings: string;
 
 export function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
+	util.logTime("Code called activate");
 	// Wire up a reload command that will re-initialise everything.
 	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", (_) => {
 		deactivate(true);
@@ -79,8 +79,11 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	const analysisCompleteCompleter = new PromiseCompleter<void>();
 	const extensionStartTime = new Date();
+	util.logTime();
 	checkForProjectsInSubFolders();
+	util.logTime("checkForProjectsInSubFolders");
 	const sdks = util.findSdks();
+	util.logTime("findSdks");
 	analytics = new Analytics(sdks);
 	if (!sdks.dart || (sdks.projectType === util.ProjectType.Flutter && !sdks.flutter)) {
 		// HACK: In order to provide a more useful message if the user was trying to fun flutter.createProject
@@ -143,6 +146,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		vs.window.showErrorMessage("Could not find a Dart Analysis Server at " + analyzerPath);
 		return;
 	}
+
 	analyzer = new Analyzer(path.join(sdks.dart, util.dartVMPath), analyzerPath);
 	context.subscriptions.push(analyzer);
 
@@ -208,7 +212,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Snippets are language-specific
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));
-	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(uri)))));
+	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => util.isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(uri)))));
 
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE[0].language, new DartLanguageConfiguration()));
 	const statusReporter = new AnalyzerStatusReporter(analyzer, sdks, analytics);
@@ -263,6 +267,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		}));
 	}
 
+	util.logTime("All other stuff before debugger..");
 	// Set up debug stuff.
 	const debugProvider = new DebugConfigProvider(sdks, analytics, flutterDaemon && flutterDaemon.deviceManager);
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
