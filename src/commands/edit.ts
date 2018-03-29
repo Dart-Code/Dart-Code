@@ -2,6 +2,7 @@ import * as as from "../analysis/analysis_server_types";
 import * as editors from "../editors";
 import * as vs from "vscode";
 import { Analyzer } from "../analysis/analyzer";
+import { config } from "../config";
 
 export class EditCommands implements vs.Disposable {
 	private context: vs.ExtensionContext;
@@ -16,6 +17,7 @@ export class EditCommands implements vs.Disposable {
 			vs.commands.registerCommand("dart.organizeDirectives", this.organizeDirectives, this),
 			vs.commands.registerCommand("dart.sortMembers", this.sortMembers, this),
 			vs.commands.registerCommand("_dart.applySourceChange", this.applyEdits, this),
+			vs.workspace.onWillSaveTextDocument((e) => this.willSaveTextDocument(e), this),
 		);
 	}
 
@@ -25,6 +27,31 @@ export class EditCommands implements vs.Disposable {
 
 	private sortMembers(): Thenable<void> {
 		return this.sendEdit(this.analyzer.editSortMembers, "Sort Members");
+	}
+
+	private willSaveTextDocument(e: vs.TextDocumentWillSaveEvent) {
+		// Don't do if setting is not enabled.
+		if (!config.organizeDirectivesOnSave
+			|| e.reason !== vs.TextDocumentSaveReason.Manual)
+			return;
+
+		const analyzer = this.analyzer;
+		async function getEdits(): Promise<vs.TextEdit[]> {
+			const response = await analyzer.editOrganizeDirectives({ file: e.document.fileName });
+			const edit = response.edit;
+			if (edit.edits.length === 0)
+				return;
+
+			return edit.edits.map((edit) => {
+				const range = new vs.Range(
+					e.document.positionAt(edit.offset),
+					e.document.positionAt(edit.offset + edit.length),
+				);
+				return new vs.TextEdit(range, edit.replacement);
+			});
+		}
+
+		e.waitUntil(getEdits());
 	}
 
 	private async sendEdit(f: (a: { file: string }) => Thenable<{ edit: as.SourceFileEdit }>, commandName: string): Promise<void> {
