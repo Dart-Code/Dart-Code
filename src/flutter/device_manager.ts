@@ -9,7 +9,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	public currentDevice: f.Device = null;
 
 	constructor(daemon: FlutterDaemon) {
-		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 0);
+		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
 		this.statusBarItem.tooltip = "Flutter";
 		this.statusBarItem.show();
 		this.updateStatusBar();

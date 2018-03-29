@@ -19,6 +19,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		super();
 
 		this.sendStdOutToConsole = false;
+		this.pollforMemoryMs = 1000;
 	}
 
 	protected initializeRequest(
