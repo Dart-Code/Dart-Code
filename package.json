@@ -511,7 +511,7 @@
 				},
 				"dart.organizeDirectivesOnSave": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "Whether to automatically execute Organize Directives when saving files.",
 					"scope": "window"
 				},
