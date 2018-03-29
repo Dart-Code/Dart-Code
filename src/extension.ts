@@ -485,7 +485,7 @@ function getAnalyzerSettings() {
 		+ config.flutterSdkPaths
 		+ config.flutterDaemonLogFile
 		+ config.closingLabels
-		+ config.previewAnalyzeAngularTemplates
+		+ config.analyzeAngularTemplates
 		+ config.previewDart2;
 }
 
