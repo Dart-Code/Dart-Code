@@ -509,6 +509,12 @@
 					"description": "Whether to enable analysis for AngularDart templates (requires the angular_analyzer_plugin).",
 					"scope": "window"
 				},
+				"dart.organizeDirectivesOnSave": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to automatically execute Organize Directives when saving files.",
+					"scope": "window"
+				},
 				"dart.previewDart2": {
 					"description": "Whether to enable previewing Dart 2.0 functionality such as optional new/const.\n\ntrue: send --preview-dart-2\nfalse: send --no-preview-dart-2\nundefined: do not send a flag",
 					"scope": "window"
