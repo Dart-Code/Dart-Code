@@ -69,7 +69,7 @@ export class EditCommands implements vs.Disposable {
 		try {
 			const response = await f({ file: document.fileName });
 
-			const edit: as.SourceFileEdit = response.edit;
+			const edit = response.edit;
 			if (edit.edits.length === 0)
 				return;
 
