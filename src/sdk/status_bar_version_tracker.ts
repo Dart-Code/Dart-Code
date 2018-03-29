@@ -23,7 +23,7 @@ export class StatusBarVersionTracker implements vs.Disposable {
 	}
 
 	private addStatusBarItem(text: string, tooltip: string, command: string) {
-		const statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
+		const statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 2);
 		statusBarItem.text = text;
 		statusBarItem.tooltip = tooltip;
 		statusBarItem.command = command;

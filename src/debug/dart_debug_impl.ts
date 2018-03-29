@@ -34,6 +34,7 @@ export class DartDebugSession extends DebugSession {
 	private packageMap: PackageMap;
 	private localPackageName: string;
 	protected sendStdOutToConsole: boolean = true;
+	protected pollforMemoryMs?: number; // If set, will poll for memory usage and send events back.
 
 	public constructor() {
 		super();
@@ -201,6 +202,10 @@ export class DartDebugSession extends DebugSession {
 						);
 					}));
 				}
+
+				// Set a timer for memory updates.
+				if (this.pollforMemoryMs)
+					setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs);
 
 				// TODO: Handle errors (such as these failing because we sent them too early).
 				// https://github.com/Dart-Code/Dart-Code/issues/790
@@ -815,6 +820,32 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		return null;
+	}
+
+	private async pollForMemoryUsage(): Promise<void> {
+		if (!this.childProcess || this.childProcess.killed)
+			return;
+
+		const result = await this.observatory.getVM();
+		const vm = result.result as VM;
+
+		const promises: Array<Promise<DebuggerResult>> = [];
+
+		const isolatePromises = vm.isolates.map((isolateRef) => this.observatory.getIsolate(isolateRef.id));
+		const isolatesResponses = await Promise.all(isolatePromises);
+		const isolates = isolatesResponses.map((response) => response.result as VMIsolate);
+
+		let current = 0;
+		let total = 0;
+
+		for (const isolate of isolates) {
+			current += isolate._heaps.new.used + isolate._heaps.new.external;
+			total += isolate._heaps.new.capacity + isolate._heaps.new.external;
+		}
+
+		this.sendEvent(new Event("dart.debugMetrics", { memory: { current, total } }));
+
+		setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs);
 	}
 
 	protected log(obj: string) {

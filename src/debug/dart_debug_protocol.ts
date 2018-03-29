@@ -54,6 +54,7 @@ export interface VMIsolate extends VMResponse {
 	runnable: boolean;
 	pauseEvent: VMEvent;
 	libraries: VMLibraryRef[];
+	_heaps?: { new: VMHeapSpace, old: VMHeapSpace };
 }
 
 export interface VMObjectRef extends VMResponse {
@@ -63,6 +64,13 @@ export interface VMObjectRef extends VMResponse {
 export interface VMStack extends VMResponse {
 	frames: VMFrame[];
 	asyncCausalFrames?: VMFrame[];
+}
+
+export interface VMHeapSpace extends VMResponse {
+	name: string;
+	used: number;
+	capacity: number;
+	external: number;
 }
 
 export interface VMFrame extends VMResponse {

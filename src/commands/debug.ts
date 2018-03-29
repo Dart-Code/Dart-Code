@@ -23,11 +23,12 @@ export class DebugCommands {
 	private currentDebugSession: vs.DebugSession;
 	private progressPromise: PromiseCompleter<void>;
 	private reloadStatus = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left);
+	private debugMetrics = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 0);
 	private observatoryUri: string = null;
 
 	constructor(context: vs.ExtensionContext, analytics: Analytics) {
 		this.analytics = analytics;
-		context.subscriptions.push(this.reloadStatus);
+		context.subscriptions.push(this.reloadStatus, this.debugMetrics);
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
 			if (e.event === "dart.progress") {
 				if (e.body.message) {
@@ -70,6 +71,12 @@ export class DebugCommands {
 			} else if (e.event === "dart.flutter.firstFrame") {
 				// Send the current value to ensure it persists for the user.
 				this.sendAllServiceSettings();
+			} else if (e.event === "dart.debugMetrics") {
+				const memory = e.body.memory;
+				const message = `${Math.ceil(memory.current / 1024 / 1024)}MB of ${Math.ceil(memory.total / 1024 / 1024)}MB`;
+				this.debugMetrics.text = message;
+				this.debugMetrics.tooltip = "This is the amount of memory being consumed by your application out of what has been allocated.";
+				this.debugMetrics.show();
 			}
 		}));
 		let debugSessionStart: Date;
@@ -87,6 +94,7 @@ export class DebugCommands {
 				if (this.progressPromise)
 					this.progressPromise.resolve();
 				this.reloadStatus.hide();
+				this.debugMetrics.hide();
 				const debugSessionEnd = new Date();
 				this.disableAllServiceExtensions();
 				analytics.logDebugSessionDuration(debugSessionEnd.getTime() - debugSessionStart.getTime());
