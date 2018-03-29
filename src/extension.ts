@@ -187,7 +187,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const renameProvider = new DartRenameProvider(analyzer);
 
 	const activeFileFilters = [DART_MODE];
-	if (config.previewAnalyzeAngularTemplates) {
+	if (config.analyzeAngularTemplates && analyzer.capabilities.supportsAnalyzingHtmlFiles) {
 		// Analyze Angular2 templates, requires the angular_analyzer_plugin.
 		activeFileFilters.push(HTML_MODE);
 	}
