@@ -54,6 +54,7 @@ export function toPosition(location: Location): Position {
 
 export function toRange(location: Location): Range {
 	const startPos = toPosition(location);
+	// TODO: Is this translation valid? Does it wrap lines correctly?
 	return new Range(startPos, startPos.translate(0, location.length));
 }
 
