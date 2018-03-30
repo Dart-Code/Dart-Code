@@ -72,5 +72,6 @@ script:
   - npm test
 
 after_script:
+  - ls -l coverage
   - ./cc-test-reporter after-build --prefix ../../ --exit-code $TRAVIS_TEST_RESULT
   - npm run post_result_to_chat
