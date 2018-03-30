@@ -10,9 +10,10 @@ import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
-import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolder, isFlutterWorkspaceFolder, ProjectType, Sdks } from "../utils";
+import { isFlutterWorkspaceFolder, ProjectType, Sdks } from "../utils";
 import * as util from "../utils";
 import * as channels from "./channels";
+import { showFlutterActivationFailure, dartPubPath, flutterPath } from "../sdk/utils";
 
 const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
 
@@ -69,7 +70,7 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", (selection) => {
 			if (!sdks.flutter) {
-				util.showFlutterActivationFailure("flutter.doctor");
+				showFlutterActivationFailure("flutter.doctor");
 				return;
 			}
 			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
@@ -112,7 +113,7 @@ export class SdkCommands {
 
 		// If there's only one folder, just use it to avoid prompting the user.
 		if (!folder && vs.workspace.workspaceFolders) {
-			const allowedProjects = getDartWorkspaceFolders();
+			const allowedProjects = util.getDartWorkspaceFolders();
 			if (allowedProjects.length === 1)
 				folder = allowedProjects[0].uri.fsPath;
 		}
@@ -121,7 +122,7 @@ export class SdkCommands {
 			? Promise.resolve(folder)
 			// TODO: Can we get this filtered?
 			// https://github.com/Microsoft/vscode/issues/39132
-			: vs.window.showWorkspaceFolderPick({ placeHolder }).then((f) => f && isDartWorkspaceFolder(f) && f.uri.fsPath); // TODO: What if the user didn't pick anything?
+			: vs.window.showWorkspaceFolderPick({ placeHolder }).then((f) => f && util.isDartWorkspaceFolder(f) && f.uri.fsPath); // TODO: What if the user didn't pick anything?
 	}
 
 	private runFlutter(command: string, selection?: vs.Uri): Thenable<number> {
@@ -187,7 +188,7 @@ export class SdkCommands {
 
 	private async createFlutterProject(): Promise<void> {
 		if (!this.sdks || !this.sdks.flutter) {
-			util.showFlutterActivationFailure("flutter.newProject");
+			showFlutterActivationFailure("flutter.newProject");
 			return;
 		}
 

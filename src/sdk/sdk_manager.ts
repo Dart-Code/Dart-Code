@@ -1,8 +1,9 @@
 import * as vs from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { hasDartExecutable, getSdkVersion, Sdks, versionIsAtLeast, hasFlutterExecutable, dartVMPath, flutterPath } from "../utils";
+import { getSdkVersion, Sdks, versionIsAtLeast } from "../utils";
 import { config } from "../config";
+import { dartVMPath, flutterPath } from "./utils";
 
 abstract class SdkManager {
 	protected sdks: Sdks;
