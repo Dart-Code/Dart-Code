@@ -38,7 +38,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		this.updateStatusBar();
 	}
 
-	public changeDevice() {
+	public async changeDevice(): Promise<void> {
 		const devices = this.devices
 			.sort(this.deviceSortComparer.bind(this))
 			.map((d) => ({
@@ -47,8 +47,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 				device: d,
 				label: d.name,
 			}));
-		vs.window.showQuickPick(devices, { placeHolder: "Select a device to use" })
-			.then((d) => { if (d) { this.currentDevice = d.device; this.updateStatusBar(); } });
+		const d = await vs.window.showQuickPick(devices, { placeHolder: "Select a device to use" });
+		if (d) {
+			this.currentDevice = d.device;
+			this.updateStatusBar();
+		}
 	}
 
 	public deviceSortComparer(d1: f.Device, d2: f.Device): number {
