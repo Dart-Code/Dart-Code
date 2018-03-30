@@ -186,11 +186,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(diagnostics);
 	const diagnosticsProvider = new DartDiagnosticProvider(analyzer, diagnostics);
 
-	// Set the root...
-	// Handle project changes that might affect SDKs.
-	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => {
-		recalculateAnalysisRoots();
-	}));
+	// Set the roots, handling project changes that might affect SDKs.
+	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => recalculateAnalysisRoots()));
 	if (vs.workspace.workspaceFolders)
 		recalculateAnalysisRoots();
 
@@ -205,6 +202,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	}
 
 	util.logTime("All other stuff before debugger..");
+
 	// Set up debug stuff.
 	const debugProvider = new DebugConfigProvider(sdks, analytics, flutterDaemon && flutterDaemon.deviceManager);
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
