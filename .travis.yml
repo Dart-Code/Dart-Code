@@ -14,6 +14,13 @@ env:
     - CC_TEST_REPORTER_ID=c923ee28c767fab893630ca20ea78949069bbeb216ecf65a5fc8bc24ea3e3f18
 
 addons:
+  artifacts:
+    debug: true
+    working_dir: .test_results
+    target_paths:
+      - /$TRAVIS_OS_NAME/$TRAVIS_BRANCH/
+
+addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
