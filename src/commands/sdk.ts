@@ -92,18 +92,18 @@ export class SdkCommands {
 		}));
 	}
 
-	private runCommandForWorkspace(
+	private async runCommandForWorkspace(
 		handler: (folder: string, command: string, shortPath: string) => Thenable<number>,
 		placeHolder: string,
 		command: string,
 		selection?: vs.Uri,
-	): Thenable<number> {
+	): Promise<number> {
 
-		return this.getWorkspace(placeHolder, selection).then((f) => {
-			const workspacePath = vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri.fsPath;
-			const shortPath = path.join(path.basename(f), path.relative(f, workspacePath));
-			return handler(f, command, shortPath);
-		});
+		const f = await this.getWorkspace(placeHolder, selection);
+
+		const workspacePath = vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri.fsPath;
+		const shortPath = path.join(path.basename(f), path.relative(f, workspacePath));
+		return handler(f, command, shortPath);
 	}
 
 	private async getWorkspace(placeHolder: string, selection?: vs.Uri): Promise<string> {
