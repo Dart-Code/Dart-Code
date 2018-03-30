@@ -27,16 +27,15 @@ function prompt(context: vs.ExtensionContext, key: string, prompt: () => Thenabl
 	return false;
 }
 
-function promptForClosingLabelsDisabled(): PromiseLike<boolean> {
-	return vs.window.showInformationMessage(
+async function promptForClosingLabelsDisabled(): Promise<boolean> {
+	const res = await vs.window.showInformationMessage(
 		"Please consider providing feedback about Closing Labels so it may be improved",
 		"Open Feedback Issue on GitHub",
-	).then((res) => {
-		if (res) {
-			openInBrowser("https://github.com/Dart-Code/Dart-Code/issues/445");
-		}
-		return true; // Always mark this as done; we don't want to re-prompt if the user clicks Close.
-	});
+	);
+	if (res) {
+		openInBrowser("https://github.com/Dart-Code/Dart-Code/issues/445");
+	}
+	return true; // Always mark this as done; we don't want to re-prompt if the user clicks Close.
 }
 
 function error(err: any) {
