@@ -33,8 +33,7 @@ export class OpenFileTracker {
 		// Set priority files.
 		this.analyzer.analysisSetPriorityFiles({
 			files: priorityFiles,
-			// tslint:disable-next-line:no-empty
-		}).then(() => { }, util.logError);
+		}).then(() => { }, util.logError); // tslint:disable-line:no-empty
 
 		// Set subscriptions.
 		if (this.analyzer.capabilities.supportsClosingLabels) {
@@ -44,7 +43,7 @@ export class OpenFileTracker {
 					OCCURRENCES: priorityFiles,
 					OUTLINE: priorityFiles,
 				},
-			});
+			}).then(() => { }, util.logError); // tslint:disable-line:no-empty
 		} else {
 			this.analyzer.analysisSetSubscriptions({
 				subscriptions: {
@@ -52,7 +51,7 @@ export class OpenFileTracker {
 					OCCURRENCES: priorityFiles,
 					OUTLINE: priorityFiles,
 				},
-			});
+			}).then(() => { }, util.logError); // tslint:disable-line:no-empty
 		}
 	}
 }
