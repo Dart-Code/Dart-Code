@@ -195,11 +195,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		recalculateAnalysisRoots();
 
 	// Hook editor changes to send updated contents to analyzer.
-	const fileChangeHandler = new FileChangeHandler(analyzer);
-	context.subscriptions.push(vs.workspace.onDidOpenTextDocument((td) => fileChangeHandler.onDidOpenTextDocument(td)));
-	context.subscriptions.push(vs.workspace.onDidChangeTextDocument((e) => fileChangeHandler.onDidChangeTextDocument(e)));
-	context.subscriptions.push(vs.workspace.onDidCloseTextDocument((td) => fileChangeHandler.onDidCloseTextDocument(td)));
-	vs.workspace.textDocuments.forEach((td) => fileChangeHandler.onDidOpenTextDocument(td)); // Handle already-open files.
+	context.subscriptions.push(new FileChangeHandler(analyzer));
 
 	// Fire up Flutter daemon if required.
 	if (sdks.projectType === util.ProjectType.Flutter) {
