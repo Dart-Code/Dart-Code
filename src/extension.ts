@@ -44,6 +44,7 @@ import { RefactorCommands } from "./commands/refactor";
 import { checkForSdkUpdates } from "./sdk/update_check";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
 import { findPackageRoots } from "./analysis/utils";
+import { flutterPath, dartVMPath, analyzerSnapshotPath, handleMissingSdks, findSdks } from "./sdk/utils";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
@@ -85,37 +86,12 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	util.logTime();
 	checkForProjectsInSubFolders();
 	util.logTime("checkForProjectsInSubFolders");
-	const sdks = util.findSdks();
+	const sdks = findSdks();
 	util.logTime("findSdks");
 	analytics = new Analytics(sdks);
 	if (!sdks.dart || (sdks.projectType === util.ProjectType.Flutter && !sdks.flutter)) {
-		// HACK: In order to provide a more useful message if the user was trying to fun flutter.createProject
-		// we need to hook the command and force the project type to Flutter to get the correct error message.
-		// This can be reverted and improved if Code adds support for providing activation context:
-		//     https://github.com/Microsoft/vscode/issues/44711
-		let commandToReRun: string;
-		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => {
-			sdks.projectType = util.ProjectType.Flutter;
-			commandToReRun = "flutter.createProject";
-		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", (_) => {
-			sdks.projectType = util.ProjectType.Flutter;
-			commandToReRun = "flutter.doctor";
-		}));
-		// Wait a while before showing the error to allow the code above to have run.
-		setTimeout(() => {
-			if (sdks.projectType === util.ProjectType.Flutter) {
-				if (sdks.flutter && !sdks.dart) {
-					util.showFluttersDartSdkActivationFailure();
-				} else {
-					util.showFlutterActivationFailure(commandToReRun);
-				}
-			} else {
-				util.showDartActivationFailure();
-			}
-			analytics.logSdkDetectionFailure();
-		}, 250);
-		return; // Don't set anything else up; we can't work like this!
+		// Don't set anything else up; we can't work like this!
+		return handleMissingSdks(context, analytics, sdks);
 	}
 
 	// Show the SDK version in the status bar.
@@ -129,13 +105,13 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Fire up the analyzer process.
 	const analyzerStartTime = new Date();
-	const analyzerPath = config.analyzerPath || path.join(sdks.dart, util.analyzerPath);
+	const analyzerPath = config.analyzerPath || path.join(sdks.dart, analyzerSnapshotPath);
 	if (!fs.existsSync(analyzerPath)) {
 		vs.window.showErrorMessage("Could not find a Dart Analysis Server at " + analyzerPath);
 		return;
 	}
 
-	analyzer = new Analyzer(path.join(sdks.dart, util.dartVMPath), analyzerPath);
+	analyzer = new Analyzer(path.join(sdks.dart, dartVMPath), analyzerPath);
 	context.subscriptions.push(analyzer);
 
 	// Log analysis server startup time when we get the welcome message/version.
@@ -227,7 +203,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Fire up Flutter daemon if required.
 	if (sdks.projectType === util.ProjectType.Flutter) {
-		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, util.flutterPath), sdks.flutter);
+		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, flutterPath), sdks.flutter);
 		context.subscriptions.push(flutterDaemon);
 		setUpHotReloadOnSave(context, diagnostics);
 	}
