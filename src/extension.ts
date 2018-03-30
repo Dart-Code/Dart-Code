@@ -258,12 +258,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
 		});
 
-		// Hook open/active file changes so we can set priority files with the analyzer.
-		const openFileTracker = new OpenFileTracker(analyzer);
-		context.subscriptions.push(vs.workspace.onDidOpenTextDocument((td) => openFileTracker.updatePriorityFiles()));
-		context.subscriptions.push(vs.workspace.onDidCloseTextDocument((td) => openFileTracker.updatePriorityFiles()));
-		context.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => openFileTracker.updatePriorityFiles()));
-		openFileTracker.updatePriorityFiles(); // Handle already-open files.
+		context.subscriptions.push(new OpenFileTracker(analyzer));
 	});
 
 	// Handle config changes so we can reanalyze if necessary.

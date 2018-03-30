@@ -1,12 +1,17 @@
-import { window, workspace, TextDocument } from "vscode";
+import { window, workspace, TextDocument, Disposable } from "vscode";
 import { Analyzer } from "./analyzer";
 import * as util from "../utils";
 
-export class OpenFileTracker {
+export class OpenFileTracker implements Disposable {
+	private disposables: Disposable[] = [];
 	private analyzer: Analyzer;
 	private lastPriorityFiles: string[] = [];
 	constructor(analyzer: Analyzer) {
 		this.analyzer = analyzer;
+		this.disposables.push(workspace.onDidOpenTextDocument((td) => this.updatePriorityFiles()));
+		this.disposables.push(workspace.onDidCloseTextDocument((td) => this.updatePriorityFiles()));
+		this.disposables.push(window.onDidChangeActiveTextEditor((e) => this.updatePriorityFiles()));
+		this.updatePriorityFiles(); // Handle already-open files.
 	}
 
 	public updatePriorityFiles() {
@@ -53,5 +58,9 @@ export class OpenFileTracker {
 				},
 			}).then(() => { }, util.logError); // tslint:disable-line:no-empty
 		}
+	}
+
+	public dispose(): any {
+		this.disposables.forEach((d) => d.dispose());
 	}
 }
