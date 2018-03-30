@@ -41,6 +41,7 @@ import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForProjectsInSubFolders } from "./project";
 import { RefactorCodeActionProvider } from "./providers/refactor_code_action_provider";
 import { RefactorCommands } from "./commands/refactor";
+import { checkForSdkUpdates } from "./sdk/update_check";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
@@ -122,19 +123,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		const statusBarVersionTracker = new StatusBarVersionTracker(sdks.projectType, dartSdkVersion, flutterSdkVersion);
 		context.subscriptions.push(statusBarVersionTracker);
 
-		// Do update-check.
-		if (config.checkForSdkUpdates && sdks.projectType === util.ProjectType.Dart) {
-			util.getLatestSdkVersion().then((version) => {
-				if (!util.versionIsAtLeast(dartSdkVersion, version))
-					vs.window.showWarningMessage(
-						`Version ${version} of the Dart SDK is available (you have ${dartSdkVersion}). Some features of Dart Code may not work correctly with an old SDK.`,
-						"Go to Dart Downloads",
-					).then((selectedItem) => {
-						if (selectedItem)
-							util.openInBrowser(util.DART_DOWNLOAD_URL);
-					});
-			}, util.logError);
-		}
+		checkForSdkUpdates(sdks, dartSdkVersion);
 
 		analytics.sdkVersion = dartSdkVersion;
 	}
