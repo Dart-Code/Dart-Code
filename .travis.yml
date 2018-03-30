@@ -16,7 +16,8 @@ env:
 addons:
   artifacts:
     debug: true
-    working_dir: .test_results
+    paths:
+      - $(ls .test_results/*.xml | tr "\n" ":")
     target_paths:
       - /$TRAVIS_OS_NAME/$TRAVIS_BRANCH/
   apt:
