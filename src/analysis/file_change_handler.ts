@@ -4,10 +4,19 @@ import { Analyzer } from "./analyzer";
 import * as as from "./analysis_server_types";
 import * as util from "../utils";
 
-export class FileChangeHandler {
+export class FileChangeHandler implements vs.Disposable {
+	private disposables: vs.Disposable[] = [];
 	private analyzer: Analyzer;
 	constructor(analyzer: Analyzer) {
 		this.analyzer = analyzer;
+
+		this.disposables.push(
+			vs.workspace.onDidOpenTextDocument((td) => this.onDidOpenTextDocument(td)),
+			vs.workspace.onDidChangeTextDocument((e) => this.onDidChangeTextDocument(e)),
+			vs.workspace.onDidCloseTextDocument((td) => this.onDidCloseTextDocument(td)),
+		);
+		// Handle already-open files.
+		vs.workspace.textDocuments.forEach((td) => this.onDidOpenTextDocument(td));
 	}
 
 	public onDidOpenTextDocument(document: vs.TextDocument) {
@@ -81,5 +90,9 @@ export class FileChangeHandler {
 			offset: document.offsetAt(change.range.start),
 			replacement: change.text,
 		};
+	}
+
+	public dispose(): any {
+		this.disposables.forEach((d) => d.dispose());
 	}
 }
