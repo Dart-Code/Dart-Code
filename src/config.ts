@@ -17,8 +17,9 @@ class Config {
 		return this.config.get<T>(key);
 	}
 
-	private setConfig<T>(key: string, value: T, target: ConfigurationTarget): Thenable<void> {
-		return this.config.update(key, value, target).then(() => this.loadConfig());
+	private async setConfig<T>(key: string, value: T, target: ConfigurationTarget): Promise<void> {
+		await this.config.update(key, value, target);
+		this.loadConfig();
 	}
 
 	get allowAnalytics() { return this.getConfig<boolean>("allowAnalytics"); }
