@@ -42,6 +42,7 @@ import { checkForProjectsInSubFolders } from "./project";
 import { RefactorCodeActionProvider } from "./providers/refactor_code_action_provider";
 import { RefactorCommands } from "./commands/refactor";
 import { checkForSdkUpdates } from "./sdk/update_check";
+import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
@@ -120,12 +121,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const dartSdkVersion = util.getSdkVersion(sdks.dart);
 	const flutterSdkVersion = util.getSdkVersion(sdks.flutter);
 	if (dartSdkVersion) {
-		const statusBarVersionTracker = new StatusBarVersionTracker(sdks.projectType, dartSdkVersion, flutterSdkVersion);
-		context.subscriptions.push(statusBarVersionTracker);
-
-		checkForSdkUpdates(sdks, dartSdkVersion);
-
 		analytics.sdkVersion = dartSdkVersion;
+		checkForSdkUpdates(sdks, dartSdkVersion);
+		context.subscriptions.push(new StatusBarVersionTracker(sdks.projectType, dartSdkVersion, flutterSdkVersion));
 	}
 
 	// Fire up the analyzer process.
@@ -230,30 +228,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	if (sdks.projectType === util.ProjectType.Flutter) {
 		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, util.flutterPath), sdks.flutter);
 		context.subscriptions.push(flutterDaemon);
-
-		let hotReloadDelayTimer: NodeJS.Timer;
-		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
-			// Don't do if setting is not enabled.
-			if (!config.flutterHotReloadOnSave)
-				return;
-
-			// Don't do if we have errors for the saved file.
-			const errors = diagnostics.get(td.uri);
-			const hasErrors = errors && errors.find((d) => d.severity === vs.DiagnosticSeverity.Error) != null;
-			if (hasErrors)
-				return;
-
-			// Debounce to avoid reloading multiple times during multi-file-save (Save All).
-			// Hopefully we can improve in future: https://github.com/Microsoft/vscode/issues/42913
-			if (hotReloadDelayTimer) {
-				clearTimeout(hotReloadDelayTimer);
-				hotReloadDelayTimer = null;
-			}
-			hotReloadDelayTimer = setTimeout(() => {
-				hotReloadDelayTimer = null;
-				vs.commands.executeCommand("flutter.hotReload");
-			}, 200);
-		}));
+		setUpHotReloadOnSave(context, diagnostics);
 	}
 
 	util.logTime("All other stuff before debugger..");
