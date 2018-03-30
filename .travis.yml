@@ -15,10 +15,15 @@ env:
 
 addons:
   apt:
+    sources:
+      - ubuntu-toolchain-r-test
     packages:
       - libsecret-1-dev
       - libstdc++6
       - gcc-4.9
+      - g++-4.9
+      - gcc-4.9-multilib
+      - g++-4.9-multilib
 
 before_install:
   - mkdir with\ spaces
