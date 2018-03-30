@@ -19,8 +19,6 @@ addons:
     working_dir: .test_results
     target_paths:
       - /$TRAVIS_OS_NAME/$TRAVIS_BRANCH/
-
-addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
