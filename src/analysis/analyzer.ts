@@ -95,14 +95,13 @@ export class Analyzer extends AnalyzerGen {
 		return !message.startsWith("--- ") && !message.startsWith("+++ ");
 	}
 
-	private requestDiagnosticsUpdate() {
+	private async requestDiagnosticsUpdate() {
 		this.lastDiagnostics = null;
 
 		if (!this.capabilities.supportsDiagnostics)
 			return;
 
-		this.diagnosticGetDiagnostics()
-			.then((resp) => this.lastDiagnostics = resp.contexts);
+		this.lastDiagnostics = (await this.diagnosticGetDiagnostics()).contexts;
 	}
 
 	public getLastDiagnostics(): as.ContextData[] {
