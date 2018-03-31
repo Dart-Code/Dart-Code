@@ -9,7 +9,7 @@ deploy:
   secret_access_key:
     secure: Kqh0mg85kGAE2roKfIiMOQXjjbR9ib+uCwBaI11H0JfygkVP27adHUF3JYwqa9AE
   bucket: dart-code-test-results
-  region: eu-west-1
+  region: us-east-1
   set_public: true
   folder: $APPVEYOR_REPO_BRANCH/win
   artifact: test-results
