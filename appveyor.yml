@@ -15,7 +15,7 @@ deploy:
   artifact: test-results
 
 artifacts:
-  # Folder is renamed from .test-results in after_test
+  # Folder is renamed from .test-_esults in after_test
   - path: win\*.xml
     name: test-results
 
@@ -52,9 +52,8 @@ test_script:
   - npm test
 
 after_test:
-  # Rename .test-results to win otherwise .test-results shows up in S3 folder name
-  - dir
-  - ren .test-results win
+  # Rename .test_results to win otherwise .test-results shows up in S3 folder name
+  - ren .test_results win
 
 on_failure:
   - ps: $env:APPVEYOR_RESULT = 1
