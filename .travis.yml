@@ -20,7 +20,7 @@ addons:
     paths:
       - $(ls . *.xml | tr "\n" ":")
     target_paths:
-      - /$TRAVIS_OS_NAME/$TRAVIS_BRANCH/
+      - /$TRAVIS_BRANCH/$TRAVIS_OS_NAME/
     acl: public_read
   apt:
     sources:
