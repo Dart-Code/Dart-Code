@@ -3,6 +3,7 @@
 .nyc_output/
 .packages
 .pub/
+.test_results/
 .vscode-test/
 .vscode/.browse.VC.db*
 *.log

@@ -2,6 +2,7 @@
 .gitignore
 .nyc_output/**
 .travis.yml
+.test_results/**
 .vscode-test/**
 .vscode/**
 *.log
