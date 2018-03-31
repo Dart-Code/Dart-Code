@@ -8,7 +8,7 @@ deploy:
     secure: nQjpvf+MHWHTkWOMvX6/eNKByxvyRMUDJNGaE+m74OY=
   secret_access_key:
     secure: Kqh0mg85kGAE2roKfIiMOQXjjbR9ib+uCwBaI11H0JfygkVP27adHUF3JYwqa9AE
-  bucket: dart-code-test-results
+  bucket: test-results.dartcode.org
   region: us-east-1
   set_public: true
   folder: $(APPVEYOR_REPO_BRANCH)
