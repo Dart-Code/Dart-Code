@@ -11,7 +11,7 @@ deploy:
   bucket: dart-code-test-results
   region: eu-west-1
   set_public: true
-  folder: $APPVEYOR_REPO_BRANCH/$PLATFORM
+  folder: $APPVEYOR_REPO_BRANCH/win
   artifact: test-results
 
 artifacts:
