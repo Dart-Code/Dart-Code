@@ -1,7 +1,24 @@
 environment:
   CHAT_WEBHOOK_PATH:
     secure: Oawgup4p18hTqsE2qGz07QLvtL/xrDiGFmqs9ebmXATs6t/Mp6L/sVS0XbAgmXhuOtZ8Q3KDC//q0ViBEnNiaEcZg3cI3GGPchtIQYjAozEC+3d3SXQY9zcSymAPgYsmc1TOsC+3BbuYXskoTu6myDbRPfh2i0YuU2lr0SRRbGS+68fGhBiPhZtkS6DOfDfu
-    
+  
+deploy:
+  provider: S3
+  access_key_id:
+    secure: nQjpvf+MHWHTkWOMvX6/eNKByxvyRMUDJNGaE+m74OY=
+  secret_access_key:
+    secure: Kqh0mg85kGAE2roKfIiMOQXjjbR9ib+uCwBaI11H0JfygkVP27adHUF3JYwqa9AE
+  bucket: test-results.dartcode.org
+  region: us-east-1
+  set_public: true
+  folder: $(APPVEYOR_REPO_BRANCH)/$(APPVEYOR_REPO_COMMIT)
+  artifact: test-results
+
+artifacts:
+  # Folder is renamed from .test-_esults in after_test
+  - path: win\*.xml
+    name: test-results
+
 install:
   - ps: mkdir "with spaces"
   - ps: cd "with spaces"
@@ -32,7 +49,11 @@ build_script:
   - npm run lint --silent
 
 test_script:
-- npm test
+  - npm test
+
+after_test:
+  # Rename .test_results to win otherwise .test-results shows up in S3 folder name
+  - ren .test_results win
 
 on_failure:
   - ps: $env:APPVEYOR_RESULT = 1

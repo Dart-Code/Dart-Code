@@ -51,7 +51,7 @@ async function send_summary_message() {
 		const commitAuthor = pEnv.APPVEYOR_REPO_COMMIT_AUTHOR || pEnv.TRAVIS_COMMIT_AUTHOR;
 		const commitMessage = pEnv.APPVEYOR_REPO_COMMIT_MESSAGE || pEnv.TRAVIS_COMMIT_MESSAGE;
 		const branchName = pEnv.APPVEYOR_REPO_BRANCH || pEnv.TRAVIS_BRANCH;
-		const flavor = pEnv.TRAVIS_OS_NAME || "";
+		const flavor = pEnv.TRAVIS_OS_NAME || "win";
 		const buildName = `${flavor} BUILD`.trim().toUpperCase();
 
 		const message =
