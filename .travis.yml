@@ -33,7 +33,8 @@ deploy:
   upload_dir: $TRAVIS_BRANCH/$TRAVIS_OS_NAME
   skip_cleanup: true
   acl: public_read
-  all_branches: true
+  on:
+    all_branches: true
 
 before_install:
   - mkdir with\ spaces
