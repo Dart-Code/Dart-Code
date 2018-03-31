@@ -16,12 +16,12 @@ env:
 addons:
   artifacts:
     debug: true
+    acl: public_read
     working_dir: .test_results
     paths:
       - $(ls .test_results/*.xml | tr "\n" ":")
     target_paths:
       - /$TRAVIS_BRANCH/$TRAVIS_OS_NAME/
-    acl: public_read
   apt:
     sources:
       - ubuntu-toolchain-r-test
