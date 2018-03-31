@@ -65,11 +65,15 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	env.MOCHA_FORBID_ONLY = true;
 	env.CODE_TESTS_WORKSPACE = path.join(cwd, "test", "test_projects", workspaceFolder);
 	env.CODE_TESTS_PATH = path.join(cwd, "out", "test", testFolder);
-	if (codeVersion === "*")
-		codeVersion = "stable";
 	if (!fs.existsSync(".nyc_output"))
 		fs.mkdirSync(".nyc_output");
-	env.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testFolder.replace("/", "_")}_${codeVersion}_${(new Date()).getTime()}.json`);
+
+	// Figure out a filename for results...
+	const dartFriendlyName = sdkPaths === process.env.PATH_UNSTABLE ? "unstable" : "stable";
+	const codeFriendlyName = codeVersion === "*" ? "stable" : "insiders";
+
+	env.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testFolder.replace("/", "_")}_${dartFriendlyName}_${codeFriendlyName}.json`);
+	env.TEST_XML_OUTPUT = path.join(cwd, ".test_results", `${testFolder.replace("/", "_")}_${dartFriendlyName}_${codeFriendlyName}.xml`);
 	let res = await runNode(cwd, args, env);
 	if (!allowFailures)
 		exitCode = exitCode || res;
