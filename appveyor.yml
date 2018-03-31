@@ -53,7 +53,7 @@ test_script:
 
 after_test:
   # Rename .test-results to win otherwise .test-results shows up in S3 folder name
-  - ps: rename .test-results win
+  - ren .test-results win
 
 on_failure:
   - ps: $env:APPVEYOR_RESULT = 1
