@@ -18,7 +18,7 @@ addons:
     debug: true
     working_dir: .test_results
     paths:
-      - $(ls *.xml | tr "\n" ":")
+      - $(ls . *.xml | tr "\n" ":")
     target_paths:
       - /$TRAVIS_OS_NAME/$TRAVIS_BRANCH/
     acl: public_read
