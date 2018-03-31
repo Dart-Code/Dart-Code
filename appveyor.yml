@@ -14,8 +14,8 @@ deploy:
   folder: $APPVEYOR_REPO_BRANCH/$PLATFORM
   artifact: test-results
 
-  artifacts:
-  - path: '.test_results\*.xml'
+artifacts:
+  - path: .test_results\*.xml
     name: test-results
 
 install:
