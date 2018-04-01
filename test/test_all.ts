@@ -115,6 +115,15 @@ async function runAllTests(): Promise<void> {
 			await runTests("not_activated/flutter_create", "empty", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 		}
 	}
+
+	if (process.env.CI) {
+		const branchName = process.env.APPVEYOR_REPO_BRANCH || process.env.TRAVIS_BRANCH;
+		const commit = process.env.APPVEYOR_REPO_COMMIT || process.env.TRAVIS_COMMIT;
+
+		console.log("\n\n");
+		console.log(yellow("A combined test summary will be available at:"));
+		console.log(yellow(`  https://dartcode.org/test-results/?${branchName}/${commit}`));
+	}
 }
 
 runAllTests().then(() => process.exit(exitCode));
