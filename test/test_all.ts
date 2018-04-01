@@ -69,7 +69,7 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 		fs.mkdirSync(".nyc_output");
 
 	// Figure out a filename for results...
-	const dartFriendlyName = sdkPaths === process.env.PATH_UNSTABLE ? "unstable" : "stable";
+	const dartFriendlyName = sdkPaths === process.env.PATH_UNSTABLE ? "dev" : "stable";
 	const codeFriendlyName = codeVersion === "*" ? "stable" : "insiders";
 
 	env.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testFolder.replace("/", "_")}_${dartFriendlyName}_${codeFriendlyName}.json`);
