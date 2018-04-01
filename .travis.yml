@@ -14,15 +14,10 @@ env:
     - CC_TEST_REPORTER_ID=c923ee28c767fab893630ca20ea78949069bbeb216ecf65a5fc8bc24ea3e3f18
 addons:
   apt:
-    sources:
-      - ubuntu-toolchain-r-test
     packages:
       - libsecret-1-dev
       - libstdc++6
       - gcc-4.9
-      - g++-4.9
-      - gcc-4.9-multilib
-      - g++-4.9-multilib
 
 deploy:
   provider: s3
