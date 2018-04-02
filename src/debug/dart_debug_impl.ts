@@ -780,6 +780,7 @@ export class DartDebugSession extends DebugSession {
 				str = "";
 
 			return {
+				evaluateName: name,
 				indexedVariables: (val.kind.endsWith("List") ? val.length : null),
 				name,
 				type: val.class.name,
