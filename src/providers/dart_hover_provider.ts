@@ -42,6 +42,10 @@ export class DartHoverProvider implements HoverProvider {
 	private getHoverData(hover: as.HoverInformation): any {
 		if (!hover.elementDescription) return null;
 
+		// Import prefix tooltips are not useful currently.
+		// https://github.com/dart-lang/sdk/issues/32735
+		if (hover.elementKind === "import prefix") return null;
+
 		const elementDescription = hover.elementDescription;
 		const elementKind = hover.elementKind;
 		const dartdoc: string = hover.dartdoc;
