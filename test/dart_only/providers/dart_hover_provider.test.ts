@@ -51,30 +51,24 @@ describe("dart_hover_provider", () => {
 
 	it("returns expected information for a field", async () => {
 		const hover = await getHoverAt("num my^NumField");
-		// TODO: We don't want this
-		// https://github.com/Dart-Code/Dart-Code/issues/555
-		assert.equal(hover.displayText, "MyClass num myNumField");
+		assert.equal(hover.displayText, "num myNumField");
 		assert.equal(hover.documentation, "This is my num field.");
 		assert.deepStrictEqual(hover.range, rangeOf("num |myNumField|"));
 	});
 
 	it("returns expected information for a getter", async () => {
 		const hover = await getHoverAt("get my^NumGetter");
-		// TODO: We don't want this
-		// https://github.com/Dart-Code/Dart-Code/issues/555
-		assert.equal(hover.displayText, "MyClass get myNumGetter → num");
+		assert.equal(hover.displayText, "get myNumGetter → num");
 		assert.equal(hover.documentation, "This is my num getter.");
 		assert.deepStrictEqual(hover.range, rangeOf("get |myNumGetter|"));
 	});
 
 	it("returns expected information for a setter", async () => {
 		const hover = await getHoverAt("my^NumSetter(");
-		// TODO: We don't want this
-		// https://github.com/Dart-Code/Dart-Code/issues/555
 		if (ext.exports.analyzerCapabilities.isDart2) {
-			assert.equal(hover.displayText, "MyClass set myNumSetter(num value) → void");
+			assert.equal(hover.displayText, "set myNumSetter(num value) → void");
 		} else {
-			assert.equal(hover.displayText, "MyClass set myNumSetter(num value) → dynamic");
+			assert.equal(hover.displayText, "set myNumSetter(num value) → dynamic");
 		}
 		assert.equal(hover.documentation, "This is my num setter.");
 		assert.deepStrictEqual(hover.range, rangeOf("|myNumSetter|"));
@@ -103,21 +97,21 @@ describe("dart_hover_provider", () => {
 
 	it("returns expected information for a void returning method", async () => {
 		const hover = await getHoverAt("my^VoidReturningMethod()");
-		assert.equal(hover.displayText, "MyClass.myVoidReturningMethod() → void");
+		assert.equal(hover.displayText, "myVoidReturningMethod() → void");
 		assert.equal(hover.documentation, "This is my void returning method.");
 		assert.deepStrictEqual(hover.range, rangeOf("|myVoidReturningMethod|()"));
 	});
 
 	it("returns expected information for a string returning method", async () => {
 		const hover = await getHoverAt("my^StringReturningMethod()");
-		assert.equal(hover.displayText, "MyClass.myStringReturningMethod() → String");
+		assert.equal(hover.displayText, "myStringReturningMethod() → String");
 		assert.equal(hover.documentation, "This is my string returning method.");
 		assert.deepStrictEqual(hover.range, rangeOf("|myStringReturningMethod|()"));
 	});
 
 	it("returns expected information for a method taking a string", async () => {
 		const hover = await getHoverAt("me^thodTakingString(");
-		assert.equal(hover.displayText, "MyClass.methodTakingString(String a) → void");
+		assert.equal(hover.displayText, "methodTakingString(String a) → void");
 		assert.equal(hover.documentation, "This is my method taking a string.");
 		assert.deepStrictEqual(hover.range, rangeOf("|methodTakingString|"));
 	});
@@ -125,16 +119,17 @@ describe("dart_hover_provider", () => {
 	it("returns expected information for a method argument", async () => {
 		const hover = await getHoverAt("methodTakingString(String ^a");
 		assert.equal(hover.displayText, "String a");
-		// TODO: This feels like a bug?
-		// https://github.com/dart-lang/sdk/issues/32390
+		// Method args can't have their own docs so return the methods dartdoc.
 		assert.equal(hover.documentation, "This is my method taking a string.");
 		assert.deepStrictEqual(hover.range, rangeOf("methodTakingString(String |a|)"));
 	});
 
 	it("returns expected information for a method taking a function", async () => {
 		const hover = await getHoverAt("me^thodTakingFunction(");
-		assert.equal(hover.displayText, "MyClass.methodTakingFunction((String) → int myFunc) → void");
+		assert.equal(hover.displayText, "methodTakingFunction((String) → int myFunc) → void");
 		assert.equal(hover.documentation, "This is my method taking a function.");
 		assert.deepStrictEqual(hover.range, rangeOf("|methodTakingFunction|("));
 	});
+
+	it("displays the correct thing for a deprecated method");
 });
