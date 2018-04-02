@@ -13,7 +13,7 @@ const iconRegex = new RegExp(
 
 export function cleanDartdoc(doc: string): string {
 	if (!doc)
-		return null;
+		return "";
 
 	// Clean up some dart.core dartdoc.
 	const index = doc.indexOf("## Other resources");
