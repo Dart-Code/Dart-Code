@@ -56,13 +56,11 @@ export class DartHoverProvider implements HoverProvider {
 		const containingLibraryName = hover.containingLibraryName;
 
 		let displayString: string = "";
-		if (containingClassDescription && callable) displayString += containingClassDescription + ".";
-		if (containingClassDescription && field) displayString += containingClassDescription + " ";
 		if (elementDescription) displayString += (hover.isDeprecated ? "(deprecated) " : "") + `${elementDescription}\n`;
 		if (propagatedType) displayString += `propogated type: ${propagatedType.trim()}`;
 
 		let documentation = cleanDartdoc(dartdoc);
-		if (containingLibraryName) documentation = `_${containingLibraryName}_\r\n\r\n` + (documentation != null ? documentation : "");
+		if (containingLibraryName) documentation = `_${containingLibraryName}_\n\n` + documentation;
 
 		return {
 			displayString: displayString.trim(),
