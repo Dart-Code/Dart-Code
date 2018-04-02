@@ -48,6 +48,7 @@ export class DartDebugSession extends DebugSession {
 	): void {
 		response.body.supportsConfigurationDoneRequest = true;
 		response.body.supportsEvaluateForHovers = true;
+		response.body.supportsDelayedStackTraceLoading = true;
 		response.body.exceptionBreakpointFilters = [
 			{ filter: "All", label: "All Exceptions", default: false },
 			{ filter: "Unhandled", label: "Uncaught Exceptions", default: true },
