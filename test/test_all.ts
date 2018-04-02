@@ -102,8 +102,7 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 async function runAllTests(): Promise<void> {
 	// Don't run insiders on Travis until we have fixed it...
 	const codeVersions = process.env.TRAVIS_OS_NAME === "linux" ? ["*"] : ["*", "insiders"];
-	if ()
-		const sdkPaths = [process.env.PATH_STABLE || process.env.PATH, process.env.PATH_UNSTABLE].filter((p) => p);
+	const sdkPaths = [process.env.PATH_STABLE || process.env.PATH, process.env.PATH_UNSTABLE].filter((p) => p);
 	let runNumber = 1;
 	for (const codeVersion of codeVersions) {
 		for (const sdkPath of sdkPaths) {
