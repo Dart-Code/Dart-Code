@@ -144,7 +144,7 @@ export class DebugCommands {
 
 	private serviceSettings: { [id: string]: () => void } = {};
 	private sendServiceSetting(id: string) {
-		if (this.serviceSettings[id])
+		if (this.serviceSettings[id] && this.enabledServiceExtensions.indexOf(id) !== -1)
 			this.serviceSettings[id]();
 	}
 
