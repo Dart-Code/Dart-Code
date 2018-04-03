@@ -19,7 +19,6 @@ export class FlutterDebugSession extends DartDebugSession {
 		super();
 
 		this.sendStdOutToConsole = false;
-		this.pollforMemoryMs = 1000;
 	}
 
 	protected initializeRequest(
@@ -62,6 +61,10 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		if (args.args) {
 			appArgs = appArgs.concat(args.args);
+		}
+
+		if (args.flutterMode === "profile") {
+			this.pollforMemoryMs = 1000;
 		}
 
 		this.flutter = new FlutterRun(this.args.flutterPath, args.cwd, appArgs, this.args.flutterRunLogFile);
