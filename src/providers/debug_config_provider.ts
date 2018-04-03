@@ -154,6 +154,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || conf.flutterRunLogFile;
 			debugConfig.flutterTestLogFile = debugConfig.flutterTestLogFile || conf.flutterTestLogFile;
 			debugConfig.deviceId = debugConfig.deviceId || deviceId;
+			debugConfig.showMemoryUsage =
+				debugConfig.showMemoryUsage !== undefined && debugConfig.showMemoryUsage !== null
+					? debugConfig.showMemoryUsage
+					: debugConfig.flutterMode === "profile";
 		}
 	}
 
