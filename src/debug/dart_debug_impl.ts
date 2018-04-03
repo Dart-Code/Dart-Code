@@ -839,8 +839,10 @@ export class DartDebugSession extends DebugSession {
 		let total = 0;
 
 		for (const isolate of isolates) {
-			current += isolate._heaps.new.used + isolate._heaps.new.external;
-			total += isolate._heaps.new.capacity + isolate._heaps.new.external;
+			for (const heap of [isolate._heaps.old, isolate._heaps.new]) {
+				current += heap.used + heap.external;
+				total += heap.capacity + heap.external;
+			}
 		}
 
 		this.sendEvent(new Event("dart.debugMetrics", { memory: { current, total } }));
