@@ -200,7 +200,7 @@ export function getRandomTempFolder(): string {
 	return tmpPath;
 }
 
-export async function waitFor(action: () => boolean, milliseconds: number = 1000): Promise<void> {
+export async function waitFor(action: () => boolean, message?: string, milliseconds: number = 1000): Promise<void> {
 	let timeRemaining = milliseconds;
 	while (timeRemaining > 0) {
 		if (action())
@@ -208,7 +208,7 @@ export async function waitFor(action: () => boolean, milliseconds: number = 1000
 		await new Promise((resolve) => setTimeout(resolve, 100));
 		timeRemaining -= 100;
 	}
-	throw new Error("Action didn't return true within specified timeout");
+	throw new Error("Action didn't return true within specified timeout" + (message ? ` (${message})` : ""));
 }
 
 export async function waitForEditorChange(action: () => Thenable<void>): Promise<void> {
