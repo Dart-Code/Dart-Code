@@ -6,7 +6,6 @@ import { OpenFileTracker } from "../../src/analysis/open_file_tracker";
 describe("file tracker", () => {
 	before(() => activate());
 	it("has a tracked outline when a file is opened", async () => {
-		console.log("Closing all files");
 		await closeAllOpenFiles();
 		await waitFor(() => !OpenFileTracker.getOutlineFor(emptyFile), "Outline was already present");
 		await vs.workspace.openTextDocument(emptyFile);
