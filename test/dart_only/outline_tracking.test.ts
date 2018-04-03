@@ -9,12 +9,12 @@ describe("file tracker", () => {
 	it("has a tracked outline when a file is opened", async () => {
 		assert.ok(!OpenFileTracker.getOutlineFor(emptyFile));
 		await vs.workspace.openTextDocument(emptyFile);
-		waitFor(() => !!OpenFileTracker.getOutlineFor(emptyFile), 500);
+		waitFor(() => !!OpenFileTracker.getOutlineFor(emptyFile));
 	});
 	it("has no tracked outline when a file is closed", async () => {
 		const doc = await vs.workspace.openTextDocument(emptyFile);
-		waitFor(() => !!OpenFileTracker.getOutlineFor(emptyFile), 500);
+		waitFor(() => !!OpenFileTracker.getOutlineFor(emptyFile));
 		await closeFile(emptyFile);
-		waitFor(() => !OpenFileTracker.getOutlineFor(emptyFile), 500);
+		waitFor(() => !OpenFileTracker.getOutlineFor(emptyFile));
 	});
 });

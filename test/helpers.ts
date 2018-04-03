@@ -187,7 +187,7 @@ export function getRandomTempFolder(): string {
 	return tmpPath;
 }
 
-export async function waitFor(action: () => boolean, milliseconds: number): Promise<void> {
+export async function waitFor(action: () => boolean, milliseconds: number = 1000): Promise<void> {
 	let timeRemaining = milliseconds;
 	while (timeRemaining > 0) {
 		if (action())
@@ -201,5 +201,5 @@ export async function waitFor(action: () => boolean, milliseconds: number): Prom
 export async function waitForEditorChange(action: () => Thenable<void>): Promise<void> {
 	const oldVersion = doc.version;
 	await action();
-	await waitFor(() => doc.version !== oldVersion, 1000);
+	await waitFor(() => doc.version !== oldVersion);
 }
