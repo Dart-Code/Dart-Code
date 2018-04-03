@@ -30,7 +30,7 @@ describe("Extension", () => {
 		const sdks: Sdks = ext.exports.sdks;
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
-		console.log(JSON.stringify(sdks, undefined, 6).trim().slice(1, -1));
+		console.log("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
 	});
 	it("did not try to use Flutter's version of the Dart SDK", async () => {
 		await ext.activate();

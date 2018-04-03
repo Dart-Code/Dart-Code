@@ -20,7 +20,7 @@ testRunner.configure({
 	forbidOnly: !!process.env.MOCHA_FORBID_ONLY,
 	reporter: "mocha-multi-reporters",
 	reporterOptions: {
-		reporterEnabled: process.env.TEST_XML_OUTPUT ? "dot, xunit" : "dot",
+		reporterEnabled: process.env.TEST_XML_OUTPUT ? "spec, xunit" : "spec",
 		xunitReporterOptions: {
 			output: process.env.TEST_XML_OUTPUT,
 		},
