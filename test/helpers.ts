@@ -65,6 +65,7 @@ export function setTestContent(content: string): Thenable<boolean> {
 }
 
 export function positionOf(searchText: string): vs.Position {
+	const doc = vs.window.activeTextEditor.document;
 	const caretOffset = searchText.indexOf("^");
 	assert.notEqual(caretOffset, -1, `Couldn't find a ^ in search text (${searchText})`);
 	const matchedTextIndex = doc.getText().indexOf(searchText.replace("^", "").replace(/\n/g, eol));
@@ -74,6 +75,7 @@ export function positionOf(searchText: string): vs.Position {
 }
 
 export function rangeOf(searchText: string, inside?: vs.Range): vs.Range {
+	const doc = vs.window.activeTextEditor.document;
 	const startOffset = searchText.indexOf("|");
 	assert.notEqual(startOffset, -1, `Couldn't find a | in search text (${searchText})`);
 	const endOffset = searchText.lastIndexOf("|");
