@@ -63,7 +63,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			appArgs = appArgs.concat(args.args);
 		}
 
-		if (args.flutterMode === "profile") {
+		if (args.showMemoryUsage) {
 			this.pollforMemoryMs = 1000;
 		}
 
