@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import { ext, activate, emptyFile, closeAllOpenFiles, waitFor, closeFile, everythingFile } from "../helpers";
 import { OpenFileTracker } from "../../src/analysis/open_file_tracker";
 
-describe("file tracker", () => {
+describe.skip("file tracker", () => {
 	before(() => activate());
 	it("has a tracked outline when a file is opened", async () => {
 		await closeAllOpenFiles();
