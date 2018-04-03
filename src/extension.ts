@@ -254,7 +254,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(new RefactorCommands(context, analyzer));
 
 	// Register misc commands.
-	context.subscriptions.push(new TypeHierarchyCommand(context, analyzer));
+	context.subscriptions.push(new TypeHierarchyCommand(analyzer));
 	context.subscriptions.push(new GoToSuperCommand(analyzer));
 
 	// Register our view providers.
