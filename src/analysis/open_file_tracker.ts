@@ -1,4 +1,4 @@
-import { window, workspace, TextDocument, Disposable } from "vscode";
+import { window, workspace, TextDocument, Disposable, Uri } from "vscode";
 import { Analyzer } from "./analyzer";
 import * as util from "../utils";
 import { AnalysisOutlineNotification, Outline } from "./analysis_server_types";
@@ -70,8 +70,8 @@ export class OpenFileTracker implements Disposable {
 		}
 	}
 
-	public static getOutlineFor(file: string): Outline | undefined {
-		return outlines[file];
+	public static getOutlineFor(file: Uri): Outline | undefined {
+		return outlines[file.fsPath];
 	}
 
 	private recordOutline(outline: AnalysisOutlineNotification): void {
