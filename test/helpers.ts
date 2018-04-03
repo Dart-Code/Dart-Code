@@ -73,13 +73,17 @@ export function positionOf(searchText: string): vs.Position {
 	return doc.positionAt(matchedTextIndex + caretOffset);
 }
 
-export function rangeOf(searchText: string): vs.Range {
+export function rangeOf(searchText: string, inside?: vs.Range): vs.Range {
 	const startOffset = searchText.indexOf("|");
 	assert.notEqual(startOffset, -1, `Couldn't find a | in search text (${searchText})`);
 	const endOffset = searchText.lastIndexOf("|");
 	assert.notEqual(endOffset, -1, `Couldn't find a second | in search text (${searchText})`);
 
-	const matchedTextIndex = doc.getText().indexOf(searchText.replace(/\|/g, "").replace(/\n/g, eol));
+	const startSearchAt = inside ? doc.offsetAt(inside.start) : 0;
+	const endSearchAt = inside ? doc.offsetAt(inside.end) : -1;
+	let matchedTextIndex = doc.getText().indexOf(searchText.replace(/\|/g, "").replace(/\n/g, eol), startSearchAt);
+	if (endSearchAt > -1 && matchedTextIndex > endSearchAt)
+		matchedTextIndex = -1;
 	assert.notEqual(matchedTextIndex, -1, `Couldn't find string ${searchText.replace(/\|/g, "")} in the document to get range of`);
 
 	return new vs.Range(
@@ -111,12 +115,19 @@ export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind
 	);
 	assert.deepStrictEqual(symbol.location.uri.fsPath, uri.fsPath);
 	assert.ok(symbol.location);
-	// Ensure we have a range, but don't check specifically what it is (this will make the test fragile and the range mapping is trivial)
 	assert.ok(symbol.location.range);
 	assert.ok(symbol.location.range.start);
 	assert.ok(symbol.location.range.start.line);
 	assert.ok(symbol.location.range.end);
 	assert.ok(symbol.location.range.end.line);
+}
+
+export function ensureIsRange(actual: vs.Range, expected: vs.Range) {
+	assert.ok(actual);
+	assert.equal(actual.start.line, expected.start.line, "Start lines did not match");
+	assert.equal(actual.start.character, expected.start.character, "Start characters did not match");
+	assert.equal(actual.end.line, expected.end.line, "End lines did not match");
+	assert.equal(actual.end.character, expected.end.character, "End characters did not match");
 }
 
 export async function getCompletionsAt(searchText: string, triggerCharacter?: string): Promise<vs.CompletionItem[]> {
