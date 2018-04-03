@@ -1,6 +1,9 @@
 import { window, workspace, TextDocument, Disposable } from "vscode";
 import { Analyzer } from "./analyzer";
 import * as util from "../utils";
+import { AnalysisOutlineNotification, Outline } from "./analysis_server_types";
+
+const outlines: { [key: string]: Outline } = {};
 
 export class OpenFileTracker implements Disposable {
 	private disposables: Disposable[] = [];
@@ -12,6 +15,7 @@ export class OpenFileTracker implements Disposable {
 		this.disposables.push(workspace.onDidCloseTextDocument((td) => this.updatePriorityFiles()));
 		this.disposables.push(window.onDidChangeActiveTextEditor((e) => this.updatePriorityFiles()));
 		this.updatePriorityFiles(); // Handle already-open files.
+		this.disposables.push(this.analyzer.registerForAnalysisOutline((o) => this.recordOutline(o)));
 	}
 
 	public updatePriorityFiles() {
@@ -34,6 +38,12 @@ export class OpenFileTracker implements Disposable {
 
 		// Keep track of files to compare next time.
 		this.lastPriorityFiles = priorityFiles;
+
+		// Drop outlines for anything that's not currently open.
+		for (const file in outlines) {
+			if (this.lastPriorityFiles.indexOf(file) === -1)
+				outlines[file] = undefined;
+		}
 
 		// Set priority files.
 		this.analyzer.analysisSetPriorityFiles({
@@ -58,6 +68,15 @@ export class OpenFileTracker implements Disposable {
 				},
 			}).then(() => { }, util.logError); // tslint:disable-line:no-empty
 		}
+	}
+
+	public static getOutlineFor(file: string): Outline | undefined {
+		return outlines[file];
+	}
+
+	private recordOutline(outline: AnalysisOutlineNotification): void {
+		if (this.lastPriorityFiles.indexOf(outline.file) !== -1)
+			outlines[outline.file] = outline.outline;
 	}
 
 	public dispose(): any {
