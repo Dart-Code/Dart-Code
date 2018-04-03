@@ -45,6 +45,7 @@ import { checkForSdkUpdates } from "./sdk/update_check";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
 import { findPackageRoots } from "./analysis/utils";
 import { flutterPath, dartVMPath, analyzerSnapshotPath, handleMissingSdks, findSdks } from "./sdk/utils";
+import { GoToSuperCommand } from "./commands/go_to_super";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
@@ -254,6 +255,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Register misc commands.
 	context.subscriptions.push(new TypeHierarchyCommand(context, analyzer));
+	context.subscriptions.push(new GoToSuperCommand(analyzer));
 
 	// Register our view providers.
 	const dartPackagesProvider = new DartPackagesProvider();

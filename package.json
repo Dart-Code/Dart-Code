@@ -100,6 +100,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.goToSuper",
+				"title": "Go to Super Method",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.sortMembers",
 				"title": "Sort Members",
 				"category": "Dart"
@@ -236,6 +241,10 @@
 				},
 				{
 					"command": "dart.organizeDirectives",
+					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
+				},
+				{
+					"command": "dart.goToSuper",
 					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
 				},
 				{
