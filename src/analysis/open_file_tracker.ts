@@ -12,10 +12,10 @@ export class OpenFileTracker implements Disposable {
 	constructor(analyzer: Analyzer) {
 		this.analyzer = analyzer;
 		this.disposables.push(workspace.onDidOpenTextDocument((td) => this.updatePriorityFiles()));
-		this.disposables.push(workspace.onDidCloseTextDocument((td) => this.updatePriorityFiles()));
+		this.disposables.push(workspace.onDidCloseTextDocument((td) => { delete outlines[td.fileName]; this.updatePriorityFiles(); }));
 		this.disposables.push(window.onDidChangeActiveTextEditor((e) => this.updatePriorityFiles()));
+		this.disposables.push(this.analyzer.registerForAnalysisOutline((o) => outlines[o.file] = o.outline));
 		this.updatePriorityFiles(); // Handle already-open files.
-		this.disposables.push(this.analyzer.registerForAnalysisOutline((o) => this.recordOutline(o)));
 	}
 
 	public updatePriorityFiles() {
@@ -41,12 +41,6 @@ export class OpenFileTracker implements Disposable {
 
 		// Keep track of files to compare next time.
 		this.lastPriorityFiles = priorityFiles;
-
-		// Drop outlines for anything that's not currently open.
-		for (const file in outlines) {
-			if (this.lastPriorityFiles.indexOf(file) === -1)
-				outlines[file] = undefined;
-		}
 
 		// Set priority files.
 		this.analyzer.analysisSetPriorityFiles({
@@ -75,11 +69,6 @@ export class OpenFileTracker implements Disposable {
 
 	public static getOutlineFor(file: Uri): Outline | undefined {
 		return outlines[file.fsPath];
-	}
-
-	private recordOutline(outline: AnalysisOutlineNotification): void {
-		if (this.lastPriorityFiles.indexOf(outline.file) !== -1)
-			outlines[outline.file] = outline.outline;
 	}
 
 	public dispose(): any {
