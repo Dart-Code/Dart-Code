@@ -23,7 +23,10 @@ export class OpenFileTracker implements Disposable {
 		// order; this is to reduce changing too much in the AS (causing more work) since we don't really care about
 		// about the relative difference within these groups.
 		const visibleDocuments = window.visibleTextEditors.map((e) => e.document).sort((d1, d2) => d1.fileName.localeCompare(d2.fileName));
-		const otherOpenDocuments = workspace.textDocuments.filter((doc) => visibleDocuments.indexOf(doc) === -1).sort((d1, d2) => d1.fileName.localeCompare(d2.fileName));
+		const otherOpenDocuments = workspace.textDocuments
+			.filter((doc) => !doc.isClosed)
+			.filter((doc) => visibleDocuments.indexOf(doc) === -1)
+			.sort((d1, d2) => d1.fileName.localeCompare(d2.fileName));
 
 		const priorityDocuments = visibleDocuments.concat(otherOpenDocuments).filter((d) => this.analyzer.capabilities.supportsPriorityFilesOutsideAnalysisRoots ? util.isAnalyzable(d) : util.isAnalyzableAndInWorkspace(d));
 		const priorityFiles = priorityDocuments.map((doc) => doc.fileName);
