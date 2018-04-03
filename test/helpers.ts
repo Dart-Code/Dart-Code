@@ -30,6 +30,21 @@ export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	eol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
 }
 
+export async function closeAllOpenFiles(): Promise<void> {
+	while (vs.window.activeTextEditor) {
+		await vs.commands.executeCommand("workbench.action.closeActiveEditor");
+	}
+}
+
+export async function closeFile(file: vs.Uri): Promise<void> {
+	for (const editor of vs.window.visibleTextEditors) {
+		if (editor.document.uri === file) {
+			await vs.window.showTextDocument(editor.document);
+			await vs.commands.executeCommand("workbench.action.closeActiveEditor");
+		}
+	}
+}
+
 const deferredItems: Array<() => Promise<void> | void> = [];
 afterEach(async () => {
 	for (const d of deferredItems) {
