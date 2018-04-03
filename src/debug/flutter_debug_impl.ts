@@ -117,12 +117,12 @@ export class FlutterDebugSession extends DartDebugSession {
 		return localPath;
 	}
 
-	protected disconnectRequest(
+	protected async disconnectRequest(
 		response: DebugProtocol.DisconnectResponse,
 		args: DebugProtocol.DisconnectArguments,
-	): void {
+	): Promise<void> {
 		if (this.currentRunningAppId)
-			this.flutter.stop(this.currentRunningAppId);
+			await this.flutter.stop(this.currentRunningAppId);
 		super.disconnectRequest(response, args);
 	}
 
