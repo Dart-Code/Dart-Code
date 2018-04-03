@@ -5,15 +5,13 @@ import { Analyzer } from "../analysis/analyzer";
 import { toRange } from "../utils";
 
 export class TypeHierarchyCommand implements vs.Disposable {
-	private context: vs.ExtensionContext;
 	private analyzer: Analyzer;
-	private commands: vs.Disposable[] = [];
+	private disposables: vs.Disposable[] = [];
 
-	constructor(context: vs.ExtensionContext, analyzer: Analyzer) {
-		this.context = context;
+	constructor(analyzer: Analyzer) {
 		this.analyzer = analyzer;
 
-		this.commands.push(
+		this.disposables.push(
 			vs.commands.registerCommand("dart.showTypeHierarchy", this.showTypeHierarchy, this),
 		);
 	}
@@ -50,6 +48,8 @@ export class TypeHierarchyCommand implements vs.Disposable {
 
 		const result = await vs.window.showQuickPick(tree.map((item) => itemToPick(item, items)), options);
 		if (result) {
+			// TODO: extract out so we have one way of jumping to code
+			// Currently we have Type Hierarchy, Go To Super, Flutter Outline
 			const location: as.Location = result.location;
 			const document = await vs.workspace.openTextDocument(location.file);
 			const editor = await vs.window.showTextDocument(document);
@@ -60,8 +60,7 @@ export class TypeHierarchyCommand implements vs.Disposable {
 	}
 
 	public dispose(): any {
-		for (const command of this.commands)
-			command.dispose();
+		this.disposables.forEach((d) => d.dispose());
 	}
 }
 
