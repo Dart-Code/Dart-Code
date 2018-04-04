@@ -53,6 +53,16 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 A full list of settings is [available here](https://dartcode.org/docs/settings/).
 
 
+## Frequently Asked Questions
+
+A list of frequently asked questions is [available here](https://dartcode.org/faq/).
+
+
+## Key Bindings
+
+A list of useful key bindings is [available here](https://dartcode.org/docs/key-bindings/).
+
+
 ## Refactorings and Code Fixes
 
 A full list of supported refactors is [available here](https://dartcode.org/docs/refactorings-and-code-fixes/).
