@@ -4,10 +4,12 @@ import * as fs from "fs";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { activate, ext, helloWorldMainFile, helloWorldBrokenFile } from "../../helpers";
-import { FlutterLaunchRequestArguments } from "../../../src/debug/utils";
 
 describe("dart cli debugger", () => {
+	console.log(`cwd: ${process.cwd()}`);
+	console.log(`extensionPath: ${ext.extensionPath}`);
 	const dc = new DebugClient("node", "./out/src/debug/dart_debug_entry.js", "dart");
+	// const dc = new DebugClient("node", path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
 	dc.defaultTimeout = 10000;
 
 	before(() => activate(helloWorldMainFile));
