@@ -8,6 +8,7 @@ import { FlutterLaunchRequestArguments } from "../../../src/debug/utils";
 
 describe("dart cli debugger", () => {
 	const dc = new DebugClient("node", "./out/src/debug/dart_debug_entry.js", "dart");
+	dc.defaultTimeout = 10000;
 
 	before(() => activate(helloWorldMainFile));
 	beforeEach(() => dc.start());
