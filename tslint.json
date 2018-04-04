@@ -20,6 +20,7 @@
 		"no-empty": {
 			"options": "allow-empty-catch"
 		},
+		"space-before-function-paren": false,
 		// TODO: These don't seem to work?
 		// "no-unused-expression": true,
 		// "no-floating-promises": true,
