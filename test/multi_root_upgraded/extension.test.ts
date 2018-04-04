@@ -8,7 +8,7 @@ import { waitFor } from "../helpers";
 
 const isWin = /^win/.test(process.platform);
 
-describe("Test environment", () => {
+describe("test environment", () => {
 	it("has opened the correct folder", () => {
 		const wfs = vs.workspace.workspaceFolders;
 		assert.equal(wfs.length, 1);
@@ -19,7 +19,7 @@ describe("Test environment", () => {
 	});
 });
 
-describe("Extension", () => {
+describe("extension", () => {
 	it("prompted the user to upgrade project folders", async () => {
 		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
 		const showWarningMessage = sinon.stub(vs.window, "showWarningMessage");
