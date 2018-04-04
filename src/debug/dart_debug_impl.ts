@@ -8,13 +8,12 @@ import {
 	Module,
 } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { PackageMap, uriToFilePath, PromiseCompleter, getLocalPackageName, isWin, DartLaunchRequestArguments, formatPathForVm } from "./utils";
+import { PackageMap, uriToFilePath, PromiseCompleter, getLocalPackageName, isWin, DartLaunchRequestArguments, formatPathForVm, safeSpawn } from "./utils";
 import {
 	ObservatoryConnection, VMEvent, VMIsolateRef, RPCError, DebuggerResult, VMStack, VMSentinel, VMObj,
 	VMFrame, VMFuncRef, VMInstanceRef, VMScriptRef, VMScript, VMSourceLocation, VMErrorRef, VMBreakpoint,
 	VMInstance, VMResponse, VMClassRef, VM, VMIsolate, VMLibraryRef, VMCodeRef,
 } from "./dart_debug_protocol";
-import { safeSpawn } from "../utils";
 
 // TODO: supportsSetVariable
 // TODO: class variables?
