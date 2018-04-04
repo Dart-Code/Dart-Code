@@ -1,3 +1,7 @@
+# v2.11.2
+
+- `--no-preview-dart-2` will no longer be sent to the VM (even when `dart.previewDart2` is set to `false`) for CLI apps as it is not supported
+
 # v2.11.1
 
 - SDKs in paths that contain spaces will no longer report that the analysis server has terminated

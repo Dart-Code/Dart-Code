@@ -2,7 +2,7 @@
 	"name": "dart-code",
 	"displayName": "Dart Code",
 	"description": "Dart, Flutter and Fuchsia support for Visual Studio Code.",
-	"version": "2.11.1",
+	"version": "2.11.2",
 	"publisher": "Dart-Code",
 	"engines": {
 		"vscode": "^1.21.0"
