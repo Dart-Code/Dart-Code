@@ -8,6 +8,12 @@ import { activate, ext, helloWorldMainFile, helloWorldBrokenFile } from "../../h
 describe("dart cli debugger", () => {
 	const dc = new DebugClient("node", path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
 
+	before(function () {
+		// Skip these tests on Linux until we get a repsonse to
+		// https://github.com/Microsoft/vscode/issues/47206
+		if (process.env.TRAVIS_OS_NAME === "linux")
+			this.skip();
+	});
 	before(() => activate(helloWorldMainFile));
 	beforeEach(() => dc.start());
 	afterEach(() => dc.stop());
