@@ -6,7 +6,7 @@ import { ProgressLocation, Uri } from "vscode";
 import * as vs from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
+import { FlutterLaunchRequestArguments, isWin, safeSpawn } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
@@ -173,7 +173,7 @@ export class SdkCommands {
 
 				channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
 
-				const process = util.safeSpawn(folder, binPath, args);
+				const process = safeSpawn(folder, binPath, args);
 				this.runningCommands[commandId] = process;
 				process.on("close", (code) => {
 					// Check it's still the same process before nulling out, in case our replacement has already been inserted.

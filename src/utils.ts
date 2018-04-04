@@ -1,4 +1,3 @@
-import * as child_process from "child_process";
 import * as fs from "fs";
 import * as https from "https";
 import * as os from "os";
@@ -202,15 +201,6 @@ export async function reloadExtension(prompt?: string, buttonText?: string) {
 	if (!prompt || await window.showInformationMessage(prompt, restartAction) === restartAction) {
 		commands.executeCommand("_dart.reloadExtension");
 	}
-}
-
-export function safeSpawn(workingDirectory: string, binPath: string, args: string[], env?: any): child_process.ChildProcess {
-	// Spawning processes on Windows with funny symbols in the path requires quoting. However if you quote an
-	// executable with a space in its path and an argument also has a space, you have to then quote all of the
-	// arguments too!
-	// Tragic.
-	// https://github.com/nodejs/node/issues/7367
-	return child_process.spawn(`"${binPath}"`, args.map((a) => `"${a}"`), { cwd: workingDirectory, env, shell: true });
 }
 
 export function unique<T>(items: T[]): T[] {
