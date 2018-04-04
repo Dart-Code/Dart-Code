@@ -305,6 +305,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	return {
 		analysisComplete: analysisCompleteCompleter.promise,
 		analyzerCapabilities: analyzer.capabilities,
+		debugProvider, // TODO: Remove this when we can get access via testing...
 		sdks,
 	};
 }
