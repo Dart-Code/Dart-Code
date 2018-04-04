@@ -6,7 +6,7 @@ import * as vs from "vscode";
 import { delay, getRandomTempFolder, ext, defer } from "../../helpers";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../../src/utils";
 
-describe("Test environment", () => {
+describe("test environment", () => {
 	it("has opened the correct folder", () => {
 		const wfs = vs.workspace.workspaceFolders;
 		assert.equal(wfs.length, 1);
@@ -17,7 +17,7 @@ describe("Test environment", () => {
 	});
 });
 
-describe("Extension", () => {
+describe("extension", () => {
 	it("did not activate", async () => {
 		assert.equal(ext.isActive, false);
 	});
@@ -26,7 +26,7 @@ describe("Extension", () => {
 // Note: We can only really have one "real" test here because it'll activate the extension.
 // Other tests must go in their own folders and be listed in test_all/launch.json individually.
 
-describe("Command", () => {
+describe("command", () => {
 	it("Flutter: New Project can be invoked and creates trigger file", async () => {
 		const showInputBox = sinon.stub(vs.window, "showInputBox");
 		defer(showInputBox.restore);
