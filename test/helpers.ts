@@ -183,9 +183,9 @@ export function ensureNoSnippet(items: vs.CompletionItem[], label: string): void
 	ensureNoCompletion(items, vs.CompletionItemKind.Snippet, label);
 }
 
-export async function ensureTestContent(expected: string): Promise<void> {
+export function ensureTestContent(expected: string): Promise<void> {
 	// Wait for a short period before checking to reduce changes of flaky tests.
-	waitFor(() =>
+	return waitFor(() =>
 		doc.getText().replace(/\r/g, "").trim() === expected.replace(/\r/g, "").trim(),
 		"Document content did not match expected",
 		100,
