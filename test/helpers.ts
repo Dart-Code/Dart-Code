@@ -29,6 +29,7 @@ export let eol: string;
 export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	await ext.activate();
 	await ext.exports.analysisComplete;
+	await closeAllOpenFiles();
 	doc = await vs.workspace.openTextDocument(file);
 	editor = await vs.window.showTextDocument(doc);
 	eol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
