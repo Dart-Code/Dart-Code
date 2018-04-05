@@ -16,6 +16,7 @@ export const ext = vs.extensions.getExtension<{
 export const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/hello_world"));
 export const helloWorldMainFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "bin/main.dart"));
 export const helloWorldBrokenFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "bin/broken.dart"));
+export const helloWorldGoodbyeFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "bin/goodbye.dart"));
 export const emptyFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "lib/empty.dart"));
 export const everythingFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "lib/everything.dart"));
 export const flutterHelloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/flutter_hello_world"));
