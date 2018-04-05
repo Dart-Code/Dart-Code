@@ -22,6 +22,9 @@ export const everythingFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "li
 export const flutterHelloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/flutter_hello_world"));
 export const flutterEmptyFile = vs.Uri.file(path.join(flutterHelloWorldFolder.fsPath, "lib/empty.dart"));
 export const flutterHelloWorldMainFile = vs.Uri.file(path.join(flutterHelloWorldFolder.fsPath, "lib/main.dart"));
+export const flutterTestMainFile = vs.Uri.file(path.join(flutterHelloWorldFolder.fsPath, "test/hello_test.dart"));
+export const flutterTestOtherFile = vs.Uri.file(path.join(flutterHelloWorldFolder.fsPath, "test/other_test.dart"));
+export const flutterTestBrokenFile = vs.Uri.file(path.join(flutterHelloWorldFolder.fsPath, "test/broken_test.dart"));
 
 export let doc: vs.TextDocument;
 export let editor: vs.TextEditor;
@@ -49,6 +52,10 @@ export async function closeFile(file: vs.Uri): Promise<void> {
 			await vs.commands.executeCommand("workbench.action.closeActiveEditor");
 		}
 	}
+}
+
+export async function openFile(file: vs.Uri): Promise<void> {
+	await vs.window.showTextDocument(await vs.workspace.openTextDocument(file));
 }
 
 const deferredItems: Array<() => Promise<void> | void> = [];

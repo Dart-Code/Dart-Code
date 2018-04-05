@@ -3,12 +3,14 @@ import * as path from "path";
 import * as fs from "fs";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
-import { activate, ext, helloWorldMainFile, helloWorldBrokenFile, closeAllOpenFiles, helloWorldGoodbyeFile, positionOf, openFile } from "../../helpers";
+import { activate, ext, closeAllOpenFiles, flutterHelloWorldMainFile, flutterTestMainFile, positionOf, flutterTestOtherFile, flutterTestBrokenFile, openFile } from "../../helpers";
 
-describe("dart cli debugger", () => {
-	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
+describe("flutter test debugger", () => {
+	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_test_debug_entry.js"), "dart");
+	// Spawning flutter tests seem to be kinda slow, so we need a higher timeout
+	dc.defaultTimeout = 10000;
 
-	beforeEach(() => activate(helloWorldMainFile));
+	beforeEach(() => activate(flutterTestMainFile));
 	beforeEach(() => dc.start());
 	afterEach(() => dc.stop());
 
@@ -24,8 +26,8 @@ describe("dart cli debugger", () => {
 		);
 	}
 
-	it("runs a Dart script to completion", async () => {
-		const config = await configFor(helloWorldMainFile);
+	it("runs a Flutter test script to completion", async () => {
+		const config = await configFor(flutterTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -33,67 +35,55 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it("receives the expected output from a Dart script", async () => {
-		const config = await configFor(helloWorldMainFile);
+	it("receives the expected output from a Flutter test script", async () => {
+		const config = await configFor(flutterTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
-			dc.assertOutput("stdout", "Hello, world!"),
-			dc.waitForEvent("terminated"),
-		]);
-	});
-
-	it("runs bin/main.dart if no file is open/provided", async () => {
-		await closeAllOpenFiles();
-		const config = await configFor(null);
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.launch(config),
-			dc.assertOutput("stdout", "Hello, world!"),
+			dc.assertOutput("stdout", "✓ - Hello world test"),
 			dc.waitForEvent("terminated"),
 		]);
 	});
 
 	it("runs the provided script regardless of what's open", async () => {
-		await openFile(helloWorldMainFile);
-		const config = await configFor(helloWorldGoodbyeFile);
+		await openFile(flutterTestMainFile);
+		const config = await configFor(flutterTestOtherFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
-			dc.assertOutput("stdout", "Goodbye!"),
+			dc.assertOutput("stdout", "✓ - Other test\n"),
 			dc.waitForEvent("terminated"),
 		]);
 	});
 
 	it("runs the open script if no file is provided", async () => {
-		await openFile(helloWorldGoodbyeFile);
+		await openFile(flutterTestOtherFile);
 		const config = await configFor(null);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
-			dc.assertOutput("stdout", "Goodbye!"),
+			dc.assertOutput("stdout", "✓ - Other test\n"),
 			dc.waitForEvent("terminated"),
 		]);
 	});
 
-	// TODO: Figure out why this doesn't work...
-	it.skip("receives stderr for a broken script", async () => {
-		const config = await configFor(helloWorldBrokenFile);
+	it("receives stderr for failing tests", async () => {
+		const config = await configFor(flutterTestBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
-			dc.assertOutput("stderr", "bad"),
+			dc.assertOutput("stderr", "Test failed. See exception logs above."),
 			dc.waitForEvent("terminated"),
 		]);
 	});
 
 	it("stops at a breakpoint", async () => {
-		await openFile(helloWorldMainFile);
-		const config = await configFor(helloWorldMainFile);
+		await openFile(flutterTestMainFile);
+		const config = await configFor(flutterTestMainFile);
 		await Promise.all([
 			dc.hitBreakpoint(config, {
 				line: positionOf("^// BREAKPOINT1").line,
-				path: helloWorldMainFile.fsPath,
+				path: flutterTestMainFile.fsPath,
 			}),
 		]);
 	});
