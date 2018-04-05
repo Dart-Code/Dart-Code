@@ -63,7 +63,13 @@ describe("dart_hover_provider", () => {
 		assert.deepStrictEqual(hover.range, rangeOf("get |myNumGetter|"));
 	});
 
-	it("returns expected information for a setter", async () => {
+	it("returns expected information for a setter", async function () {
+
+		// https://github.com/dart-lang/sdk/issues/32703
+		if (ext.exports.analyzerCapabilities.isDart2) {
+			this.skip();
+		}
+
 		const hover = await getHoverAt("my^NumSetter(");
 		if (ext.exports.analyzerCapabilities.isDart2) {
 			assert.equal(hover.displayText, "set myNumSetter(num value) → void");
