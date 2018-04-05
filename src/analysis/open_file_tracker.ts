@@ -1,9 +1,10 @@
 import { window, workspace, TextDocument, Disposable, Uri } from "vscode";
 import { Analyzer } from "./analyzer";
 import * as util from "../utils";
-import { AnalysisOutlineNotification, Outline } from "./analysis_server_types";
+import { AnalysisOutlineNotification, Outline, Occurrences } from "./analysis_server_types";
 
 const outlines: { [key: string]: Outline } = {};
+const occurrences: { [key: string]: Occurrences[] } = {};
 
 export class OpenFileTracker implements Disposable {
 	private disposables: Disposable[] = [];
@@ -12,9 +13,14 @@ export class OpenFileTracker implements Disposable {
 	constructor(analyzer: Analyzer) {
 		this.analyzer = analyzer;
 		this.disposables.push(workspace.onDidOpenTextDocument((td) => this.updatePriorityFiles()));
-		this.disposables.push(workspace.onDidCloseTextDocument((td) => { delete outlines[td.fileName]; this.updatePriorityFiles(); }));
+		this.disposables.push(workspace.onDidCloseTextDocument((td) => {
+			delete outlines[td.fileName];
+			delete occurrences[td.fileName];
+			this.updatePriorityFiles();
+		}));
 		this.disposables.push(window.onDidChangeActiveTextEditor((e) => this.updatePriorityFiles()));
 		this.disposables.push(this.analyzer.registerForAnalysisOutline((o) => outlines[o.file] = o.outline));
+		this.disposables.push(this.analyzer.registerForAnalysisOccurrences((o) => occurrences[o.file] = o.occurrences));
 		this.updatePriorityFiles(); // Handle already-open files.
 	}
 
@@ -69,6 +75,10 @@ export class OpenFileTracker implements Disposable {
 
 	public static getOutlineFor(file: Uri): Outline | undefined {
 		return outlines[file.fsPath];
+	}
+
+	public static getOccurrencesFor(file: Uri): Occurrences[] | undefined {
+		return occurrences[file.fsPath];
 	}
 
 	public dispose(): any {
