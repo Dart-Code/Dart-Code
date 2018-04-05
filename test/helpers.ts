@@ -183,13 +183,15 @@ export function ensureNoSnippet(items: vs.CompletionItem[], label: string): void
 	ensureNoCompletion(items, vs.CompletionItemKind.Snippet, label);
 }
 
-export function ensureTestContent(expected: string): Promise<void> {
+export async function ensureTestContent(expected: string): Promise<void> {
 	// Wait for a short period before checking to reduce changes of flaky tests.
-	return waitFor(() =>
+	await waitFor(() =>
 		doc.getText().replace(/\r/g, "").trim() === expected.replace(/\r/g, "").trim(),
 		"Document content did not match expected",
 		100,
+		false,
 	);
+	assert.equal(doc.getText().replace(/\r/g, "").trim(), expected.replace(/\r/g, "").trim());
 }
 
 export function delay(milliseconds: number): Promise<void> {
@@ -207,7 +209,7 @@ export function getRandomTempFolder(): string {
 	return tmpPath;
 }
 
-export async function waitFor(action: () => boolean, message?: string, milliseconds: number = 1000): Promise<void> {
+export async function waitFor(action: () => boolean, message?: string, milliseconds: number = 1000, throwOnFailure = true): Promise<void> {
 	let timeRemaining = milliseconds;
 	while (timeRemaining > 0) {
 		if (action())
@@ -215,7 +217,8 @@ export async function waitFor(action: () => boolean, message?: string, milliseco
 		await new Promise((resolve) => setTimeout(resolve, 100));
 		timeRemaining -= 100;
 	}
-	throw new Error("Action didn't return true within specified timeout" + (message ? ` (${message})` : ""));
+	if (throwOnFailure)
+		throw new Error("Action didn't return true within specified timeout" + (message ? ` (${message})` : ""));
 }
 
 export async function waitForEditorChange(action: () => Thenable<void>): Promise<void> {
