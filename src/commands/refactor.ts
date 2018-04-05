@@ -70,7 +70,8 @@ export class RefactorCommands implements vs.Disposable {
 	private shouldAbortRefactor(validationResult: as.EditGetRefactoringResponse) {
 		const validationProblems = validationResult.initialProblems
 			.concat(validationResult.optionsProblems)
-			.concat(validationResult.finalProblems);
+			.concat(validationResult.finalProblems)
+			.filter((e) => e.severity === "FATAL");
 
 		if (validationProblems.length) {
 			vs.window.showErrorMessage(validationProblems[0].message);
