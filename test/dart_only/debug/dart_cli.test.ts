@@ -3,12 +3,12 @@ import * as path from "path";
 import * as fs from "fs";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
-import { activate, ext, helloWorldMainFile, helloWorldBrokenFile, closeAllOpenFiles, helloWorldGoodbyeFile } from "../../helpers";
+import { activate, ext, helloWorldMainFile, helloWorldBrokenFile, closeAllOpenFiles, helloWorldGoodbyeFile, positionOf } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
 
-	before(() => activate(helloWorldMainFile));
+	beforeEach(() => activate(helloWorldMainFile));
 	beforeEach(() => dc.start());
 	afterEach(() => dc.stop());
 
@@ -88,10 +88,11 @@ describe("dart cli debugger", () => {
 	});
 
 	it("stops at a breakpoint", async () => {
+		await vs.workspace.openTextDocument(helloWorldMainFile);
 		const config = await configFor(helloWorldMainFile);
 		await Promise.all([
 			dc.hitBreakpoint(config, {
-				line: 2,
+				line: positionOf("^// BREAKPOINT1").line,
 				path: helloWorldMainFile.fsPath,
 			}),
 		]);
