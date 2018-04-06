@@ -24,6 +24,7 @@ install:
   - dev\flutter\bin\flutter --version
   - node --version
   - npm --version
+  - cd ..
 
 build_script:
   - npm install --depth 0 --silent
