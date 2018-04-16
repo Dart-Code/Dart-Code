@@ -55,6 +55,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				for (const launchPath of commonLaunchPaths) {
 					if (fs.existsSync(launchPath)) {
 						debugConfig.program = launchPath;
+						break;
 					}
 				}
 			}
