@@ -523,13 +523,19 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	private async callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef): Promise<string> {
+	private async callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef, getFullString: boolean = false): Promise<string> {
 		try {
 			const result = await this.observatory.evaluate(isolate.id, instanceRef.id, "toString()");
 			if (result.result.type === "@Error") {
 				return null;
 			} else {
-				const evalResult: VMInstanceRef = result.result as VMInstanceRef;
+				let evalResult: VMInstanceRef = result.result as VMInstanceRef;
+
+				if (evalResult.valueAsStringIsTruncated && getFullString) {
+					const result = await this.observatory.getObject(isolate.id, evalResult.id);
+					evalResult = result.result as VMInstanceRef;
+				}
+
 				return this.valueAsString(evalResult, undefined, true);
 			}
 		} catch (e) {
@@ -707,7 +713,7 @@ export class DartDebugSession extends DebugSession {
 				reason = "exception";
 				exceptionText = this.valueAsString(event.exception, false);
 				if (!exceptionText)
-					exceptionText = await this.callToString(event.isolate, event.exception);
+					exceptionText = await this.callToString(event.isolate, event.exception, true);
 			}
 
 			thread.handlePaused(event.atAsyncSuspension, event.exception);
