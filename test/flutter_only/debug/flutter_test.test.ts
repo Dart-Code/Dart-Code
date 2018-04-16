@@ -71,7 +71,7 @@ describe("flutter test debugger", () => {
 	});
 
 	// Skipped because https://github.com/flutter/flutter/issues/16350
-	it.skip("stops on exception", async () => {
+	it("stops on exception", async () => {
 		await openFile(flutterTestBrokenFile);
 		const config = await configFor(flutterTestBrokenFile);
 		await Promise.all([

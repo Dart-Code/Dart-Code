@@ -78,7 +78,7 @@ describe("dart cli debugger", () => {
 	});
 
 	// TODO: Figure out why this doesn't work...
-	it.skip("receives stderr for a broken script", async () => {
+	it("receives stderr for a broken script", async () => {
 		const config = await configFor(helloWorldBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
