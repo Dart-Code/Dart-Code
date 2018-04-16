@@ -73,6 +73,8 @@ export function defer(callback: () => Promise<void> | void): void {
 // tslint:disable-next-line:only-arrow-functions
 beforeEach(async function () {
 	const logFolder = process.env.DC_TEST_LOGS || path.join(ext.extensionPath, ".dart_code_logs");
+	if (!fs.existsSync(logFolder))
+		fs.mkdirSync(logFolder);
 	const prefix = filenameSafe(this.currentTest.fullTitle()) + "_";
 
 	await setLogs(
