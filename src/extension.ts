@@ -61,7 +61,7 @@ let analytics: Analytics;
 
 let showTodos: boolean;
 let showLintNames: boolean;
-let analyzerSettings: string;
+let previousSettings: string;
 
 export function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
 	util.logTime("Code called activate");
@@ -80,7 +80,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	showTodos = config.showTodos;
 	showLintNames = config.showLintNames;
-	analyzerSettings = getAnalyzerSettings();
+	previousSettings = getSettingsThatRequireRestart();
 
 	const analysisCompleteCompleter = new PromiseCompleter<void>();
 	const extensionStartTime = new Date();
@@ -335,9 +335,9 @@ function handleConfigurationChange(sdks: util.Sdks) {
 	showLintNames = newShowLintNameSetting;
 
 	// SDK
-	const newAnalyzerSettings = getAnalyzerSettings();
-	const analyzerSettingsChanged = analyzerSettings !== newAnalyzerSettings;
-	analyzerSettings = newAnalyzerSettings;
+	const newSettings = getSettingsThatRequireRestart();
+	const settingsChanged = previousSettings !== newSettings;
+	previousSettings = newSettings;
 
 	if (todoSettingChanged || showLintNameSettingChanged) {
 		analyzer.analysisReanalyze({
@@ -345,12 +345,12 @@ function handleConfigurationChange(sdks: util.Sdks) {
 		});
 	}
 
-	if (analyzerSettingsChanged) {
+	if (settingsChanged) {
 		util.reloadExtension();
 	}
 }
 
-function getAnalyzerSettings() {
+function getSettingsThatRequireRestart() {
 	// The return value here is used to detect when any config option changes that requires a project reload.
 	// It doesn't matter how these are combined; it just gets called on every config change and compared.
 	// Usually these are options that affect the analyzer and need a reload, but config options used at
