@@ -38,9 +38,8 @@ export class DartRenameProvider implements RenameProvider {
 			const expectedOldName = document.getText(wordRange);
 			const actualOldName = (resp.feedback as as.RenameFeedback).oldName; // TODO: Does the API spec have enough for us to make these generics?
 			if (actualOldName != null && actualOldName !== expectedOldName) {
-				window.showErrorMessage("This type of rename is not yet supported.");
-				outputChannel.appendLine(`[ERROR] Rename aborting due to rename mismatch (expected: ${expectedOldName}, got: ${actualOldName}). This rename will be supported in a future version.`);
-				return;
+				outputChannel.appendLine(`[ERROR] Rename aborting due to rename mismatch (expected: ${expectedOldName}, got: ${actualOldName}). This rename may be supported in a future version.`);
+				throw new Error("This rename is not supported.");
 			}
 		}
 
@@ -53,11 +52,6 @@ export class DartRenameProvider implements RenameProvider {
 				.concat(resp.finalProblems),
 			outputChannel,
 		);
-
-		if (hasError) {
-			outputChannel.appendLine("[INFO] Rename aborted.");
-			return;
-		}
 
 		const promises: Array<Thenable<void>> = [];
 		resp.change.edits.forEach((changeEdit) => {
@@ -100,9 +94,8 @@ export class DartRenameProvider implements RenameProvider {
 		if (errors.length === 0)
 			return false;
 
+		outputChannel.appendLine("[INFO] Rename aborted.");
 		// Popups just the first error.
-		window.showErrorMessage(errors[0].message);
-
-		return true;
+		throw errors[0].message;
 	}
 }
