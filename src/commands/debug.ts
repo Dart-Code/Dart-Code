@@ -28,7 +28,7 @@ export class DebugCommands {
 	constructor(context: vs.ExtensionContext, analytics: Analytics) {
 		this.analytics = analytics;
 		context.subscriptions.push(this.reloadStatus);
-		vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
+		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
 			if (e.event === "dart.progress") {
 				if (e.body.message) {
 					// Clear any old progress first
@@ -71,16 +71,16 @@ export class DebugCommands {
 				// Send the current value to ensure it persists for the user.
 				this.sendAllServiceSettings();
 			}
-		});
+		}));
 		let debugSessionStart: Date;
-		vs.debug.onDidStartDebugSession((s) => {
+		context.subscriptions.push(vs.debug.onDidStartDebugSession((s) => {
 			if (s.type === "dart") {
 				this.currentDebugSession = s;
 				this.resetFlutterSettings();
 				debugSessionStart = new Date();
 			}
-		});
-		vs.debug.onDidTerminateDebugSession((s) => {
+		}));
+		context.subscriptions.push(vs.debug.onDidTerminateDebugSession((s) => {
 			if (s === this.currentDebugSession) {
 				this.currentDebugSession = null;
 				this.observatoryUri = null;
@@ -91,7 +91,7 @@ export class DebugCommands {
 				this.disableAllServiceExtensions();
 				analytics.logDebugSessionDuration(debugSessionEnd.getTime() - debugSessionStart.getTime());
 			}
-		});
+		}));
 
 		this.registerBoolServiceCommand("ext.flutter.debugPaint", () => this.debugPaintingEnabled);
 		this.registerBoolServiceCommand("ext.flutter.showPerformanceOverlay", () => this.performanceOverlayEnabled);
