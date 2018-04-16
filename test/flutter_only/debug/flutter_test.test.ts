@@ -7,8 +7,8 @@ import { activate, ext, closeAllOpenFiles, flutterHelloWorldMainFile, flutterTes
 
 describe("flutter test debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_test_debug_entry.js"), "dart");
-	// Spawning flutter tests seem to be kinda slow, so we need a higher timeout
-	dc.defaultTimeout = 30000;
+	// Spawning flutter tests seem to be kinda slow (and may fetch packages), so we need a higher timeout
+	dc.defaultTimeout = 60000;
 
 	beforeEach(() => activate(flutterTestMainFile));
 	beforeEach(() => dc.start());
@@ -67,13 +67,18 @@ describe("flutter test debugger", () => {
 		]);
 	});
 
-	it("receives stderr for failing tests", async () => {
+	// Skipped because https://github.com/flutter/flutter/issues/16350
+	it.skip("stops on exception", async () => {
+		await openFile(flutterTestBrokenFile);
 		const config = await configFor(flutterTestBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
 			dc.assertOutput("stderr", "Test failed. See exception logs above."),
-			dc.waitForEvent("terminated"),
+			dc.assertStoppedLocation("exception", {
+				line: positionOf("^won't find this").line,
+				path: flutterTestBrokenFile.fsPath,
+			}),
 		]);
 	});
 

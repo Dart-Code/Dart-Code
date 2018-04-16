@@ -7,6 +7,7 @@ import { activate, ext, helloWorldMainFile, helloWorldBrokenFile, closeAllOpenFi
 
 describe("dart cli debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
+	dc.defaultTimeout = 30000;
 
 	beforeEach(() => activate(helloWorldMainFile));
 	beforeEach(() => dc.start());

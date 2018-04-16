@@ -69,6 +69,36 @@ export function defer(callback: () => Promise<void> | void): void {
 	deferredItems.push(callback);
 }
 
+// Set up log files for individual test logging.
+// tslint:disable-next-line:only-arrow-functions
+beforeEach(async function () {
+	const logFolder = process.env.DC_TEST_LOGS || path.join(ext.extensionPath, ".dart_code_logs");
+	const prefix = filenameSafe(this.currentTest.fullTitle()) + "_";
+
+	await setLogs(
+		vs.workspace.getConfiguration("dart"),
+		logFolder,
+		prefix,
+		["analyzer", "flutterDaemon"],
+	);
+	await setLogs(
+		vs.workspace.getConfiguration("dart", vs.workspace.workspaceFolders[0].uri),
+		logFolder,
+		prefix,
+		["observatory", "flutterRun", "flutterTest"],
+	);
+});
+
+async function setLogs(conf: vs.WorkspaceConfiguration, logFolder: string, prefix: string, logFiles: string[]): Promise<void> {
+	for (const logFile of logFiles) {
+		const key = logFile + "LogFile";
+		const logPath = path.join(logFolder, `${prefix}${logFile}.txt`);
+		const oldValue = conf.get<string>(key);
+		await conf.update(key, logPath);
+		defer(async () => await conf.update(key, oldValue));
+	}
+}
+
 export function setTestContent(content: string): Thenable<boolean> {
 	const all = new vs.Range(
 		doc.positionAt(0),
@@ -233,4 +263,8 @@ export async function waitForEditorChange(action: () => Thenable<void>): Promise
 	const oldVersion = doc.version;
 	await action();
 	await waitFor(() => doc.version !== oldVersion);
+}
+
+export function filenameSafe(input: string) {
+	return input.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
 }
