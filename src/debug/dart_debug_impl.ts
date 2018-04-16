@@ -14,6 +14,7 @@ import {
 	VMFrame, VMFuncRef, VMInstanceRef, VMScriptRef, VMScript, VMSourceLocation, VMErrorRef, VMBreakpoint,
 	VMInstance, VMResponse, VMClassRef, VM, VMIsolate, VMLibraryRef, VMCodeRef,
 } from "./dart_debug_protocol";
+import { logError } from "../utils";
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -522,15 +523,19 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	private callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef): Promise<string> {
-		return this.observatory.evaluate(isolate.id, instanceRef.id, "toString()").then((result: DebuggerResult) => {
+	private async callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef): Promise<string> {
+		try {
+			const result = await this.observatory.evaluate(isolate.id, instanceRef.id, "toString()");
 			if (result.result.type === "@Error") {
 				return null;
 			} else {
 				const evalResult: VMInstanceRef = result.result as VMInstanceRef;
 				return this.valueAsString(evalResult, undefined, true);
 			}
-		}).catch((e) => null);
+		} catch (e) {
+			logError(e);
+			return null;
+		}
 	}
 
 	protected setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments): void {
