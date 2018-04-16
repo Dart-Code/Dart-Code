@@ -1,6 +1,7 @@
 import * as vs from "vscode";
 import { FlutterDaemon } from "./flutter_daemon";
 import * as f from "./flutter_types";
+import { config } from "../config";
 
 export class FlutterDeviceManager implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
@@ -27,7 +28,9 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	public deviceAdded(dev: f.Device) {
 		this.devices.push(dev);
-		this.currentDevice = dev;
+		if (this.currentDevice == null || config.selectDeviceOnConnect) {
+			this.currentDevice = dev;
+		}
 		this.updateStatusBar();
 	}
 

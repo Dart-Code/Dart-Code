@@ -590,6 +590,12 @@
 					"items": {
 						"type": "string"
 					}
+				},
+				"dart.selectDeviceOnConnect": {
+					"type": "boolean",
+					"default": true,
+					"description": "Select newly connected devices as current device.",
+					"scope": "window"
 				}
 			}
 		},
