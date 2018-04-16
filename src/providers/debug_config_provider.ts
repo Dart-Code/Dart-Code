@@ -160,7 +160,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (this.debugServers) {
 			for (const type of Object.keys(this.debugServers)) {
 				this.debugServers[type].close();
-				this.debugServers[type] = null;
+				delete this.debugServers[type];
 			}
 		}
 	}
