@@ -202,6 +202,8 @@ export class DartDebugSession extends DebugSession {
 					}));
 				}
 
+				// TODO: Handle errors (such as these failing because we sent them too early).
+				// https://github.com/Dart-Code/Dart-Code/issues/790
 				Promise.all(promises).then((_) => {
 					this.sendEvent(new InitializedEvent());
 				});

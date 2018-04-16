@@ -1,3 +1,4 @@
+.dart_code_logs/**
 .gitattributes
 .gitignore
 .nyc_output/**

@@ -345,7 +345,7 @@ function handleConfigurationChange(sdks: util.Sdks) {
 		});
 	}
 
-	if (settingsChanged) {
+	if (settingsChanged && config.restartExtensionOnConfigChange) {
 		util.reloadExtension();
 	}
 }
