@@ -14,7 +14,6 @@ import {
 	VMFrame, VMFuncRef, VMInstanceRef, VMScriptRef, VMScript, VMSourceLocation, VMErrorRef, VMBreakpoint,
 	VMInstance, VMResponse, VMClassRef, VM, VMIsolate, VMLibraryRef, VMCodeRef,
 } from "./dart_debug_protocol";
-import { logError } from "../utils";
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -539,7 +538,7 @@ export class DartDebugSession extends DebugSession {
 				return this.valueAsString(evalResult, undefined, true);
 			}
 		} catch (e) {
-			logError(e);
+			console.error(e);
 			return null;
 		}
 	}
