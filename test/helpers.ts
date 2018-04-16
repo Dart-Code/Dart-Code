@@ -91,6 +91,11 @@ beforeEach(async function () {
 	);
 });
 
+before(() => {
+	if (!process.env.DART_CODE_IS_TEST_RUN)
+		throw new Error("DART_CODE_IS_TEST_RUN env var should be set for test runs.");
+});
+
 async function setLogs(conf: vs.WorkspaceConfiguration, logFolder: string, prefix: string, logFiles: string[]): Promise<void> {
 	for (const logFile of logFiles) {
 		const key = logFile + "LogFile";

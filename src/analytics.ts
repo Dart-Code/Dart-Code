@@ -100,7 +100,7 @@ export class Analytics {
 	}
 
 	private send(customData: any, resourceUri?: Uri): PromiseLike<void> {
-		if (!config.allowAnalytics || process.env.DART_CODE_DISABLE_ANALYTICS)
+		if (!config.allowAnalytics || process.env.DART_CODE_IS_TEST_RUN)
 			return;
 
 		const data: any = {

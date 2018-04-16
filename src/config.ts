@@ -4,9 +4,6 @@ import { versionIsAtLeast, resolveHomePath } from "./utils";
 class Config {
 	private config: WorkspaceConfiguration;
 
-	// Don't restart extension on config changes in tests
-	public get restartExtensionOnConfigChange() { return !process.env.DC_TEST_LOGS; }
-
 	constructor() {
 		workspace.onDidChangeConfiguration((e) => this.loadConfig());
 		this.loadConfig();

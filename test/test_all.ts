@@ -61,7 +61,7 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	// even though other env vars do! 😢
 	env.DART_PATH_OVERRIDE = sdkPaths;
 	env.CODE_VERSION = codeVersion;
-	env.DART_CODE_DISABLE_ANALYTICS = true;
+	env.DART_CODE_IS_TEST_RUN = true;
 	env.MOCHA_FORBID_ONLY = true;
 	env.CODE_TESTS_WORKSPACE = path.join(cwd, "test", "test_projects", workspaceFolder);
 	env.CODE_TESTS_PATH = path.join(cwd, "out", "test", testFolder);

@@ -345,7 +345,7 @@ function handleConfigurationChange(sdks: util.Sdks) {
 		});
 	}
 
-	if (settingsChanged && config.restartExtensionOnConfigChange) {
+	if (settingsChanged && !process.env.DART_CODE_IS_TEST_RUN) {
 		util.reloadExtension();
 	}
 }
