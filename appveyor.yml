@@ -28,7 +28,7 @@ artifacts:
   # Folder is renamed from .test_results in after_test
   - path: win\*.xml
     name: test-results
-  - path: .dart_code_logs\*.txt
+  - path: .dart_code_test_logs\*.txt
     name: logs
 
 install:
