@@ -34,8 +34,8 @@ deploy:
     access_key_id: $ARTIFACTS_KEY
     secret_access_key: $ARTIFACTS_SECRET
     bucket: test-results.dartcode.org
-    local_dir: .dart_code_logs
-    upload_dir: logs/$TRAVIS_BRANCH/$TRAVIS_COMMIT/$TRAVIS_OS_NAME/.dart_code_logs
+    local_dir: .dart_code_test_logs
+    upload_dir: logs/$TRAVIS_BRANCH/$TRAVIS_COMMIT/$TRAVIS_OS_NAME/.dart_code_test_logs
     skip_cleanup: true
     acl: public_read
     on:
