@@ -41,6 +41,13 @@ export class SdkCommands {
 			else
 				return this.runPub("get", uri);
 		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", async (uri) => {
+			if (!uri || !(uri instanceof Uri))
+				uri = await this.getWorkspace("Select which folder to save screenshot into");
+			if (typeof uri === "string")
+				uri = vs.Uri.file(uri);
+			return this.runFlutter("screenshot", uri);
+			}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages", async (uri) => {
 			if (!uri || !(uri instanceof Uri))
 				uri = await this.getWorkspace("Select which folder to upgrade packages in");

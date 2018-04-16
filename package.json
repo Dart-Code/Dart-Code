@@ -201,6 +201,11 @@
 				"command": "flutter.changeDevice",
 				"title": "Change Device",
 				"category": "Flutter"
+			},
+			{
+				"command": "flutter.screenshot",
+				"title": "Save Screenshot",
+				"category": "Flutter"
 			}
 		],
 		"keybindings": [
@@ -307,6 +312,10 @@
 				{
 					"command": "flutter.changeDevice",
 					"when": "dart-code:flutterProjectLoaded"
+				},
+				{
+					"command": "flutter.screenshot",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				}
 			],
 			"editor/title": [
@@ -657,15 +666,15 @@
 	},
 	"dependencies": {
 		"semver": "^5.5.0",
-		"vscode-debugadapter": "^1.27.0",
-		"vscode-debugprotocol": "^1.27.0",
+		"vscode-debugadapter": "^1.28.0",
+		"vscode-debugprotocol": "^1.28.0",
 		"ws": "^1.1.5"
 	},
 	"devDependencies": {
 		"@types/mocha": "^2.2.48",
-		"@types/node": "^6.0.102",
+		"@types/node": "^6.0.106",
 		"@types/semver": "^5.5.0",
-		"@types/sinon": "^4.3.0",
+		"@types/sinon": "^4.3.1",
 		"@types/ws": "^0.0.38",
 		"codeclimate-test-reporter": "^0.5.0",
 		"mocha": "^3.5.3",
@@ -673,10 +682,10 @@
 		"remap-istanbul": "^0.11.0",
 		"run-for-every-file": "^1.1.0",
 		"signal-exit": "^3.0.2",
-		"sinon": "^4.4.6",
+		"sinon": "^4.5.0",
 		"supports-color": "^5.3.0",
 		"tslint": "^5.9.1",
-		"typescript": "^2.7.2",
+		"typescript": "^2.8.1",
 		"vscode": "^1.1.14"
 	}
 }
