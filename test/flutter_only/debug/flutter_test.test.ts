@@ -11,6 +11,9 @@ describe("flutter test debugger", () => {
 	dc.defaultTimeout = 60000;
 
 	beforeEach(() => activate(flutterTestMainFile));
+	beforeEach(function () {
+		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
+	});
 	beforeEach(() => dc.start());
 	afterEach(() => dc.stop());
 
