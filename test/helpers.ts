@@ -102,6 +102,7 @@ async function setLogs(conf: vs.WorkspaceConfiguration, logFolder: string, prefi
 		const logPath = path.join(logFolder, `${prefix}${logFile}.txt`);
 		const oldValue = conf.get<string>(key);
 		await conf.update(key, logPath);
+		// TODO: Don't think is working properly?
 		defer(async () => await conf.update(key, oldValue));
 	}
 }
