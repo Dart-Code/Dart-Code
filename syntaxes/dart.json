@@ -252,7 +252,7 @@
 					"name": "keyword.operator.assignment.bitwise.dart"
 				},
 				{
-					"match": "(==|!=|<=?|>=?)",
+					"match": "(==|!=|<=?|[^=]>=?)",
 					"name": "keyword.operator.comparison.dart"
 				},
 				{
