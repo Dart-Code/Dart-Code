@@ -70,7 +70,6 @@ describe("flutter test debugger", () => {
 		]);
 	});
 
-	// Skipped because https://github.com/flutter/flutter/issues/16350
 	it("stops on exception", async () => {
 		await openFile(flutterTestBrokenFile);
 		const config = await configFor(flutterTestBrokenFile);
@@ -78,7 +77,7 @@ describe("flutter test debugger", () => {
 			dc.configurationSequence(),
 			dc.launch(config),
 			dc.assertStoppedLocation("exception", {
-				line: positionOf("^won't find this").line,
+				line: positionOf("^won't find this").line + 1, // TODO: This line seems to be one-based but position is zero-based?
 				path: flutterTestBrokenFile.fsPath,
 			}),
 		]);
