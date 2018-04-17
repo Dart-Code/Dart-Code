@@ -75,7 +75,7 @@ export class DebugCommands {
 				const memory = e.body.memory;
 				const message = `${Math.ceil(memory.current / 1024 / 1024)}MB of ${Math.ceil(memory.total / 1024 / 1024)}MB`;
 				this.debugMetrics.text = message;
-				this.debugMetrics.tooltip = "This is the amount of memory being consumed by your application out of what has been allocated.";
+				this.debugMetrics.tooltip = "This is the amount of memory being consumed by your applications heaps (out of what has been allocated).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage.";
 				this.debugMetrics.show();
 			}
 		}));
