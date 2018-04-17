@@ -28,7 +28,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	public deviceAdded(dev: f.Device) {
 		this.devices.push(dev);
-		if (this.currentDevice == null || config.selectDeviceOnConnect) {
+		if (this.currentDevice == null || config.flutterSelectDeviceWhenConnected) {
 			this.currentDevice = dev;
 		}
 		this.updateStatusBar();

@@ -591,10 +591,10 @@
 						"type": "string"
 					}
 				},
-				"dart.selectDeviceOnConnect": {
+				"dart.flutterSelectDeviceWhenConnected": {
 					"type": "boolean",
 					"default": true,
-					"description": "Select newly connected devices as current device.",
+					"description": "Whether to set newly connected devices as the current device in Flutter projects.",
 					"scope": "window"
 				}
 			}
