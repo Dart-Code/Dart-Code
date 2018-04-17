@@ -77,16 +77,20 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	// TODO: Figure out why this doesn't work...
-	it.skip("receives stderr for a broken script", async () => {
+	it("stops on exception", async () => {
+		await openFile(helloWorldBrokenFile);
 		const config = await configFor(helloWorldBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
-			dc.assertOutput("stderr", "bad"),
-			dc.waitForEvent("terminated"),
+			dc.assertStoppedLocation("exception", {
+				line: positionOf("^throw").line + 1, // TODO: This line seems to be one-based but position is zero-based?
+				path: helloWorldBrokenFile.fsPath,
+			}),
 		]);
 	});
+
+	it.skip("writes exception to stderr");
 
 	it("stops at a breakpoint", async () => {
 		await openFile(helloWorldMainFile);
