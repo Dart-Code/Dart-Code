@@ -9,6 +9,7 @@ export const REFACTOR_ANYWAY = "Refactor Anyway";
 
 const refactorOptions: { [key: string]: (feedback: as.RefactoringFeedback) => as.RefactoringOptions } = {
 	EXTRACT_METHOD: getExtractMethodArgs,
+	EXTRACT_WIDGET: getExtractWidgetArgs,
 };
 
 export class RefactorCommands implements vs.Disposable {
@@ -137,4 +138,10 @@ async function getExtractMethodArgs(f: as.RefactoringFeedback): Promise<as.Refac
 		parameters: feedback.parameters,
 		returnType: feedback.returnType,
 	};
+}
+
+async function getExtractWidgetArgs(f: as.RefactoringFeedback): Promise<as.RefactoringOptions> {
+	const name = await vs.window.showInputBox({ prompt: "Enter a name for the method" });
+
+	return name ? { name } : undefined;
 }

@@ -8,6 +8,7 @@ import { isAnalyzableAndInWorkspace, logError } from "../utils";
 
 const supportedRefactors: { [key: string]: string } = {
 	EXTRACT_METHOD: "Extract Method",
+	EXTRACT_WIDGET: "Extract Widget",
 };
 
 export class RefactorCodeActionProvider implements CodeActionProvider {
