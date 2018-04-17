@@ -77,13 +77,14 @@ describe("flutter test debugger", () => {
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
-			dc.assertOutput("stderr", "Test failed. See exception logs above."),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^won't find this").line,
 				path: flutterTestBrokenFile.fsPath,
 			}),
 		]);
 	});
+
+	it.skip("writes stderr to output");
 
 	it("stops at a breakpoint", async () => {
 		await openFile(flutterTestMainFile);
