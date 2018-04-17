@@ -90,7 +90,7 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it.skip("writes stderr to output");
+	it.skip("writes exception to stderr");
 
 	it("stops at a breakpoint", async () => {
 		await openFile(helloWorldMainFile);

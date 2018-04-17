@@ -70,7 +70,7 @@ describe("flutter test debugger", () => {
 		]);
 	});
 
-	it("stops on exception", async () => {
+	it.skip("stops on exception", async () => {
 		await openFile(flutterTestBrokenFile);
 		const config = await configFor(flutterTestBrokenFile);
 		await Promise.all([
@@ -83,7 +83,15 @@ describe("flutter test debugger", () => {
 		]);
 	});
 
-	it.skip("writes stderr to output");
+	it("writes failure output to stderr", async () => {
+		await openFile(flutterTestBrokenFile);
+		const config = await configFor(flutterTestBrokenFile);
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.launch(config),
+			dc.assertOutput("stderr", "Test failed. See exception logs above."),
+		]);
+	});
 
 	it("stops at a breakpoint", async () => {
 		await openFile(flutterTestMainFile);
