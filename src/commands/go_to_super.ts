@@ -76,7 +76,7 @@ export class GoToSuperCommand implements vs.Disposable {
 
 			if (outline.element.kind === "METHOD")
 				return outline;
-			else
+			else if (outline.children)
 				return this.findNode(outline.children, offset);
 		}
 	}
