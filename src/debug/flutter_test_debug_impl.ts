@@ -58,6 +58,7 @@ export class FlutterTestDebugSession extends DartDebugSession {
 		this.flutter.registerForTestDone((n) => this.writeTestResult(n));
 		this.flutter.registerForGroup((n) => this.groups[n.group.id] = n.group);
 		this.flutter.registerForDone((n) => this.writeResult(n));
+		this.flutter.registerForUnhandledMessages((n) => this.print({ message: n }));
 		this.flutter.registerForPrint((n) => this.print(n));
 		this.flutter.registerForError((n) => this.error(n));
 
@@ -80,7 +81,7 @@ export class FlutterTestDebugSession extends DartDebugSession {
 			this.sendEvent(new OutputEvent(`Some tests failed.\n`, "stderr"));
 	}
 
-	private print(print: PrintNotification) {
+	private print(print: { message: string }) {
 		this.sendEvent(new OutputEvent(`${print.message}\n`, "stdout"));
 	}
 

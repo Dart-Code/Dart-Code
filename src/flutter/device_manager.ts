@@ -1,6 +1,7 @@
 import * as vs from "vscode";
 import { FlutterDaemon } from "./flutter_daemon";
 import * as f from "./flutter_types";
+import { config } from "../config";
 
 export class FlutterDeviceManager implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
@@ -9,7 +10,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	public currentDevice: f.Device = null;
 
 	constructor(daemon: FlutterDaemon) {
-		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 0);
+		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
 		this.statusBarItem.tooltip = "Flutter";
 		this.statusBarItem.show();
 		this.updateStatusBar();
@@ -27,7 +28,9 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	public deviceAdded(dev: f.Device) {
 		this.devices.push(dev);
-		this.currentDevice = dev;
+		if (this.currentDevice == null || config.flutterSelectDeviceWhenConnected) {
+			this.currentDevice = dev;
+		}
 		this.updateStatusBar();
 	}
 
@@ -38,7 +41,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		this.updateStatusBar();
 	}
 
-	public changeDevice() {
+	public async changeDevice(): Promise<void> {
 		const devices = this.devices
 			.sort(this.deviceSortComparer.bind(this))
 			.map((d) => ({
@@ -47,8 +50,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 				device: d,
 				label: d.name,
 			}));
-		vs.window.showQuickPick(devices, { placeHolder: "Select a device to use" })
-			.then((d) => { if (d) { this.currentDevice = d.device; this.updateStatusBar(); } });
+		const d = await vs.window.showQuickPick(devices, { placeHolder: "Select a device to use" });
+		if (d) {
+			this.currentDevice = d.device;
+			this.updateStatusBar();
+		}
 	}
 
 	public deviceSortComparer(d1: f.Device, d2: f.Device): number {

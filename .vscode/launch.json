@@ -26,7 +26,7 @@
 				"--extensionTestsPath=${workspaceRoot}/out/test/multi_root"
 			],
 			"env": {
-				"DART_CODE_DISABLE_ANALYTICS": "true"
+				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
 				"${workspaceRoot}/out/test/**/*.js"
@@ -44,7 +44,7 @@
 				"--extensionTestsPath=${workspaceRoot}/out/test/multi_root_upgraded"
 			],
 			"env": {
-				"DART_CODE_DISABLE_ANALYTICS": "true"
+				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
 				"${workspaceRoot}/out/test/**/*.js"
@@ -62,7 +62,7 @@
 				"--extensionTestsPath=${workspaceRoot}/out/test/dart_only"
 			],
 			"env": {
-				"DART_CODE_DISABLE_ANALYTICS": "true"
+				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
 				"${workspaceRoot}/out/test/**/*.js"
@@ -80,7 +80,7 @@
 				"--extensionTestsPath=${workspaceRoot}/out/test/flutter_only"
 			],
 			"env": {
-				"DART_CODE_DISABLE_ANALYTICS": "true"
+				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
 				"${workspaceRoot}/out/test/**/*.js"
@@ -98,7 +98,7 @@
 				"--extensionTestsPath=${workspaceRoot}/out/test/not_activated/flutter_create"
 			],
 			"env": {
-				"DART_CODE_DISABLE_ANALYTICS": "true"
+				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
 				"${workspaceRoot}/out/test/**/*.js"

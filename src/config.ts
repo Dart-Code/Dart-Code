@@ -17,11 +17,13 @@ class Config {
 		return this.config.get<T>(key);
 	}
 
-	private setConfig<T>(key: string, value: T, target: ConfigurationTarget): Thenable<void> {
-		return this.config.update(key, value, target).then(() => this.loadConfig());
+	private async setConfig<T>(key: string, value: T, target: ConfigurationTarget): Promise<void> {
+		await this.config.update(key, value, target);
+		this.loadConfig();
 	}
 
 	get allowAnalytics() { return this.getConfig<boolean>("allowAnalytics"); }
+	get analyzeAngularTemplates() { return this.getConfig<boolean>("analyzeAngularTemplates"); }
 	get analyzerDiagnosticsPort() { return this.getConfig<number>("analyzerDiagnosticsPort"); }
 	get analyzerObservatoryPort() { return this.getConfig<number>("analyzerObservatoryPort"); }
 	get analyzerLogFile() { return resolveHomePath(this.getConfig<string>("analyzerLogFile")); }
@@ -35,19 +37,20 @@ class Config {
 	get flutterSdkPath() { return resolveHomePath(this.getConfig<string>("flutterSdkPath")); }
 	public setFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Workspace); }
 	get flutterSdkPaths() { return (this.getConfig<string[]>("flutterSdkPaths") || []).map(resolveHomePath); }
+	get organizeDirectivesOnSave() { return this.getConfig<boolean>("organizeDirectivesOnSave"); }
 	get showLintNames() { return this.getConfig<boolean>("showLintNames"); }
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
 	get reportAnalyzerErrors() { return this.getConfig<boolean>("reportAnalyzerErrors"); }
 	get sdkPath() { return resolveHomePath(this.getConfig<string>("sdkPath")); }
 	public setSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
 	get sdkPaths() { return (this.getConfig<string[]>("sdkPaths") || []).map(resolveHomePath); }
+	get flutterSelectDeviceWhenConnected() { return this.getConfig<boolean>("flutterSelectDeviceWhenConnected"); }
 
 	public setGlobalDartSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Global); }
 	public setGlobalFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Global); }
 
 	// Preview features.
 	get previewDart2() { return this.getConfig<boolean>("previewDart2"); }
-	get previewAnalyzeAngularTemplates() { return this.getConfig<boolean>("previewAnalyzeAngularTemplates"); }
 
 	public for(uri: Uri): ResourceConfig {
 		return new ResourceConfig(uri);

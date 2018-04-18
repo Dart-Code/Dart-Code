@@ -8,7 +8,7 @@ const isWin = /^win/.test(process.platform);
 const sampleFilePath = (isWin ? "X:\\" : "/tmp/") + "sample.dart";
 const sampleFileUri = vs.Uri.parse(`untitled:${sampleFilePath}`);
 
-describe("Test environment", () => {
+describe("test environment", () => {
 	it("has opened the correct folder", () => {
 		const wfs = vs.workspace.workspaceFolders;
 		assert.equal(wfs.length, 1);
@@ -19,7 +19,7 @@ describe("Test environment", () => {
 	});
 });
 
-describe("Extension", () => {
+describe("extension", () => {
 	it("activated", async () => {
 		await ext.activate();
 		assert.equal(ext.isActive, true);
@@ -30,7 +30,8 @@ describe("Extension", () => {
 		const sdks: Sdks = ext.exports.sdks;
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
-		console.log(JSON.stringify(sdks, undefined, 6).trim().slice(1, -1));
+		console.log("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
+		console.log(`        "analysis_server": ${ext.exports.analyzerCapabilities.version}`);
 	});
 	it("did not try to use Flutter's version of the Dart SDK", async () => {
 		await ext.activate();

@@ -1,11 +1,12 @@
 import {
 	TextDocument, Position, CancellationToken, CompletionItemProvider, CompletionList,
-	CompletionItem, CompletionItemKind, TextEdit, Range, SnippetString, CompletionContext, CompletionTriggerKind,
+	CompletionItem, CompletionItemKind, TextEdit, Range, SnippetString, CompletionContext, CompletionTriggerKind, MarkdownString,
 } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import { logError } from "../utils";
 import { config } from "../config";
 import * as as from "../analysis/analysis_server_types";
+import { cleanDartdoc } from "../dartdocs";
 
 export class DartCompletionItemProvider implements CompletionItemProvider {
 	private analyzer: Analyzer;
@@ -144,7 +145,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		completion.label = label;
 		completion.kind = kind;
 		completion.detail = (suggestion.isDeprecated ? "(deprecated) " : "") + detail;
-		completion.documentation = suggestion.docSummary;
+		completion.documentation = new MarkdownString(cleanDartdoc(suggestion.docSummary));
 		completion.insertText = completionText;
 		completion.range = new Range(
 			document.positionAt(notification.replacementOffset),

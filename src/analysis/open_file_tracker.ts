@@ -1,12 +1,27 @@
-import { window, workspace, TextDocument } from "vscode";
+import { window, workspace, TextDocument, Disposable, Uri } from "vscode";
 import { Analyzer } from "./analyzer";
 import * as util from "../utils";
+import { AnalysisOutlineNotification, Outline, Occurrences } from "./analysis_server_types";
 
-export class OpenFileTracker {
+const outlines: { [key: string]: Outline } = {};
+const occurrences: { [key: string]: Occurrences[] } = {};
+
+export class OpenFileTracker implements Disposable {
+	private disposables: Disposable[] = [];
 	private analyzer: Analyzer;
 	private lastPriorityFiles: string[] = [];
 	constructor(analyzer: Analyzer) {
 		this.analyzer = analyzer;
+		this.disposables.push(workspace.onDidOpenTextDocument((td) => this.updatePriorityFiles()));
+		this.disposables.push(workspace.onDidCloseTextDocument((td) => {
+			delete outlines[td.fileName];
+			delete occurrences[td.fileName];
+			this.updatePriorityFiles();
+		}));
+		this.disposables.push(window.onDidChangeActiveTextEditor((e) => this.updatePriorityFiles()));
+		this.disposables.push(this.analyzer.registerForAnalysisOutline((o) => outlines[o.file] = o.outline));
+		this.disposables.push(this.analyzer.registerForAnalysisOccurrences((o) => occurrences[o.file] = o.occurrences));
+		this.updatePriorityFiles(); // Handle already-open files.
 	}
 
 	public updatePriorityFiles() {
@@ -14,7 +29,10 @@ export class OpenFileTracker {
 		// order; this is to reduce changing too much in the AS (causing more work) since we don't really care about
 		// about the relative difference within these groups.
 		const visibleDocuments = window.visibleTextEditors.map((e) => e.document).sort((d1, d2) => d1.fileName.localeCompare(d2.fileName));
-		const otherOpenDocuments = workspace.textDocuments.filter((doc) => visibleDocuments.indexOf(doc) === -1).sort((d1, d2) => d1.fileName.localeCompare(d2.fileName));
+		const otherOpenDocuments = workspace.textDocuments
+			.filter((doc) => !doc.isClosed)
+			.filter((doc) => visibleDocuments.indexOf(doc) === -1)
+			.sort((d1, d2) => d1.fileName.localeCompare(d2.fileName));
 
 		const priorityDocuments = visibleDocuments.concat(otherOpenDocuments).filter((d) => this.analyzer.capabilities.supportsPriorityFilesOutsideAnalysisRoots ? util.isAnalyzable(d) : util.isAnalyzableAndInWorkspace(d));
 		const priorityFiles = priorityDocuments.map((doc) => doc.fileName);
@@ -33,8 +51,7 @@ export class OpenFileTracker {
 		// Set priority files.
 		this.analyzer.analysisSetPriorityFiles({
 			files: priorityFiles,
-			// tslint:disable-next-line:no-empty
-		}).then(() => { }, util.logError);
+		}).then(() => { }, util.logError); // tslint:disable-line:no-empty
 
 		// Set subscriptions.
 		if (this.analyzer.capabilities.supportsClosingLabels) {
@@ -44,7 +61,7 @@ export class OpenFileTracker {
 					OCCURRENCES: priorityFiles,
 					OUTLINE: priorityFiles,
 				},
-			});
+			}).then(() => { }, util.logError); // tslint:disable-line:no-empty
 		} else {
 			this.analyzer.analysisSetSubscriptions({
 				subscriptions: {
@@ -52,7 +69,19 @@ export class OpenFileTracker {
 					OCCURRENCES: priorityFiles,
 					OUTLINE: priorityFiles,
 				},
-			});
+			}).then(() => { }, util.logError); // tslint:disable-line:no-empty
 		}
+	}
+
+	public static getOutlineFor(file: Uri): Outline | undefined {
+		return outlines[file.fsPath];
+	}
+
+	public static getOccurrencesFor(file: Uri): Occurrences[] | undefined {
+		return occurrences[file.fsPath];
+	}
+
+	public dispose(): any {
+		this.disposables.forEach((d) => d.dispose());
 	}
 }

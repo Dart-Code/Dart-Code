@@ -2,10 +2,10 @@
 	"name": "dart-code",
 	"displayName": "Dart Code",
 	"description": "Dart, Flutter and Fuchsia support for Visual Studio Code.",
-	"version": "2.11.2",
+	"version": "2.12.0-dev",
 	"publisher": "Dart-Code",
 	"engines": {
-		"vscode": "^1.21.0"
+		"vscode": "^1.22.0"
 	},
 	"license": "SEE LICENSE IN LICENSE",
 	"bugs": {
@@ -100,6 +100,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.goToSuper",
+				"title": "Go to Super Method",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.sortMembers",
 				"title": "Sort Members",
 				"category": "Dart"
@@ -173,8 +178,8 @@
 				"category": "Flutter"
 			},
 			{
-				"command": "flutter.toggleSlowModeBanner",
-				"title": "Toggle Slow-Mode Banner",
+				"command": "flutter.toggleDebugModeBanner",
+				"title": "Toggle Debug-Mode Banner",
 				"category": "Flutter"
 			},
 			{
@@ -210,6 +215,11 @@
 		],
 		"keybindings": [
 			{
+				"command": "dart.organizeDirectives",
+				"key": "alt+shift+o",
+				"when": "editorLangId == dart"
+			},
+			{
 				"command": "dart.showTypeHierarchy",
 				"key": "f4",
 				"mac": "f4",
@@ -236,6 +246,10 @@
 				},
 				{
 					"command": "dart.organizeDirectives",
+					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
+				},
+				{
+					"command": "dart.goToSuper",
 					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
 				},
 				{
@@ -290,7 +304,7 @@
 					"when": "dart-code:serviceExtension.ext.flutter.timeDilation"
 				},
 				{
-					"command": "flutter.toggleSlowModeBanner",
+					"command": "flutter.toggleDebugModeBanner",
 					"when": "dart-code:serviceExtension.ext.flutter.debugAllowBanner"
 				},
 				{
@@ -381,7 +395,8 @@
 		"configurationDefaults": {
 			"[dart]": {
 				"editor.tabSize": 2,
-				"editor.insertSpaces": true
+				"editor.insertSpaces": true,
+				"editor.detectIndentation": false
 			}
 		},
 		"configuration": {
@@ -507,10 +522,16 @@
 					"description": "Whether to automatically send a 'hot reload' request during a Flutter debug session when saving files.",
 					"scope": "window"
 				},
-				"dart.previewAnalyzeAngularTemplates": {
+				"dart.analyzeAngularTemplates": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to enable analysis for AngularDart templates (requires the angular_analyzer_plugin).",
+					"scope": "window"
+				},
+				"dart.organizeDirectivesOnSave": {
 					"type": "boolean",
 					"default": false,
-					"description": "Whether to enable analysis for AngularDart templates (requires the angular_analyzer_plugin).",
+					"description": "Whether to automatically execute Organize Directives when saving files.",
 					"scope": "window"
 				},
 				"dart.previewDart2": {
@@ -578,6 +599,12 @@
 					"items": {
 						"type": "string"
 					}
+				},
+				"dart.flutterSelectDeviceWhenConnected": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to set newly connected devices as the current device in Flutter projects.",
+					"scope": "window"
 				}
 			}
 		},
@@ -612,7 +639,20 @@
 								"description": "Path to the script to start (eg. bin/main.dart or lib/main.dart)."
 							},
 							"previewDart2": {
-								"description": "Whether to enable previewing Dart 2.0 functionality such as optional new/const.\n\ntrue: send --preview-dart-2\nfalse: send --no-preview-dart-2\nnull: do not send a flag"
+								"description": "Whether to enable previewing Dart 2.0 functionality such as optional new/const.\n\ntrue: send --preview-dart-2\n\nfalse: send --no-preview-dart-2\n\nnull: do not send a flag"
+							},
+							"showMemoryUsage": {
+								"type": "boolean",
+								"description": "Whether to show memory usage for your Flutter app in the status bar during debug sessions (if not set, will automatically show for profile builds).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage."
+							},
+							"flutterMode": {
+								"description": "The mode for launching the Flutter application:\n\ndebug: Turns on all assertions, includes all debug information, enables all debugger aids and optimizes for fast dev cycles\n\nrelease: Turns off all assertions, strips as much debug information as possible, turns of debugger aids and optimises for fast startup, fast execution and small package sizes.\n\nprofile: Same as release mode exept profiling aids and tracing are enabled.",
+								"enum": [
+									"debug",
+									"release",
+									"profile"
+								],
+								"default": "debug"
 							},
 							"args": {
 								"type": "array",
@@ -678,6 +718,7 @@
 		"@types/ws": "^0.0.38",
 		"codeclimate-test-reporter": "^0.5.0",
 		"mocha": "^3.5.3",
+		"mocha-multi-reporters": "^1.1.7",
 		"nyc": "^11.6.0",
 		"remap-istanbul": "^0.11.0",
 		"run-for-every-file": "^1.1.0",

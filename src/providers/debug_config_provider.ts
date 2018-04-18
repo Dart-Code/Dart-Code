@@ -55,6 +55,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				for (const launchPath of commonLaunchPaths) {
 					if (fs.existsSync(launchPath)) {
 						debugConfig.program = launchPath;
+						break;
 					}
 				}
 			}
@@ -85,29 +86,31 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.cwd = forceWindowsDriveLetterToUppercase(debugConfig.cwd);
 
 		// Start port listener on launch of first debug session.
-		const debugServer = this.getDebugServer(debugType);
+		const debugServer = this.getDebugServer(debugType, debugConfig.debugServer);
 
 		// Make VS Code connect to debug server instead of launching debug adapter.
 		// TODO: Why do we need this cast? The node-mock-debug does not?
 		(debugConfig as any).debugServer = debugServer.address().port;
 
+		this.analytics.logDebuggerStart(folder && folder.uri);
+
 		return debugConfig;
 	}
 
-	private getDebugServer(debugType: DebuggerType) {
+	private getDebugServer(debugType: DebuggerType, port?: number) {
 		switch (debugType) {
 			case DebuggerType.Flutter:
-				return this.spawnOrGetServer("flutter", () => new FlutterDebugSession());
+				return this.spawnOrGetServer("flutter", port, () => new FlutterDebugSession());
 			case DebuggerType.FlutterTest:
-				return this.spawnOrGetServer("flutterTest", () => new FlutterTestDebugSession());
+				return this.spawnOrGetServer("flutterTest", port, () => new FlutterTestDebugSession());
 			case DebuggerType.Dart:
-				return this.spawnOrGetServer("dart", () => new DartDebugSession());
+				return this.spawnOrGetServer("dart", port, () => new DartDebugSession());
 			default:
 				throw new Error("Unknown debugger type");
 		}
 	}
 
-	private spawnOrGetServer(type: string, create: () => DebugSession): net.Server {
+	private spawnOrGetServer(type: string, port: number = 0, create: () => DebugSession): net.Server {
 		// Start port listener on launch of first debug session.
 		if (!this.debugServers[type]) {
 
@@ -116,15 +119,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				const session = create();
 				session.setRunAsServer(true);
 				session.start(socket as NodeJS.ReadableStream, socket);
-			}).listen(0);
+			}).listen(port);
 		}
 
 		return this.debugServers[type];
 	}
 
 	private setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, isFlutter: boolean, deviceId: string) {
-		this.analytics.logDebuggerStart(folder && folder.uri);
-
 		const dartExec = isWin ? "dart.exe" : "dart";
 		const flutterExec = isWin ? "flutter.bat" : "flutter";
 
@@ -133,7 +134,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Attach any properties that weren't explicitly set.
 		debugConfig.type = debugConfig.type || "dart";
 		debugConfig.request = debugConfig.request || "launch";
-		debugConfig.cwd = forceWindowsDriveLetterToUppercase(debugConfig.cwd || folder.uri.fsPath);
+		debugConfig.cwd = debugConfig.cwd || folder.uri.fsPath;
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.vmArgs = debugConfig.vmArgs || conf.vmAdditionalArgs;
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, "bin", dartExec);
@@ -148,10 +149,15 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (debugConfig.checkedMode === undefined)
 			debugConfig.checkedMode = true;
 		if (isFlutter) {
+			debugConfig.flutterMode = debugConfig.flutterMode || "debug";
 			debugConfig.flutterPath = debugConfig.flutterPath || (this.sdks.flutter ? path.join(this.sdks.flutter, "bin", flutterExec) : null);
 			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || conf.flutterRunLogFile;
 			debugConfig.flutterTestLogFile = debugConfig.flutterTestLogFile || conf.flutterTestLogFile;
 			debugConfig.deviceId = debugConfig.deviceId || deviceId;
+			debugConfig.showMemoryUsage =
+				debugConfig.showMemoryUsage !== undefined && debugConfig.showMemoryUsage !== null
+					? debugConfig.showMemoryUsage
+					: debugConfig.flutterMode === "profile";
 		}
 	}
 
@@ -159,7 +165,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (this.debugServers) {
 			for (const type of Object.keys(this.debugServers)) {
 				this.debugServers[type].close();
-				this.debugServers[type] = null;
+				delete this.debugServers[type];
 			}
 		}
 	}

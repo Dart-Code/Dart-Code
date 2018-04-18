@@ -6,13 +6,14 @@ import { ProgressLocation, Uri } from "vscode";
 import * as vs from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { FlutterLaunchRequestArguments, isWin } from "../debug/utils";
+import { FlutterLaunchRequestArguments, isWin, safeSpawn } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
-import { dartPubPath, flutterPath, getDartWorkspaceFolders, isDartWorkspaceFolder, isFlutterWorkspaceFolder, ProjectType, Sdks } from "../utils";
+import { isFlutterWorkspaceFolder, ProjectType, Sdks } from "../utils";
 import * as util from "../utils";
 import * as channels from "./channels";
+import { showFlutterActivationFailure, dartPubPath, flutterPath } from "../sdk/utils";
 
 const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
 
@@ -76,7 +77,7 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", (selection) => {
 			if (!sdks.flutter) {
-				util.showFlutterActivationFailure("flutter.doctor");
+				showFlutterActivationFailure("flutter.doctor");
 				return;
 			}
 			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
@@ -98,18 +99,18 @@ export class SdkCommands {
 		}));
 	}
 
-	private runCommandForWorkspace(
+	private async runCommandForWorkspace(
 		handler: (folder: string, command: string, shortPath: string) => Thenable<number>,
 		placeHolder: string,
 		command: string,
 		selection?: vs.Uri,
-	): Thenable<number> {
+	): Promise<number> {
 
-		return this.getWorkspace(placeHolder, selection).then((f) => {
-			const workspacePath = vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri.fsPath;
-			const shortPath = path.join(path.basename(f), path.relative(f, workspacePath));
-			return handler(f, command, shortPath);
-		});
+		const f = await this.getWorkspace(placeHolder, selection);
+
+		const workspacePath = vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri.fsPath;
+		const shortPath = path.join(path.basename(f), path.relative(f, workspacePath));
+		return handler(f, command, shortPath);
 	}
 
 	private async getWorkspace(placeHolder: string, selection?: vs.Uri): Promise<string> {
@@ -119,7 +120,7 @@ export class SdkCommands {
 
 		// If there's only one folder, just use it to avoid prompting the user.
 		if (!folder && vs.workspace.workspaceFolders) {
-			const allowedProjects = getDartWorkspaceFolders();
+			const allowedProjects = util.getDartWorkspaceFolders();
 			if (allowedProjects.length === 1)
 				folder = allowedProjects[0].uri.fsPath;
 		}
@@ -128,7 +129,7 @@ export class SdkCommands {
 			? Promise.resolve(folder)
 			// TODO: Can we get this filtered?
 			// https://github.com/Microsoft/vscode/issues/39132
-			: vs.window.showWorkspaceFolderPick({ placeHolder }).then((f) => f && isDartWorkspaceFolder(f) && f.uri.fsPath); // TODO: What if the user didn't pick anything?
+			: vs.window.showWorkspaceFolderPick({ placeHolder }).then((f) => f && util.isDartWorkspaceFolder(f) && f.uri.fsPath); // TODO: What if the user didn't pick anything?
 	}
 
 	private runFlutter(command: string, selection?: vs.Uri): Thenable<number> {
@@ -152,7 +153,7 @@ export class SdkCommands {
 	}
 
 	private runCommandInFolder(shortPath: string, commandName: string, folder: string, binPath: string, args: string[], isStartingBecauseOfTermination: boolean = false): Thenable<number> {
-		return vs.window.withProgress({ location: ProgressLocation.Window, title: `Running ${commandName} ${args.join(" ")}` }, (progress) => {
+		return vs.window.withProgress({ location: ProgressLocation.Notification, title: `Running ${commandName} ${args.join(" ")}` }, (progress, token) => {
 			return new Promise((resolve, reject) => {
 				const channelName = commandName.substr(0, 1).toUpperCase() + commandName.substr(1);
 				const channel = channels.createChannel(channelName);
@@ -179,7 +180,8 @@ export class SdkCommands {
 
 				channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
 
-				const process = util.safeSpawn(folder, binPath, args);
+				const process = safeSpawn(folder, binPath, args);
+				token.onCancellationRequested(() => process.kill());
 				this.runningCommands[commandId] = process;
 				process.on("close", (code) => {
 					// Check it's still the same process before nulling out, in case our replacement has already been inserted.
@@ -194,7 +196,7 @@ export class SdkCommands {
 
 	private async createFlutterProject(): Promise<void> {
 		if (!this.sdks || !this.sdks.flutter) {
-			util.showFlutterActivationFailure("flutter.newProject");
+			showFlutterActivationFailure("flutter.newProject");
 			return;
 		}
 

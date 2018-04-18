@@ -18,17 +18,18 @@ export class DebugCommands {
 	private performanceOverlayEnabled = false;
 	private repaintRainbowEnabled = false;
 	private timeDilation = 1.0;
-	private slowModeBannerEnabled = true;
+	private debugModeBannerEnabled = true;
 	private paintBaselinesEnabled = false;
 	private currentDebugSession: vs.DebugSession;
 	private progressPromise: PromiseCompleter<void>;
 	private reloadStatus = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left);
+	private debugMetrics = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 0);
 	private observatoryUri: string = null;
 
 	constructor(context: vs.ExtensionContext, analytics: Analytics) {
 		this.analytics = analytics;
-		context.subscriptions.push(this.reloadStatus);
-		vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
+		context.subscriptions.push(this.reloadStatus, this.debugMetrics);
+		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
 			if (e.event === "dart.progress") {
 				if (e.body.message) {
 					// Clear any old progress first
@@ -36,7 +37,7 @@ export class DebugCommands {
 						this.progressPromise.resolve();
 					this.progressPromise = new PromiseCompleter();
 					vs.window.withProgress(
-						{ location: vs.ProgressLocation.Window, title: e.body.message },
+						{ location: vs.ProgressLocation.Notification, title: e.body.message },
 						(_) => this.progressPromise.promise,
 					);
 				}
@@ -70,40 +71,47 @@ export class DebugCommands {
 			} else if (e.event === "dart.flutter.firstFrame") {
 				// Send the current value to ensure it persists for the user.
 				this.sendAllServiceSettings();
+			} else if (e.event === "dart.debugMetrics") {
+				const memory = e.body.memory;
+				const message = `${Math.ceil(memory.current / 1024 / 1024)}MB of ${Math.ceil(memory.total / 1024 / 1024)}MB`;
+				this.debugMetrics.text = message;
+				this.debugMetrics.tooltip = "This is the amount of memory being consumed by your applications heaps (out of what has been allocated).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage.";
+				this.debugMetrics.show();
 			}
-		});
+		}));
 		let debugSessionStart: Date;
-		vs.debug.onDidStartDebugSession((s) => {
+		context.subscriptions.push(vs.debug.onDidStartDebugSession((s) => {
 			if (s.type === "dart") {
 				this.currentDebugSession = s;
 				this.resetFlutterSettings();
 				debugSessionStart = new Date();
 			}
-		});
-		vs.debug.onDidTerminateDebugSession((s) => {
+		}));
+		context.subscriptions.push(vs.debug.onDidTerminateDebugSession((s) => {
 			if (s === this.currentDebugSession) {
 				this.currentDebugSession = null;
 				this.observatoryUri = null;
 				if (this.progressPromise)
 					this.progressPromise.resolve();
 				this.reloadStatus.hide();
+				this.debugMetrics.hide();
 				const debugSessionEnd = new Date();
 				this.disableAllServiceExtensions();
 				analytics.logDebugSessionDuration(debugSessionEnd.getTime() - debugSessionStart.getTime());
 			}
-		});
+		}));
 
 		this.registerBoolServiceCommand("ext.flutter.debugPaint", () => this.debugPaintingEnabled);
 		this.registerBoolServiceCommand("ext.flutter.showPerformanceOverlay", () => this.performanceOverlayEnabled);
 		this.registerBoolServiceCommand("ext.flutter.repaintRainbow", () => this.repaintRainbowEnabled);
 		this.registerServiceCommand("ext.flutter.timeDilation", () => ({ timeDilation: this.timeDilation }));
-		this.registerBoolServiceCommand("ext.flutter.debugAllowBanner", () => this.slowModeBannerEnabled);
+		this.registerBoolServiceCommand("ext.flutter.debugAllowBanner", () => this.debugModeBannerEnabled);
 		this.registerBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", () => this.paintBaselinesEnabled);
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => { this.debugPaintingEnabled = !this.debugPaintingEnabled; this.sendServiceSetting("ext.flutter.debugPaint"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => { this.performanceOverlayEnabled = !this.performanceOverlayEnabled; this.sendServiceSetting("ext.flutter.showPerformanceOverlay"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => { this.repaintRainbowEnabled = !this.repaintRainbowEnabled; this.sendServiceSetting("ext.flutter.repaintRainbow"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => { this.timeDilation = 6.0 - this.timeDilation; this.sendServiceSetting("ext.flutter.timeDilation"); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowModeBanner", () => { this.slowModeBannerEnabled = !this.slowModeBannerEnabled; this.sendServiceSetting("ext.flutter.debugAllowBanner"); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => { this.debugModeBannerEnabled = !this.debugModeBannerEnabled; this.sendServiceSetting("ext.flutter.debugAllowBanner"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => { this.paintBaselinesEnabled = !this.paintBaselinesEnabled; this.sendServiceSetting("ext.flutter.debugPaintBaselinesEnabled"); }));
 
 		// Open Observatory.
@@ -144,7 +152,7 @@ export class DebugCommands {
 
 	private serviceSettings: { [id: string]: () => void } = {};
 	private sendServiceSetting(id: string) {
-		if (this.serviceSettings[id])
+		if (this.serviceSettings[id] && this.enabledServiceExtensions.indexOf(id) !== -1)
 			this.serviceSettings[id]();
 	}
 
@@ -182,7 +190,7 @@ export class DebugCommands {
 	}
 
 	private resetFlutterSettings() {
-		this.debugPaintingEnabled = false, this.performanceOverlayEnabled = false, this.repaintRainbowEnabled = false, this.timeDilation = 1.0, this.slowModeBannerEnabled = true, this.paintBaselinesEnabled = false;
+		this.debugPaintingEnabled = false, this.performanceOverlayEnabled = false, this.repaintRainbowEnabled = false, this.timeDilation = 1.0, this.debugModeBannerEnabled = true, this.paintBaselinesEnabled = false;
 	}
 
 	private enabledServiceExtensions: string[] = [];

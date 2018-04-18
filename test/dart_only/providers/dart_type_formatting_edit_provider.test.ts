@@ -2,14 +2,14 @@ import * as assert from "assert";
 import * as path from "path";
 import * as fs from "fs";
 import * as vs from "vscode";
-import { activate, doc, setTestContent, editor, getPositionOf, eol } from "../../helpers";
+import { activate, doc, setTestContent, editor, positionOf, eol } from "../../helpers";
 
 describe("dart_type_formatting_edit_provider", () => {
 
 	before(() => activate());
 
 	async function formatAtLocation(searchText: string, character: string): Promise<void> {
-		const position = getPositionOf(searchText);
+		const position = positionOf(searchText);
 		const formatResult = await (vs.commands.executeCommand("vscode.executeFormatOnTypeProvider", doc.uri, position, character) as Thenable<vs.TextEdit[]>);
 		assert.ok(formatResult);
 		assert.ok(formatResult.length);

@@ -16,8 +16,8 @@ function color(col: number, message: string) {
 	return "\u001b[" + col + "m" + message + "\u001b[0m";
 }
 
-// 1 min timeout (Travis kills us at 10 min without output).
-const timeoutInMilliseconds = 1000 * 60 * 8;
+// Set timeout (Travis kills us at 10 min without output).
+const timeoutInMilliseconds = 1000 * 60 * 5;
 function runNode(cwd: string, args: string[], env: any): Promise<number> {
 	return new Promise<number>((resolve, reject) => {
 		let hasClosed = false;
@@ -61,15 +61,28 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	// even though other env vars do! 😢
 	env.DART_PATH_OVERRIDE = sdkPaths;
 	env.CODE_VERSION = codeVersion;
-	env.DART_CODE_DISABLE_ANALYTICS = true;
+	env.DART_CODE_IS_TEST_RUN = true;
 	env.MOCHA_FORBID_ONLY = true;
 	env.CODE_TESTS_WORKSPACE = path.join(cwd, "test", "test_projects", workspaceFolder);
 	env.CODE_TESTS_PATH = path.join(cwd, "out", "test", testFolder);
-	if (codeVersion === "*")
-		codeVersion = "stable";
+
+	// Figure out a filename for results...
+	const dartFriendlyName = sdkPaths === process.env.PATH_UNSTABLE ? "dev" : "stable";
+	const codeFriendlyName = codeVersion === "*" ? "stable" : "insiders";
+
+	// Set some paths that are used inside the test run.
+	env.DC_TEST_LOGS = path.join(cwd, ".dart_code_test_logs", `${testFolder.replace("/", "_")}_${dartFriendlyName}_${codeFriendlyName}`);
+	env.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testFolder.replace("/", "_")}_${dartFriendlyName}_${codeFriendlyName}.json`);
+	env.TEST_XML_OUTPUT = path.join(cwd, ".test_results", `${testFolder.replace("/", "_")}_${dartFriendlyName}_${codeFriendlyName}.xml`);
+
+	// Ensure any necessary folders exist.
 	if (!fs.existsSync(".nyc_output"))
 		fs.mkdirSync(".nyc_output");
-	env.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testFolder.replace("/", "_")}_${codeVersion}_${(new Date()).getTime()}.json`);
+	if (!fs.existsSync(".dart_code_test_logs"))
+		fs.mkdirSync(".dart_code_test_logs");
+	if (!fs.existsSync(env.DC_TEST_LOGS))
+		fs.mkdirSync(env.DC_TEST_LOGS);
+
 	let res = await runNode(cwd, args, env);
 	if (!allowFailures)
 		exitCode = exitCode || res;
@@ -110,6 +123,15 @@ async function runAllTests(): Promise<void> {
 			await runTests("multi_root_upgraded", "", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 			await runTests("not_activated/flutter_create", "empty", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 		}
+	}
+
+	if (process.env.CI) {
+		const branchName = process.env.APPVEYOR_REPO_BRANCH || process.env.TRAVIS_BRANCH;
+		const commit = process.env.APPVEYOR_REPO_COMMIT || process.env.TRAVIS_COMMIT;
+
+		console.log("\n\n");
+		console.log(yellow("A combined test summary will be available at:"));
+		console.log(yellow(`  https://dartcode.org/test-results/?${branchName}/${commit}`));
 	}
 }
 

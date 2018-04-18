@@ -1,8 +1,10 @@
 .DS_Store
+.dart_code_test_logs/
 .flutter-plugins/
 .nyc_output/
 .packages
 .pub/
+.test_results/
 .vscode-test/
 .vscode/.browse.VC.db*
 *.log

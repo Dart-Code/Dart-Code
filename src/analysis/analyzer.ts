@@ -15,6 +15,7 @@ export class AnalyzerCapabilities {
 		this.version = analyzerVersion;
 	}
 
+	get supportsAnalyzingHtmlFiles() { return versionIsAtLeast(this.version, "1.18.5"); }
 	get supportsPriorityFilesOutsideAnalysisRoots() { return versionIsAtLeast(this.version, "1.18.2"); }
 	get supportsDiagnostics() { return versionIsAtLeast(this.version, "1.18.1"); }
 	get supportsClosingLabels() { return versionIsAtLeast(this.version, "1.18.4"); }
@@ -68,7 +69,7 @@ export class Analyzer extends AnalyzerGen {
 		this.registerForRequestError((e) => this.requestDiagnosticsUpdate());
 
 		// Register for version.
-		this.registerForServerConnected((e) => { this.version = e.version; this.capabilities = new AnalyzerCapabilities(this.version); });
+		this.registerForServerConnected((e) => { this.version = e.version; this.capabilities.version = this.version; });
 
 		this.createProcess(undefined, dartVMPath, args, undefined);
 
@@ -81,7 +82,10 @@ export class Analyzer extends AnalyzerGen {
 		try {
 			super.sendMessage(json);
 		} catch (e) {
-			reloadExtension("The Dart Analyzer has terminated.");
+			const message = this.version
+				? "The Dart Analyzer has terminated."
+				: "The Dart Analyzer could not be started. Please set the `dart.analyzerLog` option and review the log file for errors.";
+			reloadExtension(message);
 			throw e;
 		}
 	}
@@ -91,14 +95,13 @@ export class Analyzer extends AnalyzerGen {
 		return !message.startsWith("--- ") && !message.startsWith("+++ ");
 	}
 
-	private requestDiagnosticsUpdate() {
+	private async requestDiagnosticsUpdate() {
 		this.lastDiagnostics = null;
 
 		if (!this.capabilities.supportsDiagnostics)
 			return;
 
-		this.diagnosticGetDiagnostics()
-			.then((resp) => this.lastDiagnostics = resp.contexts);
+		this.lastDiagnostics = (await this.diagnosticGetDiagnostics()).contexts;
 	}
 
 	public getLastDiagnostics(): as.ContextData[] {
