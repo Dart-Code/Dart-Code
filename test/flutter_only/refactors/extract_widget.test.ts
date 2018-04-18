@@ -10,7 +10,7 @@ describe("refactor", () => {
 
 	before(() => activate());
 
-	it("can extract simple code into a method", async () => {
+	it("can extract simple code into a widget", async () => {
 		const showInputBox = sinon.stub(vs.window, "showInputBox");
 		defer(showInputBox.restore);
 		showInputBox.resolves("MyOtherWidget");
