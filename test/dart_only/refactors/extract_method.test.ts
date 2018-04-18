@@ -1,10 +1,8 @@
 import * as assert from "assert";
-import * as path from "path";
-import * as fs from "fs";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { activate, doc, positionOf, setTestContent, editor, ensureTestContent, rangeOf, delay, defer, sb } from "../../helpers";
-import { REFACTOR_FAILED_DOC_MODIFIED, REFACTOR_ANYWAY } from "../../../src/commands/refactor";
+import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../src/commands/refactor";
+import { activate, delay, doc, ensureTestContent, positionOf, rangeOf, sb, setTestContent, waitFor } from "../../helpers";
 
 describe("refactor", () => {
 
@@ -75,7 +73,7 @@ main() {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("Aaaa");
 		const showWarningMessage = sb.stub(vs.window, "showWarningMessage");
-		const refactorWarning = showWarningMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves();
+		const refactorPrompt = showWarningMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves();
 		showWarningMessage.callThrough();
 
 		await setTestContent(`
@@ -91,14 +89,14 @@ main() {
   print("Hello, world!");
 }
 		`);
-		assert(refactorWarning.calledOnce);
+		assert(refactorPrompt.calledOnce);
 	});
 
 	it("applies changes when there are warnings if the user approves", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("Aaaa");
 		const showWarningMessage = sb.stub(vs.window, "showWarningMessage");
-		const refactorWarning = showWarningMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves(REFACTOR_ANYWAY);
+		const refactorPrompt = showWarningMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves(REFACTOR_ANYWAY);
 		showWarningMessage.callThrough();
 
 		await setTestContent(`
@@ -119,12 +117,16 @@ void Aaaa() {
 }
 		`);
 
-		assert(refactorWarning.calledOnce);
+		assert(refactorPrompt.calledOnce);
 	});
 
-	it("rejects the edit if the document has been modified", async () => {
+	it("rejects the edit if the document has been modified before the user approves", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
-		showInputBox.returns(delay(100).then(() => "printHelloWorld"));
+		showInputBox.resolves("Aaaaa");
+		const showWarningMessage = sb.stub(vs.window, "showWarningMessage");
+		// Accept after some time (so the doc can be edited by the test).
+		const refactorPrompt = showWarningMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).returns(delay(300).then(() => REFACTOR_ANYWAY));
+		showWarningMessage.callThrough();
 		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 		const rejectMessage = showErrorMessage.withArgs(REFACTOR_FAILED_DOC_MODIFIED).resolves();
 		showErrorMessage.callThrough();
@@ -138,8 +140,8 @@ main() {
 		// Start the command but don't await it.
 		const refactorCommand = (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
 
-		// Give the command time to start.
-		await delay(10);
+		// Wait for the message to appear.
+		await waitFor(() => refactorPrompt.called);
 
 		// Change the document in the meantime.
 		await setTestContent(`
@@ -159,5 +161,7 @@ main() {
 }
 // This comment was added
 		`);
+
+		assert(rejectMessage.calledOnce);
 	});
 });
