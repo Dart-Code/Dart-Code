@@ -112,12 +112,17 @@ async function setLogs(conf: vs.WorkspaceConfiguration, logFolder: string, prefi
 	}
 }
 
-export function setTestContent(content: string): Thenable<boolean> {
+export async function setTestContent(content: string): Promise<void> {
 	const all = new vs.Range(
 		doc.positionAt(0),
 		doc.positionAt(doc.getText().length),
 	);
-	return editor.edit((eb) => eb.replace(all, content));
+	if (await editor.edit((eb) => eb.replace(all, content))) {
+		// Wait a short period for the server to process the update
+		await delay(100);
+	} else {
+		throw new Error("Edits not applied!");
+	}
 }
 
 export function positionOf(searchText: string): vs.Position {
@@ -265,8 +270,8 @@ export async function waitFor(action: () => boolean, message?: string, milliseco
 	while (timeRemaining > 0) {
 		if (action())
 			return;
-		await new Promise((resolve) => setTimeout(resolve, 100));
-		timeRemaining -= 100;
+		await new Promise((resolve) => setTimeout(resolve, 50));
+		timeRemaining -= 50;
 	}
 	if (throwOnFailure)
 		throw new Error("Action didn't return true within specified timeout" + (message ? ` (${message})` : ""));
