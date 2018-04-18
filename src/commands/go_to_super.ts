@@ -33,7 +33,7 @@ export class GoToSuperCommand implements vs.Disposable {
 
 		const outlineNode = this.findNode([outline], offset);
 		if (!outlineNode) {
-			vs.window.showWarningMessage("Go to Super Method only works for methods.");
+			vs.window.showWarningMessage("Go to Super Method only works for methods, getters and setters.");
 			return;
 		}
 
