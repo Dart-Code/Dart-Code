@@ -114,7 +114,7 @@ class MyWidget extends StatelessWidget {
 		showInputBox.resolves("MyWidget");
 		const showErrorMessage = sinon.stub(vs.window, "showErrorMessage");
 		defer(showErrorMessage.restore);
-		const refactorWarning = showErrorMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves();
+		const refactorPrompt = showErrorMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves();
 		showErrorMessage.callThrough();
 
 		await setTestContent(`
@@ -140,7 +140,7 @@ class MyWidget extends StatelessWidget {
   }
 }
 		`);
-		assert(refactorWarning.calledOnce);
+		assert(refactorPrompt.calledOnce);
 	});
 
 	it("applies changes when there are errors if the user approves", async () => {
@@ -149,7 +149,7 @@ class MyWidget extends StatelessWidget {
 		showInputBox.resolves("MyWidget");
 		const showErrorMessage = sinon.stub(vs.window, "showErrorMessage");
 		defer(showErrorMessage.restore);
-		const refactorWarning = showErrorMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves(REFACTOR_ANYWAY);
+		const refactorPrompt = showErrorMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves(REFACTOR_ANYWAY);
 		showErrorMessage.callThrough();
 
 		await setTestContent(`
@@ -183,7 +183,7 @@ class MyWidget extends StatelessWidget {
 }
 		`);
 
-		assert(refactorWarning.calledOnce);
+		assert(refactorPrompt.calledOnce);
 	});
 
 	it("rejects the edit if the document has been modified before the user approves", async () => {
@@ -193,7 +193,8 @@ class MyWidget extends StatelessWidget {
 		const showErrorMessage = sinon.stub(vs.window, "showErrorMessage");
 		defer(showErrorMessage.restore);
 		// Accept after some time (so the doc can be edited by the test).
-		const refactorWarning = showErrorMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).returns(delay(100).then(() => REFACTOR_ANYWAY));
+		const refactorPrompt = showErrorMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).returns(delay(500).then(() => REFACTOR_ANYWAY));
+		const rejectMessage = showErrorMessage.withArgs(REFACTOR_FAILED_DOC_MODIFIED).resolves();
 		showErrorMessage.callThrough();
 
 		await setTestContent(`
@@ -211,7 +212,7 @@ class MyWidget extends StatelessWidget {
 		const refactorCommand = (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("|Container()|"), "EXTRACT_WIDGET"));
 
 		// Wait for the message to appear.
-		await waitFor(() => refactorWarning.called);
+		await waitFor(() => refactorPrompt.called);
 
 		// Change the document in the meantime.
 		await setTestContent(`
@@ -241,5 +242,7 @@ class MyWidget extends StatelessWidget {
 }
 // This comment was added
 		`);
+
+		assert(rejectMessage.calledOnce);
 	});
 });
