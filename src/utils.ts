@@ -7,13 +7,22 @@ import { commands, env as vsEnv, Range, Position, TextDocument, Uri, workspace, 
 import * as as from "./analysis/analysis_server_types";
 import { config } from "./config";
 import { referencesFlutterSdk } from "./sdk/utils";
+import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
 
 export const extensionVersion = getExtensionVersion();
 export const isDevExtension = checkIsDevExtension();
 export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "dart_code_flutter_create.dart";
 
+export function fsPath(uri: Uri) {
+	if (!config.previewExperimentalWindowsDriveLetterHandling)
+		return uri.fsPath; // tslint:disable-line:disallow-fspath
+
+	// tslint:disable-next-line:disallow-fspath
+	return forceWindowsDriveLetterToUppercase(uri.fsPath);
+}
+
 export function isFlutterWorkspaceFolder(folder: WorkspaceFolder): boolean {
-	return isDartWorkspaceFolder(folder) && isFlutterProjectFolder(folder.uri.fsPath);
+	return isDartWorkspaceFolder(folder) && isFlutterProjectFolder(fsPath(folder.uri));
 }
 
 export function isFlutterProjectFolder(folder: string): boolean {
@@ -120,7 +129,7 @@ export function isInsideFolderNamed(file: string, folderName: string): boolean {
 	if (!ws)
 		return false;
 
-	const relPath = path.sep + path.relative(ws.uri.fsPath, file);
+	const relPath = path.sep + path.relative(fsPath(ws.uri), file);
 
 	// We only want to check the relative path from the workspace root so that if the whole project is inside a
 	// test (etc.) folder (for ex. Dart Code's own tests) we don't falsely assume it's an end user test.

@@ -9,7 +9,7 @@ import { DebugSession } from "vscode-debugadapter";
 import { FlutterDebugSession } from "../debug/flutter_debug_impl";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { FlutterLaunchRequestArguments, isWin, forceWindowsDriveLetterToUppercase } from "../debug/utils";
-import { ProjectType, Sdks, isFlutterWorkspaceFolder, isInsideFolderNamed, isFlutterProjectFolder, isTestFile } from "../utils";
+import { ProjectType, Sdks, isFlutterWorkspaceFolder, isInsideFolderNamed, isFlutterProjectFolder, isTestFile, fsPath } from "../utils";
 import { SdkCommands } from "../commands/sdk";
 import { spawn } from "child_process";
 import { FlutterTestDebugSession } from "../debug/flutter_test_debug_impl";
@@ -39,7 +39,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
 		// If there's no program set, try to guess one.
 		if (!debugConfig.program) {
-			const openFile = window.activeTextEditor && window.activeTextEditor.document ? window.activeTextEditor.document.uri.fsPath : null;
+			const openFile = window.activeTextEditor && window.activeTextEditor.document ? fsPath(window.activeTextEditor.document.uri) : null;
 			// Overwrite the folder with a more appropriate workspace root (https://github.com/Microsoft/vscode/issues/45580)
 			if (openFile) {
 				folder = workspace.getWorkspaceFolder(Uri.file(openFile)) || folder;
@@ -49,8 +49,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			} else {
 				// Use the open file as a clue to find the best project root, then search from there.
 				const commonLaunchPaths = [
-					path.join(folder.uri.fsPath, "lib", "main.dart"),
-					path.join(folder.uri.fsPath, "bin", "main.dart"),
+					path.join(fsPath(folder.uri), "lib", "main.dart"),
+					path.join(fsPath(folder.uri), "bin", "main.dart"),
 				];
 				for (const launchPath of commonLaunchPaths) {
 					if (fs.existsSync(launchPath)) {
@@ -70,7 +70,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		// If we don't have a cwd then find the best one from the project root.
-		debugConfig.cwd = debugConfig.cwd || folder.uri.fsPath;
+		debugConfig.cwd = debugConfig.cwd || fsPath(folder.uri);
 
 		const isFlutter = isFlutterProjectFolder(debugConfig.cwd as string);
 		const isTest = isTestFile(debugConfig.program as string);
@@ -134,7 +134,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Attach any properties that weren't explicitly set.
 		debugConfig.type = debugConfig.type || "dart";
 		debugConfig.request = debugConfig.request || "launch";
-		debugConfig.cwd = debugConfig.cwd || folder.uri.fsPath;
+		debugConfig.cwd = debugConfig.cwd || fsPath(folder.uri);
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.vmArgs = debugConfig.vmArgs || conf.vmAdditionalArgs;
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, "bin", dartExec);

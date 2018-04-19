@@ -2,7 +2,7 @@ import { WorkspaceSymbolProvider, SymbolInformation, CancellationToken, SymbolKi
 import * as path from "path";
 import * as fs from "fs";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
-import { toRange, isWithinWorkspace, logError, escapeRegExp } from "../utils";
+import { toRange, isWithinWorkspace, logError, escapeRegExp, fsPath } from "../utils";
 import * as as from "../analysis/analysis_server_types";
 
 export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymbolProvider {
@@ -93,7 +93,7 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 			inputPath = `package:${pathComponents[0]}/${pathComponents.slice(1).join("/")}`;
 		} else {
 			const root = workspace.getWorkspaceFolder(Uri.file(inputPath));
-			inputPath = root && path.relative(root.uri.fsPath, inputPath);
+			inputPath = root && path.relative(fsPath(root.uri), inputPath);
 		}
 
 		return inputPath;

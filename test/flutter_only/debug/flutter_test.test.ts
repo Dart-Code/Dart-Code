@@ -1,9 +1,8 @@
-import * as assert from "assert";
 import * as path from "path";
-import * as fs from "fs";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
-import { activate, ext, closeAllOpenFiles, flutterHelloWorldMainFile, flutterTestMainFile, positionOf, flutterTestOtherFile, flutterTestBrokenFile, openFile } from "../../helpers";
+import { fsPath } from "../../../src/utils";
+import { activate, ext, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, openFile, positionOf } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_test_debug_entry.js"), "dart");
@@ -21,7 +20,7 @@ describe("flutter test debugger", () => {
 			vs.workspace.workspaceFolders[0],
 			{
 				name: "Dart & Flutter",
-				program: script && script.fsPath,
+				program: script && fsPath(script),
 				request: "launch",
 				type: "dart",
 			},
@@ -89,7 +88,7 @@ describe("flutter test debugger", () => {
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: flutterTestBrokenFile.fsPath,
+				path: fsPath(flutterTestBrokenFile),
 			}),
 			dc.launch(config),
 		]);

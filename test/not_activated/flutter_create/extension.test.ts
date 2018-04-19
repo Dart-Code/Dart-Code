@@ -3,16 +3,16 @@ import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { delay, getRandomTempFolder, ext, defer, sb } from "../../helpers";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../../src/utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath } from "../../../src/utils";
+import { ext, getRandomTempFolder, sb } from "../../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
 		const wfs = vs.workspace.workspaceFolders;
 		assert.equal(wfs.length, 1);
 		assert.ok(
-			wfs[0].uri.fsPath.endsWith(path.sep + "empty"),
-			`${wfs[0].uri.fsPath} doesn't end with ${path.sep}empty`,
+			fsPath(wfs[0].uri).endsWith(path.sep + "empty"),
+			`${fsPath(wfs[0].uri)} doesn't end with ${path.sep}empty`,
 		);
 	});
 });

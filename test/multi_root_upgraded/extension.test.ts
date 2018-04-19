@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { Sdks } from "../../src/utils";
+import { Sdks, fsPath } from "../../src/utils";
 import { checkForProjectsInSubFolders, UPGRADE_TO_WORKSPACE_FOLDERS } from "../../src/project";
 import { waitFor, sb } from "../helpers";
 
@@ -13,8 +13,8 @@ describe("test environment", () => {
 		const wfs = vs.workspace.workspaceFolders;
 		assert.equal(wfs.length, 1);
 		assert.ok(
-			wfs[0].uri.fsPath.endsWith(path.sep + "test_projects"),
-			`${wfs[0].uri.fsPath} doesn't end with ${path.sep}test_projects`,
+			fsPath(wfs[0].uri).endsWith(path.sep + "test_projects"),
+			`${fsPath(wfs[0].uri)} doesn't end with ${path.sep}test_projects`,
 		);
 	});
 });

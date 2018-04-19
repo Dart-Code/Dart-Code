@@ -3,8 +3,9 @@ import * as path from "path";
 import * as vs from "vscode";
 import { ext, activate, closeAllOpenFiles, waitFor, closeFile, everythingFile, helloWorldFolder, openFile } from "../helpers";
 import { OpenFileTracker } from "../../src/analysis/open_file_tracker";
+import { fsPath } from "../../src/utils";
 
-export const outlineTrackingFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "lib/outline_tracking/empty.dart"));
+export const outlineTrackingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/outline_tracking/empty.dart"));
 
 describe("file tracker", () => {
 	before(() => activate());

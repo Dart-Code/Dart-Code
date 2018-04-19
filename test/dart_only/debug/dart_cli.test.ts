@@ -1,8 +1,9 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
+import { fsPath } from "../../../src/utils";
 import { ensureVariable, getTopFrameVariables, getVariables } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, ext, helloWorldBrokenFile, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf, delay } from "../../helpers";
+import { activate, closeAllOpenFiles, ext, helloWorldBrokenFile, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
@@ -16,7 +17,7 @@ describe("dart cli debugger", () => {
 			vs.workspace.workspaceFolders[0],
 			{
 				name: "Dart & Flutter",
-				program: script && script.fsPath,
+				program: script && fsPath(script),
 				request: "launch",
 				type: "dart",
 			},
@@ -123,7 +124,7 @@ describe("dart cli debugger", () => {
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^throw").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: helloWorldBrokenFile.fsPath,
+				path: fsPath(helloWorldBrokenFile),
 			}),
 			dc.launch(config),
 		]);
@@ -136,7 +137,7 @@ describe("dart cli debugger", () => {
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^throw").line + 1, // TODO: This line seems to be one-based but position is zero-based?
-				path: helloWorldBrokenFile.fsPath,
+				path: fsPath(helloWorldBrokenFile),
 			}),
 			dc.launch(config),
 		]);

@@ -3,6 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import * as util from "./utils";
 import { config } from "./config";
+import { fsPath } from "./utils";
 
 export const UPGRADE_TO_WORKSPACE_FOLDERS = "Mark Projects as Workspace Folders";
 
@@ -48,12 +49,12 @@ export async function checkForProjectsInSubFolders() {
 		return;
 	let projects: string[] = [];
 	for (const workspaceFolder of vs.workspace.workspaceFolders) {
-		projects = projects.concat(getChildProjects(workspaceFolder.uri.fsPath, 3));
+		projects = projects.concat(getChildProjects(fsPath(workspaceFolder.uri), 3));
 	}
 
 	const projectsToAdd = projects
 		// Filter to those that aren't already roots.
-		.filter((f) => vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri.fsPath !== f)
+		.filter((f) => fsPath(vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri) !== f)
 		// Or if we're opted-out.
 		.filter((f) => config.for(vs.Uri.file(f)).promptToUpgradeWorkspace);
 
