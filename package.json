@@ -529,6 +529,12 @@
 					"description": "Whether to enable previewing Dart 2.0 functionality such as optional new/const.\n\ntrue: send --preview-dart-2\nfalse: send --no-preview-dart-2\nundefined: do not send a flag",
 					"scope": "window"
 				},
+				"dart.previewExperimentalWindowsDriveLetterHandling": {
+					"type": "boolean",
+					"default": false,
+					"description": "EXPERIMENTAL: Whether to force Windows drive letters always to uppercase to (hopefully) improve compatibility.",
+					"scope": "window"
+				},
 				"dart.analyzerAdditionalArgs": {
 					"type": "array",
 					"description": "Additional arguments to pass to the Dart analysis server.\nThis is a diagnostic setting that should not normally be set.",
