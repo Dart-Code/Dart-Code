@@ -84,21 +84,21 @@ export function getSdkVersion(sdkRoot: string): string {
 }
 
 export function isAnalyzable(document: TextDocument): boolean {
-	if (document.isUntitled || !document.fileName)
+	if (document.isUntitled || !fsPath(document.uri))
 		return false;
 
 	const analyzableLanguages = ["dart", "html"];
 	const analyzableFilenames = [".analysis_options", "analysis_options.yaml"];
 
 	return analyzableLanguages.indexOf(document.languageId) >= 0
-		|| analyzableFilenames.indexOf(path.basename(document.fileName)) >= 0;
+		|| analyzableFilenames.indexOf(path.basename(fsPath(document.uri))) >= 0;
 }
 
 export function isAnalyzableAndInWorkspace(document: TextDocument): boolean {
-	if (document.isUntitled || !document.fileName)
+	if (document.isUntitled || !fsPath(document.uri))
 		return false;
 
-	return isAnalyzable(document) && isWithinWorkspace(document.fileName);
+	return isAnalyzable(document) && isWithinWorkspace(fsPath(document.uri));
 }
 
 export function isWithinWorkspace(file: string) {
@@ -106,7 +106,7 @@ export function isWithinWorkspace(file: string) {
 	// asRelativePath returns the input if it's outside of the rootPath.
 	// Edit: Doesn't actually work properly:
 	//   https://github.com/Microsoft/vscode/issues/10446
-	// return workspace.asRelativePath(document.fileName) != document.fileName;
+	// return workspace.asRelativePath(fsPath(document.uri)) != fsPath(document.uri);
 	// Edit: Still doesn't work properly!
 	//   https://github.com/Microsoft/vscode/issues/33709
 

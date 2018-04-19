@@ -237,7 +237,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// Handle config changes so we can reanalyze if necessary.
 	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(() => handleConfigurationChange(sdks)));
 	context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
-		if (path.basename(td.fileName).toLowerCase() === "pubspec.yaml")
+		if (path.basename(fsPath(td.uri)).toLowerCase() === "pubspec.yaml")
 			handleConfigurationChange(sdks);
 	}));
 

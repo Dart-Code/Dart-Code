@@ -2,11 +2,6 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { DebugProtocol } from "vscode-debugprotocol";
-<<<<<<< HEAD
-=======
-import { Uri } from "vscode";
-import { config } from "../config";
->>>>>>> ac4b36a... Add setting for previewExperimentalWindowsDriveLetterHandling
 
 export const isWin = /^win/.test(process.platform);
 

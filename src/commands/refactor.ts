@@ -2,7 +2,7 @@ import * as as from "../analysis/analysis_server_types";
 import * as editors from "../editors";
 import * as vs from "vscode";
 import { Analyzer } from "../analysis/analyzer";
-import { unique } from "../utils";
+import { unique, fsPath } from "../utils";
 
 export const REFACTOR_FAILED_DOC_MODIFIED = "This refactor cannot be applied because the document has changed.";
 export const REFACTOR_ANYWAY = "Refactor Anyway";
@@ -59,7 +59,7 @@ export class RefactorCommands implements vs.Disposable {
 		options?: as.RefactoringOptions)
 		: Thenable<as.EditGetRefactoringResponse> {
 		return this.analyzer.editGetRefactoring({
-			file: document.fileName,
+			file: fsPath(document.uri),
 			kind: refactorKind,
 			length: document.offsetAt(range.end) - document.offsetAt(range.start),
 			offset: document.offsetAt(range.start),

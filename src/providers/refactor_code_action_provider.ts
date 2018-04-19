@@ -4,7 +4,7 @@ import {
 } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
-import { isAnalyzableAndInWorkspace, logError } from "../utils";
+import { isAnalyzableAndInWorkspace, logError, fsPath } from "../utils";
 
 const supportedRefactors: { [key: string]: string } = {
 	EXTRACT_METHOD: "Extract Method",
@@ -22,7 +22,7 @@ export class RefactorCodeActionProvider implements CodeActionProvider {
 			return null;
 		return new Promise<CodeAction[]>((resolve, reject) => {
 			this.analyzer.editGetAvailableRefactorings({
-				file: document.fileName,
+				file: fsPath(document.uri),
 				length: document.offsetAt(range.end) - document.offsetAt(range.start),
 				offset: document.offsetAt(range.start),
 			}).then((result) => {

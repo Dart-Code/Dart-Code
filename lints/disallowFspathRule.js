@@ -9,11 +9,11 @@ class Rule extends Lint.Rules.AbstractRule {
 		return this.applyWithWalker(new NoFsPathWalker(sourceFile, this.getOptions()));
 	}
 }
-Rule.FAILURE_STRING = "Do not use Uri.fsPath, use fsPath() instead";
+Rule.FAILURE_STRING = "Do not use Uri.fsPath (or fsPath(document.uri)), use fsPath() instead";
 
 class NoFsPathWalker extends Lint.RuleWalker {
 	visitPropertyAccessExpression(node) {
-		if (node.name.text === "fsPath") {
+		if (node.name.text === "fsPath" || node.name.text === "fileName") {
 			this.addFailure(this.createFailure(node.getStart(), node.getWidth(), Rule.FAILURE_STRING));
 		}
 		super.visitPropertyAccessExpression(node);
