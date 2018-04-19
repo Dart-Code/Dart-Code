@@ -24,7 +24,7 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 	}
 
 	public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<SymbolInformation[]> {
-		const results = await this.analyzer.searchGetElementDeclarations({ file: document.fileName });
+		const results = await this.analyzer.searchGetElementDeclarations({ file: fsPath(document.uri) });
 		return results.declarations.map((d) => this.convertResult(d, results.files[d.fileIndex], false));
 	}
 

@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
-import { isAnalyzable } from "../utils";
+import { isAnalyzable, fsPath } from "../utils";
 
 export class ClosingLabelsDecorations implements vs.Disposable {
 	private analyzer: Analyzer;
@@ -22,7 +22,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 		this.analyzer = analyzer;
 
 		this.subscriptions.push(this.analyzer.registerForAnalysisClosingLabels((n) => {
-			if (this.activeEditor && n.file === this.activeEditor.document.fileName) {
+			if (this.activeEditor && n.file === fsPath(this.activeEditor.document.uri)) {
 				this.closingLabels = n;
 				// Delay this so if we're getting lots of updates we don't flicker.
 				clearTimeout(this.updateTimeout);
@@ -37,7 +37,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	}
 
 	private update() {
-		if (!this.closingLabels || !this.activeEditor || this.closingLabels.file !== this.activeEditor.document.fileName)
+		if (!this.closingLabels || !this.activeEditor || this.closingLabels.file !== fsPath(this.activeEditor.document.uri))
 			return;
 
 		const decorations: { [key: number]: vs.DecorationOptions } = [];
@@ -76,7 +76,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 			this.activeEditor = editor;
 			this.closingLabels = null;
 
-			this.analyzer.forceNotificationsFor(editor.document.fileName);
+			this.analyzer.forceNotificationsFor(fsPath(editor.document.uri));
 		} else
 			this.activeEditor = null;
 	}

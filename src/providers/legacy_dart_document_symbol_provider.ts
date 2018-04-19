@@ -3,7 +3,7 @@ import {
 	Location, Uri, Range, Position,
 } from "vscode";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
-import { toRange } from "../utils";
+import { toRange, fsPath } from "../utils";
 import * as as from "../analysis/analysis_server_types";
 
 export class LegacyDartDocumentSymbolProvider implements DocumentSymbolProvider {
@@ -14,7 +14,7 @@ export class LegacyDartDocumentSymbolProvider implements DocumentSymbolProvider 
 	}
 
 	public provideDocumentSymbols(document: TextDocument, token: CancellationToken): Thenable<SymbolInformation[]> {
-		const file = document.fileName;
+		const file = fsPath(document.uri);
 
 		return new Promise<SymbolInformation[]>((resolve, reject) => {
 			const disposable = this.analyzer.registerForAnalysisOutline((n) => {

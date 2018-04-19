@@ -15,8 +15,8 @@ export class OpenFileTracker implements Disposable {
 		this.analyzer = analyzer;
 		this.disposables.push(workspace.onDidOpenTextDocument((td) => this.updatePriorityFiles()));
 		this.disposables.push(workspace.onDidCloseTextDocument((td) => {
-			delete outlines[td.fileName];
-			delete occurrences[td.fileName];
+			delete outlines[fsPath(td.uri)];
+			delete occurrences[fsPath(td.uri)];
 			this.updatePriorityFiles();
 		}));
 		this.disposables.push(window.onDidChangeActiveTextEditor((e) => this.updatePriorityFiles()));
@@ -29,14 +29,14 @@ export class OpenFileTracker implements Disposable {
 		// Within visible/otherActive we sort by name so we get the same results if files are in a different
 		// order; this is to reduce changing too much in the AS (causing more work) since we don't really care about
 		// about the relative difference within these groups.
-		const visibleDocuments = window.visibleTextEditors.map((e) => e.document).sort((d1, d2) => d1.fileName.localeCompare(d2.fileName));
+		const visibleDocuments = window.visibleTextEditors.map((e) => e.document).sort((d1, d2) => fsPath(d1.uri).localeCompare(fsPath(d2.uri)));
 		const otherOpenDocuments = workspace.textDocuments
 			.filter((doc) => !doc.isClosed)
 			.filter((doc) => visibleDocuments.indexOf(doc) === -1)
-			.sort((d1, d2) => d1.fileName.localeCompare(d2.fileName));
+			.sort((d1, d2) => fsPath(d1.uri).localeCompare(fsPath(d2.uri)));
 
 		const priorityDocuments = visibleDocuments.concat(otherOpenDocuments).filter((d) => this.analyzer.capabilities.supportsPriorityFilesOutsideAnalysisRoots ? util.isAnalyzable(d) : util.isAnalyzableAndInWorkspace(d));
-		const priorityFiles = priorityDocuments.map((doc) => doc.fileName);
+		const priorityFiles = priorityDocuments.map((doc) => fsPath(doc.uri));
 
 		// Check the files have changed before sending the results.
 		const filesHaveChanged =

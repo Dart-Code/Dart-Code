@@ -1,7 +1,7 @@
 import { HoverProvider, Hover, TextDocument, Position, CancellationToken, Range } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
-import { logError } from "../utils";
+import { logError, fsPath } from "../utils";
 import { vsCodeVersion } from "../config";
 import { cleanDartdoc } from "../dartdocs";
 
@@ -14,7 +14,7 @@ export class DartHoverProvider implements HoverProvider {
 	public provideHover(document: TextDocument, position: Position, token: CancellationToken): Thenable<Hover> {
 		return new Promise<Hover>((resolve, reject) => {
 			this.analyzer.analysisGetHover({
-				file: document.fileName,
+				file: fsPath(document.uri),
 				offset: document.offsetAt(position),
 			}).then((resp) => {
 				if (resp.hovers.length === 0) {

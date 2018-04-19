@@ -3,6 +3,7 @@ import * as editors from "../editors";
 import * as vs from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import { config } from "../config";
+import { fsPath } from "../utils";
 
 export class EditCommands implements vs.Disposable {
 	private context: vs.ExtensionContext;
@@ -37,7 +38,7 @@ export class EditCommands implements vs.Disposable {
 
 		const analyzer = this.analyzer;
 		async function getEdits(): Promise<vs.TextEdit[]> {
-			const response = await analyzer.editOrganizeDirectives({ file: e.document.fileName });
+			const response = await analyzer.editOrganizeDirectives({ file: fsPath(e.document.uri) });
 			const edit = response.edit;
 			if (edit.edits.length === 0)
 				return;
@@ -67,7 +68,7 @@ export class EditCommands implements vs.Disposable {
 		f = f.bind(this.analyzer); // Yay JavaScript!
 
 		try {
-			const response = await f({ file: document.fileName });
+			const response = await f({ file: fsPath(document.uri) });
 
 			const edit = response.edit;
 			if (edit.edits.length === 0)

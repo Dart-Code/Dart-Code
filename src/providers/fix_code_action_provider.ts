@@ -4,7 +4,7 @@ import {
 } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
-import { isAnalyzableAndInWorkspace, logError } from "../utils";
+import { isAnalyzableAndInWorkspace, logError, fsPath } from "../utils";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
 
 export class FixCodeActionProvider implements CodeActionProvider {
@@ -18,7 +18,7 @@ export class FixCodeActionProvider implements CodeActionProvider {
 			return null;
 		return new Promise<CodeAction[]>((resolve, reject) => {
 			this.analyzer.editGetFixes({
-				file: document.fileName,
+				file: fsPath(document.uri),
 				offset: document.offsetAt(range.start),
 			}).then((result) => {
 				// Because fixes may be the same for multiple errors, we'll de-dupe them based on their edit.

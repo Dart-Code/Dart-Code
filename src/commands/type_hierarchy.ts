@@ -2,7 +2,7 @@ import * as editors from "../editors";
 import * as vs from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
-import { toRange } from "../utils";
+import { toRange, fsPath } from "../utils";
 
 export class TypeHierarchyCommand implements vs.Disposable {
 	private analyzer: Analyzer;
@@ -26,7 +26,7 @@ export class TypeHierarchyCommand implements vs.Disposable {
 		const document = editor.document;
 
 		const response = await this.analyzer.searchGetTypeHierarchy({
-			file: document.fileName,
+			file: fsPath(document.uri),
 			offset: document.offsetAt(editor.selection.active),
 		});
 

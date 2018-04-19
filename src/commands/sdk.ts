@@ -87,7 +87,7 @@ export class SdkCommands {
 
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
-			if (config.for(td.uri).runPubGetOnPubspecChanges && path.basename(td.fileName).toLowerCase() === "pubspec.yaml")
+			if (config.for(td.uri).runPubGetOnPubspecChanges && path.basename(fsPath(td.uri)).toLowerCase() === "pubspec.yaml")
 				vs.commands.executeCommand("dart.getPackages", td.uri);
 		}));
 	}
@@ -108,7 +108,7 @@ export class SdkCommands {
 
 	private async getWorkspace(placeHolder: string, selection?: vs.Uri): Promise<string> {
 		let file = selection && fsPath(selection);
-		file = file || (vs.window.activeTextEditor && vs.window.activeTextEditor.document.fileName);
+		file = file || (vs.window.activeTextEditor && fsPath(vs.window.activeTextEditor.document.uri));
 		let folder = file && locateBestProjectRoot(file);
 
 		// If there's only one folder, just use it to avoid prompting the user.
