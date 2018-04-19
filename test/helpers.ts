@@ -3,7 +3,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as vs from "vscode";
 import { EOL, tmpdir } from "os";
-import { Sdks } from "../src/utils";
+import { Sdks, fsPath } from "../src/utils";
 import { AnalyzerCapabilities } from "../src/analysis/analyzer";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
 import sinon = require("sinon");
@@ -15,17 +15,17 @@ export const ext = vs.extensions.getExtension<{
 	sdks: Sdks,
 }>("Dart-Code.dart-code");
 export const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/hello_world"));
-export const helloWorldMainFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "bin/main.dart"));
-export const helloWorldBrokenFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "bin/broken.dart"));
-export const helloWorldGoodbyeFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "bin/goodbye.dart"));
-export const emptyFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "lib/empty.dart"));
-export const everythingFile = vs.Uri.file(path.join(helloWorldFolder.fsPath, "lib/everything.dart"));
+export const helloWorldMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/main.dart"));
+export const helloWorldBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/broken.dart"));
+export const helloWorldGoodbyeFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/goodbye.dart"));
+export const emptyFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/empty.dart"));
+export const everythingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/everything.dart"));
 export const flutterHelloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/flutter_hello_world"));
-export const flutterEmptyFile = vs.Uri.file(path.join(flutterHelloWorldFolder.fsPath, "lib/empty.dart"));
-export const flutterHelloWorldMainFile = vs.Uri.file(path.join(flutterHelloWorldFolder.fsPath, "lib/main.dart"));
-export const flutterTestMainFile = vs.Uri.file(path.join(flutterHelloWorldFolder.fsPath, "test/hello_test.dart"));
-export const flutterTestOtherFile = vs.Uri.file(path.join(flutterHelloWorldFolder.fsPath, "test/other_test.dart"));
-export const flutterTestBrokenFile = vs.Uri.file(path.join(flutterHelloWorldFolder.fsPath, "test/broken_test.dart"));
+export const flutterEmptyFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/empty.dart"));
+export const flutterHelloWorldMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/main.dart"));
+export const flutterTestMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/hello_test.dart"));
+export const flutterTestOtherFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/other_test.dart"));
+export const flutterTestBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/broken_test.dart"));
 
 export let doc: vs.TextDocument;
 export let editor: vs.TextEditor;
@@ -180,7 +180,7 @@ export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind
 		`Couldn't find symbol for ${name}/${vs.SymbolKind[kind]}/${containerName} in\n`
 		+ symbols.map((s) => `        ${s.name}/${vs.SymbolKind[s.kind]}/${s.containerName}`).join("\n"),
 	);
-	assert.deepStrictEqual(symbol.location.uri.fsPath, uri.fsPath);
+	assert.equal(fsPath(symbol.location.uri), fsPath(uri));
 	assert.ok(symbol.location);
 	assert.ok(symbol.location.range);
 	assert.ok(symbol.location.range.start);

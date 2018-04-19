@@ -10,7 +10,7 @@ import { FlutterLaunchRequestArguments, isWin, safeSpawn } from "../debug/utils"
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
-import { isFlutterWorkspaceFolder, ProjectType, Sdks } from "../utils";
+import { isFlutterWorkspaceFolder, ProjectType, Sdks, fsPath } from "../utils";
 import * as util from "../utils";
 import * as channels from "./channels";
 import { showFlutterActivationFailure, dartPubPath, flutterPath } from "../sdk/utils";
@@ -101,13 +101,13 @@ export class SdkCommands {
 
 		const f = await this.getWorkspace(placeHolder, selection);
 
-		const workspacePath = vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri.fsPath;
+		const workspacePath = fsPath(vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri);
 		const shortPath = path.join(path.basename(f), path.relative(f, workspacePath));
 		return handler(f, command, shortPath);
 	}
 
 	private async getWorkspace(placeHolder: string, selection?: vs.Uri): Promise<string> {
-		let file = selection && selection.fsPath;
+		let file = selection && fsPath(selection);
 		file = file || (vs.window.activeTextEditor && vs.window.activeTextEditor.document.fileName);
 		let folder = file && locateBestProjectRoot(file);
 
@@ -115,14 +115,14 @@ export class SdkCommands {
 		if (!folder && vs.workspace.workspaceFolders) {
 			const allowedProjects = util.getDartWorkspaceFolders();
 			if (allowedProjects.length === 1)
-				folder = allowedProjects[0].uri.fsPath;
+				folder = fsPath(allowedProjects[0].uri);
 		}
 
 		return folder
 			? Promise.resolve(folder)
 			// TODO: Can we get this filtered?
 			// https://github.com/Microsoft/vscode/issues/39132
-			: vs.window.showWorkspaceFolderPick({ placeHolder }).then((f) => f && util.isDartWorkspaceFolder(f) && f.uri.fsPath); // TODO: What if the user didn't pick anything?
+			: vs.window.showWorkspaceFolderPick({ placeHolder }).then((f) => f && util.isDartWorkspaceFolder(f) && fsPath(f.uri)); // TODO: What if the user didn't pick anything?
 	}
 
 	private runFlutter(command: string, selection?: vs.Uri): Thenable<number> {
@@ -202,17 +202,17 @@ export class SdkCommands {
 		if (!folders || folders.length !== 1)
 			return;
 		const folderUri = folders[0];
-		const projectFolderUri = Uri.file(path.join(folderUri.fsPath, name));
+		const projectFolderUri = Uri.file(path.join(fsPath(folderUri), name));
 
-		if (fs.existsSync(projectFolderUri.fsPath)) {
-			vs.window.showErrorMessage(`A folder named ${name} already exists in ${folderUri.fsPath}`);
+		if (fs.existsSync(fsPath(projectFolderUri))) {
+			vs.window.showErrorMessage(`A folder named ${name} already exists in ${fsPath(folderUri)}`);
 			return;
 		}
 
 		// Create the empty folder so we can open it.
-		fs.mkdirSync(projectFolderUri.fsPath);
+		fs.mkdirSync(fsPath(projectFolderUri));
 		// Create a temp dart file to force extension to load when we open this folder.
-		fs.writeFileSync(path.join(projectFolderUri.fsPath, util.FLUTTER_CREATE_PROJECT_TRIGGER_FILE), "");
+		fs.writeFileSync(path.join(fsPath(projectFolderUri), util.FLUTTER_CREATE_PROJECT_TRIGGER_FILE), "");
 
 		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
 		const openInNewWindow = hasFoldersOpen;

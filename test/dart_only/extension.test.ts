@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { Sdks } from "../../src/utils";
+import { Sdks, fsPath } from "../../src/utils";
 import { ext } from "../helpers";
 
 const isWin = /^win/.test(process.platform);
@@ -13,8 +13,8 @@ describe("test environment", () => {
 		const wfs = vs.workspace.workspaceFolders;
 		assert.equal(wfs.length, 1);
 		assert.ok(
-			wfs[0].uri.fsPath.endsWith(path.sep + "hello_world"),
-			`${wfs[0].uri.fsPath} doesn't end with ${path.sep}hello_world`,
+			fsPath(wfs[0].uri).endsWith(path.sep + "hello_world"),
+			`${fsPath(wfs[0].uri)} doesn't end with ${path.sep}hello_world`,
 		);
 	});
 });

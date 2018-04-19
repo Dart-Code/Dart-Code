@@ -2,7 +2,7 @@ import * as editors from "../editors";
 import * as vs from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
-import { toRange, toPosition } from "../utils";
+import { toRange, toPosition, fsPath } from "../utils";
 import { OpenFileTracker } from "../analysis/open_file_tracker";
 
 export class GoToSuperCommand implements vs.Disposable {
@@ -38,7 +38,7 @@ export class GoToSuperCommand implements vs.Disposable {
 		}
 
 		const hierarchy = await this.analyzer.searchGetTypeHierarchy({
-			file: document.uri.fsPath,
+			file: fsPath(document.uri),
 			offset: outlineNode.element.location.offset,
 			superOnly: true,
 		});
