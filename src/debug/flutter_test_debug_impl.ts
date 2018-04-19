@@ -90,19 +90,4 @@ export class FlutterTestDebugSession extends DartDebugSession {
 		if (error.stackTrace)
 			this.sendEvent(new OutputEvent(`${error.stackTrace}\n`, "stderr"));
 	}
-
-	/***
-	 * Converts a source path to an array of possible uris.
-	 *
-	 * For flutter test we need to extend the Dart implementation by also providing
-	 * uris using the exact file path for Windows.
-	 * See https://github.com/flutter/flutter/issues/15513
-	 */
-	protected getPossibleSourceUris(sourcePath: string): string[] {
-		const allUris = super.getPossibleSourceUris(sourcePath);
-		if (isWin && allUris.indexOf(sourcePath) === -1)
-			allUris.push(sourcePath);
-
-		return allUris;
-	}
 }
