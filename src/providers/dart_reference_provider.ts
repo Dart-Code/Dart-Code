@@ -5,6 +5,7 @@ import {
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
 import * as util from "../utils";
+import { fsPath } from "../utils";
 
 export class DartReferenceProvider implements ReferenceProvider, DefinitionProvider {
 	private analyzer: Analyzer;
@@ -19,7 +20,7 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 			: null;
 
 		const resp = await this.analyzer.searchFindElementReferencesResults({
-			file: document.fileName,
+			file: fsPath(document.uri),
 			includePotential: true,
 			offset: document.offsetAt(position),
 		});
@@ -38,7 +39,7 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 
 	public async provideDefinition(document: TextDocument, position: Position, token: CancellationToken): Promise<Definition> {
 		const resp = await this.analyzer.analysisGetNavigation({
-			file: document.fileName,
+			file: fsPath(document.uri),
 			length: 0,
 			offset: document.offsetAt(position),
 		});

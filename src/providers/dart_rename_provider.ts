@@ -3,6 +3,7 @@ import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
 import * as channels from "../commands/channels";
 import * as utils from "../utils";
+import { fsPath } from "../utils";
 
 export class DartRenameProvider implements RenameProvider {
 	private analyzer: Analyzer;
@@ -20,7 +21,7 @@ export class DartRenameProvider implements RenameProvider {
 		outputChannel.appendLine("");
 
 		const resp = await this.analyzer.editGetRefactoring({
-			file: document.fileName,
+			file: fsPath(document.uri),
 			kind: "RENAME",
 			length: wordRange.end.character - wordRange.start.character,
 			offset: document.offsetAt(wordRange.start),

@@ -2,7 +2,7 @@ import { DocumentFormattingEditProvider, TextDocument, FormattingOptions, Cancel
 import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
 import { config } from "../config";
-import { logError } from "../utils";
+import { logError, fsPath } from "../utils";
 
 export class DartFormattingEditProvider implements DocumentFormattingEditProvider {
 	private analyzer: Analyzer;
@@ -13,7 +13,7 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 	public provideDocumentFormattingEdits(document: TextDocument, options: FormattingOptions, token: CancellationToken): Thenable<TextEdit[]> {
 		return new Promise<TextEdit[]>((resolve, reject) => {
 			this.analyzer.editFormat({
-				file: document.fileName,
+				file: fsPath(document.uri),
 				lineLength: config.for(document.uri).lineLength,
 				selectionLength: 0,
 				selectionOffset: 0,

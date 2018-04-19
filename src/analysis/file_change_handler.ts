@@ -3,6 +3,7 @@ import * as path from "path";
 import { Analyzer } from "./analyzer";
 import * as as from "./analysis_server_types";
 import * as util from "../utils";
+import { fsPath } from "../utils";
 
 export class FileChangeHandler implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
@@ -25,7 +26,7 @@ export class FileChangeHandler implements vs.Disposable {
 
 		const files: { [key: string]: as.AddContentOverlay } = {};
 
-		files[document.fileName] = {
+		files[fsPath(document.uri)] = {
 			content: document.getText(),
 			type: "add",
 		};
@@ -51,7 +52,7 @@ export class FileChangeHandler implements vs.Disposable {
 		if (e.contentChanges.length === 1) {
 			const files: { [key: string]: as.ChangeContentOverlay } = {};
 
-			files[e.document.fileName] = {
+			files[fsPath(e.document.uri)] = {
 				edits: e.contentChanges.map((c) => this.convertChange(e.document, c)),
 				type: "change",
 			};
@@ -61,7 +62,7 @@ export class FileChangeHandler implements vs.Disposable {
 			// TODO: Remove this block when the bug is fixed (or we figure out it's not a bug).
 			const files: { [key: string]: as.AddContentOverlay } = {};
 
-			files[e.document.fileName] = {
+			files[fsPath(e.document.uri)] = {
 				content: e.document.getText(),
 				type: "add",
 			};
@@ -76,7 +77,7 @@ export class FileChangeHandler implements vs.Disposable {
 
 		const files: { [key: string]: as.RemoveContentOverlay } = {};
 
-		files[document.fileName] = {
+		files[fsPath(document.uri)] = {
 			type: "remove",
 		};
 

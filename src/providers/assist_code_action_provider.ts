@@ -4,7 +4,7 @@ import {
 } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
-import { isAnalyzableAndInWorkspace, logError } from "../utils";
+import { isAnalyzableAndInWorkspace, logError, fsPath } from "../utils";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
 
 export class AssistCodeActionProvider implements CodeActionProvider {
@@ -18,7 +18,7 @@ export class AssistCodeActionProvider implements CodeActionProvider {
 			return null;
 		return new Promise<CodeAction[]>((resolve, reject) => {
 			this.analyzer.editGetAssists({
-				file: document.fileName,
+				file: fsPath(document.uri),
 				length: range.end.character - range.start.character,
 				offset: document.offsetAt(range.start),
 			}).then((assists) => {

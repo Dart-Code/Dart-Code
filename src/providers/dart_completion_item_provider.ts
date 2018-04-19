@@ -3,7 +3,7 @@ import {
 	CompletionItem, CompletionItemKind, TextEdit, Range, SnippetString, CompletionContext, CompletionTriggerKind, MarkdownString,
 } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
-import { logError } from "../utils";
+import { logError, fsPath } from "../utils";
 import { config } from "../config";
 import * as as from "../analysis/analysis_server_types";
 import { cleanDartdoc } from "../dartdocs";
@@ -23,7 +23,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		const nextCharacter = document.getText(new Range(position, position.translate({ characterDelta: 200 }))).trim().substr(0, 1);
 		return new Promise<CompletionList>((resolve, reject) => {
 			this.analyzer.completionGetSuggestionsResults({
-				file: document.fileName,
+				file: fsPath(document.uri),
 				offset: document.offsetAt(position),
 			}).then((resp) => {
 				resolve(new CompletionList(resp.results.map((r) => this.convertResult(document, nextCharacter, resp, r))));
