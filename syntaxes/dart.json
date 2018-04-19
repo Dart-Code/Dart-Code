@@ -252,6 +252,10 @@
 					"name": "keyword.operator.assignment.bitwise.dart"
 				},
 				{
+					"match": "(=>)",
+					"name": "keyword.operator.closure.dart"
+				},
+				{
 					"match": "(==|!=|<=?|>=?)",
 					"name": "keyword.operator.comparison.dart"
 				},
