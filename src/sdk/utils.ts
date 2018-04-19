@@ -1,12 +1,10 @@
 import * as fs from "fs";
-import * as https from "https";
-import * as os from "os";
 import * as path from "path";
-import { ExtensionContext, commands, window, workspace, WorkspaceFolder } from "vscode";
-import { Sdks, ProjectType, openInBrowser, reloadExtension, resolveHomePath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, getDartWorkspaceFolders } from "../utils";
+import { ExtensionContext, commands, window } from "vscode";
 import { Analytics } from "../analytics";
-import { PackageMap } from "../debug/utils";
 import { config } from "../config";
+import { PackageMap } from "../debug/utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, ProjectType, Sdks, fsPath, getDartWorkspaceFolders, openInBrowser, reloadExtension, resolveHomePath } from "../utils";
 
 const isWin = /^win/.test(process.platform);
 const dartExecutableName = isWin ? "dart.exe" : "dart";
@@ -94,7 +92,7 @@ export async function showSdkActivationFailure(
 			const selectedFolders =
 				await window.showOpenDialog({ canSelectFolders: true, openLabel: `Set ${sdkType} SDK folder` });
 			if (selectedFolders && selectedFolders.length > 0) {
-				const matchingSdkFolder = search(selectedFolders.map((f) => f.fsPath));
+				const matchingSdkFolder = search(selectedFolders.map(fsPath));
 				if (matchingSdkFolder) {
 					await saveSdkPath(matchingSdkFolder);
 					await reloadExtension();
@@ -117,7 +115,7 @@ export async function showSdkActivationFailure(
 
 export function findSdks(): Sdks {
 	const folders = getDartWorkspaceFolders()
-		.map((w) => w.uri.fsPath);
+		.map((w) => fsPath(w.uri));
 	const pathOverride = (process.env.DART_PATH_OVERRIDE as string) || "";
 	const normalPath = (process.env.PATH as string) || "";
 	const paths = (pathOverride + path.delimiter + normalPath).split(path.delimiter);

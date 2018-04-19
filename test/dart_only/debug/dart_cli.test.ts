@@ -4,6 +4,7 @@ import * as fs from "fs";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { activate, ext, helloWorldMainFile, helloWorldBrokenFile, closeAllOpenFiles, helloWorldGoodbyeFile, positionOf, openFile } from "../../helpers";
+import { fsPath } from "../../../src/utils";
 
 describe("dart cli debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
@@ -18,7 +19,7 @@ describe("dart cli debugger", () => {
 			vs.workspace.workspaceFolders[0],
 			{
 				name: "Dart & Flutter",
-				program: script && script.fsPath,
+				program: script && fsPath(script),
 				request: "launch",
 				type: "dart",
 			},
@@ -85,7 +86,7 @@ describe("dart cli debugger", () => {
 			dc.launch(config),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^throw").line + 1, // TODO: This line seems to be one-based but position is zero-based?
-				path: helloWorldBrokenFile.fsPath,
+				path: fsPath(helloWorldBrokenFile),
 			}),
 		]);
 	});
@@ -98,7 +99,7 @@ describe("dart cli debugger", () => {
 		await Promise.all([
 			dc.hitBreakpoint(config, {
 				line: positionOf("^// BREAKPOINT1").line,
-				path: helloWorldMainFile.fsPath,
+				path: fsPath(helloWorldMainFile),
 			}),
 		]);
 	});

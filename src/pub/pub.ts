@@ -1,10 +1,10 @@
 import * as path from "path";
 import * as fs from "fs";
 import { window, commands, Uri, WorkspaceFolder } from "vscode";
-import { ProjectType } from "../utils";
+import { ProjectType, fsPath } from "../utils";
 
 export function isPubGetProbablyRequired(ws: WorkspaceFolder): boolean {
-	const folder = ws.uri.fsPath;
+	const folder = fsPath(ws.uri);
 	const pubspecPath = path.join(folder, "pubspec.yaml");
 	const packagesPath = path.join(folder, ".packages");
 	if (!folder || !fs.existsSync(pubspecPath))

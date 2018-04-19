@@ -2,6 +2,7 @@ import { window, workspace, TextDocument, Disposable, Uri } from "vscode";
 import { Analyzer } from "./analyzer";
 import * as util from "../utils";
 import { AnalysisOutlineNotification, Outline, Occurrences } from "./analysis_server_types";
+import { fsPath } from "../utils";
 
 const outlines: { [key: string]: Outline } = {};
 const occurrences: { [key: string]: Occurrences[] } = {};
@@ -74,11 +75,11 @@ export class OpenFileTracker implements Disposable {
 	}
 
 	public static getOutlineFor(file: Uri): Outline | undefined {
-		return outlines[file.fsPath];
+		return outlines[fsPath(file)];
 	}
 
 	public static getOccurrencesFor(file: Uri): Occurrences[] | undefined {
-		return occurrences[file.fsPath];
+		return occurrences[fsPath(file)];
 	}
 
 	public dispose(): any {

@@ -2,6 +2,7 @@ import * as vs from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { PackageMap } from "../debug/utils";
+import { fsPath } from "../utils";
 
 const DART_HIDE_PACKAGE_TREE = "dart-code:hidePackageTree";
 
@@ -20,7 +21,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 	}
 
 	public setWorkspaces(workspaces: vs.WorkspaceFolder[]) {
-		this.workspaceRoot = workspaces && workspaces.length === 1 ? workspaces[0].uri.fsPath : null;
+		this.workspaceRoot = workspaces && workspaces.length === 1 ? fsPath(workspaces[0].uri) : null;
 		this.refresh();
 	}
 
@@ -38,8 +39,8 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 				if (!element.collapsibleState && !element.resourceUri) {
 					return resolve([]);
 				} else {
-					resolve(fs.readdirSync(element.resourceUri.fsPath).map((name) => {
-						const filePath = path.join(element.resourceUri.fsPath, name);
+					resolve(fs.readdirSync(fsPath(element.resourceUri)).map((name) => {
+						const filePath = path.join(fsPath(element.resourceUri), name);
 						const stat = fs.statSync(filePath);
 						if (stat.isFile()) {
 							return new PackageDep(name, vs.Uri.file(filePath), vs.TreeItemCollapsibleState.None, {
@@ -97,7 +98,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 
 				if (this.workspaceRoot !== p) {
 					packageName = line.substring(0, line.indexOf(":"));
-					p = vs.Uri.parse(p).fsPath;
+					p = fsPath(vs.Uri.parse(p));
 					return new PackageDep(`${packageName}`, vs.Uri.file(p), vs.TreeItemCollapsibleState.Collapsed);
 				}
 			}).filter((d) => d);
