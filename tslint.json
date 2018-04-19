@@ -8,7 +8,9 @@
 			"src/analysis/analyzer_gen.ts"
 		]
 	},
+	"rulesDirectory": "lints/",
 	"rules": {
+		"disallow-fspath": true,
 		"indent": {
 			"options": "tabs"
 		},
