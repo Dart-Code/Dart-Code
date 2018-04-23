@@ -2,7 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { ensureVariable, getTopFrameVariables, getVariables } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, ext, helloWorldBrokenFile, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf } from "../../helpers";
+import { activate, closeAllOpenFiles, ext, helloWorldBrokenFile, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf, delay } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
@@ -29,8 +29,8 @@ describe("dart cli debugger", () => {
 		const config = await startDebugger(helloWorldMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.launch(config),
 			dc.waitForEvent("terminated"),
+			dc.launch(config),
 		]);
 	});
 
@@ -38,9 +38,9 @@ describe("dart cli debugger", () => {
 		const config = await startDebugger(helloWorldMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.launch(config),
 			dc.assertOutput("stdout", "Hello, world!"),
 			dc.waitForEvent("terminated"),
+			dc.launch(config),
 		]);
 	});
 
@@ -49,9 +49,9 @@ describe("dart cli debugger", () => {
 		const config = await startDebugger(null);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.launch(config),
 			dc.assertOutput("stdout", "Hello, world!"),
 			dc.waitForEvent("terminated"),
+			dc.launch(config),
 		]);
 	});
 
@@ -60,9 +60,9 @@ describe("dart cli debugger", () => {
 		const config = await startDebugger(helloWorldGoodbyeFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.launch(config),
 			dc.assertOutput("stdout", "Goodbye!"),
 			dc.waitForEvent("terminated"),
+			dc.launch(config),
 		]);
 	});
 
@@ -71,9 +71,9 @@ describe("dart cli debugger", () => {
 		const config = await startDebugger(null);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.launch(config),
 			dc.assertOutput("stdout", "Goodbye!"),
 			dc.waitForEvent("terminated"),
+			dc.launch(config),
 		]);
 	});
 
@@ -121,11 +121,11 @@ describe("dart cli debugger", () => {
 		const config = await startDebugger(helloWorldBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.launch(config),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^throw").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: helloWorldBrokenFile.fsPath,
 			}),
+			dc.launch(config),
 		]);
 	});
 
@@ -134,11 +134,11 @@ describe("dart cli debugger", () => {
 		const config = await startDebugger(helloWorldBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.launch(config),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^throw").line + 1, // TODO: This line seems to be one-based but position is zero-based?
 				path: helloWorldBrokenFile.fsPath,
 			}),
+			dc.launch(config),
 		]);
 
 		const variables = await getTopFrameVariables(dc, "Exception");

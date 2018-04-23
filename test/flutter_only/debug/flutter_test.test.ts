@@ -34,8 +34,8 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(flutterTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.launch(config),
 			dc.waitForEvent("terminated"),
+			dc.launch(config),
 		]);
 	});
 
@@ -43,9 +43,9 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(flutterTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.launch(config),
 			dc.assertOutput("stdout", "✓ - Hello world test"),
 			dc.waitForEvent("terminated"),
+			dc.launch(config),
 		]);
 	});
 
@@ -54,9 +54,9 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(flutterTestOtherFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.launch(config),
 			dc.assertOutput("stdout", "✓ - Other test\n"),
 			dc.waitForEvent("terminated"),
+			dc.launch(config),
 		]);
 	});
 
@@ -65,32 +65,9 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(null);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.launch(config),
 			dc.assertOutput("stdout", "✓ - Other test\n"),
 			dc.waitForEvent("terminated"),
-		]);
-	});
-
-	it.skip("stops on exception", async () => {
-		await openFile(flutterTestBrokenFile);
-		const config = await startDebugger(flutterTestBrokenFile);
-		await Promise.all([
-			dc.configurationSequence(),
 			dc.launch(config),
-			dc.assertStoppedLocation("exception", {
-				line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: flutterTestBrokenFile.fsPath,
-			}),
-		]);
-	});
-
-	it("writes failure output to stderr", async () => {
-		await openFile(flutterTestBrokenFile);
-		const config = await startDebugger(flutterTestBrokenFile);
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.launch(config),
-			dc.assertOutput("stderr", "Test failed. See exception logs above."),
 		]);
 	});
 
@@ -102,6 +79,29 @@ describe("flutter test debugger", () => {
 				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: flutterTestMainFile.fsPath,
 			}),
+		]);
+	});
+
+	it.skip("stops on exception", async () => {
+		await openFile(flutterTestBrokenFile);
+		const config = await startDebugger(flutterTestBrokenFile);
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.assertStoppedLocation("exception", {
+				line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
+				path: flutterTestBrokenFile.fsPath,
+			}),
+			dc.launch(config),
+		]);
+	});
+
+	it("writes failure output to stderr", async () => {
+		await openFile(flutterTestBrokenFile);
+		const config = await startDebugger(flutterTestBrokenFile);
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.assertOutput("stderr", "Test failed. See exception logs above."),
+			dc.launch(config),
 		]);
 	});
 });
