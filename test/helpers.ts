@@ -117,6 +117,10 @@ export async function setTestContent(content: string): Promise<void> {
 		doc.positionAt(0),
 		doc.positionAt(doc.getText().length),
 	);
+	// TODO: May be able to replace this with
+	// return editor.edit((eb) => eb.replace(all, content));
+	// once the fix for https://github.com/dart-lang/sdk/issues/32914
+	// has made it all the way through.
 	if (await editor.edit((eb) => eb.replace(all, content))) {
 		// Wait a short period for the server to process the update
 		await delay(100);
