@@ -110,6 +110,10 @@ describe("dart cli debugger", () => {
 		const mapVariables = await getVariables(dc, variables.find((v) => v.name === "m").variablesReference);
 		ensureVariable(mapVariables, `"s"`, `"Hello!"`);
 		ensureVariable(mapVariables, `"l"`, "[2]");
+
+		const mapListVariables = await getVariables(dc, mapVariables.find((v) => v.name === `"l"`).variablesReference);
+		ensureVariable(mapListVariables, "[0]", "0");
+		ensureVariable(mapListVariables, "[1]", "1");
 	});
 
 	it("stops on exception", async () => {
