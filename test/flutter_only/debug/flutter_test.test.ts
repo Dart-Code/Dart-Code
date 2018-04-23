@@ -14,11 +14,10 @@ describe("flutter test debugger", () => {
 	beforeEach(function () {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
 	});
-	beforeEach(() => dc.start());
 	afterEach(() => dc.stop());
 
-	async function configFor(script: vs.Uri): Promise<vs.DebugConfiguration> {
-		return await ext.exports.debugProvider.resolveDebugConfiguration(
+	async function startDebugger(script: vs.Uri): Promise<vs.DebugConfiguration> {
+		const config = await ext.exports.debugProvider.resolveDebugConfiguration(
 			vs.workspace.workspaceFolders[0],
 			{
 				name: "Dart & Flutter",
@@ -27,10 +26,12 @@ describe("flutter test debugger", () => {
 				type: "dart",
 			},
 		);
+		await dc.start(config.debugServer);
+		return config;
 	}
 
 	it("runs a Flutter test script to completion", async () => {
-		const config = await configFor(flutterTestMainFile);
+		const config = await startDebugger(flutterTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -39,7 +40,7 @@ describe("flutter test debugger", () => {
 	});
 
 	it("receives the expected output from a Flutter test script", async () => {
-		const config = await configFor(flutterTestMainFile);
+		const config = await startDebugger(flutterTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -50,7 +51,7 @@ describe("flutter test debugger", () => {
 
 	it("runs the provided script regardless of what's open", async () => {
 		await openFile(flutterTestMainFile);
-		const config = await configFor(flutterTestOtherFile);
+		const config = await startDebugger(flutterTestOtherFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -61,7 +62,7 @@ describe("flutter test debugger", () => {
 
 	it("runs the open script if no file is provided", async () => {
 		await openFile(flutterTestOtherFile);
-		const config = await configFor(null);
+		const config = await startDebugger(null);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -72,7 +73,7 @@ describe("flutter test debugger", () => {
 
 	it.skip("stops on exception", async () => {
 		await openFile(flutterTestBrokenFile);
-		const config = await configFor(flutterTestBrokenFile);
+		const config = await startDebugger(flutterTestBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -85,7 +86,7 @@ describe("flutter test debugger", () => {
 
 	it("writes failure output to stderr", async () => {
 		await openFile(flutterTestBrokenFile);
-		const config = await configFor(flutterTestBrokenFile);
+		const config = await startDebugger(flutterTestBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -95,7 +96,7 @@ describe("flutter test debugger", () => {
 
 	it("stops at a breakpoint", async () => {
 		await openFile(flutterTestMainFile);
-		const config = await configFor(flutterTestMainFile);
+		const config = await startDebugger(flutterTestMainFile);
 		await Promise.all([
 			dc.hitBreakpoint(config, {
 				line: positionOf("^// BREAKPOINT1").line,

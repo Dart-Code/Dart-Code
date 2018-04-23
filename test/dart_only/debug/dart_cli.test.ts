@@ -10,11 +10,10 @@ describe("dart cli debugger", () => {
 	dc.defaultTimeout = 30000;
 
 	beforeEach(() => activate(helloWorldMainFile));
-	beforeEach(() => dc.start());
 	afterEach(() => dc.stop());
 
-	async function configFor(script: vs.Uri): Promise<vs.DebugConfiguration> {
-		return await ext.exports.debugProvider.resolveDebugConfiguration(
+	async function startDebugger(script: vs.Uri): Promise<vs.DebugConfiguration> {
+		const config = await ext.exports.debugProvider.resolveDebugConfiguration(
 			vs.workspace.workspaceFolders[0],
 			{
 				name: "Dart & Flutter",
@@ -23,10 +22,12 @@ describe("dart cli debugger", () => {
 				type: "dart",
 			},
 		);
+		await dc.start(config.debugServer);
+		return config;
 	}
 
 	it("runs a Dart script to completion", async () => {
-		const config = await configFor(helloWorldMainFile);
+		const config = await startDebugger(helloWorldMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -35,7 +36,7 @@ describe("dart cli debugger", () => {
 	});
 
 	it("receives the expected output from a Dart script", async () => {
-		const config = await configFor(helloWorldMainFile);
+		const config = await startDebugger(helloWorldMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -46,7 +47,7 @@ describe("dart cli debugger", () => {
 
 	it("runs bin/main.dart if no file is open/provided", async () => {
 		await closeAllOpenFiles();
-		const config = await configFor(null);
+		const config = await startDebugger(null);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -57,7 +58,7 @@ describe("dart cli debugger", () => {
 
 	it("runs the provided script regardless of what's open", async () => {
 		await openFile(helloWorldMainFile);
-		const config = await configFor(helloWorldGoodbyeFile);
+		const config = await startDebugger(helloWorldGoodbyeFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -68,7 +69,7 @@ describe("dart cli debugger", () => {
 
 	it("runs the open script if no file is provided", async () => {
 		await openFile(helloWorldGoodbyeFile);
-		const config = await configFor(null);
+		const config = await startDebugger(null);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -77,9 +78,22 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
+	it("stops at a breakpoint", async () => {
+		await openFile(helloWorldMainFile);
+		const config = await startDebugger(helloWorldMainFile);
+		await Promise.all([
+			dc.hitBreakpoint(config, {
+				line: positionOf("^// BREAKPOINT1").line,
+				path: helloWorldMainFile.fsPath,
+			}),
+		]);
+	});
+
+	it("provides local variables when stopped at a breakpoint");
+
 	it("stops on exception", async () => {
 		await openFile(helloWorldBrokenFile);
-		const config = await configFor(helloWorldBrokenFile);
+		const config = await startDebugger(helloWorldBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -91,15 +105,4 @@ describe("dart cli debugger", () => {
 	});
 
 	it.skip("writes exception to stderr");
-
-	it("stops at a breakpoint", async () => {
-		await openFile(helloWorldMainFile);
-		const config = await configFor(helloWorldMainFile);
-		await Promise.all([
-			dc.hitBreakpoint(config, {
-				line: positionOf("^// BREAKPOINT1").line,
-				path: helloWorldMainFile.fsPath,
-			}),
-		]);
-	});
 });
