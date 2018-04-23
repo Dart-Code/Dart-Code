@@ -12,7 +12,7 @@ describe("file tracker", () => {
 		await closeAllOpenFiles();
 		await waitFor(() => !OpenFileTracker.getOutlineFor(outlineTrackingFile), "Outline was already present");
 		await openFile(outlineTrackingFile);
-		await waitFor(() => !!OpenFileTracker.getOutlineFor(outlineTrackingFile), "Outline was not removed");
+		await waitFor(() => !!OpenFileTracker.getOutlineFor(outlineTrackingFile), "Outline was not added");
 	});
 	// Skipped because we can't clean up until Code tells us when the editor is closed, which could be
 	// up to three minutes :(
@@ -21,6 +21,6 @@ describe("file tracker", () => {
 		const doc = await openFile(outlineTrackingFile);
 		await waitFor(() => !!OpenFileTracker.getOutlineFor(outlineTrackingFile), "Outline was never present");
 		await closeFile(outlineTrackingFile);
-		await waitFor(() => !OpenFileTracker.getOutlineFor(outlineTrackingFile), "Outline was not added");
+		await waitFor(() => !OpenFileTracker.getOutlineFor(outlineTrackingFile), "Outline was not removed");
 	});
 });
