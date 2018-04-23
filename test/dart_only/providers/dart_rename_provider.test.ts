@@ -32,4 +32,30 @@ describe("rename_provider", () => {
 			print(NewDanny.myField);
 		`);
 	});
+
+	it("rejects a rename on the import keyword", async () => {
+		await setTestContent(`
+			import "dart:async" as async;
+		`);
+
+		try {
+			await vs.commands.executeCommand("vscode.executeDocumentRenameProvider", doc.uri, positionOf("i^mport"), "import2");
+			assert.fail("<error>", "<no error", "Rename did not throw as expected");
+		} catch (e) {
+			assert.equal(e.message, "This rename is not supported.");
+		}
+	});
+
+	it("rejects a rename on the class keyword", async () => {
+		await setTestContent(`
+			class Danny {}
+		`);
+
+		try {
+			await vs.commands.executeCommand("vscode.executeDocumentRenameProvider", doc.uri, positionOf("c^lass"), "class2");
+			assert.fail("<error>", "<no error", "Rename did not throw as expected");
+		} catch (e) {
+			assert.equal(e.message, "This rename is not supported.");
+		}
+	});
 });
