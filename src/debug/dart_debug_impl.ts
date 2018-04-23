@@ -502,9 +502,10 @@ export class DartDebugSession extends DebugSession {
 								}
 							} else if (instance.associations) {
 								for (const association of instance.associations) {
-									const keyName = this.valueAsString(association.key) || (association.key as VMInstanceRef).id;
-									const evaluateName = keyName ? `${instanceRef.evaluateName}[${keyName}]` : null;
-									variables.push(this.instanceRefToVariable(thread, canEvaluate, evaluateName, keyName || "<evalError>", association.value));
+									let keyName = this.valueAsString(association.key) || (association.key as VMInstanceRef).id;
+									keyName = keyName ? `[${keyName}]` : "<evalError>";
+									const evaluateName = keyName ? `${instanceRef.evaluateName}${keyName}` : null;
+									variables.push(this.instanceRefToVariable(thread, canEvaluate, evaluateName, keyName, association.value));
 								}
 							} else if (instance.fields) {
 								for (const field of instance.fields)
