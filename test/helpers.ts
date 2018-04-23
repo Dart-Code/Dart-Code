@@ -14,6 +14,13 @@ export const ext = vs.extensions.getExtension<{
 	debugProvider: DebugConfigProvider,
 	sdks: Sdks,
 }>("Dart-Code.dart-code");
+
+if (!ext) {
+	console.error("Quitting because extension failed to load.");
+	console.error("This may be because this branch requires a newer version of Code than is currently on the stable channel?");
+	process.exit(1);
+}
+
 export const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/hello_world"));
 export const helloWorldMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/main.dart"));
 export const helloWorldBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/broken.dart"));
