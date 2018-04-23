@@ -141,7 +141,7 @@ async function getExtractMethodArgs(f: as.RefactoringFeedback): Promise<as.Refac
 }
 
 async function getExtractWidgetArgs(f: as.RefactoringFeedback): Promise<as.RefactoringOptions> {
-	const name = await vs.window.showInputBox({ prompt: "Enter a name for the method" });
+	const name = await vs.window.showInputBox({ prompt: "Enter a name for the widget" });
 
 	return name ? { name } : undefined;
 }
