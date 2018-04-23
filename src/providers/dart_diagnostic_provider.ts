@@ -48,7 +48,7 @@ export class DartDiagnosticProvider {
 			case "INFO":
 				switch (type) {
 					case "TODO":
-						return DiagnosticSeverity.Hint;
+						return DiagnosticSeverity.Information; // https://github.com/Microsoft/vscode/issues/48376
 					default:
 						return DiagnosticSeverity.Information;
 				}
