@@ -100,21 +100,21 @@ describe("dart cli debugger", () => {
 		]);
 
 		const variables = await getTopFrameVariables(dc, "Locals");
-		ensureVariable(variables, "s", `"Hello!"`);
-		ensureVariable(variables, "l", `[2]`);
-		ensureVariable(variables, "m", `{2}`);
+		ensureVariable(variables, "s", "s", `"Hello!"`);
+		ensureVariable(variables, "l", "l", `[2]`);
+		ensureVariable(variables, "m", "m", `{2}`);
 
 		const listVariables = await getVariables(dc, variables.find((v) => v.name === "l").variablesReference);
-		ensureVariable(listVariables, "[0]", "0");
-		ensureVariable(listVariables, "[1]", "1");
+		ensureVariable(listVariables, "l[0]", "[0]", "0");
+		ensureVariable(listVariables, "l[1]", "[1]", "1");
 
 		const mapVariables = await getVariables(dc, variables.find((v) => v.name === "m").variablesReference);
-		ensureVariable(mapVariables, `"s"`, `"Hello!"`);
-		ensureVariable(mapVariables, `"l"`, "[2]");
+		ensureVariable(mapVariables, `m["s"]`, `["s"]`, `"Hello!"`);
+		ensureVariable(mapVariables, `m["l"]`, `["l"]`, "[2]");
 
-		const mapListVariables = await getVariables(dc, mapVariables.find((v) => v.name === `"l"`).variablesReference);
-		ensureVariable(mapListVariables, "[0]", "0");
-		ensureVariable(mapListVariables, "[1]", "1");
+		const mapListVariables = await getVariables(dc, mapVariables.find((v) => v.name === `["l"]`).variablesReference);
+		ensureVariable(mapListVariables, `m["l"][0]`, "[0]", "0");
+		ensureVariable(mapListVariables, `m["l"][1]`, "[1]", "1");
 	});
 
 	it("stops on exception", async () => {
@@ -143,7 +143,7 @@ describe("dart cli debugger", () => {
 		]);
 
 		const variables = await getTopFrameVariables(dc, "Exception");
-		ensureVariable(variables, "message", `"Oops"`);
+		ensureVariable(variables, undefined, "message", `"Oops"`);
 	});
 
 	it.skip("writes exception to stderr");

@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import { Variable } from "vscode-debugadapter";
 import { DebugClient } from "vscode-debugadapter-testsupport";
+import { DebugProtocol } from "vscode-debugprotocol";
 
 export async function getTopFrameVariables(dc: DebugClient, scope: "Exception" | "Locals"): Promise<Variable[]> {
 	const threads = await dc.threadsRequest();
@@ -18,7 +19,7 @@ export async function getVariables(dc: DebugClient, variablesReference: number):
 	return variables.body.variables;
 }
 
-export function ensureVariable(variables: Variable[], name: string, value: string) {
+export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string, name: string, value: string) {
 	assert.ok(variables);
 	const v = variables.find((v) => v.name === name);
 	assert.ok(
@@ -26,5 +27,6 @@ export function ensureVariable(variables: Variable[], name: string, value: strin
 		`Couldn't find variable ${name} in\n`
 		+ variables.map((v) => `        ${v.name}: ${v.value}`).join("\n"),
 	);
+	assert.equal(v.evaluateName, evaluateName);
 	assert.equal(v.value, value);
 }
