@@ -464,7 +464,7 @@ export class DartDebugSession extends DebugSession {
 			const variables: DebugProtocol.Variable[] = [];
 			if (frame.vars) {
 				for (const variable of frame.vars)
-					variables.push(this.instanceRefToVariable(thread, variable.name, variable.name, variable.value));
+					variables.push(this.instanceRefToVariable(thread, true, variable.name, variable.name, variable.value));
 			}
 			response.body = { variables };
 			this.sendResponse(response);
@@ -475,6 +475,9 @@ export class DartDebugSession extends DebugSession {
 				(result: DebuggerResult,
 				) => {
 					const variables: DebugProtocol.Variable[] = [];
+					// If we're the top-level exception, or our parent has an evaluateName of undefined (its children)
+					// we cannot evaluate (this will disable "Add to Watch" etc).
+					const canEvaluate = variablesReference !== data.thread.exceptionReference && instanceRef.evaluateName !== undefined;
 
 					if (result.result.type === "Sentinel") {
 						variables.push({
@@ -495,17 +498,17 @@ export class DartDebugSession extends DebugSession {
 									start = 0;
 								for (let i = 0; i < len; i++) {
 									const element = instance.elements[i];
-									variables.push(this.instanceRefToVariable(thread, `${instanceRef.evaluateName}[${i + start}]`, `[${i + start}]`, element));
+									variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + start}]`, `[${i + start}]`, element));
 								}
 							} else if (instance.associations) {
 								for (const association of instance.associations) {
 									const keyName = this.valueAsString(association.key) || (association.key as VMInstanceRef).id;
 									const evaluateName = keyName ? `${instanceRef.evaluateName}[${keyName}]` : null;
-									variables.push(this.instanceRefToVariable(thread, evaluateName, keyName || "<evalError>", association.value));
+									variables.push(this.instanceRefToVariable(thread, canEvaluate, evaluateName, keyName || "<evalError>", association.value));
 								}
 							} else if (instance.fields) {
 								for (const field of instance.fields)
-									variables.push(this.instanceRefToVariable(thread, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value));
+									variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value));
 							} else {
 								// TODO: unhandled kind
 								this.log(instance.kind);
@@ -776,7 +779,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private instanceRefToVariable(
-		thread: ThreadInfo, evaluateName: string, name: string, ref: VMInstanceRef | VMSentinel,
+		thread: ThreadInfo, canEvaluate: boolean, evaluateName: string, name: string, ref: VMInstanceRef | VMSentinel,
 	): DebugProtocol.Variable {
 		if (ref.type === "Sentinel") {
 			return {
@@ -786,17 +789,17 @@ export class DartDebugSession extends DebugSession {
 			};
 		} else {
 			const val = ref as InstanceWithEvaluateName;
-			// Stick on the evluateName as we'll need this to build
-			// the evluateName for the child, and we don't have the parent
+			// Stick on the evaluateName as we'll need this to build
+			// the evaluateName for the child, and we don't have the parent
 			// (or a string expression) in the response.
-			val.evaluateName = evaluateName;
+			val.evaluateName = canEvaluate ? evaluateName : undefined;
 
 			let str = this.valueAsString(val);
 			if (!val.valueAsString && !str)
 				str = "";
 
 			return {
-				evaluateName,
+				evaluateName: canEvaluate ? evaluateName : null,
 				indexedVariables: (val.kind.endsWith("List") ? val.length : null),
 				name,
 				type: val.class.name,
@@ -1134,5 +1137,8 @@ class FileLocation {
 }
 
 interface InstanceWithEvaluateName extends VMInstanceRef {
-	evaluateName: string;
+	// Undefined means we cannot evaluate
+	// Null means we use the name
+	// Otherwise we use the string
+	evaluateName: string | null | undefined;
 }
