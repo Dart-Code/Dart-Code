@@ -499,15 +499,9 @@ export class DartDebugSession extends DebugSession {
 								}
 							} else if (instance.associations) {
 								for (const association of instance.associations) {
-									let keyName = this.valueAsString(association.key);
-									if (!keyName && association.key.type === "Sentinel") {
-										variables.push(this.instanceRefToVariable(thread, null, "<evalError>", association.value));
-									} else {
-										if (!keyName) {
-											keyName = (association.key as VMInstanceRef).id;
-										}
-										variables.push(this.instanceRefToVariable(thread, `${instanceRef.evaluateName}[${keyName}]`, keyName, association.value));
-									}
+									const keyName = this.valueAsString(association.key) || (association.key as VMInstanceRef).id;
+									const evaluateName = keyName ? `${instanceRef.evaluateName}[${keyName}]` : null;
+									variables.push(this.instanceRefToVariable(thread, evaluateName, keyName || "<evalError>", association.value));
 								}
 							} else if (instance.fields) {
 								for (const field of instance.fields)
