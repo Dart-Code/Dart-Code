@@ -78,7 +78,7 @@ describe("flutter test debugger", () => {
 			dc.configurationSequence(),
 			dc.launch(config),
 			dc.assertStoppedLocation("exception", {
-				line: positionOf("^won't find this").line + 1, // TODO: This line seems to be one-based but position is zero-based?
+				line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: flutterTestBrokenFile.fsPath,
 			}),
 		]);
@@ -99,7 +99,7 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(flutterTestMainFile);
 		await Promise.all([
 			dc.hitBreakpoint(config, {
-				line: positionOf("^// BREAKPOINT1").line,
+				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: flutterTestMainFile.fsPath,
 			}),
 		]);

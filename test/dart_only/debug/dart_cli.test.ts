@@ -1,10 +1,8 @@
-import * as assert from "assert";
 import * as path from "path";
-import * as fs from "fs";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
-import { activate, ext, helloWorldMainFile, helloWorldBrokenFile, closeAllOpenFiles, helloWorldGoodbyeFile, positionOf, openFile } from "../../helpers";
-import { getVariables } from "../../debug_helpers";
+import { ensureVariable, getTopFrameVariables, getVariables } from "../../debug_helpers";
+import { activate, closeAllOpenFiles, ext, helloWorldBrokenFile, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
@@ -84,13 +82,35 @@ describe("dart cli debugger", () => {
 		const config = await startDebugger(helloWorldMainFile);
 		await Promise.all([
 			dc.hitBreakpoint(config, {
-				line: positionOf("^// BREAKPOINT1").line,
+				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: helloWorldMainFile.fsPath,
 			}),
 		]);
 	});
 
-	it("provides local variables when stopped at a breakpoint");
+	it("provides local variables when stopped at a breakpoint", async () => {
+		await openFile(helloWorldMainFile);
+		const config = await startDebugger(helloWorldMainFile);
+		await Promise.all([
+			dc.hitBreakpoint(config, {
+				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+				path: helloWorldMainFile.fsPath,
+			}),
+		]);
+
+		const variables = await getTopFrameVariables(dc, "Locals");
+		ensureVariable(variables, "s", `"Hello!"`);
+		ensureVariable(variables, "l", `[2]`);
+		ensureVariable(variables, "m", `{2}`);
+
+		const listVariables = await getVariables(dc, variables.find((v) => v.name === "l").variablesReference);
+		ensureVariable(listVariables, "[0]", "0");
+		ensureVariable(listVariables, "[1]", "1");
+
+		const mapVariables = await getVariables(dc, variables.find((v) => v.name === "m").variablesReference);
+		ensureVariable(mapVariables, `"s"`, `"Hello!"`);
+		ensureVariable(mapVariables, `"l"`, "[2]");
+	});
 
 	it("stops on exception", async () => {
 		await openFile(helloWorldBrokenFile);
@@ -99,7 +119,7 @@ describe("dart cli debugger", () => {
 			dc.configurationSequence(),
 			dc.launch(config),
 			dc.assertStoppedLocation("exception", {
-				line: positionOf("^throw").line + 1, // TODO: This line seems to be one-based but position is zero-based?
+				line: positionOf("^throw").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: helloWorldBrokenFile.fsPath,
 			}),
 		]);
@@ -117,11 +137,8 @@ describe("dart cli debugger", () => {
 			}),
 		]);
 
-		const variables = await getVariables(dc, "Exception");
-		const exceptionVariable = variables.body.variables.find((s) => s.name === "message");
-		assert.ok(exceptionVariable);
-		assert.equal(exceptionVariable.name, "message");
-		assert.equal(exceptionVariable.value, `"Oops"`);
+		const variables = await getTopFrameVariables(dc, "Exception");
+		ensureVariable(variables, "message", `"Oops"`);
 	});
 
 	it.skip("writes exception to stderr");
