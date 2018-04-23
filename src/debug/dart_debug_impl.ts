@@ -509,7 +509,7 @@ export class DartDebugSession extends DebugSession {
 										keyName = keyName || (association.key as VMInstanceRef).id;
 										keyName = `[${keyName}]`;
 									}
-									const evaluateName = keyName ? `${instanceRef.evaluateName}${keyName}` : null;
+									const evaluateName = `${instanceRef.evaluateName}${keyName}`;
 									variables.push(this.instanceRefToVariable(thread, canEvaluate, evaluateName, keyName, association.value));
 								}
 							} else if (instance.fields) {
