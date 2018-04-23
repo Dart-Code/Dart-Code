@@ -169,6 +169,27 @@ export async function getWorkspaceSymbols(query: string): Promise<vs.SymbolInfor
 	return workspaceSymbolResult || [];
 }
 
+export function waitForDiagnosticChange(resource?: vs.Uri): Promise<void> {
+	return new Promise((resolve, reject) => {
+		const disposable = vs.languages.onDidChangeDiagnostics((e) => {
+			console.log("test");
+			if (!resource || e.uris.find((r) => fsPath(r) === fsPath(resource))) {
+				resolve();
+				disposable.dispose();
+			}
+		});
+	});
+}
+
+export function ensureError(errors: vs.Diagnostic[], text: string) {
+	const error = errors.find((e) => e.message.indexOf(text) !== -1);
+	assert.ok(
+		error,
+		`Couldn't find error for ${text} in\n`
+		+ errors.map((e) => `        ${e.message}`).join("\n"),
+	);
+}
+
 export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName: string, uri: vs.Uri = doc.uri): void {
 	const symbol = symbols.find((f) =>
 		f.name === name
