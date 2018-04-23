@@ -8,7 +8,6 @@
 		}
 	],
 	"settings": {
-		"files.insertFinalNewline": true,
-		"dart.previewExperimentalWindowsDriveLetterHandling": true
+		"files.insertFinalNewline": true
 	}
 }
