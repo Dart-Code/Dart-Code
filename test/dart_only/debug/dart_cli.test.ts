@@ -4,6 +4,7 @@ import * as fs from "fs";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { activate, ext, helloWorldMainFile, helloWorldBrokenFile, closeAllOpenFiles, helloWorldGoodbyeFile, positionOf, openFile } from "../../helpers";
+import { getVariables } from "../../debug_helpers";
 
 describe("dart cli debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
@@ -102,6 +103,25 @@ describe("dart cli debugger", () => {
 				path: helloWorldBrokenFile.fsPath,
 			}),
 		]);
+	});
+
+	it("provides exception details when stopped on exception", async () => {
+		await openFile(helloWorldBrokenFile);
+		const config = await startDebugger(helloWorldBrokenFile);
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.launch(config),
+			dc.assertStoppedLocation("exception", {
+				line: positionOf("^throw").line + 1, // TODO: This line seems to be one-based but position is zero-based?
+				path: helloWorldBrokenFile.fsPath,
+			}),
+		]);
+
+		const variables = await getVariables(dc, "Exception");
+		const exceptionVariable = variables.body.variables.find((s) => s.name === "message");
+		assert.ok(exceptionVariable);
+		assert.equal(exceptionVariable.name, "message");
+		assert.equal(exceptionVariable.value, `"Oops"`);
 	});
 
 	it.skip("writes exception to stderr");
