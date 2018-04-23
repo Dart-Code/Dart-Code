@@ -260,7 +260,7 @@ export function getRandomTempFolder(): string {
 	return tmpPath;
 }
 
-export async function waitFor(action: () => boolean, message?: string, milliseconds: number = 1000, throwOnFailure = true): Promise<void> {
+export async function waitFor(action: () => boolean, message?: string, milliseconds: number = 2000, throwOnFailure = true): Promise<void> {
 	let timeRemaining = milliseconds;
 	while (timeRemaining > 0) {
 		if (action())
