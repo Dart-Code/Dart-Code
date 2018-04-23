@@ -371,7 +371,8 @@ function getSettingsThatRequireRestart() {
 		+ config.flutterDaemonLogFile
 		+ config.closingLabels
 		+ config.analyzeAngularTemplates
-		+ config.previewDart2;
+		+ config.previewDart2
+		+ config.previewExperimentalWindowsDriveLetterHandling;
 }
 
 export function deactivate(isRestart: boolean = false): PromiseLike<void> {
