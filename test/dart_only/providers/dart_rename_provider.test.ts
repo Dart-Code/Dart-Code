@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as vs from "vscode";
 import { activate, doc, positionOf, setTestContent, editor, ensureTestContent } from "../../helpers";
 
-describe("rename_provider", () => {
+describe.only("rename_provider", () => {
 
 	before(() => activate());
 
@@ -33,29 +33,29 @@ describe("rename_provider", () => {
 		`);
 	});
 
-	it("rejects a rename on the import keyword", async () => {
+	// https://github.com/Microsoft/vscode/issues/7340#issuecomment-383642803
+	it.skip("renames alias on the import keyword", async () => {
 		await setTestContent(`
 			import "dart:async" as async;
 		`);
 
-		try {
-			await vs.commands.executeCommand("vscode.executeDocumentRenameProvider", doc.uri, positionOf("i^mport"), "import2");
-			assert.fail("<error>", "<no error", "Rename did not throw as expected");
-		} catch (e) {
-			assert.equal(e.message, "This rename is not supported.");
-		}
+		const renameResult = await (vs.commands.executeCommand("vscode.executeDocumentRenameProvider", doc.uri, positionOf("i^mport"), "async2") as Thenable<vs.WorkspaceEdit>);
+		await vs.workspace.applyEdit(renameResult);
+		await ensureTestContent(`
+			import "dart:async" as async2;
+		`);
 	});
 
-	it("rejects a rename on the class keyword", async () => {
+	// https://github.com/Microsoft/vscode/issues/7340#issuecomment-383642803
+	it.skip("renames the class on the class keyword", async () => {
 		await setTestContent(`
 			class Danny {}
 		`);
 
-		try {
-			await vs.commands.executeCommand("vscode.executeDocumentRenameProvider", doc.uri, positionOf("c^lass"), "class2");
-			assert.fail("<error>", "<no error", "Rename did not throw as expected");
-		} catch (e) {
-			assert.equal(e.message, "This rename is not supported.");
-		}
+		const renameResult = await (vs.commands.executeCommand("vscode.executeDocumentRenameProvider", doc.uri, positionOf("D^anny"), "Danny2") as Thenable<vs.WorkspaceEdit>);
+		await vs.workspace.applyEdit(renameResult);
+		await ensureTestContent(`
+			class Danny2 {}
+		`);
 	});
 });
