@@ -15,6 +15,10 @@ export class DartRenameProvider implements RenameProvider {
 		return this.doRename(document, position, newName, token);
 	}
 
+	public prepareRename(document: TextDocument, position: Position, token: CancellationToken): Thenable<Range | { range: Range, placeholder: string }> {
+		return this.getLocation(document, position);
+	}
+
 	private async doRename(document: TextDocument, position: Position, newName: string, token: CancellationToken): Promise<WorkspaceEdit> {
 		const wordRange = document.getWordRangeAtPosition(position);
 		const outputChannel = channels.getChannel("Refactorings");
@@ -98,5 +102,35 @@ export class DartRenameProvider implements RenameProvider {
 		outputChannel.appendLine("[INFO] Rename aborted.");
 		// Popups just the first error.
 		throw errors[0].message;
+	}
+
+	private async getLocation(document: TextDocument, position: Position): Promise<{ range: Range, placeholder: string }> {
+		const resp = await this.analyzer.editGetRefactoring({
+			file: fsPath(document.uri),
+			kind: "RENAME",
+			length: 0,
+			offset: document.offsetAt(position),
+			validateOnly: true,
+		});
+
+		const feedback = (resp.feedback as as.RenameFeedback);
+
+		if (feedback) {
+			return {
+				placeholder: feedback.oldName,
+				range: new Range(document.positionAt(feedback.offset), document.positionAt(feedback.offset + feedback.length)),
+			};
+		} else {
+			const fatalProblems = resp.initialProblems
+				.concat(resp.optionsProblems)
+				.concat(resp.finalProblems)
+				.filter((p) => p.severity === "FATAL");
+
+			if (fatalProblems && fatalProblems.length) {
+				throw fatalProblems[0].message;
+			} else {
+				throw new Error("This rename is not supported.");
+			}
+		}
 	}
 }
