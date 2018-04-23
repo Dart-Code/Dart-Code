@@ -464,12 +464,12 @@ export class DartDebugSession extends DebugSession {
 			const variables: DebugProtocol.Variable[] = [];
 			if (frame.vars) {
 				for (const variable of frame.vars)
-					variables.push(this.instanceRefToVariable(thread, variable.name, variable.value));
+					variables.push(this.instanceRefToVariable(thread, variable.name, variable.name, variable.value));
 			}
 			response.body = { variables };
 			this.sendResponse(response);
 		} else {
-			const instanceRef = data.data as VMInstanceRef;
+			const instanceRef = data.data as InstanceWithEvaluateName;
 
 			this.observatory.getObject(thread.ref.id, instanceRef.id, start, count).then(
 				(result: DebuggerResult,
@@ -495,22 +495,23 @@ export class DartDebugSession extends DebugSession {
 									start = 0;
 								for (let i = 0; i < len; i++) {
 									const element = instance.elements[i];
-									variables.push(this.instanceRefToVariable(thread, `[${i + start}]`, element));
+									variables.push(this.instanceRefToVariable(thread, `${instanceRef.evaluateName}[${i + start}]`, `[${i + start}]`, element));
 								}
 							} else if (instance.associations) {
 								for (const association of instance.associations) {
-									let keyName = this.valueAsString(association.key);
-									if (!keyName) {
-										if (association.key.type === "Sentinel")
-											keyName = "<evalError>";
-										else
+									if (association.key.type === "Sentinel") {
+										variables.push(this.instanceRefToVariable(thread, null, "<evalError>", association.value));
+									} else {
+										let keyName = this.valueAsString(association.key);
+										if (!keyName) {
 											keyName = (association.key as VMInstanceRef).id;
+										}
+										variables.push(this.instanceRefToVariable(thread, `${instanceRef.evaluateName}[${keyName}]`, keyName, association.value));
 									}
-									variables.push(this.instanceRefToVariable(thread, keyName, association.value));
 								}
 							} else if (instance.fields) {
 								for (const field of instance.fields)
-									variables.push(this.instanceRefToVariable(thread, field.decl.name, field.value));
+									variables.push(this.instanceRefToVariable(thread, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value));
 							} else {
 								// TODO: unhandled kind
 								this.log(instance.kind);
@@ -781,7 +782,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private instanceRefToVariable(
-		thread: ThreadInfo, name: string, ref: VMInstanceRef | VMSentinel,
+		thread: ThreadInfo, evaluateName: string, name: string, ref: VMInstanceRef | VMSentinel,
 	): DebugProtocol.Variable {
 		if (ref.type === "Sentinel") {
 			return {
@@ -790,14 +791,18 @@ export class DartDebugSession extends DebugSession {
 				variablesReference: 0,
 			};
 		} else {
-			const val = ref as VMInstanceRef;
+			const val = ref as InstanceWithEvaluateName;
+			// Stick on the evluateName as we'll need this to build
+			// the evluateName for the child, and we don't have the parent
+			// (or a string expression) in the response.
+			val.evaluateName = evaluateName;
 
 			let str = this.valueAsString(val);
 			if (!val.valueAsString && !str)
 				str = "";
 
 			return {
-				evaluateName: name,
+				evaluateName,
 				indexedVariables: (val.kind.endsWith("List") ? val.length : null),
 				name,
 				type: val.class.name,
@@ -1132,4 +1137,8 @@ class FileLocation {
 		this.line = line;
 		this.column = column;
 	}
+}
+
+interface InstanceWithEvaluateName extends VMInstanceRef {
+	evaluateName: string;
 }
