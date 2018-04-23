@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { delay, getRandomTempFolder, ext, defer } from "../../helpers";
+import { delay, getRandomTempFolder, ext, defer, sb } from "../../helpers";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../../src/utils";
 
 describe("test environment", () => {
@@ -28,18 +28,15 @@ describe("extension", () => {
 
 describe("command", () => {
 	it("Flutter: New Project can be invoked and creates trigger file", async () => {
-		const showInputBox = sinon.stub(vs.window, "showInputBox");
-		defer(showInputBox.restore);
+		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("my_test_flutter_proj");
 
-		const showOpenDialog = sinon.stub(vs.window, "showOpenDialog");
-		defer(showOpenDialog.restore);
+		const showOpenDialog = sb.stub(vs.window, "showOpenDialog");
 		const tempFolder = getRandomTempFolder();
 		showOpenDialog.resolves([vs.Uri.file(tempFolder)]);
 
 		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
-		const executeCommand = sinon.stub(vs.commands, "executeCommand");
-		defer(executeCommand.restore);
+		const executeCommand = sb.stub(vs.commands, "executeCommand");
 		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves();
 		executeCommand.callThrough();
 

@@ -6,6 +6,7 @@ import { EOL, tmpdir } from "os";
 import { Sdks } from "../src/utils";
 import { AnalyzerCapabilities } from "../src/analysis/analyzer";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
+import sinon = require("sinon");
 
 export const ext = vs.extensions.getExtension<{
 	analysisComplete: Promise<void>,
@@ -68,6 +69,10 @@ afterEach(async () => {
 export function defer(callback: () => Promise<void> | void): void {
 	deferredItems.push(callback);
 }
+
+export let sb: sinon.SinonSandbox;
+beforeEach(() => sb = sinon.createSandbox());
+afterEach(() => sb.restore());
 
 // Set up log files for individual test logging.
 // tslint:disable-next-line:only-arrow-functions

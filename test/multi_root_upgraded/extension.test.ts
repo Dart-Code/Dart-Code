@@ -4,7 +4,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { Sdks } from "../../src/utils";
 import { checkForProjectsInSubFolders, UPGRADE_TO_WORKSPACE_FOLDERS } from "../../src/project";
-import { waitFor } from "../helpers";
+import { waitFor, sb } from "../helpers";
 
 const isWin = /^win/.test(process.platform);
 
@@ -22,7 +22,7 @@ describe("test environment", () => {
 describe("extension", () => {
 	it("prompted the user to upgrade project folders", async () => {
 		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
-		const showWarningMessage = sinon.stub(vs.window, "showWarningMessage");
+		const showWarningMessage = sb.stub(vs.window, "showWarningMessage");
 		const upgradeMessage = showWarningMessage.withArgs(sinon.match.any, UPGRADE_TO_WORKSPACE_FOLDERS, sinon.match.any).resolves();
 		showWarningMessage.callThrough();
 
