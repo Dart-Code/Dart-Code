@@ -95,11 +95,6 @@
 				}
 			},
 			{
-				"command": "dart.organizeDirectives",
-				"title": "Organize Directives",
-				"category": "Dart"
-			},
-			{
 				"command": "dart.goToSuper",
 				"title": "Go to Super Method",
 				"category": "Dart"
@@ -209,11 +204,6 @@
 			}
 		],
 		"keybindings": [
-			{
-				"command": "dart.organizeDirectives",
-				"key": "alt+shift+o",
-				"when": "editorLangId == dart"
-			},
 			{
 				"command": "dart.showTypeHierarchy",
 				"key": "f4",
