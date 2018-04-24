@@ -358,16 +358,12 @@ function getSettingsThatRequireRestart() {
 	// activation time will also need to be included.
 	return "CONF-"
 		+ config.sdkPath
-		+ config.sdkPaths
-		+ config.analyzerLogFile
 		+ config.analyzerPath
 		+ config.analyzerDiagnosticsPort
 		+ config.analyzerObservatoryPort
 		+ config.analyzerInstrumentationLogFile
 		+ config.analyzerAdditionalArgs
 		+ config.flutterSdkPath
-		+ config.flutterSdkPaths
-		+ config.flutterDaemonLogFile
 		+ config.closingLabels
 		+ config.analyzeAngularTemplates
 		+ config.previewDart2
