@@ -12,12 +12,14 @@ export abstract class StdIOService<T> implements Disposable {
 	private nextRequestID = 1;
 	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] } = {};
 	private messageBuffer: string[] = [];
-	private logFile: string;
+	private currentLogFile: string;
+	private getLogFile: () => string;
 	private logStream: fs.WriteStream;
 	private requestErrorSubscriptions: Array<(notification: any) => void> = [];
 
-	constructor(logFile: string, wrappedMessages: boolean = false, treatHandlingErrorsAsUnhandledMessages: boolean = false) {
-		this.logFile = logFile;
+	constructor(getLogFile: () => string, wrappedMessages: boolean = false, treatHandlingErrorsAsUnhandledMessages: boolean = false) {
+		this.currentLogFile = getLogFile();
+		this.getLogFile = getLogFile;
 		this.messagesWrappedInBrackets = wrappedMessages;
 		this.treatHandlingErrorsAsUnhandledMessages = treatHandlingErrorsAsUnhandledMessages;
 	}
@@ -179,19 +181,24 @@ export abstract class StdIOService<T> implements Disposable {
 	protected logTraffic(message: string): void {
 		const max: number = 2000;
 
-		if (this.logFile) {
-			if (!this.logStream)
-				this.logStream = fs.createWriteStream(this.logFile);
-			this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
-			if (message.length > max)
-				this.logStream.write(message.substring(0, max) + "…\r\n");
-			else
-				this.logStream.write(message.trim() + "\r\n");
-		} else if (!this.logFile && this.logStream) {
-			// Turn off logging.
+		const newLogFile = this.getLogFile();
+		if (newLogFile !== this.currentLogFile && this.logStream) {
 			this.logStream.close();
 			this.logStream = null;
 		}
+
+		if (!newLogFile)
+			return;
+
+		this.currentLogFile = newLogFile;
+
+		if (!this.logStream)
+			this.logStream = fs.createWriteStream(this.currentLogFile);
+		this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
+		if (message.length > max)
+			this.logStream.write(message.substring(0, max) + "…\r\n");
+		else
+			this.logStream.write(message.trim() + "\r\n");
 	}
 
 	public dispose() {
