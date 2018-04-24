@@ -19,7 +19,7 @@ main() async {
 }
 		`);
 
-		await waitForEditorChange(() => vs.commands.executeCommand("dart.organizeDirectives"));
+		await waitForEditorChange(() => vs.commands.executeCommand("_dart.organizeDirectives"));
 
 		await ensureTestContent(`
 import "dart:async";
@@ -42,7 +42,7 @@ main() async {
 }
 		`);
 
-		await waitForEditorChange(() => vs.commands.executeCommand("dart.organizeDirectives"));
+		await waitForEditorChange(() => vs.commands.executeCommand("_dart.organizeDirectives"));
 
 		ensureTestContent(`
 import "dart:async";

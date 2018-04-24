@@ -15,7 +15,7 @@ export class EditCommands implements vs.Disposable {
 		this.analyzer = analyzer;
 
 		this.commands.push(
-			vs.commands.registerCommand("dart.organizeDirectives", this.organizeDirectives, this),
+			vs.commands.registerCommand("_dart.organizeDirectives", this.organizeDirectives, this),
 			vs.commands.registerCommand("dart.sortMembers", this.sortMembers, this),
 			vs.commands.registerCommand("_dart.applySourceChange", this.applyEdits, this),
 			vs.workspace.onWillSaveTextDocument((e) => this.willSaveTextDocument(e), this),
