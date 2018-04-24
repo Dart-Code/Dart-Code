@@ -11,6 +11,7 @@
 appveyor.yml
 CONTRIBUTING.md
 coverage/**
+lints/**
 tool/**
 logs/**
 media/screenshots/**
