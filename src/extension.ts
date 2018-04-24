@@ -168,9 +168,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		context.subscriptions.push(vs.languages.registerDefinitionProvider(filter, referenceProvider));
 		context.subscriptions.push(vs.languages.registerReferenceProvider(filter, referenceProvider));
 		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(filter, documentHighlightProvider));
-		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, assistCodeActionProvider));
-		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, fixCodeActionProvider));
-		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, refactorCodeActionProvider));
+		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, assistCodeActionProvider, assistCodeActionProvider.metadata));
+		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, fixCodeActionProvider, fixCodeActionProvider.metadata));
+		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, refactorCodeActionProvider, refactorCodeActionProvider.metadata));
 		context.subscriptions.push(vs.languages.registerRenameProvider(filter, renameProvider));
 	});
 
