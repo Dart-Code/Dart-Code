@@ -346,8 +346,7 @@ function handleConfigurationChange(sdks: util.Sdks) {
 		});
 	}
 
-	// TODO: Since we're not restarting the whole extension anymore, we should be able to handle this.
-	if (settingsChanged && !process.env.DART_CODE_IS_TEST_RUN) {
+	if (settingsChanged) {
 		util.reloadExtension();
 	}
 }
