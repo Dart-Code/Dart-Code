@@ -1,6 +1,6 @@
 import {
 	CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider,
-	Command, Diagnostic, Position, Range, TextDocument, TextEdit,
+	Command, Diagnostic, Position, Range, TextDocument, TextEdit, CodeActionProviderMetadata,
 } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
@@ -16,6 +16,10 @@ export class RefactorCodeActionProvider implements CodeActionProvider {
 	constructor(analyzer: Analyzer) {
 		this.analyzer = analyzer;
 	}
+
+	public readonly metadata: CodeActionProviderMetadata = {
+		providedCodeActionKinds: [CodeActionKind.Refactor],
+	};
 
 	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Thenable<CodeAction[]> {
 		if (!isAnalyzableAndInWorkspace(document))
