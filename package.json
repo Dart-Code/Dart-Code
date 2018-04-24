@@ -1,7 +1,7 @@
 {
 	"name": "dart-code",
-	"displayName": "Dart Code",
-	"description": "Dart, Flutter and Fuchsia support for Visual Studio Code.",
+	"displayName": "Dart",
+	"description": "Dart and Flutter support for Visual Studio Code.",
 	"version": "2.12.1-dev",
 	"publisher": "Dart-Code",
 	"engines": {
@@ -29,7 +29,7 @@
 		"fuchsia",
 		"multi-root ready"
 	],
-	"icon": "media/icon.png",
+	"icon": "media/dart.png",
 	"activationEvents": [
 		"onLanguage:dart",
 		"onView:dartPackages",
