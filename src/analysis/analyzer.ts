@@ -31,7 +31,7 @@ export class Analyzer extends AnalyzerGen {
 	public capabilities: AnalyzerCapabilities = new AnalyzerCapabilities("0.0.1");
 
 	constructor(dartVMPath: string, analyzerPath: string) {
-		super(config.analyzerLogFile);
+		super(() => config.analyzerLogFile);
 
 		let args = [];
 

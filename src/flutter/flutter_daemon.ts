@@ -12,7 +12,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	public deviceManager: FlutterDeviceManager;
 
 	constructor(flutterBinPath: string, projectFolder: string) {
-		super(config.flutterDaemonLogFile, true);
+		super(() => config.flutterDaemonLogFile, true);
 
 		this.createProcess(projectFolder, flutterBinPath, ["daemon"], flutterEnv);
 
