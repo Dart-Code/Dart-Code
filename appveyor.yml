@@ -1,9 +1,9 @@
 environment:
   CHAT_WEBHOOK_PATH:
     secure: Oawgup4p18hTqsE2qGz07QLvtL/xrDiGFmqs9ebmXATs6t/Mp6L/sVS0XbAgmXhuOtZ8Q3KDC//q0ViBEnNiaEcZg3cI3GGPchtIQYjAozEC+3d3SXQY9zcSymAPgYsmc1TOsC+3BbuYXskoTu6myDbRPfh2i0YuU2lr0SRRbGS+68fGhBiPhZtkS6DOfDfu
-  ARTIFACTS_KEY:
+  AWS_ACCESS_KEY_ID:
     secure: nQjpvf+MHWHTkWOMvX6/eNKByxvyRMUDJNGaE+m74OY=
-  ARTIFACTS_SECRET:
+  AWS_SECRET_ACCESS_KEY:
     secure: Kqh0mg85kGAE2roKfIiMOQXjjbR9ib+uCwBaI11H0JfygkVP27adHUF3JYwqa9AE
 
 install:
@@ -44,6 +44,6 @@ on_failure:
   - ps: $env:APPVEYOR_RESULT = 1
 
 on_finish:
-  - IF NOT DEFINED APPVEYOR_PULL_REQUEST_NUMBER dpl --verbose="true" --provider="s3" --access-key-id="%ARTIFACTS_KEY%" --secret-access-key="%ARTIFACTS_SECRET%" --bucket="test-results.dartcode.org" --dot_match="true" --skip_cleanup="true" --local-dir=".dart_code_test_logs" --upload-dir="logs/%APPVEYOR_REPO_BRANCH%/%APPVEYOR_REPO_COMMIT%/win" --acl="public_read"
-  - IF NOT DEFINED APPVEYOR_PULL_REQUEST_NUMBER dpl --verbose="true" --provider="s3" --access-key-id="%ARTIFACTS_KEY%" --secret-access-key="%ARTIFACTS_SECRET%" --bucket="test-results.dartcode.org" --dot_match="true" --skip_cleanup="true" --local-dir=".test_results" --upload-dir="%APPVEYOR_REPO_BRANCH%/%APPVEYOR_REPO_COMMIT%/win" --acl="public_read"
+  - IF NOT DEFINED APPVEYOR_PULL_REQUEST_NUMBER dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup="true" --local-dir=".dart_code_test_logs" --upload-dir="logs/%APPVEYOR_REPO_BRANCH%/%APPVEYOR_REPO_COMMIT%/win" --acl=public_read
+  - IF NOT DEFINED APPVEYOR_PULL_REQUEST_NUMBER dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup="true" --local-dir=".test_results" --upload-dir="%APPVEYOR_REPO_BRANCH%/%APPVEYOR_REPO_COMMIT%/win" --acl=public_read
   - npm run post_result_to_chat
