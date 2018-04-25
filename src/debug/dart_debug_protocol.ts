@@ -242,7 +242,7 @@ export class ObservatoryConnection {
 
 	constructor(uri: string) {
 		this.socket = new WebSocket(uri);
-		this.socket.on("message", (data) => this.handleData(data));
+		this.socket.on("message", (data) => this.handleData(data.toString()));
 	}
 
 	public onOpen(cb: () => void) {
