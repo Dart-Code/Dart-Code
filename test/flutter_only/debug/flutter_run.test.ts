@@ -8,9 +8,16 @@ import { getTopFrameVariables, ensureVariable } from "../../debug_helpers";
 describe.only("flutter run debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_run_debug_entry.js"), "dart");
 	// Spawning flutter tests seem to be kinda slow (and may fetch packages), so we need a higher timeout
-	dc.defaultTimeout = 30000;
+	dc.defaultTimeout = 60000;
+
+	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
+	// `flutter create .`!
+	before(() => vs.commands.executeCommand("_flutter.create", path.join(fsPath(flutterHelloWorldFolder), "dummy"), "."));
 
 	beforeEach(() => activate(flutterHelloWorldMainFile));
+	beforeEach(function () {
+		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
+	});
 	afterEach(() => dc.stop());
 
 	// TODO: This is duplicated in three places now (except deviceId).
