@@ -705,14 +705,14 @@
 		"semver": "^5.5.0",
 		"vscode-debugadapter": "^1.29.0",
 		"vscode-debugprotocol": "^1.29.0",
-		"ws": "^4.0.0"
+		"ws": "^1.1.5"
 	},
 	"devDependencies": {
 		"@types/mocha": "^5.1.0",
 		"@types/node": "^6.0.103",
 		"@types/semver": "^5.5.0",
 		"@types/sinon": "^4.3.0",
-		"@types/ws": "^4.0.0",
+		"@types/ws": "^0.0.38",
 		"codeclimate-test-reporter": "^0.5.0",
 		"mocha": "^5.1.0",
 		"mocha-multi-reporters": "^1.1.7",
