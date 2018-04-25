@@ -76,7 +76,7 @@ describe("flutter test debugger", () => {
 		await Promise.all([
 			dc.hitBreakpoint(config, {
 				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: flutterTestMainFile.fsPath,
+				path: fsPath(flutterTestMainFile),
 			}),
 		]);
 	});
