@@ -12,8 +12,11 @@ describe("dart_document_symbol_provider", () => {
 		const symbols = await getDocumentSymbols();
 
 		ensureSymbol(symbols, "main()", vs.SymbolKind.Function, "");
-		ensureSymbol(symbols, "MySampleHome", vs.SymbolKind.Class, "");
-		ensureSymbol(symbols, "build(BuildContext context)", vs.SymbolKind.Method, "MySampleHome");
-		assert.equal(symbols.length, 3);
+		ensureSymbol(symbols, "MyApp", vs.SymbolKind.Class, "");
+		ensureSymbol(symbols, "build(BuildContext context)", vs.SymbolKind.Method, "MyApp");
+		ensureSymbol(symbols, "MyHomePage", vs.SymbolKind.Class, "");
+		ensureSymbol(symbols, "MyHomePage(Key key)", vs.SymbolKind.Constructor, "MyHomePage");
+		ensureSymbol(symbols, "build(BuildContext context)", vs.SymbolKind.Method, "MyHomePage");
+		assert.equal(symbols.length, 6);
 	});
 });
