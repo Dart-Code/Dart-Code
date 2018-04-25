@@ -67,9 +67,8 @@ describe("dart_hover_provider", () => {
 	it("returns expected information for a setter", async function () {
 
 		// https://github.com/dart-lang/sdk/issues/32703
-		if (ext.exports.analyzerCapabilities.isDart2) {
+		if (ext.exports.analyzerCapabilities.isDart2)
 			this.skip();
-		}
 
 		const hover = await getHoverAt("my^NumSetter(");
 		if (ext.exports.analyzerCapabilities.isDart2) {
