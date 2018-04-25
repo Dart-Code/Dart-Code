@@ -116,8 +116,8 @@ async function runAllTests(): Promise<void> {
 	for (const codeVersion of codeVersions) {
 		for (const sdkPath of sdkPaths) {
 			// Skip Unstable/Unstable
-			if (codeVersion === "insiders" && sdkPath === process.env.PATH_UNSTABLE)
-				continue;
+			// if (codeVersion === "insiders" && sdkPath === process.env.PATH_UNSTABLE)
+			// 	continue;
 			runConfigs.push({ code: codeVersion, dart: sdkPath });
 		}
 	}
