@@ -5,7 +5,7 @@ import { fsPath } from "../../../src/utils";
 import { activate, ext, openFile, positionOf, flutterHelloWorldMainFile, delay, flutterHelloWorldFolder, flutterHelloWorldBrokenFile } from "../../helpers";
 import { getTopFrameVariables, ensureVariable } from "../../debug_helpers";
 
-describe.only("flutter run debugger", () => {
+describe("flutter run debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_run_debug_entry.js"), "dart");
 	// Spawning flutter tests seem to be kinda slow (and may fetch packages), so we need a higher timeout
 	dc.defaultTimeout = 60000;
