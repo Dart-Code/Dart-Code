@@ -20,7 +20,7 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return new Text(
       // BREAKPOINT1^
-      'Heeello, world!',
+      'Hello, world!',
       textDirection: TextDirection.ltr,
     );
   }
