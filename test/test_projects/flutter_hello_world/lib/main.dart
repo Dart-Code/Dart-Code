@@ -1,19 +1,27 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
-void main() {
-  runApp(new Column(children: [
-    new Center(
-        child: new Text(
-      'Hello, world!',
-      textDirection: TextDirection.ltr,
-    )),
-    new MySampleHome()
-  ]));
-}
+void main() => runApp(new MyApp());
 
-class MySampleHome extends StatelessWidget {
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return new Container(); // BREAKPOINT1
+    return new MaterialApp(
+      title: 'Flutter Demo',
+      theme: new ThemeData(primarySwatch: Colors.blue),
+      home: new MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatelessWidget {
+  MyHomePage({Key key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return new Text(
+      // BREAKPOINT1^
+      'Heeello, world!',
+      textDirection: TextDirection.ltr,
+    );
   }
 }
