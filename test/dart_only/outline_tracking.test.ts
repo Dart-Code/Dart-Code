@@ -9,6 +9,12 @@ export const outlineTrackingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder
 
 describe("file tracker", () => {
 	before(() => activate());
+	beforeEach(function () {
+		// https://github.com/dart-lang/sdk/issues/30238
+		if (!ext.exports.analyzerCapabilities.isDart2) {
+			this.skip();
+		}
+	});
 	it("has a tracked outline when a file is opened", async () => {
 		await closeAllOpenFiles();
 		await waitFor(() => !OpenFileTracker.getOutlineFor(outlineTrackingFile), "Outline was already present");
