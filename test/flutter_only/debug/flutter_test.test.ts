@@ -3,6 +3,7 @@ import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { fsPath } from "../../../src/utils";
 import { activate, ext, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, openFile, positionOf, flutterHelloWorldFolder } from "../../helpers";
+import { getTopFrameVariables, ensureVariable } from "../../debug_helpers";
 
 describe("flutter test debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_test_debug_entry.js"), "dart");
@@ -103,6 +104,22 @@ describe("flutter test debugger", () => {
 			}),
 			dc.launch(config),
 		]);
+	});
+
+	it.skip("provides exception details when stopped on exception", async () => {
+		await openFile(flutterTestBrokenFile);
+		const config = await startDebugger(flutterTestBrokenFile);
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.assertStoppedLocation("exception", {
+				line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
+				path: fsPath(flutterTestBrokenFile),
+			}),
+			dc.launch(config),
+		]);
+
+		const variables = await getTopFrameVariables(dc, "Exception");
+		ensureVariable(variables, undefined, "message", `"(TODO WHEN UNSKIPPING)"`);
 	});
 
 	it("writes failure output to stderr", async () => {
