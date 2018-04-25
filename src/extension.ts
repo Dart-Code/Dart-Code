@@ -86,8 +86,10 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const analysisCompleteCompleter = new PromiseCompleter<void>();
 	const extensionStartTime = new Date();
 	util.logTime();
-	checkForProjectsInSubFolders();
-	util.logTime("checkForProjectsInSubFolders");
+	if (!isRestart) {
+		checkForProjectsInSubFolders();
+		util.logTime("checkForProjectsInSubFolders");
+	}
 	const sdks = findSdks();
 	util.logTime("findSdks");
 	analytics = new Analytics(sdks);
@@ -280,7 +282,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	upgradeProject(util.getDartWorkspaceFolders());
 
 	// Prompt user for any special config we might want to set.
-	showUserPrompts(context);
+	if (!isRestart)
+		showUserPrompts(context);
 
 	// Turn on all the commands.
 	setCommandVisiblity(true, sdks.projectType);
@@ -293,7 +296,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			promptToRunPubGet(foldersRequiringPackageGet);
 	}
 	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => checkForPackages()));
-	checkForPackages();
+	if (!isRestart)
+		checkForPackages();
 
 	// Log how long all this startup took.
 	const extensionEndTime = new Date();
