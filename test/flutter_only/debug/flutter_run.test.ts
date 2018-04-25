@@ -56,7 +56,7 @@ describe.only("flutter run debugger", () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
 			dc.hitBreakpoint(config, {
-				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based, and comment is on next line!
+				line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
 				path: fsPath(flutterHelloWorldMainFile),
 			}),
 		]);
