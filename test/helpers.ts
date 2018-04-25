@@ -78,7 +78,7 @@ export function defer(callback: () => Promise<void> | void): void {
 }
 
 export let sb: sinon.SinonSandbox;
-beforeEach(() => sb = sinon.createSandbox());
+beforeEach(function () { sb = sinon.createSandbox(); }); // tslint:disable-line:only-arrow-functions
 afterEach(() => sb.restore());
 
 // Set up log files for individual test logging.
