@@ -6,7 +6,7 @@ import { ext } from "../helpers";
 
 const isWin = /^win/.test(process.platform);
 
-describe("Test environment", () => {
+describe("test environment", () => {
 	it("has opened the correct folder", () => {
 		const wfs = vs.workspace.workspaceFolders;
 		assert.equal(wfs.length, 1);
@@ -17,12 +17,12 @@ describe("Test environment", () => {
 	});
 });
 
-describe("Extension", () => {
+describe("extension", () => {
 	it("activated", async () => {
 		await ext.activate();
 		assert.equal(ext.isActive, true);
 	});
-	it("Reported no errors", async () => {
+	it("reported no errors when analysis completed", async () => {
 		await ext.activate();
 		await ext.exports.initialAnalysis;
 
