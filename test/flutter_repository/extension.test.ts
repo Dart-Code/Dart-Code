@@ -26,6 +26,11 @@ describe("Extension", () => {
 		await ext.activate();
 		await ext.exports.initialAnalysis;
 
+		// Fetch packages and wait for the next analysis to complete.
+		const analysisComplete = ext.exports.nextAnalysis();
+		await vs.commands.executeCommand("flutter.packages.get", vs.workspace.workspaceFolders[0].uri);
+		await analysisComplete;
+
 		const filesWithErrors = vs.languages
 			.getDiagnostics()
 			.filter((file) => file[1].length);
