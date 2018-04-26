@@ -10,9 +10,10 @@ import sinon = require("sinon");
 import * as semver from "semver";
 
 export const ext = vs.extensions.getExtension<{
-	analysisComplete: Promise<void>,
 	analyzerCapabilities: AnalyzerCapabilities,
 	debugProvider: DebugConfigProvider,
+	nextAnalysis: () => Promise<void>,
+	initialAnalysis: Promise<void>,
 	sdks: Sdks,
 }>("Dart-Code.dart-code");
 
@@ -48,7 +49,7 @@ export let eol: string;
 
 export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	await ext.activate();
-	await ext.exports.analysisComplete;
+	await ext.exports.initialAnalysis;
 	await closeAllOpenFiles();
 	doc = await vs.workspace.openTextDocument(file);
 	editor = await vs.window.showTextDocument(doc);
