@@ -64,6 +64,9 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		this.args = args;
+		// Force relative paths to absolute.
+		if (!path.isAbsolute(args.program))
+			args.program = path.join(args.cwd, args.program);
 		this.sourceFile = path.relative(args.cwd, args.program);
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program));
 		this.localPackageName = getLocalPackageName(args.program);
