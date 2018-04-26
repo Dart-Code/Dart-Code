@@ -45,7 +45,7 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it("receives successfully runs a Dart script with a relative path", async () => {
+	it("successfully runs a Dart script with a relative path", async () => {
 		const config = await startDebugger(helloWorldMainFile);
 		config.program = path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile));
 		await Promise.all([
