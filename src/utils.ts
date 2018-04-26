@@ -10,6 +10,7 @@ import { referencesFlutterSdk } from "./sdk/utils";
 import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
 
 export const extensionVersion = getExtensionVersion();
+export const vsCodeVersionConstraint = getVsCodeVersionConstraint();
 export const isDevExtension = checkIsDevExtension();
 export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "dart_code_flutter_create.dart";
 
@@ -139,6 +140,11 @@ export function isInsideFolderNamed(file: string, folderName: string): boolean {
 function getExtensionVersion(): string {
 	const packageJson = require("../../package.json");
 	return packageJson.version;
+}
+
+function getVsCodeVersionConstraint(): string {
+	const packageJson = require("../../package.json");
+	return packageJson.engines.vscode;
 }
 
 export function versionIsAtLeast(inputVersion: string, requiredVersion: string): boolean {
