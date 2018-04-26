@@ -48,19 +48,11 @@ before_install:
   - export ELECTRON_NO_ATTACH_CONSOLE=1
   - dart-sdk/bin/dart --version
   - flutter/bin/flutter --version
-  - flutter/bin/flutter doctor -v
   - dev/dart-sdk/bin/dart --version
   - dev/flutter/bin/flutter --version
-  - dev/flutter/bin/flutter doctor -v
   - node --version
   - npm --version
   - cd ..
-  - cd test/test_projects/flutter_hello_world
-  - ../../../with\ spaces/dev/flutter/bin/flutter packages get
-  - ../../../with\ spaces/dev/flutter/bin/cache/artifacts/engine/darwin-x64/flutter_tester --non-interactive --packages=.packages test/widget_test.dart
-  - ../../../with\ spaces/dev/flutter/bin/flutter run --machine -t lib/main.dart -d flutter-tester --verbose
-  - cd ../../../
-
 
 install:
   - npm install --depth 0
