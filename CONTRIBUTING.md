@@ -109,7 +109,7 @@ Debug adapters now run in-process and debugging them should be the same as any o
 - Add a new section to CHANGELOG.md for the new version
   - Review the GitHub milestone for completed cases
   - Scan the commit history for anything significant that didn't have a GH issue (ideally nothing)
-- If this is a new major version, remov the previous changelog entries (CHANGELOG.md only contains the most recent major version with a link to the website for the rest)
+- If this is a new major version, remove the previous changelog entries (CHANGELOG.md only contains the most recent major version with a link to the website for the rest)
 - Commit theses changes and push to GitHub (pushing before completing the next step is important for the tag to be against the correct version)
 - Create a new Release on GitHub with the title "Dart Code v{x.y.z}" where `{x.y.z}` is the correct version number
 - Copy the installation instructions header and any preview features footer from a previous GitHub release into the release description
