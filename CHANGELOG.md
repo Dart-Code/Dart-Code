@@ -1,63 +1,79 @@
-# v2.11.2
+# v2.12.0
 
-- `--no-preview-dart-2` will no longer be sent to the VM (even when `dart.previewDart2` is set to `false`) for CLI apps as it is not supported
+## Support for Flutter Profile and Release Modes
 
-# v2.11.1
+You can now create launch configurations for `profile` and `release` modes in Flutter apps. For now, this requires you to create a `launch.json` and add the setting there..
 
-- SDKs in paths that contain spaces will no longer report that the analysis server has terminated
+<img src="https://dartcode.org/images/release_notes/v2.12/flutter_modes.png" width="700" height="319" />
 
-# v2.11.0
+For more information on using profile and release modes, see [Running Flutter Apps in Profile or Release Modes](/docs/running-flutter-apps-in-profile-or-release-modes/).
 
-## Flutter Test
+## Flutter Memory Usage Monitoring
 
-Basic support for `flutter test` has been added. If you launch a file (by pressing `F5` with no launch config, or by setting `program` in your launch config) that is inside the `test` folder of a Flutter project, the script will be run using `flutter test`. Output will appear in the `Debug Console` pane. All debugging functionality (breakpoints, etc.) should work as normal.
+When running a `profile` build (or if you set [`showMemoryUsage`](/docs/running-flutter-apps-in-profile-or-release-modes/) in your launch configuration) the total memory for your applications heaps will be shown in the status bar.
 
-![Flutter Test](https://dartcode.org/images/release_notes/v2.11/flutter_test.png)
+<img src="https://dartcode.org/images/release_notes/v2.12/flutter_memory_usage.png" width="229" height="79" />
 
-## Projects in Sub-Folders
+Note: This is heap usage and not total process memory. In debug builds it may not be reflective of actual usage in a release build.
 
-When projects are found in sub-folders you will now be prompted to mark them as `Workspace folders`. This will allow Dart Code to better understand which folders are projects when detecting which debugger to run when pressing F5.
+## Progress Notifications for Long Running Tasks
 
-![Projects in Sub-Folders](https://dartcode.org/images/release_notes/v2.11/workspace_upgrade.png)
+Long running tasks like [`Flutter: Get Packages`](/docs/commands/#flutter-get-packages) and Flutter builds will now show more obvious progress notifications with progress animations.
 
-**Note:** VS Code will duplicate these workspace folders in the top level of explorer - please +1 [this VS Code issue](https://github.com/Microsoft/vscode/issues/45470) to allow this to be configurable.
+<img src="https://dartcode.org/images/release_notes/v2.12/long_running_tasks.png" width="700" height="155" />
 
-## Silent Extension Reloads
+As part of this, these actions may also now be cancelled from the `x` in the notification.
 
-Many operations in Dart Code require re-initialising the extension. This was previously done by prompting the user to `"Reload Window"` which resulted in a visible disruption and all extensions re-initialising. In this version Dart Code silently re-initialises itself meaning no more prompts for actions such as changing SDKs. Since this operation still terminates and restarts the Dart analysis server it may take a few moments to re-analyze your project.
+## Flutter Icons in Tooltips and Completion Descriptions
 
-## SDK Picker for Flutter
+Flutter icons now show correctly in tooltips and completion descriptions instead of chunks of HTML.
 
-The Flutter version number now appears on the status bar and allows quickly switching SDKs by clicking onit (this functionality already existed for Dart). Set the `dart.flutterSdkPaths` setting to an array of SDK folders (or folders containing SDKs) to use this. Note: This does not change your Flutter channel but relies on having multiple versions of the SDK in different folders (you can do this without multiple clones by using `git worktree` [as shown in our Travis script](https://github.com/Dart-Code/Dart-Code/blob/b5da182903119232eb74d1dc69d5ae878ca41341/.travis.yml#L39-L41)).
+<img src="https://dartcode.org/images/release_notes/v2.12/flutter_icons.png" width="700" height="256" />
 
-![SDK Picker for Flutter](https://dartcode.org/images/release_notes/v2.11/flutter_sdk_switcher.png)
+## Extract Widget Refactor
+
+An `Extract Widget` refactor is now available on the lightbulb menu that creates a new Widget class and inserts a call to its constructor in the original position.
+
+<img src="https://dartcode.org/images/release_notes/v2.12/extract_widget.png" width="700" height="330" />
+
+## Extract Method Refactor
+
+An `Extract Method` refactor is now available on the lightbulb menu.
+
+<img src="https://dartcode.org/images/release_notes/v2.12/extract_method.png" width="700" height="320" />
+
+## Better Feedback for Failed Renames
+
+Failed renames will now show errors directly in the editor instead of window-scoped notifications that require dismissing. In an upcoming VS Code release we will gain the ability to block the rename input box from appearing at a location that does not support a rename.
+
+<img src="https://dartcode.org/images/release_notes/v2.12/rename_message.png" width="350" height="144" />
+
+## Preview: Better Handling of Windows Paths
+
+A new setting (`dart.previewExperimentalWindowsDriveLetterHandling`) has been added. Setting this value to `true` will cause all drive letters to be converted to uppercase when Dart Code interacts with services like the analysis server. This *should* fix a number of issues affecting Windows users (unexpected errors like `Type 'x' cannot be assigned to type 'x' or completion and errors not updating when referencing code with `package:` imports). In future this behaviour may become the default so please try it out and send feedback!
 
 ## Other Changes
 
-- `dart.previewDart2` now explicitly sends `--no-preview-dart-2` when set to `false` to allow opting-out of the Dart 2 preview once it becomes the default (if undefined, neither flag will be sent)
-- The setting `dart.previewDart2` now works for Dart CLI apps in addition to Flutter (note: your Dart SDK must support it, which currently means you must be using a v2.0 dev release)
-- Pressing F5 without a `launch.json` will now launch more scripts without configuration (scripts inside `test`, `bin` and `tool`)
-- Errors when launching Flutter projects (such as when you have not accepted Android licenses) will now appear in the Debug Console
-- Flutter's `Full Restart` is now bound to `Ctrl`+`F5` by default during a debugging session
-- `Flutter: New Project` will now validate that you do not call your project `flutter` or `flutter_test` which would lead to confusing errors about depending on itself
-- The `flutter/flutter` repository will once again be treated as a Flutter project rather than a Dart one, meaning it will use Flutter's version of the Dart SDK and start the `flutter daemon`
-- The extension will no longer crash if you try to opened a Flutter project without a Flutter SDK but with a Dart SDK in your `PATH`
-- The display of the workspace symbols has been updated to include file paths in addition to class names
-- The document symbol list will no longer list constructor invocations within Flutter projects
-- The document symbol list (`Ctrl`+`Shift`+`O`) now uses the same API as the workspace symbol list (as updated in the previous version) when your SDK supports it, resulting in more consistent rendering between document/workspace lists
-- Running `Pub: Get Packages`, `Pub: Upgrade Packages`, `Flutter: Get Packages` or `Flutter: Upgrade Packages` directly from the command palette will now switch between `flutter` and `pub` based on the project type
-- Commands like `Pub: Get Packages` will no longer fail if your Dart SDK is in a folder with parentheses in the name
-- Code completion will no longer insert unwanted parentheses or colons that already exist ahead of the cursor when typing quickly
-- Code completion for named arguments will no longer insert placeholders but instead automatically re-trigger code completion where the value should be provided
-- Dart and Flutter version numbers will no longer show in the status bar when the active file is not a Dart file
-- The SDK quick-picker will now include your current SDK even if it's not included via the `dart.sdkPaths`/`dart.flutterSdkPaths` settings
-- The SDK quick-picker will now longer show an error if configured folders contain symlinks to Dart binaries
-- A new option (`dart.vmAdditionalArgs`) has been added to pass custom arguments to the VM when launching Dart CLI apps
-- Code completion will no longer get stuck open after typing `@override`
-
-## Preview Features available in this version
-
-- [`dart.previewAnalyzeAngularTemplates`](https://github.com/Dart-Code/Dart-Code/issues/396) - Enables analysis for AngularDart templates (requires the [angular_analyzer_plugin](https://github.com/dart-lang/angular_analyzer_plugin))
+- Exception messages shown in popups during debugging are no longer truncated
+- Pressing `F5` in a Flutter project will no longer pick `bin/main.dart` to execute over `lib/main.dart`
+- More output from `flutter run` will be shown in Debug Console
+- The display of lists and maps in the debugger variables pane has been improved
+- The `Add to Watch` action on variables (in the debugger variables pane) will now correctly populate watch expressions
+- `Slow Mode Banner` is now known as `Debug Mode Banner`
+- [@343max](https://github.com/343max) contributed a [`dart.flutterSelectDeviceWhenConnected`](/docs/settings/#dartflutterselectdevicewhenconnected) setting to control whether to automatically select the most recently connected device in Flutter projects
+- Organize Imports is now bound to `Alt`+`Shift`+`O` by default
+- A new [`dart.organizeDirectivesOnSave`](/docs/settings/#dartorganizedirectivesonsave) setting has been added
+- CPU usage while moving the caret/selection around the editor should be much lower
+- Code's automatic indentation detection will be disabled for Dart since sometimes it picks 4 spaces based on line contiuation indenting
+- A new [`Go to Super Method`](/docs/commands/#dart-go-to-super-method) command has been added
+- `Find References` will now also include the decleration
+- TODOs will once again appear in the Problems pane if you set the `dart.showTodos` setting
+- Formatting of the hover tooltips has been improved
+- Tooltips will no longer show on import prefixes (as the information displayed was useless)
+- Duplicate code fixes will no longer show in the lightbulb menu when there are multiple on the same line
+- [@aemino](https://github.com/aemino) contributed a fix for ligatures not working correctly on `=>` due to them being considered individual tokens
+- Analysis of AngularDart now enabled by default (requires a v2 dev SDK) and can be controlled with the [dart.analyzeAngularTemplates](/docs/settings/#dartanalyzeangulartemplates) setting.
+- The error message shown when the analysis server fails to start will now be more appropriate
 
 # Past Versions
 
