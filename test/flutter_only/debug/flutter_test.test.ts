@@ -2,7 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { fsPath } from "../../../src/utils";
-import { activate, ext, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, openFile, positionOf } from "../../helpers";
+import { activate, ext, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, openFile, positionOf, flutterHelloWorldFolder } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_test_debug_entry.js"), "dart");
@@ -40,6 +40,17 @@ describe("flutter test debugger", () => {
 
 	it("receives the expected output from a Flutter test script", async () => {
 		const config = await startDebugger(flutterTestMainFile);
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.assertOutput("stdout", "✓ - Hello world test"),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		]);
+	});
+
+	it("successfully runs a Flutter test script with a relative path", async () => {
+		const config = await startDebugger(flutterTestMainFile);
+		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterTestMainFile));
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", "✓ - Hello world test"),
