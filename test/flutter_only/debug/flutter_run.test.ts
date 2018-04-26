@@ -51,6 +51,22 @@ describe("flutter run debugger", () => {
 		await dc.waitForEvent("terminated");
 	});
 
+	it.skip("runs a Flutter application with a relative path", async () => {
+		const config = await startDebugger(flutterHelloWorldMainFile);
+		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldMainFile));
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.launch(config),
+		]);
+
+		// Ensure we're still responsive after 10 seconds.
+		await delay(10000);
+		await dc.threadsRequest();
+
+		await dc.disconnectRequest();
+		await dc.waitForEvent("terminated");
+	});
+
 	it("stops at a breakpoint", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(flutterHelloWorldMainFile);
