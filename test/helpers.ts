@@ -3,10 +3,11 @@ import * as path from "path";
 import * as fs from "fs";
 import * as vs from "vscode";
 import { EOL, tmpdir } from "os";
-import { Sdks, fsPath } from "../src/utils";
+import { Sdks, fsPath, versionIsAtLeast, vsCodeVersionConstraint } from "../src/utils";
 import { AnalyzerCapabilities } from "../src/analysis/analyzer";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
 import sinon = require("sinon");
+import * as semver from "semver";
 
 export const ext = vs.extensions.getExtension<{
 	analysisComplete: Promise<void>,
@@ -16,9 +17,15 @@ export const ext = vs.extensions.getExtension<{
 }>("Dart-Code.dart-code");
 
 if (!ext) {
-	console.error("Quitting because extension failed to load.");
-	console.error("This may be because this branch requires a newer version of Code than is currently on the stable channel?");
-	process.exit(1);
+	if (semver.satisfies(vs.version, vsCodeVersionConstraint)) {
+		console.error("Quitting with error because extension failed to load.");
+		process.exit(1);
+	} else {
+		console.error("Skipping because extension failed to load due to requiring newer VS Code version.");
+		console.error(`    Required: ${vsCodeVersionConstraint}`);
+		console.error(`    Current: ${vs.version}`);
+		process.exit(0);
+	}
 }
 
 export const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/hello_world"));
