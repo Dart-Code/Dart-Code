@@ -109,6 +109,9 @@ beforeEach(async function () {
 		prefix,
 		["observatory", "flutterRun", "flutterTest"],
 	);
+
+	// HACK: Give config time to reload
+	await delay(50);
 });
 
 before(() => {
