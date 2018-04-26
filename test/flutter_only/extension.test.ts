@@ -29,6 +29,8 @@ describe("extension", () => {
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.ok(sdks.flutter);
+		console.log("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
+		console.log(`        "analysis_server": ${ext.exports.analyzerCapabilities.version}`);
 	});
 	it("used Flutter's version of the Dart SDK", async () => {
 		await ext.activate();
