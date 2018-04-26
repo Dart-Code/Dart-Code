@@ -24,7 +24,7 @@ describe("Extension", () => {
 	});
 	it("Reported no errors", async () => {
 		await ext.activate();
-		await ext.exports.analysisComplete;
+		await ext.exports.initialAnalysis;
 
 		const filesWithErrors = vs.languages
 			.getDiagnostics()
