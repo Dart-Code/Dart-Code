@@ -62,7 +62,15 @@ export class SdkCommands {
 		}));
 
 		// Flutter commands.
-		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", (selection) => {
+		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", async (selection): Promise<number> => {
+			if (!selection)
+				selection = vs.Uri.file(await this.getWorkspace(`Select the folder to run "flutter packages get" in`, selection));
+
+			// If we're working on the flutter repository, map this on to update-packages.
+			if (selection && fsPath(selection) === sdks.flutter) {
+				return this.runFlutter("update-packages", selection);
+			}
+
 			return this.runFlutter("packages get", selection);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => {
