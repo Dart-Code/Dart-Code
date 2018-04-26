@@ -1,3 +1,8 @@
 {
-	"files.insertFinalNewline": true
+	"files.insertFinalNewline": true,
+	"dart.analyzerLogFile": "~/Dev/Dart-Code-Logs/insiders.analyzer.txt",
+	"dart.flutterDaemonLogFile": "~/Dev/Dart-Code-Logs/insiders.flutter_daemon.txt",
+	"dart.observatoryLogFile": "~/Dev/Dart-Code-Logs/insiders.observatory.txt",
+	"dart.flutterRunLogFile": "~/Dev/Dart-Code-Logs/insiders.flutter_run.txt",
+	"dart.flutterTestLogFile": "~/Dev/Dart-Code-Logs/insiders.flutter_test.txt"
 }

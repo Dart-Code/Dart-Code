@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { fsPath } from "../../../src/utils";
 import { ensureVariable, getTopFrameVariables, getVariables } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, ext, helloWorldBrokenFile, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf } from "../../helpers";
+import { activate, closeAllOpenFiles, ext, helloWorldBrokenFile, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf, helloWorldFolder } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
@@ -37,6 +37,17 @@ describe("dart cli debugger", () => {
 
 	it("receives the expected output from a Dart script", async () => {
 		const config = await startDebugger(helloWorldMainFile);
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.assertOutput("stdout", "Hello, world!"),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		]);
+	});
+
+	it("receives successfully runs a Dart script with a relative path", async () => {
+		const config = await startDebugger(helloWorldMainFile);
+		config.program = path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile));
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", "Hello, world!"),
