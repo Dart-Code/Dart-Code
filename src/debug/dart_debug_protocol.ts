@@ -393,7 +393,7 @@ export class ObservatoryConnection {
 	// TODO: Make these strongly-typed - DebuggerResult -> SourceReport? DebuggerResult<SourceReport>?
 	// Do we need DebuggerResult?
 	public getSourceReport(isolate: VMIsolateRef, reports: SourceReportKind[], script: VMScriptRef): Promise<DebuggerResult> {
-		return this.callMethod("getSourceReport", { isolateId: isolate.id, reports: reports.map((r) => SourceReportKind[r]), script: script.id });
+		return this.callMethod("getSourceReport", { isolateId: isolate.id, reports: reports.map((r) => SourceReportKind[r]), scriptId: script.id });
 	}
 
 	public getObject(isolateId: string, objectId: string, offset?: number, count?: number): Promise<DebuggerResult> {
