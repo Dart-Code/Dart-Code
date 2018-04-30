@@ -230,10 +230,6 @@
 					"when": "dart-code:dartProjectLoaded"
 				},
 				{
-					"command": "dart.organizeDirectives",
-					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
-				},
-				{
 					"command": "dart.goToSuper",
 					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
 				},
