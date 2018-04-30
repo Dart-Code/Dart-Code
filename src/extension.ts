@@ -126,19 +126,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		connectedEvents.dispose();
 	});
 
-	const nextAnalysis = () =>
-		new Promise((resolve, reject) => {
-			const disposable = analyzer.registerForServerStatus((ss) => {
-				if (ss.analysis && !ss.analysis.isAnalyzing) {
-					resolve();
-					disposable.dispose();
-				}
-			});
-		});
-
 	// Log analysis server first analysis completion time when it completes.
 	let analysisStartTime: Date;
-	const initialAnalysis = nextAnalysis();
 	const analysisCompleteEvents = analyzer.registerForServerStatus((ss) => {
 		// Analysis started for the first time.
 		if (ss.analysis && ss.analysis.isAnalyzing && !analysisStartTime)
@@ -326,9 +315,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	return {
 		analyzerCapabilities: analyzer.capabilities,
+		currentAnalysis: analyzer.currentAnalysis,
 		debugProvider, // TODO: Remove this when we can get access via testing...
-		initialAnalysis,
-		nextAnalysis,
+		initialAnalysis: analyzer.initialAnalysis,
 		sdks,
 	};
 }
