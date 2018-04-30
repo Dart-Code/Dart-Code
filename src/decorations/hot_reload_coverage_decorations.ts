@@ -11,6 +11,7 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 		},
 	} = {};
 	private isDebugging = false;
+	private coverageUpdateTimer: NodeJS.Timer;
 
 	// TODO: Move these to gutter
 	private readonly modifiedDecorationType = vs.window.createTextEditorDecorationType({
@@ -50,7 +51,7 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 			fileState = this.fileState[fsPath(e.document.uri)] = { modified: [], notRun: [] };
 		}
 
-		// Update all exisint ranges offsets.
+		// Update all existing ranges offsets.
 		for (const change of e.contentChanges) {
 			const diff = change.text.length - change.rangeLength;
 			if (diff === 0)
@@ -105,10 +106,12 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 	private onDidStartDebugSession(): void {
 		this.isDebugging = true;
+		this.requestCoverageUpdate(true);
 	}
 
 	private onDidTerminateDebugSession(): void {
 		this.isDebugging = false;
+		clearTimeout(this.coverageUpdateTimer);
 		this.clearAllMarkers();
 	}
 
@@ -138,6 +141,21 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 	private toRanges(editor: vs.TextEditor, rs: CodeRange[]): vs.Range[] {
 		return rs.map((r) => new vs.Range(editor.document.positionAt(r.offset), editor.document.positionAt(r.offset + r.length)));
+	}
+
+	private async requestCoverageUpdate(skip: boolean = false): Promise<void> {
+		const hasAnyChanges = !!Object.keys(this.fileState)
+			.find((file) => this.fileState[file].notRun.length !== 0);
+		if (hasAnyChanges && !skip) {
+			await vs.commands.executeCommand(
+				"_dart.updateCoverage",
+				vs.window.visibleTextEditors.map((e) => fsPath(e.document.uri)),
+			);
+		}
+
+		// TODO: Don't do on timer!
+		// TODO: Don't do if already in progress?
+		this.coverageUpdateTimer = setTimeout(() => this.requestCoverageUpdate(), 10000);
 	}
 
 	public dispose() {

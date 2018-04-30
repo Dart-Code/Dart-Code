@@ -5,9 +5,9 @@ import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { logError } from "../utils/log";
-import { DebuggerResult, ObservatoryConnection, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMStack } from "./dart_debug_protocol";
+import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
-import { DartAttachRequestArguments, DartLaunchRequestArguments, PromiseCompleter, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
+import { DartAttachRequestArguments, DartLaunchRequestArguments, PromiseCompleter, flatMap, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -898,7 +898,16 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected customRequest(request: string, response: DebugProtocol.Response, args: any): void {
-		super.customRequest(request, response, args);
+		switch (request) {
+			case "updateCoverage":
+				// TODO: Skip if we're not ready yet.
+				this.updateCoverage(args.scriptUris as string[]);
+				break;
+
+			default:
+				super.customRequest(request, response, args);
+				break;
+		}
 	}
 
 	// IsolateStart, IsolateRunnable, IsolateExit, IsolateUpdate, ServiceExtensionAdded
@@ -1055,6 +1064,65 @@ export class DartDebugSession extends DebugSession {
 		if (event && event.extensionRPC) {
 			this.sendEvent(new Event("dart.serviceExtensionAdded", { id: event.extensionRPC }));
 		}
+	}
+
+	private async updateCoverage(scriptUris: string[]): Promise<void> {
+		const coverageReport = await this.getCoverageReport(scriptUris);
+
+		// Unwrap tokenPos into real locations.
+		const coverageData = coverageReport.map((r) => ({
+			hits: r.hits.map((h) => this.resolveFileLocation(r.script, h)),
+			scriptUri: r.script.uri,
+		}));
+
+		this.sendEvent(new Event("dart.coverage", coverageData));
+	}
+
+	private async getCoverageReport(scriptUris: string[]): Promise<Array<{ script: VMScript, tokenPosTable: number[][], hits: number[] }>> {
+		// TODO: Do we need to do all of these requests every time? Can we stack the loaded scripts?
+		const result = await this.observatory.getVM();
+		const vm = result.result as VM;
+
+		const promises: Array<Promise<DebuggerResult>> = [];
+
+		const isolatePromises = vm.isolates.map((isolateRef) => this.observatory.getIsolate(isolateRef.id));
+		const isolatesResponses = await Promise.all(isolatePromises);
+		const isolates = isolatesResponses.map((response) => response.result as VMIsolate);
+
+		const results: Array<{ script: VMScript, tokenPosTable: number[][], hits: number[] }> = [];
+		const scriptPaths = scriptUris.map((s) => uriToFilePath(s));
+		for (const isolate of isolates) {
+			const libraryPromises = isolate.libraries.map((library) => this.observatory.getObject(isolate.id, library.id));
+			const libraryResponses = await Promise.all(libraryPromises);
+			const libraries = libraryResponses.map((response) => response.result as VMLibrary);
+
+			const scriptRefs = flatMap(libraries, (library) => library.scripts);
+
+			// Filter scripts to the ones we care about.
+			// TODO: Do we need to getPossibleSourceUris() here?
+			const scripts = scriptRefs.filter((s) => scriptPaths.indexOf(uriToFilePath(s.uri)) !== -1);
+
+			for (const scriptRef of scripts) {
+				const script = (await this.observatory.getObject(isolate.id, scriptRef.id)).result as VMScript;
+				try {
+					const report = await this.observatory.getSourceReport(isolate, [SourceReportKind.Coverage], scriptRef);
+					const sourceReport = report.result as VMSourceReport;
+					const ranges = sourceReport.ranges.filter((r) => r.coverage && r.coverage.hits && r.coverage.hits.length);
+
+					for (const range of ranges) {
+						results.push({
+							hits: range.coverage.hits,
+							script,
+							tokenPosTable: script.tokenPosTable,
+						});
+					}
+				} catch (e) {
+					logError(e);
+				}
+			}
+		}
+
+		return results;
 	}
 
 	public errorResponse(response: DebugProtocol.Response, message: string) {
