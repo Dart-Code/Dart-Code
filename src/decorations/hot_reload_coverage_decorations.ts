@@ -30,7 +30,6 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 		this.subscriptions.push(vs.debug.onDidStartDebugSession((e) => this.onDidStartDebugSession()));
 		this.subscriptions.push(vs.debug.onDidTerminateDebugSession((e) => this.onDidTerminateDebugSession()));
 		// TODO: On execution, remove from notRun list
-		// TODO: Does format and other code actions call this?
 		// TODO: If file modified externally, we may need to drop all markers?
 	}
 
@@ -63,7 +62,8 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 		// Append the new ranges.
 		for (const change of e.contentChanges) {
-			fileState.modified.push({ offset: change.rangeOffset, length: change.text.length });
+			if (change.text.length > 0)
+				fileState.modified.push({ offset: change.rangeOffset, length: change.text.length });
 		}
 
 		this.redrawDecorations([editor]);
@@ -72,12 +72,11 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 	private translateChanges(ranges: CodeRange[], change: vs.TextDocumentContentChangeEvent): CodeRange[] {
 		const diff = change.text.length - change.rangeLength;
 		return ranges
-			// TODO: Handle intersections (where content from the existing range was replaced by the new one).
 			.map((r) => {
-				if (change.rangeOffset >= r.offset) {
+				if (change.rangeOffset >= r.offset + r.length) {
 					// If the new change is after the old one, we don't need to map.
 					return r;
-				} else if (change.rangeOffset <= r.offset && change.rangeOffset + change.rangeLength > r.offset + r.length) {
+				} else if (change.rangeOffset <= r.offset && change.rangeOffset + change.rangeLength >= r.offset + r.length) {
 					// If this new change contains the whole of the old change, we don't need the old change.
 					return undefined;
 				} else {
