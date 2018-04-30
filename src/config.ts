@@ -56,6 +56,7 @@ class Config {
 	// Preview features.
 	get normalizeWindowsDriveLetters() { return this.getConfig<boolean>("normalizeWindowsDriveLetters"); }
 	get previewTestRunnerForDart() { return this.getConfig<boolean>("previewTestRunnerForDart"); }
+	get previewHotReloadCoverageMarkers() { return this.getConfig<boolean>("previewHotReloadCoverageMarkers"); }
 
 	public for(uri?: Uri): ResourceConfig {
 		return new ResourceConfig(uri);
