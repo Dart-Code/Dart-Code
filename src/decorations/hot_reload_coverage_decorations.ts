@@ -24,21 +24,25 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 	constructor(debug: DebugCommands) {
 		this.subscriptions.push(vs.workspace.onDidChangeTextDocument((e) => this.onDidChangeTextDocument(e)));
+		this.subscriptions.push(vs.window.onDidChangeVisibleTextEditors((e) => this.onDidChangeVisibleTextEditors(e)));
 		this.subscriptions.push(debug.onDidHotReload(() => this.onDidHotReload()));
 		this.subscriptions.push(debug.onDidFullRestart(() => this.onDidFullRestart()));
 		this.subscriptions.push(vs.debug.onDidStartDebugSession((e) => this.onDidStartDebugSession()));
 		this.subscriptions.push(vs.debug.onDidTerminateDebugSession((e) => this.onDidTerminateDebugSession()));
-		// TODO: On execution, remove RELOADED_NOT_RUN
-		// TODO: On open editor, restore all marks from fileState
+		// TODO: On execution, remove from notRun list
 		// TODO: Does format and other code actions call this?
 		// TODO: If file modified externally, we may need to drop all markers?
+	}
+
+	private onDidChangeVisibleTextEditors(editors: vs.TextEditor[]) {
+		this.redrawDecorations(editors);
 	}
 
 	private onDidChangeTextDocument(e: vs.TextDocumentChangeEvent) {
 		if (!this.isDebugging)
 			return;
 
-		const editor = vs.window.activeTextEditor.document === e.document ? vs.window.activeTextEditor : null;
+		const editor = vs.window.activeTextEditor.document.uri === e.document.uri ? vs.window.activeTextEditor : null;
 		if (!editor)
 			return;
 
@@ -118,6 +122,8 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 	}
 
 	private redrawDecorations(editors: vs.TextEditor[]): void {
+		if (!editors)
+			return;
 		for (const editor of editors) {
 			const fileState = this.fileState[fsPath(editor.document.uri)];
 			editor.setDecorations(
