@@ -101,6 +101,10 @@ export function isWithinPath(file: string, folder: string) {
 	return !!relative && !relative.startsWith("..") && !path.isAbsolute(relative);
 }
 
+export function flatMap<T1, T2>(input: T1[], f: (input: T1) => T2[]): T2[] {
+	return input.reduce((acc, x) => acc.concat(f(x)), []);
+}
+
 export class PromiseCompleter<T> {
 	public promise: Promise<T>;
 	public resolve: (value?: T | PromiseLike<T>) => void;
