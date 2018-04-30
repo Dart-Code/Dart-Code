@@ -133,16 +133,17 @@ async function runAllTests(): Promise<void> {
 
 		// Allow failures from unstable builds (we'll still see results in build logs).
 		const allowFailures = codeVersion === "insiders" || sdkPath === process.env.PATH_UNSTABLE;
+		const flutterRoot = sdkPath === process.env.PATH_UNSTABLE ? process.env.FLUTTER_ROOT_UNSTABLE : process.env.FLUTTER_ROOT;
 		const totalRuns = 6 * runConfigs.length;
 		await runTests("dart_only", "hello_world", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 		await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 		await runTests("multi_root", "projects.code-workspace", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 		await runTests("multi_root_upgraded", "", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 		await runTests("not_activated/flutter_create", "empty", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
-		if (process.env.FLUTTER_ROOT) {
-			await runTests("flutter_repository", process.env.FLUTTER_ROOT, sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
+		if (flutterRoot) {
+			await runTests("flutter_repository", flutterRoot, sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 		} else {
-			console.error("FLUTTER_ROOT NOT SET, SKIPPING FLUTTER TESTS");
+			console.error("FLUTTER_ROOT NOT SET, SKIPPING FLUTTER REPO TESTS");
 			if (!allowFailures)
 				exitCode = 1;
 		}
