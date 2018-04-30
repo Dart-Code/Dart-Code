@@ -158,6 +158,11 @@ export interface VMLibraryRef extends VMObjectRef {
 	uri: string;
 }
 
+export interface VMLibrary extends VMObj {
+	// A list of the scripts which constitute this library.
+	scripts: VMScriptRef[];
+}
+
 export interface VMFuncRef extends VMObjectRef {
 	name: string;
 	// The owner of this function, which can be one of [LibraryRef], [ClassRef] or [FuncRef].
@@ -225,6 +230,66 @@ export interface VMFunctionRef extends VMObjectRef {
 	_kind: string;
 	static: boolean;
 	const: boolean;
+}
+
+export interface VMSourceReport extends VMResponse {
+	// A list of ranges in the program source.  These ranges correspond
+	// to ranges of executable code in the user's program (functions,
+	// methods, constructors, etc.)
+	//
+	// Note that ranges may nest in other ranges, in the case of nested
+	// functions.
+	//
+	// Note that ranges may be duplicated, in the case of mixins.
+	ranges: VMSourceReportRange[];
+
+	// A list of scripts, referenced by index in the report's ranges.
+	scripts: VMScriptRef[];
+}
+
+export interface VMSourceReportRange {
+	// An index into the script table of the SourceReport, indicating
+	// which script contains this range of code.
+	scriptIndex: number;
+
+	// The token position at which this range begins.
+	startPos: number;
+
+	// The token position at which this range ends.  Inclusive.
+	endPos: number;
+
+	// Has this range been compiled by the Dart VM?
+	compiled: boolean;
+
+	// The error while attempting to compile this range, if this
+	// report was generated with forceCompile=true.
+	error?: Error;
+
+	// Code coverage information for this range.  Provided only when the
+	// Coverage report has been requested and the range has been
+	// compiled.
+	coverage?: VMSourceReportCoverage;
+
+	// Possible breakpoint information for this range, represented as a
+	// sorted list of token positions.  Provided only when the when the
+	// PossibleBreakpoint report has been requested and the range has been
+	// compiled.
+	possibleBreakpoints?: number[];
+}
+
+export interface VMSourceReportCoverage {
+	// A list of token positions in a SourceReportRange which have been
+	// executed.  The list is sorted.
+	hits: number[];
+
+	// A list of token positions in a SourceReportRange which have not been
+	// executed.  The list is sorted.
+	misses: number[];
+}
+
+export enum SourceReportKind {
+	Coverage,
+	PossibleBreakpoints,
 }
 
 export class RPCError {
@@ -323,6 +388,12 @@ export class ObservatoryConnection {
 
 	public getStack(isolateId: string): Promise<DebuggerResult> {
 		return this.callMethod("getStack", { isolateId });
+	}
+
+	// TODO: Make these strongly-typed - DebuggerResult -> SourceReport? DebuggerResult<SourceReport>?
+	// Do we need DebuggerResult?
+	public getSourceReport(isolate: VMIsolateRef, reports: SourceReportKind[], script: VMScriptRef): Promise<DebuggerResult> {
+		return this.callMethod("getSourceReport", { isolateId: isolate.id, reports: reports.map((r) => SourceReportKind[r]), script: script.id });
 	}
 
 	public getObject(isolateId: string, objectId: string, offset?: number, count?: number): Promise<DebuggerResult> {
