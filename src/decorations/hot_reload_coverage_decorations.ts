@@ -63,8 +63,14 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 		// Append the new ranges.
 		for (const change of e.contentChanges) {
-			if (change.text.length > 0)
-				fileState.modified.push({ offset: change.rangeOffset, length: change.text.length });
+			if (change.text.length === 0)
+				continue;
+
+			// If the replacement text is the same as the old text, don't mark it as changed.
+			if (change.rangeLength === change.text.length && change.text === editor.document.getText(change.range))
+				continue;
+
+			fileState.modified.push({ offset: change.rangeOffset, length: change.text.length });
 		}
 
 		this.redrawDecorations([editor]);
