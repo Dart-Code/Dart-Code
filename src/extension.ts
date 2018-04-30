@@ -19,6 +19,7 @@ import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
 import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, platformName } from "./debug/utils";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
+import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_decorations";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
@@ -284,7 +285,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Register SDK commands.
 	const sdkCommands = new SdkCommands(context, sdks, analytics);
-	const debugCommands = new DebugCommands(context, analytics);
+	const debug = new DebugCommands(context, analytics);
 
 	// Set up commands for Dart editors.
 	context.subscriptions.push(new EditCommands(context, analyzer));
@@ -311,6 +312,10 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		testTreeView,
 		testTreeProvider.onDidStartTests((node) => testTreeView.reveal(node)),
 	);
+
+	if (sdks.projectType !== util.ProjectType.Dart && config.previewHotReloadCoverageMarkers) {
+		context.subscriptions.push(new HotReloadCoverageDecorations(debug));
+	}
 
 	context.subscriptions.push(vs.commands.registerCommand("dart.package.openFile", (filePath) => {
 		if (!filePath) return;

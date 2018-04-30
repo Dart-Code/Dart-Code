@@ -21,6 +21,10 @@ export class DebugCommands {
 	private analytics: Analytics;
 
 	private debugMetrics = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 0);
+	private onDidHotReloadEmitter: vs.EventEmitter<void> = new vs.EventEmitter<void>();
+	public readonly onDidHotReload: vs.Event<void> = this.onDidHotReloadEmitter.event;
+	private onDidFullRestartEmitter: vs.EventEmitter<void> = new vs.EventEmitter<void>();
+	public readonly onDidFullRestart: vs.Event<void> = this.onDidFullRestartEmitter.event;
 
 	constructor(context: vs.ExtensionContext, analytics: Analytics) {
 		this.analytics = analytics;
@@ -55,6 +59,7 @@ export class DebugCommands {
 				// (eg. it wasn't intiated from our extension, so we don't get to log it
 				// in the hotReload command).
 				analytics.logDebuggerHotReload();
+				this.onDidHotReloadEmitter.fire();
 			} else if (e.event === "dart.serviceExtensionAdded") {
 				this.enableServiceExtension(e.body.id);
 			} else if (e.event === "dart.flutter.firstFrame") {
@@ -152,12 +157,14 @@ export class DebugCommands {
 				return;
 			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "hotReload"));
 			analytics.logDebuggerHotReload();
+			this.onDidHotReloadEmitter.fire();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.hotRestart", () => {
 			if (!debugSessions.length)
 				return;
 			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "hotRestart"));
 			analytics.logDebuggerRestart();
+			this.onDidFullRestartEmitter.fire();
 		}));
 
 		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugging", (resource: vs.Uri) => {
