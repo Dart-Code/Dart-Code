@@ -33,7 +33,7 @@ describe.only("rename_provider", () => {
 		`);
 	});
 
-	// https://github.com/Microsoft/vscode/issues/7340#issuecomment-383642803
+	// https://github.com/Microsoft/vscode/issues/48840
 	it.skip("renames alias on the import keyword", async () => {
 		await setTestContent(`
 			import "dart:async" as async;
@@ -46,7 +46,7 @@ describe.only("rename_provider", () => {
 		`);
 	});
 
-	// https://github.com/Microsoft/vscode/issues/7340#issuecomment-383642803
+	// https://github.com/Microsoft/vscode/issues/48840
 	it.skip("renames the class on the class keyword", async () => {
 		await setTestContent(`
 			class Danny {}
