@@ -12,7 +12,7 @@ import * as semver from "semver";
 export const ext = vs.extensions.getExtension<{
 	analyzerCapabilities: AnalyzerCapabilities,
 	debugProvider: DebugConfigProvider,
-	nextAnalysis: () => Promise<void>,
+	currentAnalysis: Promise<void>,
 	initialAnalysis: Promise<void>,
 	sdks: Sdks,
 }>("Dart-Code.dart-code");
