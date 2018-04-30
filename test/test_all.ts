@@ -139,7 +139,13 @@ async function runAllTests(): Promise<void> {
 		await runTests("multi_root", "projects.code-workspace", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 		await runTests("multi_root_upgraded", "", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 		await runTests("not_activated/flutter_create", "empty", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
-		await runTests("flutter_repository", process.env.FLUTTER_ROOT, sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
+		if (process.env.FLUTTER_ROOT) {
+			await runTests("flutter_repository", process.env.FLUTTER_ROOT, sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
+		} else {
+			console.error("FLUTTER_ROOT NOT SET, SKIPPING FLUTTER TESTS");
+			if (!allowFailures)
+				exitCode = 1;
+		}
 	}
 
 	if (process.env.CI) {
