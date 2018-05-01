@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { Sdks, fsPath } from "../../src/utils";
-import { ext, delay } from "../helpers";
+import { ext } from "../helpers";
 
 const isWin = /^win/.test(process.platform);
 
@@ -27,10 +27,9 @@ describe("extension", () => {
 		await ext.exports.initialAnalysis;
 
 		// Fetch packages and wait for the next analysis to complete.
+		const analysisComplete = ext.exports.nextAnalysis();
 		await vs.commands.executeCommand("flutter.packages.get", vs.workspace.workspaceFolders[0].uri);
-		// Allow time for analysis to begin.
-		await delay(1000);
-		await ext.exports.currentAnalysis;
+		await analysisComplete;
 
 		const filesWithErrors = vs.languages
 			.getDiagnostics()
