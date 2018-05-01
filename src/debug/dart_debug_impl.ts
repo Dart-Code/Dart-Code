@@ -646,17 +646,10 @@ export class DartDebugSession extends DebugSession {
 				this.errorResponse(response, str);
 			} else {
 				const instanceRef: VMInstanceRef = result.result as VMInstanceRef;
-				if (instanceRef.valueAsString) {
-					response.body = {
-						result: this.valueAsString(instanceRef),
-						variablesReference: 0,
-					};
-				} else {
-					response.body = {
-						result: instanceRef.class.name,
-						variablesReference: thread.storeData(instanceRef),
-					};
-				}
+				response.body = {
+					result: this.valueAsString(instanceRef),
+					variablesReference: instanceRef.valueAsString ? 0 : thread.storeData(instanceRef),
+				};
 				this.sendResponse(response);
 			}
 		}).catch((error) => this.errorResponse(response, `${error}`));
