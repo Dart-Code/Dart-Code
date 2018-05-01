@@ -30,10 +30,6 @@ export class Analyzer extends AnalyzerGen {
 	private launchArgs: string[];
 	private version: string;
 	public capabilities: AnalyzerCapabilities = new AnalyzerCapabilities("0.0.1");
-	private isCurrentlyAnalyzing = false;
-	private initialAnalysisPromise: Promise<void>;
-	public get isAnalyzing(): boolean { return this.isCurrentlyAnalyzing; }
-	public get initialAnalysis(): Promise<void> { return this.initialAnalysisPromise; }
 
 	constructor(dartVMPath: string, analyzerPath: string) {
 		super(() => config.analyzerLogFile);
@@ -76,42 +72,10 @@ export class Analyzer extends AnalyzerGen {
 		// Register for version.
 		this.registerForServerConnected((e) => { this.version = e.version; this.capabilities.version = this.version; });
 
-		// Track initial analysis.
-		this.initialAnalysisPromise = new Promise((resolve, reject) => {
-			const disposable = this.registerForServerStatus((ss) => {
-				if (ss.analysis && !ss.analysis.isAnalyzing) {
-					resolve();
-					disposable.dispose();
-				}
-			});
-		});
-
-		// Keep track of whether we're analyzing or not.
-		this.registerForServerStatus((ss) => {
-			if (ss.analysis) {
-				this.isCurrentlyAnalyzing = ss.analysis.isAnalyzing;
-			}
-		});
-
 		this.createProcess(undefined, dartVMPath, args, undefined);
 
 		this.serverSetSubscriptions({
 			subscriptions: ["STATUS"],
-		});
-	}
-
-	// Gets a Promise that resolves when any in-progress analysis finishes.
-	// If no analysis is in progress, then returns an already-resolved Promise.
-	get currentAnalysis(): Promise<void> {
-		if (!this.isAnalyzing)
-			return Promise.resolve();
-		return new Promise((resolve, reject) => {
-			const disposable = this.registerForServerStatus((ss) => {
-				if (ss.analysis && !ss.analysis.isAnalyzing) {
-					resolve();
-					disposable.dispose();
-				}
-			});
 		});
 	}
 
