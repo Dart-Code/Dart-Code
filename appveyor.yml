@@ -26,6 +26,8 @@ install:
   - ps: $env:FLUTTER_ROOT_UNSTABLE = "$pwd\dev`flutter"
   - ps: $env:PATH_UNSTABLE = "$pwd\dev\dart-sdk\bin;$pwd\dev\flutter\bin"
   - flutter\bin\flutter config --no-analytics
+  - flutter\bin\flutter update-packages
+  - dev`flutter\bin\flutter update-packages
   - dart-sdk\bin\dart --version
   - flutter\bin\flutter --version
   - dev\dart-sdk\bin\dart --version
