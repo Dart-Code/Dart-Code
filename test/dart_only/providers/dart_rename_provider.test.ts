@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as vs from "vscode";
 import { activate, doc, positionOf, setTestContent, editor, ensureTestContent } from "../../helpers";
 
-describe.only("rename_provider", () => {
+describe("rename_provider", () => {
 
 	before(() => activate());
 
