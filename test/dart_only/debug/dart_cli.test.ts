@@ -150,7 +150,7 @@ describe("dart cli debugger", () => {
 	it("doesn't stop at a breakpoint with a condition returning false", testBreakpointCondition("1 == 0", false));
 	it("doesn't stop at a breakpoint with a condition returning 0", testBreakpointCondition("3 - 3", false));
 	it("doesn't stop at a breakpoint with a condition returning null", testBreakpointCondition("print('test');", false));
-	it("reports errors evaluating breakpoint conditions", testBreakpointCondition("1 + '1'", false, "Failed to evaluate breakpoint condition `1 + '1'`: Unhandled exception:\ntype 'String' is not a subtype of type 'num'"));
+	it("reports errors evaluating breakpoint conditions", testBreakpointCondition("1 + '1'", false, "Debugger failed to evaluate expression `1 + '1'`"));
 
 	it("logs expected text (and does not stop) at a logpoint", async () => {
 		await openFile(helloWorldMainFile);
