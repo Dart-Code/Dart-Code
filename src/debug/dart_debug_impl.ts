@@ -130,8 +130,8 @@ export class DartDebugSession extends DebugSession {
 			// VM doesn't support this flag
 			// appArgs.push(`--no-preview-dart-2`);
 		}
-		if (args.vmArgs) {
-			appArgs = appArgs.concat(args.vmArgs);
+		if (args.vmAdditionalArgs) {
+			appArgs = appArgs.concat(args.vmAdditionalArgs);
 		}
 		appArgs.push(this.sourceFile);
 		if (args.args) {
