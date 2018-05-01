@@ -114,6 +114,44 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
+	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
+		return async () => {
+			await openFile(helloWorldMainFile);
+			const config = await startDebugger(helloWorldMainFile);
+			const completionEvent: Promise<any> =
+				shouldStop
+					? dc.assertStoppedLocation("breakpoint", {})
+					: dc.waitForEvent("terminated");
+			const errorOutputEvent: Promise<any> =
+				expectedError
+					? dc.assertOutput("stderr", expectedError)
+					: null;
+			await Promise.all([
+				dc.waitForEvent("initialized").then((event) => {
+					return dc.setBreakpointsRequest({
+						// positionOf is 0-based, but seems to want 1-based
+						breakpoints: [{
+							condition,
+							line: positionOf("^// BREAKPOINT1").line + 1,
+						}],
+						source: { path: fsPath(helloWorldMainFile) },
+					});
+				}).then((response) => dc.configurationDoneRequest()),
+				completionEvent,
+				errorOutputEvent,
+				dc.launch(config),
+			]);
+		};
+	}
+
+	it("stops at a breakpoint with a condition returning true", testBreakpointCondition("1 == 1", true));
+	it("stops at a breakpoint with a condition returning 1", testBreakpointCondition("3 - 2", true));
+	it("doesn't stop at a breakpoint with a condition returning a string", testBreakpointCondition("'test'", false));
+	it("doesn't stop at a breakpoint with a condition returning false", testBreakpointCondition("1 == 0", false));
+	it("doesn't stop at a breakpoint with a condition returning 0", testBreakpointCondition("3 - 3", false));
+	it("doesn't stop at a breakpoint with a condition returning null", testBreakpointCondition("print('test');", false));
+	it("reports errors evaluating breakpoint conditions", testBreakpointCondition("1 + '1'", false, "Failed to evaluate breakpoint condition `1 + '1'`: Unhandled exception:\ntype 'String' is not a subtype of type 'num'"));
+
 	it("provides local variables when stopped at a breakpoint", async () => {
 		await openFile(helloWorldMainFile);
 		const config = await startDebugger(helloWorldMainFile);
