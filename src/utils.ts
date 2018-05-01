@@ -14,12 +14,12 @@ export const vsCodeVersionConstraint = getVsCodeVersionConstraint();
 export const isDevExtension = checkIsDevExtension();
 export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "dart_code_flutter_create.dart";
 
-export function fsPath(uri: Uri) {
+export function fsPath(uri: Uri | string) {
 	if (!config.normalizeWindowsDriveLetters)
-		return uri.fsPath; // tslint:disable-line:disallow-fspath
+		return uri instanceof Uri ? uri.fsPath : uri; // tslint:disable-line:disallow-fspath
 
 	// tslint:disable-next-line:disallow-fspath
-	return forceWindowsDriveLetterToUppercase(uri.fsPath);
+	return forceWindowsDriveLetterToUppercase(uri instanceof Uri ? uri.fsPath : uri);
 }
 
 export function isFlutterWorkspaceFolder(folder: WorkspaceFolder): boolean {

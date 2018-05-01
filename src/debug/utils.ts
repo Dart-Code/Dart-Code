@@ -155,3 +155,13 @@ export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestA
 	observatoryUri: string;
 	observatoryLogFile: string;
 }
+
+export interface CoverageData {
+	scriptUri: string;
+	hits: FileLocation[];
+}
+
+export interface FileLocation {
+	line: number;
+	column: number;
+}
