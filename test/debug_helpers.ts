@@ -10,13 +10,26 @@ export async function getTopFrameVariables(dc: DebugClient, scope: "Exception" |
 	const scopes = await dc.scopesRequest({ frameId: stack.body.stackFrames[0].id });
 	const exceptionScope = scopes.body.scopes.find((s) => s.name === scope);
 	assert.ok(exceptionScope);
-	const variables = await dc.variablesRequest({ variablesReference: exceptionScope.variablesReference });
-	return variables.body.variables;
+	return getVariables(dc, exceptionScope.variablesReference);
 }
 
 export async function getVariables(dc: DebugClient, variablesReference: number): Promise<Variable[]> {
 	const variables = await dc.variablesRequest({ variablesReference });
 	return variables.body.variables;
+}
+
+export async function evaluate(dc: DebugClient, expression: string): Promise<{
+	result: string;
+	type?: string;
+	variablesReference: number;
+	namedVariables?: number;
+	indexedVariables?: number;
+}> {
+	const threads = await dc.threadsRequest();
+	assert.equal(threads.body.threads.length, 1);
+	const stack = await dc.stackTraceRequest({ threadId: threads.body.threads[0].id });
+	const result = await dc.evaluateRequest({ expression, frameId: stack.body.stackFrames[0].id });
+	return result.body;
 }
 
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string, name: string, value: string) {

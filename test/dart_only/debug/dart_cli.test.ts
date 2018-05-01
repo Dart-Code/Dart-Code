@@ -1,8 +1,9 @@
+import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { fsPath } from "../../../src/utils";
-import { ensureVariable, getTopFrameVariables, getVariables } from "../../debug_helpers";
+import { ensureVariable, getTopFrameVariables, getVariables, evaluate } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, ext, helloWorldBrokenFile, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf, helloWorldFolder } from "../../helpers";
 
 describe("dart cli debugger", () => {
@@ -139,6 +140,32 @@ describe("dart cli debugger", () => {
 		const mapListVariables = await getVariables(dc, mapVariables.find((v) => v.name === `["l"]`).variablesReference);
 		ensureVariable(mapListVariables, `m["l"][0]`, "[0]", "0");
 		ensureVariable(mapListVariables, `m["l"][1]`, "[1]", "1");
+	});
+
+	it("watch expressions provide same info as locals", async () => {
+		await openFile(helloWorldMainFile);
+		const config = await startDebugger(helloWorldMainFile);
+		await Promise.all([
+			dc.hitBreakpoint(config, {
+				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+				path: fsPath(helloWorldMainFile),
+			}),
+		]);
+
+		const variables = await getTopFrameVariables(dc, "Locals");
+		const listVariables = await getVariables(dc, variables.find((v) => v.name === "l").variablesReference);
+		const mapVariables = await getVariables(dc, variables.find((v) => v.name === "m").variablesReference);
+		const mapListVariables = await getVariables(dc, mapVariables.find((v) => v.name === `["l"]`).variablesReference);
+		const allVariables = variables.concat(listVariables).concat(mapVariables).concat(mapListVariables);
+
+		for (const variable of allVariables) {
+			const evaluateName = (variable as any).evaluateName;
+			assert.ok(evaluateName);
+			const evaluateResult = await evaluate(dc, evaluateName);
+			assert.ok(evaluateResult);
+			assert.equal(evaluateResult.result, variable.value);
+			assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);
+		}
 	});
 
 	it("stops on exception", async function () {
