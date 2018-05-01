@@ -712,10 +712,24 @@ export class DartDebugSession extends DebugSession {
 				reason = "breakpoint";
 
 				const breakpoints = event.pauseBreakpoints.map((bp) => thread.breakpoints[bp.id]);
-				const hasUnconditionalBreakpoints = !!breakpoints.find((bp) => !bp.condition);
+				const hasUnconditionalBreakpoints = !!breakpoints.find((bp) => !bp.condition && !bp.logMessage);
+				const conditionalBreakpoints = breakpoints.filter((bp) => bp.condition);
+				const logPoints = breakpoints.filter((bp) => bp.logMessage);
+
+				// Evalute conditions to see if we should remain stopped or continue.
 				shouldRemainedStoppedOnBreakpoint =
 					hasUnconditionalBreakpoints
-					|| await this.anyBreakpointConditionReturnsTrue(breakpoints, thread);
+					|| await this.anyBreakpointConditionReturnsTrue(conditionalBreakpoints, thread);
+
+				// Output any logpoint messages.
+				for (const logPoint of logPoints) {
+					// TODO: Escape triple quotes?
+					const logMessage = logPoint.logMessage
+						.replace(/(^|[^\\\$]){/g, "$1\${") // Prefix any {tokens} with $ if they don't have
+						.replace(/\\({)/g, "$1"); // Remove slashes
+					const printCommand = `print("""${logMessage}""")`;
+					await this.evaluateAndSendErrors(thread, printCommand);
+				}
 			} else if (kind === "PauseBreakpoint") {
 				reason = "step";
 			} else if (kind === "PauseException") {
@@ -736,25 +750,36 @@ export class DartDebugSession extends DebugSession {
 
 	private async anyBreakpointConditionReturnsTrue(breakpoints: DebugProtocol.SourceBreakpoint[], thread: ThreadInfo) {
 		for (const bp of breakpoints) {
-			try {
-				const result = await this.observatory.evaluateInFrame(thread.ref.id, 0, bp.condition);
-				if (result.result.type !== "@Error") {
-					const evalResult: VMInstanceRef = result.result as VMInstanceRef;
-					// To be considered true, we need to have a value and either be not-a-bool
-					const breakpointconditionEvaluatesToTrue =
-						(evalResult.kind === "Bool" && evalResult.valueAsString === "true")
-						|| (evalResult.kind === "Int" && evalResult.valueAsString !== "0");
-					if (breakpointconditionEvaluatesToTrue)
-						return true;
-				} else {
-					const e: VMErrorRef = result.result as VMErrorRef;
-					this.sendEvent(new OutputEvent(`Failed to evaluate breakpoint condition \`${bp.condition}\`: ${e.message}`, "stderr"));
-				}
-			} catch (e) {
-				this.sendEvent(new OutputEvent(`Failed to evaluate breakpoint condition \`${bp.condition}\`: ${e}`, "stderr"));
+			const evalResult = await this.evaluateAndSendErrors(thread, bp.condition);
+			if (evalResult) {
+				// To be considered true, we need to have a value and either be not-a-bool
+				const breakpointconditionEvaluatesToTrue =
+					(evalResult.kind === "Bool" && evalResult.valueAsString === "true")
+					|| (evalResult.kind === "Int" && evalResult.valueAsString !== "0");
+				if (breakpointconditionEvaluatesToTrue)
+					return true;
+
 			}
 		}
 		return false;
+	}
+
+	private async evaluateAndSendErrors(thread: ThreadInfo, expression: string): Promise<VMInstanceRef> {
+		function trimToFirstNewline(s: string) {
+			s = s && s.toString();
+			const newlinePos = s.indexOf("\n");
+			return s.substr(0, newlinePos).trim();
+		}
+		try {
+			const result = await this.observatory.evaluateInFrame(thread.ref.id, 0, expression);
+			if (result.result.type !== "@Error") {
+				return result.result as VMInstanceRef;
+			} else {
+				this.sendEvent(new OutputEvent(`Debugger failed to evaluate expression \`${expression}\``, "stderr"));
+			}
+		} catch {
+			this.sendEvent(new OutputEvent(`Debugger failed to evaluate expression \`${expression}\``, "stderr"));
+		}
 	}
 
 	public handleServiceExtensionAdded(event: VMEvent) {

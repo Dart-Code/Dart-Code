@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { fsPath } from "../../../src/utils";
 import { ensureVariable, getTopFrameVariables, getVariables, evaluate } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, ext, helloWorldBrokenFile, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf, helloWorldFolder } from "../../helpers";
+import { activate, closeAllOpenFiles, ext, helloWorldBrokenFile, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf, helloWorldFolder, eol } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
@@ -151,6 +151,28 @@ describe("dart cli debugger", () => {
 	it("doesn't stop at a breakpoint with a condition returning 0", testBreakpointCondition("3 - 3", false));
 	it("doesn't stop at a breakpoint with a condition returning null", testBreakpointCondition("print('test');", false));
 	it("reports errors evaluating breakpoint conditions", testBreakpointCondition("1 + '1'", false, "Failed to evaluate breakpoint condition `1 + '1'`: Unhandled exception:\ntype 'String' is not a subtype of type 'num'"));
+
+	it("logs expected text (and does not stop) at a logpoint", async () => {
+		await openFile(helloWorldMainFile);
+		const config = await startDebugger(helloWorldMainFile);
+		await Promise.all([
+			dc.waitForEvent("initialized").then((event) => {
+				return dc.setBreakpointsRequest({
+					// positionOf is 0-based, but seems to want 1-based
+					breakpoints: [{
+						line: positionOf("^// BREAKPOINT1").line + 1,
+						// VS Code says to use {} for expressions, but we want to support Dart's native too, so
+						// we have examples of both (as well as "escaped" brackets).
+						logMessage: "${s} The \\{year} is {(new DateTime.now()).year}",
+					}],
+					source: { path: fsPath(helloWorldMainFile) },
+				});
+			}).then((response) => dc.configurationDoneRequest()),
+			dc.waitForEvent("terminated"),
+			dc.assertOutput("stdout", `Hello! The {year} is ${(new Date()).getFullYear()}${eol}Hello, world!`),
+			dc.launch(config),
+		]);
+	});
 
 	it("provides local variables when stopped at a breakpoint", async () => {
 		await openFile(helloWorldMainFile);
