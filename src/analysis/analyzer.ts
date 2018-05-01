@@ -15,6 +15,7 @@ export class AnalyzerCapabilities {
 		this.version = analyzerVersion;
 	}
 
+	get mayRequiresPackageFolderWorkaround() { return !versionIsAtLeast(this.version, "1.20.1"); }
 	get supportsAnalyzingHtmlFiles() { return versionIsAtLeast(this.version, "1.18.5"); }
 	get supportsPriorityFilesOutsideAnalysisRoots() { return versionIsAtLeast(this.version, "1.18.2"); }
 	get supportsDiagnostics() { return versionIsAtLeast(this.version, "1.18.1"); }

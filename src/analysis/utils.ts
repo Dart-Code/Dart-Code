@@ -1,7 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
+import { Analyzer } from "./analyzer";
 
-export function findPackageRoots(root: string): string[] {
+export function findPackageRoots(analyzer: Analyzer, root: string): string[] {
 	// For repos with code inside a "packages" folder, the analyzer doesn't resolve package paths
 	// correctly. Until this is fixed in the analyzer, detect this and perform a workaround.
 	// This introduces other issues, so don't do it unless we know we need to (eg. flutter repo).
@@ -11,7 +12,7 @@ export function findPackageRoots(root: string): string[] {
 	//   https://github.com/Dart-Code/Dart-Code/issues/280 - Issue introduced by the workaround
 	//   https://github.com/dart-lang/sdk/issues/29414 - Analyzer issue (where the real fix will be)
 
-	if (!isPackageRootWorkaroundRequired(root))
+	if (!analyzer.capabilities.mayRequiresPackageFolderWorkaround || !isPackageRootWorkaroundRequired(root))
 		return [root];
 
 	console.log("Workspace root appears to need package root workaround...");
