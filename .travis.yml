@@ -47,6 +47,8 @@ before_install:
   - export FLUTTER_ROOT_UNSTABLE=`pwd`/dev/flutter
   - export PATH_UNSTABLE=`pwd`/dev/dart-sdk/bin:`pwd`/dev/flutter/bin
   - flutter/bin/flutter config --no-analytics
+  - flutter/bin/flutter update-packages
+  - dev/flutter/bin/flutter update-packages
   - export ELECTRON_NO_ATTACH_CONSOLE=1
   - dart-sdk/bin/dart --version
   - flutter/bin/flutter --version
