@@ -74,9 +74,7 @@ export class DebugCommands {
 				this.debugMetrics.tooltip = "This is the amount of memory being consumed by your applications heaps (out of what has been allocated).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage.";
 				this.debugMetrics.show();
 			} else if (e.event === "dart.coverage") {
-				// TODO: Raise an event to pass this back to the decorations class.
-				// TODO: Chekc why we're getting so many arrays full of nulls!
-				console.log(JSON.stringify(e.body));
+				this.onReceiveCoverageEmitter.fire(e.body);
 			}
 		}));
 		context.subscriptions.push(vs.debug.onDidStartDebugSession(async (s) => {
