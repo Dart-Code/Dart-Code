@@ -136,7 +136,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.request = debugConfig.request || "launch";
 		debugConfig.cwd = debugConfig.cwd || fsPath(folder.uri);
 		debugConfig.args = debugConfig.args || [];
-		debugConfig.vmArgs = debugConfig.vmArgs || conf.vmAdditionalArgs;
+		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, "bin", dartExec);
 		debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || conf.observatoryLogFile;
 		if (debugConfig.previewDart2 !== undefined) {
