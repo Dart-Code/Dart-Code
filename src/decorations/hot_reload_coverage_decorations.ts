@@ -44,7 +44,7 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 		if (!this.isDebugging)
 			return;
 
-		const editor = vs.window.activeTextEditor.document.uri === e.document.uri ? vs.window.activeTextEditor : null;
+		const editor = vs.window.visibleTextEditors.find((editor) => editor.document.uri === e.document.uri);
 		if (!editor)
 			return;
 
@@ -52,6 +52,11 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 		if (!fileState) {
 			fileState = this.fileState[fsPath(e.document.uri)] = { modified: [], notRun: [] };
 		}
+
+		// Move all "not run" edits back into "edited" because we can't track them anymore as the coverage
+		// data will be bad.
+		fileState.modified = fileState.modified.concat(fileState.notRun);
+		fileState.notRun = [];
 
 		// Update all existing ranges offsets.
 		for (const change of e.contentChanges) {
@@ -168,20 +173,30 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 	private onReceiveCoverage(coverageData: CoverageData[]): void {
 		for (const data of coverageData) {
-			const fileState = this.fileState[fsPath(data.scriptUri)];
+			const fileState = this.fileState[fsPath(data.scriptPath)];
 			if (!fileState)
 				continue;
+
+			const editor = vs.window.visibleTextEditors.find((editor) => fsPath(editor.document.uri) === data.scriptPath);
 
 			// TODO: Here we need to subtract our hits from the fileState.notRun data...
 			for (const hit of data.hits) {
 				fileState.notRun =
 					fileState.notRun
 						.map((r) => {
-							// handle intersections, etc.
-							return r;
+							// TODO: Error handline in case we got bad data
+							const startLine = editor.document.positionAt(r.offset).line;
+							const endLine = editor.document.positionAt(r.offset + r.length).line;
+							// TODO: Just extract this line from it
+							if (hit.line >= startLine && hit.line <= endLine)
+								return undefined;
+							else
+								return r;
 						})
 						.filter((r) => r);
 			}
+
+			this.redrawDecorations([editor]);
 		}
 	}
 
