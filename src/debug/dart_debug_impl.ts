@@ -49,6 +49,7 @@ export class DartDebugSession extends DebugSession {
 		response.body.supportsConfigurationDoneRequest = true;
 		response.body.supportsEvaluateForHovers = true;
 		response.body.supportsDelayedStackTraceLoading = true;
+		response.body.supportsConditionalBreakpoints = true;
 		response.body.exceptionBreakpointFilters = [
 			{ filter: "All", label: "All Exceptions", default: false },
 			{ filter: "Unhandled", label: "Uncaught Exceptions", default: true },
@@ -705,24 +706,55 @@ export class DartDebugSession extends DebugSession {
 			// PauseStart, PauseExit, PauseBreakpoint, PauseInterrupted, PauseException
 			let reason = "pause";
 			let exceptionText = null;
+			let shouldRemainedStoppedOnBreakpoint = true;
 
-			if (kind === "PauseBreakpoint") {
+			if (kind === "PauseBreakpoint" && event.pauseBreakpoints && event.pauseBreakpoints.length) {
 				reason = "breakpoint";
-				if (event.pauseBreakpoints == null || event.pauseBreakpoints.length === 0) {
-					reason = "step";
-				}
-			}
 
-			if (kind === "PauseException") {
+				const breakpoints = event.pauseBreakpoints.map((bp) => thread.breakpoints[bp.id]);
+				const hasUnconditionalBreakpoints = !!breakpoints.find((bp) => !bp.condition);
+				shouldRemainedStoppedOnBreakpoint =
+					hasUnconditionalBreakpoints
+					|| await this.anyBreakpointConditionReturnsTrue(breakpoints, thread);
+			} else if (kind === "PauseBreakpoint") {
+				reason = "step";
+			} else if (kind === "PauseException") {
 				reason = "exception";
 				exceptionText = this.valueAsString(event.exception, false);
 				if (!exceptionText)
 					exceptionText = await this.callToString(event.isolate, event.exception, true);
 			}
 
-			thread.handlePaused(event.atAsyncSuspension, event.exception);
-			this.sendEvent(new StoppedEvent(reason, thread.number, exceptionText));
+			if (shouldRemainedStoppedOnBreakpoint) {
+				thread.handlePaused(event.atAsyncSuspension, event.exception);
+				this.sendEvent(new StoppedEvent(reason, thread.number, exceptionText));
+			} else {
+				this.observatory.resume(thread.ref.id);
+			}
 		}
+	}
+
+	private async anyBreakpointConditionReturnsTrue(breakpoints: DebugProtocol.SourceBreakpoint[], thread: ThreadInfo) {
+		for (const bp of breakpoints) {
+			try {
+				const result = await this.observatory.evaluateInFrame(thread.ref.id, 0, bp.condition);
+				if (result.result.type !== "@Error") {
+					const evalResult: VMInstanceRef = result.result as VMInstanceRef;
+					// To be considered true, we need to have a value and either be not-a-bool
+					const breakpointconditionEvaluatesToTrue =
+						(evalResult.kind === "Bool" && evalResult.valueAsString === "true")
+						|| (evalResult.kind === "Int" && evalResult.valueAsString !== "0");
+					if (breakpointconditionEvaluatesToTrue)
+						return true;
+				} else {
+					const e: VMErrorRef = result.result as VMErrorRef;
+					this.sendEvent(new OutputEvent(`Failed to evaluate breakpoint condition \`${bp.condition}\`: ${e.message}`, "stderr"));
+				}
+			} catch (e) {
+				this.sendEvent(new OutputEvent(`Failed to evaluate breakpoint condition \`${bp.condition}\`: ${e}`, "stderr"));
+			}
+		}
+		return false;
 	}
 
 	public handleServiceExtensionAdded(event: VMEvent) {
@@ -1019,6 +1051,8 @@ class ThreadInfo {
 	public scriptCompleters: { [key: string]: PromiseCompleter<VMScript> } = {};
 	public runnable: boolean = false;
 	public vmBps: { [uri: string]: VMBreakpoint[] } = {};
+	// TODO: Do we need both sets of breakpoints?
+	public breakpoints: { [key: string]: DebugProtocol.SourceBreakpoint } = {};
 	public atAsyncSuspension: boolean = false;
 	public exceptionReference = 0;
 
@@ -1051,6 +1085,7 @@ class ThreadInfo {
 				).then((result: DebuggerResult) => {
 					const vmBp: VMBreakpoint = result.result as VMBreakpoint;
 					this.vmBps[uri].push(vmBp);
+					this.breakpoints[vmBp.id] = bp;
 					return true;
 				}).catch((error) => {
 					return false;
