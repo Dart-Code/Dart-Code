@@ -194,8 +194,14 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Set the roots, handling project changes that might affect SDKs.
 	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => recalculateAnalysisRoots()));
-	if (vs.workspace.workspaceFolders)
-		recalculateAnalysisRoots();
+	// TODO: Currently calculating analysis roots requires the version to check if
+	// we need the package workaround. In future if we stop supporting server < 1.20.1 we
+	// can unwrap this call so that it'll start sooner.
+	const serverConnected = analyzer.registerForServerConnected((sc) => {
+		serverConnected.dispose();
+		if (vs.workspace.workspaceFolders)
+			recalculateAnalysisRoots();
+	});
 
 	// Hook editor changes to send updated contents to analyzer.
 	context.subscriptions.push(new FileChangeHandler(analyzer));
@@ -320,7 +326,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 function recalculateAnalysisRoots() {
 	let newRoots: string[] = [];
 	util.getDartWorkspaceFolders().forEach((f) => {
-		newRoots = newRoots.concat(findPackageRoots(fsPath(f.uri)));
+		newRoots = newRoots.concat(findPackageRoots(analyzer, fsPath(f.uri)));
 	});
 	analysisRoots = newRoots;
 
