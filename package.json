@@ -577,7 +577,7 @@
 				"dart.vmAdditionalArgs": {
 					"type": "array",
 					"default": [],
-					"description": "Additional args to pass to the Dart VM when running/debugging apps.",
+					"description": "Additional args to pass to the Dart VM when running/debugging command line apps.",
 					"scope": "resource",
 					"items": {
 						"type": "string"
@@ -640,6 +640,14 @@
 							"args": {
 								"type": "array",
 								"description": "Command line arguments to the application.",
+								"items": {
+									"type": "string"
+								}
+							},
+							"vmAdditionalArgs": {
+								"type": "array",
+								"default": [],
+								"description": "Additional args to pass to the Dart VM when running/debugging command line apps.",
 								"items": {
 									"type": "string"
 								}

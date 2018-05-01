@@ -45,6 +45,19 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
+	it("passes launch.json's vmAdditionalArgs to the VM", async () => {
+		const config = await startDebugger(helloWorldMainFile);
+		config.vmAdditionalArgs = ["--fake-flag"];
+		await Promise.all([
+			// TODO: Figure out if this is a bug - because we never connect to Observatory, we never
+			// resolve this properly.
+			// dc.configurationSequence(),
+			dc.assertOutput("stderr", "Unrecognized flags: fake-flag"),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		]);
+	});
+
 	it("successfully runs a Dart script with a relative path", async () => {
 		const config = await startDebugger(helloWorldMainFile);
 		config.program = path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile));
