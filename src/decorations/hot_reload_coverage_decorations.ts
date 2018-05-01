@@ -17,10 +17,12 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 	// TODO: Move these to gutter
 	private readonly modifiedDecorationType = vs.window.createTextEditorDecorationType({
 		backgroundColor: "grey",
+		isWholeLine: true,
 		rangeBehavior: vs.DecorationRangeBehavior.OpenOpen,
 	});
 	private readonly notRunDecorationType = vs.window.createTextEditorDecorationType({
 		backgroundColor: "red",
+		isWholeLine: true,
 		rangeBehavior: vs.DecorationRangeBehavior.OpenOpen,
 	});
 
@@ -111,6 +113,8 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 		}
 
 		this.redrawDecorations(vs.window.visibleTextEditors);
+
+		this.requestCoverageUpdate();
 	}
 
 	private onDidFullRestart(): void {
@@ -119,7 +123,6 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 	private onDidStartDebugSession(): void {
 		this.isDebugging = true;
-		this.requestCoverageUpdate(true);
 	}
 
 	private onDidTerminateDebugSession(): void {
@@ -156,19 +159,19 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 		return rs.map((r) => new vs.Range(editor.document.positionAt(r.offset), editor.document.positionAt(r.offset + r.length)));
 	}
 
-	private async requestCoverageUpdate(skip: boolean = false): Promise<void> {
+	private async requestCoverageUpdate(): Promise<void> {
+		// If we don't have any "not run" changes, there's no point asking for coverage.
 		const hasAnyChanges = !!Object.keys(this.fileState)
 			.find((file) => this.fileState[file].notRun.length !== 0);
-		if (hasAnyChanges && !skip) {
+
+		if (hasAnyChanges) {
 			await vs.commands.executeCommand(
 				"_dart.updateCoverage",
 				vs.window.visibleTextEditors.map((e) => fsPath(e.document.uri)),
 			);
 		}
 
-		// TODO: Don't do on timer!
-		// TODO: Don't do if already in progress?
-		this.coverageUpdateTimer = setTimeout(() => this.requestCoverageUpdate(), 10000);
+		// TODO: Need to update periodically!
 	}
 
 	private onReceiveCoverage(coverageData: CoverageData[]): void {
@@ -179,19 +182,22 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 			const editor = vs.window.visibleTextEditors.find((editor) => fsPath(editor.document.uri) === data.scriptPath);
 
-			// TODO: Here we need to subtract our hits from the fileState.notRun data...
 			for (const hit of data.hits) {
 				fileState.notRun =
 					fileState.notRun
 						.map((r) => {
-							// TODO: Error handline in case we got bad data
-							const startLine = editor.document.positionAt(r.offset).line;
-							const endLine = editor.document.positionAt(r.offset + r.length).line;
-							// TODO: Just extract this line from it
-							if (hit.line >= startLine && hit.line <= endLine)
-								return undefined;
-							else
+							try {
+								const startLine = editor.document.positionAt(r.offset).line;
+								const endLine = editor.document.positionAt(r.offset + r.length).line;
+								// TODO: Just extract this line from it
+								if (hit.line >= startLine && hit.line <= endLine)
+									return undefined;
+								else
+									return r;
+							} catch (e) {
+								logError(e);
 								return r;
+							}
 						})
 						.filter((r) => r);
 			}
