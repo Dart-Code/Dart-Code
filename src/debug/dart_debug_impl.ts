@@ -7,7 +7,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { logError } from "../utils/log";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
-import { DartAttachRequestArguments, DartLaunchRequestArguments, PromiseCompleter, flatMap, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
+import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, PromiseCompleter, flatMap, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -1070,7 +1070,7 @@ export class DartDebugSession extends DebugSession {
 		const coverageReport = await this.getCoverageReport(scriptUris);
 
 		// Unwrap tokenPos into real locations.
-		const coverageData = coverageReport.map((r) => ({
+		const coverageData: CoverageData[] = coverageReport.map((r) => ({
 			hits: r.hits.map((h) => this.resolveFileLocation(r.script, h)),
 			scriptUri: r.script.uri,
 		}));
@@ -1231,7 +1231,7 @@ export class DartDebugSession extends DebugSession {
 			for (let index = 1; index < entry.length; index += 2) {
 				if (entry[index] === tokenPos) {
 					const line = entry[0];
-					return new FileLocation(line, entry[index + 1]);
+					return { line, column: entry[index + 1] };
 				}
 			}
 		}
@@ -1596,16 +1596,6 @@ class ThreadInfo {
 			this.exceptionReference = this.storeData(exception);
 		}
 		this.paused = true;
-	}
-}
-
-class FileLocation {
-	public line: number;
-	public column: number;
-
-	constructor(line: number, column: number) {
-		this.line = line;
-		this.column = column;
 	}
 }
 
