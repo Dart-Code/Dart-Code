@@ -18,12 +18,12 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 	// TODO: Move these to gutter
 	private readonly modifiedDecorationType = vs.window.createTextEditorDecorationType({
 		backgroundColor: "grey",
-		isWholeLine: true,
+		//isWholeLine: true,
 		rangeBehavior: vs.DecorationRangeBehavior.OpenOpen,
 	});
 	private readonly notRunDecorationType = vs.window.createTextEditorDecorationType({
 		backgroundColor: "red",
-		isWholeLine: true,
+		//isWholeLine: true,
 		rangeBehavior: vs.DecorationRangeBehavior.OpenOpen,
 	});
 
@@ -215,12 +215,40 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 	private removeLineFromRange(document: vs.TextDocument, range: CodeRange, lineNumber: number): CodeRange[] {
 		try {
-			const startLine = document.positionAt(range.offset).line;
-			const endLine = document.positionAt(range.offset + range.length).line;
-			// TODO: Just extract this line from it
-			if (lineNumber >= startLine && lineNumber <= endLine) {
+			const line = document.lineAt(lineNumber);
+			const lineStartOffset = document.offsetAt(line.rangeIncludingLineBreak.start);
+			const lineEndOffset = document.offsetAt(line.rangeIncludingLineBreak.end);
+			const rangeStartOffset = range.offset;
+			const rangeEndOffset = range.offset + range.length;
+
+			const lineStartsInsideRange = lineStartOffset > rangeStartOffset && lineStartOffset < rangeEndOffset;
+			const lineEndsInsideRange = lineEndOffset > rangeStartOffset && lineEndOffset < rangeEndOffset;
+			const lineStartsBeforeRange = lineStartOffset <= rangeStartOffset;
+			const lineEndsBeforeRange = lineEndOffset <= rangeStartOffset;
+			const lineStartsAfterRange = lineStartOffset >= rangeEndOffset;
+			const lineEndsAfterRange = lineEndOffset >= rangeEndOffset;
+
+			// If the hit line eclipses the range, drop the range.
+			if (lineStartsBeforeRange && lineEndsAfterRange) {
 				return [];
+				// If the hit line doesn't intersect the range at all, just return the range unchanged.
+			} else if (lineEndsBeforeRange || lineStartsAfterRange) {
+				return [range];
+				// If the line starts inside the range but ran through the end, we trim the end
+			} else if (lineStartsInsideRange && lineEndsAfterRange) {
+				return [{ offset: rangeStartOffset, length: lineStartOffset - rangeStartOffset }];
+
+				// If the line starts before the range but ends inside, we trim the start
+			} else if (lineEndsInsideRange) {
+				return [{ offset: lineEndOffset, length: rangeEndOffset - lineEndOffset }];
+				// If the hit line is within the range, split into two
+			} else if (lineStartsInsideRange && lineEndsInsideRange) {
+				return [
+					{ offset: rangeStartOffset, length: lineStartOffset - rangeStartOffset },
+					{ offset: lineEndOffset, length: rangeEndOffset - lineEndOffset },
+				];
 			} else {
+				logError({ message: `Unexpected coverage condition: { range: { start: ${rangeStartOffset}, end: ${rangeEndOffset} }, line hit: { start: ${lineStartOffset}, end: ${lineEndOffset} } }` });
 				return [range];
 			}
 		} catch (e) {
