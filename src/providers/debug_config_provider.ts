@@ -13,6 +13,7 @@ import { ProjectType, Sdks, isFlutterWorkspaceFolder, isInsideFolderNamed, isFlu
 import { SdkCommands } from "../commands/sdk";
 import { spawn } from "child_process";
 import { FlutterTestDebugSession } from "../debug/flutter_test_debug_impl";
+import { FlutterMultiReloadDebugSession } from "../debug/flutter_multi_reload_debug_impl";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private sdks: Sdks;
@@ -74,12 +75,15 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		const isFlutter = isFlutterProjectFolder(debugConfig.cwd as string);
 		const isTest = isTestFile(debugConfig.program as string);
-		const debugType = isFlutter
+		let debugType = isFlutter
 			? (isTest ? DebuggerType.FlutterTest : DebuggerType.Flutter)
 			: DebuggerType.Dart;
 
 		// TODO: This cast feels nasty?
 		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isFlutter, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
+
+		if (debugType === DebuggerType.Flutter && debugConfig.deviceId === "all")
+			debugType = DebuggerType.FlutterMultiReload;
 
 		// Debugger always uses uppercase drive letters to ensure our paths have them regardless of where they came from.
 		debugConfig.program = forceWindowsDriveLetterToUppercase(debugConfig.program);
@@ -101,6 +105,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		switch (debugType) {
 			case DebuggerType.Flutter:
 				return this.spawnOrGetServer("flutter", port, () => new FlutterDebugSession());
+			case DebuggerType.FlutterMultiReload:
+				return this.spawnOrGetServer("flutterMultiReload", port, () => new FlutterMultiReloadDebugSession());
 			case DebuggerType.FlutterTest:
 				return this.spawnOrGetServer("flutterTest", port, () => new FlutterTestDebugSession());
 			case DebuggerType.Dart:
@@ -175,4 +181,5 @@ enum DebuggerType {
 	Dart,
 	Flutter,
 	FlutterTest,
+	FlutterMultiReload,
 }

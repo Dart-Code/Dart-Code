@@ -2,7 +2,7 @@
 	"name": "dart-code",
 	"displayName": "Dart",
 	"description": "Dart and Flutter support for Visual Studio Code.",
-	"version": "2.12.1",
+	"version": "2.12.2-multireload",
 	"publisher": "Dart-Code",
 	"engines": {
 		"vscode": "^1.22.0"
