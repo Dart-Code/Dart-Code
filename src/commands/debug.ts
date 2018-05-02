@@ -27,6 +27,8 @@ export class DebugCommands {
 	public readonly onWillHotRestart: vs.Event<void> = this.onWillHotRestartEmitter.event;
 	private onReceiveCoverageEmitter: vs.EventEmitter<CoverageData[]> = new vs.EventEmitter<CoverageData[]>();
 	public readonly onReceiveCoverage: vs.Event<CoverageData[]> = this.onReceiveCoverageEmitter.event;
+	private onFirstFrameEmitter: vs.EventEmitter<CoverageData[]> = new vs.EventEmitter<CoverageData[]>();
+	public readonly onFirstFrame: vs.Event<CoverageData[]> = this.onFirstFrameEmitter.event;
 
 	constructor(context: vs.ExtensionContext, analytics: Analytics) {
 		this.analytics = analytics;
@@ -67,6 +69,7 @@ export class DebugCommands {
 			} else if (e.event === "dart.flutter.firstFrame") {
 				// Send the current value to ensure it persists for the user.
 				this.sendAllServiceSettings();
+				this.onFirstFrameEmitter.fire();
 			} else if (e.event === "dart.debugMetrics") {
 				const memory = e.body.memory;
 				const message = `${Math.ceil(memory.current / 1024 / 1024)}MB of ${Math.ceil(memory.total / 1024 / 1024)}MB`;
@@ -175,7 +178,9 @@ export class DebugCommands {
 				return;
 			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "requestCoverageUpdate", { scriptUris }));
 		}));
-
+		context.subscriptions.push(vs.commands.registerCommand("_dart.coverageFilesUpdate", (scriptUris: string[]) => {
+			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "coverageFilesUpdate", { scriptUris }));
+		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugging", (resource: vs.Uri) => {
 			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), {
 				name: "Dart",

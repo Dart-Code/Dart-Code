@@ -13,7 +13,6 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 		},
 	} = {};
 	private isDebugging = false;
-	private coverageUpdateTimer: NodeJS.Timer;
 
 	// TODO: Move these to gutter
 	private readonly modifiedDecorationType = vs.window.createTextEditorDecorationType({
@@ -29,6 +28,7 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 	constructor(debug: DebugCommands) {
 		this.subscriptions.push(vs.workspace.onDidChangeTextDocument((e) => this.onDidChangeTextDocument(e)));
+		this.subscriptions.push(debug.onFirstFrame(() => this.onFirstFrame()));
 		this.subscriptions.push(vs.window.onDidChangeVisibleTextEditors((e) => this.onDidChangeVisibleTextEditors(e)));
 		this.subscriptions.push(debug.onWillHotReload(() => this.onWillHotReload()));
 		this.subscriptions.push(debug.onWillHotRestart(() => this.onWillFullRestart()));
@@ -39,9 +39,14 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 		// TODO: If file modified externally, we may need to drop all markers?
 	}
 
-	private onDidChangeVisibleTextEditors(editors: vs.TextEditor[]) {
+	private async onFirstFrame(): Promise<void> {
+		await this.coverageFilesUpdate();
+	}
+
+	private async onDidChangeVisibleTextEditors(editors: vs.TextEditor[]): Promise<void> {
 		this.redrawDecorations(editors);
-		this.requestCoverageUpdate();
+		await this.coverageFilesUpdate();
+		await this.requestCoverageUpdate();
 	}
 
 	private onDidChangeTextDocument(e: vs.TextDocumentChangeEvent) {
@@ -105,7 +110,7 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 			.filter((r) => r);
 	}
 
-	private onWillHotReload(): void {
+	private async onWillHotReload(): Promise<void> {
 		for (const file of Object.keys(this.fileState)) {
 			for (const line of Object.keys(this.fileState[file]).map((k) => parseInt(k, 10))) {
 				const fileState = this.fileState[file];
@@ -114,8 +119,9 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 			}
 		}
 
+		// After the above code we may have new files to track, so re-send them here.
+		await this.coverageFilesUpdate();
 		this.redrawDecorations(vs.window.visibleTextEditors);
-		this.requestCoverageUpdate();
 	}
 
 	private onWillFullRestart(): void {
@@ -128,7 +134,6 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 	private onDidTerminateDebugSession(): void {
 		this.isDebugging = false;
-		clearTimeout(this.coverageUpdateTimer);
 		this.clearAllMarkers();
 	}
 
@@ -160,17 +165,31 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 		return rs.map((r) => new vs.Range(editor.document.positionAt(r.offset), editor.document.positionAt(r.offset + r.length)));
 	}
 
+	private async coverageFilesUpdate(): Promise<void> {
+		if (!this.isDebugging)
+			return;
+
+		const openFilesWithChanges = vs.window
+			.visibleTextEditors
+			.map((e) => fsPath(e.document.uri))
+			.filter((file) => this.fileState[file] && this.fileState[file].notRun.length !== 0);
+
+		await vs.commands.executeCommand(
+			"_dart.coverageFilesUpdate",
+			openFilesWithChanges,
+		);
+	}
+
 	private async requestCoverageUpdate(): Promise<void> {
+		if (!this.isDebugging)
+			return;
+
 		// If we don't have any "not run" changes, there's no point asking for coverage.
 		const hasAnyChanges = !!Object.keys(this.fileState)
 			.find((file) => this.fileState[file].notRun.length !== 0);
 
-		if (hasAnyChanges) {
-			await vs.commands.executeCommand(
-				"_dart.requestCoverageUpdate",
-				vs.window.visibleTextEditors.map((e) => fsPath(e.document.uri)),
-			);
-		}
+		if (hasAnyChanges)
+			await vs.commands.executeCommand("_dart.requestCoverageUpdate");
 	}
 
 	private onReceiveCoverage(coverageData: CoverageData[]): void {

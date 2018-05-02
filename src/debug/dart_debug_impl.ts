@@ -902,9 +902,11 @@ export class DartDebugSession extends DebugSession {
 
 	protected customRequest(request: string, response: DebugProtocol.Response, args: any): void {
 		switch (request) {
+			case "coverageFilesUpdate":
+				this.knownOpenFiles = args.scriptUris;
+				break;
 			case "requestCoverageUpdate":
-				// TODO: Skip if we're not ready yet.
-				this.requestCoverageUpdate("editor", args.scriptUris as string[]);
+				this.requestCoverageUpdate("editor");
 				break;
 
 			default:
@@ -1070,10 +1072,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private knownOpenFiles: string[] = []; // Keep track of these for internal requests
-	protected requestCoverageUpdate = _.throttle(async (reason: string, scriptUris?: string[]): Promise<void> => {
-		if (scriptUris)
-			this.knownOpenFiles = scriptUris;
-
+	protected requestCoverageUpdate = _.throttle(async (reason: string): Promise<void> => {
 		const coverageReport = await this.getCoverageReport(this.knownOpenFiles);
 
 		// Unwrap tokenPos into real locations.
