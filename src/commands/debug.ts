@@ -21,10 +21,10 @@ export class DebugCommands {
 	private analytics: Analytics;
 
 	private debugMetrics = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 0);
-	private onDidHotReloadEmitter: vs.EventEmitter<void> = new vs.EventEmitter<void>();
-	public readonly onDidHotReload: vs.Event<void> = this.onDidHotReloadEmitter.event;
-	private onDidFullRestartEmitter: vs.EventEmitter<void> = new vs.EventEmitter<void>();
-	public readonly onDidFullRestart: vs.Event<void> = this.onDidFullRestartEmitter.event;
+	private onWillHotReloadEmitter: vs.EventEmitter<void> = new vs.EventEmitter<void>();
+	public readonly onWillHotReload: vs.Event<void> = this.onWillHotReloadEmitter.event;
+	private onWillHotRestartEmitter: vs.EventEmitter<void> = new vs.EventEmitter<void>();
+	public readonly onWillHotRestart: vs.Event<void> = this.onWillHotRestartEmitter.event;
 	private onReceiveCoverageEmitter: vs.EventEmitter<CoverageData[]> = new vs.EventEmitter<CoverageData[]>();
 	public readonly onReceiveCoverage: vs.Event<CoverageData[]> = this.onReceiveCoverageEmitter.event;
 
@@ -61,7 +61,7 @@ export class DebugCommands {
 				// (eg. it wasn't intiated from our extension, so we don't get to log it
 				// in the hotReload command).
 				analytics.logDebuggerHotReload();
-				this.onDidHotReloadEmitter.fire();
+				this.onWillHotReloadEmitter.fire();
 			} else if (e.event === "dart.serviceExtensionAdded") {
 				this.enableServiceExtension(e.body.id);
 			} else if (e.event === "dart.flutter.firstFrame") {
@@ -159,21 +159,21 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", () => {
 			if (!debugSessions.length)
 				return;
+			this.onWillHotReloadEmitter.fire();
 			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "hotReload"));
 			analytics.logDebuggerHotReload();
-			this.onDidHotReloadEmitter.fire();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.hotRestart", () => {
 			if (!debugSessions.length)
 				return;
+			this.onWillHotRestartEmitter.fire();
 			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "hotRestart"));
 			analytics.logDebuggerRestart();
-			this.onDidFullRestartEmitter.fire();
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("_dart.updateCoverage", (scriptUris: string[]) => {
+		context.subscriptions.push(vs.commands.registerCommand("_dart.requestCoverageUpdate", (scriptUris: string[]) => {
 			if (!debugSessions.length)
 				return;
-			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "updateCoverage", { scriptUris }));
+			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "requestCoverageUpdate", { scriptUris }));
 		}));
 
 		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugging", (resource: vs.Uri) => {
