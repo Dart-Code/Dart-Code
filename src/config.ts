@@ -1,5 +1,5 @@
-import { workspace, WorkspaceConfiguration, version as codeVersion, Uri, ConfigurationTarget } from "vscode";
-import { versionIsAtLeast, resolveHomePath } from "./utils";
+import { ConfigurationTarget, Uri, WorkspaceConfiguration, version as codeVersion, workspace } from "vscode";
+import { resolveHomePath, versionIsAtLeast } from "./utils";
 
 class Config {
 	private config: WorkspaceConfiguration;
@@ -37,7 +37,6 @@ class Config {
 	get flutterSdkPath() { return resolveHomePath(this.getConfig<string>("flutterSdkPath")); }
 	public setFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Workspace); }
 	get flutterSdkPaths() { return (this.getConfig<string[]>("flutterSdkPaths") || []).map(resolveHomePath); }
-	get organizeImportsOnSave() { return this.getConfig<boolean>("organizeImportsOnSave"); }
 	get showLintNames() { return this.getConfig<boolean>("showLintNames"); }
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
 	get reportAnalyzerErrors() { return this.getConfig<boolean>("reportAnalyzerErrors"); }
