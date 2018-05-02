@@ -1,3 +1,4 @@
+import * as _ from "lodash";
 import * as vs from "vscode";
 import { DebugCommands } from "../commands/debug";
 import { CoverageData } from "../debug/utils";
@@ -202,25 +203,29 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 			for (const hit of data.hits) {
 				fileState.notRun =
-					fileState.notRun
-						.map((r) => {
-							try {
-								const startLine = editor.document.positionAt(r.offset).line;
-								const endLine = editor.document.positionAt(r.offset + r.length).line;
-								// TODO: Just extract this line from it
-								if (hit.line >= startLine && hit.line <= endLine)
-									return undefined;
-								else
-									return r;
-							} catch (e) {
-								logError(e);
-								return r;
-							}
-						})
-						.filter((r) => r);
+					_.flatMap(
+						fileState.notRun,
+						(r) => this.removeLineFromRange(editor.document, r, hit.line),
+					);
 			}
 
 			this.redrawDecorations([editor]);
+		}
+	}
+
+	private removeLineFromRange(document: vs.TextDocument, range: CodeRange, lineNumber: number): CodeRange[] {
+		try {
+			const startLine = document.positionAt(range.offset).line;
+			const endLine = document.positionAt(range.offset + range.length).line;
+			// TODO: Just extract this line from it
+			if (lineNumber >= startLine && lineNumber <= endLine) {
+				return [];
+			} else {
+				return [range];
+			}
+		} catch (e) {
+			logError(e);
+			return [range];
 		}
 	}
 
