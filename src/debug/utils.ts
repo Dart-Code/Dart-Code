@@ -218,3 +218,14 @@ export interface FlutterLaunchRequestArguments extends DartLaunchRequestArgument
 	flutterTestLogFile: string;
 	deviceId: string;
 }
+
+export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestArguments {
+	type: string;
+	request: string;
+	cwd: string;
+	debugSdkLibraries: boolean;
+	debugExternalLibraries: boolean;
+	packages: string;
+	observatoryUri: string;
+	observatoryLogFile: string;
+}
