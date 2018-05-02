@@ -7,11 +7,11 @@ import { FlutterRun } from "./flutter_run";
 import { FlutterLaunchRequestArguments, formatPathForVm, uriToFilePath } from "./utils";
 
 export class FlutterDebugSession extends DartDebugSession {
-	protected args: FlutterLaunchRequestArguments;
 	private flutter: FlutterRun;
 	private currentRunningAppId: string;
 	private observatoryUri: string;
 	private baseUri: string;
+	private noDebug: boolean;
 	private isReloadInProgress: boolean;
 
 	constructor() {
@@ -29,12 +29,14 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	protected spawnProcess(args: FlutterLaunchRequestArguments): any {
+		this.noDebug = args.noDebug;
 		const debug = !args.noDebug;
 		let appArgs = [];
 
-		if (this.sourceFile) {
+		const sourceFile = this.sourceFileForArgs(args);
+		if (sourceFile) {
 			appArgs.push("-t");
-			appArgs.push(this.sourceFile);
+			appArgs.push(sourceFile);
 		}
 
 		if (args.deviceId) {
@@ -66,7 +68,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			this.pollforMemoryMs = 1000;
 		}
 
-		this.flutter = new FlutterRun(this.args.flutterPath, args.cwd, appArgs, this.args.flutterRunLogFile);
+		this.flutter = new FlutterRun(args.flutterPath, args.cwd, appArgs, args.flutterRunLogFile);
 		this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
 
 		// Set up subscriptions.
@@ -90,7 +92,7 @@ export class FlutterDebugSession extends DartDebugSession {
 	 */
 	protected getPossibleSourceUris(sourcePath: string): string[] {
 		const allUris = super.getPossibleSourceUris(sourcePath);
-		const projectUri = formatPathForVm(this.args.cwd);
+		const projectUri = formatPathForVm(this.cwd);
 
 		// Map any paths over to the device-local paths.
 		allUris.slice().forEach((uri) => {
@@ -115,7 +117,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		// If the path is the baseUri given by flutter, we need to rewrite it into a local path for this machine.
 		const basePath = uriToFilePath(this.baseUri, false);
 		if (localPathLinux.startsWith(basePath))
-			localPath = path.join(this.args.cwd, path.relative(basePath, localPathLinux));
+			localPath = path.join(this.cwd, path.relative(basePath, localPathLinux));
 
 		return localPath;
 	}
@@ -146,7 +148,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			return;
 		}
 		this.isReloadInProgress = true;
-		return this.flutter.restart(this.currentRunningAppId, !this.args.noDebug, hotRestart)
+		return this.flutter.restart(this.currentRunningAppId, !this.noDebug, hotRestart)
 			.then(
 				(result) => {
 					// If we get a hint, send it back over to the UI to do something appropriate.

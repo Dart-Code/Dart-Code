@@ -675,6 +675,22 @@
 								}
 							}
 						}
+					},
+					"attach": {
+						"properties": {
+							"cwd": {
+								"type": "string",
+								"description": "Workspace root."
+							},
+							"packages": {
+								"type": "string",
+								"description": "Path to the packages file, if it's not at the workspace root."
+							},
+							"observatoryUri": {
+								"type": "string",
+								"description": "URI of the Observaty instance to attach to."
+							}
+						}
 					}
 				},
 				"configurationSnippets": [
@@ -697,8 +713,22 @@
 							"request": "launch",
 							"program": "^\"lib/main.dart\""
 						}
+					},
+					{
+						"label": "Dart - Attach",
+						"description": "Debug an already-running Dart application",
+						"body": {
+							"name": "Dart - Attach",
+							"type": "dart",
+							"request": "attach",
+							"packages": "^\"\\${workspaceFolder}/.packages\"",
+							"observatoryUri": "^\"http://127.0.0.1:\\${command:PromptForObservatoryAddress}/\""
+						}
 					}
-				]
+				],
+				"variables": {
+					"PromptForObservatoryAddress": "dart.getObservatoryAddress"
+				}
 			}
 		]
 	},

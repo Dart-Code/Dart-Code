@@ -79,7 +79,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// If we don't have a cwd then find the best one from the project root.
 		debugConfig.cwd = debugConfig.cwd || fsPath(folder.uri);
 
-		const isFlutter = isFlutterProjectFolder(debugConfig.cwd as string);
+		// Disable Flutter mode for attach.
+		// TODO: Update FlutterDebugSession to understand attach mode, and remove this limitation.
+		const isFlutter = isFlutterProjectFolder(debugConfig.cwd as string) && debugConfig.request === "launch";
 		const isTest = isTestFile(resolveVariables(debugConfig.program as string));
 		const debugType = isFlutter
 			? (isTest ? DebuggerType.FlutterTest : DebuggerType.Flutter)

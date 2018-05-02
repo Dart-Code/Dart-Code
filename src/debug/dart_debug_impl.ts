@@ -5,7 +5,7 @@ import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, Stac
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DebuggerResult, ObservatoryConnection, VM, VMBreakpoint, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibraryRef, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMStack } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
-import { DartLaunchRequestArguments, PromiseCompleter, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
+import { DartAttachRequestArguments, DartLaunchRequestArguments, PromiseCompleter, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -15,13 +15,15 @@ import { DartLaunchRequestArguments, PromiseCompleter, formatPathForVm, safeSpaw
 // completionsRequest(response: DebugProtocol.CompletionsResponse, args: DebugProtocol.CompletionsArguments): void;
 
 export class DartDebugSession extends DebugSession {
-	protected args: DartLaunchRequestArguments;
 	// TODO: Tidy all this up
-	protected sourceFile: string;
 	protected childProcess: child_process.ChildProcess;
 	private processExited: boolean = false;
 	public observatory: ObservatoryConnection;
+	protected cwd: string;
+	private observatoryLogFile: string;
 	private observatoryLogStream: fs.WriteStream;
+	private debugSdkLibraries: boolean;
+	private debugExternalLibraries: boolean;
 	private threadManager: ThreadManager;
 	private packageMap: PackageMap;
 	protected sendStdOutToConsole: boolean = true;
@@ -56,12 +58,14 @@ export class DartDebugSession extends DebugSession {
 			return;
 		}
 
-		this.args = args;
 		// Force relative paths to absolute.
 		if (!path.isAbsolute(args.program))
 			args.program = path.join(args.cwd, args.program);
-		this.sourceFile = path.relative(args.cwd, args.program);
+		this.cwd = args.cwd;
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program));
+		this.debugSdkLibraries = args.debugSdkLibraries;
+		this.debugExternalLibraries = args.debugExternalLibraries;
+		this.observatoryLogFile = args.observatoryLogFile;
 
 		this.sendResponse(response);
 
@@ -106,6 +110,27 @@ export class DartDebugSession extends DebugSession {
 			this.sendEvent(new InitializedEvent());
 	}
 
+	protected attachRequest(response: DebugProtocol.AttachResponse, args: DartAttachRequestArguments): void {
+		this.cwd = args.cwd;
+		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.packages));
+		this.debugSdkLibraries = args.debugSdkLibraries;
+		this.debugExternalLibraries = args.debugExternalLibraries;
+		this.observatoryLogFile = args.observatoryLogFile;
+
+		this.sendResponse(response);
+		let uri = args.observatoryUri;
+		if (!uri.endsWith("/"))
+			uri = uri + "/";
+		this.initObservatory(`${uri}ws`);
+	}
+
+	protected sourceFileForArgs(args: DartLaunchRequestArguments) {
+		if (args.program == null) {
+			return null;
+		}
+		return path.relative(args.cwd, args.program);
+	}
+
 	protected spawnProcess(args: DartLaunchRequestArguments) {
 		const debug = !args.noDebug;
 		let appArgs = [];
@@ -125,12 +150,12 @@ export class DartDebugSession extends DebugSession {
 		if (args.vmAdditionalArgs) {
 			appArgs = appArgs.concat(args.vmAdditionalArgs);
 		}
-		appArgs.push(this.sourceFile);
+		appArgs.push(this.sourceFileForArgs(args));
 		if (args.args) {
 			appArgs = appArgs.concat(args.args);
 		}
 
-		const process = safeSpawn(args.cwd, this.args.dartPath, appArgs);
+		const process = safeSpawn(args.cwd, args.dartPath, appArgs);
 
 		return process;
 	}
@@ -147,9 +172,9 @@ export class DartDebugSession extends DebugSession {
 		this.observatory.onLogging((message) => {
 			const max: number = 2000;
 
-			if (this.args.observatoryLogFile) {
+			if (this.observatoryLogFile) {
 				if (!this.observatoryLogStream)
-					this.observatoryLogStream = fs.createWriteStream(this.args.observatoryLogFile);
+					this.observatoryLogStream = fs.createWriteStream(this.observatoryLogFile);
 				this.observatoryLogStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
 				if (message.length > max)
 					this.observatoryLogStream.write(message.substring(0, max) + "…\r\n");
@@ -189,8 +214,8 @@ export class DartDebugSession extends DebugSession {
 								// Note: Condition is negated.
 								const shouldDebug = !(
 									// Inside here is shouldNotDebug!
-									(isSdkLibrary(library) && !this.args.debugSdkLibraries)
-									|| (isExternalLibrary(library) && !this.args.debugExternalLibraries)
+									(isSdkLibrary(library) && !this.debugSdkLibraries)
+									|| (isExternalLibrary(library) && !this.debugExternalLibraries)
 								);
 								this.observatory.setLibraryDebuggable(isolateRef.id, library.id, shouldDebug);
 							}),
@@ -229,6 +254,7 @@ export class DartDebugSession extends DebugSession {
 	): void {
 		if (this.childProcess != null)
 			this.childProcess.kill();
+		// TODO: Restart any paused threads for the attach case.
 		super.disconnectRequest(response, args);
 	}
 
@@ -845,7 +871,7 @@ export class DartDebugSession extends DebugSession {
 	private convertVMUriToUserName(uri: string): string {
 		if (uri.startsWith("file:")) {
 			uri = uriToFilePath(uri);
-			uri = path.relative(this.args.cwd, uri);
+			uri = path.relative(this.cwd, uri);
 		}
 
 		return uri;

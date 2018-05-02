@@ -113,6 +113,11 @@ export class DebugCommands {
 				analytics.logDebuggerOpenObservatory();
 			}
 		}));
+		context.subscriptions.push(vs.commands.registerCommand("dart.getObservatoryAddress", () => {
+			return vs.window.showInputBox({
+				prompt: "Observatory address (URL or port, depending on your launch.json).",
+			});
+		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.openTimeline", () => {
 			if (this.observatoryUri) {
 				openInBrowser(this.observatoryUri + "/#/timeline-dashboard");
