@@ -1,10 +1,7 @@
-import {
-	TextDocument, DocumentSymbolProvider, SymbolInformation, CancellationToken, SymbolKind,
-	Location, Uri, Range, Position,
-} from "vscode";
-import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
-import { toRange, fsPath } from "../utils";
+import { CancellationToken, DocumentSymbolProvider, Range, SymbolInformation, TextDocument, Uri } from "vscode";
 import * as as from "../analysis/analysis_server_types";
+import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
+import { fsPath } from "../utils";
 
 export class LegacyDartDocumentSymbolProvider implements DocumentSymbolProvider {
 	private analyzer: Analyzer;

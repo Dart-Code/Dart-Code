@@ -1,11 +1,7 @@
-import * as child_process from "child_process";
-import * as path from "path";
-import { Event, OutputEvent, TerminatedEvent } from "vscode-debugadapter";
-import { DebugProtocol } from "vscode-debugprotocol";
+import { OutputEvent } from "vscode-debugadapter";
 import { DartDebugSession } from "./dart_debug_impl";
-import { VMEvent } from "./dart_debug_protocol";
-import { FlutterTest, Test, TestDoneNotification, Group, Suite, DoneNotification, PrintNotification, ErrorNotification } from "./flutter_test";
-import { FlutterLaunchRequestArguments, formatPathForVm, isWin, uriToFilePath } from "./utils";
+import { DoneNotification, ErrorNotification, FlutterTest, Group, Suite, Test, TestDoneNotification } from "./flutter_test";
+import { FlutterLaunchRequestArguments } from "./utils";
 
 const tick = "✓";
 const cross = "✖";

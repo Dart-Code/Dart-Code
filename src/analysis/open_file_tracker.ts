@@ -1,8 +1,8 @@
-import { window, workspace, TextDocument, Disposable, Uri } from "vscode";
-import { Analyzer } from "./analyzer";
+import { Disposable, Uri, window, workspace } from "vscode";
 import * as util from "../utils";
-import { AnalysisOutlineNotification, Outline, Occurrences } from "./analysis_server_types";
 import { fsPath } from "../utils";
+import { Occurrences, Outline } from "./analysis_server_types";
+import { Analyzer } from "./analyzer";
 
 const outlines: { [key: string]: Outline } = {};
 const occurrences: { [key: string]: Occurrences[] } = {};

@@ -1,10 +1,8 @@
 import * as assert from "assert";
-import * as path from "path";
-import * as fs from "fs";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { activate, doc, positionOf, setTestContent, editor, ensureTestContent, rangeOf, delay, defer, waitFor } from "../../helpers";
-import { REFACTOR_FAILED_DOC_MODIFIED, REFACTOR_ANYWAY } from "../../../src/commands/refactor";
+import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../src/commands/refactor";
+import { activate, defer, delay, doc, ensureTestContent, rangeOf, setTestContent, waitFor } from "../../helpers";
 
 describe("refactor", () => {
 

@@ -1,8 +1,8 @@
-import * as editors from "../editors";
 import * as vs from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
-import { toRange, fsPath } from "../utils";
+import * as editors from "../editors";
+import { fsPath, toRange } from "../utils";
 
 export class TypeHierarchyCommand implements vs.Disposable {
 	private analyzer: Analyzer;

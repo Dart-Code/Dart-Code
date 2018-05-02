@@ -1,6 +1,6 @@
 import { window } from "vscode";
 import { config } from "../config";
-import { Sdks, openInBrowser, logError, getLatestSdkVersion, ProjectType, versionIsAtLeast } from "../utils";
+import { ProjectType, Sdks, getLatestSdkVersion, logError, openInBrowser, versionIsAtLeast } from "../utils";
 import { DART_DOWNLOAD_URL } from "./utils";
 
 export async function checkForSdkUpdates(sdks: Sdks, dartSdkVersion: string): Promise<void> {

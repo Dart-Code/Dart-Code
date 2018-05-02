@@ -1,4 +1,4 @@
-import { LanguageConfiguration, IndentAction } from "vscode";
+import { IndentAction, LanguageConfiguration } from "vscode";
 
 export class DartLanguageConfiguration implements LanguageConfiguration {
 	public onEnterRules = [

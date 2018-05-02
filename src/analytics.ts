@@ -1,8 +1,8 @@
-import { env, extensions, Extension, workspace, version as codeVersion, Uri } from "vscode";
 import * as https from "https";
 import * as querystring from "querystring";
+import { Uri, env, version as codeVersion } from "vscode";
 import { config } from "./config";
-import { isDevExtension, extensionVersion, ProjectType, Sdks } from "./utils";
+import { ProjectType, Sdks, extensionVersion, isDevExtension } from "./utils";
 
 // Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.
 // This is only required for debugging analytics and needn't be sent for standard Dart Code development (dev hits are already filtered with isDevelopment).

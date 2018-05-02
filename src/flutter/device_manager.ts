@@ -1,7 +1,7 @@
 import * as vs from "vscode";
+import { config } from "../config";
 import { FlutterDaemon } from "./flutter_daemon";
 import * as f from "./flutter_types";
-import { config } from "../config";
 
 export class FlutterDeviceManager implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];

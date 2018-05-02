@@ -1,8 +1,4 @@
-import * as assert from "assert";
-import * as path from "path";
-import * as fs from "fs";
-import * as vs from "vscode";
-import { activate, doc, setTestContent, getSnippetCompletionsAt, ensureSnippet, eol, ensureNoSnippet, emptyFile, flutterEmptyFile } from "../../helpers";
+import { activate, ensureSnippet, flutterEmptyFile, getSnippetCompletionsAt, setTestContent } from "../../helpers";
 
 describe("snippet_provider", () => {
 

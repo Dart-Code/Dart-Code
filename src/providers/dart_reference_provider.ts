@@ -1,9 +1,5 @@
-import {
-	ReferenceProvider, ReferenceContext, TextDocument, Location, Uri, Position, CancellationToken,
-	CompletionItemProvider, CompletionList, CompletionItem, CompletionItemKind, TextEdit, Range, DefinitionProvider, Definition,
-} from "vscode";
+import { CancellationToken, Definition, DefinitionProvider, Location, Position, ReferenceContext, ReferenceProvider, TextDocument, Uri } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
-import * as as from "../analysis/analysis_server_types";
 import * as util from "../utils";
 import { fsPath } from "../utils";
 

@@ -1,8 +1,8 @@
-import { OnTypeFormattingEditProvider, TextDocument, Position, FormattingOptions, CancellationToken, TextEdit, Range } from "vscode";
-import { Analyzer } from "../analysis/analyzer";
+import { CancellationToken, FormattingOptions, OnTypeFormattingEditProvider, Position, Range, TextDocument, TextEdit } from "vscode";
 import * as as from "../analysis/analysis_server_types";
+import { Analyzer } from "../analysis/analyzer";
 import { config } from "../config";
-import { logError, fsPath } from "../utils";
+import { fsPath } from "../utils";
 
 export class DartTypeFormattingEditProvider implements OnTypeFormattingEditProvider {
 	private analyzer: Analyzer;

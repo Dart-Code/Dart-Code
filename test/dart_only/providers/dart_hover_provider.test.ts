@@ -1,8 +1,6 @@
 import * as assert from "assert";
-import * as path from "path";
-import * as fs from "fs";
 import * as vs from "vscode";
-import { activate, doc, positionOf, rangeOf, everythingFile, ext } from "../../helpers";
+import { activate, doc, everythingFile, ext, positionOf, rangeOf } from "../../helpers";
 
 describe("dart_hover_provider", () => {
 

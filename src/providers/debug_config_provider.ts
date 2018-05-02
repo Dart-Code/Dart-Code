@@ -1,18 +1,16 @@
 import * as fs from "fs";
-import * as path from "path";
 import * as net from "net";
+import * as path from "path";
+import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, WorkspaceFolder, window, workspace } from "vscode";
+import { DebugSession } from "vscode-debugadapter";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { DartDebugSession } from "../debug/dart_debug_impl";
-import { DebugConfigurationProvider, WorkspaceFolder, CancellationToken, DebugConfiguration, ProviderResult, commands, window, workspace, debug, Uri } from "vscode";
-import { DebugSession } from "vscode-debugadapter";
 import { FlutterDebugSession } from "../debug/flutter_debug_impl";
-import { FlutterDeviceManager } from "../flutter/device_manager";
-import { FlutterLaunchRequestArguments, isWin, forceWindowsDriveLetterToUppercase } from "../debug/utils";
-import { ProjectType, Sdks, isFlutterWorkspaceFolder, isInsideFolderNamed, isFlutterProjectFolder, isTestFile, fsPath } from "../utils";
-import { SdkCommands } from "../commands/sdk";
-import { spawn } from "child_process";
 import { FlutterTestDebugSession } from "../debug/flutter_test_debug_impl";
+import { FlutterLaunchRequestArguments, forceWindowsDriveLetterToUppercase, isWin } from "../debug/utils";
+import { FlutterDeviceManager } from "../flutter/device_manager";
+import { Sdks, fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile } from "../utils";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private sdks: Sdks;

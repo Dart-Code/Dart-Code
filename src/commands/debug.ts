@@ -1,16 +1,8 @@
-import { Analytics } from "../analytics";
-import * as channels from "./channels";
-import * as child_process from "child_process";
-import * as os from "os";
-import * as path from "path";
-import * as project from "../project";
 import * as vs from "vscode";
-import { config } from "../config";
-import { openInBrowser, logError } from "../utils";
-import { FlutterLaunchRequestArguments, isWin, PromiseCompleter } from "../debug/utils";
-import { FlutterDeviceManager } from "../flutter/device_manager";
-import { Uri } from "vscode";
+import { Analytics } from "../analytics";
+import { PromiseCompleter } from "../debug/utils";
 import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
+import { logError, openInBrowser } from "../utils";
 
 export class DebugCommands {
 	private analytics: Analytics;

@@ -1,8 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import * as util from "./utils";
 import { config } from "./config";
+import * as util from "./utils";
 import { fsPath } from "./utils";
 
 export const UPGRADE_TO_WORKSPACE_FOLDERS = "Mark Projects as Workspace Folders";

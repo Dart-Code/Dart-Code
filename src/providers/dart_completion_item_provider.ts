@@ -1,12 +1,9 @@
-import {
-	TextDocument, Position, CancellationToken, CompletionItemProvider, CompletionList,
-	CompletionItem, CompletionItemKind, TextEdit, Range, SnippetString, CompletionContext, CompletionTriggerKind, MarkdownString,
-} from "vscode";
-import { Analyzer } from "../analysis/analyzer";
-import { logError, fsPath } from "../utils";
-import { config } from "../config";
+import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, MarkdownString, Position, Range, SnippetString, TextDocument } from "vscode";
 import * as as from "../analysis/analysis_server_types";
+import { Analyzer } from "../analysis/analyzer";
+import { config } from "../config";
 import { cleanDartdoc } from "../dartdocs";
+import { fsPath } from "../utils";
 
 export class DartCompletionItemProvider implements CompletionItemProvider {
 	private analyzer: Analyzer;

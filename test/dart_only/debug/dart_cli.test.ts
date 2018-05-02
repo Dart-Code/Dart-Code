@@ -3,8 +3,8 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { fsPath } from "../../../src/utils";
-import { ensureVariable, getTopFrameVariables, getVariables, evaluate } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, ext, helloWorldBrokenFile, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf, helloWorldFolder, eol } from "../../helpers";
+import { ensureVariable, evaluate, getTopFrameVariables, getVariables } from "../../debug_helpers";
+import { activate, closeAllOpenFiles, eol, ext, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");

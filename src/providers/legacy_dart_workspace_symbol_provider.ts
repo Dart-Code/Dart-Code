@@ -1,9 +1,8 @@
-import { WorkspaceSymbolProvider, SymbolInformation, CancellationToken, SymbolKind, Location, Uri, Range, Position, workspace } from "vscode";
 import * as path from "path";
-import * as fs from "fs";
-import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
-import { toRange, isWithinWorkspace, logError, fsPath } from "../utils";
+import { CancellationToken, SymbolInformation, Uri, WorkspaceSymbolProvider, workspace } from "vscode";
 import * as as from "../analysis/analysis_server_types";
+import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
+import { fsPath, isWithinWorkspace, toRange } from "../utils";
 
 export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	private analyzer: Analyzer;

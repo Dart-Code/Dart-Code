@@ -2,18 +2,17 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { ProgressLocation, Uri } from "vscode";
 import * as vs from "vscode";
+import { ProgressLocation, Uri } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { FlutterLaunchRequestArguments, isWin, safeSpawn } from "../debug/utils";
-import { FlutterDeviceManager } from "../flutter/device_manager";
+import { safeSpawn } from "../debug/utils";
 import { locateBestProjectRoot } from "../project";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
-import { isFlutterWorkspaceFolder, ProjectType, Sdks, fsPath } from "../utils";
+import { dartPubPath, flutterPath, showFlutterActivationFailure } from "../sdk/utils";
 import * as util from "../utils";
+import { ProjectType, Sdks, fsPath, isFlutterWorkspaceFolder } from "../utils";
 import * as channels from "./channels";
-import { showFlutterActivationFailure, dartPubPath, flutterPath } from "../sdk/utils";
 
 const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
 

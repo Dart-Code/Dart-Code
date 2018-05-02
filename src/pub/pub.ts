@@ -1,7 +1,7 @@
-import * as path from "path";
 import * as fs from "fs";
-import { window, commands, Uri, WorkspaceFolder } from "vscode";
-import { ProjectType, fsPath } from "../utils";
+import * as path from "path";
+import { WorkspaceFolder, commands, window } from "vscode";
+import { fsPath } from "../utils";
 
 export function isPubGetProbablyRequired(ws: WorkspaceFolder): boolean {
 	const folder = fsPath(ws.uri);

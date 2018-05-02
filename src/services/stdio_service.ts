@@ -1,6 +1,6 @@
-import { Disposable } from "vscode";
 import * as child_process from "child_process";
 import * as fs from "fs";
+import { Disposable } from "vscode";
 import { safeSpawn } from "../debug/utils";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!

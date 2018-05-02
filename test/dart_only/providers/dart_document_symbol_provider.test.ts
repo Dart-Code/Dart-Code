@@ -1,8 +1,6 @@
 import * as assert from "assert";
-import * as path from "path";
-import * as fs from "fs";
 import * as vs from "vscode";
-import { activate, doc, positionOf, rangeOf, everythingFile, ensureSymbol, getDocumentSymbols } from "../../helpers";
+import { activate, ensureSymbol, everythingFile, getDocumentSymbols } from "../../helpers";
 
 describe("document_symbol_provider", () => {
 

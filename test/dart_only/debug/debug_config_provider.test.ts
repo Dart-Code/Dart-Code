@@ -1,10 +1,6 @@
-import * as assert from "assert";
-import * as path from "path";
-import * as fs from "fs";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
-import { activate, ext } from "../../helpers";
-import { FlutterLaunchRequestArguments } from "../../../src/debug/utils";
+import { activate } from "../../helpers";
 
 const testDebugServerPortNumber = 4715;
 

@@ -2,9 +2,9 @@ import * as assert from "assert";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { Sdks, fsPath } from "../../src/utils";
-import { checkForProjectsInSubFolders, UPGRADE_TO_WORKSPACE_FOLDERS } from "../../src/project";
-import { waitFor, sb } from "../helpers";
+import { UPGRADE_TO_WORKSPACE_FOLDERS, checkForProjectsInSubFolders } from "../../src/project";
+import { fsPath } from "../../src/utils";
+import { sb, waitFor } from "../helpers";
 
 const isWin = /^win/.test(process.platform);
 

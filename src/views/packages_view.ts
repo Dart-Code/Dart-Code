@@ -1,6 +1,6 @@
-import * as vs from "vscode";
 import * as fs from "fs";
 import * as path from "path";
+import * as vs from "vscode";
 import { PackageMap } from "../debug/utils";
 import { fsPath } from "../utils";
 

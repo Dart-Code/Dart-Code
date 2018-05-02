@@ -1,6 +1,6 @@
 import * as vs from "vscode";
-import { isAnalyzable, ProjectType } from "../utils";
 import { config } from "../config";
+import { ProjectType, isAnalyzable } from "../utils";
 
 export class StatusBarVersionTracker implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];

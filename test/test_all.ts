@@ -1,6 +1,6 @@
-import * as path from "path";
-import * as fs from "fs";
 import * as childProcess from "child_process";
+import * as fs from "fs";
+import * as path from "path";
 const supportsColor = require("supports-color"); // tslint:disable-line:no-var-requires
 
 const args = ["node_modules/vscode/bin/test"];

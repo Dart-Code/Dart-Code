@@ -1,11 +1,6 @@
-import {
-	CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider,
-	Command, Diagnostic, Position, Range, TextDocument, TextEdit, CodeActionProviderMetadata,
-} from "vscode";
-import * as as from "../analysis/analysis_server_types";
+import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, CodeActionProviderMetadata, Range, TextDocument } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
-import { isAnalyzableAndInWorkspace, logError, fsPath } from "../utils";
-import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
+import { isAnalyzableAndInWorkspace } from "../utils";
 
 export class OrganizeImportsCodeActionProvider implements CodeActionProvider {
 	private analyzer: Analyzer;

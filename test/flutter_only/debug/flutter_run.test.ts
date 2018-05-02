@@ -2,8 +2,8 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { fsPath } from "../../../src/utils";
-import { activate, ext, openFile, positionOf, flutterHelloWorldMainFile, delay, flutterHelloWorldFolder, flutterHelloWorldBrokenFile } from "../../helpers";
-import { getTopFrameVariables, ensureVariable } from "../../debug_helpers";
+import { ensureVariable, getTopFrameVariables } from "../../debug_helpers";
+import { activate, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, openFile, positionOf } from "../../helpers";
 
 describe("flutter run debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_debug_entry.js"), "dart");

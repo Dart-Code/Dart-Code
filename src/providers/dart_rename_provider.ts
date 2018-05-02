@@ -1,8 +1,7 @@
-import { window, workspace, RenameProvider, OutputChannel, WorkspaceEdit, TextDocument, Position, CancellationToken, Uri, TextEdit, Range } from "vscode";
-import { Analyzer } from "../analysis/analyzer";
+import { CancellationToken, OutputChannel, Position, Range, RenameProvider, TextDocument, Uri, WorkspaceEdit, workspace } from "vscode";
 import * as as from "../analysis/analysis_server_types";
+import { Analyzer } from "../analysis/analyzer";
 import * as channels from "../commands/channels";
-import * as utils from "../utils";
 import { fsPath } from "../utils";
 
 export class DartRenameProvider implements RenameProvider {

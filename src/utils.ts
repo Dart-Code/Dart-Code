@@ -3,11 +3,10 @@ import * as https from "https";
 import * as os from "os";
 import * as path from "path";
 import * as semver from "semver";
-import { commands, env as vsEnv, Range, Position, TextDocument, Uri, workspace, WorkspaceFolder, window } from "vscode";
-import * as as from "./analysis/analysis_server_types";
+import { Position, Range, TextDocument, Uri, WorkspaceFolder, commands, env as vsEnv, window, workspace } from "vscode";
 import { config } from "./config";
-import { referencesFlutterSdk } from "./sdk/utils";
 import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
+import { referencesFlutterSdk } from "./sdk/utils";
 
 export const extensionVersion = getExtensionVersion();
 export const vsCodeVersionConstraint = getVsCodeVersionConstraint();

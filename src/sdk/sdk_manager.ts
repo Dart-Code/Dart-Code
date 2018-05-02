@@ -1,8 +1,8 @@
-import * as vs from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { getSdkVersion, Sdks, versionIsAtLeast } from "../utils";
+import * as vs from "vscode";
 import { config } from "../config";
+import { Sdks, getSdkVersion, versionIsAtLeast } from "../utils";
 import { dartVMPath, flutterPath } from "./utils";
 
 abstract class SdkManager {

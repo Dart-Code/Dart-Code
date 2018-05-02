@@ -1,7 +1,7 @@
 import * as vs from "vscode";
-import { Analyzer } from "../analysis/analyzer";
 import * as as from "../analysis/analysis_server_types";
-import { isAnalyzable, fsPath } from "../utils";
+import { Analyzer } from "../analysis/analyzer";
+import { fsPath, isAnalyzable } from "../utils";
 
 export class ClosingLabelsDecorations implements vs.Disposable {
 	private analyzer: Analyzer;

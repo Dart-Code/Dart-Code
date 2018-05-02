@@ -1,13 +1,13 @@
 import * as assert from "assert";
-import * as path from "path";
 import * as fs from "fs";
+import { tmpdir } from "os";
+import * as path from "path";
+import * as semver from "semver";
 import * as vs from "vscode";
-import { EOL, tmpdir } from "os";
-import { Sdks, fsPath, versionIsAtLeast, vsCodeVersionConstraint } from "../src/utils";
 import { AnalyzerCapabilities } from "../src/analysis/analyzer";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
+import { Sdks, fsPath, vsCodeVersionConstraint } from "../src/utils";
 import sinon = require("sinon");
-import * as semver from "semver";
 
 export const ext = vs.extensions.getExtension<{
 	analyzerCapabilities: AnalyzerCapabilities,

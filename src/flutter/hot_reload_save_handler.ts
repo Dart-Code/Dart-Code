@@ -1,5 +1,5 @@
+import { DiagnosticCollection, DiagnosticSeverity, ExtensionContext, commands, workspace } from "vscode";
 import { config } from "../config";
-import { ExtensionContext, DiagnosticCollection, DiagnosticSeverity, workspace, commands, TextDocument } from "vscode";
 
 export function setUpHotReloadOnSave(context: ExtensionContext, diagnostics: DiagnosticCollection) {
 	let hotReloadDelayTimer: NodeJS.Timer;

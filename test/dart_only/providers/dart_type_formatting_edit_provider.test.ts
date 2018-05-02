@@ -1,8 +1,6 @@
 import * as assert from "assert";
-import * as path from "path";
-import * as fs from "fs";
 import * as vs from "vscode";
-import { activate, doc, setTestContent, editor, positionOf, eol } from "../../helpers";
+import { activate, doc, editor, eol, positionOf, setTestContent } from "../../helpers";
 
 describe("dart_type_formatting_edit_provider", () => {
 

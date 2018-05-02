@@ -1,5 +1,5 @@
-import { StdIOService, Request, UnknownResponse, UnknownNotification, Notification as ioNotification } from "../services/stdio_service";
 import { Disposable } from "vscode";
+import { StdIOService } from "../services/stdio_service";
 import { flutterEnv } from "./utils";
 
 export class FlutterTest extends StdIOService<Notification> {

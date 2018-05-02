@@ -1,8 +1,7 @@
-import * as as from "../analysis/analysis_server_types";
-import * as editors from "../editors";
 import * as vs from "vscode";
+import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
-import { config } from "../config";
+import * as editors from "../editors";
 import { fsPath } from "../utils";
 
 export class EditCommands implements vs.Disposable {

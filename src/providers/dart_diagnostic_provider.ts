@@ -1,8 +1,8 @@
-import { Analyzer } from "../analysis/analyzer";
-import { DiagnosticCollection, Diagnostic, DiagnosticSeverity, Uri, Range, Position } from "vscode";
-import { toRange } from "../utils";
-import { config } from "../config";
+import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, Uri } from "vscode";
 import * as as from "../analysis/analysis_server_types";
+import { Analyzer } from "../analysis/analyzer";
+import { config } from "../config";
+import { toRange } from "../utils";
 
 export class DartDiagnosticProvider {
 	private analyzer: Analyzer;

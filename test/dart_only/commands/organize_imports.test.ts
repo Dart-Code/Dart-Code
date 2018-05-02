@@ -1,8 +1,5 @@
-import * as assert from "assert";
-import * as path from "path";
-import * as fs from "fs";
 import * as vs from "vscode";
-import { activate, doc, setTestContent, editor, ensureTestContent, delay, waitForEditorChange } from "../../helpers";
+import { activate, ensureTestContent, setTestContent, waitForEditorChange } from "../../helpers";
 
 describe("organize imports", () => {
 

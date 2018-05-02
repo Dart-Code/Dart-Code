@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { Sdks, fsPath } from "../../src/utils";
+import { fsPath } from "../../src/utils";
 import { ext } from "../helpers";
 
 const isWin = /^win/.test(process.platform);

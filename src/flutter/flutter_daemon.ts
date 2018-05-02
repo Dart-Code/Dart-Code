@@ -1,12 +1,10 @@
-import { config } from "../config";
-import { FlutterDeviceManager } from "./device_manager";
-import { logError, extensionVersion, reloadExtension } from "../utils";
-import { StdIOService, Request, UnknownResponse, UnknownNotification } from "../services/stdio_service";
-import * as child_process from "child_process";
-import * as f from "./flutter_types";
-import * as fs from "fs";
 import * as vs from "vscode";
+import { config } from "../config";
 import { flutterEnv } from "../debug/utils";
+import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
+import { reloadExtension } from "../utils";
+import { FlutterDeviceManager } from "./device_manager";
+import * as f from "./flutter_types";
 
 export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	public deviceManager: FlutterDeviceManager;

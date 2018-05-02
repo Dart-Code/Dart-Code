@@ -1,8 +1,4 @@
-import * as assert from "assert";
-import * as path from "path";
-import * as fs from "fs";
-import * as vs from "vscode";
-import { activate, doc, setTestContent, getSnippetCompletionsAt, ensureSnippet, eol, ensureNoSnippet } from "../../helpers";
+import { activate, ensureNoSnippet, ensureSnippet, getSnippetCompletionsAt, setTestContent } from "../../helpers";
 
 describe("snippet_provider", () => {
 

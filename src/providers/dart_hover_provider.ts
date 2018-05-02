@@ -1,9 +1,8 @@
-import { HoverProvider, Hover, TextDocument, Position, CancellationToken, Range } from "vscode";
-import { Analyzer } from "../analysis/analyzer";
+import { CancellationToken, Hover, HoverProvider, Position, Range, TextDocument } from "vscode";
 import * as as from "../analysis/analysis_server_types";
-import { logError, fsPath } from "../utils";
-import { vsCodeVersion } from "../config";
+import { Analyzer } from "../analysis/analyzer";
 import { cleanDartdoc } from "../dartdocs";
+import { fsPath, logError } from "../utils";
 
 export class DartHoverProvider implements HoverProvider {
 	private analyzer: Analyzer;

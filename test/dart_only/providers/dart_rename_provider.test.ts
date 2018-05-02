@@ -1,8 +1,5 @@
-import * as assert from "assert";
-import * as path from "path";
-import * as fs from "fs";
 import * as vs from "vscode";
-import { activate, doc, positionOf, setTestContent, editor, ensureTestContent } from "../../helpers";
+import { activate, doc, ensureTestContent, positionOf, setTestContent } from "../../helpers";
 
 describe("rename_provider", () => {
 
