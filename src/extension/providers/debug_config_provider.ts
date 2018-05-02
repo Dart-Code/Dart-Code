@@ -7,6 +7,7 @@ import { DebugSession } from "vscode-debugadapter";
 import { DartDebugSession } from "../../debug/dart_debug_impl";
 import { DartTestDebugSession } from "../../debug/dart_test_debug_impl";
 import { FlutterDebugSession } from "../../debug/flutter_debug_impl";
+import { FlutterMultiReloadDebugSession } from "../../debug/flutter_multi_reload_debug_impl";
 import { FlutterTestDebugSession } from "../../debug/flutter_test_debug_impl";
 import { FlutterWebDebugSession } from "../../debug/flutter_web_debug_impl";
 import { FlutterWebTestDebugSession } from "../../debug/flutter_web_test_debug_impl";
@@ -272,6 +273,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// TODO: This cast feels nasty?
 		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isAnyFlutter, deviceToLaunchOn);
 
+		if (debugType === DebuggerType.Flutter && debugConfig.deviceId === "all")
+			debugType = DebuggerType.FlutterMultiReload;
+
 		// Debugger always uses uppercase drive letters to ensure our paths have them regardless of where they came from.
 		debugConfig.program = forceWindowsDriveLetterToUppercase(debugConfig.program);
 		debugConfig.cwd = forceWindowsDriveLetterToUppercase(debugConfig.cwd);
@@ -407,6 +411,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		switch (debugType) {
 			case DebuggerType.Flutter:
 				return this.spawnOrGetServer("flutter", port, () => new FlutterDebugSession());
+			case DebuggerType.FlutterMultiReload:
+				return this.spawnOrGetServer("flutterMultiReload", port, () => new FlutterMultiReloadDebugSession());
 			case DebuggerType.FlutterTest:
 				return this.spawnOrGetServer("flutterTest", port, () => new FlutterTestDebugSession());
 			case DebuggerType.FlutterWeb:
@@ -502,6 +508,7 @@ export enum DebuggerType {
 	Dart,
 	PubTest,
 	Flutter,
+	FlutterMultiReload,
 	FlutterTest,
 	FlutterWeb,
 	FlutterWebTest,
