@@ -15,7 +15,6 @@ import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, F
 // stepBackRequest(response: DebugProtocol.StepBackResponse, args: DebugProtocol.StepBackArguments): void;
 // restartFrameRequest(response: DebugProtocol.RestartFrameResponse, args: DebugProtocol.RestartFrameArguments): void;
 // completionsRequest(response: DebugProtocol.CompletionsResponse, args: DebugProtocol.CompletionsArguments): void;
-
 export class DartDebugSession extends DebugSession {
 	// TODO: Tidy all this up
 	protected childProcess: child_process.ChildProcess;
@@ -1071,9 +1070,8 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private knownOpenFiles: string[] = []; // Keep track of these for internal requests
-	protected async requestCoverageUpdate(reason: string, scriptUris?: string[]): Promise<void> {
+	protected requestCoverageUpdate = _.throttle(async (reason: string, scriptUris?: string[]): Promise<void> => {
 		// TODO: Remove debug info...
-		// TODO: Throttle
 		this.sendEvent(new OutputEvent(`Getting coverage because ${reason}\n`));
 		if (scriptUris)
 			this.knownOpenFiles = scriptUris;
@@ -1087,7 +1085,7 @@ export class DartDebugSession extends DebugSession {
 		}));
 
 		this.sendEvent(new Event("dart.coverage", coverageData));
-	}
+	}, 2000);
 
 	private async getCoverageReport(scriptUris: string[]): Promise<Array<{ script: VMScript, tokenPosTable: number[][], hits: number[] }>> {
 		// TODO: Do we need to do all of these requests every time? Can we stack the loaded scripts?
