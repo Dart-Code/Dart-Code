@@ -18,12 +18,12 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 	// TODO: Move these to gutter
 	private readonly modifiedDecorationType = vs.window.createTextEditorDecorationType({
 		backgroundColor: "grey",
-		//isWholeLine: true,
+		isWholeLine: true,
 		rangeBehavior: vs.DecorationRangeBehavior.OpenOpen,
 	});
 	private readonly notRunDecorationType = vs.window.createTextEditorDecorationType({
 		backgroundColor: "red",
-		//isWholeLine: true,
+		isWholeLine: true,
 		rangeBehavior: vs.DecorationRangeBehavior.OpenOpen,
 	});
 
