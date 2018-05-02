@@ -7,7 +7,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { logError } from "../utils/log";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
-import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, PromiseCompleter, flatMap, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
+import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, PromiseCompleter, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -1102,7 +1102,7 @@ export class DartDebugSession extends DebugSession {
 			const libraryResponses = await Promise.all(libraryPromises);
 			const libraries = libraryResponses.map((response) => response.result as VMLibrary);
 
-			const scriptRefs = flatMap(libraries, (library) => library.scripts);
+			const scriptRefs = _.flatMap(libraries, (library) => library.scripts);
 
 			// Filter scripts to the ones we care about.
 			// TODO: Do we need to getPossibleSourceUris() here?
