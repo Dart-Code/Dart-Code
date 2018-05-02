@@ -1071,8 +1071,6 @@ export class DartDebugSession extends DebugSession {
 
 	private knownOpenFiles: string[] = []; // Keep track of these for internal requests
 	protected requestCoverageUpdate = _.throttle(async (reason: string, scriptUris?: string[]): Promise<void> => {
-		// TODO: Remove debug info...
-		this.sendEvent(new OutputEvent(`Getting coverage because ${reason}\n`));
 		if (scriptUris)
 			this.knownOpenFiles = scriptUris;
 
