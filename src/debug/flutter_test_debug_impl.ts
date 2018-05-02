@@ -34,15 +34,16 @@ export class FlutterTestDebugSession extends DartDebugSession {
 			appArgs.push("--start-paused");
 		}
 
-		if (this.sourceFile) {
-			appArgs.push(this.sourceFile);
+		const sourceFile = this.sourceFileForArgs(args);
+		if (sourceFile) {
+			appArgs.push(sourceFile);
 		}
 
 		if (args.args) {
 			appArgs = appArgs.concat(args.args);
 		}
 
-		this.flutter = new FlutterTest(this.args.flutterPath, args.cwd, appArgs, this.args.flutterTestLogFile);
+		this.flutter = new FlutterTest(args.flutterPath, args.cwd, appArgs, args.flutterTestLogFile);
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
 
 		// Set up subscriptions.
