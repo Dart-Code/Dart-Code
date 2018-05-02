@@ -87,6 +87,7 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 			if (change.rangeLength === change.text.length && change.text === editor.document.getText(change.range))
 				continue;
 
+			// TODO: Should we merge ranges and unnecessary duplicate ranges here?
 			fileState.modified.push({ offset: change.rangeOffset, length: change.text.length });
 		}
 
