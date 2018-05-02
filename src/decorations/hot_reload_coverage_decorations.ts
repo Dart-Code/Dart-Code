@@ -2,6 +2,7 @@ import * as vs from "vscode";
 import { DebugCommands } from "../commands/debug";
 import { CoverageData } from "../debug/utils";
 import { fsPath } from "../utils";
+import { logError } from "../utils/log";
 
 export class HotReloadCoverageDecorations implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
@@ -29,8 +30,8 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 	constructor(debug: DebugCommands) {
 		this.subscriptions.push(vs.workspace.onDidChangeTextDocument((e) => this.onDidChangeTextDocument(e)));
 		this.subscriptions.push(vs.window.onDidChangeVisibleTextEditors((e) => this.onDidChangeVisibleTextEditors(e)));
-		this.subscriptions.push(debug.onDidHotReload(() => this.onDidHotReload()));
-		this.subscriptions.push(debug.onDidFullRestart(() => this.onDidFullRestart()));
+		this.subscriptions.push(debug.onWillHotReload(() => this.onWillHotReload()));
+		this.subscriptions.push(debug.onWillHotRestart(() => this.onWillFullRestart()));
 		this.subscriptions.push(vs.debug.onDidStartDebugSession((e) => this.onDidStartDebugSession()));
 		this.subscriptions.push(vs.debug.onDidTerminateDebugSession((e) => this.onDidTerminateDebugSession()));
 		this.subscriptions.push(debug.onReceiveCoverage((c) => this.onReceiveCoverage(c)));
@@ -40,6 +41,7 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 	private onDidChangeVisibleTextEditors(editors: vs.TextEditor[]) {
 		this.redrawDecorations(editors);
+		this.requestCoverageUpdate();
 	}
 
 	private onDidChangeTextDocument(e: vs.TextDocumentChangeEvent) {
@@ -103,7 +105,7 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 			.filter((r) => r);
 	}
 
-	private onDidHotReload(): void {
+	private onWillHotReload(): void {
 		for (const file of Object.keys(this.fileState)) {
 			for (const line of Object.keys(this.fileState[file]).map((k) => parseInt(k, 10))) {
 				const fileState = this.fileState[file];
@@ -113,11 +115,10 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 		}
 
 		this.redrawDecorations(vs.window.visibleTextEditors);
-
 		this.requestCoverageUpdate();
 	}
 
-	private onDidFullRestart(): void {
+	private onWillFullRestart(): void {
 		this.clearAllMarkers();
 	}
 
@@ -166,12 +167,10 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 		if (hasAnyChanges) {
 			await vs.commands.executeCommand(
-				"_dart.updateCoverage",
+				"_dart.requestCoverageUpdate",
 				vs.window.visibleTextEditors.map((e) => fsPath(e.document.uri)),
 			);
 		}
-
-		// TODO: Need to update periodically!
 	}
 
 	private onReceiveCoverage(coverageData: CoverageData[]): void {
