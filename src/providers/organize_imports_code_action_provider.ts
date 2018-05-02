@@ -7,7 +7,7 @@ import { Analyzer } from "../analysis/analyzer";
 import { isAnalyzableAndInWorkspace, logError, fsPath } from "../utils";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
 
-export class OrganizeDirectivesCodeActionProvider implements CodeActionProvider {
+export class OrganizeImportsCodeActionProvider implements CodeActionProvider {
 	private analyzer: Analyzer;
 	constructor(analyzer: Analyzer) {
 		this.analyzer = analyzer;
@@ -22,11 +22,11 @@ export class OrganizeDirectivesCodeActionProvider implements CodeActionProvider 
 			return null;
 		return [{
 			command: {
-				command: "_dart.organizeDirectives",
-				title: "Organize Directives",
+				command: "_dart.organizeImports",
+				title: "Organize Imports",
 			},
 			kind: CodeActionKind.SourceOrganizeImports,
-			title: "Organize Directives",
+			title: "Organize Imports",
 		}];
 	}
 }

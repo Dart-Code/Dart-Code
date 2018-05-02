@@ -15,15 +15,15 @@ export class EditCommands implements vs.Disposable {
 		this.analyzer = analyzer;
 
 		this.commands.push(
-			vs.commands.registerCommand("_dart.organizeDirectives", this.organizeDirectives, this),
+			vs.commands.registerCommand("_dart.organizeImports", this.organizeImports, this),
 			vs.commands.registerCommand("dart.sortMembers", this.sortMembers, this),
 			vs.commands.registerCommand("_dart.applySourceChange", this.applyEdits, this),
 			vs.workspace.onWillSaveTextDocument((e) => this.willSaveTextDocument(e), this),
 		);
 	}
 
-	private organizeDirectives(): Thenable<void> {
-		return this.sendEdit(this.analyzer.editOrganizeDirectives, "Organize Directives");
+	private organizeImports(): Thenable<void> {
+		return this.sendEdit(this.analyzer.editOrganizeDirectives, "Organize Imports");
 	}
 
 	private sortMembers(): Thenable<void> {
@@ -32,7 +32,7 @@ export class EditCommands implements vs.Disposable {
 
 	private willSaveTextDocument(e: vs.TextDocumentWillSaveEvent) {
 		// Don't do if setting is not enabled.
-		if (!config.organizeDirectivesOnSave
+		if (!config.organizeImportsOnSave
 			|| e.reason !== vs.TextDocumentSaveReason.Manual)
 			return;
 

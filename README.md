@@ -42,8 +42,8 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - Support for format-on-type (`editor.formatOnType`)
 - Workspace symbol search
 - Document symbol search
-- [Organize Directives command](https://dartcode.org/docs/commands/#dart-organize-directives)
-- [Automatically Organize Directives on save](https://dartcode.org/docs/settings/#dartorganizedirectivesonsave)
+- [Organize Imports command](https://dartcode.org/docs/commands/#dart-organize-imports)
+- [Automatically Organize Imports on save](https://dartcode.org/docs/settings/#dartorganizeimportsonsave)
 - [Pub Get Packages command](https://dartcode.org/docs/commands/#pub-get-packages)
 - [Pub Upgrade Packages command](https://dartcode.org/docs/commands/#pub-upgrade-packages)
 - [Type Hierarchy](https://dartcode.org/docs/commands/#dart-show-type-hierarchy)

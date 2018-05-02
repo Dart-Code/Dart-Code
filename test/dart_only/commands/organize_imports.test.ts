@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as vs from "vscode";
 import { activate, doc, setTestContent, editor, ensureTestContent, delay, waitForEditorChange } from "../../helpers";
 
-describe("organize directives", () => {
+describe("organize imports", () => {
 
 	before(() => activate());
 
@@ -19,7 +19,7 @@ main() async {
 }
 		`);
 
-		await waitForEditorChange(() => vs.commands.executeCommand("_dart.organizeDirectives"));
+		await waitForEditorChange(() => vs.commands.executeCommand("_dart.organizeImports"));
 
 		await ensureTestContent(`
 import "dart:async";
@@ -42,7 +42,7 @@ main() async {
 }
 		`);
 
-		await waitForEditorChange(() => vs.commands.executeCommand("_dart.organizeDirectives"));
+		await waitForEditorChange(() => vs.commands.executeCommand("_dart.organizeImports"));
 
 		ensureTestContent(`
 import "dart:async";

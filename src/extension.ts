@@ -39,7 +39,7 @@ import { DartPackagesProvider } from "./views/packages_view";
 import { PromiseCompleter } from "./debug/utils";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForProjectsInSubFolders } from "./project";
-import { OrganizeDirectivesCodeActionProvider } from "./providers/organize_directives_code_action_provider";
+import { OrganizeImportsCodeActionProvider } from "./providers/organize_imports_code_action_provider";
 import { RefactorCodeActionProvider } from "./providers/refactor_code_action_provider";
 import { RefactorCommands } from "./commands/refactor";
 import { checkForSdkUpdates } from "./sdk/update_check";
@@ -162,7 +162,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const assistCodeActionProvider = new AssistCodeActionProvider(analyzer);
 	const fixCodeActionProvider = new FixCodeActionProvider(analyzer);
 	const refactorCodeActionProvider = new RefactorCodeActionProvider(analyzer);
-	const organizeDirectivesCodeActionProvider = new OrganizeDirectivesCodeActionProvider(analyzer);
+	const organizeImportsCodeActionProvider = new OrganizeImportsCodeActionProvider(analyzer);
 	const renameProvider = new DartRenameProvider(analyzer);
 
 	const activeFileFilters = [DART_MODE];
@@ -187,7 +187,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Even with the angular_analyzer_plugin, some actions only apply to Dart.
 	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, typeFormattingEditProvider, "}", ";"));
-	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, organizeDirectivesCodeActionProvider, organizeDirectivesCodeActionProvider.metadata));
+	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, organizeImportsCodeActionProvider, organizeImportsCodeActionProvider.metadata));
 
 	// Snippets are language-specific
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));
