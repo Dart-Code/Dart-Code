@@ -86,7 +86,7 @@ describe("dart_hover_provider", () => {
 	});
 
 	it("returns expected information for a named constructor", async () => {
-		// TODO: Currently server seeems to return two different ranges for
+		// Note: Server seeems to return two different ranges for
 		// MyClass and named.
 		let hover = await getHoverAt("My^Class.myNamed()");
 		assert.equal(hover.displayText, "MyClass.myNamed() → MyClass");
