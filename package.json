@@ -697,7 +697,7 @@
 	},
 	"devDependencies": {
 		"@types/mocha": "^5.1.0",
-		"@types/node": "^6.0.103",
+		"@types/node": "^6.0.107",
 		"@types/semver": "^5.5.0",
 		"@types/sinon": "^4.3.0",
 		"@types/ws": "^0.0.38",
@@ -705,14 +705,14 @@
 		"mocha": "^5.1.0",
 		"mocha-multi-reporters": "^1.1.7",
 		"nyc": "^11.7.1",
-		"remap-istanbul": "^0.11.0",
+		"remap-istanbul": "^0.11.1",
 		"run-for-every-file": "^1.1.0",
 		"signal-exit": "^3.0.2",
 		"sinon": "^4.4.10",
 		"supports-color": "^5.4.0",
 		"tslint": "^5.9.1",
 		"typescript": "^2.8.3",
-		"vscode": "^1.1.14",
+		"vscode": "^1.1.17",
 		"vscode-debugadapter-testsupport": "^1.29.0"
 	}
 }
