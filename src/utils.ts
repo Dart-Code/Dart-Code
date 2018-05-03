@@ -84,7 +84,7 @@ export function getSdkVersion(sdkRoot: string): string {
 }
 
 export function isAnalyzable(document: TextDocument): boolean {
-	if (document.isUntitled || !fsPath(document.uri))
+	if (document.isUntitled || !fsPath(document.uri) || document.uri.scheme !== "file")
 		return false;
 
 	const analyzableLanguages = ["dart", "html"];
