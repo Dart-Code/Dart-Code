@@ -150,9 +150,12 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		);
 
 		const triggerCompletionsFor = ["import '';"];
-		if (triggerCompletionsFor.indexOf(label) !== -1) {
+		if (triggerCompletionsFor.indexOf(label) !== -1)
 			triggerCompletion = true;
-		}
+
+		// Handle folders in imports better.
+		if (suggestion.kind === "IMPORT" && label.endsWith("/"))
+			triggerCompletion = true;
 
 		if (triggerCompletion) {
 			completion.command = {
