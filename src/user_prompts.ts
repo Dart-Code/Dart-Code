@@ -3,12 +3,16 @@ import * as path from "path";
 import * as vs from "vscode";
 import { config } from "./config";
 import { Context } from "./context";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, openInBrowser } from "./utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, extensionVersion, fsPath, getDartWorkspaceFolders, isDevExtension, openInBrowser } from "./utils";
 
 export function showUserPrompts(context: vs.ExtensionContext) {
 	handleNewProjects(Context.for(context));
-	// Ensure we only prompt with one question max per session!
-	return (!config.closingLabels && prompt(context, "closingLabelsDisabled", promptForClosingLabelsDisabled));
+
+	const versionMajorMinor = extensionVersion.split(".").slice(0, 2).join(".");
+	return (
+		(isDevExtension || prompt(context, `release_notes_${versionMajorMinor}`, () => promptToShowReleaseNotes(versionMajorMinor)))
+		&& !config.closingLabels && prompt(context, "closingLabelsDisabled", promptForClosingLabelsDisabled)
+	);
 }
 
 function prompt(context: vs.ExtensionContext, key: string, prompt: () => Thenable<boolean>): boolean {
@@ -36,6 +40,17 @@ async function promptForClosingLabelsDisabled(): Promise<boolean> {
 		openInBrowser("https://github.com/Dart-Code/Dart-Code/issues/445");
 	}
 	return true; // Always mark this as done; we don't want to re-prompt if the user clicks Close.
+}
+
+async function promptToShowReleaseNotes(version: string): Promise<boolean> {
+	const res = await vs.window.showInformationMessage(
+		`Dart Code has been updated to v${version}`,
+		`Show v${version} Release Notes`,
+	);
+	if (res) {
+		openInBrowser(`https://dartcode.org/releases/${version}/`);
+	}
+	return true; // Always mark this as done; we don't want to prompt the user multiple times.
 }
 
 function error(err: any) {
