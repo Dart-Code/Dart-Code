@@ -29,6 +29,6 @@ testRunner.configure({
 	timeout: 60000,   // increased timeout because starting up Code, Analyzer, etc. is slooow
 	ui: "bdd",        // the TDD UI is being used in extension.test.ts (suite, test, etc.)
 	useColors: true,  // colored output from test results
-} as any); // TODO: Remove cast once vscode extension is updated.
+} as MochaSetupOptions & { reporterOptions: any });
 
 module.exports = testRunner;
