@@ -42,6 +42,10 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 					return line.endsWith("import '") || line.endsWith("export '");
 				case "\"":
 					return line.endsWith("import \"") || line.endsWith("export \"");
+				case "/":
+				case "\\":
+					return line.startsWith("import \"") || line.startsWith("export \"")
+						|| line.startsWith("import '") || line.startsWith("export '");
 			}
 		}
 
