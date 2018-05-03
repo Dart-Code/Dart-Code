@@ -120,6 +120,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.completeStatement",
+				"title": "Complete Statement",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.showTypeHierarchy",
 				"title": "Show Type Hierarchy",
 				"category": "Dart"
@@ -267,6 +272,10 @@
 				},
 				{
 					"command": "dart.sortMembers",
+					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
+				},
+				{
+					"command": "dart.completeStatement",
 					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
 				},
 				{
