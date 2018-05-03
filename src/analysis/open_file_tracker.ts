@@ -1,11 +1,12 @@
 import { Disposable, Uri, window, workspace } from "vscode";
 import * as util from "../utils";
 import { fsPath } from "../utils";
-import { Occurrences, Outline } from "./analysis_server_types";
+import { FoldingRegion, Occurrences, Outline } from "./analysis_server_types";
 import { Analyzer } from "./analyzer";
 
 const outlines: { [key: string]: Outline } = {};
 const occurrences: { [key: string]: Occurrences[] } = {};
+const folding: { [key: string]: FoldingRegion[] } = {};
 
 export class OpenFileTracker implements Disposable {
 	private disposables: Disposable[] = [];
@@ -17,11 +18,13 @@ export class OpenFileTracker implements Disposable {
 		this.disposables.push(workspace.onDidCloseTextDocument((td) => {
 			delete outlines[fsPath(td.uri)];
 			delete occurrences[fsPath(td.uri)];
+			delete folding[fsPath(td.uri)];
 			this.updatePriorityFiles();
 		}));
 		this.disposables.push(window.onDidChangeActiveTextEditor((e) => this.updatePriorityFiles()));
 		this.disposables.push(this.analyzer.registerForAnalysisOutline((o) => outlines[o.file] = o.outline));
 		this.disposables.push(this.analyzer.registerForAnalysisOccurrences((o) => occurrences[o.file] = o.occurrences));
+		this.disposables.push(this.analyzer.registerForAnalysisFolding((f) => folding[f.file] = f.regions));
 		this.updatePriorityFiles(); // Handle already-open files.
 	}
 
@@ -59,6 +62,7 @@ export class OpenFileTracker implements Disposable {
 			this.analyzer.analysisSetSubscriptions({
 				subscriptions: {
 					CLOSING_LABELS: priorityFiles,
+					FOLDING: priorityFiles,
 					OCCURRENCES: priorityFiles,
 					OUTLINE: priorityFiles,
 				},
@@ -66,6 +70,7 @@ export class OpenFileTracker implements Disposable {
 		} else {
 			this.analyzer.analysisSetSubscriptions({
 				subscriptions: {
+					FOLDING: priorityFiles,
 					HIGHLIGHTS: priorityFiles,
 					OCCURRENCES: priorityFiles,
 					OUTLINE: priorityFiles,
@@ -80,6 +85,10 @@ export class OpenFileTracker implements Disposable {
 
 	public static getOccurrencesFor(file: Uri): Occurrences[] | undefined {
 		return occurrences[fsPath(file)];
+	}
+
+	public static getFoldingRegionsFor(file: Uri): FoldingRegion[] | undefined {
+		return folding[fsPath(file)];
 	}
 
 	public dispose(): any {

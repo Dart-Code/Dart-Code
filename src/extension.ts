@@ -23,6 +23,7 @@ import { checkForProjectsInSubFolders } from "./project";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
+import { DartFoldingProvider } from "./providers/dart_folding_provider";
 import { DartFormattingEditProvider } from "./providers/dart_formatting_edit_provider";
 import { DartDocumentHighlightProvider } from "./providers/dart_highlighting_provider";
 import { DartHoverProvider } from "./providers/dart_hover_provider";
@@ -162,6 +163,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const refactorCodeActionProvider = new RefactorCodeActionProvider(analyzer);
 	const sourceCodeActionProvider = new SourceCodeActionProvider(analyzer);
 	const renameProvider = new DartRenameProvider(analyzer);
+	const foldingProvider = new DartFoldingProvider(analyzer);
 
 	const activeFileFilters = [DART_MODE];
 	if (config.analyzeAngularTemplates && analyzer.capabilities.supportsAnalyzingHtmlFiles) {
@@ -181,6 +183,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, fixCodeActionProvider, fixCodeActionProvider.metadata));
 		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, refactorCodeActionProvider, refactorCodeActionProvider.metadata));
 		context.subscriptions.push(vs.languages.registerRenameProvider(filter, renameProvider));
+		// TODO: Does HTML support this?
+		// TODO: May need to add this conditionally depending on the outcome to https://github.com/dart-lang/sdk/issues/33033
+		context.subscriptions.push(vs.languages.registerFoldingRangeProvider(filter, foldingProvider));
 	});
 
 	// Even with the angular_analyzer_plugin, some actions only apply to Dart.
