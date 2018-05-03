@@ -2,7 +2,7 @@ import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, Uri } from "vscod
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { config } from "../config";
-import { toRange } from "../utils";
+import { toRangeOnLine } from "../utils";
 
 export class DartDiagnosticProvider {
 	private analyzer: Analyzer;
@@ -30,7 +30,7 @@ export class DartDiagnosticProvider {
 	public static createDiagnostic(error: as.AnalysisError): Diagnostic {
 		const message = ((error.type === "HINT" || error.type === "LINT") && config.showLintNames ? `${error.code}: ` : "") + error.message;
 		const diag = new Diagnostic(
-			toRange(error.location),
+			toRangeOnLine(error.location),
 			message,
 			DartDiagnosticProvider.getSeverity(error.severity, error.type),
 		);

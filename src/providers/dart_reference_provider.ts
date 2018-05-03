@@ -23,7 +23,7 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 
 		const locations = resp.results.map((result) => {
 			return {
-				range: util.toRange(result.location),
+				range: util.toRangeOnLine(result.location),
 				uri: Uri.file(result.location.file),
 			};
 		});
@@ -47,7 +47,7 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 				target.startColumn = 1;
 
 			return {
-				range: util.toRange(target),
+				range: util.toRangeOnLine(target),
 				uri: Uri.file(resp.files[target.fileIndex]),
 			};
 		});

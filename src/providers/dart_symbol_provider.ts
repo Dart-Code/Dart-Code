@@ -2,7 +2,7 @@ import * as path from "path";
 import { CancellationToken, DocumentSymbolProvider, SymbolInformation, TextDocument, Uri, WorkspaceSymbolProvider, workspace } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
-import { fsPath, toRange } from "../utils";
+import { fsPath, toRangeOnLine } from "../utils";
 
 export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymbolProvider {
 	private analyzer: Analyzer;
@@ -59,7 +59,7 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 			containerName,
 			kind: getSymbolKindForElementKind(result.kind),
 			location: {
-				range: toRange({ startLine: result.line, startColumn: result.column, length: 0 }),
+				range: toRangeOnLine({ startLine: result.line, startColumn: result.column, length: 0 }),
 				uri: Uri.file(file),
 			},
 			name,

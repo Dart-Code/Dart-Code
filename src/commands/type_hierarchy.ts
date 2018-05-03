@@ -2,7 +2,7 @@ import * as vs from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import * as editors from "../editors";
-import { fsPath, toRange } from "../utils";
+import { fsPath, toRangeOnLine } from "../utils";
 
 export class TypeHierarchyCommand implements vs.Disposable {
 	private analyzer: Analyzer;
@@ -53,7 +53,7 @@ export class TypeHierarchyCommand implements vs.Disposable {
 			const location: as.Location = result.location;
 			const document = await vs.workspace.openTextDocument(location.file);
 			const editor = await vs.window.showTextDocument(document);
-			const range = toRange(location);
+			const range = toRangeOnLine(location);
 			editor.revealRange(range, vs.TextEditorRevealType.InCenterIfOutsideViewport);
 			editor.selection = new vs.Selection(range.end, range.start);
 		}

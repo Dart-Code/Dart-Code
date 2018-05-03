@@ -2,7 +2,7 @@ import * as path from "path";
 import { CancellationToken, SymbolInformation, Uri, WorkspaceSymbolProvider, workspace } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
-import { fsPath, isWithinWorkspace, toRange } from "../utils";
+import { fsPath, isWithinWorkspace, toRangeOnLine } from "../utils";
 
 export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	private analyzer: Analyzer;
@@ -98,7 +98,7 @@ export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvide
 			containerName,
 			kind: getSymbolKindForElementKind(result.path[0].kind),
 			location: {
-				range: toRange(result.location),
+				range: toRangeOnLine(result.location),
 				uri: Uri.file(result.location.file),
 			},
 			name: elementPathDescription + parameters,

@@ -60,9 +60,11 @@ export function toPosition(location: Location): Position {
 	return new Position(location.startLine - 1, location.startColumn - 1);
 }
 
-export function toRange(location: Location): Range {
+// Translates an offset/length to a Range.
+// NOTE: Does not wrap lines because it does not have access to a TextDocument to know
+// where the line ends.
+export function toRangeOnLine(location: Location): Range {
 	const startPos = toPosition(location);
-	// TODO: Is this translation valid? Does it wrap lines correctly?
 	return new Range(startPos, startPos.translate(0, location.length));
 }
 
