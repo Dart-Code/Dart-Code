@@ -174,9 +174,8 @@ export class DartDebugSession extends DebugSession {
 							isolate.runnable ? "IsolateRunnable" : "IsolateStart",
 						);
 
-						if (isolate.pauseEvent.kind === "PauseStart") {
-							const thread = this.threadManager.getThreadInfoFromRef(isolateRef);
-							thread.receivedPauseStart();
+						if (isolate.pauseEvent.kind.startsWith("Pause")) {
+							this.handlePauseEvent(isolate.pauseEvent);
 						}
 
 						// Helpers to categories libraries as SDK/ExternalLibrary/not.
@@ -688,6 +687,14 @@ export class DartDebugSession extends DebugSession {
 	public async handleDebugEvent(event: VMEvent) {
 		const kind = event.kind;
 
+		if (kind.startsWith("Pause")) {
+			this.handlePauseEvent(event);
+		}
+	}
+
+	private async handlePauseEvent(event: VMEvent) {
+		const kind = event.kind;
+
 		// For PausePostRequest we need to re-send all breakpoints; this happens after a flutter restart
 		if (kind === "PausePostRequest") {
 			await this.threadManager.resetBreakpoints();
@@ -702,7 +709,7 @@ export class DartDebugSession extends DebugSession {
 			// "PauseStart" should auto-resume after breakpoints are set.
 			const thread = this.threadManager.getThreadInfoFromRef(event.isolate);
 			thread.receivedPauseStart();
-		} else if (kind.startsWith("Pause")) {
+		} else {
 			const thread = this.threadManager.getThreadInfoFromRef(event.isolate);
 
 			// PauseStart, PauseExit, PauseBreakpoint, PauseInterrupted, PauseException
