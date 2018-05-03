@@ -39,7 +39,10 @@ export function isDartWorkspaceFolder(folder: WorkspaceFolder): boolean {
 	if (!folder || folder.uri.scheme !== "file")
 		return false;
 
-	// TODO: Filter to only Dart projects.
+	// Currently we don't have good logic to know what's a Dart folder.
+	// We could require a pubspec, but it's valid to just write scripts without them.
+	// For now, nothing calls this that will do bad things if the folder isn't a Dart
+	// project so we can review amend this in future if required.
 	return true;
 }
 
