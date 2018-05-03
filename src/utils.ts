@@ -104,14 +104,6 @@ export function isAnalyzableAndInWorkspace(document: TextDocument): boolean {
 }
 
 export function isWithinWorkspace(file: string) {
-	// TODO: Is this fixed?
-	// asRelativePath returns the input if it's outside of the rootPath.
-	// Edit: Doesn't actually work properly:
-	//   https://github.com/Microsoft/vscode/issues/10446
-	// return workspace.asRelativePath(fsPath(document.uri)) != fsPath(document.uri);
-	// Edit: Still doesn't work properly!
-	//   https://github.com/Microsoft/vscode/issues/33709
-
 	return !!workspace.getWorkspaceFolder(Uri.file(file));
 }
 
