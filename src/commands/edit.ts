@@ -17,6 +17,7 @@ export class EditCommands implements vs.Disposable {
 			vs.commands.registerCommand("_dart.organizeImports", this.organizeImports, this),
 			vs.commands.registerCommand("dart.sortMembers", this.sortMembers, this),
 			vs.commands.registerCommand("_dart.applySourceChange", this.applyEdits, this),
+			vs.commands.registerCommand("dart.completeStatement", this.completeStatement, this),
 		);
 	}
 
@@ -26,6 +27,20 @@ export class EditCommands implements vs.Disposable {
 
 	private sortMembers(): Thenable<void> {
 		return this.sendEdit(this.analyzer.editSortMembers, "Sort Members");
+	}
+
+	private async completeStatement(): Promise<void> {
+		const editor = vs.window.activeTextEditor;
+		if (!editor || !editor.selection)
+			return;
+		const document = editor.document;
+		const file = fsPath(document.uri);
+		const offset = document.offsetAt(editor.selection.end);
+
+		const res = await this.analyzer.editGetStatementCompletion({ file, offset });
+
+		if (res && res.change)
+			this.applyEdits(document, res.change);
 	}
 
 	private async sendEdit(f: (a: { file: string }) => Thenable<{ edit: as.SourceFileEdit }>, commandName: string): Promise<void> {
@@ -82,10 +97,9 @@ export class EditCommands implements vs.Disposable {
 			return this.applyEditsWithSnippets(initiatingDocument, change);
 
 		// Otherwise, just make all the edits without the snippets.
-		const changes = new vs.WorkspaceEdit();
-
 		for (const edit of change.edits) {
 			for (const e of edit.edits) {
+				const changes = new vs.WorkspaceEdit();
 				const uri = vs.Uri.file(edit.file);
 				const document = await vs.workspace.openTextDocument(uri);
 				changes.replace(
@@ -96,11 +110,10 @@ export class EditCommands implements vs.Disposable {
 					),
 					e.replacement,
 				);
+				// Apply the edits.
+				await vs.workspace.applyEdit(changes);
 			}
 		}
-
-		// Apply the edits.
-		await vs.workspace.applyEdit(changes);
 
 		// Ensure original document is the active one.
 		const ed = await vs.window.showTextDocument(initiatingDocument);

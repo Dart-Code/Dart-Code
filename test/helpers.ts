@@ -194,6 +194,10 @@ export async function setTestContent(content: string): Promise<boolean> {
 	return editor.edit((eb) => eb.replace(all, content));
 }
 
+export function select(range: vs.Range) {
+	editor.selection = new vs.Selection(range.start, range.end);
+}
+
 export function positionOf(searchText: string): vs.Position {
 	const doc = vs.window.activeTextEditor.document;
 	const caretOffset = searchText.indexOf("^");
@@ -349,6 +353,11 @@ export async function ensureTestContent(expected: string): Promise<void> {
 		false,
 	);
 	assert.equal(doc.getText().replace(/\r/g, "").trim(), expected.replace(/\r/g, "").trim());
+}
+
+export async function ensureTestContentWithCursorPos(expected: string): Promise<void> {
+	await ensureTestContent(expected.replace("^", ""));
+	assert.equal(doc.offsetAt(editor.selection.active), expected.indexOf("^"));
 }
 
 export function delay(milliseconds: number): Promise<void> {
