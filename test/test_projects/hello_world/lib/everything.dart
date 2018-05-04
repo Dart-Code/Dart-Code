@@ -31,7 +31,7 @@ class MyClass {
   void methodTakingString(String a) {}
 
   /// This is my method taking a function.
-  void methodTakingFunction(int Function(String) myFunc) {}
+  void methodTakingFunction(void Function(String) myFunc) {}
 }
 
 void doSomeStuff() {
