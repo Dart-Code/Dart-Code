@@ -130,7 +130,7 @@ describe("dart_hover_provider", () => {
 
 	it("returns expected information for a method taking a function", async () => {
 		const hover = await getHoverAt("me^thodTakingFunction(");
-		assert.equal(hover.displayText, "methodTakingFunction((String) → int myFunc) → void");
+		assert.equal(hover.displayText, "methodTakingFunction((String) → void myFunc) → void");
 		assert.equal(hover.documentation, "This is my method taking a function.");
 		assert.deepStrictEqual(hover.range, rangeOf("|methodTakingFunction|("));
 	});
