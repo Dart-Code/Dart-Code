@@ -500,13 +500,17 @@ export class DartDebugSession extends DebugSession {
 								let index = 0;
 								for (const association of instance.associations) {
 									let keyName = this.valueAsString(association.key);
+									let evaluateName: string;
 									if (!keyName && association.key.type === "Sentinel") {
 										keyName = "<evalError>";
 									} else {
 										keyName = keyName || (association.key as VMInstanceRef).id;
-										keyName = `${index} = [${keyName}]`;
+										keyName = `[${keyName}]`;
+										// We can only provide evaluateNames for things we can flatten into strings.
+										if (this.isSimpleKind(association.key.kind))
+											evaluateName = `${instanceRef.evaluateName}${keyName}`;
+										keyName = `${index} = ${keyName}`;
 									}
-									const evaluateName = `${instanceRef.evaluateName}${keyName}`;
 									variables.push(this.instanceRefToVariable(thread, canEvaluate, evaluateName, keyName, association.value));
 									index++;
 								}
@@ -527,6 +531,10 @@ export class DartDebugSession extends DebugSession {
 					this.sendResponse(response);
 				}).catch((error) => this.errorResponse(response, `${error}`));
 		}
+	}
+
+	private isSimpleKind(kind: string) {
+		return kind === "String" || kind === "Bool" || kind === "Int" || kind === "Num" || kind === "Double";
 	}
 
 	private async callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef, getFullString: boolean = false): Promise<string> {
