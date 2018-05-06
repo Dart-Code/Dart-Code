@@ -497,16 +497,18 @@ export class DartDebugSession extends DebugSession {
 									variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + start}]`, `[${i + start}]`, element));
 								}
 							} else if (instance.associations) {
+								let index = 0;
 								for (const association of instance.associations) {
 									let keyName = this.valueAsString(association.key);
 									if (!keyName && association.key.type === "Sentinel") {
 										keyName = "<evalError>";
 									} else {
 										keyName = keyName || (association.key as VMInstanceRef).id;
-										keyName = `[${keyName}]`;
+										keyName = `${index} = [${keyName}]`;
 									}
 									const evaluateName = `${instanceRef.evaluateName}${keyName}`;
 									variables.push(this.instanceRefToVariable(thread, canEvaluate, evaluateName, keyName, association.value));
+									index++;
 								}
 							} else if (instance.fields) {
 								for (const field of instance.fields)
