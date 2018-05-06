@@ -18,7 +18,7 @@ describe("document_symbol_provider", () => {
 		ensureSymbol(symbols, "myVoidReturningMethod()", vs.SymbolKind.Method, "MyClass");
 		ensureSymbol(symbols, "myStringReturningMethod()", vs.SymbolKind.Method, "MyClass");
 		ensureSymbol(symbols, "methodTakingString(String a)", vs.SymbolKind.Method, "MyClass");
-		ensureSymbol(symbols, "methodTakingFunction(int Function(String) myFunc)", vs.SymbolKind.Method, "MyClass");
+		ensureSymbol(symbols, "methodTakingFunction(void Function(String) myFunc)", vs.SymbolKind.Method, "MyClass");
 		ensureSymbol(symbols, "doSomeStuff()", vs.SymbolKind.Function, "");
 		assert.equal(symbols.length, 11);
 	});
