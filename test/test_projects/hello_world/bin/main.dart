@@ -10,5 +10,7 @@ main() {
     1: "one",
     1.1: "one-point-one",
   };
-  print("Hello, world!"); // BREAKPOINT1
+  if (m[true]) {
+    print("Hello, world!"); // BREAKPOINT1
+  }
 }
