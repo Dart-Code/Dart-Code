@@ -1,5 +1,5 @@
-import { ConfigurationTarget, Uri, WorkspaceConfiguration, version as codeVersion, workspace } from "vscode";
-import { resolveHomePath, versionIsAtLeast } from "./utils";
+import { ConfigurationTarget, Uri, WorkspaceConfiguration, workspace } from "vscode";
+import { resolveHomePath } from "./utils";
 
 class Config {
 	private config: WorkspaceConfiguration;
@@ -94,15 +94,4 @@ class ResourceConfig {
 	public setPromptToUpgradeWorkspace(value: boolean): Thenable<void> { return this.setConfig("promptToUpgradeWorkspace", value, ConfigurationTarget.WorkspaceFolder); }
 }
 
-export class CodeCapabilities {
-	public version: string;
-
-	constructor(version: string) {
-		this.version = version;
-	}
-
-	get hasScrollableHovers() { return versionIsAtLeast(this.version, "1.6.0"); }
-}
-
 export const config = new Config();
-export const vsCodeVersion = new CodeCapabilities(codeVersion);
