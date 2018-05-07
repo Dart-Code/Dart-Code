@@ -1,16 +1,14 @@
-import * as _ from "lodash";
 import * as vs from "vscode";
 import { DebugCommands } from "../commands/debug";
 import { CoverageData } from "../debug/utils";
 import { fsPath } from "../utils";
-import { logError } from "../utils/log";
 
 export class HotReloadCoverageDecorations implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
 	private fileState: {
 		[key: string]: {
-			modified: CodeRange[],
-			notRun: CodeRange[],
+			modified: number[],
+			notRun: number[],
 		},
 	} = {};
 	private isDebugging = false;
@@ -70,12 +68,14 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 		// Update all existing ranges offsets.
 		for (const change of e.contentChanges) {
-			const diff = change.text.length - change.rangeLength;
+			const startLine = change.range.start.line;
+			const endLine = change.range.end.line;
+			const diff = endLine - startLine;
 			if (diff === 0)
 				continue;
 
-			fileState.modified = this.translateChanges(fileState.modified, change);
-			fileState.notRun = this.translateChanges(fileState.notRun, change);
+			fileState.modified = this.translateChanges(fileState.modified, startLine, endLine);
+			fileState.notRun = this.translateChanges(fileState.notRun, startLine, endLine);
 		}
 
 		// Append the new ranges.
@@ -88,28 +88,29 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 				continue;
 
 			// TODO: Should we merge ranges and unnecessary duplicate ranges here?
-			fileState.modified.push({ offset: change.rangeOffset, length: change.text.length });
+			// TODO: Make it an array of bools?
+			for (let l = change.range.start.line; l <= change.range.end.line; l++)
+				fileState.modified.push(l);
 		}
 
 		this.redrawDecorations([editor]);
 	}
 
-	private translateChanges(ranges: CodeRange[], change: vs.TextDocumentContentChangeEvent): CodeRange[] {
-		const diff = change.text.length - change.rangeLength;
-		return ranges
-			.map((r) => {
-				if (change.rangeOffset >= r.offset + r.length) {
+	private translateChanges(lines: number[], startLine: number, endLine: number): number[] {
+		return lines
+			.map((l) => {
+				if (startLine >= l) {
 					// If the new change is after the old one, we don't need to map.
-					return r;
-				} else if (change.rangeOffset <= r.offset && change.rangeOffset + change.rangeLength >= r.offset + r.length) {
+					return l;
+				} else if (startLine <= l && endLine >= l) {
 					// If this new change contains the whole of the old change, we don't need the old change.
 					return undefined;
 				} else {
 					// Otherwise, just need to offset it.
-					return { offset: r.offset + diff, length: r.length };
+					return l + (endLine - startLine);
 				}
 			})
-			.filter((r) => r);
+			.filter((l) => l);
 	}
 
 	private async onWillHotReload(): Promise<void> {
@@ -163,8 +164,8 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 		}
 	}
 
-	private toRanges(editor: vs.TextEditor, rs: CodeRange[]): vs.Range[] {
-		return rs.map((r) => new vs.Range(editor.document.positionAt(r.offset), editor.document.positionAt(r.offset + r.length)));
+	private toRanges(editor: vs.TextEditor, lines: number[]): vs.Range[] {
+		return lines.map((l) => editor.document.lineAt(l).range);
 	}
 
 	private async coverageFilesUpdate(): Promise<void> {
@@ -203,67 +204,14 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 			const editor = vs.window.visibleTextEditors.find((editor) => fsPath(editor.document.uri) === data.scriptPath);
 
 			for (const hit of data.hits) {
-				fileState.notRun =
-					_.flatMap(
-						fileState.notRun,
-						(r) => this.removeLineFromRange(editor.document, r, hit.line),
-					);
+				fileState.notRun = fileState.notRun.filter((l) => l !== hit.line);
 			}
 
 			this.redrawDecorations([editor]);
 		}
 	}
 
-	private removeLineFromRange(document: vs.TextDocument, range: CodeRange, lineNumber: number): CodeRange[] {
-		try {
-			const line = document.lineAt(lineNumber);
-			const lineStartOffset = document.offsetAt(line.rangeIncludingLineBreak.start);
-			const lineEndOffset = document.offsetAt(line.rangeIncludingLineBreak.end);
-			const rangeStartOffset = range.offset;
-			const rangeEndOffset = range.offset + range.length;
-
-			const lineStartsInsideRange = lineStartOffset > rangeStartOffset && lineStartOffset < rangeEndOffset;
-			const lineEndsInsideRange = lineEndOffset > rangeStartOffset && lineEndOffset < rangeEndOffset;
-			const lineStartsBeforeRange = lineStartOffset <= rangeStartOffset;
-			const lineEndsBeforeRange = lineEndOffset <= rangeStartOffset;
-			const lineStartsAfterRange = lineStartOffset >= rangeEndOffset;
-			const lineEndsAfterRange = lineEndOffset >= rangeEndOffset;
-
-			// If the hit line eclipses the range, drop the range.
-			if (lineStartsBeforeRange && lineEndsAfterRange) {
-				return [];
-				// If the hit line doesn't intersect the range at all, just return the range unchanged.
-			} else if (lineEndsBeforeRange || lineStartsAfterRange) {
-				return [range];
-				// If the line starts inside the range but ran through the end, we trim the end
-			} else if (lineStartsInsideRange && lineEndsAfterRange) {
-				return [{ offset: rangeStartOffset, length: lineStartOffset - rangeStartOffset }];
-
-				// If the line starts before the range but ends inside, we trim the start
-			} else if (lineEndsInsideRange) {
-				return [{ offset: lineEndOffset, length: rangeEndOffset - lineEndOffset }];
-				// If the hit line is within the range, split into two
-			} else if (lineStartsInsideRange && lineEndsInsideRange) {
-				return [
-					{ offset: rangeStartOffset, length: lineStartOffset - rangeStartOffset },
-					{ offset: lineEndOffset, length: rangeEndOffset - lineEndOffset },
-				];
-			} else {
-				logError({ message: `Unexpected coverage condition: { range: { start: ${rangeStartOffset}, end: ${rangeEndOffset} }, line hit: { start: ${lineStartOffset}, end: ${lineEndOffset} } }` });
-				return [range];
-			}
-		} catch (e) {
-			logError(e);
-			return [range];
-		}
-	}
-
 	public dispose() {
 		this.subscriptions.forEach((s) => s.dispose());
 	}
-}
-
-interface CodeRange {
-	offset: number;
-	length: number;
 }
