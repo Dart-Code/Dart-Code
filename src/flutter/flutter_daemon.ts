@@ -1,6 +1,5 @@
 import * as vs from "vscode";
 import { config } from "../config";
-import { flutterEnv } from "../debug/utils";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
 import { reloadExtension } from "../utils";
 import { FlutterDeviceManager } from "./device_manager";
@@ -12,7 +11,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	constructor(flutterBinPath: string, projectFolder: string) {
 		super(() => config.flutterDaemonLogFile, true);
 
-		this.createProcess(projectFolder, flutterBinPath, ["daemon"], flutterEnv);
+		this.createProcess(projectFolder, flutterBinPath, ["daemon"]);
 
 		this.deviceManager = new FlutterDeviceManager(this);
 

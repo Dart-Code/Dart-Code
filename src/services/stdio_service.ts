@@ -24,14 +24,12 @@ export abstract class StdIOService<T> implements Disposable {
 		this.treatHandlingErrorsAsUnhandledMessages = treatHandlingErrorsAsUnhandledMessages;
 	}
 
-	protected createProcess(workingDirectory: string, binPath: string, args: string[], env: any) {
+	protected createProcess(workingDirectory: string, binPath: string, args: string[]) {
 		this.logTraffic(`Spawning ${binPath} with args ${JSON.stringify(args)}`);
 		if (workingDirectory)
 			this.logTraffic(`..  in ${workingDirectory}`);
-		if (env)
-			this.logTraffic(`..  in ${JSON.stringify(env)}`);
 
-		this.process = safeSpawn(workingDirectory, binPath, args, env);
+		this.process = safeSpawn(workingDirectory, binPath, args);
 
 		this.process.stdout.on("data", (data: Buffer) => {
 			const message = data.toString();

@@ -72,7 +72,7 @@ export class Analyzer extends AnalyzerGen {
 		// Register for version.
 		this.registerForServerConnected((e) => { this.version = e.version; this.capabilities.version = this.version; });
 
-		this.createProcess(undefined, dartVMPath, args, undefined);
+		this.createProcess(undefined, dartVMPath, args);
 
 		this.serverSetSubscriptions({
 			subscriptions: ["STATUS"],
