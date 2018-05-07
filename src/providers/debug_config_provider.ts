@@ -144,8 +144,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || conf.debugSdkLibraries;
 		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || conf.debugExternalLibraries;
-		if (debugConfig.checkedMode === undefined)
-			debugConfig.checkedMode = true;
 		if (isFlutter) {
 			debugConfig.flutterMode = debugConfig.flutterMode || "debug";
 			debugConfig.flutterPath = debugConfig.flutterPath || (this.sdks.flutter ? path.join(this.sdks.flutter, "bin", flutterExec) : null);

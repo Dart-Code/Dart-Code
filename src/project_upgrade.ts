@@ -26,21 +26,6 @@ function remove_legacy_debug_settings(workspace: vs.WorkspaceFolder) {
 			hasChanged = true;
 		}
 
-		// Remove the old debugSettings.
-		if (d.debugSettings) {
-			console.log("Found old debugSettings, removing…");
-			d.debugSettings = undefined;
-			hasChanged = true;
-
-			// Remove checkedMode if it's default
-			// Do this inside here so it only runs for things being upgraded from debugSettings
-			// so we don't remove it if the user explicitly adds it (it may be convenient for toggling)
-			if (d.checkedMode === true) {
-				console.log("Found default checkedMode, removing…");
-				d.checkedMode = undefined;
-			}
-		}
-
 		// Remove cwd if it's default.
 		if (d.cwd === "${workspaceRoot}") {
 			console.log("Found default workspaceRoot, removing…");

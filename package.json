@@ -609,7 +609,7 @@
 							"checkedMode": {
 								"type": "boolean",
 								"description": "Whether to run the VM in checked mode.",
-								"default": true
+								"default": false
 							},
 							"program": {
 								"type": "string",
