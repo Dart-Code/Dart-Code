@@ -690,12 +690,14 @@
 		"post_result_to_chat": "node ./out/tool/post_to_chat.js"
 	},
 	"dependencies": {
+		"glob": "^7.1.2",
 		"semver": "^5.5.0",
 		"vscode-debugadapter": "^1.29.0",
 		"vscode-debugprotocol": "^1.29.0",
 		"ws": "^1.1.5"
 	},
 	"devDependencies": {
+		"@types/glob": "^5.0.35",
 		"@types/mocha": "^5.1.0",
 		"@types/node": "^6.0.107",
 		"@types/semver": "^5.5.0",
