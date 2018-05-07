@@ -203,8 +203,8 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 			const editor = vs.window.visibleTextEditors.find((editor) => fsPath(editor.document.uri) === data.scriptPath);
 
-			for (const hit of data.hits) {
-				fileState.notRun = fileState.notRun.filter((l) => l !== hit.line);
+			for (const line of data.hitLines) {
+				fileState.notRun = fileState.notRun.filter((l) => l !== line);
 			}
 
 			this.redrawDecorations([editor]);

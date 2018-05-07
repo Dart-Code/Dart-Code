@@ -154,7 +154,7 @@ export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestA
 
 export interface CoverageData {
 	scriptPath: string;
-	hits: FileLocation[];
+	hitLines: number[];
 }
 
 export interface FileLocation {
