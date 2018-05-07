@@ -75,14 +75,15 @@ export async function openFile(file: vs.Uri): Promise<void> {
 	await vs.window.showTextDocument(await vs.workspace.openTextDocument(file));
 }
 
-const deferredItems: Array<() => Promise<void> | void> = [];
-afterEach(async () => {
+const deferredItems: Array<(result?: "failed" | "passed") => Promise<void> | void> = [];
+// tslint:disable-next-line:only-arrow-functions
+afterEach(async function () {
 	for (const d of deferredItems) {
-		await d();
+		await d(this.currentTest.state);
 	}
 	deferredItems.length = 0;
 });
-export function defer(callback: () => Promise<void> | void): void {
+export function defer(callback: (result?: "failed" | "passed") => Promise<void> | void): void {
 	deferredItems.push(callback);
 }
 
@@ -127,7 +128,14 @@ async function setLogs(conf: vs.WorkspaceConfiguration, logFolder: string, prefi
 		const oldValue = conf.get<string>(key);
 		await conf.update(key, logPath);
 		// TODO: Don't think is working properly?
-		defer(async () => await conf.update(key, oldValue));
+		defer(async (testResult: "passed" | "failed") => {
+			if (testResult === "passed") {
+				try {
+					fs.unlinkSync(logPath);
+				} catch { }
+			}
+			await conf.update(key, oldValue);
+		});
 	}
 }
 
