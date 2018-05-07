@@ -15,6 +15,7 @@ import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
+import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
@@ -299,8 +300,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// Warn the user if they've opened a folder with mismatched casing.
 	if (vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length) {
 		for (const wf of vs.workspace.workspaceFolders) {
-			const userPath = fsPath(wf.uri);
-			const realPath = util.trueCasePathSync(userPath);
+			const userPath = forceWindowsDriveLetterToUppercase(fsPath(wf.uri));
+			const realPath = forceWindowsDriveLetterToUppercase(util.trueCasePathSync(userPath));
 			if (userPath !== realPath) {
 				vs.window.showWarningMessage(
 					`The casing of the open workspace folder does not match the casing on the underlying disk; please re-open the folder using the File Open dialog. `
