@@ -2,11 +2,16 @@ import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../src/commands/refactor";
-import { activate, defer, delay, doc, ensureTestContent, rangeOf, setTestContent, waitFor } from "../../helpers";
+import { activate, defer, delay, doc, ensureTestContent, ext, rangeOf, setTestContent, waitFor } from "../../helpers";
 
 describe("refactor", () => {
 
 	before(() => activate());
+	// tslint:disable-next-line:only-arrow-functions
+	beforeEach(function () {
+		if (!ext.exports.analyzerCapabilities.hasUpdatedWidgetSnippets)
+			this.skip();
+	});
 
 	it("can extract simple code into a widget", async () => {
 		const showInputBox = sinon.stub(vs.window, "showInputBox");
