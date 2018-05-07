@@ -4,7 +4,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
-import { FlutterLaunchRequestArguments, DartLaunchRequestArguments, formatPathForVm, uriToFilePath } from "./utils";
+import { FlutterLaunchRequestArguments, formatPathForVm, uriToFilePath } from "./utils";
 
 export class FlutterDebugSession extends DartDebugSession {
 	private flutter: FlutterRun;
@@ -33,11 +33,8 @@ export class FlutterDebugSession extends DartDebugSession {
 		const debug = !args.noDebug;
 		let appArgs = [];
 
-		const sourceFile = this.sourceFileForArgs(args);
-		if (sourceFile) {
-			appArgs.push("-t");
-			appArgs.push(sourceFile);
-		}
+		appArgs.push("-t");
+		appArgs.push(this.sourceFileForArgs(args));
 
 		if (args.deviceId) {
 			appArgs.push("-d");
