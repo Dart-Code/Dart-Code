@@ -35,9 +35,9 @@ import { DebugConfigProvider } from "./providers/debug_config_provider";
 import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
 import { LegacyDartDocumentSymbolProvider } from "./providers/legacy_dart_document_symbol_provider";
 import { LegacyDartWorkspaceSymbolProvider } from "./providers/legacy_dart_workspace_symbol_provider";
-import { OrganizeImportsCodeActionProvider } from "./providers/organize_imports_code_action_provider";
 import { RefactorCodeActionProvider } from "./providers/refactor_code_action_provider";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
+import { SourceCodeActionProvider } from "./providers/source_code_action_provider";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForSdkUpdates } from "./sdk/update_check";
@@ -160,7 +160,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const assistCodeActionProvider = new AssistCodeActionProvider(analyzer);
 	const fixCodeActionProvider = new FixCodeActionProvider(analyzer);
 	const refactorCodeActionProvider = new RefactorCodeActionProvider(analyzer);
-	const organizeImportsCodeActionProvider = new OrganizeImportsCodeActionProvider(analyzer);
+	const sourceCodeActionProvider = new SourceCodeActionProvider(analyzer);
 	const renameProvider = new DartRenameProvider(analyzer);
 
 	const activeFileFilters = [DART_MODE];
@@ -185,7 +185,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Even with the angular_analyzer_plugin, some actions only apply to Dart.
 	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, typeFormattingEditProvider, "}", ";"));
-	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, organizeImportsCodeActionProvider, organizeImportsCodeActionProvider.metadata));
+	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, sourceCodeActionProvider, sourceCodeActionProvider.metadata));
 
 	// Snippets are language-specific
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));

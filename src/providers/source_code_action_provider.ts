@@ -2,14 +2,16 @@ import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeA
 import { Analyzer } from "../analysis/analyzer";
 import { isAnalyzableAndInWorkspace } from "../utils";
 
-export class OrganizeImportsCodeActionProvider implements CodeActionProvider {
+const SourceSortMembers = CodeActionKind.Source.append("sortMembers");
+
+export class SourceCodeActionProvider implements CodeActionProvider {
 	private analyzer: Analyzer;
 	constructor(analyzer: Analyzer) {
 		this.analyzer = analyzer;
 	}
 
 	public readonly metadata: CodeActionProviderMetadata = {
-		providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports],
+		providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports, SourceSortMembers],
 	};
 
 	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): CodeAction[] {
@@ -22,6 +24,13 @@ export class OrganizeImportsCodeActionProvider implements CodeActionProvider {
 			},
 			kind: CodeActionKind.SourceOrganizeImports,
 			title: "Organize Imports",
+		}, {
+			command: {
+				command: "dart.sortMembers",
+				title: "Sort Members",
+			},
+			kind: SourceSortMembers,
+			title: "Sort Members",
 		}];
 	}
 }
