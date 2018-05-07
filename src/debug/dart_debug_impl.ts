@@ -80,13 +80,7 @@ export class DartDebugSession extends DebugSession {
 			}
 
 			if (match) {
-				let uri = match[1].trim();
-
-				// In SDK 1.22, trailing slash was added to the url (see #215).
-				if (!uri.endsWith("/"))
-					uri = uri + "/";
-
-				this.initObservatory(`${uri}ws`);
+				this.initObservatory(this.websocketUriForObservatoryUri(match[1]));
 			} else if (this.sendStdOutToConsole)
 				this.sendEvent(new OutputEvent(data.toString(), "stdout"));
 		});
@@ -118,16 +112,10 @@ export class DartDebugSession extends DebugSession {
 		this.observatoryLogFile = args.observatoryLogFile;
 
 		this.sendResponse(response);
-		let uri = args.observatoryUri;
-		if (!uri.endsWith("/"))
-			uri = uri + "/";
-		this.initObservatory(`${uri}ws`);
+		this.initObservatory(this.websocketUriForObservatoryUri(args.observatoryUri));
 	}
 
 	protected sourceFileForArgs(args: DartLaunchRequestArguments) {
-		if (args.program == null) {
-			return null;
-		}
 		return path.relative(args.cwd, args.program);
 	}
 
@@ -158,6 +146,16 @@ export class DartDebugSession extends DebugSession {
 		const process = safeSpawn(args.cwd, args.dartPath, appArgs);
 
 		return process;
+	}
+
+	private websocketUriForObservatoryUri(uri: string) {
+		let wsUri = uri.trim();
+		if (!wsUri.endsWith("/ws")) {
+			if (!wsUri.endsWith("/"))
+				wsUri = wsUri + "/";
+			wsUri = wsUri + "ws";
+		}
+		return wsUri;
 	}
 
 	protected initObservatory(uri: string) {
@@ -252,9 +250,12 @@ export class DartDebugSession extends DebugSession {
 		response: DebugProtocol.DisconnectResponse,
 		args: DebugProtocol.DisconnectArguments,
 	): void {
-		if (this.childProcess != null)
+		if (this.childProcess != null) {
 			this.childProcess.kill();
-		// TODO: Restart any paused threads for the attach case.
+		} else {
+			// TODO: Restart any paused threads, and remove breakpoints.
+			this.observatory.close();
+		}
 		super.disconnectRequest(response, args);
 	}
 

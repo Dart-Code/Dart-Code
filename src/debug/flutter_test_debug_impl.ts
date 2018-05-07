@@ -35,9 +35,7 @@ export class FlutterTestDebugSession extends DartDebugSession {
 		}
 
 		const sourceFile = this.sourceFileForArgs(args);
-		if (sourceFile) {
-			appArgs.push(sourceFile);
-		}
+		appArgs.push(sourceFile);
 
 		if (args.args) {
 			appArgs = appArgs.concat(args.args);
