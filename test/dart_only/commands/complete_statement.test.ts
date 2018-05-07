@@ -35,7 +35,7 @@ main() {
 		await ensureTestContentWithCursorPos(`
 main() {
   if(true) {
-	^
+    ^
   }
 }
 		`);
