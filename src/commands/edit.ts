@@ -96,12 +96,36 @@ export class EditCommands implements vs.Disposable {
 		if (change.edits.length === 1 && change.linkedEditGroups != null && change.linkedEditGroups.length !== 0)
 			return this.applyEditsWithSnippets(initiatingDocument, change);
 
-		// Otherwise, just make all the edits without the snippets.
+		// VS Code expects offsets to be based on the original document, but the analysis server provides
+		// them assuming all previous edits have already been made. This means if the server provides us a
+		// set of edits where any edits offset is *equal to or greater than* a previous edit, it will do the wrong thing.
+		// If this happens; we will fall back to sequential edits and write a warning.
+		let hasProblematicEdits = false;
+		const priorEdits: as.SourceEdit[] = [];
+		outer_loop:
 		for (const edit of change.edits) {
 			for (const e of edit.edits) {
-				const changes = new vs.WorkspaceEdit();
+				hasProblematicEdits = !!priorEdits.find((pe) => pe.offset <= e.offset);
+				if (hasProblematicEdits)
+					break outer_loop;
+				priorEdits.push(e);
+			}
+		}
+
+		if (hasProblematicEdits) {
+			console.warn("Falling back to sequential edits due to overlapping edits in server.");
+		}
+		const applyEditsSequentially = hasProblematicEdits;
+
+		// Otherwise, just make all the edits without the snippets.
+		let changes = applyEditsSequentially ? undefined : new vs.WorkspaceEdit();
+
+		for (const edit of change.edits) {
+			for (const e of edit.edits) {
 				const uri = vs.Uri.file(edit.file);
 				const document = await vs.workspace.openTextDocument(uri);
+				if (applyEditsSequentially)
+					changes = new vs.WorkspaceEdit();
 				changes.replace(
 					vs.Uri.file(edit.file),
 					new vs.Range(
@@ -110,9 +134,16 @@ export class EditCommands implements vs.Disposable {
 					),
 					e.replacement,
 				);
-				// Apply the edits.
-				await vs.workspace.applyEdit(changes);
+				if (applyEditsSequentially) {
+					await vs.workspace.applyEdit(changes);
+					changes = undefined;
+				}
 			}
+		}
+
+		// If we weren't applying sequentially
+		if (!applyEditsSequentially) {
+			await vs.workspace.applyEdit(changes);
 		}
 
 		// Ensure original document is the active one.
