@@ -1,8 +1,10 @@
+import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
+import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../src/utils";
-import { ensureVariable, getTopFrameVariables } from "../../debug_helpers";
+import { getTopFrameVariables } from "../../debug_helpers";
 import { activate, ext, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, openFile, positionOf } from "../../helpers";
 
 describe("flutter test debugger", () => {
@@ -82,7 +84,9 @@ describe("flutter test debugger", () => {
 		]);
 	});
 
-	it("stops at a breakpoint", async () => {
+	// Skipped due to
+	// https://github.com/flutter/flutter/issues/16352
+	it.skip("stops at a breakpoint", async () => {
 		await openFile(flutterTestMainFile);
 		const config = await startDebugger(flutterTestMainFile);
 		await Promise.all([
@@ -94,6 +98,20 @@ describe("flutter test debugger", () => {
 	});
 
 	it.skip("stops on exception", async () => {
+		await openFile(flutterTestBrokenFile);
+		const config = await startDebugger(flutterTestBrokenFile);
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.assertStoppedLocation("exception", {}),
+			dc.launch(config),
+		]);
+	});
+
+	// Skipped due to:
+	// https://github.com/dart-lang/sdk/issues/29156
+	// and
+	// https://github.com/flutter/flutter/issues/16352
+	it.skip("stops at the correct location on exception", async () => {
 		await openFile(flutterTestBrokenFile);
 		const config = await startDebugger(flutterTestBrokenFile);
 		await Promise.all([
@@ -111,20 +129,22 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(flutterTestBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertStoppedLocation("exception", {
-				line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(flutterTestBrokenFile),
-			}),
+			dc.assertStoppedLocation("exception", {}),
 			dc.launch(config),
 		]);
 
-		const variables = await getTopFrameVariables(dc, "Exception");
-		ensureVariable(variables, undefined, "message", `"(TODO WHEN UNSKIPPING)"`);
+		const variables = await getTopFrameVariables(dc, "Exception") as DebugProtocol.Variable[];
+		assert.ok(variables);
+		const v = variables.find((v) => v.name === "message");
+		assert.ok(v);
+		assert.equal(v.evaluateName, undefined);
+		assert.ok(v.value.startsWith(`"Expected: exactly one matching node in the widget tree`));
 	});
 
 	it("writes failure output to stderr", async () => {
 		await openFile(flutterTestBrokenFile);
 		const config = await startDebugger(flutterTestBrokenFile);
+		config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutput("stderr", "Test failed. See exception logs above."),
