@@ -43,3 +43,14 @@ export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName
 	assert.equal(v.evaluateName, evaluateName);
 	assert.equal(v.value, value);
 }
+
+export function ensureOutputContains(dc: DebugClient, category: string, text: string) {
+	return new Promise((resolve, reject) => dc.on("output", (event: DebugProtocol.OutputEvent) => {
+		if (event.body.category === category) {
+			if (event.body.output.indexOf(text) !== -1)
+				resolve();
+			else
+				reject(new Error(`Didn't find text "${text}" in ${category}`));
+		}
+	}));
+}

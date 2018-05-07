@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { fsPath } from "../../../src/utils";
-import { ensureVariable, evaluate, getTopFrameVariables, getVariables } from "../../debug_helpers";
+import { ensureOutputContains, ensureVariable, evaluate, getTopFrameVariables, getVariables } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, eol, ext, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf } from "../../helpers";
 
 describe("dart cli debugger", () => {
@@ -53,7 +53,7 @@ describe("dart cli debugger", () => {
 			// TODO: Figure out if this is a bug - because we never connect to Observatory, we never
 			// resolve this properly.
 			// dc.configurationSequence(),
-			dc.assertOutput("stderr", "Unrecognized flags: fake-flag"),
+			ensureOutputContains(dc, "stderr", "Unrecognized flags: fake-flag"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
