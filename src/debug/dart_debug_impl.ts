@@ -786,23 +786,32 @@ export class DartDebugSession extends DebugSession {
 				reason = "breakpoint";
 
 				const breakpoints = event.pauseBreakpoints.map((bp) => thread.breakpoints[bp.id]);
-				const hasUnconditionalBreakpoints = !!breakpoints.find((bp) => !bp.condition && !bp.logMessage);
-				const conditionalBreakpoints = breakpoints.filter((bp) => bp.condition);
-				const logPoints = breakpoints.filter((bp) => bp.logMessage);
+				// When attaching to an already-stopped process, this event can be handled before the
+				// breakpoints have been registered. If that happens, replace any unknown breakpoints with
+				// dummy unconditional breakpoints.
+				// TODO: Ensure that VM breakpoint state is reconciled with debugger breakpoint state before
+				// handling thread state so that this doesn't happen, and remove this check.
+				const hasUnknownBreakpoints = breakpoints.indexOf(undefined) !== -1;
 
-				// Evalute conditions to see if we should remain stopped or continue.
-				shouldRemainedStoppedOnBreakpoint =
-					hasUnconditionalBreakpoints
-					|| await this.anyBreakpointConditionReturnsTrue(conditionalBreakpoints, thread);
+				if (!hasUnknownBreakpoints) {
+					const hasUnconditionalBreakpoints = !!breakpoints.find((bp) => !bp.condition && !bp.logMessage);
+					const conditionalBreakpoints = breakpoints.filter((bp) => bp.condition);
+					const logPoints = breakpoints.filter((bp) => bp.logMessage);
 
-				// Output any logpoint messages.
-				for (const logPoint of logPoints) {
-					// TODO: Escape triple quotes?
-					const logMessage = logPoint.logMessage
-						.replace(/(^|[^\\\$]){/g, "$1\${") // Prefix any {tokens} with $ if they don't have
-						.replace(/\\({)/g, "$1"); // Remove slashes
-					const printCommand = `print("""${logMessage}""")`;
-					await this.evaluateAndSendErrors(thread, printCommand);
+					// Evalute conditions to see if we should remain stopped or continue.
+					shouldRemainedStoppedOnBreakpoint =
+						hasUnconditionalBreakpoints
+						|| await this.anyBreakpointConditionReturnsTrue(conditionalBreakpoints, thread);
+
+					// Output any logpoint messages.
+					for (const logPoint of logPoints) {
+						// TODO: Escape triple quotes?
+						const logMessage = logPoint.logMessage
+							.replace(/(^|[^\\\$]){/g, "$1\${") // Prefix any {tokens} with $ if they don't have
+							.replace(/\\({)/g, "$1"); // Remove slashes
+						const printCommand = `print("""${logMessage}""")`;
+						await this.evaluateAndSendErrors(thread, printCommand);
+					}
 				}
 			} else if (kind === "PauseBreakpoint") {
 				reason = "step";
