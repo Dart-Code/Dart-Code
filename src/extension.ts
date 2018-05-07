@@ -296,6 +296,21 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => upgradeProject(f.added.filter(util.isDartWorkspaceFolder))));
 	upgradeProject(util.getDartWorkspaceFolders());
 
+	// Warn the user if they've opened a folder with mismatched casing.
+	if (vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length) {
+		for (const wf of vs.workspace.workspaceFolders) {
+			const userPath = fsPath(wf.uri);
+			const realPath = util.trueCasePathSync(userPath);
+			if (userPath !== realPath) {
+				vs.window.showWarningMessage(
+					`The casing of the open workspace folder does not match the casing on the underlying disk; please re-open the folder using the File Open dialog. `
+					+ `Expected ${realPath} but got ${userPath}`,
+				);
+				break;
+			}
+		}
+	}
+
 	// Prompt user for any special config we might want to set.
 	if (!isRestart)
 		showUserPrompts(context);
