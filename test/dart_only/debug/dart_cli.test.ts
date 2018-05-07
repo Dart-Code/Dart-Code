@@ -197,17 +197,13 @@ describe("dart cli debugger", () => {
 		ensureVariable(listVariables, "l[1]", "[1]", "1");
 
 		const mapVariables = await getVariables(dc, variables.find((v) => v.name === "m").variablesReference);
-		ensureVariable(mapVariables, `m["l"]`, `0 = ["l"]`, "[2]");
-		ensureVariable(mapVariables, `m["s"]`, `1 = ["s"]`, `"Hello!"`);
-		ensureVariable(mapVariables, undefined, `2 = [DateTime]`, `"today"`);
-		ensureVariable(mapVariables, undefined, `3 = [DateTime]`, `"tomorrow"`);
-		ensureVariable(mapVariables, `m[true]`, `4 = [true]`, `true`);
-		ensureVariable(mapVariables, `m[1]`, `5 = [1]`, `"one"`);
-		ensureVariable(mapVariables, `m[1.1]`, `6 = [1.1]`, `"one-point-one"`);
-
-		const mapListVariables = await getVariables(dc, mapVariables.find((v) => v.name === `0 = ["l"]`).variablesReference);
-		ensureVariable(mapListVariables, `m["l"][0]`, "[0]", "0");
-		ensureVariable(mapListVariables, `m["l"][1]`, "[1]", "1");
+		ensureVariable(mapVariables, undefined, "0", `"l" -> [2]`);
+		ensureVariable(mapVariables, undefined, "1", `"s" -> "Hello!"`);
+		ensureVariable(mapVariables, undefined, "2", `DateTime -> "today"`);
+		ensureVariable(mapVariables, undefined, "3", `DateTime -> "tomorrow"`);
+		ensureVariable(mapVariables, undefined, "4", `true -> true`);
+		ensureVariable(mapVariables, undefined, "5", `1 -> "one"`);
+		ensureVariable(mapVariables, undefined, "6", `1.1 -> "one-point-one"`);
 	});
 
 	it("watch expressions provide same info as locals", async () => {
@@ -223,8 +219,7 @@ describe("dart cli debugger", () => {
 		const variables = await getTopFrameVariables(dc, "Locals");
 		const listVariables = await getVariables(dc, variables.find((v) => v.name === "l").variablesReference);
 		const mapVariables = await getVariables(dc, variables.find((v) => v.name === "m").variablesReference);
-		const mapListVariables = await getVariables(dc, mapVariables.find((v) => v.name === `0 = ["l"]`).variablesReference);
-		const allVariables = variables.concat(listVariables).concat(mapVariables).concat(mapListVariables);
+		const allVariables = variables.concat(listVariables).concat(mapVariables);
 
 		for (const variable of allVariables) {
 			const evaluateName = (variable as any).evaluateName;

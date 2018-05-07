@@ -185,6 +185,12 @@ export interface VM extends VMResponse {
 	libraries: VMLibraryRef[];
 }
 
+export interface VMMapEntry extends VMResponse {
+	keyId: string;
+	mapEvaluateName: string;
+	valueId: string;
+}
+
 export interface VMSentinel extends VMResponse {
 	// SentinelKind
 	kind: string;

@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { DebuggerResult, ObservatoryConnection, VM, VMBreakpoint, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibraryRef, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMStack } from "./dart_debug_protocol";
+import { DebuggerResult, ObservatoryConnection, VM, VMBreakpoint, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibraryRef, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMStack } from "./dart_debug_protocol";
 import { DartLaunchRequestArguments, PackageMap, PromiseCompleter, formatPathForVm, getLocalPackageName, safeSpawn, uriToFilePath } from "./utils";
 
 // TODO: supportsSetVariable
@@ -463,6 +463,33 @@ export class DartDebugSession extends DebugSession {
 			}
 			response.body = { variables };
 			this.sendResponse(response);
+		} else if (data.data.type === "MapEntry") {
+			const mapRef = data.data as VMMapEntry;
+
+			Promise.all([
+				this.observatory.getObject(thread.ref.id, mapRef.keyId),
+				this.observatory.getObject(thread.ref.id, mapRef.valueId),
+			]).then((results: DebuggerResult[]) => {
+				const variables: DebugProtocol.Variable[] = [];
+
+				const [keyDebuggerResult, valueDebuggerResult] = results;
+				const keyInstanceRef = keyDebuggerResult.result as VMInstanceRef;
+				const valueInstanceRef = valueDebuggerResult.result as VMInstanceRef;
+
+				variables.push(this.instanceRefToVariable(thread, false, "key", "key", keyInstanceRef));
+
+				let canEvaluateValueName = false;
+				let valueEvaluateName = "value";
+				if (this.isSimpleKind(keyInstanceRef.kind)) {
+					canEvaluateValueName = true;
+					valueEvaluateName = `${mapRef.mapEvaluateName}[${this.valueAsString(keyInstanceRef)}]`;
+				}
+
+				variables.push(this.instanceRefToVariable(thread, canEvaluateValueName, valueEvaluateName, "value", valueInstanceRef));
+
+				response.body = { variables };
+				this.sendResponse(response);
+			});
 		} else {
 			const instanceRef = data.data as InstanceWithEvaluateName;
 
@@ -496,22 +523,34 @@ export class DartDebugSession extends DebugSession {
 									variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + start}]`, `[${i + start}]`, element));
 								}
 							} else if (instance.associations) {
-								let index = 0;
-								for (const association of instance.associations) {
-									let keyName = this.valueAsString(association.key);
-									let evaluateName: string;
-									if (!keyName && association.key.type === "Sentinel") {
-										keyName = "<evalError>";
-									} else {
-										keyName = keyName || (association.key as VMInstanceRef).id;
-										keyName = `[${keyName}]`;
-										// We can only provide evaluateNames for things we can flatten into strings.
-										if (this.isSimpleKind(association.key.kind))
-											evaluateName = `${instanceRef.evaluateName}${keyName}`;
-										keyName = `${index} = ${keyName}`;
+								const len = instance.associations.length;
+								if (!start)
+									start = 0;
+								for (let i = 0; i < len; i++) {
+									const association = instance.associations[i];
+
+									const keyName = this.valueAsString(association.key, true);
+									const valueName = this.valueAsString(association.value, true);
+
+									let variablesReference = 0;
+
+									if (association.key.type !== "Sentinel" && association.value.type !== "Sentinel") {
+										const mapRef: VMMapEntry = {
+											keyId: (association.key as VMInstanceRef).id,
+											mapEvaluateName: instanceRef.evaluateName,
+											type: "MapEntry",
+											valueId: (association.value as VMInstanceRef).id,
+										};
+
+										variablesReference = thread.storeData(mapRef);
 									}
-									variables.push(this.instanceRefToVariable(thread, canEvaluate, evaluateName, keyName, association.value));
-									index++;
+
+									variables.push({
+										name: `${i + start}`,
+										type: `${keyName} -> ${valueName}`,
+										value: `${keyName} -> ${valueName}`,
+										variablesReference,
+									});
 								}
 							} else if (instance.fields) {
 								for (const field of instance.fields)
