@@ -1077,7 +1077,7 @@ export class DartDebugSession extends DebugSession {
 
 		// Unwrap tokenPos into real locations.
 		const coverageData: CoverageData[] = coverageReport.map((r) => ({
-			hits: r.hits.map((h) => this.resolveFileLocation(r.script, h)),
+			hitLines: r.hits.map((h) => this.resolveFileLocation(r.script, h).line),
 			scriptPath: r.hostScriptPath,
 		}));
 
