@@ -1078,13 +1078,13 @@ export class DartDebugSession extends DebugSession {
 		// Unwrap tokenPos into real locations.
 		const coverageData: CoverageData[] = coverageReport.map((r) => ({
 			hits: r.hits.map((h) => this.resolveFileLocation(r.script, h)),
-			scriptPath: uriToFilePath(r.script.uri),
+			scriptPath: r.hostScriptPath,
 		}));
 
 		this.sendEvent(new Event("dart.coverage", coverageData));
 	}, 2000);
 
-	private async getCoverageReport(scriptUris: string[]): Promise<Array<{ script: VMScript, tokenPosTable: number[][], hits: number[] }>> {
+	private async getCoverageReport(scriptUris: string[]): Promise<Array<{ hostScriptPath: string, script: VMScript, tokenPosTable: number[][], hits: number[] }>> {
 		// TODO: Do we need to do all of these requests every time? Can we stack the loaded scripts?
 		const result = await this.observatory.getVM();
 		const vm = result.result as VM;
@@ -1095,8 +1095,13 @@ export class DartDebugSession extends DebugSession {
 		const isolatesResponses = await Promise.all(isolatePromises);
 		const isolates = isolatesResponses.map((response) => response.result as VMIsolate);
 
-		const results: Array<{ script: VMScript, tokenPosTable: number[][], hits: number[] }> = [];
-		const scriptPaths = scriptUris.map((s) => uriToFilePath(s));
+		// The VM may return coverage using the device-local paths, so we need to convert them back to the hosts paths
+		const realScriptUris: { [key: string]: string } = {};
+		scriptUris.forEach((host) => {
+			this.getPossibleSourceUris(host).forEach((device) => realScriptUris[device] = uriToFilePath(host));
+		});
+
+		const results: Array<{ hostScriptPath: string, script: VMScript, tokenPosTable: number[][], hits: number[] }> = [];
 		for (const isolate of isolates) {
 			const libraryPromises = isolate.libraries.map((library) => this.observatory.getObject(isolate.id, library.id));
 			const libraryResponses = await Promise.all(libraryPromises);
@@ -1105,8 +1110,7 @@ export class DartDebugSession extends DebugSession {
 			const scriptRefs = _.flatMap(libraries, (library) => library.scripts);
 
 			// Filter scripts to the ones we care about.
-			// TODO: Do we need to getPossibleSourceUris() here?
-			const scripts = scriptRefs.filter((s) => scriptPaths.indexOf(uriToFilePath(s.uri)) !== -1);
+			const scripts = scriptRefs.filter((s) => realScriptUris[s.uri]);
 
 			for (const scriptRef of scripts) {
 				const script = (await this.observatory.getObject(isolate.id, scriptRef.id)).result as VMScript;
@@ -1118,6 +1122,7 @@ export class DartDebugSession extends DebugSession {
 					for (const range of ranges) {
 						results.push({
 							hits: range.coverage.hits,
+							hostScriptPath: realScriptUris[script.uri],
 							script,
 							tokenPosTable: script.tokenPosTable,
 						});
