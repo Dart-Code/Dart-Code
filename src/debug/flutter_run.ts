@@ -1,13 +1,12 @@
 import { Disposable } from "vscode";
 import * as f from "../flutter/flutter_types";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
-import { flutterEnv } from "./utils";
 
 export class FlutterRun extends StdIOService<UnknownNotification> {
 	constructor(flutterBinPath: string, projectFolder: string, args: string[], logFile: string) {
 		super(() => logFile, true, true);
 
-		this.createProcess(projectFolder, flutterBinPath, ["run", "--machine"].concat(args), flutterEnv);
+		this.createProcess(projectFolder, flutterBinPath, ["run", "--machine"].concat(args));
 	}
 
 	protected shouldHandleMessage(message: string): boolean {
