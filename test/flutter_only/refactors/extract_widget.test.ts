@@ -35,6 +35,8 @@ class MyWidget extends StatelessWidget {
 }
 
 class MyOtherWidget extends StatelessWidget {
+  MyOtherWidget({Key key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return new Container();
@@ -174,6 +176,8 @@ class MyWidget extends StatelessWidget {
 }
 
 class MyWidget extends StatelessWidget {
+  MyWidget({Key key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return new Container();
