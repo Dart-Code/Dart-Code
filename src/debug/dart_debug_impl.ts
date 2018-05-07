@@ -840,10 +840,14 @@ export class DartDebugSession extends DebugSession {
 		} else if (ref.kind === "Map") {
 			return `{${instanceRef.length}}`;
 		} else if (useClassNameAsFallback) {
-			return instanceRef.class.name;
+			return this.getClassName(instanceRef);
 		} else {
 			return null;
 		}
+	}
+
+	private getClassName(ref: VMInstanceRef): string {
+		return ref.kind !== "PlainInstance" ? ref.kind : ref.class.name;
 	}
 
 	private instanceRefToVariable(
@@ -870,7 +874,7 @@ export class DartDebugSession extends DebugSession {
 				evaluateName: canEvaluate ? evaluateName : null,
 				indexedVariables: (val.kind.endsWith("List") ? val.length : null),
 				name,
-				type: val.class.name,
+				type: this.getClassName(val),
 				value: str,
 				variablesReference: val.valueAsString ? 0 : thread.storeData(val),
 			};
