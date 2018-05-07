@@ -1,9 +1,13 @@
 import * as vs from "vscode";
-import { activate, ensureTestContentWithCursorPos, rangeOf, select, setTestContent, waitForEditorChange } from "../../helpers";
+import { activate, ensureTestContentWithCursorPos, ext, rangeOf, select, setTestContent, waitForEditorChange } from "../../helpers";
 
 describe("complete statement", () => {
 
 	before(() => activate());
+	beforeEach(function () {
+		if (!ext.exports.analyzerCapabilities.hasCompleteStatementFix)
+			this.skip();
+	});
 
 	it("completes a simple print", async () => {
 		await setTestContent(`
