@@ -31,7 +31,7 @@ export class EditCommands implements vs.Disposable {
 
 	private async completeStatement(): Promise<void> {
 		const editor = vs.window.activeTextEditor;
-		if (!editor || !editor.selection)
+		if (!editor || !editor.selection || !this.analyzer.capabilities.hasCompleteStatementFix)
 			return;
 		const document = editor.document;
 		const file = fsPath(document.uri);
