@@ -1,7 +1,11 @@
 import * as assert from "assert";
+import { ChildProcess } from "child_process";
+import { DebugConfiguration } from "vscode";
 import { Variable } from "vscode-debugadapter";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { ObservatoryConnection } from "../src/debug/dart_debug_protocol";
+import { safeSpawn } from "../src/debug/utils";
 
 export async function getTopFrameVariables(dc: DebugClient, scope: "Exception" | "Locals"): Promise<Variable[]> {
 	const threads = await dc.threadsRequest();
@@ -85,4 +89,26 @@ export function ensureOutputContains(dc: DebugClient, category: string, text: st
 				reject(new Error(`Didn't find text "${text}" in ${category}`));
 		}
 	}));
+}
+
+export function spawnProcessPaused(config: DebugConfiguration) {
+	return safeSpawn(
+		config.cwd,
+		config.dartPath,
+		[
+			"--enable-vm-service=0",
+			"-pause_isolates_on_start=true",
+			config.program,
+		],
+	);
+}
+
+export function getObservatoryUriForProcess(process: ChildProcess): Promise<string> {
+	return new Promise((resolve, reject) => {
+		process.stdout.on("data", (data) => {
+			const match = ObservatoryConnection.portRegex.exec(data.toString());
+			if (match)
+				resolve(match[1]);
+		});
+	});
 }
