@@ -126,7 +126,7 @@ Exception from analysis server (running from VSCode / Dart Code)
 ${method ? "\n### Request\n\nWhile responding to request: `" + method + "`\n" : ""}
 ### Versions
 
-- Dart SDK ${sdkVersion}${flutterSdkVersion ? `\n- Flutter SDK ${flutterSdkVersion}` : ""}
+- ${flutterSdkVersion ? `Flutter SDK ${flutterSdkVersion}` : `Dart SDK ${sdkVersion}`}
 - ${env.appName} ${codeVersion}
 - Dart Code ${extensionVersion}
 
