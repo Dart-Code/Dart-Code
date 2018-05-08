@@ -1,13 +1,13 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { commands, env, extensions, ProgressLocation, TextDocument, version as codeVersion, window, workspace } from "vscode";
-import { RequestError, ServerErrorNotification, ServerStatusNotification } from "./analysis_server_types";
-import { Analyzer } from "./analyzer";
+import { ProgressLocation, env, version as codeVersion, window, workspace } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PromiseCompleter } from "../debug/utils";
-import { extensionVersion, getSdkVersion, Sdks, ProjectType, isStableSdk } from "../utils";
+import { ProjectType, Sdks, extensionVersion, getSdkVersion, isStableSdk } from "../utils";
+import { RequestError, ServerErrorNotification, ServerStatusNotification } from "./analysis_server_types";
+import { Analyzer } from "./analyzer";
 
 const maxErrorReportCount = 3;
 const sendFakeErrorAtStartup = false;
