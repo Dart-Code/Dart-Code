@@ -113,7 +113,11 @@ beforeEach(async function () {
 	);
 
 	// HACK: Give config time to reload
-	await delay(50);
+	// HACK: Made even longer to workaround issue where analysis server may abort refactors when
+	// the settings files are flushed to disk by Code. May be able to reduce this once
+	// https://github.com/dart-lang/sdk/issues/32914#issuecomment-382512517
+	// is fixed/rolled out.
+	await delay(500);
 });
 
 before(() => {
