@@ -721,14 +721,10 @@
 							"name": "Dart - Attach",
 							"type": "dart",
 							"request": "attach",
-							"packages": "^\"\\${workspaceFolder}/.packages\"",
-							"observatoryUri": "^\"http://127.0.0.1:\\${command:PromptForObservatoryAddress}/\""
+							"packages": "^\"\\${workspaceFolder}/.packages\""
 						}
 					}
-				],
-				"variables": {
-					"PromptForObservatoryAddress": "dart.getObservatoryAddress"
-				}
+				]
 			}
 		]
 	},

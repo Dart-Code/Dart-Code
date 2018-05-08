@@ -105,12 +105,21 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected attachRequest(response: DebugProtocol.AttachResponse, args: DartAttachRequestArguments): void {
+		if (!args || !args.observatoryUri) {
+			response.success = false;
+			response.message = "Unable to attach; no Observatory address provided.";
+			this.sendResponse(response);
+			return;
+		}
+
 		this.cwd = args.cwd;
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.packages));
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.observatoryLogFile = args.observatoryLogFile;
 
+		// TODO: Hold off on sending the response until initObservatory has succeeded or failed
+		// so that attach failures (e.g., invalid URLs, wrong port) are reported.
 		this.sendResponse(response);
 		this.initObservatory(this.websocketUriForObservatoryUri(args.observatoryUri));
 	}

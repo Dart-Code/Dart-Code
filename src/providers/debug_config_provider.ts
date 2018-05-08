@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as net from "net";
 import * as path from "path";
+import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, WorkspaceFolder, window, workspace } from "vscode";
 import { DebugSession } from "vscode-debugadapter";
 import { Analytics } from "../analytics";
@@ -34,7 +35,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}];
 	}
 
-	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
+	public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration> {
 		const openFile = window.activeTextEditor && window.activeTextEditor.document ? fsPath(window.activeTextEditor.document.uri) : null;
 
 		function resolveVariables(input: string): string {
@@ -79,9 +80,29 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// If we don't have a cwd then find the best one from the project root.
 		debugConfig.cwd = debugConfig.cwd || fsPath(folder.uri);
 
+		const isAttachRequest = debugConfig.request === "attach";
+		if (isAttachRequest) {
+			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
+			if (!debugConfig.observatoryUri) {
+				debugConfig.observatoryUri =
+					await vs.window.showInputBox({prompt: "Enter Observatory address. This can be a full URL, or just a port for localhost."});
+			}
+			if (!debugConfig.observatoryUri) {
+				// ???: Is there a way to fail out at this stage without switching to launch.json?
+				debugConfig.type = null;
+				window.showInformationMessage("Observatory address must be provided.");
+				return debugConfig;
+			}
+			debugConfig.observatoryUri = debugConfig.observatoryUri;
+			// If the input is just a number, treat is as a localhost port.
+			if (/^\s*[0-9]+\s*$/.exec(debugConfig.observatoryUri)) {
+				debugConfig.observatoryUri = "http://127.0.0.1:" + debugConfig.observatoryUri.trim();
+			}
+		}
+
 		// Disable Flutter mode for attach.
 		// TODO: Update FlutterDebugSession to understand attach mode, and remove this limitation.
-		const isFlutter = isFlutterProjectFolder(debugConfig.cwd as string) && debugConfig.request === "launch";
+		const isFlutter = isFlutterProjectFolder(debugConfig.cwd as string) && !isAttachRequest;
 		const isTest = isTestFile(resolveVariables(debugConfig.program as string));
 		const debugType = isFlutter
 			? (isTest ? DebuggerType.FlutterTest : DebuggerType.Flutter)
