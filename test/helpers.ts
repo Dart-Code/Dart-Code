@@ -321,8 +321,8 @@ export async function waitFor(action: () => boolean, message?: string, milliseco
 	while (timeRemaining > 0) {
 		if (action())
 			return;
-		await new Promise((resolve) => setTimeout(resolve, 50));
-		timeRemaining -= 50;
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		timeRemaining -= 20;
 	}
 	if (throwOnFailure)
 		throw new Error("Action didn't return true within specified timeout" + (message ? ` (${message})` : ""));
