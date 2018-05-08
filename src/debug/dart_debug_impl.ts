@@ -262,8 +262,24 @@ export class DartDebugSession extends DebugSession {
 		if (this.childProcess != null) {
 			this.childProcess.kill();
 		} else {
-			// TODO: Restart any paused threads, and remove breakpoints.
-			this.observatory.close();
+			// Remove all breakpoints from the VM.
+			const removeBreakpointPromises = [];
+			for (const thread of this.threadManager.threads) {
+				removeBreakpointPromises.push(thread.removeAllBreakpoints());
+			}
+			Promise.all(removeBreakpointPromises).then((_) => {
+				// Restart any paused threads.
+				const resumePromises = [];
+				for (const thread of this.threadManager.threads) {
+					if (thread.paused) {
+						resumePromises.push(this.observatory.resume(thread.ref.id));
+					}
+				}
+				Promise.all(resumePromises).then((_) => {
+					// Finally, shut down the connection to the observatory.
+					this.observatory.close();
+				}).catch((error) => this.observatory.close());
+			}).catch((error) => this.observatory.close());
 		}
 		super.disconnectRequest(response, args);
 	}
@@ -1183,6 +1199,22 @@ class ThreadInfo {
 		this.manager = manager;
 		this.ref = ref;
 		this.number = num;
+	}
+
+	public removeAllBreakpoints(): Promise<DebuggerResult[]> {
+		const removeBreakpointPromises = [];
+		for (const uri of Object.keys(this.vmBps)) {
+			const breakpoints = this.vmBps[uri];
+			if (breakpoints) {
+				for (const bp of breakpoints) {
+					removeBreakpointPromises.push(this.manager.debugSession.observatory.removeBreakpoint(this.ref.id, bp.id));
+				}
+			}
+		}
+
+		this.vmBps = {};
+
+		return Promise.all(removeBreakpointPromises);
 	}
 
 	public setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {
