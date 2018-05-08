@@ -2,7 +2,8 @@ import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../src/commands/refactor";
-import { activate, defer, delay, doc, ensureTestContent, ext, rangeOf, setTestContent, waitFor } from "../../helpers";
+import { PromiseCompleter } from "../../../src/debug/utils";
+import { activate, defer, doc, ensureTestContent, ext, rangeOf, setTestContent, waitFor } from "../../helpers";
 
 describe("refactor", () => {
 
@@ -200,7 +201,8 @@ class MyWidget extends StatelessWidget {
 		const showErrorMessage = sinon.stub(vs.window, "showErrorMessage");
 		defer(showErrorMessage.restore);
 		// Accept after some time (so the doc can be edited by the test).
-		const refactorPrompt = showErrorMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).returns(delay(500).then(() => REFACTOR_ANYWAY));
+		const refactorAnywayChoice = new PromiseCompleter();
+		const refactorPrompt = showErrorMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).returns(refactorAnywayChoice.promise);
 		const rejectMessage = showErrorMessage.withArgs(REFACTOR_FAILED_DOC_MODIFIED).resolves();
 		showErrorMessage.callThrough();
 
@@ -234,6 +236,8 @@ class MyWidget extends StatelessWidget {
 // This comment was added
 		`);
 
+		refactorAnywayChoice.resolve(REFACTOR_ANYWAY);
+
 		// Wait for the command to complete.
 		await refactorCommand;
 
@@ -250,6 +254,6 @@ class MyWidget extends StatelessWidget {
 // This comment was added
 		`);
 
-		assert(rejectMessage.calledOnce);
+		assert(rejectMessage.calledOnce, "Reject message was not shown");
 	});
 });
