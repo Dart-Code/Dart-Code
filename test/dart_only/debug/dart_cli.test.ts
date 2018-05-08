@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { fsPath } from "../../../src/utils";
 import { ensureMapEntry, ensureOutputContains, ensureVariable, evaluate, getObservatoryUriForProcess, getTopFrameVariables, getVariables, spawnProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldMainFile, openFile, platformEol, positionOf } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ext, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldMainFile, openFile, platformEol, positionOf, sb } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	beforeEach(() => activate(helloWorldMainFile));
@@ -340,6 +340,39 @@ describe("dart cli debugger", () => {
 			]);
 		});
 
+		it("when provided only a port in launch.config", async () => {
+			const process = spawnProcessPaused(await getLaunchConfig(helloWorldMainFile));
+			defer(() => process && !process.killed && process.kill());
+
+			const observatoryUri = await getObservatoryUriForProcess(process);
+			const observatoryPort = /:([0-9]+)\/?$/.exec(observatoryUri)[1];
+
+			const config = await attachDebugger(observatoryUri);
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.waitForEvent("terminated"),
+				dc.launch(config),
+			]);
+		});
+
+		it("to the observatory uri provided by the user when not specified in launch.json", async () => {
+			const process = spawnProcessPaused(await getLaunchConfig(helloWorldMainFile));
+			defer(() => process && !process.killed && process.kill());
+
+			const observatoryUri = await getObservatoryUriForProcess(process);
+			const showInputBox = sb.stub(vs.window, "showInputBox");
+			showInputBox.resolves(observatoryUri);
+
+			const config = await attachDebugger(null);
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.waitForEvent("terminated"),
+				dc.launch(config),
+			]);
+
+			assert.ok(showInputBox.calledOnce);
+		});
+
 		it("to a paused Dart script and can set breakpoints", async () => {
 			const process = spawnProcessPaused(await getLaunchConfig(helloWorldMainFile));
 			defer(() => process && !process.killed && process.kill());
@@ -354,10 +387,6 @@ describe("dart cli debugger", () => {
 				}),
 			]);
 		});
-
-		it("when provided only a port in launch.config");
-		// This one will need to wrap showInputBox with sinon (similar to extract_widget.test.ts)
-		it("to the observatory uri provided by the user when not specified in launch.json");
 		it("and removes breakpoints and unpauses on detach");
 	});
 });
