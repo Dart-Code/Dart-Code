@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { fsPath } from "../../../src/utils";
-import { ensureMapEntry, ensureOutputContains, ensureVariable, evaluate, getTopFrameVariables, getVariables } from "../../debug_helpers";
+import { ensureMapEntry, ensureOutputContains, ensureVariable, evaluate, getObservatoryUriForProcess, getTopFrameVariables, getVariables, spawnProcessPaused } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, ext, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldMainFile, openFile, platformEol, positionOf } from "../../helpers";
 
 describe("dart cli debugger", () => {
@@ -16,8 +16,10 @@ describe("dart cli debugger", () => {
 		defer(() => dc.stop());
 	});
 
-	async function startDebugger(script: vs.Uri): Promise<vs.DebugConfiguration> {
-		const config = await ext.exports.debugProvider.resolveDebugConfiguration(
+	// TODO: Combine this with the duplicates in other debugger tests (flutter run/flutter test) and
+	// move to helpers.ts
+	async function getLaunchConfig(script: vs.Uri): Promise<vs.DebugConfiguration> {
+		return await ext.exports.debugProvider.resolveDebugConfiguration(
 			vs.workspace.workspaceFolders[0],
 			{
 				name: "Dart & Flutter",
@@ -26,6 +28,29 @@ describe("dart cli debugger", () => {
 				type: "dart",
 			},
 		);
+	}
+
+	// TODO: move to helpers.ts
+	async function getAttachConfig(observatoryUri: string): Promise<vs.DebugConfiguration> {
+		return await ext.exports.debugProvider.resolveDebugConfiguration(
+			vs.workspace.workspaceFolders[0],
+			{
+				name: "Dart & Flutter",
+				observatoryUri,
+				request: "attach",
+				type: "dart",
+			},
+		);
+	}
+
+	async function startDebugger(script: vs.Uri): Promise<vs.DebugConfiguration> {
+		const config = await getLaunchConfig(script);
+		await dc.start(config.debugServer);
+		return config;
+	}
+
+	async function attachDebugger(observatoryUri: string): Promise<vs.DebugConfiguration> {
+		const config = await getAttachConfig(observatoryUri);
 		await dc.start(config.debugServer);
 		return config;
 	}
@@ -299,4 +324,40 @@ describe("dart cli debugger", () => {
 	});
 
 	it.skip("writes exception to stderr");
+
+	describe("attaches", () => {
+		it("to a paused Dart script and can unpause to run it to completion", async () => {
+			const process = spawnProcessPaused(await getLaunchConfig(helloWorldMainFile));
+			defer(() => process && !process.killed && process.kill());
+
+			const observatoryUri = await getObservatoryUriForProcess(process);
+
+			const config = await attachDebugger(observatoryUri);
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.waitForEvent("terminated"),
+				dc.launch(config),
+			]);
+		});
+
+		it("to a paused Dart script and can set breakpoints", async () => {
+			const process = spawnProcessPaused(await getLaunchConfig(helloWorldMainFile));
+			defer(() => process && !process.killed && process.kill());
+
+			const observatoryUri = await getObservatoryUriForProcess(process);
+
+			const config = await attachDebugger(observatoryUri);
+			await Promise.all([
+				dc.hitBreakpoint(config, {
+					line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+					path: fsPath(helloWorldMainFile),
+				}),
+			]);
+		});
+
+		it("when provided only a port in launch.config");
+		// This one will need to wrap showInputBox with sinon (similar to extract_widget.test.ts)
+		it("to the observatory uri provided by the user when not specified in launch.json");
+		it("and removes breakpoints and unpauses on detach");
+	});
 });
