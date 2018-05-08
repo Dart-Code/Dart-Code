@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { fsPath } from "../../../src/utils";
 import { ensureOutputContains, ensureVariable, evaluate, getTopFrameVariables, getVariables } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, eol, ext, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf } from "../../helpers";
+import { activate, closeAllOpenFiles, ext, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
@@ -169,7 +169,8 @@ describe("dart cli debugger", () => {
 				});
 			}).then((response) => dc.configurationDoneRequest()),
 			dc.waitForEvent("terminated"),
-			dc.assertOutput("stdout", `Hello! The {year} is ${(new Date()).getFullYear()}${eol}Hello, world!`),
+			dc.assertOutput("stdout", `Hello! The {year} is ${(new Date()).getFullYear()}`)
+				.then((_) => dc.assertOutput("stdout", `Hello, world!`)),
 			dc.launch(config),
 		]);
 	});
