@@ -18,6 +18,10 @@ describe("flutter run debugger", () => {
 	beforeEach(function () {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
 	});
+	beforeEach(function () {
+		if (!ext.exports.analyzerCapabilities.flutterHasTestDevice)
+			this.skip();
+	});
 	afterEach(() => dc.stop());
 
 	// TODO: This is duplicated in three places now (except deviceId).
