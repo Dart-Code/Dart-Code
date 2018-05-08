@@ -138,7 +138,7 @@ async function setLogs(conf: vs.WorkspaceConfiguration, logFolder: string, prefi
 	}
 }
 
-export async function setTestContent(content: string): Promise<void> {
+export async function setTestContent(content: string): Promise<boolean> {
 	const all = new vs.Range(
 		doc.positionAt(0),
 		doc.positionAt(doc.getText().length),
@@ -147,12 +147,7 @@ export async function setTestContent(content: string): Promise<void> {
 	// return editor.edit((eb) => eb.replace(all, content));
 	// once the fix for https://github.com/dart-lang/sdk/issues/32914
 	// has made it all the way through.
-	if (await editor.edit((eb) => eb.replace(all, content))) {
-		// Wait a short period for the server to process the update
-		await delay(100);
-	} else {
-		throw new Error("Edits not applied!");
-	}
+	return editor.edit((eb) => eb.replace(all, content));
 }
 
 export function positionOf(searchText: string): vs.Position {
