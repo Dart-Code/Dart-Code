@@ -20,7 +20,6 @@ import { ClosingLabelsDecorations } from "./decorations/closing_labels_decoratio
 import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
 import { checkForProjectsInSubFolders } from "./project";
-import { upgradeProject } from "./project_upgrade";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
@@ -292,10 +291,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			vs.window.showTextDocument(document, { preview: true });
 		}, (error) => util.logError);
 	}));
-
-	// Perform any required project upgrades.
-	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => upgradeProject(f.added.filter(util.isDartWorkspaceFolder))));
-	upgradeProject(util.getDartWorkspaceFolders());
 
 	// Warn the user if they've opened a folder with mismatched casing.
 	if (vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length) {
