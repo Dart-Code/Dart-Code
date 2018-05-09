@@ -74,7 +74,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return input ? input.replace(/\${workspaceFolder}/, fsPath(folder.uri)) : input;
 		}
 
-		const isFlutter = isFlutterProjectFolder(resolveVariables(debugConfig.cwd as string));
+		debugConfig.program = resolveVariables(debugConfig.program);
+		debugConfig.cwd = resolveVariables(debugConfig.cwd);
+
+		const isFlutter = isFlutterProjectFolder(debugConfig.cwd as string);
 		const isTest = isTestFile(resolveVariables(debugConfig.program as string));
 		const debugType = isFlutter
 			? (isTest ? DebuggerType.FlutterTest : DebuggerType.Flutter)
