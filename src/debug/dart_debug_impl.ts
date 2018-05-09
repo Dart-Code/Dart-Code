@@ -92,7 +92,7 @@ export class DartDebugSession extends DebugSession {
 			this.sendEvent(new OutputEvent(data.toString(), "stderr"));
 		});
 		process.on("error", (error) => {
-			this.sendEvent(new OutputEvent(`Error: ${error}\n`));
+			this.sendEvent(new OutputEvent(`${error}`, "stderr"));
 		});
 		process.on("exit", (code, signal) => {
 			this.processExited = true;
