@@ -4,26 +4,36 @@ import { DebugClient } from "vscode-debugadapter-testsupport";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../src/utils";
 import { ensureVariable, getTopFrameVariables } from "../../debug_helpers";
-import { activate, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, openFile, positionOf } from "../../helpers";
+import { activate, defer, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, openFile, positionOf } from "../../helpers";
 
 describe("flutter run debugger", () => {
-	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_debug_entry.js"), "dart");
-	// Spawning flutter tests seem to be kinda slow (and may fetch packages), so we need a higher timeout
-	dc.defaultTimeout = 60000;
+	beforeEach(function () {
+		if (!ext.exports.analyzerCapabilities.flutterHasTestDevice)
+			this.skip();
+	});
 
 	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
 	// `flutter create .`!
 	before(() => vs.commands.executeCommand("_flutter.create", path.join(fsPath(flutterHelloWorldFolder), "dummy"), "."));
 
+	beforeEach(function () {
+		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
+	});
+
+	beforeEach(() => activate(flutterHelloWorldMainFile));
+
+	let dc: DebugClient;
+	beforeEach(() => {
+		dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_debug_entry.js"), "dart");
+		// Spawning flutter tests seem to be kinda slow (and may fetch packages), so we need a higher timeout
+		dc.defaultTimeout = 60000;
+		defer(() => dc.stop());
+	});
+
 	beforeEach(() => activate(flutterHelloWorldMainFile));
 	beforeEach(function () {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
 	});
-	beforeEach(function () {
-		if (!ext.exports.analyzerCapabilities.flutterHasTestDevice)
-			this.skip();
-	});
-	afterEach(() => dc.stop());
 
 	// TODO: This is duplicated in three places now (except deviceId).
 	async function startDebugger(script: vs.Uri | string, cwd?: string, throwOnError = true): Promise<vs.DebugConfiguration> {

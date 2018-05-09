@@ -4,14 +4,17 @@ import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { fsPath } from "../../../src/utils";
 import { ensureOutputContains, ensureVariable, evaluate, getTopFrameVariables, getVariables } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, ext, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ext, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf } from "../../helpers";
 
 describe("dart cli debugger", () => {
-	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
-	dc.defaultTimeout = 30000;
-
 	beforeEach(() => activate(helloWorldMainFile));
-	afterEach(() => dc.stop());
+
+	let dc: DebugClient;
+	beforeEach(() => {
+		dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
+		dc.defaultTimeout = 30000;
+		defer(() => dc.stop());
+	});
 
 	async function startDebugger(script: vs.Uri): Promise<vs.DebugConfiguration> {
 		const config = await ext.exports.debugProvider.resolveDebugConfiguration(
@@ -53,9 +56,9 @@ describe("dart cli debugger", () => {
 			// TODO: Figure out if this is a bug - because we never connect to Observatory, we never
 			// resolve this properly.
 			// dc.configurationSequence(),
-			ensureOutputContains(dc, "stderr", "Unrecognized flags: fake-flag"),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
+			ensureOutputContains(dc, "stderr", "Unrecognized flags: fake-flag").then((_) => console.log("Got output")),
+			dc.waitForEvent("terminated").then((_) => console.log("Got terminate")),
+			dc.launch(config).then((_) => console.log("launched")),
 		]);
 	});
 

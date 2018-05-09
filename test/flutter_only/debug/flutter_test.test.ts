@@ -8,12 +8,12 @@ import { getTopFrameVariables } from "../../debug_helpers";
 import { activate, defer, ext, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, openFile, positionOf } from "../../helpers";
 
 describe("flutter test debugger", () => {
-	let dc: DebugClient;
-
 	beforeEach(() => activate(flutterTestMainFile));
 	beforeEach(function () {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
 	});
+
+	let dc: DebugClient;
 	beforeEach(() => {
 		dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_test_debug_entry.js"), "dart");
 		// Spawning flutter tests seem to be kinda slow (and may fetch packages), so we need a higher timeout
