@@ -35,9 +35,18 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
+		const openFile = window.activeTextEditor && window.activeTextEditor.document ? fsPath(window.activeTextEditor.document.uri) : null;
+
+		function resolveVariables(input: string): string {
+			if (!input) return input;
+			if (input === "${file}") return openFile;
+			return input.replace(/\${workspaceFolder}/, fsPath(folder.uri));
+		}
+		debugConfig.program = resolveVariables(debugConfig.program);
+		debugConfig.cwd = resolveVariables(debugConfig.cwd);
+
 		// If there's no program set, try to guess one.
 		if (!debugConfig.program) {
-			const openFile = window.activeTextEditor && window.activeTextEditor.document ? fsPath(window.activeTextEditor.document.uri) : null;
 			// Overwrite the folder with a more appropriate workspace root (https://github.com/Microsoft/vscode/issues/45580)
 			if (openFile) {
 				folder = workspace.getWorkspaceFolder(Uri.file(openFile)) || folder;
@@ -69,13 +78,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// If we don't have a cwd then find the best one from the project root.
 		debugConfig.cwd = debugConfig.cwd || fsPath(folder.uri);
-
-		function resolveVariables(input: string): string {
-			return input ? input.replace(/\${workspaceFolder}/, fsPath(folder.uri)) : input;
-		}
-
-		debugConfig.program = resolveVariables(debugConfig.program);
-		debugConfig.cwd = resolveVariables(debugConfig.cwd);
 
 		const isFlutter = isFlutterProjectFolder(debugConfig.cwd as string);
 		const isTest = isTestFile(resolveVariables(debugConfig.program as string));
