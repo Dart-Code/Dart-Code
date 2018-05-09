@@ -124,7 +124,7 @@ describe("flutter run debugger", () => {
 
 	it.skip("provides exception details when stopped on exception", async () => {
 		await openFile(flutterHelloWorldBrokenFile);
-		const config = await startDebugger(flutterHelloWorldBrokenFile);
+		const config = await startDebugger(flutterHelloWorldBrokenFile, undefined, false);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
