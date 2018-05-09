@@ -105,6 +105,17 @@ describe("flutter test debugger", () => {
 		]);
 	});
 
+	it("runs the open script if program is set to ${file}", async () => {
+		await openFile(flutterTestOtherFile);
+		const config = await startDebugger("${file}");
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.assertOutput("stdout", "✓ - Other test\n"),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		]);
+	});
+
 	// Skipped due to
 	// https://github.com/flutter/flutter/issues/16352
 	it.skip("stops at a breakpoint", async () => {
