@@ -336,5 +336,6 @@ describe("dart cli debugger", () => {
 			]);
 		});
 		it("and removes breakpoints and unpauses on detach");
+		it("and reports failure to connect to the Observatory");
 	});
 });
