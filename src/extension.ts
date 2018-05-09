@@ -183,14 +183,14 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, fixCodeActionProvider, fixCodeActionProvider.metadata));
 		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, refactorCodeActionProvider, refactorCodeActionProvider.metadata));
 		context.subscriptions.push(vs.languages.registerRenameProvider(filter, renameProvider));
-		// TODO: Does HTML support this?
-		// TODO: May need to add this conditionally depending on the outcome to https://github.com/dart-lang/sdk/issues/33033
-		context.subscriptions.push(vs.languages.registerFoldingRangeProvider(filter, foldingProvider));
 	});
 
-	// Even with the angular_analyzer_plugin, some actions only apply to Dart.
+	// Some actions only apply to Dart.
 	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, typeFormattingEditProvider, "}", ";"));
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, sourceCodeActionProvider, sourceCodeActionProvider.metadata));
+
+	// TODO: Add a version check
+	context.subscriptions.push(vs.languages.registerFoldingRangeProvider(DART_MODE, foldingProvider));
 
 	// Snippets are language-specific
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));
