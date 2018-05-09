@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
+import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../src/utils";
 import { ensureVariable, getTopFrameVariables } from "../../debug_helpers";
 import { activate, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, openFile, positionOf } from "../../helpers";
@@ -25,18 +26,28 @@ describe("flutter run debugger", () => {
 	afterEach(() => dc.stop());
 
 	// TODO: This is duplicated in three places now (except deviceId).
-	async function startDebugger(script: vs.Uri): Promise<vs.DebugConfiguration> {
+	async function startDebugger(script: vs.Uri | string, cwd?: string, throwOnError = true): Promise<vs.DebugConfiguration> {
+		if (script instanceof vs.Uri)
+			script = fsPath(script);
 		const config = await ext.exports.debugProvider.resolveDebugConfiguration(
 			vs.workspace.workspaceFolders[0],
 			{
-				deviceId: "flutter-tester",
+				cwd,
 				name: "Dart & Flutter",
-				program: script && fsPath(script),
+				program: script,
 				request: "launch",
 				type: "dart",
 			},
 		);
 		await dc.start(config.debugServer);
+
+		// Throw to fail tests if we get any error output to aid debugging.
+		if (throwOnError) {
+			dc.on("output", (event: DebugProtocol.OutputEvent) => {
+				if (event.body.category === "stderr")
+					throw new Error(event.body.output);
+			});
+		}
 		return config;
 	}
 
@@ -57,6 +68,22 @@ describe("flutter run debugger", () => {
 
 	it.skip("runs a Flutter application with a relative path", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
+		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldMainFile));
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.launch(config),
+		]);
+
+		// Ensure we're still responsive after 10 seconds.
+		await delay(10000);
+		await dc.threadsRequest();
+
+		await dc.disconnectRequest();
+		await dc.waitForEvent("terminated");
+	});
+
+	it.skip("runs a Flutter application with a variable in cwd", async () => {
+		const config = await startDebugger(flutterHelloWorldMainFile, "${workspaceFolder}/");
 		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldMainFile));
 		await Promise.all([
 			dc.configurationSequence(),
@@ -113,7 +140,7 @@ describe("flutter run debugger", () => {
 
 	it.skip("writes failure output to stderr", async () => {
 		await openFile(flutterHelloWorldBrokenFile);
-		const config = await startDebugger(flutterHelloWorldBrokenFile);
+		const config = await startDebugger(flutterHelloWorldBrokenFile, undefined, false);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutput("stderr", "Test failed. See exception logs above."),
