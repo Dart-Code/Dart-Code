@@ -5,7 +5,7 @@ import { DebugClient } from "vscode-debugadapter-testsupport";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../src/utils";
 import { getTopFrameVariables } from "../../debug_helpers";
-import { activate, defer, ext, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, openFile, positionOf } from "../../helpers";
+import { activate, defer, ext, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach(() => activate(flutterTestMainFile));
@@ -22,17 +22,7 @@ describe("flutter test debugger", () => {
 	});
 
 	async function startDebugger(script: vs.Uri | string, throwOnError = true): Promise<vs.DebugConfiguration> {
-		if (script instanceof vs.Uri)
-			script = fsPath(script);
-		const config = await ext.exports.debugProvider.resolveDebugConfiguration(
-			vs.workspace.workspaceFolders[0],
-			{
-				name: "Dart & Flutter",
-				program: script,
-				request: "launch",
-				type: "dart",
-			},
-		);
+		const config = await getLaunchConfiguration(script);
 		await dc.start(config.debugServer);
 
 		// Throw to fail tests if we get any error output to aid debugging.
