@@ -5,18 +5,21 @@ import { DebugClient } from "vscode-debugadapter-testsupport";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../src/utils";
 import { getTopFrameVariables } from "../../debug_helpers";
-import { activate, ext, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, openFile, positionOf } from "../../helpers";
+import { activate, defer, ext, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, openFile, positionOf } from "../../helpers";
 
 describe("flutter test debugger", () => {
-	const dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_test_debug_entry.js"), "dart");
-	// Spawning flutter tests seem to be kinda slow (and may fetch packages), so we need a higher timeout
-	dc.defaultTimeout = 60000;
+	let dc: DebugClient;
 
 	beforeEach(() => activate(flutterTestMainFile));
 	beforeEach(function () {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
 	});
-	afterEach(() => dc.stop());
+	beforeEach(() => {
+		dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_test_debug_entry.js"), "dart");
+		// Spawning flutter tests seem to be kinda slow (and may fetch packages), so we need a higher timeout
+		dc.defaultTimeout = 60000;
+		defer(() => dc.stop());
+	});
 
 	async function startDebugger(script: vs.Uri | string, throwOnError = true): Promise<vs.DebugConfiguration> {
 		if (script instanceof vs.Uri)
@@ -158,7 +161,7 @@ describe("flutter test debugger", () => {
 
 	it.skip("provides exception details when stopped on exception", async () => {
 		await openFile(flutterTestBrokenFile);
-		const config = await startDebugger(flutterTestBrokenFile);
+		const config = await startDebugger(flutterTestBrokenFile, false);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {}),
