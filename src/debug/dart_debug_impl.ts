@@ -1201,36 +1201,35 @@ class ThreadInfo {
 		this.number = num;
 	}
 
-	public removeAllBreakpoints(): Promise<DebuggerResult[]> {
+	private removeBreakpointsAtUri(uri: string): Promise<DebuggerResult[]> {
 		const removeBreakpointPromises = [];
-		for (const uri of Object.keys(this.vmBps)) {
-			const breakpoints = this.vmBps[uri];
-			if (breakpoints) {
-				for (const bp of breakpoints) {
-					removeBreakpointPromises.push(this.manager.debugSession.observatory.removeBreakpoint(this.ref.id, bp.id));
-				}
+		const breakpoints = this.vmBps[uri];
+		if (breakpoints) {
+			for (const bp of breakpoints) {
+				removeBreakpointPromises.push(this.manager.debugSession.observatory.removeBreakpoint(this.ref.id, bp.id));
 			}
+			delete this.vmBps[uri];
 		}
-
-		this.vmBps = {};
-
 		return Promise.all(removeBreakpointPromises);
 	}
 
-	public setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {
+	public removeAllBreakpoints(): Promise<DebuggerResult[]> {
 		const removeBreakpointPromises = [];
-
-		// Remove all current bps.
-		const oldbps = this.vmBps[uri];
-		if (oldbps) {
-			for (const bp of oldbps) {
-				removeBreakpointPromises.push(this.manager.debugSession.observatory.removeBreakpoint(this.ref.id, bp.id));
-			}
+		for (const uri of Object.keys(this.vmBps)) {
+			removeBreakpointPromises.push(this.removeBreakpointsAtUri(uri));
 		}
+		return Promise.all(removeBreakpointPromises).then((results) => {
+			return [].concat.apply([], results);
+		});
+	}
+
+	public setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {
+		// Remove all current bps.
+		const removeBreakpointPromises = this.removeBreakpointsAtUri(uri);
 
 		this.vmBps[uri] = [];
 
-		return Promise.all(removeBreakpointPromises).then(() => {
+		return removeBreakpointPromises.then(() => {
 			// Set new ones.
 			const promises = [];
 
