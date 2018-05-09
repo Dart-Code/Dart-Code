@@ -28,7 +28,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const isFlutter = isFlutterWorkspaceFolder(folder);
 		return [{
 			name: isFlutter ? "Flutter" : "Dart",
-			program: isFlutter ? undefined : "${workspaceFolder}/bin/main.dart",
+			program: isFlutter ? undefined : "bin/main.dart",
 			request: "launch",
 			type: "dart",
 		}];
@@ -63,7 +63,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (!debugConfig.program) {
 			// Set type=null which causes launch.json to open.
 			debugConfig.type = null;
-			window.showInformationMessage("Set the 'program' value in your launch config (eg ${workspaceFolder}/bin/main.dart) then launch again");
+			window.showInformationMessage("Set the 'program' value in your launch config (eg 'bin/main.dart') then launch again");
 			return debugConfig;
 		}
 

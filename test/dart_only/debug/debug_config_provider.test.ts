@@ -11,7 +11,7 @@ describe.skip("debug_config_provider", () => {
 	const debugConfig: vs.DebugConfiguration = {
 		debugServer: testDebugServerPortNumber,
 		name: "Dart & Flutter",
-		program: "${workspaceFolder}/bin/main.dart",
+		program: "bin/main.dart",
 		request: "launch",
 		type: "dart",
 	};
