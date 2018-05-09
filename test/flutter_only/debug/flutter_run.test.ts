@@ -4,7 +4,7 @@ import { DebugClient } from "vscode-debugadapter-testsupport";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../src/utils";
 import { ensureVariable, getTopFrameVariables } from "../../debug_helpers";
-import { activate, defer, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, openFile, positionOf } from "../../helpers";
+import { activate, defer, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
 
 describe("flutter run debugger", () => {
 	beforeEach(function () {
@@ -35,20 +35,8 @@ describe("flutter run debugger", () => {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
 	});
 
-	// TODO: This is duplicated in three places now (except deviceId).
 	async function startDebugger(script: vs.Uri | string, cwd?: string, throwOnError = true): Promise<vs.DebugConfiguration> {
-		if (script instanceof vs.Uri)
-			script = fsPath(script);
-		const config = await ext.exports.debugProvider.resolveDebugConfiguration(
-			vs.workspace.workspaceFolders[0],
-			{
-				cwd,
-				name: "Dart & Flutter",
-				program: script,
-				request: "launch",
-				type: "dart",
-			},
-		);
+		const config = await getLaunchConfiguration(script, { deviceId: "flutter-tester" });
 		await dc.start(config.debugServer);
 
 		// Throw to fail tests if we get any error output to aid debugging.
