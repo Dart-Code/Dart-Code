@@ -118,10 +118,13 @@ export class DartDebugSession extends DebugSession {
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.observatoryLogFile = args.observatoryLogFile;
 
-		// TODO: Hold off on sending the response until initObservatory has succeeded or failed
-		// so that attach failures (e.g., invalid URLs, wrong port) are reported.
-		this.sendResponse(response);
-		this.initObservatory(this.websocketUriForObservatoryUri(args.observatoryUri));
+		this.initObservatory(this.websocketUriForObservatoryUri(args.observatoryUri)).then((error) => {
+			if (error) {
+				response.success = false;
+				response.message = `Unable to connect to Observatory: ${error}`;
+			}
+			this.sendResponse(response);
+		});
 	}
 
 	protected sourceFileForArgs(args: DartLaunchRequestArguments) {
@@ -167,7 +170,9 @@ export class DartDebugSession extends DebugSession {
 		return wsUri;
 	}
 
-	protected initObservatory(uri: string) {
+	protected initObservatory(uri: string): Promise<Error> {
+		const completer = new PromiseCompleter<Error>();
+
 		// Send the uri back to the editor so it can be used to launch browsers etc.
 		if (uri.endsWith("/ws")) {
 			let browserFriendlyUri = uri.substring(0, uri.length - 3);
@@ -190,6 +195,11 @@ export class DartDebugSession extends DebugSession {
 			}
 		});
 		this.observatory.onOpen(() => {
+			if (completer.promise) {
+				completer.resolve(null);
+				completer.promise = null;
+			}
+
 			this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event));
 			this.observatory.on("Extension", (event: VMEvent) => this.handleExtensionEvent(event));
 			this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event));
@@ -253,6 +263,14 @@ export class DartDebugSession extends DebugSession {
 					this.sendEvent(new TerminatedEvent());
 			}, 100);
 		});
+
+		this.observatory.onError((error) => {
+			if (completer.promise) {
+				completer.resolve(error);
+				completer.promise = null;
+			}
+		});
+		return completer.promise;
 	}
 
 	protected disconnectRequest(
