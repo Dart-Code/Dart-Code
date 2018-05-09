@@ -18,17 +18,27 @@ describe("flutter test debugger", () => {
 	});
 	afterEach(() => dc.stop());
 
-	async function startDebugger(script: vs.Uri): Promise<vs.DebugConfiguration> {
+	async function startDebugger(script: vs.Uri | string, throwOnError = true): Promise<vs.DebugConfiguration> {
+		if (script instanceof vs.Uri)
+			script = fsPath(script);
 		const config = await ext.exports.debugProvider.resolveDebugConfiguration(
 			vs.workspace.workspaceFolders[0],
 			{
 				name: "Dart & Flutter",
-				program: script && fsPath(script),
+				program: script,
 				request: "launch",
 				type: "dart",
 			},
 		);
 		await dc.start(config.debugServer);
+
+		// Throw to fail tests if we get any error output to aid debugging.
+		if (throwOnError) {
+			dc.on("output", (event: DebugProtocol.OutputEvent) => {
+				if (event.body.category === "stderr")
+					throw new Error(event.body.output);
+			});
+		}
 		return config;
 	}
 
@@ -43,6 +53,17 @@ describe("flutter test debugger", () => {
 
 	it("receives the expected output from a Flutter test script", async () => {
 		const config = await startDebugger(flutterTestMainFile);
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.assertOutput("stdout", "✓ - Hello world test"),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		]);
+	});
+
+	it("receives the expected output from a Flutter test script when run with variables in launch config", async () => {
+		const relativePath = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterTestMainFile));
+		const config = await startDebugger(`\${workspaceFolder}/${relativePath}`);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", "✓ - Hello world test"),
@@ -143,7 +164,7 @@ describe("flutter test debugger", () => {
 
 	it("writes failure output to stderr", async () => {
 		await openFile(flutterTestBrokenFile);
-		const config = await startDebugger(flutterTestBrokenFile);
+		const config = await startDebugger(flutterTestBrokenFile, false);
 		config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
