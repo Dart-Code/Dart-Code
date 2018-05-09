@@ -6,7 +6,7 @@ import * as vs from "vscode";
 import { ProgressLocation, Uri } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { safeSpawn } from "../debug/utils";
+import { globalFlutterArgs, safeSpawn } from "../debug/utils";
 import { locateBestProjectRoot } from "../project";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
 import { dartPubPath, flutterPath, showFlutterActivationFailure } from "../sdk/utils";
@@ -139,7 +139,7 @@ export class SdkCommands {
 	private runFlutterInFolder(folder: string, command: string, shortPath: string): Thenable<number> {
 		const binPath = path.join(this.sdks.flutter, flutterPath);
 		const args = command.split(" ");
-		return this.runCommandInFolder(shortPath, "flutter", folder, binPath, args);
+		return this.runCommandInFolder(shortPath, "flutter", folder, binPath, globalFlutterArgs.concat(args));
 	}
 
 	private runPub(command: string, selection?: vs.Uri): Thenable<number> {

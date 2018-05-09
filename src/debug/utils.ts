@@ -8,8 +8,10 @@ export const isWin = /^win/.test(process.platform);
 const toolEnv = Object.create(process.env);
 toolEnv.FLUTTER_HOST = "VSCode";
 toolEnv.PUB_ENVIRONMENT = (toolEnv.PUB_ENVIRONMENT ? `${toolEnv.PUB_ENVIRONMENT}:` : "") + "vscode.dart-code";
+export const globalFlutterArgs: string[] = [];
 if (process.env.DART_CODE_IS_TEST_RUN) {
 	toolEnv.PUB_ENVIRONMENT += ".test.bot";
+	globalFlutterArgs.push("--suppress-analytics");
 }
 
 export function safeSpawn(workingDirectory: string, binPath: string, args: string[]): child_process.ChildProcess {

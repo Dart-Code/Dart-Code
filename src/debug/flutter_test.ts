@@ -1,11 +1,12 @@
 import { Disposable } from "vscode";
 import { StdIOService } from "../services/stdio_service";
+import { globalFlutterArgs } from "./utils";
 
 export class FlutterTest extends StdIOService<Notification> {
 	constructor(flutterBinPath: string, projectFolder: string, args: string[], logFile: string) {
 		super(() => logFile, true, true);
 
-		this.createProcess(projectFolder, flutterBinPath, ["test", "--machine"].concat(args));
+		this.createProcess(projectFolder, flutterBinPath, globalFlutterArgs.concat(["test", "--machine"]).concat(args));
 	}
 
 	protected shouldHandleMessage(message: string): boolean {
