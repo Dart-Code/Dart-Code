@@ -6,6 +6,7 @@ import { DebugClient } from "vscode-debugadapter-testsupport";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { ObservatoryConnection } from "../src/debug/dart_debug_protocol";
 import { safeSpawn } from "../src/debug/utils";
+import { defer } from "./helpers";
 
 export async function getTopFrameVariables(dc: DebugClient, scope: "Exception" | "Locals"): Promise<Variable[]> {
 	const threads = await dc.threadsRequest();
@@ -91,8 +92,8 @@ export function ensureOutputContains(dc: DebugClient, category: string, text: st
 	}));
 }
 
-export function spawnProcessPaused(config: DebugConfiguration) {
-	return safeSpawn(
+export function spawnProcessPaused(config: DebugConfiguration): DartProcess {
+	const process = safeSpawn(
 		config.cwd,
 		config.dartPath,
 		[
@@ -101,14 +102,30 @@ export function spawnProcessPaused(config: DebugConfiguration) {
 			config.program,
 		],
 	);
+	const dartProcess = new DartProcess(process);
+	defer(() => {
+		if (!dartProcess.hasExited)
+			dartProcess.process.kill();
+	});
+	return dartProcess;
 }
 
-export function getObservatoryUriForProcess(process: ChildProcess): Promise<string> {
-	return new Promise((resolve, reject) => {
-		process.stdout.on("data", (data) => {
-			const match = ObservatoryConnection.portRegex.exec(data.toString());
-			if (match)
-				resolve(match[1]);
+export class DartProcess {
+	public readonly observatoryUri: Promise<string>;
+	public readonly exitCode: Promise<number>;
+	public get hasExited() { return this.exited; }
+	private exited: boolean = false;
+
+	constructor(public readonly process: ChildProcess) {
+		this.observatoryUri = new Promise((resolve, reject) => {
+			process.stdout.on("data", (data) => {
+				const match = ObservatoryConnection.portRegex.exec(data.toString());
+				if (match)
+					resolve(match[1]);
+			});
 		});
-	});
+		this.exitCode = new Promise<number>((resolve, reject) => {
+			process.on("exit", (code) => { this.exited = true; resolve(code); });
+		});
+	}
 }
