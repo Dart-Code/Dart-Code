@@ -275,7 +275,7 @@ export class DartDebugSession extends DebugSession {
 	): void {
 		if (this.childProcess != null) {
 			this.childProcess.kill();
-		} else {
+		} else if (this.observatory) {
 			// Remove all breakpoints from the VM.
 			const removeBreakpointPromises = [];
 			for (const thread of this.threadManager.threads) {
