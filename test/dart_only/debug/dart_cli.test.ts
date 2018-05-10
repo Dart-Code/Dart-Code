@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../src/utils";
 import { DartDebugClient } from "../../debug_client";
-import { attach, ensureMapEntry, ensureOutputContains, ensureVariable, evaluate, getTopFrameVariables, getVariables, spawnProcessPaused } from "../../debug_helpers";
+import { ensureMapEntry, ensureOutputContains, ensureVariable, evaluate, getTopFrameVariables, getVariables, spawnProcessPaused } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getLaunchConfiguration, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldMainFile, openFile, platformEol, positionOf, sb } from "../../helpers";
 
 describe("dart cli debugger", () => {
@@ -307,7 +307,7 @@ describe("dart cli debugger", () => {
 			await Promise.all([
 				dc.configurationSequence(),
 				dc.waitForEvent("terminated"),
-				attach(dc, config),
+				dc.launch(config),
 			]);
 		});
 
@@ -320,7 +320,7 @@ describe("dart cli debugger", () => {
 			await Promise.all([
 				dc.configurationSequence(),
 				dc.waitForEvent("terminated"),
-				attach(dc, config),
+				dc.launch(config),
 			]);
 		});
 
@@ -335,14 +335,13 @@ describe("dart cli debugger", () => {
 			await Promise.all([
 				dc.configurationSequence(),
 				dc.waitForEvent("terminated"),
-				attach(dc, config),
+				dc.launch(config),
 			]);
 
 			assert.ok(showInputBox.calledOnce);
 		});
 
-		// NEED TO MAKE ATTACH VERSION
-		it.skip("to a paused Dart script and can set breakpoints", async () => {
+		it("to a paused Dart script and can set breakpoints", async () => {
 			const process = spawnProcessPaused(await getLaunchConfiguration(helloWorldMainFile));
 			const observatoryUri = await process.observatoryUri;
 
@@ -355,8 +354,7 @@ describe("dart cli debugger", () => {
 			]);
 		});
 
-		// NEED TO MAKE ATTACH VERSION
-		it.skip("and removes breakpoints and unpauses on detach", async () => {
+		it("and removes breakpoints and unpauses on detach", async () => {
 			const process = spawnProcessPaused(await getLaunchConfiguration(helloWorldMainFile));
 			const observatoryUri = await process.observatoryUri;
 

@@ -45,7 +45,7 @@ export class DebugClient extends ProtocolClient {
 	private _debugType: string;
 	private _socket: net.Socket;
 
-	private _supportsConfigurationDoneRequest: boolean;
+	protected _supportsConfigurationDoneRequest: boolean;
 
 	public defaultTimeout = 5000;
 
