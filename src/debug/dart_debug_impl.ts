@@ -111,6 +111,9 @@ export class DartDebugSession extends DebugSession {
 			this.sendResponse(response);
 			return;
 		}
+		if (!args.packages) {
+			return this.errorResponse(response, "Unable to attach; no packages file provided.");
+		}
 
 		this.cwd = args.cwd;
 		this.debugSdkLibraries = args.debugSdkLibraries;
