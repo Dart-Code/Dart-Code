@@ -688,14 +688,14 @@
 							},
 							"observatoryUri": {
 								"type": "string",
-								"description": "URI of the Observaty instance to attach to."
+								"description": "URI (or port) of the Observatory instance to attach to."
 							}
 						}
 					}
 				},
 				"configurationSnippets": [
 					{
-						"label": "Dart",
+						"label": "Dart: Launch",
 						"description": "Launch and debug Dart applications",
 						"body": {
 							"name": "Dart",
@@ -705,7 +705,7 @@
 						}
 					},
 					{
-						"label": "Flutter",
+						"label": "Flutter: Launch",
 						"description": "Launch and debug Flutter applications",
 						"body": {
 							"name": "Flutter",
@@ -715,13 +715,12 @@
 						}
 					},
 					{
-						"label": "Dart - Attach",
+						"label": "Dart: Attach",
 						"description": "Debug an already-running Dart application",
 						"body": {
-							"name": "Dart - Attach",
+							"name": "Dart: Attach to Process",
 							"type": "dart",
-							"request": "attach",
-							"packages": "^\"\\${workspaceFolder}/.packages\""
+							"request": "attach"
 						}
 					}
 				]
