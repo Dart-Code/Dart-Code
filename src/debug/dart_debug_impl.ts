@@ -113,10 +113,15 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		this.cwd = args.cwd;
-		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.packages));
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.observatoryLogFile = args.observatoryLogFile;
+
+		try {
+			this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.packages));
+		} catch (e) {
+			this.errorResponse(response, `Unable to connect to load packages file: ${e}`);
+		}
 
 		try {
 			await this.initObservatory(this.websocketUriForObservatoryUri(args.observatoryUri));
