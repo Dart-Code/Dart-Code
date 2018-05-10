@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { fsPath } from "../../../src/utils";
-import { ensureMapEntry, ensureOutputContains, ensureVariable, evaluate, getObservatoryUriForProcess, getTopFrameVariables, getVariables, spawnProcessPaused } from "../../debug_helpers";
+import { ensureMapEntry, ensureOutputContains, ensureVariable, evaluate, getTopFrameVariables, getVariables, spawnProcessPaused } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getLaunchConfiguration, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldMainFile, openFile, platformEol, positionOf, sb } from "../../helpers";
 
 describe("dart cli debugger", () => {
@@ -301,23 +301,19 @@ describe("dart cli debugger", () => {
 	describe("attaches", () => {
 		it("to a paused Dart script and can unpause to run it to completion", async () => {
 			const process = spawnProcessPaused(await getLaunchConfiguration(helloWorldMainFile));
-			defer(() => process && !process.killed && process.kill());
-
-			const observatoryUri = await getObservatoryUriForProcess(process);
+			const observatoryUri = await process.observatoryUri;
 
 			const config = await attachDebugger(observatoryUri);
 			await Promise.all([
 				dc.configurationSequence(),
 				dc.waitForEvent("terminated"),
-				dc.launch(config),
+				dc.attachRequest(config as any),
 			]);
 		});
 
 		it("when provided only a port in launch.config", async () => {
 			const process = spawnProcessPaused(await getLaunchConfiguration(helloWorldMainFile));
-			defer(() => process && !process.killed && process.kill());
-
-			const observatoryUri = await getObservatoryUriForProcess(process);
+			const observatoryUri = await process.observatoryUri;
 			const observatoryPort = /:([0-9]+)\/?$/.exec(observatoryUri)[1];
 
 			const config = await attachDebugger(observatoryUri);
@@ -330,9 +326,8 @@ describe("dart cli debugger", () => {
 
 		it("to the observatory uri provided by the user when not specified in launch.json", async () => {
 			const process = spawnProcessPaused(await getLaunchConfiguration(helloWorldMainFile));
-			defer(() => process && !process.killed && process.kill());
+			const observatoryUri = await process.observatoryUri;
 
-			const observatoryUri = await getObservatoryUriForProcess(process);
 			const showInputBox = sb.stub(vs.window, "showInputBox");
 			showInputBox.resolves(observatoryUri);
 
@@ -348,9 +343,7 @@ describe("dart cli debugger", () => {
 
 		it("to a paused Dart script and can set breakpoints", async () => {
 			const process = spawnProcessPaused(await getLaunchConfiguration(helloWorldMainFile));
-			defer(() => process && !process.killed && process.kill());
-
-			const observatoryUri = await getObservatoryUriForProcess(process);
+			const observatoryUri = await process.observatoryUri;
 
 			const config = await attachDebugger(observatoryUri);
 			await Promise.all([
