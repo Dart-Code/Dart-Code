@@ -71,12 +71,13 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 		for (const change of e.contentChanges) {
 			const startLine = change.range.start.line;
 			const endLine = change.range.end.line;
-			const diff = endLine - startLine;
+			const linesInRange = endLine - startLine;
+			const linesInserted = change.text.split("\n").length - 1;
+			const diff = linesInserted - linesInRange;
 			if (diff === 0)
 				continue;
 
-			fileState.modified = this.translateChanges(fileState.modified, startLine, endLine);
-			fileState.notRun = this.translateChanges(fileState.notRun, startLine, endLine);
+			fileState.modified = this.translateChanges(fileState.modified, startLine, endLine, diff);
 		}
 
 		// Append the new ranges.
@@ -88,20 +89,30 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 			if (change.rangeLength === change.text.length && change.text === editor.document.getText(change.range))
 				continue;
 
-			// TODO: Should we merge ranges and unnecessary duplicate ranges here?
+			const linesInserted = change.text.split("\n").length - 1;
+
 			// TODO: Make it an array of bools?
-			for (let l = change.range.start.line; l <= change.range.end.line; l++)
+			for (let l = change.range.start.line; l <= change.range.start.line + linesInserted; l++)
 				fileState.modified.push(l);
 		}
 
 		// Make the lists unique
 		fileState.modified = _.uniq(fileState.modified);
-		fileState.notRun = _.uniq(fileState.notRun);
+
+		// Remove any uninteresting lines
+		fileState.modified = fileState.modified.filter((lineNumber: number) => {
+			const lineText = editor.document.lineAt(lineNumber).text.trim();
+
+			if (lineText === "" || lineText === "{" || lineText === "}" || lineText === "/" || lineText.startsWith("//"))
+				return false;
+
+			return true;
+		});
 
 		this.redrawDecorations([editor]);
 	}
 
-	private translateChanges(lines: number[], startLine: number, endLine: number): number[] {
+	private translateChanges(lines: number[], startLine: number, endLine: number, diff: number): number[] {
 		return lines
 			.map((l) => {
 				if (startLine >= l) {
@@ -112,7 +123,7 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 					return undefined;
 				} else {
 					// Otherwise, just need to offset it.
-					return l + (endLine - startLine);
+					return l + diff;
 				}
 			})
 			.filter((l) => l);
