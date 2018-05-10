@@ -98,6 +98,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			if (/^\s*[0-9]+\s*$/.exec(debugConfig.observatoryUri)) {
 				debugConfig.observatoryUri = "http://127.0.0.1:" + debugConfig.observatoryUri.trim();
 			}
+
+			debugConfig.packages = debugConfig.packages || path.join(fsPath(folder.uri), ".packages");
 		}
 
 		// Disable Flutter mode for attach.
