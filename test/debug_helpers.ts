@@ -37,12 +37,6 @@ export async function evaluate(dc: DartDebugClient, expression: string): Promise
 	return result.body;
 }
 
-export async function attach(dc: DartDebugClient, config: any): Promise<void> {
-	await dc.initializeRequest();
-	await dc.configurationDoneRequest();
-	await dc.attachRequest(config);
-}
-
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string, name: string, value: string) {
 	assert.ok(variables);
 	const v = variables.find((v) => v.name === name);
