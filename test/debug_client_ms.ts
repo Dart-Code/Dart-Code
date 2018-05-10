@@ -294,7 +294,7 @@ export class DebugClient extends ProtocolClient {
 		timeout = timeout || this.defaultTimeout;
 
 		return new Promise((resolve, reject) => {
-			this.once(eventType, event => {
+			this.once(eventType, (event: any) => {
 				resolve(event);
 			});
 			if (!this._socket) {	// no timeouts if debugging the tests
@@ -389,7 +389,7 @@ export class DebugClient extends ProtocolClient {
 
 		return new Promise((resolve, reject) => {
 			let output = '';
-			this.on('output', event => {
+			this.on('output', (event: any) => {
 				const e = <DebugProtocol.OutputEvent>event;
 				if (e.body.category === category) {
 					output += e.body.output;
