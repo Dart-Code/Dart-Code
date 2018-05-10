@@ -34,8 +34,7 @@ export class FlutterTestDebugSession extends DartDebugSession {
 			appArgs.push("--start-paused");
 		}
 
-		const sourceFile = this.sourceFileForArgs(args);
-		appArgs.push(sourceFile);
+		appArgs.push(this.sourceFileForArgs(args));
 
 		if (args.args) {
 			appArgs = appArgs.concat(args.args);
