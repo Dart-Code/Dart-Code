@@ -1,3 +1,4 @@
+import * as _ from "lodash";
 import * as vs from "vscode";
 import { DebugCommands } from "../commands/debug";
 import { CoverageData } from "../debug/utils";
@@ -92,6 +93,10 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 			for (let l = change.range.start.line; l <= change.range.end.line; l++)
 				fileState.modified.push(l);
 		}
+
+		// Make the lists unique
+		fileState.modified = _.uniq(fileState.modified);
+		fileState.notRun = _.uniq(fileState.notRun);
 
 		this.redrawDecorations([editor]);
 	}
