@@ -37,70 +37,48 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration> {
 		const openFile = window.activeTextEditor && window.activeTextEditor.document ? fsPath(window.activeTextEditor.document.uri) : null;
-
 		function resolveVariables(input: string): string {
 			if (!input) return input;
 			if (input === "${file}") return openFile;
 			return input.replace(/\${workspaceFolder}/, fsPath(folder.uri));
 		}
+
+		const isAttachRequest = debugConfig.request === "attach";
+
 		debugConfig.program = resolveVariables(debugConfig.program);
 		debugConfig.cwd = resolveVariables(debugConfig.cwd);
 
 		// If there's no program set, try to guess one.
-		if (!debugConfig.program) {
+		if (!isAttachRequest) {
 			// Overwrite the folder with a more appropriate workspace root (https://github.com/Microsoft/vscode/issues/45580)
-			if (openFile) {
+			if (openFile)
 				folder = workspace.getWorkspaceFolder(Uri.file(openFile)) || folder;
-			}
-			if (isTestFile(openFile) || isInsideFolderNamed(openFile, "bin") || isInsideFolderNamed(openFile, "tool")) {
-				debugConfig.program = openFile;
-			} else {
-				// Use the open file as a clue to find the best project root, then search from there.
-				const commonLaunchPaths = [
-					path.join(fsPath(folder.uri), "lib", "main.dart"),
-					path.join(fsPath(folder.uri), "bin", "main.dart"),
-				];
-				for (const launchPath of commonLaunchPaths) {
-					if (fs.existsSync(launchPath)) {
-						debugConfig.program = launchPath;
-						break;
-					}
-				}
-			}
-		}
 
-		// If we still don't have an entry point, the user will have to provide it.
-		if (!debugConfig.program) {
-			// Set type=null which causes launch.json to open.
-			debugConfig.type = null;
-			window.showInformationMessage("Set the 'program' value in your launch config (eg 'bin/main.dart') then launch again");
-			return debugConfig;
+			debugConfig.program = debugConfig.program || this.guessBestEntryPoint(openFile, folder);
+
+			// If we still don't have an entry point, the user will have to provide it.
+			if (!debugConfig.program) {
+				// Set type=null which causes launch.json to open.
+				debugConfig.type = null;
+				window.showInformationMessage("Set the 'program' value in your launch config (eg 'bin/main.dart') then launch again");
+				return debugConfig;
+			}
+		} else {
+			debugConfig.packages = debugConfig.packages || path.join(fsPath(folder.uri), ".packages");
+
+			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
+			debugConfig.observatoryUri = debugConfig.observatoryUri || await this.getObservatoryUri();
+
+			if (!debugConfig.observatoryUri) {
+				// Set type=null which causes launch.json to open.
+				debugConfig.type = null;
+				window.showInformationMessage("Set the 'program' value in your launch config (eg 'bin/main.dart') then launch again");
+				return debugConfig;
+			}
 		}
 
 		// If we don't have a cwd then find the best one from the project root.
 		debugConfig.cwd = debugConfig.cwd || fsPath(folder.uri);
-
-		const isAttachRequest = debugConfig.request === "attach";
-		if (isAttachRequest) {
-			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
-			if (!debugConfig.observatoryUri) {
-				debugConfig.observatoryUri =
-					await vs.window.showInputBox({prompt: "Enter Observatory address. This can be a full URL, or just a port for localhost."});
-			}
-			if (!debugConfig.observatoryUri) {
-				// ???: Is there a way to fail out at this stage without switching to launch.json?
-				debugConfig.type = null;
-				window.showInformationMessage("Observatory address must be provided.");
-				return debugConfig;
-			}
-			debugConfig.observatoryUri = debugConfig.observatoryUri;
-			// If the input is just a number, treat is as a localhost port.
-			if (/^\s*[0-9]+\s*$/.exec(debugConfig.observatoryUri)) {
-				debugConfig.observatoryUri = "http://127.0.0.1:" + debugConfig.observatoryUri.trim();
-			}
-
-			debugConfig.packages = debugConfig.packages || path.join(fsPath(folder.uri), ".packages");
-		}
 
 		// Disable Flutter mode for attach.
 		// TODO: Update FlutterDebugSession to understand attach mode, and remove this limitation.
@@ -127,6 +105,35 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		this.analytics.logDebuggerStart(folder && folder.uri);
 
 		return debugConfig;
+	}
+
+	private guessBestEntryPoint(openFile: string, workspaceFolder: WorkspaceFolder | undefined): string {
+
+		if (isTestFile(openFile) || isInsideFolderNamed(openFile, "bin") || isInsideFolderNamed(openFile, "tool")) {
+			return openFile;
+		} else {
+			// Use the open file as a clue to find the best project root, then search from there.
+			const commonLaunchPaths = [
+				path.join(fsPath(workspaceFolder.uri), "lib", "main.dart"),
+				path.join(fsPath(workspaceFolder.uri), "bin", "main.dart"),
+			];
+			for (const launchPath of commonLaunchPaths) {
+				if (fs.existsSync(launchPath)) {
+					return launchPath;
+				}
+			}
+		}
+	}
+
+	private async getObservatoryUri(): Promise<string> {
+		let userInput = await vs.window.showInputBox({ prompt: "Enter Observatory address. This can be a full URL, or just a port for localhost." });
+
+		// If the input is just a number, treat is as a localhost port.
+		if (userInput && /^\s*[0-9]+\s*$/.exec(userInput)) {
+			userInput = `http://127.0.0.1:${userInput}`;
+		}
+
+		return userInput;
 	}
 
 	private getDebugServer(debugType: DebuggerType, port?: number) {
