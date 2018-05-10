@@ -67,7 +67,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.packages = debugConfig.packages || path.join(fsPath(folder.uri), ".packages");
 
 			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
-			debugConfig.observatoryUri = debugConfig.observatoryUri || await this.getObservatoryUri();
+			debugConfig.observatoryUri = await this.getObservatoryUri(debugConfig.observatoryUri);
 
 			if (!debugConfig.observatoryUri) {
 				// Set type=null which causes launch.json to open.
@@ -125,15 +125,16 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 	}
 
-	private async getObservatoryUri(): Promise<string> {
-		let userInput = await vs.window.showInputBox({ prompt: "Enter Observatory address. This can be a full URL, or just a port for localhost." });
+	private async getObservatoryUri(observatoryUri: string): Promise<string> {
+		observatoryUri = observatoryUri || await vs.window.showInputBox({ prompt: "Enter Observatory address. This can be a full URL, or just a port for localhost." });
+		observatoryUri = observatoryUri && observatoryUri.trim();
 
 		// If the input is just a number, treat is as a localhost port.
-		if (userInput && /^\s*[0-9]+\s*$/.exec(userInput)) {
-			userInput = `http://127.0.0.1:${userInput}`;
+		if (observatoryUri && /^[0-9]+$/.exec(observatoryUri)) {
+			observatoryUri = `http://127.0.0.1:${observatoryUri}`;
 		}
 
-		return userInput;
+		return observatoryUri;
 	}
 
 	private getDebugServer(debugType: DebuggerType, port?: number) {

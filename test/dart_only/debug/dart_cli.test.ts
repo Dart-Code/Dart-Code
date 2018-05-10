@@ -316,7 +316,8 @@ describe("dart cli debugger", () => {
 			const observatoryUri = await process.observatoryUri;
 			const observatoryPort = /:([0-9]+)\/?$/.exec(observatoryUri)[1];
 
-			const config = await attachDebugger(observatoryUri);
+			// Include whitespace as a test for trimming.
+			const config = await attachDebugger(` ${observatoryPort} `);
 			await Promise.all([
 				dc.configurationSequence(),
 				dc.waitForEvent("terminated"),
