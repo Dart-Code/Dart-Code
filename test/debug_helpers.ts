@@ -37,6 +37,12 @@ export async function evaluate(dc: DebugClient, expression: string): Promise<{
 	return result.body;
 }
 
+export async function attach(dc: DebugClient, config: any): Promise<void> {
+	await dc.initializeRequest();
+	await dc.configurationDoneRequest();
+	await dc.attachRequest(config);
+}
+
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string, name: string, value: string) {
 	assert.ok(variables);
 	const v = variables.find((v) => v.name === name);
@@ -98,7 +104,7 @@ export function spawnProcessPaused(config: DebugConfiguration): DartProcess {
 		config.dartPath,
 		[
 			"--enable-vm-service=0",
-			"-pause_isolates_on_start=true",
+			"--pause_isolates_on_start=true",
 			config.program,
 		],
 	);
