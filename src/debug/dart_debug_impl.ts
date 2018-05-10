@@ -847,10 +847,10 @@ export class DartDebugSession extends DebugSession {
 
 					// Output any logpoint messages.
 					for (const logPoint of logPoints) {
-						// TODO: Escape triple quotes?
 						const logMessage = logPoint.logMessage
 							.replace(/(^|[^\\\$]){/g, "$1\${") // Prefix any {tokens} with $ if they don't have
 							.replace(/\\({)/g, "$1"); // Remove slashes
+						// TODO: Escape triple quotes?
 						const printCommand = `print("""${logMessage}""")`;
 						await this.evaluateAndSendErrors(thread, printCommand);
 					}
