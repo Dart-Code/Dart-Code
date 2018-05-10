@@ -54,9 +54,9 @@ describe("dart cli debugger", () => {
 			// TODO: Figure out if this is a bug - because we never connect to Observatory, we never
 			// resolve this properly.
 			// dc.configurationSequence(),
-			ensureOutputContains(dc, "stderr", "Unrecognized flags: fake-flag").then((_) => console.log("Got output")),
-			dc.waitForEvent("terminated").then((_) => console.log("Got terminate")),
-			dc.launch(config).then((_) => console.log("launched")),
+			ensureOutputContains(dc, "stderr", "Unrecognized flags: fake-flag"),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
 		]);
 	});
 
