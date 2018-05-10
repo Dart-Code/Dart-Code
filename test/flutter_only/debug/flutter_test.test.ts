@@ -1,9 +1,9 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { DebugClient } from "vscode-debugadapter-testsupport";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../src/utils";
+import { DartDebugClient } from "../../debug_client";
 import { getTopFrameVariables } from "../../debug_helpers";
 import { activate, defer, ext, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
 
@@ -13,9 +13,9 @@ describe("flutter test debugger", () => {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
 	});
 
-	let dc: DebugClient;
+	let dc: DartDebugClient;
 	beforeEach(() => {
-		dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_test_debug_entry.js"), "dart");
+		dc = new DartDebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_test_debug_entry.js"), "dart");
 		// Spawning flutter tests seem to be kinda slow (and may fetch packages), so we need a higher timeout
 		dc.defaultTimeout = 60000;
 		defer(() => dc.stop());

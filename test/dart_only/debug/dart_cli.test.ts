@@ -1,17 +1,17 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { DebugClient } from "vscode-debugadapter-testsupport";
 import { fsPath } from "../../../src/utils";
+import { DartDebugClient } from "../../debug_client";
 import { attach, ensureMapEntry, ensureOutputContains, ensureVariable, evaluate, getTopFrameVariables, getVariables, spawnProcessPaused } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getLaunchConfiguration, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldMainFile, openFile, platformEol, positionOf, sb } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	beforeEach(() => activate(helloWorldMainFile));
 
-	let dc: DebugClient;
+	let dc: DartDebugClient;
 	beforeEach(() => {
-		dc = new DebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
+		dc = new DartDebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
 		dc.defaultTimeout = 30000;
 		defer(() => dc.stop());
 	});
