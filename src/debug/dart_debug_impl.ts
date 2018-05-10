@@ -104,7 +104,7 @@ export class DartDebugSession extends DebugSession {
 			this.sendEvent(new InitializedEvent());
 	}
 
-	protected attachRequest(response: DebugProtocol.AttachResponse, args: DartAttachRequestArguments): void {
+	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DartAttachRequestArguments): Promise<void> {
 		if (!args || !args.observatoryUri) {
 			response.success = false;
 			response.message = "Unable to attach; no Observatory address provided.";
@@ -118,13 +118,12 @@ export class DartDebugSession extends DebugSession {
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.observatoryLogFile = args.observatoryLogFile;
 
-		this.initObservatory(this.websocketUriForObservatoryUri(args.observatoryUri)).then((error) => {
-			if (error) {
-				response.success = false;
-				response.message = `Unable to connect to Observatory: ${error}`;
-			}
+		try {
+			await this.initObservatory(this.websocketUriForObservatoryUri(args.observatoryUri));
 			this.sendResponse(response);
-		});
+		} catch (e) {
+			this.errorResponse(response, `Unable to connect to Observatory: ${e}`);
+		}
 	}
 
 	protected sourceFileForArgs(args: DartLaunchRequestArguments) {
@@ -170,107 +169,99 @@ export class DartDebugSession extends DebugSession {
 		return wsUri;
 	}
 
-	protected initObservatory(uri: string): Promise<Error> {
-		const completer = new PromiseCompleter<Error>();
-
-		// Send the uri back to the editor so it can be used to launch browsers etc.
-		if (uri.endsWith("/ws")) {
-			let browserFriendlyUri = uri.substring(0, uri.length - 3);
-			if (browserFriendlyUri.startsWith("ws:"))
-				browserFriendlyUri = "http:" + browserFriendlyUri.substring(3);
-			this.sendEvent(new Event("dart.observatoryUri", { observatoryUri: browserFriendlyUri.toString() }));
-		}
-		this.observatory = new ObservatoryConnection(uri);
-		this.observatory.onLogging((message) => {
-			const max: number = 2000;
-
-			if (this.observatoryLogFile) {
-				if (!this.observatoryLogStream)
-					this.observatoryLogStream = fs.createWriteStream(this.observatoryLogFile);
-				this.observatoryLogStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
-				if (message.length > max)
-					this.observatoryLogStream.write(message.substring(0, max) + "…\r\n");
-				else
-					this.observatoryLogStream.write(message.trim() + "\r\n");
+	protected initObservatory(uri: string): Promise<void> {
+		return new Promise<void>((resolve, reject) => {
+			// Send the uri back to the editor so it can be used to launch browsers etc.
+			if (uri.endsWith("/ws")) {
+				let browserFriendlyUri = uri.substring(0, uri.length - 3);
+				if (browserFriendlyUri.startsWith("ws:"))
+					browserFriendlyUri = "http:" + browserFriendlyUri.substring(3);
+				this.sendEvent(new Event("dart.observatoryUri", { observatoryUri: browserFriendlyUri.toString() }));
 			}
-		});
-		this.observatory.onOpen(() => {
-			if (completer.promise) {
-				completer.resolve(null);
-				completer.promise = null;
-			}
+			this.observatory = new ObservatoryConnection(uri);
+			this.observatory.onLogging((message) => {
+				const max: number = 2000;
 
-			this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event));
-			this.observatory.on("Extension", (event: VMEvent) => this.handleExtensionEvent(event));
-			this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event));
-			this.observatory.getVM().then((result) => {
-				const vm: VM = result.result as VM;
-				const promises = [];
-
-				for (const isolateRef of vm.isolates) {
-					promises.push(this.observatory.getIsolate(isolateRef.id).then((response) => {
-						const isolate: VMIsolate = response.result as VMIsolate;
-						this.threadManager.registerThread(
-							isolateRef,
-							isolate.runnable ? "IsolateRunnable" : "IsolateStart",
-						);
-
-						if (isolate.pauseEvent.kind.startsWith("Pause")) {
-							this.handlePauseEvent(isolate.pauseEvent);
-						}
-
-						// Helpers to categories libraries as SDK/ExternalLibrary/not.
-						const isValidToDebug = (l: VMLibraryRef) => !l.uri.startsWith("dart:_"); // TODO: See https://github.com/dart-lang/sdk/issues/29813
-						const isSdkLibrary = (l: VMLibraryRef) => l.uri.startsWith("dart:");
-						// If we don't know the local package name, we have to assume nothing is external, else we might disable debugging for the local library.
-						const isExternalLibrary = (l: VMLibraryRef) => l.uri.startsWith("package:") && this.packageMap.localPackageName && !l.uri.startsWith(`package:${this.packageMap.localPackageName}/`);
-
-						// Set whether libraries should be debuggable based on user settings.
-						return Promise.all(
-							isolate.libraries.filter(isValidToDebug).map((library) => {
-								// Note: Condition is negated.
-								const shouldDebug = !(
-									// Inside here is shouldNotDebug!
-									(isSdkLibrary(library) && !this.debugSdkLibraries)
-									|| (isExternalLibrary(library) && !this.debugExternalLibraries)
-								);
-								this.observatory.setLibraryDebuggable(isolateRef.id, library.id, shouldDebug);
-							}),
-						);
-					}));
+				if (this.observatoryLogFile) {
+					if (!this.observatoryLogStream)
+						this.observatoryLogStream = fs.createWriteStream(this.observatoryLogFile);
+					this.observatoryLogStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
+					if (message.length > max)
+						this.observatoryLogStream.write(message.substring(0, max) + "…\r\n");
+					else
+						this.observatoryLogStream.write(message.trim() + "\r\n");
 				}
+			});
+			this.observatory.onOpen(() => {
+				this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event));
+				this.observatory.on("Extension", (event: VMEvent) => this.handleExtensionEvent(event));
+				this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event));
+				this.observatory.getVM().then((result) => {
+					const vm: VM = result.result as VM;
+					const promises = [];
 
-				// Set a timer for memory updates.
-				if (this.pollforMemoryMs)
-					setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs);
+					for (const isolateRef of vm.isolates) {
+						promises.push(this.observatory.getIsolate(isolateRef.id).then((response) => {
+							const isolate: VMIsolate = response.result as VMIsolate;
+							this.threadManager.registerThread(
+								isolateRef,
+								isolate.runnable ? "IsolateRunnable" : "IsolateStart",
+							);
 
-				// TODO: Handle errors (such as these failing because we sent them too early).
-				// https://github.com/Dart-Code/Dart-Code/issues/790
-				Promise.all(promises).then((_) => {
-					this.sendEvent(new InitializedEvent());
+							if (isolate.pauseEvent.kind.startsWith("Pause")) {
+								this.handlePauseEvent(isolate.pauseEvent);
+							}
+
+							// Helpers to categories libraries as SDK/ExternalLibrary/not.
+							const isValidToDebug = (l: VMLibraryRef) => !l.uri.startsWith("dart:_"); // TODO: See https://github.com/dart-lang/sdk/issues/29813
+							const isSdkLibrary = (l: VMLibraryRef) => l.uri.startsWith("dart:");
+							// If we don't know the local package name, we have to assume nothing is external, else we might disable debugging for the local library.
+							const isExternalLibrary = (l: VMLibraryRef) => l.uri.startsWith("package:") && this.packageMap.localPackageName && !l.uri.startsWith(`package:${this.packageMap.localPackageName}/`);
+
+							// Set whether libraries should be debuggable based on user settings.
+							return Promise.all(
+								isolate.libraries.filter(isValidToDebug).map((library) => {
+									// Note: Condition is negated.
+									const shouldDebug = !(
+										// Inside here is shouldNotDebug!
+										(isSdkLibrary(library) && !this.debugSdkLibraries)
+										|| (isExternalLibrary(library) && !this.debugExternalLibraries)
+									);
+									this.observatory.setLibraryDebuggable(isolateRef.id, library.id, shouldDebug);
+								}),
+							);
+						}));
+					}
+
+					// Set a timer for memory updates.
+					if (this.pollforMemoryMs)
+						setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs);
+
+					// TODO: Handle errors (such as these failing because we sent them too early).
+					// https://github.com/Dart-Code/Dart-Code/issues/790
+					Promise.all(promises).then((_) => {
+						this.sendEvent(new InitializedEvent());
+					});
 				});
+				resolve();
+			});
+
+			this.observatory.onClose((code: number, message: string) => {
+				if (this.observatoryLogStream) {
+					this.observatoryLogStream.close();
+					this.observatoryLogStream = null;
+				}
+				// This event arrives before the process exit event.
+				setTimeout(() => {
+					if (!this.processExited)
+						this.sendEvent(new TerminatedEvent());
+				}, 100);
+			});
+
+			this.observatory.onError((error) => {
+				reject(error);
 			});
 		});
-
-		this.observatory.onClose((code: number, message: string) => {
-			if (this.observatoryLogStream) {
-				this.observatoryLogStream.close();
-				this.observatoryLogStream = null;
-			}
-			// This event arrives before the process exit event.
-			setTimeout(() => {
-				if (!this.processExited)
-					this.sendEvent(new TerminatedEvent());
-			}, 100);
-		});
-
-		this.observatory.onError((error) => {
-			if (completer.promise) {
-				completer.resolve(error);
-				completer.promise = null;
-			}
-		});
-		return completer.promise;
 	}
 
 	protected disconnectRequest(
