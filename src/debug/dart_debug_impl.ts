@@ -165,13 +165,15 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private websocketUriForObservatoryUri(uri: string) {
-		let wsUri = uri.trim();
-		if (!wsUri.endsWith("/ws")) {
-			if (!wsUri.endsWith("/"))
-				wsUri = wsUri + "/";
-			wsUri = wsUri + "ws";
-		}
-		return wsUri;
+		const wsUri = uri.trim();
+		if (wsUri.endsWith("/ws"))
+			return wsUri;
+		else if (wsUri.endsWith("/ws/"))
+			return wsUri.substr(0, wsUri.length - 1);
+		else if (wsUri.endsWith("/"))
+			return `${wsUri}ws`;
+		else
+			return `${wsUri}/ws`;
 	}
 
 	protected initObservatory(uri: string): Promise<void> {
