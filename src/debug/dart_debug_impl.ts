@@ -106,10 +106,7 @@ export class DartDebugSession extends DebugSession {
 
 	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DartAttachRequestArguments): Promise<void> {
 		if (!args || !args.observatoryUri) {
-			response.success = false;
-			response.message = "Unable to attach; no Observatory address provided.";
-			this.sendResponse(response);
-			return;
+			return this.errorResponse(response, "Unable to attach; no Observatory address provided.");
 		}
 		if (!args.packages) {
 			return this.errorResponse(response, "Unable to attach; no packages file provided.");
