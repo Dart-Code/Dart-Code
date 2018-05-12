@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DebugClient } from "vscode-debugadapter-testsupport";
 import { fsPath } from "../../../src/utils";
-import { ensureOutputContains, ensureVariable, evaluate, getTopFrameVariables, getVariables } from "../../debug_helpers";
+import { ensureMapEntry, ensureOutputContains, ensureVariable, evaluate, getTopFrameVariables, getVariables } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, ext, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldMainFile, openFile, positionOf } from "../../helpers";
 
 describe("dart cli debugger", () => {
@@ -204,6 +204,35 @@ describe("dart cli debugger", () => {
 		ensureVariable(mapVariables, undefined, "4", `true -> true`);
 		ensureVariable(mapVariables, undefined, "5", `1 -> "one"`);
 		ensureVariable(mapVariables, undefined, "6", `1.1 -> "one-point-one"`);
+
+		await ensureMapEntry(mapVariables, {
+			key: { evaluateName: null, name: "key", value: `"l"` },
+			value: { evaluateName: `m["l"]`, name: "value", value: "[2]" },
+		}, dc);
+		await ensureMapEntry(mapVariables, {
+			key: { evaluateName: null, name: "key", value: `"s"` },
+			value: { evaluateName: `m["s"]`, name: "value", value: `"Hello!"` },
+		}, dc);
+		await ensureMapEntry(mapVariables, {
+			key: { evaluateName: null, name: "key", value: `DateTime` },
+			value: { evaluateName: null, name: "value", value: `"today"` },
+		}, dc);
+		await ensureMapEntry(mapVariables, {
+			key: { evaluateName: null, name: "key", value: `DateTime` },
+			value: { evaluateName: null, name: "value", value: `"tomorrow"` },
+		}, dc);
+		await ensureMapEntry(mapVariables, {
+			key: { evaluateName: null, name: "key", value: "true" },
+			value: { evaluateName: `m[true]`, name: "value", value: "true" },
+		}, dc);
+		await ensureMapEntry(mapVariables, {
+			key: { evaluateName: null, name: "key", value: "1" },
+			value: { evaluateName: `m[1]`, name: "value", value: `"one"` },
+		}, dc);
+		await ensureMapEntry(mapVariables, {
+			key: { evaluateName: null, name: "key", value: "1.1" },
+			value: { evaluateName: `m[1.1]`, name: "value", value: `"one-point-one"` },
+		}, dc);
 	});
 
 	it("watch expressions provide same info as locals", async () => {

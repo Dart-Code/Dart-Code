@@ -44,6 +44,38 @@ export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName
 	assert.equal(v.value, value);
 }
 
+export interface MapEntry {
+	key: {
+		evaluateName: string;
+		name: string;
+		value: string;
+	};
+	value: {
+		evaluateName: string;
+		name: string;
+		value: string;
+	};
+}
+
+export async function ensureMapEntry(mapEntries: DebugProtocol.Variable[], entry: MapEntry, dc: DebugClient) {
+	assert.ok(mapEntries);
+	const results = await Promise.all(mapEntries.map((mapEntry) => {
+		return getVariables(dc, mapEntry.variablesReference).then((variable) => {
+			const key = variable[0] as DebugProtocol.Variable;
+			const value = variable[1] as DebugProtocol.Variable;
+			assert.ok(key);
+			assert.ok(value);
+			return key.evaluateName === entry.key.evaluateName
+				&& key.name === entry.key.name
+				&& key.value === entry.key.value
+				&& value.evaluateName === entry.value.evaluateName
+				&& value.name === entry.value.name
+				&& value.value === entry.value.value;
+		});
+	}));
+	assert.ok(results.find((r) => r));
+}
+
 export function ensureOutputContains(dc: DebugClient, category: string, text: string) {
 	return new Promise((resolve, reject) => dc.on("output", (event: DebugProtocol.OutputEvent) => {
 		if (event.body.category === category) {
