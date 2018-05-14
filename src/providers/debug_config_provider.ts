@@ -86,8 +86,20 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			? (isTest ? DebuggerType.FlutterTest : DebuggerType.Flutter)
 			: DebuggerType.Dart;
 
+		// Ensure we have a device
+		const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null;
+		if (isFlutter && !isTest && !deviceId && this.deviceManager) {
+			// Fetch a list of emulators
+			if (!await this.deviceManager.promptForAndLaunchEmulator()) {
+				// Set type=null which causes launch.json to open.
+				debugConfig.type = null;
+				window.showInformationMessage("Cannot launch without an active device");
+				return debugConfig;
+			}
+		}
+
 		// TODO: This cast feels nasty?
-		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isFlutter, this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null);
+		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isFlutter, deviceId);
 
 		// Debugger always uses uppercase drive letters to ensure our paths have them regardless of where they came from.
 		debugConfig.program = forceWindowsDriveLetterToUppercase(debugConfig.program);

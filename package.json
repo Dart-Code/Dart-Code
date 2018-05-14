@@ -213,8 +213,13 @@
 				"category": "Flutter"
 			},
 			{
-				"command": "flutter.changeDevice",
-				"title": "Change Device",
+				"command": "flutter.selectDevice",
+				"title": "Select Device",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.launchEmulator",
+				"title": "Launch Emulator",
 				"category": "Flutter"
 			}
 		],
@@ -332,7 +337,11 @@
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				},
 				{
-					"command": "flutter.changeDevice",
+					"command": "flutter.selectDevice",
+					"when": "dart-code:flutterProjectLoaded"
+				},
+				{
+					"command": "flutter.launchEmulator",
 					"when": "dart-code:flutterProjectLoaded"
 				}
 			],
