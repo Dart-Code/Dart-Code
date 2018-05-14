@@ -134,8 +134,21 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	private async getObservatoryUri(observatoryUri: string): Promise<string> {
 		observatoryUri = observatoryUri || await vs.window.showInputBox({
 			ignoreFocusOut: true, // Don't close the window if the user tabs away to get the uri
-			placeHolder: "Observatory URI or port",
-			prompt: "Enter an Observatory URI",
+			placeHolder: "Paste an Observatory URI or port",
+			prompt: "Enter Observatory URI",
+			validateInput: (input) => {
+				if (!input)
+					return;
+
+				if (Number.isInteger(parseFloat(input)))
+					return;
+
+				// Uri.parse doesn't seem to work as expected, so do our own basic validation
+				// https://github.com/Microsoft/vscode/issues/49818
+
+				if (!input.startsWith("http://") && !input.startsWith("https://"))
+					return "Please enter a valid Observatory URI or port number";
+			},
 		});
 		observatoryUri = observatoryUri && observatoryUri.trim();
 
