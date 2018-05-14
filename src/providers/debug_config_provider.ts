@@ -140,6 +140,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				if (!input)
 					return;
 
+				input = input.trim();
+
 				if (Number.isInteger(parseFloat(input)))
 					return;
 
