@@ -108,24 +108,11 @@ export class DartDebugSession extends DebugSession {
 		if (!args || !args.observatoryUri) {
 			return this.errorResponse(response, "Unable to attach; no Observatory address provided.");
 		}
-		if (!args.packages) {
-			return this.errorResponse(response, "Unable to attach; no packages file provided.");
-		}
 
 		this.cwd = args.cwd;
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.observatoryLogFile = args.observatoryLogFile;
-
-		// Support relative paths
-		if (!path.isAbsolute(args.packages))
-			args.packages = path.join(args.cwd, args.packages);
-
-		try {
-			this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.packages));
-		} catch (e) {
-			this.errorResponse(response, `Unable to connect to load packages file: ${e}`);
-		}
 
 		try {
 			await this.initObservatory(this.websocketUriForObservatoryUri(args.observatoryUri));
@@ -207,52 +194,58 @@ export class DartDebugSession extends DebugSession {
 				this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event));
 				this.observatory.on("Extension", (event: VMEvent) => this.handleExtensionEvent(event));
 				this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event));
-				this.observatory.getVM().then((result) => {
+				this.observatory.getVM().then(async (result): Promise<void> => {
 					const vm: VM = result.result as VM;
-					const promises = [];
+					const isolates = await Promise.all(vm.isolates.map((isolateRef) => this.observatory.getIsolate(isolateRef.id)));
 
-					for (const isolateRef of vm.isolates) {
-						promises.push(this.observatory.getIsolate(isolateRef.id).then((response) => {
-							const isolate: VMIsolate = response.result as VMIsolate;
-							this.threadManager.registerThread(
-								isolateRef,
-								isolate.runnable ? "IsolateRunnable" : "IsolateStart",
-							);
-
-							if (isolate.pauseEvent.kind.startsWith("Pause")) {
-								this.handlePauseEvent(isolate.pauseEvent);
-							}
-
-							// Helpers to categories libraries as SDK/ExternalLibrary/not.
-							const isValidToDebug = (l: VMLibraryRef) => !l.uri.startsWith("dart:_"); // TODO: See https://github.com/dart-lang/sdk/issues/29813
-							const isSdkLibrary = (l: VMLibraryRef) => l.uri.startsWith("dart:");
-							// If we don't know the local package name, we have to assume nothing is external, else we might disable debugging for the local library.
-							const isExternalLibrary = (l: VMLibraryRef) => l.uri.startsWith("package:") && this.packageMap.localPackageName && !l.uri.startsWith(`package:${this.packageMap.localPackageName}/`);
-
-							// Set whether libraries should be debuggable based on user settings.
-							return Promise.all(
-								isolate.libraries.filter(isValidToDebug).map((library) => {
-									// Note: Condition is negated.
-									const shouldDebug = !(
-										// Inside here is shouldNotDebug!
-										(isSdkLibrary(library) && !this.debugSdkLibraries)
-										|| (isExternalLibrary(library) && !this.debugExternalLibraries)
-									);
-									this.observatory.setLibraryDebuggable(isolateRef.id, library.id, shouldDebug);
-								}),
-							);
-						}));
+					if (!this.packageMap) {
+						// TODO: Is it valid to assume the first (only?) isolate with a rootLib is the one we care about here?
+						// If it's always the first, could we even just query the first instead of getting them all before we
+						// start the other processing?
+						const rootIsolateResult = isolates.find((isolate) => (isolate.result as VMIsolate).rootLib !== null);
+						const rootIsolate = rootIsolateResult && rootIsolateResult.result as VMIsolate;
+						if (rootIsolate)
+							this.packageMap = new PackageMap(PackageMap.findPackagesFile(this.convertVMUriToSourcePath(rootIsolate.rootLib.uri)));
 					}
+
+					await Promise.all(isolates.map(async (response) => {
+						const isolate: VMIsolate = response.result as VMIsolate;
+						this.threadManager.registerThread(
+							isolate,
+							isolate.runnable ? "IsolateRunnable" : "IsolateStart",
+						);
+
+						if (isolate.pauseEvent.kind.startsWith("Pause")) {
+							this.handlePauseEvent(isolate.pauseEvent);
+						}
+
+						// Helpers to categories libraries as SDK/ExternalLibrary/not.
+						const isValidToDebug = (l: VMLibraryRef) => !l.uri.startsWith("dart:_"); // TODO: See https://github.com/dart-lang/sdk/issues/29813
+						const isSdkLibrary = (l: VMLibraryRef) => l.uri.startsWith("dart:");
+						// If we don't know the local package name, we have to assume nothing is external, else we might disable debugging for the local library.
+						const isExternalLibrary = (l: VMLibraryRef) => l.uri.startsWith("package:") && this.packageMap.localPackageName && !l.uri.startsWith(`package:${this.packageMap.localPackageName}/`);
+
+						// Set whether libraries should be debuggable based on user settings.
+						return Promise.all(
+							isolate.libraries.filter(isValidToDebug).map((library) => {
+								// Note: Condition is negated.
+								const shouldDebug = !(
+									// Inside here is shouldNotDebug!
+									(isSdkLibrary(library) && !this.debugSdkLibraries)
+									|| (isExternalLibrary(library) && !this.debugExternalLibraries)
+								);
+								// TODO: Handle errors (such as these failing because we sent them too early).
+								// https://github.com/Dart-Code/Dart-Code/issues/790
+								this.observatory.setLibraryDebuggable(isolate.id, library.id, shouldDebug);
+							}),
+						);
+					}));
 
 					// Set a timer for memory updates.
 					if (this.pollforMemoryMs)
 						setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs);
 
-					// TODO: Handle errors (such as these failing because we sent them too early).
-					// https://github.com/Dart-Code/Dart-Code/issues/790
-					Promise.all(promises).then((_) => {
-						this.sendEvent(new InitializedEvent());
-					});
+					this.sendEvent(new InitializedEvent());
 				});
 				resolve();
 			});
@@ -336,9 +329,11 @@ export class DartDebugSession extends DebugSession {
 		uris.push(formatPathForVm(sourcePath));
 
 		// Convert to package path and add that too.
-		const packageUri = this.packageMap.convertFileToPackageUri(sourcePath);
-		if (packageUri)
-			uris.push(packageUri);
+		if (this.packageMap) {
+			const packageUri = this.packageMap.convertFileToPackageUri(sourcePath);
+			if (packageUri)
+				uris.push(packageUri);
+		}
 
 		return uris;
 	}
@@ -931,7 +926,7 @@ export class DartDebugSession extends DebugSession {
 		if (uri.startsWith("file:"))
 			return uriToFilePath(uri, returnWindowsPath);
 
-		if (uri.startsWith("package:"))
+		if (uri.startsWith("package:") && this.packageMap)
 			return this.packageMap.resolvePackageUri(uri);
 
 		return uri;

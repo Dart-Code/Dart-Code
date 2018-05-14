@@ -63,9 +63,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				return debugConfig;
 			}
 		} else {
-			if (!debugConfig.packages && folder)
-				debugConfig.packages = path.join(fsPath(folder.uri), ".packages");
-
 			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
 			debugConfig.observatoryUri = await this.getObservatoryUri(debugConfig.observatoryUri);
 
@@ -75,22 +72,16 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				window.showInformationMessage("You must provide an Observatory URI/port to attach a debugger");
 				return debugConfig;
 			}
-
-			if (!debugConfig.packages && !fs.existsSync(debugConfig.packages)) {
-				// Set type=null which causes launch.json to open.
-				debugConfig.type = null;
-				window.showInformationMessage("You must have an open workspace with a .packages file (or set .packages in launch.json) to attach a debugger");
-				return debugConfig;
-			}
 		}
 
 		// If we don't have a cwd then find the best one from the project root.
-		debugConfig.cwd = debugConfig.cwd || fsPath(folder.uri);
+		if (!debugConfig.cwd && folder)
+			debugConfig.cwd = fsPath(folder.uri);
 
 		// Disable Flutter mode for attach.
 		// TODO: Update FlutterDebugSession to understand attach mode, and remove this limitation.
-		const isFlutter = isFlutterProjectFolder(debugConfig.cwd as string) && !isAttachRequest;
-		const isTest = isTestFile(resolveVariables(debugConfig.program as string));
+		const isFlutter = debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string) && !isAttachRequest;
+		const isTest = debugConfig.program && isTestFile(resolveVariables(debugConfig.program as string));
 		const debugType = isFlutter
 			? (isTest ? DebuggerType.FlutterTest : DebuggerType.Flutter)
 			: DebuggerType.Dart;
@@ -195,12 +186,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const dartExec = isWin ? "dart.exe" : "dart";
 		const flutterExec = isWin ? "flutter.bat" : "flutter";
 
-		const conf = config.for(folder.uri);
+		const conf = config.for(folder && folder.uri || null);
 
 		// Attach any properties that weren't explicitly set.
 		debugConfig.type = debugConfig.type || "dart";
 		debugConfig.request = debugConfig.request || "launch";
-		debugConfig.cwd = debugConfig.cwd || fsPath(folder.uri);
+		debugConfig.cwd = debugConfig.cwd || (folder && fsPath(folder.uri));
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, "bin", dartExec);
