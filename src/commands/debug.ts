@@ -50,7 +50,7 @@ export class DebugCommands {
 			} else if (e.event === "dart.hint" && e.body && e.body.hintId) {
 				switch (e.body.hintId) {
 					case "restartRecommended":
-						this.promptForFullRestart(e.body.hintMessage);
+						this.promptForHotRestart(e.body.hintMessage);
 						break;
 					default:
 						if (e.body.hintMessage)
@@ -128,11 +128,11 @@ export class DebugCommands {
 			this.sendCustomFlutterDebugCommand("hotReload");
 			analytics.logDebuggerHotReload();
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.fullRestart", () => {
+		context.subscriptions.push(vs.commands.registerCommand("flutter.hotRestart", () => {
 			if (!this.currentDebugSession)
 				return;
 			this.reloadStatus.hide();
-			this.sendCustomFlutterDebugCommand("fullRestart");
+			this.sendCustomFlutterDebugCommand("hotRestart");
 			analytics.logDebuggerRestart();
 		}));
 
@@ -161,10 +161,10 @@ export class DebugCommands {
 		this.serviceSettings[id] = () => this.runServiceCommand(id, getValue());
 	}
 
-	private promptForFullRestart(message: string) {
-		this.reloadStatus.text = "↻ Full restart may be required";
+	private promptForHotRestart(message: string) {
+		this.reloadStatus.text = "↻ Hot restart may be required";
 		this.reloadStatus.tooltip = message + "\r\n\r\nClick to restart";
-		this.reloadStatus.command = "flutter.fullRestart";
+		this.reloadStatus.command = "flutter.hotRestart";
 		this.reloadStatus.show();
 	}
 

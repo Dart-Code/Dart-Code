@@ -140,13 +140,13 @@ export class FlutterDebugSession extends DartDebugSession {
 		super.restartRequest(response, args);
 	}
 
-	private performReload(fullRestart: boolean): Thenable<any> {
+	private performReload(hotRestart: boolean): Thenable<any> {
 		if (this.isReloadInProgress) {
 			this.sendEvent(new OutputEvent("Reload already in progress, ignoring request", "stderr"));
 			return;
 		}
 		this.isReloadInProgress = true;
-		return this.flutter.restart(this.currentRunningAppId, !this.args.noDebug, fullRestart)
+		return this.flutter.restart(this.currentRunningAppId, !this.args.noDebug, hotRestart)
 			.then(
 				(result) => {
 					// If we get a hint, send it back over to the UI to do something appropriate.
@@ -184,7 +184,7 @@ export class FlutterDebugSession extends DartDebugSession {
 					this.performReload(false);
 				break;
 
-			case "fullRestart":
+			case "hotRestart":
 				if (this.currentRunningAppId)
 					this.performReload(true);
 				break;

@@ -61,8 +61,8 @@ export class FlutterRun extends StdIOService<UnknownNotification> {
 
 	// Request methods.
 
-	public restart(appId: string, pause: boolean, fullRestart?: boolean): Thenable<any> {
-		return this.sendRequest("app.restart", { appId, fullRestart: fullRestart === true, pause });
+	public restart(appId: string, pause: boolean, hotRestart?: boolean): Thenable<any> {
+		return this.sendRequest("app.restart", { appId, fullRestart: hotRestart === true, pause });
 	}
 
 	public stop(appId: string): Thenable<UnknownResponse> {

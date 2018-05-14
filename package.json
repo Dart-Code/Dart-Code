@@ -183,8 +183,8 @@
 				"category": "Flutter"
 			},
 			{
-				"command": "flutter.fullRestart",
-				"title": "Full Restart",
+				"command": "flutter.hotRestart",
+				"title": "Hot Restart",
 				"category": "Flutter"
 			},
 			{
@@ -211,7 +211,7 @@
 				"when": "editorLangId == dart"
 			},
 			{
-				"command": "flutter.fullRestart",
+				"command": "flutter.hotRestart",
 				"when": "dart-code:flutterProjectLoaded && inDebugMode",
 				"key": "ctrl+f5"
 			}
@@ -293,7 +293,7 @@
 					"when": "dart-code:serviceExtension.ext.flutter.debugPaintBaselinesEnabled"
 				},
 				{
-					"command": "flutter.fullRestart",
+					"command": "flutter.hotRestart",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				},
 				{
