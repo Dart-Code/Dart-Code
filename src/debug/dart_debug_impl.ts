@@ -19,7 +19,7 @@ export class DartDebugSession extends DebugSession {
 	protected childProcess: child_process.ChildProcess;
 	private processExited: boolean = false;
 	public observatory: ObservatoryConnection;
-	protected cwd: string;
+	protected cwd?: string;
 	private observatoryLogFile: string;
 	private observatoryLogStream: fs.WriteStream;
 	private debugSdkLibraries: boolean;
@@ -916,7 +916,8 @@ export class DartDebugSession extends DebugSession {
 	private convertVMUriToUserName(uri: string): string {
 		if (uri.startsWith("file:")) {
 			uri = uriToFilePath(uri);
-			uri = path.relative(this.cwd, uri);
+			if (this.cwd)
+				uri = path.relative(this.cwd, uri);
 		}
 
 		return uri;
