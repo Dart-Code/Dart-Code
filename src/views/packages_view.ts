@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { PackageMap } from "../debug/utils";
+import { PackageMap } from "../debug/package_map";
 import { fsPath } from "../utils";
 
 const DART_HIDE_PACKAGE_TREE = "dart-code:hidePackageTree";

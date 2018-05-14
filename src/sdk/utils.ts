@@ -3,7 +3,7 @@ import * as path from "path";
 import { ExtensionContext, commands, window } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { PackageMap } from "../debug/utils";
+import { PackageMap } from "../debug/package_map";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, ProjectType, Sdks, fsPath, getDartWorkspaceFolders, openInBrowser, reloadExtension, resolveHomePath } from "../utils";
 
 const isWin = /^win/.test(process.platform);

@@ -43,7 +43,7 @@ export function uriToFilePath(uri: string, returnWindowsPath: boolean = isWin): 
 	return filePath;
 }
 
-function findFile(file: string, startLocation: string) {
+export function findFile(file: string, startLocation: string) {
 	let lastParent;
 	let parent = startLocation;
 
@@ -117,81 +117,6 @@ export class PromiseCompleter<T> {
 			this.resolve = res;
 			this.reject = rej;
 		});
-	}
-}
-
-export class PackageMap {
-	public static findPackagesFile(entryPoint: string): string {
-		return findFile(".packages", path.dirname(entryPoint));
-	}
-
-	private map: { [name: string]: string } = {};
-
-	constructor(file?: string) {
-		if (!file) return;
-
-		const lines: string[] = fs.readFileSync(file, { encoding: "utf8" }).split("\n");
-		for (let line of lines) {
-			line = line.trim();
-
-			if (line.length === 0 || line.startsWith("#"))
-				continue;
-
-			const index = line.indexOf(":");
-			if (index !== -1) {
-				const name = line.substr(0, index);
-				const rest = line.substring(index + 1);
-
-				if (rest.startsWith("file:"))
-					this.map[name] = uriToFilePath(rest);
-				else
-					this.map[name] = path.join(path.dirname(file), rest);
-			}
-		}
-	}
-
-	public getPackagePath(name: string): string {
-		return this.map[name];
-	}
-
-	public resolvePackageUri(uri: string): string {
-		if (!uri)
-			return null;
-
-		let name: string = uri;
-		if (name.startsWith("package:"))
-			name = name.substring(8);
-		const index = name.indexOf("/");
-		if (index === -1)
-			return null;
-
-		const rest = name.substring(index + 1);
-		name = name.substring(0, index);
-
-		const location = this.getPackagePath(name);
-		if (location)
-			return path.join(location, rest);
-		else
-			return null;
-	}
-
-	public convertFileToPackageUri(file: string): string {
-		for (const name of Object.keys(this.map)) {
-			const dir = this.map[name];
-			if (isWithinPath(file, dir)) {
-				let rest = file.substring(dir.length);
-				// package: uri should always use forward slashes.
-				if (isWin)
-					rest = rest.replace(/\\/g, "/");
-				// Ensure we don't start with a slash if the map didn't have a trailing slash,
-				// else we'll end up with doubles. See https://github.com/Dart-Code/Dart-Code/issues/398
-				if (rest.startsWith("/"))
-					rest = rest.substr(1);
-				return `package:${name}/${rest}`;
-			}
-		}
-
-		return null;
 	}
 }
 
