@@ -29,7 +29,5 @@ describe("extension", () => {
 
 		// Wait up to a second for the message to be called.
 		await waitFor(() => upgradeMessage.calledOnce);
-
-		showWarningMessage.restore();
 	});
 });

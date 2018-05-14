@@ -3,7 +3,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../src/commands/refactor";
 import { PromiseCompleter } from "../../../src/debug/utils";
-import { activate, defer, doc, ensureTestContent, ext, rangeOf, setTestContent, waitFor } from "../../helpers";
+import { activate, doc, ensureTestContent, ext, rangeOf, sb, setTestContent, waitFor } from "../../helpers";
 
 describe("refactor", () => {
 
@@ -15,8 +15,7 @@ describe("refactor", () => {
 	});
 
 	it("can extract simple code into a widget", async () => {
-		const showInputBox = sinon.stub(vs.window, "showInputBox");
-		defer(showInputBox.restore);
+		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("MyOtherWidget");
 
 		await setTestContent(`
@@ -52,8 +51,7 @@ class MyOtherWidget extends StatelessWidget {
 	});
 
 	it("displays an error if an invalid range is selected", async () => {
-		const showErrorMessage = sinon.stub(vs.window, "showErrorMessage");
-		defer(showErrorMessage.restore);
+		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 
 		await setTestContent(`
 import 'package:flutter/widgets.dart';
@@ -82,11 +80,9 @@ class MyWidget extends StatelessWidget {
 	});
 
 	it("displays an error if an invalid new name is provided", async () => {
-		const showInputBox = sinon.stub(vs.window, "showInputBox");
-		defer(showInputBox.restore);
+		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("\"\"\"");
-		const showErrorMessage = sinon.stub(vs.window, "showErrorMessage");
-		defer(showErrorMessage.restore);
+		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 
 		await setTestContent(`
 import 'package:flutter/widgets.dart';
@@ -115,13 +111,10 @@ class MyWidget extends StatelessWidget {
 	});
 
 	it("does not apply changes when there are errors if the user does not approve", async () => {
-		const showInputBox = sinon.stub(vs.window, "showInputBox");
-		defer(showInputBox.restore);
+		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("MyWidget");
-		const showErrorMessage = sinon.stub(vs.window, "showErrorMessage");
-		defer(showErrorMessage.restore);
+		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 		const refactorPrompt = showErrorMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves();
-		showErrorMessage.callThrough();
 
 		await setTestContent(`
 import 'package:flutter/widgets.dart';
@@ -150,11 +143,9 @@ class MyWidget extends StatelessWidget {
 	});
 
 	it("applies changes when there are errors if the user approves", async () => {
-		const showInputBox = sinon.stub(vs.window, "showInputBox");
-		defer(showInputBox.restore);
+		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("MyWidget");
-		const showErrorMessage = sinon.stub(vs.window, "showErrorMessage");
-		defer(showErrorMessage.restore);
+		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 		const refactorPrompt = showErrorMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves(REFACTOR_ANYWAY);
 		showErrorMessage.callThrough();
 
@@ -195,11 +186,9 @@ class MyWidget extends StatelessWidget {
 	});
 
 	it("rejects the edit if the document has been modified before the user approves", async () => {
-		const showInputBox = sinon.stub(vs.window, "showInputBox");
-		defer(showInputBox.restore);
+		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("MyWidget");
-		const showErrorMessage = sinon.stub(vs.window, "showErrorMessage");
-		defer(showErrorMessage.restore);
+		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 		// Accept after some time (so the doc can be edited by the test).
 		const refactorAnywayChoice = new PromiseCompleter();
 		const refactorPrompt = showErrorMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).returns(refactorAnywayChoice.promise);
