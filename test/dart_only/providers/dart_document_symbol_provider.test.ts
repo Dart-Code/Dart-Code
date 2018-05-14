@@ -13,6 +13,8 @@ describe("document_symbol_provider", () => {
 		ensureSymbol(symbols, "myNumField", vs.SymbolKind.Field, "MyClass");
 		ensureSymbol(symbols, "myNumGetter", vs.SymbolKind.Property, "MyClass");
 		ensureSymbol(symbols, "myNumSetter", vs.SymbolKind.Property, "MyClass");
+		ensureSymbol(symbols, "myFutureString", vs.SymbolKind.Field, "MyClass");
+		ensureSymbol(symbols, "myHttpClient", vs.SymbolKind.Field, "MyClass");
 		ensureSymbol(symbols, "MyClass()", vs.SymbolKind.Constructor, "MyClass");
 		ensureSymbol(symbols, "MyClass.myNamed()", vs.SymbolKind.Constructor, "MyClass");
 		ensureSymbol(symbols, "myVoidReturningMethod()", vs.SymbolKind.Method, "MyClass");
@@ -20,6 +22,6 @@ describe("document_symbol_provider", () => {
 		ensureSymbol(symbols, "methodTakingString(String a)", vs.SymbolKind.Method, "MyClass");
 		ensureSymbol(symbols, "methodTakingFunction(void Function(String) myFunc)", vs.SymbolKind.Method, "MyClass");
 		ensureSymbol(symbols, "doSomeStuff()", vs.SymbolKind.Function, "");
-		assert.equal(symbols.length, 11);
+		assert.equal(symbols.length, 13);
 	});
 });
