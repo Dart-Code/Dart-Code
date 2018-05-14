@@ -44,10 +44,10 @@
 			"include": "#annotations"
 		},
 		{
-			"include": "#constants-and-special-vars"
+			"include": "#keywords"
 		},
 		{
-			"include": "#keywords"
+			"include": "#constants-and-special-vars"
 		},
 		{
 			"include": "#strings"
