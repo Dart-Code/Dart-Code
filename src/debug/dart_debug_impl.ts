@@ -865,7 +865,7 @@ export class DartDebugSession extends DebugSession {
 
 			if (shouldRemainedStoppedOnBreakpoint) {
 				thread.handlePaused(event.atAsyncSuspension, event.exception);
-				this.sendEvent(new StoppedEvent(reason, thread.number, exceptionText));
+				this.sendEvent(new StoppedEvent(reason, thread.num, exceptionText));
 			} else {
 				this.observatory.resume(thread.ref.id);
 			}
@@ -1048,13 +1048,11 @@ class ThreadManager {
 	public nextThreadId: number = 0;
 
 	public threads: ThreadInfo[] = [];
-	public debugSession: DartDebugSession;
 	public bps: { [uri: string]: DebugProtocol.SourceBreakpoint[] } = {};
 	private hasConfigurationDone = false;
 	private exceptionMode = "Unhandled";
 
-	constructor(debugSession: DartDebugSession) {
-		this.debugSession = debugSession;
+	constructor(public readonly debugSession: DartDebugSession) {
 	}
 
 	public registerThread(ref: VMIsolateRef, eventKind: string) {
@@ -1066,7 +1064,7 @@ class ThreadManager {
 			this.threads.push(thread);
 
 			// If this is the first time we've seen it, fire an event
-			this.debugSession.sendEvent(new ThreadEvent("started", thread.number));
+			this.debugSession.sendEvent(new ThreadEvent("started", thread.num));
 
 			if (this.hasConfigurationDone)
 				thread.receivedConfigurationDone();
@@ -1099,14 +1097,14 @@ class ThreadManager {
 
 	public getThreadInfoFromNumber(num: number): ThreadInfo {
 		for (const thread of this.threads) {
-			if (thread.number === num)
+			if (thread.num === num)
 				return thread;
 		}
 		return null;
 	}
 
 	public getThreads(): Thread[] {
-		return this.threads.map((thread: ThreadInfo) => new Thread(thread.number, thread.ref.name));
+		return this.threads.map((thread: ThreadInfo) => new Thread(thread.num, thread.ref.name));
 	}
 
 	public setExceptionPauseMode(mode: string) {
@@ -1178,7 +1176,7 @@ class ThreadManager {
 	public handleIsolateExit(ref: VMIsolateRef) {
 		const threadInfo: ThreadInfo = this.getThreadInfoFromRef(ref);
 		if (threadInfo) {
-			this.debugSession.sendEvent(new ThreadEvent("exited", threadInfo.number));
+			this.debugSession.sendEvent(new ThreadEvent("exited", threadInfo.num));
 			this.threads.splice(this.threads.indexOf(threadInfo), 1);
 		} else {
 			console.error(`Failed to find thread for ${ref.id} during exit`);
@@ -1197,9 +1195,6 @@ class StoredData {
 }
 
 class ThreadInfo {
-	public manager: ThreadManager;
-	public ref: VMIsolateRef;
-	public number: number;
 	public storedIds: number[] = [];
 	public scriptCompleters: { [key: string]: PromiseCompleter<VMScript> } = {};
 	public runnable: boolean = false;
@@ -1210,10 +1205,10 @@ class ThreadInfo {
 	public exceptionReference = 0;
 	public paused: boolean = false;
 
-	constructor(manager: ThreadManager, ref: VMIsolateRef, num: number) {
-		this.manager = manager;
-		this.ref = ref;
-		this.number = num;
+	constructor(
+		public readonly manager: ThreadManager,
+		public readonly ref: VMIsolateRef,
+		public readonly num: number) {
 	}
 
 	private removeBreakpointsAtUri(uri: string): Promise<DebuggerResult[]> {
