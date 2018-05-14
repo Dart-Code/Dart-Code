@@ -275,31 +275,26 @@ export class DartDebugSession extends DebugSession {
 		});
 	}
 
-	protected disconnectRequest(
+	protected async disconnectRequest(
 		response: DebugProtocol.DisconnectResponse,
 		args: DebugProtocol.DisconnectArguments,
-	): void {
+	): Promise<void> {
 		if (this.childProcess != null) {
 			this.childProcess.kill();
+			this.childProcess = null;
 		} else if (this.observatory) {
-			// Remove all breakpoints from the VM.
-			const removeBreakpointPromises = [];
-			for (const thread of this.threadManager.threads) {
-				removeBreakpointPromises.push(thread.removeAllBreakpoints());
-			}
-			Promise.all(removeBreakpointPromises).then((_) => {
+			try {
+				// Remove all breakpoints from the VM.
+				await Promise.all(this.threadManager.threads.map((thread) => thread.removeAllBreakpoints()));
+
 				// Restart any paused threads.
-				const resumePromises = [];
-				for (const thread of this.threadManager.threads) {
-					if (thread.paused) {
-						resumePromises.push(this.observatory.resume(thread.ref.id));
-					}
-				}
-				Promise.all(resumePromises).then((_) => {
-					// Finally, shut down the connection to the observatory.
-					this.observatory.close();
-				}).catch((error) => this.observatory.close());
-			}).catch((error) => this.observatory.close());
+				await Promise.all(this.threadManager.threads.map((thread) => {
+					if (thread.paused)
+						return this.observatory.resume(thread.ref.id);
+				}));
+			} finally {
+				this.observatory.close();
+			}
 		}
 		super.disconnectRequest(response, args);
 	}
