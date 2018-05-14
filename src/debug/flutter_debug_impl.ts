@@ -89,17 +89,19 @@ export class FlutterDebugSession extends DartDebugSession {
 	 */
 	protected getPossibleSourceUris(sourcePath: string): string[] {
 		const allUris = super.getPossibleSourceUris(sourcePath);
-		const projectUri = formatPathForVm(this.cwd);
+		if (this.cwd) {
+			const projectUri = formatPathForVm(this.cwd);
 
-		// Map any paths over to the device-local paths.
-		allUris.slice().forEach((uri) => {
-			if (uri.startsWith(projectUri)) {
-				const relativePath = uri.substr(projectUri.length);
-				const mappedPath = path.join(this.baseUri, relativePath);
-				const newUri = formatPathForVm(mappedPath);
-				allUris.push(newUri);
-			}
-		});
+			// Map any paths over to the device-local paths.
+			allUris.slice().forEach((uri) => {
+				if (uri.startsWith(projectUri)) {
+					const relativePath = uri.substr(projectUri.length);
+					const mappedPath = path.join(this.baseUri, relativePath);
+					const newUri = formatPathForVm(mappedPath);
+					allUris.push(newUri);
+				}
+			});
+		}
 
 		return allUris;
 	}
@@ -113,7 +115,7 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		// If the path is the baseUri given by flutter, we need to rewrite it into a local path for this machine.
 		const basePath = uriToFilePath(this.baseUri, false);
-		if (localPathLinux.startsWith(basePath))
+		if (localPathLinux.startsWith(basePath) && this.cwd)
 			localPath = path.join(this.cwd, path.relative(basePath, localPathLinux));
 
 		return localPath;
