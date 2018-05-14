@@ -2,7 +2,8 @@ import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../src/commands/refactor";
-import { activate, delay, doc, ensureTestContent, positionOf, rangeOf, sb, setTestContent, waitFor } from "../../helpers";
+import { PromiseCompleter } from "../../../src/debug/utils";
+import { activate, doc, ensureTestContent, positionOf, rangeOf, sb, setTestContent, waitFor } from "../../helpers";
 
 describe("refactor", () => {
 
@@ -124,12 +125,11 @@ void Aaaa() {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("Aaaaa");
 		const showWarningMessage = sb.stub(vs.window, "showWarningMessage");
-		// Accept after some time (so the doc can be edited by the test).
-		const refactorPrompt = showWarningMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).returns(delay(300).then(() => REFACTOR_ANYWAY));
-		showWarningMessage.callThrough();
 		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
+		// Accept after some time (so the doc can be edited by the test).
+		const refactorAnywayChoice = new PromiseCompleter();
+		const refactorPrompt = showWarningMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).returns(refactorAnywayChoice.promise);
 		const rejectMessage = showErrorMessage.withArgs(REFACTOR_FAILED_DOC_MODIFIED).resolves();
-		showErrorMessage.callThrough();
 
 		await setTestContent(`
 main() {
@@ -151,6 +151,8 @@ main() {
 // This comment was added
 		`);
 
+		refactorAnywayChoice.resolve(REFACTOR_ANYWAY);
+
 		// Wait for the command to complete.
 		await refactorCommand;
 
@@ -162,6 +164,6 @@ main() {
 // This comment was added
 		`);
 
-		assert(rejectMessage.calledOnce);
+		assert(rejectMessage.calledOnce, "Reject message was not shown");
 	});
 });
