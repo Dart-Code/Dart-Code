@@ -117,6 +117,10 @@ export class DartDebugSession extends DebugSession {
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.observatoryLogFile = args.observatoryLogFile;
 
+		// Support relative paths
+		if (!path.isAbsolute(args.packages))
+			args.packages = path.join(args.cwd, args.packages);
+
 		try {
 			this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.packages));
 		} catch (e) {
