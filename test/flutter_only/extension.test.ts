@@ -4,8 +4,6 @@ import * as vs from "vscode";
 import { Sdks, fsPath } from "../../src/utils";
 import { ext } from "../helpers";
 
-const isWin = /^win/.test(process.platform);
-
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
 		const wfs = vs.workspace.workspaceFolders;

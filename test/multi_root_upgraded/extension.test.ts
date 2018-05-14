@@ -6,8 +6,6 @@ import { UPGRADE_TO_WORKSPACE_FOLDERS, checkForProjectsInSubFolders } from "../.
 import { fsPath } from "../../src/utils";
 import { sb, waitFor } from "../helpers";
 
-const isWin = /^win/.test(process.platform);
-
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
 		const wfs = vs.workspace.workspaceFolders;

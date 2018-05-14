@@ -29,6 +29,7 @@ if (!ext) {
 	}
 }
 
+export const isWin = /^win/.test(process.platform);
 export const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/hello_world"));
 export const helloWorldMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/main.dart"));
 export const helloWorldBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/broken.dart"));
@@ -45,7 +46,7 @@ export const flutterTestBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWo
 
 export let doc: vs.TextDocument;
 export let editor: vs.TextEditor;
-export let eol: string;
+export let documentEol: string;
 
 export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	await ext.activate();
@@ -53,7 +54,7 @@ export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	await closeAllOpenFiles();
 	doc = await vs.workspace.openTextDocument(file);
 	editor = await vs.window.showTextDocument(doc);
-	eol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
+	documentEol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
 }
 
 export async function closeAllOpenFiles(): Promise<void> {
@@ -158,7 +159,7 @@ export function positionOf(searchText: string): vs.Position {
 	const doc = vs.window.activeTextEditor.document;
 	const caretOffset = searchText.indexOf("^");
 	assert.notEqual(caretOffset, -1, `Couldn't find a ^ in search text (${searchText})`);
-	const matchedTextIndex = doc.getText().indexOf(searchText.replace("^", "").replace(/\n/g, eol));
+	const matchedTextIndex = doc.getText().indexOf(searchText.replace("^", "").replace(/\n/g, documentEol));
 	assert.notEqual(matchedTextIndex, -1, `Couldn't find string ${searchText.replace("^", "")} in the document to get position of`);
 
 	return doc.positionAt(matchedTextIndex + caretOffset);
@@ -173,7 +174,7 @@ export function rangeOf(searchText: string, inside?: vs.Range): vs.Range {
 
 	const startSearchAt = inside ? doc.offsetAt(inside.start) : 0;
 	const endSearchAt = inside ? doc.offsetAt(inside.end) : -1;
-	let matchedTextIndex = doc.getText().indexOf(searchText.replace(/\|/g, "").replace(/\n/g, eol), startSearchAt);
+	let matchedTextIndex = doc.getText().indexOf(searchText.replace(/\|/g, "").replace(/\n/g, documentEol), startSearchAt);
 	if (endSearchAt > -1 && matchedTextIndex > endSearchAt)
 		matchedTextIndex = -1;
 	assert.notEqual(matchedTextIndex, -1, `Couldn't find string ${searchText.replace(/\|/g, "")} in the document to get range of`);

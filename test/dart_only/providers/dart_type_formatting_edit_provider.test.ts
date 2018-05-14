@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, doc, editor, eol, positionOf, setTestContent } from "../../helpers";
+import { activate, doc, editor, documentEol, positionOf, setTestContent } from "../../helpers";
 
 describe("dart_type_formatting_edit_provider", () => {
 
@@ -18,6 +18,6 @@ describe("dart_type_formatting_edit_provider", () => {
 		// Currently we just format the whole doc on format as out formatter doesn't support ranges.
 		await setTestContent("   main ( ) { }");
 		await formatAtLocation("{ ^", "}");
-		assert.equal(doc.getText(), `main() {}${eol}`);
+		assert.equal(doc.getText(), `main() {}${documentEol}`);
 	});
 });

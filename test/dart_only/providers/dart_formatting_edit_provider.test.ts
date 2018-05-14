@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, doc, editor, eol, setTestContent } from "../../helpers";
+import { activate, doc, editor, documentEol, setTestContent } from "../../helpers";
 
 describe("dart_formatting_edit_provider", () => {
 
@@ -16,6 +16,6 @@ describe("dart_formatting_edit_provider", () => {
 	it("formats the document", async () => {
 		await setTestContent("   main ( ) {     }");
 		await formatDocument();
-		assert.equal(doc.getText(), `main() {}${eol}`);
+		assert.equal(doc.getText(), `main() {}${documentEol}`);
 	});
 });
