@@ -812,9 +812,18 @@ export class DartDebugSession extends DebugSession {
 					throw e;
 			}
 		} else if (kind === "PauseStart") {
-			// "PauseStart" should auto-resume after breakpoints are set.
+			// "PauseStart" should auto-resume after breakpoints are set if we launched the process.
 			const thread = this.threadManager.getThreadInfoFromRef(event.isolate);
-			thread.receivedPauseStart();
+			if (this.childProcess)
+				thread.receivedPauseStart();
+			else {
+				// Otherwise, if we were attaching, then just issue a step-into to put the debugger
+				// right at the start of the application.
+				thread.handlePaused(event.atAsyncSuspension, event.exception);
+				this.observatory.resume(thread.ref.id, "Into").then((_) => {
+					thread.handleResumed();
+				});
+			}
 		} else {
 			const thread = this.threadManager.getThreadInfoFromRef(event.isolate);
 
