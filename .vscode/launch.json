@@ -13,7 +13,8 @@
 			"outFiles": [
 				"${workspaceRoot}/out/src/**/*.js"
 			],
-			"preLaunchTask": "npm: watch"
+			"preLaunchTask": "npm: watch",
+			"smartStep": true
 		},
 		{
 			"name": "Launch Tests (Multi-root)",
@@ -31,7 +32,8 @@
 			"outFiles": [
 				"${workspaceRoot}/out/test/**/*.js"
 			],
-			"preLaunchTask": "npm: watch"
+			"preLaunchTask": "npm: watch",
+			"smartStep": true
 		},
 		{
 			"name": "Launch Tests (Multi-root upgraded)",
@@ -49,7 +51,8 @@
 			"outFiles": [
 				"${workspaceRoot}/out/test/**/*.js"
 			],
-			"preLaunchTask": "npm: watch"
+			"preLaunchTask": "npm: watch",
+			"smartStep": true
 		},
 		{
 			"name": "Launch Tests (Dart)",
@@ -67,7 +70,8 @@
 			"outFiles": [
 				"${workspaceRoot}/out/test/**/*.js"
 			],
-			"preLaunchTask": "npm: watch"
+			"preLaunchTask": "npm: watch",
+			"smartStep": true
 		},
 		{
 			"name": "Launch Tests (Flutter)",
@@ -85,7 +89,8 @@
 			"outFiles": [
 				"${workspaceRoot}/out/test/**/*.js"
 			],
-			"preLaunchTask": "npm: watch"
+			"preLaunchTask": "npm: watch",
+			"smartStep": true
 		},
 		{
 			"name": "Launch Tests (Flutter Repository)",
@@ -103,7 +108,8 @@
 			"outFiles": [
 				"${workspaceRoot}/out/test/**/*.js"
 			],
-			"preLaunchTask": "npm: watch"
+			"preLaunchTask": "npm: watch",
+			"smartStep": true
 		},
 		{
 			"name": "Launch Tests (Not Activated / Flutter Create)",
@@ -121,7 +127,8 @@
 			"outFiles": [
 				"${workspaceRoot}/out/test/**/*.js"
 			],
-			"preLaunchTask": "npm: watch"
+			"preLaunchTask": "npm: watch",
+			"smartStep": true
 		}
 	]
 }
