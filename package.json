@@ -95,6 +95,11 @@
 				}
 			},
 			{
+				"command": "dart.attach",
+				"title": "Attach to Dart Process",
+				"category": "Debug"
+			},
+			{
 				"command": "dart.goToSuper",
 				"title": "Go to Super Method",
 				"category": "Dart"
@@ -250,6 +255,10 @@
 				{
 					"command": "dart.goToSuper",
 					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
+				},
+				{
+					"command": "dart.attach",
+					"when": "dart-code:dartProjectLoaded && !inDebugMode"
 				},
 				{
 					"command": "dart.sortMembers",

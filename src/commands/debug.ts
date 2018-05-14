@@ -158,6 +158,17 @@ export class DebugCommands {
 		// We can't just use a service command here, as we need to call it twice (once to get, once to change) and
 		// currently it seems like the DA can't return responses to us here, so we'll have to do them both inside the DA.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => this.sendCustomFlutterDebugCommand("togglePlatform")));
+
+		// Attach commands.
+		context.subscriptions.push(vs.commands.registerCommand("dart.attach", () => {
+			if (this.currentDebugSession)
+				return;
+			vs.debug.startDebugging(undefined, {
+				name: "Dart: Attach to Process",
+				request: "attach",
+				type: "dart",
+			});
+		}));
 	}
 
 	private serviceSettings: { [id: string]: () => void } = {};

@@ -43,17 +43,15 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return input.replace(/\${workspaceFolder}/, fsPath(folder.uri));
 		}
 
-		const isAttachRequest = debugConfig.request === "attach";
-
 		debugConfig.program = resolveVariables(debugConfig.program);
 		debugConfig.cwd = resolveVariables(debugConfig.cwd);
 
-		// If there's no program set, try to guess one.
-		if (!isAttachRequest) {
-			// Overwrite the folder with a more appropriate workspace root (https://github.com/Microsoft/vscode/issues/45580)
-			if (openFile)
-				folder = workspace.getWorkspaceFolder(Uri.file(openFile)) || folder;
+		if (openFile && !folder)
+			folder = workspace.getWorkspaceFolder(Uri.file(openFile));
 
+		const isAttachRequest = debugConfig.request === "attach";
+		if (!isAttachRequest) {
+			// If there's no program set, try to guess one.
 			debugConfig.program = debugConfig.program || this.guessBestEntryPoint(openFile, folder);
 
 			// If we still don't have an entry point, the user will have to provide it.
@@ -64,7 +62,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				return debugConfig;
 			}
 		} else {
-			debugConfig.packages = debugConfig.packages || path.join(fsPath(folder.uri), ".packages");
+			if (!debugConfig.packages && folder)
+				debugConfig.packages = path.join(fsPath(folder.uri), ".packages");
 
 			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
 			debugConfig.observatoryUri = await this.getObservatoryUri(debugConfig.observatoryUri);
@@ -72,7 +71,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			if (!debugConfig.observatoryUri) {
 				// Set type=null which causes launch.json to open.
 				debugConfig.type = null;
-				window.showInformationMessage("Set the 'program' value in your launch config (eg 'bin/main.dart') then launch again");
+				window.showInformationMessage("You must provide an Observatory URI/port to attach a debugger");
+				return debugConfig;
+			}
+
+			if (!debugConfig.packages && !fs.existsSync(debugConfig.packages)) {
+				// Set type=null which causes launch.json to open.
+				debugConfig.type = null;
+				window.showInformationMessage("You must have an open workspace with a .packages file (or set .packages in launch.json) to attach a debugger");
 				return debugConfig;
 			}
 		}
