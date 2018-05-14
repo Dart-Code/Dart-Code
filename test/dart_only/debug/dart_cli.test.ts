@@ -266,13 +266,7 @@ describe("dart cli debugger", () => {
 		}
 	});
 
-	it("stops on exception", async function () {
-		// This test is flaky on Dart v1. Sometimes we hit the exception and it inexplicably resumes
-		// https://gist.github.com/DanTup/3a70795cdb82d6a74a9e0c5c82c5b374
-		// If we ever see this on a recent SDK, we should open an issue.
-		if (!ext.exports.analyzerCapabilities.isDart2)
-			this.skip();
-
+	it("stops on exception", async () => {
 		await openFile(helloWorldBrokenFile);
 		const config = await startDebugger(helloWorldBrokenFile);
 		await Promise.all([

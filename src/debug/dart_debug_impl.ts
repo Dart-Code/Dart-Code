@@ -1132,6 +1132,7 @@ class ThreadInfo {
 	public breakpoints: { [key: string]: DebugProtocol.SourceBreakpoint } = {};
 	public atAsyncSuspension: boolean = false;
 	public exceptionReference = 0;
+	public paused: boolean = false;
 
 	constructor(manager: ThreadManager, ref: VMIsolateRef, num: number) {
 		this.manager = manager;
@@ -1181,6 +1182,7 @@ class ThreadInfo {
 
 	public receivedPauseStart() {
 		this.gotPauseStart = true;
+		this.paused = true;
 		this.checkResume();
 	}
 
@@ -1195,8 +1197,8 @@ class ThreadInfo {
 	}
 
 	public checkResume() {
-		if (this.gotPauseStart && this.initialBreakpoints && this.hasConfigurationDone)
-			this.manager.debugSession.observatory.resume(this.ref.id);
+		if (this.paused && this.gotPauseStart && this.initialBreakpoints && this.hasConfigurationDone)
+			this.manager.debugSession.observatory.resume(this.ref.id).then((_) => this.handleResumed());
 	}
 
 	public handleResumed() {
@@ -1205,6 +1207,7 @@ class ThreadInfo {
 		// this.storedIds = [];
 		this.atAsyncSuspension = false;
 		this.exceptionReference = 0;
+		this.paused = false;
 	}
 
 	public getScript(scriptRef: VMScriptRef): Promise<VMScript> {
@@ -1237,6 +1240,7 @@ class ThreadInfo {
 		this.atAsyncSuspension = atAsyncSuspension;
 		if (exception)
 			this.exceptionReference = this.storeData(exception);
+		this.paused = true;
 	}
 }
 
