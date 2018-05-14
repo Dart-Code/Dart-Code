@@ -62,6 +62,14 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 		return this.sendRequest("device.enable");
 	}
 
+	public getEmulators(): Thenable<Array<{ id: string, name: string }>> {
+		return this.sendRequest("emulator.getEmulators");
+	}
+
+	public launchEmulator(emulatorId: string): Thenable<void> {
+		return this.sendRequest("emulator.launch", { emulatorId });
+	}
+
 	// Subscription methods.
 
 	public registerForDeviceAdded(subscriber: (notification: f.Device) => void): vs.Disposable {
