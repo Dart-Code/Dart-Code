@@ -132,7 +132,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	private async getObservatoryUri(observatoryUri: string): Promise<string> {
-		observatoryUri = observatoryUri || await vs.window.showInputBox({ prompt: "Enter Observatory address. This can be a full URL, or just a port for localhost." });
+		observatoryUri = observatoryUri || await vs.window.showInputBox({
+			ignoreFocusOut: true, // Don't close the window if the user tabs away to get the uri
+			placeHolder: "Observatory URI or port",
+			prompt: "Enter an Observatory URI",
+		});
 		observatoryUri = observatoryUri && observatoryUri.trim();
 
 		// If the input is just a number, treat is as a localhost port.
