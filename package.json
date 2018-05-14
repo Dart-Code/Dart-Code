@@ -691,10 +691,6 @@
 								"type": "string",
 								"description": "Workspace root."
 							},
-							"packages": {
-								"type": "string",
-								"description": "Path to the packages file, if it's not at the workspace root."
-							},
 							"observatoryUri": {
 								"type": "string",
 								"description": "URI (or port) of the Observatory instance to attach to."
