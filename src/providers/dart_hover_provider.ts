@@ -1,7 +1,8 @@
-import { CancellationToken, Hover, HoverProvider, Position, Range, TextDocument } from "vscode";
+import { CancellationToken, Hover, HoverProvider, Position, Range, TextDocument, Uri } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { cleanDartdoc } from "../dartdocs";
+import { PackageMap } from "../debug/package_map";
 import { fsPath, logError } from "../utils";
 
 export class DartHoverProvider implements HoverProvider {
@@ -20,7 +21,7 @@ export class DartHoverProvider implements HoverProvider {
 					resolve(null);
 				} else {
 					const hover = resp.hovers[0];
-					const data = this.getHoverData(hover);
+					const data = this.getHoverData(document.uri, hover);
 					if (data) {
 						const range = new Range(
 							document.positionAt(hover.offset),
@@ -38,7 +39,7 @@ export class DartHoverProvider implements HoverProvider {
 		});
 	}
 
-	private getHoverData(hover: as.HoverInformation): any {
+	private getHoverData(documentUri: Uri, hover: as.HoverInformation): any {
 		if (!hover.elementDescription) return null;
 
 		// Import prefix tooltips are not useful currently.
@@ -53,17 +54,44 @@ export class DartHoverProvider implements HoverProvider {
 		const callable = (elementKind === "function" || elementKind === "method");
 		const field = (elementKind === "getter" || elementKind === "setter" || elementKind === "field");
 		const containingLibraryName = hover.containingLibraryName;
+		const containingLibraryPath = hover.containingLibraryPath;
 
 		let displayString: string = "";
 		if (elementDescription) displayString += (hover.isDeprecated ? "(deprecated) " : "") + `${elementDescription}\n`;
 		if (propagatedType) displayString += `propogated type: ${propagatedType.trim()}`;
 
 		let documentation = cleanDartdoc(dartdoc);
-		if (containingLibraryName) documentation = `_${containingLibraryName}_\n\n` + documentation;
+		if (containingLibraryName) {
+			documentation = `*${containingLibraryName}*\n\n` + documentation;
+		} else if (containingLibraryPath) {
+			const packageMap = DartHoverProvider.getPackageMapFor(documentUri);
+			const packagePath = packageMap && packageMap.convertFileToPackageUri(containingLibraryPath, false);
+			const packageName = packagePath && packagePath.split("/")[0];
+			if (packageName)
+				documentation = `*${packageName}*\n\n` + documentation;
+		}
 
 		return {
 			displayString: displayString.trim(),
 			documentation,
 		};
+	}
+
+	// TODO: Update this when things change?
+	private static packageMaps: { [key: string]: PackageMap } = {};
+	private static getPackageMapFor(uri: Uri): PackageMap {
+		const path = fsPath(uri);
+		if (this.packageMaps[path])
+			return this.packageMaps[path];
+
+		const packagesFile = PackageMap.findPackagesFile(path);
+		const map = packagesFile && new PackageMap(packagesFile);
+		if (map)
+			this.packageMaps[path] = map;
+		return map;
+	}
+	// TODO: Don't expose this publicly, subsribe to some event to clear it.
+	public static clearPackageMapCaches() {
+		this.packageMaps = {};
 	}
 }

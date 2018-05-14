@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:http/http.dart' as http;
+
 // Before blank line
 
 // After blank line
@@ -12,6 +16,12 @@ class MyClass {
 
   /// This is my num setter.
   set myNumSetter(num value) {}
+
+  /// This is my HTTP Client from another package.
+  http.Client myHttpClient;
+
+  /// This is a future string from an SDK library.
+  Future<String> myFutureString;
 
   /// This is my class constructor.
   MyClass();

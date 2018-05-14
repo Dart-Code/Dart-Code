@@ -1,9 +1,11 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, doc, everythingFile, ext, positionOf, rangeOf } from "../../helpers";
+import { activate, doc, everythingFile, ext, helloWorldFolder, positionOf, rangeOf } from "../../helpers";
 
 describe("dart_hover_provider", () => {
 
+	// We have tests that read tooltips from external packages so we need to ensure packages have been fetched.
+	before(() => vs.commands.executeCommand("dart.getPackages", helloWorldFolder));
 	before(() => activate(everythingFile));
 
 	async function getHoversAt(searchText: string): Promise<Array<{ displayText: string, documentation?: string, range: vs.Range }>> {
@@ -133,6 +135,20 @@ describe("dart_hover_provider", () => {
 		assert.equal(hover.displayText, "methodTakingFunction((String) → void myFunc) → void");
 		assert.equal(hover.documentation, "This is my method taking a function.");
 		assert.deepStrictEqual(hover.range, rangeOf("|methodTakingFunction|("));
+	});
+
+	it("returns expected information for a type from another package", async () => {
+		const hover = await getHoverAt("http.Cli^ent");
+		assert.equal(hover.displayText, "abstract class Client");
+		assert.ok(hover.documentation.indexOf("*package:http*") === 0);
+		assert.deepStrictEqual(hover.range, rangeOf("http.|Client|"));
+	});
+
+	it("returns expected information for a type from an SDK library", async () => {
+		const hover = await getHoverAt("Fut^ure<String>");
+		assert.equal(hover.displayText, "abstract class Future<T>");
+		assert.ok(hover.documentation.indexOf("*dart.async*") === 0);
+		assert.deepStrictEqual(hover.range, rangeOf("|Future|<String>"));
 	});
 
 	it("displays the correct thing for a deprecated method");

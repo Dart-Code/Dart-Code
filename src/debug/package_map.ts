@@ -8,6 +8,7 @@ export class PackageMap {
 	}
 
 	private map: { [name: string]: string } = {};
+	private localPackageName: string;
 
 	constructor(file?: string) {
 		if (!file) return;
@@ -26,8 +27,11 @@ export class PackageMap {
 
 				if (rest.startsWith("file:"))
 					this.map[name] = uriToFilePath(rest);
-				else
+				else {
 					this.map[name] = path.join(path.dirname(file), rest);
+					if (rest === "lib" || rest === "lib\\" || rest === "lib/")
+						this.localPackageName = name;
+				}
 			}
 		}
 	}
@@ -57,10 +61,12 @@ export class PackageMap {
 			return null;
 	}
 
-	public convertFileToPackageUri(file: string): string {
+	public convertFileToPackageUri(file: string, allowSelf = true): string {
 		for (const name of Object.keys(this.map)) {
 			const dir = this.map[name];
 			if (isWithinPath(file, dir)) {
+				if (!allowSelf && name === this.localPackageName)
+					return undefined;
 				let rest = file.substring(dir.length);
 				// package: uri should always use forward slashes.
 				if (isWin)

@@ -8,6 +8,7 @@ import { Analytics } from "../analytics";
 import { config } from "../config";
 import { globalFlutterArgs, safeSpawn } from "../debug/utils";
 import { locateBestProjectRoot } from "../project";
+import { DartHoverProvider } from "../providers/dart_hover_provider";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
 import { dartPubPath, flutterPath, showFlutterActivationFailure } from "../sdk/utils";
 import * as util from "../utils";
@@ -36,10 +37,15 @@ export class SdkCommands {
 				uri = await this.getWorkspace("Select which folder to get packages for");
 			if (typeof uri === "string")
 				uri = vs.Uri.file(uri);
-			if (isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(uri)))
-				return this.runFlutter("packages get", uri);
-			else
-				return this.runPub("get", uri);
+			try {
+				if (isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(uri)))
+					return this.runFlutter("packages get", uri);
+				else
+					return this.runPub("get", uri);
+			} finally {
+				// TODO: Move this to a reusable event.
+				DartHoverProvider.clearPackageMapCaches();
+			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages", async (uri) => {
 			if (!uri || !(uri instanceof Uri))
@@ -70,7 +76,12 @@ export class SdkCommands {
 				return this.runFlutter("update-packages", selection);
 			}
 
-			return this.runFlutter("packages get", selection);
+			try {
+				return this.runFlutter("packages get", selection);
+			} finally {
+				// TODO: Move this to a reusable event.
+				DartHoverProvider.clearPackageMapCaches();
+			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => {
 			return vs.commands.executeCommand("dart.upgradePackages", selection);

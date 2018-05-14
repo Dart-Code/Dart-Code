@@ -1,1 +1,4 @@
 name: hello_world
+
+dependencies:
+  http:
