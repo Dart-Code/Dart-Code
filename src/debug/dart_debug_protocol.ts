@@ -46,14 +46,13 @@ export interface VMIsolateRef extends VMResponse {
 	name: string;
 }
 
-export interface VMIsolate extends VMResponse {
-	id: string;
+export interface VMIsolate extends VMResponse, VMIsolateRef {
 	number: string;
-	name: string;
 	runnable: boolean;
 	pauseEvent: VMEvent;
 	libraries: VMLibraryRef[];
 	_heaps?: { new: VMHeapSpace, old: VMHeapSpace };
+	rootLib?: VMLibraryRef;
 }
 
 export interface VMObjectRef extends VMResponse {
