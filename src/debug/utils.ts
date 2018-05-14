@@ -58,24 +58,6 @@ export function findFile(file: string, startLocation: string) {
 	return null;
 }
 
-export function getLocalPackageName(entryPoint: string) {
-	const pubspec = findFile("pubspec.yaml", path.dirname(entryPoint));
-	if (!pubspec)
-		return null;
-
-	// TODO: This could fail if a nested "name:" property exists above the main "name:" property..
-	// The proper fix is to use a proper YAML parser but none of those on npm look very appealing
-	// (most have several dependencies, full issue trackers and/or are not being maintained).
-	const lines = fs.readFileSync(pubspec).toString().split("\n");
-	const values = lines.filter((l) => l.indexOf(":") > -1).map((l) => l.split(":"));
-	const namePair = values.find((v) => v[0].trim() === "name");
-
-	if (namePair)
-		return namePair[1].trim();
-	else
-		return null;
-}
-
 export function formatPathForVm(file: string): string {
 	// Handle drive letter inconsistencies.
 	file = forceWindowsDriveLetterToUppercase(file);

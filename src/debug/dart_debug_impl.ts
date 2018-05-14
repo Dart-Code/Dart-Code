@@ -5,7 +5,7 @@ import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, Stac
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DebuggerResult, ObservatoryConnection, VM, VMBreakpoint, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibraryRef, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMStack } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
-import { DartLaunchRequestArguments, PromiseCompleter, formatPathForVm, getLocalPackageName, safeSpawn, uriToFilePath } from "./utils";
+import { DartLaunchRequestArguments, PromiseCompleter, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -24,7 +24,6 @@ export class DartDebugSession extends DebugSession {
 	private observatoryLogStream: fs.WriteStream;
 	private threadManager: ThreadManager;
 	private packageMap: PackageMap;
-	private localPackageName: string;
 	protected sendStdOutToConsole: boolean = true;
 	protected pollforMemoryMs?: number; // If set, will poll for memory usage and send events back.
 
@@ -63,7 +62,6 @@ export class DartDebugSession extends DebugSession {
 			args.program = path.join(args.cwd, args.program);
 		this.sourceFile = path.relative(args.cwd, args.program);
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program));
-		this.localPackageName = getLocalPackageName(args.program);
 
 		this.sendResponse(response);
 
@@ -182,7 +180,8 @@ export class DartDebugSession extends DebugSession {
 						// Helpers to categories libraries as SDK/ExternalLibrary/not.
 						const isValidToDebug = (l: VMLibraryRef) => !l.uri.startsWith("dart:_"); // TODO: See https://github.com/dart-lang/sdk/issues/29813
 						const isSdkLibrary = (l: VMLibraryRef) => l.uri.startsWith("dart:");
-						const isExternalLibrary = (l: VMLibraryRef) => l.uri.startsWith("package:") && !l.uri.startsWith(`package:${this.localPackageName}/`);
+						// If we don't know the local package name, we have to assume nothing is external, else we might disable debugging for the local library.
+						const isExternalLibrary = (l: VMLibraryRef) => l.uri.startsWith("package:") && this.packageMap.localPackageName && !l.uri.startsWith(`package:${this.packageMap.localPackageName}/`);
 
 						// Set whether libraries should be debuggable based on user settings.
 						return Promise.all(

@@ -8,7 +8,7 @@ export class PackageMap {
 	}
 
 	private map: { [name: string]: string } = {};
-	private localPackageName: string;
+	public readonly localPackageName: string;
 
 	constructor(file?: string) {
 		if (!file) return;
