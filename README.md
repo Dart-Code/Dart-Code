@@ -23,7 +23,6 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - [Flutter Get Packages command](https://dartcode.org/docs/commands/#flutter-get-packages)
 - [Flutter Upgrade Packages command](https://dartcode.org/docs/commands/#flutter-upgrade-packages)
 - [Automatically gets packages when `pubspec.yaml` is saved](https://dartcode.org/docs/settings/#dartrunpubgetonpubspecchanges)
-- Prompts for full restarts when a hot reload does not re-execute all code
 - [Automatically finds SDKs from `PATH`](https://dartcode.org/docs/configuring-path-and-environment-variables/)
 - [Notification of new stable Dart SDK releases](https://dartcode.org/docs/settings/#dartcheckforsdkupdates)
 - [Sort Members command](https://dartcode.org/docs/commands/#dart-sort-members)
@@ -74,7 +73,7 @@ This extension reports some analytics such as:
 
 - Extension load and analysis times
 - Whether you have disabled some settings (such as showing TODOs in Problems Window or Closing Labels)
-- Frequency of use of features like Hot Reload, Full Restart and Open Observatory
+- Frequency of use of features like Hot Reload, Hot Restart and Open Observatory
 - Crashes in the Dart analysis server
 - Platform and Dart/Flutter SDK versions
 
