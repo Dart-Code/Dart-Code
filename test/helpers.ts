@@ -47,6 +47,7 @@ export const flutterTestBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWo
 export let doc: vs.TextDocument;
 export let editor: vs.TextEditor;
 export let documentEol: string;
+export let platformEol: string;
 
 export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	await ext.activate();
@@ -55,6 +56,7 @@ export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	doc = await vs.workspace.openTextDocument(file);
 	editor = await vs.window.showTextDocument(doc);
 	documentEol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
+	platformEol = isWin ? "\r\n" : "\n";
 }
 
 export async function closeAllOpenFiles(): Promise<void> {

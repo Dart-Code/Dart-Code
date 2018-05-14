@@ -177,7 +177,7 @@ describe("dart cli debugger", () => {
 				});
 			}).then((response) => dc.configurationDoneRequest()),
 			dc.waitForEvent("terminated"),
-			dc.assertOutput("stdout", `Hello! The {year} is ${(new Date()).getFullYear()}${eol}Hello, world!`),
+			dc.assertOutput("stdout", `Hello! The {year} is ${(new Date()).getFullYear()}${platformEol}Hello, world!`),
 			dc.launch(config),
 		]);
 	});
