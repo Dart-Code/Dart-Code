@@ -40,6 +40,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		function resolveVariables(input: string): string {
 			if (!input) return input;
 			if (input === "${file}") return openFile;
+			if (!folder) return input;
 			return input.replace(/\${workspaceFolder}/, fsPath(folder.uri));
 		}
 
