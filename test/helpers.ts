@@ -153,9 +153,7 @@ export async function setConfig(key: string, value: any, resource?: vs.Uri): Pro
 	const conf = vs.workspace.getConfiguration("dart", resource);
 	const oldValue = conf.get<string>(key);
 	await conf.update(key, value);
-	console.log(`Setting to ${value}`);
 	defer(async () => {
-		console.log(`Setting back to ${oldValue}`);
 		await conf.update(key, oldValue);
 		await delay(500);
 	});
