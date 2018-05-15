@@ -123,6 +123,8 @@ beforeEach(async function () {
 	// https://github.com/dart-lang/sdk/issues/32914#issuecomment-382512517
 	// is fixed/rolled out.
 	await delay(500);
+	// And ensure we wait after they've bene reset too.
+	defer(() => delay(500));
 });
 
 before(() => {
@@ -145,6 +147,19 @@ async function setLogs(conf: vs.WorkspaceConfiguration, logFolder: string, prefi
 			await conf.update(key, oldValue);
 		});
 	}
+}
+
+export async function setConfig(key: string, value: any, resource?: vs.Uri): Promise<void> {
+	const conf = vs.workspace.getConfiguration("dart", resource);
+	const oldValue = conf.get<string>(key);
+	await conf.update(key, value);
+	console.log(`Setting to ${value}`);
+	defer(async () => {
+		console.log(`Setting back to ${oldValue}`);
+		await conf.update(key, oldValue);
+		await delay(500);
+	});
+	await delay(500);
 }
 
 export async function setTestContent(content: string): Promise<boolean> {
