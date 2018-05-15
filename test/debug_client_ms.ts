@@ -320,14 +320,14 @@ export class DebugClient extends ProtocolClient {
 	/**
 	 * Returns a promise that will resolve if a 'initialize' and a 'launch' request were successful.
 	 */
-	public launch(launchArgs: any): Promise<DebugProtocol.LaunchResponse> {
+	public launch(launchArgs: any): Promise<void> {
 
 		return this.initializeRequest().then(response => {
 			if (response.body && response.body.supportsConfigurationDoneRequest) {
 				this._supportsConfigurationDoneRequest = true;
 			}
 			return this.launchRequest(launchArgs);
-		});
+		}).then((_) => { });
 	}
 
 	private configurationDone(): Promise<DebugProtocol.Response> {

@@ -288,10 +288,7 @@ export class DartDebugSession extends DebugSession {
 				await Promise.all(this.threadManager.threads.map((thread) => thread.removeAllBreakpoints()));
 
 				// Restart any paused threads.
-				await Promise.all(this.threadManager.threads.map((thread) => {
-					if (thread.paused)
-						return this.observatory.resume(thread.ref.id);
-				}));
+				await Promise.all(this.threadManager.threads.map((thread) => thread.resume()));
 			} finally {
 				this.observatory.close();
 			}
@@ -680,8 +677,7 @@ export class DartDebugSession extends DebugSession {
 			this.errorResponse(response, `No thread with id ${args.threadId}`);
 			return;
 		}
-		this.observatory.resume(thread.ref.id).then((_) => {
-			thread.handleResumed();
+		thread.resume().then((_) => {
 			response.body = { allThreadsContinued: false };
 			this.sendResponse(response);
 		}).catch((error) => this.errorResponse(response, `${error}`));
@@ -694,8 +690,7 @@ export class DartDebugSession extends DebugSession {
 			return;
 		}
 		const type = thread.atAsyncSuspension ? "OverAsyncSuspension" : "Over";
-		this.observatory.resume(thread.ref.id, type).then((_) => {
-			thread.handleResumed();
+		thread.resume(type).then((_) => {
 			this.sendResponse(response);
 		}).catch((error) => this.errorResponse(response, `${error}`));
 	}
@@ -706,8 +701,7 @@ export class DartDebugSession extends DebugSession {
 			this.errorResponse(response, `No thread with id ${args.threadId}`);
 			return;
 		}
-		this.observatory.resume(thread.ref.id, "Into").then((_) => {
-			thread.handleResumed();
+		thread.resume("Into").then((_) => {
 			this.sendResponse(response);
 		}).catch((error) => this.errorResponse(response, `${error}`));
 	}
@@ -718,8 +712,7 @@ export class DartDebugSession extends DebugSession {
 			this.errorResponse(response, `No thread with id ${args.threadId}`);
 			return;
 		}
-		this.observatory.resume(thread.ref.id, "Out").then((_) => {
-			thread.handleResumed();
+		thread.resume("Out").then((_) => {
 			this.sendResponse(response);
 		}).catch((error) => this.errorResponse(response, `${error}`));
 	}
@@ -820,9 +813,7 @@ export class DartDebugSession extends DebugSession {
 				// Otherwise, if we were attaching, then just issue a step-into to put the debugger
 				// right at the start of the application.
 				thread.handlePaused(event.atAsyncSuspension, event.exception);
-				this.observatory.resume(thread.ref.id, "Into").then((_) => {
-					thread.handleResumed();
-				});
+				await thread.resume("Into");
 			}
 		} else {
 			const thread = this.threadManager.getThreadInfoFromRef(event.isolate);
@@ -872,11 +863,11 @@ export class DartDebugSession extends DebugSession {
 					exceptionText = await this.callToString(event.isolate, event.exception, true);
 			}
 
+			thread.handlePaused(event.atAsyncSuspension, event.exception);
 			if (shouldRemainedStoppedOnBreakpoint) {
-				thread.handlePaused(event.atAsyncSuspension, event.exception);
 				this.sendEvent(new StoppedEvent(reason, thread.num, exceptionText));
 			} else {
-				this.observatory.resume(thread.ref.id);
+				thread.resume();
 			}
 		}
 	}
@@ -1274,6 +1265,7 @@ class ThreadInfo {
 	private gotPauseStart = false;
 	private initialBreakpoints = false;
 	private hasConfigurationDone = false;
+	private hasPendingResume = false;
 
 	public receivedPauseStart() {
 		this.gotPauseStart = true;
@@ -1293,16 +1285,30 @@ class ThreadInfo {
 
 	public checkResume() {
 		if (this.paused && this.gotPauseStart && this.initialBreakpoints && this.hasConfigurationDone)
-			this.manager.debugSession.observatory.resume(this.ref.id).then((_) => this.handleResumed());
+			this.resume();
 	}
 
 	public handleResumed() {
 		// TODO: I don"t think we want to do this...
 		// this.manager.removeStoredIds(this.storedIds);
 		// this.storedIds = [];
+		// TODO: Should we be waiting for acknowledgement before doing this?
 		this.atAsyncSuspension = false;
 		this.exceptionReference = 0;
 		this.paused = false;
+	}
+
+	public async resume(step?: string): Promise<void> {
+		if (!this.paused || this.hasPendingResume)
+			return;
+
+		this.hasPendingResume = true;
+		try {
+			await this.manager.debugSession.observatory.resume(this.ref.id, step);
+			this.handleResumed();
+		} finally {
+			this.hasPendingResume = false;
+		}
 	}
 
 	public getScript(scriptRef: VMScriptRef): Promise<VMScript> {
