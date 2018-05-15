@@ -114,6 +114,20 @@ export class DartDebugSession extends DebugSession {
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.observatoryLogFile = args.observatoryLogFile;
 
+		// If we were given an explicity packages path, use it (otherwise we'll try
+		// to extract from the VM)
+		if (args.packages) {
+			// Support relative paths
+			if (args.packages && !path.isAbsolute(args.packages))
+				args.packages = path.join(args.cwd, args.packages);
+
+			try {
+				this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.packages));
+			} catch (e) {
+				this.errorResponse(response, `Unable to load packages file: ${e}`);
+			}
+		}
+
 		try {
 			await this.initObservatory(this.websocketUriForObservatoryUri(args.observatoryUri));
 			this.sendResponse(response);
