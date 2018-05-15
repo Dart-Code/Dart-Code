@@ -34,6 +34,7 @@ export const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/t
 export const helloWorldMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/main.dart"));
 export const helloWorldBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/broken.dart"));
 export const helloWorldGoodbyeFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/goodbye.dart"));
+export const helloWorldHttpFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/http.dart"));
 export const emptyFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/empty.dart"));
 export const everythingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/everything.dart"));
 export const flutterHelloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/flutter_hello_world"));
@@ -44,6 +45,7 @@ export const flutterTestMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorl
 export const flutterTestOtherFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/other_test.dart"));
 export const flutterTestBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/broken_test.dart"));
 
+// TODO: Make these always return for the current active file (which is what many tests already use).
 export let doc: vs.TextDocument;
 export let editor: vs.TextEditor;
 export let documentEol: string;
@@ -190,6 +192,18 @@ export function rangeOf(searchText: string, inside?: vs.Range): vs.Range {
 export async function getDocumentSymbols(): Promise<vs.SymbolInformation[]> {
 	const documentSymbolResult = await (vs.commands.executeCommand("vscode.executeDocumentSymbolProvider", doc.uri) as Thenable<vs.SymbolInformation[]>);
 	return documentSymbolResult || [];
+}
+
+export async function getDefinitions(position: vs.Position): Promise<vs.Location[]> {
+	const doc = vs.window.activeTextEditor.document;
+	const definitionResult = await (vs.commands.executeCommand("vscode.executeDefinitionProvider", doc.uri, position) as Thenable<vs.Location[]>);
+	return definitionResult || [];
+}
+
+export async function getDefinition(position: vs.Position): Promise<vs.Location> {
+	const defs = await getDefinitions(position);
+	assert.ok(defs && defs.length);
+	return defs[0];
 }
 
 export async function getWorkspaceSymbols(query: string): Promise<vs.SymbolInformation[]> {
