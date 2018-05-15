@@ -691,6 +691,10 @@
 								"type": "string",
 								"description": "Workspace root."
 							},
+							"packages": {
+								"type": "string",
+								"description": "Path to the packages file (only required if cannot be discovered from the running process automatically)."
+							},
 							"observatoryUri": {
 								"type": "string",
 								"description": "URI (or port) of the Observatory instance to attach to."
