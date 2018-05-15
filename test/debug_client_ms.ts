@@ -460,10 +460,7 @@ export class DebugClient extends ProtocolClient {
 				return this.configurationDone();
 			}),
 
-			this.launch(launchArgs),
-
-			this.assertStoppedLocation('breakpoint', expectedStopLocation || location)
-
+			this.launch(launchArgs).then((_) => this.assertStoppedLocation('breakpoint', expectedStopLocation || location))
 		]);
 	}
 }
