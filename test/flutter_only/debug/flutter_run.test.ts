@@ -2,7 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../src/utils";
-import { DartDebugClient } from "../../debug_client";
+import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable } from "../../debug_helpers";
 import { activate, defer, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
 
