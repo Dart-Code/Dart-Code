@@ -9,9 +9,8 @@ import { DartDebugClient } from "./debug_client";
 import { defer } from "./helpers";
 
 export async function getTopFrameVariables(dc: DartDebugClient, scope: "Exception" | "Locals"): Promise<Variable[]> {
-	const threads = await dc.threadsRequest();
-	assert.equal(threads.body.threads.length, 1);
-	const stack = await dc.stackTraceRequest({ threadId: threads.body.threads[0].id });
+	const thread = await dc.getMainThread();
+	const stack = await dc.stackTraceRequest({ threadId: thread.id });
 	const scopes = await dc.scopesRequest({ frameId: stack.body.stackFrames[0].id });
 	const exceptionScope = scopes.body.scopes.find((s) => s.name === scope);
 	assert.ok(exceptionScope);
@@ -30,9 +29,8 @@ export async function evaluate(dc: DartDebugClient, expression: string): Promise
 	namedVariables?: number;
 	indexedVariables?: number;
 }> {
-	const threads = await dc.threadsRequest();
-	assert.equal(threads.body.threads.length, 1);
-	const stack = await dc.stackTraceRequest({ threadId: threads.body.threads[0].id });
+	const thread = await dc.getMainThread();
+	const stack = await dc.stackTraceRequest({ threadId: thread.id });
 	const result = await dc.evaluateRequest({ expression, frameId: stack.body.stackFrames[0].id });
 	return result.body;
 }
