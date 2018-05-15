@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { fsPath } from "../../../src/utils";
 import { DartDebugClient } from "../../debug_client";
 import { ensureMapEntry, ensureOutputContains, ensureVariable, evaluate, getTopFrameVariables, getVariables, spawnProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDefinition, getLaunchConfiguration, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, platformEol, positionOf, sb } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDefinition, getLaunchConfiguration, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, platformEol, positionOf, sb, setConfig } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	beforeEach(() => activate(helloWorldMainFile));
@@ -142,13 +142,35 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it("steps into the SDK if debugSdkLibraries is true");
+	it("steps into the SDK if debugSdkLibraries is true", async () => {
+		await setConfig("debugSdkLibraries", true, helloWorldMainFile);
+		await openFile(helloWorldMainFile);
+		// Get location for `print`
+		const printCall = positionOf("pri^nt(");
+		const printDef = await getDefinition(printCall);
+		const config = await startDebugger(helloWorldMainFile);
+		await Promise.all([
+			dc.hitBreakpoint(config, {
+				line: printCall.line + 1,
+				path: fsPath(helloWorldMainFile),
+			}).then(async (_) => {
+				await dc.stepIn();
+				await dc.assertStoppedLocation("step", {
+					// SDK source will have no filename, because we download it
+					path: null,
+				}).then((response) => {
+					// Ensure the name of the top stack frame matches
+					const frame = response.body.stackFrames[0];
+					assert.equal(frame.source.name, "dart:core/print.dart");
+				});
+			}),
+		]);
+	});
 
 	it("does not step into the SDK if debugSdkLibraries is false", async () => {
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
-		// const printDef = await getDefinition(printCall);
 		const config = await startDebugger(helloWorldMainFile);
 		await Promise.all([
 			dc.hitBreakpoint(config, {
