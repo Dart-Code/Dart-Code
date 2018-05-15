@@ -1,39 +1,11 @@
 import * as assert from "assert";
 import { ChildProcess } from "child_process";
 import { DebugConfiguration } from "vscode";
-import { Variable } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { ObservatoryConnection } from "../src/debug/dart_debug_protocol";
 import { safeSpawn } from "../src/debug/utils";
 import { DartDebugClient } from "./debug_client";
 import { defer } from "./helpers";
-
-export async function getTopFrameVariables(dc: DartDebugClient, scope: "Exception" | "Locals"): Promise<Variable[]> {
-	const thread = await dc.getMainThread();
-	const stack = await dc.stackTraceRequest({ threadId: thread.id });
-	const scopes = await dc.scopesRequest({ frameId: stack.body.stackFrames[0].id });
-	const exceptionScope = scopes.body.scopes.find((s) => s.name === scope);
-	assert.ok(exceptionScope);
-	return getVariables(dc, exceptionScope.variablesReference);
-}
-
-export async function getVariables(dc: DartDebugClient, variablesReference: number): Promise<Variable[]> {
-	const variables = await dc.variablesRequest({ variablesReference });
-	return variables.body.variables;
-}
-
-export async function evaluate(dc: DartDebugClient, expression: string): Promise<{
-	result: string;
-	type?: string;
-	variablesReference: number;
-	namedVariables?: number;
-	indexedVariables?: number;
-}> {
-	const thread = await dc.getMainThread();
-	const stack = await dc.stackTraceRequest({ threadId: thread.id });
-	const result = await dc.evaluateRequest({ expression, frameId: stack.body.stackFrames[0].id });
-	return result.body;
-}
 
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string, name: string, value: string) {
 	assert.ok(variables);
@@ -63,7 +35,7 @@ export interface MapEntry {
 export async function ensureMapEntry(mapEntries: DebugProtocol.Variable[], entry: MapEntry, dc: DartDebugClient) {
 	assert.ok(mapEntries);
 	const results = await Promise.all(mapEntries.map((mapEntry) => {
-		return getVariables(dc, mapEntry.variablesReference).then((variable) => {
+		return dc.getVariables(mapEntry.variablesReference).then((variable) => {
 			const key = variable[0] as DebugProtocol.Variable;
 			const value = variable[1] as DebugProtocol.Variable;
 			assert.ok(key);
@@ -77,17 +49,6 @@ export async function ensureMapEntry(mapEntries: DebugProtocol.Variable[], entry
 		});
 	}));
 	assert.ok(results.find((r) => r));
-}
-
-export function ensureOutputContains(dc: DartDebugClient, category: string, text: string) {
-	return new Promise((resolve, reject) => dc.on("output", (event: DebugProtocol.OutputEvent) => {
-		if (event.body.category === category) {
-			if (event.body.output.indexOf(text) !== -1)
-				resolve();
-			else
-				reject(new Error(`Didn't find text "${text}" in ${category}`));
-		}
-	}));
 }
 
 export function spawnProcessPaused(config: DebugConfiguration): DartProcess {
