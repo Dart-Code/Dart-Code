@@ -363,7 +363,7 @@ async function getResolvedDebugConfiguration(extraConfiguration?: { [key: string
 	return await ext.exports.debugProvider.resolveDebugConfiguration(vs.workspace.workspaceFolders[0], debugConfig);
 }
 
-export async function getLaunchConfiguration(script: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
+export async function getLaunchConfiguration(script?: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
 	if (script instanceof vs.Uri)
 		script = fsPath(script);
 	const launchConfig = Object.assign({}, {
