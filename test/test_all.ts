@@ -29,9 +29,14 @@ function runNode(cwd: string, args: string[], env: any): Promise<number> {
 			resolve(code);
 		});
 		setTimeout(() => {
+			console.log(yellow(`Process is still going after ${timeoutInMilliseconds / 2 / 1000}s.`));
+			console.log(yellow(`Waiting another ${timeoutInMilliseconds / 2 / 1000}s before terminating`));
+			console.log(yellow("    " + JSON.stringify(args)));
+		}, timeoutInMilliseconds / 2);
+		setTimeout(() => {
 			if (proc && !hasClosed && !proc.killed) {
 				proc.kill();
-				console.log(red("Terminating process for taking too long!"));
+				console.log(red(`Terminating process for taking too long after ${timeoutInMilliseconds / 1000}s!`));
 				console.log(yellow("    " + JSON.stringify(args)));
 				resolve(1);
 			}
