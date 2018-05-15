@@ -101,9 +101,6 @@ export function isAnalyzable(document: TextDocument): boolean {
 }
 
 export function isAnalyzableAndInWorkspace(document: TextDocument): boolean {
-	if (document.isUntitled || !fsPath(document.uri))
-		return false;
-
 	return isAnalyzable(document) && isWithinWorkspace(fsPath(document.uri));
 }
 
