@@ -364,9 +364,14 @@ describe("dart cli debugger", () => {
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 					path: fsPath(helloWorldMainFile),
-				}).then((_) => dc.disconnectRequest()),
+				}).then(async (_) => {
+					console.log("Disconnecting...");
+					await dc.disconnectRequest();
+					console.log("Disconnected!");
+				}),
 			]);
 
+			console.log("Waiting for process to terminate...");
 			await process.exitCode;
 		});
 
