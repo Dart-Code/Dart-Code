@@ -2,7 +2,7 @@ import * as vs from "vscode";
 import { Analytics } from "../analytics";
 import { PromiseCompleter } from "../debug/utils";
 import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
-import { logError, openInBrowser } from "../utils";
+import { fsPath, logError, openInBrowser } from "../utils";
 
 export class DebugCommands {
 	private analytics: Analytics;
@@ -134,6 +134,24 @@ export class DebugCommands {
 			this.reloadStatus.hide();
 			this.sendCustomFlutterDebugCommand("hotRestart");
 			analytics.logDebuggerRestart();
+		}));
+
+		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugging", (resource: vs.Uri) => {
+			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), {
+				name: "Dart",
+				program: fsPath(resource),
+				request: "launch",
+				type: "dart",
+			});
+		}));
+		context.subscriptions.push(vs.commands.registerCommand("dart.startWithoutDebugging", (resource: vs.Uri) => {
+			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), {
+				name: "Dart",
+				noDebug: true,
+				program: fsPath(resource),
+				request: "launch",
+				type: "dart",
+			});
 		}));
 
 		// Flutter toggle platform.
