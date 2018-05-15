@@ -117,10 +117,13 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it("stops at a breakpoint in the SDK if debugSdkLibraries is true");
-	it("does not stop at a breakpoint in the SDK if debugSdkLibraries is false");
-	it("stops at a breakpoint in an external package if debugExternalLibraries is true");
-	it("does not stop at a breakpoint in an external package if debugExternalLibraries is false");
+	it("stops at a breakpoint in the SDK");
+	it("stops at a breakpoint in an external package");
+
+	it("steps into the SDK if debugSdkLibraries is true");
+	it("does not stop into the SDK if debugSdkLibraries is false");
+	it("steps into an external library if debugExternalLibraries is true");
+	it("does not step into an external library if debugExternalLibraries is false");
 
 	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
 		return async () => {
