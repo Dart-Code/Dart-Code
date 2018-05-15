@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { fsPath } from "../../../src/utils";
 import { DartDebugClient } from "../../debug_client";
 import { ensureMapEntry, ensureOutputContains, ensureVariable, evaluate, getTopFrameVariables, getVariables, spawnProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getLaunchConfiguration, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldMainFile, openFile, platformEol, positionOf, sb } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDefinition, getLaunchConfiguration, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, platformEol, positionOf, sb } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	beforeEach(() => activate(helloWorldMainFile));
@@ -116,7 +116,18 @@ describe("dart cli debugger", () => {
 	});
 
 	it("stops at a breakpoint in the SDK");
-	it("stops at a breakpoint in an external package");
+	it("stops at a breakpoint in an external package", async () => {
+		await openFile(helloWorldHttpFile);
+		// Invoke F12 on `print`
+		const def = await getDefinition(positionOf("http.re^ad"));
+		const config = await startDebugger(helloWorldHttpFile);
+		await Promise.all([
+			dc.hitBreakpoint(config, {
+				line: def.range.start.line + 1,
+				path: fsPath(def.uri),
+			}),
+		]);
+	});
 
 	it("steps into the SDK if debugSdkLibraries is true");
 	it("does not stop into the SDK if debugSdkLibraries is false");
