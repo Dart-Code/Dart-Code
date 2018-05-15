@@ -4,7 +4,7 @@ import { DebugConfiguration } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { ObservatoryConnection } from "../src/debug/dart_debug_protocol";
 import { safeSpawn } from "../src/debug/utils";
-import { DartDebugClient } from "./debug_client";
+import { DartDebugClient } from "./dart_debug_client";
 import { defer } from "./helpers";
 
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string, name: string, value: string) {
