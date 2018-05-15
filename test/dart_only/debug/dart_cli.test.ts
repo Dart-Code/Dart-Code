@@ -144,18 +144,24 @@ describe("dart cli debugger", () => {
 
 	it("steps into the SDK if debugSdkLibraries is true");
 
-	it.skip("does not stop into the SDK if debugSdkLibraries is false", async () => {
-		// await openFile(helloWorldMainFile);
-		// const config = await startDebugger(helloWorldMainFile);
-		// await Promise.all([
-		// 	dc.hitBreakpoint(config, {
-		// 		line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-		// 		path: fsPath(helloWorldMainFile),
-		// 	}).then((_) => {
-		// 		// dc.stepInRequest()
-		// 		// assert location
-		// 	}),
-		// ]);
+	it("does not step into the SDK if debugSdkLibraries is false", async () => {
+		await openFile(helloWorldMainFile);
+		// Get location for `print`
+		const printCall = positionOf("pri^nt(");
+		// const printDef = await getDefinition(printCall);
+		const config = await startDebugger(helloWorldMainFile);
+		await Promise.all([
+			dc.hitBreakpoint(config, {
+				line: printCall.line + 1,
+				path: fsPath(helloWorldMainFile),
+			}).then(async (_) => {
+				await dc.stepIn();
+				await dc.assertStoppedLocation("step", {
+					// Ensure we stayed in the current file
+					path: fsPath(helloWorldMainFile),
+				});
+			}),
+		]);
 	});
 
 	it("steps into an external library if debugExternalLibraries is true");

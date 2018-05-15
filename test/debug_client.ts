@@ -32,5 +32,9 @@ export class DartDebugClient extends DebugClient {
 		const thread = await this.getMainThread();
 		return this.continueRequest({ threadId: thread.id });
 	}
+
+	public async stepIn(): Promise<DebugProtocol.StepInResponse> {
+		const thread = await this.getMainThread();
+		return this.stepInRequest({ threadId: thread.id });
 	}
 }
