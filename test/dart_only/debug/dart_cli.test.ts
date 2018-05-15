@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../src/utils";
 import { DartDebugClient } from "../../debug_client";
-import { ensureMapEntry, ensureOutputContains, ensureVariable, evaluate, getTopFrameVariables, getVariables, spawnProcessPaused } from "../../debug_helpers";
+import { ensureMapEntry, ensureVariable, spawnProcessPaused } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDefinition, getLaunchConfiguration, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, platformEol, positionOf, sb, setConfig } from "../../helpers";
 
 describe("dart cli debugger", () => {
@@ -54,7 +54,7 @@ describe("dart cli debugger", () => {
 			// TODO: Figure out if this is a bug - because we never connect to Observatory, we never
 			// resolve this properly.
 			// dc.configurationSequence(),
-			ensureOutputContains(dc, "stderr", "Unrecognized flags: fake-flag"),
+			dc.assertOutputContains("stderr", "Unrecognized flags: fake-flag"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -298,16 +298,16 @@ describe("dart cli debugger", () => {
 			}),
 		]);
 
-		const variables = await getTopFrameVariables(dc, "Locals");
+		const variables = await dc.getTopFrameVariables("Locals");
 		ensureVariable(variables, "l", "l", `[2]`);
 		ensureVariable(variables, "s", "s", `"Hello!"`);
 		ensureVariable(variables, "m", "m", `{7}`);
 
-		const listVariables = await getVariables(dc, variables.find((v) => v.name === "l").variablesReference);
+		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l").variablesReference);
 		ensureVariable(listVariables, "l[0]", "[0]", "0");
 		ensureVariable(listVariables, "l[1]", "[1]", "1");
 
-		const mapVariables = await getVariables(dc, variables.find((v) => v.name === "m").variablesReference);
+		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m").variablesReference);
 		ensureVariable(mapVariables, undefined, "0", `"l" -> [2]`);
 		ensureVariable(mapVariables, undefined, "1", `"s" -> "Hello!"`);
 		ensureVariable(mapVariables, undefined, "2", `DateTime -> "today"`);
@@ -356,16 +356,16 @@ describe("dart cli debugger", () => {
 			}),
 		]);
 
-		const variables = await getTopFrameVariables(dc, "Locals");
-		const listVariables = await getVariables(dc, variables.find((v) => v.name === "l").variablesReference);
-		const mapVariables = await getVariables(dc, variables.find((v) => v.name === "m").variablesReference);
+		const variables = await dc.getTopFrameVariables("Locals");
+		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l").variablesReference);
+		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m").variablesReference);
 		const allVariables = variables.concat(listVariables).concat(mapVariables);
 
 		for (const variable of allVariables) {
 			const evaluateName = (variable as any).evaluateName;
 			if (!evaluateName)
 				continue;
-			const evaluateResult = await evaluate(dc, evaluateName);
+			const evaluateResult = await dc.evaluate(evaluateName);
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, variable.value);
 			assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);
@@ -397,7 +397,7 @@ describe("dart cli debugger", () => {
 			dc.launch(config),
 		]);
 
-		const variables = await getTopFrameVariables(dc, "Exception");
+		const variables = await dc.getTopFrameVariables("Exception");
 		ensureVariable(variables, undefined, "message", `"Oops"`);
 	});
 
