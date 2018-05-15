@@ -16,7 +16,7 @@ describe("dart cli debugger", () => {
 		defer(() => dc.stop());
 	});
 
-	async function startDebugger(script: vs.Uri): Promise<vs.DebugConfiguration> {
+	async function startDebugger(script?: vs.Uri): Promise<vs.DebugConfiguration> {
 		const config = await getLaunchConfiguration(script);
 		await dc.start(config.debugServer);
 		return config;
@@ -73,7 +73,7 @@ describe("dart cli debugger", () => {
 
 	it("runs bin/main.dart if no file is open/provided", async () => {
 		await closeAllOpenFiles();
-		const config = await startDebugger(null);
+		const config = await startDebugger();
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", "Hello, world!"),
@@ -95,7 +95,7 @@ describe("dart cli debugger", () => {
 
 	it("runs the open script if no file is provided", async () => {
 		await openFile(helloWorldGoodbyeFile);
-		const config = await startDebugger(null);
+		const config = await startDebugger();
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", "Goodbye!"),
@@ -115,10 +115,23 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it("stops at a breakpoint in the SDK");
+	// Known not to work; https://github.com/Dart-Code/Dart-Code/issues/821
+	it.skip("stops at a breakpoint in the SDK", async () => {
+		await openFile(helloWorldMainFile);
+		// Get location for `print`
+		const def = await getDefinition(positionOf("pri^nt("));
+		const config = await startDebugger(helloWorldMainFile);
+		await Promise.all([
+			dc.hitBreakpoint(config, {
+				line: def.range.start.line + 1,
+				path: fsPath(def.uri),
+			}),
+		]);
+	});
+
 	it("stops at a breakpoint in an external package", async () => {
 		await openFile(helloWorldHttpFile);
-		// Invoke F12 on `print`
+		// Get location for `http.read`
 		const def = await getDefinition(positionOf("http.re^ad"));
 		const config = await startDebugger(helloWorldHttpFile);
 		await Promise.all([
@@ -130,8 +143,23 @@ describe("dart cli debugger", () => {
 	});
 
 	it("steps into the SDK if debugSdkLibraries is true");
-	it("does not stop into the SDK if debugSdkLibraries is false");
+
+	it.skip("does not stop into the SDK if debugSdkLibraries is false", async () => {
+		// await openFile(helloWorldMainFile);
+		// const config = await startDebugger(helloWorldMainFile);
+		// await Promise.all([
+		// 	dc.hitBreakpoint(config, {
+		// 		line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+		// 		path: fsPath(helloWorldMainFile),
+		// 	}).then((_) => {
+		// 		// dc.stepInRequest()
+		// 		// assert location
+		// 	}),
+		// ]);
+	});
+
 	it("steps into an external library if debugExternalLibraries is true");
+
 	it("does not step into an external library if debugExternalLibraries is false");
 
 	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
