@@ -168,6 +168,7 @@ describe("dart cli debugger", () => {
 	});
 
 	it("does not step into the SDK if debugSdkLibraries is false", async () => {
+		await setConfig("debugSdkLibraries", false, helloWorldMainFile);
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
@@ -186,9 +187,46 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it("steps into an external library if debugExternalLibraries is true");
+	it("steps into an external library if debugExternalLibraries is true", async () => {
+		await setConfig("debugExternalLibraries", true, helloWorldHttpFile);
+		await openFile(helloWorldHttpFile);
+		// Get location for `print`
+		const httpReadCall = positionOf("http.re^ad(");
+		const httpReadDef = await getDefinition(httpReadCall);
+		const config = await startDebugger(helloWorldHttpFile);
+		await Promise.all([
+			dc.hitBreakpoint(config, {
+				line: httpReadCall.line + 1,
+				path: fsPath(helloWorldHttpFile),
+			}).then(async (_) => {
+				await dc.stepIn();
+				await dc.assertStoppedLocation("step", {
+					// Ensure we stepped into the external file
+					path: fsPath(httpReadDef.uri),
+				});
+			}),
+		]);
+	});
 
-	it("does not step into an external library if debugExternalLibraries is false");
+	it("does not step into an external library if debugExternalLibraries is false", async () => {
+		await setConfig("debugExternalLibraries", false, helloWorldHttpFile);
+		await openFile(helloWorldHttpFile);
+		// Get location for `print`
+		const httpReadCall = positionOf("http.re^ad(");
+		const config = await startDebugger(helloWorldHttpFile);
+		await Promise.all([
+			dc.hitBreakpoint(config, {
+				line: httpReadCall.line + 1,
+				path: fsPath(helloWorldHttpFile),
+			}).then(async (_) => {
+				await dc.stepIn();
+				await dc.assertStoppedLocation("step", {
+					// Ensure we stayed in the current file
+					path: fsPath(helloWorldHttpFile),
+				});
+			}),
+		]);
+	});
 
 	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
 		return async () => {
