@@ -22,9 +22,15 @@ export class DartDebugClient extends DebugClient {
 		}
 	}
 
-	public async resume(): Promise<DebugProtocol.ContinueResponse> {
+	public async getMainThread(): Promise<DebugProtocol.Thread> {
 		const threads = await this.threadsRequest();
 		assert.equal(threads.body.threads.length, 1);
-		return this.continueRequest({ threadId: threads.body.threads[0].id });
+		return threads.body.threads[0];
+	}
+
+	public async resume(): Promise<DebugProtocol.ContinueResponse> {
+		const thread = await this.getMainThread();
+		return this.continueRequest({ threadId: thread.id });
+	}
 	}
 }
