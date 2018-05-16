@@ -89,7 +89,7 @@ export class Analyzer extends AnalyzerGen {
 			if (n.analysis) {
 				if (n.analysis.isAnalyzing) {
 					this.isAnalyzing = true;
-				} else if (!n.analysis.isAnalyzing && this.currentAnalysisCompleter) {
+				} else {
 					this.isAnalyzing = false;
 					if (this.currentAnalysisCompleter) {
 						this.currentAnalysisCompleter.resolve();
