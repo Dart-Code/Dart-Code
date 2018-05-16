@@ -1,5 +1,6 @@
 import * as vs from "vscode";
 import { config } from "../config";
+import { PromiseCompleter } from "../debug/utils";
 import { extensionVersion, logError, reloadExtension, versionIsAtLeast } from "../utils";
 import * as as from "./analysis_server_types";
 import { AnalyzerGen } from "./analyzer_gen";
@@ -33,6 +34,8 @@ export class Analyzer extends AnalyzerGen {
 	private lastDiagnostics: as.ContextData[];
 	private launchArgs: string[];
 	private version: string;
+	private isAnalyzing = false;
+	private currentAnalysisCompleter: PromiseCompleter<void>;
 	public capabilities: AnalyzerCapabilities = new AnalyzerCapabilities("0.0.1");
 
 	constructor(dartVMPath: string, analyzerPath: string) {
@@ -81,6 +84,34 @@ export class Analyzer extends AnalyzerGen {
 		this.serverSetSubscriptions({
 			subscriptions: ["STATUS"],
 		});
+
+		this.registerForServerStatus((n) => {
+			if (n.analysis) {
+				if (n.analysis.isAnalyzing) {
+					this.isAnalyzing = true;
+				} else if (!n.analysis.isAnalyzing && this.currentAnalysisCompleter) {
+					this.isAnalyzing = false;
+					if (this.currentAnalysisCompleter) {
+						this.currentAnalysisCompleter.resolve();
+						this.currentAnalysisCompleter = null;
+					}
+				}
+			}
+		});
+	}
+
+	private resolvedPromise = Promise.resolve();
+	public get currentAnalysis(): Promise<void> {
+		// If we're analyzing and don't already have a completer, set one up
+		// for the analyzer to signal when done. We do this here so it's lazy, so
+		// we're not needlessly creating them on every analysis (which can be on
+		// every key press).
+		if (this.isAnalyzing && !this.currentAnalysisCompleter) {
+			this.currentAnalysisCompleter = new PromiseCompleter<void>();
+		}
+		return this.isAnalyzing
+			? this.currentAnalysisCompleter.promise
+			: this.resolvedPromise;
 	}
 
 	protected sendMessage<T>(json: string) {
