@@ -22,10 +22,10 @@ export class DartDebugSession extends DebugSession {
 	protected cwd?: string;
 	private observatoryLogFile: string;
 	private observatoryLogStream: fs.WriteStream;
-	private debugSdkLibraries: boolean;
-	private debugExternalLibraries: boolean;
+	public debugSdkLibraries: boolean;
+	public debugExternalLibraries: boolean;
 	private threadManager: ThreadManager;
-	private packageMap: PackageMap;
+	public packageMap: PackageMap;
 	protected sendStdOutToConsole: boolean = true;
 	protected pollforMemoryMs?: number; // If set, will poll for memory usage and send events back.
 
@@ -230,29 +230,8 @@ export class DartDebugSession extends DebugSession {
 						);
 
 						if (isolate.pauseEvent.kind.startsWith("Pause")) {
-							this.handlePauseEvent(isolate.pauseEvent);
+							await this.handlePauseEvent(isolate.pauseEvent);
 						}
-
-						// Helpers to categories libraries as SDK/ExternalLibrary/not.
-						const isValidToDebug = (l: VMLibraryRef) => !l.uri.startsWith("dart:_"); // TODO: See https://github.com/dart-lang/sdk/issues/29813
-						const isSdkLibrary = (l: VMLibraryRef) => l.uri.startsWith("dart:");
-						// If we don't know the local package name, we have to assume nothing is external, else we might disable debugging for the local library.
-						const isExternalLibrary = (l: VMLibraryRef) => l.uri.startsWith("package:") && this.packageMap.localPackageName && !l.uri.startsWith(`package:${this.packageMap.localPackageName}/`);
-
-						// Set whether libraries should be debuggable based on user settings.
-						return Promise.all(
-							isolate.libraries.filter(isValidToDebug).map((library) => {
-								// Note: Condition is negated.
-								const shouldDebug = !(
-									// Inside here is shouldNotDebug!
-									(isSdkLibrary(library) && !this.debugSdkLibraries)
-									|| (isExternalLibrary(library) && !this.debugExternalLibraries)
-								);
-								// TODO: Handle errors (such as these failing because we sent them too early).
-								// https://github.com/Dart-Code/Dart-Code/issues/790
-								this.observatory.setLibraryDebuggable(isolate.id, library.id, shouldDebug);
-							}),
-						);
 					}));
 
 					// Set a timer for memory updates.
@@ -1085,7 +1064,7 @@ class ThreadManager {
 			thread.runnable = true;
 
 			this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, this.exceptionMode);
-
+			this.setLibrariesDebuggable(thread.ref);
 			this.resetBreakpoints().then((_) => thread.setInitialBreakpoints());
 		}
 	}
@@ -1124,6 +1103,26 @@ class ThreadManager {
 			if (thread.runnable)
 				this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, mode);
 		}
+	}
+
+	private async setLibrariesDebuggable(isolateRef: VMIsolateRef): Promise<void> {
+		// Helpers to categories libraries as SDK/ExternalLibrary/not.
+		const isValidToDebug = (l: VMLibraryRef) => !l.uri.startsWith("dart:_"); // TODO: See https://github.com/dart-lang/sdk/issues/29813
+		const isSdkLibrary = (l: VMLibraryRef) => l.uri.startsWith("dart:");
+		// If we don't know the local package name, we have to assume nothing is external, else we might disable debugging for the local library.
+		const isExternalLibrary = (l: VMLibraryRef) => l.uri.startsWith("package:") && this.debugSession.packageMap.localPackageName && !l.uri.startsWith(`package:${this.debugSession.packageMap.localPackageName}/`);
+		// Set whether libraries should be debuggable based on user settings.
+		const response = await this.debugSession.observatory.getIsolate(isolateRef.id);
+		const isolate: VMIsolate = response.result as VMIsolate;
+		await Promise.all(
+			isolate.libraries.filter(isValidToDebug).map((library) => {
+				// Note: Condition is negated.
+				const shouldDebug = !(
+					// Inside here is shouldNotDebug!
+					(isSdkLibrary(library) && !this.debugSession.debugSdkLibraries)
+					|| (isExternalLibrary(library) && !this.debugSession.debugExternalLibraries));
+				this.debugSession.observatory.setLibraryDebuggable(isolate.id, library.id, shouldDebug);
+			}));
 	}
 
 	// Just resends existing breakpoints
