@@ -1121,7 +1121,7 @@ class ThreadManager {
 					// Inside here is shouldNotDebug!
 					(isSdkLibrary(library) && !this.debugSession.debugSdkLibraries)
 					|| (isExternalLibrary(library) && !this.debugSession.debugExternalLibraries));
-				this.debugSession.observatory.setLibraryDebuggable(isolate.id, library.id, shouldDebug);
+				return this.debugSession.observatory.setLibraryDebuggable(isolate.id, library.id, shouldDebug);
 			}));
 	}
 
