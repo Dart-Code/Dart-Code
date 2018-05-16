@@ -138,7 +138,7 @@ async function runAllTests(): Promise<void> {
 	}
 
 	let runNumber = 1;
-	for (const config of runConfigs) {
+	for (const config of runConfigs.slice(0, 1)) {
 		const codeVersion = config.code;
 		const sdkPath = config.dart;
 
