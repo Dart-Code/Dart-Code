@@ -20,26 +20,32 @@ function color(col: number, message: string) {
 const timeoutInMilliseconds = 1000 * 60 * 5;
 function runNode(cwd: string, args: string[], env: any): Promise<number> {
 	return new Promise<number>((resolve, reject) => {
-		let hasClosed = false;
+		let timerWarn: NodeJS.Timer;
+		let timerKill: NodeJS.Timer;
 		const proc = childProcess.spawn("node", args, { env, stdio: "inherit", cwd });
 		proc.on("data", (data: Buffer | string) => console.log(data.toString()));
 		proc.on("error", (data: Buffer | string) => console.warn(data.toString()));
 		proc.on("close", (code: number) => {
-			hasClosed = true;
+			if (timerWarn)
+				clearTimeout(timerWarn);
+			if (timerKill)
+				clearTimeout(timerKill);
 			resolve(code);
 		});
-		setTimeout(() => {
+		timerWarn = setTimeout(() => {
+			if (!proc || proc.killed)
+				return;
 			console.log(yellow(`Process is still going after ${timeoutInMilliseconds / 2 / 1000}s.`));
 			console.log(yellow(`Waiting another ${timeoutInMilliseconds / 2 / 1000}s before terminating`));
 			console.log(yellow("    " + JSON.stringify(args)));
 		}, timeoutInMilliseconds / 2);
-		setTimeout(() => {
-			if (proc && !hasClosed && !proc.killed) {
-				proc.kill();
-				console.log(red(`Terminating process for taking too long after ${timeoutInMilliseconds / 1000}s!`));
-				console.log(yellow("    " + JSON.stringify(args)));
-				resolve(1);
-			}
+		timerKill = setTimeout(() => {
+			if (!proc || proc.killed)
+				return;
+			proc.kill();
+			console.log(red(`Terminating process for taking too long after ${timeoutInMilliseconds / 1000}s!`));
+			console.log(yellow("    " + JSON.stringify(args)));
+			resolve(1);
 		}, timeoutInMilliseconds);
 	});
 }
