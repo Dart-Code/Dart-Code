@@ -64,6 +64,13 @@ export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	platformEol = isWin ? "\r\n" : "\n";
 }
 
+export async function getPackages() {
+	await vs.commands.executeCommand("dart.getPackages", helloWorldFolder);
+	const nextAnalysis = await ext.exports.nextAnalysis();
+	await ext.exports.reanalyze();
+	await nextAnalysis;
+}
+
 export async function closeAllOpenFiles(): Promise<void> {
 	while (vs.window.activeTextEditor) {
 		await vs.commands.executeCommand("workbench.action.closeActiveEditor");
