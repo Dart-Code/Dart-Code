@@ -164,7 +164,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const refactorCodeActionProvider = new RefactorCodeActionProvider(analyzer);
 	const sourceCodeActionProvider = new SourceCodeActionProvider(analyzer);
 	const renameProvider = new DartRenameProvider(analyzer);
-	const foldingProvider = new DartFoldingProvider(analyzer);
 
 	const activeFileFilters = [DART_MODE];
 	if (config.analyzeAngularTemplates && analyzer.capabilities.supportsAnalyzingHtmlFiles) {
@@ -189,9 +188,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// Some actions only apply to Dart.
 	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, typeFormattingEditProvider, "}", ";"));
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, sourceCodeActionProvider, sourceCodeActionProvider.metadata));
-
-	// TODO: Add a version check
-	context.subscriptions.push(vs.languages.registerFoldingRangeProvider(DART_MODE, foldingProvider));
 
 	// Snippets are language-specific
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));
@@ -246,6 +242,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		} else {
 			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(analyzer)));
 		}
+
+		if (analyzer.capabilities.supportsCustomFolding)
+			context.subscriptions.push(vs.languages.registerFoldingRangeProvider(DART_MODE, new DartFoldingProvider(analyzer)));
 
 		const documentSymbolProvider = analyzer.capabilities.supportsGetDeclerationsForFile
 			? new DartSymbolProvider(analyzer)
