@@ -11,6 +11,7 @@ import sinon = require("sinon");
 
 export const ext = vs.extensions.getExtension<{
 	analyzerCapabilities: AnalyzerCapabilities,
+	currentAnalysis: () => Promise<void>,
 	debugProvider: DebugConfigProvider,
 	nextAnalysis: () => Promise<void>,
 	initialAnalysis: Promise<void>,
@@ -54,6 +55,7 @@ export let platformEol: string;
 export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	await ext.activate();
 	await ext.exports.initialAnalysis;
+	await ext.exports.currentAnalysis();
 	await closeAllOpenFiles();
 	doc = await vs.workspace.openTextDocument(file);
 	editor = await vs.window.showTextDocument(doc);
@@ -99,6 +101,7 @@ afterEach(() => sb.restore());
 // Set up log files for individual test logging.
 // tslint:disable-next-line:only-arrow-functions
 beforeEach(async function () {
+
 	const logFolder = process.env.DC_TEST_LOGS || path.join(ext.extensionPath, ".dart_code_test_logs");
 	if (!fs.existsSync(logFolder))
 		fs.mkdirSync(logFolder);
@@ -110,6 +113,7 @@ beforeEach(async function () {
 		prefix,
 		["analyzer", "flutterDaemon"],
 	);
+
 	await setLogs(
 		vs.workspace.getConfiguration("dart", vs.workspace.workspaceFolders[0].uri),
 		logFolder,
@@ -227,7 +231,6 @@ export async function getWorkspaceSymbols(query: string): Promise<vs.SymbolInfor
 export function waitForDiagnosticChange(resource?: vs.Uri): Promise<void> {
 	return new Promise((resolve, reject) => {
 		const disposable = vs.languages.onDidChangeDiagnostics((e) => {
-			console.log("test");
 			if (!resource || e.uris.find((r) => fsPath(r) === fsPath(resource))) {
 				resolve();
 				disposable.dispose();

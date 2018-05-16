@@ -8,7 +8,7 @@ import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDef
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
-	before(() => vs.commands.executeCommand("dart.getPackages", helloWorldFolder));
+	before(async () => vs.commands.executeCommand("dart.getPackages", helloWorldFolder));
 	beforeEach(() => activate(helloWorldMainFile));
 
 	let dc: DartDebugClient;

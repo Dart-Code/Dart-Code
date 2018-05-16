@@ -335,6 +335,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	return {
 		analyzerCapabilities: analyzer.capabilities,
+		currentAnalysis: () => analyzer.currentAnalysis,
 		debugProvider, // TODO: Remove this when we can get access via testing...
 		initialAnalysis,
 		nextAnalysis,
