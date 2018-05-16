@@ -18,6 +18,7 @@ export class AnalyzerCapabilities {
 	get supportsPriorityFilesOutsideAnalysisRoots() { return versionIsAtLeast(this.version, "1.18.2"); }
 	get supportsDiagnostics() { return versionIsAtLeast(this.version, "1.18.1"); }
 	get supportsClosingLabels() { return versionIsAtLeast(this.version, "1.18.4"); }
+	get supportsCustomFolding() { return versionIsAtLeast(this.version, "1.20.2"); }
 	get supportsGetDeclerations() { return versionIsAtLeast(this.version, "1.18.7"); }
 	get supportsGetDeclerationsForFile() { return versionIsAtLeast(this.version, "1.19.0"); }
 	get isDart2() { return versionIsAtLeast(this.version, "1.19.0"); }
