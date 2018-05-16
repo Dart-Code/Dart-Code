@@ -339,6 +339,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		debugProvider, // TODO: Remove this when we can get access via testing...
 		initialAnalysis,
 		nextAnalysis,
+		reanalyze,
 		sdks,
 	};
 }
@@ -373,14 +374,18 @@ function handleConfigurationChange(sdks: util.Sdks) {
 	previousSettings = newSettings;
 
 	if (todoSettingChanged || showLintNameSettingChanged) {
-		analyzer.analysisReanalyze({
-			roots: analysisRoots,
-		});
+		reanalyze();
 	}
 
 	if (settingsChanged) {
 		util.reloadExtension();
 	}
+}
+
+function reanalyze() {
+	analyzer.analysisReanalyze({
+		roots: analysisRoots,
+	});
 }
 
 function getSettingsThatRequireRestart() {

@@ -15,6 +15,7 @@ export const ext = vs.extensions.getExtension<{
 	debugProvider: DebugConfigProvider,
 	nextAnalysis: () => Promise<void>,
 	initialAnalysis: Promise<void>,
+	reanalyze: () => void,
 	sdks: Sdks,
 }>("Dart-Code.dart-code");
 
