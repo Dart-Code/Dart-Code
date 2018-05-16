@@ -152,6 +152,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	});
 
 	// Set up providers.
+	// TODO: Do we need to push all these to subscriptions?!
 	const hoverProvider = new DartHoverProvider(analyzer);
 	const formattingEditProvider = new DartFormattingEditProvider(analyzer);
 	const typeFormattingEditProvider = new DartTypeFormattingEditProvider(analyzer);
