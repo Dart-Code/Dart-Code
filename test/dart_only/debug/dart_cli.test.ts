@@ -6,7 +6,7 @@ import { DartDebugClient } from "../../dart_debug_client";
 import { ensureMapEntry, ensureVariable, spawnProcessPaused } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDefinition, getLaunchConfiguration, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, platformEol, positionOf, sb } from "../../helpers";
 
-describe("dart cli debugger", () => {
+describe.only("dart cli debugger", () => {
 	// We have tests that require external packages.
 	before(() => vs.commands.executeCommand("dart.getPackages", helloWorldFolder));
 	beforeEach(() => activate(helloWorldMainFile));
@@ -150,21 +150,20 @@ describe("dart cli debugger", () => {
 		const printCall = positionOf("pri^nt(");
 		const printDef = await getDefinition(printCall);
 		const config = await startDebugger(helloWorldMainFile, { debugSdkLibraries: true });
+		await dc.hitBreakpoint(config, {
+			line: printCall.line + 1,
+			path: fsPath(helloWorldMainFile),
+		});
 		await Promise.all([
-			dc.hitBreakpoint(config, {
-				line: printCall.line + 1,
-				path: fsPath(helloWorldMainFile),
-			}).then(async (_) => {
-				await dc.stepIn();
-				await dc.assertStoppedLocation("step", {
-					// SDK source will have no filename, because we download it
-					path: null,
-				}).then((response) => {
-					// Ensure the name of the top stack frame matches
-					const frame = response.body.stackFrames[0];
-					assert.equal(frame.source.name, "dart:core/print.dart");
-				});
+			dc.assertStoppedLocation("step", {
+				// SDK source will have no filename, because we download it
+				path: null,
+			}).then((response) => {
+				// Ensure the name of the top stack frame matches
+				const frame = response.body.stackFrames[0];
+				assert.equal(frame.source.name, "dart:core/print.dart");
 			}),
+			dc.stepIn(),
 		]);
 	});
 
@@ -173,17 +172,16 @@ describe("dart cli debugger", () => {
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
 		const config = await startDebugger(helloWorldMainFile, { debugSdkLibraries: false });
+		await dc.hitBreakpoint(config, {
+			line: printCall.line + 1,
+			path: fsPath(helloWorldMainFile),
+		});
 		await Promise.all([
-			dc.hitBreakpoint(config, {
-				line: printCall.line + 1,
+			dc.assertStoppedLocation("step", {
+				// Ensure we stayed in the current file
 				path: fsPath(helloWorldMainFile),
-			}).then(async (_) => {
-				await dc.stepIn();
-				await dc.assertStoppedLocation("step", {
-					// Ensure we stayed in the current file
-					path: fsPath(helloWorldMainFile),
-				});
 			}),
+			dc.stepIn(),
 		]);
 	});
 
@@ -193,17 +191,16 @@ describe("dart cli debugger", () => {
 		const httpReadCall = positionOf("http.re^ad(");
 		const httpReadDef = await getDefinition(httpReadCall);
 		const config = await startDebugger(helloWorldHttpFile, { debugExternalLibraries: true });
+		await dc.hitBreakpoint(config, {
+			line: httpReadCall.line + 1,
+			path: fsPath(helloWorldHttpFile),
+		});
 		await Promise.all([
-			dc.hitBreakpoint(config, {
-				line: httpReadCall.line + 1,
-				path: fsPath(helloWorldHttpFile),
-			}).then(async (_) => {
-				await dc.stepIn();
-				await dc.assertStoppedLocation("step", {
-					// Ensure we stepped into the external file
-					path: fsPath(httpReadDef.uri),
-				});
+			dc.assertStoppedLocation("step", {
+				// Ensure we stepped into the external file
+				path: fsPath(httpReadDef.uri),
 			}),
+			dc.stepIn(),
 		]);
 	});
 
@@ -212,17 +209,16 @@ describe("dart cli debugger", () => {
 		// Get location for `print`
 		const httpReadCall = positionOf("http.re^ad(");
 		const config = await startDebugger(helloWorldHttpFile, { debugExternalLibraries: false });
+		await dc.hitBreakpoint(config, {
+			line: httpReadCall.line + 1,
+			path: fsPath(helloWorldHttpFile),
+		});
 		await Promise.all([
-			dc.hitBreakpoint(config, {
-				line: httpReadCall.line + 1,
+			dc.assertStoppedLocation("step", {
+				// Ensure we stayed in the current file
 				path: fsPath(helloWorldHttpFile),
-			}).then(async (_) => {
-				await dc.stepIn();
-				await dc.assertStoppedLocation("step", {
-					// Ensure we stayed in the current file
-					path: fsPath(helloWorldHttpFile),
-				});
 			}),
+			dc.stepIn(),
 		]);
 	});
 
