@@ -1,11 +1,11 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, doc, everythingFile, ext, helloWorldFolder, positionOf, rangeOf } from "../../helpers";
+import { activate, doc, everythingFile, ext, getPackages, positionOf, rangeOf } from "../../helpers";
 
 describe("dart_hover_provider", () => {
 
 	// We have tests that read tooltips from external packages so we need to ensure packages have been fetched.
-	before(() => vs.commands.executeCommand("dart.getPackages", helloWorldFolder));
+	before(() => getPackages());
 	before(() => activate(everythingFile));
 
 	async function getHoversAt(searchText: string): Promise<Array<{ displayText: string, documentation?: string, range: vs.Range }>> {

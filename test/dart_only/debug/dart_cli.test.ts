@@ -4,14 +4,11 @@ import * as vs from "vscode";
 import { fsPath } from "../../../src/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureMapEntry, ensureVariable, spawnProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDefinition, getLaunchConfiguration, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, platformEol, positionOf, sb } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, platformEol, positionOf, sb } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
-	before(async () => {
-		await vs.commands.executeCommand("dart.getPackages", helloWorldFolder);
-		ext.exports.reanalyze();
-	});
+	before(() => getPackages());
 	beforeEach(() => activate(helloWorldMainFile));
 
 	let dc: DartDebugClient;
