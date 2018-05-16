@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { fsPath } from "../../../src/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureMapEntry, ensureVariable, spawnProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDefinition, getLaunchConfiguration, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, platformEol, positionOf, sb, setConfig } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDefinition, getLaunchConfiguration, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, platformEol, positionOf, sb } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -18,14 +18,14 @@ describe("dart cli debugger", () => {
 		defer(() => dc.stop());
 	});
 
-	async function startDebugger(script?: vs.Uri): Promise<vs.DebugConfiguration> {
-		const config = await getLaunchConfiguration(script);
+	async function startDebugger(script?: vs.Uri, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
+		const config = await getLaunchConfiguration(script, extraConfiguration);
 		await dc.start(config.debugServer);
 		return config;
 	}
 
-	async function attachDebugger(observatoryUri: string): Promise<vs.DebugConfiguration> {
-		const config = await getAttachConfiguration(observatoryUri);
+	async function attachDebugger(observatoryUri: string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
+		const config = await getAttachConfiguration(observatoryUri, extraConfiguration);
 		await dc.start(config.debugServer);
 		return config;
 	}
@@ -145,12 +145,11 @@ describe("dart cli debugger", () => {
 	});
 
 	it("steps into the SDK if debugSdkLibraries is true", async () => {
-		await setConfig("debugSdkLibraries", true, helloWorldMainFile);
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
 		const printDef = await getDefinition(printCall);
-		const config = await startDebugger(helloWorldMainFile);
+		const config = await startDebugger(helloWorldMainFile, { debugSdkLibraries: true });
 		await Promise.all([
 			dc.hitBreakpoint(config, {
 				line: printCall.line + 1,
@@ -170,11 +169,10 @@ describe("dart cli debugger", () => {
 	});
 
 	it("does not step into the SDK if debugSdkLibraries is false", async () => {
-		await setConfig("debugSdkLibraries", false, helloWorldMainFile);
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
-		const config = await startDebugger(helloWorldMainFile);
+		const config = await startDebugger(helloWorldMainFile, { debugSdkLibraries: false });
 		await Promise.all([
 			dc.hitBreakpoint(config, {
 				line: printCall.line + 1,
@@ -190,12 +188,11 @@ describe("dart cli debugger", () => {
 	});
 
 	it("steps into an external library if debugExternalLibraries is true", async () => {
-		await setConfig("debugExternalLibraries", true, helloWorldHttpFile);
 		await openFile(helloWorldHttpFile);
 		// Get location for `print`
 		const httpReadCall = positionOf("http.re^ad(");
 		const httpReadDef = await getDefinition(httpReadCall);
-		const config = await startDebugger(helloWorldHttpFile);
+		const config = await startDebugger(helloWorldHttpFile, { debugExternalLibraries: true });
 		await Promise.all([
 			dc.hitBreakpoint(config, {
 				line: httpReadCall.line + 1,
@@ -211,11 +208,10 @@ describe("dart cli debugger", () => {
 	});
 
 	it("does not step into an external library if debugExternalLibraries is false", async () => {
-		await setConfig("debugExternalLibraries", false, helloWorldHttpFile);
 		await openFile(helloWorldHttpFile);
 		// Get location for `print`
 		const httpReadCall = positionOf("http.re^ad(");
-		const config = await startDebugger(helloWorldHttpFile);
+		const config = await startDebugger(helloWorldHttpFile, { debugExternalLibraries: false });
 		await Promise.all([
 			dc.hitBreakpoint(config, {
 				line: httpReadCall.line + 1,
