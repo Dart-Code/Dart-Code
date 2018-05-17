@@ -66,7 +66,7 @@ export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 
 export async function getPackages() {
 	await vs.commands.executeCommand("dart.getPackages", helloWorldFolder);
-	const nextAnalysis = await ext.exports.nextAnalysis();
+	const nextAnalysis = ext.exports.nextAnalysis();
 	await ext.exports.reanalyze();
 	await nextAnalysis;
 }
