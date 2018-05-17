@@ -79,7 +79,7 @@ export function formatPathForVm(file: string): string {
 }
 
 export function forceWindowsDriveLetterToUppercase(p: string): string {
-	if (isWin && path.isAbsolute(p) && p.charAt(0) === p.charAt(0).toLowerCase())
+	if (p && isWin && path.isAbsolute(p) && p.charAt(0) === p.charAt(0).toLowerCase())
 		p = p.substr(0, 1).toUpperCase() + p.substr(1);
 	return p;
 }
