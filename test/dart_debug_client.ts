@@ -16,6 +16,10 @@ export class DartDebugClient extends DebugClient {
 			// generally assume we will automatically resume.
 			await this.attachRequest(launchArgs);
 			await this.waitForEvent("stopped");
+			// HACK: Put a fake delay in after attachRequest to ensure isolates become runnable and breakpoints are transmitted
+			// This should help fix the tests so we can be sure they're otherwise good, before we fix this properly.
+			// https://github.com/Dart-Code/Dart-Code/issues/911
+			await new Promise((resolve) => setTimeout(resolve, 1000));
 			await this.resume();
 		} else {
 			await this.launchRequest(launchArgs);
