@@ -181,7 +181,7 @@ export abstract class StdIOService<T> implements Disposable {
 
 		const newLogFile = this.getLogFile();
 		if (newLogFile !== this.currentLogFile && this.logStream) {
-			this.logStream.close();
+			this.logStream.end();
 			this.logStream = null;
 		}
 
@@ -201,7 +201,7 @@ export abstract class StdIOService<T> implements Disposable {
 
 	public dispose() {
 		if (this.logStream) {
-			this.logStream.close();
+			this.logStream.end();
 			this.logStream = null;
 		}
 

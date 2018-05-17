@@ -245,7 +245,7 @@ export class DartDebugSession extends DebugSession {
 
 			this.observatory.onClose((code: number, message: string) => {
 				if (this.observatoryLogStream) {
-					this.observatoryLogStream.close();
+					this.observatoryLogStream.end();
 					this.observatoryLogStream = null;
 				}
 				// This event arrives before the process exit event.
