@@ -120,52 +120,23 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	console.log("\n\n");
 }
 
-function getRunConfigs() {
-
-	// To run just a single type of tests you can set environment variables; this is used on Travis
-	// for concurrent runs (stages).
-	// process.env.ONLY_RUN_CODE_VERSION = DEV | STABLE
-	// process.env.ONLY_RUN_DART_VERSION = DEV | STABLE
-
-	const codeVersions = [];
-	if (!process.env.ONLY_RUN_CODE_VERSION || process.env.ONLY_RUN_CODE_VERSION === "STABLE")
-		codeVersions.push("*");
-	if (!process.env.ONLY_RUN_CODE_VERSION || process.env.ONLY_RUN_CODE_VERSION === "DEV")
-		codeVersions.push("insiders");
-
-	const sdkPaths = [process.env.DART_SDK_PATHS || process.env.PATH];
-
-	return { codeVersions, sdkPaths };
-}
-
 async function runAllTests(): Promise<void> {
-	const { codeVersions, sdkPaths } = getRunConfigs();
+	const codeVersion = process.env.ONLY_RUN_CODE_VERSION === "DEV" ? "insiders" : "*";
+	const sdkPath = process.env.DART_SDK_PATHS || process.env.PATH;
 
-	// Build a matrix of versions we're running.
-	const runConfigs = [];
-	for (const codeVersion of codeVersions) {
-		for (const sdkPath of sdkPaths) {
-			runConfigs.push({ code: codeVersion, dart: sdkPath });
-		}
-	}
-
+	const flutterRoot = process.env.FLUTTER_ROOT;
+	const totalRuns = 6;
 	let runNumber = 1;
-	for (const config of runConfigs) {
-		const codeVersion = config.code;
-		const sdkPath = config.dart;
-		const flutterRoot = process.env.FLUTTER_ROOT;
-		const totalRuns = 6 * runConfigs.length;
-		await runTests("dart_only", "hello_world", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("multi_root", "projects.code-workspace", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("multi_root_upgraded", "", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("not_activated/flutter_create", "empty", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		if (flutterRoot) {
-			await runTests("flutter_repository", flutterRoot, sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		} else {
-			console.error("FLUTTER_ROOT NOT SET, SKIPPING FLUTTER REPO TESTS");
-			exitCode = 1;
-		}
+	await runTests("dart_only", "hello_world", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+	await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+	await runTests("multi_root", "projects.code-workspace", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+	await runTests("multi_root_upgraded", "", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+	await runTests("not_activated/flutter_create", "empty", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+	if (flutterRoot) {
+		await runTests("flutter_repository", flutterRoot, sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+	} else {
+		console.error("FLUTTER_ROOT NOT SET, SKIPPING FLUTTER REPO TESTS");
+		exitCode = 1;
 	}
 
 	if (process.env.CI) {
