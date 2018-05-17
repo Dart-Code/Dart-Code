@@ -8,9 +8,9 @@ import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, extensionVersion, fsPath, getDartW
 export function showUserPrompts(context: vs.ExtensionContext) {
 	handleNewProjects(Context.for(context));
 
-	const versionMajorMinor = extensionVersion.split(".").slice(0, 2).join(".");
+	const versionLink = extensionVersion.split(".").slice(0, 2).join(".").replace(".", "-");
 	return (
-		(isDevExtension || prompt(context, `release_notes_${versionMajorMinor}`, () => promptToShowReleaseNotes(versionMajorMinor)))
+		(isDevExtension || prompt(context, `release_notes_${extensionVersion}`, () => promptToShowReleaseNotes(extensionVersion, versionLink)))
 		&& !config.closingLabels && prompt(context, "closingLabelsDisabled", promptForClosingLabelsDisabled)
 	);
 }
@@ -42,13 +42,13 @@ async function promptForClosingLabelsDisabled(): Promise<boolean> {
 	return true; // Always mark this as done; we don't want to re-prompt if the user clicks Close.
 }
 
-async function promptToShowReleaseNotes(version: string): Promise<boolean> {
+async function promptToShowReleaseNotes(versionDisplay: string, versionLink: string): Promise<boolean> {
 	const res = await vs.window.showInformationMessage(
-		`Dart Code has been updated to v${version}`,
-		`Show v${version} Release Notes`,
+		`Dart Code has been updated to v${versionDisplay}`,
+		`Show Release Notes`,
 	);
 	if (res) {
-		openInBrowser(`https://dartcode.org/releases/${version}/`);
+		openInBrowser(`https://dartcode.org/releases/v${versionLink}/`);
 	}
 	return true; // Always mark this as done; we don't want to prompt the user multiple times.
 }
