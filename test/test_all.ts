@@ -82,7 +82,7 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	env.CODE_TESTS_PATH = path.join(cwd, "out", "test", testFolder);
 
 	// Figure out a filename for results...
-	const dartFriendlyName = sdkPaths === process.env.PATH_UNSTABLE ? "dev" : "stable";
+	const dartFriendlyName = sdkPaths === (process.env.ONLY_RUN_DART_VERSION || "local").toLowerCase();
 	const codeFriendlyName = codeVersion === "*" ? "stable" : "insiders";
 
 	// Set some paths that are used inside the test run.
@@ -136,11 +136,7 @@ function getRunConfigs() {
 	if (!process.env.ONLY_RUN_CODE_VERSION || process.env.ONLY_RUN_CODE_VERSION === "DEV")
 		codeVersions.push("insiders");
 
-	const sdkPaths = [];
-	if (!process.env.ONLY_RUN_DART_VERSION || process.env.ONLY_RUN_DART_VERSION === "STABLE")
-		sdkPaths.push(process.env.PATH_STABLE || process.env.PATH);
-	if ((!process.env.ONLY_RUN_DART_VERSION || process.env.ONLY_RUN_DART_VERSION === "DEV") && process.env.PATH_UNSTABLE)
-		sdkPaths.push(process.env.PATH_UNSTABLE);
+	const sdkPaths = [process.env.DART_SDK_PATHS || process.env.PATH];
 
 	return { codeVersions, sdkPaths };
 }
@@ -162,8 +158,8 @@ async function runAllTests(): Promise<void> {
 		const sdkPath = config.dart;
 
 		// Allow failures from unstable builds (we'll still see results in build logs).
-		const allowFailures = codeVersion === "insiders" || sdkPath === process.env.PATH_UNSTABLE;
-		const flutterRoot = sdkPath === process.env.PATH_UNSTABLE ? process.env.FLUTTER_ROOT_UNSTABLE : process.env.FLUTTER_ROOT;
+		const allowFailures = process.env.ONLY_RUN_CODE_VERSION === "DEV" || process.env.ONLY_RUN_DART_VERSION === "DEV";
+		const flutterRoot = process.env.FLUTTER_ROOT;
 		const totalRuns = 6 * runConfigs.length;
 		await runTests("dart_only", "hello_world", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
 		await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
