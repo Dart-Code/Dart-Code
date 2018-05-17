@@ -281,7 +281,6 @@ export class DartDebugSession extends DebugSession {
 				}
 			}
 		} catch (e) {
-			console.log(e);
 			return this.errorResponse(response, `${e}`);
 		}
 		super.disconnectRequest(response, args);
