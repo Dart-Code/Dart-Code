@@ -25,8 +25,7 @@ describe("flutter run debugger", () => {
 	let dc: DartDebugClient;
 	beforeEach(() => {
 		dc = new DartDebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_debug_entry.js"), "dart");
-		// Spawning flutter tests seem to be kinda slow (and may fetch packages), so we need a higher timeout
-		dc.defaultTimeout = 60000;
+		dc.defaultTimeout = 30000;
 		defer(() => dc.stop());
 	});
 
