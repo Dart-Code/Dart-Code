@@ -80,7 +80,7 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	env.CODE_TESTS_PATH = path.join(cwd, "out", "test", testFolder);
 
 	// Figure out a filename for results...
-	const dartFriendlyName = sdkPaths === (process.env.ONLY_RUN_DART_VERSION || "local").toLowerCase();
+	const dartFriendlyName = (process.env.ONLY_RUN_DART_VERSION || "local").toLowerCase();
 	const codeFriendlyName = codeVersion === "*" ? "stable" : "insiders";
 
 	// Set some paths that are used inside the test run.
