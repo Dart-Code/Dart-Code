@@ -45,7 +45,7 @@ install:
   - echo Downloading Dart and Flutter...
   - ps: Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
   - ps: 7z.exe x dart.zip | out-null
-  - git clone -b $env:FLUTTER_BRANCH https://github.com/flutter/flutter.git
+  - git clone -b %FLUTTER_BRANCH% https://github.com/flutter/flutter.git
   - ps: $env:FLUTTER_ROOT = "$pwd\flutter"
   - ps: $env:DART_SDK_PATHS = "$pwd\dart-sdk\bin;$pwd\flutter\bin"
   - echo Configuring Dart and Flutter...
