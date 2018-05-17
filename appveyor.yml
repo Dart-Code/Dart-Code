@@ -23,13 +23,13 @@ install:
   - ps: gem install dpl
   - echo Setting variables...
   - ps: >-
-    if ($env:ONLY_RUN_DART_VERSION -eq "STABLE") {
-      $env:DART_CHANNEL="stable"
-      $env:FLUTTER_BRANCH="beta"
-    } else {
-      $env:DART_CHANNEL="dev"
-      $env:FLUTTER_BRANCH="master"
-    }
+       if ($env:ONLY_RUN_DART_VERSION -eq "STABLE") {
+         $env:DART_CHANNEL="stable"
+         $env:FLUTTER_BRANCH="beta"
+       } else {
+         $env:DART_CHANNEL="dev"
+         $env:FLUTTER_BRANCH="master"
+       }
   - ps: mkdir "with spaces"
   - ps: cd "with spaces"
   - echo Downloading Dart and Flutter...
