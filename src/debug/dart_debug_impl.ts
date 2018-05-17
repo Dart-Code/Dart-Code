@@ -275,15 +275,11 @@ export class DartDebugSession extends DebugSession {
 					await Promise.all(this.threadManager.threads.map((thread) => thread.removeAllBreakpoints()));
 
 					// Restart any paused threads.
-					// Note: Only wait up to 1sec here because sometimes we don't get responses because the VM terminates
+					// Note: Only wait up to 500ms here because sometimes we don't get responses because the VM terminates.
+					// We can't check processExited here as we don't have a handle to the process (we attached).
 					await Promise.race([
 						Promise.all(this.threadManager.threads.map((thread) => thread.resume())),
-						new Promise((resolve, reject) => setTimeout(() => {
-							if (this.processExited)
-								resolve();
-							else
-								reject("Process didn't terminate or respond to resume()s within 1 second");
-						}, 1000)),
+						new Promise((resolve) => setTimeout(resolve, 500)),
 					]);
 				} finally {
 					this.observatory.close();
