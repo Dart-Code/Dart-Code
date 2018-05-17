@@ -123,7 +123,7 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	console.log("\n\n");
 }
 
-async function runAllTests(): Promise<void> {
+function getRunConfigs() {
 
 	// To run just a single type of tests you can set environment variables; this is used on Travis
 	// for concurrent runs (stages).
@@ -131,13 +131,22 @@ async function runAllTests(): Promise<void> {
 	// process.env.ONLY_RUN_DART_VERSION = DEV | STABLE
 
 	const codeVersions = [];
-	codeVersions.push("*");
-	codeVersions.push("insiders");
+	if (!process.env.ONLY_RUN_CODE_VERSION || process.env.ONLY_RUN_CODE_VERSION === "STABLE")
+		codeVersions.push("*");
+	if (!process.env.ONLY_RUN_CODE_VERSION || process.env.ONLY_RUN_CODE_VERSION === "DEV")
+		codeVersions.push("insiders");
 
 	const sdkPaths = [];
-	sdkPaths.push(process.env.PATH_STABLE || process.env.PATH);
-	if (process.env.PATH_UNSTABLE)
+	if (!process.env.ONLY_RUN_DART_VERSION || process.env.ONLY_RUN_DART_VERSION === "STABLE")
+		sdkPaths.push(process.env.PATH_STABLE || process.env.PATH);
+	if ((!process.env.ONLY_RUN_DART_VERSION || process.env.ONLY_RUN_DART_VERSION === "DEV") && process.env.PATH_UNSTABLE)
 		sdkPaths.push(process.env.PATH_UNSTABLE);
+
+	return { codeVersions, sdkPaths };
+}
+
+async function runAllTests(): Promise<void> {
+	const { codeVersions, sdkPaths } = getRunConfigs();
 
 	// Build a matrix of versions we're running.
 	const runConfigs = [];
