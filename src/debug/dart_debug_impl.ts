@@ -265,19 +265,24 @@ export class DartDebugSession extends DebugSession {
 		response: DebugProtocol.DisconnectResponse,
 		args: DebugProtocol.DisconnectArguments,
 	): Promise<void> {
-		if (this.childProcess != null) {
-			this.childProcess.kill();
-			this.childProcess = null;
-		} else if (this.observatory) {
-			try {
-				// Remove all breakpoints from the VM.
-				await Promise.all(this.threadManager.threads.map((thread) => thread.removeAllBreakpoints()));
+		try {
+			if (this.childProcess != null) {
+				this.childProcess.kill();
+				this.childProcess = null;
+			} else if (this.observatory) {
+				try {
+					// Remove all breakpoints from the VM.
+					await Promise.all(this.threadManager.threads.map((thread) => thread.removeAllBreakpoints()));
 
-				// Restart any paused threads.
-				await Promise.all(this.threadManager.threads.map((thread) => thread.resume()));
-			} finally {
-				this.observatory.close();
+					// Restart any paused threads.
+					await Promise.all(this.threadManager.threads.map((thread) => thread.resume()));
+				} finally {
+					this.observatory.close();
+				}
 			}
+		} catch (e) {
+			console.log(e);
+			return this.errorResponse(response, `${e}`);
 		}
 		super.disconnectRequest(response, args);
 	}
