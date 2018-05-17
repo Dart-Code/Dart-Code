@@ -26,6 +26,18 @@ addons:
       - gcc-4.8
 
 before_install:
+  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+      export DART_OS=macos;
+    else
+      export DART_OS=linux;
+    fi
+  - if [[ $ONLY_RUN_DART_VERSION == "STABLE" ]]; then
+      export DART_CHANNEL=stable;
+      export FLUTTER_BRANCH=beta;
+    else
+      export DART_CHANNEL=dev;
+      export FLUTTER_BRANCH=master;
+    fi
   - gem install dpl
   - mkdir with\ spaces
   - cd with\ spaces
@@ -35,32 +47,16 @@ before_install:
       sh -e /etc/init.d/xvfb start;
       sleep 3;
     fi
-  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-      export DART_OS=macos;
-    else
-      export DART_OS=linux;
-    fi
-  - curl https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
-  - curl https://storage.googleapis.com/dart-archive/channels/dev/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk-dev.zip
+  - curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
   - unzip dart-sdk.zip > /dev/null
-  - unzip dart-sdk-dev.zip -d dev > /dev/null
-  - git clone -b beta https://github.com/flutter/flutter.git
-  - cd flutter
-  - git worktree add ../dev/flutter origin/master
-  - cd ..
+  - git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git
   - export FLUTTER_ROOT=`pwd`/flutter
-  - export PATH_STABLE=`pwd`/dart-sdk/bin:`pwd`/flutter/bin
-  - export FLUTTER_ROOT_UNSTABLE=`pwd`/dev/flutter
-  - export PATH_UNSTABLE=`pwd`/dev/dart-sdk/bin:`pwd`/dev/flutter/bin
+  - export DART_SDK_PATHS=`pwd`/dart-sdk/bin:`pwd`/flutter/bin
   - flutter/bin/flutter config --no-analytics
-  - dev/flutter/bin/flutter config --no-analytics
   - flutter/bin/flutter update-packages
-  - dev/flutter/bin/flutter update-packages
   - export ELECTRON_NO_ATTACH_CONSOLE=1
   - dart-sdk/bin/dart --version
   - flutter/bin/flutter --version
-  - dev/dart-sdk/bin/dart --version
-  - dev/flutter/bin/flutter --version
   - node --version
   - npm --version
   - cd ..
