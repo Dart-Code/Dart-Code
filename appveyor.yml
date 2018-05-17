@@ -5,43 +5,55 @@ environment:
     secure: nQjpvf+MHWHTkWOMvX6/eNKByxvyRMUDJNGaE+m74OY=
   AWS_SECRET_ACCESS_KEY:
     secure: Kqh0mg85kGAE2roKfIiMOQXjjbR9ib+uCwBaI11H0JfygkVP27adHUF3JYwqa9AE
+  matrix:
+    - ONLY_RUN_CODE_VERSION: STABLE
+      ONLY_RUN_DART_VERSION: STABLE
+    - ONLY_RUN_CODE_VERSION: DEV
+      ONLY_RUN_DART_VERSION: STABLE
+    - ONLY_RUN_CODE_VERSION: STABLE
+      ONLY_RUN_DART_VERSION: DEV
+    - ONLY_RUN_CODE_VERSION: DEV
+      ONLY_RUN_DART_VERSION: DEV
 
 install:
+  - echo Misc setup
   - ps: $env:PATH="C:\Ruby25-x64\bin;$env:PATH"
-  - ps: gem install dpl
-  - ps: mkdir "with spaces"
-  - ps: cd "with spaces"
   - ps: Install-Product node ''
   - ps: $env:ELECTRON_NO_ATTACH_CONSOLE = 1
-  - ps: Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
-  - ps: Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/dev/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart-dev.zip"
+  - ps: gem install dpl
+  - echo Setting variables...
+  - ps: >-
+    if ($env:ONLY_RUN_DART_VERSION -eq "STABLE") {
+      $env:DART_CHANNEL="stable"
+      $env:FLUTTER_BRANCH="beta"
+    } else {
+      $env:DART_CHANNEL="dev"
+      $env:FLUTTER_BRANCH="master"
+    }
+  - ps: mkdir "with spaces"
+  - ps: cd "with spaces"
+  - echo Downloading Dart & Flutter...
+  - ps: Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
   - ps: 7z.exe x dart.zip | out-null
-  - ps: 7z.exe x -odev dart-dev.zip | out-null
-  - git clone -b beta https://github.com/flutter/flutter.git
-  - cd flutter
-  - git worktree add ..\dev\flutter origin/master
-  - cd ..
+  - git clone -b $env:FLUTTER_BRANCH https://github.com/flutter/flutter.git
   - ps: $env:FLUTTER_ROOT = "$pwd\flutter"
-  - ps: $env:PATH_STABLE = "$pwd\dart-sdk\bin;$pwd\flutter\bin"
-  - ps: $env:FLUTTER_ROOT_UNSTABLE = "$pwd\dev`flutter"
-  - ps: $env:PATH_UNSTABLE = "$pwd\dev\dart-sdk\bin;$pwd\dev\flutter\bin"
+  - ps: $env:DART_SDK_PATHS = "$pwd\dart-sdk\bin;$pwd\flutter\bin"
+  - echo Configuring Dart & Flutter...
   - flutter\bin\flutter config --no-analytics
   - flutter\bin\flutter update-packages
-  - dev\flutter\bin\flutter update-packages
   - dart-sdk\bin\dart --version
   - flutter\bin\flutter --version
-  - dev\dart-sdk\bin\dart --version
-  - dev\flutter\bin\flutter --version
   - node --version
   - npm --version
   - cd ..
 
 build_script:
-  - npm install --depth 0 --silent
-  - npm run vscode:prepublish --silent
-  - npm run lint --silent
+  - npm install --depth 0
+
 
 test_script:
+  - npm run vscode:prepublish
+  - npm run lint
   - npm test
 
 on_failure:
