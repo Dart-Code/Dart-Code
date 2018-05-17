@@ -1,3 +1,8 @@
 {
 	"files.insertFinalNewline": true,
+	"dart.analyzerLogFile": "/Users/dantup/Dev/Dart-Code/.dart_code_test_logs/dart_only_local_stable/document_symbol_provider_returns_expected_items_for_everything_dart__analyzer.txt",
+	"dart.flutterDaemonLogFile": "/Users/dantup/Dev/Dart-Code/.dart_code_test_logs/dart_only_local_stable/document_symbol_provider_returns_expected_items_for_everything_dart__flutterDaemon.txt",
+	"dart.observatoryLogFile": "/Users/dantup/Dev/Dart-Code/.dart_code_test_logs/dart_only_local_stable/document_symbol_provider_returns_expected_items_for_everything_dart__observatory.txt",
+	"dart.flutterRunLogFile": "/Users/dantup/Dev/Dart-Code/.dart_code_test_logs/dart_only_local_stable/document_symbol_provider_returns_expected_items_for_everything_dart__flutterRun.txt",
+	"dart.flutterTestLogFile": "/Users/dantup/Dev/Dart-Code/.dart_code_test_logs/dart_only_local_stable/document_symbol_provider_returns_expected_items_for_everything_dart__flutterTest.txt",
 }
