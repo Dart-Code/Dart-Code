@@ -50,13 +50,13 @@ before_install:
     fi
   - mkdir with\ spaces
   - cd with\ spaces
-  - echo Downloading Dart & Flutter...
+  - echo Downloading Dart and Flutter...
   - curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
   - unzip dart-sdk.zip > /dev/null
   - git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git
   - export FLUTTER_ROOT=`pwd`/flutter
   - export DART_SDK_PATHS=`pwd`/dart-sdk/bin:`pwd`/flutter/bin
-  - echo Configuring Dart & Flutter...
+  - echo Configuring Dart and Flutter...
   - flutter/bin/flutter config --no-analytics
   - flutter/bin/flutter update-packages
   - dart-sdk/bin/dart --version
