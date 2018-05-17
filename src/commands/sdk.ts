@@ -32,30 +32,30 @@ export class SdkCommands {
 			const flutterSdkManager = new FlutterSdkManager(sdks);
 			context.subscriptions.push(vs.commands.registerCommand("dart.changeFlutterSdk", () => flutterSdkManager.changeSdk()));
 		}
-		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", async (uri) => {
+		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", async (uri: string | Uri) => {
 			if (!uri || !(uri instanceof Uri))
 				uri = await this.getWorkspace("Select which folder to get packages for");
 			if (typeof uri === "string")
 				uri = vs.Uri.file(uri);
 			try {
 				if (isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(uri)))
-					return this.runFlutter("packages get", uri);
+					return this.runFlutter(["packages", "get"], uri);
 				else
-					return this.runPub("get", uri);
+					return this.runPub(["get"], uri);
 			} finally {
 				// TODO: Move this to a reusable event.
 				DartHoverProvider.clearPackageMapCaches();
 			}
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages", async (uri) => {
+		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages", async (uri: string | Uri) => {
 			if (!uri || !(uri instanceof Uri))
 				uri = await this.getWorkspace("Select which folder to upgrade packages in");
 			if (typeof uri === "string")
 				uri = vs.Uri.file(uri);
 			if (isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(uri)))
-				return this.runFlutter("packages upgrade", uri);
+				return this.runFlutter(["packages", "upgrade"], uri);
 			else
-				return this.runPub("upgrade", uri);
+				return this.runPub(["upgrade"], uri);
 		}));
 
 		// Pub commands.
@@ -73,11 +73,11 @@ export class SdkCommands {
 
 			// If we're working on the flutter repository, map this on to update-packages.
 			if (selection && fsPath(selection) === sdks.flutter) {
-				return this.runFlutter("update-packages", selection);
+				return this.runFlutter(["update-packages"], selection);
 			}
 
 			try {
-				return this.runFlutter("packages get", selection);
+				return this.runFlutter(["packages", "get"], selection);
 			} finally {
 				// TODO: Move this to a reusable event.
 				DartHoverProvider.clearPackageMapCaches();
@@ -125,9 +125,9 @@ export class SdkCommands {
 	}
 
 	private async runCommandForWorkspace(
-		handler: (folder: string, command: string, shortPath: string) => Thenable<number>,
+		handler: (folder: string, args: string[], shortPath: string) => Thenable<number>,
 		placeHolder: string,
-		command: string,
+		args: string[],
 		selection?: vs.Uri,
 	): Promise<number> {
 
@@ -135,7 +135,7 @@ export class SdkCommands {
 
 		const workspacePath = fsPath(vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri);
 		const shortPath = path.join(path.basename(f), path.relative(f, workspacePath));
-		return handler(f, command, shortPath);
+		return handler(f, args, shortPath);
 	}
 
 	private async getWorkspace(placeHolder: string, selection?: vs.Uri): Promise<string> {
@@ -157,8 +157,8 @@ export class SdkCommands {
 			: vs.window.showWorkspaceFolderPick({ placeHolder }).then((f) => f && util.isDartWorkspaceFolder(f) && fsPath(f.uri)); // TODO: What if the user didn't pick anything?
 	}
 
-	private runFlutter(command: string, selection?: vs.Uri): Thenable<number> {
-		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${command}" in`, command, selection);
+	private runFlutter(args: string[], selection?: vs.Uri): Thenable<number> {
+		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection);
 	}
 
 	private runFlutterInFolder(folder: string, args: string[], shortPath: string): Thenable<number> {
@@ -166,13 +166,13 @@ export class SdkCommands {
 		return this.runCommandInFolder(shortPath, "flutter", folder, binPath, globalFlutterArgs.concat(args));
 	}
 
-	private runPub(command: string, selection?: vs.Uri): Thenable<number> {
-		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${command}" in`, command, selection);
+	private runPub(args: string[], selection?: vs.Uri): Thenable<number> {
+		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${args.join(" ")}")}" in`, args, selection);
 	}
 
-	private runPubInFolder(folder: string, command: string, shortPath: string): Thenable<number> {
+	private runPubInFolder(folder: string, args: string[], shortPath: string): Thenable<number> {
 		const binPath = path.join(this.sdks.dart, dartPubPath);
-		const args = command.split(" ").concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
+		args = args.concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
 		return this.runCommandInFolder(shortPath, "pub", folder, binPath, args);
 	}
 
