@@ -94,7 +94,13 @@ const deferredItems: Array<(result?: "failed" | "passed") => Promise<void> | voi
 // tslint:disable-next-line:only-arrow-functions
 afterEach(async function () {
 	for (const d of deferredItems) {
-		await d(this.currentTest.state);
+		try {
+			await d(this.currentTest.state);
+		} catch (e) {
+			console.error(`Error running deferred function: ${e}`);
+			console.warn(d.toString());
+			throw e;
+		}
 	}
 	deferredItems.length = 0;
 });
