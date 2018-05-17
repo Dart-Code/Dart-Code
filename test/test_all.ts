@@ -50,7 +50,7 @@ function runNode(cwd: string, args: string[], env: any): Promise<number> {
 	});
 }
 
-async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string, codeVersion: string, allowFailures: boolean, runInfo: string): Promise<void> {
+async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string, codeVersion: string, runInfo: string): Promise<void> {
 	console.log("\n\n");
 	console.log(yellow("############################################################"));
 	console.log(
@@ -63,8 +63,6 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 		.split(path.delimiter)
 		.filter((p) => p && p.toLowerCase().indexOf("dart") !== -1 || p.toLowerCase().indexOf("flutter") !== -1)
 		.forEach((p) => console.log(`${yellow("##")}    ${p}`));
-	if (allowFailures)
-		console.log(`${yellow("##")} ${red("Failures")} are ${green("allowed")} for this run.`);
 	console.log(yellow("############################################################"));
 	const cwd = process.cwd();
 	const env = Object.create(process.env);
@@ -99,8 +97,7 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 		fs.mkdirSync(env.DC_TEST_LOGS);
 
 	let res = await runNode(cwd, args, env);
-	if (!allowFailures)
-		exitCode = exitCode || res;
+	exitCode = exitCode || res;
 
 	// Remap coverage output.
 	if (fs.existsSync(env.COVERAGE_OUTPUT)) {
@@ -156,22 +153,18 @@ async function runAllTests(): Promise<void> {
 	for (const config of runConfigs) {
 		const codeVersion = config.code;
 		const sdkPath = config.dart;
-
-		// Allow failures from unstable builds (we'll still see results in build logs).
-		const allowFailures = process.env.ONLY_RUN_CODE_VERSION === "DEV" || process.env.ONLY_RUN_DART_VERSION === "DEV";
 		const flutterRoot = process.env.FLUTTER_ROOT;
 		const totalRuns = 6 * runConfigs.length;
-		await runTests("dart_only", "hello_world", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
-		await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
-		await runTests("multi_root", "projects.code-workspace", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
-		await runTests("multi_root_upgraded", "", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
-		await runTests("not_activated/flutter_create", "empty", sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
+		await runTests("dart_only", "hello_world", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("multi_root", "projects.code-workspace", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("multi_root_upgraded", "", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("not_activated/flutter_create", "empty", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		if (flutterRoot) {
-			await runTests("flutter_repository", flutterRoot, sdkPath, codeVersion, allowFailures, `${runNumber++} of ${totalRuns}`);
+			await runTests("flutter_repository", flutterRoot, sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		} else {
 			console.error("FLUTTER_ROOT NOT SET, SKIPPING FLUTTER REPO TESTS");
-			if (!allowFailures)
-				exitCode = 1;
+			exitCode = 1;
 		}
 	}
 

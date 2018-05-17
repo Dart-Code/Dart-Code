@@ -15,6 +15,16 @@ environment:
     - ONLY_RUN_CODE_VERSION: DEV
       ONLY_RUN_DART_VERSION: DEV
 
+matrix:
+  fast_finish: true
+  allow_failures:
+    - ONLY_RUN_CODE_VERSION: DEV
+      ONLY_RUN_DART_VERSION: STABLE
+    - ONLY_RUN_CODE_VERSION: STABLE
+      ONLY_RUN_DART_VERSION: DEV
+    - ONLY_RUN_CODE_VERSION: DEV
+      ONLY_RUN_DART_VERSION: DEV
+
 install:
   - echo Misc setup
   - ps: $env:PATH="C:\Ruby25-x64\bin;$env:PATH"
