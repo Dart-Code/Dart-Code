@@ -536,6 +536,27 @@
 					"description": "Whether to automatically send a 'hot reload' request during a Flutter debug session when saving files.",
 					"scope": "window"
 				},
+				"dart.flutterCreateOrganization": {
+					"type": "string",
+					"description": "The organization responsible for your new Flutter project, in reverse domain name notation. This string is used in Java package names and as prefix in the iOS bundle identifier when creating new projects using the `Flutter: New Project` command.",
+					"scope": "window"
+				},
+				"dart.flutterCreateIOSLanguage": {
+					"enum": [
+						"objc",
+						"swift"
+					],
+					"description": "The programming language to use for IOS apps when creating new projects using the `Flutter: New Project` command.",
+					"scope": "window"
+				},
+				"dart.flutterCreateAndroidLanguage": {
+					"enum": [
+						"java",
+						"kotlin"
+					],
+					"description": "The programming language to use for Android apps when creating new projects using the `Flutter: New Project` command.",
+					"scope": "window"
+				},
 				"dart.analyzeAngularTemplates": {
 					"type": "boolean",
 					"default": true,

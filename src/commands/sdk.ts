@@ -94,13 +94,27 @@ export class SdkCommands {
 			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
 			if (!fs.existsSync(tempDir))
 				fs.mkdirSync(tempDir);
-			return this.runFlutterInFolder(tempDir, "doctor", "flutter");
+			return this.runFlutterInFolder(tempDir, ["doctor"], "flutter");
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
 		// Internal command that's fired in user_prompts to actually do the creation.
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.create", (projectPath: string, projectName?: string) => {
 			projectName = projectName || path.basename(projectPath);
-			return this.runFlutterInFolder(path.dirname(projectPath), `create ${projectName}`, projectName);
+			const args = ["create"];
+			if (config.flutterCreateOrganization) {
+				args.push("--org");
+				args.push(config.flutterCreateOrganization);
+			}
+			if (config.flutterCreateIOSLanguage) {
+				args.push("--ios-language");
+				args.push(config.flutterCreateIOSLanguage);
+			}
+			if (config.flutterCreateAndroidLanguage) {
+				args.push("--android-language");
+				args.push(config.flutterCreateAndroidLanguage);
+			}
+			args.push(projectName);
+			return this.runFlutterInFolder(path.dirname(projectPath), args, projectName);
 		}));
 
 		// Hook saving pubspec to run pub.get.
@@ -147,9 +161,8 @@ export class SdkCommands {
 		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${command}" in`, command, selection);
 	}
 
-	private runFlutterInFolder(folder: string, command: string, shortPath: string): Thenable<number> {
+	private runFlutterInFolder(folder: string, args: string[], shortPath: string): Thenable<number> {
 		const binPath = path.join(this.sdks.flutter, flutterPath);
-		const args = command.split(" ");
 		return this.runCommandInFolder(shortPath, "flutter", folder, binPath, globalFlutterArgs.concat(args));
 	}
 
