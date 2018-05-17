@@ -1048,7 +1048,7 @@ class ThreadManager {
 	constructor(public readonly debugSession: DartDebugSession) {
 	}
 
-	public registerThread(ref: VMIsolateRef, eventKind: string) {
+	public async registerThread(ref: VMIsolateRef, eventKind: string): Promise<void> {
 		let thread: ThreadInfo = this.getThreadInfoFromRef(ref);
 
 		if (!thread) {
@@ -1067,9 +1067,12 @@ class ThreadManager {
 		if (eventKind === "IsolateRunnable" && !thread.runnable) {
 			thread.runnable = true;
 
-			this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, this.exceptionMode);
-			this.setLibrariesDebuggable(thread.ref);
-			this.resetBreakpoints().then((_) => thread.setInitialBreakpoints());
+			await Promise.all([
+				this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, this.exceptionMode),
+				this.setLibrariesDebuggable(thread.ref),
+				this.resetBreakpoints(),
+			]);
+			thread.setInitialBreakpoints();
 		}
 	}
 
