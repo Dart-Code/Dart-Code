@@ -16,7 +16,9 @@ environment:
       ONLY_RUN_DART_VERSION: DEV
 
 matrix:
-  fast_finish: true
+#  Disable until fixed
+#  https://github.com/appveyor/ci/issues/2346
+#  fast_finish: true
   allow_failures:
     - ONLY_RUN_CODE_VERSION: DEV
       ONLY_RUN_DART_VERSION: STABLE
