@@ -48,7 +48,7 @@ export async function ensureMapEntry(mapEntries: DebugProtocol.Variable[], entry
 				&& value.value === entry.value.value;
 		});
 	}));
-	assert.ok(results.find((r) => r));
+	assert.ok(results.find((r) => r), `Didn't find map entry for ${entry.key.value}=${entry.value.value}`);
 }
 
 export function spawnProcessPaused(config: DebugConfiguration): DartProcess {
