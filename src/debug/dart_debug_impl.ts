@@ -949,9 +949,9 @@ export class DartDebugSession extends DebugSession {
 				str = `"${str}"`;
 			return str;
 		} else if (ref.kind === "List") {
-			return `[${instanceRef.length}]`;
+			return `List (${instanceRef.length} items)`;
 		} else if (ref.kind === "Map") {
-			return `{${instanceRef.length}}`;
+			return `Map (${instanceRef.length} items)`;
 		} else if (useClassNameAsFallback) {
 			return this.getFriendlyTypeName(instanceRef);
 		} else {
