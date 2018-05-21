@@ -33,14 +33,12 @@ export class AssistCodeActionProvider implements CodeActionProvider {
 		const refactorId = change.id
 			? CodeActionKind.Refactor.append(change.id.replace("dart.assist.", ""))
 			: CodeActionKind.Refactor;
-		return {
-			command: {
-				arguments: [document, change],
-				command: "_dart.applySourceChange",
-				title,
-			},
-			kind: refactorId,
+		const action = new CodeAction(title, refactorId);
+		action.command = {
+			arguments: [document, change],
+			command: "_dart.applySourceChange",
 			title,
 		};
+		return action;
 	}
 }

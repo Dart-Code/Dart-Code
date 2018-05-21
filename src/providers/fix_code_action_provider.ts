@@ -39,15 +39,13 @@ export class FixCodeActionProvider implements CodeActionProvider {
 	private convertResult(document: TextDocument, change: as.SourceChange, error: as.AnalysisError): CodeAction {
 		const title = change.message;
 		const diagnostics = error ? [DartDiagnosticProvider.createDiagnostic(error)] : undefined;
-		return {
-			command: {
-				arguments: [document, change],
-				command: "_dart.applySourceChange",
-				title,
-			},
-			diagnostics,
-			kind: CodeActionKind.QuickFix,
+		const action = new CodeAction(title, CodeActionKind.QuickFix);
+		action.command = {
+			arguments: [document, change],
+			command: "_dart.applySourceChange",
 			title,
 		};
+		action.diagnostics = diagnostics;
+		return action;
 	}
 }

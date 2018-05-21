@@ -39,15 +39,12 @@ export class RefactorCodeActionProvider implements CodeActionProvider {
 			return;
 
 		const title = supportedRefactors[k];
-
-		return {
-			command: {
-				arguments: [document, range, k],
-				command: "_dart.performRefactor",
-				title,
-			},
-			kind: CodeActionKind.Refactor,
+		const action = new CodeAction(title, CodeActionKind.Refactor);
+		action.command = {
+			arguments: [document, range, k],
+			command: "_dart.performRefactor",
 			title,
 		};
+		return action;
 	}
 }

@@ -22,10 +22,10 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 		});
 
 		const locations = resp.results.map((result) => {
-			return {
-				range: util.toRangeOnLine(result.location),
-				uri: Uri.file(result.location.file),
-			};
+			return new Location(
+				Uri.file(result.location.file),
+				util.toRangeOnLine(result.location),
+			);
 		});
 
 		return definition
@@ -46,10 +46,10 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 			if (target.startColumn === 0)
 				target.startColumn = 1;
 
-			return {
-				range: util.toRangeOnLine(target),
-				uri: Uri.file(resp.files[target.fileIndex]),
-			};
+			return new Location(
+				Uri.file(resp.files[target.fileIndex]),
+				util.toRangeOnLine(target),
+			);
 		});
 	}
 }
