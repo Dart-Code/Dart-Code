@@ -5,6 +5,8 @@ environment:
     secure: nQjpvf+MHWHTkWOMvX6/eNKByxvyRMUDJNGaE+m74OY=
   AWS_SECRET_ACCESS_KEY:
     secure: Kqh0mg85kGAE2roKfIiMOQXjjbR9ib+uCwBaI11H0JfygkVP27adHUF3JYwqa9AE
+  # https://github.com/flutter/flutter/issues/17768
+  FLUTTER_TEST: true
   matrix:
     - ONLY_RUN_CODE_VERSION: STABLE
       ONLY_RUN_DART_VERSION: STABLE
