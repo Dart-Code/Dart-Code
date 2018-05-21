@@ -50,7 +50,9 @@ describe("rename_provider", () => {
 			class Danny {}
 		`);
 
-		const renameResult = await (vs.commands.executeCommand("vscode.executeDocumentRenameProvider", doc.uri, positionOf("D^anny"), "Danny2") as Thenable<vs.WorkspaceEdit>);
+		const renamePrep = await ext.exports.renameProvider.prepareRename(doc, positionOf("D^anny"), null);
+		assert.equal(renamePrep.placeholder, "Danny");
+		const renameResult = await ext.exports.renameProvider.provideRenameEdits(doc, renamePrep.range.start, "Danny2", null);
 		await vs.workspace.applyEdit(renameResult);
 		await ensureTestContent(`
 			class Danny2 {}
