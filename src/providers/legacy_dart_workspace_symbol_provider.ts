@@ -1,5 +1,5 @@
 import * as path from "path";
-import { CancellationToken, SymbolInformation, Uri, WorkspaceSymbolProvider, workspace } from "vscode";
+import { CancellationToken, Location, SymbolInformation, Uri, workspace, WorkspaceSymbolProvider } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { fsPath, isWithinWorkspace, toRangeOnLine } from "../utils";
@@ -94,15 +94,15 @@ export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvide
 			? result.path[0].parameters
 			: "";
 
-		return {
+		return new SymbolInformation(
+			elementPathDescription + parameters,
+			getSymbolKindForElementKind(result.path[0].kind),
 			containerName,
-			kind: getSymbolKindForElementKind(result.path[0].kind),
-			location: {
-				range: toRangeOnLine(result.location),
-				uri: Uri.file(result.location.file),
-			},
-			name: elementPathDescription + parameters,
-		};
+			new Location(
+				Uri.file(result.location.file),
+				toRangeOnLine(result.location),
+			),
+		);
 	}
 
 	private createDisplayPath(inputPath: string): string {
