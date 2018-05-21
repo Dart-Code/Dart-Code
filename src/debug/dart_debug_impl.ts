@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { logError } from "../utils";
 import { DebuggerResult, ObservatoryConnection, VM, VMBreakpoint, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibraryRef, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMStack } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
 import { DartAttachRequestArguments, DartLaunchRequestArguments, PromiseCompleter, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
@@ -17,6 +18,7 @@ import { DartAttachRequestArguments, DartLaunchRequestArguments, PromiseComplete
 export class DartDebugSession extends DebugSession {
 	// TODO: Tidy all this up
 	protected childProcess: child_process.ChildProcess;
+	protected additionalPidsToTerminate: number[] = [];
 	private processExited: boolean = false;
 	public observatory: ObservatoryConnection;
 	protected cwd?: string;
@@ -210,6 +212,15 @@ export class DartDebugSession extends DebugSession {
 				this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event));
 				this.observatory.getVM().then(async (result): Promise<void> => {
 					const vm: VM = result.result as VM;
+
+					// If we own this process (we launched it, didn't attach) and the PID we get from Observatory is different, then
+					// we should keep a ref to this process to terminate when we quit. This avoids issues where our process is a shell
+					// (we use shell execute to fix issues on Windows) and the kill signal isn't passed on correctly.
+					// See: https://github.com/Dart-Code/Dart-Code/issues/907
+					if (this.childProcess && this.childProcess.pid !== vm.pid) {
+						this.additionalPidsToTerminate.push(vm.pid);
+					}
+
 					const isolates = await Promise.all(vm.isolates.map((isolateRef) => this.observatory.getIsolate(isolateRef.id)));
 
 					if (!this.packageMap) {
@@ -267,6 +278,14 @@ export class DartDebugSession extends DebugSession {
 	): Promise<void> {
 		try {
 			if (this.childProcess != null) {
+				for (const pid of this.additionalPidsToTerminate) {
+					try {
+						process.kill(pid);
+					} catch (e) {
+						logError({ message: e.toString() });
+					}
+				}
+				this.additionalPidsToTerminate.length = 0;
 				this.childProcess.kill();
 				this.childProcess = null;
 			} else if (this.observatory) {
