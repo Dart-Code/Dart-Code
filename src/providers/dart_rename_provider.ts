@@ -14,38 +14,25 @@ export class DartRenameProvider implements RenameProvider {
 		return this.doRename(document, position, newName, token);
 	}
 
-	public prepareRename(document: TextDocument, position: Position, token: CancellationToken): Thenable<Range | { range: Range, placeholder: string }> {
+	public prepareRename(document: TextDocument, position: Position, token: CancellationToken): Thenable<{ range: Range, placeholder: string }> {
 		return this.getLocation(document, position);
 	}
 
 	private async doRename(document: TextDocument, position: Position, newName: string, token: CancellationToken): Promise<WorkspaceEdit> {
-		const wordRange = document.getWordRangeAtPosition(position);
 		const outputChannel = channels.getChannel("Refactorings");
 		outputChannel.appendLine("");
 
 		const resp = await this.analyzer.editGetRefactoring({
 			file: fsPath(document.uri),
 			kind: "RENAME",
-			length: wordRange.end.character - wordRange.start.character,
-			offset: document.offsetAt(wordRange.start),
+			length: 1,
+			offset: document.offsetAt(position),
 			options: {
 				newName,
 			},
 			validateOnly: false,
 		});
 		const workspaceEdit = new WorkspaceEdit();
-
-		// Check that the thing we're refactoring macthes up with what the AS says the oldName is. This
-		// allows us to abort (even though it's a bit late) if it seems like we're doing something unexpected.
-		// See https://github.com/Dart-Code/Dart-Code/issues/144
-		if (resp.feedback) {
-			const expectedOldName = document.getText(wordRange);
-			const actualOldName = (resp.feedback as as.RenameFeedback).oldName; // TODO: Does the API spec have enough for us to make these generics?
-			if (actualOldName != null && actualOldName !== expectedOldName) {
-				outputChannel.appendLine(`[ERROR] Rename aborting due to rename mismatch (expected: ${expectedOldName}, got: ${actualOldName}). This rename may be supported in a future version.`);
-				throw new Error("This rename is not supported.");
-			}
-		}
 
 		if (resp.change && resp.change.message)
 			outputChannel.appendLine(`[INFO] ${resp.change.message}…`);
@@ -114,10 +101,12 @@ export class DartRenameProvider implements RenameProvider {
 
 		const feedback = (resp.feedback as as.RenameFeedback);
 
+		// VS Code will reject the rename if our range doesn't span the position it gave us, but sometimes this isn't the case
+		// such as `import "x" as y` when invoking rename on `import`, so we just it back the position is asked for.
 		if (feedback) {
 			return {
 				placeholder: feedback.oldName,
-				range: new Range(document.positionAt(feedback.offset), document.positionAt(feedback.offset + feedback.length)),
+				range: new Range(position, position),
 			};
 		} else {
 			const fatalProblems = resp.initialProblems

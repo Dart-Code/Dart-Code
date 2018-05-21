@@ -1,5 +1,6 @@
+import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, doc, ensureTestContent, positionOf, setTestContent } from "../../helpers";
+import { activate, doc, ensureTestContent, ext, positionOf, setTestContent } from "../../helpers";
 
 describe("rename_provider", () => {
 
@@ -30,21 +31,21 @@ describe("rename_provider", () => {
 		`);
 	});
 
-	// https://github.com/Microsoft/vscode/issues/48840
-	it.skip("renames alias on the import keyword", async () => {
+	it("renames alias on the import keyword", async () => {
 		await setTestContent(`
 			import "dart:async" as async;
 		`);
 
-		const renameResult = await (vs.commands.executeCommand("vscode.executeDocumentRenameProvider", doc.uri, positionOf("i^mport"), "async2") as Thenable<vs.WorkspaceEdit>);
+		const renamePrep = await ext.exports.renameProvider.prepareRename(doc, positionOf("i^mport"), null);
+		assert.equal(renamePrep.placeholder, "async");
+		const renameResult = await ext.exports.renameProvider.provideRenameEdits(doc, renamePrep.range.start, "async2", null);
 		await vs.workspace.applyEdit(renameResult);
 		await ensureTestContent(`
 			import "dart:async" as async2;
 		`);
 	});
 
-	// https://github.com/Microsoft/vscode/issues/48840
-	it.skip("renames the class on the class keyword", async () => {
+	it("renames the class on the class keyword", async () => {
 		await setTestContent(`
 			class Danny {}
 		`);

@@ -5,6 +5,7 @@ import * as path from "path";
 import * as semver from "semver";
 import * as vs from "vscode";
 import { AnalyzerCapabilities } from "../src/analysis/analyzer";
+import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
 import { Sdks, fsPath, vsCodeVersionConstraint } from "../src/utils";
 import sinon = require("sinon");
@@ -16,6 +17,7 @@ export const ext = vs.extensions.getExtension<{
 	nextAnalysis: () => Promise<void>,
 	initialAnalysis: Promise<void>,
 	reanalyze: () => void,
+	renameProvider: DartRenameProvider,
 	sdks: Sdks,
 }>("Dart-Code.dart-code");
 

@@ -345,6 +345,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		initialAnalysis,
 		nextAnalysis,
 		reanalyze,
+		renameProvider, // TODO: Remove this when we can get access via testing...
 		sdks,
 	};
 }
