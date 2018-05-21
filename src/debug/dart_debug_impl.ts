@@ -538,7 +538,7 @@ export class DartDebugSession extends DebugSession {
 		this.sendResponse(response);
 	}
 
-	protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void {
+	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): Promise<void> {
 		const variablesReference = args.variablesReference;
 
 		// implement paged arrays
@@ -561,108 +561,108 @@ export class DartDebugSession extends DebugSession {
 		} else if (data.data.type === "MapEntry") {
 			const mapRef = data.data as VMMapEntry;
 
-			Promise.all([
+			const results = await Promise.all([
 				this.observatory.getObject(thread.ref.id, mapRef.keyId),
 				this.observatory.getObject(thread.ref.id, mapRef.valueId),
-			]).then((results: DebuggerResult[]) => {
-				const variables: DebugProtocol.Variable[] = [];
+			]);
+			const variables: DebugProtocol.Variable[] = [];
 
-				const [keyDebuggerResult, valueDebuggerResult] = results;
-				const keyInstanceRef = keyDebuggerResult.result as VMInstanceRef;
-				const valueInstanceRef = valueDebuggerResult.result as VMInstanceRef;
+			const [keyDebuggerResult, valueDebuggerResult] = results;
+			const keyInstanceRef = keyDebuggerResult.result as VMInstanceRef;
+			const valueInstanceRef = valueDebuggerResult.result as VMInstanceRef;
 
-				variables.push(this.instanceRefToVariable(thread, false, "key", "key", keyInstanceRef));
+			variables.push(this.instanceRefToVariable(thread, false, "key", "key", keyInstanceRef));
 
-				let canEvaluateValueName = false;
-				let valueEvaluateName = "value";
-				if (this.isSimpleKind(keyInstanceRef.kind)) {
-					canEvaluateValueName = true;
-					valueEvaluateName = `${mapRef.mapEvaluateName}[${this.valueAsString(keyInstanceRef)}]`;
-				}
+			let canEvaluateValueName = false;
+			let valueEvaluateName = "value";
+			if (this.isSimpleKind(keyInstanceRef.kind)) {
+				canEvaluateValueName = true;
+				valueEvaluateName = `${mapRef.mapEvaluateName}[${this.valueAsString(keyInstanceRef)}]`;
+			}
 
-				variables.push(this.instanceRefToVariable(thread, canEvaluateValueName, valueEvaluateName, "value", valueInstanceRef));
+			variables.push(this.instanceRefToVariable(thread, canEvaluateValueName, valueEvaluateName, "value", valueInstanceRef));
 
-				response.body = { variables };
-				this.sendResponse(response);
-			});
+			response.body = { variables };
+			this.sendResponse(response);
 		} else {
 			const instanceRef = data.data as InstanceWithEvaluateName;
 
-			this.observatory.getObject(thread.ref.id, instanceRef.id, start, count).then(
-				(result: DebuggerResult,
-				) => {
-					const variables: DebugProtocol.Variable[] = [];
-					// If we're the top-level exception, or our parent has an evaluateName of undefined (its children)
-					// we cannot evaluate (this will disable "Add to Watch" etc).
-					const canEvaluate = variablesReference !== data.thread.exceptionReference && instanceRef.evaluateName !== undefined;
+			try {
+				const result = await this.observatory.getObject(thread.ref.id, instanceRef.id, start, count);
+				const variables: DebugProtocol.Variable[] = [];
+				// If we're the top-level exception, or our parent has an evaluateName of undefined (its children)
+				// we cannot evaluate (this will disable "Add to Watch" etc).
+				const canEvaluate = variablesReference !== data.thread.exceptionReference && instanceRef.evaluateName !== undefined;
 
-					if (result.result.type === "Sentinel") {
-						variables.push({
-							name: "<evalError>",
-							value: (result.result as VMSentinel).valueAsString,
-							variablesReference: 0,
-						});
-					} else {
-						const obj: VMObj = result.result as VMObj;
+				if (result.result.type === "Sentinel") {
+					variables.push({
+						name: "<evalError>",
+						value: (result.result as VMSentinel).valueAsString,
+						variablesReference: 0,
+					});
+				} else {
+					const obj: VMObj = result.result as VMObj;
 
-						if (obj.type === "Instance") {
-							const instance = obj as VMInstance;
+					if (obj.type === "Instance") {
+						const instance = obj as VMInstance;
 
-							// TODO: show by kind instead
-							if (instance.elements) {
-								const len = instance.elements.length;
-								if (!start)
-									start = 0;
-								for (let i = 0; i < len; i++) {
-									const element = instance.elements[i];
-									variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + start}]`, `[${i + start}]`, element));
-								}
-							} else if (instance.associations) {
-								const len = instance.associations.length;
-								if (!start)
-									start = 0;
-								for (let i = 0; i < len; i++) {
-									const association = instance.associations[i];
-
-									const keyName = this.valueAsString(association.key, true);
-									const valueName = this.valueAsString(association.value, true);
-
-									let variablesReference = 0;
-
-									if (association.key.type !== "Sentinel" && association.value.type !== "Sentinel") {
-										const mapRef: VMMapEntry = {
-											keyId: (association.key as VMInstanceRef).id,
-											mapEvaluateName: instanceRef.evaluateName,
-											type: "MapEntry",
-											valueId: (association.value as VMInstanceRef).id,
-										};
-
-										variablesReference = thread.storeData(mapRef);
-									}
-
-									variables.push({
-										name: `${i + start}`,
-										type: `${keyName} -> ${valueName}`,
-										value: `${keyName} -> ${valueName}`,
-										variablesReference,
-									});
-								}
-							} else if (instance.fields) {
-								for (const field of instance.fields)
-									variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value));
-							} else {
-								// TODO: unhandled kind
-								this.logToUser(instance.kind);
+						// TODO: show by kind instead
+						if (instance.elements) {
+							const len = instance.elements.length;
+							if (!start)
+								start = 0;
+							for (let i = 0; i < len; i++) {
+								const element = instance.elements[i];
+								variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + start}]`, `[${i + start}]`, element));
 							}
-						} else {
-							// TODO: unhandled type
-							this.logToUser(obj.type);
-						}
-					}
+						} else if (instance.associations) {
+							const len = instance.associations.length;
+							if (!start)
+								start = 0;
+							for (let i = 0; i < len; i++) {
+								const association = instance.associations[i];
 
-					response.body = { variables };
-					this.sendResponse(response);
-				}).catch((error) => this.errorResponse(response, `${error}`));
+								const keyName = this.valueAsString(association.key, true);
+								const valueName = this.valueAsString(association.value, true);
+
+								let variablesReference = 0;
+
+								if (association.key.type !== "Sentinel" && association.value.type !== "Sentinel") {
+									const mapRef: VMMapEntry = {
+										keyId: (association.key as VMInstanceRef).id,
+										mapEvaluateName: instanceRef.evaluateName,
+										type: "MapEntry",
+										valueId: (association.value as VMInstanceRef).id,
+									};
+
+									variablesReference = thread.storeData(mapRef);
+								}
+
+								variables.push({
+									name: `${i + start}`,
+									type: `${keyName} -> ${valueName}`,
+									value: `${keyName} -> ${valueName}`,
+									variablesReference,
+								});
+							}
+						} else if (instance.fields) {
+							for (const field of instance.fields)
+								variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value));
+						} else {
+							// TODO: unhandled kind
+							this.logToUser(instance.kind);
+						}
+					} else {
+						// TODO: unhandled type
+						this.logToUser(obj.type);
+					}
+				}
+
+				response.body = { variables };
+				this.sendResponse(response);
+			} catch (error) {
+				this.errorResponse(response, `${error}`);
+			}
 		}
 	}
 
