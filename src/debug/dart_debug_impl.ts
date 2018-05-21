@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { config } from "../config";
 import { logError } from "../utils";
 import { DebuggerResult, ObservatoryConnection, VM, VMBreakpoint, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMStack } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
@@ -664,6 +665,11 @@ export class DartDebugSession extends DebugSession {
 								});
 							}
 						} else if (instance.fields) {
+							// TODO: Add getters
+							// TODO: Will .fields always exist? What if we have a type with only getters?
+							if (config.evaluateGettersInDebugViews) {
+								// TODO: This.
+							}
 							for (const field of instance.fields)
 								variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value));
 						} else {

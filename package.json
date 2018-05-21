@@ -459,6 +459,12 @@
 					"description": "Whether external libraries should be marked as debuggable.",
 					"scope": "resource"
 				},
+				"dart.evaluateGettersInDebugViews": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to evaluate getters to display them in debug views (such as Variables, Watch and Hovers).",
+					"scope": "resource"
+				},
 				"dart.sdkPath": {
 					"type": "string",
 					"description": "The location of the Dart SDK to use for analyzing and executing code. If blank, Dart Code will attempt to find it from the PATH environment variable.",
