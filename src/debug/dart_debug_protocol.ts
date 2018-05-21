@@ -14,6 +14,7 @@ export interface VMEvent {
 	timestamp: number;
 	isolate?: VMIsolateRef;
 	exception?: VMInstanceRef;
+	breakpoint?: VMBreakpoint;
 	pauseBreakpoints?: VMBreakpoint[];
 	atAsyncSuspension?: boolean;
 	extensionRPC?: string;
