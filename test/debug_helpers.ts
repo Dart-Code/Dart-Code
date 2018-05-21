@@ -8,7 +8,7 @@ import { DartDebugClient } from "./dart_debug_client";
 import { defer } from "./helpers";
 
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string, name: string, value: string) {
-	assert.ok(variables);
+	assert.ok(variables && variables.length, "No variables given to search");
 	const v = variables.find((v) => v.name === name);
 	assert.ok(
 		v,
