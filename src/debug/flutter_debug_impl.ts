@@ -66,7 +66,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 
 		this.flutter = new FlutterRun(args.flutterPath, args.cwd, appArgs, args.flutterRunLogFile);
-		this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
+		this.flutter.registerForUnhandledMessages((msg) => this.logToUser(msg));
 
 		// Set up subscriptions.
 		this.flutter.registerForAppStart((n) => this.currentRunningAppId = n.appId);

@@ -22,8 +22,8 @@ export class DartDebugSession extends DebugSession {
 	private processExited: boolean = false;
 	public observatory: ObservatoryConnection;
 	protected cwd?: string;
-	private observatoryLogFile: string;
-	private observatoryLogStream: fs.WriteStream;
+	private logFile: string;
+	private logStream: fs.WriteStream;
 	public debugSdkLibraries: boolean;
 	public debugExternalLibraries: boolean;
 	private threadManager: ThreadManager;
@@ -67,7 +67,7 @@ export class DartDebugSession extends DebugSession {
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program));
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
-		this.observatoryLogFile = args.observatoryLogFile;
+		this.logFile = args.observatoryLogFile;
 
 		this.sendResponse(response);
 
@@ -114,7 +114,7 @@ export class DartDebugSession extends DebugSession {
 		this.cwd = args.cwd;
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
-		this.observatoryLogFile = args.observatoryLogFile;
+		this.logFile = args.observatoryLogFile;
 
 		// If we were given an explicity packages path, use it (otherwise we'll try
 		// to extract from the VM)
@@ -166,6 +166,10 @@ export class DartDebugSession extends DebugSession {
 			appArgs = appArgs.concat(args.args);
 		}
 
+		this.logToFile(`Spawning ${args.dartPath} with args ${JSON.stringify(appArgs)}`);
+		if (args.cwd)
+			this.logToFile(`..  in ${args.cwd}`);
+
 		const process = safeSpawn(args.cwd, args.dartPath, appArgs);
 
 		return process;
@@ -183,6 +187,20 @@ export class DartDebugSession extends DebugSession {
 			return `${wsUri}/ws`;
 	}
 
+	private logToFile(message: string) {
+		const max: number = 2000;
+
+		if (this.logFile) {
+			if (!this.logStream)
+				this.logStream = fs.createWriteStream(this.logFile);
+			this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
+			if (message.length > max)
+				this.logStream.write(message.substring(0, max) + "…\r\n");
+			else
+				this.logStream.write(message.trim() + "\r\n");
+		}
+	}
+
 	protected initObservatory(uri: string): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
 			// Send the uri back to the editor so it can be used to launch browsers etc.
@@ -193,19 +211,7 @@ export class DartDebugSession extends DebugSession {
 				this.sendEvent(new Event("dart.observatoryUri", { observatoryUri: browserFriendlyUri.toString() }));
 			}
 			this.observatory = new ObservatoryConnection(uri);
-			this.observatory.onLogging((message) => {
-				const max: number = 2000;
-
-				if (this.observatoryLogFile) {
-					if (!this.observatoryLogStream)
-						this.observatoryLogStream = fs.createWriteStream(this.observatoryLogFile);
-					this.observatoryLogStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
-					if (message.length > max)
-						this.observatoryLogStream.write(message.substring(0, max) + "…\r\n");
-					else
-						this.observatoryLogStream.write(message.trim() + "\r\n");
-				}
-			});
+			this.observatory.onLogging((message) => this.logToFile(message));
 			this.observatory.onOpen(() => {
 				this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event));
 				this.observatory.on("Extension", (event: VMEvent) => this.handleExtensionEvent(event));
@@ -255,9 +261,9 @@ export class DartDebugSession extends DebugSession {
 			});
 
 			this.observatory.onClose((code: number, message: string) => {
-				if (this.observatoryLogStream) {
-					this.observatoryLogStream.end();
-					this.observatoryLogStream = null;
+				if (this.logStream) {
+					this.logStream.end();
+					this.logStream = null;
 				}
 				// This event arrives before the process exit event.
 				setTimeout(() => {
@@ -637,11 +643,11 @@ export class DartDebugSession extends DebugSession {
 									variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value));
 							} else {
 								// TODO: unhandled kind
-								this.log(instance.kind);
+								this.logToUser(instance.kind);
 							}
 						} else {
 							// TODO: unhandled type
-							this.log(obj.type);
+							this.logToUser(obj.type);
 						}
 					}
 
@@ -1056,7 +1062,7 @@ export class DartDebugSession extends DebugSession {
 		setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs);
 	}
 
-	protected log(obj: string) {
+	protected logToUser(obj: string) {
 		this.sendEvent(new OutputEvent(`${obj}\n`));
 	}
 }
