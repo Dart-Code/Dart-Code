@@ -298,8 +298,12 @@ export class DartDebugSession extends DebugSession {
 					}
 				}
 				this.additionalPidsToTerminate.length = 0;
-				this.logToFile(`Terminating main process...`);
-				this.childProcess.kill();
+				try {
+					this.logToFile(`Terminating main process...`);
+					this.childProcess.kill();
+				} catch (e) {
+					logError({ message: e.toString() });
+				}
 				this.childProcess = null;
 			} else if (this.observatory) {
 				try {
