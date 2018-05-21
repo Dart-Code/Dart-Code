@@ -354,7 +354,9 @@ describe("dart cli debugger", () => {
 		ensureVariable(variables, "danny", "danny", `Danny`);
 
 		const classInstance = await dc.getVariables(variables.find((v) => v.name === "danny").variablesReference);
-		ensureVariable(classInstance, "danny.name", "name", "Danny");
+		ensureVariable(classInstance, "danny.kind", "kind", `"Person"`);
+		ensureVariable(classInstance, "danny.name", "name", `"Danny"`);
+		ensureVariable(classInstance, undefined, "throws", { starts: "Unhandled exception:\nOops!" });
 
 	});
 
