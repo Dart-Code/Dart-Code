@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { fsPath } from "../../../src/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureMapEntry, ensureVariable, spawnProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, platformEol, positionOf, sb } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, platformEol, positionOf, sb } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -338,6 +338,24 @@ describe("dart cli debugger", () => {
 			key: { evaluateName: null, name: "key", value: "1.1" },
 			value: { evaluateName: `m[1.1]`, name: "value", value: `"one-point-one"` },
 		}, dc);
+	});
+
+	it("includes getters in variables when stopped at a breakpoint", async () => {
+		await openFile(helloWorldGettersFile);
+		const config = await startDebugger(helloWorldGettersFile);
+		await Promise.all([
+			dc.hitBreakpoint(config, {
+				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+				path: fsPath(helloWorldGettersFile),
+			}),
+		]);
+
+		const variables = await dc.getTopFrameVariables("Locals");
+		ensureVariable(variables, "danny", "danny", `Danny`);
+
+		const classInstance = await dc.getVariables(variables.find((v) => v.name === "danny").variablesReference);
+		ensureVariable(classInstance, "danny.name", "name", "Danny");
+
 	});
 
 	it("watch expressions provide same info as locals", async () => {
