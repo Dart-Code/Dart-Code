@@ -1052,8 +1052,12 @@ export class DartDebugSession extends DebugSession {
 				await this.handlePauseEvent(event);
 			} else if (kind === "Inspect") {
 				await this.handleInspectEvent(event);
+			} else if (kind === "BreakpointAdded") {
+				this.sendEvent(new BreakpointEvent("new", this.breakpointFromVm(event.breakpoint)));
 			} else if (kind === "BreakpointResolved") {
 				this.sendEvent(new BreakpointEvent("changed", this.breakpointFromVm(event.breakpoint)));
+			} else if (kind === "BreakpointRemoved") {
+				this.sendEvent(new BreakpointEvent("removed", this.breakpointFromVm(event.breakpoint)));
 			}
 		} catch (e) {
 			logError(e);
