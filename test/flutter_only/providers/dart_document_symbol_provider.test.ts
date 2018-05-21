@@ -9,6 +9,8 @@ describe("dart_document_symbol_provider", () => {
 	it("returns expected items for 'flutter/hello_world'", async () => {
 		const symbols = await getDocumentSymbols();
 
+		assert.ok(symbols && symbols.length, "Didn't get any symbols");
+
 		ensureSymbol(symbols, "main()", vs.SymbolKind.Function, "");
 		ensureSymbol(symbols, "MyApp", vs.SymbolKind.Class, "");
 		ensureSymbol(symbols, "build(BuildContext context)", vs.SymbolKind.Method, "MyApp");
