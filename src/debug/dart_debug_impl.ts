@@ -720,7 +720,9 @@ export class DartDebugSession extends DebugSession {
 					}
 				}
 
-				response.body = { variables };
+				response.body = {
+					variables: _.sortBy(variables, (v) => v.name),
+				};
 				this.sendResponse(response);
 			} catch (error) {
 				this.errorResponse(response, `${error}`);
