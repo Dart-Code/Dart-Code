@@ -463,7 +463,7 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Whether to evaluate getters to display them in debug views (such as Variables, Watch and Hovers).",
-					"scope": "resource"
+					"scope": "window"
 				},
 				"dart.sdkPath": {
 					"type": "string",
@@ -791,6 +791,7 @@
 	},
 	"dependencies": {
 		"glob": "^7.1.2",
+		"lodash": "^4.17.10",
 		"semver": "^5.5.0",
 		"vscode-debugadapter": "^1.29.0",
 		"vscode-debugprotocol": "^1.29.0",
@@ -798,6 +799,7 @@
 	},
 	"devDependencies": {
 		"@types/glob": "^5.0.35",
+		"@types/lodash": "^4.14.108",
 		"@types/mocha": "^5.1.0",
 		"@types/node": "^6.0.107",
 		"@types/semver": "^5.5.0",

@@ -1,11 +1,12 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
+import * as _ from "lodash";
 import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { config } from "../config";
 import { logError } from "../utils";
-import { DebuggerResult, ObservatoryConnection, VM, VMBreakpoint, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMStack } from "./dart_debug_protocol";
+import { DebuggerResult, ObservatoryConnection, VM, VMBreakpoint, VMClass, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMStack } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
 import { DartAttachRequestArguments, DartLaunchRequestArguments, PromiseCompleter, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
 
@@ -584,6 +585,7 @@ export class DartDebugSession extends DebugSession {
 				this.observatory.getObject(thread.ref.id, mapRef.keyId),
 				this.observatory.getObject(thread.ref.id, mapRef.valueId),
 			]);
+
 			const variables: DebugProtocol.Variable[] = [];
 
 			const [keyDebuggerResult, valueDebuggerResult] = results;
@@ -665,11 +667,47 @@ export class DartDebugSession extends DebugSession {
 								});
 							}
 						} else if (instance.fields) {
-							// TODO: Add getters
-							// TODO: Will .fields always exist? What if we have a type with only getters?
-							if (config.evaluateGettersInDebugViews) {
-								// TODO: This.
+							if (config.evaluateGettersInDebugViews && instance.class) {
+								let classRef = instance.class;
+
+								// Get getter names for whole hierarchy
+								let getterNames: string[] = [];
+								while (classRef) {
+									const classResponse = await this.observatory.getObject(thread.ref.id, classRef.id);
+									if (classResponse.result.type !== "Class")
+										break;
+
+									const c = classResponse.result as VMClass;
+
+									// TODO: This kinda smells for two reasons:
+									// 1. This is supposed to be an @Function but it has loads of extra stuff on it compare to the docs
+									// 2. We're accessing _kind to check if it's a getter :/
+									getterNames = getterNames.concat(getterNames, c.functions.filter((f) => f._kind === "GetterFunction" && !f.static && !f.const).map((f) => f.name));
+									classRef = c.super;
+								}
+
+								// Distinct the list; since we may have got dupes from the super-classes.
+								getterNames = _.uniq(getterNames);
+
+								// This getter always throws?
+								getterNames = getterNames.filter((g) => g !== "_identityHashCode");
+
+								// Call each getter, adding the result as a variable.
+								for (const getterName of getterNames) {
+									const getterResult = await this.observatory.evaluate(thread.ref.id, instanceRef.id, getterName);
+									if (getterResult.result.type === "@Error") {
+										variables.push({ name: getterName, value: (getterResult.result as VMErrorRef).message, variablesReference: 0 });
+									} else if (getterResult.result.type === "Sentinel") {
+										variables.push({ name: getterName, value: (getterResult.result as VMSentinel).valueAsString, variablesReference: 0 });
+									} else {
+										const getterResultInstanceRef = getterResult.result as VMInstanceRef;
+										variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${getterName}`, getterName, getterResultInstanceRef));
+									}
+								}
+
 							}
+
+							// Add all of the fields.
 							for (const field of instance.fields)
 								variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value));
 						} else {

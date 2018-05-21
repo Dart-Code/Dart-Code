@@ -37,7 +37,7 @@ export interface VMBreakpoint extends VMObj {
 
 export interface VMObj extends VMResponse {
 	id: string;
-	classRef?: VMClassRef;
+	class?: VMClassRef;
 	size?: number;
 }
 
@@ -120,14 +120,18 @@ export interface VMInstance extends VMObj {
 	offset?: number;
 	count?: number;
 	name?: string;
-	typeClass?: VMClassRef;
-	parameterizedClass?: VMClassRef;
 	// The fields of this Instance.
 	fields?: VMBoundField[];
 	// The elements of a List instance. Provided for instance kinds: List.
 	elements?: any[];
 	// The elements of a Map instance. Provided for instance kinds: Map.
 	associations?: VMMapAssociation[];
+}
+
+export interface VMClass extends VMObj {
+	name: string;
+	functions: VMFunctionRef[];
+	super?: VMClassRef;
 }
 
 export interface VMBoundField {
@@ -214,6 +218,13 @@ export interface VMErrorRef extends VMObjectRef {
 
 export interface VMClassRef extends VMObjectRef {
 	name: string;
+}
+
+export interface VMFunctionRef extends VMObjectRef {
+	name: string;
+	_kind: string;
+	static: boolean;
+	const: boolean;
 }
 
 export class RPCError {
