@@ -423,10 +423,10 @@ export class DartDebugSession extends DebugSession {
 		super.disconnectRequest(response, args);
 	}
 
-	protected setBreakPointsRequest(
+	protected async setBreakPointsRequest(
 		response: DebugProtocol.SetBreakpointsResponse,
 		args: DebugProtocol.SetBreakpointsArguments,
-	): void {
+	): Promise<void> {
 		const source: DebugProtocol.Source = args.source;
 		let breakpoints: DebugProtocol.SourceBreakpoint[] = args.breakpoints;
 		if (!breakpoints)
@@ -435,17 +435,23 @@ export class DartDebugSession extends DebugSession {
 		// Get all possible valid source uris for the given path.
 		const uris = this.getPossibleSourceUris(source.path);
 
-		uris.forEach((uri) => {
-			this.threadManager.setBreakpoints(uri, breakpoints).then((result: boolean[]) => {
-				const bpResponse = [];
-				for (const verified of result) {
-					bpResponse.push({ verified });
+		await Promise.all(uris.map(async (uri) => {
+			try {
+				const result = await this.threadManager.setBreakpoints(uri, breakpoints);
+				const bpResponse: DebugProtocol.Breakpoint[] = [];
+				for (const bp of result) {
+					bpResponse.push({
+						id: bp.breakpointNumber,
+						verified: bp.resolved,
+					});
 				}
 
 				response.body = { breakpoints: bpResponse };
 				this.sendResponse(response);
-			}).catch((error) => this.errorResponse(response, `${error}`));
-		});
+			} catch (error) {
+				this.errorResponse(response, `${error}`);
+			}
+		}));
 	}
 
 	/***
@@ -1042,6 +1048,8 @@ export class DartDebugSession extends DebugSession {
 				await this.handlePauseEvent(event);
 			} else if (kind === "Inspect") {
 				await this.handleInspectEvent(event);
+			} else if (kind === "BreakpointResolved") {
+				console.log(`Resolving breakpoint: ${JSON.stringify(event)}`);
 			}
 		} catch (e) {
 			logError(e);
@@ -1537,6 +1545,7 @@ class ThreadManager {
 
 	// Just resends existing breakpoints
 	public resetBreakpoints() {
+		// TODO: Should we mark them as un-verified?!
 		const promises = [];
 		for (const uri of Object.keys(this.bps)) {
 			promises.push(this.setBreakpoints(uri, this.bps[uri]));
@@ -1544,32 +1553,17 @@ class ThreadManager {
 		return Promise.all(promises);
 	}
 
-	public setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {
+	public async setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<VMBreakpoint[]> {
 		// Remember these bps for when new threads start.
 		if (breakpoints.length === 0)
 			delete this.bps[uri];
 		else
 			this.bps[uri] = breakpoints;
 
-		let promise;
-
-		for (const thread of this.threads) {
-			if (thread.runnable) {
-				const result = thread.setBreakpoints(uri, breakpoints);
-				if (!promise)
-					promise = result;
-			}
-		}
-
-		if (promise)
-			return promise;
-
-		const completer = new PromiseCompleter<boolean[]>();
-		const result = [];
-		for (const b of breakpoints)
-			result.push(true);
-		completer.resolve(result);
-		return completer.promise;
+		const allResults = await Promise.all(
+			this.threads.filter((t) => t.runnable).map((t) => t.setBreakpoints(uri, breakpoints)),
+		);
+		return _.flatMap(allResults);
 	}
 
 	public nextDataId: number = 1;
@@ -1663,33 +1657,20 @@ class ThreadInfo {
 		});
 	}
 
-	public setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {
+	public async setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<VMBreakpoint[]> {
 		// Remove all current bps.
-		const removeBreakpointPromises = this.removeBreakpointsAtUri(uri);
-
+		await this.removeBreakpointsAtUri(uri);
 		this.vmBps[uri] = [];
 
-		return removeBreakpointPromises.then(() => {
-			// Set new ones.
-			const promises = [];
-
-			for (const bp of breakpoints) {
-				const promise = this.manager.debugSession.observatory.addBreakpointWithScriptUri(
-					this.ref.id, uri, bp.line, bp.column,
-				).then((result: DebuggerResult) => {
-					const vmBp: VMBreakpoint = result.result as VMBreakpoint;
-					this.vmBps[uri].push(vmBp);
-					this.breakpoints[vmBp.id] = bp;
-					return true;
-				}).catch((error) => {
-					return false;
-				});
-
-				promises.push(promise);
-			}
-
-			return Promise.all(promises);
-		});
+		return Promise.all(
+			breakpoints.map(async (bp) => {
+				const result = await this.manager.debugSession.observatory.addBreakpointWithScriptUri(this.ref.id, uri, bp.line, bp.column);
+				const vmBp: VMBreakpoint = result.result as VMBreakpoint;
+				this.vmBps[uri].push(vmBp);
+				this.breakpoints[vmBp.id] = bp;
+				return vmBp;
+			}),
+		);
 	}
 
 	private gotPauseStart = false;
