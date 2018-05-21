@@ -94,6 +94,7 @@ export class DartDebugSession extends DebugSession {
 			this.sendEvent(new OutputEvent(`${error}`, "stderr"));
 		});
 		process.on("exit", (code, signal) => {
+			this.logToFile(`Process excited with code ${code}`);
 			this.processExited = true;
 			if (!code && !signal)
 				this.sendEvent(new OutputEvent("Exited"));
@@ -115,6 +116,8 @@ export class DartDebugSession extends DebugSession {
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.logFile = args.observatoryLogFile;
+
+		this.logToFile(`Attaching to process via ${args.observatoryUri}`);
 
 		// If we were given an explicity packages path, use it (otherwise we'll try
 		// to extract from the VM)
@@ -261,6 +264,8 @@ export class DartDebugSession extends DebugSession {
 			});
 
 			this.observatory.onClose((code: number, message: string) => {
+
+				this.logToFile(`Observatory connection closed: ${code} (${message})`);
 				if (this.logStream) {
 					this.logStream.end();
 					this.logStream = null;
@@ -286,16 +291,19 @@ export class DartDebugSession extends DebugSession {
 			if (this.childProcess != null) {
 				for (const pid of this.additionalPidsToTerminate) {
 					try {
+						this.logToFile(`Terminating related process ${pid}...`);
 						process.kill(pid);
 					} catch (e) {
 						logError({ message: e.toString() });
 					}
 				}
 				this.additionalPidsToTerminate.length = 0;
+				this.logToFile(`Terminating main process...`);
 				this.childProcess.kill();
 				this.childProcess = null;
 			} else if (this.observatory) {
 				try {
+					this.logToFile(`Disconnecting from process...`);
 					// Remove all breakpoints from the VM.
 					await Promise.all(this.threadManager.threads.map((thread) => thread.removeAllBreakpoints()));
 
@@ -308,6 +316,7 @@ export class DartDebugSession extends DebugSession {
 					]);
 				} finally {
 					this.observatory.close();
+					this.observatory = null;
 				}
 			}
 		} catch (e) {
