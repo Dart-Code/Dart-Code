@@ -6,7 +6,7 @@ import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, Stac
 import { DebugProtocol } from "vscode-debugprotocol";
 import { config } from "../config";
 import { logError } from "../utils";
-import { DebuggerResult, ObservatoryConnection, VM, VMBreakpoint, VMClass, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMStack } from "./dart_debug_protocol";
+import { DebuggerResult, ObservatoryConnection, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMStack } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
 import { DartAttachRequestArguments, DartLaunchRequestArguments, PromiseCompleter, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
 
@@ -667,30 +667,9 @@ export class DartDebugSession extends DebugSession {
 								});
 							}
 						} else if (instance.fields) {
+							// Add getters
 							if (config.evaluateGettersInDebugViews && instance.class) {
-								let classRef = instance.class;
-
-								// Get getter names for whole hierarchy
-								let getterNames: string[] = [];
-								while (classRef) {
-									const classResponse = await this.observatory.getObject(thread.ref.id, classRef.id);
-									if (classResponse.result.type !== "Class")
-										break;
-
-									const c = classResponse.result as VMClass;
-
-									// TODO: This kinda smells for two reasons:
-									// 1. This is supposed to be an @Function but it has loads of extra stuff on it compare to the docs
-									// 2. We're accessing _kind to check if it's a getter :/
-									getterNames = getterNames.concat(getterNames, c.functions.filter((f) => f._kind === "GetterFunction" && !f.static && !f.const).map((f) => f.name));
-									classRef = c.super;
-								}
-
-								// Distinct the list; since we may have got dupes from the super-classes.
-								getterNames = _.uniq(getterNames);
-
-								// This getter always throws?
-								getterNames = getterNames.filter((g) => g !== "_identityHashCode");
+								const getterNames = await this.getGetterNamesForHierarchy(thread.ref, instance.class);
 
 								// Call each getter, adding the result as a variable.
 								for (const getterName of getterNames) {
@@ -704,7 +683,6 @@ export class DartDebugSession extends DebugSession {
 										variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${getterName}`, getterName, getterResultInstanceRef));
 									}
 								}
-
 							}
 
 							// Add all of the fields.
@@ -728,6 +706,29 @@ export class DartDebugSession extends DebugSession {
 				this.errorResponse(response, `${error}`);
 			}
 		}
+	}
+
+	private async getGetterNamesForHierarchy(thread: VMIsolateRef, classRef: VMClassRef): Promise<string[]> {
+		let getterNames: string[] = [];
+		while (classRef) {
+			const classResponse = await this.observatory.getObject(thread.id, classRef.id);
+			if (classResponse.result.type !== "Class")
+				break;
+
+			const c = classResponse.result as VMClass;
+
+			// TODO: This kinda smells for two reasons:
+			// 1. This is supposed to be an @Function but it has loads of extra stuff on it compare to the docs
+			// 2. We're accessing _kind to check if it's a getter :/
+			getterNames = getterNames.concat(getterNames, c.functions.filter((f) => f._kind === "GetterFunction" && !f.static && !f.const).map((f) => f.name));
+			classRef = c.super;
+		}
+
+		// Distinct the list; since we may have got dupes from the super-classes.
+		getterNames = _.uniq(getterNames);
+
+		// Remove _identityHashCode because it seems to throw (and probably isn't useful to the user).
+		return getterNames.filter((g) => g !== "_identityHashCode");
 	}
 
 	private isSimpleKind(kind: string) {
