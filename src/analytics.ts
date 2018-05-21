@@ -104,6 +104,7 @@ export class Analytics {
 			return;
 
 		const data: any = {
+			aip: 1,
 			an: "Dart Code",
 			av: extensionVersion,
 			cd1: isDevExtension,
