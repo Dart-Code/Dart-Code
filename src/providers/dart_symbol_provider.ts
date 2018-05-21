@@ -1,5 +1,5 @@
 import * as path from "path";
-import { CancellationToken, DocumentSymbolProvider, SymbolInformation, TextDocument, Uri, WorkspaceSymbolProvider, workspace } from "vscode";
+import { CancellationToken, DocumentSymbolProvider, Location, SymbolInformation, TextDocument, Uri, workspace, WorkspaceSymbolProvider } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { fsPath, toRangeOnLine } from "../utils";
@@ -55,15 +55,15 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 			containerName = result.className || "";
 		}
 
-		return {
-			containerName,
-			kind: getSymbolKindForElementKind(result.kind),
-			location: {
-				range: toRangeOnLine({ startLine: result.line, startColumn: result.column, length: 0 }),
-				uri: Uri.file(file),
-			},
+		return new SymbolInformation(
 			name,
-		};
+			getSymbolKindForElementKind(result.kind),
+			containerName,
+			new Location(
+				Uri.file(file),
+				toRangeOnLine({ startLine: result.line, startColumn: result.column, length: 0 }),
+			),
+		);
 	}
 
 	private createDisplayPath(inputPath: string): string {

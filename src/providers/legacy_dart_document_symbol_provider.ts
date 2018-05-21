@@ -1,4 +1,4 @@
-import { CancellationToken, DocumentSymbolProvider, Range, SymbolInformation, TextDocument, Uri } from "vscode";
+import { CancellationToken, DocumentSymbolProvider, Location, Range, SymbolInformation, TextDocument, Uri } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { fsPath } from "../utils";
@@ -42,15 +42,15 @@ export class LegacyDartDocumentSymbolProvider implements DocumentSymbolProvider 
 		if (element.parameters && element.kind !== "SETTER")
 			name = `${name}${element.parameters}`;
 
-		symbols.push({
-			containerName: parent && parent.name,
-			kind: getSymbolKindForElementKind(element.kind),
-			location: {
-				range: this.getRange(document, outline),
-				uri: Uri.file(element.location.file),
-			},
+		symbols.push(new SymbolInformation(
 			name,
-		});
+			getSymbolKindForElementKind(element.kind),
+			parent && parent.name,
+			new Location(
+				Uri.file(element.location.file),
+				this.getRange(document, outline),
+			),
+		));
 
 		if (outline.children) {
 			for (const child of outline.children)
