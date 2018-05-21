@@ -115,7 +115,7 @@ export class DartRenameProvider implements RenameProvider {
 				.filter((p) => p.severity === "FATAL");
 
 			if (fatalProblems && fatalProblems.length) {
-				throw fatalProblems[0].message;
+				throw new Error(fatalProblems[0].message);
 			} else {
 				throw new Error("This rename is not supported.");
 			}
