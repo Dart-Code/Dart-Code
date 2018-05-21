@@ -6,7 +6,7 @@ import { BreakpointEvent, DebugSession, Event, InitializedEvent, OutputEvent, Sc
 import { DebugProtocol } from "vscode-debugprotocol";
 import { config } from "../config";
 import { getLogHeader, logError } from "../utils/log";
-import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
+import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef, VMUnresolvedSourceLocation } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
 import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm, LogCategory, LogMessage, LogSeverity, PromiseCompleter, safeSpawn, uriToFilePath } from "./utils";
 
@@ -452,10 +452,38 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private breakpointFromVm(bp: VMBreakpoint): DebugProtocol.Breakpoint {
+		let line: number;
+		let column: number;
+		if (bp.location.type === "SourceLocation") {
+			logError({ message: "Need to get location from tokenPos" });
+			// const location = bp.location as VMSourceLocation;
+			// const script = await thread.getScript(location.script);
+			// const loc = this.resolveFileLocation(script, location.tokenPos);
+			// line = loc.line;
+			// column = loc.column;
+		} else if (bp.location.type === "UnresolvedSourceLocation") {
+			const location = bp.location as VMUnresolvedSourceLocation;
+			if (location.tokenPos) {
+				logError({ message: "Need to get location from tokenPos" });
+				// const loc = this.resolveFileLocation(location.scriptUri || location.script.uri, location.tokenPos);
+				// line = loc.line;
+				// column = loc.column;
+			} else {
+				line = location.line;
+				column = location.column;
+			}
+		} else {
+			logError({ message: `Unknown breakpoint location type: ${bp.location.type}` });
+			return;
+		}
+
 		return {
+			column,
 			id: bp.breakpointNumber,
+			line,
 			verified: bp.resolved,
 		};
+
 	}
 
 	/***

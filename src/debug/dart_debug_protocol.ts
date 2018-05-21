@@ -33,7 +33,7 @@ export interface VMBreakpoint extends VMObj {
 
 	// SourceLocation when breakpoint is resolved, UnresolvedSourceLocation when a breakpoint
 	// is not resolved. [location] can be one of [SourceLocation] or [UnresolvedSourceLocation].
-	// location: any;
+	location: VMSourceLocation | VMUnresolvedSourceLocation;
 }
 
 export interface VMObj extends VMResponse {
@@ -95,6 +95,28 @@ export interface VMSourceLocation extends VMResponse {
 	tokenPos: number;
 	// The last token of the location if this is a range.
 	endTokenPos?: number;
+}
+
+export interface VMUnresolvedSourceLocation extends VMResponse {
+	// The script containing the source location if the script has been loaded.
+	// Either the script or the scriptUri field will be present.
+	script?: VMScriptRef;
+	// The uri of the script containing the source location if the script
+	// has yet to be loaded.
+	// Either the script or the scriptUri field will be present.
+	scriptUri?: string;
+	// An approximate token position for the source location. This may
+	// change when the location is resolved.
+	// Either the tokenPos or the line field will be present.
+	tokenPos?: number;
+	// An approximate line number for the source location. This may
+	// change when the location is resolved.
+	// Either the tokenPos or the line field will be present.
+	line?: number;
+	// An approximate column number for the source location. This may
+	// change when the location is resolved.
+	// The column field will only be present when the breakpoint was specified with a specific column number.
+	column?: number;
 }
 
 export interface VMScriptRef extends VMObjectRef {
