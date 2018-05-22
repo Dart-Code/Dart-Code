@@ -308,7 +308,8 @@ export class DartDebugSession extends DebugSession {
 					this.logToFile(`Terminating main process...`);
 					this.childProcess.kill();
 				} catch (e) {
-					logError({ message: e.toString() });
+					// This tends to throw a lot because the shell process quit when we terminated the related
+					// VM process above, so just swallow the error.
 				}
 				this.childProcess = null;
 			} else if (this.observatory) {
