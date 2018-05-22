@@ -7,13 +7,13 @@ import { DartDebugClient } from "../../dart_debug_client";
 import { activate, defer, ext, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
 
 describe("flutter test debugger", () => {
-	beforeEach(() => activate(flutterTestMainFile));
-	beforeEach(function () {
+	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
+	beforeEach("set timeout", function () {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
 	});
 
 	let dc: DartDebugClient;
-	beforeEach(() => {
+	beforeEach("create debug client", () => {
 		dc = new DartDebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_test_debug_entry.js"), "dart");
 		dc.defaultTimeout = 30000;
 		defer(() => dc.stop());

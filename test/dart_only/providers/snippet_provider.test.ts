@@ -2,7 +2,7 @@ import { activate, ensureNoSnippet, ensureSnippet, getSnippetCompletionsAt, setT
 
 describe("snippet_provider", () => {
 
-	before(() => activate());
+	before("activate", () => activate());
 
 	it("returns dart items", async () => {
 		await setTestContent("mai");

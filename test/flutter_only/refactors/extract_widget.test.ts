@@ -7,9 +7,9 @@ import { activate, doc, ensureTestContent, ext, rangeOf, sb, setTestContent, wai
 
 describe("refactor", () => {
 
-	before(() => activate());
+	before("activate", () => activate());
 	// tslint:disable-next-line:only-arrow-functions
-	beforeEach(function () {
+	beforeEach("skip if not updated widget snippets", function () {
 		if (!ext.exports.analyzerCapabilities.hasUpdatedWidgetSnippets)
 			this.skip();
 	});

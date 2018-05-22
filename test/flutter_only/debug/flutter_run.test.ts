@@ -7,30 +7,30 @@ import { ensureVariable } from "../../debug_helpers";
 import { activate, defer, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
 
 describe("flutter run debugger", () => {
-	beforeEach(function () {
+	beforeEach("skip if no test device", function () {
 		if (!ext.exports.analyzerCapabilities.flutterHasTestDevice)
 			this.skip();
 	});
 
 	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
 	// `flutter create .`!
-	before(() => vs.commands.executeCommand("_flutter.create", path.join(fsPath(flutterHelloWorldFolder), "dummy"), "."));
+	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", path.join(fsPath(flutterHelloWorldFolder), "dummy"), "."));
 
-	beforeEach(function () {
+	beforeEach("set timeout", function () {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
 	});
 
-	beforeEach(() => activate(flutterHelloWorldMainFile));
+	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 
 	let dc: DartDebugClient;
-	beforeEach(() => {
+	beforeEach("create debug client", () => {
 		dc = new DartDebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_debug_entry.js"), "dart");
 		dc.defaultTimeout = 30000;
 		defer(() => dc.stop());
 	});
 
-	beforeEach(() => activate(flutterHelloWorldMainFile));
-	beforeEach(function () {
+	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
+	beforeEach("set timeout", function () {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
 	});
 

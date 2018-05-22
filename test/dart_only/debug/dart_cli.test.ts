@@ -8,11 +8,11 @@ import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDef
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
-	before(() => getPackages());
-	beforeEach(() => activate(helloWorldMainFile));
+	before("get packages", () => getPackages());
+	beforeEach("activate helloWorldMainFile", () => activate(helloWorldMainFile));
 
 	let dc: DartDebugClient;
-	beforeEach(() => {
+	beforeEach("create debug client", () => {
 		dc = new DartDebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
 		dc.defaultTimeout = 30000;
 		defer(() => dc.stop());

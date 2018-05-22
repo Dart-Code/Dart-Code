@@ -5,7 +5,7 @@ import { activate, ensureSymbol, everythingFile, ext, getWorkspaceSymbols } from
 
 describe("workspace_symbol_provider", () => {
 
-	before(() => activate());
+	before("activate", () => activate());
 
 	it("includes nothing given no query", async () => {
 		const symbols = await getWorkspaceSymbols("");

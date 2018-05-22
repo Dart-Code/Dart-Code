@@ -7,8 +7,8 @@ import { activate, closeAllOpenFiles, closeFile, ext, helloWorldFolder, openFile
 export const outlineTrackingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/outline_tracking/empty.dart"));
 
 describe("file tracker", () => {
-	before(() => activate());
-	beforeEach(function () {
+	before("activate", () => activate());
+	beforeEach("skip if not Dart 2", function () {
 		// https://github.com/dart-lang/sdk/issues/30238
 		if (!ext.exports.analyzerCapabilities.isDart2)
 			this.skip();

@@ -3,7 +3,7 @@ import { activate, ensureTestContent, setTestContent, waitForEditorChange } from
 
 describe("sort members", () => {
 
-	before(() => activate());
+	before("activate", () => activate());
 
 	it("sorts members", async () => {
 		await setTestContent(`

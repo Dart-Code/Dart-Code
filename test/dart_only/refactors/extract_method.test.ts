@@ -7,7 +7,7 @@ import { activate, doc, ensureTestContent, positionOf, rangeOf, sb, setTestConte
 
 describe("refactor", () => {
 
-	before(() => activate());
+	before("activate", () => activate());
 
 	it("can extract simple code into a method", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");

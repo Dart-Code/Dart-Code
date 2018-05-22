@@ -4,7 +4,7 @@ import { activate, doc, editor, documentEol, setTestContent } from "../../helper
 
 describe("dart_formatting_edit_provider", () => {
 
-	before(() => activate());
+	before("activate", () => activate());
 
 	async function formatDocument(): Promise<void> {
 		const formatResult = await (vs.commands.executeCommand("vscode.executeFormatDocumentProvider", doc.uri) as Thenable<vs.TextEdit[]>);

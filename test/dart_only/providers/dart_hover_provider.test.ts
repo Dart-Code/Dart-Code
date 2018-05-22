@@ -5,8 +5,8 @@ import { activate, doc, everythingFile, ext, getPackages, positionOf, rangeOf } 
 describe("dart_hover_provider", () => {
 
 	// We have tests that read tooltips from external packages so we need to ensure packages have been fetched.
-	before(() => getPackages());
-	before(() => activate(everythingFile));
+	before("get packages", () => getPackages());
+	before("activate everythingFile", () => activate(everythingFile));
 
 	async function getHoversAt(searchText: string): Promise<Array<{ displayText: string, documentation?: string, range: vs.Range }>> {
 		const position = positionOf(searchText);

@@ -4,7 +4,7 @@ import { activate, emptyFile, ensureError, setTestContent, waitForDiagnosticChan
 
 describe("diagnostics_provider", () => {
 
-	before(() => activate(emptyFile));
+	before("activate emptyFile", () => activate(emptyFile));
 
 	it("returns no errors for a valid file", async () => {
 		await setTestContent(`

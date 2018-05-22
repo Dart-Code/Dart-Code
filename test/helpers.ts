@@ -94,7 +94,7 @@ export async function openFile(file: vs.Uri): Promise<void> {
 
 const deferredItems: Array<(result?: "failed" | "passed") => Promise<void> | void> = [];
 // tslint:disable-next-line:only-arrow-functions
-afterEach(async function () {
+afterEach("run deferred functions", async function () {
 	for (const d of deferredItems) {
 		try {
 			await d(this.currentTest.state);
@@ -111,12 +111,12 @@ export function defer(callback: (result?: "failed" | "passed") => Promise<void> 
 }
 
 export let sb: sinon.SinonSandbox;
-beforeEach(function () { sb = sinon.createSandbox(); }); // tslint:disable-line:only-arrow-functions
-afterEach(() => sb.restore());
+beforeEach("create sinon sandbox", function () { sb = sinon.createSandbox(); }); // tslint:disable-line:only-arrow-functions
+afterEach("destroy sinon sandbox", () => sb.restore());
 
 // Set up log files for individual test logging.
 // tslint:disable-next-line:only-arrow-functions
-beforeEach(async function () {
+beforeEach("set log paths", async function () {
 
 	const logFolder = process.env.DC_TEST_LOGS || path.join(ext.extensionPath, ".dart_code_test_logs");
 	if (!fs.existsSync(logFolder))
@@ -147,7 +147,7 @@ beforeEach(async function () {
 	defer(() => delay(500));
 });
 
-before(() => {
+before("throw if DART_CODE_IS_TEST_RUN is not set", () => {
 	if (!process.env.DART_CODE_IS_TEST_RUN)
 		throw new Error("DART_CODE_IS_TEST_RUN env var should be set for test runs.");
 });

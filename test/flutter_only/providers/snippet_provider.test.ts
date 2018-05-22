@@ -2,7 +2,7 @@ import { activate, ensureSnippet, flutterEmptyFile, getSnippetCompletionsAt, set
 
 describe("snippet_provider", () => {
 
-	before(() => activate(flutterEmptyFile));
+	before("activate flutterEmptyFile", () => activate(flutterEmptyFile));
 
 	it("returns dart items", async () => {
 		await setTestContent("mai");

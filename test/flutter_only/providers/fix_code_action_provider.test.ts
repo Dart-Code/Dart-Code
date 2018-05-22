@@ -4,7 +4,7 @@ import { activate, doc, flutterEmptyFile, rangeOf, setTestContent } from "../../
 
 describe("fix_code_action_provider", () => {
 
-	before(async () => {
+	before("activate flutterEmptyFile and add test content", async () => {
 		await activate(flutterEmptyFile);
 		await setTestContent(`
 			import 'package:flutter/widgets.dart';

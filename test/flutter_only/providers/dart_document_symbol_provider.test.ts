@@ -4,7 +4,7 @@ import { activate, ensureSymbol, flutterHelloWorldMainFile, getDocumentSymbols }
 
 describe("dart_document_symbol_provider", () => {
 
-	before(async () => activate(flutterHelloWorldMainFile));
+	before("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 
 	it("returns expected items for 'flutter/hello_world'", async () => {
 		const symbols = await getDocumentSymbols();
