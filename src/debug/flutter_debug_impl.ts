@@ -65,7 +65,7 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		const logger = (message: string) => this.sendEvent(new Event("dart.log.flutter.run", { message }));
 		this.flutter = new FlutterRun(args.flutterPath, args.cwd, appArgs, args.flutterRunLogFile, logger);
-		this.flutter.registerForUnhandledMessages((msg) => this.logToUser(msg));
+		this.flutter.registerForUnhandledMessages((msg) => this.logToUser(msg, "stdout"));
 
 		// Set up subscriptions.
 		this.flutter.registerForDaemonConnect((n) => this.additionalPidsToTerminate.push(n.pid));

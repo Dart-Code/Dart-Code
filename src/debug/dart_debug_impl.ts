@@ -1306,8 +1306,8 @@ export class DartDebugSession extends DebugSession {
 		setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs);
 	}
 
-	protected logToUser(obj: string) {
-		this.sendEvent(new OutputEvent(`${obj}\n`));
+	protected logToUser(message: string, category?: string) {
+		this.sendEvent(new OutputEvent(`${message}\n`, category));
 	}
 }
 
