@@ -97,6 +97,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	public async promptForAndLaunchEmulator(): Promise<boolean> {
 		const emulators = (await this.getEmulators())
 			.map((e) => ({
+				description: e.id,
 				emulator: e,
 				label: e.name,
 			}));
@@ -124,10 +125,10 @@ export class FlutterDeviceManager implements vs.Disposable {
 				title: `Launching ${emulator.name}...`,
 			}, async (progress) => {
 				await this.daemon.launchEmulator(emulator.id);
-				progress.report({ message: `Waiting for ${emulator.name} to start...` });
+				progress.report({ message: `Waiting for ${emulator.name} to connect...` });
 				// Wait up to 60 seconds for emulator to launch.
-				for (let i = 0; i < 60; i++) {
-					await new Promise((resolve, reject) => setTimeout(resolve, 1000));
+				for (let i = 0; i < 120; i++) {
+					await new Promise((resolve, reject) => setTimeout(resolve, 500));
 					if (this.currentDevice)
 						return;
 				}
