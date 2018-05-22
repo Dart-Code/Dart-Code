@@ -114,6 +114,45 @@ describe("flutter run debugger", () => {
 		await dc.waitForEvent("terminated");
 	});
 
+	it("hot reloads successfully", async () => {
+		const config = await startDebugger(flutterHelloWorldMainFile);
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.launch(config),
+		]);
+
+		// If we reload too fast, things fail :-/
+		await delay(1000);
+
+		await Promise.all([
+			dc.assertOutput("stdout", "Reloaded"),
+			dc.customRequest("hotReload"),
+		]);
+
+		await dc.disconnectRequest();
+		await dc.waitForEvent("terminated");
+	});
+
+	// Skipped due to https://github.com/flutter/flutter/issues/17798
+	it.skip("hot restarts successfully", async () => {
+		const config = await startDebugger(flutterHelloWorldMainFile);
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.launch(config),
+		]);
+
+		// If we restart too fast, things fail :-/
+		await delay(1000);
+
+		await Promise.all([
+			dc.assertOutput("stdout", "Restarted app"),
+			dc.customRequest("hotRestart"),
+		]);
+
+		await dc.disconnectRequest();
+		await dc.waitForEvent("terminated");
+	});
+
 	it("stops at a breakpoint", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(flutterHelloWorldMainFile);
