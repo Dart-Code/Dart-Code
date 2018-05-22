@@ -88,7 +88,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// Ensure we have a device
 		const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null;
-		if (isFlutter && !isTest && !deviceId && this.deviceManager) {
+		if (isFlutter && !isTest && !deviceId && this.deviceManager && debugConfig.deviceId !== "flutter-tester") {
 			// Fetch a list of emulators
 			if (!await this.deviceManager.promptForAndLaunchEmulator()) {
 				// Set type=null which causes launch.json to open.
