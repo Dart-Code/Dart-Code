@@ -272,6 +272,9 @@ export class DartDebugSession extends DebugSession {
 				if (this.logStream) {
 					this.logStream.end();
 					this.logStream = null;
+					// Wipe out the filename so if a message arrives late, it doesn't
+					// wipe out the logfile with just a "process excited" or similar message.
+					this.logFile = null;
 				}
 				// This event arrives before the process exit event.
 				setTimeout(() => {
