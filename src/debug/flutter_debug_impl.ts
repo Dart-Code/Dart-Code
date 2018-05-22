@@ -18,6 +18,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		super();
 
 		this.sendStdOutToConsole = false;
+		this.allowTerminatingObservatoryVmPid = false;
 	}
 
 	protected initializeRequest(

@@ -19,6 +19,9 @@ export class DartDebugSession extends DebugSession {
 	// TODO: Tidy all this up
 	protected childProcess: child_process.ChildProcess;
 	protected additionalPidsToTerminate: number[] = [];
+	// We normally track the pid from Observatory to terminate the VM afterwards, but for Flutter Run it's
+	// a remote PID and therefore doesn't make sense to try and terminate.
+	protected allowTerminatingObservatoryVmPid = true;
 	private processExited: boolean = false;
 	public observatory: ObservatoryConnection;
 	protected cwd?: string;
@@ -226,7 +229,7 @@ export class DartDebugSession extends DebugSession {
 					// we should keep a ref to this process to terminate when we quit. This avoids issues where our process is a shell
 					// (we use shell execute to fix issues on Windows) and the kill signal isn't passed on correctly.
 					// See: https://github.com/Dart-Code/Dart-Code/issues/907
-					if (this.childProcess && this.childProcess.pid !== vm.pid) {
+					if (this.allowTerminatingObservatoryVmPid && this.childProcess && this.childProcess.pid !== vm.pid) {
 						this.additionalPidsToTerminate.push(vm.pid);
 					}
 
