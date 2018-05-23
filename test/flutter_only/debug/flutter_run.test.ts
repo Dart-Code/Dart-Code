@@ -121,13 +121,7 @@ describe("flutter run debugger", () => {
 			dc.launch(config),
 		]);
 
-		// If we reload too fast, things fail :-/
-		await delay(1000);
-
-		await Promise.all([
-			dc.assertOutput("stdout", "Reloaded"),
-			dc.customRequest("hotReload"),
-		]);
+		await dc.hotReload();
 
 		await dc.disconnectRequest();
 		await dc.waitForEvent("terminated");
