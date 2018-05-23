@@ -20,7 +20,12 @@ export class DartDebugClient extends DebugClient {
 			// This should help fix the tests so we can be sure they're otherwise good, before we fix this properly.
 			// https://github.com/Dart-Code/Dart-Code/issues/911
 			await new Promise((resolve) => setTimeout(resolve, 1000));
-			await this.resume();
+			// It's possible the resume will never return because the process will terminate as soon as it starts resuming
+			// so we will assume that if we get a terminate the resume worked.
+			await Promise.race([
+				this.waitForEvent("terminated"),
+				this.resume(),
+			]);
 		} else {
 			await this.launchRequest(launchArgs);
 		}
