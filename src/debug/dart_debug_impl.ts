@@ -462,14 +462,15 @@ export class DartDebugSession extends DebugSession {
 				levels = totalFrames - startFrame;
 			vmFrames = vmFrames.slice(startFrame, startFrame + levels);
 
-			const stackFrames: StackFrame[] = [];
+			const stackFrames: DebugProtocol.StackFrame[] = [];
 			const promises: Array<Promise<void>> = [];
 
 			vmFrames.forEach((frame: VMFrame) => {
 				const frameId = thread.storeData(frame);
 
 				if (frame.kind === "AsyncSuspensionMarker") {
-					const stackFrame: StackFrame = new StackFrame(frameId, "<asynchronous gap>");
+					const stackFrame: DebugProtocol.StackFrame = new StackFrame(frameId, "<asynchronous gap>");
+					stackFrame.presentationHint = "label";
 					stackFrames.push(stackFrame);
 					return;
 				}
