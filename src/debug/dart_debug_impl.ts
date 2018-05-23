@@ -294,7 +294,10 @@ export class DartDebugSession extends DebugSession {
 						this.logToFile(`Terminating related process ${pid}...`);
 						process.kill(pid);
 					} catch (e) {
-						logError({ message: e.toString() });
+						// Only log if we hadn't already been told the process had quit, since if that's happened
+						// it's very likely this will fail.
+						if (!this.processExited)
+							logError({ message: e.toString() });
 					}
 				}
 				this.additionalPidsToTerminate.length = 0;
