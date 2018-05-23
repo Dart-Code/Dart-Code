@@ -115,6 +115,11 @@ describe("dart cli debugger", () => {
 				path: fsPath(helloWorldMainFile),
 			}),
 		]);
+		const stack = await dc.getStack();
+		const frames = stack.body.stackFrames;
+		assert.equal(frames[0].name, "main");
+		assert.equal(frames[0].source.path, fsPath(helloWorldMainFile));
+		assert.equal(frames[0].source.name, path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile)));
 	});
 
 	// Known not to work; https://github.com/Dart-Code/Dart-Code/issues/821
@@ -129,6 +134,11 @@ describe("dart cli debugger", () => {
 				path: fsPath(def.uri),
 			}),
 		]);
+		const stack = await dc.getStack();
+		const frames = stack.body.stackFrames;
+		assert.equal(frames[0].name, "print");
+		assert.equal(frames[0].source.path, fsPath(def.uri));
+		assert.equal(frames[0].source.name, "dart:core/print.dart");
 	});
 
 	it("stops at a breakpoint in an external package", async () => {
@@ -142,6 +152,11 @@ describe("dart cli debugger", () => {
 				path: fsPath(def.uri),
 			}),
 		]);
+		const stack = await dc.getStack();
+		const frames = stack.body.stackFrames;
+		assert.equal(frames[0].name, "read");
+		assert.equal(frames[0].source.path, fsPath(def.uri));
+		assert.equal(frames[0].source.name, "package:http/http.dart");
 	});
 
 	it("steps into the SDK if debugSdkLibraries is true", async () => {
@@ -159,8 +174,11 @@ describe("dart cli debugger", () => {
 				// SDK source will have no filename, because we download it
 				path: null,
 			}).then((response) => {
-				// Ensure the name of the top stack frame matches
+				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
+				assert.equal(frame.name, "print");
+				// We don't get a source path, because the source is downloaded from the VM
+				assert.equal(frame.source.path, null);
 				assert.equal(frame.source.name, "dart:core/print.dart");
 			}),
 			dc.stepIn(),
@@ -199,6 +217,12 @@ describe("dart cli debugger", () => {
 			dc.assertStoppedLocation("step", {
 				// Ensure we stepped into the external file
 				path: fsPath(httpReadDef.uri),
+			}).then((response) => {
+				// Ensure the top stack frame matches
+				const frame = response.body.stackFrames[0];
+				assert.equal(frame.name, "read");
+				assert.equal(frame.source.path, fsPath(httpReadDef.uri));
+				assert.equal(frame.source.name, "package:http/http.dart");
 			}),
 			dc.stepIn(),
 		]);
