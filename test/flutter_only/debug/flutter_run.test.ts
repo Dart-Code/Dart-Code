@@ -4,11 +4,14 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../src/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable } from "../../debug_helpers";
-import { activate, defer, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
+import { activate, defer, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, isWin, openFile, positionOf } from "../../helpers";
 
 describe("flutter run debugger", () => {
 	beforeEach("skip if no test device", function () {
 		if (!ext.exports.analyzerCapabilities.flutterHasTestDevice)
+			this.skip();
+		// Skip on Windows due to https://github.com/flutter/flutter/issues/17833
+		if (isWin)
 			this.skip();
 	});
 
