@@ -479,7 +479,8 @@ export class DartDebugSession extends DebugSession {
 				const location: VMSourceLocation = frame.location;
 
 				if (location == null) {
-					const stackFrame: StackFrame = new StackFrame(frameId, frameName);
+					const stackFrame: DebugProtocol.StackFrame = new StackFrame(frameId, frameName);
+					stackFrame.presentationHint = "label";
 					stackFrames.push(stackFrame);
 					return;
 				}
