@@ -4,7 +4,7 @@ import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { logError } from "../utils";
-import { DebuggerResult, ObservatoryConnection, VM, VMBreakpoint, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibraryRef, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMStack } from "./dart_debug_protocol";
+import { DebuggerResult, ObservatoryConnection, VM, VMBreakpoint, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMStack } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
 import { DartAttachRequestArguments, DartLaunchRequestArguments, PromiseCompleter, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
 
@@ -496,12 +496,20 @@ export class DartDebugSession extends DebugSession {
 					sourceReference = thread.storeData(location.script);
 				}
 
-				const stackFrame: StackFrame = new StackFrame(
+				const stackFrame: DebugProtocol.StackFrame = new StackFrame(
 					frameId,
 					frameName,
 					new Source(shortName, sourcePath, sourceReference, null, location.script),
 					0, 0,
 				);
+				// If we wouldn't debug this source, then deemphasize in the stack.
+				if (
+					!this.isValidToDebug(uri)
+					|| (this.isSdkLibrary(uri) && !this.debugSdkLibraries)
+					|| (this.isExternalLibrary(uri) && !this.debugExternalLibraries)
+				) {
+					stackFrame.source.presentationHint = "deemphasize";
+				}
 				stackFrames.push(stackFrame);
 
 				// Resolve the line and column information.
@@ -1038,6 +1046,20 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
+	public isValidToDebug(uri: string) {
+		// TODO: See https://github.com/dart-lang/sdk/issues/29813
+		return !uri.startsWith("dart:_");
+	}
+
+	public isSdkLibrary(uri: string) {
+		return uri.startsWith("dart:");
+	}
+
+	public isExternalLibrary(uri: string) {
+		// If we don't know the local package name, we have to assume nothing is external, else we might disable debugging for the local library.
+		return uri.startsWith("package:") && this.packageMap.localPackageName && !uri.startsWith(`package:${this.packageMap.localPackageName}/`);
+	}
+
 	private resolveFileLocation(script: VMScript, tokenPos: number): FileLocation {
 		const table: number[][] = script.tokenPosTable;
 		for (const entry of table) {
@@ -1163,20 +1185,16 @@ class ThreadManager {
 
 	private async setLibrariesDebuggable(isolateRef: VMIsolateRef): Promise<void> {
 		// Helpers to categories libraries as SDK/ExternalLibrary/not.
-		const isValidToDebug = (l: VMLibraryRef) => !l.uri.startsWith("dart:_"); // TODO: See https://github.com/dart-lang/sdk/issues/29813
-		const isSdkLibrary = (l: VMLibraryRef) => l.uri.startsWith("dart:");
-		// If we don't know the local package name, we have to assume nothing is external, else we might disable debugging for the local library.
-		const isExternalLibrary = (l: VMLibraryRef) => l.uri.startsWith("package:") && this.debugSession.packageMap.localPackageName && !l.uri.startsWith(`package:${this.debugSession.packageMap.localPackageName}/`);
 		// Set whether libraries should be debuggable based on user settings.
 		const response = await this.debugSession.observatory.getIsolate(isolateRef.id);
 		const isolate: VMIsolate = response.result as VMIsolate;
 		await Promise.all(
-			isolate.libraries.filter(isValidToDebug).map((library) => {
+			isolate.libraries.filter((l) => this.debugSession.isValidToDebug(l.uri)).map((library) => {
 				// Note: Condition is negated.
 				const shouldDebug = !(
 					// Inside here is shouldNotDebug!
-					(isSdkLibrary(library) && !this.debugSession.debugSdkLibraries)
-					|| (isExternalLibrary(library) && !this.debugSession.debugExternalLibraries));
+					(this.debugSession.isSdkLibrary(library.uri) && !this.debugSession.debugSdkLibraries)
+					|| (this.debugSession.isExternalLibrary(library.uri) && !this.debugSession.debugExternalLibraries));
 				return this.debugSession.observatory.setLibraryDebuggable(isolate.id, library.id, shouldDebug);
 			}));
 	}
