@@ -673,14 +673,20 @@ export class DartDebugSession extends DebugSession {
 
 								// Call each getter, adding the result as a variable.
 								for (const getterName of getterNames) {
+									const getterDisplayName = `${getterName} (get)`;
 									const getterResult = await this.observatory.evaluate(thread.ref.id, instanceRef.id, getterName);
 									if (getterResult.result.type === "@Error") {
-										variables.push({ name: getterName, value: (getterResult.result as VMErrorRef).message, variablesReference: 0 });
+										variables.push({ name: getterDisplayName, value: (getterResult.result as VMErrorRef).message, variablesReference: 0 });
 									} else if (getterResult.result.type === "Sentinel") {
-										variables.push({ name: getterName, value: (getterResult.result as VMSentinel).valueAsString, variablesReference: 0 });
+										variables.push({ name: getterDisplayName, value: (getterResult.result as VMSentinel).valueAsString, variablesReference: 0 });
 									} else {
 										const getterResultInstanceRef = getterResult.result as VMInstanceRef;
-										variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${getterName}`, getterName, getterResultInstanceRef));
+										variables.push(this.instanceRefToVariable(
+											thread, canEvaluate,
+											`${instanceRef.evaluateName}.${getterName}`,
+											getterDisplayName,
+											getterResultInstanceRef,
+										));
 									}
 								}
 							}
