@@ -488,23 +488,20 @@ export class DartDebugSession extends DebugSession {
 				const uri = location.script.uri;
 				const shortName = this.convertVMUriToUserName(uri);
 				let sourcePath = this.convertVMUriToSourcePath(uri);
-				let hint: "normal" | "subtle" = "normal";
 
 				// Download the source if from a "dart:" uri.
 				let sourceReference: number;
 				if (uri.startsWith("dart:")) {
 					sourcePath = null;
 					sourceReference = thread.storeData(location.script);
-					hint = "subtle";
 				}
 
-				const stackFrame: DebugProtocol.StackFrame = new StackFrame(
+				const stackFrame: StackFrame = new StackFrame(
 					frameId,
 					frameName,
 					new Source(shortName, sourcePath, sourceReference, null, location.script),
 					0, 0,
 				);
-				stackFrame.presentationHint = hint;
 				stackFrames.push(stackFrame);
 
 				// Resolve the line and column information.
