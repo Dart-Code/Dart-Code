@@ -404,7 +404,7 @@ function getSettingsThatRequireRestart() {
 		+ config.flutterSdkPath
 		+ config.closingLabels
 		+ config.analyzeAngularTemplates
-		+ config.previewExperimentalWindowsDriveLetterHandling;
+		+ config.normaliseWindowsDriveLetters;
 }
 
 export function deactivate(isRestart: boolean = false): PromiseLike<void> {
