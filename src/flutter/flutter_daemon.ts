@@ -38,6 +38,15 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 		return message.startsWith("[") && message.endsWith("]");
 	}
 
+	private static readonly outOfDateWarning = new RegExp("WARNING: .* Flutter is (\\d+) days old");
+	protected processUnhandledMessage(message: string): void {
+		const matches = FlutterDaemon.outOfDateWarning.exec(message);
+		if (!matches || matches.length !== 2)
+			return;
+
+		vs.window.showWarningMessage(`Your installation of Flutter is ${matches[1]} days old. To update to the latest version, run 'flutter upgrade'.`);
+	}
+
 	// TODO: Can we code-gen all this like the analysis server?
 
 	protected handleNotification(evt: UnknownNotification) {
