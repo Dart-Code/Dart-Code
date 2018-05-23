@@ -116,12 +116,10 @@ describe("flutter test debugger", () => {
 	it.skip("stops at a breakpoint", async () => {
 		await openFile(flutterTestMainFile);
 		const config = await startDebugger(flutterTestMainFile);
-		await Promise.all([
-			dc.hitBreakpoint(config, {
-				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(flutterTestMainFile),
-			}),
-		]);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(flutterTestMainFile),
+		});
 	});
 
 	it.skip("stops on exception", async () => {
