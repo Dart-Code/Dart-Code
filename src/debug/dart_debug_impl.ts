@@ -477,7 +477,7 @@ export class DartDebugSession extends DebugSession {
 
 				if (location == null) {
 					const stackFrame: DebugProtocol.StackFrame = new StackFrame(frameId, frameName);
-					stackFrame.presentationHint = "label";
+					stackFrame.presentationHint = "subtle";
 					stackFrames.push(stackFrame);
 					return;
 				}
