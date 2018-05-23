@@ -409,7 +409,6 @@ function getSettingsThatRequireRestart() {
 		+ config.flutterSdkPath
 		+ config.closingLabels
 		+ config.analyzeAngularTemplates
-		+ config.previewDart2
 		+ config.previewExperimentalWindowsDriveLetterHandling;
 }
 

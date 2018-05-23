@@ -42,12 +42,6 @@ export class FlutterDebugSession extends DartDebugSession {
 			appArgs.push(args.deviceId);
 		}
 
-		if (args.previewDart2) {
-			appArgs.push("--preview-dart-2");
-		} else if (args.previewDart2 === false) {
-			appArgs.push(`--no-preview-dart-2`);
-		}
-
 		if (args.flutterMode === "profile") {
 			appArgs.push("--profile");
 		} else if (args.flutterMode === "release") {

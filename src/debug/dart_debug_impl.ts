@@ -155,14 +155,8 @@ export class DartDebugSession extends DebugSession {
 			appArgs.push("--enable-vm-service=0");
 			appArgs.push("--pause_isolates_on_start=true");
 		}
-		if (args.checkedMode && !args.previewDart2) {
+		if (args.checkedMode) {
 			appArgs.push("--checked");
-		}
-		if (args.previewDart2 === true) {
-			appArgs.push("--preview-dart-2");
-		} else if (args.previewDart2 === false) {
-			// VM doesn't support this flag
-			// appArgs.push(`--no-preview-dart-2`);
 		}
 		if (args.vmAdditionalArgs) {
 			appArgs = appArgs.concat(args.vmAdditionalArgs);

@@ -110,7 +110,7 @@ export class Analytics {
 			cd1: isDevExtension,
 			cd10: config.showTodos ? "On" : "Off",
 			cd11: config.showLintNames ? "On" : "Off",
-			cd12: config.previewDart2 === true ? "On" : (config.previewDart2 === false ? "Off" : "Unspecified"),
+			cd12: "Removed",
 			cd13: this.flutterSdkVersion,
 			cd2: process.platform,
 			cd3: this.sdkVersion,

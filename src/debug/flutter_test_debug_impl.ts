@@ -24,12 +24,6 @@ export class FlutterTestDebugSession extends DartDebugSession {
 		const debug = !args.noDebug;
 		let appArgs = [];
 
-		if (args.previewDart2) {
-			appArgs.push("--preview-dart-2");
-		} else if (args.previewDart2 === false) {
-			appArgs.push(`--no-preview-dart-2`);
-		}
-
 		if (debug) {
 			appArgs.push("--start-paused");
 		}

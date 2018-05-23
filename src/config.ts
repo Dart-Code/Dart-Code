@@ -52,7 +52,6 @@ class Config {
 	public setGlobalFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Global); }
 
 	// Preview features.
-	get previewDart2() { return this.getConfig<boolean>("previewDart2"); }
 	get previewExperimentalWindowsDriveLetterHandling() { return this.getConfig<boolean>("previewExperimentalWindowsDriveLetterHandling"); }
 
 	public for(uri?: Uri): ResourceConfig {

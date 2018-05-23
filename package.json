@@ -572,15 +572,6 @@
 					"description": "Whether to enable analysis for AngularDart templates (requires the angular_analyzer_plugin).",
 					"scope": "window"
 				},
-				"dart.previewDart2": {
-					"enum": [
-						true,
-						false,
-						null
-					],
-					"description": "Whether to enable previewing Dart 2.0 functionality such as optional new/const.\n\ntrue: send --preview-dart-2\nfalse: send --no-preview-dart-2\nundefined: do not send a flag",
-					"scope": "window"
-				},
 				"dart.previewExperimentalWindowsDriveLetterHandling": {
 					"type": "boolean",
 					"default": false,
@@ -686,9 +677,6 @@
 							"program": {
 								"type": "string",
 								"description": "Path to the script to start (eg. bin/main.dart or lib/main.dart)."
-							},
-							"previewDart2": {
-								"description": "Whether to enable previewing Dart 2.0 functionality such as optional new/const.\n\ntrue: send --preview-dart-2\n\nfalse: send --no-preview-dart-2\n\nnull: do not send a flag"
 							},
 							"showMemoryUsage": {
 								"type": "boolean",
