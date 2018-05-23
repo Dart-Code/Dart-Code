@@ -147,15 +147,30 @@ describe("flutter run debugger", () => {
 		await dc.waitForEvent("terminated");
 	});
 
-	it("stops at a breakpoint", async () => {
-		await openFile(flutterHelloWorldMainFile);
-		const config = await startDebugger(flutterHelloWorldMainFile);
-		await Promise.all([
-			dc.hitBreakpoint(config, {
+	[0, 1, 2].forEach((numReloads) => {
+		const reloadDescription =
+			numReloads === 0
+				? ""
+				: ` after ${numReloads} reload${numReloads === 1 ? "" : "s"}`;
+
+		it("stops at a breakpoint" + reloadDescription, async () => {
+			await openFile(flutterHelloWorldMainFile);
+			const config = await startDebugger(flutterHelloWorldMainFile);
+			const expectedLocation = {
 				line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
 				path: fsPath(flutterHelloWorldMainFile),
-			}),
-		]);
+			};
+			await dc.hitBreakpoint(config, expectedLocation);
+			await dc.resume();
+
+			// Reload and ensure we hit the breakpoint on each one.
+			for (let i = 0; i < numReloads; i++) {
+				await Promise.all([
+					dc.assertStoppedLocation("breakpoint", expectedLocation),
+					dc.hotReload().then((_) => dc.resume()),
+				]);
+			}
+		});
 	});
 
 	it.skip("can evaluate simple expressions at breakpoint", async () => {
