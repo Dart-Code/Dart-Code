@@ -299,8 +299,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		dartPackagesProvider.setWorkspaces(util.getDartWorkspaceFolders());
 	}));
 	const testTreeProvider = new TestResultsProvider();
-	context.subscriptions.push(testTreeProvider);
-	context.subscriptions.push(vs.window.createTreeView("dartTestTree", { treeDataProvider: testTreeProvider }));
+	const testTreeView = vs.window.createTreeView("dartTestTree", { treeDataProvider: testTreeProvider });
+	context.subscriptions.push(testTreeProvider, testTreeView);
 
 	context.subscriptions.push(vs.commands.registerCommand("dart.package.openFile", (filePath) => {
 		if (!filePath) return;
