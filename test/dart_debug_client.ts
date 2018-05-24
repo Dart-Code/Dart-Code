@@ -3,6 +3,7 @@ import { SpawnOptions } from "child_process";
 import { DebugSessionCustomEvent } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { debugLogTypes, handleDebugLogEvent } from "../src/utils/log";
+import { Notification, Test, TestDoneNotification, TestStartNotification } from "../src/views/test_view";
 import { DebugClient } from "./debug_client_ms";
 
 export class DartDebugClient extends DebugClient {
@@ -97,5 +98,62 @@ export class DartDebugClient extends DebugClient {
 					reject(new Error(`Didn't find text "${text}" in ${category}`));
 			}
 		}));
+	}
+
+	public waitForCustomEvent<T>(type: string, filter: (notification: T) => boolean): Promise<T> {
+		return new Promise((resolve, reject) => {
+			this.on(type, (event: DebugProtocol.Event) => {
+				try {
+					const notification = event.body as T;
+					if (filter(notification))
+						resolve(notification);
+				} catch (e) {
+					reject(e);
+				}
+			});
+		});
+	}
+
+	public waitForTestNotification<T extends Notification>(type: string, filter: (notification: T) => boolean): Promise<T> {
+		return this.waitForCustomEvent<T>(
+			"dart.testRunNotification",
+			(notification) => notification.type === type && filter(notification as T),
+		);
+	}
+
+	private assertTestStatus(testName: string, expectedStatus: "success" | "failure" | "error"): Promise<void> {
+		let test: Test;
+		return Promise.all([
+			this.waitForTestNotification<TestStartNotification>(
+				"testStart",
+				(e) => {
+					if (e.test.name === testName) {
+						test = e.test;
+						return true;
+					} else {
+						return false;
+					}
+				},
+			),
+			this.waitForTestNotification<TestDoneNotification>(
+				"testDone",
+				(e) => {
+					if (test && e.testID === test.id) {
+						assert.equal(e.result, expectedStatus, `Test ${test.name} result was not as expected`);
+						return true;
+					} else {
+						return false;
+					}
+				},
+			),
+		]).then((_) => null);
+	}
+
+	public assertPassingTest(testName: string) {
+		return this.assertTestStatus(testName, "success");
+	}
+
+	public assertFailingTest(testName: string) {
+		return this.assertTestStatus(testName, "failure");
 	}
 }
