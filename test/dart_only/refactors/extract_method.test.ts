@@ -67,7 +67,7 @@ main() {
   print("Hello, world!");
 }
 		`);
-		assert(() => showErrorMessage.calledOnce);
+		assert(showErrorMessage.calledOnce);
 	});
 
 	it("does not apply changes when there are warnings if the user does not approve", async () => {

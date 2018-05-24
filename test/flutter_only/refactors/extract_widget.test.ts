@@ -109,7 +109,7 @@ class MyWidget extends StatelessWidget {
   }
 }
 		`);
-		assert(() => showErrorMessage.calledOnce);
+		assert(showErrorMessage.calledOnce);
 	});
 
 	it("does not apply changes when there are errors if the user does not approve", async () => {
