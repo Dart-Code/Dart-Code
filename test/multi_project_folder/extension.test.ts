@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
+import { forceWindowsDriveLetterToUppercase } from "../../src/debug/utils";
 import { fsPath } from "../../src/utils";
 import { ext, flutterHelloWorldFolder, flutterHelloWorldMainFile } from "../helpers";
 
@@ -26,6 +27,8 @@ describe("extension", () => {
 				type: "dart",
 			},
 		);
-		assert.equal(resolvedConfig.cwd, fsPath(flutterHelloWorldFolder));
+
+		// TODO: Remove forceWindowsDriveLetterToUppercase when it becomes default.
+		assert.equal(forceWindowsDriveLetterToUppercase(resolvedConfig.cwd), forceWindowsDriveLetterToUppercase(fsPath(flutterHelloWorldFolder)));
 	});
 });
