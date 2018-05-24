@@ -148,19 +148,13 @@ export interface Item {
 	id: number;
 	name?: string;
 	suiteID: number;
-	metadata: Metadata;
 	line?: number;
 	column?: number;
 	url?: string;
 }
 
 export interface Test extends Item {
-	groupIDs: Group[];
-}
-
-export interface Metadata {
-	skip: boolean;
-	skipReason?: string;
+	groupIDs: number[];
 }
 
 export interface GroupNotification extends Notification {
