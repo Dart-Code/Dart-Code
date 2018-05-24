@@ -232,7 +232,7 @@ export abstract class StdIOService<T> implements Disposable {
 		}
 		this.additionalPidsToTerminate.length = 0;
 		try {
-			if (!this.processExited)
+			if (!this.processExited && this.process && !this.process.killed)
 				this.process.kill();
 		} catch (e) {
 			// This tends to throw a lot because the shell process quit when we terminated the related
