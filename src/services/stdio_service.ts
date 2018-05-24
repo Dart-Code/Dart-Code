@@ -16,6 +16,7 @@ export abstract class StdIOService<T> implements Disposable {
 	private currentLogFile: string;
 	private logStream: fs.WriteStream;
 	private requestErrorSubscriptions: Array<(notification: any) => void> = [];
+	private processExited = false;
 
 	constructor(
 		public readonly getLogFile: () => string,
@@ -44,6 +45,9 @@ export abstract class StdIOService<T> implements Disposable {
 		});
 		this.process.stderr.on("data", (data: Buffer) => {
 			this.logTraffic(`ERR ${data.toString()}`);
+		});
+		this.process.on("exit", (data: Buffer) => {
+			this.processExited = true;
 		});
 	}
 
@@ -228,7 +232,8 @@ export abstract class StdIOService<T> implements Disposable {
 		}
 		this.additionalPidsToTerminate.length = 0;
 		try {
-			this.process.kill();
+			if (!this.processExited)
+				this.process.kill();
 		} catch (e) {
 			// This tends to throw a lot because the shell process quit when we terminated the related
 			// process above, so just swallow the error.
