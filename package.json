@@ -427,6 +427,13 @@
 					"name": "Dependencies",
 					"when": "dart-code:dartProjectLoaded && !dart-code:hidePackageTree"
 				}
+			],
+			"test": [
+				{
+					"id": "dartTestTree",
+					"name": "Dart & Flutter",
+					"when": "dart-code:dartProjectLoaded && dart-code:flutterProjectLoaded"
+				}
 			]
 		},
 		"configurationDefaults": {

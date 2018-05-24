@@ -50,6 +50,7 @@ import * as util from "./utils";
 import { fsPath } from "./utils";
 import { LogCategory, log, logError, logTo } from "./utils/log";
 import { DartPackagesProvider } from "./views/packages_view";
+import { TestResultsProvider } from "./views/test_view";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }];
 const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
@@ -293,10 +294,13 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const dartPackagesProvider = new DartPackagesProvider();
 	dartPackagesProvider.setWorkspaces(util.getDartWorkspaceFolders());
 	context.subscriptions.push(dartPackagesProvider);
-	vs.window.registerTreeDataProvider("dartPackages", dartPackagesProvider);
+	context.subscriptions.push(vs.window.registerTreeDataProvider("dartPackages", dartPackagesProvider));
 	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => {
 		dartPackagesProvider.setWorkspaces(util.getDartWorkspaceFolders());
 	}));
+	const testTreeProvider = new TestResultsProvider();
+	context.subscriptions.push(testTreeProvider);
+	context.subscriptions.push(vs.window.createTreeView("dartTestTree", { treeDataProvider: testTreeProvider }));
 
 	context.subscriptions.push(vs.commands.registerCommand("dart.package.openFile", (filePath) => {
 		if (!filePath) return;
