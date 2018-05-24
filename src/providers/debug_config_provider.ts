@@ -9,9 +9,9 @@ import { config } from "../config";
 import { DartDebugSession } from "../debug/dart_debug_impl";
 import { FlutterDebugSession } from "../debug/flutter_debug_impl";
 import { FlutterTestDebugSession } from "../debug/flutter_test_debug_impl";
-import { PackageMap } from "../debug/package_map";
 import { FlutterLaunchRequestArguments, forceWindowsDriveLetterToUppercase, isWin, isWithinPath } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
+import { locateBestProjectRoot } from "../project";
 import { Sdks, fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile } from "../utils";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
@@ -81,9 +81,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 			// If we have an entry point, see if we can make this more specific by finding a .packages file
 			if (debugConfig.program) {
-				const packagesFile = PackageMap.findPackagesFile(debugConfig.program);
-				if (packagesFile) {
-					const bestProjectRoot = path.dirname(packagesFile);
+				const bestProjectRoot = locateBestProjectRoot(debugConfig.program);
+				if (bestProjectRoot) {
 					if (!folder || isWithinPath(bestProjectRoot, fsPath(folder.uri)))
 						debugConfig.cwd = bestProjectRoot;
 				}
