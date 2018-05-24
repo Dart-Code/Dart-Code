@@ -87,6 +87,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 
 	private handleStartNotification(evt: StartNotification) {
 		this.tests.forEach((t) => t.status = TestStatus.Stale);
+		this.onDidChangeTreeDataEmitter.fire();
 	}
 
 	// private handleAllSuitesNotification(evt: AllSuitesNotification) {}
@@ -172,6 +173,7 @@ class SuiteTreeItem extends vs.TreeItem {
 	constructor(public suite: Suite) {
 		super(vs.Uri.file(suite.path), vs.TreeItemCollapsibleState.Expanded);
 		this.contextValue = DART_TEST_SUITE_NODE;
+		this.id = `suite_${this.suite.id}`;
 	}
 }
 
@@ -182,25 +184,26 @@ class GroupTreeItem extends vs.TreeItem {
 	constructor(public readonly group: Group) {
 		super(group.name, vs.TreeItemCollapsibleState.Expanded);
 		this.contextValue = DART_TEST_GROUP_NODE;
+		this.id = `group_${this.group.id}`;
 	}
 }
 
 class TestTreeItem extends vs.TreeItem {
-	public status = TestStatus.Unknown;
 	constructor(public readonly test: Test) {
 		super(test.name);
 		// TODO: Allow re-running tests/groups/suites
 		this.contextValue = DART_TEST_TEST_NODE;
 	}
 
-	// get label(): string {
-	// 	return `${this.test.name} (${this.status})`;
-	// }
-
 	get groupId(): number | undefined {
 		return this.test.groupIDs && this.test.groupIDs.length
 			? this.test.groupIDs[this.test.groupIDs.length - 1]
 			: undefined;
+	}
+
+	set status(status: TestStatus) {
+		this.label = `${this.test.name} (${TestStatus[status]})`;
+		this.id = `test_${this.test.id}`;
 	}
 }
 
