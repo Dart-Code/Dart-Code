@@ -514,12 +514,6 @@
 					"description": "Prompt to get packages when opening a project with out of date packages.",
 					"scope": "resource"
 				},
-				"dart.promptToUpgradeWorkspace": {
-					"type": "boolean",
-					"default": true,
-					"description": "Prompt to upgrade folders to Workspace Folders when projects are detected in sub-folders.",
-					"scope": "resource"
-				},
 				"dart.showLintNames": {
 					"type": "boolean",
 					"default": false,

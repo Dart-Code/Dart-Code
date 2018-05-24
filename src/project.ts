@@ -1,9 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import * as vs from "vscode";
-import { config } from "./config";
 import * as util from "./utils";
-import { fsPath } from "./utils";
 
 export const UPGRADE_TO_WORKSPACE_FOLDERS = "Mark Projects as Workspace Folders";
 
@@ -39,60 +36,4 @@ function getChildProjects(folder: string, levelsToGo: number): string[] {
 	}
 
 	return projects;
-}
-
-export async function checkForProjectsInSubFolders() {
-	// TODO: This method is super slow (10x slower than any other part of startup, including
-	// SDK searching). It's marked async but is actually all sync. Needs rewriting async (but
-	// sadly node's fs library doesn't use Promises :()
-	if (!vs.workspace.workspaceFolders)
-		return;
-	let projects: string[] = [];
-	for (const workspaceFolder of vs.workspace.workspaceFolders) {
-		projects = projects.concat(getChildProjects(fsPath(workspaceFolder.uri), 3));
-	}
-
-	const projectsToAdd = projects
-		// Filter to those that aren't already roots.
-		.filter((f) => fsPath(vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri) !== f)
-		// Or if we're opted-out.
-		.filter((f) => config.for(vs.Uri.file(f)).promptToUpgradeWorkspace);
-
-	if (projectsToAdd.length > 0) {
-		promptUserToUpgradeProjectFolders(projectsToAdd);
-	}
-}
-
-async function promptUserToUpgradeProjectFolders(projectsToAdd: string[]) {
-	const notForThisFolderAction = "Don't ask for this Folder";
-	const res = await vs.window.showWarningMessage(
-		`This folder contains ${projectsToAdd.length} projects in sub-folders. Would you like to mark them as Workspace Folders to enable all functionality?`,
-		UPGRADE_TO_WORKSPACE_FOLDERS,
-		notForThisFolderAction,
-	);
-	if (res === UPGRADE_TO_WORKSPACE_FOLDERS) {
-		upgradeProjectFolders(projectsToAdd);
-	} else {
-		if (res === notForThisFolderAction) {
-			await disablePromptToUpgradeProjectFolders(projectsToAdd);
-		}
-		vs.window.showWarningMessage("Some functionality may not work correctly for projects that are in sub-folders.");
-	}
-}
-
-async function upgradeProjectFolders(projectsToAdd: string[]) {
-	vs.workspace.updateWorkspaceFolders(
-		vs.workspace.workspaceFolders.length,
-		undefined,
-		...projectsToAdd.map((p) => ({
-			name: path.basename(p),
-			uri: vs.Uri.file(p),
-		})),
-	);
-}
-
-async function disablePromptToUpgradeProjectFolders(projectsToAdd: string[]) {
-	for (const f of projectsToAdd) {
-		await config.for(vs.Uri.file(f)).setPromptToUpgradeWorkspace(false);
-	}
 }
