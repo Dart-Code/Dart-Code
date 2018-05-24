@@ -4,6 +4,10 @@ import { DoneNotification, ErrorNotification, Group, GroupNotification, PrintNot
 const tick = "✓";
 const cross = "✖";
 
+const DART_TEST_SUITE_NODE = "dart-code:testSuiteNode";
+const DART_TEST_GROUP_NODE = "dart-code:testGroupNode";
+const DART_TEST_TEST_NODE = "dart-code:testTestNode";
+
 export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<object> {
 	private disposables: vs.Disposable[] = [];
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<vs.TreeItem | undefined> = new vs.EventEmitter<vs.TreeItem | undefined>();
@@ -167,6 +171,7 @@ class SuiteTreeItem extends vs.TreeItem {
 
 	constructor(public suite: Suite) {
 		super(vs.Uri.file(suite.path), vs.TreeItemCollapsibleState.Expanded);
+		this.contextValue = DART_TEST_SUITE_NODE;
 	}
 }
 
@@ -176,6 +181,7 @@ class GroupTreeItem extends vs.TreeItem {
 
 	constructor(public readonly group: Group) {
 		super(group.name, vs.TreeItemCollapsibleState.Expanded);
+		this.contextValue = DART_TEST_GROUP_NODE;
 	}
 }
 
@@ -183,6 +189,8 @@ class TestTreeItem extends vs.TreeItem {
 	public status = TestStatus.Unknown;
 	constructor(public readonly test: Test) {
 		super(test.name);
+		// TODO: Allow re-running tests/groups/suites
+		this.contextValue = DART_TEST_TEST_NODE;
 	}
 
 	// get label(): string {
