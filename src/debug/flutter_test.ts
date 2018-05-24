@@ -2,7 +2,7 @@ import { Disposable } from "vscode";
 import { StdIOService } from "../services/stdio_service";
 import { globalFlutterArgs } from "./utils";
 
-export class FlutterTest extends StdIOService<Notification> {
+export class FlutterTest extends StdIOService<{ type: string }> {
 	constructor(flutterBinPath: string, projectFolder: string, args: string[], logFile: string, logger: (message: string) => void) {
 		super(() => logFile, logger, true, true);
 
@@ -33,49 +33,14 @@ export class FlutterTest extends StdIOService<Notification> {
 				this.notify(this.testStartedProcessSubscriptions, evt.params as TestStartedProcess);
 				break;
 		}
-		switch (evt.type) {
-			case "start":
-				this.notify(this.startSubscriptions, evt as StartNotification);
-				break;
-			case "allSuites":
-				this.notify(this.allSuitesSubscriptions, evt as AllSuitesNotification);
-				break;
-			case "suite":
-				this.notify(this.suiteSubscriptions, evt as SuiteNotification);
-				break;
-			case "testStart":
-				this.notify(this.testStartSubscriptions, evt as TestStartNotification);
-				break;
-			case "testDone":
-				this.notify(this.testDoneSubscriptions, evt as TestDoneNotification);
-				break;
-			case "group":
-				this.notify(this.groupSubscriptions, evt as GroupNotification);
-				break;
-			case "done":
-				this.notify(this.doneSubscriptions, evt as DoneNotification);
-				break;
-			case "print":
-				this.notify(this.printSubscriptions, evt as PrintNotification);
-				break;
-			case "error":
-				this.notify(this.errorSubscriptions, evt as ErrorNotification);
-				break;
-		}
+
+		this.notify(this.allTestNotificationsSubscriptions, evt);
 	}
 
 	// Subscription lists.
 
 	private testStartedProcessSubscriptions: Array<(notification: TestStartedProcess) => void> = [];
-	private startSubscriptions: Array<(notification: StartNotification) => void> = [];
-	private allSuitesSubscriptions: Array<(notification: AllSuitesNotification) => void> = [];
-	private suiteSubscriptions: Array<(notification: SuiteNotification) => void> = [];
-	private testStartSubscriptions: Array<(notification: TestStartNotification) => void> = [];
-	private testDoneSubscriptions: Array<(notification: TestDoneNotification) => void> = [];
-	private groupSubscriptions: Array<(notification: GroupNotification) => void> = [];
-	private doneSubscriptions: Array<(notification: DoneNotification) => void> = [];
-	private printSubscriptions: Array<(notification: PrintNotification) => void> = [];
-	private errorSubscriptions: Array<(notification: ErrorNotification) => void> = [];
+	private allTestNotificationsSubscriptions: Array<(notification: any) => void> = [];
 
 	// Subscription methods.
 
@@ -83,127 +48,11 @@ export class FlutterTest extends StdIOService<Notification> {
 		return this.subscribe(this.testStartedProcessSubscriptions, subscriber);
 	}
 
-	public registerForStart(subscriber: (notification: StartNotification) => void): Disposable {
-		return this.subscribe(this.startSubscriptions, subscriber);
-	}
-
-	public registerForAllSuites(subscriber: (notification: AllSuitesNotification) => void): Disposable {
-		return this.subscribe(this.allSuitesSubscriptions, subscriber);
-	}
-
-	public registerForSuite(subscriber: (notification: SuiteNotification) => void): Disposable {
-		return this.subscribe(this.suiteSubscriptions, subscriber);
-	}
-
-	public registerForTestStart(subscriber: (notification: TestStartNotification) => void): Disposable {
-		return this.subscribe(this.testStartSubscriptions, subscriber);
-	}
-
-	public registerForTestDone(subscriber: (notification: TestDoneNotification) => void): Disposable {
-		return this.subscribe(this.testDoneSubscriptions, subscriber);
-	}
-
-	public registerForGroup(subscriber: (notification: GroupNotification) => void): Disposable {
-		return this.subscribe(this.groupSubscriptions, subscriber);
-	}
-
-	public registerForDone(subscriber: (notification: DoneNotification) => void): Disposable {
-		return this.subscribe(this.doneSubscriptions, subscriber);
-	}
-
-	public registerForPrint(subscriber: (notification: PrintNotification) => void): Disposable {
-		return this.subscribe(this.printSubscriptions, subscriber);
-	}
-
-	public registerForError(subscriber: (notification: ErrorNotification) => void): Disposable {
-		return this.subscribe(this.errorSubscriptions, subscriber);
+	public registerForAllTestNotifications(subscriber: (notification: { type: string }) => void): Disposable {
+		return this.subscribe(this.allTestNotificationsSubscriptions, subscriber);
 	}
 }
 
 export interface TestStartedProcess {
 	observatoryUri: string;
-}
-
-export interface Notification {
-	type: string;
-	time: number;
-}
-
-export interface StartNotification extends Notification {
-	protocolVersion: string;
-	runnerVersion?: string;
-}
-
-export interface AllSuitesNotification extends Notification {
-	count: number;
-}
-
-export interface SuiteNotification extends Notification {
-	suite: Suite;
-}
-
-export interface Suite {
-	id: number;
-	platform: string;
-	path: string;
-}
-
-export interface TestNotification extends Notification {
-	test: Test;
-}
-
-export interface Item {
-	id: number;
-	name?: string;
-	suiteID: number;
-	metadata: Metadata;
-	line?: number;
-	column?: number;
-	url?: string;
-}
-
-export interface Test extends Item {
-	groupIDs: Group[];
-}
-
-export interface Metadata {
-	skip: boolean;
-	skipReason?: string;
-}
-
-export interface GroupNotification extends Notification {
-	group: Group;
-}
-
-export interface Group extends Item {
-	parentID?: number;
-	testCount: number;
-}
-
-export interface TestStartNotification extends Notification {
-	test: Test;
-}
-
-export interface TestDoneNotification extends Notification {
-	testID: number;
-	result: string;
-	skipped: boolean;
-	hidden: boolean;
-}
-
-export interface DoneNotification extends Notification {
-	success: boolean;
-}
-
-export interface PrintNotification extends Notification {
-	testID: number;
-	messageType: string;
-	message: string;
-}
-
-export interface ErrorNotification extends Notification {
-	testID: number;
-	error: string;
-	stackTrace: string;
-	isFailure: boolean;
 }
