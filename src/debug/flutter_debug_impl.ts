@@ -18,7 +18,6 @@ export class FlutterDebugSession extends DartDebugSession {
 		super();
 
 		this.sendStdOutToConsole = false;
-		this.allowTerminatingObservatoryVmPid = false;
 	}
 
 	protected initializeRequest(
@@ -59,6 +58,11 @@ export class FlutterDebugSession extends DartDebugSession {
 		if (args.showMemoryUsage) {
 			this.pollforMemoryMs = 1000;
 		}
+
+		// Normally for `flutter run` we don't allow terminating the pid we get from Observatory,
+		// because it's on a remote device, however in the case of the flutter-tester, it is local
+		// and otherwise might be left hanging around.
+		this.allowTerminatingObservatoryVmPid = args.deviceId === "flutter-tester";
 
 		this.flutter = new FlutterRun(args.flutterPath, args.cwd, appArgs, args.flutterRunLogFile);
 		this.flutter.registerForUnhandledMessages((msg) => this.logToUser(msg));
