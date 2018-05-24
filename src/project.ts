@@ -10,7 +10,7 @@ export function locateBestProjectRoot(folder: string): string {
 
 	let dir = folder;
 	while (dir !== path.dirname(dir)) {
-		if (fs.existsSync(path.join(dir, "pubspec.yaml")))
+		if (fs.existsSync(path.join(dir, "pubspec.yaml")) || fs.existsSync(path.join(dir, ".packages")))
 			return dir;
 		dir = path.dirname(dir);
 	}
