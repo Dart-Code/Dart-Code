@@ -19,7 +19,6 @@ import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
-import { checkForProjectsInSubFolders } from "./project";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
@@ -85,10 +84,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	const extensionStartTime = new Date();
 	util.logTime();
-	if (!isRestart) {
-		checkForProjectsInSubFolders();
-		util.logTime("checkForProjectsInSubFolders");
-	}
 	const sdks = findSdks();
 	util.logTime("findSdks");
 	analytics = new Analytics(sdks);
