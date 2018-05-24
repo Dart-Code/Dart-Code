@@ -1,5 +1,7 @@
+import * as path from "path";
 import * as vs from "vscode";
-import { AllSuitesNotification, DoneNotification, ErrorNotification, Group, GroupNotification, PrintNotification, StartNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "./test_protocol";
+import { fsPath } from "../utils";
+import { DoneNotification, ErrorNotification, Group, GroupNotification, PrintNotification, StartNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "./test_protocol";
 
 const tick = "✓";
 const cross = "✖";
@@ -9,9 +11,9 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<vs.TreeItem | undefined> = new vs.EventEmitter<vs.TreeItem | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<vs.TreeItem | undefined> = this.onDidChangeTreeDataEmitter.event;
 
-	private suites: Suite[] = [];
-	private groups: Group[] = [];
-	private tests: Test[] = [];
+	private suites: SuiteTreeItem[] = [];
+	private groups: GroupTreeItem[] = [];
+	private tests: TestTreeItem[] = [];
 
 	constructor() {
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
@@ -22,15 +24,27 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	public getTreeItem(element: vs.TreeItem): vs.TreeItem | Thenable<vs.TreeItem> {
-		throw new Error("Method not implemented.");
+		return element;
 	}
 
 	public getChildren(element?: vs.TreeItem): vs.ProviderResult<vs.TreeItem[]> {
-		throw new Error("Method not implemented.");
+		if (!element) {
+			return this.suites;
+		} else if (element instanceof SuiteTreeItem || element instanceof GroupTreeItem) {
+			return [].concat(element.groups).concat(element.tests);
+		}
 	}
 
 	public getParent?(element: vs.TreeItem): vs.ProviderResult<vs.TreeItem> {
-		throw new Error("Method not implemented.");
+		if (element instanceof GroupTreeItem) {
+			return element.group.parentID
+				? this.groups[element.group.parentID]
+				: this.suites[element.group.suiteID];
+		} else if (element instanceof TestTreeItem) {
+			return element.groupId
+				? this.groups[element.groupId]
+				: this.suites[element.test.suiteID];
+		}
 	}
 
 	public dispose(): any {
@@ -38,13 +52,14 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	private handleNotification(evt: any) {
+		console.log(JSON.stringify(evt));
 		switch (evt.type) {
 			case "start":
 				this.handleStartNotification(evt as StartNotification);
 				break;
-			case "allSuites":
-				this.handleAllSuitesNotification(evt as AllSuitesNotification);
-				break;
+			// case "allSuites":
+			// 	this.handleAllSuitesNotification(evt as AllSuitesNotification);
+			// 	break;
 			case "suite":
 				this.handleSuiteNotification(evt as SuiteNotification);
 				break;
@@ -70,32 +85,66 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	private handleStartNotification(evt: StartNotification) {
-		// TODO: ...
+		this.tests.forEach((t) => t.status = TestStatus.Stale);
 	}
 
-	private handleAllSuitesNotification(evt: AllSuitesNotification) {
-		// TODO ...
-	}
+	// private handleAllSuitesNotification(evt: AllSuitesNotification) {}
 
 	private handleSuiteNotification(evt: SuiteNotification) {
-		this.suites[evt.suite.id] = evt.suite;
+		const suiteNode = new SuiteTreeItem(evt.suite);
+		this.suites[evt.suite.id] = suiteNode;
+		this.onDidChangeTreeDataEmitter.fire();
 	}
 
 	private handleTestStartNotifcation(evt: TestStartNotification) {
-		this.tests[evt.test.id] = evt.test;
+		const testNode = new TestTreeItem(evt.test);
+		this.tests[evt.test.id] = testNode;
+		const parent = testNode.groupId
+			? this.groups[testNode.groupId]
+			: this.suites[testNode.test.suiteID];
+		parent.tests.push(testNode);
+		this.onDidChangeTreeDataEmitter.fire(parent);
 	}
 
 	private handleTestDoneNotification(evt: TestDoneNotification) {
-		if (evt.hidden)
+		const testNode = this.tests[evt.testID];
+
+		// If this test should be hidden, remove from its parent
+		if (evt.hidden) {
+			const parent = testNode.groupId
+				? this.groups[testNode.groupId]
+				: this.suites[testNode.test.suiteID];
+			parent.tests.splice(parent.tests.indexOf(testNode), 1);
+			this.onDidChangeTreeDataEmitter.fire(parent);
 			return;
-		const test = this.tests[evt.testID];
+		}
+		if (evt.skipped) {
+			testNode.status = TestStatus.Skipped;
+		} else if (evt.result === "success") {
+			testNode.status = TestStatus.Passed;
+		} else if (evt.result === "failure") {
+			testNode.status = TestStatus.Failed;
+		} else if (evt.result === "error")
+			testNode.status = TestStatus.Errored;
+		else {
+			testNode.status = TestStatus.Unknown;
+		}
+		this.onDidChangeTreeDataEmitter.fire(testNode);
+
+		// TODO: Remove this
 		const pass = evt.result === "success";
 		const symbol = pass ? tick : cross;
-		console.log(`${symbol} ${test.name}\n`); // TODO: Fix
+		console.log(`${symbol} ${testNode.label}\n`); // TODO: Fix
 	}
 
 	private handleGroupNotification(evt: GroupNotification) {
-		this.groups[evt.group.id] = evt.group;
+		const groupNode = new GroupTreeItem(evt.group);
+		this.groups[evt.group.id] = groupNode;
+		const parent = groupNode.group.parentID
+			? this.groups[groupNode.group.parentID]
+			: this.suites[groupNode.group.suiteID];
+		parent.groups.push(groupNode);
+		this.onDidChangeTreeDataEmitter.fire(parent);
 	}
 
 	private handleDoneNotification(evt: DoneNotification) {
@@ -115,4 +164,56 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		if (evt.stackTrace)
 			console.error(evt.stackTrace);
 	}
+}
+
+class SuiteTreeItem extends vs.TreeItem {
+	public readonly groups: GroupTreeItem[] = [];
+	public readonly tests: TestTreeItem[] = [];
+
+	private static getLabel(suitePath: string) {
+		const workspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(suitePath));
+		return workspace
+			? path.relative(fsPath(workspace.uri), suitePath)
+			: suitePath;
+	}
+
+	constructor(public suite: Suite) {
+		super(SuiteTreeItem.getLabel(suite.path), vs.TreeItemCollapsibleState.Expanded);
+	}
+}
+
+class GroupTreeItem extends vs.TreeItem {
+	public readonly groups: GroupTreeItem[] = [];
+	public readonly tests: TestTreeItem[] = [];
+
+	constructor(public readonly group: Group) {
+		super(group.name, vs.TreeItemCollapsibleState.Expanded);
+	}
+}
+
+class TestTreeItem extends vs.TreeItem {
+	public status = TestStatus.Unknown;
+	constructor(public readonly test: Test) {
+		super(test.name);
+	}
+
+	// get label(): string {
+	// 	return `${this.test.name} (${this.status})`;
+	// }
+
+	get groupId(): number | undefined {
+		return this.test.groupIDs && this.test.groupIDs.length
+			? this.test.groupIDs[this.test.groupIDs.length - 1]
+			: undefined;
+	}
+}
+
+enum TestStatus {
+	Stale,
+	Unknown,
+	Running,
+	Skipped,
+	Passed,
+	Failed,
+	Errored,
 }
