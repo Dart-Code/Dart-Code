@@ -48,7 +48,7 @@ describe("flutter test debugger", () => {
 		]);
 	});
 
-	it("receives the expected output from a Flutter test script", async () => {
+	it("receives the expected events from a Flutter test script", async () => {
 		const config = await startDebugger(flutterTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
@@ -59,7 +59,7 @@ describe("flutter test debugger", () => {
 		]);
 	});
 
-	it("receives the expected output from a Flutter test script when run with variables in launch config", async () => {
+	it("receives the expected events from a Flutter test script when run with variables in launch config", async () => {
 		const relativePath = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterTestMainFile));
 		const config = await startDebugger(`\${workspaceFolder}/${relativePath}`);
 		await Promise.all([
@@ -176,13 +176,13 @@ describe("flutter test debugger", () => {
 		assert.ok(v.value.startsWith(`"Expected: exactly one matching node in the widget tree`));
 	});
 
-	it("writes failure output to stderr", async () => {
+	it("send failure results for failing tests", async () => {
 		await openFile(flutterTestBrokenFile);
 		const config = await startDebugger(flutterTestBrokenFile, false);
 		config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertFailingTest("- Hello world test"),
+			dc.assertErroringTest("- Hello world test"),
 			dc.launch(config),
 		]);
 	});
