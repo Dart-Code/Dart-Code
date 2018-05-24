@@ -45,7 +45,9 @@ function runNode(cwd: string, args: string[], env: any): Promise<number> {
 			proc.kill();
 			console.log(red(`Terminating process for taking too long after ${timeoutInMilliseconds / 1000}s!`));
 			console.log(yellow("    " + JSON.stringify(args)));
-			resolve(1);
+			// We'll throw and bring the tests down here, because when this happens, the Code process doesn't
+			// get terminated (only the node wrapper) so subsequent tests fail anyway.
+			reject("Terminating test run due to hung process.");
 		}, timeoutInMilliseconds);
 	});
 }
@@ -121,24 +123,6 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 }
 
 async function runAllTests(): Promise<void> {
-	const codeVersion = process.env.ONLY_RUN_CODE_VERSION === "DEV" ? "insiders" : "*";
-	const sdkPath = process.env.DART_SDK_PATHS || process.env.PATH;
-
-	const flutterRoot = process.env.FLUTTER_ROOT;
-	const totalRuns = 6;
-	let runNumber = 1;
-	await runTests("dart_only", "hello_world", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-	await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-	await runTests("multi_root", "projects.code-workspace", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-	await runTests("multi_root_upgraded", "", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-	await runTests("not_activated/flutter_create", "empty", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-	if (flutterRoot) {
-		await runTests("flutter_repository", flutterRoot, sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-	} else {
-		console.error("FLUTTER_ROOT NOT SET, SKIPPING FLUTTER REPO TESTS");
-		exitCode = 1;
-	}
-
 	if (process.env.CI) {
 		const branchName = process.env.APPVEYOR_REPO_BRANCH || process.env.TRAVIS_BRANCH;
 		const commit = process.env.APPVEYOR_REPO_COMMIT || process.env.TRAVIS_COMMIT;
@@ -146,6 +130,30 @@ async function runAllTests(): Promise<void> {
 		console.log("\n\n");
 		console.log(yellow("A combined test summary will be available at:"));
 		console.log(yellow(`  https://dartcode.org/test-results/?${branchName}/${commit}`));
+		console.log("\n\n");
+	}
+
+	const codeVersion = process.env.ONLY_RUN_CODE_VERSION === "DEV" ? "insiders" : "*";
+	const sdkPath = process.env.DART_SDK_PATHS || process.env.PATH;
+
+	const flutterRoot = process.env.FLUTTER_ROOT;
+	const totalRuns = 6;
+	let runNumber = 1;
+	try {
+		await runTests("dart_only", "hello_world", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("multi_root", "projects.code-workspace", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("multi_root_upgraded", "", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("not_activated/flutter_create", "empty", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		if (flutterRoot) {
+			await runTests("flutter_repository", flutterRoot, sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		} else {
+			console.error("FLUTTER_ROOT NOT SET, SKIPPING FLUTTER REPO TESTS");
+			exitCode = 1;
+		}
+	} catch (e) {
+		exitCode = 1;
+		console.error(e);
 	}
 }
 
