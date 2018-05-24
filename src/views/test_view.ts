@@ -170,15 +170,8 @@ class SuiteTreeItem extends vs.TreeItem {
 	public readonly groups: GroupTreeItem[] = [];
 	public readonly tests: TestTreeItem[] = [];
 
-	private static getLabel(suitePath: string) {
-		const workspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(suitePath));
-		return workspace
-			? path.relative(fsPath(workspace.uri), suitePath)
-			: suitePath;
-	}
-
 	constructor(public suite: Suite) {
-		super(SuiteTreeItem.getLabel(suite.path), vs.TreeItemCollapsibleState.Expanded);
+		super(vs.Uri.file(suite.path), vs.TreeItemCollapsibleState.Expanded);
 	}
 }
 
