@@ -178,7 +178,7 @@ export interface TestStartNotification extends Notification {
 
 export interface TestDoneNotification extends Notification {
 	testID: number;
-	result: string;
+	result: "success" | "failure" | "error";
 	skipped: boolean;
 	hidden: boolean;
 }
