@@ -55,6 +55,25 @@
 			"smartStep": true
 		},
 		{
+			"name": "Launch Tests (Multi-project folder)",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"${workspaceRoot}/test/test_projects/",
+				"--extensionDevelopmentPath=${workspaceRoot}",
+				"--extensionTestsPath=${workspaceRoot}/out/test/multi_project_folder"
+			],
+			"env": {
+				"DART_CODE_IS_TEST_RUN": "true"
+			},
+			"outFiles": [
+				"${workspaceRoot}/out/test/**/*.js"
+			],
+			"preLaunchTask": "npm: watch",
+			"smartStep": true
+		},
+		{
 			"name": "Launch Tests (Dart)",
 			"type": "extensionHost",
 			"request": "launch",
