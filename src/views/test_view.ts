@@ -93,19 +93,31 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	// private handleAllSuitesNotification(evt: AllSuitesNotification) {}
 
 	private handleSuiteNotification(evt: SuiteNotification) {
-		const suiteNode = new SuiteTreeItem(evt.suite);
-		this.suites[evt.suite.id] = suiteNode;
+		if (this.suites[evt.suite.id]) {
+			this.suites[evt.suite.id].suite = evt.suite;
+		} else {
+			const suiteNode = new SuiteTreeItem(evt.suite);
+			this.suites[evt.suite.id] = suiteNode;
+		}
 		this.onDidChangeTreeDataEmitter.fire();
 	}
 
 	private handleTestStartNotifcation(evt: TestStartNotification) {
-		const testNode = new TestTreeItem(evt.test);
-		this.tests[evt.test.id] = testNode;
-		const parent = testNode.groupId
-			? this.groups[testNode.groupId]
-			: this.suites[testNode.test.suiteID];
-		parent.tests.push(testNode);
-		this.onDidChangeTreeDataEmitter.fire(parent);
+		if (this.tests[evt.test.id]) {
+			const testNode = this.tests[evt.test.id];
+			testNode.test = evt.test;
+			this.onDidChangeTreeDataEmitter.fire(testNode);
+			// TODO: Change parent if required...
+		} else {
+			const testNode = new TestTreeItem(evt.test);
+			this.tests[evt.test.id] = testNode;
+			testNode.status = TestStatus.Running;
+			const parent = testNode.groupId
+				? this.groups[testNode.groupId]
+				: this.suites[testNode.test.suiteID];
+			parent.tests.push(testNode);
+			this.onDidChangeTreeDataEmitter.fire(parent);
+		}
 	}
 
 	private handleTestDoneNotification(evt: TestDoneNotification) {
@@ -139,13 +151,20 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	private handleGroupNotification(evt: GroupNotification) {
-		const groupNode = new GroupTreeItem(evt.group);
-		this.groups[evt.group.id] = groupNode;
-		const parent = groupNode.group.parentID
-			? this.groups[groupNode.group.parentID]
-			: this.suites[groupNode.group.suiteID];
-		parent.groups.push(groupNode);
-		this.onDidChangeTreeDataEmitter.fire(parent);
+		if (this.groups[evt.group.id]) {
+			const groupNode = this.groups[evt.group.id];
+			groupNode.group = evt.group;
+			this.onDidChangeTreeDataEmitter.fire(groupNode);
+			// TODO: Change parent if required...
+		} else {
+			const groupNode = new GroupTreeItem(evt.group);
+			this.groups[evt.group.id] = groupNode;
+			const parent = groupNode.group.parentID
+				? this.groups[groupNode.group.parentID]
+				: this.suites[groupNode.group.suiteID];
+			parent.groups.push(groupNode);
+			this.onDidChangeTreeDataEmitter.fire(parent);
+		}
 	}
 
 	private handleDoneNotification(evt: DoneNotification) {
@@ -181,7 +200,7 @@ class GroupTreeItem extends vs.TreeItem {
 	public readonly groups: GroupTreeItem[] = [];
 	public readonly tests: TestTreeItem[] = [];
 
-	constructor(public readonly group: Group) {
+	constructor(public group: Group) {
 		super(group.name, vs.TreeItemCollapsibleState.Expanded);
 		this.contextValue = DART_TEST_GROUP_NODE;
 		this.id = `group_${this.group.id}`;
@@ -189,7 +208,7 @@ class GroupTreeItem extends vs.TreeItem {
 }
 
 class TestTreeItem extends vs.TreeItem {
-	constructor(public readonly test: Test) {
+	constructor(public test: Test) {
 		super(test.name);
 		// TODO: Allow re-running tests/groups/suites
 		this.contextValue = DART_TEST_TEST_NODE;
