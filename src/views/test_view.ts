@@ -1,6 +1,4 @@
-import * as path from "path";
 import * as vs from "vscode";
-import { fsPath } from "../utils";
 import { DoneNotification, ErrorNotification, Group, GroupNotification, PrintNotification, StartNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "./test_protocol";
 
 const tick = "✓";
@@ -52,7 +50,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	private handleNotification(evt: any) {
-		console.log(JSON.stringify(evt));
 		switch (evt.type) {
 			case "start":
 				this.handleStartNotification(evt as StartNotification);
@@ -134,7 +131,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		// TODO: Remove this
 		const pass = evt.result === "success";
 		const symbol = pass ? tick : cross;
-		console.log(`${symbol} ${testNode.label}\n`); // TODO: Fix
 	}
 
 	private handleGroupNotification(evt: GroupNotification) {
@@ -148,18 +144,17 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	private handleDoneNotification(evt: DoneNotification) {
-		if (evt.success)
-			console.log("All tests passed!");
-		else
-			console.error("Some tests failed.");
+		// TODO: Some notification that things are complete?
+		// TODO: Maybe a progress bar during the run?
 	}
 
 	private handlePrintNotification(evt: PrintNotification) {
+		// TODO: Provide a better way of seeing this?
 		console.log(`${evt.message}\n`);
-
 	}
 
 	private handleErrorNotification(evt: ErrorNotification) {
+		// TODO: Provide a better way of seeing this?
 		console.error(evt.error);
 		if (evt.stackTrace)
 			console.error(evt.stackTrace);
