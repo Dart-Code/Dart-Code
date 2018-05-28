@@ -69,6 +69,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.flutter.registerForUnhandledMessages((msg) => this.logToUser(msg));
 
 		// Set up subscriptions.
+		this.flutter.registerForDaemonConnect((n) => this.additionalPidsToTerminate.push(n.pid));
 		this.flutter.registerForAppStart((n) => this.currentRunningAppId = n.appId);
 		this.flutter.registerForAppDebugPort((n) => { this.observatoryUri = n.wsUri; this.baseUri = n.baseUri; });
 		this.flutter.registerForAppStarted((n) => {
