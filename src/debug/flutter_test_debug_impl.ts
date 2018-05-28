@@ -22,6 +22,7 @@ export class FlutterTestDebugSession extends DartDebugSession {
 			appArgs.push("--start-paused");
 		}
 
+		// TODO: Validate that args.program is always absolute (we use it as a key for notifications).
 		appArgs.push(this.sourceFileForArgs(args));
 
 		if (args.args) {
@@ -35,7 +36,12 @@ export class FlutterTestDebugSession extends DartDebugSession {
 		// Set up subscriptions.
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
 		this.flutter.registerForTestStartedProcess((n) => this.initObservatory(`${n.observatoryUri}ws`));
-		this.flutter.registerForAllTestNotifications((n) => this.sendEvent(new Event("dart.testRunNotification", n)));
+		this.flutter.registerForAllTestNotifications((n) => {
+			this.sendEvent(new Event(
+				"dart.testRunNotification",
+				{ suitePath: args.program, notification: n },
+			));
+		});
 
 		return this.flutter.process;
 	}
