@@ -435,6 +435,18 @@ export class DebugClient extends ProtocolClient {
 	 */
 	public hitBreakpoint(launchArgs: any, location: ILocation, expectedStopLocation?: IPartialLocation, expectedBPLocation?: IPartialLocation): Promise<any> {
 
+		// If we're an attach request, we'll automatically pause at startup, so we need to wait for that then resume before asserting
+		// the stop.
+		const setupBreakpointWait = launchArgs.request === "attach"
+			? async () => {
+				const event = await this.waitForEvent("stopped") as DebugProtocol.StoppedEvent;
+				assert.equal(event.body.reason, "step");
+
+				// We don't need to send a resume, as this is done in the launch method; we can just wait.
+				return this.assertStoppedLocation('breakpoint', expectedStopLocation || location);
+			}
+			: () => this.assertStoppedLocation('breakpoint', expectedStopLocation || location);
+
 		return Promise.all([
 
 			this.waitForEvent('initialized').then(event => {
@@ -460,7 +472,9 @@ export class DebugClient extends ProtocolClient {
 				return this.configurationDone();
 			}),
 
-			this.launch(launchArgs).then((_) => this.assertStoppedLocation('breakpoint', expectedStopLocation || location))
+			this.launch(launchArgs),
+
+			setupBreakpointWait(),
 		]);
 	}
 }
