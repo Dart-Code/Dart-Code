@@ -55,6 +55,7 @@ describe("flutter test debugger", () => {
 			dc.assertOutput("stdout", `✓ ${testPrefix}Hello world test`),
 			dc.waitForEvent("terminated"),
 			dc.assertPassingTest("- Hello world test"),
+			dc.assertOutput("stdout", "✓ - Hello world test"),
 			dc.launch(config),
 		]);
 	});
@@ -66,6 +67,7 @@ describe("flutter test debugger", () => {
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", `✓ ${testPrefix}Hello world test`),
 			dc.assertPassingTest("- Hello world test"),
+			dc.assertOutput("stdout", "✓ - Hello world test"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -78,6 +80,7 @@ describe("flutter test debugger", () => {
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", `✓ ${testPrefix}Hello world test`),
 			dc.assertPassingTest("- Hello world test"),
+			dc.assertOutput("stdout", "✓ - Hello world test"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -90,6 +93,7 @@ describe("flutter test debugger", () => {
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", `✓ ${testPrefix}Other test\n`),
 			dc.assertPassingTest("- Other test"),
+			dc.assertOutput("stdout", "✓ - Other test"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -102,6 +106,7 @@ describe("flutter test debugger", () => {
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", `✓ ${testPrefix}Other test\n`),
 			dc.assertPassingTest("- Other test"),
+			dc.assertOutput("stdout", "✓ - Other test"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -114,6 +119,7 @@ describe("flutter test debugger", () => {
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", `✓ ${testPrefix}Other test\n`),
 			dc.assertPassingTest("- Other test"),
+			dc.assertOutput("stdout", "✓ - Other test"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -183,6 +189,8 @@ describe("flutter test debugger", () => {
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertErroringTest("- Hello world test"),
+			dc.assertOutput("stderr", "Test failed. See exception logs above."),
+			dc.assertOutputContains("stdout", "EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK"),
 			dc.launch(config),
 		]);
 	});
