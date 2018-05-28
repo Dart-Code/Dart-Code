@@ -5,6 +5,11 @@ export interface Device {
 	emulator: boolean;
 }
 
+export interface DaemonConnected {
+	version: string;
+	pid: number;
+}
+
 export interface AppStart extends AppEvent {
 	deviceId: string;
 	directory: string;
