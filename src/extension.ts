@@ -58,6 +58,7 @@ const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
 const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
 export const SERVICE_EXTENSION_CONTEXT_PREFIX = "dart-code:serviceExtension.";
+export let extensionPath: string = null;
 
 let analyzer: Analyzer;
 let flutterDaemon: FlutterDaemon;
@@ -93,6 +94,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	showLintNames = config.showLintNames;
 	previousSettings = getSettingsThatRequireRestart();
 
+	extensionPath = context.extensionPath;
 	const extensionStartTime = new Date();
 	util.logTime();
 	const sdks = findSdks();

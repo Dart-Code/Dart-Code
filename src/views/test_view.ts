@@ -1,4 +1,6 @@
+import * as path from "path";
 import * as vs from "vscode";
+import { extensionPath } from "../extension";
 import { DoneNotification, ErrorNotification, Group, GroupNotification, PrintNotification, StartNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "./test_protocol";
 
 const tick = "✓";
@@ -210,7 +212,7 @@ class GroupTreeItem extends vs.TreeItem {
 
 class TestTreeItem extends vs.TreeItem {
 	constructor(public test: Test) {
-		super(test.name);
+		super(test.name, vs.TreeItemCollapsibleState.None);
 		// TODO: Allow re-running tests/groups/suites
 		this.contextValue = DART_TEST_TEST_NODE;
 	}
@@ -224,6 +226,26 @@ class TestTreeItem extends vs.TreeItem {
 	set status(status: TestStatus) {
 		this.label = `${this.test.name} (${TestStatus[status]})`;
 		this.id = `test_${this.test.id}`;
+		switch (status) {
+			case TestStatus.Running:
+				this.iconPath = this.getIconPath("running");
+			case TestStatus.Passed:
+				this.iconPath = this.getIconPath("pass");
+			case TestStatus.Failed:
+			case TestStatus.Errored:
+				this.iconPath = this.getIconPath("fail");
+			case TestStatus.Skipped:
+				this.iconPath = this.getIconPath("skip");
+			default:
+				this.iconPath = null;
+		}
+	}
+
+	private getIconPath(name: string): { light: vs.Uri, dark: vs.Uri } {
+		return {
+			dark: vs.Uri.file(path.join(extensionPath, `media/icons/tests/${name}_white.svg`)),
+			light: vs.Uri.file(path.join(extensionPath, `media/icons/tests/${name}_black.svg`)),
+		};
 	}
 }
 
