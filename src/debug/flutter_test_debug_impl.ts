@@ -22,12 +22,12 @@ export class FlutterTestDebugSession extends DartDebugSession {
 			appArgs.push("--start-paused");
 		}
 
-		// TODO: Validate that args.program is always absolute (we use it as a key for notifications).
-		appArgs.push(this.sourceFileForArgs(args));
-
 		if (args.args) {
 			appArgs = appArgs.concat(args.args);
 		}
+
+		// TODO: Validate that args.program is always absolute (we use it as a key for notifications).
+		appArgs.push(this.sourceFileForArgs(args));
 
 		const logger = (message: string) => this.sendEvent(new Event("dart.log.flutter.test", { message }));
 		this.flutter = new FlutterTest(args.flutterPath, args.cwd, appArgs, args.flutterTestLogFile, logger);
