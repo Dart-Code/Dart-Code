@@ -459,16 +459,13 @@ describe("dart cli debugger", () => {
 			const observatoryUri = await process.observatoryUri;
 
 			const config = await attachDebugger(observatoryUri);
-			await Promise.all([
-				dc.hitBreakpoint(config, {
-					line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-					path: fsPath(helloWorldMainFile),
-				}).then(async (_) => {
-					console.log("Disconnecting...");
-					await dc.disconnectRequest();
-					console.log("Disconnected!");
-				}),
-			]);
+			await dc.hitBreakpoint(config, {
+				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+				path: fsPath(helloWorldMainFile),
+			});
+			console.log("Disconnecting...");
+			await dc.disconnectRequest();
+			console.log("Disconnected!");
 
 			console.log("Waiting for process to terminate...");
 			await process.exitCode;
