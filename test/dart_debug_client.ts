@@ -114,10 +114,10 @@ export class DartDebugClient extends DebugClient {
 		});
 	}
 
-	public waitForTestNotification<T extends Notification>(type: string, filter: (notification: T) => boolean): Promise<T> {
-		return this.waitForCustomEvent<T>(
+	public async waitForTestNotification<T extends Notification>(type: string, filter: (notification: T) => boolean): Promise<void> {
+		await this.waitForCustomEvent<{ suitePath: string, notification: T }>(
 			"dart.testRunNotification",
-			(notification) => notification.type === type && filter(notification as T),
+			(event) => event.notification.type === type && filter(event.notification as T),
 		);
 	}
 
