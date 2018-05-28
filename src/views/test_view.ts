@@ -33,12 +33,19 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		if (!element) {
 			return suites;
 		} else if (element instanceof SuiteTreeItem || element instanceof GroupTreeItem) {
-			return [].concat(element.groups).concat(element.tests);
+			// If we got a Suite and it has only a single phantom child group, then just bounce over it.
+			if (element instanceof SuiteTreeItem && element.groups.length === 1 && !element.groups[0].group.name)
+				return [].concat(element.groups[0].groups).concat(element.groups[0].tests);
+			else
+				return [].concat(element.groups).concat(element.tests);
 		}
 	}
 
 	public getParent?(element: vs.TreeItem): vs.ProviderResult<vs.TreeItem> {
 		if (element instanceof GroupTreeItem || element instanceof TestTreeItem) {
+			// If our parent is a phantom group at the top level, then just bounce over it.
+			if (element.parent instanceof GroupTreeItem && !element.parent.group.name && element.parent.parent instanceof SuiteTreeItem)
+				return element.parent.parent;
 			return element.parent;
 		}
 	}
