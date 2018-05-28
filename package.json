@@ -418,6 +418,18 @@
 					"command": "dart.startWithoutDebugging",
 					"group": "4.5_exec@1"
 				}
+			],
+			"view/item/context": [
+				{
+					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testSuiteNode",
+					"command": "dart.startDebugging",
+					"group": "4.5_exec@1"
+				},
+				{
+					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testSuiteNode",
+					"command": "dart.startWithoutDebugging",
+					"group": "4.5_exec@1"
+				}
 			]
 		},
 		"views": {
