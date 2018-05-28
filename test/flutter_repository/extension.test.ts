@@ -4,6 +4,10 @@ import * as vs from "vscode";
 import { fsPath } from "../../src/utils";
 import { ext } from "../helpers";
 
+beforeEach("set timeout", function () {
+	this.timeout(90000); // These tests can be slow due to having to analyzer the whole Flutter repo.
+});
+
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
 		const wfs = vs.workspace.workspaceFolders;
