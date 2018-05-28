@@ -32,6 +32,9 @@ export class FlutterRun extends StdIOService<UnknownNotification> {
 			this.notify(this.errorSubscriptions, evt.params.error as string);
 		}
 		switch (evt.event) {
+			case "daemon.connected":
+				this.notify(this.daemonConnectedSubscriptions, evt.params as f.DaemonConnected);
+				break;
 			case "app.start":
 				this.notify(this.appStartSubscriptions, evt.params as f.AppStart);
 				break;
@@ -52,6 +55,7 @@ export class FlutterRun extends StdIOService<UnknownNotification> {
 
 	// Subscription lists.
 
+	private daemonConnectedSubscriptions: Array<(notification: f.DaemonConnected) => void> = [];
 	private appStartSubscriptions: Array<(notification: f.AppStart) => void> = [];
 	private appDebugPortSubscriptions: Array<(notification: f.AppDebugPort) => void> = [];
 	private appStartedSubscriptions: Array<(notification: f.AppEvent) => void> = [];
@@ -74,6 +78,10 @@ export class FlutterRun extends StdIOService<UnknownNotification> {
 	}
 
 	// Subscription methods.
+
+	public registerForDaemonConnect(subscriber: (notification: f.DaemonConnected) => void): Disposable {
+		return this.subscribe(this.daemonConnectedSubscriptions, subscriber);
+	}
 
 	public registerForAppStart(subscriber: (notification: f.AppStart) => void): Disposable {
 		return this.subscribe(this.appStartSubscriptions, subscriber);
