@@ -34,6 +34,7 @@ export class FlutterTest extends StdIOService<{ type: string }> {
 				break;
 		}
 
+		// Send all events to the editor.
 		this.notify(this.allTestNotificationsSubscriptions, evt);
 	}
 
