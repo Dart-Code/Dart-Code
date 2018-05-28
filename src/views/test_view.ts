@@ -61,11 +61,11 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 				return []
 					.concat(element.tests.filter((t) => !t.hidden))
 					.concat(element.groups[0].groups)
-					.concat(element.groups[0].tests);
+					.concat(element.groups[0].tests.filter((t) => !t.hidden));
 			else
 				return []
 					.concat(element.groups)
-					.concat(element.tests);
+					.concat(element.tests.filter((t) => !t.hidden));
 		}
 	}
 
@@ -200,6 +200,17 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	private handleDoneNotification(suite: SuiteData, evt: DoneNotification) {
 		// TODO: Some notification that things are complete?
 		// TODO: Maybe a progress bar during the run?
+
+		// We have to hide all stale results here because we have no reliable way
+		// to match up new tests with the previos run. Consider the user runs 10 tests
+		// and then runs just one. The ID of the single run in the second run is "1" sp
+		// we overwrite the node for "1" and update it's ID, but if it was previously
+		// test "5" then we now have a dupe in the tree (one updated, one stale) and
+		// the original "1" has vanished.
+		suite.tests.filter((t) => t.status === TestStatus.Stale).forEach((t) => {
+			t.hidden = true;
+			this.onDidChangeTreeDataEmitter.fire(t.parent);
+		});
 	}
 
 	private handlePrintNotification(suite: SuiteData, evt: PrintNotification) {
@@ -251,6 +262,7 @@ class GroupTreeItem extends vs.TreeItem {
 
 class TestTreeItem extends vs.TreeItem {
 	private _test: Test; // tslint:disable-line:variable-name
+	private _status: TestStatus; // tslint:disable-line:variable-name
 	constructor(public suite: SuiteData, test: Test, public hidden = false) {
 		super(test.name, vs.TreeItemCollapsibleState.None);
 		this._test = test;
@@ -266,7 +278,12 @@ class TestTreeItem extends vs.TreeItem {
 			: this.suite.suites[this.test.suiteID];
 	}
 
+	get status(): TestStatus {
+		return this._status;
+	}
+
 	set status(status: TestStatus) {
+		this._status = status;
 		this.iconPath = getIconPath(status);
 	}
 
