@@ -129,8 +129,12 @@ export class FlutterDebugSession extends DartDebugSession {
 		response: DebugProtocol.DisconnectResponse,
 		args: DebugProtocol.DisconnectArguments,
 	): Promise<void> {
+		try {
 			if (this.currentRunningAppId && this.appHasStarted)
 				await this.flutter.stop(this.currentRunningAppId);
+		} catch (e) {
+			this.errorResponse(response, `${e}`);
+		}
 		super.disconnectRequest(response, args);
 	}
 
