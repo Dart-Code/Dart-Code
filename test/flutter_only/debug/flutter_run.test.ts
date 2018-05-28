@@ -66,6 +66,24 @@ describe("flutter run debugger", () => {
 		await dc.waitForEvent("terminated");
 	});
 
+	it("can quit during a build", async () => {
+		const config = await startDebugger(flutterHelloWorldMainFile);
+		// Kick off a build, but do not await it...
+		Promise.all([
+			dc.configurationSequence(),
+			dc.launch(config),
+		]);
+
+		// Wait 3 seconds to ensure the build is in progress...
+		await delay(3000);
+
+		// Send a disconnect request and ensure it happens within 5 seconds.
+		await Promise.race([
+			dc.disconnectRequest(),
+			new Promise((resolve, reject) => setTimeout(() => reject(new Error("Did not complete disconnectRequest within 5s")), 500)),
+		]);
+	});
+
 	it.skip("runs a Flutter application with a relative path", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldMainFile));
