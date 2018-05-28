@@ -87,7 +87,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	private async getEmulators(): Promise<Array<{ id: string, name: string }>> {
 		try {
-			return await this.daemon.getEmulators();
+			const emus = await this.daemon.getEmulators();
+			return emus.map((e) => ({
+				id: e.id,
+				name: e.name || e.id,
+			}));
 		} catch (e) {
 			logError({ message: e });
 			return [];
