@@ -144,10 +144,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			testNode.status = TestStatus.Unknown;
 		}
 		this.onDidChangeTreeDataEmitter.fire(testNode);
-
-		// TODO: Remove this
-		const pass = evt.result === "success";
-		const symbol = pass ? tick : cross;
 	}
 
 	private handleGroupNotification(evt: GroupNotification) {
@@ -213,6 +209,7 @@ class GroupTreeItem extends vs.TreeItem {
 class TestTreeItem extends vs.TreeItem {
 	constructor(public test: Test) {
 		super(test.name, vs.TreeItemCollapsibleState.None);
+		this.id = `test_${this.test.id}`;
 		// TODO: Allow re-running tests/groups/suites
 		this.contextValue = DART_TEST_TEST_NODE;
 	}
@@ -224,28 +221,31 @@ class TestTreeItem extends vs.TreeItem {
 	}
 
 	set status(status: TestStatus) {
-		this.label = `${this.test.name} (${TestStatus[status]})`;
-		this.id = `test_${this.test.id}`;
 		switch (status) {
 			case TestStatus.Running:
 				this.iconPath = this.getIconPath("running");
+				break;
 			case TestStatus.Passed:
 				this.iconPath = this.getIconPath("pass");
+				break;
 			case TestStatus.Failed:
 			case TestStatus.Errored:
 				this.iconPath = this.getIconPath("fail");
+				break;
 			case TestStatus.Skipped:
 				this.iconPath = this.getIconPath("skip");
+				break;
+			case TestStatus.Stale:
+			case TestStatus.Unknown:
+				this.iconPath = this.getIconPath("stale");
+				break;
 			default:
 				this.iconPath = null;
 		}
 	}
 
-	private getIconPath(name: string): { light: vs.Uri, dark: vs.Uri } {
-		return {
-			dark: vs.Uri.file(path.join(extensionPath, `media/icons/tests/${name}_white.svg`)),
-			light: vs.Uri.file(path.join(extensionPath, `media/icons/tests/${name}_black.svg`)),
-		};
+	private getIconPath(name: string): vs.Uri {
+		return vs.Uri.file(path.join(extensionPath, `media/icons/tests/${name}.svg`));
 	}
 }
 
