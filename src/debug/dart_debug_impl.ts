@@ -100,7 +100,7 @@ export class DartDebugSession extends DebugSession {
 			this.sendEvent(new OutputEvent(`${error}`, "stderr"));
 		});
 		process.on("exit", (code, signal) => {
-			this.logToFile(`Process excited with code ${code}`);
+			this.logToFile(`Process exited with code ${code}`);
 			this.processExited = true;
 			if (!code && !signal)
 				this.sendEvent(new OutputEvent("Exited"));
@@ -270,7 +270,7 @@ export class DartDebugSession extends DebugSession {
 					this.logStream.end();
 					this.logStream = null;
 					// Wipe out the filename so if a message arrives late, it doesn't
-					// wipe out the logfile with just a "process excited" or similar message.
+					// wipe out the logfile with just a "process exited" or similar message.
 					this.logFile = null;
 				}
 				// This event arrives before the process exit event.
