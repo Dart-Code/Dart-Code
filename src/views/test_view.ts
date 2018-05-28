@@ -2,6 +2,7 @@ import * as _ from "lodash";
 import * as path from "path";
 import * as vs from "vscode";
 import { extensionPath } from "../extension";
+import { fsPath } from "../utils";
 import { DoneNotification, ErrorNotification, Group, GroupNotification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "./test_protocol";
 
 const DART_TEST_SUITE_NODE = "dart-code:testSuiteNode";
@@ -21,6 +22,29 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 				this.handleNotification(e.body.suitePath, e.body.notification);
 			}
 		}));
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | TestTreeItem) => {
+			vs.debug.startDebugging(
+				vs.workspace.getWorkspaceFolder(treeNode.resourceUri),
+				this.getLaunchConfig(false, treeNode),
+			);
+		}));
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteTreeItem | TestTreeItem) => {
+			vs.debug.startDebugging(
+				vs.workspace.getWorkspaceFolder(treeNode.resourceUri),
+				this.getLaunchConfig(true, treeNode),
+			);
+		}));
+	}
+
+	private getLaunchConfig(noDebug: boolean, treeNode: SuiteTreeItem | TestTreeItem) {
+		return {
+			args: treeNode instanceof TestTreeItem ? ["--plain-name", treeNode.test.name] : undefined,
+			name: "Tests",
+			noDebug,
+			program: fsPath(treeNode.resourceUri),
+			request: "launch",
+			type: "dart",
+		};
 	}
 
 	public getTreeItem(element: vs.TreeItem): vs.TreeItem | Thenable<vs.TreeItem> {
@@ -197,7 +221,7 @@ class SuiteData {
 	public readonly tests: TestTreeItem[] = [];
 }
 
-class SuiteTreeItem extends vs.TreeItem {
+export class SuiteTreeItem extends vs.TreeItem {
 	public readonly groups: GroupTreeItem[] = [];
 	public readonly tests: TestTreeItem[] = [];
 
@@ -226,8 +250,11 @@ class GroupTreeItem extends vs.TreeItem {
 }
 
 class TestTreeItem extends vs.TreeItem {
-	constructor(public suite: SuiteData, public test: Test, public hidden = false) {
+	private _test: Test; // tslint:disable-line:variable-name
+	constructor(public suite: SuiteData, test: Test, public hidden = false) {
 		super(test.name, vs.TreeItemCollapsibleState.None);
+		this._test = test;
+		this.resourceUri = vs.Uri.file(suite.path);
 		this.id = `suite_${this.suite.path}_test_${this.test.id}`;
 		// TODO: Allow re-running tests/groups/suites
 		this.contextValue = DART_TEST_TEST_NODE;
@@ -241,6 +268,15 @@ class TestTreeItem extends vs.TreeItem {
 
 	set status(status: TestStatus) {
 		this.iconPath = getIconPath(status);
+	}
+
+	get test(): Test {
+		return this._test;
+	}
+
+	set test(test: Test) {
+		this._test = test;
+		this.label = test.name;
 	}
 }
 

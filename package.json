@@ -115,6 +115,16 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.startDebuggingTest",
+				"title": "Start Debugging",
+				"category": "Dart"
+			},
+			{
+				"command": "dart.startWithoutDebuggingTest",
+				"title": "Start Without Debugging",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.sortMembers",
 				"title": "Sort Members",
 				"category": "Dart"
@@ -265,6 +275,14 @@
 				},
 				{
 					"command": "dart.startWithoutDebugging",
+					"when": "false"
+				},
+				{
+					"command": "dart.startDebuggingTest",
+					"when": "false"
+				},
+				{
+					"command": "dart.startWithoutDebuggingTest",
 					"when": "false"
 				},
 				{
@@ -422,12 +440,22 @@
 			"view/item/context": [
 				{
 					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testSuiteNode",
-					"command": "dart.startDebugging",
+					"command": "dart.startDebuggingTest",
 					"group": "4.5_exec@1"
 				},
 				{
 					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testSuiteNode",
-					"command": "dart.startWithoutDebugging",
+					"command": "dart.startWithoutDebuggingTest",
+					"group": "4.5_exec@1"
+				},
+				{
+					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testTestNode",
+					"command": "dart.startDebuggingTest",
+					"group": "4.5_exec@1"
+				},
+				{
+					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testTestNode",
+					"command": "dart.startWithoutDebuggingTest",
 					"group": "4.5_exec@1"
 				}
 			]
