@@ -1,4 +1,3 @@
-
 export interface Notification {
 	type: string;
 	time: number;
