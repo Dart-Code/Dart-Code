@@ -72,8 +72,18 @@ export class DebugCommands {
 			}
 		}));
 		let debugSessionStart: Date;
-		context.subscriptions.push(vs.debug.onDidStartDebugSession((s) => {
-			if (s.type === "dart") {
+		context.subscriptions.push(vs.debug.onDidStartDebugSession(async (s) => {
+			let type = s.type;
+
+			// The Visual Studio Live Share extension overrides the type to proxy debug sessions so
+			// it won't be "dart". We can request the real info from it with the debugSessionInfo
+			// custom request.
+			if (type === "vslsShare") {
+				const debugSessionInfo = await s.customRequest("debugSessionInfo");
+				type = debugSessionInfo.configurationProperties.type;
+			}
+
+			if (type === "dart") {
 				this.currentDebugSession = s;
 				this.resetFlutterSettings();
 				debugSessionStart = new Date();
