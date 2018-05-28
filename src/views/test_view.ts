@@ -3,9 +3,6 @@ import * as vs from "vscode";
 import { extensionPath } from "../extension";
 import { DoneNotification, ErrorNotification, Group, GroupNotification, PrintNotification, StartNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "./test_protocol";
 
-const tick = "✓";
-const cross = "✖";
-
 const DART_TEST_SUITE_NODE = "dart-code:testSuiteNode";
 const DART_TEST_GROUP_NODE = "dart-code:testGroupNode";
 const DART_TEST_TEST_NODE = "dart-code:testTestNode";
@@ -36,8 +33,9 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			return suites;
 		} else if (element instanceof SuiteTreeItem || element instanceof GroupTreeItem) {
 			// If we got a Suite and it has only a single phantom child group, then just bounce over it.
+			// (but still include its tests so we can see loading...)
 			if (element instanceof SuiteTreeItem && element.groups.length === 1 && !element.groups[0].group.name)
-				return [].concat(element.groups[0].groups).concat(element.groups[0].tests);
+				return [].concat(element.tests.filter((t) => !t.hidden)).concat(element.groups[0].groups).concat(element.groups[0].tests);
 			else
 				return [].concat(element.groups).concat(element.tests);
 		}
@@ -106,32 +104,37 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	private handleTestStartNotifcation(evt: TestStartNotification) {
-		if (tests[evt.test.id]) {
-			const testNode = tests[evt.test.id];
-			const oldParent = testNode.parent;
-			testNode.test = evt.test;
-			this.onDidChangeTreeDataEmitter.fire(testNode);
-			if (oldParent !== testNode.parent) {
-				// TODO: Re-parent...
-			}
-		} else {
-			const testNode = new TestTreeItem(evt.test);
+		const isExistingTest = !!tests[evt.test.id];
+		const testNode = tests[evt.test.id] || new TestTreeItem(evt.test);
+		let oldParent: SuiteTreeItem | GroupTreeItem;
+
+		if (!isExistingTest) {
 			tests[evt.test.id] = testNode;
-			testNode.status = TestStatus.Running;
+			oldParent = testNode.parent;
+		}
+		testNode.hidden = false;
+		testNode.status = TestStatus.Running;
+		testNode.test = evt.test;
+
+		// Remove from old parent if required.
+		if (oldParent && oldParent !== testNode.parent) {
+			oldParent.tests.splice(oldParent.tests.indexOf(testNode), 1);
+			this.onDidChangeTreeDataEmitter.fire(oldParent);
+		}
+
+		// Push to new parent if required.
+		if (!isExistingTest) {
 			testNode.parent.tests.push(testNode);
 			this.onDidChangeTreeDataEmitter.fire(testNode.parent);
 		}
+		// Always fire this, whether it was new or not, as the status has changed.
+		this.onDidChangeTreeDataEmitter.fire(testNode);
 	}
 
 	private handleTestDoneNotification(evt: TestDoneNotification) {
 		const testNode = tests[evt.testID];
 
-		// If this test should be hidden, remove from its parent
-		if (evt.hidden) {
-			testNode.parent.tests.splice(testNode.parent.tests.indexOf(testNode), 1);
-			this.onDidChangeTreeDataEmitter.fire(testNode.parent);
-			return;
-		}
+		testNode.hidden = evt.hidden;
 		if (evt.skipped) {
 			testNode.status = TestStatus.Skipped;
 		} else if (evt.result === "success") {
@@ -143,6 +146,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		else {
 			testNode.status = TestStatus.Unknown;
 		}
+
+		this.onDidChangeTreeDataEmitter.fire(testNode.parent);
 		this.onDidChangeTreeDataEmitter.fire(testNode);
 	}
 
@@ -207,7 +212,7 @@ class GroupTreeItem extends vs.TreeItem {
 }
 
 class TestTreeItem extends vs.TreeItem {
-	constructor(public test: Test) {
+	constructor(public test: Test, public hidden = false) {
 		super(test.name, vs.TreeItemCollapsibleState.None);
 		this.id = `test_${this.test.id}`;
 		// TODO: Allow re-running tests/groups/suites
