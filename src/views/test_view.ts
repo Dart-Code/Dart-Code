@@ -240,32 +240,37 @@ class TestTreeItem extends vs.TreeItem {
 	}
 
 	set status(status: TestStatus) {
-		switch (status) {
-			case TestStatus.Running:
-				this.iconPath = this.getIconPath("running");
-				break;
-			case TestStatus.Passed:
-				this.iconPath = this.getIconPath("pass");
-				break;
-			case TestStatus.Failed:
-			case TestStatus.Errored:
-				this.iconPath = this.getIconPath("fail");
-				break;
-			case TestStatus.Skipped:
-				this.iconPath = this.getIconPath("skip");
-				break;
-			case TestStatus.Stale:
-			case TestStatus.Unknown:
-				this.iconPath = this.getIconPath("stale");
-				break;
-			default:
-				this.iconPath = null;
-		}
+		this.iconPath = getIconPath(status);
+	}
+}
+
+function getIconPath(status: TestStatus): vs.Uri {
+	let file: string;
+	switch (status) {
+		case TestStatus.Running:
+			file = "running";
+			break;
+		case TestStatus.Passed:
+			file = "pass";
+			break;
+		case TestStatus.Failed:
+		case TestStatus.Errored:
+			file = "fail";
+			break;
+		case TestStatus.Skipped:
+			file = "skip";
+			break;
+		case TestStatus.Stale:
+		case TestStatus.Unknown:
+			file = "stale";
+			break;
+		default:
+			file = undefined;
 	}
 
-	private getIconPath(name: string): vs.Uri {
-		return vs.Uri.file(path.join(extensionPath, `media/icons/tests/${name}.svg`));
-	}
+	return file
+		? vs.Uri.file(path.join(extensionPath, `media/icons/tests/${file}.svg`))
+		: undefined;
 }
 
 enum TestStatus {
