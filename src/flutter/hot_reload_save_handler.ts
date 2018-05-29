@@ -1,10 +1,11 @@
 import { DiagnosticCollection, DiagnosticSeverity, ExtensionContext, commands, workspace } from "vscode";
 import { config } from "../config";
+import { isAnalyzableAndInWorkspace } from "../utils";
 
 export function setUpHotReloadOnSave(context: ExtensionContext, diagnostics: DiagnosticCollection) {
 	let hotReloadDelayTimer: NodeJS.Timer;
 	context.subscriptions.push(workspace.onDidSaveTextDocument((td) => {
-		if (!config.flutterHotReloadOnSave)
+		if (!config.flutterHotReloadOnSave || !isAnalyzableAndInWorkspace(td))
 			return;
 
 		// Don't do if we have errors for the saved file.
