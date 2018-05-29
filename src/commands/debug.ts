@@ -4,19 +4,22 @@ import { PromiseCompleter } from "../debug/utils";
 import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
 import { fsPath, logError, openInBrowser } from "../utils";
 
+let debugPaintingEnabled = false;
+let performanceOverlayEnabled = false;
+let repaintRainbowEnabled = false;
+let timeDilation = 1.0;
+let debugModeBannerEnabled = true;
+let paintBaselinesEnabled = false;
+let currentDebugSession: vs.DebugSession;
+let progressPromise: PromiseCompleter<void>;
+let observatoryUri: string = null;
+
 export class DebugCommands {
 	private analytics: Analytics;
-	private debugPaintingEnabled = false;
-	private performanceOverlayEnabled = false;
-	private repaintRainbowEnabled = false;
-	private timeDilation = 1.0;
-	private debugModeBannerEnabled = true;
-	private paintBaselinesEnabled = false;
-	private currentDebugSession: vs.DebugSession;
-	private progressPromise: PromiseCompleter<void>;
+
+	// TODO: Do we need to push these into context?
 	private reloadStatus = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left);
 	private debugMetrics = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 0);
-	private observatoryUri: string = null;
 
 	constructor(context: vs.ExtensionContext, analytics: Analytics) {
 		this.analytics = analytics;
@@ -25,22 +28,22 @@ export class DebugCommands {
 			if (e.event === "dart.progress") {
 				if (e.body.message) {
 					// Clear any old progress first
-					if (this.progressPromise)
-						this.progressPromise.resolve();
-					this.progressPromise = new PromiseCompleter();
+					if (progressPromise)
+						progressPromise.resolve();
+					progressPromise = new PromiseCompleter();
 					vs.window.withProgress(
 						{ location: vs.ProgressLocation.Notification, title: e.body.message },
-						(_) => this.progressPromise.promise,
+						(_) => progressPromise.promise,
 					);
 				}
 				if (e.body.finished) {
-					if (this.progressPromise) {
-						this.progressPromise.resolve();
-						this.progressPromise = null;
+					if (progressPromise) {
+						progressPromise.resolve();
+						progressPromise = null;
 					}
 				}
 			} else if (e.event === "dart.observatoryUri") {
-				this.observatoryUri = e.body.observatoryUri;
+				observatoryUri = e.body.observatoryUri;
 			} else if (e.event === "dart.restartRequest") {
 				// This event comes back when the user restarts with the Restart button
 				// (eg. it wasn't intiated from our extension, so we don't get to log it
@@ -84,17 +87,17 @@ export class DebugCommands {
 			}
 
 			if (type === "dart") {
-				this.currentDebugSession = s;
+				currentDebugSession = s;
 				this.resetFlutterSettings();
 				debugSessionStart = new Date();
 			}
 		}));
 		context.subscriptions.push(vs.debug.onDidTerminateDebugSession((s) => {
-			if (s === this.currentDebugSession) {
-				this.currentDebugSession = null;
-				this.observatoryUri = null;
-				if (this.progressPromise)
-					this.progressPromise.resolve();
+			if (s === currentDebugSession) {
+				currentDebugSession = null;
+				observatoryUri = null;
+				if (progressPromise)
+					progressPromise.resolve();
 				this.reloadStatus.hide();
 				this.debugMetrics.hide();
 				const debugSessionEnd = new Date();
@@ -103,43 +106,43 @@ export class DebugCommands {
 			}
 		}));
 
-		this.registerBoolServiceCommand("ext.flutter.debugPaint", () => this.debugPaintingEnabled);
-		this.registerBoolServiceCommand("ext.flutter.showPerformanceOverlay", () => this.performanceOverlayEnabled);
-		this.registerBoolServiceCommand("ext.flutter.repaintRainbow", () => this.repaintRainbowEnabled);
-		this.registerServiceCommand("ext.flutter.timeDilation", () => ({ timeDilation: this.timeDilation }));
-		this.registerBoolServiceCommand("ext.flutter.debugAllowBanner", () => this.debugModeBannerEnabled);
-		this.registerBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", () => this.paintBaselinesEnabled);
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => { this.debugPaintingEnabled = !this.debugPaintingEnabled; this.sendServiceSetting("ext.flutter.debugPaint"); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => { this.performanceOverlayEnabled = !this.performanceOverlayEnabled; this.sendServiceSetting("ext.flutter.showPerformanceOverlay"); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => { this.repaintRainbowEnabled = !this.repaintRainbowEnabled; this.sendServiceSetting("ext.flutter.repaintRainbow"); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => { this.timeDilation = 6.0 - this.timeDilation; this.sendServiceSetting("ext.flutter.timeDilation"); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => { this.debugModeBannerEnabled = !this.debugModeBannerEnabled; this.sendServiceSetting("ext.flutter.debugAllowBanner"); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => { this.paintBaselinesEnabled = !this.paintBaselinesEnabled; this.sendServiceSetting("ext.flutter.debugPaintBaselinesEnabled"); }));
+		this.registerBoolServiceCommand("ext.flutter.debugPaint", () => debugPaintingEnabled);
+		this.registerBoolServiceCommand("ext.flutter.showPerformanceOverlay", () => performanceOverlayEnabled);
+		this.registerBoolServiceCommand("ext.flutter.repaintRainbow", () => repaintRainbowEnabled);
+		this.registerServiceCommand("ext.flutter.timeDilation", () => ({ timeDilation }));
+		this.registerBoolServiceCommand("ext.flutter.debugAllowBanner", () => debugModeBannerEnabled);
+		this.registerBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", () => paintBaselinesEnabled);
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => { debugPaintingEnabled = !debugPaintingEnabled; this.sendServiceSetting("ext.flutter.debugPaint"); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => { performanceOverlayEnabled = !performanceOverlayEnabled; this.sendServiceSetting("ext.flutter.showPerformanceOverlay"); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => { repaintRainbowEnabled = !repaintRainbowEnabled; this.sendServiceSetting("ext.flutter.repaintRainbow"); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => { timeDilation = 6.0 - timeDilation; this.sendServiceSetting("ext.flutter.timeDilation"); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => { debugModeBannerEnabled = !debugModeBannerEnabled; this.sendServiceSetting("ext.flutter.debugAllowBanner"); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => { paintBaselinesEnabled = !paintBaselinesEnabled; this.sendServiceSetting("ext.flutter.debugPaintBaselinesEnabled"); }));
 
 		// Open Observatory.
 		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", () => {
-			if (this.observatoryUri) {
-				openInBrowser(this.observatoryUri);
+			if (observatoryUri) {
+				openInBrowser(observatoryUri);
 				analytics.logDebuggerOpenObservatory();
 			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.openTimeline", () => {
-			if (this.observatoryUri) {
-				openInBrowser(this.observatoryUri + "/#/timeline-dashboard");
+			if (observatoryUri) {
+				openInBrowser(observatoryUri + "/#/timeline-dashboard");
 				analytics.logDebuggerOpenTimeline();
 			}
 		}));
 
 		// Misc custom debug commands.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", () => {
-			if (!this.currentDebugSession)
+			if (!currentDebugSession)
 				return;
 			this.reloadStatus.hide();
 			this.sendCustomFlutterDebugCommand("hotReload");
 			analytics.logDebuggerHotReload();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.hotRestart", () => {
-			if (!this.currentDebugSession)
+			if (!currentDebugSession)
 				return;
 			this.reloadStatus.hide();
 			this.sendCustomFlutterDebugCommand("hotRestart");
@@ -171,7 +174,7 @@ export class DebugCommands {
 
 		// Attach commands.
 		context.subscriptions.push(vs.commands.registerCommand("dart.attach", () => {
-			if (this.currentDebugSession)
+			if (currentDebugSession)
 				return;
 			vs.debug.startDebugging(undefined, {
 				name: "Dart: Attach to Process",
@@ -216,12 +219,17 @@ export class DebugCommands {
 	}
 
 	private sendCustomFlutterDebugCommand(type: string, args?: any) {
-		if (this.currentDebugSession)
-			this.currentDebugSession.customRequest(type, args);
+		if (currentDebugSession)
+			currentDebugSession.customRequest(type, args);
 	}
 
 	private resetFlutterSettings() {
-		this.debugPaintingEnabled = false, this.performanceOverlayEnabled = false, this.repaintRainbowEnabled = false, this.timeDilation = 1.0, this.debugModeBannerEnabled = true, this.paintBaselinesEnabled = false;
+		debugPaintingEnabled = false;
+		performanceOverlayEnabled = false;
+		repaintRainbowEnabled = false;
+		timeDilation = 1.0;
+		debugModeBannerEnabled = true;
+		paintBaselinesEnabled = false;
 	}
 
 	private enabledServiceExtensions: string[] = [];
