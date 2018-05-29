@@ -47,17 +47,17 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		};
 	}
 
-	public getTreeItem(element: vs.TreeItem): vs.TreeItem | Thenable<vs.TreeItem> {
+	public getTreeItem(element: vs.TreeItem): vs.TreeItem {
 		return element;
 	}
 
-	public getChildren(element?: vs.TreeItem): vs.ProviderResult<vs.TreeItem[]> {
+	public getChildren(element?: vs.TreeItem): vs.TreeItem[] {
 		if (!element) {
 			return _.flatMap(Object.keys(suites).map((k) => suites[k].suites));
 		} else if (element instanceof SuiteTreeItem || element instanceof GroupTreeItem) {
 			// If we got a Suite and it has only a single phantom child group, then just bounce over it.
 			// (but still include its tests so we can see loading...)
-			if (element instanceof SuiteTreeItem && element.groups.length === 1 && !element.groups[0].group.name)
+			if (element instanceof SuiteTreeItem && element.groups.length === 1 && element.groups[0].isPhantomGroup)
 				return []
 					.concat(element.tests.filter((t) => !t.hidden))
 					.concat(element.groups[0].groups)
@@ -69,13 +69,13 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		}
 	}
 
-	public getParent?(element: vs.TreeItem): vs.ProviderResult<vs.TreeItem> {
-		if (element instanceof GroupTreeItem || element instanceof TestTreeItem) {
-			// If our parent is a phantom group at the top level, then just bounce over it.
-			if (element.parent instanceof GroupTreeItem && !element.parent.group.name && element.parent.parent instanceof SuiteTreeItem)
-				return element.parent.parent;
-			return element.parent;
-		}
+	public getParent?(element: vs.TreeItem): vs.TreeItem {
+		if (!(element instanceof TestTreeItem || element instanceof GroupTreeItem))
+			return;
+		// If our parent is a phantom group at the top level, then just bounce over it.
+		if (element instanceof GroupTreeItem && element.isPhantomGroup && element.parent instanceof GroupTreeItem)
+			return element.parent.parent;
+		return element.parent;
 	}
 
 	public dispose(): any {
@@ -159,7 +159,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		if (!isExistingTest)
 			testNode.parent.tests.push(testNode);
 
-		this.onDidChangeTreeDataEmitter.fire(testNode.parent);
+		this.onDidChangeTreeDataEmitter.fire(this.getParent(testNode));
 		this.onDidChangeTreeDataEmitter.fire(testNode);
 	}
 
@@ -179,7 +179,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			testNode.status = TestStatus.Unknown;
 		}
 
-		this.onDidChangeTreeDataEmitter.fire(testNode.parent);
+		this.onDidChangeTreeDataEmitter.fire(this.getParent(testNode));
 		this.onDidChangeTreeDataEmitter.fire(testNode);
 	}
 
@@ -193,7 +193,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			const groupNode = new GroupTreeItem(suite, evt.group);
 			suite.groups[evt.group.id] = groupNode;
 			groupNode.parent.groups.push(groupNode);
-			this.onDidChangeTreeDataEmitter.fire(groupNode.parent);
+			this.onDidChangeTreeDataEmitter.fire(this.getParent(groupNode));
 		}
 	}
 
@@ -251,6 +251,10 @@ class GroupTreeItem extends vs.TreeItem {
 		super(group.name, vs.TreeItemCollapsibleState.Expanded);
 		this.contextValue = DART_TEST_GROUP_NODE;
 		this.id = `suite_${this.suite.path}_group_${this.group.id}`;
+	}
+
+	get isPhantomGroup() {
+		return !this.group.name && this.parent instanceof SuiteTreeItem;
 	}
 
 	get parent(): SuiteTreeItem | GroupTreeItem {
