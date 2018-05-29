@@ -7,8 +7,9 @@ import { logError } from "../utils";
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
 export abstract class StdIOService<T> implements Disposable {
-	protected additionalPidsToTerminate: number[] = [];
+	private disposables: Disposable[] = [];
 	public process: child_process.ChildProcess;
+	protected additionalPidsToTerminate: number[] = [];
 	protected messagesWrappedInBrackets = false;
 	protected treatHandlingErrorsAsUnhandledMessages = false;
 	private nextRequestID = 1;
@@ -164,7 +165,7 @@ export abstract class StdIOService<T> implements Disposable {
 
 	protected subscribe<T>(subscriptions: Array<(notification: T) => void>, subscriber: (notification: T) => void): Disposable {
 		subscriptions.push(subscriber);
-		return {
+		const disposable = {
 			dispose: () => {
 				const index = subscriptions.indexOf(subscriber);
 				if (index >= 0) {
@@ -172,6 +173,10 @@ export abstract class StdIOService<T> implements Disposable {
 				}
 			},
 		};
+
+		this.disposables.push(disposable);
+
+		return disposable;
 	}
 
 	public registerForRequestError(subscriber: (notification: any) => void): Disposable {
@@ -222,6 +227,8 @@ export abstract class StdIOService<T> implements Disposable {
 			// process above, so just swallow the error.
 		}
 		this.process = null;
+
+		this.disposables.forEach((d) => d.dispose());
 	}
 }
 
