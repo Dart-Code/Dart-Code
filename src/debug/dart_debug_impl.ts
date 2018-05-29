@@ -824,7 +824,7 @@ export class DartDebugSession extends DebugSession {
 		// unsupported
 	}
 
-	protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
+	protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): Promise<void> {
 		const expression: string = args.expression;
 		// Stack frame scope; if not specified, the expression is evaluated in the global scope.
 		const frameId: number = args.frameId;
@@ -840,7 +840,8 @@ export class DartDebugSession extends DebugSession {
 		const thread = data.thread;
 		const frame: VMFrame = data.data as VMFrame;
 
-		this.observatory.evaluateInFrame(thread.ref.id, frame.index, expression).then((result: DebuggerResult) => {
+		try {
+			const result = await this.observatory.evaluateInFrame(thread.ref.id, frame.index, expression);
 			// InstanceRef or ErrorRef
 			if (result.result.type === "@Error") {
 				const error: VMErrorRef = result.result as VMErrorRef;
@@ -856,7 +857,9 @@ export class DartDebugSession extends DebugSession {
 				};
 				this.sendResponse(response);
 			}
-		}).catch((error) => this.errorResponse(response, `${error}`));
+		} catch (e) {
+			this.errorResponse(response, `${e}`);
+		}
 	}
 
 	protected customRequest(request: string, response: DebugProtocol.Response, args: any): void {
