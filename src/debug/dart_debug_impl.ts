@@ -431,44 +431,18 @@ export class DartDebugSession extends DebugSession {
 		if (!breakpoints)
 			breakpoints = [];
 
-		// Get all possible valid source uris for the given path.
-		const uris = this.getPossibleSourceUris(source.path);
+		// Get the correct format for the path depending on whether it's a package.
+		const uri = this.packageMap.convertFileToPackageUri(source.path) || formatPathForVm(source.path);
 
-		uris.forEach((uri) => {
-			this.threadManager.setBreakpoints(uri, breakpoints).then((result: boolean[]) => {
-				const bpResponse = [];
-				for (const verified of result) {
-					bpResponse.push({ verified });
-				}
+		this.threadManager.setBreakpoints(uri, breakpoints).then((result: boolean[]) => {
+			const bpResponse = [];
+			for (const verified of result) {
+				bpResponse.push({ verified });
+			}
 
-				response.body = { breakpoints: bpResponse };
-				this.sendResponse(response);
-			}).catch((error) => this.errorResponse(response, `${error}`));
-		});
-	}
-
-	/***
-	 * Converts a source path to an array of possible uris.
-	 *
-	 * This is to ensure that we can hit breakpoints in the case
-	 * where the VM considers a file to be a package: uri and also
-	 * a filesystem uri (this can vary depending on how it was
-	 * imported by the user).
-	 */
-	protected getPossibleSourceUris(sourcePath: string): string[] {
-		const uris = [];
-
-		// Add the raw file path as a URI.
-		uris.push(formatPathForVm(sourcePath));
-
-		// Convert to package path and add that too.
-		if (this.packageMap) {
-			const packageUri = this.packageMap.convertFileToPackageUri(sourcePath);
-			if (packageUri)
-				uris.push(packageUri);
-		}
-
-		return uris;
+			response.body = { breakpoints: bpResponse };
+			this.sendResponse(response);
+		}).catch((error) => this.errorResponse(response, `${error}`));
 	}
 
 	protected setExceptionBreakPointsRequest(
@@ -1238,11 +1212,9 @@ export class DartDebugSession extends DebugSession {
 			return uri.replace("file://", "");
 		}
 
-		// The VM may return coverage using the device-local paths, so we need to convert them back to the hosts paths
-		const realScriptUris: { [key: string]: string } = {};
-		scriptUris.forEach((host) => {
-			this.getPossibleSourceUris(host).forEach((device) => realScriptUris[removeFilePrefix(device)] = uriToFilePath(host));
-		});
+		// Make a quick map for looking up with scripts we are tracking.
+		const trackedScriptUris: { [key: string]: boolean } = {};
+		scriptUris.forEach((uri) => trackedScriptUris[uri] = true);
 
 		const results: Array<{ hostScriptPath: string, script: VMScript, tokenPosTable: number[][], startPos: number, endPos: number, hits: number[], misses: number[] }> = [];
 		for (const isolate of isolates) {
@@ -1253,7 +1225,7 @@ export class DartDebugSession extends DebugSession {
 			const scriptRefs = flatMap(libraries, (library) => library.scripts);
 
 			// Filter scripts to the ones we care about.
-			const scripts = scriptRefs.filter((s) => realScriptUris[removeFilePrefix(s.uri)]);
+			const scripts = scriptRefs.filter((s) => trackedScriptUris[s.uri]);
 
 			for (const scriptRef of scripts) {
 				const script = (await this.observatory.getObject(isolate.id, scriptRef.id)).result as VMScript;
@@ -1266,7 +1238,7 @@ export class DartDebugSession extends DebugSession {
 						results.push({
 							endPos: range.endPos,
 							hits: range.coverage.hits,
-							hostScriptPath: realScriptUris[removeFilePrefix(script.uri)],
+							hostScriptPath: uriToFilePath(script.uri),
 							misses: range.coverage.misses,
 							script,
 							startPos: range.startPos,
