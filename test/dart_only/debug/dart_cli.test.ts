@@ -412,7 +412,7 @@ describe("dart cli debugger", () => {
 		]);
 
 		const variables = await dc.getTopFrameVariables("Exception");
-		ensureVariable(variables, undefined, "message", `"Oops"`);
+		ensureVariable(variables, "$e.message", "message", `"Oops"`);
 	});
 
 	it.skip("writes exception to stderr");

@@ -160,7 +160,7 @@ describe("flutter test debugger", () => {
 		assert.ok(variables);
 		const v = variables.find((v) => v.name === "message");
 		assert.ok(v);
-		assert.equal(v.evaluateName, undefined);
+		assert.equal(v.evaluateName, "$e.message");
 		assert.ok(v.value.startsWith(`"Expected: exactly one matching node in the widget tree`));
 	});
 
