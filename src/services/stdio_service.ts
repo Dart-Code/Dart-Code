@@ -2,10 +2,12 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import { Disposable } from "vscode";
 import { safeSpawn } from "../debug/utils";
+import { logError } from "../utils";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
 export abstract class StdIOService<T> implements Disposable {
+	protected additionalPidsToTerminate: number[] = [];
 	public process: child_process.ChildProcess;
 	protected messagesWrappedInBrackets = false;
 	protected treatHandlingErrorsAsUnhandledMessages = false;
@@ -205,7 +207,21 @@ export abstract class StdIOService<T> implements Disposable {
 			this.logStream = null;
 		}
 
-		this.process.kill();
+		for (const pid of this.additionalPidsToTerminate) {
+			try {
+				process.kill(pid);
+			} catch (e) {
+				logError({ message: e.toString() });
+			}
+		}
+		this.additionalPidsToTerminate.length = 0;
+		try {
+			this.process.kill();
+		} catch (e) {
+			// This tends to throw a lot because the shell process quit when we terminated the related
+			// process above, so just swallow the error.
+		}
+		this.process = null;
 	}
 }
 

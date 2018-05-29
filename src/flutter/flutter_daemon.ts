@@ -51,6 +51,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 
 	protected handleNotification(evt: UnknownNotification) {
 		switch (evt.event) {
+			case "daemon.connected":
+				const params = evt.params as f.DaemonConnected;
+				this.additionalPidsToTerminate.push(params.pid);
+				break;
 			case "device.added":
 				this.notify(this.deviceAddedSubscriptions, evt.params as f.Device);
 				break;
