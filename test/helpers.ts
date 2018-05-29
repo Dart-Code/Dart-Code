@@ -358,7 +358,7 @@ export async function ensureTestContent(expected: string): Promise<void> {
 
 export async function ensureTestContentWithCursorPos(expected: string): Promise<void> {
 	await ensureTestContent(expected.replace("^", ""));
-	assert.equal(doc.offsetAt(editor.selection.active), expected.indexOf("^"));
+	await tryFor(() => assert.equal(doc.offsetAt(editor.selection.active), expected.indexOf("^")), 100);
 }
 
 export function delay(milliseconds: number): Promise<void> {
@@ -386,6 +386,22 @@ export async function waitFor(action: () => boolean, message?: string, milliseco
 	}
 	if (throwOnFailure)
 		throw new Error("Action didn't return true within specified timeout" + (message ? ` (${message})` : ""));
+}
+
+export async function tryFor(action: () => Promise<void> | void, milliseconds: number = 2000): Promise<void> {
+	let timeRemaining = milliseconds;
+	while (timeRemaining > 0) {
+		try {
+			await action();
+			return; // We succeeded, so return successfully.
+		} catch {
+			// Swallow the error so we can try again.
+		}
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		timeRemaining -= 20;
+	}
+	// Run normally, so we get a good error message.
+	await action();
 }
 
 export async function waitForEditorChange(action: () => Thenable<void>): Promise<void> {
