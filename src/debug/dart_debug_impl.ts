@@ -4,7 +4,6 @@ import * as _ from "lodash";
 import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { config } from "../config";
 import { logError } from "../utils";
 import { DebuggerResult, ObservatoryConnection, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMStack } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
@@ -31,6 +30,7 @@ export class DartDebugSession extends DebugSession {
 	private logStream: fs.WriteStream;
 	public debugSdkLibraries: boolean;
 	public debugExternalLibraries: boolean;
+	public evaluateGettersInDebugViews: boolean;
 	private threadManager: ThreadManager;
 	public packageMap: PackageMap;
 	protected sendStdOutToConsole: boolean = true;
@@ -72,6 +72,7 @@ export class DartDebugSession extends DebugSession {
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program));
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
+		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
 		this.logFile = args.observatoryLogFile;
 
 		this.sendResponse(response);
@@ -668,7 +669,7 @@ export class DartDebugSession extends DebugSession {
 							}
 						} else if (instance.fields) {
 							// Add getters
-							if (config.evaluateGettersInDebugViews && instance.class) {
+							if (this.evaluateGettersInDebugViews && instance.class) {
 								const getterNames = await this.getGetterNamesForHierarchy(thread.ref, instance.class);
 
 								// Call each getter, adding the result as a variable.

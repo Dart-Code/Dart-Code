@@ -111,6 +111,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	dartPath: string;
 	debugSdkLibraries: boolean;
 	debugExternalLibraries: boolean;
+	evaluateGettersInDebugViews: boolean;
 	program: string;
 	args: string[];
 	vmAdditionalArgs: string[];
