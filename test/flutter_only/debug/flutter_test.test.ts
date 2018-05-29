@@ -2,12 +2,18 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { fsPath } from "../../../src/utils";
+import { fsPath, versionIsAtLeast } from "../../../src/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { activate, defer, ext, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
 
 describe("flutter test debugger", () => {
-	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
+
+	let testPrefix = "- ";
+	beforeEach("activate flutterTestMainFile", async () => {
+		await activate(flutterTestMainFile);
+		if (versionIsAtLeast(ext.exports.analyzerCapabilities.version, "1.20.3"))
+			testPrefix = "";
+	});
 	beforeEach("set timeout", function () {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
 	});
@@ -46,7 +52,7 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(flutterTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", "✓ - Hello world test"),
+			dc.assertOutput("stdout", `✓ ${testPrefix}Hello world test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -57,7 +63,7 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(`\${workspaceFolder}/${relativePath}`);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", "✓ - Hello world test"),
+			dc.assertOutput("stdout", `✓ ${testPrefix}Hello world test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -68,7 +74,7 @@ describe("flutter test debugger", () => {
 		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterTestMainFile));
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", "✓ - Hello world test"),
+			dc.assertOutput("stdout", `✓ ${testPrefix}Hello world test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -79,7 +85,7 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(flutterTestOtherFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", "✓ - Other test\n"),
+			dc.assertOutput("stdout", `✓ ${testPrefix}Other test\n`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -90,7 +96,7 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(null);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", "✓ - Other test\n"),
+			dc.assertOutput("stdout", `✓ ${testPrefix}Other test\n`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -101,7 +107,7 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger("${file}");
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", "✓ - Other test\n"),
+			dc.assertOutput("stdout", `✓ ${testPrefix}Other test\n`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
