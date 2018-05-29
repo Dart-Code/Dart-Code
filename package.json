@@ -463,7 +463,7 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Whether to evaluate getters in order to display them in debug views (such as the Variables, Watch and Hovers views).",
-					"scope": "window"
+					"scope": "resource"
 				},
 				"dart.sdkPath": {
 					"type": "string",
