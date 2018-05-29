@@ -614,7 +614,7 @@ export class DartDebugSession extends DebugSession {
 				const variables: DebugProtocol.Variable[] = [];
 				// If we're the top-level exception, or our parent has an evaluateName of undefined (its children)
 				// we cannot evaluate (this will disable "Add to Watch" etc).
-				const canEvaluate = variablesReference !== data.thread.exceptionReference && instanceRef.evaluateName !== undefined;
+				const canEvaluate = instanceRef.evaluateName !== undefined;
 
 				if (result.result.type === "Sentinel") {
 					variables.push({
@@ -841,7 +841,28 @@ export class DartDebugSession extends DebugSession {
 		const frame: VMFrame = data.data as VMFrame;
 
 		try {
-			const result = await this.observatory.evaluateInFrame(thread.ref.id, frame.index, expression);
+			let result: DebuggerResult;
+			if ((expression === "$e" || expression.startsWith("$e.")) && thread.exceptionReference) {
+				const exceptionData = this.threadManager.getStoredData(thread.exceptionReference);
+				const exceptionInstanceRef = exceptionData && exceptionData.data as VMInstanceRef;
+
+				if (expression === "$e") {
+					response.body = {
+						result: this.valueAsString(exceptionInstanceRef),
+						variablesReference: thread.exceptionReference,
+					};
+					this.sendResponse(response);
+					return;
+				}
+
+				const exceptionId = exceptionInstanceRef && exceptionInstanceRef.id;
+
+				if (exceptionId)
+					result = await this.observatory.evaluate(thread.ref.id, exceptionId, expression.substr(3));
+			}
+			if (!result)
+				result = await this.observatory.evaluateInFrame(thread.ref.id, frame.index, expression);
+
 			// InstanceRef or ErrorRef
 			if (result.result.type === "@Error") {
 				const error: VMErrorRef = result.result as VMErrorRef;
@@ -1479,8 +1500,10 @@ class ThreadInfo {
 
 	public handlePaused(atAsyncSuspension?: boolean, exception?: VMInstanceRef) {
 		this.atAsyncSuspension = atAsyncSuspension;
-		if (exception)
+		if (exception) {
+			(exception as InstanceWithEvaluateName).evaluateName = "$e";
 			this.exceptionReference = this.storeData(exception);
+		}
 		this.paused = true;
 	}
 }
