@@ -66,7 +66,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			return element.parent;
 	}
 
-	private updateNode(node: SuiteTreeItem | GroupTreeItem | TestTreeItem): void {
+	private updateNode(node: TestItemTreeItem): void {
 		this.onDidChangeTreeDataEmitter.fire(node);
 	}
 
@@ -244,12 +244,38 @@ class SuiteData {
 	}
 }
 
-export class SuiteTreeItem extends vs.TreeItem {
+class TestItemTreeItem extends vs.TreeItem {
+	protected updateLocation(loc: { url?: string | vs.Uri; line?: number; column?: number; }) {
+		if (!loc.url || !loc.line)
+			return;
+
+		const uri = loc.url instanceof vs.Uri ? loc.url : vs.Uri.parse(loc.url);
+
+		if (uri.scheme !== "file") {
+			this.command = null;
+			return;
+		}
+
+		this.command = {
+			arguments: [
+				uri,
+				loc.line - 1, // Dart's lines are 1-based
+				loc.column,
+			],
+			command: "_dart.jumpToLineColInUri",
+			title: "",
+		};
+	}
+}
+
+export class SuiteTreeItem extends TestItemTreeItem {
+	private _suite: Suite; // tslint:disable-line:variable-name
 	public readonly groups: GroupTreeItem[] = [];
 	public readonly tests: TestTreeItem[] = [];
 
-	constructor(public suite: Suite) {
+	constructor(suite: Suite) {
 		super(vs.Uri.file(suite.path), vs.TreeItemCollapsibleState.Expanded);
+		this.suite = suite;
 		this.contextValue = DART_TEST_SUITE_NODE;
 		this.id = `suite_${this.suite.path}_${this.suite.id}`;
 	}
@@ -263,14 +289,26 @@ export class SuiteTreeItem extends vs.TreeItem {
 			.concat(this.groups.filter((g) => !g.isPhantomGroup))
 			.concat(this.tests.filter((t) => !t.hidden));
 	}
+
+	get suite(): Suite {
+		return this._suite;
+	}
+
+	set suite(suite: Suite) {
+		this._suite = suite;
+		this.resourceUri = vs.Uri.file(suite.path);
+		this.updateLocation({ url: vs.Uri.file(suite.path), line: 1, column: 0 });
+	}
 }
 
-class GroupTreeItem extends vs.TreeItem {
+class GroupTreeItem extends TestItemTreeItem {
+	private _group: Group; // tslint:disable-line:variable-name
 	public readonly groups: GroupTreeItem[] = [];
 	public readonly tests: TestTreeItem[] = [];
 
-	constructor(public suite: SuiteData, public group: Group) {
+	constructor(public suite: SuiteData, group: Group) {
 		super(group.name, vs.TreeItemCollapsibleState.Expanded);
+		this.group = group;
 		this.contextValue = DART_TEST_GROUP_NODE;
 		this.id = `suite_${this.suite.path}_group_${this.group.id}`;
 	}
@@ -295,14 +333,24 @@ class GroupTreeItem extends vs.TreeItem {
 			.concat(this.groups)
 			.concat(this.tests.filter((t) => !t.hidden));
 	}
+
+	get group(): Group {
+		return this._group;
+	}
+
+	set group(group: Group) {
+		this._group = group;
+		this.label = group.name;
+		this.updateLocation(group);
+	}
 }
 
-class TestTreeItem extends vs.TreeItem {
+class TestTreeItem extends TestItemTreeItem {
 	private _test: Test; // tslint:disable-line:variable-name
 	private _status: TestStatus; // tslint:disable-line:variable-name
 	constructor(public suite: SuiteData, test: Test, public hidden = false) {
 		super(test.name, vs.TreeItemCollapsibleState.None);
-		this._test = test;
+		this.test = test;
 		this.resourceUri = vs.Uri.file(suite.path);
 		this.id = `suite_${this.suite.path}_test_${this.test.id}`;
 		// TODO: Allow re-running tests/groups/suites
@@ -336,6 +384,7 @@ class TestTreeItem extends vs.TreeItem {
 	set test(test: Test) {
 		this._test = test;
 		this.label = test.name;
+		this.updateLocation(test);
 	}
 }
 

@@ -18,6 +18,7 @@ export class EditCommands implements vs.Disposable {
 			vs.commands.registerCommand("_dart.organizeImports", this.organizeImports, this),
 			vs.commands.registerCommand("dart.sortMembers", this.sortMembers, this),
 			vs.commands.registerCommand("_dart.applySourceChange", this.applyEdits, this),
+			vs.commands.registerCommand("_dart.jumpToLineColInUri", this.jumpToLineColInUri, this),
 			vs.commands.registerCommand("_dart.showCode", this.showCode, this),
 			vs.commands.registerCommand("dart.completeStatement", this.completeStatement, this),
 		);
@@ -25,6 +26,14 @@ export class EditCommands implements vs.Disposable {
 
 	private organizeImports(): Thenable<void> {
 		return this.sendEdit(this.analyzer.editOrganizeDirectives, "Organize Imports");
+	}
+
+	private async jumpToLineColInUri(uri: vs.Uri, lineNumber: number, columnNumber: number) {
+		const doc = await vs.workspace.openTextDocument(uri);
+		const editor = await vs.window.showTextDocument(doc);
+		const line = doc.lineAt(lineNumber);
+		const firstChar = line.range.start.translate({ characterDelta: line.firstNonWhitespaceCharacterIndex });
+		this.showCode(editor, line.range, line.range, new vs.Range(firstChar, firstChar));
 	}
 
 	private showCode(editor: vs.TextEditor, displayRange: vs.Range, highlightRange: vs.Range, selectionRange?: vs.Range): void {
