@@ -114,7 +114,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	private handleSuiteNotification(suitePath: string, evt: SuiteNotification) {
 		let suite = suites[evt.suite.path];
 		if (!suite) {
-			suite = new SuiteData(suitePath, [new SuiteTreeItem(evt.suite)]);
+			suite = new SuiteData(suitePath, new SuiteTreeItem(evt.suite));
 			suites[evt.suite.path] = suite;
 		}
 		// If this is the first suite, we've started a run and can show the tree.
@@ -230,9 +230,12 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 }
 
 class SuiteData {
-	constructor(public readonly path: string, public readonly suites: SuiteTreeItem[]) { }
+	public readonly suites: SuiteTreeItem[] = [];
 	public readonly groups: GroupTreeItem[] = [];
 	public readonly tests: TestTreeItem[] = [];
+	constructor(public readonly path: string, suite: SuiteTreeItem) {
+		this.suites[suite.suite.id] = suite;
+	}
 }
 
 export class SuiteTreeItem extends vs.TreeItem {
