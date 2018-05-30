@@ -3,3 +3,6 @@ name: hello_world
 dependencies:
   http:
   convert: ^2.0.1
+
+dev_dependencies:
+  test:
