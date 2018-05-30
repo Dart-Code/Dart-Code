@@ -302,9 +302,14 @@ class TestTreeItem extends vs.TreeItem {
 	}
 
 	get parent(): SuiteTreeItem | GroupTreeItem {
-		return this.test.groupIDs && this.test.groupIDs.length
+		const parent = this.test.groupIDs && this.test.groupIDs.length
 			? this.suite.groups[this.test.groupIDs[this.test.groupIDs.length - 1]]
 			: this.suite.suites[this.test.suiteID];
+
+		// If our parent is a phantom group at the top level, then just bounce over it.
+		if (parent instanceof GroupTreeItem && parent.isPhantomGroup)
+			return parent.parent;
+		return parent;
 	}
 
 	get status(): TestStatus {
