@@ -121,6 +121,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		if (evt.suite.id === 0) {
 			this.onDidStartTestsEmitter.fire(suite.suites[evt.suite.id]);
 		}
+		suite.groups.forEach((g) => g.status = TestStatus.Stale);
 		suite.tests.forEach((t) => t.status = TestStatus.Stale);
 		if (suite.suites[evt.suite.id]) {
 			suite.suites[evt.suite.id].suite = evt.suite;
@@ -128,8 +129,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			const suiteNode = new SuiteTreeItem(evt.suite);
 			suite.suites[evt.suite.id] = suiteNode;
 		}
+		suite.suites[evt.suite.id].status = TestStatus.Running;
 		this.updateNode(suite.suites[evt.suite.id]);
-		suite.suites[evt.suite.id].iconPath = getIconPath(TestStatus.Running);
 	}
 
 	private handleTestStartNotifcation(suite: SuiteData, evt: TestStartNotification) {
@@ -141,7 +142,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			suite.tests[evt.test.id] = testNode;
 		else
 			oldParent = testNode.parent;
-		testNode.status = TestStatus.Running;
 		testNode.test = evt.test;
 
 		// If this is a "loading" test then mark it as hidden because it looks wonky in
@@ -161,8 +161,9 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		if (!isExistingTest)
 			testNode.parent.tests.push(testNode);
 
+		testNode.status = TestStatus.Running;
 		this.updateNode(testNode);
-		this.updateNode(this.getParent(testNode));
+		this.updateNode(testNode.parent);
 	}
 
 	private handleTestDoneNotification(suite: SuiteData, evt: TestDoneNotification) {
@@ -182,21 +183,23 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		}
 
 		this.updateNode(testNode);
-		this.updateNode(this.getParent(testNode));
+		this.updateNode(testNode.parent);
 	}
 
 	private handleGroupNotification(suite: SuiteData, evt: GroupNotification) {
+		let groupNode: GroupTreeItem;
 		if (suite.groups[evt.group.id]) {
-			const groupNode = suite.groups[evt.group.id];
+			groupNode = suite.groups[evt.group.id];
 			groupNode.group = evt.group;
-			this.updateNode(groupNode);
 			// TODO: Change parent if required...
 		} else {
-			const groupNode = new GroupTreeItem(suite, evt.group);
+			groupNode = new GroupTreeItem(suite, evt.group);
 			suite.groups[evt.group.id] = groupNode;
 			groupNode.parent.groups.push(groupNode);
-			this.updateNode(this.getParent(groupNode));
 		}
+		suite.groups[evt.group.id].status = TestStatus.Running;
+		this.updateNode(groupNode);
+		this.updateNode(groupNode.parent);
 	}
 
 	private handleDoneNotification(suite: SuiteData, evt: DoneNotification) {
@@ -216,8 +219,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 
 		// Walk the tree to get the status.
 		suite.suites.forEach((s) => {
-			const status = getHighestChildStatus(s);
-			s.iconPath = getIconPath(status);
+			// TODO: This for groups too
+			updateStatusFromChildren(s);
 			this.updateNode(s);
 		});
 	}
@@ -245,6 +248,17 @@ class SuiteData {
 }
 
 class TestItemTreeItem extends vs.TreeItem {
+	private _status: TestStatus; // tslint:disable-line:variable-name
+
+	get status(): TestStatus {
+		return this._status;
+	}
+
+	set status(status: TestStatus) {
+		this._status = status;
+		this.iconPath = getIconPath(status);
+	}
+
 	protected updateLocation(loc: { url?: string | vs.Uri; line?: number; column?: number; }) {
 		if (!loc.url || !loc.line)
 			return;
@@ -278,6 +292,7 @@ export class SuiteTreeItem extends TestItemTreeItem {
 		this.suite = suite;
 		this.contextValue = DART_TEST_SUITE_NODE;
 		this.id = `suite_${this.suite.path}_${this.suite.id}`;
+		this.status = TestStatus.Unknown;
 	}
 
 	get children(): vs.TreeItem[] {
@@ -311,6 +326,7 @@ class GroupTreeItem extends TestItemTreeItem {
 		this.group = group;
 		this.contextValue = DART_TEST_GROUP_NODE;
 		this.id = `suite_${this.suite.path}_group_${this.group.id}`;
+		this.status = TestStatus.Unknown;
 	}
 
 	get isPhantomGroup() {
@@ -347,7 +363,6 @@ class GroupTreeItem extends TestItemTreeItem {
 
 class TestTreeItem extends TestItemTreeItem {
 	private _test: Test; // tslint:disable-line:variable-name
-	private _status: TestStatus; // tslint:disable-line:variable-name
 	constructor(public suite: SuiteData, test: Test, public hidden = false) {
 		super(test.name, vs.TreeItemCollapsibleState.None);
 		this.test = test;
@@ -355,6 +370,7 @@ class TestTreeItem extends TestItemTreeItem {
 		this.id = `suite_${this.suite.path}_test_${this.test.id}`;
 		// TODO: Allow re-running tests/groups/suites
 		this.contextValue = DART_TEST_TEST_NODE;
+		this.status = TestStatus.Unknown;
 	}
 
 	get parent(): SuiteTreeItem | GroupTreeItem {
@@ -366,15 +382,6 @@ class TestTreeItem extends TestItemTreeItem {
 		if (parent instanceof GroupTreeItem && parent.isPhantomGroup)
 			return parent.parent;
 		return parent;
-	}
-
-	get status(): TestStatus {
-		return this._status;
-	}
-
-	set status(status: TestStatus) {
-		this._status = status;
-		this.iconPath = getIconPath(status);
 	}
 
 	get test(): Test {
@@ -417,15 +424,17 @@ function getIconPath(status: TestStatus): vs.Uri {
 		: undefined;
 }
 
-function getHighestChildStatus(node: SuiteTreeItem | GroupTreeItem): TestStatus {
+function updateStatusFromChildren(node: SuiteTreeItem | GroupTreeItem): TestStatus {
 	const childStatuses = node.children.map((c) => {
 		if (c instanceof GroupTreeItem)
-			return getHighestChildStatus(c);
+			return updateStatusFromChildren(c);
 		if (c instanceof TestTreeItem)
 			return c.status;
 		return TestStatus.Unknown;
 	});
-	return Math.max.apply(Math, childStatuses);
+	const status = Math.max.apply(Math, childStatuses);
+	node.iconPath = getIconPath(status);
+	return status;
 }
 
 enum TestStatus {
