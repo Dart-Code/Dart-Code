@@ -61,9 +61,13 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		}
 	}
 
-	public getParent?(element: vs.TreeItem): vs.TreeItem {
+	public getParent?(element: vs.TreeItem): SuiteTreeItem | GroupTreeItem {
 		if (element instanceof TestTreeItem || element instanceof GroupTreeItem)
 			return element.parent;
+	}
+
+	private updateNode(node: SuiteTreeItem | GroupTreeItem | TestTreeItem): void {
+		this.onDidChangeTreeDataEmitter.fire(node);
 	}
 
 	public dispose(): any {
@@ -115,7 +119,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		}
 		// If this is the first suite, we've started a run and can show the tree.
 		if (evt.suite.id === 0) {
-			this.onDidStartTestsEmitter.fire(suite.suites[0]);
+			this.onDidStartTestsEmitter.fire(suite.suites[evt.suite.id]);
 		}
 		suite.tests.forEach((t) => t.status = TestStatus.Stale);
 		if (suite.suites[evt.suite.id]) {
@@ -124,8 +128,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			const suiteNode = new SuiteTreeItem(evt.suite);
 			suite.suites[evt.suite.id] = suiteNode;
 		}
-		this.onDidChangeTreeDataEmitter.fire();
-		// suite.suites.forEach((s) => this.onDidChangeTreeDataEmitter.fire(s));
+		this.updateNode(suite.suites[evt.suite.id]);
 	}
 
 	private handleTestStartNotifcation(suite: SuiteData, evt: TestStartNotification) {
@@ -144,15 +147,15 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		// Remove from old parent if required.
 		if (oldParent && oldParent !== testNode.parent) {
 			oldParent.tests.splice(oldParent.tests.indexOf(testNode), 1);
-			this.onDidChangeTreeDataEmitter.fire(oldParent);
+			this.updateNode(oldParent);
 		}
 
 		// Push to new parent if required.
 		if (!isExistingTest)
 			testNode.parent.tests.push(testNode);
 
-		this.onDidChangeTreeDataEmitter.fire(this.getParent(testNode));
-		this.onDidChangeTreeDataEmitter.fire(testNode);
+		this.updateNode(testNode);
+		this.updateNode(this.getParent(testNode));
 	}
 
 	private handleTestDoneNotification(suite: SuiteData, evt: TestDoneNotification) {
@@ -171,21 +174,21 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			testNode.status = TestStatus.Unknown;
 		}
 
-		this.onDidChangeTreeDataEmitter.fire(this.getParent(testNode));
-		this.onDidChangeTreeDataEmitter.fire(testNode);
+		this.updateNode(testNode);
+		this.updateNode(this.getParent(testNode));
 	}
 
 	private handleGroupNotification(suite: SuiteData, evt: GroupNotification) {
 		if (suite.groups[evt.group.id]) {
 			const groupNode = suite.groups[evt.group.id];
 			groupNode.group = evt.group;
-			this.onDidChangeTreeDataEmitter.fire(groupNode);
+			this.updateNode(groupNode);
 			// TODO: Change parent if required...
 		} else {
 			const groupNode = new GroupTreeItem(suite, evt.group);
 			suite.groups[evt.group.id] = groupNode;
 			groupNode.parent.groups.push(groupNode);
-			this.onDidChangeTreeDataEmitter.fire(this.getParent(groupNode));
+			this.updateNode(this.getParent(groupNode));
 		}
 	}
 
@@ -201,7 +204,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		// the original "1" has vanished.
 		suite.tests.filter((t) => t.status === TestStatus.Stale).forEach((t) => {
 			t.hidden = true;
-			this.onDidChangeTreeDataEmitter.fire(t.parent);
+			this.updateNode(t.parent);
 		});
 	}
 
