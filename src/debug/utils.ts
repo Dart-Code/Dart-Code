@@ -103,6 +103,7 @@ export class PromiseCompleter<T> {
 }
 
 export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
+	name: string;
 	type: string;
 	request: string;
 	cwd: string;
