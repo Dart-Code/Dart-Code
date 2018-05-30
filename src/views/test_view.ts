@@ -129,6 +129,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			suite.suites[evt.suite.id] = suiteNode;
 		}
 		this.updateNode(suite.suites[evt.suite.id]);
+		suite.suites[evt.suite.id].iconPath = getIconPath(TestStatus.Running);
 	}
 
 	private handleTestStartNotifcation(suite: SuiteData, evt: TestStartNotification) {
@@ -205,6 +206,13 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		suite.tests.filter((t) => t.status === TestStatus.Stale).forEach((t) => {
 			t.hidden = true;
 			this.updateNode(t.parent);
+		});
+
+		// Walk the tree to get the status.
+		suite.suites.forEach((s) => {
+			const status = getHighestChildStatus(s);
+			s.iconPath = getIconPath(status);
+			this.updateNode(s);
 		});
 	}
 
@@ -345,6 +353,17 @@ function getIconPath(status: TestStatus): vs.Uri {
 	return file
 		? vs.Uri.file(path.join(extensionPath, `media/icons/tests/${file}.svg`))
 		: undefined;
+}
+
+function getHighestChildStatus(node: SuiteTreeItem | GroupTreeItem): TestStatus {
+	const childStatuses = node.children.map((c) => {
+		if (c instanceof GroupTreeItem)
+			return getHighestChildStatus(c);
+		if (c instanceof TestTreeItem)
+			return c.status;
+		return TestStatus.Unknown;
+	});
+	return Math.max.apply(Math, childStatuses);
 }
 
 enum TestStatus {
