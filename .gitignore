@@ -1,5 +1,6 @@
 .DS_Store
 .dart_code_test_logs/
+.dart_tool/
 .flutter-plugins/
 .nyc_output/
 .packages
