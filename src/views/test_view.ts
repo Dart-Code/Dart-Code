@@ -57,27 +57,13 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		if (!element) {
 			return _.flatMap(Object.keys(suites).map((k) => suites[k].suites));
 		} else if (element instanceof SuiteTreeItem || element instanceof GroupTreeItem) {
-			// If we got a Suite and it has only a single phantom child group, then just bounce over it.
-			// (but still include its tests so we can see loading...)
-			if (element instanceof SuiteTreeItem && element.groups.length === 1 && element.groups[0].isPhantomGroup)
-				return []
-					.concat(element.tests.filter((t) => !t.hidden))
-					.concat(element.groups[0].groups)
-					.concat(element.groups[0].tests.filter((t) => !t.hidden));
-			else
-				return []
-					.concat(element.groups)
-					.concat(element.tests.filter((t) => !t.hidden));
+			return element.children;
 		}
 	}
 
 	public getParent?(element: vs.TreeItem): vs.TreeItem {
-		if (!(element instanceof TestTreeItem || element instanceof GroupTreeItem))
-			return;
-		// If our parent is a phantom group at the top level, then just bounce over it.
-		if (element instanceof GroupTreeItem && element.isPhantomGroup && element.parent instanceof GroupTreeItem)
-			return element.parent.parent;
-		return element.parent;
+		if (element instanceof TestTreeItem || element instanceof GroupTreeItem)
+			return element.parent;
 	}
 
 	public dispose(): any {
@@ -247,6 +233,17 @@ export class SuiteTreeItem extends vs.TreeItem {
 		this.contextValue = DART_TEST_SUITE_NODE;
 		this.id = `suite_${this.suite.path}_${this.suite.id}`;
 	}
+
+	get children(): vs.TreeItem[] {
+		if (this.groups.length === 1 && this.groups[0].isPhantomGroup)
+			return []
+				.concat(this.groups[0].groups)
+				.concat(this.groups[0].tests.filter((t) => !t.hidden));
+		else
+			return []
+				.concat(this.groups)
+				.concat(this.tests.filter((t) => !t.hidden));
+	}
 }
 
 class GroupTreeItem extends vs.TreeItem {
@@ -264,9 +261,20 @@ class GroupTreeItem extends vs.TreeItem {
 	}
 
 	get parent(): SuiteTreeItem | GroupTreeItem {
-		return this.group.parentID
+		const parent = this.group.parentID
 			? this.suite.groups[this.group.parentID]
 			: this.suite.suites[this.group.suiteID];
+
+		// If our parent is a phantom group at the top level, then just bounce over it.
+		if (parent instanceof GroupTreeItem && parent.isPhantomGroup)
+			return parent.parent;
+		return parent;
+	}
+
+	get children(): vs.TreeItem[] {
+		return []
+			.concat(this.groups)
+			.concat(this.tests.filter((t) => !t.hidden));
 	}
 }
 
@@ -337,11 +345,13 @@ function getIconPath(status: TestStatus): vs.Uri {
 }
 
 enum TestStatus {
+	// This should be in order such that the highest number is the one to show
+	// when aggregating (eg. from children).
 	Stale,
 	Unknown,
-	Running,
-	Skipped,
 	Passed,
+	Skipped,
 	Failed,
 	Errored,
+	Running,
 }
