@@ -246,14 +246,13 @@ export class SuiteTreeItem extends vs.TreeItem {
 	}
 
 	get children(): vs.TreeItem[] {
-		if (this.groups.length === 1 && this.groups[0].isPhantomGroup)
-			return []
-				.concat(this.groups[0].groups)
-				.concat(this.groups[0].tests.filter((t) => !t.hidden));
-		else
-			return []
-				.concat(this.groups)
-				.concat(this.tests.filter((t) => !t.hidden));
+		// Children should be:
+		// 1. All children of any of our phantom groups
+		// 2. Our children excluding our phantom groups
+		return []
+			.concat(_.flatMap(this.groups.filter((g) => g.isPhantomGroup), (g) => g.children))
+			.concat(this.groups.filter((g) => !g.isPhantomGroup))
+			.concat(this.tests.filter((t) => !t.hidden));
 	}
 }
 
