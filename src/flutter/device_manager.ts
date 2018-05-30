@@ -109,15 +109,20 @@ export class FlutterDeviceManager implements vs.Disposable {
 			return false;
 		}
 
+		const cancellationTokenSource = new vs.CancellationTokenSource();
+		const disposable = this.daemon.registerForDeviceAdded(() => {
+			cancellationTokenSource.cancel();
+			disposable.dispose();
+		});
 		const selectedEmulator =
 			emulators.length === 1
 				? emulators[0]
-				: await vs.window.showQuickPick(emulators, { placeHolder: "Select an emulator to launch or press <escape> and connect a device" });
+				: await vs.window.showQuickPick(emulators, { placeHolder: "Connect a device or select an emulator to launch" }, cancellationTokenSource.token);
 
 		if (selectedEmulator) {
 			return this.launchEmulator(selectedEmulator.emulator);
 		} else {
-			return false;
+			return !!this.currentDevice;
 		}
 	}
 
