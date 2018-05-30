@@ -302,7 +302,11 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	}));
 	const testTreeProvider = new TestResultsProvider();
 	const testTreeView = vs.window.createTreeView("dartTestTree", { treeDataProvider: testTreeProvider });
-	context.subscriptions.push(testTreeProvider, testTreeView);
+	context.subscriptions.push(
+		testTreeProvider,
+		testTreeView,
+		testTreeProvider.onDidStartTests((node) => testTreeView.reveal(node))
+	);
 
 	context.subscriptions.push(vs.commands.registerCommand("dart.package.openFile", (filePath) => {
 		if (!filePath) return;

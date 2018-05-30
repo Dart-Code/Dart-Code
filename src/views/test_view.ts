@@ -15,6 +15,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	private disposables: vs.Disposable[] = [];
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<vs.TreeItem | undefined> = new vs.EventEmitter<vs.TreeItem | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<vs.TreeItem | undefined> = this.onDidChangeTreeDataEmitter.event;
+	private onDidStartTestsEmitter: vs.EventEmitter<vs.TreeItem | undefined> = new vs.EventEmitter<vs.TreeItem | undefined>();
+	public readonly onDidStartTests: vs.Event<vs.TreeItem | undefined> = this.onDidStartTestsEmitter.event;
 
 	constructor() {
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
@@ -124,6 +126,10 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		if (!suite) {
 			suite = new SuiteData(suitePath, [new SuiteTreeItem(evt.suite)]);
 			suites[evt.suite.path] = suite;
+		}
+		// If this is the first suite, we've started a run and can show the tree.
+		if (evt.suite.id === 0) {
+			this.onDidStartTestsEmitter.fire(suite.suites[0]);
 		}
 		suite.tests.forEach((t) => t.status = TestStatus.Stale);
 		if (suite.suites[evt.suite.id]) {
