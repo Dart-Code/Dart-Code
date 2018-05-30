@@ -70,6 +70,27 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		this.onDidChangeTreeDataEmitter.fire(node);
 	}
 
+	private updateAllIcons(suite: SuiteData) {
+		// Walk the tree to get the status.
+		suite.suites.forEach((s) => {
+			updateStatusFromChildren(s);
+			this.updateNode(s);
+		});
+	}
+
+	// Since running is the highest status, it's faster to just run all the way up the tree
+	// and set them all than do the usual top-down calcuation to updates statuses like we do
+	// when tests complete.
+	private markAncestorsRunning(node: SuiteTreeItem | GroupTreeItem | TestTreeItem) {
+		const status = TestStatus.Running;
+		let current = node;
+		while (current) {
+			current.status = status;
+			this.updateNode(current);
+			current = current instanceof SuiteTreeItem ? undefined : current.parent;
+		}
+	}
+
 	public dispose(): any {
 		this.disposables.forEach((d) => d.dispose());
 	}
@@ -161,7 +182,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		if (!isExistingTest)
 			testNode.parent.tests.push(testNode);
 
-		testNode.status = TestStatus.Running;
+		this.markAncestorsRunning(testNode);
 		this.updateNode(testNode);
 		this.updateNode(testNode.parent);
 	}
@@ -184,6 +205,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 
 		this.updateNode(testNode);
 		this.updateNode(testNode.parent);
+
+		this.updateAllIcons(suite);
 	}
 
 	private handleGroupNotification(suite: SuiteData, evt: GroupNotification) {
@@ -217,12 +240,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			this.updateNode(t.parent);
 		});
 
-		// Walk the tree to get the status.
-		suite.suites.forEach((s) => {
-			// TODO: This for groups too
-			updateStatusFromChildren(s);
-			this.updateNode(s);
-		});
+		this.updateAllIcons(suite);
 	}
 
 	private handlePrintNotification(suite: SuiteData, evt: PrintNotification) {
