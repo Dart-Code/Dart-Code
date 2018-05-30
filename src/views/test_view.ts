@@ -141,9 +141,15 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			suite.tests[evt.test.id] = testNode;
 		else
 			oldParent = testNode.parent;
-		testNode.hidden = false;
 		testNode.status = TestStatus.Running;
 		testNode.test = evt.test;
+
+		// If this is a "loading" test then mark it as hidden because it looks wonky in
+		// the tree with a full path and we already have the "running" icon on the suite.
+		if (testNode.test.name.startsWith("loading ") && testNode.parent instanceof SuiteTreeItem)
+			testNode.hidden = true;
+		else
+			testNode.hidden = false;
 
 		// Remove from old parent if required.
 		if (oldParent && oldParent !== testNode.parent) {
