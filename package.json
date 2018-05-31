@@ -432,6 +432,12 @@
 					"description": "Whether to show annotations against constructor, method invocations and lists that span multiple lines.",
 					"scope": "window"
 				},
+				"dart.analysisServerFolding": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to use folding data from the Dart analysis server instead of the built-in VS Code indent-based folding.",
+					"scope": "window"
+				},
 				"dart.debugSdkLibraries": {
 					"type": "boolean",
 					"default": false,

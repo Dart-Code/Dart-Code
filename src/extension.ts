@@ -238,7 +238,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(analyzer)));
 		}
 
-		if (analyzer.capabilities.supportsCustomFolding)
+		if (analyzer.capabilities.supportsCustomFolding && config.analysisServerFolding)
 			context.subscriptions.push(vs.languages.registerFoldingRangeProvider(DART_MODE, new DartFoldingProvider(analyzer)));
 
 		const documentSymbolProvider = analyzer.capabilities.supportsGetDeclerationsForFile
@@ -404,7 +404,8 @@ function getSettingsThatRequireRestart() {
 		+ config.flutterSdkPath
 		+ config.closingLabels
 		+ config.analyzeAngularTemplates
-		+ config.previewExperimentalWindowsDriveLetterHandling;
+		+ config.previewExperimentalWindowsDriveLetterHandling
+		+ config.analysisServerFolding;
 }
 
 export function deactivate(isRestart: boolean = false): PromiseLike<void> {

@@ -28,6 +28,7 @@ class Config {
 	get analyzerObservatoryPort() { return this.getConfig<number>("analyzerObservatoryPort"); }
 	get analyzerLogFile() { return resolveHomePath(this.getConfig<string>("analyzerLogFile")); }
 	get analyzerPath() { return resolveHomePath(this.getConfig<string>("analyzerPath")); }
+	get analysisServerFolding() { return this.getConfig<boolean>("analysisServerFolding"); }
 	get analyzerInstrumentationLogFile() { return resolveHomePath(this.getConfig<string>("analyzerInstrumentationLogFile")); }
 	get analyzerAdditionalArgs() { return this.getConfig<string[]>("analyzerAdditionalArgs"); }
 	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
