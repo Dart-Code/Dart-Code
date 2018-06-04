@@ -938,10 +938,10 @@ export class DartDebugSession extends DebugSession {
 			if (result.result.type !== "@Error") {
 				return result.result as VMInstanceRef;
 			} else {
-				this.sendEvent(new OutputEvent(`Debugger failed to evaluate expression \`${expression}\``, "stderr"));
+				this.sendEvent(new OutputEvent(`Debugger failed to evaluate expression \`${expression}\`\n`, "stderr"));
 			}
 		} catch {
-			this.sendEvent(new OutputEvent(`Debugger failed to evaluate expression \`${expression}\``, "stderr"));
+			this.sendEvent(new OutputEvent(`Debugger failed to evaluate expression \`${expression}\`\n`, "stderr"));
 		}
 	}
 
