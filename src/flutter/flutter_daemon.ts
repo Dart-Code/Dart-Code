@@ -1,5 +1,7 @@
 import * as vs from "vscode";
+import { ProgressLocation } from "vscode";
 import { config } from "../config";
+import { PromiseCompleter } from "../debug/utils";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
 import { reloadExtension } from "../utils";
 import { FlutterDeviceManager } from "./device_manager";
@@ -7,6 +9,9 @@ import * as f from "./flutter_types";
 
 export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	public deviceManager: FlutterDeviceManager;
+	private hasStarted = false;
+	private startupReporter: vs.Progress<{ message?: string; increment?: number }>;
+	private daemonStartedCompleter = new PromiseCompleter();
 
 	constructor(flutterBinPath: string, projectFolder: string) {
 		super(() => config.flutterDaemonLogFile, true);
@@ -16,8 +21,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 		this.deviceManager = new FlutterDeviceManager(this);
 
 		// Enable device polling.
-		this.deviceEnable();
+		this.deviceEnable().then(() => this.deviceManager.updateStatusBar());
 	}
+
+	public get isReady() { return this.hasStarted; }
 
 	public dispose() {
 		this.deviceManager.dispose();
@@ -35,16 +42,43 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 
 	protected shouldHandleMessage(message: string): boolean {
 		// Everything in flutter is wrapped in [] so we can tell what to handle.
-		return message.startsWith("[") && message.endsWith("]");
+		if (message.startsWith("[") && message.endsWith("]")) {
+			if (!this.hasStarted) {
+				this.hasStarted = true;
+				this.daemonStartedCompleter.resolve();
+			}
+			return true;
+		}
+		return false;
 	}
 
 	private static readonly outOfDateWarning = new RegExp("WARNING: .* Flutter is (\\d+) days old");
 	protected processUnhandledMessage(message: string): void {
 		const matches = FlutterDaemon.outOfDateWarning.exec(message);
-		if (!matches || matches.length !== 2)
+		if (matches && matches.length === 2) {
+			vs.window.showWarningMessage(`Your installation of Flutter is ${matches[1]} days old. To update to the latest version, run 'flutter upgrade'.`);
 			return;
+		}
 
-		vs.window.showWarningMessage(`Your installation of Flutter is ${matches[1]} days old. To update to the latest version, run 'flutter upgrade'.`);
+		// Show as progress message, this is likely "Building flutter tool" or "downloading Dart SDK" messages.
+		if (
+			(message.startsWith("Building ") || message.startsWith("Downloading ") || message.startsWith("Starting "))
+			&& !message.startsWith("Starting device daemon") // Don't show this one as it happens for normal startups too.
+		) {
+			if (!this.hasStarted) {
+				if (this.startupReporter) {
+					this.startupReporter.report({ message });
+				} else {
+					vs.window.withProgress({
+						location: ProgressLocation.Notification,
+						title: message,
+					}, (progressReporter) => {
+						this.startupReporter = progressReporter;
+						return this.daemonStartedCompleter.promise;
+					});
+				}
+			}
+		}
 	}
 
 	// TODO: Can we code-gen all this like the analysis server?

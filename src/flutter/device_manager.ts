@@ -73,6 +73,13 @@ export class FlutterDeviceManager implements vs.Disposable {
 		else
 			this.statusBarItem.text = "No Devices";
 
+		// Don't show the progress bar until we're ready (eg. we may have kicked off a Dart download).
+		if (!this.daemon.isReady) {
+			this.statusBarItem.hide();
+		} else {
+			this.statusBarItem.show();
+		}
+
 		if (this.devices.length > 1) {
 			this.statusBarItem.tooltip = `${this.devices.length} Devices Connected`;
 			this.statusBarItem.command = "flutter.selectDevice";
