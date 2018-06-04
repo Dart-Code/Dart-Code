@@ -138,6 +138,27 @@ describe("flutter run debugger", () => {
 		ensureVariable(variables, undefined, "message", `"(TODO WHEN UNSKIPPING)"`);
 	});
 
+	it("logs expected text (and does not stop) at a logpoint", async () => {
+		await openFile(flutterHelloWorldMainFile);
+		const config = await startDebugger(flutterHelloWorldMainFile);
+		await Promise.all([
+			dc.waitForEvent("initialized").then((event) => {
+				return dc.setBreakpointsRequest({
+					// positionOf is 0-based, but seems to want 1-based
+					breakpoints: [{
+						line: positionOf("^// BREAKPOINT1").line,
+						// VS Code says to use {} for expressions, but we want to support Dart's native too, so
+						// we have examples of both (as well as "escaped" brackets).
+						logMessage: "The \\{year} is {(new DateTime.now()).year}",
+					}],
+					source: { path: fsPath(flutterHelloWorldMainFile) },
+				});
+			}).then((response) => dc.configurationDoneRequest()),
+			dc.assertOutput("stdout", `The {year} is ${(new Date()).getFullYear()}`),
+			dc.launch(config),
+		]);
+	});
+
 	it.skip("writes failure output to stderr", async () => {
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile, undefined, false);
