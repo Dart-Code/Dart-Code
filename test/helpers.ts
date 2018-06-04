@@ -303,7 +303,7 @@ export async function getSnippetCompletionsAt(searchText: string, triggerCharact
 	return completions.filter((c) => c.kind === vs.CompletionItemKind.Snippet);
 }
 
-export function ensureCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind, label: string, filterText: string, documentation?: string): void {
+export function ensureCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind, label: string, filterText?: string, documentation?: string): void {
 	const completion = items.find((item) =>
 		item.label === label
 		&& item.filterText === filterText
