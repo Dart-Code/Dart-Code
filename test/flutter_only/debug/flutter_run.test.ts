@@ -138,7 +138,8 @@ describe("flutter run debugger", () => {
 		ensureVariable(variables, undefined, "message", `"(TODO WHEN UNSKIPPING)"`);
 	});
 
-	it("logs expected text (and does not stop) at a logpoint", async () => {
+	// Failing due to https://github.com/flutter/flutter/issues/18160
+	it.skip("logs expected text (and does not stop) at a logpoint", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
