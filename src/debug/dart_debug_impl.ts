@@ -1328,9 +1328,10 @@ class ThreadManager {
 		return this.storedData[id];
 	}
 
-	public removeStoredIds(ids: number[]) {
-		for (const id of ids) {
-			delete this.storedData[id];
+	public removeStoredData(thread: ThreadInfo) {
+		for (const id of Object.keys(this.storedData).map((k) => parseInt(k, 10))) {
+			if (this.storedData[id].thread.num === thread.num)
+				delete this.storedData[id];
 		}
 	}
 
@@ -1339,6 +1340,7 @@ class ThreadManager {
 		if (threadInfo) {
 			this.debugSession.sendEvent(new ThreadEvent("exited", threadInfo.num));
 			this.threads.splice(this.threads.indexOf(threadInfo), 1);
+			this.removeStoredData(threadInfo);
 		} else {
 			console.error(`Failed to find thread for ${ref.id} during exit`);
 		}
@@ -1356,7 +1358,6 @@ class StoredData {
 }
 
 class ThreadInfo {
-	public storedIds: number[] = [];
 	public scriptCompleters: { [key: string]: PromiseCompleter<VMScript> } = {};
 	public runnable: boolean = false;
 	public vmBps: { [uri: string]: VMBreakpoint[] } = {};
@@ -1450,9 +1451,7 @@ class ThreadInfo {
 	}
 
 	public handleResumed() {
-		// TODO: I don"t think we want to do this...
-		// this.manager.removeStoredIds(this.storedIds);
-		// this.storedIds = [];
+		this.manager.removeStoredData(this);
 		// TODO: Should we be waiting for acknowledgement before doing this?
 		this.atAsyncSuspension = false;
 		this.exceptionReference = 0;
