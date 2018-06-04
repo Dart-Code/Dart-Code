@@ -69,7 +69,10 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		const nextCharacterIsColon = nextCharacter === ":";
 
 		// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its parameters.
-		if (element && element.parameters && elementKind !== CompletionItemKind.Property && suggestion.kind !== "OVERRIDE") {
+		if (element && element.parameters && elementKind !== CompletionItemKind.Property && suggestion.kind !== "OVERRIDE"
+			// Don't ever show if there is already a paren! (#969).
+			&& label.indexOf("(") === -1
+		) {
 			label += element.parameters.length === 2 ? "()" : "(…)";
 			detail = element.parameters;
 
