@@ -333,6 +333,9 @@ export class DartDebugSession extends DebugSession {
 		} catch (e) {
 			this.errorResponse(response, `${e}`);
 		}
+		finally {
+			this.threadManager.removeAllStoredData();
+		}
 		super.disconnectRequest(response, args);
 	}
 
@@ -1332,6 +1335,12 @@ class ThreadManager {
 		for (const id of Object.keys(this.storedData).map((k) => parseInt(k, 10))) {
 			if (this.storedData[id].thread.num === thread.num)
 				delete this.storedData[id];
+		}
+	}
+
+	public removeAllStoredData() {
+		for (const id of Object.keys(this.storedData).map((k) => parseInt(k, 10))) {
+			delete this.storedData[id];
 		}
 	}
 
