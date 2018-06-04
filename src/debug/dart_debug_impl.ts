@@ -867,8 +867,8 @@ export class DartDebugSession extends DebugSession {
 			if (result.result.type === "@Error") {
 				const error: VMErrorRef = result.result as VMErrorRef;
 				let str: string = error.message;
-				if (str && str.length > 100)
-					str = str.substring(0, 100) + "…";
+				if (str)
+					str = str.split("\n").slice(0, 6).join("\n");
 				this.errorResponse(response, str);
 			} else {
 				const instanceRef: VMInstanceRef = result.result as VMInstanceRef;
