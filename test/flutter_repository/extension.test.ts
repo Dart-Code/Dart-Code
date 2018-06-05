@@ -33,9 +33,13 @@ describe("extension", () => {
 		await vs.commands.executeCommand("flutter.packages.get", vs.workspace.workspaceFolders[0].uri);
 		await analysisComplete;
 
+		function warningOrError(d: vs.Diagnostic) {
+			return d.severity <= vs.DiagnosticSeverity.Warning;
+		}
+
 		const filesWithErrors = vs.languages
 			.getDiagnostics()
-			.filter((file) => file[1].length);
+			.filter((file) => file[1].find(warningOrError));
 		if (filesWithErrors.length !== 0) {
 			assert.equal(
 				filesWithErrors.length,
@@ -43,7 +47,12 @@ describe("extension", () => {
 				`Expected no errors, but got some:\n`
 				+ filesWithErrors
 					.slice(0, Math.min(10, filesWithErrors.length))
-					.map((file) => `    ${path.basename(fsPath(file[0]))}: ${file[1][0].message}`)
+					.map((file) => {
+						return "    "
+							+ path.basename(fsPath(file[0]))
+							+ ": "
+							+ file[1].find(warningOrError).message;
+					})
 					.join("\n"),
 			);
 		}
