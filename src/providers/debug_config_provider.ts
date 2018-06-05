@@ -90,7 +90,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		// Ensure we have a full path.
-		if (!path.isAbsolute(debugConfig.program) && debugConfig.cwd)
+		if (debugConfig.program && debugConfig.cwd && !path.isAbsolute(debugConfig.program))
 			debugConfig.program = path.join(debugConfig.cwd, debugConfig.program);
 
 		// Disable Flutter mode for attach.
