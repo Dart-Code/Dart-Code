@@ -305,7 +305,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(
 		testTreeProvider,
 		testTreeView,
-		testTreeProvider.onDidStartTests((node) => testTreeView.reveal(node)),
+		// Delay revealing of the node (https://github.com/Microsoft/vscode/issues/51136)
+		testTreeProvider.onDidStartTests((node) => setTimeout(() => testTreeView.reveal(node), 500)),
 	);
 
 	context.subscriptions.push(vs.commands.registerCommand("dart.package.openFile", (filePath) => {
