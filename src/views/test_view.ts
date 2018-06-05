@@ -1,6 +1,7 @@
 import * as _ from "lodash";
 import * as path from "path";
 import * as vs from "vscode";
+import { getChannel } from "../commands/channels";
 import { extensionPath } from "../extension";
 import { fsPath } from "../utils";
 import { DoneNotification, ErrorNotification, Group, GroupNotification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "./test_protocol";
@@ -48,6 +49,24 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			return vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(treeNode.group.url), treeNode.group.line, treeNode.group.column);
 		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.displayTest", (treeNode: TestTreeItem) => {
+			const output = getChannel("Test Output");
+			output.clear();
+			if (treeNode.outputEvents.length) {
+				output.show(true);
+				output.appendLine(`${treeNode.test.name}:\n`);
+				for (let o of treeNode.outputEvents) {
+					if (o.type === "error") {
+						o = o as ErrorNotification;
+						output.appendLine(`ERROR: ${o.error}`);
+						output.appendLine(o.stackTrace);
+					} else if (o.type === "print") {
+						o = o as PrintNotification;
+						output.appendLine(o.message);
+					} else {
+						output.appendLine(`Unknown message type '${o.type}'.`);
+					}
+				}
+			}
 			return vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(treeNode.test.url), treeNode.test.line, treeNode.test.column);
 		}));
 	}
@@ -273,12 +292,12 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	private handlePrintNotification(suite: SuiteData, evt: PrintNotification) {
-		// TODO: Provide a better way of seeing this?
+		suite.tests[evt.testID].outputEvents.push(evt);
 		console.log(`${evt.message}\n`);
 	}
 
 	private handleErrorNotification(suite: SuiteData, evt: ErrorNotification) {
-		// TODO: Provide a better way of seeing this?
+		suite.tests[evt.testID].outputEvents.push(evt);
 		console.error(evt.error);
 		if (evt.stackTrace)
 			console.error(evt.stackTrace);
@@ -387,6 +406,7 @@ class GroupTreeItem extends TestItemTreeItem {
 }
 
 class TestTreeItem extends TestItemTreeItem {
+	public readonly outputEvents: Array<PrintNotification | ErrorNotification> = [];
 	private _test: Test; // tslint:disable-line:variable-name
 	constructor(public suite: SuiteData, test: Test, public hidden = false) {
 		super(test.name, vs.TreeItemCollapsibleState.None);
@@ -417,6 +437,7 @@ class TestTreeItem extends TestItemTreeItem {
 	set test(test: Test) {
 		this._test = test;
 		this.label = test.name;
+		this.outputEvents.length = 0;
 	}
 }
 
