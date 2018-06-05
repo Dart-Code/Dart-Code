@@ -89,6 +89,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 		}
 
+		// Ensure we have a full path.
+		if (!path.isAbsolute(debugConfig.program) && debugConfig.cwd)
+			debugConfig.program = path.join(debugConfig.cwd, debugConfig.program);
+
 		// Disable Flutter mode for attach.
 		// TODO: Update FlutterDebugSession to understand attach mode, and remove this limitation.
 		const isFlutter = debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string) && !isAttachRequest;
