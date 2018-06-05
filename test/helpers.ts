@@ -39,6 +39,8 @@ export const helloWorldMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder)
 export const helloWorldBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/broken.dart"));
 export const helloWorldGoodbyeFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/goodbye.dart"));
 export const helloWorldHttpFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/http.dart"));
+export const helloWorldCreateMethodClassAFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/create_method/class_a.dart"));
+export const helloWorldCreateMethodClassBFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/create_method/class_b.dart"));
 export const emptyFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/empty.dart"));
 export const everythingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/everything.dart"));
 export const flutterHelloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/flutter_hello_world"));
@@ -88,8 +90,8 @@ export async function closeFile(file: vs.Uri): Promise<void> {
 	}
 }
 
-export async function openFile(file: vs.Uri): Promise<void> {
-	await vs.window.showTextDocument(await vs.workspace.openTextDocument(file));
+export async function openFile(file: vs.Uri): Promise<vs.TextEditor> {
+	return vs.window.showTextDocument(await vs.workspace.openTextDocument(file));
 }
 
 const deferredItems: Array<(result?: "failed" | "passed") => Promise<void> | void> = [];
