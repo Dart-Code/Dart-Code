@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as vs from "vscode";
 import { activate, doc, helloWorldCreateMethodClassAFile, helloWorldCreateMethodClassBFile, openFile, rangeOf } from "../../helpers";
 
-describe.only("fix_code_action_provider", () => {
+describe("fix_code_action_provider", () => {
 
 	before("activate helloWorldCreateMethodClassBFile and add test content", async () => {
 		await activate(helloWorldCreateMethodClassBFile);

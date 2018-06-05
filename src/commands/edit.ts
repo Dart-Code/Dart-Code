@@ -76,10 +76,10 @@ export class EditCommands implements vs.Disposable {
 			command.dispose();
 	}
 
-	private async applyEdits(document: vs.TextDocument, change: as.SourceChange): Promise<void> {
+	private async applyEdits(initiatingDocument: vs.TextDocument, change: as.SourceChange): Promise<void> {
 		// We can only apply with snippets if there's a single change.
 		if (change.edits.length === 1 && change.linkedEditGroups != null && change.linkedEditGroups.length !== 0)
-			return this.applyEditsWithSnippets(document, change);
+			return this.applyEditsWithSnippets(initiatingDocument, change);
 
 		// Otherwise, just make all the edits without the snippets.
 		const changes = new vs.WorkspaceEdit();
@@ -102,17 +102,20 @@ export class EditCommands implements vs.Disposable {
 		// Apply the edits.
 		await vs.workspace.applyEdit(changes);
 
+		// Ensure original document is the active one.
+		const ed = await vs.window.showTextDocument(initiatingDocument);
+
 		// Set the cursor position.
 		if (change.selection) {
-			const pos = document.positionAt(change.selection.offset);
+			const pos = initiatingDocument.positionAt(change.selection.offset);
 			const selection = new vs.Selection(pos, pos);
-			const ed = await vs.window.showTextDocument(document);
 			ed.selection = selection;
 		}
 	}
 
-	private async applyEditsWithSnippets(document: vs.TextDocument, change: as.SourceChange): Promise<void> {
+	private async applyEditsWithSnippets(initiatingDocument: vs.TextDocument, change: as.SourceChange): Promise<void> {
 		const edit = change.edits[0];
+		const document = await vs.workspace.openTextDocument(edit.file);
 		const editor = await vs.window.showTextDocument(document);
 		// Apply of all of the edits.
 		await editor.edit((eb) => {
@@ -161,6 +164,9 @@ export class EditCommands implements vs.Disposable {
 
 		// Replace the document.
 		await editor.insertSnippet(snippet, new vs.Range(document.positionAt(startPos), document.positionAt(endPos)));
+
+		// Ensure original document is the active one.
+		await vs.window.showTextDocument(initiatingDocument);
 	}
 
 	private snippetStringEscape(value: string): string {
