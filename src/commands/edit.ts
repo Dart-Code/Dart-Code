@@ -146,14 +146,16 @@ export class EditCommands implements vs.Disposable {
 			await vs.workspace.applyEdit(changes);
 		}
 
-		// Ensure original document is the active one.
-		const ed = await vs.window.showTextDocument(initiatingDocument);
-
 		// Set the cursor position.
 		if (change.selection) {
-			const pos = initiatingDocument.positionAt(change.selection.offset);
+			const uri = vs.Uri.file(change.selection.file);
+			const document = await vs.workspace.openTextDocument(uri);
+			const editor = await vs.window.showTextDocument(document);
+			const pos = document.positionAt(change.selection.offset);
 			const selection = new vs.Selection(pos, pos);
-			ed.selection = selection;
+			editor.selection = selection;
+		} else {
+			await vs.window.showTextDocument(initiatingDocument);
 		}
 	}
 
