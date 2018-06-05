@@ -22,6 +22,10 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
 			if (e.event === "dart.testRunNotification") {
 				this.handleNotification(e.body.suitePath, e.body.notification);
+				this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => {
+					if (session.id === e.session.id)
+						this.handleSessionEnd(suites[e.body.suitePath]);
+				}));
 			}
 		}));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | TestTreeItem) => {
@@ -228,6 +232,13 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	private handleDoneNotification(suite: SuiteData, evt: DoneNotification) {
+		this.handleSessionEnd(suite);
+	}
+
+	private handleSessionEnd(suite: SuiteData) {
+		if (!suite)
+			return;
+
 		// TODO: Some notification that things are complete?
 		// TODO: Maybe a progress bar during the run?
 
@@ -240,6 +251,12 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		suite.tests.filter((t) => t.status === TestStatus.Stale).forEach((t) => {
 			t.hidden = true;
 			this.updateNode(t.parent);
+		});
+
+		// Anything marked as running should be set back to Unknown
+		suite.tests.filter((t) => t.status === TestStatus.Running).forEach((t) => {
+			t.status = TestStatus.Unknown;
+			this.updateNode(t);
 		});
 
 		this.updateAllIcons(suite);
