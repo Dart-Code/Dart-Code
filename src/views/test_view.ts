@@ -66,7 +66,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			return element.parent;
 	}
 
-	private updateNode(node: TestItemTreeItem): void {
+	private updateNode(node?: TestItemTreeItem): void {
 		this.onDidChangeTreeDataEmitter.fire(node);
 	}
 
@@ -152,6 +152,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		}
 		suite.suites[evt.suite.id].status = TestStatus.Running;
 		this.updateNode(suite.suites[evt.suite.id]);
+		this.updateNode();
 	}
 
 	private handleTestStartNotifcation(suite: SuiteData, evt: TestStartNotification) {
