@@ -3,7 +3,7 @@ import { SpawnOptions } from "child_process";
 import { DebugSessionCustomEvent } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { debugLogTypes, handleDebugLogEvent } from "../src/utils/log";
-import { Notification, Test, TestDoneNotification, TestStartNotification } from "../src/views/test_view";
+import { Notification, Test, TestDoneNotification, TestStartNotification } from "../src/views/test_protocol";
 import { DebugClient } from "./debug_client_ms";
 
 export class DartDebugClient extends DebugClient {
