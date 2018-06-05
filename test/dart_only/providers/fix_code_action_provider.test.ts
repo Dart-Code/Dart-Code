@@ -8,7 +8,7 @@ describe("fix_code_action_provider", () => {
 		await activate(helloWorldCreateMethodClassBFile);
 	});
 
-	it("modifies correct file when main edit is not in the original file", async () => {
+	it("modifies correct file when single edit is not in the original file", async () => {
 		openFile(helloWorldCreateMethodClassBFile);
 		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", doc.uri, rangeOf("createNon||ExistentMethod")) as Thenable<vs.CodeAction[]>);
 		assert.ok(fixResults);
