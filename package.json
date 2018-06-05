@@ -105,6 +105,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.runAllTestsWithoutDebugging",
+				"title": "Run All Tests",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.startDebugging",
 				"title": "Start Debugging",
 				"category": "Dart"
@@ -272,6 +277,10 @@
 				{
 					"command": "dart.startDebugging",
 					"when": "false"
+				},
+				{
+					"command": "dart.runAllTestsWithoutDebugging",
+					"when": "dart-code:flutterProjectLoaded && !inDebugMode"
 				},
 				{
 					"command": "dart.startWithoutDebugging",

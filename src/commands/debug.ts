@@ -1,8 +1,12 @@
+import * as fs from "fs";
+import * as glob from "glob";
+import * as _ from "lodash";
+import * as path from "path";
 import * as vs from "vscode";
 import { Analytics } from "../analytics";
 import { PromiseCompleter } from "../debug/utils";
 import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
-import { fsPath, openInBrowser } from "../utils";
+import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../utils";
 import { handleDebugLogEvent, logError } from "../utils/log";
 
 let debugPaintingEnabled = false;
@@ -180,6 +184,25 @@ export class DebugCommands {
 				program: fsPath(resource),
 				request: "launch",
 				type: "dart",
+			});
+		}));
+		context.subscriptions.push(vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", () => {
+			const testFolders = getDartWorkspaceFolders()
+				.map((project) => path.join(fsPath(project.uri), "test"))
+				.filter((testFolder) => fs.existsSync(testFolder));
+			const testSuites = _.flatMap(testFolders, (folder) => glob.sync("**/*_test.dart", {
+				absolute: true, cwd: folder, nodir: true, nonull: false, nosort: true,
+			}));
+			testSuites.forEach((suite) => {
+				const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(suite));
+				const relativePath = path.relative(fsPath(ws.uri), suite);
+				vs.debug.startDebugging(ws, {
+					name: `Dart ${relativePath}`,
+					noDebug: true,
+					program: suite,
+					request: "launch",
+					type: "dart",
+				});
 			});
 		}));
 
