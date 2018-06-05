@@ -40,6 +40,16 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 				this.getLaunchConfig(true, treeNode),
 			);
 		}));
+
+		this.disposables.push(vs.commands.registerCommand("_dart.displaySuite", (treeNode: SuiteTreeItem) => {
+			return vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(treeNode.suite.path));
+		}));
+		this.disposables.push(vs.commands.registerCommand("_dart.displayGroup", (treeNode: GroupTreeItem) => {
+			return vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(treeNode.group.url), treeNode.group.line, treeNode.group.column);
+		}));
+		this.disposables.push(vs.commands.registerCommand("_dart.displayTest", (treeNode: TestTreeItem) => {
+			return vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(treeNode.test.url), treeNode.test.line, treeNode.test.column);
+		}));
 	}
 
 	private getLaunchConfig(noDebug: boolean, treeNode: SuiteTreeItem | TestTreeItem) {
@@ -295,28 +305,6 @@ class TestItemTreeItem extends vs.TreeItem {
 		this._status = status;
 		this.iconPath = getIconPath(status);
 	}
-
-	protected updateLocation(loc: { url?: string | vs.Uri; line?: number; column?: number; }) {
-		if (!loc.url || !loc.line)
-			return;
-
-		const uri = loc.url instanceof vs.Uri ? loc.url : vs.Uri.parse(loc.url);
-
-		if (uri.scheme !== "file") {
-			this.command = null;
-			return;
-		}
-
-		this.command = {
-			arguments: [
-				uri,
-				loc.line - 1, // Dart's lines are 1-based
-				loc.column,
-			],
-			command: "_dart.jumpToLineColInUri",
-			title: "",
-		};
-	}
 }
 
 export class SuiteTreeItem extends TestItemTreeItem {
@@ -330,6 +318,7 @@ export class SuiteTreeItem extends TestItemTreeItem {
 		this.contextValue = DART_TEST_SUITE_NODE;
 		this.id = `suite_${this.suite.path}_${this.suite.id}`;
 		this.status = TestStatus.Unknown;
+		this.command = { command: "_dart.displaySuite", arguments: [this], title: "" };
 	}
 
 	get children(): vs.TreeItem[] {
@@ -349,7 +338,6 @@ export class SuiteTreeItem extends TestItemTreeItem {
 	set suite(suite: Suite) {
 		this._suite = suite;
 		this.resourceUri = vs.Uri.file(suite.path);
-		this.updateLocation({ url: vs.Uri.file(suite.path), line: 1, column: 0 });
 	}
 }
 
@@ -364,6 +352,7 @@ class GroupTreeItem extends TestItemTreeItem {
 		this.contextValue = DART_TEST_GROUP_NODE;
 		this.id = `suite_${this.suite.path}_group_${this.group.id}`;
 		this.status = TestStatus.Unknown;
+		this.command = { command: "_dart.displayGroup", arguments: [this], title: "" };
 	}
 
 	get isPhantomGroup() {
@@ -394,7 +383,6 @@ class GroupTreeItem extends TestItemTreeItem {
 	set group(group: Group) {
 		this._group = group;
 		this.label = group.name;
-		this.updateLocation(group);
 	}
 }
 
@@ -408,6 +396,7 @@ class TestTreeItem extends TestItemTreeItem {
 		// TODO: Allow re-running tests/groups/suites
 		this.contextValue = DART_TEST_TEST_NODE;
 		this.status = TestStatus.Unknown;
+		this.command = { command: "_dart.displayTest", arguments: [this], title: "" };
 	}
 
 	get parent(): SuiteTreeItem | GroupTreeItem {
@@ -428,7 +417,6 @@ class TestTreeItem extends TestItemTreeItem {
 	set test(test: Test) {
 		this._test = test;
 		this.label = test.name;
-		this.updateLocation(test);
 	}
 }
 
