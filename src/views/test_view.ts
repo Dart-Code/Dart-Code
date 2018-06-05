@@ -138,10 +138,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			suite = new SuiteData(suitePath, new SuiteTreeItem(evt.suite));
 			suites[evt.suite.path] = suite;
 		}
-		// If this is the first suite, we've started a run and can show the tree.
-		if (evt.suite.id === 0) {
-			this.onDidStartTestsEmitter.fire(suite.suites[evt.suite.id]);
-		}
 		suite.groups.forEach((g) => g.status = TestStatus.Stale);
 		suite.tests.forEach((t) => t.status = TestStatus.Stale);
 		if (suite.suites[evt.suite.id]) {
@@ -153,6 +149,11 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		suite.suites[evt.suite.id].status = TestStatus.Running;
 		this.updateNode(suite.suites[evt.suite.id]);
 		this.updateNode();
+		// If this is the first suite, we've started a run and can show the tree.
+		// We need to wait for the tree node to have been rendered though so setTimeout :(
+		if (evt.suite.id === 0) {
+			this.onDidStartTestsEmitter.fire(suite.suites[evt.suite.id]);
+		}
 	}
 
 	private handleTestStartNotifcation(suite: SuiteData, evt: TestStartNotification) {
