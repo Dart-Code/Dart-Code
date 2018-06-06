@@ -1,7 +1,9 @@
 import * as _ from "lodash";
+import * as path from "path";
 import * as vs from "vscode";
 import { DebugCommands } from "../commands/debug";
 import { CoverageData } from "../debug/utils";
+import { extensionPath } from "../extension";
 import { fsPath } from "../utils";
 import { logError } from "../utils/log";
 
@@ -15,14 +17,13 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 	} = {};
 	private isDebugging = false;
 
-	// TODO: Move these to gutter
 	private readonly modifiedDecorationType = vs.window.createTextEditorDecorationType({
-		backgroundColor: "grey",
+		gutterIconPath: vs.Uri.file(path.join(extensionPath, `media/icons/reload_coverage/modified.svg`)),
 		isWholeLine: true,
 		rangeBehavior: vs.DecorationRangeBehavior.OpenOpen,
 	});
 	private readonly notRunDecorationType = vs.window.createTextEditorDecorationType({
-		backgroundColor: "red",
+		gutterIconPath: vs.Uri.file(path.join(extensionPath, `media/icons/reload_coverage/not_run.svg`)),
 		isWholeLine: true,
 		rangeBehavior: vs.DecorationRangeBehavior.OpenOpen,
 	});
@@ -105,7 +106,7 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 			try {
 				const lineText = editor.document.lineAt(lineNumber).text.trim();
 
-				if (lineText === "" || lineText === "{" || lineText === "}" || lineText === "/" || lineText.startsWith("//"))
+				if (lineText === "" || lineText === "{" || lineText === "}" || lineText === "/" || lineText.startsWith("//") || lineText.startsWith("@"))
 					return false;
 
 				return true;
