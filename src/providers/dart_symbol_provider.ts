@@ -1,5 +1,5 @@
 import * as path from "path";
-import { CancellationToken, DocumentSymbolProvider, Location, SymbolInformation, TextDocument, Uri, workspace, WorkspaceSymbolProvider } from "vscode";
+import { CancellationToken, DocumentSymbolProvider, Location, SymbolInformation, TextDocument, Uri, WorkspaceSymbolProvider, workspace } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { fsPath, toRangeOnLine } from "../utils";
@@ -17,7 +17,7 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 
 		// Turn query into a case-insensitive fuzzy search.
 		const pattern = ".*" + query.replace(this.badChars, "").split("").map((c) => `[${c.toUpperCase()}${c.toLowerCase()}]`).join(".*") + ".*";
-		const results = await this.analyzer.searchGetElementDeclarations({ pattern });
+		const results = await this.analyzer.searchGetElementDeclarations({ pattern, maxResults: 500 });
 
 		return results.declarations.map((d) => this.convertResult(d, results.files[d.fileIndex], true));
 	}
