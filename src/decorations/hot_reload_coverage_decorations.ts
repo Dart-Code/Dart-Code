@@ -3,6 +3,7 @@ import * as vs from "vscode";
 import { DebugCommands } from "../commands/debug";
 import { CoverageData } from "../debug/utils";
 import { fsPath } from "../utils";
+import { logError } from "../utils/log";
 
 export class HotReloadCoverageDecorations implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
@@ -101,12 +102,17 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 		// Remove any uninteresting lines
 		fileState.modified = fileState.modified.filter((lineNumber: number) => {
-			const lineText = editor.document.lineAt(lineNumber).text.trim();
+			try {
+				const lineText = editor.document.lineAt(lineNumber).text.trim();
 
-			if (lineText === "" || lineText === "{" || lineText === "}" || lineText === "/" || lineText.startsWith("//"))
+				if (lineText === "" || lineText === "{" || lineText === "}" || lineText === "/" || lineText.startsWith("//"))
+					return false;
+
+				return true;
+			} catch (e) {
+				logError(e);
 				return false;
-
-			return true;
+			}
 		});
 
 		this.redrawDecorations([editor]);
