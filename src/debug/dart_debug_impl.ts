@@ -1077,13 +1077,16 @@ export class DartDebugSession extends DebugSession {
 
 		// Unwrap tokenPos into real locations.
 		const coverageData: CoverageData[] = coverageReport.map((r) => {
+			const allTokens = _.concat(r.startPos, r.endPos, r.hits, r.misses);
 			const hitLines: number[] = [];
 			r.hits.forEach((h) => {
-				const startLoc = this.resolveFileLocation(r.script, h);
-				// TODO: Will whitespace mean this eats the next line?
-				const endLoc = this.resolveFileLocation(r.script, h + 1) || startLoc;
+				const startTokenIndex = allTokens.indexOf(h);
+				const endTokenIndex = startTokenIndex < allTokens.length - 1 ? startTokenIndex + 1 : startTokenIndex;
+				const startLoc = this.resolveFileLocation(r.script, allTokens[startTokenIndex]);
+				const endLoc = this.resolveFileLocation(r.script, allTokens[endTokenIndex]);
 				for (let i = startLoc.line; i <= endLoc.line; i++)
 					hitLines.push(i);
+				console.log(`Token ${h} seems to go from ${startLoc.line} to ${endLoc.line}`);
 			});
 			return {
 				hitLines,
@@ -1094,7 +1097,7 @@ export class DartDebugSession extends DebugSession {
 		this.sendEvent(new Event("dart.coverage", coverageData));
 	}, 2000);
 
-	private async getCoverageReport(scriptUris: string[]): Promise<Array<{ hostScriptPath: string, script: VMScript, tokenPosTable: number[][], hits: number[] }>> {
+	private async getCoverageReport(scriptUris: string[]): Promise<Array<{ hostScriptPath: string, script: VMScript, tokenPosTable: number[][], startPos: number, endPos: number, hits: number[], misses: number[] }>> {
 		// TODO: Do we need to do all of these requests every time? Can we stack the loaded scripts?
 		const result = await this.observatory.getVM();
 		const vm = result.result as VM;
@@ -1111,7 +1114,7 @@ export class DartDebugSession extends DebugSession {
 			this.getPossibleSourceUris(host).forEach((device) => realScriptUris[device] = uriToFilePath(host));
 		});
 
-		const results: Array<{ hostScriptPath: string, script: VMScript, tokenPosTable: number[][], hits: number[] }> = [];
+		const results: Array<{ hostScriptPath: string, script: VMScript, tokenPosTable: number[][], startPos: number, endPos: number, hits: number[], misses: number[] }> = [];
 		for (const isolate of isolates) {
 			const libraryPromises = isolate.libraries.map((library) => this.observatory.getObject(isolate.id, library.id));
 			const libraryResponses = await Promise.all(libraryPromises);
@@ -1131,9 +1134,12 @@ export class DartDebugSession extends DebugSession {
 
 					for (const range of ranges) {
 						results.push({
+							endPos: range.endPos,
 							hits: range.coverage.hits,
 							hostScriptPath: realScriptUris[script.uri],
+							misses: range.coverage.misses,
 							script,
+							startPos: range.startPos,
 							tokenPosTable: script.tokenPosTable,
 						});
 					}
