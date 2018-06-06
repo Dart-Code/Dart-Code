@@ -1076,10 +1076,20 @@ export class DartDebugSession extends DebugSession {
 		const coverageReport = await this.getCoverageReport(this.knownOpenFiles);
 
 		// Unwrap tokenPos into real locations.
-		const coverageData: CoverageData[] = coverageReport.map((r) => ({
-			hitLines: r.hits.map((h) => this.resolveFileLocation(r.script, h).line),
-			scriptPath: r.hostScriptPath,
-		}));
+		const coverageData: CoverageData[] = coverageReport.map((r) => {
+			const hitLines: number[] = [];
+			r.hits.forEach((h) => {
+				const startLoc = this.resolveFileLocation(r.script, h);
+				// TODO: Will whitespace mean this eats the next line?
+				const endLoc = this.resolveFileLocation(r.script, h + 1) || startLoc;
+				for (let i = startLoc.line; i <= endLoc.line; i++)
+					hitLines.push(i);
+			});
+			return {
+				hitLines,
+				scriptPath: r.hostScriptPath,
+			};
+		});
 
 		this.sendEvent(new Event("dart.coverage", coverageData));
 	}, 2000);
