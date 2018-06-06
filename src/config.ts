@@ -66,20 +66,11 @@ class ResourceConfig {
 
 	constructor(uri: Uri) {
 		this.uri = uri;
-		workspace.onDidChangeConfiguration((e) => this.loadConfig());
-		this.loadConfig();
-	}
-
-	private loadConfig() {
 		this.config = workspace.getConfiguration("dart", this.uri);
 	}
 
 	private getConfig<T>(key: string): T {
 		return this.config.get<T>(key);
-	}
-
-	private setConfig<T>(key: string, value: T, target: ConfigurationTarget): Thenable<void> {
-		return this.config.update(key, value, target).then(() => this.loadConfig());
 	}
 
 	get debugSdkLibraries() { return this.getConfig<boolean>("debugSdkLibraries"); }
