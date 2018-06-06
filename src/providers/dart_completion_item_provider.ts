@@ -18,12 +18,13 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			return;
 		// Stash the next character so that we can avoid inserted additional parens if they already exist immediately after the cursor.
 		const nextCharacter = document.getText(new Range(position, position.translate({ characterDelta: 200 }))).trim().substr(0, 1);
+		const insertArgumentPlaceholders = config.for(document.uri).insertArgumentPlaceholders;
 		return new Promise<CompletionList>((resolve, reject) => {
 			this.analyzer.completionGetSuggestionsResults({
 				file: fsPath(document.uri),
 				offset: document.offsetAt(position),
 			}).then((resp) => {
-				resolve(new CompletionList(resp.results.map((r) => this.convertResult(document, nextCharacter, resp, r))));
+				resolve(new CompletionList(resp.results.map((r) => this.convertResult(document, nextCharacter, insertArgumentPlaceholders, resp, r))));
 			},
 				() => reject(),
 			);
@@ -54,7 +55,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 	}
 
 	private convertResult(
-		document: TextDocument, nextCharacter: string, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion,
+		document: TextDocument, nextCharacter: string, insertArgumentPlaceholders: boolean, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion,
 	): CompletionItem {
 		const element = suggestion.element;
 		const elementKind = element ? this.getElementKind(element.kind) : null;
@@ -64,7 +65,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		const completionText = new SnippetString();
 		let triggerCompletion = false;
 
-		const insertArgumentPlaceholders = config.for(document.uri).insertArgumentPlaceholders;
 		const nextCharacterIsOpenParen = nextCharacter === "(";
 		const nextCharacterIsColon = nextCharacter === ":";
 
