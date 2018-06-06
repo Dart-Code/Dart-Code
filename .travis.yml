@@ -71,6 +71,7 @@ before_install:
   - node --version
   - npm --version
   - cd ..
+  - flutter/bin/flutter doctor
 
 install:
   - npm install --depth 0

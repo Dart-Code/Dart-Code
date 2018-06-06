@@ -58,6 +58,7 @@ install:
   - node --version
   - npm --version
   - cd ..
+  - flutter\bin\flutter doctor
 
 build_script:
   - npm install --depth 0
