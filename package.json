@@ -807,7 +807,7 @@
 		"@types/ws": "^0.0.38",
 		"mocha": "^5.1.0",
 		"mocha-multi-reporters": "^1.1.7",
-		"nyc": "^11.7.1",
+		"nyc": "^12.0.2",
 		"remap-istanbul": "^0.11.1",
 		"run-for-every-file": "^1.1.0",
 		"signal-exit": "^3.0.2",
