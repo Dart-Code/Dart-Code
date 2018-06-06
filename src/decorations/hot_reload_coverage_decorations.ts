@@ -82,7 +82,7 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 		// Append the new ranges.
 		for (const change of e.contentChanges) {
-			if (change.text.length === 0)
+			if (change.rangeLength === 0 && change.text.length)
 				continue;
 
 			// If the replacement text is the same as the old text, don't mark it as changed.
