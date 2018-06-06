@@ -168,9 +168,16 @@ export abstract class StdIOService<T> implements Disposable {
 		subscriptions.push(subscriber);
 		const disposable = {
 			dispose: () => {
-				const index = subscriptions.indexOf(subscriber);
+				// Remove from the subscription list.
+				let index = subscriptions.indexOf(subscriber);
 				if (index >= 0) {
 					subscriptions.splice(index, 1);
+				}
+
+				// Also remove from our disposables (else we'll leak it).
+				index = this.disposables.indexOf(disposable);
+				if (index >= 0) {
+					this.disposables.splice(index, 1);
 				}
 			},
 		};
