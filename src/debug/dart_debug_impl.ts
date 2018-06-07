@@ -191,7 +191,6 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private log(message: string) {
-		// Truncate this so we don
 		const max: number = 2500;
 
 		if (this.logFile) {
