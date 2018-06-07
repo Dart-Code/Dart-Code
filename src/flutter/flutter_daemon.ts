@@ -3,7 +3,8 @@ import { ProgressLocation } from "vscode";
 import { config } from "../config";
 import { PromiseCompleter } from "../debug/utils";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
-import { LogCategory, log, reloadExtension } from "../utils";
+import { reloadExtension } from "../utils";
+import { LogCategory, log } from "../utils/log";
 import { FlutterDeviceManager } from "./device_manager";
 import * as f from "./flutter_types";
 
