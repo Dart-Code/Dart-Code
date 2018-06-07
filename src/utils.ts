@@ -4,7 +4,7 @@ import * as https from "https";
 import * as os from "os";
 import * as path from "path";
 import * as semver from "semver";
-import { Event, EventEmitter, Position, Range, TextDocument, Uri, WorkspaceFolder, commands, env as vsEnv, window, workspace } from "vscode";
+import { Position, Range, TextDocument, Uri, WorkspaceFolder, commands, env as vsEnv, window, workspace } from "vscode";
 import { config } from "./config";
 import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
 import { referencesFlutterSdk } from "./sdk/utils";
@@ -262,51 +262,4 @@ export function trueCasePathSync(fsPath: string): string {
 	// Fortunately, glob() with nocase case-corrects the input even if it is
 	// a *literal* path.
 	return glob.sync(noDrivePath, { nocase: true, cwd: pathRoot })[0];
-}
-
-const onLogEmitter: EventEmitter<LogMessage> = new EventEmitter<LogMessage>();
-export const onLog: Event<LogMessage> = onLogEmitter.event;
-export function log(message: string, category = LogCategory.General) {
-	onLogEmitter.fire(new LogMessage((message || "").toString().trim(), category));
-}
-export enum LogCategory {
-	General,
-	Analyzer,
-	FlutterDaemon,
-	FlutterRun,
-	FlutterTest,
-	Observatory,
-}
-export class LogMessage {
-	constructor(public readonly message: string, public readonly category: LogCategory) { }
-}
-
-export function logTo(file: string, maxLength = 1000): ({ dispose: () => Promise<void> }) {
-	if (!file || !path.isAbsolute(file))
-		throw new Error("Path passed to logTo must be an absolute path");
-	const time = () => `[${(new Date()).toLocaleTimeString()}] `;
-	let logStream = fs.createWriteStream(file);
-	logStream.write(`${time()}Log file started\n`);
-	let logger = onLog((e) => {
-		const logMessage = e.message.length > maxLength
-			? e.message.substring(0, maxLength) + "…"
-			: e.message;
-		const prefix = `${time()}[${LogCategory[e.category]}] `;
-		logStream.write(`${prefix}${logMessage}\n`);
-	});
-	return {
-		dispose(): Promise<void> {
-			if (logger) {
-				logger.dispose();
-				logger = null;
-			}
-			if (logStream) {
-				logStream.write(`${time()}Log file ended\n`);
-				return new Promise((resolve) => {
-					logStream.end(resolve);
-					logStream = null;
-				});
-			}
-		},
-	};
 }

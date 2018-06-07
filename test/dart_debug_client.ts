@@ -1,8 +1,17 @@
 import * as assert from "assert";
+import { SpawnOptions } from "child_process";
+import { DebugSessionCustomEvent } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { debugLogTypes, handleDebugLogEvent } from "../src/utils/log";
 import { DebugClient } from "./debug_client_ms";
 
 export class DartDebugClient extends DebugClient {
+	constructor(runtime: string, executable: string, debugType: string, spwanOptions?: SpawnOptions) {
+		super(runtime, executable, debugType, spwanOptions);
+		Object.keys(debugLogTypes).forEach((event) => {
+			this.on(event, (e: DebugSessionCustomEvent) => handleDebugLogEvent(e.event, e.body.message));
+		});
+	}
 	public async launch(launchArgs: any): Promise<void> {
 		// We override the base method to swap for attachRequest when required, so that
 		// all the existing methods that provide useful functionality but assume launching

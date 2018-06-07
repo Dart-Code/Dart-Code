@@ -7,7 +7,8 @@ import * as vs from "vscode";
 import { AnalyzerCapabilities } from "../src/analysis/analyzer";
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
-import { Sdks, fsPath, logTo, vsCodeVersionConstraint } from "../src/utils";
+import { Sdks, fsPath, vsCodeVersionConstraint } from "../src/utils";
+import { logTo } from "../src/utils/log";
 import sinon = require("sinon");
 
 export const ext = vs.extensions.getExtension<{

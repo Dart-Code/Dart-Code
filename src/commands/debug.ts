@@ -2,7 +2,8 @@ import * as vs from "vscode";
 import { Analytics } from "../analytics";
 import { PromiseCompleter } from "../debug/utils";
 import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
-import { LogCategory, fsPath, log, logError, openInBrowser } from "../utils";
+import { fsPath, logError, openInBrowser } from "../utils";
+import { handleDebugLogEvent } from "../utils/log";
 
 let debugPaintingEnabled = false;
 let performanceOverlayEnabled = false;
@@ -25,6 +26,7 @@ export class DebugCommands {
 		this.analytics = analytics;
 		context.subscriptions.push(this.reloadStatus, this.debugMetrics);
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
+			console.log(`Got a custom event! ${e.event}`);
 			if (e.event === "dart.progress") {
 				if (e.body.message) {
 					// Clear any old progress first
@@ -44,12 +46,8 @@ export class DebugCommands {
 				}
 			} else if (e.event === "dart.observatoryUri") {
 				observatoryUri = e.body.observatoryUri;
-			} else if (e.event === "dart.log.observatory") {
-				log(e.body.message, LogCategory.Observatory);
-			} else if (e.event === "dart.log.flutter.run") {
-				log(e.body.message, LogCategory.FlutterRun);
-			} else if (e.event === "dart.log.flutter.test") {
-				log(e.body.message, LogCategory.FlutterTest);
+			} else if (e.event.startsWith("dart.log.")) {
+				handleDebugLogEvent(e.event, e.body.message);
 			} else if (e.event === "dart.restartRequest") {
 				// This event comes back when the user restarts with the Restart button
 				// (eg. it wasn't intiated from our extension, so we don't get to log it
