@@ -2,7 +2,7 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import { Disposable } from "vscode";
 import { safeSpawn } from "../debug/utils";
-import { LogCategory, log, logError } from "../utils";
+import { logError } from "../utils";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
@@ -19,7 +19,7 @@ export abstract class StdIOService<T> implements Disposable {
 
 	constructor(
 		public readonly getLogFile: () => string,
-		public readonly logCategory: LogCategory,
+		public readonly logger: (message: string) => void,
 		public messagesWrappedInBrackets: boolean = false,
 		public readonly treatHandlingErrorsAsUnhandledMessages: boolean = false) {
 		this.currentLogFile = getLogFile();
@@ -190,7 +190,7 @@ export abstract class StdIOService<T> implements Disposable {
 	}
 
 	protected logTraffic(message: string): void {
-		log(message, this.logCategory);
+		this.logger(message);
 		const max: number = 2000;
 
 		const newLogFile = this.getLogFile();

@@ -203,7 +203,7 @@ export class DartDebugSession extends DebugSession {
 				this.logStream.write(message.trim() + "\r\n");
 		}
 
-		this.sendEvent(new Event("dart.observatory.log", { message }));
+		this.sendEvent(new Event("dart.log.observatory", { message }));
 	}
 
 	protected initObservatory(uri: string): Promise<void> {

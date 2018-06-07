@@ -1,4 +1,4 @@
-import { OutputEvent } from "vscode-debugadapter";
+import { Event, OutputEvent } from "vscode-debugadapter";
 import { DartDebugSession } from "./dart_debug_impl";
 import { DoneNotification, ErrorNotification, FlutterTest, Group, Suite, Test, TestDoneNotification } from "./flutter_test";
 import { FlutterLaunchRequestArguments } from "./utils";
@@ -34,7 +34,8 @@ export class FlutterTestDebugSession extends DartDebugSession {
 			appArgs = appArgs.concat(args.args);
 		}
 
-		this.flutter = new FlutterTest(args.flutterPath, args.cwd, appArgs, args.flutterTestLogFile);
+		const logger = (message: string) => this.sendEvent(new Event("dart.log.flutter.test", { message }));
+		this.flutter = new FlutterTest(args.flutterPath, args.cwd, appArgs, args.flutterTestLogFile, logger);
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
 
 		// Set up subscriptions.
