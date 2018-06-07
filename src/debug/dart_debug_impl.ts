@@ -886,11 +886,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected customRequest(request: string, response: DebugProtocol.Response, args: any): void {
-		switch (request) {
-			default:
-				super.customRequest(request, response, args);
-				break;
-		}
+		super.customRequest(request, response, args);
 	}
 
 	// IsolateStart, IsolateRunnable, IsolateExit, IsolateUpdate, ServiceExtensionAdded

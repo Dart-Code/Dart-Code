@@ -173,40 +173,37 @@ export class FlutterDebugSession extends DartDebugSession {
 			.then(() => this.isReloadInProgress = false);
 	}
 
-	protected customRequest(request: string, response: DebugProtocol.Response, args: any): void {
-		switch (request) {
-			case "serviceExtension":
-				if (this.currentRunningAppId)
-					this.flutter.callServiceExtension(this.currentRunningAppId, args.type, args.params)
-						// tslint:disable-next-line:no-empty
-						.then((result) => { }, (error) => this.sendEvent(new OutputEvent(error, "stderr")));
-				break;
+	protected async customRequest(request: string, response: DebugProtocol.Response, args: any): Promise<void> {
+		try {
+			switch (request) {
+				case "serviceExtension":
+					if (this.currentRunningAppId)
+						await this.flutter.callServiceExtension(this.currentRunningAppId, args.type, args.params);
+					break;
 
-			case "togglePlatform":
-				if (this.currentRunningAppId)
-					this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", null).then(
-						(result) => {
-							this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", { value: result.value === "android" ? "iOS" : "android" })
-								// tslint:disable-next-line:no-empty
-								.then((result) => { }, (error) => this.sendEvent(new OutputEvent(error, "stderr")));
-						},
-						(error) => this.sendEvent(new OutputEvent(error, "stderr")),
-					);
-				break;
+				case "togglePlatform":
+					if (this.currentRunningAppId) {
+						const result = await this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", null);
+						await this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", { value: result.value === "android" ? "iOS" : "android" });
+					}
+					break;
 
-			case "hotReload":
-				if (this.currentRunningAppId)
-					this.performReload(false);
-				break;
+				case "hotReload":
+					if (this.currentRunningAppId)
+						this.performReload(false);
+					break;
 
-			case "hotRestart":
-				if (this.currentRunningAppId)
-					this.performReload(true);
-				break;
+				case "hotRestart":
+					if (this.currentRunningAppId)
+						this.performReload(true);
+					break;
 
-			default:
-				super.customRequest(request, response, args);
-				break;
+				default:
+					super.customRequest(request, response, args);
+					break;
+			}
+		} catch (e) {
+			this.sendEvent(new OutputEvent(e, "stderr"));
 		}
 	}
 
