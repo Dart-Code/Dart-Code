@@ -132,9 +132,14 @@ export class FlutterDebugSession extends DartDebugSession {
 	): Promise<void> {
 		try {
 			if (this.currentRunningAppId && this.appHasStarted)
-				await this.flutter.stop(this.currentRunningAppId);
-		} catch (e) {
-			this.errorResponse(response, `${e}`);
+				// Wait up to 500ms for app to quit since we often don't get a
+				// response here because the processes terminate immediately.
+				await Promise.race([
+					this.flutter.stop(this.currentRunningAppId),
+					new Promise((resolve) => setTimeout(resolve, 500)),
+				]);
+		} catch {
+			// Ignore failures here (see comment above).
 		}
 		super.disconnectRequest(response, args);
 	}
