@@ -190,12 +190,12 @@ export class FlutterDebugSession extends DartDebugSession {
 
 				case "hotReload":
 					if (this.currentRunningAppId)
-						this.performReload(false);
+						await this.performReload(false);
 					break;
 
 				case "hotRestart":
 					if (this.currentRunningAppId)
-						this.performReload(true);
+						await this.performReload(true);
 					break;
 
 				default:
