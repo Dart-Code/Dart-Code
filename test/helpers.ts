@@ -122,43 +122,24 @@ beforeEach("set logger", async function () {
 	if (!fs.existsSync(logFolder))
 		fs.mkdirSync(logFolder);
 	const logFile = filenameSafe(this.currentTest.fullTitle()) + ".txt";
+	const logPath = path.join(logFolder, logFile);
 
-	const logger = logTo(path.join(logFolder, logFile));
-	defer(() => logger.dispose());
+	const logger = logTo(logPath);
+
+	defer(async (testResult: "passed" | "failed") => {
+		await logger.dispose();
+		if (testResult === "passed") {
+			try {
+				fs.unlinkSync(logPath);
+			} catch { }
+		}
+	});
 });
 
 before("throw if DART_CODE_IS_TEST_RUN is not set", () => {
 	if (!process.env.DART_CODE_IS_TEST_RUN)
 		throw new Error("DART_CODE_IS_TEST_RUN env var should be set for test runs.");
 });
-
-async function setLogs(conf: vs.WorkspaceConfiguration, logFolder: string, prefix: string, logFiles: string[]): Promise<void> {
-	for (const logFile of logFiles) {
-		const key = logFile + "LogFile";
-		const logPath = path.join(logFolder, `${prefix}${logFile}.txt`);
-		const oldValue = conf.get<string>(key);
-		await conf.update(key, logPath);
-		defer(async (testResult: "passed" | "failed") => {
-			if (testResult === "passed") {
-				try {
-					fs.unlinkSync(logPath);
-				} catch { }
-			}
-			await conf.update(key, oldValue);
-		});
-	}
-}
-
-export async function setConfig(key: string, value: any, resource?: vs.Uri): Promise<void> {
-	const conf = vs.workspace.getConfiguration("dart", resource);
-	const oldValue = conf.get<string>(key);
-	await conf.update(key, value);
-	defer(async () => {
-		await conf.update(key, oldValue);
-		await delay(500);
-	});
-	await delay(500);
-}
 
 export async function setTestContent(content: string): Promise<boolean> {
 	const all = new vs.Range(
