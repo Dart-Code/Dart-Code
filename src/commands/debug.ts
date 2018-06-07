@@ -26,7 +26,6 @@ export class DebugCommands {
 		this.analytics = analytics;
 		context.subscriptions.push(this.reloadStatus, this.debugMetrics);
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
-			console.log(`Got a custom event! ${e.event}`);
 			if (e.event === "dart.progress") {
 				if (e.body.message) {
 					// Clear any old progress first
