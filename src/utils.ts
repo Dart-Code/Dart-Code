@@ -60,6 +60,10 @@ export interface Location {
 	length: number;
 }
 
+export function toRange(document: TextDocument, offset: number, length: number): Range {
+	return new Range(document.positionAt(offset), document.positionAt(offset + length));
+}
+
 export function toPosition(location: Location): Position {
 	return new Position(location.startLine - 1, location.startColumn - 1);
 }
