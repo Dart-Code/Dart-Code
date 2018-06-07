@@ -3,7 +3,9 @@ import * as path from "path";
 import * as vs from "vscode";
 import { forceWindowsDriveLetterToUppercase } from "../../src/debug/utils";
 import { fsPath } from "../../src/utils";
-import { ext, flutterHelloWorldFolder, flutterHelloWorldMainFile } from "../helpers";
+import { activate, ext, flutterHelloWorldFolder, flutterHelloWorldMainFile } from "../helpers";
+
+before("activate", () => activate());
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
