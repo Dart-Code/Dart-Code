@@ -1086,7 +1086,6 @@ export class DartDebugSession extends DebugSession {
 				const endLoc = this.resolveFileLocation(r.script, allTokens[endTokenIndex]);
 				for (let i = startLoc.line; i <= endLoc.line; i++)
 					hitLines.push(i);
-				console.log(`Token ${h} seems to go from ${startLoc.line} to ${endLoc.line}`);
 			});
 			return {
 				hitLines,

@@ -87,6 +87,7 @@ export function formatPathForVm(file: string): string {
 	if (file.startsWith("dart:"))
 		return file;
 	else
+		// TODO: Add file:// prefix for coverage markers to work...
 		return `/${encodeURI(file)}`;
 }
 
