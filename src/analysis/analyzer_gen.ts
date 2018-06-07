@@ -5,12 +5,12 @@
 
 import * as vs from "vscode";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
-import { LogCategory } from "../utils";
+import { LogCategory, log } from "../utils";
 import * as as from "./analysis_server_types";
 
 export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	constructor(getLogFile: () => string) {
-		super(getLogFile, LogCategory.Analyzer);
+		super(getLogFile, (message) => log(message, LogCategory.Analyzer));
 	}
 
 	private serverConnectedSubscriptions: ((notification: as.ServerConnectedNotification) => void)[] = [];
