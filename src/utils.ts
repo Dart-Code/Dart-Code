@@ -4,7 +4,7 @@ import * as https from "https";
 import * as os from "os";
 import * as path from "path";
 import * as semver from "semver";
-import { Disposable, Event, EventEmitter, Position, Range, TextDocument, Uri, WorkspaceFolder, commands, env as vsEnv, window, workspace } from "vscode";
+import { Event, EventEmitter, Position, Range, TextDocument, Uri, WorkspaceFolder, commands, env as vsEnv, window, workspace } from "vscode";
 import { config } from "./config";
 import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
 import { referencesFlutterSdk } from "./sdk/utils";
@@ -281,7 +281,7 @@ export class LogMessage {
 	constructor(public readonly message: string, public readonly category: LogCategory) { }
 }
 
-export function logTo(file: string, maxLength = 1000): Disposable {
+export function logTo(file: string, maxLength = 1000): ({ dispose: () => Promise<void> }) {
 	if (!file || !path.isAbsolute(file))
 		throw new Error("Path passed to logTo must be an absolute path");
 	const time = () => `[${(new Date()).toLocaleTimeString()}] `;
@@ -295,15 +295,17 @@ export function logTo(file: string, maxLength = 1000): Disposable {
 		logStream.write(`${prefix}${logMessage}\n`);
 	});
 	return {
-		dispose() {
+		dispose(): Promise<void> {
 			if (logger) {
 				logger.dispose();
 				logger = null;
 			}
 			if (logStream) {
 				logStream.write(`${time()}Log file ended\n`);
-				logStream.end();
-				logStream = null;
+				return new Promise((resolve) => {
+					logStream.end(resolve);
+					logStream = null;
+				});
 			}
 		},
 	};
