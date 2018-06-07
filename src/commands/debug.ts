@@ -2,7 +2,7 @@ import * as vs from "vscode";
 import { Analytics } from "../analytics";
 import { PromiseCompleter } from "../debug/utils";
 import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
-import { fsPath, logError, openInBrowser } from "../utils";
+import { LogCategory, fsPath, log, logError, openInBrowser } from "../utils";
 
 let debugPaintingEnabled = false;
 let performanceOverlayEnabled = false;
@@ -44,6 +44,8 @@ export class DebugCommands {
 				}
 			} else if (e.event === "dart.observatoryUri") {
 				observatoryUri = e.body.observatoryUri;
+			} else if (e.event === "dart.observatory.log") {
+				log(e.body.message, LogCategory.Observatory);
 			} else if (e.event === "dart.restartRequest") {
 				// This event comes back when the user restarts with the Restart button
 				// (eg. it wasn't intiated from our extension, so we don't get to log it

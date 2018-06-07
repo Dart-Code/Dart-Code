@@ -2,7 +2,7 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import { Disposable } from "vscode";
 import { safeSpawn } from "../debug/utils";
-import { logError } from "../utils";
+import { LogCategory, log, logError } from "../utils";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
@@ -10,21 +10,19 @@ export abstract class StdIOService<T> implements Disposable {
 	private disposables: Disposable[] = [];
 	public process: child_process.ChildProcess;
 	protected additionalPidsToTerminate: number[] = [];
-	protected messagesWrappedInBrackets = false;
-	protected treatHandlingErrorsAsUnhandledMessages = false;
 	private nextRequestID = 1;
 	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] } = {};
 	private messageBuffer: string[] = [];
 	private currentLogFile: string;
-	private getLogFile: () => string;
 	private logStream: fs.WriteStream;
 	private requestErrorSubscriptions: Array<(notification: any) => void> = [];
 
-	constructor(getLogFile: () => string, wrappedMessages: boolean = false, treatHandlingErrorsAsUnhandledMessages: boolean = false) {
+	constructor(
+		public readonly getLogFile: () => string,
+		public readonly logCategory: LogCategory,
+		public messagesWrappedInBrackets: boolean = false,
+		public readonly treatHandlingErrorsAsUnhandledMessages: boolean = false) {
 		this.currentLogFile = getLogFile();
-		this.getLogFile = getLogFile;
-		this.messagesWrappedInBrackets = wrappedMessages;
-		this.treatHandlingErrorsAsUnhandledMessages = treatHandlingErrorsAsUnhandledMessages;
 	}
 
 	protected createProcess(workingDirectory: string, binPath: string, args: string[]) {
@@ -192,6 +190,7 @@ export abstract class StdIOService<T> implements Disposable {
 	}
 
 	protected logTraffic(message: string): void {
+		log(message, this.logCategory);
 		const max: number = 2000;
 
 		const newLogFile = this.getLogFile();
