@@ -100,7 +100,7 @@ export class DartDebugSession extends DebugSession {
 			this.sendEvent(new OutputEvent(`${error}`, "stderr"));
 		});
 		process.on("exit", (code, signal) => {
-			this.logToFile(`Process exited with code ${code}`);
+			this.log(`Process exited with code ${code}`);
 			this.processExited = true;
 			if (!code && !signal)
 				this.sendEvent(new OutputEvent("Exited"));
@@ -123,7 +123,7 @@ export class DartDebugSession extends DebugSession {
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.logFile = args.observatoryLogFile;
 
-		this.logToFile(`Attaching to process via ${args.observatoryUri}`);
+		this.log(`Attaching to process via ${args.observatoryUri}`);
 
 		// If we were given an explicity packages path, use it (otherwise we'll try
 		// to extract from the VM)
@@ -169,9 +169,9 @@ export class DartDebugSession extends DebugSession {
 			appArgs = appArgs.concat(args.args);
 		}
 
-		this.logToFile(`Spawning ${args.dartPath} with args ${JSON.stringify(appArgs)}`);
+		this.log(`Spawning ${args.dartPath} with args ${JSON.stringify(appArgs)}`);
 		if (args.cwd)
-			this.logToFile(`..  in ${args.cwd}`);
+			this.log(`..  in ${args.cwd}`);
 
 		const process = safeSpawn(args.cwd, args.dartPath, appArgs);
 
@@ -190,8 +190,9 @@ export class DartDebugSession extends DebugSession {
 			return `${wsUri}/ws`;
 	}
 
-	private logToFile(message: string) {
-		const max: number = 2000;
+	private log(message: string) {
+		// Truncate this so we don
+		const max: number = 2500;
 
 		if (this.logFile) {
 			if (!this.logStream)
@@ -202,6 +203,8 @@ export class DartDebugSession extends DebugSession {
 			else
 				this.logStream.write(message.trim() + "\r\n");
 		}
+
+		this.sendEvent(new Event("dart.observatory.log", { message }));
 	}
 
 	protected initObservatory(uri: string): Promise<void> {
@@ -214,7 +217,7 @@ export class DartDebugSession extends DebugSession {
 				this.sendEvent(new Event("dart.observatoryUri", { observatoryUri: browserFriendlyUri.toString() }));
 			}
 			this.observatory = new ObservatoryConnection(uri);
-			this.observatory.onLogging((message) => this.logToFile(message));
+			this.observatory.onLogging((message) => this.log(message));
 			this.observatory.onOpen(() => {
 				this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event));
 				this.observatory.on("Extension", (event: VMEvent) => this.handleExtensionEvent(event));
@@ -265,7 +268,7 @@ export class DartDebugSession extends DebugSession {
 
 			this.observatory.onClose((code: number, message: string) => {
 
-				this.logToFile(`Observatory connection closed: ${code} (${message})`);
+				this.log(`Observatory connection closed: ${code} (${message})`);
 				if (this.logStream) {
 					this.logStream.end();
 					this.logStream = null;
@@ -294,7 +297,7 @@ export class DartDebugSession extends DebugSession {
 			if (this.childProcess != null) {
 				for (const pid of this.additionalPidsToTerminate) {
 					try {
-						this.logToFile(`Terminating related process ${pid}...`);
+						this.log(`Terminating related process ${pid}...`);
 						process.kill(pid);
 					} catch (e) {
 						// Only log if we hadn't already been told the process had quit, since if that's happened
@@ -305,7 +308,7 @@ export class DartDebugSession extends DebugSession {
 				}
 				this.additionalPidsToTerminate.length = 0;
 				try {
-					this.logToFile(`Terminating main process...`);
+					this.log(`Terminating main process...`);
 					this.childProcess.kill();
 				} catch (e) {
 					// This tends to throw a lot because the shell process quit when we terminated the related
@@ -314,7 +317,7 @@ export class DartDebugSession extends DebugSession {
 				this.childProcess = null;
 			} else if (this.observatory) {
 				try {
-					this.logToFile(`Disconnecting from process...`);
+					this.log(`Disconnecting from process...`);
 					// Remove all breakpoints from the VM.
 					await Promise.all(this.threadManager.threads.map((thread) => thread.removeAllBreakpoints()));
 

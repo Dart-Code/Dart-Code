@@ -3,7 +3,7 @@ import { ProgressLocation } from "vscode";
 import { config } from "../config";
 import { PromiseCompleter } from "../debug/utils";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
-import { reloadExtension } from "../utils";
+import { LogCategory, reloadExtension } from "../utils";
 import { FlutterDeviceManager } from "./device_manager";
 import * as f from "./flutter_types";
 
@@ -14,7 +14,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	private daemonStartedCompleter = new PromiseCompleter();
 
 	constructor(flutterBinPath: string, projectFolder: string) {
-		super(() => config.flutterDaemonLogFile, true);
+		super(() => config.flutterDaemonLogFile, LogCategory.FlutterDaemon, true);
 
 		this.createProcess(projectFolder, flutterBinPath, ["daemon"]);
 

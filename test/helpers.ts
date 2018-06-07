@@ -7,7 +7,7 @@ import * as vs from "vscode";
 import { AnalyzerCapabilities } from "../src/analysis/analyzer";
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
-import { Sdks, fsPath, vsCodeVersionConstraint } from "../src/utils";
+import { Sdks, fsPath, logTo, vsCodeVersionConstraint } from "../src/utils";
 import sinon = require("sinon");
 
 export const ext = vs.extensions.getExtension<{
@@ -117,37 +117,14 @@ export let sb: sinon.SinonSandbox;
 beforeEach("create sinon sandbox", function () { sb = sinon.createSandbox(); }); // tslint:disable-line:only-arrow-functions
 afterEach("destroy sinon sandbox", () => sb.restore());
 
-// Set up log files for individual test logging.
-// tslint:disable-next-line:only-arrow-functions
-beforeEach("set log paths", async function () {
-
+beforeEach("set logger", async function () {
 	const logFolder = process.env.DC_TEST_LOGS || path.join(ext.extensionPath, ".dart_code_test_logs");
 	if (!fs.existsSync(logFolder))
 		fs.mkdirSync(logFolder);
-	const prefix = filenameSafe(this.currentTest.fullTitle()) + "_";
+	const logFile = filenameSafe(this.currentTest.fullTitle()) + ".txt";
 
-	await setLogs(
-		vs.workspace.getConfiguration("dart"),
-		logFolder,
-		prefix,
-		["analyzer", "flutterDaemon"],
-	);
-
-	await setLogs(
-		vs.workspace.getConfiguration("dart", vs.workspace.workspaceFolders[0].uri),
-		logFolder,
-		prefix,
-		["observatory", "flutterRun", "flutterTest"],
-	);
-
-	// HACK: Give config time to reload
-	// HACK: Made even longer to workaround issue where analysis server may abort refactors when
-	// the settings files are flushed to disk by Code. May be able to reduce this once
-	// https://github.com/dart-lang/sdk/issues/32914#issuecomment-382512517
-	// is fixed/rolled out.
-	await delay(500);
-	// And ensure we wait after they've bene reset too.
-	defer(() => delay(500));
+	const logger = logTo(path.join(logFolder, logFile));
+	defer(() => logger.dispose());
 });
 
 before("throw if DART_CODE_IS_TEST_RUN is not set", () => {
