@@ -21,8 +21,10 @@ export class LegacyDartDocumentSymbolProvider implements DocumentSymbolProvider 
 				disposable.dispose();
 
 				const symbols: SymbolInformation[] = [];
-				for (const element of n.outline.children)
-					this.transcribeOutline(document, symbols, null, element);
+				if (n.outline && n.outline.children) {
+					for (const element of n.outline.children)
+						this.transcribeOutline(document, symbols, null, element);
+				}
 				resolve(symbols);
 			});
 
