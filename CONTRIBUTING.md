@@ -12,7 +12,8 @@ There are some addigional configuration settings that allow you to enable diagno
 - `"dart.analyzerLogFile"`: Logs communication between Dart Code and the analysis server from the Dart SDK
 - `"dart.flutterDaemonLogFile"`: Logs communication with the `flutter daemon` process used for device management in Dart Code
 - `"dart.flutterRunLogFile"`: Logs communication with the `flutter run` process used for launching and reloading Flutter applications
-- `"dart.flutterTestLogFile"`: Logs communication with the `flutter test` process used for launching and reloading Flutter applications
+- `"dart.flutterTestLogFile"`: Logs communication with the `flutter test` process used for running Flutter tests
+- `"dart.pubTestLogFile"`: Logs communication with the `pub run test` process used for running Dart CLI tests
 - `"dart.observatoryLogFile"`: Logs communication with Observatory, the Dart debugger service
 - `"dart.analyzerInstrumentationLogFile"`: Instructs the analysis server to log its own instrumentation data (this is very detailed and can become very large)
 

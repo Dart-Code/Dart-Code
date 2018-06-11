@@ -122,6 +122,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	args: string[];
 	vmAdditionalArgs: string[];
 	observatoryLogFile: string;
+	pubTestLogFile: string;
 	showMemoryUsage: boolean;
 }
 
