@@ -32,7 +32,7 @@ export function handleDebugLogEvent(event: string, message: string) {
 		console.warn(`Failed to handle log event ${event}`);
 }
 
-export function logTo(file: string, maxLength = 1000): ({ dispose: () => Promise<void> }) {
+export function logTo(file: string, maxLength = 2000): ({ dispose: () => Promise<void> }) {
 	if (!file || !path.isAbsolute(file))
 		throw new Error("Path passed to logTo must be an absolute path");
 	const time = () => `[${(new Date()).toLocaleTimeString()}] `;
