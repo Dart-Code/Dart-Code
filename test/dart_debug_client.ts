@@ -102,6 +102,12 @@ export class DartDebugClient extends DebugClient {
 
 	public waitForCustomEvent<T>(type: string, filter: (notification: T) => boolean): Promise<T> {
 		return new Promise((resolve, reject) => {
+			setTimeout(
+				() => {
+					reject(new Error(`No customEvent '${type}' matching ${filter} received after ${this.defaultTimeout} ms`));
+				},
+				this.defaultTimeout,
+			);
 			this.on(type, (event: DebugProtocol.Event) => {
 				try {
 					const notification = event.body as T;
