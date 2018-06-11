@@ -2,20 +2,15 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { fsPath, versionIsAtLeast } from "../../../src/utils";
+import { fsPath } from "../../../src/utils";
 import { DartDebugClient } from "../../dart_debug_client";
-import { activate, defer, ext, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, openFile, positionOf } from "../../helpers";
+import { activate, defer, ext, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, openFile, platformEol, positionOf } from "../../helpers";
 
-describe.skip("dart test debugger", () => {
+describe.only("dart test debugger", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 
-	let testPrefix = "- ";
-	beforeEach("activate helloWorldTestMainFile", async () => {
-		await activate(helloWorldTestMainFile);
-		if (versionIsAtLeast(ext.exports.analyzerCapabilities.version, "1.20.3"))
-			testPrefix = "";
-	});
+	beforeEach("activate helloWorldTestMainFile", () => activate(helloWorldTestMainFile));
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
@@ -52,17 +47,14 @@ describe.skip("dart test debugger", () => {
 		const config = await startDebugger(helloWorldTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ ${testPrefix}Hello world test`),
+			dc.assertOutput("stdout", `✓ String .split() splits the string on the delimiter`),
 			dc.waitForEvent("terminated"),
-			dc.assertPassingTest("- Hello world test"),
-			dc.assertOutput("stdout", "✓ - Hello world test"),
+			dc.assertPassingTest("String .split() splits the string on the delimiter"),
 			dc.launch(config),
 		]);
 	});
 
-	// Skipped due to
-	// https://github.com/flutter/flutter/issues/16352
-	it.skip("stops at a breakpoint", async () => {
+	it("stops at a breakpoint", async () => {
 		await openFile(helloWorldTestMainFile);
 		const config = await startDebugger(helloWorldTestMainFile);
 		await Promise.all([
@@ -73,7 +65,7 @@ describe.skip("dart test debugger", () => {
 		]);
 	});
 
-	it.skip("stops on exception", async () => {
+	it("stops on exception", async () => {
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile);
 		await Promise.all([
@@ -85,22 +77,20 @@ describe.skip("dart test debugger", () => {
 
 	// Skipped due to:
 	// https://github.com/dart-lang/sdk/issues/29156
-	// and
-	// https://github.com/flutter/flutter/issues/16352
 	it.skip("stops at the correct location on exception", async () => {
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
-				line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
+				line: positionOf("^expect(1, equals(2))").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: fsPath(helloWorldTestBrokenFile),
 			}),
 			dc.launch(config),
 		]);
 	});
 
-	it.skip("provides exception details when stopped on exception", async () => {
+	it("provides exception details when stopped on exception", async () => {
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile, false);
 		await Promise.all([
@@ -114,7 +104,14 @@ describe.skip("dart test debugger", () => {
 		const v = variables.find((v) => v.name === "message");
 		assert.ok(v);
 		assert.equal(v.evaluateName, "$e.message");
-		assert.ok(v.value.startsWith(`"Expected: exactly one matching node in the widget tree`));
+		const expectedStart = `"Expected: <2>${platformEol}  Actual: <1>`;
+		assert.ok(
+			v.value.startsWith(expectedStart),
+			`Exception didn't have expected prefix\n` +
+			`+ expected - actual\n` +
+			`+ ${JSON.stringify(expectedStart)}\n` +
+			`- ${JSON.stringify(v.value)}\n`,
+		);
 	});
 
 	it("send failure results for failing tests", async () => {
@@ -123,9 +120,8 @@ describe.skip("dart test debugger", () => {
 		config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertErroringTest("- Hello world test"),
-			dc.assertOutput("stderr", "Test failed. See exception logs above."),
-			dc.assertOutputContains("stdout", "EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK"),
+			dc.assertErroringTest("might fail today"),
+			dc.assertOutput("stderr", `Expected: <2>${platformEol}  Actual: <1>`),
 			dc.launch(config),
 		]);
 	});
