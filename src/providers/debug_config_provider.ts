@@ -10,9 +10,9 @@ import { DartDebugSession } from "../debug/dart_debug_impl";
 import { DartTestDebugSession } from "../debug/dart_test_debug_impl";
 import { FlutterDebugSession } from "../debug/flutter_debug_impl";
 import { FlutterTestDebugSession } from "../debug/flutter_test_debug_impl";
-import { FlutterLaunchRequestArguments, forceWindowsDriveLetterToUppercase, isWin, isWithinPath } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
+import { dartPubPath, dartVMPath, flutterPath } from "../sdk/utils";
 import { Sdks, fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile } from "../utils";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
@@ -223,9 +223,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	private setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, isFlutter: boolean, deviceId: string) {
-		const dartExec = isWin ? "dart.exe" : "dart";
-		const flutterExec = isWin ? "flutter.bat" : "flutter";
-
 		const conf = config.for(folder && folder.uri || null);
 
 		// Attach any properties that weren't explicitly set.
@@ -235,7 +232,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.cwd = debugConfig.cwd || (folder && fsPath(folder.uri));
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
-		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, "bin", dartExec);
+		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, dartVMPath);
 		debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || conf.observatoryLogFile;
 		debugConfig.pubTestLogFile = debugConfig.pubTestLogFile || conf.pubTestLogFile;
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || conf.debugSdkLibraries;
@@ -243,7 +240,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		if (isFlutter) {
 			debugConfig.flutterMode = debugConfig.flutterMode || "debug";
-			debugConfig.flutterPath = debugConfig.flutterPath || (this.sdks.flutter ? path.join(this.sdks.flutter, "bin", flutterExec) : null);
+			debugConfig.flutterPath = debugConfig.flutterPath || (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : null);
 			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || conf.flutterRunLogFile;
 			debugConfig.flutterTestLogFile = debugConfig.flutterTestLogFile || conf.flutterTestLogFile;
 			debugConfig.deviceId = debugConfig.deviceId || deviceId;
