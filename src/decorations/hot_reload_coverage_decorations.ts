@@ -84,11 +84,19 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 		// Append the new ranges.
 		for (const change of e.contentChanges) {
-			if (change.rangeLength === 0 && change.text.length)
+			const originalText = editor.document.getText(change.range);
+			const newText = change.text;
+
+			// Don't mark if the replacement text is the same as the old text.
+			if (newText === originalText)
 				continue;
 
-			// If the replacement text is the same as the old text, don't mark it as changed.
-			if (change.rangeLength === change.text.length && change.text === editor.document.getText(change.range))
+			// Don't mark if we're just deleting whitespace (eg. backspace on a newline).
+			if (originalText.trim() === "" && !newText)
+				continue;
+
+			// If we're just adding whitespace, don't mark that.
+			if (!originalText && newText.trim() === "")
 				continue;
 
 			const linesInserted = change.text.split("\n").length - 1;
