@@ -592,7 +592,7 @@
 					"description": "Whether to enable analysis for AngularDart templates (requires the angular_analyzer_plugin).",
 					"scope": "window"
 				},
-				"dart.normaliseWindowsDriveLetters": {
+				"dart.normalizeWindowsDriveLetters": {
 					"type": "boolean",
 					"default": true,
 					"description": "Whether to force Windows drive letters always to uppercase to improve compatibility.",

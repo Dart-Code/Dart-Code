@@ -15,7 +15,7 @@ export const isDevExtension = checkIsDevExtension();
 export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "dart_code_flutter_create.dart";
 
 export function fsPath(uri: Uri) {
-	if (!config.normaliseWindowsDriveLetters)
+	if (!config.normalizeWindowsDriveLetters)
 		return uri.fsPath; // tslint:disable-line:disallow-fspath
 
 	// tslint:disable-next-line:disallow-fspath

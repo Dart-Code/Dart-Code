@@ -406,7 +406,7 @@ function getSettingsThatRequireRestart() {
 		+ config.flutterSdkPath
 		+ config.closingLabels
 		+ config.analyzeAngularTemplates
-		+ config.normaliseWindowsDriveLetters
+		+ config.normalizeWindowsDriveLetters
 		+ config.analysisServerFolding;
 }
 

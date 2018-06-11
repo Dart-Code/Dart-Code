@@ -53,7 +53,7 @@ class Config {
 	public setGlobalFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Global); }
 
 	// Preview features.
-	get normaliseWindowsDriveLetters() { return this.getConfig<boolean>("normaliseWindowsDriveLetters"); }
+	get normalizeWindowsDriveLetters() { return this.getConfig<boolean>("normalizeWindowsDriveLetters"); }
 
 	public for(uri?: Uri): ResourceConfig {
 		return new ResourceConfig(uri);
