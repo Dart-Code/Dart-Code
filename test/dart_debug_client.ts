@@ -46,9 +46,12 @@ export class DartDebugClient extends DebugClient {
 	}
 
 	public async getMainThread(): Promise<DebugProtocol.Thread> {
+		// HACK: Take the first thread that doesn't look like pub/test.
 		const threads = await this.threadsRequest();
-		assert.equal(threads.body.threads.length, 1);
-		return threads.body.threads[0];
+		const userThreads = threads.body.threads
+			.filter((t) => !t.name.startsWith("pub.dart.snapshot") && !t.name.startsWith("test.dart.snapshot"));
+		assert.equal(userThreads.length, 1);
+		return userThreads[0];
 	}
 
 	public async resume(): Promise<DebugProtocol.ContinueResponse> {
