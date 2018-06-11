@@ -46,7 +46,12 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			return vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(treeNode.suite.path));
 		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.displayGroup", (treeNode: GroupTreeItem) => {
-			return vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(treeNode.group.url), treeNode.group.line, treeNode.group.column);
+			return vs.commands.executeCommand(
+				"_dart.jumpToLineColInUri",
+				vs.Uri.parse(treeNode.group.url || treeNode.group.root_url),
+				treeNode.group.root_line || treeNode.group.line,
+				treeNode.group.root_column || treeNode.group.column,
+			);
 		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.displayTest", (treeNode: TestTreeItem) => {
 			const output = getChannel("Test Output");
@@ -67,7 +72,12 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 					}
 				}
 			}
-			return vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(treeNode.test.url), treeNode.test.line, treeNode.test.column);
+			return vs.commands.executeCommand(
+				"_dart.jumpToLineColInUri",
+				vs.Uri.parse(treeNode.test.root_url || treeNode.test.url),
+				treeNode.test.root_line || treeNode.test.line,
+				treeNode.test.root_column || treeNode.test.column,
+			);
 		}));
 	}
 
