@@ -31,20 +31,11 @@ export class PubTest extends StdIOService<{ type: string }> {
 
 	// Subscription lists.
 
-	private testStartedProcessSubscriptions: Array<(notification: TestStartedProcess) => void> = [];
 	private allTestNotificationsSubscriptions: Array<(notification: any) => void> = [];
 
 	// Subscription methods.
 
-	public registerForTestStartedProcess(subscriber: (notification: TestStartedProcess) => void): Disposable {
-		return this.subscribe(this.testStartedProcessSubscriptions, subscriber);
-	}
-
 	public registerForAllTestNotifications(subscriber: (notification: { type: string }) => void): Disposable {
 		return this.subscribe(this.allTestNotificationsSubscriptions, subscriber);
 	}
-}
-
-export interface TestStartedProcess {
-	observatoryUri: string;
 }

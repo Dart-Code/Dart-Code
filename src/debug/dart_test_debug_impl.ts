@@ -39,7 +39,6 @@ export class DartTestDebugSession extends DartDebugSession {
 
 		// Set up subscriptions.
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
-		this.pubTest.registerForTestStartedProcess((n) => this.initObservatory(`${n.observatoryUri}ws`));
 		this.pubTest.registerForAllTestNotifications((n) => this.handleTestEvent(args.program, n));
 
 		return this.pubTest.process;
