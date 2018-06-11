@@ -1,7 +1,7 @@
 import { Event, OutputEvent } from "vscode-debugadapter";
 import { ErrorNotification, PrintNotification, TestDoneNotification, TestStartNotification } from "../views/test_protocol";
 import { DartDebugSession } from "./dart_debug_impl";
-import { PubTest } from "./pub_test";
+import { TestRunner } from "./test_runner";
 import { DartLaunchRequestArguments, FlutterLaunchRequestArguments } from "./utils";
 
 const tick = "✓";
@@ -9,7 +9,7 @@ const cross = "✖";
 
 export class DartTestDebugSession extends DartDebugSession {
 	protected args: FlutterLaunchRequestArguments;
-	private pubTest: PubTest;
+	protected runner: TestRunner;
 
 	constructor() {
 		super();
@@ -35,13 +35,13 @@ export class DartTestDebugSession extends DartDebugSession {
 		// TODO: Validate that args.program is always absolute (we use it as a key for notifications).
 		appArgs.push(this.sourceFileForArgs(args));
 
-		this.pubTest = new PubTest(args.pubPath, args.cwd, appArgs, args.pubTestLogFile, envOverrides);
+		this.runner = new TestRunner(args.pubPath, args.cwd, ["run", "test", "-r", "json"].concat(appArgs), args.pubTestLogFile, envOverrides);
 
 		// Set up subscriptions.
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
-		this.pubTest.registerForAllTestNotifications((n) => this.handleTestEvent(args.program, n));
+		this.runner.registerForAllTestNotifications((n) => this.handleTestEvent(args.program, n));
 
-		return this.pubTest.process;
+		return this.runner.process;
 	}
 
 	// TODO: currentTest somewhat relies on ordering of test results coming after the test starts...

@@ -1,10 +1,9 @@
 import { Event } from "vscode-debugadapter";
 import { DartTestDebugSession } from "./dart_test_debug_impl";
-import { FlutterTest } from "./flutter_test";
-import { FlutterLaunchRequestArguments } from "./utils";
+import { TestRunner } from "./test_runner";
+import { FlutterLaunchRequestArguments, globalFlutterArgs } from "./utils";
 
 export class FlutterTestDebugSession extends DartTestDebugSession {
-	private flutter: FlutterTest;
 
 	protected spawnProcess(args: FlutterLaunchRequestArguments): any {
 		const debug = !args.noDebug;
@@ -22,14 +21,14 @@ export class FlutterTestDebugSession extends DartTestDebugSession {
 		appArgs.push(this.sourceFileForArgs(args));
 
 		const logger = (message: string) => this.sendEvent(new Event("dart.log.flutter.test", { message }));
-		this.flutter = new FlutterTest(args.flutterPath, args.cwd, appArgs, args.flutterTestLogFile, logger);
+		this.runner = new TestRunner(args.flutterPath, args.cwd, globalFlutterArgs.concat(["test", "--machine"]).concat(appArgs), args.flutterTestLogFile, logger);
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
 
 		// Set up subscriptions.
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
-		this.flutter.registerForTestStartedProcess((n) => this.initObservatory(`${n.observatoryUri}ws`));
-		this.flutter.registerForAllTestNotifications((n) => this.handleTestEvent(args.program, n));
+		this.runner.registerForTestStartedProcess((n) => this.initObservatory(`${n.observatoryUri}ws`));
+		this.runner.registerForAllTestNotifications((n) => this.handleTestEvent(args.program, n));
 
-		return this.flutter.process;
+		return this.runner.process;
 	}
 }
