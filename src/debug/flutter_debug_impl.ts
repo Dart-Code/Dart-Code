@@ -157,6 +157,9 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	private performReload(hotRestart: boolean): Thenable<any> {
+		if (!this.appHasStarted)
+			return;
+
 		if (this.isReloadInProgress) {
 			this.sendEvent(new OutputEvent("Reload already in progress, ignoring request", "stderr"));
 			return;
