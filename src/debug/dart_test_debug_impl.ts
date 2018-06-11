@@ -9,8 +9,6 @@ const cross = "✖";
 
 export class DartTestDebugSession extends DartDebugSession {
 	protected args: FlutterLaunchRequestArguments;
-	protected runner: TestRunner;
-
 	constructor() {
 		super();
 
@@ -35,13 +33,18 @@ export class DartTestDebugSession extends DartDebugSession {
 		// TODO: Validate that args.program is always absolute (we use it as a key for notifications).
 		appArgs.push(this.sourceFileForArgs(args));
 
-		this.runner = new TestRunner(args.pubPath, args.cwd, ["run", "test", "-r", "json"].concat(appArgs), args.pubTestLogFile, envOverrides);
+		return this.createRunner(args.pubPath, args.cwd, args.program, ["run", "test", "-r", "json"].concat(appArgs), args.pubTestLogFile, envOverrides);
+	}
+
+	protected createRunner(executable: string, projectFolder: string, program: string, args: string[], logFile: string, envOverrides?: any) {
+		const runner = new TestRunner(executable, projectFolder, args, logFile, envOverrides);
 
 		// Set up subscriptions.
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
-		this.runner.registerForAllTestNotifications((n) => this.handleTestEvent(args.program, n));
+		runner.registerForTestStartedProcess((n) => this.initObservatory(`${n.observatoryUri}ws`));
+		runner.registerForAllTestNotifications((n) => this.handleTestEvent(program, n));
 
-		return this.runner.process;
+		return runner.process;
 	}
 
 	// TODO: currentTest somewhat relies on ordering of test results coming after the test starts...
