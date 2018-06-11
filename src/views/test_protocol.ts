@@ -33,6 +33,9 @@ export interface Item {
 	line?: number;
 	column?: number;
 	url?: string;
+	root_line?: number;
+	root_column?: number;
+	root_url?: string;
 }
 
 export interface Test extends Item {
