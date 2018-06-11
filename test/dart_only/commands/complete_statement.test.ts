@@ -26,8 +26,7 @@ main() {
 		`);
 	});
 
-	// Skipped due to https://github.com/dart-lang/sdk/issues/33034
-	it.skip("completes an if statement", async () => {
+	it("completes an if statement", async () => {
 		await setTestContent(`
 main() {
   if (true
@@ -38,7 +37,7 @@ main() {
 		await waitForEditorChange(() => vs.commands.executeCommand("dart.completeStatement"));
 		await ensureTestContentWithCursorPos(`
 main() {
-  if(true) {
+  if (true) {
     ^
   }
 }
