@@ -9,6 +9,7 @@ export enum LogCategory {
 	General,
 	CI,
 	Analyzer,
+	DartTest,
 	FlutterDaemon,
 	FlutterRun,
 	FlutterTest,
@@ -61,6 +62,7 @@ export function logInfo(info: string) {
 	log(info, LogCategory.General);
 }
 export const debugLogTypes: { [key: string]: LogCategory } = {
+	"dart.log.dart.test": LogCategory.DartTest,
 	"dart.log.flutter.run": LogCategory.FlutterRun,
 	"dart.log.flutter.test": LogCategory.FlutterTest,
 	"dart.log.observatory": LogCategory.Observatory,

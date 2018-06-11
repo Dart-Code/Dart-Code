@@ -33,11 +33,12 @@ export class DartTestDebugSession extends DartDebugSession {
 		// TODO: Validate that args.program is always absolute (we use it as a key for notifications).
 		appArgs.push(this.sourceFileForArgs(args));
 
-		return this.createRunner(args.pubPath, args.cwd, args.program, ["run", "test", "-r", "json"].concat(appArgs), args.pubTestLogFile, envOverrides);
+		const logger = (message: string) => this.sendEvent(new Event("dart.log.dart.test", { message }));
+		return this.createRunner(args.pubPath, args.cwd, args.program, ["run", "test", "-r", "json"].concat(appArgs), args.pubTestLogFile, logger, envOverrides);
 	}
 
-	protected createRunner(executable: string, projectFolder: string, program: string, args: string[], logFile: string, envOverrides?: any) {
-		const runner = new TestRunner(executable, projectFolder, args, logFile, envOverrides);
+	protected createRunner(executable: string, projectFolder: string, program: string, args: string[], logFile: string, logger: (message: string) => void, envOverrides?: any) {
+		const runner = new TestRunner(executable, projectFolder, args, logFile, logger, envOverrides);
 
 		// Set up subscriptions.
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
