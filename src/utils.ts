@@ -93,6 +93,13 @@ export function getSdkVersion(sdkRoot: string): string {
 	}
 }
 
+export function shouldTriggerHotReload(document: TextDocument): boolean {
+	if (!isAnalyzableAndInWorkspace(document))
+		return false;
+
+	return path.extname(fsPath(document.uri)) === ".dart";
+}
+
 export function isAnalyzable(document: TextDocument): boolean {
 	if (document.isUntitled || !fsPath(document.uri) || document.uri.scheme !== "file")
 		return false;
