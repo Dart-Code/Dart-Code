@@ -6,7 +6,7 @@ import { fsPath } from "../../../src/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { activate, defer, ext, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, openFile, platformEol, positionOf } from "../../helpers";
 
-describe.only("dart test debugger", () => {
+describe("dart test debugger", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 
