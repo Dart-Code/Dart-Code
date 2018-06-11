@@ -509,7 +509,7 @@
 				{
 					"id": "dartTestTree",
 					"name": "Dart & Flutter",
-					"when": "dart-code:dartProjectLoaded && dart-code:flutterProjectLoaded"
+					"when": "dart-code:dartProjectLoaded"
 				}
 			]
 		},
