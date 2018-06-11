@@ -3,7 +3,7 @@ import "package:test/test.dart";
 void main() {
   group("String", () {
     test(".split() splits the string on the delimiter", () {
-      var string = "foo,bar,baz";
+      var string = "foo,bar,baz"; // BREAKPOINT1
       expect(string.split(","), equals(["foo", "bar", "baz"]));
     });
 
