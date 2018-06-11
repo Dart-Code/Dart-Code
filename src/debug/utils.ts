@@ -20,13 +20,15 @@ if (process.env.DART_CODE_IS_TEST_RUN) {
 	globalFlutterArgs.push("--suppress-analytics");
 }
 
-export function safeSpawn(workingDirectory: string, binPath: string, args: string[]): child_process.ChildProcess {
+export function safeSpawn(workingDirectory: string, binPath: string, args: string[], envOverrides?: any): child_process.ChildProcess {
 	// Spawning processes on Windows with funny symbols in the path requires quoting. However if you quote an
 	// executable with a space in its path and an argument also has a space, you have to then quote all of the
-	// arguments too!
-	// Tragic.
+	// arguments too!\
 	// https://github.com/nodejs/node/issues/7367
-	return child_process.spawn(`"${binPath}"`, args.map((a) => `"${a}"`), { cwd: workingDirectory, env: toolEnv, shell: true });
+	const customEnv = envOverrides
+		? Object.assign(Object.create(toolEnv), envOverrides) // Do it this way so we can override toolEnv if required.
+		: toolEnv;
+	return child_process.spawn(`"${binPath}"`, args.map((a) => `"${a}"`), { cwd: workingDirectory, env: customEnv, shell: true });
 }
 
 export function uriToFilePath(uri: string, returnWindowsPath: boolean = isWin): string {
@@ -122,6 +124,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	args: string[];
 	vmAdditionalArgs: string[];
 	observatoryLogFile: string;
+	pubPath: string;
 	pubTestLogFile: string;
 	showMemoryUsage: boolean;
 }
