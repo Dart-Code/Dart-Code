@@ -26,12 +26,14 @@ export abstract class StdIOService<T> implements Disposable {
 		this.currentLogFile = getLogFile();
 	}
 
-	protected createProcess(workingDirectory: string, binPath: string, args: string[]) {
+	protected createProcess(workingDirectory: string, binPath: string, args: string[], envOverrides?: any) {
 		this.logTraffic(`Spawning ${binPath} with args ${JSON.stringify(args)}`);
 		if (workingDirectory)
 			this.logTraffic(`..  in ${workingDirectory}`);
+		if (envOverrides)
+			this.logTraffic(`..  with ${JSON.stringify(envOverrides)}`);
 
-		this.process = safeSpawn(workingDirectory, binPath, args);
+		this.process = safeSpawn(workingDirectory, binPath, args, envOverrides);
 
 		this.process.stdout.on("data", (data: Buffer) => {
 			const message = data.toString();

@@ -10,6 +10,7 @@ import { DartDebugSession } from "../debug/dart_debug_impl";
 import { DartTestDebugSession } from "../debug/dart_test_debug_impl";
 import { FlutterDebugSession } from "../debug/flutter_debug_impl";
 import { FlutterTestDebugSession } from "../debug/flutter_test_debug_impl";
+import { FlutterLaunchRequestArguments, forceWindowsDriveLetterToUppercase, isWithinPath } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { dartPubPath, dartVMPath, flutterPath } from "../sdk/utils";
@@ -234,6 +235,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, dartVMPath);
 		debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || conf.observatoryLogFile;
+		debugConfig.pubPath = debugConfig.pubPath || path.join(this.sdks.dart, dartPubPath);
 		debugConfig.pubTestLogFile = debugConfig.pubTestLogFile || conf.pubTestLogFile;
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || conf.debugSdkLibraries;
 		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || conf.debugExternalLibraries;
