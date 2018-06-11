@@ -112,6 +112,12 @@ export class FlutterDeviceManager implements vs.Disposable {
 				emulator: e,
 				label: e.name,
 			}));
+
+		// Because the above call is async, it's possible a device was connected while we were calling. If so,
+		// just use that instead of showing the prompt.
+		if (this.currentDevice)
+			return true;
+
 		if (emulators.length === 0) {
 			return false;
 		}
