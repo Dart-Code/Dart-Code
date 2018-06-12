@@ -13,5 +13,13 @@
 	"typescript.tsdk": "node_modules/typescript/lib",
 	"editor.codeActionsOnSave": {
 		"source.organizeImports": true
-	}
+	},
+	"dart.extensionLogFile": "logs/extension.txt",
+	"dart.analyzerLogFile": "logs/analyzer.txt",
+	//"dart.analyzerInstrumentationLogFile": "logs/analyzer.instrum.txt",
+	"dart.flutterRunLogFile": "logs/flutter_run.txt",
+	"dart.flutterTestLogFile": "logs/flutter_test.txt",
+	"dart.pubTestLogFile": "logs/pub_test.txt",
+	"dart.flutterDaemonLogFile": "logs/flutter_daemon.txt",
+	"dart.observatoryLogFile": "logs/observatory.txt",
 }
