@@ -3,6 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { isWin } from "../../src/debug/utils";
 import { Sdks, fsPath } from "../../src/utils";
+import { logInfo } from "../../src/utils/log";
 import { ext } from "../helpers";
 
 const sampleFilePath = (isWin ? "X:\\" : "/tmp/") + "sample.dart";
@@ -30,8 +31,8 @@ describe("extension", () => {
 		const sdks: Sdks = ext.exports.sdks;
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
-		console.log("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
-		console.log(`        "analysis_server": ${ext.exports.analyzerCapabilities.version}`);
+		logInfo("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
+		logInfo(`        "analysis_server": ${ext.exports.analyzerCapabilities.version}`);
 	});
 	it("did not try to use Flutter's version of the Dart SDK", async () => {
 		await ext.activate();

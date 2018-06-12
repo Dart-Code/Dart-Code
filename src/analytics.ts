@@ -3,7 +3,7 @@ import * as querystring from "querystring";
 import { Uri, env, version as codeVersion } from "vscode";
 import { config } from "./config";
 import { ProjectType, Sdks, extensionVersion, isDevExtension } from "./utils";
-import { logWarn } from "./utils/log";
+import { logInfo, logWarn } from "./utils/log";
 
 // Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.
 // This is only required for debugging analytics and needn't be sent for standard Dart Code development (dev hits are already filtered with isDevelopment).
@@ -131,7 +131,7 @@ export class Analytics {
 		Object.assign(data, customData);
 
 		if (debug)
-			console.log("Sending analytic: " + JSON.stringify(data));
+			logInfo("Sending analytic: " + JSON.stringify(data));
 
 		const options: https.RequestOptions = {
 			headers: {
@@ -150,7 +150,7 @@ export class Analytics {
 						try {
 							const gaDebugResp = JSON.parse(c.toString());
 							if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
-								console.log("Sent OK!");
+								logInfo("Sent OK!");
 							else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
 								logWarn(c.toString());
 							else
@@ -161,7 +161,7 @@ export class Analytics {
 					});
 
 				if (resp.statusCode < 200 || resp.statusCode > 300) {
-					console.log(`Failed to send analytics ${resp.statusCode}: ${resp.statusMessage}`);
+					logInfo(`Failed to send analytics ${resp.statusCode}: ${resp.statusMessage}`);
 				}
 				resolve();
 			});
