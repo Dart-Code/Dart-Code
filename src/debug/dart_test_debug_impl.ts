@@ -17,24 +17,24 @@ export class DartTestDebugSession extends DartDebugSession {
 
 	protected spawnProcess(args: DartLaunchRequestArguments): any {
 		const debug = !args.noDebug;
-		let envOverrides: any;
-		let appArgs: string[] = [];
-
+		let appArgs = [];
 		if (debug) {
-			envOverrides = {
-				DART_VM_OPTIONS: "--enable-vm-service=0 --pause_isolates_on_start=true",
-			};
+			appArgs.push("--enable-vm-service=0");
+			appArgs.push("--pause_isolates_on_start=true");
 		}
-
+		if (args.checkedMode) {
+			appArgs.push("--checked");
+		}
+		if (args.vmAdditionalArgs) {
+			appArgs = appArgs.concat(args.vmAdditionalArgs);
+		}
+		appArgs.push(this.sourceFileForArgs(args));
 		if (args.args) {
 			appArgs = appArgs.concat(args.args);
 		}
 
-		// TODO: Validate that args.program is always absolute (we use it as a key for notifications).
-		appArgs.push(this.sourceFileForArgs(args));
-
 		const logger = (message: string) => this.sendEvent(new Event("dart.log.dart.test", { message }));
-		return this.createRunner(args.pubPath, args.cwd, args.program, ["run", "test", "-r", "json"].concat(appArgs), args.pubTestLogFile, logger, envOverrides);
+		return this.createRunner(args.dartPath, args.cwd, args.program, appArgs, args.dartTestLogFile, logger, { DART_TEST_REPORTER: "json" });
 	}
 
 	protected createRunner(executable: string, projectFolder: string, program: string, args: string[], logFile: string, logger: (message: string) => void, envOverrides?: any) {

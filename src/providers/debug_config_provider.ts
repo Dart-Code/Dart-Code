@@ -236,7 +236,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, dartVMPath);
 		debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || conf.observatoryLogFile;
 		debugConfig.pubPath = debugConfig.pubPath || path.join(this.sdks.dart, dartPubPath);
-		debugConfig.pubTestLogFile = debugConfig.pubTestLogFile || conf.pubTestLogFile;
+		debugConfig.dartTestLogFile = debugConfig.dartTestLogFile || conf.dartTestLogFile;
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || conf.debugSdkLibraries;
 		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || conf.debugExternalLibraries;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
