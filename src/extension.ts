@@ -47,7 +47,7 @@ import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingS
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { fsPath } from "./utils";
-import { LogCategory, logError, logTo } from "./utils/log";
+import { LogCategory, log, logError, logTo } from "./utils/log";
 import { DartPackagesProvider } from "./views/packages_view";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }];
@@ -65,18 +65,16 @@ let analytics: Analytics;
 let showTodos: boolean;
 let showLintNames: boolean;
 let previousSettings: string;
+let extensionLogger: { dispose: () => Promise<void> };
 
 export function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
-	if (config.extensionLogFile) {
-		try {
-			context.subscriptions.push(logTo(config.extensionLogFile, LogCategory.General));
-		} catch (e) {
-			logError(e);
-		}
-	}
+	if (!extensionLogger && config.extensionLogFile)
+		extensionLogger = logTo(config.extensionLogFile, LogCategory.General);
+
 	util.logTime("Code called activate");
 	// Wire up a reload command that will re-initialise everything.
 	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", (_) => {
+		log("Performing silent extension reload...");
 		deactivate(true);
 		for (const sub of context.subscriptions) {
 			try {
@@ -86,6 +84,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			}
 		}
 		activate(context, true);
+		log("Done!");
 	}));
 
 	showTodos = config.showTodos;
@@ -421,10 +420,12 @@ function getSettingsThatRequireRestart() {
 		+ config.analysisServerFolding;
 }
 
-export function deactivate(isRestart: boolean = false): PromiseLike<void> {
+export async function deactivate(isRestart: boolean = false): Promise<void> {
 	setCommandVisiblity(false, null);
 	if (!isRestart) {
-		return analytics.logExtensionShutdown();
+		await analytics.logExtensionShutdown();
+		if (extensionLogger)
+			await extensionLogger.dispose();
 	}
 }
 
