@@ -47,10 +47,12 @@ export function isDartWorkspaceFolder(folder: WorkspaceFolder): boolean {
 	return true;
 }
 
-export function resolveHomePath(p: string) {
-	if (p == null) return null;
+export function resolvePaths(p: string) {
+	if (!p) return null;
 	if (p.startsWith("~/"))
 		return path.join(os.homedir(), p.substr(2));
+	if (!path.isAbsolute(p) && workspace.workspaceFolders && workspace.workspaceFolders.length)
+		return path.join(fsPath(workspace.workspaceFolders[0].uri), p);
 	return p;
 }
 
