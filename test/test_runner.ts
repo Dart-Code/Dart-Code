@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { IRunner, reporters } from "mocha";
+import { MultiReporter } from "./mocha_multi_reporter";
 import testRunner = require("vscode/lib/testrunner");
 const onExit = require("signal-exit"); // tslint:disable-line:no-var-requires
 
@@ -16,14 +16,6 @@ onExit(() => {
 		process.exit(1);
 	}
 });
-
-class MultiReporter extends reporters.Base {
-	constructor(runner: IRunner, options: any) {
-		const reporterConstructors: any[] = process.env.TEST_XML_OUTPUT ? [reporters.Spec, reporters.XUnit] : [reporters.Spec];
-		const rs = reporterConstructors.map((r) => new r(runner, options));
-		super(runner);
-	}
-}
 
 testRunner.configure({
 	forbidOnly: !!process.env.MOCHA_FORBID_ONLY,

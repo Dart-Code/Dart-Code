@@ -4,6 +4,7 @@ import { Event, EventEmitter } from "vscode";
 
 export enum LogCategory {
 	General,
+	CI,
 	Analyzer,
 	FlutterDaemon,
 	FlutterRun,
