@@ -1,6 +1,7 @@
 import { Disposable, Uri, window, workspace } from "vscode";
 import * as util from "../utils";
 import { fsPath } from "../utils";
+import { logError } from "../utils/log";
 import { FoldingRegion, Occurrences, Outline } from "./analysis_server_types";
 import { Analyzer } from "./analyzer";
 
@@ -55,7 +56,7 @@ export class OpenFileTracker implements Disposable {
 		// Set priority files.
 		this.analyzer.analysisSetPriorityFiles({
 			files: priorityFiles,
-		}).then(() => { }, util.logError); // tslint:disable-line:no-empty
+		}).then(() => { }, logError); // tslint:disable-line:no-empty
 
 		// Set subscriptions.
 		if (this.analyzer.capabilities.supportsClosingLabels) {
@@ -66,7 +67,7 @@ export class OpenFileTracker implements Disposable {
 					OCCURRENCES: priorityFiles,
 					OUTLINE: priorityFiles,
 				},
-			}).then(() => { }, util.logError); // tslint:disable-line:no-empty
+			}).then(() => { }, logError); // tslint:disable-line:no-empty
 		} else {
 			this.analyzer.analysisSetSubscriptions({
 				subscriptions: {
@@ -75,7 +76,7 @@ export class OpenFileTracker implements Disposable {
 					OCCURRENCES: priorityFiles,
 					OUTLINE: priorityFiles,
 				},
-			}).then(() => { }, util.logError); // tslint:disable-line:no-empty
+			}).then(() => { }, logError); // tslint:disable-line:no-empty
 		}
 	}
 

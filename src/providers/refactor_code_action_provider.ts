@@ -1,7 +1,8 @@
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, CodeActionProviderMetadata, Range, TextDocument } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
-import { fsPath, isAnalyzableAndInWorkspace, logError } from "../utils";
+import { fsPath, isAnalyzableAndInWorkspace } from "../utils";
+import { logError } from "../utils/log";
 
 const supportedRefactors: { [key: string]: string } = {
 	EXTRACT_METHOD: "Extract Method",

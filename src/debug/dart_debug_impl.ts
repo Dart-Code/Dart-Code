@@ -4,7 +4,7 @@ import * as _ from "lodash";
 import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { logError } from "../utils";
+import { logError } from "../utils/log";
 import { DebuggerResult, ObservatoryConnection, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMStack } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
 import { DartAttachRequestArguments, DartLaunchRequestArguments, PromiseCompleter, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
@@ -302,7 +302,7 @@ export class DartDebugSession extends DebugSession {
 						// Only log if we hadn't already been told the process had quit, since if that's happened
 						// it's very likely this will fail.
 						if (!this.processExited)
-							logError({ message: e.toString() });
+							logError(e);
 					}
 				}
 				this.additionalPidsToTerminate.length = 0;
@@ -762,7 +762,7 @@ export class DartDebugSession extends DebugSession {
 				return this.valueAsString(evalResult, undefined, true);
 			}
 		} catch (e) {
-			console.error(e);
+			logError(e);
 			return null;
 		}
 	}
@@ -1348,7 +1348,7 @@ class ThreadManager {
 			this.threads.splice(this.threads.indexOf(threadInfo), 1);
 			this.removeStoredData(threadInfo);
 		} else {
-			console.error(`Failed to find thread for ${ref.id} during exit`);
+			logError(`Failed to find thread for ${ref.id} during exit`);
 		}
 	}
 }

@@ -47,6 +47,7 @@ import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingS
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { fsPath } from "./utils";
+import { logError } from "./utils/log";
 import { DartPackagesProvider } from "./views/packages_view";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }];
@@ -74,7 +75,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			try {
 				sub.dispose();
 			} catch (e) {
-				console.error(e);
+				logError(e);
 			}
 		}
 		activate(context, true);
@@ -293,7 +294,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 		vs.workspace.openTextDocument(filePath).then((document) => {
 			vs.window.showTextDocument(document, { preview: true });
-		}, (error) => util.logError);
+		}, (error) => logError);
 	}));
 
 	// Warn the user if they've opened a folder with mismatched casing.

@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { config } from "../config";
-import { logError } from "../utils";
+import { logError } from "../utils/log";
 import { FlutterDaemon } from "./flutter_daemon";
 import * as f from "./flutter_types";
 
