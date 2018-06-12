@@ -2,7 +2,7 @@ import * as path from "path";
 import { CancellationToken, DocumentSymbolProvider, Location, SymbolInformation, TextDocument, Uri, WorkspaceSymbolProvider, workspace } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
-import { fsPath, toRange, toRangeOnLine } from "../utils";
+import { fsPath, toRange } from "../utils";
 
 export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymbolProvider {
 	private analyzer: Analyzer;
@@ -25,6 +25,19 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 	public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<SymbolInformation[]> {
 		const results = await this.analyzer.searchGetElementDeclarations({ file: fsPath(document.uri) });
 		return results.declarations.map((d) => this.convertResult(document, d, results.files[d.fileIndex], false));
+	}
+
+	// Needs testing when https://github.com/Microsoft/vscode/issues/51695 is fixed
+	$$$
+	public async resolveWorkspaceSymbol(symbol: SymbolInformation, token: CancellationToken): Promise<SymbolInformation> {
+		if (!(symbol instanceof PartialSymbolInformation))
+			return;
+
+		const document = await workspace.openTextDocument(Uri.file(symbol.locationData.file));
+		symbol.location = new Location(
+			document.uri,
+			toRange(document, symbol.locationData.offset, symbol.locationData.length),
+		);
 	}
 
 	private convertResult(document: TextDocument | undefined, result: as.ElementDeclaration, file: string, includeFilename: boolean): SymbolInformation {
@@ -55,17 +68,27 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 			containerName = result.className;
 		}
 
-		return new SymbolInformation(
+		const symbol: any = new PartialSymbolInformation(
 			name,
 			getSymbolKindForElementKind(result.kind),
 			containerName,
-			new Location(
-				Uri.file(file),
-				document
-					? toRange(document, result.codeOffset, result.codeLength)
-					: toRangeOnLine({ startLine: result.line, startColumn: result.column, length: 0 }),
-			),
+			document
+				? new Location(
+					Uri.file(file),
+					toRange(document, result.codeOffset, result.codeLength),
+				)
+				: undefined,
 		);
+
+		if (!document) {
+			symbol.locationData = {
+				file,
+				length: result.codeLength,
+				offset: result.codeOffset,
+			};
+		}
+
+		return symbol;
 	}
 
 	private createDisplayPath(inputPath: string): string {
@@ -99,4 +122,12 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 
 		return inputPath;
 	}
+}
+
+class PartialSymbolInformation extends SymbolInformation {
+	public locationData: {
+		file: string;
+		offset: number;
+		length: number;
+	};
 }
