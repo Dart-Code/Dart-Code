@@ -47,7 +47,7 @@ import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingS
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { fsPath } from "./utils";
-import { logError } from "./utils/log";
+import { LogCategory, logError, logTo } from "./utils/log";
 import { DartPackagesProvider } from "./views/packages_view";
 
 const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }];
@@ -67,6 +67,13 @@ let showLintNames: boolean;
 let previousSettings: string;
 
 export function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
+	if (config.extensionLogFile) {
+		try {
+			context.subscriptions.push(logTo(config.extensionLogFile, LogCategory.General));
+		} catch (e) {
+			logError(e);
+		}
+	}
 	util.logTime("Code called activate");
 	// Wire up a reload command that will re-initialise everything.
 	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", (_) => {
@@ -405,6 +412,7 @@ function getSettingsThatRequireRestart() {
 		+ config.analyzerDiagnosticsPort
 		+ config.analyzerObservatoryPort
 		+ config.analyzerInstrumentationLogFile
+		+ config.extensionLogFile
 		+ config.analyzerAdditionalArgs
 		+ config.flutterSdkPath
 		+ config.closingLabels

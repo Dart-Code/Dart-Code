@@ -34,6 +34,7 @@ class Config {
 	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
 	get closingLabels() { return this.getConfig<boolean>("closingLabels"); }
 	get flutterDaemonLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("flutterDaemonLogFile"))); }
+	get extensionLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("extensionLogFile"))); }
 	get flutterHotReloadOnSave() { return this.getConfig<boolean>("flutterHotReloadOnSave"); }
 	get flutterCreateOrganization() { return this.getConfig<string>("flutterCreateOrganization"); }
 	get flutterCreateIOSLanguage() { return this.getConfig<string>("flutterCreateIOSLanguage"); }

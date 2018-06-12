@@ -8,6 +8,7 @@ If you're going to work on an issue, please add a comment to the issue so others
 
 There are some addigional configuration settings that allow you to enable diagnostic logging in order to debug/develop Dart Code more easily. These should be set to full filesystem paths of where to log. The folders must exist:
 
+- `"dart.extensionLogFile"`: Logs some basic information and errors from the Dart Code extension
 - `"dart.analyzerLogFile"`: Logs communication between Dart Code and the analysis server from the Dart SDK
 - `"dart.flutterDaemonLogFile"`: Logs communication with the `flutter daemon` process used for device management in Dart Code
 - `"dart.flutterRunLogFile"`: Logs communication with the `flutter run` process used for launching and reloading Flutter applications
