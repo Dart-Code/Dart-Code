@@ -57,6 +57,9 @@ export function resolvePaths(p: string) {
 }
 
 export function createFolderIfRequired(file: string) {
+	if (!file || !path.isAbsolute(file))
+		return;
+
 	const folder = path.dirname(file);
 	function mkDirAndParents(folder: string) {
 		const parent = path.dirname(folder);
