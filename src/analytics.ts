@@ -120,7 +120,7 @@ export class Analytics {
 			cd7: ProjectType[this.sdks.projectType],
 			cd8: config.closingLabels ? "On" : "Off",
 			cd9: this.sdks.projectType === ProjectType.Flutter ? (config.flutterHotReloadOnSave ? "On" : "Off") : null,
-			cid: env.machineId,
+			cid: env.machineId === "someValue.machineId" ? undefined : env.machineId,
 			tid: "UA-2201586-19",
 			ul: env.language,
 			v: "1", // API Version.
