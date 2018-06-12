@@ -1,10 +1,10 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, doc, editor, documentEol, positionOf, setTestContent } from "../../helpers";
+import { activate, doc, documentEol, editor, positionOf, setTestContent } from "../../helpers";
 
 describe("dart_type_formatting_edit_provider", () => {
 
-	before("activate", () => activate());
+	beforeEach("activate", () => activate());
 
 	async function formatAtLocation(searchText: string, character: string): Promise<void> {
 		const position = positionOf(searchText);

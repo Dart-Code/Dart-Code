@@ -4,7 +4,7 @@ import { activate, doc, helloWorldCreateMethodClassAFile, helloWorldCreateMethod
 
 describe("fix_code_action_provider", () => {
 
-	before("activate helloWorldCreateMethodClassBFile", async () => {
+	beforeEach("activate helloWorldCreateMethodClassBFile", async () => {
 		await activate(helloWorldCreateMethodClassBFile);
 	});
 

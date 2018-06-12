@@ -16,7 +16,7 @@ describe.skip("debug_config_provider", () => {
 		type: "dart",
 	};
 
-	before("activate", () => activate());
+	beforeEach("activate", () => activate());
 
 	it("runs a Dart script to completion", async () => {
 		await vs.debug.startDebugging(vs.workspace.workspaceFolders[0], debugConfig);

@@ -3,7 +3,7 @@ import { activate, ensureCompletion, flutterHelloWorldMainFile, getCompletionsAt
 
 describe("completion_item_provider", () => {
 
-	before("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
+	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 
 	it("returns expected items", async () => {
 		const completions = await getCompletionsAt("new ^Text");
