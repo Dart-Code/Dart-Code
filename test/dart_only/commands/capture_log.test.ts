@@ -56,7 +56,32 @@ describe.only("capture logs command", () => {
 		assert.equal(fsPath(vs.window.activeTextEditor.document.uri), tempLogFile);
 	});
 
-	it("does not start logging if cancelled");
+	it("does not start logging if cancelled", async () => {
+		const tempLogFile = path.join(getRandomTempFolder(), "test_log.txt");
+		defer(() => {
+			if (fs.existsSync(tempLogFile))
+				fs.unlinkSync(tempLogFile);
+		});
+
+		// When prompted for a log file, provide this temp filename.
+		const showSaveDialog = sb.stub(vs.window, "showSaveDialog");
+		showSaveDialog.resolves(undefined);
+
+		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
+
+		// Start the logging but don't await it (it doesn't complete until we stop the logging!).
+		const loggingCommand = vs.commands.executeCommand("dart.startLogging");
+
+		// Wait until the command has called for the filename (otherwise we'll send our log before
+		// the logger is set up because the above call is async).
+		await waitFor(() => showSaveDialog.called);
+
+		// Wait for the logging command to finish (which it should automatically because we aborted).
+		await loggingCommand;
+
+		assert.ok(!fs.existsSync(tempLogFile));
+	});
+
 	it("only logs the specified categories");
 	it("always logs general logs");
 });
