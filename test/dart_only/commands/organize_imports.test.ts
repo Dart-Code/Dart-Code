@@ -3,7 +3,7 @@ import { activate, ensureTestContent, setTestContent, waitForEditorChange } from
 
 describe("organize imports", () => {
 
-	before("activate", () => activate());
+	beforeEach("activate", () => activate());
 
 	it("sorts imports", async () => {
 		await setTestContent(`

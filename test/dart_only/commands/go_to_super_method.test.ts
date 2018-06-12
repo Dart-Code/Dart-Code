@@ -9,7 +9,7 @@ export const superFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go
 export const derivedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super_method/derived.dart"));
 
 describe("go_to_super_method", () => {
-	before("activate and wait for outline", async () => {
+	beforeEach("activate and wait for outline", async () => {
 		await activate(derivedFile);
 		await waitFor(() => !!OpenFileTracker.getOutlineFor(derivedFile));
 	});

@@ -4,7 +4,7 @@ import { activate, doc, ensureTestContent, ext, positionOf, setTestContent } fro
 
 describe("rename_provider", () => {
 
-	before("activate", () => activate());
+	beforeEach("activate", () => activate());
 
 	it("renames all exact references but not other items with same name", async () => {
 		await setTestContent(`
