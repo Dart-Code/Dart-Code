@@ -2,6 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { Sdks, fsPath } from "../../src/utils";
+import { logInfo } from "../../src/utils/log";
 import { ext } from "../helpers";
 
 describe("test environment", () => {
@@ -27,8 +28,8 @@ describe("extension", () => {
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.ok(sdks.flutter);
-		console.log("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
-		console.log(`        "analysis_server": ${ext.exports.analyzerCapabilities.version}`);
+		logInfo("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
+		logInfo(`        "analysis_server": ${ext.exports.analyzerCapabilities.version}`);
 	});
 	it("used Flutter's version of the Dart SDK", async () => {
 		await ext.activate();

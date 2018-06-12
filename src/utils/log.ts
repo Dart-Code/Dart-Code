@@ -55,6 +55,12 @@ export function logWarn(warning: string) {
 	console.warn(warning);
 	log(`WARN: ${warning}`, LogCategory.General);
 }
+export function logInfo(info: string) {
+	if (isDevExtension)
+		vs.window.showInformationMessage("DEBUG: " + info);
+	console.log(info);
+	log(info, LogCategory.General);
+}
 export const debugLogTypes: { [key: string]: LogCategory } = {
 	"dart.log.flutter.run": LogCategory.FlutterRun,
 	"dart.log.flutter.test": LogCategory.FlutterTest,

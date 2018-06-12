@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import { logInfo } from "../utils/log";
 import { Analyzer } from "./analyzer";
 
 export function findPackageRoots(analyzer: Analyzer, root: string): string[] {
@@ -15,7 +16,7 @@ export function findPackageRoots(analyzer: Analyzer, root: string): string[] {
 	if (!analyzer.capabilities.mayRequiresPackageFolderWorkaround || !isPackageRootWorkaroundRequired(root))
 		return [root];
 
-	console.log("Workspace root appears to need package root workaround...");
+	logInfo("Workspace root appears to need package root workaround...");
 
 	const roots = getChildren(root, 3);
 
