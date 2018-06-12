@@ -370,6 +370,7 @@ export async function waitForEditorChange(action: () => Thenable<void>): Promise
 	await waitFor(() => doc.version !== oldVersion);
 }
 
+// This same logic exists in the website to link back to logs.
 export function filenameSafe(input: string) {
 	return input.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
 }
