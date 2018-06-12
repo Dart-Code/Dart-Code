@@ -616,6 +616,11 @@
 					"description": "The path to a log file for the Dart analysis server built-in instrumentation.\nThis is a diagnostic setting that should not normally be set.",
 					"scope": "window"
 				},
+				"dart.extensionLogFile": {
+					"type": "string",
+					"description": "The path to a log file for the Dart Code extension.\nThis is a diagnostic setting that should not normally be set.",
+					"scope": "window"
+				},
 				"dart.analyzerLogFile": {
 					"type": "string",
 					"description": "The path to a log file for the Dart analysis server communication.\nThis is a diagnostic setting that should not normally be set.",
