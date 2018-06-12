@@ -84,7 +84,7 @@ class ResourceConfig {
 	get flutterRunLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("flutterRunLogFile"))); }
 	get flutterTestLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("flutterTestLogFile"))); }
 	get observatoryLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("observatoryLogFile"))); }
-	get pubTestLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("pubTestLogFile"))); }
+	get dartTestLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("dartTestLogFile"))); }
 	get promptToGetPackages() { return this.getConfig<boolean>("promptToGetPackages"); }
 	get vmAdditionalArgs() { return this.getConfig<string[]>("vmAdditionalArgs"); }
 }
