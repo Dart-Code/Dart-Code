@@ -3,6 +3,7 @@ import * as querystring from "querystring";
 import { Uri, env, version as codeVersion } from "vscode";
 import { config } from "./config";
 import { ProjectType, Sdks, extensionVersion, isDevExtension } from "./utils";
+import { logWarn } from "./utils/log";
 
 // Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.
 // This is only required for debugging analytics and needn't be sent for standard Dart Code development (dev hits are already filtered with isDevelopment).
@@ -151,11 +152,11 @@ export class Analytics {
 							if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
 								console.log("Sent OK!");
 							else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
-								console.warn(c.toString());
+								logWarn(c.toString());
 							else
-								console.warn("Unexpected GA debug response: " + c.toString());
+								logWarn("Unexpected GA debug response: " + c.toString());
 						} catch (e) {
-							console.warn("Error in GA debug response: " + c.toString());
+							logWarn("Error in GA debug response: " + c.toString());
 						}
 					});
 

@@ -10,7 +10,7 @@ import { isWin } from "../src/debug/utils";
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
 import { Sdks, fsPath, vsCodeVersionConstraint } from "../src/utils";
-import { log, logError, logTo } from "../src/utils/log";
+import { log, logError, logTo, logWarn } from "../src/utils/log";
 import sinon = require("sinon");
 
 export const ext = vs.extensions.getExtension<{
@@ -147,7 +147,7 @@ afterEach("run deferred functions", async function () {
 		} catch (e) {
 			logError(`Error running deferred function: ${e}`);
 			// TODO: Add named for deferred functions instead...
-			console.warn(d.toString());
+			logWarn(d.toString());
 			firstError = firstError || e;
 		}
 	}
