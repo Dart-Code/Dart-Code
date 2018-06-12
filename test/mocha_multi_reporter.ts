@@ -1,7 +1,7 @@
 import { IRunner, reporters } from "mocha";
 import { LoggingReporter } from "./mocha_logging_reporter";
 
-class MultiReporter extends reporters.Base {
+export class MultiReporter extends reporters.Base {
 	constructor(runner: IRunner, options: any) {
 		// These have to be any because the TS defs don't have the options argument.
 		// TODO: Send a PR to fix?
