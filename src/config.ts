@@ -1,5 +1,5 @@
 import { ConfigurationTarget, Uri, WorkspaceConfiguration, workspace } from "vscode";
-import { resolvePaths } from "./utils";
+import { createFolderIfRequired, resolvePaths } from "./utils";
 
 class Config {
 	private config: WorkspaceConfiguration;
@@ -26,14 +26,14 @@ class Config {
 	get analyzeAngularTemplates() { return this.getConfig<boolean>("analyzeAngularTemplates"); }
 	get analyzerDiagnosticsPort() { return this.getConfig<number>("analyzerDiagnosticsPort"); }
 	get analyzerObservatoryPort() { return this.getConfig<number>("analyzerObservatoryPort"); }
-	get analyzerLogFile() { return resolvePaths(this.getConfig<string>("analyzerLogFile")); }
+	get analyzerLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("analyzerLogFile"))); }
 	get analyzerPath() { return resolvePaths(this.getConfig<string>("analyzerPath")); }
 	get analysisServerFolding() { return this.getConfig<boolean>("analysisServerFolding"); }
-	get analyzerInstrumentationLogFile() { return resolvePaths(this.getConfig<string>("analyzerInstrumentationLogFile")); }
+	get analyzerInstrumentationLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("analyzerInstrumentationLogFile"))); }
 	get analyzerAdditionalArgs() { return this.getConfig<string[]>("analyzerAdditionalArgs"); }
 	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
 	get closingLabels() { return this.getConfig<boolean>("closingLabels"); }
-	get flutterDaemonLogFile() { return resolvePaths(this.getConfig<string>("flutterDaemonLogFile")); }
+	get flutterDaemonLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("flutterDaemonLogFile"))); }
 	get flutterHotReloadOnSave() { return this.getConfig<boolean>("flutterHotReloadOnSave"); }
 	get flutterCreateOrganization() { return this.getConfig<string>("flutterCreateOrganization"); }
 	get flutterCreateIOSLanguage() { return this.getConfig<string>("flutterCreateIOSLanguage"); }
@@ -80,9 +80,9 @@ class ResourceConfig {
 	get lineLength() { return this.getConfig<number>("lineLength"); }
 	get pubAdditionalArgs() { return this.getConfig<string[]>("pubAdditionalArgs"); }
 	get runPubGetOnPubspecChanges() { return this.getConfig<boolean>("runPubGetOnPubspecChanges"); }
-	get flutterRunLogFile() { return resolvePaths(this.getConfig<string>("flutterRunLogFile")); }
-	get flutterTestLogFile() { return resolvePaths(this.getConfig<string>("flutterTestLogFile")); }
-	get observatoryLogFile() { return resolvePaths(this.getConfig<string>("observatoryLogFile")); }
+	get flutterRunLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("flutterRunLogFile"))); }
+	get flutterTestLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("flutterTestLogFile"))); }
+	get observatoryLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("observatoryLogFile"))); }
 	get promptToGetPackages() { return this.getConfig<boolean>("promptToGetPackages"); }
 	get vmAdditionalArgs() { return this.getConfig<string[]>("vmAdditionalArgs"); }
 }

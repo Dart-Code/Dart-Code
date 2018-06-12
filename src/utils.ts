@@ -56,6 +56,20 @@ export function resolvePaths(p: string) {
 	return p;
 }
 
+export function createFolderIfRequired(file: string) {
+	const folder = path.dirname(file);
+	function mkDirAndParents(folder: string) {
+		const parent = path.dirname(folder);
+		if (!fs.existsSync(parent))
+			mkDirAndParents(parent);
+		if (!fs.existsSync(folder))
+			fs.mkdirSync(folder);
+	}
+	if (!fs.existsSync(folder))
+		mkDirAndParents(folder);
+	return file;
+}
+
 export interface Location {
 	startLine: number;
 	startColumn: number;
