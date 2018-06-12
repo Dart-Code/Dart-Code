@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import * as fs from "fs";
+import * as _ from "lodash";
 import { tmpdir } from "os";
 import * as path from "path";
 import * as semver from "semver";
@@ -96,28 +97,6 @@ export async function openFile(file: vs.Uri): Promise<vs.TextEditor> {
 	return vs.window.showTextDocument(await vs.workspace.openTextDocument(file));
 }
 
-const deferredItems: Array<(result?: "failed" | "passed") => Promise<void> | void> = [];
-// tslint:disable-next-line:only-arrow-functions
-afterEach("run deferred functions", async function () {
-	for (const d of deferredItems) {
-		try {
-			await d(this.currentTest.state);
-		} catch (e) {
-			console.error(`Error running deferred function: ${e}`);
-			console.warn(d.toString());
-			throw e;
-		}
-	}
-	deferredItems.length = 0;
-});
-export function defer(callback: (result?: "failed" | "passed") => Promise<void> | void): void {
-	deferredItems.push(callback);
-}
-
-export let sb: sinon.SinonSandbox;
-beforeEach("create sinon sandbox", function () { sb = sinon.createSandbox(); }); // tslint:disable-line:only-arrow-functions
-afterEach("destroy sinon sandbox", () => sb.restore());
-
 beforeEach("set logger", async function () {
 	const logFolder = process.env.DC_TEST_LOGS || path.join(ext.extensionPath, ".dart_code_test_logs");
 	if (!fs.existsSync(logFolder))
@@ -127,7 +106,7 @@ beforeEach("set logger", async function () {
 
 	const logger = logTo(logPath);
 
-	defer(async (testResult: "passed" | "failed") => {
+	deferUntilLast(async (testResult: "passed" | "failed") => {
 		await logger.dispose();
 		// On CI, we delete logs for passing tests to save money on S3 :-)
 		if (process.env.CI && testResult === "passed") {
@@ -138,10 +117,41 @@ beforeEach("set logger", async function () {
 	});
 });
 
+export let sb: sinon.SinonSandbox;
+beforeEach("create sinon sandbox", function () { sb = sinon.createSandbox(); }); // tslint:disable-line:only-arrow-functions
+afterEach("destroy sinon sandbox", () => sb.restore());
+
 before("throw if DART_CODE_IS_TEST_RUN is not set", () => {
 	if (!process.env.DART_CODE_IS_TEST_RUN)
 		throw new Error("DART_CODE_IS_TEST_RUN env var should be set for test runs.");
 });
+
+const deferredItems: Array<(result?: "failed" | "passed") => Promise<void> | void> = [];
+const deferredToLastItems: Array<(result?: "failed" | "passed") => Promise<void> | void> = [];
+// tslint:disable-next-line:only-arrow-functions
+afterEach("run deferred functions", async function () {
+	let firstError: any;
+	for (const d of _.concat(deferredItems, deferredToLastItems)) {
+		try {
+			await d(this.currentTest.state);
+		} catch (e) {
+			console.error(`Error running deferred function: ${e}`);
+			console.warn(d.toString());
+			firstError = firstError || e;
+		}
+	}
+	deferredItems.length = 0;
+	deferredToLastItems.length = 0;
+	// We delay throwing until the end so that other cleanup can run
+	if (firstError)
+		throw firstError;
+});
+export function defer(callback: (result?: "failed" | "passed") => Promise<void> | void): void {
+	deferredItems.push(callback);
+}
+export function deferUntilLast(callback: (result?: "failed" | "passed") => Promise<void> | void): void {
+	deferredToLastItems.push(callback);
+}
 
 export async function setTestContent(content: string): Promise<boolean> {
 	const all = new vs.Range(
