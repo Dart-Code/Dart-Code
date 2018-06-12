@@ -49,6 +49,12 @@ export function logError(error: any) {
 	console.error(error);
 	log(`ERR: ${error}`, LogCategory.General);
 }
+export function logWarn(warning: string) {
+	if (isDevExtension)
+		vs.window.showWarningMessage("DEBUG: " + warning);
+	console.warn(warning);
+	log(`WARN: ${warning}`, LogCategory.General);
+}
 export const debugLogTypes: { [key: string]: LogCategory } = {
 	"dart.log.flutter.run": LogCategory.FlutterRun,
 	"dart.log.flutter.test": LogCategory.FlutterTest,
@@ -59,7 +65,7 @@ export function handleDebugLogEvent(event: string, message: string) {
 	if (event)
 		log(message, cat);
 	else
-		console.warn(`Failed to handle log event ${event}`);
+		logWarn(`Failed to handle log event ${event}`);
 }
 
 export function logTo(file: string, logCategories?: LogCategory[], maxLength = 2000): ({ dispose: () => Promise<void> }) {

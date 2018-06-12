@@ -3,6 +3,7 @@ import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import * as editors from "../editors";
 import { fsPath } from "../utils";
+import { logWarn } from "../utils/log";
 
 export class EditCommands implements vs.Disposable {
 	private context: vs.ExtensionContext;
@@ -113,7 +114,7 @@ export class EditCommands implements vs.Disposable {
 		}
 
 		if (hasProblematicEdits) {
-			console.warn("Falling back to sequential edits due to overlapping edits in server.");
+			logWarn("Falling back to sequential edits due to overlapping edits in server.");
 		}
 		const applyEditsSequentially = hasProblematicEdits;
 
