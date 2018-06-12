@@ -1,7 +1,8 @@
+import * as _ from "lodash";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../utils";
-import { logTo } from "../utils/log";
+import { LogCategory, logTo, userSelectableLogCategories } from "../utils/log";
 
 export const STOP_LOGGING = "Stop Logging";
 
@@ -41,7 +42,22 @@ export class LoggingCommands implements vs.Disposable {
 
 		this.lastUsedLogPath = logUri;
 
-		const logger = logTo(fsPath(logUri));
+		const selectedLogCategories = await vs.window.showQuickPick(
+			Object.keys(userSelectableLogCategories).map((k) => ({
+				label: k,
+				logCategory: userSelectableLogCategories[k],
+			})),
+			{
+				canPickMany: true,
+				placeHolder: "Select which categories to include on the log",
+			},
+		);
+		if (!selectedLogCategories || !selectedLogCategories.length)
+			return;
+
+		const allLoggedCategories = _.concat(LogCategory.General, selectedLogCategories.map((s) => s.logCategory));
+
+		const logger = logTo(fsPath(logUri), allLoggedCategories);
 		this.disposables.push(logger);
 
 		await vs.window.showInformationMessage(
