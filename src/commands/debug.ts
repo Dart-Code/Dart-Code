@@ -2,8 +2,8 @@ import * as vs from "vscode";
 import { Analytics } from "../analytics";
 import { PromiseCompleter } from "../debug/utils";
 import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
-import { fsPath, logError, openInBrowser } from "../utils";
-import { handleDebugLogEvent } from "../utils/log";
+import { fsPath, openInBrowser } from "../utils";
+import { handleDebugLogEvent, logError } from "../utils/log";
 
 let debugPaintingEnabled = false;
 let performanceOverlayEnabled = false;

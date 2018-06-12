@@ -2,7 +2,7 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import { Disposable } from "vscode";
 import { safeSpawn } from "../debug/utils";
-import { logError } from "../utils";
+import { logError } from "../utils/log";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
@@ -109,7 +109,7 @@ export abstract class StdIOService<T> implements Disposable {
 				msg = msg[0];
 		} catch (e) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
-				console.error(`Unexpected non-JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
+				logError(`Unexpected non-JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
 				this.processUnhandledMessage(message);
 				return;
 			} else {
@@ -123,12 +123,12 @@ export abstract class StdIOService<T> implements Disposable {
 			else if (msg && this.isResponse(msg))
 				this.handleResponse(msg as UnknownResponse);
 			else {
-				console.error(`Unexpected JSON message, assuming normal stdout : ${message}`);
+				logError(`Unexpected JSON message, assuming normal stdout : ${message}`);
 				this.processUnhandledMessage(message);
 			}
 		} catch (e) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
-				console.error(`Failed to handle JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
+				logError(`Failed to handle JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
 				this.processUnhandledMessage(message);
 			} else {
 				throw e;

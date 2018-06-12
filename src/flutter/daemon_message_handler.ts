@@ -1,6 +1,6 @@
 import { ExtensionContext, window } from "vscode";
 import { getChannel } from "../commands/channels";
-import { logError } from "../utils";
+import { logError } from "../utils/log";
 import { FlutterDaemon } from "./flutter_daemon";
 import { LogMessage, ShowMessage } from "./flutter_types";
 

@@ -1,6 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
+import * as vs from "vscode";
 import { Event, EventEmitter } from "vscode";
+import { isDevExtension } from "../utils";
 
 export enum LogCategory {
 	General,
@@ -26,6 +28,24 @@ const onLogEmitter: EventEmitter<LogMessage> = new EventEmitter<LogMessage>();
 export const onLog: Event<LogMessage> = onLogEmitter.event;
 export function log(message: string, category = LogCategory.General) {
 	onLogEmitter.fire(new LogMessage((message || "").toString().trim(), category));
+}
+export function logError(error: any) {
+	if (!error)
+		error = "Empty error";
+	if (typeof error !== "string") {
+		try {
+			error = JSON.stringify(error);
+		} catch {
+			if (error.message)
+				error = error.message;
+			else
+				error = `${error}`;
+		}
+	}
+	if (isDevExtension)
+		vs.window.showErrorMessage("DEBUG: " + error);
+	console.error(error);
+	log(`ERR: ${error}`, LogCategory.General);
 }
 export const debugLogTypes: { [key: string]: LogCategory } = {
 	"dart.log.flutter.run": LogCategory.FlutterRun,

@@ -2,7 +2,8 @@ import { CancellationToken, DocumentFormattingEditProvider, FormattingOptions, R
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { config } from "../config";
-import { fsPath, logError } from "../utils";
+import { fsPath } from "../utils";
+import { logError } from "../utils/log";
 
 export class DartFormattingEditProvider implements DocumentFormattingEditProvider {
 	private analyzer: Analyzer;

@@ -2,7 +2,8 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { isWin } from "../../../src/debug/utils";
-import { fsPath, logError } from "../../../src/utils";
+import { fsPath } from "../../../src/utils";
+import { logError } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable } from "../../debug_helpers";
 import { activate, defer, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
@@ -42,7 +43,7 @@ describe("flutter run debugger", () => {
 		// Make sure any stdErr is logged to console + log file for debugging.
 		dc.on("output", (event: DebugProtocol.OutputEvent) => {
 			if (event.body.category === "stderr")
-				logError({ message: event.body.output });
+				logError(event.body.output);
 		});
 		return config;
 	}

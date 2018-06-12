@@ -1,7 +1,8 @@
 import * as vs from "vscode";
 import { config } from "../config";
 import { PromiseCompleter } from "../debug/utils";
-import { extensionVersion, logError, reloadExtension, versionIsAtLeast } from "../utils";
+import { extensionVersion, reloadExtension, versionIsAtLeast } from "../utils";
+import { logError } from "../utils/log";
 import * as as from "./analysis_server_types";
 import { AnalyzerGen } from "./analyzer_gen";
 
@@ -285,7 +286,7 @@ export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind
 		case "UNKNOWN":
 			return vs.SymbolKind.Object;
 		default:
-			logError({ message: "Unknown kind: " + kind });
+			logError(`Unknown kind: ${kind}`);
 			return vs.SymbolKind.Object;
 	}
 }

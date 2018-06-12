@@ -10,7 +10,7 @@ import { isWin } from "../src/debug/utils";
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
 import { Sdks, fsPath, vsCodeVersionConstraint } from "../src/utils";
-import { log, logTo } from "../src/utils/log";
+import { log, logError, logTo } from "../src/utils/log";
 import sinon = require("sinon");
 
 export const ext = vs.extensions.getExtension<{
@@ -26,12 +26,12 @@ export const ext = vs.extensions.getExtension<{
 
 if (!ext) {
 	if (semver.satisfies(vs.version, vsCodeVersionConstraint)) {
-		console.error("Quitting with error because extension failed to load.");
+		logError("Quitting with error because extension failed to load.");
 		process.exit(1);
 	} else {
-		console.error("Skipping because extension failed to load due to requiring newer VS Code version.");
-		console.error(`    Required: ${vsCodeVersionConstraint}`);
-		console.error(`    Current: ${vs.version}`);
+		logError("Skipping because extension failed to load due to requiring newer VS Code version.");
+		logError(`    Required: ${vsCodeVersionConstraint}`);
+		logError(`    Current: ${vs.version}`);
 		process.exit(0);
 	}
 }
@@ -145,7 +145,8 @@ afterEach("run deferred functions", async function () {
 		try {
 			await d(this.currentTest.state);
 		} catch (e) {
-			console.error(`Error running deferred function: ${e}`);
+			logError(`Error running deferred function: ${e}`);
+			// TODO: Add named for deferred functions instead...
 			console.warn(d.toString());
 			firstError = firstError || e;
 		}

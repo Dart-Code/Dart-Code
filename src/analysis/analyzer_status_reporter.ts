@@ -6,6 +6,7 @@ import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PromiseCompleter } from "../debug/utils";
 import { ProjectType, Sdks, extensionVersion, getSdkVersion, isStableSdk } from "../utils";
+import { logError } from "../utils/log";
 import { RequestError, ServerErrorNotification, ServerStatusNotification } from "./analysis_server_types";
 import { Analyzer } from "./analyzer";
 
@@ -81,9 +82,9 @@ export class AnalyzerStatusReporter {
 
 	private handleServerError(error: ServerErrorNotification, method?: string) {
 		// Always log to the console.
-		console.error(error.message);
+		logError(error.message);
 		if (error.stackTrace)
-			console.error(error.stackTrace);
+			logError(error.stackTrace);
 
 		this.analytics.logAnalyzerError((method ? `(${method}) ` : "") + error.message, error.isFatal);
 

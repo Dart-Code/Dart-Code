@@ -185,12 +185,6 @@ export function isStableSdk(sdkVersion: string): boolean {
 	return !!(sdkVersion && !semver.prerelease(sdkVersion));
 }
 
-export function logError(error: { message: string }): void {
-	if (isDevExtension)
-		window.showErrorMessage("DEBUG: " + error.message);
-	console.error(error.message);
-}
-
 export function getLatestSdkVersion(): PromiseLike<string> {
 	return new Promise<string>((resolve, reject) => {
 		const options: https.RequestOptions = {

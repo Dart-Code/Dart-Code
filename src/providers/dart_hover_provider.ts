@@ -3,7 +3,8 @@ import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { cleanDartdoc } from "../dartdocs";
 import { PackageMap } from "../debug/package_map";
-import { fsPath, logError } from "../utils";
+import { fsPath } from "../utils";
+import { logError } from "../utils/log";
 
 export class DartHoverProvider implements HoverProvider {
 	private analyzer: Analyzer;
