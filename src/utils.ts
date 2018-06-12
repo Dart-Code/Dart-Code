@@ -4,7 +4,7 @@ import * as https from "https";
 import * as os from "os";
 import * as path from "path";
 import * as semver from "semver";
-import { Position, Range, TextDocument, Uri, WorkspaceFolder, commands, env as vsEnv, window, workspace } from "vscode";
+import { Position, Range, TextDocument, Uri, WorkspaceFolder, commands, window, workspace } from "vscode";
 import { config } from "./config";
 import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
 import { referencesFlutterSdk } from "./sdk/utils";
@@ -176,7 +176,7 @@ export function versionIsAtLeast(inputVersion: string, requiredVersion: string):
 }
 
 function checkIsDevExtension() {
-	return extensionVersion.endsWith("-dev") || vsEnv.machineId === "someValue.machineId";
+	return extensionVersion.endsWith("-dev");
 }
 
 export function isStableSdk(sdkVersion: string): boolean {
