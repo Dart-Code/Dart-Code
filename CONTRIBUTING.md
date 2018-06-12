@@ -4,21 +4,6 @@
 
 If you're going to work on an issue, please add a comment to the issue so others know it's being looked at. If there isn't an issue for the work you want to do, please create one. The [good first issue](https://github.com/Dart-Code/Dart-Code/labels/good%20first%20issue) issues might make good starting points for new contributors.
 
-## Enable Logging
-
-There are some addigional configuration settings that allow you to enable diagnostic logging in order to debug/develop Dart Code more easily. These should be set to full filesystem paths of where to log. The folders must exist:
-
-- `"dart.extensionLogFile"`: Logs some basic information and errors from the Dart Code extension
-- `"dart.analyzerLogFile"`: Logs communication between Dart Code and the analysis server from the Dart SDK
-- `"dart.flutterDaemonLogFile"`: Logs communication with the `flutter daemon` process used for device management in Dart Code
-- `"dart.flutterRunLogFile"`: Logs communication with the `flutter run` process used for launching and reloading Flutter applications
-- `"dart.flutterTestLogFile"`: Logs communication with the `flutter test` process used for running Flutter tests
-- `"dart.pubTestLogFile"`: Logs communication with the `pub run test` process used for running Dart CLI tests
-- `"dart.observatoryLogFile"`: Logs communication with Observatory, the Dart debugger service
-- `"dart.analyzerInstrumentationLogFile"`: Instructs the analysis server to log its own instrumentation data (this is very detailed and can become very large)
-
-Note: It is expected that Code will report that these are unknown configuration options - this is because they're not listed in the package manifest since they're not normally used by end users.
-
 ## Project Structure
 
 Dart Code is currently written in TypeScript. There's a lot of configuration for how Code interacts with Dart Code in `package.json` though the main entry point is the `activate` method in `src/extension.ts`. Functionality is split into classes that provide small pieces of functionality via the Code APIs ([which are documented here](https://code.visualstudio.com/docs/extensionAPI/vscode-api)).
