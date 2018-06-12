@@ -32,6 +32,8 @@ export function log(message: string, category = LogCategory.General) {
 export function logError(error: any) {
 	if (!error)
 		error = "Empty error";
+	if (error instanceof Error)
+		error = error.message + (error.stack ? `\n${error.stack}` : "");
 	if (typeof error !== "string") {
 		try {
 			error = JSON.stringify(error);
