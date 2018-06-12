@@ -3,6 +3,8 @@ import * as vs from "vscode";
 import { fsPath } from "../utils";
 import { logTo } from "../utils/log";
 
+export const STOP_LOGGING = "Stop Logging";
+
 export class LoggingCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
@@ -44,7 +46,7 @@ export class LoggingCommands implements vs.Disposable {
 
 		await vs.window.showInformationMessage(
 			`Dart and Flutter logs are being written to ${fsPath(logUri)}...`,
-			"Stop Logging",
+			STOP_LOGGING,
 		);
 
 		await logger.dispose();
