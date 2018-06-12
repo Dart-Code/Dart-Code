@@ -11,6 +11,13 @@ export enum LogCategory {
 	FlutterTest,
 	Observatory,
 }
+export const userSelectableLogCategories: { [key: string]: LogCategory } = {
+	"Analysis Server": LogCategory.Analyzer,
+	"Debugger (Observatory)": LogCategory.Observatory,
+	"Flutter Device Daemon": LogCategory.FlutterDaemon,
+	"Flutter Run": LogCategory.FlutterRun,
+	"Flutter Test": LogCategory.FlutterTest,
+};
 export class LogMessage {
 	constructor(public readonly message: string, public readonly category: LogCategory) { }
 }
@@ -33,13 +40,16 @@ export function handleDebugLogEvent(event: string, message: string) {
 		console.warn(`Failed to handle log event ${event}`);
 }
 
-export function logTo(file: string, maxLength = 2000): ({ dispose: () => Promise<void> }) {
+export function logTo(file: string, logCategories?: LogCategory[], maxLength = 2000): ({ dispose: () => Promise<void> }) {
 	if (!file || !path.isAbsolute(file))
 		throw new Error("Path passed to logTo must be an absolute path");
 	const time = () => `[${(new Date()).toLocaleTimeString()}] `;
 	let logStream = fs.createWriteStream(file);
 	logStream.write(`${time()}Log file started\n`);
 	let logger = onLog((e) => {
+		if (logCategories && logCategories.indexOf(e.category) === -1)
+			return;
+
 		const logMessage = e.message.length > maxLength
 			? e.message.substring(0, maxLength) + "…"
 			: e.message;
