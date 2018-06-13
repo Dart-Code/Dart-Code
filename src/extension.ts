@@ -28,6 +28,7 @@ import { DartFoldingProvider } from "./providers/dart_folding_provider";
 import { DartFormattingEditProvider } from "./providers/dart_formatting_edit_provider";
 import { DartDocumentHighlightProvider } from "./providers/dart_highlighting_provider";
 import { DartHoverProvider } from "./providers/dart_hover_provider";
+import { DartImplementationProvider } from "./providers/dart_implementation_provider";
 import { DartLanguageConfiguration } from "./providers/dart_language_configuration";
 import { DartReferenceProvider } from "./providers/dart_reference_provider";
 import { DartRenameProvider } from "./providers/dart_rename_provider";
@@ -168,6 +169,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const refactorCodeActionProvider = new RefactorCodeActionProvider(analyzer);
 	const sourceCodeActionProvider = new SourceCodeActionProvider(analyzer);
 	const renameProvider = new DartRenameProvider(analyzer);
+	const implementationProvider = new DartImplementationProvider(analyzer);
 
 	const activeFileFilters = [DART_MODE];
 	if (config.analyzeAngularTemplates && analyzer.capabilities.supportsAnalyzingHtmlFiles) {
@@ -192,6 +194,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// Some actions only apply to Dart.
 	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, typeFormattingEditProvider, "}", ";"));
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, sourceCodeActionProvider, sourceCodeActionProvider.metadata));
+	context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, implementationProvider));
 
 	// Snippets are language-specific
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));
