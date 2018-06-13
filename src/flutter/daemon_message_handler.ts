@@ -7,7 +7,8 @@ import { LogMessage, ShowMessage } from "./flutter_types";
 export function setUpDaemonMessageHandler(context: ExtensionContext, daemon: FlutterDaemon) {
 	context.subscriptions.push(daemon.registerForDaemonLogMessage((l: LogMessage) => {
 		const channel = getChannel("Flutter Daemon");
-		channel.show(true);
+		// Don't show, as we get errors from this just when disconnected devices!
+		// channel.show(true);
 		channel.appendLine(`[${l.level}] ${l.message}`);
 	}));
 	context.subscriptions.push(daemon.registerForDaemonShowMessage((l: ShowMessage) => {
