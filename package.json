@@ -101,7 +101,7 @@
 			},
 			{
 				"command": "dart.goToSuper",
-				"title": "Go to Super Method",
+				"title": "Go to Super Class/Method",
 				"category": "Dart"
 			},
 			{
