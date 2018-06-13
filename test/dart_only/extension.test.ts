@@ -1,8 +1,9 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
+import { isWin } from "../../src/debug/utils";
 import { Sdks, fsPath } from "../../src/utils";
-import { ext, isWin } from "../helpers";
+import { ext } from "../helpers";
 
 const sampleFilePath = (isWin ? "X:\\" : "/tmp/") + "sample.dart";
 const sampleFileUri = vs.Uri.parse(`untitled:${sampleFilePath}`);
