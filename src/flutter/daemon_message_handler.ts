@@ -1,6 +1,6 @@
 import { ExtensionContext, window } from "vscode";
 import { getChannel } from "../commands/channels";
-import { logError } from "../utils/log";
+import { logWarn } from "../utils/log";
 import { FlutterDaemon } from "./flutter_daemon";
 import { LogMessage, ShowMessage } from "./flutter_types";
 
@@ -25,7 +25,7 @@ export function setUpDaemonMessageHandler(context: ExtensionContext, daemon: Flu
 				window.showErrorMessage(message);
 				break;
 			default:
-				logError({ message: `Unexpected daemon.showMessage type: ${l.level}` });
+				logWarn(`Unexpected daemon.showMessage type: ${l.level}`);
 		}
 	}));
 }
