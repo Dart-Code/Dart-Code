@@ -4,7 +4,7 @@ import { config } from "../config";
 import { PromiseCompleter } from "../debug/utils";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
 import { reloadExtension } from "../utils";
-import { LogCategory, log } from "../utils/log";
+import { log, LogCategory } from "../utils/log";
 import { FlutterDeviceManager } from "./device_manager";
 import * as f from "./flutter_types";
 
@@ -96,6 +96,12 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 			case "device.removed":
 				this.notify(this.deviceRemovedSubscriptions, evt.params as f.Device);
 				break;
+			case "daemon.logMessage":
+				this.notify(this.daemonLogMessageSubscriptions, evt.params as f.LogMessage);
+				break;
+			case "daemon.showMessage":
+				this.notify(this.daemonShowMessageSubscriptions, evt.params as f.ShowMessage);
+				break;
 		}
 	}
 
@@ -103,6 +109,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 
 	private deviceAddedSubscriptions: Array<(notification: f.Device) => void> = [];
 	private deviceRemovedSubscriptions: Array<(notification: f.Device) => void> = [];
+	private daemonLogMessageSubscriptions: Array<(notification: f.LogMessage) => void> = [];
+	private daemonShowMessageSubscriptions: Array<(notification: f.ShowMessage) => void> = [];
 
 	// Request methods.
 
@@ -126,5 +134,13 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 
 	public registerForDeviceRemoved(subscriber: (notification: f.Device) => void): vs.Disposable {
 		return this.subscribe(this.deviceRemovedSubscriptions, subscriber);
+	}
+
+	public registerForDaemonLogMessage(subscriber: (notification: f.LogMessage) => void): vs.Disposable {
+		return this.subscribe(this.daemonLogMessageSubscriptions, subscriber);
+	}
+
+	public registerForDaemonShowMessage(subscriber: (notification: f.ShowMessage) => void): vs.Disposable {
+		return this.subscribe(this.daemonShowMessageSubscriptions, subscriber);
 	}
 }

@@ -29,3 +29,15 @@ export interface AppProgress extends AppEvent {
 	message?: string;
 	finished?: boolean;
 }
+
+export interface LogMessage {
+	level: "info" | "warning" | "error";
+	message: string;
+	stackTrace?: string;
+}
+
+export interface ShowMessage {
+	level: "info" | "warning" | "error";
+	title: string;
+	message: string;
+}

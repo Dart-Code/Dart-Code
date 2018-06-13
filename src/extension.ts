@@ -18,6 +18,7 @@ import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
 import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
+import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
@@ -215,6 +216,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	if (sdks.projectType === util.ProjectType.Flutter) {
 		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, flutterPath), sdks.flutter);
 		context.subscriptions.push(flutterDaemon);
+		setUpDaemonMessageHandler(context, flutterDaemon);
 		setUpHotReloadOnSave(context, diagnostics);
 	}
 
