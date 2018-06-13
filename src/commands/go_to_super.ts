@@ -1,9 +1,9 @@
 import * as vs from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
-import { OpenFileTracker } from "../analysis/open_file_tracker";
 import * as editors from "../editors";
 import { fsPath, toRangeOnLine } from "../utils";
+import { findNearestOutlineNode } from "../utils/outline";
 
 export class GoToSuperCommand implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
@@ -23,23 +23,14 @@ export class GoToSuperCommand implements vs.Disposable {
 
 		const editor = vs.window.activeTextEditor;
 		const document = editor.document;
-		const offset = document.offsetAt(editor.selection.start);
+		const position = editor.selection.start;
 
-		const outline = OpenFileTracker.getOutlineFor(document.uri);
-		if (!outline) {
-			vs.window.showWarningMessage("Outline not available.");
-			return;
-		}
-
-		const outlineNode = this.findNode([outline], offset);
-		if (!outlineNode) {
-			vs.window.showWarningMessage("Go to Super Method only works for methods, getters and setters.");
-			return;
-		}
+		const outlineNode = findNearestOutlineNode(document, position, ["CLASS", "METHOD", "GETTER", "SETTER"]);
+		const offset = outlineNode ? outlineNode.element.location.offset : document.offsetAt(position);
 
 		const hierarchy = await this.analyzer.searchGetTypeHierarchy({
 			file: fsPath(document.uri),
-			offset: outlineNode.element.location.offset,
+			offset,
 			superOnly: true,
 		});
 
@@ -47,8 +38,9 @@ export class GoToSuperCommand implements vs.Disposable {
 			return;
 
 		// The first item is the current node, so skip that one and walk up till we find a matching member.
-		const item = hierarchy.hierarchyItems.slice(1).find((h) => !!h.memberElement);
-		const element = item && item.memberElement;
+		const isClass = !hierarchy.hierarchyItems[0].memberElement;
+		const item = hierarchy.hierarchyItems.slice(1).find((h) => isClass ? !!h.classElement : !!h.memberElement);
+		const element = item && isClass ? item.classElement : item.memberElement;
 
 		if (!element)
 			return;
@@ -62,22 +54,6 @@ export class GoToSuperCommand implements vs.Disposable {
 			const range = toRangeOnLine(location);
 			editor.revealRange(range, vs.TextEditorRevealType.InCenterIfOutsideViewport);
 			editor.selection = new vs.Selection(range.end, range.start);
-		}
-	}
-
-	private findNode(outlines: as.Outline[], offset: number): as.Outline | undefined {
-		for (const outline of outlines) {
-			const outlineStart = outline.offset;
-			const outlineEnd = outline.offset + outline.length;
-
-			// Bail if this node is not spanning us.
-			if (outlineStart > offset || outlineEnd < offset)
-				continue;
-
-			if (outline.element.kind === "METHOD" || outline.element.kind === "GETTER" || outline.element.kind === "SETTER")
-				return outline;
-			else if (outline.children)
-				return this.findNode(outline.children, offset);
 		}
 	}
 
