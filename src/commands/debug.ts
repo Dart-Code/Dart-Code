@@ -11,9 +11,7 @@ let repaintRainbowEnabled = false;
 let timeDilation = 1.0;
 let debugModeBannerEnabled = true;
 let paintBaselinesEnabled = false;
-let currentDebugSession: vs.DebugSession;
-let progressPromise: PromiseCompleter<void>;
-let observatoryUri: string = null;
+const debugSessions: DartDebugSessionInformation[] = [];
 
 export class DebugCommands {
 	private analytics: Analytics;
@@ -26,25 +24,28 @@ export class DebugCommands {
 		this.analytics = analytics;
 		context.subscriptions.push(this.reloadStatus, this.debugMetrics);
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
+			const session = debugSessions.find((ds) => ds.session === e.session);
+			if (!session)
+				return;
 			if (e.event === "dart.progress") {
 				if (e.body.message) {
 					// Clear any old progress first
-					if (progressPromise)
-						progressPromise.resolve();
-					progressPromise = new PromiseCompleter();
+					if (session.progressPromise)
+						session.progressPromise.resolve();
+					session.progressPromise = new PromiseCompleter();
 					vs.window.withProgress(
 						{ location: vs.ProgressLocation.Notification, title: e.body.message },
-						(_) => progressPromise.promise,
+						(_) => session.progressPromise.promise,
 					);
 				}
 				if (e.body.finished) {
-					if (progressPromise) {
-						progressPromise.resolve();
-						progressPromise = null;
+					if (session.progressPromise) {
+						session.progressPromise.resolve();
+						session.progressPromise = null;
 					}
 				}
 			} else if (e.event === "dart.observatoryUri") {
-				observatoryUri = e.body.observatoryUri;
+				session.observatoryUri = e.body.observatoryUri;
 			} else if (e.event.startsWith("dart.log.")) {
 				handleDebugLogEvent(e.event, e.body.message);
 			} else if (e.event === "dart.restartRequest") {
@@ -77,7 +78,6 @@ export class DebugCommands {
 				this.debugMetrics.show();
 			}
 		}));
-		let debugSessionStart: Date;
 		context.subscriptions.push(vs.debug.onDidStartDebugSession(async (s) => {
 			let type = s.type;
 
@@ -90,23 +90,26 @@ export class DebugCommands {
 			}
 
 			if (type === "dart") {
-				currentDebugSession = s;
-				this.resetFlutterSettings();
-				debugSessionStart = new Date();
+				const session = new DartDebugSessionInformation(s);
+				// If we're the first fresh debug session, reset all settings to default.
+				// Subsequent launches will inherit the "current" values.
+				if (debugSessions.length === 0)
+					this.resetFlutterSettings();
+				debugSessions.push(session);
 			}
 		}));
 		context.subscriptions.push(vs.debug.onDidTerminateDebugSession((s) => {
-			if (s === currentDebugSession) {
-				currentDebugSession = null;
-				observatoryUri = null;
-				if (progressPromise)
-					progressPromise.resolve();
-				this.reloadStatus.hide();
-				this.debugMetrics.hide();
-				const debugSessionEnd = new Date();
-				this.disableAllServiceExtensions();
-				analytics.logDebugSessionDuration(debugSessionEnd.getTime() - debugSessionStart.getTime());
-			}
+			const session = debugSessions.find((ds) => ds.session === s);
+			if (!session)
+				return;
+
+			if (session.progressPromise)
+				session.progressPromise.resolve();
+			this.reloadStatus.hide();
+			this.debugMetrics.hide();
+			const debugSessionEnd = new Date();
+			this.disableAllServiceExtensions(); // TODO: ????
+			analytics.logDebugSessionDuration(debugSessionEnd.getTime() - session.sessionStart.getTime());
 		}));
 
 		this.registerBoolServiceCommand("ext.flutter.debugPaint", () => debugPaintingEnabled);
@@ -123,32 +126,42 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => { paintBaselinesEnabled = !paintBaselinesEnabled; this.sendServiceSetting("ext.flutter.debugPaintBaselinesEnabled"); }));
 
 		// Open Observatory.
-		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", () => {
-			if (observatoryUri) {
-				openInBrowser(observatoryUri);
+		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", async () => {
+			if (!debugSessions.length)
+				return;
+			const session = debugSessions.length === 1
+				? debugSessions[0]
+				: await this.promptForDebugSession();
+			if (session && session.observatoryUri) {
+				openInBrowser(session.observatoryUri);
 				analytics.logDebuggerOpenObservatory();
 			}
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.openTimeline", () => {
-			if (observatoryUri) {
-				openInBrowser(observatoryUri + "/#/timeline-dashboard");
+		context.subscriptions.push(vs.commands.registerCommand("flutter.openTimeline", async () => {
+			if (!debugSessions.length)
+				return;
+			const session = debugSessions.length === 1
+				? debugSessions[0]
+				: await this.promptForDebugSession();
+			if (session && session.observatoryUri) {
+				openInBrowser(session.observatoryUri + "/#/timeline-dashboard");
 				analytics.logDebuggerOpenTimeline();
 			}
 		}));
 
 		// Misc custom debug commands.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", () => {
-			if (!currentDebugSession)
+			if (!debugSessions.length)
 				return;
 			this.reloadStatus.hide();
-			this.sendCustomFlutterDebugCommand("hotReload");
+			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "hotReload"));
 			analytics.logDebuggerHotReload();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.hotRestart", () => {
-			if (!currentDebugSession)
+			if (!debugSessions.length)
 				return;
 			this.reloadStatus.hide();
-			this.sendCustomFlutterDebugCommand("hotRestart");
+			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "hotRestart"));
 			analytics.logDebuggerRestart();
 		}));
 
@@ -173,18 +186,33 @@ export class DebugCommands {
 		// Flutter toggle platform.
 		// We can't just use a service command here, as we need to call it twice (once to get, once to change) and
 		// currently it seems like the DA can't return responses to us here, so we'll have to do them both inside the DA.
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => this.sendCustomFlutterDebugCommand("togglePlatform")));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => {
+			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "togglePlatform"));
+		}));
 
 		// Attach commands.
 		context.subscriptions.push(vs.commands.registerCommand("dart.attach", () => {
-			if (currentDebugSession)
-				return;
 			vs.debug.startDebugging(undefined, {
 				name: "Dart: Attach to Process",
 				request: "attach",
 				type: "dart",
 			});
 		}));
+	}
+
+	private async promptForDebugSession(): Promise<DartDebugSessionInformation> {
+		const selectedItem = await vs.window.showQuickPick(
+			debugSessions.map((s) => ({
+				description: `Started ${s.sessionStart.toLocaleTimeString()}`,
+				label: s.session.name,
+				session: s,
+			})),
+			{
+				placeHolder: "Which debug session?",
+			},
+		);
+
+		return selectedItem && selectedItem.session;
 	}
 
 	private serviceSettings: { [id: string]: () => void } = {};
@@ -199,11 +227,15 @@ export class DebugCommands {
 	}
 
 	private registerBoolServiceCommand(id: string, getValue: () => boolean): void {
-		this.serviceSettings[id] = () => this.runBoolServiceCommand(id, getValue());
+		this.serviceSettings[id] = () => {
+			debugSessions.forEach((s) => this.runBoolServiceCommand(s, id, getValue()));
+		};
 	}
 
 	private registerServiceCommand(id: string, getValue: () => any): void {
-		this.serviceSettings[id] = () => this.runServiceCommand(id, getValue());
+		this.serviceSettings[id] = () => {
+			debugSessions.forEach((s) => this.runServiceCommand(s, id, getValue()));
+		};
 	}
 
 	private promptForHotRestart(message: string) {
@@ -213,17 +245,16 @@ export class DebugCommands {
 		this.reloadStatus.show();
 	}
 
-	private runServiceCommand(method: string, params: any) {
-		this.sendCustomFlutterDebugCommand("serviceExtension", { type: method, params });
+	private runServiceCommand(session: DartDebugSessionInformation, method: string, params: any) {
+		this.sendCustomFlutterDebugCommand(session, "serviceExtension", { type: method, params });
 	}
 
-	private runBoolServiceCommand(method: string, enabled: boolean) {
-		this.runServiceCommand(method, { enabled });
+	private runBoolServiceCommand(session: DartDebugSessionInformation, method: string, enabled: boolean) {
+		this.runServiceCommand(session, method, { enabled });
 	}
 
-	private sendCustomFlutterDebugCommand(type: string, args?: any) {
-		if (currentDebugSession)
-			currentDebugSession.customRequest(type, args);
+	private sendCustomFlutterDebugCommand(session: DartDebugSessionInformation, type: string, args?: any) {
+		session.session.customRequest(type, args);
 	}
 
 	private resetFlutterSettings() {
@@ -247,4 +278,11 @@ export class DebugCommands {
 		}
 		this.enabledServiceExtensions.length = 0;
 	}
+}
+
+class DartDebugSessionInformation {
+	public observatoryUri: string;
+	public progressPromise: PromiseCompleter<void>;
+	public readonly sessionStart: Date = new Date();
+	constructor(public readonly session: vs.DebugSession) { }
 }
