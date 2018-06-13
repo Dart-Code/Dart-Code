@@ -1,17 +1,15 @@
-import * as path from "path";
 import { Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
-import { FlutterLaunchRequestArguments, formatPathForVm, uriToFilePath } from "./utils";
+import { FlutterLaunchRequestArguments } from "./utils";
 
 export class FlutterDebugSession extends DartDebugSession {
 	private flutter: FlutterRun;
 	private currentRunningAppId: string;
 	private appHasStarted = false;
 	private observatoryUri: string;
-	private baseUri: string;
 	private noDebug: boolean;
 	private isReloadInProgress: boolean;
 
@@ -72,7 +70,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		// Set up subscriptions.
 		this.flutter.registerForDaemonConnect((n) => this.additionalPidsToTerminate.push(n.pid));
 		this.flutter.registerForAppStart((n) => this.currentRunningAppId = n.appId);
-		this.flutter.registerForAppDebugPort((n) => { this.observatoryUri = n.wsUri; this.baseUri = n.baseUri; });
+		this.flutter.registerForAppDebugPort((n) => { this.observatoryUri = n.wsUri; });
 		this.flutter.registerForAppStarted((n) => {
 			this.appHasStarted = true;
 			if (!args.noDebug && this.observatoryUri)
@@ -83,48 +81,6 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.flutter.registerForError((err) => this.sendEvent(new OutputEvent(err, "stderr")));
 
 		return this.flutter.process;
-	}
-
-	/***
-	 * Converts a source path to an array of possible uris.
-	 *
-	 * For flutter we need to extend the Dart implementation by also providing uris
-	 * using the baseUri value returned from `flutter run` to match the fs path
-	 * on the device running the application in order for breakpoints to match the
-	 * patched `hot reload` code.
-	 */
-	protected getPossibleSourceUris(sourcePath: string): string[] {
-		const allUris = super.getPossibleSourceUris(sourcePath);
-		if (this.cwd) {
-			const projectUri = formatPathForVm(this.cwd);
-
-			// Map any paths over to the device-local paths.
-			allUris.slice().forEach((uri) => {
-				if (uri.startsWith(projectUri)) {
-					const relativePath = uri.substr(projectUri.length);
-					const mappedPath = path.join(this.baseUri, relativePath);
-					const newUri = formatPathForVm(mappedPath);
-					allUris.push(newUri);
-				}
-			});
-		}
-
-		return allUris;
-	}
-
-	protected convertVMUriToSourcePath(uri: string): string {
-		// Note: Flutter device paths (and baseUri) are always linux-y (not Windows) so we need to
-		// force Linux format for remote paths.
-
-		let localPath = super.convertVMUriToSourcePath(uri);
-		const localPathLinux = super.convertVMUriToSourcePath(uri, false);
-
-		// If the path is the baseUri given by flutter, we need to rewrite it into a local path for this machine.
-		const basePath = uriToFilePath(this.baseUri, false);
-		if (localPathLinux.startsWith(basePath) && this.cwd)
-			localPath = path.join(this.cwd, path.relative(basePath, localPathLinux));
-
-		return localPath;
 	}
 
 	protected async disconnectRequest(
