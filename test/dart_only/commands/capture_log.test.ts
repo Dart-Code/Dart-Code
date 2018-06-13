@@ -9,7 +9,7 @@ import { fsPath } from "../../../src/utils";
 import { log } from "../../../src/utils/log";
 import { activate, defer, getRandomTempFolder, sb, waitFor } from "../../helpers";
 
-describe.only("capture logs command", () => {
+describe("capture logs command", () => {
 	beforeEach(() => activate());
 
 	it("writes to the correct file", async () => {
