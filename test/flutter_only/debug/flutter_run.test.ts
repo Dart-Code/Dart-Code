@@ -2,7 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { isWin } from "../../../src/debug/utils";
-import { fsPath } from "../../../src/utils";
+import { fsPath, logError } from "../../../src/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable } from "../../debug_helpers";
 import { activate, defer, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
@@ -36,17 +36,14 @@ describe("flutter run debugger", () => {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
 	});
 
-	async function startDebugger(script: vs.Uri | string, cwd?: string, throwOnError = true): Promise<vs.DebugConfiguration> {
+	async function startDebugger(script: vs.Uri | string, cwd?: string): Promise<vs.DebugConfiguration> {
 		const config = await getLaunchConfiguration(script, { deviceId: "flutter-tester" });
 		await dc.start(config.debugServer);
-
-		// Throw to fail tests if we get any error output to aid debugging.
-		if (throwOnError) {
-			dc.on("output", (event: DebugProtocol.OutputEvent) => {
-				if (event.body.category === "stderr")
-					throw new Error(event.body.output);
-			});
-		}
+		// Make sure any stdErr is logged to console + log file for debugging.
+		dc.on("output", (event: DebugProtocol.OutputEvent) => {
+			if (event.body.category === "stderr")
+				logError({ message: event.body.output });
+		});
 		return config;
 	}
 
