@@ -272,6 +272,33 @@ export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind
 	assert.ok(symbol.location.range.end.line);
 }
 
+function rangeString(range: vs.Range) {
+	return `${range.start.line}:${range.start.character}-${range.end.line}:${range.end.character}`;
+}
+
+export function ensureLocation(locations: vs.Location[], uri: vs.Uri, range: vs.Range): void {
+	const location = locations.find((l) =>
+		l.uri.toString() === uri.toString()
+		&& l.range.isEqual(range),
+	);
+	assert.ok(
+		location,
+		`Couldn't find location for ${uri}/${rangeString(range)} in\n`
+		+ locations.map((l) => `        ${l.uri}/${rangeString(l.range)}`).join("\n"),
+	);
+}
+
+export function ensureNoLocation(locations: vs.Location[], uri: vs.Uri, range: vs.Range): void {
+	const location = locations.find((l) =>
+		l.uri.toString() === uri.toString()
+		&& l.range.isEqual(range),
+	);
+	assert.ok(
+		!location,
+		`Unexpectedly found location for ${uri}/${rangeString(range)}`,
+	);
+}
+
 export function ensureIsRange(actual: vs.Range, expected: vs.Range) {
 	assert.ok(actual);
 	assert.equal(actual.start.line, expected.start.line, "Start lines did not match");
