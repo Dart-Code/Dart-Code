@@ -17,7 +17,7 @@ function findNode(outlines: as.Outline[], offset: number, kinds: as.ElementKind[
 	}
 }
 
-export function findNearestOutlineNode(document: vs.TextDocument, position: vs.Position, kinds: as.ElementKind[]) {
+export function findNearestOutlineNode(document: vs.TextDocument, position: vs.Position, kinds: as.ElementKind[] = ["CLASS", "METHOD", "GETTER", "SETTER"]) {
 	const outline = OpenFileTracker.getOutlineFor(document.uri);
 	return outline && findNode([outline], document.offsetAt(position), kinds);
 }
