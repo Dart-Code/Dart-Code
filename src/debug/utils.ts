@@ -4,6 +4,8 @@ import * as path from "path";
 import { DebugProtocol } from "vscode-debugprotocol";
 
 export const isWin = /^win/.test(process.platform);
+export const isMac = process.platform === "darwin";
+export const isLinux = !isWin && !isMac;
 
 const toolEnv = Object.create(process.env);
 toolEnv.FLUTTER_HOST = "VSCode";
