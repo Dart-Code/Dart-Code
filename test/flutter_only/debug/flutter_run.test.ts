@@ -174,17 +174,17 @@ describe("flutter run debugger", () => {
 			// Reload and ensure we hit the breakpoint on each one.
 			for (let i = 0; i < numReloads; i++) {
 				await Promise.all([
-					dc.assertStoppedLocation("breakpoint", expectedLocation).then(async (_) => {
-						const stack = await dc.getStack();
-						const frames = stack.body.stackFrames;
-						assert.equal(frames[0].name, "MyHomePage.build");
-						assert.equal(frames[0].source.path, expectedLocation.path);
-						assert.equal(frames[0].source.name, path.relative(fsPath(flutterHelloWorldFolder), expectedLocation.path));
-					}),
+					dc.assertStoppedLocation("breakpoint", expectedLocation)
+						.then(async (_) => {
+							const stack = await dc.getStack();
+							const frames = stack.body.stackFrames;
+							assert.equal(frames[0].name, "MyHomePage.build");
+							assert.equal(frames[0].source.path, expectedLocation.path);
+							assert.equal(frames[0].source.name, path.relative(fsPath(flutterHelloWorldFolder), expectedLocation.path));
+						})
+						.then((_) => dc.resume()),
 					dc.hotReload(),
 				]);
-
-				await dc.resume();
 			}
 		});
 	});
