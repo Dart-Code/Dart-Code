@@ -4,9 +4,9 @@ import { ExtensionContext, commands, window } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
+import { isMac, isWin } from "../debug/utils";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, ProjectType, Sdks, fsPath, getDartWorkspaceFolders, openInBrowser, reloadExtension, resolvePaths } from "../utils";
 
-const isWin = /^win/.test(process.platform);
 const dartExecutableName = isWin ? "dart.exe" : "dart";
 const pubExecutableName = isWin ? "pub.bat" : "pub";
 const flutterExecutableName = isWin ? "flutter.bat" : "flutter";
@@ -119,7 +119,7 @@ export function findSdks(): Sdks {
 	const pathOverride = (process.env.DART_PATH_OVERRIDE as string) || "";
 	const normalPath = (process.env.PATH as string) || "";
 	const paths = (pathOverride + path.delimiter + normalPath).split(path.delimiter);
-	const platformName = isWin ? "win" : process.platform === "darwin" ? "mac" : "linux";
+	const platformName = isWin ? "win" : isMac ? "mac" : "linux";
 
 	let fuchsiaRoot: string;
 	let flutterProject: string;

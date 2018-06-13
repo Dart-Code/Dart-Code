@@ -6,6 +6,7 @@ import * as path from "path";
 import * as semver from "semver";
 import * as vs from "vscode";
 import { AnalyzerCapabilities } from "../src/analysis/analyzer";
+import { isWin } from "../src/debug/utils";
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
 import { Sdks, fsPath, vsCodeVersionConstraint } from "../src/utils";
@@ -35,7 +36,6 @@ if (!ext) {
 	}
 }
 
-export const isWin = /^win/.test(process.platform);
 export const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/hello_world"));
 export const helloWorldMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/main.dart"));
 export const helloWorldGettersFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/getters.dart"));
