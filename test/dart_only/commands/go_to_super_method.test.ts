@@ -5,8 +5,8 @@ import { OpenFileTracker } from "../../../src/analysis/open_file_tracker";
 import { fsPath } from "../../../src/utils";
 import { activate, ensureIsRange, helloWorldFolder, positionOf, rangeOf, waitFor } from "../../helpers";
 
-export const superFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super_method/super.dart"));
-export const derivedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super_method/derived.dart"));
+const superFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super_method/super.dart"));
+const derivedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super_method/derived.dart"));
 
 describe("go_to_super_method", () => {
 	beforeEach("activate and wait for outline", async () => {
