@@ -105,7 +105,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 	}
 
-	public async promptForAndLaunchEmulator(): Promise<boolean> {
+	public async promptForAndLaunchEmulator(allowAutomaticSelection = false): Promise<boolean> {
 		const emulators = (await this.getEmulators())
 			.map((e) => ({
 				description: e.id,
@@ -115,7 +115,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 		// Because the above call is async, it's possible a device was connected while we were calling. If so,
 		// just use that instead of showing the prompt.
-		if (this.currentDevice)
+		if (allowAutomaticSelection && this.currentDevice)
 			return true;
 
 		if (emulators.length === 0) {

@@ -105,7 +105,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null;
 		if (isFlutter && !isTest && !deviceId && this.deviceManager && debugConfig.deviceId !== "flutter-tester") {
 			// Fetch a list of emulators
-			if (!await this.deviceManager.promptForAndLaunchEmulator()) {
+			if (!await this.deviceManager.promptForAndLaunchEmulator(true)) {
 				// Set type=null which causes launch.json to open.
 				debugConfig.type = null;
 				window.showInformationMessage("Cannot launch without an active device");
