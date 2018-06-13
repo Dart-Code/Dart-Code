@@ -195,8 +195,8 @@ export class DartDebugClient extends DebugClient {
 		await delay(500);
 
 		await Promise.all([
-			this.assertOutput("stdout", "Reloaded").then((_) => console.log("got reload text")),
-			this.customRequest("hotReload").then((_) => console.log("reload done!")),
+			this.assertOutput("stdout", "Reloaded"),
+			this.customRequest("hotReload"),
 		]);
 	}
 }
