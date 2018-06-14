@@ -90,6 +90,7 @@ export async function getPackages() {
 export async function closeAllOpenFiles(): Promise<void> {
 	while (vs.window.activeTextEditor) {
 		await vs.commands.executeCommand("workbench.action.revertAndCloseActiveEditor");
+		await delay(5);
 	}
 }
 
