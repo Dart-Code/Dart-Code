@@ -9,7 +9,7 @@ import { AnalyzerCapabilities } from "../src/analysis/analyzer";
 import { isWin } from "../src/debug/utils";
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
-import { Sdks, fsPath, vsCodeVersionConstraint } from "../src/utils";
+import { fsPath, Sdks, vsCodeVersionConstraint } from "../src/utils";
 import { log, logTo } from "../src/utils/log";
 import sinon = require("sinon");
 
@@ -61,16 +61,17 @@ export let documentEol: string;
 export let platformEol: string;
 
 export async function activate(file: vs.Uri = emptyFile): Promise<void> {
-	log("Activating and waiting for any initial/in-progress analysis");
+	log("Activating");
 	await ext.activate();
-	await ext.exports.initialAnalysis;
-	await ext.exports.currentAnalysis();
 	log(`Closing all open files and opening ${fsPath(file)}`);
 	await closeAllOpenFiles();
 	doc = await vs.workspace.openTextDocument(file);
 	editor = await vs.window.showTextDocument(doc);
 	documentEol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
 	platformEol = isWin ? "\r\n" : "\n";
+	log(`Waiting for initial and any in-progress analysis`);
+	await ext.exports.initialAnalysis;
+	await ext.exports.currentAnalysis();
 	log(`Ready to start test`);
 }
 
