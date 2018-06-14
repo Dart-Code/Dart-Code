@@ -71,6 +71,9 @@ export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	platformEol = isWin ? "\r\n" : "\n";
 	log(`Waiting for initial and any in-progress analysis`);
 	await ext.exports.initialAnalysis;
+	// Opening a file above may start analysis after a short period so give it time to start
+	// before we continue.
+	await delay(200);
 	await ext.exports.currentAnalysis();
 	log(`Ready to start test`);
 }
