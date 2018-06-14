@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { config } from "../config";
-import { PromiseCompleter, isLinux } from "../debug/utils";
+import { PromiseCompleter } from "../debug/utils";
 import { extensionVersion, logError, reloadExtension, versionIsAtLeast } from "../utils";
 import * as as from "./analysis_server_types";
 import { AnalyzerGen } from "./analyzer_gen";
@@ -30,10 +30,10 @@ export class AnalyzerCapabilities {
 	// TODO: Remove this after next beta update, it's to stop tests failing on
 	// "stable"(beta) builds because of no flutter test device.
 	get flutterHasTestDevice() { return versionIsAtLeast(this.version, "1.20.1"); }
-	// TODO: Remove this after the next beta update. We have some flakes on Linux (flutter run tests)
+	// TODO: Remove this after the next beta update. We have some flakes (flutter run tests)
 	// due to the test device not starting up properly. Never seen on master, so assumed to be an
 	// issue that's been fixed. If not we'll see new failures despite this and can investigate further.
-	get flutterTestDeviceMayBeFlaky() { return isLinux && !versionIsAtLeast(this.version, "1.20.3"); }
+	get flutterTestDeviceMayBeFlaky() { return !versionIsAtLeast(this.version, "1.20.3"); }
 }
 
 export class Analyzer extends AnalyzerGen {
