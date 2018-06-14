@@ -9,7 +9,7 @@ import { AnalyzerCapabilities } from "../src/analysis/analyzer";
 import { isWin } from "../src/debug/utils";
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
-import { fsPath, Sdks, vsCodeVersionConstraint } from "../src/utils";
+import { Sdks, fsPath, vsCodeVersionConstraint } from "../src/utils";
 import { log, logTo } from "../src/utils/log";
 import sinon = require("sinon");
 
@@ -245,11 +245,11 @@ export function ensureError(errors: vs.Diagnostic[], text: string) {
 	);
 }
 
-export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName: string, uri: vs.Uri = doc.uri): void {
+export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName?: string, uri: vs.Uri = doc.uri): void {
 	const symbol = symbols.find((f) =>
 		f.name === name
 		&& f.kind === kind
-		&& f.containerName === containerName,
+		&& (f.containerName || "") === (containerName || ""),
 	);
 	assert.ok(
 		symbol,

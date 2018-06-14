@@ -46,13 +46,13 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 		if (result.parameters && result.kind !== "SETTER")
 			name += result.parameters;
 
-		let containerName = "";
+		let containerName: string;
 		if (includeFilename) {
 			containerName = this.createDisplayPath(file);
 			if (result.className && !nameIsPrefixedWithClass)
 				name = `${result.className}.${name}`;
 		} else {
-			containerName = result.className || "";
+			containerName = result.className;
 		}
 
 		return new SymbolInformation(

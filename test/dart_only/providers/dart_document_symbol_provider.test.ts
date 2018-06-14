@@ -9,7 +9,7 @@ describe("document_symbol_provider", () => {
 	it("returns expected items for 'everything.dart'", async () => {
 		const symbols = await getDocumentSymbols();
 
-		ensureSymbol(symbols, "MyClass", vs.SymbolKind.Class, "");
+		ensureSymbol(symbols, "MyClass", vs.SymbolKind.Class);
 		ensureSymbol(symbols, "myNumField", vs.SymbolKind.Field, "MyClass");
 		ensureSymbol(symbols, "myNumGetter", vs.SymbolKind.Property, "MyClass");
 		ensureSymbol(symbols, "myNumSetter", vs.SymbolKind.Property, "MyClass");
@@ -21,7 +21,7 @@ describe("document_symbol_provider", () => {
 		ensureSymbol(symbols, "myStringReturningMethod()", vs.SymbolKind.Method, "MyClass");
 		ensureSymbol(symbols, "methodTakingString(String a)", vs.SymbolKind.Method, "MyClass");
 		ensureSymbol(symbols, "methodTakingFunction(void Function(String) myFunc)", vs.SymbolKind.Method, "MyClass");
-		ensureSymbol(symbols, "doSomeStuff()", vs.SymbolKind.Function, "");
+		ensureSymbol(symbols, "doSomeStuff()", vs.SymbolKind.Function);
 		assert.equal(symbols.length, 13);
 	});
 });
