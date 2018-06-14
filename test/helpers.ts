@@ -63,9 +63,11 @@ export let platformEol: string;
 export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	log("Activating");
 	await ext.activate();
-	log(`Closing all open files and opening ${fsPath(file)}`);
+	log(`Closing all open files`);
 	await closeAllOpenFiles();
+	log(`Opening ${fsPath(file)}`);
 	doc = await vs.workspace.openTextDocument(file);
+	log(`Showing ${fsPath(file)}`);
 	editor = await vs.window.showTextDocument(doc);
 	documentEol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
 	platformEol = isWin ? "\r\n" : "\n";
