@@ -45,7 +45,7 @@ export class LoggingCommands implements vs.Disposable {
 		this.disposables.push(logger);
 
 		await vs.window.showInformationMessage(
-			`Dart and Flutter logs are being written to ${fsPath(logUri)}...`,
+			`Dart and Flutter logs are being written to ${fsPath(logUri)}`,
 			STOP_LOGGING,
 		);
 
