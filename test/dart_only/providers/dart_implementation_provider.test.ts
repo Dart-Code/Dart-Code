@@ -18,7 +18,7 @@ describe("dart_implementation_provider", () => {
 
 	it("does not return anything for blank areas of the document", async () => {
 		const impls = await getImplementationsAt("\n^\n");
-		assert.equal(impls.length, 0);
+		assert.equal(impls.length, 0, "Unexpected results: " + JSON.stringify(impls, undefined, 4));
 	});
 
 	it("returns direct class implementations", async () => {
