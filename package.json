@@ -246,6 +246,11 @@
 				"command": "flutter.launchEmulator",
 				"title": "Launch Emulator",
 				"category": "Flutter"
+			},
+			{
+				"command": "flutter.openInXcode",
+				"title": "Open in Xcode",
+				"category": "Flutter"
 			}
 		],
 		"keybindings": [
@@ -384,6 +389,10 @@
 				{
 					"command": "flutter.launchEmulator",
 					"when": "dart-code:flutterProjectLoaded"
+				},
+				{
+					"command": "flutter.openInXcode",
+					"when": "false"
 				}
 			],
 			"editor/title": [
@@ -444,6 +453,11 @@
 					"when": "resourceLangId == dart && dart-code:dartProjectLoaded && !inDebugMode",
 					"command": "dart.startWithoutDebugging",
 					"group": "4.5_exec@1"
+				},
+				{
+					"command": "flutter.openInXcode",
+					"when": "resourceFilename == ios && dart-code:flutterProjectLoaded && dart-code:platformName == mac",
+					"group": "1.5_open_ext@1"
 				}
 			],
 			"view/item/context": [
