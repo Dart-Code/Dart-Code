@@ -38,6 +38,15 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration> {
 		const openFile = window.activeTextEditor && window.activeTextEditor.document ? fsPath(window.activeTextEditor.document.uri) : null;
+
+		// VS Code often gives us a bogus folder, so only trust it if we got a real debugConfig (eg. with program or cwd).
+		// Otherwise, blank it, or take from open file if we have one.
+		if (!debugConfig.cwd && !debugConfig.program) {
+			folder = openFile
+				? workspace.getWorkspaceFolder(Uri.file(openFile))
+				: undefined;
+		}
+
 		function resolveVariables(input: string): string {
 			if (!input) return input;
 			if (input === "${file}") return openFile;
@@ -47,9 +56,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		debugConfig.program = resolveVariables(debugConfig.program);
 		debugConfig.cwd = resolveVariables(debugConfig.cwd);
-
-		if (openFile && !folder)
-			folder = workspace.getWorkspaceFolder(Uri.file(openFile));
 
 		const isAttachRequest = debugConfig.request === "attach";
 		if (!isAttachRequest) {
