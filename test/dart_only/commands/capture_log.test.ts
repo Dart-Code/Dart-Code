@@ -6,7 +6,7 @@ import * as vs from "vscode";
 import { STOP_LOGGING } from "../../../src/commands/logging";
 import { PromiseCompleter } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
-import { log } from "../../../src/utils/log";
+import { LogCategory, log } from "../../../src/utils/log";
 import { activate, defer, getRandomTempFolder, sb, waitFor } from "../../helpers";
 
 describe("capture logs command", () => {
@@ -23,6 +23,10 @@ describe("capture logs command", () => {
 		const showSaveDialog = sb.stub(vs.window, "showSaveDialog");
 		showSaveDialog.resolves(vs.Uri.file(tempLogFile));
 
+		// When prompted for categories, pick just Analyzer.
+		const showQuickPick = sb.stub(vs.window, "showQuickPick");
+		showQuickPick.resolves([{ logCategory: LogCategory.Analyzer }]);
+
 		// Use a completer so the test can signal when to end logging (normally a user
 		// would click the Stop Logging button on the notification).
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
@@ -32,11 +36,13 @@ describe("capture logs command", () => {
 		// Start the logging but don't await it (it doesn't complete until we stop the logging!).
 		const loggingCommand = vs.commands.executeCommand("dart.startLogging");
 
-		// Wait until the command has called for the filename (otherwise we'll send our log before
+		// Wait until the command has called for the filename and options (otherwise we'll send our log before
 		// the logger is set up because the above call is async).
-		await waitFor(() => showSaveDialog.called);
+		await waitFor(() => showQuickPick.called);
 
-		log("This is a test");
+		log("This is a test"); // Should be logged
+		log("This is an analyzer event", LogCategory.Analyzer); // Should be logged
+		log("This is an flutter daemon event", LogCategory.FlutterDaemon); // Should not be logged
 
 		// Resolving the promise will stop the logging.
 		stopLogging.resolve(STOP_LOGGING);
@@ -50,6 +56,8 @@ describe("capture logs command", () => {
 		const lastLine = lines[lines.length - 1].trim();
 		assert.ok(firstLine.endsWith("Log file started"), `First line of log was ${firstLine}`);
 		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), "Did not find logged message");
+		assert.ok(lines.find((l) => l.indexOf("This is an analyzer event") !== -1), "Did not find logged analyzer message");
+		assert.ok(lines.find((l) => l.indexOf("This is an flutter daemon event") === -1), "Found logged flutter daemon message");
 		assert.ok(lastLine.endsWith("Log file ended"), `Last line of log was ${lastLine}`);
 
 		// Ensure the log file was opened.
