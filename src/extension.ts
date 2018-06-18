@@ -293,7 +293,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(new TypeHierarchyCommand(analyzer));
 	context.subscriptions.push(new GoToSuperCommand(analyzer));
 	context.subscriptions.push(new LoggingCommands());
-	context.subscriptions.push(new OpenInOtherEditorCommands());
+	context.subscriptions.push(new OpenInOtherEditorCommands(sdks));
 
 	// Register our view providers.
 	const dartPackagesProvider = new DartPackagesProvider();

@@ -248,6 +248,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.openInAndroidStudio",
+				"title": "Open in Android Studio",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.openInXcode",
 				"title": "Open in Xcode",
 				"category": "Flutter"
@@ -391,6 +396,10 @@
 					"when": "dart-code:flutterProjectLoaded"
 				},
 				{
+					"command": "flutter.openInAndroidStudio",
+					"when": "false"
+				},
+				{
 					"command": "flutter.openInXcode",
 					"when": "false"
 				}
@@ -453,6 +462,11 @@
 					"when": "resourceLangId == dart && dart-code:dartProjectLoaded && !inDebugMode",
 					"command": "dart.startWithoutDebugging",
 					"group": "4.5_exec@1"
+				},
+				{
+					"command": "flutter.openInAndroidStudio",
+					"when": "resourceFilename == android && dart-code:flutterProjectLoaded",
+					"group": "1.5_open_ext@1"
 				},
 				{
 					"command": "flutter.openInXcode",
