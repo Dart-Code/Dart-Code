@@ -69,7 +69,7 @@ let extensionLogger: { dispose: () => Promise<void> };
 
 export function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
 	if (!extensionLogger && config.extensionLogFile)
-		extensionLogger = logTo(config.extensionLogFile, LogCategory.General);
+		extensionLogger = logTo(config.extensionLogFile, [LogCategory.General]);
 
 	util.logTime("Code called activate");
 	// Wire up a reload command that will re-initialise everything.
