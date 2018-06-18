@@ -27,8 +27,6 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 		return results.declarations.map((d) => this.convertResult(document, d, results.files[d.fileIndex], false));
 	}
 
-	// Needs testing when https://github.com/Microsoft/vscode/issues/51695 is fixed
-	$$$
 	public async resolveWorkspaceSymbol(symbol: SymbolInformation, token: CancellationToken): Promise<SymbolInformation> {
 		if (!(symbol instanceof PartialSymbolInformation))
 			return;
@@ -72,12 +70,10 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 			name,
 			getSymbolKindForElementKind(result.kind),
 			containerName,
-			document
-				? new Location(
-					Uri.file(file),
-					toRange(document, result.codeOffset, result.codeLength),
-				)
-				: undefined,
+			new Location(
+				Uri.file(file),
+				document ? toRange(document, result.codeOffset, result.codeLength) : undefined,
+			),
 		);
 
 		if (!document) {
