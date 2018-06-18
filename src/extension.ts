@@ -12,11 +12,12 @@ import { DebugCommands } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
 import { GoToSuperCommand } from "./commands/go_to_super";
 import { LoggingCommands } from "./commands/logging";
+import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
 import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
-import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
+import { forceWindowsDriveLetterToUppercase, platformName } from "./debug/utils";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
@@ -57,6 +58,7 @@ const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
 
 const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
+const DART_PLATFORM_NAME = "dart-code:platformName";
 export const SERVICE_EXTENSION_CONTEXT_PREFIX = "dart-code:serviceExtension.";
 export let extensionPath: string = null;
 
@@ -291,6 +293,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(new TypeHierarchyCommand(analyzer));
 	context.subscriptions.push(new GoToSuperCommand(analyzer));
 	context.subscriptions.push(new LoggingCommands());
+	context.subscriptions.push(new OpenInOtherEditorCommands());
 
 	// Register our view providers.
 	const dartPackagesProvider = new DartPackagesProvider();
@@ -337,6 +340,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Turn on all the commands.
 	setCommandVisiblity(true, sdks.projectType);
+	vs.commands.executeCommand("setContext", DART_PLATFORM_NAME, platformName);
 
 	// Prompt for pub get if required
 	function checkForPackages() {
