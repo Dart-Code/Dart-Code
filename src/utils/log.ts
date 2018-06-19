@@ -9,7 +9,7 @@ export enum LogCategory {
 	General,
 	CI,
 	Analyzer,
-	DartTest,
+	PubTest,
 	FlutterDaemon,
 	FlutterRun,
 	FlutterTest,
@@ -21,6 +21,7 @@ export const userSelectableLogCategories: { [key: string]: LogCategory } = {
 	"Flutter Device Daemon": LogCategory.FlutterDaemon,
 	"Flutter Run": LogCategory.FlutterRun,
 	"Flutter Test": LogCategory.FlutterTest,
+	"Pub Run Test": LogCategory.PubTest,
 };
 export class LogMessage {
 	constructor(public readonly message: string, public readonly category: LogCategory) { }
@@ -62,10 +63,10 @@ export function logInfo(info: string) {
 	log(info, LogCategory.General);
 }
 export const debugLogTypes: { [key: string]: LogCategory } = {
-	"dart.log.dart.test": LogCategory.DartTest,
 	"dart.log.flutter.run": LogCategory.FlutterRun,
 	"dart.log.flutter.test": LogCategory.FlutterTest,
 	"dart.log.observatory": LogCategory.Observatory,
+	"dart.log.pub.test": LogCategory.PubTest,
 };
 export function handleDebugLogEvent(event: string, message: string) {
 	const cat = debugLogTypes[event];

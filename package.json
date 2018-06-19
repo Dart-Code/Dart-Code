@@ -735,9 +735,9 @@
 					"description": "The path to a log file for `flutter test` communication.\nThis is a diagnostic setting that should not normally be set.",
 					"scope": "resource"
 				},
-				"dart.dartTestLogFile": {
+				"dart.pubTestLogFile": {
 					"type": "string",
-					"description": "The path to a log file for Dart Test communication.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The path to a log file for `pub run test` communication.\nThis is a diagnostic setting that should not normally be set.",
 					"scope": "resource"
 				},
 				"dart.observatoryLogFile": {

@@ -248,7 +248,8 @@ export class RPCError {
 }
 
 export class ObservatoryConnection {
-	public static portRegex: RegExp = new RegExp("Observatory listening on (http:.+)");
+	public static bannerRegex: RegExp = new RegExp("Observatory listening on (http:.+)");
+	public static httpLinkRegex: RegExp = new RegExp("(http://[\\d\\.:]+/)");
 
 	public socket: WebSocket;
 	private completers: { [key: string]: PromiseCompleter<DebuggerResult> } = {};
