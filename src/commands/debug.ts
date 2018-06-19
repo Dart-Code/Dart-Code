@@ -20,7 +20,6 @@ const debugSessions: DartDebugSessionInformation[] = [];
 export class DebugCommands {
 	private analytics: Analytics;
 
-	// TODO: Do we need to push these into context?
 	private reloadStatus = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left);
 	private debugMetrics = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 0);
 
