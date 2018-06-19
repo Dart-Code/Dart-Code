@@ -290,7 +290,7 @@
 				},
 				{
 					"command": "dart.runAllTestsWithoutDebugging",
-					"when": "dart-code:flutterProjectLoaded && !inDebugMode"
+					"when": "dart-code:dartProjectLoaded && !inDebugMode"
 				},
 				{
 					"command": "dart.startWithoutDebugging",
