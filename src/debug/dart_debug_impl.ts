@@ -84,9 +84,8 @@ export class DartDebugSession extends DebugSession {
 		process.stdout.on("data", (data) => {
 			let match: RegExpExecArray;
 			if (!this.observatory) {
-				match = ObservatoryConnection.portRegex.exec(data.toString());
+				match = ObservatoryConnection.bannerRegex.exec(data.toString());
 			}
-
 			if (match) {
 				this.initObservatory(this.websocketUriForObservatoryUri(match[1]));
 			} else if (this.sendStdOutToConsole)
@@ -178,7 +177,7 @@ export class DartDebugSession extends DebugSession {
 		return process;
 	}
 
-	private websocketUriForObservatoryUri(uri: string) {
+	protected websocketUriForObservatoryUri(uri: string) {
 		const wsUri = uri.trim();
 		if (wsUri.endsWith("/ws"))
 			return wsUri;

@@ -81,7 +81,7 @@ export class DartProcess {
 	constructor(public readonly process: ChildProcess) {
 		this.observatoryUri = new Promise((resolve, reject) => {
 			process.stdout.on("data", (data) => {
-				const match = ObservatoryConnection.portRegex.exec(data.toString());
+				const match = ObservatoryConnection.bannerRegex.exec(data.toString());
 				if (match)
 					resolve(match[1]);
 			});

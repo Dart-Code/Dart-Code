@@ -1,6 +1,7 @@
 import { Event, OutputEvent } from "vscode-debugadapter";
 import { ErrorNotification, PrintNotification, TestDoneNotification, TestStartNotification } from "../views/test_protocol";
 import { DartDebugSession } from "./dart_debug_impl";
+import { ObservatoryConnection } from "./dart_debug_protocol";
 import { TestRunner } from "./test_runner";
 import { DartLaunchRequestArguments, FlutterLaunchRequestArguments } from "./utils";
 
@@ -17,24 +18,21 @@ export class DartTestDebugSession extends DartDebugSession {
 
 	protected spawnProcess(args: DartLaunchRequestArguments): any {
 		const debug = !args.noDebug;
-		let appArgs = [];
+		let appArgs: string[] = [];
+
 		if (debug) {
-			appArgs.push("--enable-vm-service=0");
-			appArgs.push("--pause_isolates_on_start=true");
+			appArgs.push("--pause-after-load");
 		}
-		if (args.checkedMode) {
-			appArgs.push("--checked");
-		}
-		if (args.vmAdditionalArgs) {
-			appArgs = appArgs.concat(args.vmAdditionalArgs);
-		}
-		appArgs.push(this.sourceFileForArgs(args));
+
 		if (args.args) {
 			appArgs = appArgs.concat(args.args);
 		}
 
-		const logger = (message: string) => this.sendEvent(new Event("dart.log.dart.test", { message }));
-		return this.createRunner(args.dartPath, args.cwd, args.program, appArgs, args.dartTestLogFile, logger, { DART_TEST_REPORTER: "json" });
+		// TODO: Validate that args.program is always absolute (we use it as a key for notifications).
+		appArgs.push(this.sourceFileForArgs(args));
+
+		const logger = (message: string) => this.sendEvent(new Event("dart.log.pub.test", { message }));
+		return this.createRunner(args.pubPath, args.cwd, args.program, ["run", "test", "-r", "json"].concat(appArgs), args.pubTestLogFile, logger, { DART_VM_OPTIONS: "-DSILENT_OBSERVATORY=true" });
 	}
 
 	protected createRunner(executable: string, projectFolder: string, program: string, args: string[], logFile: string, logger: (message: string) => void, envOverrides?: any) {
@@ -58,6 +56,15 @@ export class DartTestDebugSession extends DartDebugSession {
 		));
 		// Handle basic output
 		switch (notification.type) {
+			case "debug":
+				const observatoryUri = notification.observatory;
+				if (observatoryUri) {
+					const match = ObservatoryConnection.httpLinkRegex.exec(observatoryUri);
+					if (match) {
+						this.initObservatory(this.websocketUriForObservatoryUri(match[1]));
+					}
+				}
+				break;
 			case "testStart":
 				const testStart = notification as TestStartNotification;
 				this.currentTest = testStart.test;

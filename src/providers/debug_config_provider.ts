@@ -112,7 +112,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const canPubRunTest = isTest && supportsPubRunTest(debugConfig.program as string);
 		const debugType = isFlutter
 			? (isTest ? DebuggerType.FlutterTest : DebuggerType.Flutter)
-			: (isTest && canPubRunTest ? DebuggerType.DartTest : DebuggerType.Dart);
+			: (isTest && canPubRunTest ? DebuggerType.PubTest : DebuggerType.Dart);
 
 		// Ensure we have a device
 		const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null;
@@ -202,8 +202,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				return this.spawnOrGetServer("flutterTest", port, () => new FlutterTestDebugSession());
 			case DebuggerType.Dart:
 				return this.spawnOrGetServer("dart", port, () => new DartDebugSession());
-			case DebuggerType.DartTest:
-				return this.spawnOrGetServer("dartTest", port, () => new DartTestDebugSession());
+			case DebuggerType.PubTest:
+				return this.spawnOrGetServer("pubTest", port, () => new DartTestDebugSession());
 			default:
 				throw new Error("Unknown debugger type");
 		}
@@ -237,7 +237,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, dartVMPath);
 		debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || conf.observatoryLogFile;
 		debugConfig.pubPath = debugConfig.pubPath || path.join(this.sdks.dart, dartPubPath);
-		debugConfig.dartTestLogFile = debugConfig.dartTestLogFile || conf.dartTestLogFile;
+		debugConfig.pubTestLogFile = debugConfig.pubTestLogFile || conf.pubTestLogFile;
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || conf.debugSdkLibraries;
 		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || conf.debugExternalLibraries;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
@@ -266,7 +266,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 enum DebuggerType {
 	Dart,
-	DartTest,
+	PubTest,
 	Flutter,
 	FlutterTest,
 }
