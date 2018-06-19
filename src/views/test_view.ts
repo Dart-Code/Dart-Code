@@ -102,11 +102,16 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	public getChildren(element?: vs.TreeItem): vs.TreeItem[] {
-		if (!element) {
-			return _.flatMap(Object.keys(suites).map((k) => suites[k].suites));
-		} else if (element instanceof SuiteTreeItem || element instanceof GroupTreeItem) {
-			return element.children;
-		}
+		let items = !element
+			? _.flatMap(Object.keys(suites).map((k) => suites[k].suites))
+			: (element instanceof SuiteTreeItem || element instanceof GroupTreeItem)
+				? element.children
+				: [];
+		items = items.filter((item) => item);
+		// Only sort suites, as tests may have a useful order themselves.
+		if (!element)
+			items = _.sortBy(items, (t) => t.label);
+		return items;
 	}
 
 	public getParent?(element: vs.TreeItem): SuiteTreeItem | GroupTreeItem {
