@@ -1073,6 +1073,9 @@ export class DartDebugSession extends DebugSession {
 
 	private knownOpenFiles: string[] = []; // Keep track of these for internal requests
 	protected requestCoverageUpdate = _.throttle(async (reason: string): Promise<void> => {
+		if (!this.knownOpenFiles || !this.knownOpenFiles.length)
+			return;
+
 		const coverageReport = await this.getCoverageReport(this.knownOpenFiles);
 
 		// Unwrap tokenPos into real locations.
@@ -1097,7 +1100,9 @@ export class DartDebugSession extends DebugSession {
 	}, 2000);
 
 	private async getCoverageReport(scriptUris: string[]): Promise<Array<{ hostScriptPath: string, script: VMScript, tokenPosTable: number[][], startPos: number, endPos: number, hits: number[], misses: number[] }>> {
-		// TODO: Do we need to do all of these requests every time? Can we stack the loaded scripts?
+		if (!scriptUris || !scriptUris.length)
+			return [];
+
 		const result = await this.observatory.getVM();
 		const vm = result.result as VM;
 
