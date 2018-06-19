@@ -343,11 +343,22 @@ export class SuiteTreeItem extends TestItemTreeItem {
 
 	constructor(suite: Suite) {
 		super(vs.Uri.file(suite.path), vs.TreeItemCollapsibleState.Expanded);
+		this.label = this.getLabel(suite.path);
 		this.suite = suite;
 		this.contextValue = DART_TEST_SUITE_NODE;
 		this.id = `suite_${this.suite.path}_${this.suite.id}`;
 		this.status = TestStatus.Unknown;
 		this.command = { command: "_dart.displaySuite", arguments: [this], title: "" };
+	}
+
+	private getLabel(file: string): string {
+		const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(file));
+		if (!ws)
+			return path.basename(file);
+		const rel = path.relative(fsPath(ws.uri), file);
+		return rel.startsWith("test/")
+			? rel.substr(5)
+			: rel;
 	}
 
 	get children(): vs.TreeItem[] {
