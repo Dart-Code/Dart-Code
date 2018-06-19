@@ -189,7 +189,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			const suiteNode = new SuiteTreeItem(evt.suite);
 			suite.suites[evt.suite.id] = suiteNode;
 		}
-		suite.suites[evt.suite.id].status = TestStatus.Running;
+		suite.suites[evt.suite.id].status = TestStatus.Waiting;
 		this.updateNode(suite.suites[evt.suite.id]);
 		this.updateNode();
 		// If this is the first suite, we've started a run and can show the tree.
