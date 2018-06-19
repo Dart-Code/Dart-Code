@@ -87,7 +87,8 @@ export function formatPathForVm(file: string): string {
 	if (file.startsWith("dart:"))
 		return file;
 	else
-		// TODO: Add file:// prefix for coverage markers to work...
+		// TODO: Add file:// prefix and remove the "removeFilePrefix" workaround in coverage markers
+		// code when https://github.com/flutter/flutter/issues/18441 is fixed.
 		return `/${encodeURI(file)}`;
 }
 
