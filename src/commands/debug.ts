@@ -6,7 +6,7 @@ import * as vs from "vscode";
 import { Analytics } from "../analytics";
 import { PromiseCompleter } from "../debug/utils";
 import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
-import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../utils";
+import { fsPath, getDartWorkspaceFolders, isFlutterProjectFolder, openInBrowser } from "../utils";
 import { handleDebugLogEvent } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
@@ -179,24 +179,37 @@ export class DebugCommands {
 			});
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", () => {
+			TestResultsProvider.shouldShowTreeOnNextSuiteStart = true;
 			const testFolders = getDartWorkspaceFolders()
 				.map((project) => path.join(fsPath(project.uri), "test"))
 				.filter((testFolder) => fs.existsSync(testFolder));
-			const testSuites = _.flatMap(testFolders, (folder) => glob.sync("**/*_test.dart", {
-				absolute: true, cwd: folder, nodir: true, nonull: false, nosort: true,
-			}));
-			testSuites.forEach((suite) => {
-				const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(suite));
-				const relativePath = path.relative(fsPath(ws.uri), suite);
-			TestResultsProvider.shouldShowTreeOnNextSuiteStart = true;
-				vs.debug.startDebugging(ws, {
-					name: `Dart ${relativePath}`,
-					noDebug: true,
-					program: suite,
-					request: "launch",
-					type: "dart",
+			for (const folder of testFolders) {
+				// Flutter doesn't support running whole folder, so we
+				// have to run each file individually.
+				// TODO: Do we need to limit this? Spawning 1,000 debug sessions would
+				// be crazy.
+				const testSuites = isFlutterProjectFolder(folder)
+					? _.flatMap(testFolders, (folder) => glob.sync("**/*_test.dart", {
+						absolute: true, cwd: folder, nodir: true, nonull: false, nosort: true,
+					}))
+					: [undefined];
+				testSuites.forEach((suite) => {
+					const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(folder));
+					const name = suite
+						? path.relative(fsPath(ws.uri), suite)
+						: path.basename(folder); // TODO: Should this be parent + " tests"?
+					const runner = suite ? undefined : "pubTest";
+					vs.debug.startDebugging(ws, {
+						cwd: path.dirname(folder),
+						name: `Dart ${path.basename(folder)}`,
+						noDebug: true,
+						program: suite,
+						request: "launch",
+						runner,
+						type: "dart",
+					});
 				});
-			});
+			}
 		}));
 
 		// Flutter toggle platform.
