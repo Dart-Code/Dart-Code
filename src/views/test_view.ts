@@ -10,6 +10,10 @@ const DART_TEST_SUITE_NODE = "dart-code:testSuiteNode";
 const DART_TEST_GROUP_NODE = "dart-code:testGroupNode";
 const DART_TEST_TEST_NODE = "dart-code:testTestNode";
 
+// TODO: Flatten out suite.suites so we index into suites by path always
+// and do not use suiteIDs anywhere in the editor-side. The DA should map these
+// to paths so we can't end up with mismatched IDs (which are not stable
+// across runs)
 const suites: { [key: string]: SuiteData } = {};
 
 export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<object> {
