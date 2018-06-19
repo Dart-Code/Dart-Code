@@ -8,6 +8,7 @@ import { PromiseCompleter } from "../debug/utils";
 import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
 import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../utils";
 import { handleDebugLogEvent } from "../utils/log";
+import { TestResultsProvider } from "../views/test_view";
 
 let debugPaintingEnabled = false;
 let performanceOverlayEnabled = false;
@@ -187,6 +188,7 @@ export class DebugCommands {
 			testSuites.forEach((suite) => {
 				const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(suite));
 				const relativePath = path.relative(fsPath(ws.uri), suite);
+			TestResultsProvider.shouldShowTreeOnNextSuiteStart = true;
 				vs.debug.startDebugging(ws, {
 					name: `Dart ${relativePath}`,
 					noDebug: true,
