@@ -2,7 +2,7 @@ import * as assert from "assert";
 import { SpawnOptions } from "child_process";
 import { DebugSessionCustomEvent } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { debugLogTypes, handleDebugLogEvent } from "../src/utils/log";
+import { debugLogTypes, handleDebugLogEvent, log } from "../src/utils/log";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../src/views/test_protocol";
 import { DebugClient } from "./debug_client_ms";
 
@@ -24,7 +24,9 @@ export class DartDebugClient extends DebugClient {
 		if (launchArgs.request === "attach") {
 			// Attach will be paused by default and issue a step when we connect; but our tests
 			// generally assume we will automatically resume.
+			log("Attaching to process...");
 			await this.attachRequest(launchArgs);
+			log("Waiting for stopped (step) event...");
 			const event = await this.waitForEvent("stopped");
 			assert.equal(event.body.reason, "step");
 			// HACK: Put a fake delay in after attachRequest to ensure isolates become runnable and breakpoints are transmitted
@@ -33,9 +35,10 @@ export class DartDebugClient extends DebugClient {
 			await new Promise((resolve) => setTimeout(resolve, 1000));
 			// It's possible the resume will never return because the process will terminate as soon as it starts resuming
 			// so we will assume that if we get a terminate the resume worked.
+			log("Resuming and waiting for success or terminate...");
 			await Promise.race([
-				this.waitForEvent("terminated"),
-				this.resume(),
+				this.waitForEvent("terminated").then((_) => log("Terminated!")),
+				this.resume().then((_) => log("Resumed!")),
 			]);
 		} else {
 			await this.launchRequest(launchArgs);
