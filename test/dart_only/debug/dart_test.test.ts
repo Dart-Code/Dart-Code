@@ -114,13 +114,13 @@ describe("dart test debugger", () => {
 		);
 	});
 
-	it("send failure results for failing tests", async () => {
+	it("sends failure results for failing tests", async () => {
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile, false);
 		config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertErroringTest("might fail today"),
+			dc.assertFailingTest("might fail today"),
 			dc.assertOutput("stderr", `Expected: <2>${platformEol}  Actual: <1>`),
 			dc.launch(config),
 		]);
