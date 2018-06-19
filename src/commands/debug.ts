@@ -103,17 +103,25 @@ export class DebugCommands {
 			}
 		}));
 		context.subscriptions.push(vs.debug.onDidTerminateDebugSession((s) => {
-			const session = debugSessions.find((ds) => ds.session === s);
-			if (!session)
+			const sessionIndex = debugSessions.findIndex((ds) => ds.session === s);
+			if (sessionIndex === -1)
 				return;
+
+			// Grab the session and remove it from the list so we don't try to interact with it anymore.
+			const session = debugSessions[sessionIndex];
+			debugSessions.splice(sessionIndex, 1);
 
 			if (session.progressPromise)
 				session.progressPromise.resolve();
 			this.reloadStatus.hide();
 			this.debugMetrics.hide();
 			const debugSessionEnd = new Date();
-			this.disableAllServiceExtensions(); // TODO: ????
 			analytics.logDebugSessionDuration(debugSessionEnd.getTime() - session.sessionStart.getTime());
+			// If this was the last session terminating, then remove all the flags for which service extensions are supported.
+			// Really we should track these per-session, but the changes of them being different given we only support one
+			// SDK at a time are practically zero.
+			if (debugSessions.length === 0)
+				this.disableAllServiceExtensions();
 		}));
 
 		this.registerBoolServiceCommand("ext.flutter.debugPaint", () => debugPaintingEnabled);
