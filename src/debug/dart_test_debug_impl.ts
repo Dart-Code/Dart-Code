@@ -38,6 +38,9 @@ export class DartTestDebugSession extends DartDebugSession {
 			};
 		}
 
+		// Only run single-threaded in the runner.
+		appArgs.push("-j1");
+
 		if (args.args) {
 			appArgs = appArgs.concat(args.args);
 		}
