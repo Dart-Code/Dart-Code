@@ -20,9 +20,14 @@ export class DartTestDebugSession extends DartDebugSession {
 		const debug = !args.noDebug;
 		let appArgs: string[] = [];
 
-		if (debug) {
-			appArgs.push("--pause-after-load");
-		}
+		// To use the test framework in the supported debugging way we should
+		// send this flag; which will pause the tests at each suite start (this is
+		// deifferent to the isolates being paused). To do that, we need to change
+		// how our "unpause" logic works in the base debug adapter (since it won't
+		// be paused at startup). 
+		// if (debug) {
+		// 	appArgs.push("--pause-after-load");
+		// }
 
 		if (args.args) {
 			appArgs = appArgs.concat(args.args);
@@ -32,7 +37,7 @@ export class DartTestDebugSession extends DartDebugSession {
 		appArgs.push(this.sourceFileForArgs(args));
 
 		const logger = (message: string) => this.sendEvent(new Event("dart.log.pub.test", { message }));
-		return this.createRunner(args.pubPath, args.cwd, args.program, ["run", "test", "-r", "json"].concat(appArgs), args.pubTestLogFile, logger, { DART_VM_OPTIONS: "-DSILENT_OBSERVATORY=true" });
+		return this.createRunner(args.pubPath, args.cwd, args.program, ["run", "test", "-r", "json"].concat(appArgs), args.pubTestLogFile, logger, { DART_VM_OPTIONS: "--pause_isolates_on_start=true --enable-vm-service=0" });
 	}
 
 	protected createRunner(executable: string, projectFolder: string, program: string, args: string[], logFile: string, logger: (message: string) => void, envOverrides?: any) {
