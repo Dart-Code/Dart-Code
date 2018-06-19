@@ -507,13 +507,18 @@ function getIconPath(status: TestStatus): vs.Uri {
 }
 
 function updateStatusFromChildren(node: SuiteTreeItem | GroupTreeItem): TestStatus {
-	const childStatuses = node.children.map((c) => {
-		if (c instanceof GroupTreeItem)
-			return updateStatusFromChildren(c);
-		if (c instanceof TestTreeItem)
-			return c.status;
-		return TestStatus.Unknown;
-	});
+	const childStatuses = node.children.length
+		? node.children.filter((c) =>
+			(c instanceof GroupTreeItem && !c.isPhantomGroup)
+			|| (c instanceof TestTreeItem && !c.hidden),
+		).map((c) => {
+			if (c instanceof GroupTreeItem)
+				return updateStatusFromChildren(c);
+			if (c instanceof TestTreeItem)
+				return c.status;
+			return TestStatus.Unknown;
+		})
+		: TestStatus.Unknown;
 	const status = Math.max.apply(Math, childStatuses);
 	node.iconPath = getIconPath(status);
 	return status;
