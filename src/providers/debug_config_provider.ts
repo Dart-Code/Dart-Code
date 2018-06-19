@@ -109,10 +109,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// TODO: Update FlutterDebugSession to understand attach mode, and remove this limitation.
 		const isFlutter = debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string) && !isAttachRequest;
 		const isTest = debugConfig.program && isTestFile(debugConfig.program as string);
-		const canPubRunTest = isTest && supportsPubRunTest(debugConfig.program as string);
 		const debugType = isFlutter
 			? (isTest ? DebuggerType.FlutterTest : DebuggerType.Flutter)
 			: (isTest && canPubRunTest ? DebuggerType.PubTest : DebuggerType.Dart);
+		const canPubRunTest = isTest && supportsPubRunTest(debugConfig.cwd as string, debugConfig.program as string);
 
 		// Ensure we have a device
 		const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null;
