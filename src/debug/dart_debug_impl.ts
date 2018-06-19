@@ -1107,10 +1107,16 @@ export class DartDebugSession extends DebugSession {
 		const isolatesResponses = await Promise.all(isolatePromises);
 		const isolates = isolatesResponses.map((response) => response.result as VMIsolate);
 
+		// Our handling of file:// prefixes is inconsistent until
+		// https://github.com/flutter/flutter/issues/18441 is resolved.
+		function removeFilePrefix(uri: string) {
+			return uri.replace("file://", "");
+		}
+
 		// The VM may return coverage using the device-local paths, so we need to convert them back to the hosts paths
 		const realScriptUris: { [key: string]: string } = {};
 		scriptUris.forEach((host) => {
-			this.getPossibleSourceUris(host).forEach((device) => realScriptUris[device] = uriToFilePath(host));
+			this.getPossibleSourceUris(host).forEach((device) => realScriptUris[removeFilePrefix(device)] = uriToFilePath(host));
 		});
 
 		const results: Array<{ hostScriptPath: string, script: VMScript, tokenPosTable: number[][], startPos: number, endPos: number, hits: number[], misses: number[] }> = [];
@@ -1122,7 +1128,7 @@ export class DartDebugSession extends DebugSession {
 			const scriptRefs = _.flatMap(libraries, (library) => library.scripts);
 
 			// Filter scripts to the ones we care about.
-			const scripts = scriptRefs.filter((s) => realScriptUris[s.uri]);
+			const scripts = scriptRefs.filter((s) => realScriptUris[removeFilePrefix(s.uri)]);
 
 			for (const scriptRef of scripts) {
 				const script = (await this.observatory.getObject(isolate.id, scriptRef.id)).result as VMScript;
@@ -1135,7 +1141,7 @@ export class DartDebugSession extends DebugSession {
 						results.push({
 							endPos: range.endPos,
 							hits: range.coverage.hits,
-							hostScriptPath: realScriptUris[script.uri],
+							hostScriptPath: realScriptUris[removeFilePrefix(script.uri)],
 							misses: range.coverage.misses,
 							script,
 							startPos: range.startPos,
