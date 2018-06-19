@@ -17,7 +17,8 @@ export class FlutterTestDebugSession extends DartTestDebugSession {
 		}
 
 		// TODO: Validate that args.program is always absolute (we use it as a key for notifications).
-		appArgs.push(this.sourceFileForArgs(args));
+		if (args.program)
+			appArgs.push(this.sourceFileForArgs(args));
 
 		const logger = (message: string) => this.sendEvent(new Event("dart.log.flutter.test", { message }));
 		return this.createRunner(args.flutterPath, args.cwd, args.program, globalFlutterArgs.concat(["test", "--machine"]).concat(appArgs), args.flutterTestLogFile, logger);
