@@ -77,7 +77,7 @@ describe("flutter run debugger", () => {
 		// Send a disconnect request and ensure it happens within 5 seconds.
 		await Promise.race([
 			dc.disconnectRequest(),
-			new Promise((resolve, reject) => setTimeout(() => reject(new Error("Did not complete disconnectRequest within 5s")), 500)),
+			new Promise((resolve, reject) => setTimeout(() => reject(new Error("Did not complete disconnectRequest within 5s")), 5000)),
 		]);
 	});
 

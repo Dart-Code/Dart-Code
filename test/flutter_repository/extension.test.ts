@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../src/utils";
-import { ext } from "../helpers";
+import { ext, getPackages } from "../helpers";
 
 beforeEach("set timeout", function () {
 	this.timeout(90000); // These tests can be slow due to having to analyzer the whole Flutter repo.
@@ -27,11 +27,7 @@ describe("extension", () => {
 	it("reported no errors when analysis completed", async () => {
 		await ext.activate();
 		await ext.exports.initialAnalysis;
-
-		// Fetch packages and wait for the next analysis to complete.
-		const analysisComplete = ext.exports.nextAnalysis();
-		await vs.commands.executeCommand("flutter.packages.get", vs.workspace.workspaceFolders[0].uri);
-		await analysisComplete;
+		await getPackages();
 
 		function warningOrError(d: vs.Diagnostic) {
 			return d.severity <= vs.DiagnosticSeverity.Warning;

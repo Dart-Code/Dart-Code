@@ -81,10 +81,10 @@ export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 }
 
 export async function getPackages() {
-	await vs.commands.executeCommand("dart.getPackages", helloWorldFolder);
-	const nextAnalysis = ext.exports.nextAnalysis();
-	await ext.exports.reanalyze();
-	await nextAnalysis;
+	await waitForNextAnalysis(async () => {
+		await vs.commands.executeCommand("dart.getPackages", helloWorldFolder);
+		await ext.exports.reanalyze();
+	}, 60);
 }
 
 export async function closeAllOpenFiles(): Promise<void> {
@@ -174,6 +174,10 @@ export async function setTestContent(content: string): Promise<boolean> {
 	// once the fix for https://github.com/dart-lang/sdk/issues/32914
 	// has made it all the way through.
 	return editor.edit((eb) => eb.replace(all, content));
+}
+
+export async function uncommentTestFile(): Promise<void> {
+	await setTestContent(doc.getText().replace(/\n\/\/ /mg, "\n"));
 }
 
 export function select(range: vs.Range) {
@@ -420,6 +424,28 @@ export async function waitForEditorChange(action: () => Thenable<void>): Promise
 	const oldVersion = doc.version;
 	await action();
 	await waitFor(() => doc.version !== oldVersion);
+}
+
+export async function waitForNextAnalysis(action: () => void | Thenable<void>, timeoutSeconds = 15): Promise<void> {
+	log("Waiting for any in-progress analysis to complete");
+	await ext.exports.currentAnalysis;
+	// Get a new completer for the next analysis.
+	const nextAnalysis = ext.exports.nextAnalysis();
+	log("Running requested action");
+	await action();
+	log(`Waiting for analysis to complete with timeout of ${timeoutSeconds}s`);
+	await withTimeout(nextAnalysis, timeoutSeconds);
+}
+
+export async function withTimeout(promise: Promise<void>, seconds: number) {
+	return Promise.race([
+		promise,
+		timeoutIn(seconds),
+	]);
+}
+
+export async function timeoutIn(seconds: number) {
+	return new Promise((resolve, reject) => setTimeout(() => reject(new Error(`Did not complete next analysis within ${seconds}s`)), seconds * 1000));
 }
 
 // This same logic exists in the website to link back to logs.
