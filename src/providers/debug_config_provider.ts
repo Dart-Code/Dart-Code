@@ -14,7 +14,7 @@ import { FlutterLaunchRequestArguments, forceWindowsDriveLetterToUppercase, isWi
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { dartPubPath, dartVMPath, flutterPath } from "../sdk/utils";
-import { Sdks, fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile } from "../utils";
+import { Sdks, fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, supportsPubRunTest } from "../utils";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private sdks: Sdks;
@@ -108,10 +108,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Disable Flutter mode for attach.
 		// TODO: Update FlutterDebugSession to understand attach mode, and remove this limitation.
 		const isFlutter = debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string) && !isAttachRequest;
-		const isTest = debugConfig.program && isTestFile(resolveVariables(debugConfig.program as string));
+		const isTest = debugConfig.program && isTestFile(debugConfig.program as string);
+		const canPubRunTest = isTest && supportsPubRunTest(debugConfig.program as string);
 		const debugType = isFlutter
 			? (isTest ? DebuggerType.FlutterTest : DebuggerType.Flutter)
-			: (isTest ? DebuggerType.DartTest : DebuggerType.Dart);
+			: (isTest && canPubRunTest ? DebuggerType.DartTest : DebuggerType.Dart);
 
 		// Ensure we have a device
 		const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null;
