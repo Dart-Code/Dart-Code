@@ -56,8 +56,6 @@ export function logWarn(warning: string) {
 	log(`WARN: ${warning}`, LogCategory.General);
 }
 export function logInfo(info: string) {
-	if (isDevExtension)
-		vs.window.showInformationMessage("DEBUG: " + info);
 	console.log(info);
 	log(info, LogCategory.General);
 }
