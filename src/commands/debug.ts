@@ -7,7 +7,7 @@ import { Analytics } from "../analytics";
 import { PromiseCompleter } from "../debug/utils";
 import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
 import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../utils";
-import { handleDebugLogEvent, logError } from "../utils/log";
+import { handleDebugLogEvent } from "../utils/log";
 
 let debugPaintingEnabled = false;
 let performanceOverlayEnabled = false;
@@ -20,12 +20,11 @@ const debugSessions: DartDebugSessionInformation[] = [];
 export class DebugCommands {
 	private analytics: Analytics;
 
-	private reloadStatus = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left);
 	private debugMetrics = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 0);
 
 	constructor(context: vs.ExtensionContext, analytics: Analytics) {
 		this.analytics = analytics;
-		context.subscriptions.push(this.reloadStatus, this.debugMetrics);
+		context.subscriptions.push(this.debugMetrics);
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
 			const session = debugSessions.find((ds) => ds.session === e.session);
 			if (!session)
@@ -56,18 +55,6 @@ export class DebugCommands {
 				// (eg. it wasn't intiated from our extension, so we don't get to log it
 				// in the hotReload command).
 				analytics.logDebuggerHotReload();
-				this.reloadStatus.hide(); // Also remove stale reload status when this happened.
-			} else if (e.event === "dart.hint" && e.body && e.body.hintId) {
-				switch (e.body.hintId) {
-					case "restartRecommended":
-						this.promptForHotRestart(e.body.hintMessage);
-						break;
-					default:
-						if (e.body.hintMessage)
-							vs.window.showInformationMessage(e.body.hintMessage);
-						else
-							logError({ message: `Unexpected hint from debugger: ${e.body.hintId}, ${e.body.hintMessage}` });
-				}
 			} else if (e.event === "dart.serviceExtensionAdded") {
 				this.enableServiceExtension(e.body.id);
 			} else if (e.event === "dart.flutter.firstFrame") {
@@ -112,7 +99,6 @@ export class DebugCommands {
 
 			if (session.progressPromise)
 				session.progressPromise.resolve();
-			this.reloadStatus.hide();
 			this.debugMetrics.hide();
 			const debugSessionEnd = new Date();
 			analytics.logDebugSessionDuration(debugSessionEnd.getTime() - session.sessionStart.getTime());
@@ -164,14 +150,12 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", () => {
 			if (!debugSessions.length)
 				return;
-			this.reloadStatus.hide();
 			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "hotReload"));
 			analytics.logDebuggerHotReload();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.hotRestart", () => {
 			if (!debugSessions.length)
 				return;
-			this.reloadStatus.hide();
 			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "hotRestart"));
 			analytics.logDebuggerRestart();
 		}));
@@ -266,13 +250,6 @@ export class DebugCommands {
 		this.serviceSettings[id] = () => {
 			debugSessions.forEach((s) => this.runServiceCommand(s, id, getValue()));
 		};
-	}
-
-	private promptForHotRestart(message: string) {
-		this.reloadStatus.text = "↻ Hot restart may be required";
-		this.reloadStatus.tooltip = message + "\r\n\r\nClick to restart";
-		this.reloadStatus.command = "flutter.hotRestart";
-		this.reloadStatus.show();
 	}
 
 	private runServiceCommand(session: DartDebugSessionInformation, method: string, params: any) {

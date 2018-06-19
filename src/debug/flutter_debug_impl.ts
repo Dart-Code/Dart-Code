@@ -112,7 +112,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		super.restartRequest(response, args);
 	}
 
-	private performReload(hotRestart: boolean): Thenable<any> {
+	private async performReload(hotRestart: boolean): Promise<any> {
 		if (!this.appHasStarted)
 			return;
 
@@ -121,16 +121,13 @@ export class FlutterDebugSession extends DartDebugSession {
 			return;
 		}
 		this.isReloadInProgress = true;
-		return this.flutter.restart(this.currentRunningAppId, !this.noDebug, hotRestart)
-			.then(
-				(result) => {
-					// If we get a hint, send it back over to the UI to do something appropriate.
-					if (result && result.hintId)
-						this.sendEvent(new Event("dart.hint", { hintId: result.hintId, hintMessage: result.hintMessage }));
-				},
-				(error) => this.sendEvent(new OutputEvent(error, "stderr")),
-		)
-			.then(() => this.isReloadInProgress = false);
+		try {
+			await this.flutter.restart(this.currentRunningAppId, !this.noDebug, hotRestart);
+		} catch (e) {
+			this.sendEvent(new OutputEvent(e, "stderr"));
+		} finally {
+			this.isReloadInProgress = false;
+		}
 	}
 
 	protected async customRequest(request: string, response: DebugProtocol.Response, args: any): Promise<void> {
