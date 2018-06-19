@@ -19,6 +19,11 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	private onDidStartTestsEmitter: vs.EventEmitter<vs.TreeItem | undefined> = new vs.EventEmitter<vs.TreeItem | undefined>();
 	public readonly onDidStartTests: vs.Event<vs.TreeItem | undefined> = this.onDidStartTestsEmitter.event;
 
+	// Set this flag we know when a new run starts so we can show the tree; however
+	// we can't show it until we render a node (we can only call reveal on a node) so
+	// we need to delay this until the suite starts.
+	public static shouldShowTreeOnNextSuiteStart = true;
+
 	constructor() {
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
 			if (e.event === "dart.testRunNotification") {
@@ -194,7 +199,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		this.updateNode();
 		// If this is the first suite, we've started a run and can show the tree.
 		// We need to wait for the tree node to have been rendered though so setTimeout :(
-		if (evt.suite.id === 0) {
+		if (TestResultsProvider.shouldShowTreeOnNextSuiteStart) {
+			TestResultsProvider.shouldShowTreeOnNextSuiteStart = false;
 			this.onDidStartTestsEmitter.fire(suite.suites[evt.suite.id]);
 		}
 	}
