@@ -40,7 +40,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration> {
 		const openFile = window.activeTextEditor && window.activeTextEditor.document ? fsPath(window.activeTextEditor.document.uri) : null;
-		const allowProgramlessRun = debugConfig && debugConfig.runner === "pubTest";
+		const isFullTestRun = debugConfig && debugConfig.runner === "tests"; // TODO: Allow pubTest and flutterTest explicitly.
+		const allowProgramlessRun = isFullTestRun;
 
 		// VS Code often gives us a bogus folder, so only trust it if we got a real debugConfig (eg. with program or cwd).
 		// Otherwise, take from open file if we have one, else blank it (unless we only have one open folder, then use that).
@@ -110,20 +111,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Disable Flutter mode for attach.
 		// TODO: Update FlutterDebugSession to understand attach mode, and remove this limitation.
 		const isFlutter = debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string) && !isAttachRequest;
-		const isTest = debugConfig.program && isTestFile(debugConfig.program as string);
+		const isTest = isFullTestRun || (debugConfig.program && isTestFile(debugConfig.program as string));
 		const canPubRunTest = isTest && supportsPubRunTest(debugConfig.cwd as string, debugConfig.program as string);
-		// TODO: Make this better (and official)..
-		const debugRunners: { [key: string]: DebuggerType } = {
-			dart: DebuggerType.Dart,
-			flutter: DebuggerType.Flutter,
-			flutterTest: DebuggerType.FlutterTest,
-			pubTest: DebuggerType.PubTest,
-		};
-		const debugType = debugConfig.runner && debugRunners[debugConfig.runner]
-			? debugRunners[debugConfig.runner]
-			: isFlutter
-				? (isTest ? DebuggerType.FlutterTest : DebuggerType.Flutter)
-				: (isTest && canPubRunTest ? DebuggerType.PubTest : DebuggerType.Dart);
+		const debugType = isFlutter
+			? (isTest ? DebuggerType.FlutterTest : DebuggerType.Flutter)
+			: (isTest && canPubRunTest ? DebuggerType.PubTest : DebuggerType.Dart);
 
 		// Ensure we have a device
 		const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null;

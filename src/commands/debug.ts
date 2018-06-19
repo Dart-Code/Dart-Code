@@ -1,12 +1,10 @@
 import * as fs from "fs";
-import * as glob from "glob";
-import * as _ from "lodash";
 import * as path from "path";
 import * as vs from "vscode";
 import { Analytics } from "../analytics";
 import { PromiseCompleter } from "../debug/utils";
 import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
-import { fsPath, getDartWorkspaceFolders, isFlutterProjectFolder, openInBrowser } from "../utils";
+import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../utils";
 import { handleDebugLogEvent } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
@@ -184,30 +182,15 @@ export class DebugCommands {
 				.map((project) => path.join(fsPath(project.uri), "test"))
 				.filter((testFolder) => fs.existsSync(testFolder));
 			for (const folder of testFolders) {
-				// Flutter doesn't support running whole folder, so we
-				// have to run each file individually.
-				// TODO: Do we need to limit this? Spawning 1,000 debug sessions would
-				// be crazy.
-				const testSuites = isFlutterProjectFolder(folder)
-					? _.flatMap(testFolders, (folder) => glob.sync("**/*_test.dart", {
-						absolute: true, cwd: folder, nodir: true, nonull: false, nosort: true,
-					}))
-					: [undefined];
-				testSuites.forEach((suite) => {
-					const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(folder));
-					const name = suite
-						? path.relative(fsPath(ws.uri), suite)
-						: path.basename(folder); // TODO: Should this be parent + " tests"?
-					const runner = suite ? undefined : "pubTest";
-					vs.debug.startDebugging(ws, {
-						cwd: path.dirname(folder),
-						name: `Dart ${path.basename(folder)}`,
-						noDebug: true,
-						program: suite,
-						request: "launch",
-						runner,
-						type: "dart",
-					});
+				const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(folder));
+				const name = path.basename(path.dirname(folder)); // TODO: Should this be parent + " tests"?
+				vs.debug.startDebugging(ws, {
+					cwd: path.dirname(folder),
+					name: `Dart ${name}`,
+					noDebug: true,
+					request: "launch",
+					runner: "tests",
+					type: "dart",
 				});
 			}
 		}));
