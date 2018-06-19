@@ -4,7 +4,7 @@ import { findFile, isWin, isWithinPath, uriToFilePath } from "./utils";
 
 export class PackageMap {
 	public static findPackagesFile(entryPoint: string): string {
-		return findFile(".packages", path.dirname(entryPoint));
+		return findFile(".packages", entryPoint);
 	}
 
 	private map: { [name: string]: string } = {};
