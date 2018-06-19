@@ -14,6 +14,7 @@ export class DartTestDebugSession extends DartDebugSession {
 		super();
 
 		this.sendStdOutToConsole = false;
+		this.requiresProgram = false;
 	}
 
 	protected spawnProcess(args: DartLaunchRequestArguments): any {

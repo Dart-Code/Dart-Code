@@ -34,6 +34,7 @@ export class DartDebugSession extends DebugSession {
 	private threadManager: ThreadManager;
 	public packageMap: PackageMap;
 	protected sendStdOutToConsole: boolean = true;
+	protected requiresProgram: boolean = true;
 	protected pollforMemoryMs?: number; // If set, will poll for memory usage and send events back.
 
 	public constructor() {
@@ -59,17 +60,17 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: DartLaunchRequestArguments): void {
-		if (!args || !args.dartPath || !args.program) {
+		if (!args || !args.dartPath || (this.requiresProgram && !args.program)) {
 			this.sendEvent(new OutputEvent("Unable to restart debugging. Please try ending the debug session and starting again."));
 			this.sendEvent(new TerminatedEvent());
 			return;
 		}
 
 		// Force relative paths to absolute.
-		if (!path.isAbsolute(args.program))
+		if (args.program && !path.isAbsolute(args.program))
 			args.program = path.join(args.cwd, args.program);
 		this.cwd = args.cwd;
-		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program));
+		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program || args.cwd));
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
