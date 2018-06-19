@@ -324,7 +324,7 @@ class SuiteData {
 }
 
 class TestItemTreeItem extends vs.TreeItem {
-	private _status: TestStatus; // tslint:disable-line:variable-name
+	private _status: TestStatus = TestStatus.Unknown; // tslint:disable-line:variable-name
 
 	get status(): TestStatus {
 		return this._status;
