@@ -252,7 +252,7 @@ export function ensureError(errors: vs.Diagnostic[], text: string) {
 	);
 }
 
-export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName?: string, uri: vs.Uri = doc.uri): void {
+export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName?: string, uri: vs.Uri = doc.uri, shouldHaveRange = true): void {
 	const symbol = symbols.find((f) =>
 		f.name === name
 		&& f.kind === kind
@@ -265,11 +265,15 @@ export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind
 	);
 	assert.equal(fsPath(symbol.location.uri), fsPath(uri));
 	assert.ok(symbol.location);
-	assert.ok(symbol.location.range);
-	assert.ok(symbol.location.range.start);
-	assert.ok(symbol.location.range.start.line);
-	assert.ok(symbol.location.range.end);
-	assert.ok(symbol.location.range.end.line);
+	if (shouldHaveRange) {
+		assert.ok(symbol.location.range);
+		assert.ok(symbol.location.range.start);
+		assert.ok(symbol.location.range.start.line);
+		assert.ok(symbol.location.range.end);
+		assert.ok(symbol.location.range.end.line);
+	} else {
+		assert.ok(!symbol.location.range);
+	}
 }
 
 function rangeString(range: vs.Range) {
