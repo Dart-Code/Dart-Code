@@ -40,11 +40,15 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const openFile = window.activeTextEditor && window.activeTextEditor.document ? fsPath(window.activeTextEditor.document.uri) : null;
 
 		// VS Code often gives us a bogus folder, so only trust it if we got a real debugConfig (eg. with program or cwd).
-		// Otherwise, blank it, or take from open file if we have one.
+		// Otherwise, take from open file if we have one, else blank it (unless we only have one open folder, then use that).
 		if (!debugConfig.cwd && !debugConfig.program) {
 			folder = openFile
 				? workspace.getWorkspaceFolder(Uri.file(openFile))
-				: undefined;
+				: (
+					workspace.workspaceFolders.length === 1
+						? workspace.workspaceFolders[0]
+						: undefined
+				);
 		}
 
 		function resolveVariables(input: string): string {
@@ -142,7 +146,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		if (isTestFile(openFile) || isInsideFolderNamed(openFile, "bin") || isInsideFolderNamed(openFile, "tool")) {
 			return openFile;
-		} else {
+		} else if (workspaceFolder) {
 			// Use the open file as a clue to find the best project root, then search from there.
 			const commonLaunchPaths = [
 				path.join(fsPath(workspaceFolder.uri), "lib", "main.dart"),
