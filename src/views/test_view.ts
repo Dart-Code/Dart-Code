@@ -471,6 +471,9 @@ function getIconPath(status: TestStatus): vs.Uri {
 		case TestStatus.Unknown:
 			file = "stale";
 			break;
+		case TestStatus.Waiting:
+			file = "loading";
+			break;
 		default:
 			file = undefined;
 	}
@@ -497,6 +500,7 @@ enum TestStatus {
 	// This should be in order such that the highest number is the one to show
 	// when aggregating (eg. from children).
 	Stale,
+	Waiting,
 	Passed,
 	Skipped,
 	Unknown,
