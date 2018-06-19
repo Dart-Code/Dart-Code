@@ -46,6 +46,7 @@ export class LoggingCommands implements vs.Disposable {
 			Object.keys(userSelectableLogCategories).map((k) => ({
 				label: k,
 				logCategory: userSelectableLogCategories[k],
+				picked: true,
 			})),
 			{
 				canPickMany: true,
