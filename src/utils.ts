@@ -142,7 +142,7 @@ export function isTestFile(file: string): boolean {
 	return isInsideFolderNamed(file, "test");
 }
 
-export function supportsPubRunTest(file: string): boolean {
+export function supportsPubRunTest(folder: string, file: string): boolean {
 	return true;
 }
 
