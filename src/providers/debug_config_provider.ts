@@ -15,6 +15,7 @@ import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { dartPubPath, dartVMPath, flutterPath } from "../sdk/utils";
 import { Sdks, fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, supportsPubRunTest } from "../utils";
+import { TestResultsProvider } from "../views/test_view";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private sdks: Sdks;
@@ -116,6 +117,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const debugType = isFlutter
 			? (isTest ? DebuggerType.FlutterTest : DebuggerType.Flutter)
 			: (isTest && canPubRunTest ? DebuggerType.PubTest : DebuggerType.Dart);
+
+		if (debugType === DebuggerType.FlutterTest || debugType === DebuggerType.PubTest)
+			TestResultsProvider.shouldShowTreeOnNextSuiteStart = true;
 
 		// Ensure we have a device
 		const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null;
