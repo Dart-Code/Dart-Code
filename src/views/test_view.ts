@@ -10,10 +10,6 @@ const DART_TEST_SUITE_NODE = "dart-code:testSuiteNode";
 const DART_TEST_GROUP_NODE = "dart-code:testGroupNode";
 const DART_TEST_TEST_NODE = "dart-code:testTestNode";
 
-// TODO: Flatten out suite.suites so we index into suites by path always
-// and do not use suiteIDs anywhere in the editor-side. The DA should map these
-// to paths so we can't end up with mismatched IDs (which are not stable
-// across runs)
 const suites: { [key: string]: SuiteData } = {};
 
 export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<object> {
@@ -107,7 +103,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 
 	public getChildren(element?: vs.TreeItem): vs.TreeItem[] {
 		let items = !element
-			? _.flatMap(Object.keys(suites).map((k) => suites[k].suites))
+			? Object.keys(suites).map((k) => suites[k].node)
 			: (element instanceof SuiteTreeItem || element instanceof GroupTreeItem)
 				? element.children
 				: [];
@@ -129,10 +125,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 
 	private updateAllIcons(suite: SuiteData) {
 		// Walk the tree to get the status.
-		suite.suites.forEach((s) => {
-			updateStatusFromChildren(s);
-			this.updateNode(s);
-		});
+		updateStatusFromChildren(suite.node);
+		this.updateNode(suite.node);
 	}
 
 	// Since running is the highest status, it's faster to just run all the way up the tree
@@ -197,20 +191,14 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		}
 		suite.groups.forEach((g) => g.status = TestStatus.Stale);
 		suite.tests.forEach((t) => t.status = TestStatus.Stale);
-		if (suite.suites[evt.suite.id]) {
-			suite.suites[evt.suite.id].suite = evt.suite;
-		} else {
-			const suiteNode = new SuiteTreeItem(evt.suite);
-			suite.suites[evt.suite.id] = suiteNode;
-		}
-		suite.suites[evt.suite.id].status = TestStatus.Waiting;
-		this.updateNode(suite.suites[evt.suite.id]);
+		suite.node.status = TestStatus.Waiting;
+		this.updateNode(suite.node);
 		this.updateNode();
 		// If this is the first suite, we've started a run and can show the tree.
 		// We need to wait for the tree node to have been rendered though so setTimeout :(
 		if (TestResultsProvider.shouldShowTreeOnNextSuiteStart) {
 			TestResultsProvider.shouldShowTreeOnNextSuiteStart = false;
-			this.onDidStartTestsEmitter.fire(suite.suites[evt.suite.id]);
+			this.onDidStartTestsEmitter.fire(suite.node);
 		}
 	}
 
@@ -331,11 +319,9 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 }
 
 class SuiteData {
-	public readonly suites: SuiteTreeItem[] = [];
 	public readonly groups: GroupTreeItem[] = [];
 	public readonly tests: TestTreeItem[] = [];
-	constructor(public readonly path: string, suite: SuiteTreeItem) {
-		this.suites[suite.suite.id] = suite;
+	constructor(public readonly path: string, public readonly node: SuiteTreeItem) {
 	}
 }
 
@@ -418,7 +404,7 @@ class GroupTreeItem extends TestItemTreeItem {
 	get parent(): SuiteTreeItem | GroupTreeItem {
 		const parent = this.group.parentID
 			? this.suite.groups[this.group.parentID]
-			: this.suite.suites[this.group.suiteID];
+			: this.suite.node;
 
 		// If our parent is a phantom group at the top level, then just bounce over it.
 		if (parent instanceof GroupTreeItem && parent.isPhantomGroup)
@@ -459,7 +445,7 @@ class TestTreeItem extends TestItemTreeItem {
 	get parent(): SuiteTreeItem | GroupTreeItem {
 		const parent = this.test.groupIDs && this.test.groupIDs.length
 			? this.suite.groups[this.test.groupIDs[this.test.groupIDs.length - 1]]
-			: this.suite.suites[this.test.suiteID];
+			: this.suite.node;
 
 		// If our parent is a phantom group at the top level, then just bounce over it.
 		if (parent instanceof GroupTreeItem && parent.isPhantomGroup)

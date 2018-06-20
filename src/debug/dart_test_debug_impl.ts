@@ -1,6 +1,6 @@
 import * as path from "path";
 import { Event, OutputEvent } from "vscode-debugadapter";
-import { ErrorNotification, PrintNotification, SuiteNotification, TestDoneNotification, TestStartNotification } from "../views/test_protocol";
+import { ErrorNotification, GroupNotification, PrintNotification, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../views/test_protocol";
 import { DartDebugSession } from "./dart_debug_impl";
 import { ObservatoryConnection } from "./dart_debug_protocol";
 import { TestRunner } from "./test_runner";
@@ -59,14 +59,26 @@ export class DartTestDebugSession extends DartDebugSession {
 		// Set up subscriptions.
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
 		runner.registerForTestStartedProcess((n) => this.initObservatory(`${n.observatoryUri}ws`));
-		runner.registerForAllTestNotifications((n) => this.handleTestEvent(n));
+		runner.registerForAllTestNotifications((n) => {
+			try {
+				this.handleTestEvent(n);
+			} catch (e) {
+				this.log(e);
+				this.logToUser(e);
+			}
+			try {
+				this.sendTestEventToEditor(n);
+			} catch (e) {
+				this.log(e);
+				this.logToUser(e);
+			}
+		});
 
 		return runner.process;
 	}
 
-	private currentSuitePath: string;
-	// TODO: currentTest somewhat relies on ordering of test results coming after the test starts...
-	private currentTest: any;
+	private readonly suitePaths: string[] = [];
+	private readonly tests: Test[] = [];
 	protected handleTestEvent(notification: any) {
 		// Handle basic output
 		switch (notification.type) {
@@ -84,11 +96,11 @@ export class DartTestDebugSession extends DartDebugSession {
 				// HACK: If we got a relative path, fix it up.
 				if (!path.isAbsolute(suite.suite.path) && this.cwd)
 					suite.suite.path = path.join(this.cwd, suite.suite.path);
-				this.currentSuitePath = suite.suite.path;
+				this.suitePaths[suite.suite.id] = suite.suite.path;
 				break;
 			case "testStart":
 				const testStart = notification as TestStartNotification;
-				this.currentTest = testStart.test;
+				this.tests[testStart.test.id] = testStart.test;
 				break;
 			case "testDone":
 				const testDone = notification as TestDoneNotification;
@@ -96,7 +108,7 @@ export class DartTestDebugSession extends DartDebugSession {
 					return;
 				const pass = testDone.result === "success";
 				const symbol = pass ? tick : cross;
-				this.sendEvent(new OutputEvent(`${symbol} ${this.currentTest.name}\n`, "stdout"));
+				this.sendEvent(new OutputEvent(`${symbol} ${this.tests[testDone.testID].name}\n`, "stdout"));
 				break;
 			case "print":
 				const print = notification as PrintNotification;
@@ -108,12 +120,42 @@ export class DartTestDebugSession extends DartDebugSession {
 				this.sendEvent(new OutputEvent(`${error.stackTrace}\n`, "stderr"));
 				break;
 		}
+	}
 
-		// Send to the editor.
-		if (this.currentSuitePath) {
+	protected sendTestEventToEditor(notification: any) {
+		let suiteID: number;
+		switch (notification.type) {
+			case "suite":
+				const suite = notification as SuiteNotification;
+				suiteID = suite.suite.id;
+				break;
+			case "group":
+				const group = notification as GroupNotification;
+				suiteID = group.group.suiteID;
+				break;
+			case "testStart":
+				const testStart = notification as TestStartNotification;
+				suiteID = testStart.test.suiteID;
+				break;
+			case "testDone":
+				const testDone = notification as TestDoneNotification;
+				suiteID = this.tests[testDone.testID].suiteID;
+				break;
+			case "print":
+				const print = notification as PrintNotification;
+				suiteID = this.tests[print.testID].suiteID;
+				break;
+			case "error":
+				const error = notification as ErrorNotification;
+				suiteID = this.tests[error.testID].suiteID;
+				break;
+		}
+
+		const suitePath = this.suitePaths[suiteID];
+		if (suitePath) {
 			this.sendEvent(new Event(
 				"dart.testRunNotification",
-				{ suitePath: this.currentSuitePath, notification },
+				{ suitePath, notification },
 			));
 		}
 	}
