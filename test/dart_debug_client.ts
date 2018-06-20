@@ -13,6 +13,10 @@ export class DartDebugClient extends DebugClient {
 		Object.keys(debugLogTypes).forEach((event) => {
 			this.on(event, (e: DebugSessionCustomEvent) => handleDebugLogEvent(e.event, e.body.message));
 		});
+		// Log output events to make troubleshooting tests easier.
+		this.on("output", (event: DebugProtocol.OutputEvent) => {
+			log(`[${event.body.category}] ${event.body.output}`);
+		});
 	}
 	public async launch(launchArgs: any): Promise<void> {
 		// We override the base method to swap for attachRequest when required, so that
