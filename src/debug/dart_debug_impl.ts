@@ -190,7 +190,7 @@ export class DartDebugSession extends DebugSession {
 			return `${wsUri}/ws`;
 	}
 
-	private log(message: string) {
+	protected log(message: string) {
 		const max: number = 2500;
 
 		if (this.logFile) {
