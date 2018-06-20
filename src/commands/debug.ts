@@ -183,7 +183,7 @@ export class DebugCommands {
 				.filter((testFolder) => fs.existsSync(testFolder));
 			for (const folder of testFolders) {
 				const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(folder));
-				const name = path.basename(path.dirname(folder)); // TODO: Should this be parent + " tests"?
+				const name = path.basename(path.dirname(folder));
 				vs.debug.startDebugging(ws, {
 					cwd: path.dirname(folder),
 					name: `Dart ${name}`,
