@@ -89,6 +89,8 @@ script:
   - npm run vscode:prepublish
   - npm run lint
   - npm test
+  - pgrep -l -x dart
+  - if [ `pgrep -x dart` ]; then echo 'DART WAS FOUND'; exit 1; fi;
 
 after_script:
   - if [ $TRAVIS_PULL_REQUEST = "false" ]; then
