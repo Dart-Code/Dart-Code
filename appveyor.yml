@@ -68,6 +68,8 @@ test_script:
   - npm run vscode:prepublish
   - npm run lint
   - npm test
+  - ps: get-process dart  -ErrorAction SilentlyContinue | fl
+  - ps: if (get-process dart -ErrorAction SilentlyContinue) { throw "Dart processes were still running" }
 
 on_failure:
   - ps: $env:APPVEYOR_RESULT = 1
