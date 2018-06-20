@@ -19,18 +19,8 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 
 	private async openInAndroidStudio(resource: vs.Uri): Promise<void> {
 		const folder = fsPath(resource);
-		const parentFolder = path.dirname(folder);
-		const files = fs
-			.readdirSync(parentFolder)
-			.filter((item) => fs.statSync(path.join(parentFolder, item)).isFile())
-			.filter((item) => item.endsWith("_android.iml"));
 
-		if (!files || !files.length) {
-			vs.window.showErrorMessage(`Unable to find an Android .iml file in your project`);
-			return;
-		}
-
-		let androidStudioDir = await this.getAndroidStudioDir(parentFolder);
+		let androidStudioDir = await this.getAndroidStudioDir(folder);
 
 		if (!androidStudioDir) {
 			vs.window.showErrorMessage(`Unable to find Android Studio`);
@@ -39,11 +29,10 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 		if (isMac && androidStudioDir.endsWith("/Contents"))
 			androidStudioDir = androidStudioDir.substr(0, androidStudioDir.length - "/Contents".length);
 
-		const file = path.join(parentFolder, files[0]);
 		if (isMac)
-			safeSpawn(folder, "open", ["-a", androidStudioDir, file]);
+			safeSpawn(folder, "open", ["-a", androidStudioDir, folder]);
 		else
-			safeSpawn(folder, androidStudioDir, [file]);
+			safeSpawn(folder, androidStudioDir, [folder]);
 	}
 
 	private async openInXcode(resource: vs.Uri): Promise<void> {
