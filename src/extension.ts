@@ -17,7 +17,7 @@ import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
-import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, platformName, safeSpawn } from "./debug/utils";
+import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, platformName } from "./debug/utils";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
@@ -361,9 +361,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	} else {
 		analytics.logExtensionStartup(extensionEndTime.getTime() - extensionStartTime.getTime());
 	}
-
-	// Leak a dart process to test CI failure if Dart processes aren't all cleaned up.
-	safeSpawn(sdks.dart, path.join(sdks.dart, dartVMPath), ["--observe", path.join(extensionPath, "test/test_projects/hello_world/bin/main.dart")]);
 
 	return {
 		analyzerCapabilities: analyzer.capabilities,
