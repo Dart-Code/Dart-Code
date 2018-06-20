@@ -5,6 +5,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { debugLogTypes, handleDebugLogEvent, log } from "../src/utils/log";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../src/views/test_protocol";
 import { DebugClient } from "./debug_client_ms";
+import { withTimeout } from "./helpers";
 
 export class DartDebugClient extends DebugClient {
 	constructor(runtime: string, executable: string, debugType: string, spwanOptions?: SpawnOptions) {
@@ -96,14 +97,17 @@ export class DartDebugClient extends DebugClient {
 	}
 
 	public assertOutputContains(category: string, text: string) {
-		return new Promise((resolve, reject) => this.on("output", (event: DebugProtocol.OutputEvent) => {
-			if (event.body.category === category) {
-				if (event.body.output.indexOf(text) !== -1)
-					resolve();
-				else
-					reject(new Error(`Didn't find text "${text}" in ${category}`));
-			}
-		}));
+		let output = "";
+		return withTimeout(
+			new Promise((resolve, reject) => this.on("output", (event: DebugProtocol.OutputEvent) => {
+				if (event.body.category === category) {
+					output += event.body.output;
+					if (output.indexOf(text) !== -1)
+						resolve();
+				}
+			})),
+			() => `Didn't find text "${text}" in ${category}\nGot: ${output}`,
+		);
 	}
 
 	public waitForCustomEvent<T>(type: string, filter: (notification: T) => boolean): Promise<T> {

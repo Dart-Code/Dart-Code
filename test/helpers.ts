@@ -426,26 +426,29 @@ export async function waitForEditorChange(action: () => Thenable<void>): Promise
 	await waitFor(() => doc.version !== oldVersion);
 }
 
-export async function waitForNextAnalysis(action: () => void | Thenable<void>, timeoutSeconds = 15): Promise<void> {
+export async function waitForNextAnalysis(action: () => void | Thenable<void>, timeoutSeconds?: number): Promise<void> {
 	log("Waiting for any in-progress analysis to complete");
 	await ext.exports.currentAnalysis;
 	// Get a new completer for the next analysis.
 	const nextAnalysis = ext.exports.nextAnalysis();
 	log("Running requested action");
 	await action();
-	log(`Waiting for analysis to complete with timeout of ${timeoutSeconds}s`);
-	await withTimeout(nextAnalysis, timeoutSeconds);
+	log(`Waiting for analysis to complete`);
+	await withTimeout(nextAnalysis, "Analysis did not complete within specified timeout", timeoutSeconds);
 }
 
-export async function withTimeout(promise: Promise<void>, seconds: number) {
+export async function withTimeout(promise: Promise<void>, message: string | (() => string), seconds?: number) {
 	return Promise.race([
 		promise,
-		timeoutIn(seconds),
+		timeoutIn(message, seconds),
 	]);
 }
 
-export async function timeoutIn(seconds: number) {
-	return new Promise((resolve, reject) => setTimeout(() => reject(new Error(`Did not complete next analysis within ${seconds}s`)), seconds * 1000));
+export async function timeoutIn(message: string | (() => string), seconds: number = 15) {
+	return new Promise((resolve, reject) => setTimeout(() => {
+		const msg = typeof message === "string" ? message : message();
+		reject(new Error(`${msg} within ${seconds}s`));
+	}, seconds * 1000));
 }
 
 // This same logic exists in the website to link back to logs.
