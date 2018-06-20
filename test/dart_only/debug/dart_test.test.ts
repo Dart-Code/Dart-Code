@@ -67,7 +67,7 @@ describe("dart test debugger", () => {
 
 	it("stops on exception", async () => {
 		await openFile(helloWorldTestBrokenFile);
-		const config = await startDebugger(helloWorldTestBrokenFile);
+		const config = await startDebugger(helloWorldTestBrokenFile, false);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {}),
@@ -79,7 +79,7 @@ describe("dart test debugger", () => {
 	// https://github.com/dart-lang/sdk/issues/29156
 	it.skip("stops at the correct location on exception", async () => {
 		await openFile(helloWorldTestBrokenFile);
-		const config = await startDebugger(helloWorldTestBrokenFile);
+		const config = await startDebugger(helloWorldTestBrokenFile, false);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
