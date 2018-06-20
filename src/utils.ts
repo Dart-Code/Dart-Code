@@ -143,7 +143,8 @@ export function isTestFile(file: string): boolean {
 }
 
 export function supportsPubRunTest(folder: string, file: string): boolean {
-	return true;
+	return fs.existsSync(path.join(folder, ".packages"))
+		&& fs.existsSync(path.join(folder, "pubspec.yaml"));
 }
 
 export function isInsideFolderNamed(file: string, folderName: string): boolean {
