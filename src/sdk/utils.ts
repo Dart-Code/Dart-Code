@@ -1,19 +1,21 @@
 import * as fs from "fs";
 import * as path from "path";
-import { ExtensionContext, commands, window } from "vscode";
+import { commands, ExtensionContext, window } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
 import { isWin, platformName } from "../debug/utils";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, ProjectType, Sdks, fsPath, getDartWorkspaceFolders, openInBrowser, reloadExtension, resolvePaths } from "../utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, openInBrowser, ProjectType, reloadExtension, resolvePaths, Sdks } from "../utils";
 
 const dartExecutableName = isWin ? "dart.exe" : "dart";
 const pubExecutableName = isWin ? "pub.bat" : "pub";
 const flutterExecutableName = isWin ? "flutter.bat" : "flutter";
+const androidStudioExecutableName = isWin ? "studio64.exe" : "studio";
 export const dartVMPath = "bin/" + dartExecutableName;
 export const dartPubPath = "bin/" + pubExecutableName;
 export const analyzerSnapshotPath = "bin/snapshots/analysis_server.dart.snapshot";
 export const flutterPath = "bin/" + flutterExecutableName;
+export const androidStudioPath = "bin/" + androidStudioExecutableName;
 export const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
 export const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
 
