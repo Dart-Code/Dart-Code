@@ -55,6 +55,7 @@ class Config {
 
 	// Preview features.
 	get normalizeWindowsDriveLetters() { return this.getConfig<boolean>("normalizeWindowsDriveLetters"); }
+	get previewTestRunnerForDart() { return this.getConfig<boolean>("previewTestRunnerForDart"); }
 
 	public for(uri?: Uri): ResourceConfig {
 		return new ResourceConfig(uri);
