@@ -10,7 +10,6 @@ export class LoggingCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
 	constructor() {
-
 		this.disposables.push(
 			vs.commands.registerCommand("dart.startLogging", this.startLogging, this),
 		);

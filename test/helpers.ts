@@ -6,7 +6,7 @@ import * as path from "path";
 import * as semver from "semver";
 import * as vs from "vscode";
 import { AnalyzerCapabilities } from "../src/analysis/analyzer";
-import { isWin } from "../src/debug/utils";
+import { dartCodeExtensionIdentifier } from "../src/debug/utils";
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
 import { Sdks, fsPath, vsCodeVersionConstraint } from "../src/utils";
@@ -22,7 +22,7 @@ export const ext = vs.extensions.getExtension<{
 	reanalyze: () => void,
 	renameProvider: DartRenameProvider,
 	sdks: Sdks,
-}>("Dart-Code.dart-code");
+}>(dartCodeExtensionIdentifier);
 
 if (!ext) {
 	if (semver.satisfies(vs.version, vsCodeVersionConstraint)) {
@@ -58,7 +58,6 @@ export const flutterTestBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWo
 export let doc: vs.TextDocument;
 export let editor: vs.TextEditor;
 export let documentEol: string;
-export let platformEol: string;
 
 export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	log("Activating");
@@ -70,7 +69,6 @@ export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	log(`Showing ${fsPath(file)}`);
 	editor = await vs.window.showTextDocument(doc);
 	documentEol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
-	platformEol = isWin ? "\r\n" : "\n";
 	log(`Waiting for initial and any in-progress analysis`);
 	await ext.exports.initialAnalysis;
 	// Opening a file above may start analysis after a short period so give it time to start

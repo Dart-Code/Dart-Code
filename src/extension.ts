@@ -17,7 +17,7 @@ import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
-import { forceWindowsDriveLetterToUppercase, platformName } from "./debug/utils";
+import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, platformName } from "./debug/utils";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
@@ -49,7 +49,7 @@ import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingS
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { fsPath } from "./utils";
-import { LogCategory, log, logError, logTo } from "./utils/log";
+import { LogCategory, addToLogHeader, log, logError, logTo } from "./utils/log";
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestResultsProvider } from "./views/test_view";
 
@@ -100,6 +100,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const extensionStartTime = new Date();
 	util.logTime();
 	const sdks = findSdks();
+	buildLogHeaders(sdks);
 	util.logTime("findSdks");
 	analytics = new Analytics(sdks);
 	if (!sdks.dart || (sdks.projectType === util.ProjectType.Flutter && !sdks.flutter)) {
@@ -371,6 +372,16 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		renameProvider, // TODO: Remove this when we can get access via testing...
 		sdks,
 	};
+}
+
+function buildLogHeaders(sdks: util.Sdks) {
+	addToLogHeader(() => `Dart Code extension: ${util.extensionVersion}`);
+	addToLogHeader(() => `Flutter extension: ${vs.extensions.getExtension(flutterExtensionIdentifier).packageJSON.version}`);
+	addToLogHeader(() => `Platform: ${platformName}`);
+	addToLogHeader(() => `Workspace type: ${util.ProjectType[sdks.projectType]}`);
+	addToLogHeader(() => `Multi-root?: ${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1}`);
+	addToLogHeader(() => `Dart SDK:\n    Loc: ${sdks.dart}\n    Ver: ${util.getSdkVersion(sdks.dart)}`);
+	addToLogHeader(() => `Flutter SDK:\n    Loc: ${sdks.flutter}\n    Ver: ${util.getSdkVersion(sdks.flutter)}`);
 }
 
 function recalculateAnalysisRoots() {

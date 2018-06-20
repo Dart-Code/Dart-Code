@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { Event, EventEmitter } from "vscode";
+import { platformEol } from "../debug/utils";
 import { isDevExtension } from "../utils";
 
 export enum LogCategory {
@@ -72,12 +73,24 @@ export function handleDebugLogEvent(event: string, message: string) {
 		logWarn(`Failed to handle log event ${event}`);
 }
 
+const logHeader: string[] = [];
+export function addToLogHeader(f: () => string) {
+	try {
+		logHeader.push(f().replace("\r", "").replace("\n", "\r\n"));
+	} catch {
+		// Don't log here; we may be trying to access things that aren't available yet.
+	}
+}
+
 export function logTo(file: string, logCategories?: LogCategory[], maxLength = 2000): ({ dispose: () => Promise<void> }) {
 	if (!file || !path.isAbsolute(file))
 		throw new Error("Path passed to logTo must be an absolute path");
-	const time = () => `[${(new Date()).toLocaleTimeString()}] `;
+	const time = () => `[${(new Date()).toTimeString()}] `;
 	let logStream = fs.createWriteStream(file);
-	logStream.write(`${time()}Log file started\n`);
+	logStream.write(`!! PLEASE REVIEW THIS LOG FOR SENSITIVE INFORMATION BEFORE SHARING !!${platformEol}`);
+	logStream.write(`!! IT MAY CONTAIN PARTS OF YOUR PROJECT FILES                      !!${platformEol}${platformEol}`);
+	logStream.write(logHeader.join(platformEol) + platformEol + platformEol);
+	logStream.write(`${(new Date()).toDateString()} ${time()}Log file started${platformEol}`);
 	let logger = onLog((e) => {
 		if (logCategories && logCategories.indexOf(e.category) === -1)
 			return;
@@ -86,7 +99,7 @@ export function logTo(file: string, logCategories?: LogCategory[], maxLength = 2
 			? e.message.substring(0, maxLength) + "…"
 			: e.message;
 		const prefix = `${time()}[${LogCategory[e.category]}] `;
-		logStream.write(`${prefix}${logMessage}\n`);
+		logStream.write(`${prefix}${logMessage}${platformEol}`);
 	});
 	return {
 		dispose(): Promise<void> {
@@ -95,7 +108,7 @@ export function logTo(file: string, logCategories?: LogCategory[], maxLength = 2
 				logger = null;
 			}
 			if (logStream) {
-				logStream.write(`${time()}Log file ended\n`);
+				logStream.write(`${(new Date()).toDateString()} ${time()}Log file ended${platformEol}`);
 				return new Promise((resolve) => {
 					logStream.end(resolve);
 					logStream = null;
