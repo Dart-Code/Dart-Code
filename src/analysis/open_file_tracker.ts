@@ -1,4 +1,5 @@
 import { Disposable, Uri, window, workspace } from "vscode";
+import { IAmDisposable } from "../debug/utils";
 import * as util from "../utils";
 import { fsPath } from "../utils";
 import { logError } from "../utils/log";
@@ -9,7 +10,7 @@ const outlines: { [key: string]: Outline } = {};
 const occurrences: { [key: string]: Occurrences[] } = {};
 const folding: { [key: string]: FoldingRegion[] } = {};
 
-export class OpenFileTracker implements Disposable {
+export class OpenFileTracker implements IAmDisposable {
 	private disposables: Disposable[] = [];
 	private analyzer: Analyzer;
 	private lastPriorityFiles: string[] = [];

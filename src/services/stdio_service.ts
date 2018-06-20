@@ -1,13 +1,12 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
-import { Disposable } from "vscode";
-import { safeSpawn } from "../debug/utils";
+import { IAmDisposable, safeSpawn } from "../debug/utils";
 import { logError } from "../utils/log";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
-export abstract class StdIOService<T> implements Disposable {
-	private disposables: Disposable[] = [];
+export abstract class StdIOService<T> implements IAmDisposable {
+	private disposables: IAmDisposable[] = [];
 	public process: child_process.ChildProcess;
 	protected additionalPidsToTerminate: number[] = [];
 	private nextRequestID = 1;
@@ -168,7 +167,7 @@ export abstract class StdIOService<T> implements Disposable {
 		subscriptions.slice().forEach((sub) => sub(notification));
 	}
 
-	protected subscribe<T>(subscriptions: Array<(notification: T) => void>, subscriber: (notification: T) => void): Disposable {
+	protected subscribe<T>(subscriptions: Array<(notification: T) => void>, subscriber: (notification: T) => void): IAmDisposable {
 		subscriptions.push(subscriber);
 		const disposable = {
 			dispose: () => {
@@ -191,7 +190,7 @@ export abstract class StdIOService<T> implements Disposable {
 		return disposable;
 	}
 
-	public registerForRequestError(subscriber: (notification: any) => void): Disposable {
+	public registerForRequestError(subscriber: (notification: any) => void): IAmDisposable {
 		return this.subscribe(this.requestErrorSubscriptions, subscriber);
 	}
 

@@ -1,5 +1,5 @@
-import { Disposable } from "vscode";
 import { StdIOService } from "../services/stdio_service";
+import { IAmDisposable } from "./utils";
 
 export class TestRunner extends StdIOService<{ type: string }> {
 	constructor(executable: string, projectFolder: string, args: string[], logFile: string, logger: (message: string) => void, envOverrides?: any) {
@@ -20,7 +20,7 @@ export class TestRunner extends StdIOService<{ type: string }> {
 	}
 
 	private unhandledMessageSubscriptions: Array<(notification: string) => void> = [];
-	public registerForUnhandledMessages(subscriber: (notification: string) => void): Disposable {
+	public registerForUnhandledMessages(subscriber: (notification: string) => void): IAmDisposable {
 		return this.subscribe(this.unhandledMessageSubscriptions, subscriber);
 	}
 
@@ -43,11 +43,11 @@ export class TestRunner extends StdIOService<{ type: string }> {
 
 	// Subscription methods.
 
-	public registerForTestStartedProcess(subscriber: (notification: TestStartedProcess) => void): Disposable {
+	public registerForTestStartedProcess(subscriber: (notification: TestStartedProcess) => void): IAmDisposable {
 		return this.subscribe(this.testStartedProcessSubscriptions, subscriber);
 	}
 
-	public registerForAllTestNotifications(subscriber: (notification: { type: string }) => void): Disposable {
+	public registerForAllTestNotifications(subscriber: (notification: { type: string }) => void): IAmDisposable {
 		return this.subscribe(this.allTestNotificationsSubscriptions, subscriber);
 	}
 }
