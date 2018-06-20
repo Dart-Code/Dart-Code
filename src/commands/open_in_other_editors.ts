@@ -2,8 +2,8 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { isMac, safeSpawn } from "../debug/utils";
-import { flutterPath } from "../sdk/utils";
-import { Sdks, fsPath } from "../utils";
+import { androidStudioPath, flutterPath } from "../sdk/utils";
+import { fsPath, Sdks } from "../utils";
 import { logError } from "../utils/log";
 
 export class OpenInOtherEditorCommands implements vs.Disposable {
@@ -26,13 +26,12 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 			vs.window.showErrorMessage(`Unable to find Android Studio`);
 			return;
 		}
-		if (isMac && androidStudioDir.endsWith("/Contents"))
+		if (isMac && androidStudioDir.endsWith("/Contents")) {
 			androidStudioDir = androidStudioDir.substr(0, androidStudioDir.length - "/Contents".length);
-
-		if (isMac)
 			safeSpawn(folder, "open", ["-a", androidStudioDir, folder]);
-		else
-			safeSpawn(folder, androidStudioDir, [folder]);
+		} else {
+			safeSpawn(folder, path.join(androidStudioDir, androidStudioPath), [folder]);
+		}
 	}
 
 	private async openInXcode(resource: vs.Uri): Promise<void> {
