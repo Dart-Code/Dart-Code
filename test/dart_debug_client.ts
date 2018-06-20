@@ -13,9 +13,18 @@ export class DartDebugClient extends DebugClient {
 		Object.keys(debugLogTypes).forEach((event) => {
 			this.on(event, (e: DebugSessionCustomEvent) => handleDebugLogEvent(e.event, e.body.message));
 		});
-		// Log output events to make troubleshooting tests easier.
+		// Log important events to make troubleshooting tests easier.
 		this.on("output", (event: DebugProtocol.OutputEvent) => {
 			log(`[${event.body.category}] ${event.body.output}`);
+		});
+		this.on("terminated", (event: DebugProtocol.TerminatedEvent) => {
+			log(`[terminated]`);
+		});
+		this.on("stopped", (event: DebugProtocol.StoppedEvent) => {
+			log(`[stopped] ${event.body.reason}`);
+		});
+		this.on("initialized", (event: DebugProtocol.InitializedEvent) => {
+			log(`[initialized]`);
 		});
 	}
 	public async launch(launchArgs: any): Promise<void> {
