@@ -1,7 +1,6 @@
-import { Disposable } from "vscode";
 import * as f from "../flutter/flutter_types";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
-import { globalFlutterArgs } from "./utils";
+import { IAmDisposable, globalFlutterArgs } from "./utils";
 
 export class FlutterRun extends StdIOService<UnknownNotification> {
 	constructor(flutterBinPath: string, projectFolder: string, args: string[], logFile: string, logger: (message: string) => void) {
@@ -20,7 +19,7 @@ export class FlutterRun extends StdIOService<UnknownNotification> {
 	}
 
 	private unhandledMessageSubscriptions: Array<(notification: string) => void> = [];
-	public registerForUnhandledMessages(subscriber: (notification: string) => void): Disposable {
+	public registerForUnhandledMessages(subscriber: (notification: string) => void): IAmDisposable {
 		return this.subscribe(this.unhandledMessageSubscriptions, subscriber);
 	}
 
@@ -79,31 +78,31 @@ export class FlutterRun extends StdIOService<UnknownNotification> {
 
 	// Subscription methods.
 
-	public registerForDaemonConnect(subscriber: (notification: f.DaemonConnected) => void): Disposable {
+	public registerForDaemonConnect(subscriber: (notification: f.DaemonConnected) => void): IAmDisposable {
 		return this.subscribe(this.daemonConnectedSubscriptions, subscriber);
 	}
 
-	public registerForAppStart(subscriber: (notification: f.AppStart) => void): Disposable {
+	public registerForAppStart(subscriber: (notification: f.AppStart) => void): IAmDisposable {
 		return this.subscribe(this.appStartSubscriptions, subscriber);
 	}
 
-	public registerForAppDebugPort(subscriber: (notification: f.AppDebugPort) => void): Disposable {
+	public registerForAppDebugPort(subscriber: (notification: f.AppDebugPort) => void): IAmDisposable {
 		return this.subscribe(this.appDebugPortSubscriptions, subscriber);
 	}
 
-	public registerForAppStarted(subscriber: (notification: f.AppEvent) => void): Disposable {
+	public registerForAppStarted(subscriber: (notification: f.AppEvent) => void): IAmDisposable {
 		return this.subscribe(this.appStartedSubscriptions, subscriber);
 	}
 
-	public registerForAppStop(subscriber: (notification: f.AppEvent) => void): Disposable {
+	public registerForAppStop(subscriber: (notification: f.AppEvent) => void): IAmDisposable {
 		return this.subscribe(this.appStopSubscriptions, subscriber);
 	}
 
-	public registerForAppProgress(subscriber: (notification: f.AppProgress) => void): Disposable {
+	public registerForAppProgress(subscriber: (notification: f.AppProgress) => void): IAmDisposable {
 		return this.subscribe(this.appProgressSubscriptions, subscriber);
 	}
 
-	public registerForError(subscriber: (error: string) => void): Disposable {
+	public registerForError(subscriber: (error: string) => void): IAmDisposable {
 		return this.subscribe(this.errorSubscriptions, subscriber);
 	}
 }

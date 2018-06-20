@@ -20,6 +20,10 @@ if (process.env.DART_CODE_IS_TEST_RUN) {
 	globalFlutterArgs.push("--suppress-analytics");
 }
 
+export interface IAmDisposable {
+	dispose(): void;
+}
+
 export function safeSpawn(workingDirectory: string, binPath: string, args: string[], envOverrides?: any): child_process.ChildProcess {
 	// Spawning processes on Windows with funny symbols in the path requires quoting. However if you quote an
 	// executable with a space in its path and an argument also has a space, you have to then quote all of the
