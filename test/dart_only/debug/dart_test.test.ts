@@ -71,7 +71,10 @@ describe("dart test debugger", () => {
 		]);
 	});
 
-	it("stops on exception", async () => {
+	it("stops on exception", async function () {
+		// Dart v1 doesn't pause on unhandled exceptions here :(
+		if (!ext.exports.analyzerCapabilities.isDart2)
+			this.skip();
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile, false);
 		await Promise.all([
@@ -96,7 +99,10 @@ describe("dart test debugger", () => {
 		]);
 	});
 
-	it("provides exception details when stopped on exception", async () => {
+	it("provides exception details when stopped on exception", async function () {
+		// Dart v1 doesn't pause on unhandled exceptions here :(
+		if (!ext.exports.analyzerCapabilities.isDart2)
+			this.skip();
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile, false);
 		await Promise.all([
