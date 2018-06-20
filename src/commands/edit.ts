@@ -35,7 +35,7 @@ export class EditCommands implements vs.Disposable {
 		const doc = await vs.workspace.openTextDocument(uri);
 		const editor = await vs.window.showTextDocument(doc);
 		if (lineNumber && columnNumber) {
-			const line = doc.lineAt(lineNumber);
+			const line = doc.lineAt(lineNumber > 0 ? lineNumber - 1 : 0);
 			const firstChar = line.range.start.translate({ characterDelta: line.firstNonWhitespaceCharacterIndex });
 			this.showCode(editor, line.range, line.range, new vs.Range(firstChar, firstChar));
 		}
