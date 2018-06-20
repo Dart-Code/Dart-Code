@@ -16,7 +16,6 @@ export class FlutterTestDebugSession extends DartTestDebugSession {
 			appArgs = appArgs.concat(args.args);
 		}
 
-		// TODO: Validate that args.program is always absolute (we use it as a key for notifications).
 		if (args.program)
 			appArgs.push(this.sourceFileForArgs(args));
 
