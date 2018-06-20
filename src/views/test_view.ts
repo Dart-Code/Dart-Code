@@ -358,7 +358,7 @@ export class SuiteTreeItem extends TestItemTreeItem {
 	public readonly tests: TestTreeItem[] = [];
 
 	constructor(suite: Suite) {
-		super(vs.Uri.file(suite.path), vs.TreeItemCollapsibleState.Expanded);
+		super(vs.Uri.file(suite.path), vs.TreeItemCollapsibleState.Collapsed);
 		this.label = this.getLabel(suite.path);
 		this.suite = suite;
 		this.contextValue = DART_TEST_SUITE_NODE;
@@ -403,7 +403,7 @@ class GroupTreeItem extends TestItemTreeItem {
 	public readonly tests: TestTreeItem[] = [];
 
 	constructor(public suite: SuiteData, group: Group) {
-		super(group.name, vs.TreeItemCollapsibleState.Expanded);
+		super(group.name, vs.TreeItemCollapsibleState.Collapsed);
 		this.group = group;
 		this.contextValue = DART_TEST_GROUP_NODE;
 		this.id = `suite_${this.suite.path}_group_${this.group.id}`;
