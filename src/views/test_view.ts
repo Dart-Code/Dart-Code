@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { getChannel } from "../commands/channels";
 import { extensionPath } from "../extension";
 import { fsPath } from "../utils";
-import { DoneNotification, ErrorNotification, Group, GroupNotification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "./test_protocol";
+import { ErrorNotification, Group, GroupNotification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "./test_protocol";
 
 const DART_TEST_SUITE_NODE = "dart-code:testSuiteNode";
 const DART_TEST_GROUP_NODE = "dart-code:testGroupNode";
@@ -24,16 +24,19 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	// we need to delay this until the suite starts.
 	public static shouldShowTreeOnNextSuiteStart = true;
 
+	private owningDebugSessions: { [key: string]: vs.DebugSession } = {};
+
 	constructor() {
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
 			if (e.event === "dart.testRunNotification") {
+				// If we're starting a suite, record us as the owner so we can clean up later
+				if (e.body.notification.type === "suite")
+					this.owningDebugSessions[e.body.suitePath] = e.session;
+
 				this.handleNotification(e.body.suitePath, e.body.notification);
-				this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => {
-					if (session.id === e.session.id)
-						this.handleSessionEnd(suites[e.body.suitePath]);
-				}));
 			}
 		}));
+		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleSessionEnd(session)));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | TestTreeItem) => {
 			vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(treeNode.resourceUri),
@@ -149,9 +152,13 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	private handleNotification(suitePath: string, evt: any) {
 		const suite = suites[suitePath];
 		switch (evt.type) {
+			// We won't get notifications that aren't directly tied to Suites because
+			// of how the DA works.
 			// case "start":
 			// 	this.handleStartNotification(evt as StartNotification);
 			// 	break;
+			// We won't get notifications that aren't directly tied to Suites because
+			// of how the DA works.
 			// case "allSuites":
 			// 	this.handleAllSuitesNotification(evt as AllSuitesNotification);
 			// 	break;
@@ -167,9 +174,11 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			case "group":
 				this.handleGroupNotification(suite, evt as GroupNotification);
 				break;
-			case "done":
-				this.handleDoneNotification(suite, evt as DoneNotification);
-				break;
+			// We won't get notifications that aren't directly tied to Suites because
+			// of how the DA works.
+			// case "done":
+			// 	this.handleDoneNotification(suite, evt as DoneNotification);
+			// 	break;
 			case "print":
 				this.handlePrintNotification(suite, evt as PrintNotification);
 				break;
@@ -178,10 +187,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 				break;
 		}
 	}
-
-	// private handleStartNotification(evt: StartNotification) {}
-
-	// private handleAllSuitesNotification(evt: AllSuitesNotification) {}
 
 	private handleSuiteNotification(suitePath: string, evt: SuiteNotification) {
 		let suite = suites[evt.suite.path];
@@ -274,11 +279,17 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		this.updateNode(groupNode.parent);
 	}
 
-	private handleDoneNotification(suite: SuiteData, evt: DoneNotification) {
-		this.handleSessionEnd(suite);
+	private handleSessionEnd(session: vs.DebugSession) {
+		// Get the suite paths that have us as the owning debug session.
+		const suitePaths = Object.keys(this.owningDebugSessions).filter((suitePath) => this.owningDebugSessions[suitePath] === session);
+		// End them all and remove from the lookup.
+		for (const suitePath of suitePaths) {
+			this.handleSuiteEnd(suites[suitePath]);
+			delete this.owningDebugSessions[suitePath];
+		}
 	}
 
-	private handleSessionEnd(suite: SuiteData) {
+	private handleSuiteEnd(suite: SuiteData) {
 		if (!suite)
 			return;
 
@@ -508,7 +519,7 @@ function updateStatusFromChildren(node: SuiteTreeItem | GroupTreeItem): TestStat
 				return c.status;
 			return TestStatus.Unknown;
 		})
-		: TestStatus.Unknown;
+		: [TestStatus.Unknown];
 	const status = Math.max.apply(Math, childStatuses);
 	node.iconPath = getIconPath(status);
 	return status;
