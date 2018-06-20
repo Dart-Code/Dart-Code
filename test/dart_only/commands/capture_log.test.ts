@@ -54,7 +54,7 @@ describe("capture logs command", () => {
 		const lines = fs.readFileSync(tempLogFile).toString().trim().split("\n");
 		const firstLine = lines[0].trim();
 		const lastLine = lines[lines.length - 1].trim();
-		assert.ok(firstLine.endsWith("Log file started"), `First line of log was ${firstLine}`);
+		assert.ok(lines.find((l) => l.endsWith("Log file started")), "Did not find logged message");
 		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), "Did not find logged message");
 		assert.ok(lines.find((l) => l.indexOf("This is an analyzer event") !== -1), "Did not find logged analyzer message");
 		assert.ok(lines.find((l) => l.indexOf("This is an flutter daemon event") === -1), "Found logged flutter daemon message");
