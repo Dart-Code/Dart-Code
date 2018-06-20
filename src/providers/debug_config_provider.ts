@@ -41,7 +41,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration> {
 		const openFile = window.activeTextEditor && window.activeTextEditor.document ? fsPath(window.activeTextEditor.document.uri) : null;
-		const isFullTestRun = debugConfig && debugConfig.runner === "tests"; // TODO: Allow pubTest and flutterTest explicitly.
+		const isFullTestRun = debugConfig && debugConfig.runner === "tests";
 		const allowProgramlessRun = isFullTestRun;
 
 		// VS Code often gives us a bogus folder, so only trust it if we got a real debugConfig (eg. with program or cwd).
