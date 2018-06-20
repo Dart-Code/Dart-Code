@@ -90,7 +90,10 @@ script:
   - npm run lint
   - npm test
   - ps -ax | grep dart
-  - if [ `pgrep -x dart` ]; then echo 'DART WAS FOUND'; exit 1; fi;
+  - if [[ $(pgrep -x dart) ]]; then
+      echo 'DART WAS FOUND';
+      exit 1;
+    fi;
 
 after_script:
   - if [ $TRAVIS_PULL_REQUEST = "false" ]; then
