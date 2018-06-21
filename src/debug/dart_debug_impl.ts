@@ -631,7 +631,9 @@ export class DartDebugSession extends DebugSession {
 						const instance = obj as VMInstance;
 
 						// TODO: show by kind instead
-						if (instance.elements) {
+						if (this.isSimpleKind(instance.kind)) {
+							variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}`, instance.kind, instanceRef));
+						} else if (instance.elements) {
 							const len = instance.elements.length;
 							if (!start)
 								start = 0;
@@ -850,7 +852,7 @@ export class DartDebugSession extends DebugSession {
 
 				if (expression === "$e") {
 					response.body = {
-						result: this.valueAsString(exceptionInstanceRef),
+						result: await this.getExceptionText(thread.ref, exceptionInstanceRef),
 						variablesReference: thread.exceptionReference,
 					};
 					this.sendResponse(response);
@@ -992,10 +994,7 @@ export class DartDebugSession extends DebugSession {
 				reason = "step";
 			} else if (kind === "PauseException") {
 				reason = "exception";
-				if (!event.exception.valueAsStringIsTruncated)
-					exceptionText = this.valueAsString(event.exception, false);
-				if (!exceptionText)
-					exceptionText = await this.callToString(event.isolate, event.exception, true);
+				exceptionText = await this.getExceptionText(event.isolate, event.exception);
 			}
 
 			thread.handlePaused(event.atAsyncSuspension, event.exception);
@@ -1005,6 +1004,15 @@ export class DartDebugSession extends DebugSession {
 				thread.resume();
 			}
 		}
+	}
+
+	private async getExceptionText(isolate: VMIsolateRef, exception: VMInstanceRef): Promise<string> {
+		let exceptionText: string;
+		if (!exception.valueAsStringIsTruncated)
+			exceptionText = this.valueAsString(exception, false);
+		if (!exceptionText)
+			exceptionText = await this.callToString(isolate, exception, true);
+		return exceptionText;
 	}
 
 	private async anyBreakpointConditionReturnsTrue(breakpoints: DebugProtocol.SourceBreakpoint[], thread: ThreadInfo) {
