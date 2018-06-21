@@ -71,7 +71,7 @@ export class EditCommands implements vs.Disposable {
 		const res = await this.analyzer.editGetStatementCompletion({ file, offset });
 
 		if (res && res.change)
-			this.applyEdits(document, res.change);
+			await this.applyEdits(document, res.change);
 	}
 
 	private async sendEdit(f: (a: { file: string }) => Thenable<{ edit: as.SourceFileEdit }>, commandName: string): Promise<void> {
