@@ -82,6 +82,12 @@ export class DartTestDebugSession extends DartDebugSession {
 	protected handleTestEvent(notification: any) {
 		// Handle basic output
 		switch (notification.type) {
+			case "start":
+				const pid = notification.pid;
+				if (pid) {
+					this.additionalPidsToTerminate.push(pid);
+				}
+				break;
 			case "debug":
 				const observatoryUri = notification.observatory;
 				if (observatoryUri) {
