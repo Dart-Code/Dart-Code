@@ -992,7 +992,8 @@ export class DartDebugSession extends DebugSession {
 				reason = "step";
 			} else if (kind === "PauseException") {
 				reason = "exception";
-				exceptionText = this.valueAsString(event.exception, false);
+				if (!event.exception.valueAsStringIsTruncated)
+					exceptionText = this.valueAsString(event.exception, false);
 				if (!exceptionText)
 					exceptionText = await this.callToString(event.isolate, event.exception, true);
 			}
