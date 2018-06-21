@@ -51,9 +51,8 @@ describe("capture logs command", () => {
 		await loggingCommand;
 
 		assert.ok(fs.existsSync(tempLogFile));
-		const lines = fs.readFileSync(tempLogFile).toString().trim().split("\n");
-		const firstLine = lines[0].trim();
-		const lastLine = lines[lines.length - 1].trim();
+		const lines = fs.readFileSync(tempLogFile).toString().trim().split("\n").map((l) => l.trim());
+		const lastLine = lines[lines.length - 1];
 		assert.ok(lines.find((l) => l.endsWith("Log file started")), "Did not find logged message");
 		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), "Did not find logged message");
 		assert.ok(lines.find((l) => l.indexOf("This is an analyzer event") !== -1), "Did not find logged analyzer message");
