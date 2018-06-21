@@ -891,7 +891,7 @@ export class DartDebugSession extends DebugSession {
 				const text = await this.fullValueAsString(thread.ref, instanceRef);
 				response.body = {
 					result: text,
-					variablesReference: instanceRef.valueAsString ? 0 : thread.storeData(instanceRef),
+					variablesReference: this.isSimpleKind(instanceRef.kind) ? 0 : thread.storeData(instanceRef),
 				};
 				this.sendResponse(response);
 			}
@@ -1194,7 +1194,7 @@ export class DartDebugSession extends DebugSession {
 
 		const instanceRef = ref as VMInstanceRef;
 
-		if (ref.valueAsString) {
+		if (ref.kind === "String" || ref.valueAsString) {
 			let str: string = instanceRef.valueAsString;
 			if (instanceRef.valueAsStringIsTruncated)
 				str += "…";
