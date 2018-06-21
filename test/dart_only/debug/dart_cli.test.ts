@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { platformEol } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
-import { logInfo } from "../../../src/utils/log";
+import { log } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureMapEntry, ensureVariable, spawnProcessPaused } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, positionOf, sb } from "../../helpers";
@@ -509,11 +509,11 @@ describe("dart cli debugger", () => {
 				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: fsPath(helloWorldMainFile),
 			});
-			logInfo("Disconnecting...");
+			log("Disconnecting...");
 			await dc.disconnectRequest();
-			logInfo("Disconnected!");
+			log("Disconnected!");
 
-			logInfo("Waiting for process to terminate...");
+			log("Waiting for process to terminate...");
 			await process.exitCode;
 		});
 
