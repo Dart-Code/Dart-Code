@@ -6,7 +6,7 @@ import * as https from "https";
 
 const chatWebHookPath = process.env.CHAT_WEBHOOK_PATH;
 
-function sendToChat(message: string): Promise<void> {
+function sendToChat(message: string): Promise<void> | undefined {
 	if (!chatWebHookPath) {
 		return;
 	}
@@ -25,8 +25,8 @@ function sendToChat(message: string): Promise<void> {
 			// resp.on("data", (c) => console.log(c.toString()));
 			resp.on("error", (c) => console.error(c.toString()));
 
-			if (resp.statusCode < 200 || resp.statusCode > 300) {
-				console.log(`Failed to send chat message ${resp.statusCode}: ${resp.statusMessage}`);
+			if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
+				console.log(`Failed to send chat message ${resp && resp.statusCode}: ${resp && resp.statusMessage}`);
 			}
 			resolve();
 		});
@@ -42,7 +42,7 @@ async function send_summary_message() {
 	if (pEnv.CI) {
 		const hasFailed = pEnv.TRAVIS_TEST_RESULT === "1" || pEnv.APPVEYOR_RESULT;
 
-		let buildUrl: string;
+		let buildUrl: string | undefined;
 		if (process.env.TRAVIS) {
 			buildUrl = `https://travis-ci.org/${pEnv.TRAVIS_REPO_SLUG}/builds/${pEnv.TRAVIS_BUILD_ID}`;
 		} else if (process.env.APPVEYOR) {

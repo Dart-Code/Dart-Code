@@ -6,7 +6,7 @@ import { activateWithoutAnalysis, ext, extApi } from "../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
-		const wfs = vs.workspace.workspaceFolders;
+		const wfs = vs.workspace.workspaceFolders || [];
 		assert.equal(wfs.length, 2);
 		assert.ok(
 			fsPath(wfs[0].uri).endsWith(path.sep + "flutter_hello_world"),
@@ -37,6 +37,7 @@ describe("extension", () => {
 		assert.ok(extApi);
 		const sdks: Sdks = extApi.sdks;
 		assert.ok(sdks);
-		assert.notEqual(sdks.dart.indexOf("flutter"), -1);
+		assert.ok(sdks.dart);
+		assert.notEqual(sdks.dart!.indexOf("flutter"), -1);
 	});
 });

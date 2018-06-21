@@ -161,7 +161,7 @@ export class Analytics {
 					});
 
 				if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
-					logInfo(`Failed to send analytics ${resp.statusCode}: ${resp.statusMessage}`);
+					logInfo(`Failed to send analytics ${resp && resp.statusCode}: ${resp && resp.statusMessage}`);
 				}
 				resolve();
 			});

@@ -13,13 +13,13 @@ class Config {
 		this.config = workspace.getConfiguration("dart");
 	}
 
-	private getConfig<T>(key: string): T {
+	private getConfig<T>(key: string): T | undefined {
 		return this.config.get<T>(key);
 	}
 
 	private async setConfig<T>(key: string, value: T, target: ConfigurationTarget): Promise<void> {
 		await this.config.update(key, value, target);
-		this.loadConfig();
+		this.loadConfig(); // TODO: Do we need this or does it get done via onDidChangeConfiguration?
 	}
 
 	get allowAnalytics() { return this.getConfig<boolean>("allowAnalytics"); }

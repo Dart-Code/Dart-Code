@@ -117,7 +117,7 @@ export class RefactorCommands implements vs.Disposable {
 	}
 }
 
-async function getExtractMethodArgs(f: as.RefactoringFeedback): Promise<as.RefactoringOptions> {
+async function getExtractMethodArgs(f: as.RefactoringFeedback): Promise<as.RefactoringOptions | undefined> {
 	const feedback = f as as.ExtractMethodFeedback;
 	const suggestedName = feedback.names && feedback.names.length ? feedback.names[0] : undefined;
 	const name = await vs.window.showInputBox({ prompt: "Enter a name for the method", value: suggestedName });
@@ -134,7 +134,7 @@ async function getExtractMethodArgs(f: as.RefactoringFeedback): Promise<as.Refac
 	};
 }
 
-async function getExtractWidgetArgs(f: as.RefactoringFeedback): Promise<as.RefactoringOptions> {
+async function getExtractWidgetArgs(f: as.RefactoringFeedback): Promise<as.RefactoringOptions | undefined> {
 	const name = await vs.window.showInputBox({ prompt: "Enter a name for the widget" });
 
 	return name ? { name } : undefined;

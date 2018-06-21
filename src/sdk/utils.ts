@@ -252,7 +252,7 @@ function extractFlutterSdkPathFromPackagesFile(file: string): string {
 	return packagePath;
 }
 
-function findFuchsiaRoot(folder: string): string {
+function findFuchsiaRoot(folder: string): string | undefined {
 	if (folder) {
 		// Walk up the directories from the workspace root, and see if there
 		// exists a directory which has ".jiri_root" directory as a child.
@@ -273,7 +273,7 @@ function findFuchsiaRoot(folder: string): string {
 		}
 	}
 
-	return null;
+	return undefined;
 }
 
 export const hasDartExecutable = (pathToTest: string) => hasExecutable(pathToTest, dartExecutableName);

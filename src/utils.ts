@@ -8,7 +8,7 @@ import { commands, Position, Range, TextDocument, Uri, window, workspace, Worksp
 import { config } from "./config";
 import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
 import { referencesFlutterSdk } from "./sdk/utils";
-import { getExtensionLogPath } from "./utils/log";
+import { getExtensionLogPath, logError } from "./utils/log";
 
 export const extensionVersion = getExtensionVersion();
 export const vsCodeVersionConstraint = getVsCodeVersionConstraint();
@@ -49,7 +49,7 @@ export function isDartWorkspaceFolder(folder: WorkspaceFolder): boolean {
 	return true;
 }
 
-export function resolvePaths(p: string) {
+export function resolvePaths(p: string | undefined) {
 	if (!p) return null;
 	if (p.startsWith("~/"))
 		return path.join(os.homedir(), p.substr(2));
@@ -98,9 +98,9 @@ export function toRangeOnLine(location: Location): Range {
 	return new Range(startPos, startPos.translate(0, location.length));
 }
 
-export function getSdkVersion(sdkRoot: string): string {
+export function getSdkVersion(sdkRoot: string): string | undefined {
 	if (!sdkRoot)
-		return null;
+		return undefined;
 	try {
 		return fs
 			.readFileSync(path.join(sdkRoot, "version"), "utf8")
@@ -111,7 +111,8 @@ export function getSdkVersion(sdkRoot: string): string {
 			.join("\n")
 			.trim();
 	} catch (e) {
-		return null;
+		logError(e);
+		return undefined;
 	}
 }
 
@@ -203,8 +204,8 @@ export function getLatestSdkVersion(): PromiseLike<string> {
 		};
 
 		const req = https.request(options, (resp) => {
-			if (resp.statusCode < 200 || resp.statusCode > 300) {
-				reject({ message: `Failed to get Dart SDK Version ${resp.statusCode}: ${resp.statusMessage}` });
+			if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
+				reject({ message: `Failed to get Dart SDK Version ${resp && resp.statusCode}: ${resp && resp.statusMessage}` });
 			} else {
 				resp.on("data", (d) => {
 					resolve(JSON.parse(d.toString()).version);
@@ -236,10 +237,10 @@ export function openInBrowser(url: string) {
 }
 
 export class Sdks {
-	public dart: string;
-	public flutter: string;
-	public fuchsia: string;
-	public projectType: ProjectType;
+	public dart?: string;
+	public flutter?: string;
+	public fuchsia?: string;
+	public projectType?: ProjectType;
 }
 
 export enum ProjectType {

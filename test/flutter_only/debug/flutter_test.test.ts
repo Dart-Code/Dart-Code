@@ -25,7 +25,7 @@ describe("flutter test debugger", () => {
 		defer(() => dc.stop());
 	});
 
-	async function startDebugger(script: vs.Uri | string): Promise<vs.DebugConfiguration> {
+	async function startDebugger(script?: vs.Uri | string): Promise<vs.DebugConfiguration> {
 		const config = await getLaunchConfiguration(script);
 		await dc.start(config.debugServer);
 		return config;
@@ -89,7 +89,7 @@ describe("flutter test debugger", () => {
 
 	it("runs the open script if no file is provided", async () => {
 		await openFile(flutterTestOtherFile);
-		const config = await startDebugger(null);
+		const config = await startDebugger(undefined);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", `✓ ${testPrefix}Other test\n`),
@@ -156,8 +156,9 @@ describe("flutter test debugger", () => {
 
 		const variables = await dc.getTopFrameVariables("Exception") as DebugProtocol.Variable[];
 		assert.ok(variables);
-		const v = variables.find((v) => v.name === "message");
+		let v = variables.find((v) => v.name === "message");
 		assert.ok(v);
+		v = v!;
 		assert.equal(v.evaluateName, "$e.message");
 		assert.ok(v.value.startsWith(`"Expected: exactly one matching node in the widget tree`));
 	});
