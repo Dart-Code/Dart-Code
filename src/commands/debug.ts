@@ -174,8 +174,6 @@ export class DebugCommands {
 			analytics.logDebuggerRestart();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.requestCoverageUpdate", (scriptUris: string[]) => {
-			if (!debugSessions.length)
-				return;
 			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "requestCoverageUpdate", { scriptUris }));
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.coverageFilesUpdate", (scriptUris: string[]) => {
