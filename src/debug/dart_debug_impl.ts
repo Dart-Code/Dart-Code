@@ -852,7 +852,7 @@ export class DartDebugSession extends DebugSession {
 
 				if (expression === "$e") {
 					response.body = {
-						result: await this.getExceptionText(thread.ref, exceptionInstanceRef),
+						result: await this.fullValueAsString(thread.ref, exceptionInstanceRef),
 						variablesReference: thread.exceptionReference,
 					};
 					this.sendResponse(response);
@@ -994,7 +994,7 @@ export class DartDebugSession extends DebugSession {
 				reason = "step";
 			} else if (kind === "PauseException") {
 				reason = "exception";
-				exceptionText = await this.getExceptionText(event.isolate, event.exception);
+				exceptionText = await this.fullValueAsString(event.isolate, event.exception);
 			}
 
 			thread.handlePaused(event.atAsyncSuspension, event.exception);
@@ -1006,13 +1006,14 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	private async getExceptionText(isolate: VMIsolateRef, exception: VMInstanceRef): Promise<string> {
-		let exceptionText: string;
-		if (!exception.valueAsStringIsTruncated)
-			exceptionText = this.valueAsString(exception, false);
-		if (!exceptionText)
-			exceptionText = await this.callToString(isolate, exception, true);
-		return exceptionText;
+	// Like valueAsString, but will call toString() if the thing is truncated.
+	private async fullValueAsString(isolate: VMIsolateRef, instanceRef: VMInstanceRef): Promise<string> {
+		let text: string;
+		if (!instanceRef.valueAsStringIsTruncated)
+			text = this.valueAsString(instanceRef, false);
+		if (!text)
+			text = await this.callToString(isolate, instanceRef, true);
+		return text;
 	}
 
 	private async anyBreakpointConditionReturnsTrue(breakpoints: DebugProtocol.SourceBreakpoint[], thread: ThreadInfo) {
