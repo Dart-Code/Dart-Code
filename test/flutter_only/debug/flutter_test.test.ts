@@ -25,17 +25,9 @@ describe("flutter test debugger", () => {
 		defer(() => dc.stop());
 	});
 
-	async function startDebugger(script: vs.Uri | string, throwOnError = true): Promise<vs.DebugConfiguration> {
+	async function startDebugger(script: vs.Uri | string): Promise<vs.DebugConfiguration> {
 		const config = await getLaunchConfiguration(script);
 		await dc.start(config.debugServer);
-
-		// Throw to fail tests if we get any error output to aid debugging.
-		if (throwOnError) {
-			dc.on("output", (event: DebugProtocol.OutputEvent) => {
-				if (event.body.category === "stderr")
-					throw new Error(event.body.output);
-			});
-		}
 		return config;
 	}
 
