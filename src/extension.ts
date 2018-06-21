@@ -450,7 +450,8 @@ function getSettingsThatRequireRestart() {
 		+ config.closingLabels
 		+ config.analyzeAngularTemplates
 		+ config.normalizeWindowsDriveLetters
-		+ config.analysisServerFolding;
+		+ config.analysisServerFolding
+		+ config.previewHotReloadCoverageMarkers;
 }
 
 export async function deactivate(isRestart: boolean = false): Promise<void> {
