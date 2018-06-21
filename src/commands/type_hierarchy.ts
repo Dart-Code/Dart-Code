@@ -14,12 +14,12 @@ export class TypeHierarchyCommand implements vs.Disposable {
 	}
 
 	private async showTypeHierarchy(): Promise<void> {
-		if (!editors.hasActiveDartEditor()) {
+		const editor = editors.getActiveDartEditor();
+		if (!editor) {
 			vs.window.showWarningMessage("No active Dart editor.");
 			return;
 		}
 
-		const editor = vs.window.activeTextEditor;
 		const document = editor.document;
 
 		const response = await this.analyzer.searchGetTypeHierarchy({
