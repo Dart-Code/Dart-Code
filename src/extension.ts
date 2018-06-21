@@ -74,7 +74,7 @@ let analytics: Analytics;
 let showTodos: boolean;
 let showLintNames: boolean;
 let previousSettings: string;
-let extensionLogger: { dispose: () => Promise<void> };
+let extensionLogger: { dispose: () => Promise<void> | void };
 
 export function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
 	if (!extensionLogger)

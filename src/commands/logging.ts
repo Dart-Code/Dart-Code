@@ -17,7 +17,7 @@ export class LoggingCommands implements vs.Disposable {
 		);
 	}
 
-	private lastUsedLogFolder: string;
+	private lastUsedLogFolder?: string;
 	private async startLogging(): Promise<void> {
 		const defaultFilename = this.getDefaultFilename();
 		// Use last folder or inside first workspace folder.

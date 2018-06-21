@@ -17,22 +17,22 @@ import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, F
 // completionsRequest(response: DebugProtocol.CompletionsResponse, args: DebugProtocol.CompletionsArguments): void;
 export class DartDebugSession extends DebugSession {
 	// TODO: Tidy all this up
-	protected childProcess: child_process.ChildProcess;
+	protected childProcess?: child_process.ChildProcess;
 	protected additionalPidsToTerminate: number[] = [];
 	// We normally track the pid from Observatory to terminate the VM afterwards, but for Flutter Run it's
 	// a remote PID and therefore doesn't make sense to try and terminate.
 	protected allowTerminatingObservatoryVmPid = true;
 	private processExited = false;
-	public observatory: ObservatoryConnection;
+	public observatory?: ObservatoryConnection;
 	protected cwd?: string;
-	private logFile: string;
-	private logStream: fs.WriteStream;
+	private logFile?: string;
+	private logStream?: fs.WriteStream;
 	public debugSdkLibraries: boolean;
 	public debugExternalLibraries: boolean;
 	public evaluateGettersInDebugViews: boolean;
 	public flutterTrackWidgetCreation: boolean;
 	protected threadManager: ThreadManager;
-	public packageMap: PackageMap;
+	public packageMap?: PackageMap;
 	protected sendStdOutToConsole: boolean = true;
 	protected requiresProgram: boolean = true;
 	protected pollforMemoryMs?: number; // If set, will poll for memory usage and send events back.
@@ -279,10 +279,10 @@ export class DartDebugSession extends DebugSession {
 				this.log(`Observatory connection closed: ${code} (${message})`);
 				if (this.logStream) {
 					this.logStream.end();
-					this.logStream = null;
+					this.logStream = undefined;
 					// Wipe out the filename so if a message arrives late, it doesn't
 					// wipe out the logfile with just a "process exited" or similar message.
-					this.logFile = null;
+					this.logFile = undefined;
 				}
 				// If we don't have a process (eg. we're attached) then this is our signal to quit, since we won't
 				// get a process exit event.
@@ -321,7 +321,7 @@ export class DartDebugSession extends DebugSession {
 			// Don't do this - because the process might ignore our kill (eg. test framework lets the current
 			// test finish) so we may need to send again it we get another disconnectRequest.
 			// We also use childProcess == null to mean we're attached.
-			// this.childProcess = null;
+			// this.childProcess = undefined;
 		} else if (this.observatory) {
 			try {
 				this.log(`${request}: Disconnecting from process...`);
@@ -537,13 +537,13 @@ export class DartDebugSession extends DebugSession {
 
 				const uri = location.script.uri;
 				const shortName = this.convertVMUriToUserName(uri);
-				let sourcePath = this.convertVMUriToSourcePath(uri);
+				let sourcePath: string | undefined = this.convertVMUriToSourcePath(uri);
 				let canShowSource = fs.existsSync(sourcePath);
 
 				// Download the source if from a "dart:" uri.
 				let sourceReference: number;
 				if (uri.startsWith("dart:")) {
-					sourcePath = null;
+					sourcePath = undefined;
 					sourceReference = thread.storeData(location.script);
 					canShowSource = true;
 				}

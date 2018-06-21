@@ -162,7 +162,7 @@ export class EditCommands implements vs.Disposable {
 		}
 
 		// If we weren't applying sequentially
-		if (!applyEditsSequentially) {
+		if (changes) {
 			await vs.workspace.applyEdit(changes);
 		}
 

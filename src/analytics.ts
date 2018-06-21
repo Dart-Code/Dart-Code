@@ -33,9 +33,9 @@ enum TimingVariable {
 
 export class Analytics {
 	public sdks: Sdks;
-	public sdkVersion: string;
-	public flutterSdkVersion: string;
-	public analysisServerVersion: string;
+	public sdkVersion?: string;
+	public flutterSdkVersion?: string;
+	public analysisServerVersion?: string;
 
 	constructor(sdks: Sdks) {
 		this.sdks = sdks;

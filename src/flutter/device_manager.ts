@@ -86,10 +86,10 @@ export class FlutterDeviceManager implements vs.Disposable {
 			this.statusBarItem.tooltip = `${this.devices.length} Devices Connected`;
 			this.statusBarItem.command = "flutter.selectDevice";
 		} else if (this.devices.length === 1) {
-			this.statusBarItem.tooltip = null;
-			this.statusBarItem.command = null;
+			this.statusBarItem.tooltip = undefined;
+			this.statusBarItem.command = undefined;
 		} else {
-			this.statusBarItem.tooltip = null;
+			this.statusBarItem.tooltip = undefined;
 			this.statusBarItem.command = "flutter.launchEmulator";
 		}
 	}

@@ -4,9 +4,9 @@ import * as util from "./utils";
 
 export const UPGRADE_TO_WORKSPACE_FOLDERS = "Mark Projects as Workspace Folders";
 
-export function locateBestProjectRoot(folder: string): string {
+export function locateBestProjectRoot(folder: string): string | undefined {
 	if (!folder || !util.isWithinWorkspace(folder))
-		return null;
+		return undefined;
 
 	let dir = folder;
 	while (dir !== path.dirname(dir)) {
@@ -15,7 +15,7 @@ export function locateBestProjectRoot(folder: string): string {
 		dir = path.dirname(dir);
 	}
 
-	return null;
+	return undefined;
 }
 
 function getChildProjects(folder: string, levelsToGo: number): string[] {

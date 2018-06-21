@@ -85,15 +85,17 @@ export function addToLogHeader(f: () => string) {
 	}
 }
 
-export function logTo(file: string, logCategories?: LogCategory[]): ({ dispose: () => Promise<void> }) {
+export function logTo(file: string, logCategories?: LogCategory[]): ({ dispose: () => Promise<void> | void }) {
 	if (!file || !path.isAbsolute(file))
 		throw new Error("Path passed to logTo must be an absolute path");
 	const time = () => `[${(new Date()).toTimeString()}] `;
-	let logStream = fs.createWriteStream(file);
+	let logStream: fs.WriteStream | undefined = fs.createWriteStream(file);
 	logStream.write(getLogHeader());
 	logStream.write(`${(new Date()).toDateString()} ${time()}Log file started${platformEol}`);
-	let logger = onLog((e) => {
+	let logger: vs.Disposable | undefined = onLog((e) => {
 		if (logCategories && logCategories.indexOf(e.category) === -1)
+			return;
+		if (!logStream)
 			return;
 
 		const message = _.trimEnd(e.message);
@@ -105,16 +107,16 @@ export function logTo(file: string, logCategories?: LogCategory[]): ({ dispose: 
 		logStream.write(`${prefix}${logMessage}${platformEol}`);
 	});
 	return {
-		dispose(): Promise<void> {
+		dispose(): Promise<void> | void {
 			if (logger) {
 				logger.dispose();
-				logger = null;
+				logger = undefined;
 			}
 			if (logStream) {
 				logStream.write(`${(new Date()).toDateString()} ${time()}Log file ended${platformEol}`);
 				return new Promise((resolve) => {
 					logStream.end(resolve);
-					logStream = null;
+					logStream = undefined;
 				});
 			}
 		},

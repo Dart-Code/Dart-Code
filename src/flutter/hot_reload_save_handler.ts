@@ -3,7 +3,7 @@ import { config } from "../config";
 import { shouldTriggerHotReload } from "../utils";
 
 export function setUpHotReloadOnSave(context: ExtensionContext, diagnostics: DiagnosticCollection) {
-	let hotReloadDelayTimer: NodeJS.Timer;
+	let hotReloadDelayTimer: NodeJS.Timer | undefined;
 	context.subscriptions.push(workspace.onDidSaveTextDocument((td) => {
 		if (!config.flutterHotReloadOnSave || !shouldTriggerHotReload(td))
 			return;
@@ -21,7 +21,7 @@ export function setUpHotReloadOnSave(context: ExtensionContext, diagnostics: Dia
 		}
 
 		hotReloadDelayTimer = setTimeout(() => {
-			hotReloadDelayTimer = null;
+			hotReloadDelayTimer = undefined;
 			commands.executeCommand("flutter.hotReload");
 		}, 200);
 	}));

@@ -80,7 +80,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			// If we still don't have an entry point, the user will have to provide it.
 			if (!allowProgramlessRun && !debugConfig.program) {
 				// Set type=null which causes launch.json to open.
-				debugConfig.type = null;
+				debugConfig.type = undefined;
 				logWarn("No program was set and programlessRun is not allowed");
 				window.showInformationMessage("Set the 'program' value in your launch config (eg 'bin/main.dart') then launch again");
 				return debugConfig;
@@ -91,7 +91,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 			if (!debugConfig.observatoryUri) {
 				// Set type=null which causes launch.json to open.
-				debugConfig.type = null;
+				debugConfig.type = undefined;
 				logWarn("No Observatory URI/port was provided");
 				window.showInformationMessage("You must provide an Observatory URI/port to attach a debugger");
 				return debugConfig;
@@ -143,7 +143,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			// Fetch a list of emulators
 			if (!await this.deviceManager.promptForAndLaunchEmulator(true)) {
 				// Set type=null which causes launch.json to open.
-				debugConfig.type = null;
+				debugConfig.type = undefined;
 				window.showInformationMessage("Cannot launch without an active device");
 				return debugConfig;
 			}
