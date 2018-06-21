@@ -49,7 +49,7 @@ export class LoggingCommands implements vs.Disposable {
 			})),
 			{
 				canPickMany: true,
-				placeHolder: "Select which categories to include on the log",
+				placeHolder: "Select which categories to include in the log",
 			},
 		);
 		if (!selectedLogCategories || !selectedLogCategories.length)
