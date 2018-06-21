@@ -3,9 +3,10 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { config as conf } from "../../../src/config";
+import { platformEol } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
 import { DartDebugClient } from "../../dart_debug_client";
-import { activate, defer, ext, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, openFile, platformEol, positionOf } from "../../helpers";
+import { activate, defer, ext, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, openFile, positionOf } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
