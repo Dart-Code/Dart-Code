@@ -153,7 +153,7 @@ describe("flutter test debugger", () => {
 
 	it.skip("provides exception details when stopped on exception", async () => {
 		await openFile(flutterTestBrokenFile);
-		const config = await startDebugger(flutterTestBrokenFile, false);
+		const config = await startDebugger(flutterTestBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {}),
@@ -170,7 +170,7 @@ describe("flutter test debugger", () => {
 
 	it("send failure results for failing tests", async () => {
 		await openFile(flutterTestBrokenFile);
-		const config = await startDebugger(flutterTestBrokenFile, false);
+		const config = await startDebugger(flutterTestBrokenFile);
 		config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
