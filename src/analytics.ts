@@ -100,7 +100,7 @@ export class Analytics {
 		this.send(data);
 	}
 
-	private send(customData: any, resourceUri?: Uri): PromiseLike<void> {
+	private async send(customData: any, resourceUri?: Uri): Promise<void> {
 		if (!config.allowAnalytics || process.env.DART_CODE_IS_TEST_RUN)
 			return;
 
@@ -143,7 +143,7 @@ export class Analytics {
 			port: 443,
 		};
 
-		return new Promise((resolve, reject) => {
+		await new Promise((resolve, reject) => {
 			const req = https.request(options, (resp) => {
 				if (debug)
 					resp.on("data", (c) => {
@@ -160,7 +160,7 @@ export class Analytics {
 						}
 					});
 
-				if (resp.statusCode < 200 || resp.statusCode > 300) {
+				if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
 					logInfo(`Failed to send analytics ${resp.statusCode}: ${resp.statusMessage}`);
 				}
 				resolve();

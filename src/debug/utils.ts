@@ -43,7 +43,7 @@ export interface IAmDisposable {
 	dispose(): void;
 }
 
-export function safeSpawn(workingDirectory: string, binPath: string, args: string[], envOverrides?: any): child_process.ChildProcess {
+export function safeSpawn(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any): child_process.ChildProcess {
 	// Spawning processes on Windows with funny symbols in the path requires quoting. However if you quote an
 	// executable with a space in its path and an argument also has a space, you have to then quote all of the
 	// arguments too!\

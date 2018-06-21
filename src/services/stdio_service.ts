@@ -26,7 +26,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		this.currentLogFile = getLogFile();
 	}
 
-	protected createProcess(workingDirectory: string, binPath: string, args: string[], envOverrides?: any) {
+	protected createProcess(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any) {
 		this.logTraffic(`Spawning ${binPath} with args ${JSON.stringify(args)}`);
 		if (workingDirectory)
 			this.logTraffic(`..  in ${workingDirectory}`);

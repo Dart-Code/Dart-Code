@@ -47,13 +47,17 @@ export class DebugCommands {
 					session.progressPromise = new PromiseCompleter();
 					vs.window.withProgress(
 						{ location: vs.ProgressLocation.Notification, title: e.body.message },
-						(_) => session.progressPromise.promise,
+						(_) => {
+							if (!session.progressPromise)
+								session.progressPromise = new PromiseCompleter();
+							return session.progressPromise.promise;
+						},
 					);
 				}
 				if (e.body.finished) {
 					if (session.progressPromise) {
 						session.progressPromise.resolve();
-						session.progressPromise = null;
+						session.progressPromise = undefined;
 					}
 				}
 			} else if (e.event === "dart.observatoryUri") {
@@ -243,7 +247,7 @@ export class DebugCommands {
 		}));
 	}
 
-	private async promptForDebugSession(): Promise<DartDebugSessionInformation> {
+	private async promptForDebugSession(): Promise<DartDebugSessionInformation | undefined> {
 		const selectedItem = await vs.window.showQuickPick(
 			debugSessions.map((s) => ({
 				description: `Started ${s.sessionStart.toLocaleTimeString()}`,
@@ -323,8 +327,8 @@ export class DebugCommands {
 }
 
 class DartDebugSessionInformation {
-	public observatoryUri: string;
-	public progressPromise: PromiseCompleter<void>;
+	public observatoryUri?: string;
+	public progressPromise?: PromiseCompleter<void>;
 	public readonly sessionStart: Date = new Date();
 	constructor(public readonly session: vs.DebugSession) { }
 }
