@@ -9,12 +9,13 @@ import { defer } from "./helpers";
 
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string, name: string, value: string | { starts?: string, ends?: string }) {
 	assert.ok(variables && variables.length, "No variables given to search");
-	const v = variables.find((v) => v.name === name);
+	let v = variables.find((v) => v.name === name);
 	assert.ok(
 		v,
 		`Couldn't find variable ${name} in\n`
 		+ variables.map((v) => `        ${v.name}: ${v.value}`).join("\n"),
 	);
+	v = v!;
 	assert.equal(v.evaluateName, evaluateName);
 	if (typeof value === "string")
 		assert.equal(v.value, value);

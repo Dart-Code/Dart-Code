@@ -7,7 +7,7 @@ import { activate, extApi, flutterHelloWorldFolder, flutterHelloWorldMainFile } 
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
-		const wfs = vs.workspace.workspaceFolders;
+		const wfs = vs.workspace.workspaceFolders || [];
 		assert.equal(wfs.length, 1);
 		assert.ok(
 			fsPath(wfs[0].uri).endsWith(path.sep + "test_projects"),
@@ -20,7 +20,7 @@ describe("extension", () => {
 	it("resolves the correct debug config for a nested project", async () => {
 		await activate();
 		const resolvedConfig = await extApi.debugProvider.resolveDebugConfiguration(
-			vs.workspace.workspaceFolders[0],
+			vs.workspace.workspaceFolders![0],
 			{
 				name: "Dart",
 				program: fsPath(flutterHelloWorldMainFile),

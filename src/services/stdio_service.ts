@@ -7,13 +7,13 @@ import { getLogHeader, logError } from "../utils/log";
 
 export abstract class StdIOService<T> implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
-	public process: child_process.ChildProcess;
+	public process?: child_process.ChildProcess;
 	protected additionalPidsToTerminate: number[] = [];
 	private nextRequestID = 1;
 	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] } = {};
 	private messageBuffer: string[] = [];
 	private currentLogFile: string;
-	private logStream: fs.WriteStream;
+	private logStream?: fs.WriteStream;
 	private requestErrorSubscriptions: Array<(notification: any) => void> = [];
 	private processExited = false;
 

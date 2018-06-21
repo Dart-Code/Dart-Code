@@ -22,7 +22,9 @@ export class GoToSuperCommand implements vs.Disposable {
 		const position = editor.selection.start;
 
 		const outlineNode = findNearestOutlineNode(document, position);
-		const offset = outlineNode ? outlineNode.element.location.offset : document.offsetAt(position);
+		const offset = outlineNode && outlineNode.element && outlineNode.element.location
+			? outlineNode.element.location.offset
+			: document.offsetAt(position);
 
 		const hierarchy = await this.analyzer.searchGetTypeHierarchy({
 			file: fsPath(document.uri),

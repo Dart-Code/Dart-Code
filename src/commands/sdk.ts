@@ -22,7 +22,7 @@ export class SdkCommands {
 	private analytics: Analytics;
 	private flutterScreenshotPath: string;
 	// A map of any in-progress commands so we can terminate them if we want to run another.
-	private runningCommands: { [workspaceUriAndCommand: string]: child_process.ChildProcess; } = {};
+	private runningCommands: { [workspaceUriAndCommand: string]: child_process.ChildProcess | undefined; } = {};
 	constructor(context: vs.ExtensionContext, sdks: Sdks, analytics: Analytics) {
 		this.sdks = sdks;
 		this.analytics = analytics;
@@ -245,7 +245,7 @@ export class SdkCommands {
 					existingProcess.on("close", () => this.runCommandInFolder(shortPath, commandName, folder, binPath, args, true).then(resolve, reject));
 					existingProcess.kill();
 
-					this.runningCommands[commandId] = null;
+					this.runningCommands[commandId] = undefined;
 					return;
 				} else if (!isStartingBecauseOfTermination) {
 					channel.clear();
