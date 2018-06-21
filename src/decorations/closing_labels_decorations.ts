@@ -71,15 +71,15 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	private setTrackingFile(editor: vs.TextEditor) {
 		if (editor && isAnalyzable(editor.document)) {
 			this.activeEditor = editor;
-			this.closingLabels = null;
+			this.closingLabels = undefined;
 
 			this.analyzer.forceNotificationsFor(fsPath(editor.document.uri));
 		} else
-			this.activeEditor = null;
+			this.activeEditor = undefined;
 	}
 
 	public dispose() {
-		this.activeEditor = null;
+		this.activeEditor = undefined;
 		this.subscriptions.forEach((s) => s.dispose());
 	}
 }

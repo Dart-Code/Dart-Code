@@ -201,7 +201,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		const newLogFile = this.getLogFile();
 		if (newLogFile !== this.currentLogFile && this.logStream) {
 			this.logStream.end();
-			this.logStream = null;
+			this.logStream = undefined;
 		}
 
 		if (!newLogFile)
@@ -242,7 +242,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			// This tends to throw a lot because the shell process quit when we terminated the related
 			// process above, so just swallow the error.
 		}
-		this.process = null;
+		this.process = undefined;
 
 		this.disposables.forEach((d) => d.dispose());
 	}
