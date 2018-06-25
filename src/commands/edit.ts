@@ -131,17 +131,7 @@ export class EditCommands implements vs.Disposable {
 		// them assuming all previous edits have already been made. This means if the server provides us a
 		// set of edits where any edits offset is *equal to or greater than* a previous edit, it will do the wrong thing.
 		// If this happens; we will fall back to sequential edits and write a warning.
-		let hasProblematicEdits = false;
-		const priorEdits: as.SourceEdit[] = [];
-		outer_loop:
-		for (const edit of change.edits) {
-			for (const e of edit.edits) {
-				hasProblematicEdits = !!priorEdits.find((pe) => pe.offset <= e.offset);
-				if (hasProblematicEdits)
-					break outer_loop;
-				priorEdits.push(e);
-			}
-		}
+		const hasProblematicEdits = hasOverlappingEdits(change);
 
 		if (hasProblematicEdits) {
 			logWarn("Falling back to sequential edits due to overlapping edits in server.");
@@ -249,4 +239,18 @@ export class EditCommands implements vs.Disposable {
 	private snippetStringEscape(value: string): string {
 		return value.replace(/\$|}|\\|,/g, "\\$&");
 	}
+}
+
+export function hasOverlappingEdits(change: as.SourceChange) {
+	let hasProblematicEdits = false;
+	const priorEdits: as.SourceEdit[] = [];
+	outer_loop: for (const edit of change.edits) {
+		for (const e of edit.edits) {
+			hasProblematicEdits = !!priorEdits.find((pe) => pe.offset <= e.offset);
+			if (hasProblematicEdits)
+				break outer_loop;
+			priorEdits.push(e);
+		}
+	}
+	return hasProblematicEdits;
 }
