@@ -242,15 +242,15 @@ export class EditCommands implements vs.Disposable {
 }
 
 export function hasOverlappingEdits(change: as.SourceChange) {
-	let hasProblematicEdits = false;
-	const priorEdits: as.SourceEdit[] = [];
-	outer_loop: for (const edit of change.edits) {
+	const priorEdits: { [file: string]: as.SourceEdit[] } = {};
+	for (const edit of change.edits) {
+		if (!priorEdits[edit.file])
+			priorEdits[edit.file] = [];
 		for (const e of edit.edits) {
-			hasProblematicEdits = !!priorEdits.find((pe) => pe.offset <= e.offset);
-			if (hasProblematicEdits)
-				break outer_loop;
-			priorEdits.push(e);
+			if (priorEdits[edit.file].find((pe) => pe.offset <= e.offset))
+				return true;
+			priorEdits[edit.file].push(e);
 		}
 	}
-	return hasProblematicEdits;
+	return false;
 }
