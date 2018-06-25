@@ -18,10 +18,16 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    myTopLevelFunction();
     return new Text(
       // BREAKPOINT1^
       'Hello, world!',
       textDirection: TextDirection.ltr,
     );
   }
+}
+
+myTopLevelFunction() {
+  print("Test");
+  // BREAKPOINT2^
 }

@@ -1,3 +1,4 @@
+import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
@@ -122,6 +123,70 @@ describe("flutter run debugger", () => {
 				path: fsPath(flutterHelloWorldMainFile),
 			}),
 		]);
+	});
+
+	it.skip("can evaluate simple expressions at breakpoint", async () => {
+		await openFile(flutterHelloWorldMainFile);
+		const config = await startDebugger(flutterHelloWorldMainFile);
+		await Promise.all([
+			dc.hitBreakpoint(config, {
+				line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
+				path: fsPath(flutterHelloWorldMainFile),
+			}),
+		]);
+
+		const evaluateResult = await dc.evaluate(`"test"`);
+		assert.ok(evaluateResult);
+		assert.equal(evaluateResult.result, `"test"`);
+		assert.equal(evaluateResult.variablesReference, 0);
+	});
+
+	it.skip("can evaluate complex expression expressions at breakpoint", async () => {
+		await openFile(flutterHelloWorldMainFile);
+		const config = await startDebugger(flutterHelloWorldMainFile);
+		await Promise.all([
+			dc.hitBreakpoint(config, {
+				line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
+				path: fsPath(flutterHelloWorldMainFile),
+			}),
+		]);
+
+		const evaluateResult = await dc.evaluate(`(new DateTime.now()).year`);
+		assert.ok(evaluateResult);
+		assert.equal(evaluateResult.result, (new Date()).getFullYear());
+		assert.equal(evaluateResult.variablesReference, 0);
+	});
+
+	it.skip("can evaluate an expression that returns a variable at breakpoint", async () => {
+		await openFile(flutterHelloWorldMainFile);
+		const config = await startDebugger(flutterHelloWorldMainFile);
+		await Promise.all([
+			dc.hitBreakpoint(config, {
+				line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
+				path: fsPath(flutterHelloWorldMainFile),
+			}),
+		]);
+
+		const evaluateResult = await dc.evaluate(`new DateTime.now()`);
+		assert.ok(evaluateResult);
+		assert.equal(evaluateResult.result, "TODO...");
+		assert.ok(evaluateResult.variablesReference);
+	});
+
+	it.skip("can evaluate complex expression expressions when stopped in a top level function", async () => {
+		await openFile(flutterHelloWorldMainFile);
+		const config = await startDebugger(flutterHelloWorldMainFile);
+		await Promise.all([
+			dc.hitBreakpoint(config, {
+				line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
+				path: fsPath(flutterHelloWorldMainFile),
+			}),
+		]);
+
+		const evaluateResult = await dc.evaluate(`(new DateTime.now()).year`);
+		assert.ok(evaluateResult);
+		assert.equal(evaluateResult.result, (new Date()).getFullYear());
+		assert.equal(evaluateResult.variablesReference, 0);
 	});
 
 	it.skip("stops on exception", async () => {
