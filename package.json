@@ -465,12 +465,12 @@
 				},
 				{
 					"command": "flutter.openInAndroidStudio",
-					"when": "resourceFilename == android && dart-code:flutterProjectLoaded",
+					"when": "explorerResourceIsFolder && resourceFilename == android && dart-code:flutterProjectLoaded",
 					"group": "1.5_open_ext@1"
 				},
 				{
 					"command": "flutter.openInXcode",
-					"when": "resourceFilename == ios && dart-code:flutterProjectLoaded && dart-code:platformName == mac",
+					"when": "explorerResourceIsFolder && resourceFilename == ios && dart-code:flutterProjectLoaded && dart-code:platformName == mac",
 					"group": "1.5_open_ext@1"
 				}
 			],
