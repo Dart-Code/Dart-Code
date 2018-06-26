@@ -89,7 +89,7 @@ export class SdkCommands {
 
 				// Only prompt the user if variable has never been set
 				if (!this.screenshotUri) {
-					var selectedFolder =
+					let selectedFolder =
 						await window.showOpenDialog({ canSelectFolders: true, canSelectMany: false, openLabel: "Select folder to save screenshot" });
 					if (selectedFolder && selectedFolder.length > 0) {
 						this.screenshotUri = selectedFolder[0].path
