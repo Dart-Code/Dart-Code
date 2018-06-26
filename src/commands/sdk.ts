@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { ProgressLocation, Uri } from "vscode";
+import { ProgressLocation, Uri, window } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { globalFlutterArgs, safeSpawn } from "../debug/utils";
@@ -82,6 +82,21 @@ export class SdkCommands {
 				// TODO: Move this to a reusable event.
 				DartHoverProvider.clearPackageMapCaches();
 			}
+		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", async (uri) => {
+			if (!uri || !(uri instanceof Uri)) {
+				var selectedFolder =
+					await window.showOpenDialog({ canSelectFolders: true, canSelectMany: false, openLabel: "Select folder to save screenshot" });
+
+				if (selectedFolder && selectedFolder.length > 0) {
+					uri = selectedFolder[0].path
+				} else {
+					// Do nothing if the user canceled the folder selection
+					return
+				}
+			}
+
+			return this.runFlutterInFolder(uri, ["screenshot"], "screenshot");
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => {
 			return vs.commands.executeCommand("dart.upgradePackages", selection);

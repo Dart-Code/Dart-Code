@@ -261,6 +261,11 @@
 				"command": "flutter.openInXcode",
 				"title": "Open in Xcode",
 				"category": "Flutter"
+			},
+			{
+				"command": "flutter.screenshot",
+				"title": "Save Screenshot",
+				"category": "Flutter"
 			}
 		],
 		"keybindings": [
@@ -407,6 +412,10 @@
 				{
 					"command": "flutter.openInXcode",
 					"when": "false"
+				},
+				{
+					"command": "flutter.screenshot",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				}
 			],
 			"editor/title": [
