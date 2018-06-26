@@ -20,6 +20,7 @@ const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
 export class SdkCommands {
 	private sdks: Sdks;
 	private analytics: Analytics;
+	private screenshotUri: string;
 	// A map of any in-progress commands so we can terminate them if we want to run another.
 	private runningCommands: { [workspaceUriAndCommand: string]: child_process.ChildProcess; } = {};
 	constructor(context: vs.ExtensionContext, sdks: Sdks, analytics: Analytics) {
@@ -85,18 +86,21 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", async (uri) => {
 			if (!uri || !(uri instanceof Uri)) {
-				var selectedFolder =
-					await window.showOpenDialog({ canSelectFolders: true, canSelectMany: false, openLabel: "Select folder to save screenshot" });
 
-				if (selectedFolder && selectedFolder.length > 0) {
-					uri = selectedFolder[0].path
-				} else {
-					// Do nothing if the user canceled the folder selection
-					return
+				// Only prompt the user if variable has never been set
+				if (!this.screenshotUri) {
+					var selectedFolder =
+						await window.showOpenDialog({ canSelectFolders: true, canSelectMany: false, openLabel: "Select folder to save screenshot" });
+					if (selectedFolder && selectedFolder.length > 0) {
+						this.screenshotUri = selectedFolder[0].path
+					} else {
+						// Do nothing if the user canceled the folder selection
+						return
+					}
 				}
 			}
 
-			return this.runFlutterInFolder(uri, ["screenshot"], "screenshot");
+			return this.runFlutterInFolder(this.screenshotUri, ["screenshot"], "screenshot");
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => {
 			return vs.commands.executeCommand("dart.upgradePackages", selection);
