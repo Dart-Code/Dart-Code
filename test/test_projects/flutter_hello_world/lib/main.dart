@@ -28,6 +28,6 @@ class MyHomePage extends StatelessWidget {
 }
 
 myTopLevelFunction() {
-  print("Test");
+  const _ = 1;
   // BREAKPOINT2^
 }
