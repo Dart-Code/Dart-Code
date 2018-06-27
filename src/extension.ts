@@ -50,7 +50,7 @@ import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingS
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { fsPath } from "./utils";
-import { LogCategory, addToLogHeader, log, logError, logTo } from "./utils/log";
+import { LogCategory, addToLogHeader, clearLogHeader, log, logError, logTo } from "./utils/log";
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestResultsProvider } from "./views/test_view";
 
@@ -380,6 +380,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 }
 
 function buildLogHeaders(sdks: util.Sdks) {
+	clearLogHeader();
 	addToLogHeader(() => `Dart Code extension: ${util.extensionVersion}`);
 	addToLogHeader(() => `Flutter extension: ${vs.extensions.getExtension(flutterExtensionIdentifier).packageJSON.version}`);
 	addToLogHeader(() => `Platform: ${platformName}`);

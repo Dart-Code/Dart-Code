@@ -488,6 +488,10 @@ describe("dart cli debugger", () => {
 		});
 
 		it("to a paused Dart script and can set breakpoints", async () => {
+			// Test may be flaky:
+			//   2018-06-26 Mac/Stable Dart/Stable Code:
+			//       https://dartcode.org/test-results/?master/79805900c2a977148ccda558024fc4daec1ac7d3
+			//       https://test-results.dartcode.org/logs/master/79805900c2a977148ccda558024fc4daec1ac7d3/osx/dart_only_stable_stable/dart_cli_debugger_attaches_to_a_paused_dart_script_and_can_set_breakpoints.txt
 			const process = spawnProcessPaused(await getLaunchConfiguration(helloWorldMainFile));
 			const observatoryUri = await process.observatoryUri;
 

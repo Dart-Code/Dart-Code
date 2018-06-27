@@ -77,6 +77,9 @@ export function handleDebugLogEvent(event: string, message: string) {
 }
 
 const logHeader: string[] = [];
+export function clearLogHeader() {
+	logHeader.length = 0;
+}
 export function addToLogHeader(f: () => string) {
 	try {
 		logHeader.push(f().replace("\r", "").replace("\n", "\r\n"));

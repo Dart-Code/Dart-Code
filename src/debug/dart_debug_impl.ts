@@ -237,8 +237,10 @@ export class DartDebugSession extends DebugSession {
 						// TODO: Is it valid to assume the first (only?) isolate with a rootLib is the one we care about here?
 						// If it's always the first, could we even just query the first instead of getting them all before we
 						// start the other processing?
-						const rootIsolateResult = isolates.find((isolate) => (isolate.result as VMIsolate).rootLib !== null);
+						const rootIsolateResult = isolates.find((isolate) => !!(isolate.result as VMIsolate).rootLib);
 						const rootIsolate = rootIsolateResult && rootIsolateResult.result as VMIsolate;
+						// TODO: There's a race here if the isolate is not yet runnable, it might not have rootLib yet. We don't
+						// currently fill this in later.
 						if (rootIsolate)
 							this.packageMap = new PackageMap(PackageMap.findPackagesFile(this.convertVMUriToSourcePath(rootIsolate.rootLib.uri)));
 					}
@@ -1258,7 +1260,7 @@ export class DartDebugSession extends DebugSession {
 
 	public isExternalLibrary(uri: string) {
 		// If we don't know the local package name, we have to assume nothing is external, else we might disable debugging for the local library.
-		return uri.startsWith("package:") && this.packageMap.localPackageName && !uri.startsWith(`package:${this.packageMap.localPackageName}/`);
+		return uri.startsWith("package:") && this.packageMap && this.packageMap.localPackageName && !uri.startsWith(`package:${this.packageMap.localPackageName}/`);
 	}
 
 	private resolveFileLocation(script: VMScript, tokenPos: number): FileLocation {
