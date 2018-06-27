@@ -270,16 +270,14 @@ export class SdkCommands {
 		let screenshotPath = config.flutterScreenshotPath;
 
 		// if it's not valid or missing, save it in the user's home directory
-		if (screenshotPath === "")
+		if (screenshotPath == null) {
 			screenshotPath = os.homedir();
+		}
 
 		// if folder doesn't exist, create it
 		if (!fs.existsSync(screenshotPath)) {
 			fs.mkdirSync(screenshotPath);
 		}
-
-		// construct a filename in format Screenshot %yyyy-mm-dd at %hh:mm
-		// const screenshotFilename = "Screenshot " + Date.now.toString();
 
 		// invoke flutter screenshot with the Uri
 		const screenshotUri = vs.Uri.file(screenshotPath);
