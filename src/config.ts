@@ -40,6 +40,8 @@ class Config {
 	get flutterCreateOrganization() { return this.getConfig<string>("flutterCreateOrganization"); }
 	get flutterDaemonLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("flutterDaemonLogFile"))); }
 	get flutterHotReloadOnSave() { return this.getConfig<boolean>("flutterHotReloadOnSave"); }
+	get flutterScreenshotPath() { return resolvePaths(this.getConfig<string>("flutterScreenshotPath")); }
+	public setFlutterScreenshotPath(value: string): Thenable<void> { return this.setConfig("flutterScreenshotPath", value, ConfigurationTarget.Workspace); }
 	get flutterSdkPath() { return resolvePaths(this.getConfig<string>("flutterSdkPath")); }
 	public setFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Workspace); }
 	get flutterSdkPaths() { return (this.getConfig<string[]>("flutterSdkPaths") || []).map(resolvePaths); }
