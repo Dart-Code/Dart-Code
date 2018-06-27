@@ -1,4 +1,4 @@
-import { ConfigurationTarget, Uri, WorkspaceConfiguration, workspace } from "vscode";
+import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from "vscode";
 import { createFolderIfRequired, resolvePaths } from "./utils";
 
 class Config {
@@ -39,6 +39,8 @@ class Config {
 	get flutterCreateOrganization() { return this.getConfig<string>("flutterCreateOrganization"); }
 	get flutterCreateIOSLanguage() { return this.getConfig<string>("flutterCreateIOSLanguage"); }
 	get flutterCreateAndroidLanguage() { return this.getConfig<string>("flutterCreateAndroidLanguage"); }
+	get flutterScreenshotPath() { return resolvePaths(this.getConfig<string>("flutterScreenshotPath")); }
+	public setFlutterScreenshotPath(value: string): Thenable<void> { return this.setConfig("flutterScreenshotPath", value, ConfigurationTarget.Workspace); }
 	get flutterSdkPath() { return resolvePaths(this.getConfig<string>("flutterSdkPath")); }
 	public setFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Workspace); }
 	get flutterSdkPaths() { return (this.getConfig<string[]>("flutterSdkPaths") || []).map(resolvePaths); }

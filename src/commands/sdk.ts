@@ -12,7 +12,7 @@ import { DartHoverProvider } from "../providers/dart_hover_provider";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
 import { dartPubPath, flutterPath, showFlutterActivationFailure } from "../sdk/utils";
 import * as util from "../utils";
-import { ProjectType, Sdks, fsPath, isFlutterWorkspaceFolder } from "../utils";
+import { fsPath, isFlutterWorkspaceFolder, ProjectType, Sdks } from "../utils";
 import * as channels from "./channels";
 
 const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
@@ -116,6 +116,8 @@ export class SdkCommands {
 			args.push(projectName);
 			return this.runFlutterInFolder(path.dirname(projectPath), args, projectName);
 		}));
+
+		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", (selection) => this.createFlutterScreenshot()));
 
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
@@ -248,6 +250,33 @@ export class SdkCommands {
 		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
 		const openInNewWindow = hasFoldersOpen;
 		vs.commands.executeCommand("vscode.openFolder", projectFolderUri, openInNewWindow);
+	}
+
+	private async createFlutterScreenshot(): Promise<void> {
+		// TODO: default screenshot path to a sane default on Windows, Linux, Mac OS
+
+		// get screenshot path
+		let screenshotPath = config.flutterScreenshotPath;
+
+		// if it's not valid or missing, save it in the user's home directory
+		if (screenshotPath === "")
+			screenshotPath = os.homedir();
+
+		// if folder doesn't exist, create it
+		if (!fs.existsSync(screenshotPath)) {
+			fs.mkdirSync(screenshotPath);
+		}
+
+		// construct a filename in format Screenshot %yyyy-mm-dd at %hh:mm
+		// const screenshotFilename = "Screenshot " + Date.now.toString();
+
+		// invoke flutter screenshot with the Uri
+		const screenshotUri = vs.Uri.file(screenshotPath);
+
+		this.runFlutter(["screenshot"], screenshotUri);
+
+		// tell the user where to find the screenshot
+		vs.window.showInformationMessage("Flutter screenshot saved at " + screenshotUri.toString());
 	}
 
 	private validateFlutterProjectName(input: string) {
