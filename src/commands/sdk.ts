@@ -264,8 +264,6 @@ export class SdkCommands {
 	}
 
 	private async createFlutterScreenshot(): Promise<void> {
-		// TODO: default screenshot path to a sane default on Windows, Linux, Mac OS
-
 		// get screenshot path
 		let screenshotPath = config.flutterScreenshotPath;
 
