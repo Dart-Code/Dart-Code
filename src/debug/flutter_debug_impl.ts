@@ -8,12 +8,12 @@ import { FlutterLaunchRequestArguments, LogCategory, LogMessage, LogSeverity } f
 const objectGroupName = "my-group";
 
 export class FlutterDebugSession extends DartDebugSession {
-	private flutter: FlutterRun;
-	private currentRunningAppId: string;
+	private flutter?: FlutterRun;
+	private currentRunningAppId?: string;
 	private appHasStarted = false;
-	private observatoryUri: string;
-	private noDebug: boolean;
-	private isReloadInProgress: boolean;
+	private observatoryUri?: string;
+	private noDebug = false;
+	private isReloadInProgress = false;
 
 	constructor() {
 		super();

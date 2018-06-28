@@ -49,7 +49,7 @@ export function isDartWorkspaceFolder(folder: WorkspaceFolder): boolean {
 	return true;
 }
 
-export function resolvePaths(p: string | undefined) {
+export function resolvePaths(p?: string) {
 	if (!p) return null;
 	if (p.startsWith("~/"))
 		return path.join(os.homedir(), p.substr(2));
@@ -66,7 +66,7 @@ export function mkDirRecursive(folder: string) {
 		fs.mkdirSync(folder);
 }
 
-export function createFolderForFile(file: string) {
+export function createFolderForFile(file?: string) {
 	if (!file || !path.isAbsolute(file))
 		return;
 
@@ -98,7 +98,7 @@ export function toRangeOnLine(location: Location): Range {
 	return new Range(startPos, startPos.translate(0, location.length));
 }
 
-export function getSdkVersion(sdkRoot: string): string | undefined {
+export function getSdkVersion(sdkRoot?: string): string | undefined {
 	if (!sdkRoot)
 		return undefined;
 	try {
@@ -188,7 +188,7 @@ function checkIsDevExtension() {
 	return extensionVersion.endsWith("-dev");
 }
 
-export function isStableSdk(sdkVersion: string): boolean {
+export function isStableSdk(sdkVersion?: string): boolean {
 	// We'll consider empty versions as dev; stable versions will likely always
 	// be shipped with valid version files.
 	return !!(sdkVersion && !semver.prerelease(sdkVersion));
@@ -240,7 +240,7 @@ export class Sdks {
 	public dart?: string;
 	public flutter?: string;
 	public fuchsia?: string;
-	public projectType?: ProjectType;
+	public projectType = ProjectType.Dart;
 }
 
 export enum ProjectType {

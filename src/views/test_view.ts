@@ -161,7 +161,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		return items;
 	}
 
-	public getParent?(element: vs.TreeItem): SuiteTreeItem | GroupTreeItem {
+	public getParent?(element: vs.TreeItem): SuiteTreeItem | GroupTreeItem | undefined {
 		if (element instanceof TestTreeItem || element instanceof GroupTreeItem)
 			return element.parent;
 	}
@@ -262,7 +262,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	private handleTestStartNotifcation(suite: SuiteData, evt: TestStartNotification) {
-		let oldParent: SuiteTreeItem | GroupTreeItem;
+		let oldParent: SuiteTreeItem | GroupTreeItem | undefined;
 		const existingTest = suite.getCurrentTest(evt.test.id) || suite.reuseMatchingTest(suite.currentRunNumber, evt.test, (parent) => oldParent = parent);
 		const testNode = existingTest || new TestTreeItem(suite, evt.test);
 
@@ -272,7 +272,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 
 		// If this is a "loading" test then mark it as hidden because it looks wonky in
 		// the tree with a full path and we already have the "running" icon on the suite.
-		if (testNode.test.name.startsWith("loading ") && testNode.parent instanceof SuiteTreeItem)
+		if (testNode.test.name && testNode.test.name.startsWith("loading ") && testNode.parent instanceof SuiteTreeItem)
 			testNode.hidden = true;
 		else
 			testNode.hidden = false;

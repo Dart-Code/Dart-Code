@@ -72,15 +72,15 @@ class Config {
 }
 
 class ResourceConfig {
-	public uri: Uri;
+	public uri?: Uri;
 	public config: WorkspaceConfiguration;
 
-	constructor(uri: Uri) {
+	constructor(uri?: Uri) {
 		this.uri = uri;
 		this.config = workspace.getConfiguration("dart", this.uri);
 	}
 
-	private getConfig<T>(key: string): T {
+	private getConfig<T>(key: string): T | undefined {
 		return this.config.get<T>(key);
 	}
 

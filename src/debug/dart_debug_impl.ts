@@ -49,6 +49,7 @@ export class DartDebugSession extends DebugSession {
 		response: DebugProtocol.InitializeResponse,
 		args: DebugProtocol.InitializeRequestArguments,
 	): void {
+		response.body = response.body || {};
 		response.body.supportsConfigurationDoneRequest = true;
 		response.body.supportsEvaluateForHovers = true;
 		response.body.supportsDelayedStackTraceLoading = true;
@@ -225,6 +226,8 @@ export class DartDebugSession extends DebugSession {
 			this.observatory = new ObservatoryConnection(uri);
 			this.observatory.onLogging((message) => this.log(message));
 			this.observatory.onOpen(() => {
+				if (!this.observatory)
+					return;
 				this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event));
 				this.observatory.on("Extension", (event: VMEvent) => this.handleExtensionEvent(event));
 				this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event));

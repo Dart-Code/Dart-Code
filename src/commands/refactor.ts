@@ -6,7 +6,7 @@ import { fsPath, unique } from "../utils";
 export const REFACTOR_FAILED_DOC_MODIFIED = "This refactor cannot be applied because the document has changed.";
 export const REFACTOR_ANYWAY = "Refactor Anyway";
 
-const refactorOptions: { [key: string]: (feedback: as.RefactoringFeedback) => as.RefactoringOptions } = {
+const refactorOptions: { [key: string]: (feedback?: as.RefactoringFeedback) => as.RefactoringOptions } = {
 	EXTRACT_METHOD: getExtractMethodArgs,
 	EXTRACT_WIDGET: getExtractWidgetArgs,
 };
@@ -117,9 +117,9 @@ export class RefactorCommands implements vs.Disposable {
 	}
 }
 
-async function getExtractMethodArgs(f: as.RefactoringFeedback): Promise<as.RefactoringOptions | undefined> {
-	const feedback = f as as.ExtractMethodFeedback;
-	const suggestedName = feedback.names && feedback.names.length ? feedback.names[0] : undefined;
+async function getExtractMethodArgs(f?: as.RefactoringFeedback): Promise<as.RefactoringOptions | undefined> {
+	const feedback = f as as.ExtractMethodFeedback | undefined;
+	const suggestedName = feedback && feedback.names && feedback.names.length ? feedback.names[0] : undefined;
 	const name = await vs.window.showInputBox({ prompt: "Enter a name for the method", value: suggestedName });
 
 	if (!name)
@@ -129,12 +129,12 @@ async function getExtractMethodArgs(f: as.RefactoringFeedback): Promise<as.Refac
 		createGetter: false,
 		extractAll: false,
 		name,
-		parameters: feedback.parameters,
-		returnType: feedback.returnType,
+		parameters: feedback && feedback.parameters,
+		returnType: feedback && feedback.returnType,
 	};
 }
 
-async function getExtractWidgetArgs(f: as.RefactoringFeedback): Promise<as.RefactoringOptions | undefined> {
+async function getExtractWidgetArgs(f?: as.RefactoringFeedback): Promise<as.RefactoringOptions | undefined> {
 	const name = await vs.window.showInputBox({ prompt: "Enter a name for the widget" });
 
 	return name ? { name } : undefined;
