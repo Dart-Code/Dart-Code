@@ -785,6 +785,11 @@
 					"default": false,
 					"description": "EXPERIMENTAL: Use `pub run test` for Dart test files and show results in the Test Tree. This is only required for Dart VM tests; Flutter uses the Test Tree automatically.",
 					"scope": "window"
+				},
+				"dart.flutterScreenshotPath": {
+					"type": "string",
+					"description": "The path to a directory to save flutter screenshots.",
+					"scope": "window"
 				}
 			}
 		},
