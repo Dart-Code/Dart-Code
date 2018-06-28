@@ -3,16 +3,28 @@ import { ProgressLocation } from "vscode";
 import { config } from "../config";
 import { PromiseCompleter } from "../debug/utils";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
-import { reloadExtension } from "../utils";
-import { log, LogCategory } from "../utils/log";
+import { reloadExtension, versionIsAtLeast } from "../utils";
+import { LogCategory, log } from "../utils/log";
 import { FlutterDeviceManager } from "./device_manager";
 import * as f from "./flutter_types";
+
+export class DaemonCapabilities {
+
+	public version: string;
+
+	constructor(daemonProtocolVersion: string) {
+		this.version = daemonProtocolVersion;
+	}
+
+	get canCreateEmulators() { return versionIsAtLeast(this.version, "0.4.0"); }
+}
 
 export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	public deviceManager: FlutterDeviceManager;
 	private hasStarted = false;
 	private startupReporter: vs.Progress<{ message?: string; increment?: number }>;
 	private daemonStartedCompleter = new PromiseCompleter();
+	public capabilities: DaemonCapabilities = new DaemonCapabilities("0.0.1");
 
 	constructor(flutterBinPath: string, projectFolder: string) {
 		super(() => config.flutterDaemonLogFile, (message) => log(message, LogCategory.FlutterDaemon), true);
@@ -89,6 +101,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 			case "daemon.connected":
 				const params = evt.params as f.DaemonConnected;
 				this.additionalPidsToTerminate.push(params.pid);
+				this.capabilities.version = params.version;
 				break;
 			case "device.added":
 				this.notify(this.deviceAddedSubscriptions, evt.params as f.Device);
@@ -124,6 +137,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 
 	public launchEmulator(emulatorId: string): Thenable<void> {
 		return this.sendRequest("emulator.launch", { emulatorId });
+	}
+
+	public createEmulator(name?: string): Thenable<{ success: boolean, emulatorName: string, error: string }> {
+		return this.sendRequest("emulator.create", { name });
 	}
 
 	// Subscription methods.
