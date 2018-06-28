@@ -27,7 +27,7 @@ describe("util.versionIsAtLeast", () => {
 
 describe("util.isStableSdk", () => {
 	it("should consider missing versions as unstable", () => {
-		assert.equal(util.isStableSdk(null), false);
+		assert.equal(util.isStableSdk(), false);
 		assert.equal(util.isStableSdk(undefined), false);
 	});
 	it("should consider anything without a hyphen as stable", () => {

@@ -139,14 +139,14 @@ describe("dart_hover_provider", () => {
 	it("returns expected information for a type from another package", async () => {
 		const hover = await getHoverAt("http.Cli^ent");
 		assert.equal(hover.displayText, "abstract class Client");
-		assert.ok(hover.documentation.indexOf("*package:http*") === 0);
+		assert.ok(hover.documentation!.indexOf("*package:http*") === 0);
 		assert.deepStrictEqual(hover.range, rangeOf("http.|Client|"));
 	});
 
 	it("returns expected information for a type from an SDK library", async () => {
 		const hover = await getHoverAt("Fut^ure<String>");
 		assert.equal(hover.displayText, "abstract class Future<T>");
-		assert.ok(hover.documentation.indexOf("*dart.async*") === 0);
+		assert.ok(hover.documentation!.indexOf("*dart.async*") === 0);
 		assert.deepStrictEqual(hover.range, rangeOf("|Future|<String>"));
 	});
 

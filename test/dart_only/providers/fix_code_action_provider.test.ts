@@ -17,7 +17,7 @@ describe("fix_code_action_provider", () => {
 		const createMethodFix = fixResults.find((r) => r.title.indexOf("Create method 'createNonExistentMethod'") !== -1);
 		assert.ok(createMethodFix);
 
-		await (vs.commands.executeCommand(createMethodFix.command.command, ...createMethodFix.command.arguments));
+		await (vs.commands.executeCommand(createMethodFix!.command!.command, ...createMethodFix!.command!.arguments || []));
 
 		const fileA = await openFile(helloWorldCreateMethodClassAFile);
 		const fileB = await openFile(helloWorldCreateMethodClassBFile);

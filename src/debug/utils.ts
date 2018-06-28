@@ -86,7 +86,7 @@ export function findFile(file: string, startLocation: string) {
 		parent = path.dirname(parent);
 	}
 
-	return null;
+	return undefined;
 }
 
 export function formatPathForVm(file: string): string {

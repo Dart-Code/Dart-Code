@@ -51,7 +51,7 @@ class Config {
 	get openTestViewOnFailure() { return this.openTestView.indexOf("testFailure") !== -1; }
 	get openTestViewOnStart() { return this.openTestView.indexOf("testRunStart") !== -1; }
 	get reportAnalyzerErrors() { return this.getConfig<boolean>("reportAnalyzerErrors"); }
-	get sdkPath() { return resolvePaths(this.getConfig<string>("sdkPath")); }
+	get sdkPath() { return resolvePaths(this.getConfig<string>("sdkPath")) || undefined; }
 	public setSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
 	get sdkPaths() { return (this.getConfig<string[]>("sdkPaths") || []).map(resolvePaths); }
 	get showLintNames() { return this.getConfig<boolean>("showLintNames"); }

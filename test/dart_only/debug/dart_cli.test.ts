@@ -118,8 +118,8 @@ describe("dart cli debugger", () => {
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "main");
-		assert.equal(frames[0].source.path, fsPath(helloWorldMainFile));
-		assert.equal(frames[0].source.name, path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile)));
+		assert.equal(frames[0].source!.path, fsPath(helloWorldMainFile));
+		assert.equal(frames[0].source!.name, path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile)));
 	});
 
 	// Known not to work; https://github.com/Dart-Code/Dart-Code/issues/821
@@ -135,8 +135,8 @@ describe("dart cli debugger", () => {
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "print");
-		assert.equal(frames[0].source.path, fsPath(def.uri));
-		assert.equal(frames[0].source.name, "dart:core/print.dart");
+		assert.equal(frames[0].source!.path, fsPath(def.uri));
+		assert.equal(frames[0].source!.name, "dart:core/print.dart");
 	});
 
 	it("stops at a breakpoint in an external package", async () => {
@@ -151,8 +151,8 @@ describe("dart cli debugger", () => {
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "read");
-		assert.equal(frames[0].source.path, fsPath(def.uri));
-		assert.equal(frames[0].source.name, "package:http/http.dart");
+		assert.equal(frames[0].source!.path, fsPath(def.uri));
+		assert.equal(frames[0].source!.name, "package:http/http.dart");
 	});
 
 	it("steps into the SDK if debugSdkLibraries is true", async () => {
@@ -167,14 +167,14 @@ describe("dart cli debugger", () => {
 		await Promise.all([
 			dc.assertStoppedLocation("step", {
 				// SDK source will have no filename, because we download it
-				path: null,
+				path: undefined,
 			}).then((response) => {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "print");
 				// We don't get a source path, because the source is downloaded from the VM
-				assert.equal(frame.source.path, null);
-				assert.equal(frame.source.name, "dart:core/print.dart");
+				assert.equal(frame.source!.path, null);
+				assert.equal(frame.source!.name, "dart:core/print.dart");
 			}),
 			dc.stepIn(),
 		]);
@@ -216,8 +216,8 @@ describe("dart cli debugger", () => {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "read");
-				assert.equal(frame.source.path, fsPath(httpReadDef.uri));
-				assert.equal(frame.source.name, "package:http/http.dart");
+				assert.equal(frame.source!.path, fsPath(httpReadDef.uri));
+				assert.equal(frame.source!.name, "package:http/http.dart");
 			}),
 			dc.stepIn(),
 		]);
@@ -278,7 +278,7 @@ describe("dart cli debugger", () => {
 			const errorOutputEvent: Promise<any> =
 				expectedError
 					? dc.assertOutput("stderr", expectedError)
-					: null;
+					: Promise.resolve();
 			await Promise.all([
 				dc.waitForEvent("initialized").then((event) => {
 					return dc.setBreakpointsRequest({
@@ -406,7 +406,7 @@ describe("dart cli debugger", () => {
 		const variables = await dc.getTopFrameVariables("Locals");
 		ensureVariable(variables, "danny", "danny", `Danny`);
 
-		const classInstance = await dc.getVariables(variables.find((v) => v.name === "danny").variablesReference);
+		const classInstance = await dc.getVariables(variables.find((v) => v.name === "danny")!.variablesReference);
 		ensureVariable(classInstance, "danny.kind", "kind", `"Person"`);
 		ensureVariable(classInstance, "danny.name", "name", `"Danny"`);
 		ensureVariable(classInstance, undefined, "throws", { starts: "Unhandled exception:\nOops!" });

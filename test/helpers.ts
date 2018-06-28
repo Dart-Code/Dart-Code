@@ -68,12 +68,15 @@ export const flutterTestMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorl
 export const flutterTestOtherFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/other_test.dart"));
 export const flutterTestBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/broken_test.dart"));
 
-// TODO: Make these always return for the current active file (which is what many tests already use).
 export function currentEditor(): vs.TextEditor {
-	return vs.window.activeTextEditor;
+	if (!vs.window.activeTextEditor)
+		throw new Error("There is no active editor");
+	return vs.window.activeTextEditor!;
 }
 export function currentDoc(): vs.TextDocument {
-	return vs.window.activeTextEditor && vs.window.activeTextEditor.document;
+	if (!vs.window.activeTextEditor || !vs.window.activeTextEditor.document)
+		throw new Error("There is no active document");
+	return vs.window.activeTextEditor.document;
 }
 export let documentEol: string;
 
