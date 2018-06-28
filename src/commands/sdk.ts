@@ -138,6 +138,8 @@ export class SdkCommands {
 			return this.runFlutterInFolder(path.dirname(projectPath), args, projectName);
 		}));
 
+		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", (selection) => this.createFlutterScreenshot()));
+
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
 			if (config.for(td.uri).runPubGetOnPubspecChanges && path.basename(fsPath(td.uri)).toLowerCase() === "pubspec.yaml")
@@ -269,6 +271,29 @@ export class SdkCommands {
 		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
 		const openInNewWindow = hasFoldersOpen;
 		vs.commands.executeCommand("vscode.openFolder", projectFolderUri, openInNewWindow);
+	}
+
+	private async createFlutterScreenshot(): Promise<void> {
+		// get screenshot path
+		let screenshotPath = config.flutterScreenshotPath;
+
+		// if it's not valid or missing, save it in the user's home directory
+		if (screenshotPath == null) {
+			screenshotPath = os.homedir();
+		}
+
+		// if folder doesn't exist, create it
+		if (!fs.existsSync(screenshotPath)) {
+			fs.mkdirSync(screenshotPath);
+		}
+
+		// invoke flutter screenshot with the Uri
+		const screenshotUri = vs.Uri.file(screenshotPath);
+
+		this.runFlutter(["screenshot"], screenshotUri);
+
+		// tell the user where to find the screenshot
+		vs.window.showInformationMessage("Flutter screenshot saved at " + screenshotUri.toString());
 	}
 
 	private validateFlutterProjectName(input: string) {
