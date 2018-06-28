@@ -4,6 +4,8 @@ import { logError } from "../utils/log";
 import { FlutterDaemon } from "./flutter_daemon";
 import * as f from "./flutter_types";
 
+const emulatorNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
+
 export class FlutterDeviceManager implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
 	private statusBarItem: vs.StatusBarItem;
@@ -110,6 +112,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			.map((e) => ({
 				description: e.id,
 				emulator: e,
+				isCreateEntry: false,
 				label: e.name,
 			}));
 
@@ -122,20 +125,64 @@ export class FlutterDeviceManager implements vs.Disposable {
 			return false;
 		}
 
+		// Add an option to create a new emulator if the daemon supports it.
+		if (this.daemon.capabilities.canCreateEmulators) {
+			emulators.push({
+				description: "Creates and launches a new Android emulator",
+				emulator: undefined,
+				isCreateEntry: true,
+				label: "Create New",
+			});
+		}
+
 		const cancellationTokenSource = new vs.CancellationTokenSource();
 		const waitingForRealDeviceSubscription = this.daemon.registerForDeviceAdded(() => {
 			cancellationTokenSource.cancel();
 			waitingForRealDeviceSubscription.dispose();
 		});
 		const selectedEmulator =
-			await vs.window.showQuickPick(emulators, { placeHolder: "Connect a device or select an emulator to launch" }, cancellationTokenSource.token);
+			await vs.window.showQuickPick(
+				emulators,
+				{
+					matchOnDescription: true,
+					placeHolder: "Connect a device or select an emulator to launch",
+				},
+				cancellationTokenSource.token);
 		waitingForRealDeviceSubscription.dispose();
 
-		if (selectedEmulator) {
+		if (selectedEmulator && selectedEmulator.isCreateEntry) {
+			// TODO: Allow user to create names when we let them customise the emulator type.
+			// const name = await vs.window.showInputBox({
+			// 	prompt: "Enter a name for your new Android Emulator",
+			// 	validateInput: this.validateEmulatorName,
+			// });
+			// if (!name) bail() // Pressing ENTER doesn't work, but escape does, so if
+			// no name, user probably wanted to cancel
+			const name: string = undefined;
+			const create = this.daemon.createEmulator(name);
+			vs.window.withProgress({
+				location: vs.ProgressLocation.Notification,
+				title: `${`Creating emulator ${name ? name : ""}`.trim()}...`,
+			}, (progress) => create);
+			const res = await create;
+			if (res.success) {
+				return this.launchEmulator({
+					id: res.emulatorName,
+					name: res.emulatorName,
+				});
+			} else {
+				vs.window.showErrorMessage(res.error);
+			}
+		} else if (selectedEmulator) {
 			return this.launchEmulator(selectedEmulator.emulator);
 		} else {
 			return !!this.currentDevice;
 		}
+	}
+
+	private validateEmulatorName(input: string) {
+		if (!emulatorNameRegex.test(input))
+			return "Emulator names should contain only letters, numbers, dots, underscores and dashes";
 	}
 
 	private async launchEmulator(emulator: { id: string, name: string }): Promise<boolean> {
@@ -149,7 +196,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				progress.report({ message: `Waiting for ${emulator.name} to connect...` });
 				// Wait up to 60 seconds for emulator to launch.
 				for (let i = 0; i < 120; i++) {
-					await new Promise((resolve, reject) => setTimeout(resolve, 500));
+					await new Promise((resolve) => setTimeout(resolve, 500));
 					if (this.currentDevice)
 						return;
 				}
@@ -159,6 +206,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 			vs.window.showErrorMessage(`Failed to launch emulator: ${e}`);
 			return false;
 		}
+		// Wait an additional second to try and void some possible races.
+		await new Promise((resolve) => setTimeout(resolve, 1000));
 		return true;
 	}
 }
