@@ -22,7 +22,8 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 			if (this.activeEditor && n.file === fsPath(this.activeEditor.document.uri)) {
 				this.closingLabels = n;
 				// Delay this so if we're getting lots of updates we don't flicker.
-				clearTimeout(this.updateTimeout);
+				if (this.updateTimeout)
+					clearTimeout(this.updateTimeout);
 				this.updateTimeout = setTimeout(() => this.update(), 500);
 			}
 		}));

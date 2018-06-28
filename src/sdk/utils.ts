@@ -146,18 +146,18 @@ export function findSdks(): Sdks {
 		};
 	}
 
-	let fuchsiaRoot: string;
-	let flutterProject: string;
+	let fuchsiaRoot: string | undefined;
+	let flutterProject: string | undefined;
 	// Keep track of whether we have Fuchsia projects that are not "vanilla Flutter" because
 	// if not we will set project type to Flutter to allow daemon to run (and debugging support).
 	let hasFuchsiaProjectThatIsNotVanillaFlutter: boolean;
 	folders.forEach((folder) => {
 		fuchsiaRoot = fuchsiaRoot || findFuchsiaRoot(folder);
 		flutterProject = flutterProject
-			|| (referencesFlutterSdk(folder) ? folder : null)
-			|| (fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE)) ? folder : null)
+			|| (referencesFlutterSdk(folder) ? folder : undefined)
+			|| (fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE)) ? folder : undefined)
 			// Special case to detect the Flutter repo root, so we always consider it a Flutter project and will use the local SDK
-			|| (fs.existsSync(path.join(folder, "bin/flutter")) && fs.existsSync(path.join(folder, "bin/cache/dart-sdk")) ? folder : null);
+			|| (fs.existsSync(path.join(folder, "bin/flutter")) && fs.existsSync(path.join(folder, "bin/cache/dart-sdk")) ? folder : undefined);
 		hasFuchsiaProjectThatIsNotVanillaFlutter = hasFuchsiaProjectThatIsNotVanillaFlutter || !referencesFlutterSdk(folder);
 	});
 
@@ -205,7 +205,7 @@ export function findSdks(): Sdks {
 	};
 }
 
-export function referencesFlutterSdk(folder: string): boolean {
+export function referencesFlutterSdk(folder?: string): boolean {
 	if (folder && fs.existsSync(path.join(folder, "pubspec.yaml"))) {
 		const regex = new RegExp("sdk\\s*:\\s*flutter", "i");
 		return regex.test(fs.readFileSync(path.join(folder, "pubspec.yaml")).toString());
@@ -283,7 +283,7 @@ function hasExecutable(pathToTest: string, executableName: string): boolean {
 	return fs.existsSync(path.join(pathToTest, executableName));
 }
 
-export function searchPaths(paths: string[], filter: (s: string) => boolean, executableName: string): string {
+export function searchPaths(paths: Array<string | undefined>, filter: (s: string) => boolean, executableName: string): string {
 	log(`Searching for ${executableName}`);
 
 	const sdkPaths =

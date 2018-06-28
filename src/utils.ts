@@ -24,11 +24,11 @@ export function fsPath(uri: Uri | string) {
 	return forceWindowsDriveLetterToUppercase(uri instanceof Uri ? uri.fsPath : uri);
 }
 
-export function isFlutterWorkspaceFolder(folder: WorkspaceFolder): boolean {
-	return isDartWorkspaceFolder(folder) && isFlutterProjectFolder(fsPath(folder.uri));
+export function isFlutterWorkspaceFolder(folder?: WorkspaceFolder): boolean {
+	return !!(folder && isDartWorkspaceFolder(folder) && isFlutterProjectFolder(fsPath(folder.uri)));
 }
 
-export function isFlutterProjectFolder(folder: string): boolean {
+export function isFlutterProjectFolder(folder?: string): boolean {
 	return referencesFlutterSdk(folder);
 }
 
@@ -38,7 +38,7 @@ export function getDartWorkspaceFolders(): WorkspaceFolder[] {
 	return workspace.workspaceFolders.filter(isDartWorkspaceFolder);
 }
 
-export function isDartWorkspaceFolder(folder: WorkspaceFolder): boolean {
+export function isDartWorkspaceFolder(folder?: WorkspaceFolder): boolean {
 	if (!folder || folder.uri.scheme !== "file")
 		return false;
 
@@ -50,7 +50,7 @@ export function isDartWorkspaceFolder(folder: WorkspaceFolder): boolean {
 }
 
 export function resolvePaths(p?: string) {
-	if (!p) return null;
+	if (!p) return undefined;
 	if (p.startsWith("~/"))
 		return path.join(os.homedir(), p.substr(2));
 	if (!path.isAbsolute(p) && workspace.workspaceFolders && workspace.workspaceFolders.length)

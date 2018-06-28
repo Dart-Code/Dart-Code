@@ -3,12 +3,12 @@ import * as path from "path";
 import { findFile, isWin, isWithinPath, uriToFilePath } from "./utils";
 
 export class PackageMap {
-	public static findPackagesFile(entryPoint: string): string {
+	public static findPackagesFile(entryPoint: string): string | undefined {
 		return findFile(".packages", entryPoint);
 	}
 
 	private map: { [name: string]: string } = {};
-	public readonly localPackageName: string;
+	public readonly localPackageName: string | undefined;
 
 	constructor(file?: string) {
 		if (!file) return;
@@ -40,16 +40,16 @@ export class PackageMap {
 		return this.map[name];
 	}
 
-	public resolvePackageUri(uri: string): string {
+	public resolvePackageUri(uri: string): string | undefined {
 		if (!uri)
-			return null;
+			return undefined;
 
 		let name: string = uri;
 		if (name.startsWith("package:"))
 			name = name.substring(8);
 		const index = name.indexOf("/");
 		if (index === -1)
-			return null;
+			return undefined;
 
 		const rest = name.substring(index + 1);
 		name = name.substring(0, index);
@@ -58,10 +58,10 @@ export class PackageMap {
 		if (location)
 			return path.join(location, rest);
 		else
-			return null;
+			return undefined;
 	}
 
-	public convertFileToPackageUri(file: string, allowSelf = true): string {
+	public convertFileToPackageUri(file: string, allowSelf = true): string | undefined {
 		for (const name of Object.keys(this.map)) {
 			const dir = this.map[name];
 			if (isWithinPath(file, dir)) {
@@ -79,6 +79,6 @@ export class PackageMap {
 			}
 		}
 
-		return null;
+		return undefined;
 	}
 }

@@ -39,11 +39,11 @@ export class DebugClient extends ProtocolClient {
 
 	private _runtime: string;
 	private _executable: string;
-	private _adapterProcess: cp.ChildProcess;
-	private _spawnOptions: cp.SpawnOptions;
+	private _adapterProcess?: cp.ChildProcess;
+	private _spawnOptions?: cp.SpawnOptions;
 	private _enableStderr: boolean;
 	private _debugType: string;
-	private _socket: net.Socket;
+	private _socket?: net.Socket;
 
 	protected _supportsConfigurationDoneRequest: boolean;
 
@@ -98,7 +98,7 @@ export class DebugClient extends ProtocolClient {
 		return new Promise<void>((resolve, reject) => {
 			if (typeof port === 'number') {
 				this._socket = net.createConnection(port, '127.0.0.1', () => {
-					this.connect(this._socket, this._socket);
+					this.connect(this._socket!, this._socket!);
 					resolve();
 				});
 			} else {
@@ -141,11 +141,11 @@ export class DebugClient extends ProtocolClient {
 	private stopAdapter() {
 		if (this._adapterProcess) {
 			this._adapterProcess.kill();
-			this._adapterProcess = null;
+			this._adapterProcess = undefined;
 		}
 		if (this._socket) {
 			this._socket.end();
-			this._socket = null;
+			this._socket = undefined;
 		}
 	}
 
@@ -354,7 +354,7 @@ export class DebugClient extends ProtocolClient {
 		}).then(response => {
 			const frame = response.body.stackFrames[0];
 			if (typeof expected.path === 'string' || expected.path instanceof RegExp) {
-				this.assertPath(frame.source.path, expected.path, 'stopped location: path mismatch');
+				this.assertPath(frame.source!.path!, expected.path, 'stopped location: path mismatch');
 			}
 			if (typeof expected.line === 'number') {
 				assert.equal(frame.line, expected.line, 'stopped location: line mismatch');
@@ -368,7 +368,7 @@ export class DebugClient extends ProtocolClient {
 
 	private assertPartialLocationsEqual(locA: IPartialLocation, locB: IPartialLocation): void {
 		if (locA.path) {
-			this.assertPath(locA.path, locB.path, 'breakpoint verification mismatch: path');
+			this.assertPath(locA.path, locB.path!, 'breakpoint verification mismatch: path');
 		}
 		if (typeof locA.line === 'number') {
 			assert.equal(locA.line, locB.line, 'breakpoint verification mismatch: line');

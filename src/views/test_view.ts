@@ -669,8 +669,8 @@ class TestTreeItem extends TestItemTreeItem {
 	}
 }
 
-function getIconPath(status: TestStatus, isStale: boolean): vs.Uri {
-	let file: string;
+function getIconPath(status: TestStatus, isStale: boolean): vs.Uri | undefined {
+	let file: string | undefined;
 	// TODO: Should we have faded icons for stale versions?
 	switch (status) {
 		case TestStatus.Running:
@@ -696,7 +696,7 @@ function getIconPath(status: TestStatus, isStale: boolean): vs.Uri {
 			file = undefined;
 	}
 
-	return file
+	return file && extensionPath
 		? vs.Uri.file(path.join(extensionPath, `media/icons/tests/${file}.svg`))
 		: undefined;
 }

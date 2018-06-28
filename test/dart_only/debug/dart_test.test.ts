@@ -115,8 +115,9 @@ describe("dart test debugger", () => {
 
 		const variables = await dc.getTopFrameVariables("Exception") as DebugProtocol.Variable[];
 		assert.ok(variables);
-		const v = variables.find((v) => v.name === "message");
+		let v = variables.find((v) => v.name === "message");
 		assert.ok(v);
+		v = v!;
 		assert.equal(v.evaluateName, "$e.message");
 		const expectedStart = `"Expected: <2>\n  Actual: <1>`;
 		assert.ok(
