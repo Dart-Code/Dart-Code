@@ -3,7 +3,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../src/commands/refactor";
 import { PromiseCompleter } from "../../../src/debug/utils";
-import { activate, doc, ensureTestContent, extApi, rangeOf, sb, setTestContent, waitFor } from "../../helpers";
+import { activate, ensureTestContent, extApi, rangeOf, sb, setTestContent, waitFor } from "../../helpers";
 
 describe("refactor", () => {
 	beforeEach("activate", () => activate());
@@ -27,7 +27,7 @@ class MyWidget extends StatelessWidget {
   }
 }
 		`);
-		await (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("||Container()"), "EXTRACT_WIDGET"));
+		await (vs.commands.executeCommand("_dart.performRefactor", rangeOf("||Container()"), "EXTRACT_WIDGET"));
 		await ensureTestContent(`
 import 'package:flutter/widgets.dart';
 
@@ -64,7 +64,7 @@ class MyWidget extends StatelessWidget {
   }
 }
 		`);
-		await (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("|MyWidget|"), "EXTRACT_WIDGET"));
+		await (vs.commands.executeCommand("_dart.performRefactor", rangeOf("|MyWidget|"), "EXTRACT_WIDGET"));
 
 		// Ensure the content was not modified.
 		await ensureTestContent(`
@@ -95,7 +95,7 @@ class MyWidget extends StatelessWidget {
   }
 }
 		`);
-		await (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("||Container()"), "EXTRACT_WIDGET"));
+		await (vs.commands.executeCommand("_dart.performRefactor", rangeOf("||Container()"), "EXTRACT_WIDGET"));
 
 		// Ensure the content was not modified.
 		await ensureTestContent(`
@@ -127,7 +127,7 @@ class MyWidget extends StatelessWidget {
   }
 }
 		`);
-		await (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("||Container()"), "EXTRACT_WIDGET"));
+		await (vs.commands.executeCommand("_dart.performRefactor", rangeOf("||Container()"), "EXTRACT_WIDGET"));
 
 		// Ensure the content was not modified.
 		await ensureTestContent(`
@@ -160,7 +160,7 @@ class MyWidget extends StatelessWidget {
   }
 }
 		`);
-		await (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("||Container()"), "EXTRACT_WIDGET"));
+		await (vs.commands.executeCommand("_dart.performRefactor", rangeOf("||Container()"), "EXTRACT_WIDGET"));
 
 		// Ensure the content was modified.
 		await ensureTestContent(`
@@ -210,7 +210,7 @@ class MyWidget extends StatelessWidget {
 		`);
 
 		// Start the command but don't await it.
-		const refactorCommand = (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("||Container()"), "EXTRACT_WIDGET"));
+		const refactorCommand = (vs.commands.executeCommand("_dart.performRefactor", rangeOf("||Container()"), "EXTRACT_WIDGET"));
 
 		// Wait for the message to appear.
 		await waitFor(() => refactorPrompt.called);

@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, doc, helloWorldCreateMethodClassAFile, helloWorldCreateMethodClassBFile, openFile, rangeOf, uncommentTestFile, waitForNextAnalysis } from "../../helpers";
+import { activate, currentDoc, helloWorldCreateMethodClassAFile, helloWorldCreateMethodClassBFile, openFile, rangeOf, uncommentTestFile, waitForNextAnalysis } from "../../helpers";
 
 describe("fix_code_action_provider", () => {
 
@@ -10,7 +10,7 @@ describe("fix_code_action_provider", () => {
 
 	it("modifies correct file when single edit is not in the original file", async () => {
 		await waitForNextAnalysis(() => uncommentTestFile());
-		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", doc.uri, rangeOf("createNon||ExistentMethod")) as Thenable<vs.CodeAction[]>);
+		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("createNon||ExistentMethod")) as Thenable<vs.CodeAction[]>);
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
 
