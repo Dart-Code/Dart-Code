@@ -30,7 +30,7 @@ export class LogMessage {
 const onLogEmitter: EventEmitter<LogMessage> = new EventEmitter<LogMessage>();
 export const onLog: Event<LogMessage> = onLogEmitter.event;
 export function log(message: string, category = LogCategory.General) {
-	onLogEmitter.fire(new LogMessage((message || "").toString().trim(), category));
+	onLogEmitter.fire(new LogMessage((message || "").toString(), category));
 }
 export function logError(error: any) {
 	if (!error)
