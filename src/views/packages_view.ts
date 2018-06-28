@@ -82,7 +82,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 
 			const deps = lines.map((line) => {
 				const pos = line.indexOf(":");
-				if (pos === -1) return new PackageDep(line, null, vs.TreeItemCollapsibleState.None);
+				if (pos === -1) return new PackageDep(line, undefined, vs.TreeItemCollapsibleState.None);
 
 				let packageName = line.substring(0, pos);
 				let p = line.substring(pos + 1);

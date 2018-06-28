@@ -8,7 +8,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	private badChars: RegExp = new RegExp("[^0-9a-z\-]", "gi");
 	constructor(public readonly analyzer: Analyzer) { }
 
-	public async provideWorkspaceSymbols(query: string, token: CancellationToken): Promise<SymbolInformation[]> {
+	public async provideWorkspaceSymbols(query: string, token: CancellationToken): Promise<SymbolInformation[] | null> {
 		if (query.length === 0)
 			return null;
 

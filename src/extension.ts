@@ -64,15 +64,15 @@ const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
 const DART_PLATFORM_NAME = "dart-code:platformName";
 export const SERVICE_EXTENSION_CONTEXT_PREFIX = "dart-code:serviceExtension.";
-export let extensionPath: string = null;
+export let extensionPath: string | undefined;
 
 let analyzer: Analyzer;
 let flutterDaemon: FlutterDaemon;
 let analysisRoots: string[] = [];
 let analytics: Analytics;
 
-let showTodos: boolean;
-let showLintNames: boolean;
+let showTodos: boolean | undefined;
+let showLintNames: boolean | undefined;
 let previousSettings: string;
 let extensionLogger: { dispose: () => Promise<void> | void };
 

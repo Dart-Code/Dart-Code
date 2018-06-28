@@ -7,7 +7,7 @@ import { safeSpawn } from "../src/debug/utils";
 import { DartDebugClient } from "./dart_debug_client";
 import { defer } from "./helpers";
 
-export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string, name: string, value: string | { starts?: string, ends?: string }) {
+export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {
 	assert.ok(variables && variables.length, "No variables given to search");
 	let v = variables.find((v) => v.name === name);
 	assert.ok(
@@ -29,12 +29,12 @@ export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName
 
 export interface MapEntry {
 	key: {
-		evaluateName: string;
+		evaluateName?: string | null;
 		name: string;
 		value: string;
 	};
 	value: {
-		evaluateName: string;
+		evaluateName?: string | null;
 		name: string;
 		value: string;
 	};

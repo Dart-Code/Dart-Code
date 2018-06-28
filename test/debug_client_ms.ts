@@ -300,7 +300,7 @@ export class DebugClient extends ProtocolClient {
 			if (!this._socket) {	// no timeouts if debugging the tests
 				setTimeout(() => {
 					reject(new Error(`no event '${eventType}' received after ${timeout} ms`));
-				}, timeout);
+				}, timeout!);
 			}
 		});
 	}
@@ -404,7 +404,7 @@ export class DebugClient extends ProtocolClient {
 			if (!this._socket) {	// no timeouts if debugging the tests
 				setTimeout(() => {
 					reject(new Error(`not enough output data received after ${timeout} ms`));
-				}, timeout);
+				}, timeout!);
 			}
 		});
 	}
