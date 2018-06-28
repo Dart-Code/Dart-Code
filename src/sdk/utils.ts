@@ -1,11 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
-import { commands, ExtensionContext, window } from "vscode";
+import { ExtensionContext, commands, window } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
 import { isWin, platformName } from "../debug/utils";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, openInBrowser, ProjectType, reloadExtension, resolvePaths, Sdks } from "../utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, ProjectType, Sdks, fsPath, getDartWorkspaceFolders, openInBrowser, reloadExtension, resolvePaths } from "../utils";
+import { log } from "../utils/log";
 
 const dartExecutableName = isWin ? "dart.exe" : "dart";
 const pubExecutableName = isWin ? "pub.bat" : "pub";
@@ -116,11 +117,16 @@ export async function showSdkActivationFailure(
 }
 
 export function findSdks(): Sdks {
+	log("Searching for SDKs...");
 	const folders = getDartWorkspaceFolders()
 		.map((w) => fsPath(w.uri));
 	const pathOverride = (process.env.DART_PATH_OVERRIDE as string) || "";
 	const normalPath = (process.env.PATH as string) || "";
-	const paths = (pathOverride + path.delimiter + normalPath).split(path.delimiter);
+	const paths = (pathOverride + path.delimiter + normalPath).split(path.delimiter).filter((p) => p);
+
+	log("Environment PATH:");
+	for (const p of paths)
+		log(`    ${p}`);
 
 	let fuchsiaRoot: string;
 	let flutterProject: string;
@@ -136,6 +142,14 @@ export function findSdks(): Sdks {
 			|| (fs.existsSync(path.join(folder, "bin/flutter")) && fs.existsSync(path.join(folder, "bin/cache/dart-sdk")) ? folder : null);
 		hasFuchsiaProjectThatIsNotVanillaFlutter = hasFuchsiaProjectThatIsNotVanillaFlutter || !referencesFlutterSdk(folder);
 	});
+
+	if (fuchsiaRoot) {
+		log(`Found Fuchsia root at ${fuchsiaRoot}`);
+		if (hasFuchsiaProjectThatIsNotVanillaFlutter)
+			log(`Found Fuchsia project that is not vanilla Flutter`);
+	}
+	if (flutterProject)
+		log(`Found Flutter project at ${flutterProject}`);
 
 	const flutterSdkSearchPaths = [
 		config.flutterSdkPath,
@@ -252,18 +266,30 @@ function hasExecutable(pathToTest: string, executableName: string): boolean {
 }
 
 export function searchPaths(paths: string[], filter: (s: string) => boolean, executableName: string): string {
-	let sdkPath =
+	log(`Searching for ${executableName}`);
+
+	const sdkPaths =
 		paths
 			.filter((p) => p)
 			.map(resolvePaths)
-			.map((p) => path.basename(p) !== "bin" ? path.join(p, "bin") : p) // Ensure /bin on end.
-			.find(filter);
+			.map((p) => path.basename(p) !== "bin" ? path.join(p, "bin") : p); // Ensure /bin on end.
+
+	log("    Looking in:");
+	for (const p of sdkPaths)
+		log(`        ${p}`);
+
+	let sdkPath = sdkPaths.find(filter);
+
+	if (sdkPath)
+		log(`    Found at ${sdkPath}`);
 
 	// In order to handle symlinks on the binary (not folder), we need to add the executableName and then realpath.
 	sdkPath = sdkPath && fs.realpathSync(path.join(sdkPath, executableName));
 
 	// Then we need to take the executable name and /bin back off
 	sdkPath = sdkPath && path.dirname(path.dirname(sdkPath));
+
+	log(`    Returning SDK path ${sdkPath} for ${executableName}`);
 
 	return sdkPath;
 }
