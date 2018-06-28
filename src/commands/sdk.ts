@@ -20,7 +20,7 @@ const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
 export class SdkCommands {
 	private sdks: Sdks;
 	private analytics: Analytics;
-	private screenshotUri: string;
+	private flutterScreenshotPath: string;
 	// A map of any in-progress commands so we can terminate them if we want to run another.
 	private runningCommands: { [workspaceUriAndCommand: string]: child_process.ChildProcess; } = {};
 	constructor(context: vs.ExtensionContext, sdks: Sdks, analytics: Analytics) {
@@ -86,21 +86,23 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", async (uri) => {
 			if (!uri || !(uri instanceof Uri)) {
-
-				// Only prompt the user if variable has never been set
-				if (!this.screenshotUri) {
+				if (!this.flutterScreenshotPath) {
+					this.flutterScreenshotPath = config.flutterScreenshotPath
+				}
+				// Only if the settings are empty it will bring up the folder selector.
+				if (!this.flutterScreenshotPath) {
 					const selectedFolder =
 						await window.showOpenDialog({ canSelectFolders: true, canSelectMany: false, openLabel: "Select folder to save screenshot" });
 					if (selectedFolder && selectedFolder.length > 0) {
-						this.screenshotUri = selectedFolder[0].path;
+						// Set variable to selected path. This allows prompting the user only once.
+						this.flutterScreenshotPath = selectedFolder[0].path;
 					} else {
-						// Do nothing if the user canceled the folder selection
+						// Do nothing if the user cancelled the folder selection.
 						return;
 					}
 				}
 			}
-
-			return this.runFlutterInFolder(this.screenshotUri, ["screenshot"], "screenshot");
+			return this.runFlutterInFolder(this.flutterScreenshotPath, ["screenshot"], "screenshot");
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => {
 			return vs.commands.executeCommand("dart.upgradePackages", selection);
