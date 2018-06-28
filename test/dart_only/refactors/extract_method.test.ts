@@ -3,7 +3,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../src/commands/refactor";
 import { PromiseCompleter } from "../../../src/debug/utils";
-import { activate, doc, ensureTestContent, positionOf, rangeOf, sb, setTestContent, waitFor } from "../../helpers";
+import { activate, ensureTestContent, positionOf, rangeOf, sb, setTestContent, waitFor } from "../../helpers";
 
 describe("refactor", () => {
 
@@ -18,7 +18,7 @@ main() {
   print("Hello, world!");
 }
 		`);
-		await (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
+		await (vs.commands.executeCommand("_dart.performRefactor", rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
 		await ensureTestContent(`
 main() {
   printHelloWorld();
@@ -38,7 +38,7 @@ main() {
   print("Hello, world!");
 }
 		`);
-		await (vs.commands.executeCommand("_dart.performRefactor", doc, new vs.Range(positionOf("^main("), positionOf("world^")), "EXTRACT_METHOD"));
+		await (vs.commands.executeCommand("_dart.performRefactor", new vs.Range(positionOf("^main("), positionOf("world^")), "EXTRACT_METHOD"));
 
 		// Ensure the content was not modified.
 		await ensureTestContent(`
@@ -59,7 +59,7 @@ main() {
   print("Hello, world!");
 }
 		`);
-		await (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
+		await (vs.commands.executeCommand("_dart.performRefactor", rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
 
 		// Ensure the content was not modified.
 		await ensureTestContent(`
@@ -82,7 +82,7 @@ main() {
   print("Hello, world!");
 }
 		`);
-		await (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
+		await (vs.commands.executeCommand("_dart.performRefactor", rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
 
 		// Ensure the content was not modified.
 		await ensureTestContent(`
@@ -105,7 +105,7 @@ main() {
   print("Hello, world!");
 }
 		`);
-		await (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
+		await (vs.commands.executeCommand("_dart.performRefactor", rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
 
 		// Ensure the content was modified.
 		await ensureTestContent(`
@@ -138,7 +138,7 @@ main() {
 		`);
 
 		// Start the command but don't await it.
-		const refactorCommand = (vs.commands.executeCommand("_dart.performRefactor", doc, rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
+		const refactorCommand = (vs.commands.executeCommand("_dart.performRefactor", rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
 
 		// Wait for the message to appear.
 		await waitFor(() => refactorPrompt.called);

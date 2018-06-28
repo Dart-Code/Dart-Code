@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../src/utils";
-import { activate, doc, ensureLocation, ensureNoLocation, extApi, helloWorldFolder, positionOf, rangeOf } from "../../helpers";
+import { activate, currentDoc, ensureLocation, ensureNoLocation, extApi, helloWorldFolder, positionOf, rangeOf } from "../../helpers";
 
 const testFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_implementation.dart"));
 
@@ -11,7 +11,7 @@ describe("dart_implementation_provider", () => {
 
 	async function getImplementationsAt(searchText: string): Promise<vs.Location[]> {
 		const position = positionOf(searchText);
-		const definitionResults = await (vs.commands.executeCommand("vscode.executeImplementationProvider", doc.uri, position) as Thenable<vs.Location[]>);
+		const definitionResults = await (vs.commands.executeCommand("vscode.executeImplementationProvider", currentDoc().uri, position) as Thenable<vs.Location[]>);
 
 		return definitionResults || [];
 	}

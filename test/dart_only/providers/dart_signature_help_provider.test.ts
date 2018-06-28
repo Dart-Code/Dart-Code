@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, doc, extApi, positionOf, setTestContent } from "../../helpers";
+import { activate, currentDoc, extApi, positionOf, setTestContent } from "../../helpers";
 
 describe("dart_signature_provider", () => {
 	beforeEach("activate", () => activate());
@@ -11,7 +11,7 @@ describe("dart_signature_provider", () => {
 
 	async function getSignatureAt(searchText: string): Promise<vs.SignatureHelp> {
 		const position = positionOf(searchText);
-		return (vs.commands.executeCommand("vscode.executeSignatureHelpProvider", doc.uri, position) as Thenable<vs.SignatureHelp>);
+		return (vs.commands.executeCommand("vscode.executeSignatureHelpProvider", currentDoc().uri, position) as Thenable<vs.SignatureHelp>);
 	}
 
 	it("returns undefined for invalid area", async () => {

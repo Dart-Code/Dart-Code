@@ -1,12 +1,13 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, doc, ensureTestContent, extApi, positionOf, setTestContent } from "../../helpers";
+import { activate, currentDoc, ensureTestContent, extApi, positionOf, setTestContent } from "../../helpers";
 
 describe("rename_provider", () => {
 
 	beforeEach("activate", () => activate());
 
 	it("renames all exact references but not other items with same name", async () => {
+		const doc = currentDoc();
 		await setTestContent(`
 			class Danny {
 				static int myField = 1;
@@ -32,6 +33,7 @@ describe("rename_provider", () => {
 	});
 
 	it("renames alias on the import keyword", async () => {
+		const doc = currentDoc();
 		await setTestContent(`
 			import "dart:async" as async;
 		`);
@@ -46,6 +48,7 @@ describe("rename_provider", () => {
 	});
 
 	it("renames the class on the class keyword", async () => {
+		const doc = currentDoc();
 		await setTestContent(`
 			class Danny {}
 		`);

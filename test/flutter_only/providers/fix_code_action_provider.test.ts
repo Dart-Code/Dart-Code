@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, doc, flutterEmptyFile, rangeOf, setTestContent } from "../../helpers";
+import { activate, currentDoc, flutterEmptyFile, rangeOf, setTestContent } from "../../helpers";
 
 describe("fix_code_action_provider", () => {
 
@@ -27,14 +27,14 @@ describe("fix_code_action_provider", () => {
 	});
 
 	it("returns expected items", async () => {
-		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", doc.uri, rangeOf("Col||ors")) as Thenable<vs.CodeAction[]>);
+		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("Col||ors")) as Thenable<vs.CodeAction[]>);
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
 		assert.ok(fixResults.find((r) => r.title.indexOf("Create local variable 'Colors'") !== -1));
 	});
 
 	it("does not contain duplicates", async () => {
-		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", doc.uri, rangeOf("Col||ors")) as Thenable<vs.CodeAction[]>);
+		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("Col||ors")) as Thenable<vs.CodeAction[]>);
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
 		// Ensure no edit is the same as one that came before it.
