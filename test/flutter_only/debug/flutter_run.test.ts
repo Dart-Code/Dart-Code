@@ -153,7 +153,12 @@ describe("flutter run debugger", () => {
 				? ""
 				: ` after ${numReloads} reload${numReloads === 1 ? "" : "s"}`;
 
-		it("stops at a breakpoint" + reloadDescription, async () => {
+		it("stops at a breakpoint" + reloadDescription, async function () { // tslint:disable-line:only-arrow-functions
+			if (numReloads > 0) {
+				// Skipping due to https://github.com/flutter/flutter/issues/17838.
+				this.skip();
+			}
+
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(flutterHelloWorldMainFile);
 			const expectedLocation = {
