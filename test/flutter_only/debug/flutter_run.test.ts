@@ -127,8 +127,7 @@ describe("flutter run debugger", () => {
 		await dc.waitForEvent("terminated");
 	});
 
-	// Skipped due to https://github.com/flutter/flutter/issues/17798
-	it.skip("hot restarts successfully", async () => {
+	it("hot restarts successfully", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
