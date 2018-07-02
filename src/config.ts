@@ -1,4 +1,4 @@
-import { ConfigurationTarget, Uri, WorkspaceConfiguration, workspace } from "vscode";
+import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from "vscode";
 import { createFolderIfRequired, resolvePaths } from "./utils";
 
 class Config {
@@ -31,6 +31,7 @@ class Config {
 	get analysisServerFolding() { return this.getConfig<boolean>("analysisServerFolding"); }
 	get analyzerInstrumentationLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("analyzerInstrumentationLogFile"))); }
 	get analyzerAdditionalArgs() { return this.getConfig<string[]>("analyzerAdditionalArgs"); }
+	get analyzerSshHost() { return this.getConfig<string>("analyzerSshHost"); }
 	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
 	get closingLabels() { return this.getConfig<boolean>("closingLabels"); }
 	get flutterDaemonLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("flutterDaemonLogFile"))); }

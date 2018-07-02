@@ -50,7 +50,7 @@ import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingS
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { fsPath } from "./utils";
-import { LogCategory, addToLogHeader, clearLogHeader, log, logError, logTo } from "./utils/log";
+import { addToLogHeader, clearLogHeader, log, LogCategory, logError, logTo } from "./utils/log";
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestResultsProvider } from "./views/test_view";
 
@@ -121,7 +121,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// Fire up the analyzer process.
 	const analyzerStartTime = new Date();
 	const analyzerPath = config.analyzerPath || path.join(sdks.dart, analyzerSnapshotPath);
-	if (!fs.existsSync(analyzerPath)) {
+	// If the ssh host is set, then we are running the analyzer on a remote machine, that same analyzer
+	// might not exist on the local machine.
+	if (!config.analyzerSshHost && !fs.existsSync(analyzerPath)) {
 		vs.window.showErrorMessage("Could not find a Dart Analysis Server at " + analyzerPath);
 		return;
 	}
