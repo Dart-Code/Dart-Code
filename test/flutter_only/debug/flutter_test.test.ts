@@ -122,7 +122,7 @@ describe("flutter test debugger", () => {
 		});
 	});
 
-	it.skip("stops on exception", async () => {
+	it("stops on exception", async () => {
 		await openFile(flutterTestBrokenFile);
 		const config = await startDebugger(flutterTestBrokenFile);
 		await Promise.all([
@@ -149,7 +149,7 @@ describe("flutter test debugger", () => {
 		]);
 	});
 
-	it.skip("provides exception details when stopped on exception", async () => {
+	it("provides exception details when stopped on exception", async () => {
 		await openFile(flutterTestBrokenFile);
 		const config = await startDebugger(flutterTestBrokenFile);
 		await Promise.all([
