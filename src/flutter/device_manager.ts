@@ -121,10 +121,6 @@ export class FlutterDeviceManager implements vs.Disposable {
 		if (allowAutomaticSelection && this.currentDevice)
 			return true;
 
-		if (emulators.length === 0) {
-			return false;
-		}
-
 		// Add an option to create a new emulator if the daemon supports it.
 		if (this.daemon.capabilities.canCreateEmulators) {
 			emulators.push({
@@ -133,6 +129,10 @@ export class FlutterDeviceManager implements vs.Disposable {
 				isCreateEntry: true,
 				label: "Create New",
 			});
+		}
+
+		if (emulators.length === 0) {
+			return false;
 		}
 
 		const cancellationTokenSource = new vs.CancellationTokenSource();
