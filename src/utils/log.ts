@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as _ from "lodash";
 import * as path from "path";
 import * as vs from "vscode";
 import { Event, EventEmitter } from "vscode";
@@ -101,9 +102,10 @@ export function logTo(file: string, logCategories?: LogCategory[], maxLength = 2
 		if (logCategories && logCategories.indexOf(e.category) === -1)
 			return;
 
-		const logMessage = e.message.length > maxLength
-			? e.message.substring(0, maxLength) + "…"
-			: e.message;
+		const message = _.trimEnd(e.message);
+		const logMessage = message.length > maxLength
+			? message.substring(0, maxLength) + "…"
+			: message;
 		const prefix = `${time()}[${LogCategory[e.category]}] `;
 		logStream.write(`${prefix}${logMessage}${platformEol}`);
 	});
