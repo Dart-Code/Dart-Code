@@ -1,3 +1,5 @@
+import * as _ from "lodash";
+import * as shellEscape from "shell-escape";
 import * as vs from "vscode";
 import { config } from "../config";
 import { PromiseCompleter } from "../debug/utils";
@@ -43,31 +45,31 @@ export class Analyzer extends AnalyzerGen {
 	constructor(dartVMPath: string, analyzerPath: string) {
 		super(() => config.analyzerLogFile);
 
-		let args = [];
+		let analyzerArgs = [];
 
 		// Optionally start Observatory for the analyzer.
 		if (config.analyzerObservatoryPort)
-			args.push(`--observe=${config.analyzerObservatoryPort}`);
+			analyzerArgs.push(`--observe=${config.analyzerObservatoryPort}`);
 
-		args.push(analyzerPath);
+		analyzerArgs.push(analyzerPath);
 
 		// Optionally start the analyzer's diagnostic web server on the given port.
 		if (config.analyzerDiagnosticsPort)
-			args.push(`--port=${config.analyzerDiagnosticsPort}`);
+			analyzerArgs.push(`--port=${config.analyzerDiagnosticsPort}`);
 
 		// Add info about the extension that will be collected for crash reports etc.
-		args.push(`--client-id=Dart-Code.dart-code`);
-		args.push(`--client-version=${extensionVersion}`);
+		analyzerArgs.push(`--client-id=Dart-Code.dart-code`);
+		analyzerArgs.push(`--client-version=${extensionVersion}`);
 
 		// The analysis server supports a verbose instrumentation log file.
 		if (config.analyzerInstrumentationLogFile)
-			args.push(`--instrumentation-log-file=${config.analyzerInstrumentationLogFile}`);
+			analyzerArgs.push(`--instrumentation-log-file=${config.analyzerInstrumentationLogFile}`);
 
 		// Allow arbitrary args to be passed to the analysis server.
 		if (config.analyzerAdditionalArgs)
-			args = args.concat(config.analyzerAdditionalArgs);
+			analyzerArgs = analyzerArgs.concat(config.analyzerAdditionalArgs);
 
-		this.launchArgs = args;
+		this.launchArgs = analyzerArgs;
 
 		// Hook error subscriptions so we can try and get diagnostic info if this happens.
 		this.registerForServerError((e) => this.requestDiagnosticsUpdate());
@@ -76,7 +78,26 @@ export class Analyzer extends AnalyzerGen {
 		// Register for version.
 		this.registerForServerConnected((e) => { this.version = e.version; this.capabilities.version = this.version; });
 
-		this.createProcess(undefined, dartVMPath, args);
+		var binaryPath = dartVMPath;
+		var processArgs = _.clone(analyzerArgs);
+
+		// Since we communicate with the analysis server over STDOUT/STDIN, it is trivial for us
+		// to support launching it on a remote machine over SSH. This can be useful if the codebase
+		// is being modified remotely over SSHFS, and running the analysis server locally would
+		// result in excessive file reading over SSHFS.
+		if (config.analyzerSshHost) {
+			binaryPath = 'ssh';
+			processArgs.unshift(dartVMPath);
+			processArgs = [
+				// SSH quiet mode, which prevents SSH from interfering with the STDOUT/STDIN communication
+				// with the analysis server.
+				"-q",
+				config.analyzerSshHost,
+				shellEscape(processArgs)
+			];
+		}
+
+		this.createProcess(undefined, binaryPath, processArgs);
 
 		this.serverSetSubscriptions({
 			subscriptions: ["STATUS"],

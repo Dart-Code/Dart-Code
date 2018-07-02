@@ -1,11 +1,11 @@
 import * as fs from "fs";
 import * as path from "path";
-import { ExtensionContext, commands, window } from "vscode";
+import { commands, ExtensionContext, window } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
 import { isWin, platformName } from "../debug/utils";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, ProjectType, Sdks, fsPath, getDartWorkspaceFolders, openInBrowser, reloadExtension, resolvePaths } from "../utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, openInBrowser, ProjectType, reloadExtension, resolvePaths, Sdks } from "../utils";
 import { log } from "../utils/log";
 
 const dartExecutableName = isWin ? "dart.exe" : "dart";
@@ -127,6 +127,18 @@ export function findSdks(): Sdks {
 	log("Environment PATH:");
 	for (const p of paths)
 		log(`    ${p}`);
+
+	// If we are running the analyzer remotely over SSH, we only support an analyzer, since none
+	// of the other SDKs will work remotely. Also, there is no need to validate the sdk path,
+	// since that file will exist on a remote machine.
+	if (config.analyzerSshHost) {
+		return {
+			dart: config.sdkPath,
+			flutter: null,
+			fuchsia: null,
+			projectType: ProjectType.Dart,
+		}
+	}
 
 	let fuchsiaRoot: string;
 	let flutterProject: string;
