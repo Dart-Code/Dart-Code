@@ -49,7 +49,7 @@ describe("flutter run debugger", () => {
 		return config;
 	}
 
-	it.skip("runs a Flutter application and remains active until told to quit", async () => {
+	it("runs a Flutter application and remains active until told to quit", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
@@ -82,7 +82,7 @@ describe("flutter run debugger", () => {
 		]);
 	});
 
-	it.skip("runs a Flutter application with a relative path", async () => {
+	it("runs a Flutter application with a relative path", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldMainFile));
 		await Promise.all([
@@ -98,7 +98,7 @@ describe("flutter run debugger", () => {
 		await dc.waitForEvent("terminated");
 	});
 
-	it.skip("runs a Flutter application with a variable in cwd", async () => {
+	it("runs a Flutter application with a variable in cwd", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile, "${workspaceFolder}/");
 		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldMainFile));
 		await Promise.all([
@@ -125,7 +125,7 @@ describe("flutter run debugger", () => {
 		]);
 	});
 
-	it.skip("can evaluate simple expressions at breakpoint", async () => {
+	it("can evaluate simple expressions at breakpoint", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
@@ -141,7 +141,7 @@ describe("flutter run debugger", () => {
 		assert.equal(evaluateResult.variablesReference, 0);
 	});
 
-	it.skip("can evaluate complex expression expressions at breakpoint", async () => {
+	it("can evaluate complex expression expressions at breakpoint", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
@@ -157,7 +157,7 @@ describe("flutter run debugger", () => {
 		assert.equal(evaluateResult.variablesReference, 0);
 	});
 
-	it.skip("can evaluate an expression that returns a variable at breakpoint", async () => {
+	it("can evaluate an expression that returns a variable at breakpoint", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
@@ -169,11 +169,11 @@ describe("flutter run debugger", () => {
 
 		const evaluateResult = await dc.evaluate(`new DateTime.now()`);
 		assert.ok(evaluateResult);
-		assert.equal(evaluateResult.result, "TODO...");
+		assert.ok(evaluateResult.result.startsWith(new Date().getFullYear().toString()));
 		assert.ok(evaluateResult.variablesReference);
 	});
 
-	it.skip("can evaluate complex expression expressions when stopped in a top level function", async () => {
+	it("can evaluate complex expression expressions when stopped in a top level function", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
@@ -189,6 +189,7 @@ describe("flutter run debugger", () => {
 		assert.equal(evaluateResult.variablesReference, 0);
 	});
 
+	// Skipped due to https://github.com/flutter/flutter/issues/17838
 	it.skip("stops on exception", async () => {
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
@@ -202,6 +203,7 @@ describe("flutter run debugger", () => {
 		]);
 	});
 
+	// Skipped due to https://github.com/flutter/flutter/issues/17838
 	it.skip("provides exception details when stopped on exception", async () => {
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
@@ -218,7 +220,7 @@ describe("flutter run debugger", () => {
 		ensureVariable(variables, "$e.message", "message", `"(TODO WHEN UNSKIPPING)"`);
 	});
 
-	// Failing due to https://github.com/flutter/flutter/issues/18160
+	// Skipped due to https://github.com/flutter/flutter/issues/17838
 	it.skip("logs expected text (and does not stop) at a logpoint", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(flutterHelloWorldMainFile);
@@ -240,6 +242,7 @@ describe("flutter run debugger", () => {
 		]);
 	});
 
+	// Skipped due to https://github.com/flutter/flutter/issues/17838
 	it.skip("writes failure output to stderr", async () => {
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
