@@ -137,7 +137,7 @@ export function findSdks(): Sdks {
 			flutter: null,
 			fuchsia: null,
 			projectType: ProjectType.Dart,
-		}
+		};
 	}
 
 	let fuchsiaRoot: string;

@@ -905,7 +905,6 @@
 		"glob": "^7.1.2",
 		"lodash": "^4.17.10",
 		"semver": "^5.5.0",
-		"shell-escape": "^0.2.0",
 		"vscode-debugadapter": "^1.29.0",
 		"vscode-debugprotocol": "^1.29.0",
 		"ws": "^1.1.5"
@@ -916,7 +915,6 @@
 		"@types/mocha": "^5.1.0",
 		"@types/node": "^6.0.107",
 		"@types/semver": "^5.5.0",
-		"@types/shell-escape": "^0.2.0",
 		"@types/sinon": "^4.3.0",
 		"@types/ws": "^0.0.38",
 		"mocha": "^5.1.0",

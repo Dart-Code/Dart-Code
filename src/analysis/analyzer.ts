@@ -1,9 +1,8 @@
 import * as _ from "lodash";
-import * as shellEscape from "shell-escape";
 import * as vs from "vscode";
 import { config } from "../config";
 import { PromiseCompleter } from "../debug/utils";
-import { extensionVersion, reloadExtension, versionIsAtLeast } from "../utils";
+import { escapeShell, extensionVersion, reloadExtension, versionIsAtLeast } from "../utils";
 import { logError } from "../utils/log";
 import * as as from "./analysis_server_types";
 import { AnalyzerGen } from "./analyzer_gen";
@@ -78,22 +77,22 @@ export class Analyzer extends AnalyzerGen {
 		// Register for version.
 		this.registerForServerConnected((e) => { this.version = e.version; this.capabilities.version = this.version; });
 
-		var binaryPath = dartVMPath;
-		var processArgs = _.clone(analyzerArgs);
+		let binaryPath = dartVMPath;
+		let processArgs = _.clone(analyzerArgs);
 
 		// Since we communicate with the analysis server over STDOUT/STDIN, it is trivial for us
 		// to support launching it on a remote machine over SSH. This can be useful if the codebase
 		// is being modified remotely over SSHFS, and running the analysis server locally would
 		// result in excessive file reading over SSHFS.
 		if (config.analyzerSshHost) {
-			binaryPath = 'ssh';
+			binaryPath = "ssh";
 			processArgs.unshift(dartVMPath);
 			processArgs = [
 				// SSH quiet mode, which prevents SSH from interfering with the STDOUT/STDIN communication
 				// with the analysis server.
 				"-q",
 				config.analyzerSshHost,
-				shellEscape(processArgs)
+				escapeShell(processArgs),
 			];
 		}
 
