@@ -322,6 +322,7 @@ export class DartDebugSession extends DebugSession {
 					// Restart any paused threads.
 					// Note: Only wait up to 500ms here because sometimes we don't get responses because the VM terminates.
 					// We can't check processExited here as we don't have a handle to the process (we attached).
+					this.log(`Unpausing all threads...`);
 					await Promise.race([
 						Promise.all(this.threadManager.threads.map((thread) => thread.resume())),
 						new Promise((resolve) => setTimeout(resolve, 500)),
@@ -334,8 +335,10 @@ export class DartDebugSession extends DebugSession {
 		} catch (e) {
 			return this.errorResponse(response, `${e}`);
 		} finally {
+			this.log(`Removing all stored data...`);
 			this.threadManager.removeAllStoredData();
 		}
+		this.log(`Disconnecting...`);
 		super.disconnectRequest(response, args);
 	}
 

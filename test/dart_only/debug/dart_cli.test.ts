@@ -501,7 +501,7 @@ describe("dart cli debugger", () => {
 				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: fsPath(helloWorldMainFile),
 			});
-			log("Disconnecting...");
+			log("Sending disconnect request...");
 			await dc.disconnectRequest();
 			log("Disconnected!");
 
