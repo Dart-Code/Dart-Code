@@ -7,6 +7,7 @@ import * as as from "./analysis_server_types";
 import { AnalyzerGen } from "./analyzer_gen";
 
 export class AnalyzerCapabilities {
+	public static get empty() { return new AnalyzerCapabilities("0.0.0"); }
 
 	public version: string;
 
@@ -28,13 +29,6 @@ export class AnalyzerCapabilities {
 	// TODO: Remove this after next beta update, it's to stop tests failing on
 	// "stable"(beta) builds because of an upcoming change.
 	get hasUpdatedWidgetSnippets() { return versionIsAtLeast(this.version, "1.20.1"); }
-	// TODO: Remove this after next beta update, it's to stop tests failing on
-	// "stable"(beta) builds because of no flutter test device.
-	get flutterHasTestDevice() { return versionIsAtLeast(this.version, "1.20.1"); }
-	// TODO: Remove this after the next beta update. We have some flakes (flutter run tests)
-	// due to the test device not starting up properly. Never seen on master, so assumed to be an
-	// issue that's been fixed. If not we'll see new failures despite this and can investigate further.
-	get flutterTestDeviceMayBeFlaky() { return !versionIsAtLeast(this.version, "1.20.3"); }
 }
 
 export class Analyzer extends AnalyzerGen {
@@ -43,7 +37,7 @@ export class Analyzer extends AnalyzerGen {
 	private version: string;
 	private isAnalyzing = false;
 	private currentAnalysisCompleter: PromiseCompleter<void>;
-	public capabilities: AnalyzerCapabilities = new AnalyzerCapabilities("0.0.1");
+	public capabilities: AnalyzerCapabilities = AnalyzerCapabilities.empty;
 
 	constructor(dartVMPath: string, analyzerPath: string) {
 		super(() => config.analyzerLogFile);

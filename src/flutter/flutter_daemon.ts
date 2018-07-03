@@ -9,6 +9,7 @@ import { FlutterDeviceManager } from "./device_manager";
 import * as f from "./flutter_types";
 
 export class DaemonCapabilities {
+	public static get empty() { return new DaemonCapabilities("0.0.0"); }
 
 	public version: string;
 
@@ -17,6 +18,11 @@ export class DaemonCapabilities {
 	}
 
 	get canCreateEmulators() { return versionIsAtLeast(this.version, "0.4.0"); }
+
+	// TODO: Remove this after the next beta update. We have some flakes (flutter run tests)
+	// due to the test device not starting up properly. Never seen on master, so assumed to be an
+	// issue that's been fixed. If not we'll see new failures despite this and can investigate further.
+	get flutterTesterMayBeFlaky() { return !versionIsAtLeast(this.version, "0.4.0"); }
 }
 
 export class FlutterDaemon extends StdIOService<UnknownNotification> {
@@ -24,7 +30,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	private hasStarted = false;
 	private startupReporter: vs.Progress<{ message?: string; increment?: number }>;
 	private daemonStartedCompleter = new PromiseCompleter();
-	public capabilities: DaemonCapabilities = new DaemonCapabilities("0.0.1");
+	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
 	constructor(flutterBinPath: string, projectFolder: string) {
 		super(() => config.flutterDaemonLogFile, (message) => log(message, LogCategory.FlutterDaemon), true);

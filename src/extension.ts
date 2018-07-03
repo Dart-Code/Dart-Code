@@ -21,7 +21,7 @@ import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, platfor
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_decorations";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
-import { FlutterDaemon } from "./flutter/flutter_daemon";
+import { DaemonCapabilities, FlutterDaemon } from "./flutter/flutter_daemon";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
@@ -370,6 +370,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	return {
 		analyzerCapabilities: analyzer.capabilities,
 		currentAnalysis: () => analyzer.currentAnalysis,
+		daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
 		debugProvider, // TODO: Remove this when we can get access via testing...
 		initialAnalysis,
 		nextAnalysis,

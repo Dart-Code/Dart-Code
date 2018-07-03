@@ -7,6 +7,7 @@ import * as semver from "semver";
 import * as vs from "vscode";
 import { AnalyzerCapabilities } from "../src/analysis/analyzer";
 import { dartCodeExtensionIdentifier } from "../src/debug/utils";
+import { DaemonCapabilities } from "../src/flutter/flutter_daemon";
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
 import { Sdks, fsPath, vsCodeVersionConstraint } from "../src/utils";
@@ -16,6 +17,7 @@ import sinon = require("sinon");
 export const ext = vs.extensions.getExtension<{
 	analyzerCapabilities: AnalyzerCapabilities,
 	currentAnalysis: () => Promise<void>,
+	daemonCapabilities: DaemonCapabilities,
 	debugProvider: DebugConfigProvider,
 	nextAnalysis: () => Promise<void>,
 	initialAnalysis: Promise<void>,

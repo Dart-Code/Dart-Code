@@ -15,7 +15,7 @@ describe("flutter run debugger", () => {
 	});
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 	beforeEach("skip if no test device", function () {
-		if (!ext.exports.analyzerCapabilities.flutterHasTestDevice || ext.exports.analyzerCapabilities.flutterTestDeviceMayBeFlaky)
+		if (ext.exports.daemonCapabilities.flutterTesterMayBeFlaky)
 			this.skip();
 		// Skip on Windows due to https://github.com/flutter/flutter/issues/17833
 		if (isWin)
