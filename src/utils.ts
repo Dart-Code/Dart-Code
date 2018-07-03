@@ -218,21 +218,21 @@ export function escapeRegExp(input: string) {
 	return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 }
 
-// return a shell compatible format
-export function escapeShell(args : string[]) {
-	let ret : string[] = [];
-  
-	args.forEach(function(arg) {
-	  if (/[^A-Za-z0-9_\/:=-]/.test(arg)) {
-		arg = "'"+arg.replace(/'/g,"'\\''")+"'";
-		arg = arg.replace(/^(?:'')+/g, '') // unduplicate single-quote at the beginning
-		  .replace(/\\'''/g, "\\'" ); // remove non-escaped single-quote if there are enclosed between 2 escaped
-	  }
-	  ret.push(arg);
+// Escapes a set of command line arguments so that the escaped string is suitable for passing as an argument
+// to another shell command.
+// Implementation is taken from https://github.com/xxorax/node-shell-escape
+export function escapeShell(args: string[]) {
+	const ret: string[] = [];
+	args.forEach((arg) => {
+		if (/[^A-Za-z0-9_\/:=-]/.test(arg)) {
+			arg = "'" + arg.replace(/'/g, "'\\''") + "'";
+			arg = arg.replace(/^(?:'')+/g, "") // unduplicate single-quote at the beginning
+				.replace(/\\'''/g, "\\'" ); // remove non-escaped single-quote if there are enclosed between 2 escaped
+		}
+		ret.push(arg);
 	});
-  
-	return ret.join(' ');
-  }
+	return ret.join(" ");
+}
 
 export function openInBrowser(url: string) {
 	commands.executeCommand("vscode.open", Uri.parse(url));
