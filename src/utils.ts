@@ -4,7 +4,7 @@ import * as https from "https";
 import * as os from "os";
 import * as path from "path";
 import * as semver from "semver";
-import { Position, Range, TextDocument, Uri, WorkspaceFolder, commands, window, workspace } from "vscode";
+import { commands, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { config } from "./config";
 import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
 import { referencesFlutterSdk } from "./sdk/utils";
@@ -217,6 +217,22 @@ export function escapeRegExp(input: string) {
 	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
 	return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 }
+
+// return a shell compatible format
+export function escapeShell(args : string[]) {
+	let ret : string[] = [];
+  
+	args.forEach(function(arg) {
+	  if (/[^A-Za-z0-9_\/:=-]/.test(arg)) {
+		arg = "'"+arg.replace(/'/g,"'\\''")+"'";
+		arg = arg.replace(/^(?:'')+/g, '') // unduplicate single-quote at the beginning
+		  .replace(/\\'''/g, "\\'" ); // remove non-escaped single-quote if there are enclosed between 2 escaped
+	  }
+	  ret.push(arg);
+	});
+  
+	return ret.join(' ');
+  }
 
 export function openInBrowser(url: string) {
 	commands.executeCommand("vscode.open", Uri.parse(url));
