@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as net from "net";
 import * as path from "path";
 import * as vs from "vscode";
-import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, WorkspaceFolder, window, workspace } from "vscode";
+import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { DebugSession } from "vscode-debugadapter";
 import { Analytics } from "../analytics";
 import { config } from "../config";
@@ -14,7 +14,7 @@ import { FlutterLaunchRequestArguments, forceWindowsDriveLetterToUppercase, isWi
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { dartPubPath, dartVMPath, flutterPath } from "../sdk/utils";
-import { Sdks, fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, supportsPubRunTest } from "../utils";
+import { fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, ProjectType, Sdks, supportsPubRunTest } from "../utils";
 import { TestResultsProvider } from "../views/test_view";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
@@ -111,7 +111,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// Disable Flutter mode for attach.
 		// TODO: Update FlutterDebugSession to understand attach mode, and remove this limitation.
-		const isFlutter = debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string) && !isAttachRequest;
+		const isFlutter = !isAttachRequest && this.sdks.projectType !== ProjectType.Dart
+			&& debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string);
 		const isTest = isFullTestRun || (debugConfig.program && isTestFile(debugConfig.program as string));
 		const canPubRunTest = isTest && supportsPubRunTest(debugConfig.cwd as string, debugConfig.program as string);
 		const debugType = isFlutter
