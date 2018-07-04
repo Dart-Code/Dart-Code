@@ -193,13 +193,13 @@ describe("flutter run debugger", () => {
 		});
 	});
 
-	describe("can evaluate", function () { // tslint:disable-line:only-arrow-functions
+	describe("can evaluate at breakpoint", function () { // tslint:disable-line:only-arrow-functions
 		beforeEach("skip if expression evaluation is known broken", function () {
-			if (!ext.exports.analyzerCapabilities.expressionEvaluationIsBroken)
+			if (ext.exports.analyzerCapabilities.expressionEvaluationIsBroken)
 				this.skip();
 		});
 
-		it("simple expressions at breakpoint", async () => {
+		it("simple expressions", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(flutterHelloWorldMainFile);
 			await Promise.all([
@@ -215,7 +215,7 @@ describe("flutter run debugger", () => {
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
 
-		it("complex expression expressions at breakpoint", async () => {
+		it("complex expression expressions", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(flutterHelloWorldMainFile);
 			await Promise.all([
@@ -231,7 +231,7 @@ describe("flutter run debugger", () => {
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
 
-		it("an expression that returns a variable at breakpoint", async () => {
+		it("an expression that returns a variable", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(flutterHelloWorldMainFile);
 			await Promise.all([
@@ -247,7 +247,7 @@ describe("flutter run debugger", () => {
 			assert.ok(evaluateResult.variablesReference);
 		});
 
-		it("complex expression expressions when stopped in a top level function", async () => {
+		it("complex expression expressions when in a top level function", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(flutterHelloWorldMainFile);
 			await Promise.all([
