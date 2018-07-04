@@ -91,7 +91,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				}
 				return null; // null means open launch.json.
 			}
-		} else {
+		} else if (!debugConfig.previewFlutterAttach) {
 			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
 			debugConfig.observatoryUri = await this.getObservatoryUri(debugConfig.observatoryUri);
 
@@ -131,9 +131,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 		}
 
-		// Disable Flutter mode for attach.
-		// TODO: Update FlutterDebugSession to understand attach mode, and remove this limitation.
-		const isFlutter = !isAttachRequest && this.sdks.projectType !== ProjectType.Dart
+		// Ensure we have a full path.
+		if (debugConfig.program && debugConfig.cwd && !path.isAbsolute(debugConfig.program))
+			debugConfig.program = path.join(debugConfig.cwd, debugConfig.program);
+
+		const isFlutter = (!isAttachRequest || debugConfig.previewFlutterAttach) && this.sdks.projectType !== ProjectType.Dart
 			&& debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string)
 			&& !isInsideFolderNamed(debugConfig.program, "bin") && !isInsideFolderNamed(debugConfig.program, "tool");
 		log(`Detected launch project as ${isFlutter ? "Flutter" : "Dart"}`);

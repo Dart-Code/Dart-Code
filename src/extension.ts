@@ -62,6 +62,7 @@ const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
 
 const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
+export const FLUTTER_SUPPORTS_ATTACH = "dart-code:flutterSupportsAttach";
 const DART_PLATFORM_NAME = "dart-code:platformName";
 export const SERVICE_EXTENSION_CONTEXT_PREFIX = "dart-code:serviceExtension.";
 export let extensionPath: string | undefined;
@@ -495,6 +496,7 @@ function getSettingsThatRequireRestart() {
 
 export async function deactivate(isRestart: boolean = false): Promise<void> {
 	setCommandVisiblity(false, null);
+	vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, false);
 	if (!isRestart) {
 		vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, false);
 		await analytics.logExtensionShutdown();

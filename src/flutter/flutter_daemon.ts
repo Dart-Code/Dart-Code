@@ -2,6 +2,7 @@ import * as vs from "vscode";
 import { ProgressLocation } from "vscode";
 import { config } from "../config";
 import { LogCategory, PromiseCompleter } from "../debug/utils";
+import { FLUTTER_SUPPORTS_ATTACH } from "../extension";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
 import { reloadExtension, versionIsAtLeast } from "../utils";
 import { log } from "../utils/log";
@@ -18,6 +19,7 @@ export class DaemonCapabilities {
 	}
 
 	get canCreateEmulators() { return versionIsAtLeast(this.version, "0.4.0"); }
+	get canFlutterAttach() { return versionIsAtLeast(this.version, "0.4.1"); }
 
 	// TODO: Remove this after the next beta update. We have some flakes (flutter run tests)
 	// due to the test device not starting up properly. Never seen on master, so assumed to be an
@@ -119,6 +121,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 				const params = evt.params as f.DaemonConnected;
 				this.additionalPidsToTerminate.push(params.pid);
 				this.capabilities.version = params.version;
+				vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, this.capabilities.canFlutterAttach);
 				break;
 			case "device.added":
 				this.notify(this.deviceAddedSubscriptions, evt.params as f.Device);

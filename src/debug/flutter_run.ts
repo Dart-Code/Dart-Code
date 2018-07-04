@@ -3,10 +3,12 @@ import { StdIOService, UnknownNotification, UnknownResponse } from "../services/
 import { globalFlutterArgs, IAmDisposable, LogSeverity } from "./utils";
 
 export class FlutterRun extends StdIOService<UnknownNotification> {
-	constructor(flutterBinPath: string, projectFolder: string, args: string[], envOverrides: any, logFile: string, logger: (message: string, severity: LogSeverity) => void, maxLogLineLength: number) {
+	constructor(public mode: RunMode, flutterBinPath: string, projectFolder: string, args: string[], envOverrides: any, logFile: string, logger: (message: string, severity: LogSeverity) => void, maxLogLineLength: number) {
 		super(() => logFile, logger, maxLogLineLength, true, true);
 
-		this.createProcess(projectFolder, flutterBinPath, globalFlutterArgs.concat(["run", "--machine"]).concat(args), envOverrides);
+		const command = mode === RunMode.Attach ? "attach" : "run";
+
+		this.createProcess(projectFolder, flutterBinPath, globalFlutterArgs.concat([command, "--machine"]).concat(args), envOverrides);
 	}
 
 	protected shouldHandleMessage(message: string): boolean {
@@ -105,4 +107,9 @@ export class FlutterRun extends StdIOService<UnknownNotification> {
 	public registerForError(subscriber: (error: string) => void): IAmDisposable {
 		return this.subscribe(this.errorSubscriptions, subscriber);
 	}
+}
+
+export enum RunMode {
+	Run,
+	Attach,
 }

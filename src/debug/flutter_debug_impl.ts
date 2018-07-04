@@ -2,7 +2,7 @@ import { Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
-import { FlutterRun } from "./flutter_run";
+import { FlutterRun, RunMode } from "./flutter_run";
 import { FlutterLaunchRequestArguments, isWin, LogCategory, LogMessage, LogSeverity } from "./utils";
 
 const objectGroupName = "my-group";
@@ -24,6 +24,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		// finished setting up and bad things can happen (like us sending events
 		// way too early).
 		this.parseObservatoryUriFromStdOut = false;
+		this.requiresProgram = false;
 	}
 
 	protected initializeRequest(
@@ -34,27 +35,38 @@ export class FlutterDebugSession extends DartDebugSession {
 		super.initializeRequest(response, args);
 	}
 
+	protected async attachRequest(response: DebugProtocol.AttachResponse, args: any): Promise<void> {
+		// For flutter attach, we actually do the same thing as launch - we run a flutter process
+		// (flutter attach instead of flutter run).
+		this.launchRequest(response, args);
+	}
+
 	protected spawnProcess(args: FlutterLaunchRequestArguments): any {
 		this.noDebug = args.noDebug;
 		const debug = !args.noDebug;
+		const isAttach = args.request === "attach";
 		let appArgs = [];
 
-		appArgs.push("-t");
-		appArgs.push(this.sourceFileForArgs(args));
+		if (!isAttach) {
+			appArgs.push("-t");
+			appArgs.push(this.sourceFileForArgs(args));
+		}
 
 		if (args.deviceId) {
 			appArgs.push("-d");
 			appArgs.push(args.deviceId);
 		}
 
-		if (args.flutterMode === "profile") {
-			appArgs.push("--profile");
-		} else if (args.flutterMode === "release") {
-			appArgs.push("--release");
-		}
+		if (!isAttach) {
+			if (args.flutterMode === "profile") {
+				appArgs.push("--profile");
+			} else if (args.flutterMode === "release") {
+				appArgs.push("--release");
+			}
 
-		if (debug) {
-			appArgs.push("--start-paused");
+			if (debug) {
+				appArgs.push("--start-paused");
+			}
 		}
 
 		if (this.flutterTrackWidgetCreation) {
@@ -75,7 +87,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.allowTerminatingObservatoryVmPid = args.deviceId === "flutter-tester";
 
 		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.FlutterRun)));
-		this.flutter = new FlutterRun(args.flutterPath, args.cwd, appArgs, args.env, args.flutterRunLogFile, logger, this.maxLogLineLength);
+		this.flutter = new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterPath, args.cwd, appArgs, args.env, args.flutterRunLogFile, logger, this.maxLogLineLength);
 		this.flutter.registerForUnhandledMessages((msg) => this.logToUser(msg, "stdout"));
 
 		// Set up subscriptions.
@@ -106,7 +118,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		args: DebugProtocol.DisconnectArguments,
 	): Promise<void> {
 		try {
-			if (this.currentRunningAppId && this.appHasStarted)
+			if (this.currentRunningAppId && this.appHasStarted && this.flutter.mode === RunMode.Run)
 				// Wait up to 1000ms for app to quit since we often don't get a
 				// response here because the processes terminate immediately.
 				await Promise.race([
