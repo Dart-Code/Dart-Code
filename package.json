@@ -186,6 +186,10 @@
 				"command": "flutter.doctor",
 				"title": "Run Flutter Doctor",
 				"category": "Flutter"
+			},{
+				"command": "flutter.upgrade",
+				"title": "Run Flutter Upgrade",
+				"category": "Flutter"
 			},
 			{
 				"command": "flutter.toggleDebugPainting",
@@ -346,6 +350,9 @@
 				},
 				{
 					"command": "flutter.doctor"
+				},
+				{
+					"command": "flutter.upgrade"
 				},
 				{
 					"command": "flutter.toggleDebugPainting",

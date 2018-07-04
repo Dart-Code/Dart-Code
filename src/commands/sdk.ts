@@ -96,6 +96,17 @@ export class SdkCommands {
 				fs.mkdirSync(tempDir);
 			return this.runFlutterInFolder(tempDir, ["doctor"], "flutter");
 		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.upgrade", async (selection) => {
+			if (!sdks.flutter) {
+				showFlutterActivationFailure("flutter.upgrade");
+				return;
+			}
+			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
+			if (!fs.existsSync(tempDir))
+				fs.mkdirSync(tempDir);
+			await this.runFlutterInFolder(tempDir, ["upgrade"], "flutter");
+			await util.reloadExtension();
+		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
 		// Internal command that's fired in user_prompts to actually do the creation.
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.create", (projectPath: string, projectName?: string) => {

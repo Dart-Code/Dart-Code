@@ -72,10 +72,18 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	}
 
 	private static readonly outOfDateWarning = new RegExp("WARNING: .* Flutter is (\\d+) days old");
-	protected processUnhandledMessage(message: string): void {
+	private static readonly newVersionMessage = "A new version of Flutter is available";
+	protected async processUnhandledMessage(message: string): Promise<void> {
+		let upgradeMessage: string | undefined;
 		const matches = FlutterDaemon.outOfDateWarning.exec(message);
-		if (matches && matches.length === 2) {
-			vs.window.showWarningMessage(`Your installation of Flutter is ${matches[1]} days old. To update to the latest version, run 'flutter upgrade'.`);
+		if (matches && matches.length === 2)
+			upgradeMessage = `Your installation of Flutter is ${matches[1]} days old.`;
+		else if (message.indexOf(FlutterDaemon.newVersionMessage) !== -1)
+			upgradeMessage = "A new version of Flutter is available";
+
+		if (upgradeMessage) {
+			if (await vs.window.showWarningMessage(upgradeMessage, "Upgrade Flutter"))
+				vs.commands.executeCommand("flutter.upgrade");
 			return;
 		}
 
