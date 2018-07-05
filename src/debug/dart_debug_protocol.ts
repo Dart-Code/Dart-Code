@@ -214,6 +214,10 @@ export interface VMInstanceRef extends VMObjectRef {
 	length?: number;
 }
 
+export interface VMTypeRef extends VMInstanceRef {
+	name: string;
+}
+
 export interface VMErrorRef extends VMObjectRef {
 	// The kind of error.
 	kind: string;

@@ -5,7 +5,7 @@ import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { logError } from "../utils/log";
-import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack } from "./dart_debug_protocol";
+import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
 import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, PromiseCompleter, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
 
@@ -1210,6 +1210,9 @@ export class DartDebugSession extends DebugSession {
 			return `List (${instanceRef.length} items)`;
 		} else if (ref.kind === "Map") {
 			return `Map (${instanceRef.length} items)`;
+		} else if (ref.kind === "Type") {
+			const typeRef = ref as VMTypeRef;
+			return `Type (${typeRef.name})`;
 		} else if (useClassNameAsFallback) {
 			return this.getFriendlyTypeName(instanceRef);
 		} else {
