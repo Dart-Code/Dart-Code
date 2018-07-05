@@ -27,3 +27,8 @@ class F extends E {
     print("test");
   }
 }
+
+fromCallSite() {
+  A e = new E();
+  e.b();
+}
