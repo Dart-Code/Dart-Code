@@ -16,7 +16,7 @@ export class DartImplementationProvider implements vs.ImplementationProvider {
 		//
 		// The search.getTypeHierarchy call will only work over "b" but by using outline we
 		// can support the whole "void b();".
-		const outlineNode = findNearestOutlineNode(document, position);
+		const outlineNode = findNearestOutlineNode(document, position, true);
 		const offset = outlineNode ? outlineNode.element.location.offset : document.offsetAt(position);
 
 		const hierarchy = await this.analyzer.searchGetTypeHierarchy({

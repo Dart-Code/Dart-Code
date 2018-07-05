@@ -28,7 +28,9 @@ class F extends E {
   }
 }
 
-fromCallSite() {
-  A e = new E();
-  e.b();
+class X {
+  fromCallSite() {
+    A e = new E();
+    e.b();
+  }
 }
