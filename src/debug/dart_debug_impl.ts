@@ -35,6 +35,7 @@ export class DartDebugSession extends DebugSession {
 	protected sendStdOutToConsole: boolean = true;
 	protected requiresProgram: boolean = true;
 	protected pollforMemoryMs?: number; // If set, will poll for memory usage and send events back.
+	protected processExit: Promise<void> = Promise.resolve();
 
 	public constructor() {
 		super();
@@ -79,6 +80,7 @@ export class DartDebugSession extends DebugSession {
 
 		this.childProcess = this.spawnProcess(args);
 		const process = this.childProcess;
+		this.processExit = new Promise((resolve) => process.on("exit", resolve));
 
 		process.stdout.setEncoding("utf8");
 		process.stdout.on("data", (data) => {
@@ -338,6 +340,8 @@ export class DartDebugSession extends DebugSession {
 			this.log(`Removing all stored data...`);
 			this.threadManager.removeAllStoredData();
 		}
+		this.log(`Waiting for process to finish...`);
+		await this.processExit;
 		this.log(`Disconnecting...`);
 		super.disconnectRequest(response, args);
 	}
