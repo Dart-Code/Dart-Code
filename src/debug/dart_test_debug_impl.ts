@@ -58,6 +58,7 @@ export class DartTestDebugSession extends DartDebugSession {
 
 		// Set up subscriptions.
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
+		runner.registerForUnhandledMessages((msg) => this.logToUserIfAppropriate(msg, "stdout"));
 		runner.registerForTestStartedProcess((n) => this.initObservatory(`${n.observatoryUri}ws`));
 		runner.registerForAllTestNotifications((n) => {
 			try {
@@ -75,6 +76,16 @@ export class DartTestDebugSession extends DartDebugSession {
 		});
 
 		return runner.process;
+	}
+
+	protected logToUserIfAppropriate(message: string, category?: string) {
+		// Filter out these messages taht come to stdout that we don't want to send to the user.
+		if (message && message.startsWith("Observatory listening on"))
+			return;
+		if (message && message.startsWith("Press Control-C again"))
+			return;
+
+		this.logToUser(message, category);
 	}
 
 	private readonly suitePaths: string[] = [];
