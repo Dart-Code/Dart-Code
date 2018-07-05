@@ -13,7 +13,13 @@ function findNode(outlines: as.Outline[], offset: number, kinds: as.ElementKind[
 		if (outlineStart > offset || outlineEnd < offset)
 			continue;
 
-		return findNode(outline.children, offset, kinds) || (kinds.indexOf(outline.element.kind) !== -1 ? outline : null);
+		// Although we use the full code range above so that we can walk into children, when performing a match we want to stop
+		// at the end of the element, so we use a reduce range to avoid returning a method for the whole of its body.
+		const isInReducedRange = !outline.element || !outline.element.location
+			|| (offset >= outlineStart && offset <= outline.element.location.offset + outline.element.location.length);
+
+		return findNode(outline.children, offset, kinds)
+			|| (kinds.indexOf(outline.element.kind) !== -1 && isInReducedRange ? outline : null);
 	}
 }
 
