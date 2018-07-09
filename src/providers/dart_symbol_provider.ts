@@ -36,6 +36,8 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 			document.uri,
 			toRange(document, symbol.locationData.offset, symbol.locationData.length),
 		);
+
+		return symbol;
 	}
 
 	private convertResult(document: TextDocument | undefined, result: as.ElementDeclaration, file: string, includeFilename: boolean): SymbolInformation {
