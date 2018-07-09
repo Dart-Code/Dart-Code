@@ -1,34 +1,12 @@
 import * as path from "path";
-import { CancellationToken, DocumentSymbolProvider, Location, SymbolInformation, TextDocument, Uri, WorkspaceSymbolProvider, workspace } from "vscode";
+import { CancellationToken, Location, SymbolInformation, Uri, WorkspaceSymbolProvider, workspace } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { fsPath, toRange } from "../utils";
 
-export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymbolProvider {
-	private analyzer: Analyzer;
+export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	private badChars: RegExp = new RegExp("[^0-9a-z\-]", "gi");
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-	}
-
-	public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<SymbolInformation[]> {
-		const results = await this.analyzer.searchGetElementDeclarations({ file: fsPath(document.uri) });
-		return results.declarations.map((d) => this.convertDocumentResult(document, d, results.files[d.fileIndex]));
-	}
-
-	private convertDocumentResult(document: TextDocument | undefined, result: as.ElementDeclaration, file: string): SymbolInformation {
-		const names = this.getNames(result, false, file);
-
-		return new SymbolInformation(
-			names.name,
-			getSymbolKindForElementKind(result.kind),
-			names.containerName,
-			new Location(
-				Uri.file(file),
-				toRange(document, result.codeOffset, result.codeLength),
-			),
-		);
-	}
+	constructor(public readonly analyzer: Analyzer) { }
 
 	public async provideWorkspaceSymbols(query: string, token: CancellationToken): Promise<SymbolInformation[]> {
 		if (query.length === 0)
