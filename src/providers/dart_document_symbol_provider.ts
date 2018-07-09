@@ -29,10 +29,17 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 		);
 
 		if (outline.children && outline.children.length) {
-			symbol.children = outline.children.map((r) => this.convertResult(document, r));
+			symbol.children = outline.children.filter(this.shouldShow).map((r) => this.convertResult(document, r));
 		}
 
 		return symbol;
+	}
+
+	private shouldShow(outline: Outline): boolean {
+		// Don't show these (#656).
+		if (outline.element.kind === "CONSTRUCTOR_INVOCATION" || outline.element.kind === "FUNCTION_INVOCATION")
+			return false;
+		return true;
 	}
 
 	private getCodeOffset(document: TextDocument, outline: Outline & { codeOffset?: number, codeLength?: number }) {
