@@ -1,10 +1,10 @@
 import * as vs from "vscode";
 import { ProgressLocation } from "vscode";
 import { config } from "../config";
-import { PromiseCompleter } from "../debug/utils";
+import { LogCategory, PromiseCompleter } from "../debug/utils";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
 import { reloadExtension, versionIsAtLeast } from "../utils";
-import { LogCategory, log } from "../utils/log";
+import { log } from "../utils/log";
 import { FlutterDeviceManager } from "./device_manager";
 import * as f from "./flutter_types";
 
@@ -33,7 +33,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
 	constructor(flutterBinPath: string, projectFolder: string) {
-		super(() => config.flutterDaemonLogFile, (message) => log(message, LogCategory.FlutterDaemon), true);
+		super(() => config.flutterDaemonLogFile, (message, severity) => log(message, severity, LogCategory.FlutterDaemon), true);
 
 		this.createProcess(projectFolder, flutterBinPath, ["daemon"]);
 
@@ -54,7 +54,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 		try {
 			super.sendMessage(json);
 		} catch (e) {
-			reloadExtension("The Flutter Daemon has terminated.");
+			reloadExtension("The Flutter Daemon has terminated.", undefined, true);
 			throw e;
 		}
 	}

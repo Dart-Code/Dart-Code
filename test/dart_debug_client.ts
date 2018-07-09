@@ -2,7 +2,7 @@ import * as assert from "assert";
 import { SpawnOptions } from "child_process";
 import { DebugSessionCustomEvent } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { debugLogTypes, handleDebugLogEvent, log } from "../src/utils/log";
+import { handleDebugLogEvent, log } from "../src/utils/log";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../src/views/test_protocol";
 import { DebugClient } from "./debug_client_ms";
 import { delay, withTimeout } from "./helpers";
@@ -10,9 +10,7 @@ import { delay, withTimeout } from "./helpers";
 export class DartDebugClient extends DebugClient {
 	constructor(runtime: string, executable: string, debugType: string, spwanOptions?: SpawnOptions) {
 		super(runtime, executable, debugType, spwanOptions);
-		Object.keys(debugLogTypes).forEach((event) => {
-			this.on(event, (e: DebugSessionCustomEvent) => handleDebugLogEvent(e.event, e.body.message));
-		});
+		this.on("dart.log", (e: DebugSessionCustomEvent) => handleDebugLogEvent(e.event, e.body));
 		// Log important events to make troubleshooting tests easier.
 		this.on("output", (event: DebugProtocol.OutputEvent) => {
 			log(`[${event.body.category}] ${event.body.output}`);

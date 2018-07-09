@@ -4,13 +4,14 @@
 "use strict";
 
 import * as vs from "vscode";
+import { LogCategory } from "../debug/utils";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
-import { LogCategory, log } from "../utils/log";
+import { log } from "../utils/log";
 import * as as from "./analysis_server_types";
 
 export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	constructor(getLogFile: () => string) {
-		super(getLogFile, (message) => log(message, LogCategory.Analyzer));
+		super(getLogFile, (message, severity) => log(message, severity, LogCategory.Analyzer));
 	}
 
 	private serverConnectedSubscriptions: ((notification: as.ServerConnectedNotification) => void)[] = [];

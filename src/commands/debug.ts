@@ -56,8 +56,8 @@ export class DebugCommands {
 				}
 			} else if (e.event === "dart.observatoryUri") {
 				session.observatoryUri = e.body.observatoryUri;
-			} else if (e.event.startsWith("dart.log.")) {
-				handleDebugLogEvent(e.event, e.body.message);
+			} else if (e.event === "dart.log") {
+				handleDebugLogEvent(e.event, e.body);
 			} else if (e.event === "dart.restartRequest") {
 				// This event comes back when the user restarts with the Restart button
 				// (eg. it wasn't intiated from our extension, so we don't get to log it

@@ -7,7 +7,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { logError } from "../utils/log";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
-import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, PromiseCompleter, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
+import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, LogCategory, LogMessage, LogSeverity, PromiseCompleter, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -191,7 +191,7 @@ export class DartDebugSession extends DebugSession {
 			return `${wsUri}/ws`;
 	}
 
-	protected log(message: string) {
+	protected log(message: string, severity = LogSeverity.Info) {
 		const max: number = 2500;
 
 		if (this.logFile) {
@@ -204,7 +204,7 @@ export class DartDebugSession extends DebugSession {
 				this.logStream.write(message.trim() + "\r\n");
 		}
 
-		this.sendEvent(new Event("dart.log.observatory", { message }));
+		this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.Observatory)));
 	}
 
 	protected initObservatory(uri: string): Promise<void> {
@@ -770,7 +770,7 @@ export class DartDebugSession extends DebugSession {
 				return this.valueAsString(evalResult, undefined, true);
 			}
 		} catch (e) {
-			logError(e);
+			logError(e, LogCategory.Observatory);
 			return null;
 		}
 	}
@@ -1163,7 +1163,7 @@ export class DartDebugSession extends DebugSession {
 						});
 					}
 				} catch (e) {
-					logError(e);
+					logError(e, LogCategory.Observatory);
 				}
 			}
 		}
@@ -1483,7 +1483,7 @@ class ThreadManager {
 			this.threads.splice(this.threads.indexOf(threadInfo), 1);
 			this.removeStoredData(threadInfo);
 		} else {
-			logError(`Failed to find thread for ${ref.id} during exit`);
+			logError(`Failed to find thread for ${ref.id} during exit`, LogCategory.Observatory);
 		}
 	}
 }

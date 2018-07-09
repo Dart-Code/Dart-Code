@@ -4,15 +4,17 @@ import * as https from "https";
 import * as os from "os";
 import * as path from "path";
 import * as semver from "semver";
-import { commands, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
+import { Position, Range, TextDocument, Uri, WorkspaceFolder, commands, window, workspace } from "vscode";
 import { config } from "./config";
 import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
+import { extensionLogPath } from "./extension";
 import { referencesFlutterSdk } from "./sdk/utils";
 
 export const extensionVersion = getExtensionVersion();
 export const vsCodeVersionConstraint = getVsCodeVersionConstraint();
 export const isDevExtension = checkIsDevExtension();
 export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "dart_code_flutter_create.dart";
+export const showLogAction = "Show Log";
 
 export function fsPath(uri: Uri | string) {
 	if (!config.normalizeWindowsDriveLetters)
@@ -227,7 +229,7 @@ export function escapeShell(args: string[]) {
 		if (/[^A-Za-z0-9_\/:=-]/.test(arg)) {
 			arg = "'" + arg.replace(/'/g, "'\\''") + "'";
 			arg = arg.replace(/^(?:'')+/g, "") // unduplicate single-quote at the beginning
-				.replace(/\\'''/g, "\\'" ); // remove non-escaped single-quote if there are enclosed between 2 escaped
+				.replace(/\\'''/g, "\\'"); // remove non-escaped single-quote if there are enclosed between 2 escaped
 		}
 		ret.push(arg);
 	});
@@ -251,9 +253,13 @@ export enum ProjectType {
 	Fuchsia,
 }
 
-export async function reloadExtension(prompt?: string, buttonText?: string) {
+export async function reloadExtension(prompt?: string, buttonText?: string, offerLogFile = false) {
 	const restartAction = buttonText || "Restart";
-	if (!prompt || await window.showInformationMessage(prompt, restartAction) === restartAction) {
+	const actions = offerLogFile ? [restartAction, showLogAction] : [restartAction];
+	const chosenAction = prompt && await window.showInformationMessage(prompt, ...actions);
+	if (chosenAction === showLogAction) {
+		openExtensionLogFile();
+	} else if (!prompt || chosenAction === restartAction) {
 		commands.executeCommand("_dart.reloadExtension");
 	}
 }
@@ -304,4 +310,14 @@ export function trueCasePathSync(fsPath: string): string {
 	// Fortunately, glob() with nocase case-corrects the input even if it is
 	// a *literal* path.
 	return glob.sync(noDrivePath, { nocase: true, cwd: pathRoot })[0];
+}
+
+export function getRandomInt(min: number, max: number) {
+	min = Math.ceil(min);
+	max = Math.floor(max);
+	return Math.floor(Math.random() * (max - min)) + min;
+}
+
+export function openExtensionLogFile() {
+	workspace.openTextDocument(extensionLogPath).then(window.showTextDocument);
 }

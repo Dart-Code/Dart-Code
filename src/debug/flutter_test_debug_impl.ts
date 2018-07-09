@@ -1,6 +1,6 @@
 import { Event } from "vscode-debugadapter";
 import { DartTestDebugSession } from "./dart_test_debug_impl";
-import { FlutterLaunchRequestArguments, globalFlutterArgs } from "./utils";
+import { FlutterLaunchRequestArguments, LogCategory, LogMessage, LogSeverity, globalFlutterArgs } from "./utils";
 
 export class FlutterTestDebugSession extends DartTestDebugSession {
 
@@ -19,7 +19,7 @@ export class FlutterTestDebugSession extends DartTestDebugSession {
 		if (args.program)
 			appArgs.push(this.sourceFileForArgs(args));
 
-		const logger = (message: string) => this.sendEvent(new Event("dart.log.flutter.test", { message }));
+		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.FlutterTest)));
 		return this.createRunner(args.flutterPath, args.cwd, args.program, globalFlutterArgs.concat(["test", "--machine"]).concat(appArgs), args.flutterTestLogFile, logger);
 	}
 }
