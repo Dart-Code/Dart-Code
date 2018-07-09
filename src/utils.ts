@@ -7,8 +7,8 @@ import * as semver from "semver";
 import { Position, Range, TextDocument, Uri, WorkspaceFolder, commands, window, workspace } from "vscode";
 import { config } from "./config";
 import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
-import { extensionLogPath } from "./extension";
 import { referencesFlutterSdk } from "./sdk/utils";
+import { getExtensionLogPath } from "./utils/log";
 
 export const extensionVersion = getExtensionVersion();
 export const vsCodeVersionConstraint = getVsCodeVersionConstraint();
@@ -319,5 +319,5 @@ export function getRandomInt(min: number, max: number) {
 }
 
 export function openExtensionLogFile() {
-	workspace.openTextDocument(extensionLogPath).then(window.showTextDocument);
+	workspace.openTextDocument(getExtensionLogPath()).then(window.showTextDocument);
 }

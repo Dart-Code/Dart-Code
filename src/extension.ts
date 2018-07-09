@@ -1,4 +1,3 @@
-import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { WorkspaceFolder } from "vscode";
@@ -50,7 +49,7 @@ import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingS
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { fsPath } from "./utils";
-import { addToLogHeader, clearLogHeader, log, logError, logTo } from "./utils/log";
+import { addToLogHeader, clearLogHeader, getExtensionLogPath, log, logError, logTo } from "./utils/log";
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestResultsProvider } from "./views/test_view";
 
@@ -72,12 +71,10 @@ let showTodos: boolean;
 let showLintNames: boolean;
 let previousSettings: string;
 let extensionLogger: { dispose: () => Promise<void> };
-export let extensionLogPath: string;
 
 export function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
-	extensionLogPath = config.extensionLogFile || path.join(os.tmpdir(), `dart-code-startup-log-${util.getRandomInt(0x1000, 0x10000).toString(16)}.txt`);
 	if (!extensionLogger)
-		extensionLogger = logTo(extensionLogPath, [LogCategory.General]);
+		extensionLogger = logTo(getExtensionLogPath(), [LogCategory.General]);
 
 	util.logTime("Code called activate");
 	// Wire up a reload command that will re-initialise everything.
