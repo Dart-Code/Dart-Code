@@ -25,7 +25,7 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 			outline.element.name, outline.element.parameters,
 			getSymbolKindForElementKind(outline.element.kind),
 			this.getCodeOffset(document, outline),
-			toRange(document, outline.element.location.offset, outline.element.name.length),
+			toRange(document, outline.element.location.offset, outline.element.location.length),
 		);
 
 		if (outline.children && outline.children.length) {
