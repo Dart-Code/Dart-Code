@@ -955,6 +955,8 @@ export class DartDebugSession extends DebugSession {
 
 		if (kind.startsWith("Pause")) {
 			this.handlePauseEvent(event);
+		} else if (kind === "Inspect") {
+			this.handleInspectEvent(event);
 		}
 	}
 
@@ -1035,6 +1037,10 @@ export class DartDebugSession extends DebugSession {
 				thread.resume();
 			}
 		}
+	}
+
+	protected async handleInspectEvent(event: VMEvent): Promise<void> {
+		// No implementation for Dart.
 	}
 
 	// Like valueAsString, but will call toString() if the thing is truncated.

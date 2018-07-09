@@ -169,6 +169,13 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 	}
 
+	protected async handleInspectEvent(event: VMEvent): Promise<void> {
+		// TODO: How can we translate this back to source?
+		// const evt = event as any;
+		// const thread: VMIsolateRef = evt.isolate;
+		// const inspectee = (event as any).inspectee;
+	}
+
 	// Extension
 	public handleExtensionEvent(event: VMEvent) {
 		if (event.kind === "Extension" && event.extensionKind === "Flutter.FirstFrame") {
