@@ -1,11 +1,18 @@
 import * as fs from "fs";
 import * as _ from "lodash";
+import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { Event, EventEmitter } from "vscode";
+import { config } from "../config";
 import { LogCategory, LogMessage, LogSeverity, platformEol } from "../debug/utils";
-import { isDevExtension } from "../utils";
+import { getRandomInt, isDevExtension } from "../utils";
 
+let extensionLogPath: string;
+export function getExtensionLogPath() {
+	extensionLogPath = extensionLogPath || config.extensionLogFile || path.join(os.tmpdir(), `dart-code-startup-log-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`);
+	return extensionLogPath;
+}
 export const userSelectableLogCategories: { [key: string]: LogCategory } = {
 	"Analysis Server": LogCategory.Analyzer,
 	"Debugger (Observatory)": LogCategory.Observatory,
