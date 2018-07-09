@@ -1,4 +1,4 @@
-import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, Uri } from "vscode";
+import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, DiagnosticTag, Uri } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { config } from "../config";
@@ -36,6 +36,7 @@ export class DartDiagnosticProvider {
 		);
 		diag.code = error.code;
 		diag.source = "dart";
+		diag.tags = DartDiagnosticProvider.getTags(error);
 		return diag;
 	}
 
@@ -55,6 +56,13 @@ export class DartDiagnosticProvider {
 			default:
 				throw new Error("Unknown severity type: " + severity);
 		}
+	}
+
+	public static getTags(error: as.AnalysisError): DiagnosticTag[] {
+		const tags: DiagnosticTag[] = [];
+		if (error.code === "dead_code" || error.code === "unused_local_variable" || error.code === "unused_import")
+			tags.push(DiagnosticTag.Unnecessary);
+		return tags;
 	}
 
 	private flushResults(notification: as.AnalysisFlushResultsNotification) {
