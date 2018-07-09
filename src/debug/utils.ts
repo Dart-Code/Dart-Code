@@ -11,6 +11,25 @@ export const isLinux = !isWin && !isMac;
 export const platformName = isWin ? "win" : isMac ? "mac" : "linux";
 export const platformEol = isWin ? "\r\n" : "\n";
 
+export enum LogCategory {
+	General,
+	CI,
+	Analyzer,
+	PubTest,
+	FlutterDaemon,
+	FlutterRun,
+	FlutterTest,
+	Observatory,
+}
+export enum LogSeverity {
+	Info,
+	Warn,
+	Error,
+}
+export class LogMessage {
+	constructor(public readonly message: string, public readonly severity: LogSeverity, public readonly category: LogCategory) { }
+}
+
 const toolEnv = Object.create(process.env);
 toolEnv.FLUTTER_HOST = "VSCode";
 toolEnv.PUB_ENVIRONMENT = (toolEnv.PUB_ENVIRONMENT ? `${toolEnv.PUB_ENVIRONMENT}:` : "") + "vscode.dart-code";

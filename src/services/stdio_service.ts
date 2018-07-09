@@ -1,6 +1,6 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
-import { IAmDisposable, safeSpawn } from "../debug/utils";
+import { IAmDisposable, LogSeverity, safeSpawn } from "../debug/utils";
 import { logError } from "../utils/log";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
@@ -19,7 +19,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 	constructor(
 		public readonly getLogFile: () => string,
-		public readonly logger: (message: string) => void,
+		public readonly logger: (message: string, severity: LogSeverity) => void,
 		public messagesWrappedInBrackets: boolean = false,
 		public readonly treatHandlingErrorsAsUnhandledMessages: boolean = false) {
 		this.currentLogFile = getLogFile();
@@ -45,7 +45,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 				this.processMessageBuffer();
 		});
 		this.process.stderr.on("data", (data: Buffer) => {
-			this.logTraffic(`ERR ${data.toString()}`);
+			this.logTraffic(`${data.toString()}`, LogSeverity.Error);
 		});
 		this.process.on("exit", (data: Buffer) => {
 			this.processExited = true;
@@ -194,8 +194,8 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		return this.subscribe(this.requestErrorSubscriptions, subscriber);
 	}
 
-	protected logTraffic(message: string): void {
-		this.logger(message);
+	protected logTraffic(message: string, severity = LogSeverity.Info): void {
+		this.logger(message, severity);
 		const max: number = 2000;
 
 		const newLogFile = this.getLogFile();
@@ -228,6 +228,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			try {
 				process.kill(pid);
 			} catch (e) {
+				// TODO: Logger knows the category!
 				logError({ message: e.toString() });
 			}
 		}

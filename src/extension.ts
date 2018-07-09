@@ -1,4 +1,4 @@
-import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { WorkspaceFolder } from "vscode";
@@ -17,7 +17,7 @@ import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
-import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, platformName } from "./debug/utils";
+import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, LogCategory, platformName } from "./debug/utils";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_decorations";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
@@ -50,7 +50,7 @@ import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingS
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { fsPath } from "./utils";
-import { addToLogHeader, clearLogHeader, log, LogCategory, logError, logTo } from "./utils/log";
+import { addToLogHeader, clearLogHeader, log, logError, logTo } from "./utils/log";
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestResultsProvider } from "./views/test_view";
 
@@ -72,10 +72,12 @@ let showTodos: boolean;
 let showLintNames: boolean;
 let previousSettings: string;
 let extensionLogger: { dispose: () => Promise<void> };
+export let extensionLogPath: string;
 
 export function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
-	if (!extensionLogger && config.extensionLogFile)
-		extensionLogger = logTo(config.extensionLogFile, [LogCategory.General]);
+	extensionLogPath = config.extensionLogFile || path.join(os.tmpdir(), `dart-code-startup-log-${util.getRandomInt(0x1000, 0x10000).toString(16)}.txt`);
+	if (!extensionLogger)
+		extensionLogger = logTo(extensionLogPath, [LogCategory.General]);
 
 	util.logTime("Code called activate");
 	// Wire up a reload command that will re-initialise everything.
@@ -126,10 +128,10 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const analyzerPath = config.analyzerPath || path.join(sdks.dart, analyzerSnapshotPath);
 	// If the ssh host is set, then we are running the analyzer on a remote machine, that same analyzer
 	// might not exist on the local machine.
-	if (!config.analyzerSshHost && !fs.existsSync(analyzerPath)) {
-		vs.window.showErrorMessage("Could not find a Dart Analysis Server at " + analyzerPath);
-		return;
-	}
+	// if (!config.analyzerSshHost && !fs.existsSync(analyzerPath)) {
+	// 	vs.window.showErrorMessage("Could not find a Dart Analysis Server at " + analyzerPath);
+	// 	return;
+	// }
 
 	analyzer = new Analyzer(path.join(sdks.dart, dartVMPath), analyzerPath);
 	context.subscriptions.push(analyzer);

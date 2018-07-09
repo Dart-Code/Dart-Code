@@ -4,7 +4,7 @@ import { ErrorNotification, GroupNotification, PrintNotification, SuiteNotificat
 import { DartDebugSession } from "./dart_debug_impl";
 import { ObservatoryConnection } from "./dart_debug_protocol";
 import { TestRunner } from "./test_runner";
-import { DartLaunchRequestArguments, FlutterLaunchRequestArguments } from "./utils";
+import { DartLaunchRequestArguments, FlutterLaunchRequestArguments, LogCategory, LogMessage, LogSeverity } from "./utils";
 
 const tick = "✓";
 const cross = "✖";
@@ -49,11 +49,11 @@ export class DartTestDebugSession extends DartDebugSession {
 		if (args.program)
 			appArgs.push(this.sourceFileForArgs(args));
 
-		const logger = (message: string) => this.sendEvent(new Event("dart.log.pub.test", { message }));
+		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.PubTest)));
 		return this.createRunner(args.pubPath, args.cwd, args.program, ["run", "test", "-r", "json"].concat(appArgs), args.pubTestLogFile, logger, envOverrides);
 	}
 
-	protected createRunner(executable: string, projectFolder: string, program: string, args: string[], logFile: string, logger: (message: string) => void, envOverrides?: any) {
+	protected createRunner(executable: string, projectFolder: string, program: string, args: string[], logFile: string, logger: (message: string, severity: LogSeverity) => void, envOverrides?: any) {
 		const runner = new TestRunner(executable, projectFolder, args, logFile, logger, envOverrides);
 
 		// Set up subscriptions.

@@ -1,8 +1,8 @@
 import { StdIOService } from "../services/stdio_service";
-import { IAmDisposable } from "./utils";
+import { IAmDisposable, LogSeverity } from "./utils";
 
 export class TestRunner extends StdIOService<{ type: string }> {
-	constructor(executable: string, projectFolder: string, args: string[], logFile: string, logger: (message: string) => void, envOverrides?: any) {
+	constructor(executable: string, projectFolder: string, args: string[], logFile: string, logger: (message: string, severity: LogSeverity) => void, envOverrides?: any) {
 		super(() => logFile, logger, true, true);
 
 		this.createProcess(projectFolder, executable, args, envOverrides);

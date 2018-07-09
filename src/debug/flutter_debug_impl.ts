@@ -3,7 +3,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
-import { FlutterLaunchRequestArguments } from "./utils";
+import { FlutterLaunchRequestArguments, LogCategory, LogMessage, LogSeverity } from "./utils";
 
 export class FlutterDebugSession extends DartDebugSession {
 	private flutter: FlutterRun;
@@ -63,7 +63,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		// and otherwise might be left hanging around.
 		this.allowTerminatingObservatoryVmPid = args.deviceId === "flutter-tester";
 
-		const logger = (message: string) => this.sendEvent(new Event("dart.log.flutter.run", { message }));
+		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.FlutterRun)));
 		this.flutter = new FlutterRun(args.flutterPath, args.cwd, appArgs, args.flutterRunLogFile, logger);
 		this.flutter.registerForUnhandledMessages((msg) => this.logToUser(msg, "stdout"));
 

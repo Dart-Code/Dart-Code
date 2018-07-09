@@ -4,8 +4,8 @@ import * as path from "path";
 import { ProgressLocation, env, version as codeVersion, window, workspace } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { PromiseCompleter } from "../debug/utils";
-import { ProjectType, Sdks, extensionVersion, getSdkVersion, isStableSdk } from "../utils";
+import { LogCategory, PromiseCompleter } from "../debug/utils";
+import { ProjectType, Sdks, extensionVersion, getRandomInt, getSdkVersion, isStableSdk } from "../utils";
 import { logError } from "../utils/log";
 import { RequestError, ServerErrorNotification, ServerStatusNotification } from "./analysis_server_types";
 import { Analyzer } from "./analyzer";
@@ -82,9 +82,9 @@ export class AnalyzerStatusReporter {
 
 	private handleServerError(error: ServerErrorNotification, method?: string) {
 		// Always log to the console.
-		logError(error.message);
+		logError(error.message, LogCategory.Analyzer);
 		if (error.stackTrace)
-			logError(error.stackTrace);
+			logError(error.stackTrace, LogCategory.Analyzer);
 
 		this.analytics.logAnalyzerError((method ? `(${method}) ` : "") + error.message, error.isFatal);
 
@@ -156,10 +156,4 @@ ${diagnostics ? "\nDiagnostics requested after the error occurred are:\n\n```js\
 			window.showTextDocument(document);
 		});
 	}
-}
-
-function getRandomInt(min: number, max: number) {
-	min = Math.ceil(min);
-	max = Math.floor(max);
-	return Math.floor(Math.random() * (max - min)) + min;
 }

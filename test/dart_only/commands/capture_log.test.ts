@@ -4,9 +4,9 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { STOP_LOGGING } from "../../../src/commands/logging";
-import { PromiseCompleter } from "../../../src/debug/utils";
+import { LogCategory, LogSeverity, PromiseCompleter } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
-import { LogCategory, log } from "../../../src/utils/log";
+import { log } from "../../../src/utils/log";
 import { activate, defer, getRandomTempFolder, sb, waitFor } from "../../helpers";
 
 describe("capture logs command", () => {
@@ -41,8 +41,9 @@ describe("capture logs command", () => {
 		await waitFor(() => showQuickPick.called);
 
 		log("This is a test"); // Should be logged
-		log("This is an analyzer event", LogCategory.Analyzer); // Should be logged
-		log("This is an flutter daemon event", LogCategory.FlutterDaemon); // Should not be logged
+		log("This is an analyzer event", LogSeverity.Info, LogCategory.Analyzer); // Should be logged
+		log("This is an flutter daemon event", LogSeverity.Info, LogCategory.FlutterDaemon); // Should not be logged
+		log("This is an flutter daemon ERROR event", LogSeverity.Error, LogCategory.FlutterDaemon); // Should be logged because it's an error.
 
 		// Resolving the promise will stop the logging.
 		stopLogging.resolve(STOP_LOGGING);
@@ -57,6 +58,7 @@ describe("capture logs command", () => {
 		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), "Did not find logged message");
 		assert.ok(lines.find((l) => l.indexOf("This is an analyzer event") !== -1), "Did not find logged analyzer message");
 		assert.ok(lines.find((l) => l.indexOf("This is an flutter daemon event") === -1), "Found logged flutter daemon message");
+		assert.ok(lines.find((l) => l.indexOf("This is an flutter daemon ERROR event") !== -1), "Did not find logged flutter daemon ERROR message");
 		assert.ok(lastLine.endsWith("Log file ended"), `Last line of log was ${lastLine}`);
 
 		// Ensure the log file was opened.

@@ -3,19 +3,9 @@ import * as _ from "lodash";
 import * as path from "path";
 import * as vs from "vscode";
 import { Event, EventEmitter } from "vscode";
-import { platformEol } from "../debug/utils";
+import { LogCategory, LogMessage, LogSeverity, platformEol } from "../debug/utils";
 import { isDevExtension } from "../utils";
 
-export enum LogCategory {
-	General,
-	CI,
-	Analyzer,
-	PubTest,
-	FlutterDaemon,
-	FlutterRun,
-	FlutterTest,
-	Observatory,
-}
 export const userSelectableLogCategories: { [key: string]: LogCategory } = {
 	"Analysis Server": LogCategory.Analyzer,
 	"Debugger (Observatory)": LogCategory.Observatory,
@@ -24,16 +14,17 @@ export const userSelectableLogCategories: { [key: string]: LogCategory } = {
 	"Flutter Test": LogCategory.FlutterTest,
 	"Pub Run Test": LogCategory.PubTest,
 };
-export class LogMessage {
-	constructor(public readonly message: string, public readonly category: LogCategory) { }
-}
 
 const onLogEmitter: EventEmitter<LogMessage> = new EventEmitter<LogMessage>();
 export const onLog: Event<LogMessage> = onLogEmitter.event;
-export function log(message: string, category = LogCategory.General) {
-	onLogEmitter.fire(new LogMessage((message || "").toString(), category));
+export function log(message: string, severity = LogSeverity.Info, category = LogCategory.General) {
+	onLogEmitter.fire(new LogMessage((message || "").toString(), severity, category));
+	// Warn/Error always go to General.
+	if (category !== LogCategory.General && severity !== LogSeverity.Info) {
+		onLogEmitter.fire(new LogMessage(`[${LogCategory[category]}] ${message}`, severity, LogCategory.General));
+	}
 }
-export function logError(error: any) {
+export function logError(error: any, category = LogCategory.General) {
 	if (!error)
 		error = "Empty error";
 	if (error instanceof Error)
@@ -51,30 +42,23 @@ export function logError(error: any) {
 	if (isDevExtension)
 		vs.window.showErrorMessage("DEBUG: " + error);
 	console.error(error);
-	log(`ERR: ${error}`, LogCategory.General);
+	log(error, LogSeverity.Error, category);
 }
-export function logWarn(warning: string) {
+export function logWarn(warning: string, category = LogCategory.General) {
 	if (isDevExtension)
 		vs.window.showWarningMessage("DEBUG: " + warning);
 	console.warn(warning);
-	log(`WARN: ${warning}`, LogCategory.General);
+	log(`WARN: ${warning}`, LogSeverity.Warn, category);
 }
 export function logInfo(info: string) {
 	console.log(info);
-	log(info, LogCategory.General);
+	log(info, LogSeverity.Info, LogCategory.General);
 }
-export const debugLogTypes: { [key: string]: LogCategory } = {
-	"dart.log.flutter.run": LogCategory.FlutterRun,
-	"dart.log.flutter.test": LogCategory.FlutterTest,
-	"dart.log.observatory": LogCategory.Observatory,
-	"dart.log.pub.test": LogCategory.PubTest,
-};
-export function handleDebugLogEvent(event: string, message: string) {
-	const cat = debugLogTypes[event];
+export function handleDebugLogEvent(event: string, message: LogMessage) {
 	if (event)
-		log(message, cat);
+		log(message.message, message.severity, message.category);
 	else
-		logWarn(`Failed to handle log event ${event}`);
+		logWarn(`Failed to handle log event ${JSON.stringify(message)}`);
 }
 
 const logHeader: string[] = [];
@@ -106,7 +90,7 @@ export function logTo(file: string, logCategories?: LogCategory[], maxLength = 2
 		const logMessage = message.length > maxLength
 			? message.substring(0, maxLength) + "…"
 			: message;
-		const prefix = `${time()}[${LogCategory[e.category]}] `;
+		const prefix = `${time()}[${LogCategory[e.category]}] [${LogSeverity[e.severity]}] `;
 		logStream.write(`${prefix}${logMessage}${platformEol}`);
 	});
 	return {

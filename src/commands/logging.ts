@@ -2,8 +2,9 @@ import * as _ from "lodash";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
+import { LogCategory } from "../debug/utils";
 import { fsPath } from "../utils";
-import { LogCategory, logTo, userSelectableLogCategories } from "../utils/log";
+import { logTo, userSelectableLogCategories } from "../utils/log";
 
 export const STOP_LOGGING = "Stop Logging";
 

@@ -1,11 +1,11 @@
 import * as fs from "fs";
 import * as path from "path";
-import { commands, ExtensionContext, window } from "vscode";
+import { ExtensionContext, commands, window } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
 import { isWin, platformName } from "../debug/utils";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, openInBrowser, ProjectType, reloadExtension, resolvePaths, Sdks } from "../utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, ProjectType, Sdks, fsPath, getDartWorkspaceFolders, openExtensionLogFile, openInBrowser, reloadExtension, resolvePaths, showLogAction } from "../utils";
 import { log } from "../utils/log";
 
 const dartExecutableName = isWin ? "dart.exe" : "dart";
@@ -54,6 +54,7 @@ export function showFluttersDartSdkActivationFailure() {
 	reloadExtension("Could not find Dart in your Flutter SDK. " +
 		"Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
 		"Reload",
+		true,
 	);
 }
 export function showFlutterActivationFailure(commandToReRun: string = null) {
@@ -79,7 +80,7 @@ export async function showSdkActivationFailure(
 	search: (path: string[]) => string,
 	downloadUrl: string,
 	saveSdkPath: (path: string) => Thenable<void>,
-	commandToReRun: string = null,
+	commandToReRun?: string,
 ) {
 	const locateAction = "Locate SDK";
 	const downloadAction = "Download SDK";
@@ -89,6 +90,7 @@ export async function showSdkActivationFailure(
 		const selectedItem = await window.showErrorMessage(displayMessage,
 			locateAction,
 			downloadAction,
+			showLogAction,
 		);
 		// TODO: Refactor/reformat/comment this code - it's messy and hard to understand!
 		if (selectedItem === locateAction) {
@@ -109,6 +111,9 @@ export async function showSdkActivationFailure(
 			}
 		} else if (selectedItem === downloadAction) {
 			openInBrowser(downloadUrl);
+			break;
+		} else if (selectedItem === showLogAction) {
+			openExtensionLogFile();
 			break;
 		} else {
 			break;

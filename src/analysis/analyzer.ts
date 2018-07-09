@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import * as vs from "vscode";
 import { config } from "../config";
-import { PromiseCompleter } from "../debug/utils";
+import { LogCategory, PromiseCompleter } from "../debug/utils";
 import { escapeShell, extensionVersion, reloadExtension, versionIsAtLeast } from "../utils";
 import { logError } from "../utils/log";
 import * as as from "./analysis_server_types";
@@ -137,8 +137,8 @@ export class Analyzer extends AnalyzerGen {
 		} catch (e) {
 			const message = this.version
 				? "The Dart Analyzer has terminated."
-				: "The Dart Analyzer could not be started. Please set the `dart.analyzerLog` option and review the log file for errors.";
-			reloadExtension(message);
+				: "The Dart Analyzer could not be started.";
+			reloadExtension(message, undefined, true);
 			throw e;
 		}
 	}
@@ -301,7 +301,7 @@ export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind
 		case "UNKNOWN":
 			return vs.SymbolKind.Object;
 		default:
-			logError(`Unknown kind: ${kind}`);
+			logError(`Unknown kind: ${kind}`, LogCategory.Analyzer);
 			return vs.SymbolKind.Object;
 	}
 }
