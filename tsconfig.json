@@ -12,7 +12,8 @@
 		"noImplicitThis": true,
 		"alwaysStrict": true,
 		"strictFunctionTypes": true,
-		"strictPropertyInitialization": true
+		//"strictPropertyInitialization": true,
+		//"strictNullChecks": true,
 	},
 	"exclude": [
 		"node_modules",
