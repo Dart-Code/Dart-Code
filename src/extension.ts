@@ -39,7 +39,6 @@ import { DartTypeFormattingEditProvider } from "./providers/dart_type_formatting
 import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
 import { DebugConfigProvider } from "./providers/debug_config_provider";
 import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
-import { LegacyDartDocumentSymbolProvider } from "./providers/legacy_dart_document_symbol_provider";
 import { LegacyDartWorkspaceSymbolProvider } from "./providers/legacy_dart_workspace_symbol_provider";
 import { RefactorCodeActionProvider } from "./providers/refactor_code_action_provider";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
@@ -264,9 +263,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		if (analyzer.capabilities.supportsCustomFolding && config.analysisServerFolding)
 			context.subscriptions.push(vs.languages.registerFoldingRangeProvider(DART_MODE, new DartFoldingProvider(analyzer)));
 
-		const documentSymbolProvider = analyzer.capabilities.supportsGetDeclerationsForFile
-			? new DartDocumentSymbolProvider(analyzer)
-			: new LegacyDartDocumentSymbolProvider(analyzer);
+		const documentSymbolProvider = new DartDocumentSymbolProvider(analyzer);
 		activeFileFilters.forEach((filter) => {
 			context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
 		});
