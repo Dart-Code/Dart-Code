@@ -49,16 +49,16 @@ async function send_summary_message() {
 			buildUrl = `https://ci.appveyor.com/project/${pEnv.APPVEYOR_ACCOUNT_NAME}/${pEnv.APPVEYOR_PROJECT_SLUG}/build/${pEnv.APPVEYOR_BUILD_VERSION}`;
 		}
 		const commitAuthor = pEnv.APPVEYOR_REPO_COMMIT_AUTHOR || pEnv.TRAVIS_COMMIT_AUTHOR;
-		const commitMessage = pEnv.APPVEYOR_REPO_COMMIT_MESSAGE || pEnv.TRAVIS_COMMIT_MESSAGE;
+		let commitMessage = pEnv.APPVEYOR_REPO_COMMIT_MESSAGE || pEnv.TRAVIS_COMMIT_MESSAGE || "";
+		commitMessage = commitMessage.split("\n")[0];
 		const branchName = pEnv.APPVEYOR_REPO_BRANCH || pEnv.TRAVIS_BRANCH;
 		const flavor = pEnv.TRAVIS_OS_NAME || "win";
-		const buildName = `${flavor} BUILD`.trim().toUpperCase();
+		const buildName = flavor.trim().toUpperCase();
 
 		const message =
 			`*${buildName} ${hasFailed ? "FAILURE <users/all>" : "SUCCESS"}*\n\n`
-			+ `*${commitAuthor}* _${branchName}_\n`
-			+ `${commitMessage}\n\n`
-			+ `<${buildUrl}|Build Report>`;
+			+ `*${commitMessage}* _${branchName}_ _(${commitAuthor})_\n`
+			+ `<${buildUrl}|View Build Report>`;
 
 		if (hasFailed)
 			await sendToChat(message);
