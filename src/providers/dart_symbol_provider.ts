@@ -11,6 +11,25 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 		this.analyzer = analyzer;
 	}
 
+	public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<SymbolInformation[]> {
+		const results = await this.analyzer.searchGetElementDeclarations({ file: fsPath(document.uri) });
+		return results.declarations.map((d) => this.convertDocumentResult(document, d, results.files[d.fileIndex]));
+	}
+
+	private convertDocumentResult(document: TextDocument | undefined, result: as.ElementDeclaration, file: string): SymbolInformation {
+		const names = this.getNames(result, false, file);
+
+		return new SymbolInformation(
+			names.name,
+			getSymbolKindForElementKind(result.kind),
+			names.containerName,
+			new Location(
+				Uri.file(file),
+				toRange(document, result.codeOffset, result.codeLength),
+			),
+		);
+	}
+
 	public async provideWorkspaceSymbols(query: string, token: CancellationToken): Promise<SymbolInformation[]> {
 		if (query.length === 0)
 			return null;
@@ -19,12 +38,7 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 		const pattern = ".*" + query.replace(this.badChars, "").split("").map((c) => `[${c.toUpperCase()}${c.toLowerCase()}]`).join(".*") + ".*";
 		const results = await this.analyzer.searchGetElementDeclarations({ pattern, maxResults: 500 });
 
-		return results.declarations.map((d) => this.convertResult(undefined, d, results.files[d.fileIndex], true));
-	}
-
-	public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<SymbolInformation[]> {
-		const results = await this.analyzer.searchGetElementDeclarations({ file: fsPath(document.uri) });
-		return results.declarations.map((d) => this.convertResult(document, d, results.files[d.fileIndex], false));
+		return results.declarations.map((d) => this.convertWorkspaceResult(d, results.files[d.fileIndex]));
 	}
 
 	public async resolveWorkspaceSymbol(symbol: SymbolInformation, token: CancellationToken): Promise<SymbolInformation> {
@@ -40,9 +54,27 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 		return symbol;
 	}
 
-	private convertResult(document: TextDocument | undefined, result: as.ElementDeclaration, file: string, includeFilename: boolean): SymbolInformation {
-		let name = result.name;
+	private convertWorkspaceResult(result: as.ElementDeclaration, file: string): SymbolInformation {
+		const names = this.getNames(result, true, file);
 
+		const symbol: any = new PartialSymbolInformation(
+			names.name,
+			getSymbolKindForElementKind(result.kind),
+			names.containerName,
+			new Location(Uri.file(file), undefined),
+		);
+
+		symbol.locationData = {
+			file,
+			length: result.codeLength,
+			offset: result.codeOffset,
+		};
+
+		return symbol;
+	}
+
+	private getNames(result: as.ElementDeclaration, includeFilename: boolean, file: string) {
+		let name = result.name;
 		// Constructors don't come prefixed with class name, so add them for a nice display:
 		//    () => MyClass()
 		//    named() => MyClass.named()
@@ -55,10 +87,8 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 				name = result.className;
 			}
 		}
-
 		if (result.parameters && result.kind !== "SETTER")
 			name += result.parameters;
-
 		let containerName: string;
 		if (includeFilename) {
 			containerName = this.createDisplayPath(file);
@@ -67,26 +97,7 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 		} else {
 			containerName = result.className;
 		}
-
-		const symbol: any = new PartialSymbolInformation(
-			name,
-			getSymbolKindForElementKind(result.kind),
-			containerName,
-			new Location(
-				Uri.file(file),
-				document ? toRange(document, result.codeOffset, result.codeLength) : undefined,
-			),
-		);
-
-		if (!document) {
-			symbol.locationData = {
-				file,
-				length: result.codeLength,
-				offset: result.codeOffset,
-			};
-		}
-
-		return symbol;
+		return { name, containerName };
 	}
 
 	private createDisplayPath(inputPath: string): string {
