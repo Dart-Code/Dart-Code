@@ -228,6 +228,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.toggleWidgetInspector",
+				"title": "Toggle Widget Inspector",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.hotRestart",
 				"title": "Hot Restart",
 				"category": "Flutter"
@@ -382,6 +387,10 @@
 				{
 					"command": "flutter.togglePaintBaselines",
 					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.debugPaintBaselinesEnabled"
+				},
+				{
+					"command": "flutter.toggleWidgetInspector",
+					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.debugWidgetInspector"
 				},
 				{
 					"command": "flutter.hotRestart",

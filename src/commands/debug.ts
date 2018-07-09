@@ -13,6 +13,7 @@ let repaintRainbowEnabled = false;
 let timeDilation = 1.0;
 let debugModeBannerEnabled = true;
 let paintBaselinesEnabled = false;
+let widgetInspectorEnabled = false;
 const debugSessions: DartDebugSessionInformation[] = [];
 
 export class DebugCommands {
@@ -125,12 +126,14 @@ export class DebugCommands {
 		this.registerServiceCommand("ext.flutter.timeDilation", () => ({ timeDilation }));
 		this.registerBoolServiceCommand("ext.flutter.debugAllowBanner", () => debugModeBannerEnabled);
 		this.registerBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", () => paintBaselinesEnabled);
+		this.registerBoolServiceCommand("ext.flutter.debugWidgetInspector", () => widgetInspectorEnabled);
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => { debugPaintingEnabled = !debugPaintingEnabled; this.sendServiceSetting("ext.flutter.debugPaint"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => { performanceOverlayEnabled = !performanceOverlayEnabled; this.sendServiceSetting("ext.flutter.showPerformanceOverlay"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => { repaintRainbowEnabled = !repaintRainbowEnabled; this.sendServiceSetting("ext.flutter.repaintRainbow"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => { timeDilation = 6.0 - timeDilation; this.sendServiceSetting("ext.flutter.timeDilation"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => { debugModeBannerEnabled = !debugModeBannerEnabled; this.sendServiceSetting("ext.flutter.debugAllowBanner"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => { paintBaselinesEnabled = !paintBaselinesEnabled; this.sendServiceSetting("ext.flutter.debugPaintBaselinesEnabled"); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleWidgetInspector", () => { widgetInspectorEnabled = !widgetInspectorEnabled; this.sendServiceSetting("ext.flutter.debugWidgetInspector"); }));
 
 		// Open Observatory.
 		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", async () => {
@@ -290,6 +293,7 @@ export class DebugCommands {
 		timeDilation = 1.0;
 		debugModeBannerEnabled = true;
 		paintBaselinesEnabled = false;
+		widgetInspectorEnabled = false;
 	}
 
 	private enabledServiceExtensions: string[] = [];
