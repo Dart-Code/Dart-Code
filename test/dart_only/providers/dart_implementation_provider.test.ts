@@ -94,7 +94,11 @@ describe("dart_implementation_provider", () => {
 		ensureLocation(impls, testFile, rangeOf("void |b|() /* C */ {"));
 	});
 
-	it("returns implementations when invoked at call sites", async () => {
+	it("returns implementations when invoked at call sites", async function () {
+		// Only Dart v2 gets all of these results.
+		if (!ext.exports.analyzerCapabilities.isDart2) {
+			this.skip();
+		}
 		const impls = await getImplementationsAt("e.^b();");
 		ensureLocation(impls, testFile, rangeOf("void |b|() /* B */ {"));
 		ensureLocation(impls, testFile, rangeOf("void |b|() /* C */ {"));
