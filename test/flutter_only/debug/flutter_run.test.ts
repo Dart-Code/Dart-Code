@@ -7,7 +7,7 @@ import { fsPath } from "../../../src/utils";
 import { logError } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable } from "../../debug_helpers";
-import { activate, defer, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
+import { activate, defer, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
 
 describe("flutter run debugger", () => {
 	beforeEach("set timeout", function () {
@@ -25,6 +25,7 @@ describe("flutter run debugger", () => {
 	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
 	// `flutter create .`!
 	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", path.join(fsPath(flutterHelloWorldFolder), "dummy"), "."));
+	before("run 'flutter create' for example", () => vs.commands.executeCommand("_flutter.create", path.join(fsPath(flutterHelloWorldFolder), "dummy"), "."));
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
@@ -38,7 +39,7 @@ describe("flutter run debugger", () => {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
 	});
 
-	async function startDebugger(script: vs.Uri | string, cwd?: string): Promise<vs.DebugConfiguration> {
+	async function startDebugger(script?: vs.Uri | string, cwd?: string): Promise<vs.DebugConfiguration> {
 		const config = await getLaunchConfiguration(script, { deviceId: "flutter-tester" });
 		await dc.start(config.debugServer);
 		// Make sure any stdErr is logged to console + log file for debugging.
@@ -139,6 +140,27 @@ describe("flutter run debugger", () => {
 
 		await Promise.all([
 			dc.assertOutput("stdout", "Restarted app"),
+			dc.customRequest("hotRestart"),
+		]);
+
+		await dc.disconnectRequest();
+		await dc.waitForEvent("terminated");
+	});
+
+	it("runs projects in sub-folders when the open file is in a project sub-folder", async () => {
+		await openFile(flutterHelloWorldExampleSubFolderMainFile);
+		const config = await startDebugger();
+		config.noDebug = true;
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.launch(config),
+		]);
+
+		// If we restart too fast, things fail :-/
+		await delay(1000);
+
+		await Promise.all([
+			dc.assertOutputContains("stdout", "This output is from an example sub-folder!"),
 			dc.customRequest("hotRestart"),
 		]);
 

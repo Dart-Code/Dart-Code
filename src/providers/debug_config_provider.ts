@@ -144,20 +144,24 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return debugConfig;
 	}
 
-	private guessBestEntryPoint(openFile: string, workspaceFolder: WorkspaceFolder | undefined): string {
-
+	private guessBestEntryPoint(openFile: string, workspaceFolder: WorkspaceFolder | undefined): string | undefined {
+		// For certain open files, assume the user wants to run them.
 		if (isTestFile(openFile) || isInsideFolderNamed(openFile, "bin") || isInsideFolderNamed(openFile, "tool")) {
 			return openFile;
-		} else if (workspaceFolder) {
-			// Use the open file as a clue to find the best project root, then search from there.
-			const commonLaunchPaths = [
-				path.join(fsPath(workspaceFolder.uri), "lib", "main.dart"),
-				path.join(fsPath(workspaceFolder.uri), "bin", "main.dart"),
-			];
-			for (const launchPath of commonLaunchPaths) {
-				if (fs.existsSync(launchPath)) {
-					return launchPath;
-				}
+		}
+
+		// Use the open file as a clue to find the best project root, then search from there.
+		const projectRoot = locateBestProjectRoot(openFile) || fsPath(workspaceFolder.uri);
+		if (!projectRoot)
+			return;
+
+		const commonLaunchPaths = [
+			path.join(projectRoot, "lib", "main.dart"),
+			path.join(projectRoot, "bin", "main.dart"),
+		];
+		for (const launchPath of commonLaunchPaths) {
+			if (fs.existsSync(launchPath)) {
+				return launchPath;
 			}
 		}
 	}
