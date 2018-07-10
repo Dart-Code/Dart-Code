@@ -10,7 +10,7 @@ import { dartCodeExtensionIdentifier } from "../src/debug/utils";
 import { DaemonCapabilities } from "../src/flutter/flutter_daemon";
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
-import { Sdks, fsPath, vsCodeVersionConstraint } from "../src/utils";
+import { ProjectType, Sdks, fsPath, vsCodeVersionConstraint } from "../src/utils";
 import { log, logError, logTo, logWarn } from "../src/utils/log";
 import sinon = require("sinon");
 
@@ -63,7 +63,14 @@ export let doc: vs.TextDocument;
 export let editor: vs.TextEditor;
 export let documentEol: string;
 
-export async function activate(file: vs.Uri = emptyFile): Promise<void> {
+function getDefaultFile(): vs.Uri {
+	if (ext.exports.sdks.projectType === ProjectType.Dart)
+		return emptyFile;
+	else
+		return flutterEmptyFile;
+}
+
+export async function activate(file: vs.Uri = getDefaultFile()): Promise<void> {
 	log("Activating");
 	await ext.activate();
 	log(`Closing all open files`);
@@ -84,7 +91,7 @@ export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 
 export async function getPackages() {
 	await waitForNextAnalysis(async () => {
-		await vs.commands.executeCommand("dart.getPackages", helloWorldFolder);
+		await vs.commands.executeCommand("dart.getPackages", vs.workspace.workspaceFolders ? [0] : undefined);
 		await ext.exports.reanalyze();
 	}, 60);
 }
