@@ -9,6 +9,11 @@ import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable } from "../../debug_helpers";
 import { activate, defer, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
 
+// When this issue is fixed and makes beta, we can delete this cool and the code
+// that is added because of it.
+// https://github.com/flutter/flutter/issues/17838
+const disableDebuggingToAvoidBreakingOnCaughtException = true;
+
 describe("flutter run debugger", () => {
 	beforeEach("set timeout", function () {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
@@ -160,7 +165,8 @@ describe("flutter run debugger", () => {
 	it("runs projects in sub-folders when the open file is in a project sub-folder", async () => {
 		await openFile(flutterHelloWorldExampleSubFolderMainFile);
 		const config = await startDebugger();
-		config.noDebug = true;
+		if (disableDebuggingToAvoidBreakingOnCaughtException)
+			config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
