@@ -1,4 +1,4 @@
-import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from "vscode";
+import { ConfigurationTarget, Uri, WorkspaceConfiguration, workspace } from "vscode";
 import { createFolderIfRequired, resolvePaths } from "./utils";
 
 class Config {
@@ -45,6 +45,9 @@ class Config {
 	get flutterSdkPaths() { return (this.getConfig<string[]>("flutterSdkPaths") || []).map(resolvePaths); }
 	get showLintNames() { return this.getConfig<boolean>("showLintNames"); }
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
+	get openTestView() { return this.getConfig<string[]>("openTestView") || []; }
+	get openTestViewOnStart() { return this.openTestView.indexOf("testRunStart") !== -1; }
+	get openTestViewOnFailure() { return this.openTestView.indexOf("testFailure") !== -1; }
 	get reportAnalyzerErrors() { return this.getConfig<boolean>("reportAnalyzerErrors"); }
 	get sdkPath() { return resolvePaths(this.getConfig<string>("sdkPath")); }
 	public setSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }

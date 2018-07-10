@@ -197,7 +197,7 @@ export class DebugCommands {
 			});
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", () => {
-			TestResultsProvider.shouldShowTreeOnNextSuiteStart = true;
+			TestResultsProvider.flagStart();
 			const testFolders = getDartWorkspaceFolders()
 				.filter((project) => isFlutterWorkspaceFolder(project) || config.previewTestRunnerForDart)
 				.map((project) => path.join(fsPath(project.uri), "test"))

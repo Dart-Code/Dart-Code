@@ -593,6 +593,18 @@
 					"description": "Whether to show TODOs in the Problems list.",
 					"scope": "window"
 				},
+				"dart.openTestView": {
+					"type": "array",
+					"items": {
+						"enum": [
+							"testRunStart",
+							"testFailure"
+						]
+					},
+					"default": ["testRunStart"],
+					"description": "When to automatically switch focus to the test list (array to support multiple values).",
+					"scope": "window"
+				},
 				"dart.reportAnalyzerErrors": {
 					"type": "boolean",
 					"default": true,

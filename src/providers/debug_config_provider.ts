@@ -111,7 +111,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			: (isTest && canPubRunTest ? DebuggerType.PubTest : DebuggerType.Dart);
 
 		if (debugType === DebuggerType.FlutterTest || debugType === DebuggerType.PubTest)
-			TestResultsProvider.shouldShowTreeOnNextSuiteStart = true;
+			TestResultsProvider.flagStart();
 
 		// Ensure we have a device
 		const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null;

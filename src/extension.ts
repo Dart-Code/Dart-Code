@@ -310,7 +310,14 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(
 		testTreeProvider,
 		testTreeView,
-		testTreeProvider.onDidStartTests((node) => testTreeView.reveal(node)),
+		testTreeProvider.onDidStartTests((node) => {
+			if (config.openTestViewOnStart)
+				testTreeView.reveal(node);
+		}),
+		testTreeProvider.onFirstFailure((node) => {
+			if (config.openTestViewOnFailure)
+				testTreeView.reveal(node);
+		}),
 	);
 
 	if (sdks.projectType !== util.ProjectType.Dart && config.previewHotReloadCoverageMarkers) {
