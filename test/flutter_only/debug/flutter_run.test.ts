@@ -61,8 +61,10 @@ describe("flutter run debugger", () => {
 		await delay(10000);
 		await dc.threadsRequest();
 
-		await dc.disconnectRequest();
-		await dc.waitForEvent("terminated");
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.disconnectRequest(),
+		]);
 	});
 
 	it("can quit during a build", async () => {
@@ -95,8 +97,10 @@ describe("flutter run debugger", () => {
 		await delay(10000);
 		await dc.threadsRequest();
 
-		await dc.disconnectRequest();
-		await dc.waitForEvent("terminated");
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.disconnectRequest(),
+		]);
 	});
 
 	it("runs a Flutter application with a variable in cwd", async () => {
@@ -111,8 +115,10 @@ describe("flutter run debugger", () => {
 		await delay(10000);
 		await dc.threadsRequest();
 
-		await dc.disconnectRequest();
-		await dc.waitForEvent("terminated");
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.disconnectRequest(),
+		]);
 	});
 
 	it("hot reloads successfully", async () => {
@@ -124,8 +130,10 @@ describe("flutter run debugger", () => {
 
 		await dc.hotReload();
 
-		await dc.disconnectRequest();
-		await dc.waitForEvent("terminated");
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.disconnectRequest(),
+		]);
 	});
 
 	it("hot restarts successfully", async () => {
@@ -143,8 +151,10 @@ describe("flutter run debugger", () => {
 			dc.customRequest("hotRestart"),
 		]);
 
-		await dc.disconnectRequest();
-		await dc.waitForEvent("terminated");
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.disconnectRequest(),
+		]);
 	});
 
 	it("runs projects in sub-folders when the open file is in a project sub-folder", async () => {
@@ -164,8 +174,10 @@ describe("flutter run debugger", () => {
 			dc.customRequest("hotRestart"),
 		]);
 
-		await dc.disconnectRequest();
-		await dc.waitForEvent("terminated");
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.disconnectRequest(),
+		]);
 	});
 
 	[0, 1, 2].forEach((numReloads) => {
