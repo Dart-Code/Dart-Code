@@ -170,6 +170,12 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	protected async handleInspectEvent(event: VMEvent): Promise<void> {
+		const selectedWidget = await this.flutter.callServiceExtension(
+			this.currentRunningAppId,
+			"ext.flutter.inspector.getSelectedWidget",
+			{ previousSelectionId: null, objectGroup: null },
+		);
+		this.logToUser(JSON.stringify(selectedWidget));
 		// TODO: How can we translate this back to source?
 		// const evt = event as any;
 		// const thread: VMIsolateRef = evt.isolate;
@@ -187,4 +193,3 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 	}
 }
-
