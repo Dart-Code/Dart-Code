@@ -1,3 +1,4 @@
 {
 	"files.insertFinalNewline": true,
+	"dart.analysisServerFolding": true
 }

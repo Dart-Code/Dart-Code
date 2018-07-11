@@ -50,7 +50,7 @@ import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingS
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { fsPath } from "./utils";
-import { LogCategory, addToLogHeader, clearLogHeader, log, logError, logTo } from "./utils/log";
+import { addToLogHeader, clearLogHeader, log, LogCategory, logError, logTo } from "./utils/log";
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestResultsProvider } from "./views/test_view";
 
@@ -82,7 +82,10 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", (_) => {
 		log("Performing silent extension reload...");
 		deactivate(true);
-		for (const sub of context.subscriptions) {
+		console.log(`dispoising ${context.subscriptions.length} items`);
+		const toDispose = context.subscriptions.slice();
+		context.subscriptions.length = 0;
+		for (const sub of toDispose) {
 			try {
 				sub.dispose();
 			} catch (e) {
