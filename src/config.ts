@@ -1,4 +1,4 @@
-import { ConfigurationTarget, Uri, WorkspaceConfiguration, workspace } from "vscode";
+import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from "vscode";
 import { createFolderIfRequired, resolvePaths } from "./utils";
 
 class Config {
@@ -23,43 +23,42 @@ class Config {
 	}
 
 	get allowAnalytics() { return this.getConfig<boolean>("allowAnalytics"); }
-	get analyzeAngularTemplates() { return this.getConfig<boolean>("analyzeAngularTemplates"); }
-	get analyzerDiagnosticsPort() { return this.getConfig<number>("analyzerDiagnosticsPort"); }
-	get analyzerObservatoryPort() { return this.getConfig<number>("analyzerObservatoryPort"); }
-	get analyzerLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("analyzerLogFile"))); }
-	get analyzerPath() { return resolvePaths(this.getConfig<string>("analyzerPath")); }
 	get analysisServerFolding() { return this.getConfig<boolean>("analysisServerFolding"); }
-	get analyzerInstrumentationLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("analyzerInstrumentationLogFile"))); }
+	get analyzeAngularTemplates() { return this.getConfig<boolean>("analyzeAngularTemplates"); }
 	get analyzerAdditionalArgs() { return this.getConfig<string[]>("analyzerAdditionalArgs"); }
+	get analyzerDiagnosticsPort() { return this.getConfig<number>("analyzerDiagnosticsPort"); }
+	get analyzerInstrumentationLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("analyzerInstrumentationLogFile"))); }
+	get analyzerLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("analyzerLogFile"))); }
+	get analyzerObservatoryPort() { return this.getConfig<number>("analyzerObservatoryPort"); }
+	get analyzerPath() { return resolvePaths(this.getConfig<string>("analyzerPath")); }
 	get analyzerSshHost() { return this.getConfig<string>("analyzerSshHost"); }
 	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
 	get closingLabels() { return this.getConfig<boolean>("closingLabels"); }
-	get flutterDaemonLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("flutterDaemonLogFile"))); }
 	get extensionLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("extensionLogFile"))); }
-	get flutterHotReloadOnSave() { return this.getConfig<boolean>("flutterHotReloadOnSave"); }
-	get flutterCreateOrganization() { return this.getConfig<string>("flutterCreateOrganization"); }
-	get flutterCreateIOSLanguage() { return this.getConfig<string>("flutterCreateIOSLanguage"); }
 	get flutterCreateAndroidLanguage() { return this.getConfig<string>("flutterCreateAndroidLanguage"); }
+	get flutterCreateIOSLanguage() { return this.getConfig<string>("flutterCreateIOSLanguage"); }
+	get flutterCreateOrganization() { return this.getConfig<string>("flutterCreateOrganization"); }
+	get flutterDaemonLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("flutterDaemonLogFile"))); }
+	get flutterHotReloadOnSave() { return this.getConfig<boolean>("flutterHotReloadOnSave"); }
 	get flutterSdkPath() { return resolvePaths(this.getConfig<string>("flutterSdkPath")); }
 	public setFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Workspace); }
 	get flutterSdkPaths() { return (this.getConfig<string[]>("flutterSdkPaths") || []).map(resolvePaths); }
-	get showLintNames() { return this.getConfig<boolean>("showLintNames"); }
-	get showTodos() { return this.getConfig<boolean>("showTodos"); }
+	get flutterSelectDeviceWhenConnected() { return this.getConfig<boolean>("flutterSelectDeviceWhenConnected"); }
+	get normalizeWindowsDriveLetters() { return this.getConfig<boolean>("normalizeWindowsDriveLetters"); }
 	get openTestView() { return this.getConfig<string[]>("openTestView") || []; }
-	get openTestViewOnStart() { return this.openTestView.indexOf("testRunStart") !== -1; }
 	get openTestViewOnFailure() { return this.openTestView.indexOf("testFailure") !== -1; }
+	get openTestViewOnStart() { return this.openTestView.indexOf("testRunStart") !== -1; }
 	get reportAnalyzerErrors() { return this.getConfig<boolean>("reportAnalyzerErrors"); }
 	get sdkPath() { return resolvePaths(this.getConfig<string>("sdkPath")); }
 	public setSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
 	get sdkPaths() { return (this.getConfig<string[]>("sdkPaths") || []).map(resolvePaths); }
-	get flutterSelectDeviceWhenConnected() { return this.getConfig<boolean>("flutterSelectDeviceWhenConnected"); }
+	get showLintNames() { return this.getConfig<boolean>("showLintNames"); }
+	get showTodos() { return this.getConfig<boolean>("showTodos"); }
 
 	public setGlobalDartSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Global); }
 	public setGlobalFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Global); }
 
 	// Preview features.
-	get normalizeWindowsDriveLetters() { return this.getConfig<boolean>("normalizeWindowsDriveLetters"); }
-	get previewTestRunnerForDart() { return this.getConfig<boolean>("previewTestRunnerForDart"); }
 	get previewHotReloadCoverageMarkers() { return this.getConfig<boolean>("previewHotReloadCoverageMarkers"); }
 
 	public for(uri?: Uri): ResourceConfig {

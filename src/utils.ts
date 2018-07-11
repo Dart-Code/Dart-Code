@@ -145,8 +145,7 @@ export function isTestFile(file: string): boolean {
 }
 
 export function supportsPubRunTest(folder: string, file: string): boolean {
-	return config.previewTestRunnerForDart
-		&& fs.existsSync(path.join(folder, ".packages"))
+	return fs.existsSync(path.join(folder, ".packages"))
 		&& fs.existsSync(path.join(folder, "pubspec.yaml"));
 }
 
