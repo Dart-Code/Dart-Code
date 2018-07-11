@@ -4,6 +4,7 @@ import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { platformEol } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
+import { logWarn } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { activate, defer, ext, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, openFile, positionOf } from "../../helpers";
 
@@ -20,8 +21,10 @@ describe("dart test debugger", () => {
 		// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
 		// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
 		// a second request and that'll cause it to quit immediately.
-		defer(() => Promise.all([dc.disconnectRequest(), dc.disconnectRequest()]));
-		defer(() => dc.stop());
+		defer(() => Promise.all([
+			dc.stop().catch((e) => logWarn(e)),
+			dc.stop().catch((e) => logWarn(e)),
+		]));
 	});
 
 	async function startDebugger(script: vs.Uri | string): Promise<vs.DebugConfiguration> {
