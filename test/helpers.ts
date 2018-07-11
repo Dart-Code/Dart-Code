@@ -149,8 +149,8 @@ before("throw if DART_CODE_IS_TEST_RUN is not set", () => {
 		throw new Error("DART_CODE_IS_TEST_RUN env var should be set for test runs.");
 });
 
-const deferredItems: Array<(result?: "failed" | "passed") => Promise<void> | void> = [];
-const deferredToLastItems: Array<(result?: "failed" | "passed") => Promise<void> | void> = [];
+const deferredItems: Array<(result?: "failed" | "passed") => Promise<any> | any> = [];
+const deferredToLastItems: Array<(result?: "failed" | "passed") => Promise<any> | any> = [];
 // tslint:disable-next-line:only-arrow-functions
 afterEach("run deferred functions", async function () {
 	let firstError: any;
@@ -170,10 +170,10 @@ afterEach("run deferred functions", async function () {
 	if (firstError)
 		throw firstError;
 });
-export function defer(callback: (result?: "failed" | "passed") => Promise<void> | void): void {
+export function defer(callback: (result?: "failed" | "passed") => Promise<any> | any): void {
 	deferredItems.push(callback);
 }
-export function deferUntilLast(callback: (result?: "failed" | "passed") => Promise<void> | void): void {
+export function deferUntilLast(callback: (result?: "failed" | "passed") => Promise<any> | any): void {
 	deferredToLastItems.push(callback);
 }
 

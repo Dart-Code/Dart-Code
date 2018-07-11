@@ -17,6 +17,10 @@ describe("dart test debugger", () => {
 	beforeEach("create debug client", () => {
 		dc = new DartDebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_test_debug_entry.js"), "dart");
 		dc.defaultTimeout = 30000;
+		// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
+		// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
+		// a second request and that'll cause it to quit immediately.
+		defer(() => Promise.all([dc.disconnectRequest(), dc.disconnectRequest()]));
 		defer(() => dc.stop());
 	});
 
