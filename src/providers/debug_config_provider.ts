@@ -13,7 +13,7 @@ import { FlutterTestDebugSession } from "../debug/flutter_test_debug_impl";
 import { FlutterLaunchRequestArguments, forceWindowsDriveLetterToUppercase, isWithinPath } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
-import { dartPubPath, dartVMPath, flutterPath } from "../sdk/utils";
+import { dartVMPath, flutterPath, pubPath, pubSnapshotPath } from "../sdk/utils";
 import { fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, ProjectType, Sdks, supportsPubRunTest } from "../utils";
 import { log, logWarn } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
@@ -268,7 +268,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, dartVMPath);
 		debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || conf.observatoryLogFile;
-		debugConfig.pubPath = debugConfig.pubPath || path.join(this.sdks.dart, dartPubPath);
+		debugConfig.pubPath = debugConfig.pubPath || path.join(this.sdks.dart, pubPath);
+		debugConfig.pubSnapshotPath = debugConfig.pubSnapshotPath || path.join(this.sdks.dart, pubSnapshotPath);
 		debugConfig.pubTestLogFile = debugConfig.pubTestLogFile || conf.pubTestLogFile;
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || conf.debugSdkLibraries;
 		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || conf.debugExternalLibraries;

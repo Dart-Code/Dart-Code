@@ -10,9 +10,9 @@ import { globalFlutterArgs, safeSpawn } from "../debug/utils";
 import { locateBestProjectRoot } from "../project";
 import { DartHoverProvider } from "../providers/dart_hover_provider";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
-import { dartPubPath, flutterPath, showFlutterActivationFailure } from "../sdk/utils";
+import { flutterPath, pubPath, showFlutterActivationFailure } from "../sdk/utils";
 import * as util from "../utils";
-import { ProjectType, Sdks, fsPath, isFlutterWorkspaceFolder } from "../utils";
+import { fsPath, isFlutterWorkspaceFolder, ProjectType, Sdks } from "../utils";
 import * as channels from "./channels";
 
 const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
@@ -182,7 +182,7 @@ export class SdkCommands {
 	}
 
 	private runPubInFolder(folder: string, args: string[], shortPath: string): Thenable<number> {
-		const binPath = path.join(this.sdks.dart, dartPubPath);
+		const binPath = path.join(this.sdks.dart, pubPath);
 		args = args.concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
 		return this.runCommandInFolder(shortPath, "pub", folder, binPath, args);
 	}
