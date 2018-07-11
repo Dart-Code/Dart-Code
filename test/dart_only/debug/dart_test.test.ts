@@ -2,7 +2,6 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { config as conf } from "../../../src/config";
 import { platformEol } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
 import { DartDebugClient } from "../../dart_debug_client";
@@ -40,14 +39,9 @@ describe("dart test debugger", () => {
 		const config = await startDebugger(helloWorldTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			conf.previewTestRunnerForDart
-				? Promise.all([
-					dc.assertOutput("stdout", `✓ String .split() splits the string on the delimiter`),
-					dc.assertPassingTest("String .split() splits the string on the delimiter"),
-					dc.waitForEvent("terminated"),
-				])
-				: dc.assertOutputContains("stdout", `String .split() splits the string on the delimiter`),
-			,
+			dc.assertOutput("stdout", `✓ String .split() splits the string on the delimiter`),
+			dc.assertPassingTest("String .split() splits the string on the delimiter"),
+			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
 	});
@@ -124,15 +118,8 @@ describe("dart test debugger", () => {
 		config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
-			conf.previewTestRunnerForDart
-				? Promise.all([
-					dc.assertFailingTest("might fail today"),
-					dc.assertOutput("stderr", `Expected: <2>${platformEol}  Actual: <1>`),
-				])
-				: Promise.all([
-					dc.assertOutput("stderr", `Unhandled exception:`),
-					dc.assertOutputContains("stdout", `Expected: <2>${platformEol}    Actual: <1>`),
-				]),
+			dc.assertFailingTest("might fail today"),
+			dc.assertOutput("stderr", `Expected: <2>${platformEol}  Actual: <1>`),
 			dc.launch(config),
 		]);
 	});

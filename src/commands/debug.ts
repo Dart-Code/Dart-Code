@@ -2,10 +2,9 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { Analytics } from "../analytics";
-import { config } from "../config";
 import { CoverageData, PromiseCompleter } from "../debug/utils";
 import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
-import { fsPath, getDartWorkspaceFolders, isFlutterWorkspaceFolder, openInBrowser } from "../utils";
+import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../utils";
 import { handleDebugLogEvent } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
@@ -199,11 +198,10 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", () => {
 			TestResultsProvider.flagStart();
 			const testFolders = getDartWorkspaceFolders()
-				.filter((project) => isFlutterWorkspaceFolder(project) || config.previewTestRunnerForDart)
 				.map((project) => path.join(fsPath(project.uri), "test"))
 				.filter((testFolder) => fs.existsSync(testFolder));
 			if (testFolders.length === 0) {
-				vs.window.showErrorMessage("Unable to find test folders. Run All Tests works for Flutter projects or for Dart projects when `dart.previewTestRunnerForDart` is enabled");
+				vs.window.showErrorMessage("Unable to find any test folders");
 				return;
 			}
 			for (const folder of testFolders) {

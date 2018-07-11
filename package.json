@@ -786,12 +786,6 @@
 					"default": true,
 					"description": "Whether to set newly connected devices as the current device in Flutter projects.",
 					"scope": "window"
-				},
-				"dart.previewTestRunnerForDart": {
-					"type": "boolean",
-					"default": false,
-					"description": "EXPERIMENTAL: Use `pub run test` for Dart test files and show results in the Test Tree. This is only required for Dart VM tests; Flutter uses the Test Tree automatically.",
-					"scope": "window"
 				}
 			}
 		},
