@@ -361,12 +361,10 @@ describe("dart cli debugger", () => {
 	it("includes getters in variables when stopped at a breakpoint", async () => {
 		await openFile(helloWorldGettersFile);
 		const config = await startDebugger(helloWorldGettersFile);
-		await Promise.all([
-			dc.hitBreakpoint(config, {
-				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(helloWorldGettersFile),
-			}),
-		]);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(helloWorldGettersFile),
+		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
 		ensureVariable(variables, "danny", "danny", `Danny`);

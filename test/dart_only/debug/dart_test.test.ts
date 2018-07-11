@@ -53,12 +53,10 @@ describe("dart test debugger", () => {
 	it("stops at a breakpoint", async () => {
 		await openFile(helloWorldTestMainFile);
 		const config = await startDebugger(helloWorldTestMainFile);
-		await Promise.all([
-			dc.hitBreakpoint(config, {
-				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(helloWorldTestMainFile),
-			}),
-		]);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(helloWorldTestMainFile),
+		});
 	});
 
 	it("stops on exception", async function () {
