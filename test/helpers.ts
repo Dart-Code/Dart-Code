@@ -10,7 +10,7 @@ import { dartCodeExtensionIdentifier } from "../src/debug/utils";
 import { DaemonCapabilities } from "../src/flutter/flutter_daemon";
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
-import { ProjectType, Sdks, fsPath, vsCodeVersionConstraint } from "../src/utils";
+import { fsPath, ProjectType, Sdks, vsCodeVersionConstraint } from "../src/utils";
 import { log, logError, logTo, logWarn } from "../src/utils/log";
 import sinon = require("sinon");
 
@@ -72,9 +72,11 @@ function getDefaultFile(): vs.Uri {
 		return flutterEmptyFile;
 }
 
-export async function activate(file: vs.Uri = getDefaultFile()): Promise<void> {
+export async function activate(file?: vs.Uri): Promise<void> {
 	log("Activating");
 	await ext.activate();
+	if (!file)
+		file = getDefaultFile();
 	log(`Closing all open files`);
 	await closeAllOpenFiles();
 	log(`Opening ${fsPath(file)}`);
