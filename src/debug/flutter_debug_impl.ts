@@ -5,6 +5,8 @@ import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
 import { FlutterLaunchRequestArguments, LogCategory, LogMessage, LogSeverity } from "./utils";
 
+const objectGroupName = "my-group";
+
 export class FlutterDebugSession extends DartDebugSession {
 	private flutter: FlutterRun;
 	private currentRunningAppId: string;
@@ -170,12 +172,23 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	protected async handleInspectEvent(event: VMEvent): Promise<void> {
+		// await this.flutter.callServiceExtension(
+		// 	this.currentRunningAppId,
+		// 	"ext.flutter.inspector.setPubRootDirectories",
+		// 	{ pubRootDirectories: [this.cwd] },
+		// );
 		const selectedWidget = await this.flutter.callServiceExtension(
 			this.currentRunningAppId,
+			// "ext.flutter.inspector.getSelectedSummaryWidget",
 			"ext.flutter.inspector.getSelectedWidget",
-			{ previousSelectionId: null, objectGroup: null },
+			{ previousSelectionId: null, objectGroup: objectGroupName },
 		);
-		this.logToUser(JSON.stringify(selectedWidget));
+		console.log(JSON.stringify(selectedWidget));
+		await this.flutter.callServiceExtension(
+			this.currentRunningAppId,
+			"ext.flutter.inspector.disposeGroup",
+			{ objectGroup: objectGroupName },
+		);
 		// TODO: How can we translate this back to source?
 		// const evt = event as any;
 		// const thread: VMIsolateRef = evt.isolate;
