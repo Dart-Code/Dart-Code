@@ -18,6 +18,8 @@ import { fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolde
 import { log, logWarn } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
+export const TRACK_WIDGET_CREATION_ENABLED = "dart-code:trackWidgetCreationEnabled";
+
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private sdks: Sdks;
 	private analytics: Analytics;
@@ -168,6 +170,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		log(`Debug session starting...\n    ${JSON.stringify(debugConfig, undefined, 4).replace(/\n/g, "\n    ")}`);
+
+		// TODO: Remove this context (and associated condition on the command) when it is default, inc. for beta channel.
+		if (debugConfig.args) {
+			const args: string[] = debugConfig.args;
+			const trackWidgetCreationEnabled = args.indexOf("--track-widget-creation") !== -1;
+			vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, trackWidgetCreationEnabled);
+		}
 
 		return debugConfig;
 	}

@@ -4,6 +4,7 @@ import * as vs from "vscode";
 import { Analytics } from "../analytics";
 import { CoverageData, PromiseCompleter } from "../debug/utils";
 import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
+import { TRACK_WIDGET_CREATION_ENABLED } from "../providers/debug_config_provider";
 import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../utils";
 import { handleDebugLogEvent } from "../utils/log";
 
@@ -77,6 +78,9 @@ export class DebugCommands {
 				this.debugMetrics.show();
 			} else if (e.event === "dart.coverage") {
 				this.onReceiveCoverageEmitter.fire(e.body);
+			} else if (e.event === "dart.navigate") {
+				if (e.body.file && e.body.line && e.body.column)
+					vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(e.body.file), e.body.line, e.body.column);
 			}
 		}));
 		context.subscriptions.push(vs.debug.onDidStartDebugSession(async (s) => {
@@ -307,6 +311,7 @@ export class DebugCommands {
 			vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${id}`, undefined);
 		}
 		this.enabledServiceExtensions.length = 0;
+		vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, false);
 	}
 }
 
