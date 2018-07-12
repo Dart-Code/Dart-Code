@@ -92,7 +92,7 @@ script:
   - ps -ax | grep dart || true
   - if [[ $(pgrep -x dart) ]]; then
       echo 'DART WAS FOUND';
-      exit 1;
+      travis_result 1;
     fi;
 
 after_script:
