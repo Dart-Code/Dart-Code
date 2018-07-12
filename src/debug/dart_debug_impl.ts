@@ -7,7 +7,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { logError } from "../utils/log";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
-import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, LogCategory, LogMessage, LogSeverity, PromiseCompleter, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
+import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm, LogCategory, LogMessage, LogSeverity, PromiseCompleter, safeSpawn, uriToFilePath } from "./utils";
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -296,17 +296,19 @@ export class DartDebugSession extends DebugSession {
 		args: DebugProtocol.DisconnectArguments,
 	): Promise<void> {
 		try {
-			if (this.childProcess != null) {
-				for (const pid of this.additionalPidsToTerminate) {
-					try {
-						this.log(`Terminating related process ${pid}...`);
-						process.kill(pid);
-					} catch (e) {
-						// Sometimes this process will have already gone away (eg. the app finished/terminated)
-						// so logging here just results in lots of useless info.
-					}
+			for (const pid of this.additionalPidsToTerminate) {
+				try {
+					this.log(`Terminating related process ${pid}...`);
+					process.kill(pid);
+				} catch (e) {
+					// Sometimes this process will have already gone away (eg. the app finished/terminated)
+					// so logging here just results in lots of useless info.
 				}
-				this.additionalPidsToTerminate.length = 0;
+			}
+			// Don't do this - because the process might ignore our kill (eg. test framework lets the current
+			// test finish) so we may need to send again it we get another disconnectRequest.
+			// this.additionalPidsToTerminate.length = 0;
+			if (this.childProcess != null) {
 				try {
 					this.log(`Terminating main process...`);
 					this.childProcess.kill();
@@ -314,7 +316,9 @@ export class DartDebugSession extends DebugSession {
 					// This tends to throw a lot because the shell process quit when we terminated the related
 					// VM process above, so just swallow the error.
 				}
-				this.childProcess = null;
+				// Don't do this - because the process might ignore our kill (eg. test framework lets the current
+				// test finish) so we may need to send again it we get another disconnectRequest.
+				// this.childProcess = null;
 			} else if (this.observatory) {
 				try {
 					this.log(`Disconnecting from process...`);

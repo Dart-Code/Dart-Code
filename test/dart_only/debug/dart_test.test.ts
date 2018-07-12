@@ -5,7 +5,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../src/utils";
 import { logInfo } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
-import { activate, defer, ext, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, openFile, positionOf, withTimeout } from "../../helpers";
+import { activate, defer, delay, ext, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, openFile, positionOf, withTimeout } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -21,10 +21,10 @@ describe("dart test debugger", () => {
 		// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
 		// a second request and that'll cause it to quit immediately.
 		defer(() => withTimeout(
-			dc.disconnectRequest()
-				.catch((e) => logInfo(e))
-				.then(() => dc.stop())
-				.catch((e) => logInfo(e)),
+			Promise.all([
+				dc.disconnectRequest(),
+				delay(500).then(() => dc.stop()),
+			]),
 			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
 		).catch((e) => logInfo(e)));
 	});
