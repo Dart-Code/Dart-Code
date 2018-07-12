@@ -24,8 +24,13 @@ export class EditCommands implements vs.Disposable {
 		);
 	}
 
-	private organizeImports(): Thenable<void> {
-		return this.sendEdit(this.analyzer.editOrganizeDirectives, "Organize Imports");
+	private getActiveDoc() {
+		return vs.window.activeTextEditor && vs.window.activeTextEditor.document;
+	}
+
+	private organizeImports(document: vs.TextDocument): Thenable<void> {
+		document = document || this.getActiveDoc();
+		return this.sendEdit(this.analyzer.editOrganizeDirectives, "Organize Imports", document || vs.window.activeTextEditor.document);
 	}
 
 	private async jumpToLineColInUri(uri: vs.Uri, lineNumber?: number, columnNumber?: number) {
@@ -56,8 +61,9 @@ export class EditCommands implements vs.Disposable {
 		// See https://github.com/Microsoft/vscode/issues/45059
 	}
 
-	private sortMembers(): Thenable<void> {
-		return this.sendEdit(this.analyzer.editSortMembers, "Sort Members");
+	private sortMembers(document: vs.TextDocument): Thenable<void> {
+		document = document || this.getActiveDoc();
+		return this.sendEdit(this.analyzer.editSortMembers, "Sort Members", document);
 	}
 
 	private async completeStatement(): Promise<void> {
@@ -74,15 +80,14 @@ export class EditCommands implements vs.Disposable {
 			await this.applyEdits(document, res.change);
 	}
 
-	private async sendEdit(f: (a: { file: string }) => Thenable<{ edit: as.SourceFileEdit }>, commandName: string): Promise<void> {
-		if (!editors.hasActiveDartEditor()) {
-			vs.window.showWarningMessage("No active Dart editor.");
+	private async sendEdit(f: (a: { file: string }) => Thenable<{ edit: as.SourceFileEdit }>, commandName: string, document: vs.TextDocument): Promise<void> {
+		if (!editors.isDartDocument(document)) {
+			vs.window.showWarningMessage("Not a Dart file.");
 			return;
 		}
 
-		const editor = vs.window.activeTextEditor;
-		const document = editor.document;
 		const documentVersion = document.version;
+		const editor = await vs.window.showTextDocument(document);
 
 		f = f.bind(this.analyzer); // Yay JavaScript!
 
