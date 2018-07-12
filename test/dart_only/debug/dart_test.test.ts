@@ -2,7 +2,6 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { platformEol } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
 import { logInfo } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
@@ -110,7 +109,7 @@ describe("dart test debugger", () => {
 		const v = variables.find((v) => v.name === "message");
 		assert.ok(v);
 		assert.equal(v.evaluateName, "$e.message");
-		const expectedStart = `"Expected: <2>${platformEol}  Actual: <1>`;
+		const expectedStart = `"Expected: <2>\n  Actual: <1>`;
 		assert.ok(
 			v.value.startsWith(expectedStart),
 			`Exception didn't have expected prefix\n` +
@@ -127,7 +126,7 @@ describe("dart test debugger", () => {
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertFailingTest("might fail today"),
-			dc.assertOutput("stderr", `Expected: <2>${platformEol}  Actual: <1>`),
+			dc.assertOutput("stderr", `Expected: <2>\n  Actual: <1>`),
 			dc.launch(config),
 		]);
 	});
