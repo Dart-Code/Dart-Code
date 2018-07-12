@@ -1,4 +1,5 @@
 import * as _ from "lodash";
+import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../utils";
@@ -15,21 +16,18 @@ export class LoggingCommands implements vs.Disposable {
 		);
 	}
 
-	private lastUsedLogPath: vs.Uri;
+	private lastUsedLogFolder: string;
 	private async startLogging(): Promise<void> {
-		// Use last log file location or inside first workspace folder.
-		let defaultUri = this.lastUsedLogPath;
-		if (!defaultUri && vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length) {
-			defaultUri = vs.Uri.file(
-				path.join(
-					fsPath(vs.workspace.workspaceFolders[0].uri),
-					"Dart-Code-Log.txt",
-				),
-			);
-		}
+		const defaultFilename = this.getDefaultFilename();
+		// Use last folder or inside first workspace folder.
+		const defaultFolder = this.lastUsedLogFolder || (
+			vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length
+				? fsPath(vs.workspace.workspaceFolders[0].uri)
+				: os.homedir()
+		);
 
 		const logUri = await vs.window.showSaveDialog({
-			defaultUri,
+			defaultUri: vs.Uri.file(path.join(defaultFolder, defaultFilename)),
 			filters: {
 				"Log Files": ["txt", "log"],
 			},
@@ -39,7 +37,7 @@ export class LoggingCommands implements vs.Disposable {
 		if (!logUri)
 			return;
 
-		this.lastUsedLogPath = logUri;
+		this.lastUsedLogFolder = path.dirname(fsPath(logUri));
 
 		const selectedLogCategories = await vs.window.showQuickPick(
 			Object.keys(userSelectableLogCategories).map((k) => ({
@@ -69,6 +67,13 @@ export class LoggingCommands implements vs.Disposable {
 
 		const doc = await vs.workspace.openTextDocument(logUri);
 		await vs.window.showTextDocument(doc);
+	}
+
+	private getDefaultFilename(): string {
+		const pad = (s: string | number) => `0${s.toString()}`.slice(-2);
+		const now = new Date();
+		const formattedDate = `${now.getFullYear()}-${pad(now.getMonth())}-${pad(now.getDay())} ${pad(now.getHours())}-${pad(now.getMinutes())}`;
+		return `Dart-Code-Log-${formattedDate}.txt`;
 	}
 
 	public dispose(): any {
