@@ -183,7 +183,14 @@ export class FlutterDebugSession extends DartDebugSession {
 			"ext.flutter.inspector.getSelectedWidget",
 			{ previousSelectionId: null, objectGroup: objectGroupName },
 		);
-		console.log(JSON.stringify(selectedWidget));
+		if (selectedWidget && selectedWidget.result && selectedWidget.result.creationLocation) {
+			const loc = selectedWidget.result.creationLocation;
+			const file = loc.file;
+			const line = loc.line;
+			const column = loc.column;
+			this.sendEvent(new Event("dart.navigate", { file, line, column }));
+		}
+		// console.log(JSON.stringify(selectedWidget));
 		await this.flutter.callServiceExtension(
 			this.currentRunningAppId,
 			"ext.flutter.inspector.disposeGroup",

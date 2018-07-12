@@ -390,7 +390,7 @@
 				},
 				{
 					"command": "flutter.toggleWidgetInspector",
-					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.debugWidgetInspector"
+					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.debugWidgetInspector && dart-code:trackWidgetCreationEnabled"
 				},
 				{
 					"command": "flutter.hotRestart",
