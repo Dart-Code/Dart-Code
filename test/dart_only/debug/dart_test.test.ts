@@ -6,7 +6,7 @@ import { platformEol } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
 import { logWarn } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
-import { activate, defer, ext, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, openFile, positionOf } from "../../helpers";
+import { activate, defer, ext, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, openFile, positionOf, withTimeout } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -21,10 +21,13 @@ describe("dart test debugger", () => {
 		// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
 		// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
 		// a second request and that'll cause it to quit immediately.
-		defer(() => Promise.all([
-			dc.stop().catch((e) => logWarn(e)),
-			dc.stop().catch((e) => logWarn(e)),
-		]));
+		defer(() => withTimeout(
+			dc.disconnectRequest()
+				.catch((e) => logWarn(e))
+				.then(() => dc.stop())
+				.catch((e) => logWarn(e)),
+			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
+		).catch((e) => logWarn(e)));
 	});
 
 	async function startDebugger(script: vs.Uri | string): Promise<vs.DebugConfiguration> {

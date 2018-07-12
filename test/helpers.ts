@@ -450,7 +450,7 @@ export async function waitForNextAnalysis(action: () => void | Thenable<void>, t
 	await withTimeout(nextAnalysis, "Analysis did not complete within specified timeout", timeoutSeconds);
 }
 
-export async function withTimeout(promise: Promise<void>, message: string | (() => string), seconds?: number) {
+export async function withTimeout(promise: Promise<any>, message: string | (() => string), seconds?: number) {
 	return Promise.race([
 		promise,
 		timeoutIn(message, seconds),
