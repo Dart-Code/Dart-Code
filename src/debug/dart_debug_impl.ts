@@ -30,7 +30,7 @@ export class DartDebugSession extends DebugSession {
 	public debugSdkLibraries: boolean;
 	public debugExternalLibraries: boolean;
 	public evaluateGettersInDebugViews: boolean;
-	private threadManager: ThreadManager;
+	protected threadManager: ThreadManager;
 	public packageMap: PackageMap;
 	protected sendStdOutToConsole: boolean = true;
 	protected requiresProgram: boolean = true;
@@ -950,13 +950,17 @@ export class DartDebugSession extends DebugSession {
 
 	// PauseStart, PauseExit, PauseBreakpoint, PauseInterrupted, PauseException, Resume,
 	// BreakpointAdded, BreakpointResolved, BreakpointRemoved, Inspect, None
-	public async handleDebugEvent(event: VMEvent) {
-		const kind = event.kind;
+	public async handleDebugEvent(event: VMEvent): Promise<void> {
+		try {
+			const kind = event.kind;
 
-		if (kind.startsWith("Pause")) {
-			this.handlePauseEvent(event);
-		} else if (kind === "Inspect") {
-			this.handleInspectEvent(event);
+			if (kind.startsWith("Pause")) {
+				await this.handlePauseEvent(event);
+			} else if (kind === "Inspect") {
+				await this.handleInspectEvent(event);
+			}
+		} catch (e) {
+			logError(e);
 		}
 	}
 

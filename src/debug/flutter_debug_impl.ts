@@ -172,15 +172,21 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	protected async handleInspectEvent(event: VMEvent): Promise<void> {
-		// await this.flutter.callServiceExtension(
-		// 	this.currentRunningAppId,
-		// 	"ext.flutter.inspector.setPubRootDirectories",
-		// 	{ pubRootDirectories: [this.cwd] },
-		// );
+		// TODO: Move to only do this at the start of the session (only if required)
+		// TODO: We should send all open workspaces (arg0, arg1, arg2) so that it
+		// works for open packages too
+		await this.flutter.callServiceExtension(
+			this.currentRunningAppId,
+			"ext.flutter.inspector.setPubRootDirectories",
+			{
+				arg0: this.cwd,
+				// TODO: Is this OK???
+				isolateId: this.threadManager.threads[0].ref.id,
+			},
+		);
 		const selectedWidget = await this.flutter.callServiceExtension(
 			this.currentRunningAppId,
-			// "ext.flutter.inspector.getSelectedSummaryWidget",
-			"ext.flutter.inspector.getSelectedWidget",
+			"ext.flutter.inspector.getSelectedSummaryWidget",
 			{ previousSelectionId: null, objectGroup: objectGroupName },
 		);
 		if (selectedWidget && selectedWidget.result && selectedWidget.result.creationLocation) {
