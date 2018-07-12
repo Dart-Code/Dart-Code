@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { platformEol } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
-import { logWarn } from "../../../src/utils/log";
+import { logInfo } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { activate, defer, ext, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, openFile, positionOf, withTimeout } from "../../helpers";
 
@@ -23,11 +23,11 @@ describe("dart test debugger", () => {
 		// a second request and that'll cause it to quit immediately.
 		defer(() => withTimeout(
 			dc.disconnectRequest()
-				.catch((e) => logWarn(e))
+				.catch((e) => logInfo(e))
 				.then(() => dc.stop())
-				.catch((e) => logWarn(e)),
+				.catch((e) => logInfo(e)),
 			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
-		).catch((e) => logWarn(e)));
+		).catch((e) => logInfo(e)));
 	});
 
 	async function startDebugger(script: vs.Uri | string): Promise<vs.DebugConfiguration> {
