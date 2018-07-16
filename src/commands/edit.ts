@@ -86,7 +86,7 @@ export class EditCommands implements vs.Disposable {
 			return;
 		}
 
-		const documentVersion = document.version;
+		const originalDocumentVersion = document.version;
 		const editor = await vs.window.showTextDocument(document);
 
 		f = f.bind(this.analyzer); // Yay JavaScript!
@@ -103,7 +103,7 @@ export class EditCommands implements vs.Disposable {
 				return;
 			}
 
-			if (document.version !== document.version) {
+			if (document.version !== originalDocumentVersion) {
 				vs.window.showErrorMessage(`Error running ${commandName}: Document has been modified.`);
 				return;
 			}
