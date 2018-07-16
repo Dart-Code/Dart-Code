@@ -122,7 +122,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		// Only sort suites, as tests may have a useful order themselves.
 		if (!element) {
 			items = _.sortBy(items, [
-				(t: TestItemTreeItem) => -t.lastCompletedStatus,
+				(t: TestItemTreeItem) => t.sort,
 				(t: TestItemTreeItem) => t.label,
 			]);
 			console.log(items.map((i) => i.status));
@@ -369,7 +369,9 @@ class TestItemTreeItem extends vs.TreeItem {
 	private _status: TestStatus = TestStatus.Unknown; // tslint:disable-line:variable-name
 	// To avoid the sort changing on every status change (stale, running, etc.) this
 	// field will be the last status the user would care about (pass/fail/skip).
-	private _lastCompletedStatus: TestStatus = TestStatus.Unknown; // tslint:disable-line:variable-name
+	// Default to Passed just so things default to the most likely (hopefully) place. This should
+	// never be used for rendering; only sorting.
+	private _sort: TestSortOrder = TestSortOrder.Middle; // tslint:disable-line:variable-name
 
 	get status(): TestStatus {
 		return this._status;
@@ -382,12 +384,12 @@ class TestItemTreeItem extends vs.TreeItem {
 		if (status === TestStatus.Errored || status === TestStatus.Failed
 			|| status === TestStatus.Passed
 			|| status === TestStatus.Skipped) {
-			this._lastCompletedStatus = status;
+			this._sort = getTestSortOrder(status);
 		}
 	}
 
-	get lastCompletedStatus(): TestStatus {
-		return this._lastCompletedStatus;
+	get sort(): TestSortOrder {
+		return this._sort;
 	}
 }
 
@@ -568,4 +570,18 @@ enum TestStatus {
 	Failed,
 	Errored,
 	Running,
+}
+
+enum TestSortOrder {
+	Top, // Fails
+	Middle, // Passes
+	Bottom, // Skips
+}
+
+function getTestSortOrder(status: TestStatus): TestSortOrder {
+	if (status === TestStatus.Failed || status === TestStatus.Errored)
+		return TestSortOrder.Top;
+	if (status === TestStatus.Skipped)
+		return TestSortOrder.Bottom;
+	return TestSortOrder.Middle;
 }
