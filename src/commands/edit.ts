@@ -87,7 +87,6 @@ export class EditCommands implements vs.Disposable {
 		}
 
 		const originalDocumentVersion = document.version;
-		const editor = await vs.window.showTextDocument(document);
 
 		f = f.bind(this.analyzer); // Yay JavaScript!
 
@@ -108,15 +107,15 @@ export class EditCommands implements vs.Disposable {
 				return;
 			}
 
-			await editor.edit((editBuilder) => {
-				edit.edits.forEach((edit) => {
-					const range = new vs.Range(
-						document.positionAt(edit.offset),
-						document.positionAt(edit.offset + edit.length),
-					);
-					editBuilder.replace(range, edit.replacement);
-				});
+			const editBuilder = new vs.WorkspaceEdit();
+			edit.edits.forEach((edit) => {
+				const range = new vs.Range(
+					document.positionAt(edit.offset),
+					document.positionAt(edit.offset + edit.length),
+				);
+				editBuilder.replace(document.uri, range, edit.replacement);
 			});
+			await vs.workspace.applyEdit(editBuilder);
 		} catch (error) {
 			vs.window.showErrorMessage(`Error running ${commandName}: ${error.message}.`);
 		}
