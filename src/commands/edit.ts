@@ -179,8 +179,6 @@ export class EditCommands implements vs.Disposable {
 			const pos = document.positionAt(change.selection.offset);
 			const selection = new vs.Selection(pos, pos);
 			editor.selection = selection;
-		} else {
-			await vs.window.showTextDocument(initiatingDocument);
 		}
 	}
 
