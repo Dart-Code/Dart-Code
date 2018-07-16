@@ -82,7 +82,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", (_) => {
 		log("Performing silent extension reload...");
 		deactivate(true);
-		console.log(`dispoising ${context.subscriptions.length} items`);
 		const toDispose = context.subscriptions.slice();
 		context.subscriptions.length = 0;
 		for (const sub of toDispose) {
