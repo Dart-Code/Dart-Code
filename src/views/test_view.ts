@@ -112,7 +112,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		return element;
 	}
 
-	public getChildren(element?: vs.TreeItem): vs.TreeItem[] {
+	public getChildren(element?: vs.TreeItem): TestItemTreeItem[] {
 		let items = !element
 			? Object.keys(suites).map((k) => suites[k].node)
 			: (element instanceof SuiteTreeItem || element instanceof GroupTreeItem)
@@ -120,8 +120,13 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 				: [];
 		items = items.filter((item) => item);
 		// Only sort suites, as tests may have a useful order themselves.
-		if (!element)
-			items = _.sortBy(items, (t) => t.label);
+		if (!element) {
+			items = _.sortBy(items, [
+				(t: TestItemTreeItem) => -t.lastCompletedStatus,
+				(t: TestItemTreeItem) => t.label,
+			]);
+			console.log(items.map((i) => i.status));
+		}
 		return items;
 	}
 
@@ -134,23 +139,35 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		this.onDidChangeTreeDataEmitter.fire(node);
 	}
 
-	private updateAllIcons(suite: SuiteData) {
+	private updateAllStatuses(suite: SuiteData) {
 		// Walk the tree to get the status.
-		updateStatusFromChildren(suite.node);
-		this.updateNode(suite.node);
+		this.updateStatusFromChildren(suite.node);
+
+		// Update top level list, as we could've changed order.
+		this.updateNode();
 	}
 
-	// Since running is the highest status, it's faster to just run all the way up the tree
-	// and set them all than do the usual top-down calcuation to updates statuses like we do
-	// when tests complete.
-	private markAncestorsRunning(node: SuiteTreeItem | GroupTreeItem | TestTreeItem) {
-		const status = TestStatus.Running;
-		let current = node;
-		while (current) {
-			current.status = status;
-			this.updateNode(current);
-			current = current instanceof SuiteTreeItem ? undefined : current.parent;
+	private updateStatusFromChildren(node: SuiteTreeItem | GroupTreeItem): TestStatus {
+		const childStatuses = node.children.length
+			? node.children.filter((c) =>
+				(c instanceof GroupTreeItem && !c.isPhantomGroup)
+				|| (c instanceof TestTreeItem && !c.hidden),
+			).map((c) => {
+				if (c instanceof GroupTreeItem)
+					return this.updateStatusFromChildren(c);
+				if (c instanceof TestTreeItem)
+					return c.status;
+				return TestStatus.Unknown;
+			})
+			: [TestStatus.Unknown];
+
+		const newStatus = Math.max.apply(Math, childStatuses);
+		if (newStatus !== node.status) {
+			node.status = newStatus;
+			node.iconPath = getIconPath(node.status);
+			this.updateNode(node);
 		}
+		return node.status;
 	}
 
 	public dispose(): any {
@@ -243,10 +260,10 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		if (!isExistingTest)
 			testNode.parent.tests.push(testNode);
 
-		if (!testNode.hidden)
-			this.markAncestorsRunning(testNode);
 		this.updateNode(testNode);
 		this.updateNode(testNode.parent);
+		if (!testNode.hidden)
+			this.updateAllStatuses(suite);
 	}
 
 	private handleTestDoneNotification(suite: SuiteData, evt: TestDoneNotification) {
@@ -267,8 +284,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 
 		this.updateNode(testNode);
 		this.updateNode(testNode.parent);
-
-		this.updateAllIcons(suite);
+		this.updateAllStatuses(suite);
 
 		if (testNode.status === TestStatus.Failed && TestResultsProvider.nextFailureIsFirst) {
 			TestResultsProvider.nextFailureIsFirst = false;
@@ -326,7 +342,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			this.updateNode(t);
 		});
 
-		this.updateAllIcons(suite);
+		this.updateAllStatuses(suite);
 	}
 
 	private handlePrintNotification(suite: SuiteData, evt: PrintNotification) {
@@ -351,6 +367,9 @@ class SuiteData {
 
 class TestItemTreeItem extends vs.TreeItem {
 	private _status: TestStatus = TestStatus.Unknown; // tslint:disable-line:variable-name
+	// To avoid the sort changing on every status change (stale, running, etc.) this
+	// field will be the last status the user would care about (pass/fail/skip).
+	private _lastCompletedStatus: TestStatus = TestStatus.Unknown; // tslint:disable-line:variable-name
 
 	get status(): TestStatus {
 		return this._status;
@@ -359,6 +378,16 @@ class TestItemTreeItem extends vs.TreeItem {
 	set status(status: TestStatus) {
 		this._status = status;
 		this.iconPath = getIconPath(status);
+
+		if (status === TestStatus.Errored || status === TestStatus.Failed
+			|| status === TestStatus.Passed
+			|| status === TestStatus.Skipped) {
+			this._lastCompletedStatus = status;
+		}
+	}
+
+	get lastCompletedStatus(): TestStatus {
+		return this._lastCompletedStatus;
 	}
 }
 
@@ -387,7 +416,7 @@ export class SuiteTreeItem extends TestItemTreeItem {
 			: rel;
 	}
 
-	get children(): vs.TreeItem[] {
+	get children(): TestItemTreeItem[] {
 		// Children should be:
 		// 1. All children of any of our phantom groups
 		// 2. Our children excluding our phantom groups
@@ -436,7 +465,7 @@ class GroupTreeItem extends TestItemTreeItem {
 		return parent;
 	}
 
-	get children(): vs.TreeItem[] {
+	get children(): TestItemTreeItem[] {
 		return []
 			.concat(this.groups)
 			.concat(this.tests.filter((t) => !t.hidden));
@@ -518,24 +547,6 @@ function getIconPath(status: TestStatus): vs.Uri {
 	return file
 		? vs.Uri.file(path.join(extensionPath, `media/icons/tests/${file}.svg`))
 		: undefined;
-}
-
-function updateStatusFromChildren(node: SuiteTreeItem | GroupTreeItem): TestStatus {
-	const childStatuses = node.children.length
-		? node.children.filter((c) =>
-			(c instanceof GroupTreeItem && !c.isPhantomGroup)
-			|| (c instanceof TestTreeItem && !c.hidden),
-		).map((c) => {
-			if (c instanceof GroupTreeItem)
-				return updateStatusFromChildren(c);
-			if (c instanceof TestTreeItem)
-				return c.status;
-			return TestStatus.Unknown;
-		})
-		: [TestStatus.Unknown];
-	const status = Math.max.apply(Math, childStatuses);
-	node.iconPath = getIconPath(status);
-	return status;
 }
 
 enum TestStatus {
