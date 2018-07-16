@@ -89,7 +89,7 @@ script:
   - npm run vscode:prepublish
   - npm run lint
   - npm test
-  - ps -ax | grep dart || true
+  - ps -ax | grep -v grep | grep dart || true
   - if [[ $(pgrep -x dart) ]]; then
       echo 'DART WAS FOUND';
       travis_result 1;
