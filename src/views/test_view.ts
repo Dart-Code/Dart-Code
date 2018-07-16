@@ -422,7 +422,7 @@ export class SuiteTreeItem extends TestItemTreeItem {
 		// 2. Our children excluding our phantom groups
 		return []
 			.concat(_.flatMap(this.groups.filter((g) => g.isPhantomGroup), (g) => g.children))
-			.concat(this.groups.filter((g) => !g.isPhantomGroup))
+			.concat(this.groups.filter((g) => !g.isPhantomGroup && !g.hidden))
 			.concat(this.tests.filter((t) => !t.hidden));
 	}
 
@@ -454,6 +454,14 @@ class GroupTreeItem extends TestItemTreeItem {
 		return !this.group.name && this.parent instanceof SuiteTreeItem;
 	}
 
+	get hidden(): boolean {
+		// If every child is hidden, we are hidden.
+		return this.children.every((c) => {
+			return (c instanceof GroupTreeItem && c.hidden)
+				|| (c instanceof TestTreeItem && c.hidden);
+		});
+	}
+
 	get parent(): SuiteTreeItem | GroupTreeItem {
 		const parent = this.group.parentID
 			? this.suite.groups[this.group.parentID]
@@ -467,7 +475,7 @@ class GroupTreeItem extends TestItemTreeItem {
 
 	get children(): TestItemTreeItem[] {
 		return []
-			.concat(this.groups)
+			.concat(this.groups.filter((t) => !t.hidden))
 			.concat(this.tests.filter((t) => !t.hidden));
 	}
 
