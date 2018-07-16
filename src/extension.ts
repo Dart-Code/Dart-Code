@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { WorkspaceFolder } from "vscode";
@@ -125,10 +126,10 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const analyzerPath = config.analyzerPath || path.join(sdks.dart, analyzerSnapshotPath);
 	// If the ssh host is set, then we are running the analyzer on a remote machine, that same analyzer
 	// might not exist on the local machine.
-	// if (!config.analyzerSshHost && !fs.existsSync(analyzerPath)) {
-	// 	vs.window.showErrorMessage("Could not find a Dart Analysis Server at " + analyzerPath);
-	// 	return;
-	// }
+	if (!config.analyzerSshHost && !fs.existsSync(analyzerPath)) {
+		vs.window.showErrorMessage("Could not find a Dart Analysis Server at " + analyzerPath);
+		return;
+	}
 
 	analyzer = new Analyzer(path.join(sdks.dart, dartVMPath), analyzerPath);
 	context.subscriptions.push(analyzer);
