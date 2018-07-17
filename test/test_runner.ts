@@ -1,3 +1,5 @@
+console.log("Starting test runner...");
+
 import * as fs from "fs";
 import { MultiReporter } from "./mocha_multi_reporter";
 import testRunner = require("vscode/lib/testrunner");
