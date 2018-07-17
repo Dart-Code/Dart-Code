@@ -388,7 +388,15 @@ export async function ensureTestContent(expected: string): Promise<void> {
 
 export async function ensureTestContentWithCursorPos(expected: string): Promise<void> {
 	await ensureTestContent(expected.replace("^", ""));
-	await tryFor(() => assert.equal(doc.offsetAt(editor.selection.active), expected.indexOf("^")), 100);
+	// To avoid issues with newlines not matching up in `expected`, we'll just stick the
+	// placeholder character ^ in the cursor location then call ensureTextContent.
+	const originalSelection = editor.document.getText(editor.selection);
+	try {
+		await editor.edit((builder) => builder.replace(editor.selection, "^"));
+		await ensureTestContent(expected);
+	} finally {
+		await editor.edit((builder) => builder.replace(editor.selection, originalSelection));
+	}
 }
 
 export function delay(milliseconds: number): Promise<void> {
