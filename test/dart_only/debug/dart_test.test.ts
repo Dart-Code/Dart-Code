@@ -155,6 +155,29 @@ describe("dart test debugger", () => {
 		assert.ok(actualResults);
 		assert.equal(actualResults, expectedResults);
 	});
+
+	it("sorts suites correctly", async () => {
+		// Run each test file in a different order to how we expect the results.
+		for (const file of [helloWorldTestSkipFile, helloWorldTestMainFile, helloWorldTestTreeFile, helloWorldTestBrokenFile]) {
+			await openFile(file);
+			const config = await startDebugger(file);
+			config.noDebug = true;
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.waitForEvent("terminated"),
+				dc.launch(config),
+			]);
+		}
+
+		const topLevelNodes = extApi.testTreeProvider.getChildren();
+		assert.ok(topLevelNodes);
+		assert.equal(topLevelNodes.length, 4);
+
+		assert.equal(`${topLevelNodes[0].label} (${TestStatus[topLevelNodes[0].status]})`, "broken_test.dart (Failed)");
+		assert.equal(`${topLevelNodes[1].label} (${TestStatus[topLevelNodes[1].status]})`, "tree_test.dart (Failed)");
+		assert.equal(`${topLevelNodes[2].label} (${TestStatus[topLevelNodes[2].status]})`, "basic_test.dart (Passed)");
+		assert.equal(`${topLevelNodes[3].label} (${TestStatus[topLevelNodes[3].status]})`, "skip_test.dart (Skipped)");
+	});
 });
 
 function makeTextTree(suite: vs.Uri, provider: TestResultsProvider, parent?: vs.TreeItem, buffer: string[] = [], indent = 0) {
