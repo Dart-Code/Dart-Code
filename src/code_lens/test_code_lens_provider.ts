@@ -104,4 +104,9 @@ class TestOutlineVisitor extends OutlineVisitor {
 	protected visitUnitTestTest(outline: Outline) {
 		this.tests.push(outline);
 	}
+	// Groups seem to increase the change of us accidentally running more than
+	// we expected, so for now we'll only support on tests.
+	// protected visitUnitTestGroup(outline: Outline) {
+	// 	this.tests.push(outline);
+	// }
 }
