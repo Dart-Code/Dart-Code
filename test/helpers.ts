@@ -77,10 +77,14 @@ function getDefaultFile(): vs.Uri {
 		return flutterEmptyFile;
 }
 
-export async function activate(file?: vs.Uri): Promise<void> {
+export async function activateWithoutAnalysis(): Promise<void> {
 	log("Activating");
 	await ext.activate();
 	extApi = ext.exports[internalApiSymbol];
+}
+
+export async function activate(file?: vs.Uri): Promise<void> {
+	await activateWithoutAnalysis();
 	if (!file)
 		file = getDefaultFile();
 
