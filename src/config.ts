@@ -53,6 +53,7 @@ class Config {
 	public setSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
 	get sdkPaths() { return (this.getConfig<string[]>("sdkPaths") || []).map(resolvePaths); }
 	get showLintNames() { return this.getConfig<boolean>("showLintNames"); }
+	get showTestCodeLens() { return this.getConfig<boolean>("showTestCodeLens"); }
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
 
 	public setGlobalDartSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Global); }

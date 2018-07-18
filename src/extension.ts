@@ -9,6 +9,7 @@ import { FileChangeHandler } from "./analysis/file_change_handler";
 import { OpenFileTracker } from "./analysis/open_file_tracker";
 import { findPackageRoots } from "./analysis/utils";
 import { Analytics } from "./analytics";
+import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
 import { DebugCommands } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
 import { GoToSuperCommand } from "./commands/go_to_super";
@@ -207,6 +208,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, typeFormattingEditProvider, "}", ";"));
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, sourceCodeActionProvider, sourceCodeActionProvider.metadata));
 	context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, implementationProvider));
+	if (config.showTestCodeLens)
+		context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, new TestCodeLensProvider(analyzer)));
 
 	// Snippets are language-specific
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));
@@ -466,6 +469,7 @@ function getSettingsThatRequireRestart() {
 		+ config.analyzeAngularTemplates
 		+ config.normalizeWindowsDriveLetters
 		+ config.analysisServerFolding
+		+ config.showTestCodeLens
 		+ config.previewHotReloadCoverageMarkers;
 }
 
