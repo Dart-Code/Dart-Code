@@ -86,7 +86,7 @@ export async function activate(file?: vs.Uri): Promise<void> {
 
 	if (extApi && extApi.sdks && extApi.sdks.projectType === ProjectType.Flutter) {
 		log("Restoring packages for Flutter project");
-		await getPackages();
+		await vs.commands.executeCommand("dart.getPackages", vs.workspace.workspaceFolders ? [0] : undefined);
 	}
 
 	log(`Closing all open files`);
@@ -106,9 +106,9 @@ export async function activate(file?: vs.Uri): Promise<void> {
 }
 
 export async function getPackages() {
+	log("Restoring packages and waiting for next analysis to complete");
 	await waitForNextAnalysis(async () => {
 		await vs.commands.executeCommand("dart.getPackages", vs.workspace.workspaceFolders ? [0] : undefined);
-		await extApi.reanalyze();
 	}, 60);
 }
 
