@@ -4,6 +4,7 @@ import * as vs from "vscode";
 import { getChannel } from "../commands/channels";
 import { extensionPath } from "../extension";
 import { fsPath } from "../utils";
+import { getLaunchConfig } from "../utils/test";
 import { ErrorNotification, Group, GroupNotification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "./test_protocol";
 
 const DART_TEST_SUITE_NODE = "dart-code:testSuiteNode";
@@ -40,13 +41,21 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | TestTreeItem) => {
 			vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(treeNode.resourceUri),
-				this.getLaunchConfig(false, treeNode),
+				getLaunchConfig(
+					false,
+					fsPath(treeNode.resourceUri),
+					treeNode instanceof TestTreeItem ? treeNode.test.name : undefined,
+				),
 			);
 		}));
 		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteTreeItem | TestTreeItem) => {
 			vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(treeNode.resourceUri),
-				this.getLaunchConfig(true, treeNode),
+				getLaunchConfig(
+					true,
+					fsPath(treeNode.resourceUri),
+					treeNode instanceof TestTreeItem ? treeNode.test.name : undefined,
+				),
 			);
 		}));
 
@@ -87,17 +96,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 				treeNode.test.root_column || treeNode.test.column,
 			);
 		}));
-	}
-
-	private getLaunchConfig(noDebug: boolean, treeNode: SuiteTreeItem | TestTreeItem) {
-		return {
-			args: treeNode instanceof TestTreeItem ? ["--plain-name", treeNode.test.name] : undefined,
-			name: "Tests",
-			noDebug,
-			program: fsPath(treeNode.resourceUri),
-			request: "launch",
-			type: "dart",
-		};
 	}
 
 	public handleDebugSessionCustomEvent(e: vs.DebugSessionCustomEvent) {

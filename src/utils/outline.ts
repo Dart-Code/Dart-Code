@@ -1,6 +1,7 @@
 import * as vs from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { OpenFileTracker } from "../analysis/open_file_tracker";
+import { logError } from "./log";
 
 function findNode(outlines: as.Outline[], offset: number, useReducedRange: boolean, kinds: as.ElementKind[]): as.Outline | undefined {
 	if (!outlines)
@@ -26,4 +27,123 @@ function findNode(outlines: as.Outline[], offset: number, useReducedRange: boole
 export function findNearestOutlineNode(document: vs.TextDocument, position: vs.Position, useReducedRange = false, kinds: as.ElementKind[] = ["CLASS", "METHOD", "GETTER", "SETTER"]) {
 	const outline = OpenFileTracker.getOutlineFor(document.uri);
 	return outline && findNode([outline], document.offsetAt(position), useReducedRange, kinds);
+}
+
+export abstract class OutlineVisitor {
+	public visit(outline: as.Outline) {
+		this.visitNode(outline);
+		if (outline.children) {
+			for (const child of outline.children) {
+				this.visit(child);
+			}
+		}
+	}
+
+	private visitNode(outline: as.Outline) {
+		switch (outline && outline.element && outline.element.kind) {
+			case "CLASS":
+				this.visitClass(outline);
+				break;
+			case "CLASS_TYPE_ALIAS":
+				this.visitClassTypeAlias(outline);
+				break;
+			case "COMPILATION_UNIT":
+				this.visitCompilationUnit(outline);
+				break;
+			case "CONSTRUCTOR":
+				this.visitConstructor(outline);
+				break;
+			case "CONSTRUCTOR_INVOCATION":
+				this.visitContructorInvocation(outline);
+				break;
+			case "ENUM":
+				this.visitEnum(outline);
+				break;
+			case "ENUM_CONSTANT":
+				this.visitEnumConstant(outline);
+				break;
+			case "FIELD":
+				this.visitField(outline);
+				break;
+			case "FILE":
+				this.visitXXX(outline);
+				break;
+			case "FUNCTION":
+				this.visitFile(outline);
+				break;
+			case "FUNCTION_INVOCATION":
+				this.visitFunctionInvocation(outline);
+				break;
+			case "FUNCTION_TYPE_ALIAS":
+				this.visitFunctionTypeAlias(outline);
+				break;
+			case "GETTER":
+				this.visitGetter(outline);
+				break;
+			case "LABEL":
+				this.visitLabel(outline);
+				break;
+			case "LIBRARY":
+				this.visitLibrary(outline);
+				break;
+			case "LOCAL_VARIABLE":
+				this.visitLocalVariable(outline);
+				break;
+			case "METHOD":
+				this.visitMethod(outline);
+				break;
+			case "PARAMETER":
+				this.visitParameter(outline);
+				break;
+			case "PREFIX":
+				this.visitPrefix(outline);
+				break;
+			case "SETTER":
+				this.visitSetter(outline);
+				break;
+			case "TOP_LEVEL_VARIABLE":
+				this.visitTopLevelVariable(outline);
+				break;
+			case "TYPE_PARAMETER":
+				this.visitTypeParameter(outline);
+				break;
+			case "UNIT_TEST_GROUP":
+				this.visitUnitTestGroup(outline);
+				break;
+			case "UNIT_TEST_TEST":
+				this.visitUnitTestTest(outline);
+				break;
+			case "UNKNOWN":
+				this.visitUnknown(outline);
+				break;
+			default:
+				logError(`Unknown Outline item! ${outline && outline.element && outline.element.kind}`);
+		}
+	}
+
+	protected visitClass(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitClassTypeAlias(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitCompilationUnit(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitConstructor(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitContructorInvocation(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitEnum(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitEnumConstant(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitField(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitXXX(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitFile(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitFunctionInvocation(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitFunctionTypeAlias(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitGetter(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitLabel(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitLibrary(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitLocalVariable(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitMethod(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitParameter(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitPrefix(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitSetter(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitTopLevelVariable(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitTypeParameter(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitUnitTestGroup(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitUnitTestTest(outline: as.Outline): void { } // tslint:disable-line:no-empty
+	protected visitUnknown(outline: as.Outline): void { }// tslint:disable-line:no-empty
 }
