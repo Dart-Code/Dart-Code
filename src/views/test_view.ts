@@ -35,15 +35,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	private owningDebugSessions: { [key: string]: vs.DebugSession } = {};
 
 	constructor() {
-		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
-			if (e.event === "dart.testRunNotification") {
-				// If we're starting a suite, record us as the owner so we can clean up later
-				if (e.body.notification.type === "suite")
-					this.owningDebugSessions[e.body.suitePath] = e.session;
-
-				this.handleNotification(e.body.suitePath, e.body.notification);
-			}
-		}));
+		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleSessionEnd(session)));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | TestTreeItem) => {
 			vs.debug.startDebugging(
@@ -108,6 +100,16 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		};
 	}
 
+	public handleDebugSessionCustomEvent(e: vs.DebugSessionCustomEvent) {
+		if (e.event === "dart.testRunNotification") {
+			// If we're starting a suite, record us as the owner so we can clean up later
+			if (e.body.notification.type === "suite")
+				this.owningDebugSessions[e.body.suitePath] = e.session;
+
+			this.handleNotification(e.body.suitePath, e.body.notification);
+		}
+	}
+
 	public getTreeItem(element: vs.TreeItem): vs.TreeItem {
 		return element;
 	}
@@ -125,7 +127,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 				(t: TestItemTreeItem) => t.sort,
 				(t: TestItemTreeItem) => t.label,
 			]);
-			console.log(items.map((i) => i.status));
 		}
 		return items;
 	}
@@ -559,7 +560,7 @@ function getIconPath(status: TestStatus): vs.Uri {
 		: undefined;
 }
 
-enum TestStatus {
+export enum TestStatus {
 	// This should be in order such that the highest number is the one to show
 	// when aggregating (eg. from children).
 	Stale,
