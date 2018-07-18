@@ -17,7 +17,7 @@ import { TestResultsProvider } from "../src/views/test_view";
 import sinon = require("sinon");
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
-export const extApi: {
+export let extApi: {
 	analyzerCapabilities: AnalyzerCapabilities,
 	currentAnalysis: () => Promise<void>,
 	daemonCapabilities: DaemonCapabilities,
@@ -28,7 +28,7 @@ export const extApi: {
 	renameProvider: DartRenameProvider,
 	sdks: Sdks,
 	testTreeProvider: TestResultsProvider,
-} = ext.exports[internalApiSymbol];
+};
 
 if (!ext) {
 	if (semver.satisfies(vs.version, vsCodeVersionConstraint)) {
@@ -80,6 +80,7 @@ function getDefaultFile(): vs.Uri {
 export async function activate(file?: vs.Uri): Promise<void> {
 	log("Activating");
 	await ext.activate();
+	extApi = ext.exports[internalApiSymbol];
 	if (!file)
 		file = getDefaultFile();
 	log(`Closing all open files`);
