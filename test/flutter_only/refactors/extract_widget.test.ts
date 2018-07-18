@@ -3,7 +3,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../src/commands/refactor";
 import { PromiseCompleter } from "../../../src/debug/utils";
-import { activate, doc, ensureTestContent, extApi, getPackages, rangeOf, sb, setTestContent, waitFor } from "../../helpers";
+import { activate, doc, ensureTestContent, extApi, rangeOf, sb, setTestContent, waitFor } from "../../helpers";
 
 describe("refactor", () => {
 	beforeEach("activate", () => activate());
@@ -12,8 +12,6 @@ describe("refactor", () => {
 		if (!extApi.analyzerCapabilities.hasUpdatedWidgetSnippets)
 			this.skip();
 	});
-	// We have tests that require external packages.
-	before("get packages", () => getPackages());
 
 	it("can extract simple code into a widget", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");

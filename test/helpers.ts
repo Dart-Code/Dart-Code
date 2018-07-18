@@ -87,6 +87,12 @@ export async function activate(file?: vs.Uri): Promise<void> {
 	await activateWithoutAnalysis();
 	if (!file)
 		file = getDefaultFile();
+
+	if (extApi && extApi.sdks && extApi.sdks.projectType === ProjectType.Flutter) {
+		log("Restoring packages for Flutter project");
+		await getPackages();
+	}
+
 	log(`Closing all open files`);
 	await closeAllOpenFiles();
 	log(`Opening ${fsPath(file)}`);
