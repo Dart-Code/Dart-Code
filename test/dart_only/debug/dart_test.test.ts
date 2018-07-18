@@ -148,18 +148,22 @@ describe("dart test debugger", () => {
 			dc.launch(config),
 		]);
 
-		const expectedResultsTree = getExpectedResults();
-		const actualResults = makeTextTree(extApi.testTreeProvider).join("\n");
+		const expectedResults = getExpectedResults();
+		const actualResults = makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider).join("\n");
 
-		assert.equal(actualResults, expectedResultsTree);
+		assert.ok(expectedResults);
+		assert.ok(actualResults);
+		assert.equal(actualResults, expectedResults);
 	});
 });
 
-function makeTextTree(provider: TestResultsProvider, parent?: vs.TreeItem, buffer: string[] = [], indent = 0) {
-	const items = provider.getChildren(parent);
+function makeTextTree(suite: vs.Uri, provider: TestResultsProvider, parent?: vs.TreeItem, buffer: string[] = [], indent = 0) {
+	const items = provider.getChildren(parent)
+		// Filter to only the suite we were given (though includes all children).
+		.filter((item) => fsPath(item.resourceUri) === fsPath(suite) || !!parent);
 	items.forEach((item) => {
 		buffer.push(`${" ".repeat(indent * 4)}${item.label} (${TestStatus[item.status]})`);
-		makeTextTree(provider, item, buffer, indent + 1);
+		makeTextTree(suite, provider, item, buffer, indent + 1);
 	});
 	return buffer;
 }
