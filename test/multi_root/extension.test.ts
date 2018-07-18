@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath, Sdks } from "../../src/utils";
-import { activateWithoutAnalysis, ext, extApi } from "../helpers";
+import { activate, ext, extApi } from "../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -21,11 +21,11 @@ describe("test environment", () => {
 
 describe("extension", () => {
 	it("activated", async () => {
-		await activateWithoutAnalysis();
+		await activate();
 		assert.equal(ext.isActive, true);
 	});
 	it("found the Dart and Flutter SDK", async () => {
-		await activateWithoutAnalysis();
+		await activate();
 		assert.ok(extApi);
 		const sdks: Sdks = extApi.sdks;
 		assert.ok(sdks);
@@ -33,7 +33,7 @@ describe("extension", () => {
 		assert.ok(sdks.flutter);
 	});
 	it("used Flutter's version of the Dart SDK", async () => {
-		await activateWithoutAnalysis();
+		await activate();
 		assert.ok(extApi);
 		const sdks: Sdks = extApi.sdks;
 		assert.ok(sdks);
