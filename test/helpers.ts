@@ -10,11 +10,14 @@ import { dartCodeExtensionIdentifier } from "../src/debug/utils";
 import { DaemonCapabilities } from "../src/flutter/flutter_daemon";
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
+import { internalApiSymbol } from "../src/symbols";
 import { fsPath, ProjectType, Sdks, vsCodeVersionConstraint } from "../src/utils";
 import { log, logError, logTo, logWarn } from "../src/utils/log";
+import { TestResultsProvider } from "../src/views/test_view";
 import sinon = require("sinon");
 
-export const ext = vs.extensions.getExtension<{
+export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
+export const extApi: {
 	analyzerCapabilities: AnalyzerCapabilities,
 	currentAnalysis: () => Promise<void>,
 	daemonCapabilities: DaemonCapabilities,
@@ -24,7 +27,8 @@ export const ext = vs.extensions.getExtension<{
 	reanalyze: () => void,
 	renameProvider: DartRenameProvider,
 	sdks: Sdks,
-}>(dartCodeExtensionIdentifier);
+	testTreeProvider: TestResultsProvider,
+} = ext.exports[internalApiSymbol];
 
 if (!ext) {
 	if (semver.satisfies(vs.version, vsCodeVersionConstraint)) {
@@ -67,7 +71,7 @@ export let editor: vs.TextEditor;
 export let documentEol: string;
 
 function getDefaultFile(): vs.Uri {
-	if (ext.exports.sdks.projectType === ProjectType.Dart)
+	if (extApi.sdks.projectType === ProjectType.Dart)
 		return emptyFile;
 	else
 		return flutterEmptyFile;
@@ -86,18 +90,18 @@ export async function activate(file?: vs.Uri): Promise<void> {
 	editor = await vs.window.showTextDocument(doc);
 	documentEol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
 	log(`Waiting for initial and any in-progress analysis`);
-	await ext.exports.initialAnalysis;
+	await extApi.initialAnalysis;
 	// Opening a file above may start analysis after a short period so give it time to start
 	// before we continue.
 	await delay(200);
-	await ext.exports.currentAnalysis();
+	await extApi.currentAnalysis();
 	log(`Ready to start test`);
 }
 
 export async function getPackages() {
 	await waitForNextAnalysis(async () => {
 		await vs.commands.executeCommand("dart.getPackages", vs.workspace.workspaceFolders ? [0] : undefined);
-		await ext.exports.reanalyze();
+		await extApi.reanalyze();
 	}, 60);
 }
 
@@ -450,9 +454,9 @@ export async function waitForEditorChange(action: () => Thenable<void>): Promise
 
 export async function waitForNextAnalysis(action: () => void | Thenable<void>, timeoutSeconds?: number): Promise<void> {
 	log("Waiting for any in-progress analysis to complete");
-	await ext.exports.currentAnalysis;
+	await extApi.currentAnalysis;
 	// Get a new completer for the next analysis.
-	const nextAnalysis = ext.exports.nextAnalysis();
+	const nextAnalysis = extApi.nextAnalysis();
 	log("Running requested action");
 	await action();
 	log(`Waiting for analysis to complete`);
@@ -484,7 +488,7 @@ async function getResolvedDebugConfiguration(extraConfiguration?: { [key: string
 		request: "launch",
 		type: "dart",
 	}, extraConfiguration);
-	return await ext.exports.debugProvider.resolveDebugConfiguration(vs.workspace.workspaceFolders[0], debugConfig);
+	return await extApi.debugProvider.resolveDebugConfiguration(vs.workspace.workspaceFolders[0], debugConfig);
 }
 
 export async function getLaunchConfiguration(script?: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {

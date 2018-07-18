@@ -5,7 +5,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../src/utils";
 import { logInfo } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
-import { activate, defer, delay, ext, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, openFile, positionOf, withTimeout } from "../../helpers";
+import { activate, defer, delay, ext, extApi, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, openFile, positionOf, withTimeout } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -66,7 +66,7 @@ describe("dart test debugger", () => {
 
 	it("stops on exception", async function () {
 		// Dart v1 doesn't pause on unhandled exceptions here :(
-		if (!ext.exports.analyzerCapabilities.isDart2)
+		if (!extApi.analyzerCapabilities.isDart2)
 			this.skip();
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile);
@@ -94,7 +94,7 @@ describe("dart test debugger", () => {
 
 	it("provides exception details when stopped on exception", async function () {
 		// Dart v1 doesn't pause on unhandled exceptions here :(
-		if (!ext.exports.analyzerCapabilities.isDart2)
+		if (!extApi.analyzerCapabilities.isDart2)
 			this.skip();
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile);

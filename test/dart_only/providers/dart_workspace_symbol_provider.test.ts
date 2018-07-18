@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { activate, ensureSymbol, everythingFile, ext, getWorkspaceSymbols } from "../../helpers";
+import { activate, ensureSymbol, everythingFile, extApi, getWorkspaceSymbols } from "../../helpers";
 
 describe("workspace_symbol_provider", () => {
 
@@ -15,7 +15,7 @@ describe("workspace_symbol_provider", () => {
 
 	it("includes items from 'everything.dart'", async function () {
 		// Results in legacy version are kinda junk.
-		if (!ext.exports.analyzerCapabilities.isDart2)
+		if (!extApi.analyzerCapabilities.isDart2)
 			this.skip();
 
 		const symbols = await getWorkspaceSymbols("my");

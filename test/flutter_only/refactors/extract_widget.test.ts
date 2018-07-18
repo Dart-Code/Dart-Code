@@ -3,13 +3,13 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../src/commands/refactor";
 import { PromiseCompleter } from "../../../src/debug/utils";
-import { activate, doc, ensureTestContent, ext, getPackages, rangeOf, sb, setTestContent, waitFor } from "../../helpers";
+import { activate, doc, ensureTestContent, extApi, getPackages, rangeOf, sb, setTestContent, waitFor } from "../../helpers";
 
 describe("refactor", () => {
 	beforeEach("activate", () => activate());
 	// tslint:disable-next-line:only-arrow-functions
 	beforeEach("skip if not updated widget snippets", function () {
-		if (!ext.exports.analyzerCapabilities.hasUpdatedWidgetSnippets)
+		if (!extApi.analyzerCapabilities.hasUpdatedWidgetSnippets)
 			this.skip();
 	});
 	// We have tests that require external packages.

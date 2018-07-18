@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, doc, everythingFile, ext, getPackages, positionOf, rangeOf } from "../../helpers";
+import { activate, doc, everythingFile, extApi, getPackages, positionOf, rangeOf } from "../../helpers";
 
 describe("dart_hover_provider", () => {
 
@@ -66,11 +66,11 @@ describe("dart_hover_provider", () => {
 	// tslint:disable-next-line:only-arrow-functions
 	it("returns expected information for a setter", async function () {
 		// https://github.com/dart-lang/sdk/issues/32703
-		if (ext.exports.analyzerCapabilities.isDart2)
+		if (extApi.analyzerCapabilities.isDart2)
 			this.skip();
 
 		const hover = await getHoverAt("my^NumSetter(");
-		if (ext.exports.analyzerCapabilities.isDart2) {
+		if (extApi.analyzerCapabilities.isDart2) {
 			assert.equal(hover.displayText, "set myNumSetter(num value) → void");
 		} else {
 			assert.equal(hover.displayText, "set myNumSetter(num value) → dynamic");

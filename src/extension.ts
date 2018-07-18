@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { WorkspaceFolder } from "vscode";
+import { internalApiSymbol } from "../src/symbols";
 import { Analyzer } from "./analysis/analyzer";
 import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
 import { FileChangeHandler } from "./analysis/file_change_handler";
@@ -377,15 +378,18 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	}
 
 	return {
-		analyzerCapabilities: analyzer.capabilities,
-		currentAnalysis: () => analyzer.currentAnalysis,
-		daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
-		debugProvider, // TODO: Remove this when we can get access via testing...
-		initialAnalysis,
-		nextAnalysis,
-		reanalyze,
-		renameProvider, // TODO: Remove this when we can get access via testing...
-		sdks,
+		[internalApiSymbol]: {
+			analyzerCapabilities: analyzer.capabilities,
+			currentAnalysis: () => analyzer.currentAnalysis,
+			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
+			debugProvider,
+			initialAnalysis,
+			nextAnalysis,
+			reanalyze,
+			renameProvider,
+			sdks,
+			testTreeProvider,
+		},
 	};
 }
 

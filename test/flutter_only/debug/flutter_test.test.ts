@@ -4,14 +4,14 @@ import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath, versionIsAtLeast } from "../../../src/utils";
 import { DartDebugClient } from "../../dart_debug_client";
-import { activate, defer, ext, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
+import { activate, defer, ext, extApi, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
 
 describe("flutter test debugger", () => {
 
 	let testPrefix = "- ";
 	beforeEach("activate flutterTestMainFile", async () => {
 		await activate(flutterTestMainFile);
-		if (versionIsAtLeast(ext.exports.analyzerCapabilities.version, "1.20.3"))
+		if (versionIsAtLeast(extApi.analyzerCapabilities.version, "1.20.3"))
 			testPrefix = "";
 	});
 	beforeEach("set timeout", function () {

@@ -2,9 +2,9 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { isWin } from "../../src/debug/utils";
-import { Sdks, fsPath } from "../../src/utils";
+import { fsPath, Sdks } from "../../src/utils";
 import { logInfo } from "../../src/utils/log";
-import { ext } from "../helpers";
+import { ext, extApi } from "../helpers";
 
 const sampleFilePath = (isWin ? "X:\\" : "/tmp/") + "sample.dart";
 const sampleFileUri = vs.Uri.parse(`untitled:${sampleFilePath}`);
@@ -27,17 +27,17 @@ describe("extension", () => {
 	});
 	it("found the Dart SDK", async () => {
 		await ext.activate();
-		assert.ok(ext.exports);
-		const sdks: Sdks = ext.exports.sdks;
+		assert.ok(extApi);
+		const sdks: Sdks = extApi.sdks;
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		logInfo("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
-		logInfo(`        "analysis_server": ${ext.exports.analyzerCapabilities.version}`);
+		logInfo(`        "analysis_server": ${extApi.analyzerCapabilities.version}`);
 	});
 	it("did not try to use Flutter's version of the Dart SDK", async () => {
 		await ext.activate();
-		assert.ok(ext.exports);
-		const sdks: Sdks = ext.exports.sdks;
+		assert.ok(extApi);
+		const sdks: Sdks = extApi.sdks;
 		assert.ok(sdks);
 		assert.equal(sdks.dart.indexOf("flutter"), -1);
 	});

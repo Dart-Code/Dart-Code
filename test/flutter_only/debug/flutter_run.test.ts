@@ -7,7 +7,7 @@ import { fsPath } from "../../../src/utils";
 import { logError } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable } from "../../debug_helpers";
-import { activate, defer, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
+import { activate, defer, delay, ext, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
 
 // When this issue is fixed and makes beta, we can delete this cool and the code
 // that is added because of it.
@@ -20,7 +20,7 @@ describe("flutter run debugger", () => {
 	});
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 	beforeEach("skip if no test device", function () {
-		if (ext.exports.daemonCapabilities.flutterTesterMayBeFlaky)
+		if (extApi.daemonCapabilities.flutterTesterMayBeFlaky)
 			this.skip();
 		// Skip on Windows due to https://github.com/flutter/flutter/issues/17833
 		if (isWin)
@@ -235,7 +235,7 @@ describe("flutter run debugger", () => {
 
 	describe("can evaluate at breakpoint", function () { // tslint:disable-line:only-arrow-functions
 		beforeEach("skip if expression evaluation is known broken", function () {
-			if (ext.exports.analyzerCapabilities.expressionEvaluationIsBroken)
+			if (extApi.analyzerCapabilities.expressionEvaluationIsBroken)
 				this.skip();
 		});
 
