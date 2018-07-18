@@ -21,7 +21,7 @@ describe("test environment", () => {
 
 describe("extension", () => {
 	it("activated", async () => {
-		await activate();
+		await ext.activate();
 		assert.equal(ext.isActive, true);
 	});
 	it("reported no errors when analysis completed", async () => {
