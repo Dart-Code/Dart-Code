@@ -587,6 +587,12 @@
 					"description": "Whether to insert argument placeholders during code completions.",
 					"scope": "resource"
 				},
+				"dart.showTestCodeLens": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to show Code Lens for Tests.",
+					"scope": "window"
+				},
 				"dart.showTodos": {
 					"type": "boolean",
 					"default": true,
