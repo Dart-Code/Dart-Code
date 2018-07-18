@@ -4,8 +4,9 @@ import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../src/utils";
 import { logInfo } from "../../../src/utils/log";
+import { TestResultsProvider, TestStatus } from "../../../src/views/test_view";
 import { DartDebugClient } from "../../dart_debug_client";
-import { activate, defer, delay, ext, extApi, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, openFile, positionOf, withTimeout } from "../../helpers";
+import { activate, defer, delay, ext, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, helloWorldTestTreeFile, openFile, positionOf, withTimeout } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -136,4 +137,29 @@ describe("dart test debugger", () => {
 			dc.launch(config),
 		]);
 	});
+
+	it("builds the expected tree from a test run", async () => {
+		await openFile(helloWorldTestTreeFile);
+		const config = await startDebugger(helloWorldTestTreeFile);
+		config.noDebug = true;
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		]);
+
+		const expectedResultsTree = getExpectedResults();
+		const actualResults = makeTextTree(extApi.testTreeProvider).join("\n");
+
+		assert.equal(actualResults, expectedResultsTree);
+	});
 });
+
+function makeTextTree(provider: TestResultsProvider, parent?: vs.TreeItem, buffer: string[] = [], indent = 0) {
+	const items = provider.getChildren(parent);
+	items.forEach((item) => {
+		buffer.push(`${" ".repeat(indent * 4)}${item.label} (${TestStatus[item.status]})`);
+		makeTextTree(provider, item, buffer, indent + 1);
+	});
+	return buffer;
+}

@@ -45,6 +45,7 @@ if (!ext) {
 export const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/hello_world"));
 export const helloWorldMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/main.dart"));
 export const helloWorldTestMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/basic_test.dart"));
+export const helloWorldTestTreeFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/tree_test.dart"));
 export const helloWorldTestBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/broken_test.dart"));
 export const helloWorldGettersFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/getters.dart"));
 export const helloWorldBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/broken.dart"));
@@ -207,6 +208,18 @@ export async function setTestContent(content: string): Promise<boolean> {
 
 export async function uncommentTestFile(): Promise<void> {
 	await setTestContent(doc.getText().replace(/\n\/\/ /mg, "\n"));
+}
+
+export function getExpectedResults() {
+	const start = positionOf("// == EXPECTED RESULTS ==^");
+	const end = positionOf("^// == /EXPECTED RESULTS ==");
+	const doc = vs.window.activeTextEditor.document;
+	const results = doc.getText(new vs.Range(start, end));
+	return results.split("\n")
+		.map((l) => l.trim())
+		.filter((l) => l.startsWith("// ") && !l.startsWith("// #")) // Allow "comment" lines within the comment
+		.map((l) => l.substr(3))
+		.join("\n");
 }
 
 export function select(range: vs.Range) {
