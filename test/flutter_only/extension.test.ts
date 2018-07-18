@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { fsPath, Sdks } from "../../src/utils";
 import { logInfo } from "../../src/utils/log";
-import { ext, extApi } from "../helpers";
+import { activateWithoutAnalysis, ext, extApi } from "../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -18,11 +18,11 @@ describe("test environment", () => {
 
 describe("extension", () => {
 	it("activated", async () => {
-		await ext.activate();
+		await activateWithoutAnalysis();
 		assert.equal(ext.isActive, true);
 	});
 	it("found the Dart and Flutter SDK", async () => {
-		await ext.activate();
+		await activateWithoutAnalysis();
 		assert.ok(extApi);
 		const sdks: Sdks = extApi.sdks;
 		assert.ok(sdks);
@@ -32,7 +32,7 @@ describe("extension", () => {
 		logInfo(`        "analysis_server": ${extApi.analyzerCapabilities.version}`);
 	});
 	it("used Flutter's version of the Dart SDK", async () => {
-		await ext.activate();
+		await activateWithoutAnalysis();
 		assert.ok(extApi);
 		const sdks: Sdks = extApi.sdks;
 		assert.ok(sdks);

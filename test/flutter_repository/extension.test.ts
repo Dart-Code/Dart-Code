@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../src/utils";
-import { ext, extApi, getPackages } from "../helpers";
+import { activateWithoutAnalysis, ext, extApi, getPackages } from "../helpers";
 
 beforeEach("set timeout", function () {
 	this.timeout(90000); // These tests can be slow due to having to analyzer the whole Flutter repo.
@@ -21,11 +21,11 @@ describe("test environment", () => {
 
 describe("extension", () => {
 	it("activated", async () => {
-		await ext.activate();
+		await activateWithoutAnalysis();
 		assert.equal(ext.isActive, true);
 	});
 	it("reported no errors when analysis completed", async () => {
-		await ext.activate();
+		await activateWithoutAnalysis();
 		await extApi.initialAnalysis;
 		await getPackages();
 
