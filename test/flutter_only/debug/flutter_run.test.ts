@@ -234,11 +234,6 @@ describe("flutter run debugger", () => {
 	});
 
 	describe("can evaluate at breakpoint", function () { // tslint:disable-line:only-arrow-functions
-		beforeEach("skip if expression evaluation is known broken", function () {
-			if (extApi.analyzerCapabilities.expressionEvaluationIsBroken)
-				this.skip();
-		});
-
 		it("simple expressions", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(flutterHelloWorldMainFile);
