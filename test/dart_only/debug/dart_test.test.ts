@@ -6,7 +6,7 @@ import { fsPath } from "../../../src/utils";
 import { logInfo } from "../../../src/utils/log";
 import { TestResultsProvider, TestStatus } from "../../../src/views/test_view";
 import { DartDebugClient } from "../../dart_debug_client";
-import { activate, defer, delay, ext, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, helloWorldTestTreeFile, openFile, positionOf, withTimeout } from "../../helpers";
+import { activate, defer, delay, ext, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, openFile, positionOf, withTimeout } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
