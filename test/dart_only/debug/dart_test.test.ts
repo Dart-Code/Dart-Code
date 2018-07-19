@@ -28,11 +28,11 @@ describe("dart test debugger", () => {
 		// a second request and that'll cause it to quit immediately.
 		defer(() => withTimeout(
 			Promise.all([
-				dc.disconnectRequest(),
-				delay(500).then(() => dc.stop()),
+				dc.disconnectRequest().catch((e) => logInfo(e)),
+				delay(500).then(() => dc.stop()).catch((e) => logInfo(e)),
 			]),
 			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
-		).catch((e) => logInfo(e)));
+		));
 	});
 
 	async function startDebugger(script: vs.Uri | string): Promise<vs.DebugConfiguration> {
