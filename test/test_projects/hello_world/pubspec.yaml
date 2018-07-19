@@ -5,4 +5,4 @@ dependencies:
   convert: ^2.0.1
 
 dev_dependencies:
-  test:
+  test: '>=0.12.34'
