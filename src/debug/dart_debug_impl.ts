@@ -36,6 +36,7 @@ export class DartDebugSession extends DebugSession {
 	protected requiresProgram: boolean = true;
 	protected pollforMemoryMs?: number; // If set, will poll for memory usage and send events back.
 	protected processExit: Promise<void> = Promise.resolve();
+	protected maxLogLineLength: number;
 
 	public constructor() {
 		super();
@@ -75,6 +76,7 @@ export class DartDebugSession extends DebugSession {
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
 		this.logFile = args.observatoryLogFile;
+		this.maxLogLineLength = args.maxLogLineLength;
 
 		this.sendResponse(response);
 
@@ -192,14 +194,12 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected log(message: string, severity = LogSeverity.Info) {
-		const max: number = 2500;
-
 		if (this.logFile) {
 			if (!this.logStream)
 				this.logStream = fs.createWriteStream(this.logFile);
 			this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
-			if (message.length > max)
-				this.logStream.write(message.substring(0, max) + "…\r\n");
+			if (this.maxLogLineLength && message.length > this.maxLogLineLength)
+				this.logStream.write(message.substring(0, this.maxLogLineLength) + "…\r\n");
 			else
 				this.logStream.write(message.trim() + "\r\n");
 		}

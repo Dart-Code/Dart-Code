@@ -45,6 +45,7 @@ class Config {
 	get flutterSdkPaths() { return (this.getConfig<string[]>("flutterSdkPaths") || []).map(resolvePaths); }
 	get flutterSelectDeviceWhenConnected() { return this.getConfig<boolean>("flutterSelectDeviceWhenConnected"); }
 	get normalizeWindowsDriveLetters() { return this.getConfig<boolean>("normalizeWindowsDriveLetters"); }
+	get maxLogLineLength() { return this.getConfig<number>("maxLogLineLength"); }
 	get openTestView() { return this.getConfig<string[]>("openTestView") || []; }
 	get openTestViewOnFailure() { return this.openTestView.indexOf("testFailure") !== -1; }
 	get openTestViewOnStart() { return this.openTestView.indexOf("testRunStart") !== -1; }

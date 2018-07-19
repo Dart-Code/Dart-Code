@@ -33,7 +33,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
 	constructor(flutterBinPath: string, projectFolder: string) {
-		super(() => config.flutterDaemonLogFile, (message, severity) => log(message, severity, LogCategory.FlutterDaemon), true);
+		super(() => config.flutterDaemonLogFile, (message, severity) => log(message, severity, LogCategory.FlutterDaemon), config.maxLogLineLength, true);
 
 		this.createProcess(projectFolder, flutterBinPath, ["daemon"]);
 
