@@ -113,6 +113,7 @@ export async function activate(file?: vs.Uri): Promise<void> {
 
 export async function getPackages() {
 	log("Restoring packages and waiting for next analysis to complete");
+	await activateWithoutAnalysis();
 	await waitForNextAnalysis(async () => {
 		await vs.commands.executeCommand("dart.getPackages", vs.workspace.workspaceFolders ? [0] : undefined);
 	}, 60);
