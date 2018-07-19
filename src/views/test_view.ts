@@ -38,25 +38,25 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	constructor() {
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleSessionEnd(session)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | TestTreeItem) => {
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
 			vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(treeNode.resourceUri),
 				getLaunchConfig(
 					false,
 					fsPath(treeNode.resourceUri),
-					treeNode instanceof TestTreeItem ? treeNode.test.name : undefined,
-					false, // TODO: Support groups
+					treeNode instanceof TestTreeItem ? treeNode.test.name : treeNode instanceof GroupTreeItem ? treeNode.group.name : undefined,
+					treeNode instanceof GroupTreeItem,
 				),
 			);
 		}));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteTreeItem | TestTreeItem) => {
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
 			vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(treeNode.resourceUri),
 				getLaunchConfig(
 					true,
 					fsPath(treeNode.resourceUri),
-					treeNode instanceof TestTreeItem ? treeNode.test.name : undefined,
-					false, // TODO: Support groups
+					treeNode instanceof TestTreeItem ? treeNode.test.name : treeNode instanceof GroupTreeItem ? treeNode.group.name : undefined,
+					treeNode instanceof GroupTreeItem,
 				),
 			);
 		}));
@@ -401,9 +401,9 @@ export class SuiteTreeItem extends TestItemTreeItem {
 
 	constructor(suite: Suite) {
 		super(vs.Uri.file(suite.path), vs.TreeItemCollapsibleState.Collapsed);
-		this.label = this.getLabel(suite.path);
 		this.suite = suite;
 		this.contextValue = DART_TEST_SUITE_NODE;
+		this.resourceUri = vs.Uri.file(suite.path);
 		this.id = `suite_${this.suite.path}_${this.suite.id}`;
 		this.status = TestStatus.Unknown;
 		this.command = { command: "_dart.displaySuite", arguments: [this], title: "" };
@@ -435,7 +435,7 @@ export class SuiteTreeItem extends TestItemTreeItem {
 
 	set suite(suite: Suite) {
 		this._suite = suite;
-		this.resourceUri = vs.Uri.file(suite.path);
+		this.label = this.getLabel(suite.path);
 	}
 }
 
@@ -448,6 +448,7 @@ class GroupTreeItem extends TestItemTreeItem {
 		super(group.name, vs.TreeItemCollapsibleState.Collapsed);
 		this.group = group;
 		this.contextValue = DART_TEST_GROUP_NODE;
+		this.resourceUri = vs.Uri.file(suite.path);
 		this.id = `suite_${this.suite.path}_group_${this.group.id}`;
 		this.status = TestStatus.Unknown;
 		this.command = { command: "_dart.displayGroup", arguments: [this], title: "" };
@@ -498,10 +499,9 @@ class TestTreeItem extends TestItemTreeItem {
 	constructor(public suite: SuiteData, test: Test, public hidden = false) {
 		super(test.name, vs.TreeItemCollapsibleState.None);
 		this.test = test;
+		this.contextValue = DART_TEST_TEST_NODE;
 		this.resourceUri = vs.Uri.file(suite.path);
 		this.id = `suite_${this.suite.path}_test_${this.test.id}`;
-		// TODO: Allow re-running tests/groups/suites
-		this.contextValue = DART_TEST_TEST_NODE;
 		this.status = TestStatus.Unknown;
 		this.command = { command: "_dart.displayTest", arguments: [this], title: "" };
 	}
