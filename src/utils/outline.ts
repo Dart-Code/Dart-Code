@@ -32,6 +32,9 @@ export function findNearestOutlineNode(document: vs.TextDocument, position: vs.P
 export abstract class OutlineVisitor {
 	public visit(outline: as.Outline) {
 		this.visitNode(outline);
+	}
+
+	private visitChildren(outline: as.Outline) {
 		if (outline.children) {
 			for (const child of outline.children) {
 				this.visit(child);
@@ -121,29 +124,29 @@ export abstract class OutlineVisitor {
 		}
 	}
 
-	protected visitClass(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitClassTypeAlias(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitCompilationUnit(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitConstructor(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitContructorInvocation(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitEnum(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitEnumConstant(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitField(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitXXX(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitFile(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitFunctionInvocation(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitFunctionTypeAlias(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitGetter(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitLabel(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitLibrary(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitLocalVariable(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitMethod(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitParameter(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitPrefix(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitSetter(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitTopLevelVariable(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitTypeParameter(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitUnitTestGroup(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitUnitTestTest(outline: as.Outline): void { } // tslint:disable-line:no-empty
-	protected visitUnknown(outline: as.Outline): void { }// tslint:disable-line:no-empty
+	protected visitClass(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitClassTypeAlias(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitCompilationUnit(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitConstructor(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitContructorInvocation(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitEnum(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitEnumConstant(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitField(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitXXX(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitFile(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitFunctionInvocation(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitFunctionTypeAlias(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitGetter(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitLabel(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitLibrary(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitLocalVariable(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitMethod(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitParameter(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitPrefix(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitSetter(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitTopLevelVariable(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitTypeParameter(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitUnitTestGroup(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitUnitTestTest(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitUnknown(outline: as.Outline): void { this.visitChildren(outline); }
 }

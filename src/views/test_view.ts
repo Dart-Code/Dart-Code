@@ -45,6 +45,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 					false,
 					fsPath(treeNode.resourceUri),
 					treeNode instanceof TestTreeItem ? treeNode.test.name : undefined,
+					false, // TODO: Support groups
 				),
 			);
 		}));
@@ -55,6 +56,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 					true,
 					fsPath(treeNode.resourceUri),
 					treeNode instanceof TestTreeItem ? treeNode.test.name : undefined,
+					false, // TODO: Support groups
 				),
 			);
 		}));
