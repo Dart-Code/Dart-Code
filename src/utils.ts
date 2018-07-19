@@ -4,7 +4,7 @@ import * as https from "https";
 import * as os from "os";
 import * as path from "path";
 import * as semver from "semver";
-import { Position, Range, TextDocument, Uri, WorkspaceFolder, commands, window, workspace } from "vscode";
+import { commands, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { config } from "./config";
 import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
 import { referencesFlutterSdk } from "./sdk/utils";
@@ -212,11 +212,6 @@ export function getLatestSdkVersion(): PromiseLike<string> {
 		});
 		req.end();
 	});
-}
-
-export function escapeRegExp(input: string) {
-	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
-	return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 }
 
 // Escapes a set of command line arguments so that the escaped string is suitable for passing as an argument
