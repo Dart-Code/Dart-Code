@@ -18,16 +18,16 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 			this.onDidChangeCodeLensesEmitter.fire();
 		}));
 
-		this.disposables.push(commands.registerCommand("_dart.startDebuggingTestFromOutline", (file: string, testName?: string) => {
+		this.disposables.push(commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: Test) => {
 			debug.startDebugging(
-				workspace.getWorkspaceFolder(Uri.file(file)),
-				getLaunchConfig(false, file, testName),
+				workspace.getWorkspaceFolder(Uri.file(test.file)),
+				getLaunchConfig(false, test.file, test.fullName, test.isGroup),
 			);
 		}));
-		this.disposables.push(commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (file: string, testName?: string) => {
+		this.disposables.push(commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: Test) => {
 			debug.startDebugging(
-				workspace.getWorkspaceFolder(Uri.file(file)),
-				getLaunchConfig(true, file, testName),
+				workspace.getWorkspaceFolder(Uri.file(test.file)),
+				getLaunchConfig(true, test.file, test.fullName, test.isGroup),
 			);
 		}));
 	}
@@ -46,14 +46,11 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 			visitor.tests
 				.filter((test) => test.offset && test.length)
 				.map((test) => {
-					const testName = this.extractTestName(test.element.name);
-					if (!testName)
-						return [];
 					return [
 						new CodeLens(
 							toRange(document, test.offset, test.length),
 							{
-								arguments: [test.element.location.file, testName],
+								arguments: [test],
 								command: "_dart.startWithoutDebuggingTestFromOutline",
 								title: "Run",
 							},
@@ -61,7 +58,7 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 						new CodeLens(
 							toRange(document, test.offset, test.length),
 							{
-								arguments: [test.element.location.file, testName],
+								arguments: [test],
 								command: "_dart.startDebuggingTestFromOutline",
 								title: "Debug",
 							},
@@ -69,6 +66,42 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 					];
 				}),
 		);
+	}
+
+	public dispose(): any {
+		this.disposables.forEach((d) => d.dispose());
+	}
+}
+
+class TestOutlineVisitor extends OutlineVisitor {
+	public readonly tests: Test[] = [];
+	private readonly names: string[] = [];
+	protected visitUnitTestTest(outline: Outline) {
+		this.addTest(outline, super.visitUnitTestTest);
+	}
+	protected visitUnitTestGroup(outline: Outline) {
+		this.addTest(outline, super.visitUnitTestGroup);
+	}
+
+	private addTest(outline: Outline, base: (outline: Outline) => void) {
+		const name = this.extractTestName(outline.element.name);
+		if (!name)
+			return;
+		this.names.push(name);
+		const fullName = this.names.join(" ");
+		const isGroup = outline.element.kind === "UNIT_TEST_GROUP";
+		this.tests.push({
+			file: outline.element.location.file,
+			fullName,
+			isGroup,
+			length: outline.element.location.length,
+			offset: outline.element.location.offset,
+		});
+		try {
+			base.bind(this)(outline);
+		} finally {
+			this.names.pop();
+		}
 	}
 
 	private extractTestName(elementName: string): string | undefined {
@@ -93,20 +126,12 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 
 		return elementName;
 	}
-
-	public dispose(): any {
-		this.disposables.forEach((d) => d.dispose());
-	}
 }
 
-class TestOutlineVisitor extends OutlineVisitor {
-	public readonly tests: Outline[] = [];
-	protected visitUnitTestTest(outline: Outline) {
-		this.tests.push(outline);
-	}
-	// Groups seem to increase the change of us accidentally running more than
-	// we expected, so for now we'll only support on tests.
-	// protected visitUnitTestGroup(outline: Outline) {
-	// 	this.tests.push(outline);
-	// }
+interface Test {
+	fullName: string;
+	file: string;
+	offset: number;
+	length: number;
+	isGroup: boolean;
 }
