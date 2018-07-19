@@ -11,7 +11,6 @@ import { activate, defer, delay, ext, extApi, getExpectedResults, getLaunchConfi
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
-
 	beforeEach("activate helloWorldTestMainFile", () => activate(helloWorldTestMainFile));
 
 	let dc: DartDebugClient;
