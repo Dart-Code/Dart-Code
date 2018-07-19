@@ -149,6 +149,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	args: string[];
 	vmAdditionalArgs: string[];
 	observatoryLogFile: string;
+	maxLogLineLength: number;
 	pubPath: string;
 	pubSnapshotPath: string;
 	pubTestLogFile: string;

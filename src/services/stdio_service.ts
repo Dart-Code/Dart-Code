@@ -20,6 +20,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	constructor(
 		public readonly getLogFile: () => string,
 		public readonly logger: (message: string, severity: LogSeverity) => void,
+		public readonly maxLogLineLength: number,
 		public messagesWrappedInBrackets: boolean = false,
 		public readonly treatHandlingErrorsAsUnhandledMessages: boolean = false) {
 		this.currentLogFile = getLogFile();
@@ -196,7 +197,6 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 	protected logTraffic(message: string, severity = LogSeverity.Info): void {
 		this.logger(message, severity);
-		const max: number = 2000;
 
 		const newLogFile = this.getLogFile();
 		if (newLogFile !== this.currentLogFile && this.logStream) {
@@ -212,8 +212,8 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		if (!this.logStream)
 			this.logStream = fs.createWriteStream(this.currentLogFile);
 		this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
-		if (message.length > max)
-			this.logStream.write(message.substring(0, max) + "…\r\n");
+		if (this.maxLogLineLength && message.length > this.maxLogLineLength)
+			this.logStream.write(message.substring(0, this.maxLogLineLength) + "…\r\n");
 		else
 			this.logStream.write(message.trim() + "\r\n");
 	}

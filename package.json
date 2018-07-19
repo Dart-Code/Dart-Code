@@ -591,6 +591,12 @@
 					"description": "The maximum length of a line of code. This is used by the document formatter.",
 					"scope": "resource"
 				},
+				"dart.maxLogLineLength": {
+					"type": "number",
+					"default": 2000,
+					"description": "The maximum length of a line in the log file. Lines longer than this will be truncated and suffixed with an ellipsis.",
+					"scope": "window"
+				},
 				"dart.insertArgumentPlaceholders": {
 					"type": "boolean",
 					"default": true,

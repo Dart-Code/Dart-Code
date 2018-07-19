@@ -80,7 +80,7 @@ export function addToLogHeader(f: () => string) {
 	}
 }
 
-export function logTo(file: string, logCategories?: LogCategory[], maxLength = 2000): ({ dispose: () => Promise<void> }) {
+export function logTo(file: string, logCategories?: LogCategory[]): ({ dispose: () => Promise<void> }) {
 	if (!file || !path.isAbsolute(file))
 		throw new Error("Path passed to logTo must be an absolute path");
 	const time = () => `[${(new Date()).toTimeString()}] `;
@@ -94,8 +94,9 @@ export function logTo(file: string, logCategories?: LogCategory[], maxLength = 2
 			return;
 
 		const message = _.trimEnd(e.message);
-		const logMessage = message.length > maxLength
-			? message.substring(0, maxLength) + "…"
+		const maxLogLineLength = config.maxLogLineLength;
+		const logMessage = maxLogLineLength && message.length > maxLogLineLength
+			? message.substring(0, maxLogLineLength) + "…"
 			: message;
 		const prefix = `${time()}[${LogCategory[e.category]}] [${LogSeverity[e.severity]}] `;
 		logStream.write(`${prefix}${logMessage}${platformEol}`);
