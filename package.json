@@ -494,6 +494,16 @@
 					"group": "4.5_exec@1"
 				},
 				{
+					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testGroupNode",
+					"command": "dart.startDebuggingTest",
+					"group": "4.5_exec@1"
+				},
+				{
+					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testGroupNode",
+					"command": "dart.startWithoutDebuggingTest",
+					"group": "4.5_exec@1"
+				},
+				{
 					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testTestNode",
 					"command": "dart.startDebuggingTest",
 					"group": "4.5_exec@1"
