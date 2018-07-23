@@ -312,25 +312,37 @@ describe("dart cli debugger", () => {
 
 		const variables = await dc.getTopFrameVariables("Locals");
 		ensureVariable(variables, "l", "l", `List (2 items)`);
+		ensureVariable(variables, "longStrings", "longStrings", `List (1 item)`);
 		ensureVariable(variables, "s", "s", `"Hello!"`);
-		ensureVariable(variables, "m", "m", `Map (7 items)`);
+		ensureVariable(variables, "m", "m", `Map (8 items)`);
 
 		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l").variablesReference);
 		ensureVariable(listVariables, "l[0]", "[0]", "0");
 		ensureVariable(listVariables, "l[1]", "[1]", "1");
 
+		const longStringListVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings").variablesReference);
+		ensureVariable(longStringListVariables, "longStrings[0]", "[0]", {
+			ends: "…\"", // String is truncated here.
+			starts: "\"This is a long string that is 300 characters!",
+		});
+
 		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m").variablesReference);
 		ensureVariable(mapVariables, undefined, "0", `"l" -> List (2 items)`);
-		ensureVariable(mapVariables, undefined, "1", `"s" -> "Hello!"`);
-		ensureVariable(mapVariables, undefined, "2", `DateTime -> "today"`);
-		ensureVariable(mapVariables, undefined, "3", `DateTime -> "tomorrow"`);
-		ensureVariable(mapVariables, undefined, "4", `true -> true`);
-		ensureVariable(mapVariables, undefined, "5", `1 -> "one"`);
-		ensureVariable(mapVariables, undefined, "6", `1.1 -> "one-point-one"`);
+		ensureVariable(mapVariables, undefined, "1", `"longStrings" -> List (1 item)`);
+		ensureVariable(mapVariables, undefined, "2", `"s" -> "Hello!"`);
+		ensureVariable(mapVariables, undefined, "3", `DateTime -> "today"`);
+		ensureVariable(mapVariables, undefined, "4", `DateTime -> "tomorrow"`);
+		ensureVariable(mapVariables, undefined, "5", `true -> true`);
+		ensureVariable(mapVariables, undefined, "6", `1 -> "one"`);
+		ensureVariable(mapVariables, undefined, "7", `1.1 -> "one-point-one"`);
 
 		await ensureMapEntry(mapVariables, {
 			key: { evaluateName: null, name: "key", value: `"l"` },
 			value: { evaluateName: `m["l"]`, name: "value", value: "List (2 items)" },
+		}, dc);
+		await ensureMapEntry(mapVariables, {
+			key: { evaluateName: null, name: "key", value: `"longStrings"` },
+			value: { evaluateName: `m["longStrings"]`, name: "value", value: "List (1 item)" },
 		}, dc);
 		await ensureMapEntry(mapVariables, {
 			key: { evaluateName: null, name: "key", value: `"s"` },
@@ -386,8 +398,9 @@ describe("dart cli debugger", () => {
 
 		const variables = await dc.getTopFrameVariables("Locals");
 		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l").variablesReference);
+		const listLongstringVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings").variablesReference);
 		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m").variablesReference);
-		const allVariables = variables.concat(listVariables).concat(mapVariables);
+		const allVariables = variables.concat(listVariables).concat(listLongstringVariables).concat(mapVariables);
 
 		for (const variable of allVariables) {
 			const evaluateName = (variable as any).evaluateName;
