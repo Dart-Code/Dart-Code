@@ -278,13 +278,14 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			testNode.hidden = false;
 
 		// Remove from old parent if required.
-		if (oldParent && oldParent !== testNode.parent) {
+		const hasChangedParent = oldParent && oldParent !== testNode.parent;
+		if (hasChangedParent) {
 			oldParent.tests.splice(oldParent.tests.indexOf(testNode), 1);
 			this.updateNode(oldParent);
 		}
 
 		// Push to new parent if required.
-		if (!existingTest || oldParent !== testNode.parent)
+		if (!existingTest || hasChangedParent)
 			testNode.parent.tests.push(testNode);
 
 		testNode.status = TestStatus.Running;
@@ -329,14 +330,15 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			suite.storeGroup(evt.group.id, groupNode);
 		groupNode.group = evt.group;
 
-		// Remove from old parent if required.
-		if (oldParent && oldParent !== groupNode.parent) {
+		// Remove from old parent if required
+		const hasChangedParent = oldParent && oldParent !== groupNode.parent;
+		if (hasChangedParent) {
 			oldParent.groups.splice(oldParent.groups.indexOf(groupNode), 1);
 			this.updateNode(oldParent);
 		}
 
 		// Push to new parent if required.
-		if (!existingGroup || oldParent !== groupNode.parent)
+		if (!existingGroup || hasChangedParent)
 			groupNode.parent.groups.push(groupNode);
 
 		groupNode.status = TestStatus.Running;
