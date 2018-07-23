@@ -900,7 +900,8 @@ export class DartDebugSession extends DebugSession {
 					str = str.split("\n").slice(0, 6).join("\n");
 				this.errorResponse(response, str);
 			} else {
-				const instanceRef: VMInstanceRef = result.result as VMInstanceRef;
+				const instanceRef: InstanceWithEvaluateName = result.result as InstanceWithEvaluateName;
+				instanceRef.evaluateName = expression;
 				const text = await this.fullValueAsString(thread.ref, instanceRef);
 				response.body = {
 					result: text,

@@ -397,10 +397,31 @@ describe("dart cli debugger", () => {
 		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
+
+		for (const variable of variables) {
+			const evaluateName = (variable as any).evaluateName;
+			if (!evaluateName)
+				continue;
+			const evaluateResult = await dc.evaluate(evaluateName);
+			assert.ok(evaluateResult);
+			assert.equal(evaluateResult.result, variable.value);
+			assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);
+		}
+	});
+
+	it("evaluateName evaluates to the expected value", async () => {
+		await openFile(helloWorldMainFile);
+		const config = await startDebugger(helloWorldMainFile);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(helloWorldMainFile),
+		});
+
+		const variables = await dc.getTopFrameVariables("Locals");
 		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l").variablesReference);
 		const listLongstringVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings").variablesReference);
 		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m").variablesReference);
-		const allVariables = variables.concat(listVariables).concat(listLongstringVariables).concat(mapVariables);
+		const allVariables = listVariables.concat(listLongstringVariables).concat(mapVariables);
 
 		for (const variable of allVariables) {
 			const evaluateName = (variable as any).evaluateName;
@@ -408,7 +429,15 @@ describe("dart cli debugger", () => {
 				continue;
 			const evaluateResult = await dc.evaluate(evaluateName);
 			assert.ok(evaluateResult);
-			assert.equal(evaluateResult.result, variable.value);
+			if (variable.value.endsWith("…\"")) {
+				// If the value was truncated, the evaluate responses should be longer
+				const prefix = variable.value.slice(1, -2);
+				assert.ok(evaluateResult.result.length > prefix.length);
+				assert.equal(evaluateResult.result.slice(0, prefix.length), prefix);
+			} else {
+				// Otherwise it should be the same.
+				assert.equal(evaluateResult.result, variable.value);
+			}
 			assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);
 		}
 	});
