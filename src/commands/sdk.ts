@@ -85,24 +85,52 @@ export class SdkCommands {
 			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", async (uri) => {
+			let shouldNotify = false;
 			if (!uri || !(uri instanceof Uri)) {
+				// If there is no path for this session, get it from config
+				// If there is already a path set for this session, but the config differs
+				// set the session path to the config path and conrtinue execution. 
 				if (!this.flutterScreenshotPath) {
-					this.flutterScreenshotPath = config.flutterScreenshotPath
+					this.flutterScreenshotPath = config.flutterScreenshotPath;
+					shouldNotify = true;
+				} else if (config.flutterScreenshotPath && (this.flutterScreenshotPath !== config.flutterScreenshotPath)) {
+					this.flutterScreenshotPath = config.flutterScreenshotPath;
+					shouldNotify = true;
 				}
-				// Only if the settings are empty it will bring up the folder selector.
+
+				// If path is still empty it will bring up the folder selector.
 				if (!this.flutterScreenshotPath) {
 					const selectedFolder =
 						await window.showOpenDialog({ canSelectFolders: true, canSelectMany: false, openLabel: "Select folder to save screenshot" });
 					if (selectedFolder && selectedFolder.length > 0) {
 						// Set variable to selected path. This allows prompting the user only once.
 						this.flutterScreenshotPath = selectedFolder[0].path;
+						shouldNotify = true;
 					} else {
 						// Do nothing if the user cancelled the folder selection.
 						return;
 					}
 				}
+
+				// 	// if folder doesn't exist, create it
+				if (!fs.existsSync(this.flutterScreenshotPath)) {
+					fs.mkdirSync(this.flutterScreenshotPath);
+				}
 			}
-			return this.runFlutterInFolder(this.flutterScreenshotPath, ["screenshot"], "screenshot");
+
+			const screenshotResult = this.runFlutterInFolder(this.flutterScreenshotPath, ["screenshot"], "screenshot");
+
+			screenshotResult.then(async (_) => {
+				if (shouldNotify) {
+					const res = await vs.window.showInformationMessage("Screenshot saved at " + this.flutterScreenshotPath.toString(), "Open folder");
+					if (res) {
+						const uri = vs.Uri.parse(this.flutterScreenshotPath);
+						// TODO: open folder in file explorer.
+					}
+				}
+			});
+
+			return screenshotResult;
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => {
 			return vs.commands.executeCommand("dart.upgradePackages", selection);
@@ -138,7 +166,7 @@ export class SdkCommands {
 			return this.runFlutterInFolder(path.dirname(projectPath), args, projectName);
 		}));
 
-		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", (selection) => this.createFlutterScreenshot()));
+		// context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", (selection) => this.createFlutterScreenshot()));
 
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
@@ -273,28 +301,28 @@ export class SdkCommands {
 		vs.commands.executeCommand("vscode.openFolder", projectFolderUri, openInNewWindow);
 	}
 
-	private async createFlutterScreenshot(): Promise<void> {
-		// get screenshot path
-		let screenshotPath = config.flutterScreenshotPath;
+	// private async createFlutterScreenshot(): Promise<void> {
+	// 	// get screenshot path
+	// 	let screenshotPath = config.flutterScreenshotPath;
 
-		// if it's not valid or missing, save it in the user's home directory
-		if (screenshotPath == null) {
-			screenshotPath = os.homedir();
-		}
+	// 	// if it's not valid or missing, save it in the user's home directory
+	// 	if (screenshotPath == null) {
+	// 		screenshotPath = os.homedir();
+	// 	}
 
-		// if folder doesn't exist, create it
-		if (!fs.existsSync(screenshotPath)) {
-			fs.mkdirSync(screenshotPath);
-		}
+	// 	// if folder doesn't exist, create it
+	// 	if (!fs.existsSync(screenshotPath)) {
+	// 		fs.mkdirSync(screenshotPath);
+	// 	}
 
-		// invoke flutter screenshot with the Uri
-		const screenshotUri = vs.Uri.file(screenshotPath);
+	// 	// invoke flutter screenshot with the Uri
+	// 	const screenshotUri = vs.Uri.file(screenshotPath);
 
-		this.runFlutter(["screenshot"], screenshotUri);
+	// 	this.runFlutter(["screenshot"], screenshotUri);
 
-		// tell the user where to find the screenshot
-		vs.window.showInformationMessage("Flutter screenshot saved at " + screenshotUri.toString());
-	}
+	// 	// tell the user where to find the screenshot
+	// 	vs.window.showInformationMessage("Flutter screenshot saved at " + screenshotUri.toString());
+	// }
 
 	private validateFlutterProjectName(input: string) {
 		if (!flutterNameRegex.test(input))
