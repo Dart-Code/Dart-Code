@@ -78,24 +78,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			);
 		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.displayTest", (treeNode: TestTreeItem) => {
-			const output = getChannel("Test Output");
-			output.clear();
-			if (treeNode.outputEvents.length) {
-				output.show(true);
-				output.appendLine(`${treeNode.test.name}:\n`);
-				for (let o of treeNode.outputEvents) {
-					if (o.type === "error") {
-						o = o as ErrorNotification;
-						output.appendLine(`ERROR: ${o.error}`);
-						output.appendLine(o.stackTrace);
-					} else if (o.type === "print") {
-						o = o as PrintNotification;
-						output.appendLine(o.message);
-					} else {
-						output.appendLine(`Unknown message type '${o.type}'.`);
-					}
-				}
-			}
+			this.writeTestOutput(treeNode, true);
 			return vs.commands.executeCommand(
 				"_dart.jumpToLineColInUri",
 				vs.Uri.parse(treeNode.test.root_url || treeNode.test.url),
@@ -103,6 +86,35 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 				treeNode.test.root_column || treeNode.test.column,
 			);
 		}));
+	}
+
+	private writeTestOutput(treeNode: TestTreeItem, forceShow = false) {
+		const output = getChannel("Test Output");
+		output.clear();
+		if (forceShow)
+			output.show(true);
+
+		output.appendLine(`${treeNode.test.name}:\n`);
+
+		if (!treeNode.outputEvents.length)
+			output.appendLine(`(no output)`);
+
+		for (const o of treeNode.outputEvents) {
+			this.appendTestOutput(o, output);
+		}
+	}
+
+	private appendTestOutput(event: PrintNotification | ErrorNotification, output = getChannel("Test Output")) {
+		if (event.type === "error") {
+			event = event as ErrorNotification;
+			output.appendLine(`ERROR: ${event.error}`);
+			output.appendLine(event.stackTrace);
+		} else if (event.type === "print") {
+			event = event as PrintNotification;
+			output.appendLine(event.message);
+		} else {
+			output.appendLine(`Unknown message type '${event.type}'.`);
+		}
 	}
 
 	public handleDebugSessionCustomEvent(e: vs.DebugSessionCustomEvent) {
