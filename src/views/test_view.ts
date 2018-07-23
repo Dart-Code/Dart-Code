@@ -284,6 +284,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		if (!isExistingTest)
 			testNode.parent.tests.push(testNode);
 
+		testNode.status = TestStatus.Running;
 		this.updateNode(testNode);
 		this.updateNode(testNode.parent);
 		if (!testNode.hidden)
