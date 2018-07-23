@@ -36,8 +36,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		if (isRunningWholeSuite && suitePath && path.isAbsolute(suitePath)) {
 			const suite = suites[fsPath(suitePath)];
 			if (suite) {
-				suite.groups.forEach((g) => g.isStale = true);
-				suite.tests.forEach((t) => t.isStale = true);
+				Object.keys(suite.groups).map((gKey) => suite.groups[gKey]).forEach((g) => g.isStale = true);
+				Object.keys(suite.tests).map((tKey) => suite.tests[tKey]).forEach((t) => t.isStale = true);
 			}
 		}
 	}
@@ -350,14 +350,14 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		// TODO: Some notification that things are complete?
 		// TODO: Maybe a progress bar during the run?
 
-		suite.tests.filter((t) => t.isStale).forEach((t) => {
+		Object.keys(suite.tests).map((tKey) => suite.tests[tKey]).filter((t) => t.isStale).forEach((t) => {
 			// TODO: Should we actually remove it?!
 			t.hidden = true;
 			this.updateNode(t.parent);
 		});
 
 		// Anything marked as running should be set back to Unknown
-		suite.tests.filter((t) => t.status === TestStatus.Running).forEach((t) => {
+		Object.keys(suite.tests).map((tKey) => suite.tests[tKey]).filter((t) => t.status === TestStatus.Running).forEach((t) => {
 			t.status = TestStatus.Unknown;
 			this.updateNode(t);
 		});
@@ -383,8 +383,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 }
 
 class SuiteData {
-	public readonly groups: GroupTreeItem[] = [];
-	public readonly tests: TestTreeItem[] = [];
+	public readonly groups: { [key: string]: GroupTreeItem } = {};
+	public readonly tests: { [key: string]: TestTreeItem } = {};
 	constructor(public readonly path: string, public readonly node: SuiteTreeItem) {
 	}
 }
