@@ -637,7 +637,6 @@ class TestTreeItem extends TestItemTreeItem {
 	}
 
 	get parent(): SuiteTreeItem | GroupTreeItem {
-		console.log(`asked for parent!`);
 		const parent = this.test.groupIDs && this.test.groupIDs.length
 			? this.suite.getMyGroup(this.suiteRunNumber, this.test.groupIDs[this.test.groupIDs.length - 1])
 			: this.suite.node;
