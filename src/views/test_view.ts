@@ -11,6 +11,8 @@ const DART_TEST_SUITE_NODE = "dart-code:testSuiteNode";
 const DART_TEST_GROUP_NODE = "dart-code:testGroupNode";
 const DART_TEST_TEST_NODE = "dart-code:testTestNode";
 
+// TODO: Refactor all of this crazy logic out of test_view into its own class, so that consuming the test results is much
+// simpler and disconnected from the view!
 const suites: { [key: string]: SuiteData } = {};
 
 export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<object> {
@@ -33,11 +35,14 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		TestResultsProvider.isNewTestRun = true;
 		TestResultsProvider.nextFailureIsFirst = true;
 
-		if (isRunningWholeSuite && suitePath && path.isAbsolute(suitePath)) {
+		if (suitePath && path.isAbsolute(suitePath)) {
 			const suite = suites[fsPath(suitePath)];
 			if (suite) {
-				suite.getAllGroups().forEach((g) => g.isStale = true);
-				suite.getAllTests().forEach((t) => t.isStale = true);
+				suite.currentRunNumber++;
+				if (isRunningWholeSuite) {
+					suite.getAllGroups().forEach((g) => g.isStale = true);
+					suite.getAllTests().forEach((t) => t.isStale = true);
+				}
 			}
 		}
 	}
@@ -257,14 +262,12 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	private handleTestStartNotifcation(suite: SuiteData, evt: TestStartNotification) {
-		const existingTest = suite.getCurrentTest(evt.test.id);
-		const testNode = existingTest || new TestTreeItem(suite, evt.test);
 		let oldParent: SuiteTreeItem | GroupTreeItem;
+		const existingTest = suite.getCurrentTest(evt.test.id) || suite.reuseMatchingTest(evt.test, (parent) => oldParent = parent);
+		const testNode = existingTest || new TestTreeItem(suite, evt.test);
 
 		if (!existingTest)
 			suite.storeTest(evt.test.id, testNode);
-		else
-			oldParent = testNode.parent;
 		testNode.test = evt.test;
 
 		// If this is a "loading" test then mark it as hidden because it looks wonky in
@@ -281,7 +284,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		}
 
 		// Push to new parent if required.
-		if (!existingTest)
+		if (!existingTest || oldParent !== testNode.parent)
 			testNode.parent.tests.push(testNode);
 
 		testNode.status = TestStatus.Running;
@@ -318,17 +321,24 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	private handleGroupNotification(suite: SuiteData, evt: GroupNotification) {
-		const existingGroup = suite.getCurrentGroup(evt.group.id);
-		let groupNode: GroupTreeItem;
-		if (existingGroup) {
-			groupNode = existingGroup;
-			groupNode.group = evt.group;
-			// TODO: Change parent if required...
-		} else {
-			groupNode = new GroupTreeItem(suite, evt.group);
+		let oldParent: SuiteTreeItem | GroupTreeItem;
+		const existingGroup = suite.getCurrentGroup(evt.group.id) || suite.reuseMatchingGroup(evt.group, (parent) => oldParent = parent);
+		const groupNode = existingGroup || new GroupTreeItem(suite, evt.group);
+
+		if (!existingGroup)
 			suite.storeGroup(evt.group.id, groupNode);
-			groupNode.parent.groups.push(groupNode);
+		groupNode.group = evt.group;
+
+		// Remove from old parent if required.
+		if (oldParent && oldParent !== groupNode.parent) {
+			oldParent.groups.splice(oldParent.groups.indexOf(groupNode), 1);
+			this.updateNode(oldParent);
 		}
+
+		// Push to new parent if required.
+		if (!existingGroup || oldParent !== groupNode.parent)
+			groupNode.parent.groups.push(groupNode);
+
 		groupNode.status = TestStatus.Running;
 		this.updateNode(groupNode);
 		this.updateNode(groupNode.parent);
@@ -351,9 +361,13 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		// TODO: Some notification that things are complete?
 		// TODO: Maybe a progress bar during the run?
 
-		suite.getAllTests().filter((t) => t.isStale).forEach((t) => {
-			// TODO: Should we actually remove it?!
-			t.hidden = true;
+		// Remove all hidden/stale results.
+		suite.getAllGroups(true).filter((g) => g.isStale || g.isPhantomGroup || g.hidden).forEach((g) => {
+			suite.removeGroup(g);
+			this.updateNode(g.parent);
+		});
+		suite.getAllTests(true).filter((t) => t.isStale || t.hidden).forEach((t) => {
+			suite.removeTest(t);
 			this.updateNode(t.parent);
 		});
 
@@ -390,11 +404,23 @@ class SuiteData {
 	private readonly tests: { [key: string]: TestTreeItem } = {};
 	constructor(public readonly path: string, public readonly node: SuiteTreeItem) { }
 
-	public getAllGroups() {
-		return Object.keys(this.groups).map((gKey) => this.groups[gKey]);
+	public getAllGroups(includeHidden = false) {
+		// Have to unique these, as we keep dupes in the lookup with the "old" IDs
+		// so that stale nodes can still look up their parents.
+		return _.uniq(
+			Object.keys(this.groups)
+				.map((gKey) => this.groups[gKey])
+				.filter((g) => includeHidden || (!g.hidden && !g.isPhantomGroup)),
+		);
 	}
-	public getAllTests() {
-		return Object.keys(this.tests).map((tKey) => this.tests[tKey]);
+	public getAllTests(includeHidden = false) {
+		// Have to unique these, as we keep dupes in the lookup with the "old" IDs
+		// so that stale nodes can still look up their parents.
+		return _.uniq(
+			Object.keys(this.tests)
+				.map((tKey) => this.tests[tKey])
+				.filter((g) => includeHidden || !g.hidden),
+		);
 	}
 	public getCurrentGroup(id: number) {
 		return this.groups[`${this.currentRunNumber}_${id}`];
@@ -414,6 +440,46 @@ class SuiteData {
 	public storeTest(id: number, node: TestTreeItem) {
 		return this.tests[`${this.currentRunNumber}_${id}`] = node;
 	}
+	public reuseMatchingGroup(group: Group, handleOldParent: (parent: SuiteTreeItem | GroupTreeItem) => void): GroupTreeItem {
+		const match = this.getAllGroups().find((g) => {
+			// It's more important that we don't match the wrong group than
+			// we find the right one.
+			return g.group.name === group.name
+				&& g.group.line === group.line;
+		});
+		if (match) {
+			handleOldParent(match.parent);
+			match.suiteRunNumber = this.currentRunNumber;
+			this.storeGroup(group.id, match);
+		}
+		return match;
+	}
+	public reuseMatchingTest(test: Test, handleOldParent: (parent: SuiteTreeItem | GroupTreeItem) => void): TestTreeItem {
+		const match = this.getAllTests().find((t) => {
+			// It's more important that we don't match the wrong group than
+			// we find the right one.
+			return t.test.name === test.name
+				&& t.test.line === test.line;
+		});
+		if (match) {
+			handleOldParent(match.parent);
+			match.suiteRunNumber = this.currentRunNumber;
+			this.storeTest(test.id, match);
+		}
+		return match;
+	}
+	public removeGroup(group: GroupTreeItem) {
+		Object.keys(this.groups).forEach((gKey) => {
+			if (this.groups[gKey] === group)
+				delete this.groups[gKey];
+		});
+	}
+	public removeTest(test: TestTreeItem) {
+		Object.keys(this.tests).forEach((tKey) => {
+			if (this.tests[tKey] === test)
+				delete this.tests[tKey];
+		});
+	}
 }
 
 class TestItemTreeItem extends vs.TreeItem {
@@ -424,7 +490,7 @@ class TestItemTreeItem extends vs.TreeItem {
 	// Default to Passed just so things default to the most likely (hopefully) place. This should
 	// never be used for rendering; only sorting.
 	private _sort: TestSortOrder = TestSortOrder.Middle; // tslint:disable-line:variable-name
-	protected suiteRunNumber = 0;
+	public suiteRunNumber = 0;
 
 	get status(): TestStatus {
 		return this._status;
@@ -466,7 +532,7 @@ export class SuiteTreeItem extends TestItemTreeItem {
 		this.suite = suite;
 		this.contextValue = DART_TEST_SUITE_NODE;
 		this.resourceUri = vs.Uri.file(suite.path);
-		this.id = `suite_${this.suite.path}_${this.suite.id}`;
+		this.id = `suite_${this.suite.path}_${this.suiteRunNumber}_${this.suite.id}`;
 		this.status = TestStatus.Unknown;
 		this.command = { command: "_dart.displaySuite", arguments: [this], title: "" };
 	}
@@ -512,7 +578,7 @@ class GroupTreeItem extends TestItemTreeItem {
 		this.group = group;
 		this.contextValue = DART_TEST_GROUP_NODE;
 		this.resourceUri = vs.Uri.file(suite.path);
-		this.id = `suite_${this.suite.path}_group_${this.group.id}`;
+		this.id = `suite_${this.suite.path}_${this.suiteRunNumber}_group_${this.group.id}`;
 		this.status = TestStatus.Unknown;
 		this.command = { command: "_dart.displayGroup", arguments: [this], title: "" };
 	}
@@ -565,12 +631,13 @@ class TestTreeItem extends TestItemTreeItem {
 		this.test = test;
 		this.contextValue = DART_TEST_TEST_NODE;
 		this.resourceUri = vs.Uri.file(suite.path);
-		this.id = `suite_${this.suite.path}_test_${this.test.id}`;
+		this.id = `suite_${this.suite.path}_${this.suiteRunNumber}_test_${this.test.id}`;
 		this.status = TestStatus.Unknown;
 		this.command = { command: "_dart.displayTest", arguments: [this], title: "" };
 	}
 
 	get parent(): SuiteTreeItem | GroupTreeItem {
+		console.log(`asked for parent!`);
 		const parent = this.test.groupIDs && this.test.groupIDs.length
 			? this.suite.getMyGroup(this.suiteRunNumber, this.test.groupIDs[this.test.groupIDs.length - 1])
 			: this.suite.node;
