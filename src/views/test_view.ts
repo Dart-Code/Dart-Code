@@ -36,8 +36,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		if (isRunningWholeSuite && suitePath && path.isAbsolute(suitePath)) {
 			const suite = suites[fsPath(suitePath)];
 			if (suite) {
-				Object.keys(suite.groups).map((gKey) => suite.groups[gKey]).forEach((g) => g.isStale = true);
-				Object.keys(suite.tests).map((tKey) => suite.tests[tKey]).forEach((t) => t.isStale = true);
+				suite.groups.forEach((g) => g.isStale = true);
+				suite.tests.forEach((t) => t.isStale = true);
 			}
 		}
 	}
@@ -256,22 +256,13 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		}
 	}
 
-	private getTestKey(test: Test): string {
-		// This key should reduce false-positives for a test colliding with a *different*
-		// test from a previous run. It is better to return a new string in this case (which
-		// will always happen if a test is renamed, for example). We use the group count just to
-		// help reduce collissions with "duplicate" names, since the nest level is unlikely to
-		// frequently change.
-		return `${test.groupIDs ? test.groupIDs.length : ""}_${test.name ? test.name : `unnamed_${test.id}`}`;
-	}
-
 	private handleTestStartNotifcation(suite: SuiteData, evt: TestStartNotification) {
-		const isExistingTest = !!suite.tests[this.getTestKey(evt.test)];
-		const testNode = suite.tests[this.getTestKey(evt.test)] || new TestTreeItem(suite, evt.test);
+		const isExistingTest = !!suite.tests[evt.test.id];
+		const testNode = suite.tests[evt.test.id] || new TestTreeItem(suite, evt.test);
 		let oldParent: SuiteTreeItem | GroupTreeItem;
 
 		if (!isExistingTest)
-			suite.tests[this.getTestKey(evt.test)] = testNode;
+			suite.tests[evt.test.id] = testNode;
 		else
 			oldParent = testNode.parent;
 		testNode.test = evt.test;
@@ -300,7 +291,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	private handleTestDoneNotification(suite: SuiteData, evt: TestDoneNotification) {
-		can't look these up by ID anymore
 		const testNode = suite.tests[evt.testID];
 
 		testNode.hidden = evt.hidden;
@@ -328,16 +318,16 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 
 	private handleGroupNotification(suite: SuiteData, evt: GroupNotification) {
 		let groupNode: GroupTreeItem;
-		if (suite.groups[this.getGroupKey(evt.group)]) {
-			groupNode = suite.groups[this.getGroupKey(evt.group)];
+		if (suite.groups[evt.group.id]) {
+			groupNode = suite.groups[evt.group.id];
 			groupNode.group = evt.group;
 			// TODO: Change parent if required...
 		} else {
 			groupNode = new GroupTreeItem(suite, evt.group);
-			suite.groups[this.getGroupKey(evt.group.id)] = groupNode;
+			suite.groups[evt.group.id] = groupNode;
 			groupNode.parent.groups.push(groupNode);
 		}
-		suite.groups[this.getGroupKey(evt.group.id)].status = TestStatus.Running;
+		suite.groups[evt.group.id].status = TestStatus.Running;
 		this.updateNode(groupNode);
 		this.updateNode(groupNode.parent);
 	}
@@ -359,14 +349,14 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		// TODO: Some notification that things are complete?
 		// TODO: Maybe a progress bar during the run?
 
-		Object.keys(suite.tests).map((tKey) => suite.tests[tKey]).filter((t) => t.isStale).forEach((t) => {
+		suite.tests.filter((t) => t.isStale).forEach((t) => {
 			// TODO: Should we actually remove it?!
 			t.hidden = true;
 			this.updateNode(t.parent);
 		});
 
 		// Anything marked as running should be set back to Unknown
-		Object.keys(suite.tests).map((tKey) => suite.tests[tKey]).filter((t) => t.status === TestStatus.Running).forEach((t) => {
+		suite.tests.filter((t) => t.status === TestStatus.Running).forEach((t) => {
 			t.status = TestStatus.Unknown;
 			this.updateNode(t);
 		});
@@ -375,7 +365,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	private handlePrintNotification(suite: SuiteData, evt: PrintNotification) {
-		can't look these up by ID anymore
 		suite.tests[evt.testID].outputEvents.push(evt);
 		if (suite.tests[evt.testID] === this.currentSelectedNode)
 			this.appendTestOutput(evt);
@@ -383,7 +372,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	private handleErrorNotification(suite: SuiteData, evt: ErrorNotification) {
-		can't look these up by ID anymore
 		suite.tests[evt.testID].outputEvents.push(evt);
 		if (suite.tests[evt.testID] === this.currentSelectedNode)
 			this.appendTestOutput(evt);
@@ -394,8 +382,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 }
 
 class SuiteData {
-	public readonly groups: { [key: string]: GroupTreeItem } = {};
-	public readonly tests: { [key: string]: TestTreeItem } = {};
+	public readonly groups: GroupTreeItem[] = [];
+	public readonly tests: TestTreeItem[] = [];
 	constructor(public readonly path: string, public readonly node: SuiteTreeItem) {
 	}
 }
@@ -504,7 +492,6 @@ class GroupTreeItem extends TestItemTreeItem {
 
 	get parent(): SuiteTreeItem | GroupTreeItem {
 		const parent = this.group.parentID
-		we can't look them up by ID anymore...
 			? this.suite.groups[this.group.parentID]
 			: this.suite.node;
 
@@ -545,7 +532,6 @@ class TestTreeItem extends TestItemTreeItem {
 
 	get parent(): SuiteTreeItem | GroupTreeItem {
 		const parent = this.test.groupIDs && this.test.groupIDs.length
-		we can't look them up by ID anymore...
 			? this.suite.groups[this.test.groupIDs[this.test.groupIDs.length - 1]]
 			: this.suite.node;
 
