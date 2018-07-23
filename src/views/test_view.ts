@@ -371,7 +371,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		test.outputEvents.push(evt);
 		if (test === this.currentSelectedNode)
 			this.appendTestOutput(evt);
-		console.log(`${evt.message}\n`);
 	}
 
 	private handleErrorNotification(suite: SuiteData, evt: ErrorNotification) {
@@ -379,9 +378,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		test.outputEvents.push(evt);
 		if (test === this.currentSelectedNode)
 			this.appendTestOutput(evt);
-		console.error(evt.error);
-		if (evt.stackTrace)
-			console.error(evt.stackTrace);
 	}
 }
 
