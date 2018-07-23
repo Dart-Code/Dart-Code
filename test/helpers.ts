@@ -114,8 +114,12 @@ export async function activate(file?: vs.Uri): Promise<void> {
 export async function getPackages() {
 	log("Restoring packages and waiting for next analysis to complete");
 	await activateWithoutAnalysis();
+	if (!vs.workspace.workspaceFolders || !vs.workspace.workspaceFolders.length) {
+		logError("Cannoy getPackages because there is no workspace folder");
+		return;
+	}
 	await waitForNextAnalysis(async () => {
-		await vs.commands.executeCommand("dart.getPackages", vs.workspace.workspaceFolders ? [0] : undefined);
+		await vs.commands.executeCommand("dart.getPackages", vs.workspace.workspaceFolders[0]);
 	}, 60);
 }
 
