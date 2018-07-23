@@ -190,7 +190,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		const newStatus = Math.max.apply(Math, childStatuses);
 		if (newStatus !== node.status) {
 			node.status = newStatus;
-			node.iconPath = getIconPath(node.status);
+			node.iconPath = getIconPath(node.status, false);
 			this.updateNode(node);
 		}
 		return node.status;
@@ -421,7 +421,7 @@ class SuiteData {
 }
 
 class TestItemTreeItem extends vs.TreeItem {
-	public isStale = false;
+	private _isStale = false; // tslint:disable-line:variable-name
 	private _status: TestStatus = TestStatus.Unknown; // tslint:disable-line:variable-name
 	// To avoid the sort changing on every status change (stale, running, etc.) this
 	// field will be the last status the user would care about (pass/fail/skip).
@@ -436,7 +436,7 @@ class TestItemTreeItem extends vs.TreeItem {
 
 	set status(status: TestStatus) {
 		this._status = status;
-		this.iconPath = getIconPath(status);
+		this.iconPath = getIconPath(status, this.isStale);
 
 		if (status === TestStatus.Errored || status === TestStatus.Failed
 			|| status === TestStatus.Passed
@@ -444,6 +444,15 @@ class TestItemTreeItem extends vs.TreeItem {
 			this.isStale = false;
 			this._sort = getTestSortOrder(status);
 		}
+	}
+
+	get isStale(): boolean {
+		return this._isStale;
+	}
+
+	set isStale(isStale: boolean) {
+		this._isStale = isStale;
+		this.iconPath = getIconPath(this.status, this.isStale);
 	}
 
 	get sort(): TestSortOrder {
@@ -587,7 +596,7 @@ class TestTreeItem extends TestItemTreeItem {
 	}
 }
 
-function getIconPath(status: TestStatus): vs.Uri {
+function getIconPath(status: TestStatus, isStale: boolean): vs.Uri {
 	let file: string;
 	// TODO: Should we have faded icons for stale versions?
 	switch (status) {
@@ -595,14 +604,14 @@ function getIconPath(status: TestStatus): vs.Uri {
 			file = "running";
 			break;
 		case TestStatus.Passed:
-			file = "pass";
+			file = isStale ? "pass_stale" : "pass";
 			break;
 		case TestStatus.Failed:
 		case TestStatus.Errored:
-			file = "fail";
+			file = isStale ? "fail_stale" : "fail";
 			break;
 		case TestStatus.Skipped:
-			file = "skip";
+			file = isStale ? "skip_stale" : "skip";
 			break;
 		case TestStatus.Unknown:
 			file = "stale";
