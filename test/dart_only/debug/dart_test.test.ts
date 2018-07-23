@@ -207,6 +207,11 @@ describe("dart test debugger", () => {
 		}
 	});
 
+	it.skip("removes stale results when running a full suite", () => {
+		// Need to rename a test or something to ensure we get a stale result
+		// after a full suite run?
+	});
+
 	async function runWithoutDebugging(file: vs.Uri, args?: string[]): Promise<void> {
 		await openFile(file);
 		const config = await startDebugger(file, { args, noDebug: true });
