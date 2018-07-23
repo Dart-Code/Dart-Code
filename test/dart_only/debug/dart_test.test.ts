@@ -2,8 +2,11 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { OpenFileTracker } from "../../../src/analysis/open_file_tracker";
 import { fsPath } from "../../../src/utils";
 import { logInfo } from "../../../src/utils/log";
+import { TestOutlineVisitor } from "../../../src/utils/outline";
+import { makeRegexForTest } from "../../../src/utils/test";
 import { TestResultsProvider, TestStatus } from "../../../src/views/test_view";
 import { DartDebugClient } from "../../dart_debug_client";
 import { activate, defer, delay, ext, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, openFile, positionOf, withTimeout } from "../../helpers";
@@ -35,8 +38,8 @@ describe("dart test debugger", () => {
 		));
 	});
 
-	async function startDebugger(script: vs.Uri | string): Promise<vs.DebugConfiguration> {
-		const config = await getLaunchConfiguration(script);
+	async function startDebugger(script: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
+		const config = await getLaunchConfiguration(script, extraConfiguration);
 		await dc.start(config.debugServer);
 		return config;
 	}
@@ -177,8 +180,43 @@ describe("dart test debugger", () => {
 		assert.equal(`${topLevelNodes[2].label} (${TestStatus[topLevelNodes[2].status]})`, "basic_test.dart (Passed)");
 		assert.equal(`${topLevelNodes[3].label} (${TestStatus[topLevelNodes[3].status]})`, "skip_test.dart (Skipped)");
 	});
-});
 
+	it.skip("does not overwrite unrelated test nodes due to overlapping IDs", async () => {
+		// When we run an individual test, it will always have an ID of 1. Since the test we ran might
+		// not have been ID=1 in the previous run, we need to be sure we update the correct node in the tree.
+		// To test it, we'll run the whole suite, ensure the results are as expected, and then re-check it
+		// after running each test individually.
+
+		function checkResults(description: string) {
+			const expectedResults = getExpectedResults();
+			const actualResults = makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider).join("\n");
+
+			assert.ok(expectedResults);
+			assert.ok(actualResults);
+			assert.equal(actualResults, expectedResults, description);
+		}
+
+		await runWithoutDebugging(helloWorldTestTreeFile);
+		checkResults(`After initial run`);
+		const visitor = new TestOutlineVisitor();
+		visitor.visit(OpenFileTracker.getOutlineFor(helloWorldTestTreeFile));
+		for (const test of visitor.tests.filter((t) => !t.isGroup)) {
+			// Run the test.
+			await runWithoutDebugging(helloWorldTestTreeFile, ["--name", makeRegexForTest(test.fullName, test.isGroup)]);
+			checkResults(`After running test ${test.fullName}`);
+		}
+	});
+
+	async function runWithoutDebugging(file: vs.Uri, args?: string[]): Promise<void> {
+		await openFile(file);
+		const config = await startDebugger(file, { args, noDebug: true });
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		]);
+	}
+});
 function makeTextTree(suite: vs.Uri, provider: TestResultsProvider, parent?: vs.TreeItem, buffer: string[] = [], indent = 0) {
 	const items = provider.getChildren(parent)
 		// Filter to only the suite we were given (though includes all children).
