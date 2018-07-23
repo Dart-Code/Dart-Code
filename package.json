@@ -223,11 +223,6 @@
 				"category": "Flutter"
 			},
 			{
-				"command": "flutter.screenshot",
-				"title": "Save Screenshot",
-				"category": "Flutter"
-			},
-			{
 				"command": "flutter.hotRestart",
 				"title": "Hot Restart",
 				"category": "Flutter"
