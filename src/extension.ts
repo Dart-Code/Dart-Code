@@ -324,6 +324,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			if (config.openTestViewOnFailure)
 				testTreeView.reveal(node);
 		}),
+		testTreeView.onDidChangeSelection((e) => {
+			testTreeProvider.setSelectedNodes(e.selection && e.selection.length === 1 ? e.selection[0] : undefined);
+		}),
 	);
 
 	if (sdks.projectType !== util.ProjectType.Dart && config.previewHotReloadCoverageMarkers) {

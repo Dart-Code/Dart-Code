@@ -21,6 +21,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	public readonly onDidStartTests: vs.Event<vs.TreeItem | undefined> = this.onDidStartTestsEmitter.event;
 	private onFirstFailureEmitter: vs.EventEmitter<vs.TreeItem | undefined> = new vs.EventEmitter<vs.TreeItem | undefined>();
 	public readonly onFirstFailure: vs.Event<vs.TreeItem | undefined> = this.onFirstFailureEmitter.event;
+	private currentSelectedNode: vs.TreeItem;
 
 	// Set this flag we know when a new run starts so we can show the tree; however
 	// we can't show it until we render a node (we can only call reveal on a node) so
@@ -31,6 +32,10 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	public static flagStart(): void {
 		TestResultsProvider.isNewTestRun = true;
 		TestResultsProvider.nextFailureIsFirst = true;
+	}
+
+	public setSelectedNodes(item: vs.TreeItem): void {
+		this.currentSelectedNode = item;
 	}
 
 	private owningDebugSessions: { [key: string]: vs.DebugSession } = {};
