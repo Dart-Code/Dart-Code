@@ -163,7 +163,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		this.analytics.logDebuggerStart(folder && folder.uri);
 		if (debugType === DebuggerType.FlutterTest || debugType === DebuggerType.PubTest) {
-			const isRunningTestSubset = debugConfig.args && (debugConfig.args.indexOf("--name") || debugConfig.args.indexOf("--pname"));
+			const isRunningTestSubset = debugConfig.args && (debugConfig.args.indexOf("--name") !== -1 || debugConfig.args.indexOf("--pname") !== -1);
 			TestResultsProvider.flagSuiteStart(debugConfig.program, !isRunningTestSubset);
 		}
 
