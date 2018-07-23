@@ -365,11 +365,15 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 
 	private handlePrintNotification(suite: SuiteData, evt: PrintNotification) {
 		suite.tests[evt.testID].outputEvents.push(evt);
+		if (suite.tests[evt.testID] === this.currentSelectedNode)
+			this.appendTestOutput(evt);
 		console.log(`${evt.message}\n`);
 	}
 
 	private handleErrorNotification(suite: SuiteData, evt: ErrorNotification) {
 		suite.tests[evt.testID].outputEvents.push(evt);
+		if (suite.tests[evt.testID] === this.currentSelectedNode)
+			this.appendTestOutput(evt);
 		console.error(evt.error);
 		if (evt.stackTrace)
 			console.error(evt.stackTrace);
