@@ -30,6 +30,7 @@ export class DartDebugClient extends DebugClient {
 		// debug session.
 		if (testProvider) {
 			this.on("dart.testRunNotification", (e: DebugSessionCustomEvent) => testProvider.handleDebugSessionCustomEvent(e));
+			this.on("terminated", (e: DebugSessionCustomEvent) => testProvider.handleDebugSessionEnd(e.session));
 		}
 	}
 	public async launch(launchArgs: any): Promise<void> {

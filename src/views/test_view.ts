@@ -42,7 +42,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 
 	constructor() {
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
-		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleSessionEnd(session)));
+		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
 			vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(treeNode.resourceUri),
@@ -326,7 +326,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		this.updateNode(groupNode.parent);
 	}
 
-	private handleSessionEnd(session: vs.DebugSession) {
+	public handleDebugSessionEnd(session: vs.DebugSession) {
 		// Get the suite paths that have us as the owning debug session.
 		const suitePaths = Object.keys(this.owningDebugSessions).filter((suitePath) => this.owningDebugSessions[suitePath] === session);
 		// End them all and remove from the lookup.
