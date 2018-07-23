@@ -181,7 +181,7 @@ describe("dart test debugger", () => {
 		assert.equal(`${topLevelNodes[3].label} (${TestStatus[topLevelNodes[3].status]})`, "skip_test.dart (Skipped)");
 	});
 
-	it.skip("does not overwrite unrelated test nodes due to overlapping IDs", async () => {
+	it("does not overwrite unrelated test nodes due to overlapping IDs", async () => {
 		// When we run an individual test, it will always have an ID of 1. Since the test we ran might
 		// not have been ID=1 in the previous run, we need to be sure we update the correct node in the tree.
 		// To test it, we'll run the whole suite, ensure the results are as expected, and then re-check it
@@ -197,13 +197,14 @@ describe("dart test debugger", () => {
 		}
 
 		await runWithoutDebugging(helloWorldTestTreeFile);
+		let numRuns = 1;
 		checkResults(`After initial run`);
 		const visitor = new TestOutlineVisitor();
 		visitor.visit(OpenFileTracker.getOutlineFor(helloWorldTestTreeFile));
 		for (const test of visitor.tests.filter((t) => !t.isGroup)) {
 			// Run the test.
 			await runWithoutDebugging(helloWorldTestTreeFile, ["--name", makeRegexForTest(test.fullName, test.isGroup)]);
-			checkResults(`After running test ${test.fullName}`);
+			checkResults(`After running ${numRuns++} tests (most recently ${test.fullName})`);
 		}
 	});
 
