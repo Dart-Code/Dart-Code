@@ -135,9 +135,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			: (isTest && canPubRunTest ? DebuggerType.PubTest : DebuggerType.Dart);
 		log(`Using ${DebuggerType[debugType]} debug adapter for this session`);
 
-		if (debugType === DebuggerType.FlutterTest || debugType === DebuggerType.PubTest)
-			TestResultsProvider.flagStart();
-
 		// Ensure we have a device
 		const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null;
 		if (isFlutter && !isTest && !deviceId && this.deviceManager && debugConfig.deviceId !== "flutter-tester") {
@@ -165,6 +162,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		(debugConfig as any).debugServer = debugServer.address().port;
 
 		this.analytics.logDebuggerStart(folder && folder.uri);
+		if (debugType === DebuggerType.FlutterTest || debugType === DebuggerType.PubTest) {
+			const isRunningTestSubset = debugConfig.args && (debugConfig.args.indexOf("--name") || debugConfig.args.indexOf("--pname"));
+			TestResultsProvider.flagSuiteStart(debugConfig.program, !isRunningTestSubset);
+		}
 
 		log(`Debug session starting...\n    ${JSON.stringify(debugConfig, undefined, 4).replace(/\n/g, "\n    ")}`);
 

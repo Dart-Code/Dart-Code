@@ -6,7 +6,6 @@ import { CoverageData, PromiseCompleter } from "../debug/utils";
 import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
 import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../utils";
 import { handleDebugLogEvent } from "../utils/log";
-import { TestResultsProvider } from "../views/test_view";
 
 let debugPaintingEnabled = false;
 let performanceOverlayEnabled = false;
@@ -196,7 +195,6 @@ export class DebugCommands {
 			});
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", () => {
-			TestResultsProvider.flagStart();
 			const testFolders = getDartWorkspaceFolders()
 				.map((project) => path.join(fsPath(project.uri), "test"))
 				.filter((testFolder) => fs.existsSync(testFolder));

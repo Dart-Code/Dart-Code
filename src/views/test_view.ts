@@ -29,9 +29,17 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	private static isNewTestRun = true;
 	private static nextFailureIsFirst = true;
 
-	public static flagStart(): void {
+	public static flagSuiteStart(suitePath: string, isRunningWholeSuite: boolean): void {
 		TestResultsProvider.isNewTestRun = true;
 		TestResultsProvider.nextFailureIsFirst = true;
+
+		if (isRunningWholeSuite && suitePath && path.isAbsolute(suitePath)) {
+			const suite = suites[fsPath(suitePath)];
+			if (suite) {
+				suite.groups.forEach((g) => g.isStale = true);
+				suite.tests.forEach((t) => t.isStale = true);
+			}
+		}
 	}
 
 	public setSelectedNodes(item: vs.TreeItem): void {
@@ -237,8 +245,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			suite = new SuiteData(suitePath, new SuiteTreeItem(evt.suite));
 			suites[evt.suite.path] = suite;
 		}
-		suite.groups.forEach((g) => g.status = TestStatus.Stale);
-		suite.tests.forEach((t) => t.status = TestStatus.Stale);
 		suite.node.status = TestStatus.Waiting;
 		this.updateNode(suite.node);
 		this.updateNode();
@@ -343,13 +349,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		// TODO: Some notification that things are complete?
 		// TODO: Maybe a progress bar during the run?
 
-		// We have to hide all stale results here because we have no reliable way
-		// to match up new tests with the previos run. Consider the user runs 10 tests
-		// and then runs just one. The ID of the single run in the second run is "1" sp
-		// we overwrite the node for "1" and update it's ID, but if it was previously
-		// test "5" then we now have a dupe in the tree (one updated, one stale) and
-		// the original "1" has vanished.
-		suite.tests.filter((t) => t.status === TestStatus.Stale).forEach((t) => {
+		suite.tests.filter((t) => t.isStale).forEach((t) => {
+			// TODO: Should we actually remove it?!
 			t.hidden = true;
 			this.updateNode(t.parent);
 		});
@@ -388,6 +389,7 @@ class SuiteData {
 }
 
 class TestItemTreeItem extends vs.TreeItem {
+	public isStale = false;
 	private _status: TestStatus = TestStatus.Unknown; // tslint:disable-line:variable-name
 	// To avoid the sort changing on every status change (stale, running, etc.) this
 	// field will be the last status the user would care about (pass/fail/skip).
@@ -406,6 +408,7 @@ class TestItemTreeItem extends vs.TreeItem {
 		if (status === TestStatus.Errored || status === TestStatus.Failed
 			|| status === TestStatus.Passed
 			|| status === TestStatus.Skipped) {
+			this.isStale = false;
 			this._sort = getTestSortOrder(status);
 		}
 	}
@@ -551,6 +554,7 @@ class TestTreeItem extends TestItemTreeItem {
 
 function getIconPath(status: TestStatus): vs.Uri {
 	let file: string;
+	// TODO: Should we have faded icons for stale versions?
 	switch (status) {
 		case TestStatus.Running:
 			file = "running";
@@ -565,7 +569,6 @@ function getIconPath(status: TestStatus): vs.Uri {
 		case TestStatus.Skipped:
 			file = "skip";
 			break;
-		case TestStatus.Stale:
 		case TestStatus.Unknown:
 			file = "stale";
 			break;
@@ -584,7 +587,6 @@ function getIconPath(status: TestStatus): vs.Uri {
 export enum TestStatus {
 	// This should be in order such that the highest number is the one to show
 	// when aggregating (eg. from children).
-	Stale,
 	Waiting,
 	Passed,
 	Skipped,
