@@ -7,7 +7,7 @@ import { safeSpawn } from "../src/debug/utils";
 import { DartDebugClient } from "./dart_debug_client";
 import { defer } from "./helpers";
 
-export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string, name: string, value: string | { starts: string }) {
+export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string, name: string, value: string | { starts?: string, ends?: string }) {
 	assert.ok(variables && variables.length, "No variables given to search");
 	const v = variables.find((v) => v.name === name);
 	assert.ok(
@@ -18,8 +18,12 @@ export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName
 	assert.equal(v.evaluateName, evaluateName);
 	if (typeof value === "string")
 		assert.equal(v.value, value);
-	else
-		assert.equal(0, v.value.indexOf(value.starts));
+	else {
+		if (value.starts)
+			assert.equal(v.value.slice(0, value.starts.length), value.starts);
+		if (value.ends)
+			assert.equal(v.value.slice(-value.ends.length), value.ends);
+	}
 }
 
 export interface MapEntry {
