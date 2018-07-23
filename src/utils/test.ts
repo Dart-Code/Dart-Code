@@ -11,7 +11,7 @@ export function getLaunchConfig(noDebug: boolean, path: string, testName: string
 	};
 }
 
-function makeRegexForTest(name: string, isGroup: boolean) {
+export function makeRegexForTest(name: string, isGroup: boolean) {
 	const prefix = "^";
 	const suffix = isGroup ? "" : "$";
 	// Require exact match (though for group, allow anything afterwards).

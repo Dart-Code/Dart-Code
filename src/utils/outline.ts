@@ -150,3 +150,66 @@ export abstract class OutlineVisitor {
 	protected visitUnitTestTest(outline: as.Outline): void { this.visitChildren(outline); }
 	protected visitUnknown(outline: as.Outline): void { this.visitChildren(outline); }
 }
+
+export class TestOutlineVisitor extends OutlineVisitor {
+	public readonly tests: TestOutlineInfo[] = [];
+	private readonly names: string[] = [];
+	protected visitUnitTestTest(outline: as.Outline) {
+		this.addTest(outline, super.visitUnitTestTest);
+	}
+	protected visitUnitTestGroup(outline: as.Outline) {
+		this.addTest(outline, super.visitUnitTestGroup);
+	}
+
+	private addTest(outline: as.Outline, base: (outline: as.Outline) => void) {
+		const name = this.extractTestName(outline.element.name);
+		if (!name)
+			return;
+		this.names.push(name);
+		const fullName = this.names.join(" ");
+		const isGroup = outline.element.kind === "UNIT_TEST_GROUP";
+		this.tests.push({
+			file: outline.element.location.file,
+			fullName,
+			isGroup,
+			length: outline.element.location.length,
+			offset: outline.element.location.offset,
+		});
+		try {
+			base.bind(this)(outline);
+		} finally {
+			this.names.pop();
+		}
+	}
+
+	private extractTestName(elementName: string): string | undefined {
+		if (!elementName)
+			return;
+		// Strip off the function name/parent like test( or testWidget(
+		const openParen = elementName.indexOf("(");
+		const closeParen = elementName.lastIndexOf(")");
+		if (openParen === -1 || closeParen === -1 || openParen > closeParen)
+			return;
+		elementName = elementName.substring(openParen + 1, closeParen);
+
+		// To avoid implemented Dart string parsing here (escaping, triple quotes, etc.)
+		// we will just require that a string is quoted at each end with the same character
+		// and contains zero of that character inside the string, and zero backslashes.
+		const quoteCharacter = elementName.substr(0, 1);
+		if (elementName.slice(-1) !== quoteCharacter)
+			return;
+		elementName = elementName.slice(1, -1);
+		if (elementName.indexOf(quoteCharacter) !== -1 || elementName.indexOf("\\") !== -1)
+			return;
+
+		return elementName;
+	}
+}
+
+export interface TestOutlineInfo {
+	fullName: string;
+	file: string;
+	offset: number;
+	length: number;
+	isGroup: boolean;
+}
