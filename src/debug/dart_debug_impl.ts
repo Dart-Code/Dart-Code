@@ -1215,9 +1215,9 @@ export class DartDebugSession extends DebugSession {
 				str = `"${str}"`;
 			return str;
 		} else if (ref.kind === "List") {
-			return `List (${instanceRef.length} items)`;
+			return `List (${instanceRef.length} ${instanceRef.length === 1 ? "item" : "items"})`;
 		} else if (ref.kind === "Map") {
-			return `Map (${instanceRef.length} items)`;
+			return `Map (${instanceRef.length} ${instanceRef.length === 1 ? "item" : "items"})`;
 		} else if (ref.kind === "Type") {
 			const typeRef = ref as VMTypeRef;
 			return `Type (${typeRef.name})`;
