@@ -1,5 +1,5 @@
 import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from "vscode";
-import { createFolderIfRequired, resolvePaths } from "./utils";
+import { createFolderForFile, resolvePaths } from "./utils";
 
 class Config {
 	private config: WorkspaceConfiguration;
@@ -27,18 +27,18 @@ class Config {
 	get analyzeAngularTemplates() { return this.getConfig<boolean>("analyzeAngularTemplates"); }
 	get analyzerAdditionalArgs() { return this.getConfig<string[]>("analyzerAdditionalArgs"); }
 	get analyzerDiagnosticsPort() { return this.getConfig<number>("analyzerDiagnosticsPort"); }
-	get analyzerInstrumentationLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("analyzerInstrumentationLogFile"))); }
-	get analyzerLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("analyzerLogFile"))); }
+	get analyzerInstrumentationLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("analyzerInstrumentationLogFile"))); }
+	get analyzerLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("analyzerLogFile"))); }
 	get analyzerObservatoryPort() { return this.getConfig<number>("analyzerObservatoryPort"); }
 	get analyzerPath() { return resolvePaths(this.getConfig<string>("analyzerPath")); }
 	get analyzerSshHost() { return this.getConfig<string>("analyzerSshHost"); }
 	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
 	get closingLabels() { return this.getConfig<boolean>("closingLabels"); }
-	get extensionLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("extensionLogFile"))); }
+	get extensionLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("extensionLogFile"))); }
 	get flutterCreateAndroidLanguage() { return this.getConfig<string>("flutterCreateAndroidLanguage"); }
 	get flutterCreateIOSLanguage() { return this.getConfig<string>("flutterCreateIOSLanguage"); }
 	get flutterCreateOrganization() { return this.getConfig<string>("flutterCreateOrganization"); }
-	get flutterDaemonLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("flutterDaemonLogFile"))); }
+	get flutterDaemonLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("flutterDaemonLogFile"))); }
 	get flutterHotReloadOnSave() { return this.getConfig<boolean>("flutterHotReloadOnSave"); }
 	get flutterSdkPath() { return resolvePaths(this.getConfig<string>("flutterSdkPath")); }
 	public setFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Workspace); }
@@ -88,10 +88,10 @@ class ResourceConfig {
 	get lineLength() { return this.getConfig<number>("lineLength"); }
 	get pubAdditionalArgs() { return this.getConfig<string[]>("pubAdditionalArgs"); }
 	get runPubGetOnPubspecChanges() { return this.getConfig<boolean>("runPubGetOnPubspecChanges"); }
-	get flutterRunLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("flutterRunLogFile"))); }
-	get flutterTestLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("flutterTestLogFile"))); }
-	get observatoryLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("observatoryLogFile"))); }
-	get pubTestLogFile() { return createFolderIfRequired(resolvePaths(this.getConfig<string>("pubTestLogFile"))); }
+	get flutterRunLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("flutterRunLogFile"))); }
+	get flutterTestLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("flutterTestLogFile"))); }
+	get observatoryLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("observatoryLogFile"))); }
+	get pubTestLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("pubTestLogFile"))); }
 	get promptToGetPackages() { return this.getConfig<boolean>("promptToGetPackages"); }
 	get vmAdditionalArgs() { return this.getConfig<string[]>("vmAdditionalArgs"); }
 }

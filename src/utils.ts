@@ -58,20 +58,21 @@ export function resolvePaths(p: string) {
 	return p;
 }
 
-export function createFolderIfRequired(file: string) {
+export function mkDirRecursive(folder: string) {
+	const parent = path.dirname(folder);
+	if (!fs.existsSync(parent))
+		mkDirRecursive(parent);
+	if (!fs.existsSync(folder))
+		fs.mkdirSync(folder);
+}
+
+export function createFolderForFile(file: string) {
 	if (!file || !path.isAbsolute(file))
 		return;
 
 	const folder = path.dirname(file);
-	function mkDirAndParents(folder: string) {
-		const parent = path.dirname(folder);
-		if (!fs.existsSync(parent))
-			mkDirAndParents(parent);
-		if (!fs.existsSync(folder))
-			fs.mkdirSync(folder);
-	}
 	if (!fs.existsSync(folder))
-		mkDirAndParents(folder);
+		mkDirRecursive(folder);
 	return file;
 }
 
