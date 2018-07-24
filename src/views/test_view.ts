@@ -348,10 +348,15 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 
 	public handleDebugSessionEnd(session: vs.DebugSession) {
 		// Get the suite paths that have us as the owning debug session.
-		const suitePaths = Object.keys(this.owningDebugSessions).filter((suitePath) => this.owningDebugSessions[suitePath] === session);
+		const suitePaths = Object.keys(this.owningDebugSessions).filter((suitePath) => {
+			return this.owningDebugSessions[suitePath] && session
+				&& this.owningDebugSessions[suitePath].id === session.id;
+		});
+
 		// End them all and remove from the lookup.
 		for (const suitePath of suitePaths) {
 			this.handleSuiteEnd(suites[suitePath]);
+			this.owningDebugSessions[suitePath] = undefined;
 			delete this.owningDebugSessions[suitePath];
 		}
 	}
