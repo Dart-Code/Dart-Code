@@ -1,11 +1,11 @@
 import * as fs from "fs";
 import * as path from "path";
-import { ExtensionContext, commands, window } from "vscode";
+import { commands, ExtensionContext, window } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
 import { isWin, platformName } from "../debug/utils";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, ProjectType, Sdks, fsPath, getDartWorkspaceFolders, openExtensionLogFile, openInBrowser, reloadExtension, resolvePaths, showLogAction } from "../utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, openExtensionLogFile, openInBrowser, ProjectType, reloadExtension, resolvePaths, Sdks, showLogAction } from "../utils";
 import { log } from "../utils/log";
 
 const dartExecutableName = isWin ? "dart.exe" : "dart";
@@ -181,10 +181,10 @@ export function findSdks(): Sdks {
 	const flutterSdkPath = searchPaths(flutterSdkSearchPaths, hasFlutterExecutable, flutterExecutableName);
 
 	const dartSdkSearchPaths = [
-		config.sdkPath,
 		fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart/tools/sdks", platformName, "dart-sdk"),
 		fuchsiaRoot && path.join(fuchsiaRoot, "dart/tools/sdks", platformName, "dart-sdk"),
 		flutterProject && flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk"),
+		config.sdkPath,
 	].concat(paths)
 		// The above array only has the Flutter SDK	in the search path if we KNOW it's a flutter
 		// project, however this doesn't cover the activating-to-run-flutter.createProject so
