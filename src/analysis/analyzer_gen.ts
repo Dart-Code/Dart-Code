@@ -473,7 +473,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	server as being files with the given content, even if the files do not exist on the filesystem or if the file path represents
 	the path to a directory on the filesystem.
 	*/
-	analysisUpdateContent(request: as.AnalysisUpdateContentRequest): Thenable<as.AnalysisUpdateContentResponse> {
+	analysisUpdateContent(request: as.AnalysisUpdateContentRequest): Thenable<UnknownResponse> {
 		return this.sendRequest("analysis.updateContent", request);
 	}
 
