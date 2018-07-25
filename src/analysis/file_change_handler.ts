@@ -1,4 +1,5 @@
 import * as vs from "vscode";
+import { config } from "../config";
 import * as util from "../utils";
 import { fsPath } from "../utils";
 import * as as from "./analysis_server_types";
@@ -7,6 +8,7 @@ import { Analyzer } from "./analyzer";
 export class FileChangeHandler implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 	private analyzer: Analyzer;
+	private readonly filesWarnedAbout = new Set<string>();
 	constructor(analyzer: Analyzer) {
 		this.analyzer = analyzer;
 
@@ -40,13 +42,18 @@ export class FileChangeHandler implements vs.Disposable {
 		if (e.contentChanges.length === 0) // This event fires for metadata changes (dirty?) so don't need to notify AS then.
 			return;
 
-		const files: { [key: string]: as.ChangeContentOverlay } = {};
+		const filePath = fsPath(e.document.uri);
 
-		files[fsPath(e.document.uri)] = {
+		if (config.warnWhenEditingFilesOutsideWorkspace && !this.filesWarnedAbout.has(filePath) && !util.isWithinWorkspace(filePath)) {
+			vs.window.showWarningMessage(`You are modifying a file outside of your current workspace: ${filePath}`);
+			this.filesWarnedAbout.add(filePath);
+		}
+
+		const files: { [key: string]: as.ChangeContentOverlay } = {};
+		files[filePath] = {
 			edits: e.contentChanges.map((c) => this.convertChange(e.document, c)),
 			type: "change",
 		};
-
 		this.analyzer.analysisUpdateContent({ files });
 	}
 

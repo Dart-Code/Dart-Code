@@ -810,6 +810,12 @@
 					"default": true,
 					"description": "Whether to set newly connected devices as the current device in Flutter projects.",
 					"scope": "window"
+				},
+				"dart.warnWhenEditingFilesOutsideWorkspace": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to show a warning when modifying files outside of the workspace.",
+					"scope": "window"
 				}
 			}
 		},
