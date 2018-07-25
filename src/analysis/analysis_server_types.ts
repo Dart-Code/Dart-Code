@@ -325,6 +325,96 @@ export interface AnalysisGetReachableSourcesResponse {
 }
 
 /**
+ * Return the signature information associated with the given
+ * location in the given file. If the signature information
+ * for the given file has not yet been computed, or the most
+ * recently computed signature information for the given file
+ * is out of date, then the response for this request will be
+ * delayed until it has been computed. If the content of the
+ * file changes after this request was received but before a
+ * response could be sent, then an error of type
+ * CONTENT_MODIFIED will be generated.
+ * 
+ * If a request is made for a file which does not exist, or
+ * which is not currently subject to analysis (e.g. because it
+ * is not associated with any analysis root specified to
+ * analysis.setAnalysisRoots), an error of type
+ * GET_SIGNATURE_INVALID_FILE will be generated.
+ * 
+ * If the location given is not inside the argument list for a
+ * function (including method and constructor) invocation, then
+ * an error of type GET_SIGNATURE_INVALID_OFFSET will
+ * be generated. If the location is inside an argument list but
+ * the function is not defined or cannot be determined (such as
+ * a method invocation where the target has type 'dynamic')
+ * then an error of type GET_SIGNATURE_UNKNOWN_FUNCTION
+ * will be generated.
+ */
+export interface AnalysisGetSignatureRequest {
+	/**
+	 * The file in which signature information is being requested.
+	 */
+	file: FilePath;
+
+	/**
+	 * The location for which signature information is being requested.
+	 */
+	offset: number;
+}
+
+/**
+ * Return the signature information associated with the given
+ * location in the given file. If the signature information
+ * for the given file has not yet been computed, or the most
+ * recently computed signature information for the given file
+ * is out of date, then the response for this request will be
+ * delayed until it has been computed. If the content of the
+ * file changes after this request was received but before a
+ * response could be sent, then an error of type
+ * CONTENT_MODIFIED will be generated.
+ * 
+ * If a request is made for a file which does not exist, or
+ * which is not currently subject to analysis (e.g. because it
+ * is not associated with any analysis root specified to
+ * analysis.setAnalysisRoots), an error of type
+ * GET_SIGNATURE_INVALID_FILE will be generated.
+ * 
+ * If the location given is not inside the argument list for a
+ * function (including method and constructor) invocation, then
+ * an error of type GET_SIGNATURE_INVALID_OFFSET will
+ * be generated. If the location is inside an argument list but
+ * the function is not defined or cannot be determined (such as
+ * a method invocation where the target has type 'dynamic')
+ * then an error of type GET_SIGNATURE_UNKNOWN_FUNCTION
+ * will be generated.
+ */
+export interface AnalysisGetSignatureResponse {
+	/**
+	 * The name of the function being invoked at the given offset.
+	 */
+	name: string;
+
+	/**
+	 * The dartdoc associated with the function being invoked. Other
+	 * than the removal of the comment delimiters, including leading
+	 * asterisks in the case of a block comment, the dartdoc is
+	 * unprocessed markdown. This data is omitted if there is no
+	 * referenced element, or if the element has no dartdoc.
+	 */
+	dartdoc?: string;
+
+	/**
+	 * A list of information about each of the parameters of the function being invoked.
+	 */
+	parameters: ParameterInfo[];
+
+	/**
+	 * The index of the paramter in the parameters collection at the specified offset.
+	 */
+	selectedParameterIndex: number;
+}
+
+/**
  * Force the re-analysis of everything contained in the specified
  * analysis roots. This will cause all previously computed analysis
  * results to be discarded and recomputed, and will cause all subscribed
@@ -1375,6 +1465,105 @@ export interface ExecutionDeleteContextRequest {
 }
 
 /**
+ * Request completion suggestions for the given runtime context.
+ * 
+ * It might take one or two requests of this type to get completion
+ * suggestions. The first request should have only "code", "offset",
+ * and "variables", but not "expressions". If there are sub-expressions that
+ * can have different runtime types, and are considered to be safe to
+ * evaluate at runtime (e.g. getters), so using their actual runtime types
+ * can improve completion results, the server will not include the
+ * "suggestions" field in the response, and instead will return the
+ * "expressions" field. The client will use debug API to get current runtime
+ * types for these sub-expressions and send another request, this time with
+ * "expressions". If there are no interesting sub-expressions to get
+ * runtime types for, or when the "expressions" field is provided by the
+ * client, the server will return "suggestions" in the response.
+ */
+export interface ExecutionGetSuggestionsRequest {
+	/**
+	 * The code to get suggestions in.
+	 */
+	code: string;
+
+	/**
+	 * The offset within the code to get suggestions at.
+	 */
+	offset: number;
+
+	/**
+	 * The path of the context file, e.g. the file of the current debugger
+	 * frame. The combination of the context file and context offset can
+	 * be used to ensure that all variables of the context are available
+	 * for completion (with their static types).
+	 */
+	contextFile: FilePath;
+
+	/**
+	 * The offset in the context file, e.g. the line offset in the current
+	 * debugger frame.
+	 */
+	contextOffset: number;
+
+	/**
+	 * The runtime context variables that are potentially referenced in the
+	 * code.
+	 */
+	variables: RuntimeCompletionVariable[];
+
+	/**
+	 * The list of sub-expressions in the code for which the client wants
+	 * to provide runtime types. It does not have to be the full list of
+	 * expressions requested by the server, for missing expressions their
+	 * static types will be used.
+	 * 
+	 * When this field is omitted, the server will return completion
+	 * suggestions only when there are no interesting sub-expressions in the
+	 * given code. The client may provide an empty list, in this case the
+	 * server will return completion suggestions.
+	 */
+	expressions?: RuntimeCompletionExpression[];
+}
+
+/**
+ * Request completion suggestions for the given runtime context.
+ * 
+ * It might take one or two requests of this type to get completion
+ * suggestions. The first request should have only "code", "offset",
+ * and "variables", but not "expressions". If there are sub-expressions that
+ * can have different runtime types, and are considered to be safe to
+ * evaluate at runtime (e.g. getters), so using their actual runtime types
+ * can improve completion results, the server will not include the
+ * "suggestions" field in the response, and instead will return the
+ * "expressions" field. The client will use debug API to get current runtime
+ * types for these sub-expressions and send another request, this time with
+ * "expressions". If there are no interesting sub-expressions to get
+ * runtime types for, or when the "expressions" field is provided by the
+ * client, the server will return "suggestions" in the response.
+ */
+export interface ExecutionGetSuggestionsResponse {
+	/**
+	 * The completion suggestions. In contrast to usual completion request,
+	 * suggestions for private elements also will be provided.
+	 * 
+	 * If there are sub-expressions that can have different runtime types,
+	 * and are considered to be safe to evaluate at runtime (e.g. getters),
+	 * so using their actual runtime types can improve completion results,
+	 * the server omits this field in the response, and instead will return
+	 * the "expressions" field.
+	 */
+	suggestions?: CompletionSuggestion[];
+
+	/**
+	 * The list of sub-expressions in the code for which the server would
+	 * like to know runtime types to provide better completion suggestions.
+	 * 
+	 * This field is omitted the field "suggestions" is returned.
+	 */
+	expressions?: RuntimeCompletionExpression[];
+}
+
+/**
  * Map a URI from the execution context to the file that it corresponds
  * to, or map a file to the URI that it corresponds to in the execution
  * context.
@@ -1620,6 +1809,72 @@ export interface KytheGetKytheEntriesResponse {
 	 * being generated or passed before the call to "getKytheEntries".
 	 */
 	files: FilePath[];
+}
+
+/**
+ * Return the change that adds the forDesignTime() constructor for the
+ * widget class at the given offset.
+ */
+export interface FlutterGetChangeAddForDesignTimeConstructorRequest {
+	/**
+	 * The file containing the code of the class.
+	 */
+	file: FilePath;
+
+	/**
+	 * The offset of the class in the code.
+	 */
+	offset: number;
+}
+
+/**
+ * Return the change that adds the forDesignTime() constructor for the
+ * widget class at the given offset.
+ */
+export interface FlutterGetChangeAddForDesignTimeConstructorResponse {
+	/**
+	 * The change that adds the forDesignTime() constructor.
+	 * If the change cannot be produced, an error is returned.
+	 */
+	change: SourceChange;
+}
+
+/**
+ * Subscribe for services that are specific to individual files.
+ * All previous subscriptions are replaced by the current set of
+ * subscriptions. If a given service is not included as a key in the map
+ * then no files will be subscribed to the service, exactly as if the
+ * service had been included in the map with an explicit empty list of
+ * files.
+ * 
+ * Note that this request determines the set of requested
+ * subscriptions. The actual set of subscriptions at any given
+ * time is the intersection of this set with the set of files
+ * currently subject to analysis. The files currently subject
+ * to analysis are the set of files contained within an actual
+ * analysis root but not excluded, plus all of the files
+ * transitively reachable from those files via import, export
+ * and part directives. (See analysis.setAnalysisRoots for an
+ * explanation of how the actual analysis roots are
+ * determined.) When the actual analysis roots change, the
+ * actual set of subscriptions is automatically updated, but
+ * the set of requested subscriptions is unchanged.
+ * 
+ * If a requested subscription is a directory it is ignored,
+ * but remains in the set of requested subscriptions so that if
+ * it later becomes a file it can be included in the set of
+ * actual subscriptions.
+ * 
+ * It is an error if any of the keys in the map are not valid
+ * services. If there is an error, then the existing
+ * subscriptions will remain unchanged.
+ */
+export interface FlutterSetSubscriptionsRequest {
+	/**
+	 * A table mapping services to a list of the files being
+	 * subscribed to the service.
+	 */
+	subscriptions: { [key: string]: FilePath[]; };
 }
 
 /**
@@ -2113,6 +2368,34 @@ export interface ExecutionLaunchDataNotification {
 }
 
 /**
+ * Reports the Flutter outline associated with a single file.
+ * 
+ * This notification is not subscribed to by default. Clients
+ * can subscribe by including the value "OUTLINE" in
+ * the list of services passed in an flutter.setSubscriptions
+ * request.
+ */
+export interface FlutterOutlineNotification {
+	/**
+	 * The file with which the outline is associated.
+	 */
+	file: FilePath;
+
+	/**
+	 * The outline associated with the file.
+	 */
+	outline: FlutterOutline;
+
+	/**
+	 * If the file has Flutter widgets that can be rendered, this field
+	 * has the instrumented content of the file, that allows associating
+	 * widgets with corresponding outline nodes. If there are no widgets
+	 * to render, this field is absent.
+	 */
+	instrumentedCode?: string;
+}
+
+/**
  * A list of fixes associated with a specific error.
  */
 export interface AnalysisErrorFixes {
@@ -2378,6 +2661,106 @@ export type ExecutableKind =
 export type ExecutionContextId = string;
 
 /**
+ * An expression for which we want to know its runtime type.
+ * In expressions like `a.b.c.where((e) => e.^)` we want to know the
+ * runtime type of `a.b.c` to enforce it statically at the time when we
+ * compute completion suggestions, and get better type for `e`.
+ */
+export interface RuntimeCompletionExpression {
+	/**
+	 * The offset of the expression in the code for completion.
+	 */
+	offset: number;
+
+	/**
+	 * The length of the expression in the code for completion.
+	 */
+	length: number;
+
+	/**
+	 * When the expression is sent from the server to the client, the
+	 * type is omitted. The client should fill the type when it sends the
+	 * request to the server again.
+	 */
+	type?: RuntimeCompletionExpressionType;
+}
+
+/**
+ * A variable in a runtime context.
+ */
+export interface RuntimeCompletionVariable {
+	/**
+	 * The name of the variable.
+	 * The name "this" has a special meaning and is used as an implicit
+	 * target for runtime completion, and in explicit "this" references.
+	 */
+	name: string;
+
+	/**
+	 * The type of the variable.
+	 */
+	type: RuntimeCompletionExpressionType;
+}
+
+/**
+ * A type at runtime.
+ */
+export interface RuntimeCompletionExpressionType {
+	/**
+	 * The path of the library that has this type.
+	 * Omitted if the type is not declared in any library, e.g. "dynamic",
+	 * or "void".
+	 */
+	libraryPath?: FilePath;
+
+	/**
+	 * The kind of the type.
+	 */
+	kind: RuntimeCompletionExpressionTypeKind;
+
+	/**
+	 * The name of the type. Omitted if the type does not have a name, e.g.
+	 * an inline function type.
+	 */
+	name?: string;
+
+	/**
+	 * The type arguments of the type.
+	 * Omitted if the type does not have type parameters.
+	 */
+	typeArguments?: RuntimeCompletionExpressionType[];
+
+	/**
+	 * If the type is a function type, the return type of the function.
+	 * Omitted if the type is not a function type.
+	 */
+	returnType?: RuntimeCompletionExpressionType;
+
+	/**
+	 * If the type is a function type, the types of the function parameters
+	 * of all kinds - required, optional positional, and optional named.
+	 * Omitted if the type is not a function type.
+	 */
+	parameterTypes?: RuntimeCompletionExpressionType[];
+
+	/**
+	 * If the type is a function type, the names of the function parameters
+	 * of all kinds - required, optional positional, and optional named.
+	 * The names of positional parameters are empty strings.
+	 * Omitted if the type is not a function type.
+	 */
+	parameterNames?: string[];
+}
+
+/**
+ * An enumeration of the kinds of runtime expression types.
+ */
+export type RuntimeCompletionExpressionTypeKind =
+	"DYNAMIC"
+	| "FUNCTION"
+	| "INTERFACE";
+
+/**
  * An enumeration of the services provided by the execution
  * domain.
  */
@@ -2390,6 +2773,179 @@ export type ExecutionService =
 export type FileKind =
 	"LIBRARY"
 	| "PART";
+
+/**
+ * An enumeration of the services provided by the flutter domain that
+ * are related to a specific list of files.
+ */
+export type FlutterService =
+	"OUTLINE";
+
+/**
+ * An node in the Flutter specific outline structure of a file.
+ */
+export interface FlutterOutline {
+	/**
+	 * The kind of the node.
+	 */
+	kind: FlutterOutlineKind;
+
+	/**
+	 * The offset of the first character of the element. This is different
+	 * than the offset in the Element, which is the offset of the name of the
+	 * element. It can be used, for example, to map locations in the file
+	 * back to an outline.
+	 */
+	offset: number;
+
+	/**
+	 * The length of the element.
+	 */
+	length: number;
+
+	/**
+	 * The offset of the first character of the element code, which is
+	 * neither documentation, nor annotation.
+	 */
+	codeOffset: number;
+
+	/**
+	 * The length of the element code.
+	 */
+	codeLength: number;
+
+	/**
+	 * The text label of the node children of the node.
+	 * It is provided for any FlutterOutlineKind.GENERIC node,
+	 * where better information is not available.
+	 */
+	label?: string;
+
+	/**
+	 * If this node is a Dart element, the description of it; omitted
+	 * otherwise.
+	 */
+	dartElement?: Element;
+
+	/**
+	 * Additional attributes for this node, which might be interesting
+	 * to display on the client. These attributes are usually arguments
+	 * for the instance creation or the invocation that created the widget.
+	 */
+	attributes?: FlutterOutlineAttribute[];
+
+	/**
+	 * If the node creates a new class instance, or a reference to an
+	 * instance, this field has the name of the class.
+	 */
+	className?: string;
+
+	/**
+	 * A short text description how this node is associated with the parent
+	 * node. For example "appBar" or "body" in Scaffold.
+	 */
+	parentAssociationLabel?: string;
+
+	/**
+	 * If FlutterOutlineKind.VARIABLE, the name of the variable.
+	 */
+	variableName?: string;
+
+	/**
+	 * The children of the node. The field will be omitted if the node has no
+	 * children.
+	 */
+	children?: FlutterOutline[];
+
+	/**
+	 * If the node is a widget, and it is instrumented, the unique identifier
+	 * of this widget, that can be used to associate rendering information
+	 * with this node.
+	 */
+	id?: number;
+
+	/**
+	 * True if the node is a widget class, so it can potentially be
+	 * rendered, even if it does not yet have the rendering constructor.
+	 * This field is omitted if the node is not a widget class.
+	 */
+	isWidgetClass?: boolean;
+
+	/**
+	 * If the node is a widget class that can be rendered for IDE, the name
+	 * of the constructor that should be used to instantiate the widget.
+	 * Empty string for default constructor. Absent if the node is not a
+	 * widget class that can be rendered.
+	 */
+	renderConstructor?: string;
+
+	/**
+	 * If the node is a StatefulWidget, and its state class is defined in
+	 * the same file, the name of the state class.
+	 */
+	stateClassName?: string;
+
+	/**
+	 * If the node is a StatefulWidget that can be rendered, and its state
+	 * class is defined in the same file, the offset of the state class code
+	 * in the file.
+	 */
+	stateOffset?: number;
+
+	/**
+	 * If the node is a StatefulWidget that can be rendered, and its state
+	 * class is defined in the same file, the length of the state class code
+	 * in the file.
+	 */
+	stateLength?: number;
+}
+
+/**
+ * An attribute for a FlutterOutline.
+ */
+export interface FlutterOutlineAttribute {
+	/**
+	 * The name of the attribute.
+	 */
+	name: string;
+
+	/**
+	 * The label of the attribute value, usually the Dart code.
+	 * It might be quite long, the client should abbreviate as needed.
+	 */
+	label: string;
+
+	/**
+	 * The boolean literal value of the attribute.
+	 * This field is absent if the value is not a boolean literal.
+	 */
+	literalValueBoolean?: boolean;
+
+	/**
+	 * The integer literal value of the attribute.
+	 * This field is absent if the value is not an integer literal.
+	 */
+	literalValueInteger?: number;
+
+	/**
+	 * The string literal value of the attribute.
+	 * This field is absent if the value is not a string literal.
+	 */
+	literalValueString?: string;
+}
+
+/**
+ * An enumeration of the kinds of FlutterOutline elements. The list of kinds
+ * might be expanded with time, clients must be able to handle new kinds
+ * in some general way.
+ */
+export type FlutterOutlineKind =
+	"DART_ELEMENT"
+	| "GENERIC"
+	| "NEW_INSTANCE"
+	| "INVOCATION"
+	| "VARIABLE"
+	| "PLACEHOLDER";
 
 /**
  * An enumeration of the services provided by the analysis domain that are
@@ -2669,6 +3225,9 @@ export type RequestErrorCode =
 	| "GET_KYTHE_ENTRIES_INVALID_FILE"
 	| "GET_NAVIGATION_INVALID_FILE"
 	| "GET_REACHABLE_SOURCES_INVALID_FILE"
+	| "GET_SIGNATURE_INVALID_FILE"
+	| "GET_SIGNATURE_INVALID_OFFSET"
+	| "GET_SIGNATURE_UNKNOWN_FUNCTION"
 	| "IMPORT_ELEMENTS_INVALID_FILE"
 	| "INVALID_ANALYSIS_ROOT"
 	| "INVALID_EXECUTION_CONTEXT"
@@ -2959,7 +3518,7 @@ export interface InlineMethodFeedback extends RefactoringFeedback {
 export interface RenameFeedback extends RefactoringFeedback {
 	/**
 	 * The offset to the beginning of the name selected to be
-	 * renamed.
+	 * renamed, or -1 if the name does not exist yet.
 	 */
 	offset: number;
 
@@ -3356,11 +3915,14 @@ export type FilePath = string;
  * An enumeration of the kinds of folding regions.
  */
 export type FoldingKind =
-	"COMMENT"
-	| "CLASS_MEMBER"
+	"ANNOTATIONS"
+	| "CLASS_BODY"
 	| "DIRECTIVES"
 	| "DOCUMENTATION_COMMENT"
-	| "TOP_LEVEL_DECLARATION";
+	| "FILE_HEADER"
+	| "FUNCTION_BODY"
+	| "INVOCATION"
+	| "LITERAL";
 
 /**
  * A description of a region that can be folded.
@@ -3741,11 +4303,50 @@ export interface Outline {
 	length: number;
 
 	/**
+	 * The offset of the first character of the element code, which is
+	 * neither documentation, nor annotation.
+	 */
+	codeOffset: number;
+
+	/**
+	 * The length of the element code.
+	 */
+	codeLength: number;
+
+	/**
 	 * The children of the node. The field will be omitted if the node has no
-	 * children.
+	 * children. Children are sorted by offset.
 	 */
 	children?: Outline[];
 }
+
+/**
+ * A description of a member that is being overridden.
+ */
+export interface ParameterInfo {
+	/**
+	 * The kind of the parameter.
+	 */
+	kind: ParameterKind;
+
+	/**
+	 * The name of the parameter.
+	 */
+	name: string;
+
+	/**
+	 * The type of the parameter.
+	 */
+	type: string;
+}
+
+/**
+ * An enumeration of the types of parameters.
+ */
+export type ParameterKind =
+	"NAMED"
+	| "OPTIONAL"
+	| "REQUIRED";
 
 /**
  * A position within a file.
@@ -3770,11 +4371,11 @@ export type RefactoringKind =
 	| "CONVERT_METHOD_TO_GETTER"
 	| "EXTRACT_LOCAL_VARIABLE"
 	| "EXTRACT_METHOD"
+	| "EXTRACT_WIDGET"
 	| "INLINE_LOCAL_VARIABLE"
 	| "INLINE_METHOD"
 	| "MOVE_FILE"
-	| "RENAME"
-	| "SORT_MEMBERS";
+	| "RENAME";
 
 /**
  * A description of a parameter in a method refactoring.
