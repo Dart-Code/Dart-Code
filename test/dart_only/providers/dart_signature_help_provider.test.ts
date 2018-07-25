@@ -70,4 +70,18 @@ main() {
 		assert.equal(sig.signatures[0].label, "a(String name, {int age, int otherAge})");
 	});
 
+	it("returns only named params correctly", async () => {
+		await setTestContent(`
+a({int age: 1, int otherAge: 2}) {}
+main() {
+  a("here
+}
+		`);
+		const sig = await getSignatureAt("here^");
+		assert.ok(sig);
+		// assert.equal(sig.activeParameter, 0);
+		assert.equal(sig.activeSignature, 0);
+		assert.equal(sig.signatures[0].label, "a({int age, int otherAge})");
+	});
+
 });
