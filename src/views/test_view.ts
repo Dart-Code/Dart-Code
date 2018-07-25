@@ -549,7 +549,7 @@ export class SuiteTreeItem extends TestItemTreeItem {
 		if (!ws)
 			return path.basename(file);
 		const rel = path.relative(fsPath(ws.uri), file);
-		return rel.startsWith("test/")
+		return rel.startsWith(`test${path.sep}`)
 			? rel.substr(5)
 			: rel;
 	}
