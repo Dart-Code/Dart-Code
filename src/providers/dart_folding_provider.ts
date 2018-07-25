@@ -37,7 +37,7 @@ export class DartFoldingProvider implements FoldingRangeProvider {
 
 	private getKind(kind: FoldingKind): FoldingRangeKind {
 		switch (kind) {
-			case "COMMENT":
+			case "FILE_HEADER":
 			case "DOCUMENTATION_COMMENT":
 				return FoldingRangeKind.Comment;
 			case "DIRECTIVES":
