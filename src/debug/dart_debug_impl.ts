@@ -4,7 +4,7 @@ import * as _ from "lodash";
 import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { logError } from "../utils/log";
+import { getLogHeader, logError } from "../utils/log";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
 import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm, LogCategory, LogMessage, LogSeverity, PromiseCompleter, safeSpawn, uriToFilePath } from "./utils";
@@ -195,8 +195,10 @@ export class DartDebugSession extends DebugSession {
 
 	protected log(message: string, severity = LogSeverity.Info) {
 		if (this.logFile) {
-			if (!this.logStream)
+			if (!this.logStream) {
 				this.logStream = fs.createWriteStream(this.logFile);
+				this.logStream.write(getLogHeader());
+			}
 			this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
 			if (this.maxLogLineLength && message.length > this.maxLogLineLength)
 				this.logStream.write(message.substring(0, this.maxLogLineLength) + "…\r\n");

@@ -1,7 +1,7 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
 import { IAmDisposable, LogSeverity, safeSpawn } from "../debug/utils";
-import { logError } from "../utils/log";
+import { getLogHeader, logError } from "../utils/log";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
@@ -209,8 +209,10 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 		this.currentLogFile = newLogFile;
 
-		if (!this.logStream)
+		if (!this.logStream) {
 			this.logStream = fs.createWriteStream(this.currentLogFile);
+			this.logStream.write(getLogHeader());
+		}
 		this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
 		if (this.maxLogLineLength && message.length > this.maxLogLineLength)
 			this.logStream.write(message.substring(0, this.maxLogLineLength) + "…\r\n");

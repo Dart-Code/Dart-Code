@@ -401,6 +401,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 function buildLogHeaders(sdks: util.Sdks) {
 	clearLogHeader();
+	addToLogHeader(() => `!! PLEASE REVIEW THIS LOG FOR SENSITIVE INFORMATION BEFORE SHARING !!`);
+	addToLogHeader(() => ``);
 	addToLogHeader(() => `Dart Code extension: ${util.extensionVersion}`);
 	addToLogHeader(() => `Flutter extension: ${vs.extensions.getExtension(flutterExtensionIdentifier).packageJSON.version}`);
 	addToLogHeader(() => `Platform: ${platformName}`);

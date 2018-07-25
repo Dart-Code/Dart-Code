@@ -72,6 +72,11 @@ const logHeader: string[] = [];
 export function clearLogHeader() {
 	logHeader.length = 0;
 }
+export function getLogHeader() {
+	if (!logHeader.length)
+		return "";
+	return logHeader.join(platformEol) + platformEol + platformEol;
+}
 export function addToLogHeader(f: () => string) {
 	try {
 		logHeader.push(f().replace("\r", "").replace("\n", "\r\n"));
@@ -85,9 +90,7 @@ export function logTo(file: string, logCategories?: LogCategory[]): ({ dispose: 
 		throw new Error("Path passed to logTo must be an absolute path");
 	const time = () => `[${(new Date()).toTimeString()}] `;
 	let logStream = fs.createWriteStream(file);
-	logStream.write(`!! PLEASE REVIEW THIS LOG FOR SENSITIVE INFORMATION BEFORE SHARING !!${platformEol}`);
-	logStream.write(`!! IT MAY CONTAIN PARTS OF YOUR PROJECT FILES                      !!${platformEol}${platformEol}`);
-	logStream.write(logHeader.join(platformEol) + platformEol + platformEol);
+	logStream.write(getLogHeader());
 	logStream.write(`${(new Date()).toDateString()} ${time()}Log file started${platformEol}`);
 	let logger = onLog((e) => {
 		if (logCategories && logCategories.indexOf(e.category) === -1)
