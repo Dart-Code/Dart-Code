@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { OpenFileTracker } from "../../../src/analysis/open_file_tracker";
 import { fsPath } from "../../../src/utils";
-import { logInfo } from "../../../src/utils/log";
+import { log, logInfo } from "../../../src/utils/log";
 import { TestOutlineVisitor } from "../../../src/utils/outline";
 import { makeRegexForTest } from "../../../src/utils/test";
 import { TestResultsProvider, TestStatus } from "../../../src/views/test_view";
@@ -188,12 +188,13 @@ describe("dart test debugger", () => {
 		// after running each test individually.
 
 		function checkResults(description: string) {
+			log(description);
 			const expectedResults = getExpectedResults();
 			const actualResults = makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider).join("\n");
 
 			assert.ok(expectedResults);
 			assert.ok(actualResults);
-			assert.equal(actualResults, expectedResults, description);
+			assert.equal(actualResults, expectedResults);
 		}
 
 		await runWithoutDebugging(helloWorldTestTreeFile);
