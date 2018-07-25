@@ -37,6 +37,7 @@ import { DartImplementationProvider } from "./providers/dart_implementation_prov
 import { DartLanguageConfiguration } from "./providers/dart_language_configuration";
 import { DartReferenceProvider } from "./providers/dart_reference_provider";
 import { DartRenameProvider } from "./providers/dart_rename_provider";
+import { DartSignatureHelpProvider } from "./providers/dart_signature_help_provider";
 import { DartTypeFormattingEditProvider } from "./providers/dart_type_formatting_edit_provider";
 import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
 import { DebugConfigProvider } from "./providers/debug_config_provider";
@@ -268,6 +269,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 		if (analyzer.capabilities.supportsCustomFolding && config.analysisServerFolding)
 			context.subscriptions.push(vs.languages.registerFoldingRangeProvider(DART_MODE, new DartFoldingProvider(analyzer)));
+
+		if (analyzer.capabilities.supportsGetSignature)
+			context.subscriptions.push(vs.languages.registerSignatureHelpProvider(DART_MODE, new DartSignatureHelpProvider(analyzer), "(", ","));
 
 		const documentSymbolProvider = new DartDocumentSymbolProvider(analyzer);
 		activeFileFilters.forEach((filter) => {
