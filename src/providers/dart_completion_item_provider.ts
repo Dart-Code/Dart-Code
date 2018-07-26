@@ -11,11 +11,13 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 	public provideCompletionItems(
 		document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext,
 	): Thenable<CompletionList> {
-		if (!this.shouldAllowCompletion(document, position, context))
-			return;
-		// Stash the next character so that we can avoid inserted additional parens if they already exist immediately after the cursor.
+		const line = document.lineAt(position.line).text.slice(0, position.character);
 		const nextCharacter = document.getText(new Range(position, position.translate({ characterDelta: 200 }))).trim().substr(0, 1);
 		const insertArgumentPlaceholders = config.for(document.uri).insertArgumentPlaceholders;
+
+		if (!this.shouldAllowCompletion(line, context))
+			return;
+
 		return new Promise<CompletionList>((resolve, reject) => {
 			this.analyzer.completionGetSuggestionsResults({
 				file: fsPath(document.uri),
@@ -28,11 +30,10 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		});
 	}
 
-	private shouldAllowCompletion(document: TextDocument, position: Position, context: CompletionContext): boolean {
+	private shouldAllowCompletion(line: string, context: CompletionContext): boolean {
 		// Filter out auto triggered completions on certain characters based on the previous
 		// characters (eg. to allow completion on " if it's part of an import).
 		if (context.triggerKind === CompletionTriggerKind.TriggerCharacter) {
-			const line = document.lineAt(position.line).text.slice(0, position.character);
 			switch (context.triggerCharacter) {
 				case "{":
 					return line.endsWith("${");
@@ -90,7 +91,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 					completionText.appendPlaceholder(""); // Put a tap stop between parens since there are optional args.
 				completionText.appendText(")");
 				completionText.appendPlaceholder("");
-			} else if (!nextCharacterIsOpenParen) {
+			} else if (insertArgumentPlaceholders && !nextCharacterIsOpenParen) {
 				completionText.appendText(suggestion.completion);
 				completionText.appendText("(");
 				if (hasParams)
@@ -143,7 +144,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			: this.getSuggestionKind(suggestion.kind);
 
 		const completion = new CompletionItem(label, kind);
-		completion.label = label;
+		completion.label = `${label} (${element ? element.kind : ""}) (${suggestion.kind})`;
 		completion.kind = kind;
 		completion.detail = (suggestion.isDeprecated ? "(deprecated) " : "") + detail;
 		completion.documentation = new MarkdownString(cleanDartdoc(suggestion.docSummary));
@@ -152,6 +153,15 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			document.positionAt(notification.replacementOffset),
 			document.positionAt(notification.replacementOffset + notification.replacementLength),
 		);
+		if (element) {
+			let chars = this.getCommitCharacters(suggestion.kind);
+			// If we're inserting placeholder args (no longer default), then we cannot
+			// commit on `(` or we'll get dupes (https://github.com/Microsoft/vscode/issues/42544).
+			if (insertArgumentPlaceholders) {
+				chars = chars.filter((c) => c !== "(");
+			}
+			completion.commitCharacters = chars;
+		}
 
 		const triggerCompletionsFor = ["import '';"];
 		if (triggerCompletionsFor.indexOf(label) !== -1)
@@ -241,6 +251,14 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				return CompletionItemKind.Method;
 			case "UNKNOWN":
 				return CompletionItemKind.Value;
+		}
+	}
+
+	private getCommitCharacters(kind: as.CompletionSuggestionKind): string[] {
+		switch (kind) {
+			case "IDENTIFIER":
+			case "INVOCATION":
+				return [".", ",", "(", "["];
 		}
 	}
 }
