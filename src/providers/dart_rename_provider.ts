@@ -5,10 +5,7 @@ import * as channels from "../commands/channels";
 import { fsPath } from "../utils";
 
 export class DartRenameProvider implements RenameProvider {
-	private analyzer: Analyzer;
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-	}
+	constructor(private readonly analyzer: Analyzer) { }
 
 	public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): Thenable<WorkspaceEdit> {
 		return this.doRename(document, position, newName, token);

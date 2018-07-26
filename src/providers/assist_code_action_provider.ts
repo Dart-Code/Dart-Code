@@ -5,10 +5,7 @@ import { fsPath, isAnalyzableAndInWorkspace } from "../utils";
 import { logError } from "../utils/log";
 
 export class AssistCodeActionProvider implements CodeActionProvider {
-	private analyzer: Analyzer;
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-	}
+	constructor(private readonly analyzer: Analyzer) { }
 
 	public readonly metadata: CodeActionProviderMetadata = {
 		providedCodeActionKinds: [CodeActionKind.Refactor],

@@ -5,10 +5,7 @@ import { isAnalyzableAndInWorkspace } from "../utils";
 const SourceSortMembers = CodeActionKind.Source.append("sortMembers");
 
 export class SourceCodeActionProvider implements CodeActionProvider {
-	private analyzer: Analyzer;
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-	}
+	constructor(private readonly analyzer: Analyzer) { }
 
 	public readonly metadata: CodeActionProviderMetadata = {
 		providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports, SourceSortMembers],

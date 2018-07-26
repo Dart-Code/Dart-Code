@@ -7,10 +7,7 @@ import { fsPath } from "../utils";
 import { logError } from "../utils/log";
 
 export class DartHoverProvider implements HoverProvider {
-	private analyzer: Analyzer;
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-	}
+	constructor(private readonly analyzer: Analyzer) { }
 
 	public provideHover(document: TextDocument, position: Position, token: CancellationToken): Thenable<Hover> {
 		return new Promise<Hover>((resolve, reject) => {

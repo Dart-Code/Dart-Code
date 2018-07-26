@@ -1,11 +1,11 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { ProgressLocation, env, version as codeVersion, window, workspace } from "vscode";
+import { env, ProgressLocation, version as codeVersion, window, workspace } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { LogCategory, PromiseCompleter } from "../debug/utils";
-import { ProjectType, Sdks, extensionVersion, getRandomInt, getSdkVersion, isStableSdk } from "../utils";
+import { extensionVersion, getRandomInt, getSdkVersion, isStableSdk, ProjectType, Sdks } from "../utils";
 import { logError } from "../utils/log";
 import { RequestError, ServerErrorNotification, ServerStatusNotification } from "./analysis_server_types";
 import { Analyzer } from "./analyzer";
@@ -17,15 +17,9 @@ let errorCount = 0;
 
 export class AnalyzerStatusReporter {
 	private analysisInProgress: boolean;
-	private analyzer: Analyzer;
-	private sdks: Sdks;
-	private analytics: Analytics;
 	private analyzingPromise: PromiseCompleter<void>;
 
-	constructor(analyzer: Analyzer, sdks: Sdks, analytics: Analytics) {
-		this.analyzer = analyzer;
-		this.sdks = sdks;
-		this.analytics = analytics;
+	constructor(private readonly analyzer: Analyzer, private readonly sdks: Sdks, private readonly analytics: Analytics) {
 		analyzer.registerForServerStatus((n) => this.handleServerStatus(n));
 		analyzer.registerForServerError((e) => this.handleServerError(e));
 		analyzer.registerForRequestError((e) => this.handleRequestError(e));

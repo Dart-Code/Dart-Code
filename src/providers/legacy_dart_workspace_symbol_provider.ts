@@ -5,10 +5,7 @@ import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { fsPath, isWithinWorkspace, toRangeOnLine } from "../utils";
 
 export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
-	private analyzer: Analyzer;
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-	}
+	constructor(private readonly analyzer: Analyzer) { }
 
 	public provideWorkspaceSymbols(query: string, token: CancellationToken): Thenable<SymbolInformation[]> {
 		if (query.length === 0)

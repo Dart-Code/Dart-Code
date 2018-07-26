@@ -10,10 +10,7 @@ const supportedRefactors: { [key: string]: string } = {
 };
 
 export class RefactorCodeActionProvider implements CodeActionProvider {
-	private analyzer: Analyzer;
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-	}
+	constructor(private readonly analyzer: Analyzer) { }
 
 	public readonly metadata: CodeActionProviderMetadata = {
 		providedCodeActionKinds: [CodeActionKind.Refactor],

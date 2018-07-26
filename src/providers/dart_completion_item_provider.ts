@@ -6,10 +6,7 @@ import { cleanDartdoc } from "../dartdocs";
 import { fsPath } from "../utils";
 
 export class DartCompletionItemProvider implements CompletionItemProvider {
-	private analyzer: Analyzer;
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-	}
+	constructor(private readonly analyzer: Analyzer) { }
 
 	public provideCompletionItems(
 		document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext,
