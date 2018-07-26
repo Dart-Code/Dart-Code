@@ -113,9 +113,9 @@ export class SdkCommands {
 					}
 				}
 
-				// 	// if folder doesn't exist, create it
+				// if folder doesn't exist, create it
 				if (!fs.existsSync(this.flutterScreenshotPath)) {
-					fs.mkdirSync(this.flutterScreenshotPath);
+					util.mkDirRecursive(this.flutterScreenshotPath);
 				}
 			}
 
@@ -123,10 +123,10 @@ export class SdkCommands {
 
 			screenshotResult.then(async (_) => {
 				if (shouldNotify) {
-					const res = await vs.window.showInformationMessage("Screenshot saved at " + this.flutterScreenshotPath.toString(), "Open folder");
+					const res = await vs.window.showInformationMessage(`Screenshot saved at ${this.flutterScreenshotPath}`, "Open Folder");
 					if (res) {
 						const uri = vs.Uri.parse(this.flutterScreenshotPath);
-						// TODO: open folder in file explorer.
+						await vs.commands.executeCommand("revealFileInOS", Uri.parse(this.flutterScreenshotPath));
 					}
 				}
 			});
@@ -312,29 +312,6 @@ export class SdkCommands {
 		const openInNewWindow = hasFoldersOpen;
 		vs.commands.executeCommand("vscode.openFolder", projectFolderUri, openInNewWindow);
 	}
-
-	// private async createFlutterScreenshot(): Promise<void> {
-	// 	// get screenshot path
-	// 	let screenshotPath = config.flutterScreenshotPath;
-
-	// 	// if it's not valid or missing, save it in the user's home directory
-	// 	if (screenshotPath == null) {
-	// 		screenshotPath = os.homedir();
-	// 	}
-
-	// 	// if folder doesn't exist, create it
-	// 	if (!fs.existsSync(screenshotPath)) {
-	// 		fs.mkdirSync(screenshotPath);
-	// 	}
-
-	// 	// invoke flutter screenshot with the Uri
-	// 	const screenshotUri = vs.Uri.file(screenshotPath);
-
-	// 	this.runFlutter(["screenshot"], screenshotUri);
-
-	// 	// tell the user where to find the screenshot
-	// 	vs.window.showInformationMessage("Flutter screenshot saved at " + screenshotUri.toString());
-	// }
 
 	private validateFlutterProjectName(input: string) {
 		if (!flutterNameRegex.test(input))
