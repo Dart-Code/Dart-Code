@@ -8,6 +8,8 @@ import { TRACK_WIDGET_CREATION_ENABLED } from "../providers/debug_config_provide
 import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../utils";
 import { handleDebugLogEvent } from "../utils/log";
 
+export const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidget";
+
 let debugPaintingEnabled = false;
 let performanceOverlayEnabled = false;
 let repaintRainbowEnabled = false;
@@ -138,6 +140,7 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => { debugModeBannerEnabled = !debugModeBannerEnabled; this.sendServiceSetting("ext.flutter.debugAllowBanner"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => { paintBaselinesEnabled = !paintBaselinesEnabled; this.sendServiceSetting("ext.flutter.debugPaintBaselinesEnabled"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.inspectWidget", () => { widgetInspectorEnabled = true; this.sendServiceSetting("ext.flutter.debugWidgetInspector"); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => { widgetInspectorEnabled = false; this.sendServiceSetting("ext.flutter.debugWidgetInspector"); }));
 
 		// Open Observatory.
 		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", async () => {
@@ -257,8 +260,12 @@ export class DebugCommands {
 
 	private serviceSettings: { [id: string]: () => void } = {};
 	private sendServiceSetting(id: string) {
-		if (this.serviceSettings[id] && this.enabledServiceExtensions.indexOf(id) !== -1)
+		if (this.serviceSettings[id] && this.enabledServiceExtensions.indexOf(id) !== -1) {
 			this.serviceSettings[id]();
+
+			if (id === "ext.flutter.debugWidgetInspector")
+				vs.commands.executeCommand("setContext", IS_INSPECTING_WIDGET_CONTEXT, widgetInspectorEnabled);
+		}
 	}
 
 	private sendAllServiceSettings() {
