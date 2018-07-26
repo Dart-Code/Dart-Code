@@ -84,6 +84,7 @@ class ResourceConfig {
 
 	get debugSdkLibraries() { return this.getConfig<boolean>("debugSdkLibraries"); }
 	get debugExternalLibraries() { return this.getConfig<boolean>("debugExternalLibraries"); }
+	get enableCompletionCommitCharacters() { return this.getConfig<boolean>("enableCompletionCommitCharacters"); }
 	get evaluateGettersInDebugViews() { return this.getConfig<boolean>("evaluateGettersInDebugViews"); }
 	get insertArgumentPlaceholders() { return this.getConfig<boolean>("insertArgumentPlaceholders"); }
 	get lineLength() { return this.getConfig<number>("lineLength"); }
