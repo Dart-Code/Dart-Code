@@ -159,7 +159,6 @@ describe("dart cli debugger", () => {
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
-		const printDef = await getDefinition(printCall);
 		const config = await startDebugger(helloWorldMainFile, { debugSdkLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
@@ -237,6 +236,32 @@ describe("dart cli debugger", () => {
 			dc.assertStoppedLocation("step", {
 				// Ensure we stayed in the current file
 				path: fsPath(helloWorldHttpFile),
+			}),
+			dc.stepIn(),
+		]);
+	});
+
+	it("downloads SDK source code from the VM", async () => {
+		await openFile(helloWorldMainFile);
+		// Get location for `print`
+		const printCall = positionOf("pri^nt(");
+		const config = await startDebugger(helloWorldMainFile, { debugSdkLibraries: true });
+		await dc.hitBreakpoint(config, {
+			line: printCall.line + 1,
+			path: fsPath(helloWorldMainFile),
+		});
+		await Promise.all([
+			dc.assertStoppedLocation("step", {
+				// SDK source will have no filename, because we download it
+				path: null,
+			}).then(async (response) => {
+				// Ensure the top stack frame matches
+				const frame = response.body.stackFrames[0];
+				assert.equal(frame.source.path, null);
+				assert.equal(frame.source.name, "dart:core/print.dart");
+				const source = await dc.sourceRequest({ source: frame.source, sourceReference: frame.source.sourceReference });
+				assert.ok(source.body.content);
+				assert.notEqual(source.body.content.indexOf("void print(Object object) {"), -1);
 			}),
 			dc.stepIn(),
 		]);
