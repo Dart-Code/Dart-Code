@@ -43,6 +43,9 @@ export class DartSignatureHelpProvider implements vs.SignatureHelpProvider {
 	}
 
 	private getLabel(p: ParameterInfo): string {
-		return `${p.type} ${p.name}`;
+		const def = p.defaultValue
+			? p.kind === "NAMED" ? `: ${p.defaultValue}` : ` = ${p.defaultValue}`
+			: "";
+		return `${p.type} ${p.name}${def}`;
 	}
 }
