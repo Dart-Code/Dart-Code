@@ -606,7 +606,7 @@
 				"dart.insertArgumentPlaceholders": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to insert argument placeholders during code completions. Enabling this will prevent automatic commit of methods when pressing the `(` key.",
+					"description": "Whether to insert argument placeholders during code completions. This feature is automatically disabled when enableCompletionCommitCharacters is enabled.",
 					"scope": "resource"
 				},
 				"dart.showTestCodeLens": {
