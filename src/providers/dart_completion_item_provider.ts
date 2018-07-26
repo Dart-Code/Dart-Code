@@ -13,7 +13,9 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 	): Thenable<CompletionList> {
 		const line = document.lineAt(position.line).text.slice(0, position.character);
 		const nextCharacter = document.getText(new Range(position, position.translate({ characterDelta: 200 }))).trim().substr(0, 1);
-		const insertArgumentPlaceholders = config.for(document.uri).insertArgumentPlaceholders;
+		const conf = config.for(document.uri);
+		const enableCommitCharacters = conf.enableCompletionCommitCharacters;
+		const insertArgumentPlaceholders = !enableCommitCharacters && conf.insertArgumentPlaceholders;
 
 		if (!this.shouldAllowCompletion(line, context))
 			return;
@@ -23,7 +25,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				file: fsPath(document.uri),
 				offset: document.offsetAt(position),
 			}).then((resp) => {
-				resolve(new CompletionList(resp.results.map((r) => this.convertResult(document, nextCharacter, insertArgumentPlaceholders, resp, r))));
+				resolve(new CompletionList(resp.results.map((r) => this.convertResult(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, resp, r))));
 			},
 				() => reject(),
 			);
@@ -53,7 +55,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 	}
 
 	private convertResult(
-		document: TextDocument, nextCharacter: string, insertArgumentPlaceholders: boolean, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion,
+		document: TextDocument, nextCharacter: string, enableCommitCharacters: boolean, insertArgumentPlaceholders: boolean, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion,
 	): CompletionItem {
 		const element = suggestion.element;
 		const elementKind = element ? this.getElementKind(element.kind) : null;
@@ -153,15 +155,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			document.positionAt(notification.replacementOffset),
 			document.positionAt(notification.replacementOffset + notification.replacementLength),
 		);
-		if (element) {
-			let chars = this.getCommitCharacters(suggestion.kind);
-			// If we're inserting placeholder args (no longer default), then we cannot
-			// commit on `(` or we'll get dupes (https://github.com/Microsoft/vscode/issues/42544).
-			if (insertArgumentPlaceholders) {
-				chars = chars.filter((c) => c !== "(");
-			}
-			completion.commitCharacters = chars;
-		}
+		if (enableCommitCharacters)
+			completion.commitCharacters = this.getCommitCharacters(suggestion.kind);
 
 		const triggerCompletionsFor = ["import '';"];
 		if (triggerCompletionsFor.indexOf(label) !== -1)

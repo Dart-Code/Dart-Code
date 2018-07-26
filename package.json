@@ -566,6 +566,12 @@
 					"description": "Whether external libraries should be marked as debuggable.",
 					"scope": "resource"
 				},
+				"dart.enableCompletionCommitCharacters": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to automatically commit the selected completion item when pressing certain characters such as . , ( and [.",
+					"scope": "resource"
+				},
 				"dart.evaluateGettersInDebugViews": {
 					"type": "boolean",
 					"default": true,
