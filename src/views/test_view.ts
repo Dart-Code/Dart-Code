@@ -489,7 +489,7 @@ class SuiteData {
 	}
 }
 
-class TestItemTreeItem extends vs.TreeItem {
+abstract class TestItemTreeItem extends vs.TreeItem {
 	private _isStale = false; // tslint:disable-line:variable-name
 	private _status: TestStatus = TestStatus.Unknown; // tslint:disable-line:variable-name
 	// To avoid the sort changing on every status change (stale, running, etc.) this
@@ -625,7 +625,14 @@ class GroupTreeItem extends TestItemTreeItem {
 
 	set group(group: Group) {
 		this._group = group;
-		this.label = group.name;
+		const parent = this.parent;
+		this.label = parent && parent instanceof GroupTreeItem && parent.fullName && group.name.startsWith(`${parent.fullName} `)
+			? group.name.substr(parent.fullName.length + 1) // +1 because of the space (included above).
+			: group.name;
+	}
+
+	get fullName(): string {
+		return this._group.name;
 	}
 }
 
@@ -660,8 +667,17 @@ class TestTreeItem extends TestItemTreeItem {
 
 	set test(test: Test) {
 		this._test = test;
-		this.label = test.name;
 		this.outputEvents.length = 0;
+
+		// Update the label.
+		const parent = this.parent;
+		this.label = parent && parent instanceof GroupTreeItem && parent.fullName && test.name.startsWith(`${parent.fullName} `)
+			? test.name.substr(parent.fullName.length + 1) // +1 because of the space (included above).
+			: test.name;
+	}
+
+	get fullName(): string {
+		return this._test.name;
 	}
 }
 
