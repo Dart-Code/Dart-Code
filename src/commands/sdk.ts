@@ -125,7 +125,6 @@ export class SdkCommands {
 				if (shouldNotify) {
 					const res = await vs.window.showInformationMessage(`Screenshot saved at ${this.flutterScreenshotPath}`, "Open Folder");
 					if (res) {
-						const uri = vs.Uri.parse(this.flutterScreenshotPath);
 						await vs.commands.executeCommand("revealFileInOS", Uri.parse(this.flutterScreenshotPath));
 					}
 				}
