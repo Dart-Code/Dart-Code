@@ -4,7 +4,6 @@ import { Analyzer } from "../analysis/analyzer";
 import { fsPath, isAnalyzable } from "../utils";
 
 export class ClosingLabelsDecorations implements vs.Disposable {
-	private analyzer: Analyzer;
 	private subscriptions: vs.Disposable[] = [];
 	private activeEditor: vs.TextEditor;
 	private closingLabels: as.AnalysisClosingLabelsNotification;
@@ -18,9 +17,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 		rangeBehavior: vs.DecorationRangeBehavior.ClosedOpen,
 	});
 
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-
+	constructor(private readonly analyzer: Analyzer) {
 		this.subscriptions.push(this.analyzer.registerForAnalysisClosingLabels((n) => {
 			if (this.activeEditor && n.file === fsPath(this.activeEditor.document.uri)) {
 				this.closingLabels = n;

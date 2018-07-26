@@ -6,14 +6,9 @@ import { fsPath } from "../utils";
 import { logWarn } from "../utils/log";
 
 export class EditCommands implements vs.Disposable {
-	private context: vs.ExtensionContext;
-	private analyzer: Analyzer;
 	private commands: vs.Disposable[] = [];
 
-	constructor(context: vs.ExtensionContext, analyzer: Analyzer) {
-		this.context = context;
-		this.analyzer = analyzer;
-
+	constructor(private readonly context: vs.ExtensionContext, private readonly analyzer: Analyzer) {
 		this.commands.push(
 			vs.commands.registerCommand("_dart.organizeImports", this.organizeImports, this),
 			vs.commands.registerCommand("dart.sortMembers", this.sortMembers, this),

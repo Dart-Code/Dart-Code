@@ -6,10 +6,7 @@ import { logError } from "../utils/log";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
 
 export class FixCodeActionProvider implements CodeActionProvider {
-	private analyzer: Analyzer;
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-	}
+	constructor(private readonly analyzer: Analyzer) { }
 
 	public readonly metadata: CodeActionProviderMetadata = {
 		providedCodeActionKinds: [CodeActionKind.QuickFix],

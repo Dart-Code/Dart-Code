@@ -5,10 +5,7 @@ import { config } from "../config";
 import { fsPath } from "../utils";
 
 export class DartTypeFormattingEditProvider implements OnTypeFormattingEditProvider {
-	private analyzer: Analyzer;
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-	}
+	constructor(private readonly analyzer: Analyzer) { }
 
 	public provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, token: CancellationToken): Thenable<TextEdit[]> {
 		return new Promise<TextEdit[]>((resolve, reject) => {

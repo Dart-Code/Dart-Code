@@ -12,10 +12,8 @@ const folding: { [key: string]: FoldingRegion[] } = {};
 
 export class OpenFileTracker implements IAmDisposable {
 	private disposables: Disposable[] = [];
-	private analyzer: Analyzer;
 	private lastPriorityFiles: string[] = [];
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
+	constructor(private readonly analyzer: Analyzer) {
 		this.disposables.push(workspace.onDidOpenTextDocument((td) => this.updatePriorityFiles()));
 		this.disposables.push(workspace.onDidCloseTextDocument((td) => {
 			delete outlines[fsPath(td.uri)];

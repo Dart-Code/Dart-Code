@@ -5,12 +5,7 @@ import { config } from "../config";
 import { toRangeOnLine } from "../utils";
 
 export class DartDiagnosticProvider {
-	private analyzer: Analyzer;
-	private diagnostics: DiagnosticCollection;
-	constructor(analyzer: Analyzer, diagnostics: DiagnosticCollection) {
-		this.analyzer = analyzer;
-		this.diagnostics = diagnostics;
-
+	constructor(private readonly analyzer: Analyzer, private readonly diagnostics: DiagnosticCollection) {
 		this.analyzer.registerForAnalysisErrors((es) => this.handleErrors(es));
 
 		// Fired when files are deleted

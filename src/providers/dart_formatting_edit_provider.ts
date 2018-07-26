@@ -6,10 +6,7 @@ import { fsPath } from "../utils";
 import { logError } from "../utils/log";
 
 export class DartFormattingEditProvider implements DocumentFormattingEditProvider {
-	private analyzer: Analyzer;
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-	}
+	constructor(private readonly analyzer: Analyzer) { }
 
 	public provideDocumentFormattingEdits(document: TextDocument, options: FormattingOptions, token: CancellationToken): Thenable<TextEdit[]> {
 		return new Promise<TextEdit[]>((resolve, reject) => {

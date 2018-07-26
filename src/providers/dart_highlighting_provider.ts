@@ -3,10 +3,7 @@ import { Analyzer } from "../analysis/analyzer";
 import { OpenFileTracker } from "../analysis/open_file_tracker";
 
 export class DartDocumentHighlightProvider implements DocumentHighlightProvider {
-	private analyzer: Analyzer;
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-	}
+	constructor(private readonly analyzer: Analyzer) { }
 
 	public provideDocumentHighlights(
 		document: TextDocument, position: Position, token: CancellationToken,

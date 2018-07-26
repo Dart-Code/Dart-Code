@@ -4,10 +4,7 @@ import { Analyzer } from "../analysis/analyzer";
 import { OpenFileTracker } from "../analysis/open_file_tracker";
 
 export class DartFoldingProvider implements FoldingRangeProvider {
-	private analyzer: Analyzer;
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-	}
+	constructor(private readonly analyzer: Analyzer) { }
 
 	public async provideFoldingRanges(document: TextDocument, context: FoldingContext, token: CancellationToken): Promise<FoldingRange[]> {
 		// Wait for any current analysis to complete (eg. if we've just opened a project it

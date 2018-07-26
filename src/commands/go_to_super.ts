@@ -7,11 +7,8 @@ import { findNearestOutlineNode } from "../utils/outline";
 
 export class GoToSuperCommand implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
-	private analyzer: Analyzer;
 
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-
+	constructor(private readonly analyzer: Analyzer) {
 		this.disposables.push(vs.commands.registerCommand("dart.goToSuper", this.goToSuper, this));
 	}
 

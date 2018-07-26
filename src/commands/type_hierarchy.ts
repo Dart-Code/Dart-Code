@@ -5,12 +5,9 @@ import * as editors from "../editors";
 import { fsPath, toRangeOnLine } from "../utils";
 
 export class TypeHierarchyCommand implements vs.Disposable {
-	private analyzer: Analyzer;
 	private disposables: vs.Disposable[] = [];
 
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-
+	constructor(private readonly analyzer: Analyzer) {
 		this.disposables.push(
 			vs.commands.registerCommand("dart.showTypeHierarchy", this.showTypeHierarchy, this),
 		);

@@ -4,10 +4,7 @@ import * as util from "../utils";
 import { fsPath } from "../utils";
 
 export class DartReferenceProvider implements ReferenceProvider, DefinitionProvider {
-	private analyzer: Analyzer;
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-	}
+	constructor(private readonly analyzer: Analyzer) { }
 
 	public async provideReferences(document: TextDocument, position: Position, context: ReferenceContext, token: CancellationToken): Promise<Location[]> {
 		// If we want to include the decleration, kick off a request for that.

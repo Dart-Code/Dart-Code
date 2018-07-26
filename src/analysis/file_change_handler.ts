@@ -7,11 +7,8 @@ import { Analyzer } from "./analyzer";
 
 export class FileChangeHandler implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
-	private analyzer: Analyzer;
 	private readonly filesWarnedAbout = new Set<string>();
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-
+	constructor(private readonly analyzer: Analyzer) {
 		this.disposables.push(
 			vs.workspace.onDidOpenTextDocument((td) => this.onDidOpenTextDocument(td)),
 			vs.workspace.onDidChangeTextDocument((e) => this.onDidChangeTextDocument(e)),

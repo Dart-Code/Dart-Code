@@ -12,14 +12,9 @@ const refactorOptions: { [key: string]: (feedback: as.RefactoringFeedback) => as
 };
 
 export class RefactorCommands implements vs.Disposable {
-	private context: vs.ExtensionContext;
-	private analyzer: Analyzer;
 	private commands: vs.Disposable[] = [];
 
-	constructor(context: vs.ExtensionContext, analyzer: Analyzer) {
-		this.context = context;
-		this.analyzer = analyzer;
-
+	constructor(private readonly context: vs.ExtensionContext, private readonly analyzer: Analyzer) {
 		this.commands.push(
 			vs.commands.registerCommand("_dart.performRefactor", this.performRefactor, this),
 		);
