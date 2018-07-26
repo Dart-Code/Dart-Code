@@ -1,10 +1,10 @@
 import * as vs from "vscode";
-import { activate, ensureTestContentWithCursorPos, ext, rangeOf, select, setTestContent, waitForEditorChange } from "../../helpers";
+import { activate, ensureTestContentWithCursorPos, extApi, rangeOf, select, setTestContent, waitForEditorChange } from "../../helpers";
 
 describe("complete statement", () => {
 	beforeEach(() => activate());
 	beforeEach("skip if not got complete statement fix", function () {
-		if (!ext.exports.analyzerCapabilities.hasCompleteStatementFix)
+		if (!extApi.analyzerCapabilities.hasCompleteStatementFix)
 			this.skip();
 	});
 

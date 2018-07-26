@@ -1,6 +1,6 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
-import { IAmDisposable, safeSpawn } from "../debug/utils";
+import { IAmDisposable, LogSeverity, safeSpawn } from "../debug/utils";
 import { logError } from "../utils/log";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
@@ -19,7 +19,8 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 	constructor(
 		public readonly getLogFile: () => string,
-		public readonly logger: (message: string) => void,
+		public readonly logger: (message: string, severity: LogSeverity) => void,
+		public readonly maxLogLineLength: number,
 		public messagesWrappedInBrackets: boolean = false,
 		public readonly treatHandlingErrorsAsUnhandledMessages: boolean = false) {
 		this.currentLogFile = getLogFile();
@@ -45,7 +46,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 				this.processMessageBuffer();
 		});
 		this.process.stderr.on("data", (data: Buffer) => {
-			this.logTraffic(`ERR ${data.toString()}`);
+			this.logTraffic(`${data.toString()}`, LogSeverity.Error);
 		});
 		this.process.on("exit", (data: Buffer) => {
 			this.processExited = true;
@@ -194,9 +195,8 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		return this.subscribe(this.requestErrorSubscriptions, subscriber);
 	}
 
-	protected logTraffic(message: string): void {
-		this.logger(message);
-		const max: number = 2000;
+	protected logTraffic(message: string, severity = LogSeverity.Info): void {
+		this.logger(message, severity);
 
 		const newLogFile = this.getLogFile();
 		if (newLogFile !== this.currentLogFile && this.logStream) {
@@ -212,8 +212,8 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		if (!this.logStream)
 			this.logStream = fs.createWriteStream(this.currentLogFile);
 		this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
-		if (message.length > max)
-			this.logStream.write(message.substring(0, max) + "…\r\n");
+		if (this.maxLogLineLength && message.length > this.maxLogLineLength)
+			this.logStream.write(message.substring(0, this.maxLogLineLength) + "…\r\n");
 		else
 			this.logStream.write(message.trim() + "\r\n");
 	}
@@ -228,6 +228,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			try {
 				process.kill(pid);
 			} catch (e) {
+				// TODO: Logger knows the category!
 				logError({ message: e.toString() });
 			}
 		}

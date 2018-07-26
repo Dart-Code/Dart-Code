@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../src/utils";
-import { activate, doc, ensureLocation, ensureNoLocation, ext, helloWorldFolder, positionOf, rangeOf } from "../../helpers";
+import { activate, doc, ensureLocation, ensureNoLocation, extApi, helloWorldFolder, positionOf, rangeOf } from "../../helpers";
 
 const testFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_implementation.dart"));
 
@@ -20,7 +20,7 @@ describe("dart_implementation_provider", () => {
 	it("does not return anything for blank areas of the document", async function () {
 		// This test fails on Dart v1 because the outline ranges include the leading whitespace so this gets snapped
 		// to the next item. This has changed in v2.
-		if (!ext.exports.analyzerCapabilities.isDart2) {
+		if (!extApi.analyzerCapabilities.isDart2) {
 			this.skip();
 		}
 		const impls = await getImplementationsAt("\n^\n");
@@ -92,5 +92,17 @@ describe("dart_implementation_provider", () => {
 		const impls = await getImplementationsAt("^void b();");
 		ensureLocation(impls, testFile, rangeOf("void |b|() /* B */ {"));
 		ensureLocation(impls, testFile, rangeOf("void |b|() /* C */ {"));
+	});
+
+	it("returns implementations when invoked at call sites", async function () {
+		// Only Dart v2 gets all of these results.
+		if (!extApi.analyzerCapabilities.isDart2) {
+			this.skip();
+		}
+		const impls = await getImplementationsAt("e.^b();");
+		ensureLocation(impls, testFile, rangeOf("void |b|() /* B */ {"));
+		ensureLocation(impls, testFile, rangeOf("void |b|() /* C */ {"));
+		ensureLocation(impls, testFile, rangeOf("void |b|() /* D */ {"));
+		ensureLocation(impls, testFile, rangeOf("void |b|() /* F */ {"));
 	});
 });

@@ -4,6 +4,7 @@ import * as vs from "vscode";
 import { getChannel } from "../commands/channels";
 import { extensionPath } from "../extension";
 import { fsPath } from "../utils";
+import { getLaunchConfig } from "../utils/test";
 import { ErrorNotification, Group, GroupNotification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "./test_protocol";
 
 const DART_TEST_SUITE_NODE = "dart-code:testSuiteNode";
@@ -18,35 +19,45 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	public readonly onDidChangeTreeData: vs.Event<vs.TreeItem | undefined> = this.onDidChangeTreeDataEmitter.event;
 	private onDidStartTestsEmitter: vs.EventEmitter<vs.TreeItem | undefined> = new vs.EventEmitter<vs.TreeItem | undefined>();
 	public readonly onDidStartTests: vs.Event<vs.TreeItem | undefined> = this.onDidStartTestsEmitter.event;
+	private onFirstFailureEmitter: vs.EventEmitter<vs.TreeItem | undefined> = new vs.EventEmitter<vs.TreeItem | undefined>();
+	public readonly onFirstFailure: vs.Event<vs.TreeItem | undefined> = this.onFirstFailureEmitter.event;
 
 	// Set this flag we know when a new run starts so we can show the tree; however
 	// we can't show it until we render a node (we can only call reveal on a node) so
 	// we need to delay this until the suite starts.
-	public static shouldShowTreeOnNextSuiteStart = true;
+	private static isNewTestRun = true;
+	private static nextFailureIsFirst = true;
+
+	public static flagStart(): void {
+		TestResultsProvider.isNewTestRun = true;
+		TestResultsProvider.nextFailureIsFirst = true;
+	}
 
 	private owningDebugSessions: { [key: string]: vs.DebugSession } = {};
 
 	constructor() {
-		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
-			if (e.event === "dart.testRunNotification") {
-				// If we're starting a suite, record us as the owner so we can clean up later
-				if (e.body.notification.type === "suite")
-					this.owningDebugSessions[e.body.suitePath] = e.session;
-
-				this.handleNotification(e.body.suitePath, e.body.notification);
-			}
-		}));
+		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleSessionEnd(session)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | TestTreeItem) => {
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
 			vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(treeNode.resourceUri),
-				this.getLaunchConfig(false, treeNode),
+				getLaunchConfig(
+					false,
+					fsPath(treeNode.resourceUri),
+					treeNode instanceof TestTreeItem ? treeNode.test.name : treeNode instanceof GroupTreeItem ? treeNode.group.name : undefined,
+					treeNode instanceof GroupTreeItem,
+				),
 			);
 		}));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteTreeItem | TestTreeItem) => {
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
 			vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(treeNode.resourceUri),
-				this.getLaunchConfig(true, treeNode),
+				getLaunchConfig(
+					true,
+					fsPath(treeNode.resourceUri),
+					treeNode instanceof TestTreeItem ? treeNode.test.name : treeNode instanceof GroupTreeItem ? treeNode.group.name : undefined,
+					treeNode instanceof GroupTreeItem,
+				),
 			);
 		}));
 
@@ -89,22 +100,21 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		}));
 	}
 
-	private getLaunchConfig(noDebug: boolean, treeNode: SuiteTreeItem | TestTreeItem) {
-		return {
-			args: treeNode instanceof TestTreeItem ? ["--plain-name", treeNode.test.name] : undefined,
-			name: "Tests",
-			noDebug,
-			program: fsPath(treeNode.resourceUri),
-			request: "launch",
-			type: "dart",
-		};
+	public handleDebugSessionCustomEvent(e: vs.DebugSessionCustomEvent) {
+		if (e.event === "dart.testRunNotification") {
+			// If we're starting a suite, record us as the owner so we can clean up later
+			if (e.body.notification.type === "suite")
+				this.owningDebugSessions[e.body.suitePath] = e.session;
+
+			this.handleNotification(e.body.suitePath, e.body.notification);
+		}
 	}
 
 	public getTreeItem(element: vs.TreeItem): vs.TreeItem {
 		return element;
 	}
 
-	public getChildren(element?: vs.TreeItem): vs.TreeItem[] {
+	public getChildren(element?: vs.TreeItem): TestItemTreeItem[] {
 		let items = !element
 			? Object.keys(suites).map((k) => suites[k].node)
 			: (element instanceof SuiteTreeItem || element instanceof GroupTreeItem)
@@ -112,8 +122,12 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 				: [];
 		items = items.filter((item) => item);
 		// Only sort suites, as tests may have a useful order themselves.
-		if (!element)
-			items = _.sortBy(items, (t) => t.label);
+		if (!element) {
+			items = _.sortBy(items, [
+				(t: TestItemTreeItem) => t.sort,
+				(t: TestItemTreeItem) => t.label,
+			]);
+		}
 		return items;
 	}
 
@@ -126,23 +140,35 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		this.onDidChangeTreeDataEmitter.fire(node);
 	}
 
-	private updateAllIcons(suite: SuiteData) {
+	private updateAllStatuses(suite: SuiteData) {
 		// Walk the tree to get the status.
-		updateStatusFromChildren(suite.node);
-		this.updateNode(suite.node);
+		this.updateStatusFromChildren(suite.node);
+
+		// Update top level list, as we could've changed order.
+		this.updateNode();
 	}
 
-	// Since running is the highest status, it's faster to just run all the way up the tree
-	// and set them all than do the usual top-down calcuation to updates statuses like we do
-	// when tests complete.
-	private markAncestorsRunning(node: SuiteTreeItem | GroupTreeItem | TestTreeItem) {
-		const status = TestStatus.Running;
-		let current = node;
-		while (current) {
-			current.status = status;
-			this.updateNode(current);
-			current = current instanceof SuiteTreeItem ? undefined : current.parent;
+	private updateStatusFromChildren(node: SuiteTreeItem | GroupTreeItem): TestStatus {
+		const childStatuses = node.children.length
+			? node.children.filter((c) =>
+				(c instanceof GroupTreeItem && !c.isPhantomGroup)
+				|| (c instanceof TestTreeItem && !c.hidden),
+			).map((c) => {
+				if (c instanceof GroupTreeItem)
+					return this.updateStatusFromChildren(c);
+				if (c instanceof TestTreeItem)
+					return c.status;
+				return TestStatus.Unknown;
+			})
+			: [TestStatus.Unknown];
+
+		const newStatus = Math.max.apply(Math, childStatuses);
+		if (newStatus !== node.status) {
+			node.status = newStatus;
+			node.iconPath = getIconPath(node.status);
+			this.updateNode(node);
 		}
+		return node.status;
 	}
 
 	public dispose(): any {
@@ -201,8 +227,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		this.updateNode();
 		// If this is the first suite, we've started a run and can show the tree.
 		// We need to wait for the tree node to have been rendered though so setTimeout :(
-		if (TestResultsProvider.shouldShowTreeOnNextSuiteStart) {
-			TestResultsProvider.shouldShowTreeOnNextSuiteStart = false;
+		if (TestResultsProvider.isNewTestRun) {
+			TestResultsProvider.isNewTestRun = false;
 			this.onDidStartTestsEmitter.fire(suite.node);
 		}
 	}
@@ -235,10 +261,10 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		if (!isExistingTest)
 			testNode.parent.tests.push(testNode);
 
-		if (!testNode.hidden)
-			this.markAncestorsRunning(testNode);
 		this.updateNode(testNode);
 		this.updateNode(testNode.parent);
+		if (!testNode.hidden)
+			this.updateAllStatuses(suite);
 	}
 
 	private handleTestDoneNotification(suite: SuiteData, evt: TestDoneNotification) {
@@ -259,8 +285,12 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 
 		this.updateNode(testNode);
 		this.updateNode(testNode.parent);
+		this.updateAllStatuses(suite);
 
-		this.updateAllIcons(suite);
+		if (testNode.status === TestStatus.Failed && TestResultsProvider.nextFailureIsFirst) {
+			TestResultsProvider.nextFailureIsFirst = false;
+			this.onFirstFailureEmitter.fire(suite.node);
+		}
 	}
 
 	private handleGroupNotification(suite: SuiteData, evt: GroupNotification) {
@@ -313,7 +343,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 			this.updateNode(t);
 		});
 
-		this.updateAllIcons(suite);
+		this.updateAllStatuses(suite);
 	}
 
 	private handlePrintNotification(suite: SuiteData, evt: PrintNotification) {
@@ -338,6 +368,11 @@ class SuiteData {
 
 class TestItemTreeItem extends vs.TreeItem {
 	private _status: TestStatus = TestStatus.Unknown; // tslint:disable-line:variable-name
+	// To avoid the sort changing on every status change (stale, running, etc.) this
+	// field will be the last status the user would care about (pass/fail/skip).
+	// Default to Passed just so things default to the most likely (hopefully) place. This should
+	// never be used for rendering; only sorting.
+	private _sort: TestSortOrder = TestSortOrder.Middle; // tslint:disable-line:variable-name
 
 	get status(): TestStatus {
 		return this._status;
@@ -346,6 +381,16 @@ class TestItemTreeItem extends vs.TreeItem {
 	set status(status: TestStatus) {
 		this._status = status;
 		this.iconPath = getIconPath(status);
+
+		if (status === TestStatus.Errored || status === TestStatus.Failed
+			|| status === TestStatus.Passed
+			|| status === TestStatus.Skipped) {
+			this._sort = getTestSortOrder(status);
+		}
+	}
+
+	get sort(): TestSortOrder {
+		return this._sort;
 	}
 }
 
@@ -356,9 +401,9 @@ export class SuiteTreeItem extends TestItemTreeItem {
 
 	constructor(suite: Suite) {
 		super(vs.Uri.file(suite.path), vs.TreeItemCollapsibleState.Collapsed);
-		this.label = this.getLabel(suite.path);
 		this.suite = suite;
 		this.contextValue = DART_TEST_SUITE_NODE;
+		this.resourceUri = vs.Uri.file(suite.path);
 		this.id = `suite_${this.suite.path}_${this.suite.id}`;
 		this.status = TestStatus.Unknown;
 		this.command = { command: "_dart.displaySuite", arguments: [this], title: "" };
@@ -374,13 +419,13 @@ export class SuiteTreeItem extends TestItemTreeItem {
 			: rel;
 	}
 
-	get children(): vs.TreeItem[] {
+	get children(): TestItemTreeItem[] {
 		// Children should be:
 		// 1. All children of any of our phantom groups
 		// 2. Our children excluding our phantom groups
 		return []
 			.concat(_.flatMap(this.groups.filter((g) => g.isPhantomGroup), (g) => g.children))
-			.concat(this.groups.filter((g) => !g.isPhantomGroup))
+			.concat(this.groups.filter((g) => !g.isPhantomGroup && !g.hidden))
 			.concat(this.tests.filter((t) => !t.hidden));
 	}
 
@@ -390,7 +435,7 @@ export class SuiteTreeItem extends TestItemTreeItem {
 
 	set suite(suite: Suite) {
 		this._suite = suite;
-		this.resourceUri = vs.Uri.file(suite.path);
+		this.label = this.getLabel(suite.path);
 	}
 }
 
@@ -403,6 +448,7 @@ class GroupTreeItem extends TestItemTreeItem {
 		super(group.name, vs.TreeItemCollapsibleState.Collapsed);
 		this.group = group;
 		this.contextValue = DART_TEST_GROUP_NODE;
+		this.resourceUri = vs.Uri.file(suite.path);
 		this.id = `suite_${this.suite.path}_group_${this.group.id}`;
 		this.status = TestStatus.Unknown;
 		this.command = { command: "_dart.displayGroup", arguments: [this], title: "" };
@@ -410,6 +456,14 @@ class GroupTreeItem extends TestItemTreeItem {
 
 	get isPhantomGroup() {
 		return !this.group.name && this.parent instanceof SuiteTreeItem;
+	}
+
+	get hidden(): boolean {
+		// If every child is hidden, we are hidden.
+		return this.children.every((c) => {
+			return (c instanceof GroupTreeItem && c.hidden)
+				|| (c instanceof TestTreeItem && c.hidden);
+		});
 	}
 
 	get parent(): SuiteTreeItem | GroupTreeItem {
@@ -423,9 +477,9 @@ class GroupTreeItem extends TestItemTreeItem {
 		return parent;
 	}
 
-	get children(): vs.TreeItem[] {
+	get children(): TestItemTreeItem[] {
 		return []
-			.concat(this.groups)
+			.concat(this.groups.filter((t) => !t.hidden))
 			.concat(this.tests.filter((t) => !t.hidden));
 	}
 
@@ -445,10 +499,9 @@ class TestTreeItem extends TestItemTreeItem {
 	constructor(public suite: SuiteData, test: Test, public hidden = false) {
 		super(test.name, vs.TreeItemCollapsibleState.None);
 		this.test = test;
+		this.contextValue = DART_TEST_TEST_NODE;
 		this.resourceUri = vs.Uri.file(suite.path);
 		this.id = `suite_${this.suite.path}_test_${this.test.id}`;
-		// TODO: Allow re-running tests/groups/suites
-		this.contextValue = DART_TEST_TEST_NODE;
 		this.status = TestStatus.Unknown;
 		this.command = { command: "_dart.displayTest", arguments: [this], title: "" };
 	}
@@ -507,25 +560,7 @@ function getIconPath(status: TestStatus): vs.Uri {
 		: undefined;
 }
 
-function updateStatusFromChildren(node: SuiteTreeItem | GroupTreeItem): TestStatus {
-	const childStatuses = node.children.length
-		? node.children.filter((c) =>
-			(c instanceof GroupTreeItem && !c.isPhantomGroup)
-			|| (c instanceof TestTreeItem && !c.hidden),
-		).map((c) => {
-			if (c instanceof GroupTreeItem)
-				return updateStatusFromChildren(c);
-			if (c instanceof TestTreeItem)
-				return c.status;
-			return TestStatus.Unknown;
-		})
-		: [TestStatus.Unknown];
-	const status = Math.max.apply(Math, childStatuses);
-	node.iconPath = getIconPath(status);
-	return status;
-}
-
-enum TestStatus {
+export enum TestStatus {
 	// This should be in order such that the highest number is the one to show
 	// when aggregating (eg. from children).
 	Stale,
@@ -536,4 +571,18 @@ enum TestStatus {
 	Failed,
 	Errored,
 	Running,
+}
+
+enum TestSortOrder {
+	Top, // Fails
+	Middle, // Passes
+	Bottom, // Skips
+}
+
+function getTestSortOrder(status: TestStatus): TestSortOrder {
+	if (status === TestStatus.Failed || status === TestStatus.Errored)
+		return TestSortOrder.Top;
+	if (status === TestStatus.Skipped)
+		return TestSortOrder.Bottom;
+	return TestSortOrder.Middle;
 }

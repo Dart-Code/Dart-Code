@@ -2,17 +2,16 @@ import * as assert from "assert";
 import { SpawnOptions } from "child_process";
 import { DebugSessionCustomEvent } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { debugLogTypes, handleDebugLogEvent, log } from "../src/utils/log";
+import { handleDebugLogEvent, log } from "../src/utils/log";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../src/views/test_protocol";
+import { TestResultsProvider } from "../src/views/test_view";
 import { DebugClient } from "./debug_client_ms";
-import { withTimeout } from "./helpers";
+import { delay, withTimeout } from "./helpers";
 
 export class DartDebugClient extends DebugClient {
-	constructor(runtime: string, executable: string, debugType: string, spwanOptions?: SpawnOptions) {
+	constructor(runtime: string, executable: string, debugType: string, spwanOptions?: SpawnOptions, testProvider?: TestResultsProvider) {
 		super(runtime, executable, debugType, spwanOptions);
-		Object.keys(debugLogTypes).forEach((event) => {
-			this.on(event, (e: DebugSessionCustomEvent) => handleDebugLogEvent(e.event, e.body.message));
-		});
+		this.on("dart.log", (e: DebugSessionCustomEvent) => handleDebugLogEvent(e.event, e.body));
 		// Log important events to make troubleshooting tests easier.
 		this.on("output", (event: DebugProtocol.OutputEvent) => {
 			log(`[${event.body.category}] ${event.body.output}`);
@@ -26,6 +25,12 @@ export class DartDebugClient extends DebugClient {
 		this.on("initialized", (event: DebugProtocol.InitializedEvent) => {
 			log(`[initialized]`);
 		});
+		// If we were given a test provider, forward the test notifications on to
+		// it as it won't receive the events normally because this is not a Code-spawned
+		// debug session.
+		if (testProvider) {
+			this.on("dart.testRunNotification", (e: DebugSessionCustomEvent) => testProvider.handleDebugSessionCustomEvent(e));
+		}
 	}
 	public async launch(launchArgs: any): Promise<void> {
 		// We override the base method to swap for attachRequest when required, so that
@@ -188,5 +193,15 @@ export class DartDebugClient extends DebugClient {
 
 	public assertErroringTest(testName: string) {
 		return this.assertTestStatus(testName, "error");
+	}
+
+	public async hotReload(): Promise<void> {
+		// If we reload too fast, things fail :-/
+		await delay(500);
+
+		await Promise.all([
+			this.assertOutput("stdout", "Reloaded"),
+			this.customRequest("hotReload"),
+		]);
 	}
 }

@@ -19,6 +19,7 @@ export class SourceCodeActionProvider implements CodeActionProvider {
 			return null;
 		return [{
 			command: {
+				arguments: [document],
 				command: "_dart.organizeImports",
 				title: "Organize Imports",
 			},
@@ -26,6 +27,7 @@ export class SourceCodeActionProvider implements CodeActionProvider {
 			title: "Organize Imports",
 		}, {
 			command: {
+				arguments: [document],
 				command: "dart.sortMembers",
 				title: "Sort Members",
 			},

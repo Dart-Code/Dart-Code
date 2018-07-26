@@ -11,13 +11,13 @@ describe("dart_document_symbol_provider", () => {
 
 		assert.ok(symbols && symbols.length, "Didn't get any symbols");
 
-		ensureSymbol(symbols, "main()", vs.SymbolKind.Function);
+		ensureSymbol(symbols, "main", vs.SymbolKind.Function);
 		ensureSymbol(symbols, "MyApp", vs.SymbolKind.Class);
-		ensureSymbol(symbols, "build(BuildContext context)", vs.SymbolKind.Method, "MyApp");
+		ensureSymbol(symbols, "build", vs.SymbolKind.Method, "MyApp");
 		ensureSymbol(symbols, "MyHomePage", vs.SymbolKind.Class);
-		ensureSymbol(symbols, "MyHomePage(Key key)", vs.SymbolKind.Constructor, "MyHomePage");
-		ensureSymbol(symbols, "build(BuildContext context)", vs.SymbolKind.Method, "MyHomePage");
-		ensureSymbol(symbols, "myTopLevelFunction()", vs.SymbolKind.Function);
+		ensureSymbol(symbols, "MyHomePage", vs.SymbolKind.Constructor, "MyHomePage");
+		ensureSymbol(symbols, "build", vs.SymbolKind.Method, "MyHomePage");
+		ensureSymbol(symbols, "myTopLevelFunction", vs.SymbolKind.Function);
 		assert.equal(symbols.length, 7);
 	});
 });

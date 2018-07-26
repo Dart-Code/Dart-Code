@@ -214,6 +214,10 @@ export interface VMInstanceRef extends VMObjectRef {
 	length?: number;
 }
 
+export interface VMTypeRef extends VMInstanceRef {
+	name: string;
+}
+
 export interface VMErrorRef extends VMObjectRef {
 	// The kind of error.
 	kind: string;
@@ -330,6 +334,7 @@ export class ObservatoryConnection {
 		this.socket.on("open", cb);
 	}
 
+	// TODO: This API doesn't make it obvious you can only have one subscriber.
 	public onLogging(callback: (message: string) => void) {
 		this.logging = callback;
 	}
@@ -501,12 +506,8 @@ export class ObservatoryConnection {
 	}
 
 	private logTraffic(message: string): void {
-		const callback = this.logging;
-		if (callback) {
-			const max: number = 2000;
-			if (message.length > max)
-				message = message.substring(0, max) + "…";
-			callback(message);
+		if (this.logging) {
+			this.logging(message);
 		}
 	}
 

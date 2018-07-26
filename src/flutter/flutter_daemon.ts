@@ -1,21 +1,39 @@
 import * as vs from "vscode";
 import { ProgressLocation } from "vscode";
 import { config } from "../config";
-import { PromiseCompleter } from "../debug/utils";
+import { LogCategory, PromiseCompleter } from "../debug/utils";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
-import { reloadExtension } from "../utils";
-import { log, LogCategory } from "../utils/log";
+import { reloadExtension, versionIsAtLeast } from "../utils";
+import { log } from "../utils/log";
 import { FlutterDeviceManager } from "./device_manager";
 import * as f from "./flutter_types";
+
+export class DaemonCapabilities {
+	public static get empty() { return new DaemonCapabilities("0.0.0"); }
+
+	public version: string;
+
+	constructor(daemonProtocolVersion: string) {
+		this.version = daemonProtocolVersion;
+	}
+
+	get canCreateEmulators() { return versionIsAtLeast(this.version, "0.4.0"); }
+
+	// TODO: Remove this after the next beta update. We have some flakes (flutter run tests)
+	// due to the test device not starting up properly. Never seen on master, so assumed to be an
+	// issue that's been fixed. If not we'll see new failures despite this and can investigate further.
+	get flutterTesterMayBeFlaky() { return !versionIsAtLeast(this.version, "0.4.0"); }
+}
 
 export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	public deviceManager: FlutterDeviceManager;
 	private hasStarted = false;
 	private startupReporter: vs.Progress<{ message?: string; increment?: number }>;
 	private daemonStartedCompleter = new PromiseCompleter();
+	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
 	constructor(flutterBinPath: string, projectFolder: string) {
-		super(() => config.flutterDaemonLogFile, (message) => log(message, LogCategory.FlutterDaemon), true);
+		super(() => config.flutterDaemonLogFile, (message, severity) => log(message, severity, LogCategory.FlutterDaemon), config.maxLogLineLength, true);
 
 		this.createProcess(projectFolder, flutterBinPath, ["daemon"]);
 
@@ -36,7 +54,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 		try {
 			super.sendMessage(json);
 		} catch (e) {
-			reloadExtension("The Flutter Daemon has terminated.");
+			reloadExtension("The Flutter Daemon has terminated.", undefined, true);
 			throw e;
 		}
 	}
@@ -54,10 +72,18 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	}
 
 	private static readonly outOfDateWarning = new RegExp("WARNING: .* Flutter is (\\d+) days old");
-	protected processUnhandledMessage(message: string): void {
+	private static readonly newVersionMessage = "A new version of Flutter is available";
+	protected async processUnhandledMessage(message: string): Promise<void> {
+		let upgradeMessage: string | undefined;
 		const matches = FlutterDaemon.outOfDateWarning.exec(message);
-		if (matches && matches.length === 2) {
-			vs.window.showWarningMessage(`Your installation of Flutter is ${matches[1]} days old. To update to the latest version, run 'flutter upgrade'.`);
+		if (matches && matches.length === 2)
+			upgradeMessage = `Your installation of Flutter is ${matches[1]} days old.`;
+		else if (message.indexOf(FlutterDaemon.newVersionMessage) !== -1)
+			upgradeMessage = "A new version of Flutter is available";
+
+		if (upgradeMessage) {
+			if (await vs.window.showWarningMessage(upgradeMessage, "Upgrade Flutter"))
+				vs.commands.executeCommand("flutter.upgrade");
 			return;
 		}
 
@@ -89,6 +115,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 			case "daemon.connected":
 				const params = evt.params as f.DaemonConnected;
 				this.additionalPidsToTerminate.push(params.pid);
+				this.capabilities.version = params.version;
 				break;
 			case "device.added":
 				this.notify(this.deviceAddedSubscriptions, evt.params as f.Device);
@@ -124,6 +151,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 
 	public launchEmulator(emulatorId: string): Thenable<void> {
 		return this.sendRequest("emulator.launch", { emulatorId });
+	}
+
+	public createEmulator(name?: string): Thenable<{ success: boolean, emulatorName: string, error: string }> {
+		return this.sendRequest("emulator.create", { name });
 	}
 
 	// Subscription methods.

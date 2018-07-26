@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { forceWindowsDriveLetterToUppercase } from "../../src/debug/utils";
 import { fsPath } from "../../src/utils";
-import { ext, flutterHelloWorldFolder, flutterHelloWorldMainFile } from "../helpers";
+import { activate, extApi, flutterHelloWorldFolder, flutterHelloWorldMainFile } from "../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -18,8 +18,8 @@ describe("test environment", () => {
 
 describe("extension", () => {
 	it("resolves the correct debug config for a nested project", async () => {
-		await ext.activate();
-		const resolvedConfig = await ext.exports.debugProvider.resolveDebugConfiguration(
+		await activate();
+		const resolvedConfig = await extApi.debugProvider.resolveDebugConfiguration(
 			vs.workspace.workspaceFolders[0],
 			{
 				name: "Dart",

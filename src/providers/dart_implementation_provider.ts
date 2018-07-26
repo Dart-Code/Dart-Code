@@ -16,7 +16,7 @@ export class DartImplementationProvider implements vs.ImplementationProvider {
 		//
 		// The search.getTypeHierarchy call will only work over "b" but by using outline we
 		// can support the whole "void b();".
-		const outlineNode = findNearestOutlineNode(document, position);
+		const outlineNode = findNearestOutlineNode(document, position, true);
 		const offset = outlineNode ? outlineNode.element.location.offset : document.offsetAt(position);
 
 		const hierarchy = await this.analyzer.searchGetTypeHierarchy({
@@ -31,7 +31,10 @@ export class DartImplementationProvider implements vs.ImplementationProvider {
 		const currentItem = hierarchy.hierarchyItems.find((h) => {
 			const elm = h.memberElement || h.classElement;
 			return elm.location.offset <= offset && elm.location.offset + elm.location.length >= offset;
-		});
+		})
+			// If we didn't find the element when we might have been at a call site, so we'll have to start
+			// at the root.
+			|| hierarchy.hierarchyItems[0];
 
 		const isClass = !currentItem.memberElement;
 		function getDescendants(item: as.TypeHierarchyItem): as.TypeHierarchyItem[] {

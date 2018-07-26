@@ -4,14 +4,14 @@ import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath, versionIsAtLeast } from "../../../src/utils";
 import { DartDebugClient } from "../../dart_debug_client";
-import { activate, defer, ext, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
+import { activate, defer, ext, extApi, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
 
 describe("flutter test debugger", () => {
 
 	let testPrefix = "- ";
 	beforeEach("activate flutterTestMainFile", async () => {
 		await activate(flutterTestMainFile);
-		if (versionIsAtLeast(ext.exports.analyzerCapabilities.version, "1.20.3"))
+		if (versionIsAtLeast(extApi.analyzerCapabilities.version, "1.20.3"))
 			testPrefix = "";
 	});
 	beforeEach("set timeout", function () {
@@ -116,15 +116,13 @@ describe("flutter test debugger", () => {
 	it.skip("stops at a breakpoint", async () => {
 		await openFile(flutterTestMainFile);
 		const config = await startDebugger(flutterTestMainFile);
-		await Promise.all([
-			dc.hitBreakpoint(config, {
-				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(flutterTestMainFile),
-			}),
-		]);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(flutterTestMainFile),
+		});
 	});
 
-	it.skip("stops on exception", async () => {
+	it("stops on exception", async () => {
 		await openFile(flutterTestBrokenFile);
 		const config = await startDebugger(flutterTestBrokenFile);
 		await Promise.all([
@@ -151,7 +149,7 @@ describe("flutter test debugger", () => {
 		]);
 	});
 
-	it.skip("provides exception details when stopped on exception", async () => {
+	it("provides exception details when stopped on exception", async () => {
 		await openFile(flutterTestBrokenFile);
 		const config = await startDebugger(flutterTestBrokenFile);
 		await Promise.all([

@@ -29,6 +29,9 @@
 					"include": "#strings"
 				},
 				{
+					"include": "#comments"
+				},
+				{
 					"match": "\\b(as|show|hide)\\b",
 					"name": "keyword.other.import.dart"
 				}

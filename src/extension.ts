@@ -2,12 +2,14 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { WorkspaceFolder } from "vscode";
+import { internalApiSymbol } from "../src/symbols";
 import { Analyzer } from "./analysis/analyzer";
 import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
 import { FileChangeHandler } from "./analysis/file_change_handler";
 import { OpenFileTracker } from "./analysis/open_file_tracker";
 import { findPackageRoots } from "./analysis/utils";
 import { Analytics } from "./analytics";
+import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
 import { DebugCommands } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
 import { GoToSuperCommand } from "./commands/go_to_super";
@@ -17,15 +19,16 @@ import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
-import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, platformName } from "./debug/utils";
+import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, LogCategory, platformName } from "./debug/utils";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_decorations";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
-import { FlutterDaemon } from "./flutter/flutter_daemon";
+import { DaemonCapabilities, FlutterDaemon } from "./flutter/flutter_daemon";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
+import { DartDocumentSymbolProvider } from "./providers/dart_document_symbol_provider";
 import { DartFoldingProvider } from "./providers/dart_folding_provider";
 import { DartFormattingEditProvider } from "./providers/dart_formatting_edit_provider";
 import { DartDocumentHighlightProvider } from "./providers/dart_highlighting_provider";
@@ -34,11 +37,10 @@ import { DartImplementationProvider } from "./providers/dart_implementation_prov
 import { DartLanguageConfiguration } from "./providers/dart_language_configuration";
 import { DartReferenceProvider } from "./providers/dart_reference_provider";
 import { DartRenameProvider } from "./providers/dart_rename_provider";
-import { DartSymbolProvider } from "./providers/dart_symbol_provider";
 import { DartTypeFormattingEditProvider } from "./providers/dart_type_formatting_edit_provider";
+import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
 import { DebugConfigProvider } from "./providers/debug_config_provider";
 import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
-import { LegacyDartDocumentSymbolProvider } from "./providers/legacy_dart_document_symbol_provider";
 import { LegacyDartWorkspaceSymbolProvider } from "./providers/legacy_dart_workspace_symbol_provider";
 import { RefactorCodeActionProvider } from "./providers/refactor_code_action_provider";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
@@ -50,7 +52,7 @@ import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingS
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { fsPath } from "./utils";
-import { LogCategory, addToLogHeader, clearLogHeader, log, logError, logTo } from "./utils/log";
+import { addToLogHeader, clearLogHeader, getExtensionLogPath, log, logError, logTo } from "./utils/log";
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestResultsProvider } from "./views/test_view";
 
@@ -74,15 +76,17 @@ let previousSettings: string;
 let extensionLogger: { dispose: () => Promise<void> };
 
 export function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
-	if (!extensionLogger && config.extensionLogFile)
-		extensionLogger = logTo(config.extensionLogFile, [LogCategory.General]);
+	if (!extensionLogger)
+		extensionLogger = logTo(getExtensionLogPath(), [LogCategory.General]);
 
 	util.logTime("Code called activate");
 	// Wire up a reload command that will re-initialise everything.
 	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", (_) => {
 		log("Performing silent extension reload...");
 		deactivate(true);
-		for (const sub of context.subscriptions) {
+		const toDispose = context.subscriptions.slice();
+		context.subscriptions.length = 0;
+		for (const sub of toDispose) {
 			try {
 				sub.dispose();
 			} catch (e) {
@@ -121,7 +125,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// Fire up the analyzer process.
 	const analyzerStartTime = new Date();
 	const analyzerPath = config.analyzerPath || path.join(sdks.dart, analyzerSnapshotPath);
-	if (!fs.existsSync(analyzerPath)) {
+	// If the ssh host is set, then we are running the analyzer on a remote machine, that same analyzer
+	// might not exist on the local machine.
+	if (!config.analyzerSshHost && !fs.existsSync(analyzerPath)) {
 		vs.window.showErrorMessage("Could not find a Dart Analysis Server at " + analyzerPath);
 		return;
 	}
@@ -202,6 +208,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, typeFormattingEditProvider, "}", ";"));
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, sourceCodeActionProvider, sourceCodeActionProvider.metadata));
 	context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, implementationProvider));
+	if (config.showTestCodeLens)
+		context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, new TestCodeLensProvider(analyzer)));
 
 	// Snippets are language-specific
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));
@@ -253,7 +261,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		}
 
 		if (analyzer.capabilities.supportsGetDeclerations) {
-			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartSymbolProvider(analyzer)));
+			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
 		} else {
 			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(analyzer)));
 		}
@@ -261,9 +269,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		if (analyzer.capabilities.supportsCustomFolding && config.analysisServerFolding)
 			context.subscriptions.push(vs.languages.registerFoldingRangeProvider(DART_MODE, new DartFoldingProvider(analyzer)));
 
-		const documentSymbolProvider = analyzer.capabilities.supportsGetDeclerationsForFile
-			? new DartSymbolProvider(analyzer)
-			: new LegacyDartDocumentSymbolProvider(analyzer);
+		const documentSymbolProvider = new DartDocumentSymbolProvider(analyzer);
 		activeFileFilters.forEach((filter) => {
 			context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
 		});
@@ -310,7 +316,14 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(
 		testTreeProvider,
 		testTreeView,
-		testTreeProvider.onDidStartTests((node) => testTreeView.reveal(node)),
+		testTreeProvider.onDidStartTests((node) => {
+			if (config.openTestViewOnStart)
+				testTreeView.reveal(node);
+		}),
+		testTreeProvider.onFirstFailure((node) => {
+			if (config.openTestViewOnFailure)
+				testTreeView.reveal(node);
+		}),
 	);
 
 	if (sdks.projectType !== util.ProjectType.Dart && config.previewHotReloadCoverageMarkers) {
@@ -368,14 +381,18 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	}
 
 	return {
-		analyzerCapabilities: analyzer.capabilities,
-		currentAnalysis: () => analyzer.currentAnalysis,
-		debugProvider, // TODO: Remove this when we can get access via testing...
-		initialAnalysis,
-		nextAnalysis,
-		reanalyze,
-		renameProvider, // TODO: Remove this when we can get access via testing...
-		sdks,
+		[internalApiSymbol]: {
+			analyzerCapabilities: analyzer.capabilities,
+			currentAnalysis: () => analyzer.currentAnalysis,
+			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
+			debugProvider,
+			initialAnalysis,
+			nextAnalysis,
+			reanalyze,
+			renameProvider,
+			sdks,
+			testTreeProvider,
+		},
 	};
 }
 
@@ -452,6 +469,7 @@ function getSettingsThatRequireRestart() {
 		+ config.analyzeAngularTemplates
 		+ config.normalizeWindowsDriveLetters
 		+ config.analysisServerFolding
+		+ config.showTestCodeLens
 		+ config.previewHotReloadCoverageMarkers;
 }
 

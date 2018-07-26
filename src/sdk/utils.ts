@@ -1,18 +1,20 @@
 import * as fs from "fs";
 import * as path from "path";
-import { commands, ExtensionContext, window } from "vscode";
+import { ExtensionContext, commands, window } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
 import { isWin, platformName } from "../debug/utils";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, openInBrowser, ProjectType, reloadExtension, resolvePaths, Sdks } from "../utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, ProjectType, Sdks, fsPath, getDartWorkspaceFolders, openExtensionLogFile, openInBrowser, reloadExtension, resolvePaths, showLogAction } from "../utils";
+import { log } from "../utils/log";
 
 const dartExecutableName = isWin ? "dart.exe" : "dart";
 const pubExecutableName = isWin ? "pub.bat" : "pub";
 const flutterExecutableName = isWin ? "flutter.bat" : "flutter";
 const androidStudioExecutableName = isWin ? "studio64.exe" : "studio";
 export const dartVMPath = "bin/" + dartExecutableName;
-export const dartPubPath = "bin/" + pubExecutableName;
+export const pubPath = "bin/" + pubExecutableName;
+export const pubSnapshotPath = "bin/snapshots/pub.dart.snapshot";
 export const analyzerSnapshotPath = "bin/snapshots/analysis_server.dart.snapshot";
 export const flutterPath = "bin/" + flutterExecutableName;
 export const androidStudioPath = "bin/" + androidStudioExecutableName;
@@ -53,6 +55,7 @@ export function showFluttersDartSdkActivationFailure() {
 	reloadExtension("Could not find Dart in your Flutter SDK. " +
 		"Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
 		"Reload",
+		true,
 	);
 }
 export function showFlutterActivationFailure(commandToReRun: string = null) {
@@ -78,7 +81,7 @@ export async function showSdkActivationFailure(
 	search: (path: string[]) => string,
 	downloadUrl: string,
 	saveSdkPath: (path: string) => Thenable<void>,
-	commandToReRun: string = null,
+	commandToReRun?: string,
 ) {
 	const locateAction = "Locate SDK";
 	const downloadAction = "Download SDK";
@@ -88,6 +91,7 @@ export async function showSdkActivationFailure(
 		const selectedItem = await window.showErrorMessage(displayMessage,
 			locateAction,
 			downloadAction,
+			showLogAction,
 		);
 		// TODO: Refactor/reformat/comment this code - it's messy and hard to understand!
 		if (selectedItem === locateAction) {
@@ -109,6 +113,9 @@ export async function showSdkActivationFailure(
 		} else if (selectedItem === downloadAction) {
 			openInBrowser(downloadUrl);
 			break;
+		} else if (selectedItem === showLogAction) {
+			openExtensionLogFile();
+			break;
 		} else {
 			break;
 		}
@@ -116,11 +123,28 @@ export async function showSdkActivationFailure(
 }
 
 export function findSdks(): Sdks {
+	log("Searching for SDKs...");
 	const folders = getDartWorkspaceFolders()
 		.map((w) => fsPath(w.uri));
 	const pathOverride = (process.env.DART_PATH_OVERRIDE as string) || "";
 	const normalPath = (process.env.PATH as string) || "";
-	const paths = (pathOverride + path.delimiter + normalPath).split(path.delimiter);
+	const paths = (pathOverride + path.delimiter + normalPath).split(path.delimiter).filter((p) => p);
+
+	log("Environment PATH:");
+	for (const p of paths)
+		log(`    ${p}`);
+
+	// If we are running the analyzer remotely over SSH, we only support an analyzer, since none
+	// of the other SDKs will work remotely. Also, there is no need to validate the sdk path,
+	// since that file will exist on a remote machine.
+	if (config.analyzerSshHost) {
+		return {
+			dart: config.sdkPath,
+			flutter: null,
+			fuchsia: null,
+			projectType: ProjectType.Dart,
+		};
+	}
 
 	let fuchsiaRoot: string;
 	let flutterProject: string;
@@ -136,6 +160,14 @@ export function findSdks(): Sdks {
 			|| (fs.existsSync(path.join(folder, "bin/flutter")) && fs.existsSync(path.join(folder, "bin/cache/dart-sdk")) ? folder : null);
 		hasFuchsiaProjectThatIsNotVanillaFlutter = hasFuchsiaProjectThatIsNotVanillaFlutter || !referencesFlutterSdk(folder);
 	});
+
+	if (fuchsiaRoot) {
+		log(`Found Fuchsia root at ${fuchsiaRoot}`);
+		if (hasFuchsiaProjectThatIsNotVanillaFlutter)
+			log(`Found Fuchsia project that is not vanilla Flutter`);
+	}
+	if (flutterProject)
+		log(`Found Flutter project at ${flutterProject}`);
 
 	const flutterSdkSearchPaths = [
 		config.flutterSdkPath,
@@ -252,18 +284,30 @@ function hasExecutable(pathToTest: string, executableName: string): boolean {
 }
 
 export function searchPaths(paths: string[], filter: (s: string) => boolean, executableName: string): string {
-	let sdkPath =
+	log(`Searching for ${executableName}`);
+
+	const sdkPaths =
 		paths
 			.filter((p) => p)
 			.map(resolvePaths)
-			.map((p) => path.basename(p) !== "bin" ? path.join(p, "bin") : p) // Ensure /bin on end.
-			.find(filter);
+			.map((p) => path.basename(p) !== "bin" ? path.join(p, "bin") : p); // Ensure /bin on end.
+
+	log("    Looking in:");
+	for (const p of sdkPaths)
+		log(`        ${p}`);
+
+	let sdkPath = sdkPaths.find(filter);
+
+	if (sdkPath)
+		log(`    Found at ${sdkPath}`);
 
 	// In order to handle symlinks on the binary (not folder), we need to add the executableName and then realpath.
 	sdkPath = sdkPath && fs.realpathSync(path.join(sdkPath, executableName));
 
 	// Then we need to take the executable name and /bin back off
 	sdkPath = sdkPath && path.dirname(path.dirname(sdkPath));
+
+	log(`    Returning SDK path ${sdkPath} for ${executableName}`);
 
 	return sdkPath;
 }

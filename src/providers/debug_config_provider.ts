@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as net from "net";
 import * as path from "path";
 import * as vs from "vscode";
-import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, WorkspaceFolder, window, workspace } from "vscode";
+import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { DebugSession } from "vscode-debugadapter";
 import { Analytics } from "../analytics";
 import { config } from "../config";
@@ -13,8 +13,9 @@ import { FlutterTestDebugSession } from "../debug/flutter_test_debug_impl";
 import { FlutterLaunchRequestArguments, forceWindowsDriveLetterToUppercase, isWithinPath } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
-import { dartPubPath, dartVMPath, flutterPath } from "../sdk/utils";
-import { Sdks, fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, supportsPubRunTest } from "../utils";
+import { dartVMPath, flutterPath, pubPath, pubSnapshotPath } from "../sdk/utils";
+import { fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, ProjectType, Sdks, supportsPubRunTest } from "../utils";
+import { log, logWarn } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
@@ -44,18 +45,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const isFullTestRun = debugConfig && debugConfig.runner === "tests";
 		const allowProgramlessRun = isFullTestRun;
 
-		// VS Code often gives us a bogus folder, so only trust it if we got a real debugConfig (eg. with program or cwd).
-		// Otherwise, take from open file if we have one, else blank it (unless we only have one open folder, then use that).
-		if (!debugConfig.cwd && !debugConfig.program) {
-			folder = openFile
-				? workspace.getWorkspaceFolder(Uri.file(openFile))
-				: (
-					workspace.workspaceFolders.length === 1
-						? workspace.workspaceFolders[0]
-						: undefined
-				);
-		}
-
 		function resolveVariables(input: string): string {
 			if (!input) return input;
 			if (input === "${file}") return openFile;
@@ -63,8 +52,22 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return input.replace(/\${workspaceFolder}/, fsPath(folder.uri));
 		}
 
+		log(`Starting debug session...`);
+		if (folder)
+			log(`    workspace: ${fsPath(folder.uri)}`);
+		if (debugConfig.program)
+			log(`    program  : ${debugConfig.program}`);
+		if (debugConfig.cwd)
+			log(`    cwd      : ${debugConfig.cwd}`);
+
 		debugConfig.program = resolveVariables(debugConfig.program);
 		debugConfig.cwd = resolveVariables(debugConfig.cwd);
+
+		if (openFile && !folder) {
+			folder = workspace.getWorkspaceFolder(Uri.file(openFile));
+			if (folder)
+				log(`Setting workspace based on open file: ${fsPath(folder.uri)}`);
+		}
 
 		const isAttachRequest = debugConfig.request === "attach";
 		if (!isAttachRequest) {
@@ -76,6 +79,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			if (!allowProgramlessRun && !debugConfig.program) {
 				// Set type=null which causes launch.json to open.
 				debugConfig.type = null;
+				logWarn("No program was set and programlessRun is not allowed");
 				window.showInformationMessage("Set the 'program' value in your launch config (eg 'bin/main.dart') then launch again");
 				return debugConfig;
 			}
@@ -86,6 +90,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			if (!debugConfig.observatoryUri) {
 				// Set type=null which causes launch.json to open.
 				debugConfig.type = null;
+				logWarn("No Observatory URI/port was provided");
 				window.showInformationMessage("You must provide an Observatory URI/port to attach a debugger");
 				return debugConfig;
 			}
@@ -94,32 +99,44 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// If we don't have a cwd then find the best one from the project root.
 		if (!debugConfig.cwd && folder) {
 			debugConfig.cwd = fsPath(folder.uri);
+			log(`Using workspace as cwd: ${debugConfig.cwd}`);
 
 			// If we have an entry point, see if we can make this more specific by finding a .packages file
 			if (debugConfig.program) {
 				const bestProjectRoot = locateBestProjectRoot(debugConfig.program);
 				if (bestProjectRoot) {
-					if (!folder || isWithinPath(bestProjectRoot, fsPath(folder.uri)))
+					if (!folder || isWithinPath(bestProjectRoot, fsPath(folder.uri))) {
 						debugConfig.cwd = bestProjectRoot;
+						log(`Found better project root to use as cwd: ${debugConfig.cwd}`);
+					}
 				}
 			}
 		}
 
 		// Ensure we have a full path.
-		if (debugConfig.program && debugConfig.cwd && !path.isAbsolute(debugConfig.program))
+		if (debugConfig.program && debugConfig.cwd && !path.isAbsolute(debugConfig.program)) {
 			debugConfig.program = path.join(debugConfig.cwd, debugConfig.program);
+			log(`Converting program to absolute path: ${debugConfig.program}`);
+		}
 
 		// Disable Flutter mode for attach.
 		// TODO: Update FlutterDebugSession to understand attach mode, and remove this limitation.
-		const isFlutter = debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string) && !isAttachRequest;
+		const isFlutter = !isAttachRequest && this.sdks.projectType !== ProjectType.Dart
+			&& debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string);
+		log(`Detected launch project as ${isFlutter ? "Flutter" : "Dart"}`);
 		const isTest = isFullTestRun || (debugConfig.program && isTestFile(debugConfig.program as string));
+		if (isTest)
+			log(`Detected launch project as a Test project`);
 		const canPubRunTest = isTest && supportsPubRunTest(debugConfig.cwd as string, debugConfig.program as string);
+		if (isTest && !canPubRunTest)
+			log(`Project does not appear to support 'pub run test', will use VM directly`);
 		const debugType = isFlutter
 			? (isTest ? DebuggerType.FlutterTest : DebuggerType.Flutter)
 			: (isTest && canPubRunTest ? DebuggerType.PubTest : DebuggerType.Dart);
+		log(`Using ${DebuggerType[debugType]} debug adapter for this session`);
 
 		if (debugType === DebuggerType.FlutterTest || debugType === DebuggerType.PubTest)
-			TestResultsProvider.shouldShowTreeOnNextSuiteStart = true;
+			TestResultsProvider.flagStart();
 
 		// Ensure we have a device
 		const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null;
@@ -149,23 +166,31 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		this.analytics.logDebuggerStart(folder && folder.uri);
 
+		log(`Debug session starting...\n    ${JSON.stringify(debugConfig, undefined, 4).replace(/\n/g, "\n    ")}`);
+
 		return debugConfig;
 	}
 
-	private guessBestEntryPoint(openFile: string, workspaceFolder: WorkspaceFolder | undefined): string {
-
+	private guessBestEntryPoint(openFile: string, workspaceFolder: WorkspaceFolder | undefined): string | undefined {
+		// For certain open files, assume the user wants to run them.
 		if (isTestFile(openFile) || isInsideFolderNamed(openFile, "bin") || isInsideFolderNamed(openFile, "tool")) {
+			log(`Using open file as entry point: ${openFile}`);
 			return openFile;
-		} else if (workspaceFolder) {
-			// Use the open file as a clue to find the best project root, then search from there.
-			const commonLaunchPaths = [
-				path.join(fsPath(workspaceFolder.uri), "lib", "main.dart"),
-				path.join(fsPath(workspaceFolder.uri), "bin", "main.dart"),
-			];
-			for (const launchPath of commonLaunchPaths) {
-				if (fs.existsSync(launchPath)) {
-					return launchPath;
-				}
+		}
+
+		// Use the open file as a clue to find the best project root, then search from there.
+		const projectRoot = locateBestProjectRoot(openFile) || fsPath(workspaceFolder.uri);
+		if (!projectRoot)
+			return;
+
+		const commonLaunchPaths = [
+			path.join(projectRoot, "lib", "main.dart"),
+			path.join(projectRoot, "bin", "main.dart"),
+		];
+		for (const launchPath of commonLaunchPaths) {
+			if (fs.existsSync(launchPath)) {
+				log(`Using found common entry point: ${openFile}`);
+				return launchPath;
 			}
 		}
 	}
@@ -219,7 +244,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	private spawnOrGetServer(type: string, port: number = 0, create: () => DebugSession): net.Server {
 		// Start port listener on launch of first debug session.
 		if (!this.debugServers[type]) {
-
+			log(`Spawning a new ${type} debugger`);
 			// Start listening on a random port.
 			this.debugServers[type] = net.createServer((socket) => {
 				const session = create();
@@ -243,7 +268,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, dartVMPath);
 		debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || conf.observatoryLogFile;
-		debugConfig.pubPath = debugConfig.pubPath || path.join(this.sdks.dart, dartPubPath);
+		debugConfig.maxLogLineLength = debugConfig.maxLogLineLength || config.maxLogLineLength;
+		debugConfig.pubPath = debugConfig.pubPath || path.join(this.sdks.dart, pubPath);
+		debugConfig.pubSnapshotPath = debugConfig.pubSnapshotPath || path.join(this.sdks.dart, pubSnapshotPath);
 		debugConfig.pubTestLogFile = debugConfig.pubTestLogFile || conf.pubTestLogFile;
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || conf.debugSdkLibraries;
 		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || conf.debugExternalLibraries;

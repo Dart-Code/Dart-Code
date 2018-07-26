@@ -3,7 +3,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
-import { FlutterLaunchRequestArguments } from "./utils";
+import { FlutterLaunchRequestArguments, LogCategory, LogMessage, LogSeverity } from "./utils";
 
 export class FlutterDebugSession extends DartDebugSession {
 	private flutter: FlutterRun;
@@ -63,9 +63,9 @@ export class FlutterDebugSession extends DartDebugSession {
 		// and otherwise might be left hanging around.
 		this.allowTerminatingObservatoryVmPid = args.deviceId === "flutter-tester";
 
-		const logger = (message: string) => this.sendEvent(new Event("dart.log.flutter.run", { message }));
-		this.flutter = new FlutterRun(args.flutterPath, args.cwd, appArgs, args.flutterRunLogFile, logger);
-		this.flutter.registerForUnhandledMessages((msg) => this.logToUser(msg));
+		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.FlutterRun)));
+		this.flutter = new FlutterRun(args.flutterPath, args.cwd, appArgs, args.flutterRunLogFile, logger, this.maxLogLineLength);
+		this.flutter.registerForUnhandledMessages((msg) => this.logToUser(msg, "stdout"));
 
 		// Set up subscriptions.
 		this.flutter.registerForDaemonConnect((n) => this.additionalPidsToTerminate.push(n.pid));
@@ -137,6 +137,7 @@ export class FlutterDebugSession extends DartDebugSession {
 				case "serviceExtension":
 					if (this.currentRunningAppId)
 						await this.flutter.callServiceExtension(this.currentRunningAppId, args.type, args.params);
+					this.sendResponse(response);
 					break;
 
 				case "togglePlatform":
@@ -144,16 +145,19 @@ export class FlutterDebugSession extends DartDebugSession {
 						const result = await this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", null);
 						await this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", { value: result.value === "android" ? "iOS" : "android" });
 					}
+					this.sendResponse(response);
 					break;
 
 				case "hotReload":
 					if (this.currentRunningAppId)
 						await this.performReload(false);
+					this.sendResponse(response);
 					break;
 
 				case "hotRestart":
 					if (this.currentRunningAppId)
 						await this.performReload(true);
+					this.sendResponse(response);
 					break;
 
 				default:

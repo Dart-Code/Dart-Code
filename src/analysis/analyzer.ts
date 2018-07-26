@@ -1,12 +1,14 @@
+import * as _ from "lodash";
 import * as vs from "vscode";
 import { config } from "../config";
-import { PromiseCompleter } from "../debug/utils";
-import { extensionVersion, reloadExtension, versionIsAtLeast } from "../utils";
+import { LogCategory, PromiseCompleter } from "../debug/utils";
+import { escapeShell, extensionVersion, reloadExtension, versionIsAtLeast } from "../utils";
 import { logError } from "../utils/log";
 import * as as from "./analysis_server_types";
 import { AnalyzerGen } from "./analyzer_gen";
 
 export class AnalyzerCapabilities {
+	public static get empty() { return new AnalyzerCapabilities("0.0.0"); }
 
 	public version: string;
 
@@ -28,13 +30,6 @@ export class AnalyzerCapabilities {
 	// TODO: Remove this after next beta update, it's to stop tests failing on
 	// "stable"(beta) builds because of an upcoming change.
 	get hasUpdatedWidgetSnippets() { return versionIsAtLeast(this.version, "1.20.1"); }
-	// TODO: Remove this after next beta update, it's to stop tests failing on
-	// "stable"(beta) builds because of no flutter test device.
-	get flutterHasTestDevice() { return versionIsAtLeast(this.version, "1.20.1"); }
-	// TODO: Remove this after the next beta update. We have some flakes (flutter run tests)
-	// due to the test device not starting up properly. Never seen on master, so assumed to be an
-	// issue that's been fixed. If not we'll see new failures despite this and can investigate further.
-	get flutterTestDeviceMayBeFlaky() { return !versionIsAtLeast(this.version, "1.20.3"); }
 }
 
 export class Analyzer extends AnalyzerGen {
@@ -43,36 +38,36 @@ export class Analyzer extends AnalyzerGen {
 	private version: string;
 	private isAnalyzing = false;
 	private currentAnalysisCompleter: PromiseCompleter<void>;
-	public capabilities: AnalyzerCapabilities = new AnalyzerCapabilities("0.0.1");
+	public capabilities: AnalyzerCapabilities = AnalyzerCapabilities.empty;
 
 	constructor(dartVMPath: string, analyzerPath: string) {
-		super(() => config.analyzerLogFile);
+		super(() => config.analyzerLogFile, config.maxLogLineLength);
 
-		let args = [];
+		let analyzerArgs = [];
 
 		// Optionally start Observatory for the analyzer.
 		if (config.analyzerObservatoryPort)
-			args.push(`--observe=${config.analyzerObservatoryPort}`);
+			analyzerArgs.push(`--observe=${config.analyzerObservatoryPort}`);
 
-		args.push(analyzerPath);
+		analyzerArgs.push(analyzerPath);
 
 		// Optionally start the analyzer's diagnostic web server on the given port.
 		if (config.analyzerDiagnosticsPort)
-			args.push(`--port=${config.analyzerDiagnosticsPort}`);
+			analyzerArgs.push(`--port=${config.analyzerDiagnosticsPort}`);
 
 		// Add info about the extension that will be collected for crash reports etc.
-		args.push(`--client-id=Dart-Code.dart-code`);
-		args.push(`--client-version=${extensionVersion}`);
+		analyzerArgs.push(`--client-id=Dart-Code.dart-code`);
+		analyzerArgs.push(`--client-version=${extensionVersion}`);
 
 		// The analysis server supports a verbose instrumentation log file.
 		if (config.analyzerInstrumentationLogFile)
-			args.push(`--instrumentation-log-file=${config.analyzerInstrumentationLogFile}`);
+			analyzerArgs.push(`--instrumentation-log-file=${config.analyzerInstrumentationLogFile}`);
 
 		// Allow arbitrary args to be passed to the analysis server.
 		if (config.analyzerAdditionalArgs)
-			args = args.concat(config.analyzerAdditionalArgs);
+			analyzerArgs = analyzerArgs.concat(config.analyzerAdditionalArgs);
 
-		this.launchArgs = args;
+		this.launchArgs = analyzerArgs;
 
 		// Hook error subscriptions so we can try and get diagnostic info if this happens.
 		this.registerForServerError((e) => this.requestDiagnosticsUpdate());
@@ -81,7 +76,26 @@ export class Analyzer extends AnalyzerGen {
 		// Register for version.
 		this.registerForServerConnected((e) => { this.version = e.version; this.capabilities.version = this.version; });
 
-		this.createProcess(undefined, dartVMPath, args);
+		let binaryPath = dartVMPath;
+		let processArgs = _.clone(analyzerArgs);
+
+		// Since we communicate with the analysis server over STDOUT/STDIN, it is trivial for us
+		// to support launching it on a remote machine over SSH. This can be useful if the codebase
+		// is being modified remotely over SSHFS, and running the analysis server locally would
+		// result in excessive file reading over SSHFS.
+		if (config.analyzerSshHost) {
+			binaryPath = "ssh";
+			processArgs.unshift(dartVMPath);
+			processArgs = [
+				// SSH quiet mode, which prevents SSH from interfering with the STDOUT/STDIN communication
+				// with the analysis server.
+				"-q",
+				config.analyzerSshHost,
+				escapeShell(processArgs),
+			];
+		}
+
+		this.createProcess(undefined, binaryPath, processArgs);
 
 		this.serverSetSubscriptions({
 			subscriptions: ["STATUS"],
@@ -122,8 +136,8 @@ export class Analyzer extends AnalyzerGen {
 		} catch (e) {
 			const message = this.version
 				? "The Dart Analyzer has terminated."
-				: "The Dart Analyzer could not be started. Please set the `dart.analyzerLog` option and review the log file for errors.";
-			reloadExtension(message);
+				: "The Dart Analyzer could not be started.";
+			reloadExtension(message, undefined, true);
 			throw e;
 		}
 	}
@@ -286,7 +300,7 @@ export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind
 		case "UNKNOWN":
 			return vs.SymbolKind.Object;
 		default:
-			logError(`Unknown kind: ${kind}`);
+			logError(`Unknown kind: ${kind}`, LogCategory.Analyzer);
 			return vs.SymbolKind.Object;
 	}
 }

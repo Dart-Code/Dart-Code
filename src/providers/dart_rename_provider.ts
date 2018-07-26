@@ -1,4 +1,4 @@
-import { CancellationToken, OutputChannel, Position, Range, RenameProvider, TextDocument, Uri, WorkspaceEdit, workspace } from "vscode";
+import { CancellationToken, OutputChannel, Position, Range, RenameProvider, TextDocument, Uri, workspace, WorkspaceEdit } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import * as channels from "../commands/channels";

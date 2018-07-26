@@ -2,23 +2,37 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { config as conf } from "../../../src/config";
-import { platformEol } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
+import { logInfo } from "../../../src/utils/log";
+import { TestResultsProvider, TestStatus } from "../../../src/views/test_view";
 import { DartDebugClient } from "../../dart_debug_client";
-import { activate, defer, ext, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, openFile, positionOf } from "../../helpers";
+import { activate, defer, delay, ext, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, openFile, positionOf, withTimeout } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
-
 	beforeEach("activate helloWorldTestMainFile", () => activate(helloWorldTestMainFile));
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
-		dc = new DartDebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_test_debug_entry.js"), "dart");
+		dc = new DartDebugClient(
+			process.execPath,
+			path.join(ext.extensionPath, "out/src/debug/dart_test_debug_entry.js"),
+			"dart",
+			undefined,
+			extApi.testTreeProvider,
+		);
 		dc.defaultTimeout = 30000;
-		defer(() => dc.stop());
+		// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
+		// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
+		// a second request and that'll cause it to quit immediately.
+		defer(() => withTimeout(
+			Promise.all([
+				dc.disconnectRequest().catch((e) => logInfo(e)),
+				delay(500).then(() => dc.stop()).catch((e) => logInfo(e)),
+			]),
+			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
+		));
 	});
 
 	async function startDebugger(script: vs.Uri | string): Promise<vs.DebugConfiguration> {
@@ -40,14 +54,9 @@ describe("dart test debugger", () => {
 		const config = await startDebugger(helloWorldTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			conf.previewTestRunnerForDart
-				? Promise.all([
-					dc.assertOutput("stdout", `✓ String .split() splits the string on the delimiter`),
-					dc.assertPassingTest("String .split() splits the string on the delimiter"),
-					dc.waitForEvent("terminated"),
-				])
-				: dc.assertOutputContains("stdout", `String .split() splits the string on the delimiter`),
-			,
+			dc.assertOutput("stdout", `✓ String .split() splits the string on the delimiter`),
+			dc.assertPassingTest("String .split() splits the string on the delimiter"),
+			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
 	});
@@ -55,17 +64,15 @@ describe("dart test debugger", () => {
 	it("stops at a breakpoint", async () => {
 		await openFile(helloWorldTestMainFile);
 		const config = await startDebugger(helloWorldTestMainFile);
-		await Promise.all([
-			dc.hitBreakpoint(config, {
-				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(helloWorldTestMainFile),
-			}),
-		]);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(helloWorldTestMainFile),
+		});
 	});
 
 	it("stops on exception", async function () {
 		// Dart v1 doesn't pause on unhandled exceptions here :(
-		if (!ext.exports.analyzerCapabilities.isDart2)
+		if (!extApi.analyzerCapabilities.isDart2)
 			this.skip();
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile);
@@ -93,7 +100,7 @@ describe("dart test debugger", () => {
 
 	it("provides exception details when stopped on exception", async function () {
 		// Dart v1 doesn't pause on unhandled exceptions here :(
-		if (!ext.exports.analyzerCapabilities.isDart2)
+		if (!extApi.analyzerCapabilities.isDart2)
 			this.skip();
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile);
@@ -108,7 +115,7 @@ describe("dart test debugger", () => {
 		const v = variables.find((v) => v.name === "message");
 		assert.ok(v);
 		assert.equal(v.evaluateName, "$e.message");
-		const expectedStart = `"Expected: <2>${platformEol}  Actual: <1>`;
+		const expectedStart = `"Expected: <2>\n  Actual: <1>`;
 		assert.ok(
 			v.value.startsWith(expectedStart),
 			`Exception didn't have expected prefix\n` +
@@ -124,16 +131,61 @@ describe("dart test debugger", () => {
 		config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
-			conf.previewTestRunnerForDart
-				? Promise.all([
-					dc.assertFailingTest("might fail today"),
-					dc.assertOutput("stderr", `Expected: <2>${platformEol}  Actual: <1>`),
-				])
-				: Promise.all([
-					dc.assertOutput("stderr", `Unhandled exception:`),
-					dc.assertOutputContains("stdout", `Expected: <2>${platformEol}    Actual: <1>`),
-				]),
+			dc.assertFailingTest("might fail today"),
+			dc.assertOutput("stderr", `Expected: <2>\n  Actual: <1>`),
 			dc.launch(config),
 		]);
 	});
+
+	it("builds the expected tree from a test run", async () => {
+		await openFile(helloWorldTestTreeFile);
+		const config = await startDebugger(helloWorldTestTreeFile);
+		config.noDebug = true;
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		]);
+
+		const expectedResults = getExpectedResults();
+		const actualResults = makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider).join("\n");
+
+		assert.ok(expectedResults);
+		assert.ok(actualResults);
+		assert.equal(actualResults, expectedResults);
+	});
+
+	it("sorts suites correctly", async () => {
+		// Run each test file in a different order to how we expect the results.
+		for (const file of [helloWorldTestSkipFile, helloWorldTestMainFile, helloWorldTestTreeFile, helloWorldTestBrokenFile]) {
+			await openFile(file);
+			const config = await startDebugger(file);
+			config.noDebug = true;
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.waitForEvent("terminated"),
+				dc.launch(config),
+			]);
+		}
+
+		const topLevelNodes = extApi.testTreeProvider.getChildren();
+		assert.ok(topLevelNodes);
+		assert.equal(topLevelNodes.length, 4);
+
+		assert.equal(`${topLevelNodes[0].label} (${TestStatus[topLevelNodes[0].status]})`, "broken_test.dart (Failed)");
+		assert.equal(`${topLevelNodes[1].label} (${TestStatus[topLevelNodes[1].status]})`, "tree_test.dart (Failed)");
+		assert.equal(`${topLevelNodes[2].label} (${TestStatus[topLevelNodes[2].status]})`, "basic_test.dart (Passed)");
+		assert.equal(`${topLevelNodes[3].label} (${TestStatus[topLevelNodes[3].status]})`, "skip_test.dart (Skipped)");
+	});
 });
+
+function makeTextTree(suite: vs.Uri, provider: TestResultsProvider, parent?: vs.TreeItem, buffer: string[] = [], indent = 0) {
+	const items = provider.getChildren(parent)
+		// Filter to only the suite we were given (though includes all children).
+		.filter((item) => fsPath(item.resourceUri) === fsPath(suite) || !!parent);
+	items.forEach((item) => {
+		buffer.push(`${" ".repeat(indent * 4)}${item.label} (${TestStatus[item.status]})`);
+		makeTextTree(suite, provider, item, buffer, indent + 1);
+	});
+	return buffer;
+}

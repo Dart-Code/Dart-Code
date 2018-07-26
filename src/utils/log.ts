@@ -1,19 +1,17 @@
 import * as fs from "fs";
+import * as _ from "lodash";
+import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { Event, EventEmitter } from "vscode";
-import { platformEol } from "../debug/utils";
-import { isDevExtension } from "../utils";
+import { config } from "../config";
+import { LogCategory, LogMessage, LogSeverity, platformEol } from "../debug/utils";
+import { getRandomInt, isDevExtension } from "../utils";
 
-export enum LogCategory {
-	General,
-	CI,
-	Analyzer,
-	PubTest,
-	FlutterDaemon,
-	FlutterRun,
-	FlutterTest,
-	Observatory,
+let extensionLogPath: string;
+export function getExtensionLogPath() {
+	extensionLogPath = extensionLogPath || config.extensionLogFile || path.join(os.tmpdir(), `dart-code-startup-log-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`);
+	return extensionLogPath;
 }
 export const userSelectableLogCategories: { [key: string]: LogCategory } = {
 	"Analysis Server": LogCategory.Analyzer,
@@ -23,16 +21,17 @@ export const userSelectableLogCategories: { [key: string]: LogCategory } = {
 	"Flutter Test": LogCategory.FlutterTest,
 	"Pub Run Test": LogCategory.PubTest,
 };
-export class LogMessage {
-	constructor(public readonly message: string, public readonly category: LogCategory) { }
-}
 
 const onLogEmitter: EventEmitter<LogMessage> = new EventEmitter<LogMessage>();
 export const onLog: Event<LogMessage> = onLogEmitter.event;
-export function log(message: string, category = LogCategory.General) {
-	onLogEmitter.fire(new LogMessage((message || "").toString().trim(), category));
+export function log(message: string, severity = LogSeverity.Info, category = LogCategory.General) {
+	onLogEmitter.fire(new LogMessage((message || "").toString(), severity, category));
+	// Warn/Error always go to General.
+	if (category !== LogCategory.General && severity !== LogSeverity.Info) {
+		onLogEmitter.fire(new LogMessage(`[${LogCategory[category]}] ${message}`, severity, LogCategory.General));
+	}
 }
-export function logError(error: any) {
+export function logError(error: any, category = LogCategory.General) {
 	if (!error)
 		error = "Empty error";
 	if (error instanceof Error)
@@ -50,30 +49,23 @@ export function logError(error: any) {
 	if (isDevExtension)
 		vs.window.showErrorMessage("DEBUG: " + error);
 	console.error(error);
-	log(`ERR: ${error}`, LogCategory.General);
+	log(error, LogSeverity.Error, category);
 }
-export function logWarn(warning: string) {
+export function logWarn(warning: string, category = LogCategory.General) {
 	if (isDevExtension)
 		vs.window.showWarningMessage("DEBUG: " + warning);
 	console.warn(warning);
-	log(`WARN: ${warning}`, LogCategory.General);
+	log(`WARN: ${warning}`, LogSeverity.Warn, category);
 }
 export function logInfo(info: string) {
 	console.log(info);
-	log(info, LogCategory.General);
+	log(info, LogSeverity.Info, LogCategory.General);
 }
-export const debugLogTypes: { [key: string]: LogCategory } = {
-	"dart.log.flutter.run": LogCategory.FlutterRun,
-	"dart.log.flutter.test": LogCategory.FlutterTest,
-	"dart.log.observatory": LogCategory.Observatory,
-	"dart.log.pub.test": LogCategory.PubTest,
-};
-export function handleDebugLogEvent(event: string, message: string) {
-	const cat = debugLogTypes[event];
+export function handleDebugLogEvent(event: string, message: LogMessage) {
 	if (event)
-		log(message, cat);
+		log(message.message, message.severity, message.category);
 	else
-		logWarn(`Failed to handle log event ${event}`);
+		logWarn(`Failed to handle log event ${JSON.stringify(message)}`);
 }
 
 const logHeader: string[] = [];
@@ -88,7 +80,7 @@ export function addToLogHeader(f: () => string) {
 	}
 }
 
-export function logTo(file: string, logCategories?: LogCategory[], maxLength = 2000): ({ dispose: () => Promise<void> }) {
+export function logTo(file: string, logCategories?: LogCategory[]): ({ dispose: () => Promise<void> }) {
 	if (!file || !path.isAbsolute(file))
 		throw new Error("Path passed to logTo must be an absolute path");
 	const time = () => `[${(new Date()).toTimeString()}] `;
@@ -101,10 +93,12 @@ export function logTo(file: string, logCategories?: LogCategory[], maxLength = 2
 		if (logCategories && logCategories.indexOf(e.category) === -1)
 			return;
 
-		const logMessage = e.message.length > maxLength
-			? e.message.substring(0, maxLength) + "…"
-			: e.message;
-		const prefix = `${time()}[${LogCategory[e.category]}] `;
+		const message = _.trimEnd(e.message);
+		const maxLogLineLength = config.maxLogLineLength;
+		const logMessage = maxLogLineLength && message.length > maxLogLineLength
+			? message.substring(0, maxLogLineLength) + "…"
+			: message;
+		const prefix = `${time()}[${LogCategory[e.category]}] [${LogSeverity[e.severity]}] `;
 		logStream.write(`${prefix}${logMessage}${platformEol}`);
 	});
 	return {

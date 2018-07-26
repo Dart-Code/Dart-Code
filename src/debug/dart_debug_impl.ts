@@ -5,9 +5,9 @@ import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { logError } from "../utils/log";
-import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack } from "./dart_debug_protocol";
+import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
-import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, PromiseCompleter, formatPathForVm, safeSpawn, uriToFilePath } from "./utils";
+import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm, LogCategory, LogMessage, LogSeverity, PromiseCompleter, safeSpawn, uriToFilePath } from "./utils";
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -35,6 +35,8 @@ export class DartDebugSession extends DebugSession {
 	protected sendStdOutToConsole: boolean = true;
 	protected requiresProgram: boolean = true;
 	protected pollforMemoryMs?: number; // If set, will poll for memory usage and send events back.
+	protected processExit: Promise<void> = Promise.resolve();
+	protected maxLogLineLength: number;
 
 	public constructor() {
 		super();
@@ -74,11 +76,13 @@ export class DartDebugSession extends DebugSession {
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
 		this.logFile = args.observatoryLogFile;
+		this.maxLogLineLength = args.maxLogLineLength;
 
 		this.sendResponse(response);
 
 		this.childProcess = this.spawnProcess(args);
 		const process = this.childProcess;
+		this.processExit = new Promise((resolve) => process.on("exit", resolve));
 
 		process.stdout.setEncoding("utf8");
 		process.stdout.on("data", (data) => {
@@ -189,20 +193,18 @@ export class DartDebugSession extends DebugSession {
 			return `${wsUri}/ws`;
 	}
 
-	protected log(message: string) {
-		const max: number = 2500;
-
+	protected log(message: string, severity = LogSeverity.Info) {
 		if (this.logFile) {
 			if (!this.logStream)
 				this.logStream = fs.createWriteStream(this.logFile);
 			this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
-			if (message.length > max)
-				this.logStream.write(message.substring(0, max) + "…\r\n");
+			if (this.maxLogLineLength && message.length > this.maxLogLineLength)
+				this.logStream.write(message.substring(0, this.maxLogLineLength) + "…\r\n");
 			else
 				this.logStream.write(message.trim() + "\r\n");
 		}
 
-		this.sendEvent(new Event("dart.log.observatory", { message }));
+		this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.Observatory)));
 	}
 
 	protected initObservatory(uri: string): Promise<void> {
@@ -294,17 +296,19 @@ export class DartDebugSession extends DebugSession {
 		args: DebugProtocol.DisconnectArguments,
 	): Promise<void> {
 		try {
-			if (this.childProcess != null) {
-				for (const pid of this.additionalPidsToTerminate) {
-					try {
-						this.log(`Terminating related process ${pid}...`);
-						process.kill(pid);
-					} catch (e) {
-						// Sometimes this process will have already gone away (eg. the app finished/terminated)
-						// so logging here just results in lots of useless info.
-					}
+			for (const pid of this.additionalPidsToTerminate) {
+				try {
+					this.log(`Terminating related process ${pid}...`);
+					process.kill(pid);
+				} catch (e) {
+					// Sometimes this process will have already gone away (eg. the app finished/terminated)
+					// so logging here just results in lots of useless info.
 				}
-				this.additionalPidsToTerminate.length = 0;
+			}
+			// Don't do this - because the process might ignore our kill (eg. test framework lets the current
+			// test finish) so we may need to send again it we get another disconnectRequest.
+			// this.additionalPidsToTerminate.length = 0;
+			if (this.childProcess != null) {
 				try {
 					this.log(`Terminating main process...`);
 					this.childProcess.kill();
@@ -312,7 +316,9 @@ export class DartDebugSession extends DebugSession {
 					// This tends to throw a lot because the shell process quit when we terminated the related
 					// VM process above, so just swallow the error.
 				}
-				this.childProcess = null;
+				// Don't do this - because the process might ignore our kill (eg. test framework lets the current
+				// test finish) so we may need to send again it we get another disconnectRequest.
+				// this.childProcess = null;
 			} else if (this.observatory) {
 				try {
 					this.log(`Disconnecting from process...`);
@@ -322,6 +328,7 @@ export class DartDebugSession extends DebugSession {
 					// Restart any paused threads.
 					// Note: Only wait up to 500ms here because sometimes we don't get responses because the VM terminates.
 					// We can't check processExited here as we don't have a handle to the process (we attached).
+					this.log(`Unpausing all threads...`);
 					await Promise.race([
 						Promise.all(this.threadManager.threads.map((thread) => thread.resume())),
 						new Promise((resolve) => setTimeout(resolve, 500)),
@@ -334,8 +341,12 @@ export class DartDebugSession extends DebugSession {
 		} catch (e) {
 			return this.errorResponse(response, `${e}`);
 		} finally {
+			this.log(`Removing all stored data...`);
 			this.threadManager.removeAllStoredData();
 		}
+		this.log(`Waiting for process to finish...`);
+		await this.processExit;
+		this.log(`Disconnecting...`);
 		super.disconnectRequest(response, args);
 	}
 
@@ -763,7 +774,7 @@ export class DartDebugSession extends DebugSession {
 				return this.valueAsString(evalResult, undefined, true);
 			}
 		} catch (e) {
-			logError(e);
+			logError(e, LogCategory.Observatory);
 			return null;
 		}
 	}
@@ -1156,7 +1167,7 @@ export class DartDebugSession extends DebugSession {
 						});
 					}
 				} catch (e) {
-					logError(e);
+					logError(e, LogCategory.Observatory);
 				}
 			}
 		}
@@ -1207,6 +1218,9 @@ export class DartDebugSession extends DebugSession {
 			return `List (${instanceRef.length} items)`;
 		} else if (ref.kind === "Map") {
 			return `Map (${instanceRef.length} items)`;
+		} else if (ref.kind === "Type") {
+			const typeRef = ref as VMTypeRef;
+			return `Type (${typeRef.name})`;
 		} else if (useClassNameAsFallback) {
 			return this.getFriendlyTypeName(instanceRef);
 		} else {
@@ -1306,8 +1320,8 @@ export class DartDebugSession extends DebugSession {
 		setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs);
 	}
 
-	protected logToUser(obj: string) {
-		this.sendEvent(new OutputEvent(`${obj}\n`));
+	protected logToUser(message: string, category?: string) {
+		this.sendEvent(new OutputEvent(`${message}\n`, category));
 	}
 }
 
@@ -1473,7 +1487,7 @@ class ThreadManager {
 			this.threads.splice(this.threads.indexOf(threadInfo), 1);
 			this.removeStoredData(threadInfo);
 		} else {
-			logError(`Failed to find thread for ${ref.id} during exit`);
+			logError(`Failed to find thread for ${ref.id} during exit`, LogCategory.Observatory);
 		}
 	}
 }

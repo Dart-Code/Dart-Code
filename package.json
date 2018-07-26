@@ -2,10 +2,10 @@
 	"name": "dart-code",
 	"displayName": "Dart",
 	"description": "Dart language support and debugger for Visual Studio Code.",
-	"version": "2.15.0-dev",
+	"version": "2.17.0-dev",
 	"publisher": "Dart-Code",
 	"engines": {
-		"vscode": "^1.24.0"
+		"vscode": "^1.25.0"
 	},
 	"license": "SEE LICENSE IN LICENSE",
 	"bugs": {
@@ -188,6 +188,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.upgrade",
+				"title": "Run Flutter Upgrade",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.toggleDebugPainting",
 				"title": "Toggle Debug Painting",
 				"category": "Flutter"
@@ -220,6 +225,11 @@
 			{
 				"command": "flutter.togglePaintBaselines",
 				"title": "Toggle Baseline Painting",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.screenshot",
+				"title": "Save Screenshot",
 				"category": "Flutter"
 			},
 			{
@@ -351,6 +361,9 @@
 				},
 				{
 					"command": "flutter.doctor"
+				},
+				{
+					"command": "flutter.upgrade"
 				},
 				{
 					"command": "flutter.toggleDebugPainting",
@@ -495,6 +508,16 @@
 					"group": "4.5_exec@1"
 				},
 				{
+					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testGroupNode",
+					"command": "dart.startDebuggingTest",
+					"group": "4.5_exec@1"
+				},
+				{
+					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testGroupNode",
+					"command": "dart.startWithoutDebuggingTest",
+					"group": "4.5_exec@1"
+				},
+				{
 					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testTestNode",
 					"command": "dart.startDebuggingTest",
 					"group": "4.5_exec@1"
@@ -582,16 +605,42 @@
 					"description": "The maximum length of a line of code. This is used by the document formatter.",
 					"scope": "resource"
 				},
+				"dart.maxLogLineLength": {
+					"type": "number",
+					"default": 2000,
+					"description": "The maximum length of a line in the log file. Lines longer than this will be truncated and suffixed with an ellipsis.",
+					"scope": "window"
+				},
 				"dart.insertArgumentPlaceholders": {
 					"type": "boolean",
 					"default": true,
 					"description": "Whether to insert argument placeholders during code completions.",
 					"scope": "resource"
 				},
+				"dart.showTestCodeLens": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to show Code Lens for Tests.",
+					"scope": "window"
+				},
 				"dart.showTodos": {
 					"type": "boolean",
 					"default": true,
 					"description": "Whether to show TODOs in the Problems list.",
+					"scope": "window"
+				},
+				"dart.openTestView": {
+					"type": "array",
+					"items": {
+						"enum": [
+							"testRunStart",
+							"testFailure"
+						]
+					},
+					"default": [
+						"testRunStart"
+					],
+					"description": "When to automatically switch focus to the test list (array to support multiple values).",
 					"scope": "window"
 				},
 				"dart.reportAnalyzerErrors": {
@@ -637,12 +686,6 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Whether to show the names of linter rules in the problems panel to make it easier to `// ignore:`.",
-					"scope": "window"
-				},
-				"dart.flutterScreenshotPath": {
-					"type": "string",
-					"default": "",
-					"description": "The location where screenshots will be stored. If blank, Dart Code will attempt to store it in the user's home directory.",
 					"scope": "window"
 				},
 				"dart.flutterSdkPath": {
@@ -715,6 +758,12 @@
 					"description": "The path to a log file for the Dart analysis server built-in instrumentation.\nThis is a diagnostic setting that should not normally be set.",
 					"scope": "window"
 				},
+				"dart.analyzerSshHost": {
+					"type": "string",
+					"default": null,
+					"description": "An SSH host to run the analysis server.\nThis can be useful when modifying code on a remote machine using SSHFS.",
+					"scope": "window"
+				},
 				"dart.extensionLogFile": {
 					"type": "string",
 					"description": "The path to a log file for the Dart Code extension.\nThis is a diagnostic setting that should not normally be set.",
@@ -732,6 +781,7 @@
 				},
 				"dart.analyzerPath": {
 					"type": "string",
+					"default": null,
 					"description": "The path to a custom Dart analysis server.\nThis is a diagnostic setting that should not normally be set.",
 					"scope": "window"
 				},
@@ -918,27 +968,27 @@
 		"glob": "^7.1.2",
 		"lodash": "^4.17.10",
 		"semver": "^5.5.0",
-		"vscode-debugadapter": "^1.29.0",
+		"vscode-debugadapter": "^1.30.0",
 		"vscode-debugprotocol": "^1.29.0",
 		"ws": "^1.1.5"
 	},
 	"devDependencies": {
 		"@types/glob": "^5.0.35",
-		"@types/lodash": "^4.14.108",
-		"@types/mocha": "^5.1.0",
-		"@types/node": "^6.0.107",
+		"@types/lodash": "^4.14.110",
+		"@types/mocha": "^5.2.4",
+		"@types/node": "^6.0.114",
 		"@types/semver": "^5.5.0",
-		"@types/sinon": "^4.3.0",
+		"@types/sinon": "^4.3.3",
 		"@types/ws": "^0.0.38",
-		"mocha": "^5.1.0",
+		"mocha": "^5.2.0",
 		"nyc": "^12.0.2",
 		"remap-istanbul": "^0.11.1",
 		"run-for-every-file": "^1.1.0",
 		"signal-exit": "^3.0.2",
 		"sinon": "^4.4.10",
 		"supports-color": "^5.4.0",
-		"tslint": "^5.9.1",
-		"typescript": "^2.8.3",
+		"tslint": "^5.10.0",
+		"typescript": "^2.9.2",
 		"vscode": "^1.1.18",
 		"vscode-debugadapter-testsupport": "^1.29.0"
 	}

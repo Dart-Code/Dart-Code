@@ -1,15 +1,12 @@
 import * as path from "path";
-import { CancellationToken, DocumentSymbolProvider, Location, SymbolInformation, TextDocument, Uri, WorkspaceSymbolProvider, workspace } from "vscode";
+import { CancellationToken, Location, SymbolInformation, Uri, WorkspaceSymbolProvider, workspace } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { fsPath, toRange } from "../utils";
 
-export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymbolProvider {
-	private analyzer: Analyzer;
+export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	private badChars: RegExp = new RegExp("[^0-9a-z\-]", "gi");
-	constructor(analyzer: Analyzer) {
-		this.analyzer = analyzer;
-	}
+	constructor(public readonly analyzer: Analyzer) { }
 
 	public async provideWorkspaceSymbols(query: string, token: CancellationToken): Promise<SymbolInformation[]> {
 		if (query.length === 0)
@@ -19,12 +16,7 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 		const pattern = ".*" + query.replace(this.badChars, "").split("").map((c) => `[${c.toUpperCase()}${c.toLowerCase()}]`).join(".*") + ".*";
 		const results = await this.analyzer.searchGetElementDeclarations({ pattern, maxResults: 500 });
 
-		return results.declarations.map((d) => this.convertResult(undefined, d, results.files[d.fileIndex], true));
-	}
-
-	public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<SymbolInformation[]> {
-		const results = await this.analyzer.searchGetElementDeclarations({ file: fsPath(document.uri) });
-		return results.declarations.map((d) => this.convertResult(document, d, results.files[d.fileIndex], false));
+		return results.declarations.map((d) => this.convertWorkspaceResult(d, results.files[d.fileIndex]));
 	}
 
 	public async resolveWorkspaceSymbol(symbol: SymbolInformation, token: CancellationToken): Promise<SymbolInformation> {
@@ -36,11 +28,31 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 			document.uri,
 			toRange(document, symbol.locationData.offset, symbol.locationData.length),
 		);
+
+		return symbol;
 	}
 
-	private convertResult(document: TextDocument | undefined, result: as.ElementDeclaration, file: string, includeFilename: boolean): SymbolInformation {
-		let name = result.name;
+	private convertWorkspaceResult(result: as.ElementDeclaration, file: string): SymbolInformation {
+		const names = this.getNames(result, true, file);
 
+		const symbol: any = new PartialSymbolInformation(
+			names.name,
+			getSymbolKindForElementKind(result.kind),
+			names.containerName,
+			new Location(Uri.file(file), undefined),
+		);
+
+		symbol.locationData = {
+			file,
+			length: result.codeLength,
+			offset: result.codeOffset,
+		};
+
+		return symbol;
+	}
+
+	private getNames(result: as.ElementDeclaration, includeFilename: boolean, file: string) {
+		let name = result.name;
 		// Constructors don't come prefixed with class name, so add them for a nice display:
 		//    () => MyClass()
 		//    named() => MyClass.named()
@@ -53,10 +65,8 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 				name = result.className;
 			}
 		}
-
 		if (result.parameters && result.kind !== "SETTER")
 			name += result.parameters;
-
 		let containerName: string;
 		if (includeFilename) {
 			containerName = this.createDisplayPath(file);
@@ -65,26 +75,7 @@ export class DartSymbolProvider implements WorkspaceSymbolProvider, DocumentSymb
 		} else {
 			containerName = result.className;
 		}
-
-		const symbol: any = new PartialSymbolInformation(
-			name,
-			getSymbolKindForElementKind(result.kind),
-			containerName,
-			new Location(
-				Uri.file(file),
-				document ? toRange(document, result.codeOffset, result.codeLength) : undefined,
-			),
-		);
-
-		if (!document) {
-			symbol.locationData = {
-				file,
-				length: result.codeLength,
-				offset: result.codeOffset,
-			};
-		}
-
-		return symbol;
+		return { name, containerName };
 	}
 
 	private createDisplayPath(inputPath: string): string {

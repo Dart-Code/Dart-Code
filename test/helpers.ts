@@ -7,22 +7,28 @@ import * as semver from "semver";
 import * as vs from "vscode";
 import { AnalyzerCapabilities } from "../src/analysis/analyzer";
 import { dartCodeExtensionIdentifier } from "../src/debug/utils";
+import { DaemonCapabilities } from "../src/flutter/flutter_daemon";
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
-import { Sdks, fsPath, vsCodeVersionConstraint } from "../src/utils";
+import { internalApiSymbol } from "../src/symbols";
+import { fsPath, ProjectType, Sdks, vsCodeVersionConstraint } from "../src/utils";
 import { log, logError, logTo, logWarn } from "../src/utils/log";
+import { TestResultsProvider } from "../src/views/test_view";
 import sinon = require("sinon");
 
-export const ext = vs.extensions.getExtension<{
+export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
+export let extApi: {
 	analyzerCapabilities: AnalyzerCapabilities,
 	currentAnalysis: () => Promise<void>,
+	daemonCapabilities: DaemonCapabilities,
 	debugProvider: DebugConfigProvider,
 	nextAnalysis: () => Promise<void>,
 	initialAnalysis: Promise<void>,
 	reanalyze: () => void,
 	renameProvider: DartRenameProvider,
 	sdks: Sdks,
-}>(dartCodeExtensionIdentifier);
+	testTreeProvider: TestResultsProvider,
+};
 
 if (!ext) {
 	if (semver.satisfies(vs.version, vsCodeVersionConstraint)) {
@@ -39,7 +45,9 @@ if (!ext) {
 export const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/hello_world"));
 export const helloWorldMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/main.dart"));
 export const helloWorldTestMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/basic_test.dart"));
+export const helloWorldTestTreeFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/tree_test.dart"));
 export const helloWorldTestBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/broken_test.dart"));
+export const helloWorldTestSkipFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/skip_test.dart"));
 export const helloWorldGettersFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/getters.dart"));
 export const helloWorldBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/broken.dart"));
 export const helloWorldGoodbyeFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/goodbye.dart"));
@@ -47,10 +55,13 @@ export const helloWorldHttpFile = vs.Uri.file(path.join(fsPath(helloWorldFolder)
 export const helloWorldCreateMethodClassAFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/create_method/class_a.dart"));
 export const helloWorldCreateMethodClassBFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/create_method/class_b.dart"));
 export const emptyFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/empty.dart"));
+export const helloWorldCompletionFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/completion.dart"));
 export const everythingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/everything.dart"));
 export const flutterHelloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/flutter_hello_world"));
 export const flutterEmptyFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/empty.dart"));
 export const flutterHelloWorldMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/main.dart"));
+export const flutterHelloWorldExampleSubFolder = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "example"));
+export const flutterHelloWorldExampleSubFolderMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldExampleSubFolder), "lib/main.dart"));
 export const flutterHelloWorldBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/broken.dart"));
 export const flutterTestMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/widget_test.dart"));
 export const flutterTestOtherFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/other_test.dart"));
@@ -61,9 +72,29 @@ export let doc: vs.TextDocument;
 export let editor: vs.TextEditor;
 export let documentEol: string;
 
-export async function activate(file: vs.Uri = emptyFile): Promise<void> {
+function getDefaultFile(): vs.Uri {
+	if (extApi.sdks.projectType === ProjectType.Dart)
+		return emptyFile;
+	else
+		return flutterEmptyFile;
+}
+
+export async function activateWithoutAnalysis(): Promise<void> {
 	log("Activating");
 	await ext.activate();
+	extApi = ext.exports[internalApiSymbol];
+}
+
+export async function activate(file?: vs.Uri): Promise<void> {
+	await activateWithoutAnalysis();
+	if (!file)
+		file = getDefaultFile();
+
+	if (extApi && extApi.sdks && extApi.sdks.projectType === ProjectType.Flutter) {
+		log("Restoring packages for Flutter project");
+		await vs.commands.executeCommand("dart.getPackages", vs.workspace.workspaceFolders ? [0] : undefined);
+	}
+
 	log(`Closing all open files`);
 	await closeAllOpenFiles();
 	log(`Opening ${fsPath(file)}`);
@@ -72,18 +103,19 @@ export async function activate(file: vs.Uri = emptyFile): Promise<void> {
 	editor = await vs.window.showTextDocument(doc);
 	documentEol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
 	log(`Waiting for initial and any in-progress analysis`);
-	await ext.exports.initialAnalysis;
+	await extApi.initialAnalysis;
 	// Opening a file above may start analysis after a short period so give it time to start
 	// before we continue.
 	await delay(200);
-	await ext.exports.currentAnalysis();
+	await extApi.currentAnalysis();
 	log(`Ready to start test`);
 }
 
 export async function getPackages() {
+	log("Restoring packages and waiting for next analysis to complete");
+	await activateWithoutAnalysis();
 	await waitForNextAnalysis(async () => {
-		await vs.commands.executeCommand("dart.getPackages", helloWorldFolder);
-		await ext.exports.reanalyze();
+		await vs.commands.executeCommand("dart.getPackages", vs.workspace.workspaceFolders ? [0] : undefined);
 	}, 60);
 }
 
@@ -136,8 +168,8 @@ before("throw if DART_CODE_IS_TEST_RUN is not set", () => {
 		throw new Error("DART_CODE_IS_TEST_RUN env var should be set for test runs.");
 });
 
-const deferredItems: Array<(result?: "failed" | "passed") => Promise<void> | void> = [];
-const deferredToLastItems: Array<(result?: "failed" | "passed") => Promise<void> | void> = [];
+const deferredItems: Array<(result?: "failed" | "passed") => Promise<any> | any> = [];
+const deferredToLastItems: Array<(result?: "failed" | "passed") => Promise<any> | any> = [];
 // tslint:disable-next-line:only-arrow-functions
 afterEach("run deferred functions", async function () {
 	let firstError: any;
@@ -157,10 +189,10 @@ afterEach("run deferred functions", async function () {
 	if (firstError)
 		throw firstError;
 });
-export function defer(callback: (result?: "failed" | "passed") => Promise<void> | void): void {
+export function defer(callback: (result?: "failed" | "passed") => Promise<any> | any): void {
 	deferredItems.push(callback);
 }
-export function deferUntilLast(callback: (result?: "failed" | "passed") => Promise<void> | void): void {
+export function deferUntilLast(callback: (result?: "failed" | "passed") => Promise<any> | any): void {
 	deferredToLastItems.push(callback);
 }
 
@@ -178,6 +210,18 @@ export async function setTestContent(content: string): Promise<boolean> {
 
 export async function uncommentTestFile(): Promise<void> {
 	await setTestContent(doc.getText().replace(/\n\/\/ /mg, "\n"));
+}
+
+export function getExpectedResults() {
+	const start = positionOf("// == EXPECTED RESULTS ==^");
+	const end = positionOf("^// == /EXPECTED RESULTS ==");
+	const doc = vs.window.activeTextEditor.document;
+	const results = doc.getText(new vs.Range(start, end));
+	return results.split("\n")
+		.map((l) => l.trim())
+		.filter((l) => l.startsWith("// ") && !l.startsWith("// #")) // Allow "comment" lines within the comment
+		.map((l) => l.substr(3))
+		.join("\n");
 }
 
 export function select(range: vs.Range) {
@@ -374,7 +418,15 @@ export async function ensureTestContent(expected: string): Promise<void> {
 
 export async function ensureTestContentWithCursorPos(expected: string): Promise<void> {
 	await ensureTestContent(expected.replace("^", ""));
-	await tryFor(() => assert.equal(doc.offsetAt(editor.selection.active), expected.indexOf("^")), 100);
+	// To avoid issues with newlines not matching up in `expected`, we'll just stick the
+	// placeholder character ^ in the cursor location then call ensureTextContent.
+	const originalSelection = editor.document.getText(editor.selection);
+	try {
+		await editor.edit((builder) => builder.replace(editor.selection, "^"));
+		await ensureTestContent(expected);
+	} finally {
+		await editor.edit((builder) => builder.replace(editor.selection, originalSelection));
+	}
 }
 
 export function delay(milliseconds: number): Promise<void> {
@@ -428,16 +480,16 @@ export async function waitForEditorChange(action: () => Thenable<void>): Promise
 
 export async function waitForNextAnalysis(action: () => void | Thenable<void>, timeoutSeconds?: number): Promise<void> {
 	log("Waiting for any in-progress analysis to complete");
-	await ext.exports.currentAnalysis;
+	await extApi.currentAnalysis;
 	// Get a new completer for the next analysis.
-	const nextAnalysis = ext.exports.nextAnalysis();
+	const nextAnalysis = extApi.nextAnalysis();
 	log("Running requested action");
 	await action();
 	log(`Waiting for analysis to complete`);
 	await withTimeout(nextAnalysis, "Analysis did not complete within specified timeout", timeoutSeconds);
 }
 
-export async function withTimeout(promise: Promise<void>, message: string | (() => string), seconds?: number) {
+export async function withTimeout(promise: Promise<any>, message: string | (() => string), seconds?: number) {
 	return Promise.race([
 		promise,
 		timeoutIn(message, seconds),
@@ -462,7 +514,7 @@ async function getResolvedDebugConfiguration(extraConfiguration?: { [key: string
 		request: "launch",
 		type: "dart",
 	}, extraConfiguration);
-	return await ext.exports.debugProvider.resolveDebugConfiguration(vs.workspace.workspaceFolders[0], debugConfig);
+	return await extApi.debugProvider.resolveDebugConfiguration(vs.workspace.workspaceFolders[0], debugConfig);
 }
 
 export async function getLaunchConfiguration(script?: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {

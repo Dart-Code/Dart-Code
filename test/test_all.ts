@@ -22,6 +22,10 @@ function runNode(cwd: string, args: string[], env: any): Promise<number> {
 	return new Promise<number>((resolve, reject) => {
 		let timerWarn: NodeJS.Timer;
 		let timerKill: NodeJS.Timer;
+		console.log(`    Spawning test run:`);
+		console.log(`        Command: node ${args.join(" ")}`);
+		console.log(`        CWD: ${cwd}`);
+		console.log(`        ENV: ${JSON.stringify(env, undefined, 4).replace(/    /gm, "                ").replace(/\n}/, "\n              }")}`);
 		const proc = childProcess.spawn("node", args, { env, stdio: "inherit", cwd });
 		proc.on("data", (data: Buffer | string) => console.log(data.toString()));
 		proc.on("error", (data: Buffer | string) => console.warn(data.toString()));

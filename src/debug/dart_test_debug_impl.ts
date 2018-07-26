@@ -4,7 +4,7 @@ import { ErrorNotification, GroupNotification, PrintNotification, SuiteNotificat
 import { DartDebugSession } from "./dart_debug_impl";
 import { ObservatoryConnection } from "./dart_debug_protocol";
 import { TestRunner } from "./test_runner";
-import { DartLaunchRequestArguments, FlutterLaunchRequestArguments } from "./utils";
+import { DartLaunchRequestArguments, FlutterLaunchRequestArguments, LogCategory, LogMessage, LogSeverity } from "./utils";
 
 const tick = "✓";
 const cross = "✖";
@@ -20,7 +20,6 @@ export class DartTestDebugSession extends DartDebugSession {
 
 	protected spawnProcess(args: DartLaunchRequestArguments): any {
 		const debug = !args.noDebug;
-		let envOverrides: any;
 		let appArgs: string[] = [];
 
 		// To use the test framework in the supported debugging way we should
@@ -34,30 +33,34 @@ export class DartTestDebugSession extends DartDebugSession {
 
 		// Instead, we do it the VM way for now...
 		if (debug) {
-			envOverrides = {
-				DART_VM_OPTIONS: "--enable-vm-service=0 --pause_isolates_on_start=true",
-			};
+			appArgs.push("--enable-vm-service=0");
+			appArgs.push("--pause_isolates_on_start=true");
+		}
+		if (args.vmAdditionalArgs) {
+			appArgs = appArgs.concat(args.vmAdditionalArgs);
 		}
 
-		// Only run single-threaded in the runner.
-		appArgs.push("-j1");
+		appArgs.push(args.pubSnapshotPath);
+		appArgs = appArgs.concat(["run", "test", "-r", "json"]);
+		appArgs.push("-j1"); // Only run single-threaded in the runner.
+
+		if (args.program)
+			appArgs.push(this.sourceFileForArgs(args));
 
 		if (args.args) {
 			appArgs = appArgs.concat(args.args);
 		}
 
-		if (args.program)
-			appArgs.push(this.sourceFileForArgs(args));
-
-		const logger = (message: string) => this.sendEvent(new Event("dart.log.pub.test", { message }));
-		return this.createRunner(args.pubPath, args.cwd, args.program, ["run", "test", "-r", "json"].concat(appArgs), args.pubTestLogFile, logger, envOverrides);
+		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.PubTest)));
+		return this.createRunner(args.dartPath, args.cwd, args.program, appArgs, args.pubTestLogFile, logger);
 	}
 
-	protected createRunner(executable: string, projectFolder: string, program: string, args: string[], logFile: string, logger: (message: string) => void, envOverrides?: any) {
+	protected createRunner(executable: string, projectFolder: string, program: string, args: string[], logFile: string, logger: (message: string, severity: LogSeverity) => void, envOverrides?: any) {
 		const runner = new TestRunner(executable, projectFolder, args, logFile, logger, envOverrides);
 
 		// Set up subscriptions.
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
+		runner.registerForUnhandledMessages((msg) => this.logToUserIfAppropriate(msg, "stdout"));
 		runner.registerForTestStartedProcess((n) => this.initObservatory(`${n.observatoryUri}ws`));
 		runner.registerForAllTestNotifications((n) => {
 			try {
@@ -75,6 +78,16 @@ export class DartTestDebugSession extends DartDebugSession {
 		});
 
 		return runner.process;
+	}
+
+	protected logToUserIfAppropriate(message: string, category?: string) {
+		// Filter out these messages taht come to stdout that we don't want to send to the user.
+		if (message && message.startsWith("Observatory listening on"))
+			return;
+		if (message && message.startsWith("Press Control-C again"))
+			return;
+
+		this.logToUser(message, category);
 	}
 
 	private readonly suitePaths: string[] = [];

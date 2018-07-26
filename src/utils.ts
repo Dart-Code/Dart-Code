@@ -4,15 +4,17 @@ import * as https from "https";
 import * as os from "os";
 import * as path from "path";
 import * as semver from "semver";
-import { Position, Range, TextDocument, Uri, WorkspaceFolder, commands, window, workspace } from "vscode";
+import { commands, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { config } from "./config";
 import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
 import { referencesFlutterSdk } from "./sdk/utils";
+import { getExtensionLogPath } from "./utils/log";
 
 export const extensionVersion = getExtensionVersion();
 export const vsCodeVersionConstraint = getVsCodeVersionConstraint();
 export const isDevExtension = checkIsDevExtension();
 export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "dart_code_flutter_create.dart";
+export const showLogAction = "Show Log";
 
 export function fsPath(uri: Uri | string) {
 	if (!config.normalizeWindowsDriveLetters)
@@ -56,20 +58,21 @@ export function resolvePaths(p: string) {
 	return p;
 }
 
-export function createFolderIfRequired(file: string) {
+export function mkDirRecursive(folder: string) {
+	const parent = path.dirname(folder);
+	if (!fs.existsSync(parent))
+		mkDirRecursive(parent);
+	if (!fs.existsSync(folder))
+		fs.mkdirSync(folder);
+}
+
+export function createFolderForFile(file: string) {
 	if (!file || !path.isAbsolute(file))
 		return;
 
 	const folder = path.dirname(file);
-	function mkDirAndParents(folder: string) {
-		const parent = path.dirname(folder);
-		if (!fs.existsSync(parent))
-			mkDirAndParents(parent);
-		if (!fs.existsSync(folder))
-			fs.mkdirSync(folder);
-	}
 	if (!fs.existsSync(folder))
-		mkDirAndParents(folder);
+		mkDirRecursive(folder);
 	return file;
 }
 
@@ -143,8 +146,7 @@ export function isTestFile(file: string): boolean {
 }
 
 export function supportsPubRunTest(folder: string, file: string): boolean {
-	return config.previewTestRunnerForDart
-		&& fs.existsSync(path.join(folder, ".packages"))
+	return fs.existsSync(path.join(folder, ".packages"))
 		&& fs.existsSync(path.join(folder, "pubspec.yaml"));
 }
 
@@ -213,9 +215,20 @@ export function getLatestSdkVersion(): PromiseLike<string> {
 	});
 }
 
-export function escapeRegExp(input: string) {
-	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
-	return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+// Escapes a set of command line arguments so that the escaped string is suitable for passing as an argument
+// to another shell command.
+// Implementation is taken from https://github.com/xxorax/node-shell-escape
+export function escapeShell(args: string[]) {
+	const ret: string[] = [];
+	args.forEach((arg) => {
+		if (/[^A-Za-z0-9_\/:=-]/.test(arg)) {
+			arg = "'" + arg.replace(/'/g, "'\\''") + "'";
+			arg = arg.replace(/^(?:'')+/g, "") // unduplicate single-quote at the beginning
+				.replace(/\\'''/g, "\\'"); // remove non-escaped single-quote if there are enclosed between 2 escaped
+		}
+		ret.push(arg);
+	});
+	return ret.join(" ");
 }
 
 export function openInBrowser(url: string) {
@@ -235,9 +248,13 @@ export enum ProjectType {
 	Fuchsia,
 }
 
-export async function reloadExtension(prompt?: string, buttonText?: string) {
+export async function reloadExtension(prompt?: string, buttonText?: string, offerLogFile = false) {
 	const restartAction = buttonText || "Restart";
-	if (!prompt || await window.showInformationMessage(prompt, restartAction) === restartAction) {
+	const actions = offerLogFile ? [restartAction, showLogAction] : [restartAction];
+	const chosenAction = prompt && await window.showInformationMessage(prompt, ...actions);
+	if (chosenAction === showLogAction) {
+		openExtensionLogFile();
+	} else if (!prompt || chosenAction === restartAction) {
 		commands.executeCommand("_dart.reloadExtension");
 	}
 }
@@ -288,4 +305,14 @@ export function trueCasePathSync(fsPath: string): string {
 	// Fortunately, glob() with nocase case-corrects the input even if it is
 	// a *literal* path.
 	return glob.sync(noDrivePath, { nocase: true, cwd: pathRoot })[0];
+}
+
+export function getRandomInt(min: number, max: number) {
+	min = Math.ceil(min);
+	max = Math.floor(max);
+	return Math.floor(Math.random() * (max - min)) + min;
+}
+
+export function openExtensionLogFile() {
+	workspace.openTextDocument(getExtensionLogPath()).then(window.showTextDocument);
 }

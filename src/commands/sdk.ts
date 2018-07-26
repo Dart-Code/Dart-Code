@@ -10,7 +10,7 @@ import { globalFlutterArgs, safeSpawn } from "../debug/utils";
 import { locateBestProjectRoot } from "../project";
 import { DartHoverProvider } from "../providers/dart_hover_provider";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
-import { dartPubPath, flutterPath, showFlutterActivationFailure } from "../sdk/utils";
+import { flutterPath, pubPath, showFlutterActivationFailure } from "../sdk/utils";
 import * as util from "../utils";
 import { fsPath, isFlutterWorkspaceFolder, ProjectType, Sdks } from "../utils";
 import * as channels from "./channels";
@@ -87,9 +87,10 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", async (uri) => {
 			let shouldNotify = false;
 			if (!uri || !(uri instanceof Uri)) {
+
 				// If there is no path for this session, get it from config
 				// If there is already a path set for this session, but the config differs
-				// set the session path to the config path and conrtinue execution. 
+				// set the session path to the config path and conrtinue execution.
 				if (!this.flutterScreenshotPath) {
 					this.flutterScreenshotPath = config.flutterScreenshotPath;
 					shouldNotify = true;
@@ -144,6 +145,17 @@ export class SdkCommands {
 			if (!fs.existsSync(tempDir))
 				fs.mkdirSync(tempDir);
 			return this.runFlutterInFolder(tempDir, ["doctor"], "flutter");
+		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.upgrade", async (selection) => {
+			if (!sdks.flutter) {
+				showFlutterActivationFailure("flutter.upgrade");
+				return;
+			}
+			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
+			if (!fs.existsSync(tempDir))
+				fs.mkdirSync(tempDir);
+			await this.runFlutterInFolder(tempDir, ["upgrade"], "flutter");
+			await util.reloadExtension();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
 		// Internal command that's fired in user_prompts to actually do the creation.
@@ -222,7 +234,7 @@ export class SdkCommands {
 	}
 
 	private runPubInFolder(folder: string, args: string[], shortPath: string): Thenable<number> {
-		const binPath = path.join(this.sdks.dart, dartPubPath);
+		const binPath = path.join(this.sdks.dart, pubPath);
 		args = args.concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
 		return this.runCommandInFolder(shortPath, "pub", folder, binPath, args);
 	}
