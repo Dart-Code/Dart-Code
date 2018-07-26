@@ -24,7 +24,7 @@ main() {
 		assert.ok(!sig);
 	});
 
-	it("returns simple sig", async () => {
+	it("displays a simple sig", async () => {
 		await setTestContent(`
 main() {
   print("here
@@ -42,9 +42,9 @@ main() {
 		assert.equal(sig.signatures[0].parameters[0].documentation, undefined);
 	});
 
-	it("returns displays optional params correctly", async () => {
+	it("displays optional params correctly", async () => {
 		await setTestContent(`
-a(String name, [int age=1, int otherAge=2]) {}
+a(String name, [int age, int otherAge]) {}
 main() {
   a("here
 }
@@ -56,9 +56,9 @@ main() {
 		assert.equal(sig.signatures[0].label, "a(String name, [int age, int otherAge])");
 	});
 
-	it("returns displays named params correctly", async () => {
+	it("displays named params correctly", async () => {
 		await setTestContent(`
-a(String name, {int age: 1, int otherAge: 2}) {}
+a(String name, {int age, int otherAge}) {}
 main() {
   a("here
 }
@@ -70,9 +70,9 @@ main() {
 		assert.equal(sig.signatures[0].label, "a(String name, {int age, int otherAge})");
 	});
 
-	it("returns only named params correctly", async () => {
+	it("displays only named params correctly", async () => {
 		await setTestContent(`
-a({int age: 1, int otherAge: 2}) {}
+a({int age, int otherAge}) {}
 main() {
   a("here
 }
@@ -84,4 +84,31 @@ main() {
 		assert.equal(sig.signatures[0].label, "a({int age, int otherAge})");
 	});
 
+	it("displays optional params default values", async () => {
+		await setTestContent(`
+a(String name, [int age, int otherAge = 2]) {}
+main() {
+  a("here
+}
+		`);
+		const sig = await getSignatureAt("here^");
+		assert.ok(sig);
+		// assert.equal(sig.activeParameter, 0);
+		assert.equal(sig.activeSignature, 0);
+		assert.equal(sig.signatures[0].label, "a(String name, [int age, int otherAge = 2])");
+	});
+
+	it("displays named params default values", async () => {
+		await setTestContent(`
+a(String name, {int age, int otherAge: 2}) {}
+main() {
+  a("here
+}
+		`);
+		const sig = await getSignatureAt("here^");
+		assert.ok(sig);
+		// assert.equal(sig.activeParameter, 0);
+		assert.equal(sig.activeSignature, 0);
+		assert.equal(sig.signatures[0].label, "a(String name, {int age, int otherAge: 2})");
+	});
 });

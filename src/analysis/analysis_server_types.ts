@@ -407,11 +407,6 @@ export interface AnalysisGetSignatureResponse {
 	 * A list of information about each of the parameters of the function being invoked.
 	 */
 	parameters: ParameterInfo[];
-
-	/**
-	 * The index of the paramter in the parameters collection at the specified offset.
-	 */
-	selectedParameterIndex: number;
 }
 
 /**
@@ -4338,6 +4333,12 @@ export interface ParameterInfo {
 	 * The type of the parameter.
 	 */
 	type: string;
+
+	/**
+	 * The default value for this parameter. This value will be omitted if the parameter
+	 * does not have a default value.
+	 */
+	defaultValue?: string;
 }
 
 /**
