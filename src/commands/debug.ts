@@ -137,7 +137,7 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => { timeDilation = 6.0 - timeDilation; this.sendServiceSetting("ext.flutter.timeDilation"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => { debugModeBannerEnabled = !debugModeBannerEnabled; this.sendServiceSetting("ext.flutter.debugAllowBanner"); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => { paintBaselinesEnabled = !paintBaselinesEnabled; this.sendServiceSetting("ext.flutter.debugPaintBaselinesEnabled"); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleWidgetInspector", () => { widgetInspectorEnabled = !widgetInspectorEnabled; this.sendServiceSetting("ext.flutter.debugWidgetInspector"); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.inspectWidget", () => { widgetInspectorEnabled = true; this.sendServiceSetting("ext.flutter.debugWidgetInspector"); }));
 
 		// Open Observatory.
 		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", async () => {

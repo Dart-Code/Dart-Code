@@ -228,8 +228,8 @@
 				"category": "Flutter"
 			},
 			{
-				"command": "flutter.toggleWidgetInspector",
-				"title": "Toggle Widget Inspector",
+				"command": "flutter.inspectWidget",
+				"title": "Inspect Widget",
 				"category": "Flutter"
 			},
 			{
@@ -389,7 +389,7 @@
 					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.debugPaintBaselinesEnabled"
 				},
 				{
-					"command": "flutter.toggleWidgetInspector",
+					"command": "flutter.inspectWidget",
 					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.debugWidgetInspector && dart-code:trackWidgetCreationEnabled"
 				},
 				{
