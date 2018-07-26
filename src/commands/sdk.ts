@@ -178,8 +178,6 @@ export class SdkCommands {
 			return this.runFlutterInFolder(path.dirname(projectPath), args, projectName);
 		}));
 
-		// context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", (selection) => this.createFlutterScreenshot()));
-
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
 			if (config.for(td.uri).runPubGetOnPubspecChanges && path.basename(fsPath(td.uri)).toLowerCase() === "pubspec.yaml")
