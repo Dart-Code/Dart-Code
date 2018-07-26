@@ -146,7 +146,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			: this.getSuggestionKind(suggestion.kind);
 
 		const completion = new CompletionItem(label, kind);
-		completion.label = `${label} (${element ? element.kind : ""}) (${suggestion.kind})`;
+		completion.label = label;
 		completion.kind = kind;
 		completion.detail = (suggestion.isDeprecated ? "(deprecated) " : "") + detail;
 		completion.documentation = new MarkdownString(cleanDartdoc(suggestion.docSummary));
