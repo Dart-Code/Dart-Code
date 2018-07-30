@@ -207,7 +207,7 @@ describe("dart test debugger", () => {
 			await runWithoutDebugging(helloWorldTestTreeFile, ["--name", makeRegexForTest(test.fullName, test.isGroup)]);
 			checkResults(`After running ${numRuns++} tests (most recently ${test.fullName})`);
 		}
-	});
+	}).timeout(120000); // This test runs lots of tests, and they're quite slow to start up currently.
 
 	it.skip("removes stale results when running a full suite", () => {
 		// Need to rename a test or something to ensure we get a stale result
