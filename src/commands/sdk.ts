@@ -116,7 +116,7 @@ export class SdkCommands {
 			await this.runFlutterInFolder(this.flutterScreenshotPath, ["screenshot"], "screenshot");
 
 			if (shouldNotify) {
-				const res = await vs.window.showInformationMessage(`Screenshots are being saved to ${this.flutterScreenshotPath}`, "Show Folder");
+				const res = await vs.window.showInformationMessage(`Screenshots will be saved to ${this.flutterScreenshotPath}`, "Show Folder");
 				if (res)
 					await vs.commands.executeCommand("revealFileInOS", Uri.file(this.flutterScreenshotPath));
 			}
