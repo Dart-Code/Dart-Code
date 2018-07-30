@@ -734,7 +734,8 @@ enum TestSortOrder {
 function getTestSortOrder(status: TestStatus): TestSortOrder {
 	if (status === TestStatus.Failed || status === TestStatus.Errored)
 		return TestSortOrder.Top;
-	if (status === TestStatus.Skipped)
-		return TestSortOrder.Bottom;
+	// https://github.com/Dart-Code/Dart-Code/issues/1125
+	// if (status === TestStatus.Skipped)
+	// 	return TestSortOrder.Bottom;
 	return TestSortOrder.Middle;
 }
