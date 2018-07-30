@@ -89,7 +89,8 @@ export class SdkCommands {
 			if (!uri || !(uri instanceof Uri)) {
 
 				// If there is no path for this session, or it differs from config, use the one from config.
-				if (!this.flutterScreenshotPath || this.flutterScreenshotPath !== config.flutterScreenshotPath) {
+				if (!this.flutterScreenshotPath ||
+					(config.flutterScreenshotPath && this.flutterScreenshotPath !== config.flutterScreenshotPath)) {
 					this.flutterScreenshotPath = config.flutterScreenshotPath;
 					shouldNotify = true;
 				}
