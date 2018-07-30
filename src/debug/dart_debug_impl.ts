@@ -446,7 +446,12 @@ export class DartDebugSession extends DebugSession {
 		const scriptRef: VMScriptRef = data.data as VMScriptRef;
 
 		data.thread.getScript(scriptRef).then((script: VMScript) => {
-			response.body = { content: script.source };
+			if (script.source) {
+				response.body = { content: script.source };
+			} else {
+				response.success = false;
+				response.message = "<source not available>";
+			}
 			this.sendResponse(response);
 		}).catch((error) => this.errorResponse(response, `${error}`));
 	}
