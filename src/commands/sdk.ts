@@ -88,21 +88,16 @@ export class SdkCommands {
 			let shouldNotify = false;
 			if (!uri || !(uri instanceof Uri)) {
 
-				// If there is no path for this session, get it from config
-				// If there is already a path set for this session, but the config differs
-				// set the session path to the config path and conrtinue execution.
-				if (!this.flutterScreenshotPath) {
-					this.flutterScreenshotPath = config.flutterScreenshotPath;
-					shouldNotify = true;
-				} else if (config.flutterScreenshotPath && (this.flutterScreenshotPath !== config.flutterScreenshotPath)) {
+				// If there is no path for this session, or it differs from config, use the one from config.
+				if (!this.flutterScreenshotPath || this.flutterScreenshotPath !== config.flutterScreenshotPath) {
 					this.flutterScreenshotPath = config.flutterScreenshotPath;
 					shouldNotify = true;
 				}
 
-				// If path is still empty it will bring up the folder selector.
+				// If path is still empty, bring up the folder selector.
 				if (!this.flutterScreenshotPath) {
 					const selectedFolder =
-						await window.showOpenDialog({ canSelectFolders: true, canSelectMany: false, openLabel: "Select folder to save screenshot" });
+						await window.showOpenDialog({ canSelectFolders: true, openLabel: "Set screenshots folder" });
 					if (selectedFolder && selectedFolder.length > 0) {
 						// Set variable to selected path. This allows prompting the user only once.
 						this.flutterScreenshotPath = selectedFolder[0].path;
@@ -113,24 +108,17 @@ export class SdkCommands {
 					}
 				}
 
-				// if folder doesn't exist, create it
-				if (!fs.existsSync(this.flutterScreenshotPath)) {
-					util.mkDirRecursive(this.flutterScreenshotPath);
-				}
+				// Ensure folder exists.
+				util.mkDirRecursive(this.flutterScreenshotPath);
 			}
 
-			const screenshotResult = this.runFlutterInFolder(this.flutterScreenshotPath, ["screenshot"], "screenshot");
+			await this.runFlutterInFolder(this.flutterScreenshotPath, ["screenshot"], "screenshot");
 
-			screenshotResult.then(async (_) => {
-				if (shouldNotify) {
-					const res = await vs.window.showInformationMessage(`Screenshot saved at ${this.flutterScreenshotPath}`, "Open Folder");
-					if (res) {
-						await vs.commands.executeCommand("revealFileInOS", Uri.parse(this.flutterScreenshotPath));
-					}
-				}
-			});
-
-			return screenshotResult;
+			if (shouldNotify) {
+				const res = await vs.window.showInformationMessage(`Screenshots are being saved to ${this.flutterScreenshotPath}`, "Show Folder");
+				if (res)
+					await vs.commands.executeCommand("revealFileInOS", Uri.file(this.flutterScreenshotPath));
+			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => {
 			return vs.commands.executeCommand("dart.upgradePackages", selection);
