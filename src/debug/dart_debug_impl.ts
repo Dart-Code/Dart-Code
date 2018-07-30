@@ -512,25 +512,27 @@ export class DartDebugSession extends DebugSession {
 				const uri = location.script.uri;
 				const shortName = this.convertVMUriToUserName(uri);
 				let sourcePath = this.convertVMUriToSourcePath(uri);
+				let canShowSource = fs.existsSync(sourcePath);
 
 				// Download the source if from a "dart:" uri.
 				let sourceReference: number;
 				if (uri.startsWith("dart:")) {
 					sourcePath = null;
 					sourceReference = thread.storeData(location.script);
+					canShowSource = true;
 				}
 
 				const stackFrame: DebugProtocol.StackFrame = new StackFrame(
 					frameId,
 					frameName,
-					new Source(shortName, sourcePath, sourceReference, null, location.script),
+					canShowSource ? new Source(shortName, sourcePath, sourceReference, null, location.script) : undefined,
 					0, 0,
 				);
 				// If we wouldn't debug this source, then deemphasize in the stack.
-				if (
+				if (stackFrame.source && (
 					!this.isValidToDebug(uri)
 					|| (this.isSdkLibrary(uri) && !this.debugSdkLibraries)
-					|| (this.isExternalLibrary(uri) && !this.debugExternalLibraries)
+					|| (this.isExternalLibrary(uri) && !this.debugExternalLibraries))
 				) {
 					stackFrame.source.presentationHint = "deemphasize";
 				}
