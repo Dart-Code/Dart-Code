@@ -433,6 +433,10 @@
 				{
 					"command": "flutter.openInXcode",
 					"when": "false"
+				},
+				{
+					"command": "flutter.screenshot",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				}
 			],
 			"editor/title": [
@@ -705,8 +709,7 @@
 				},
 				"dart.flutterScreenshotPath": {
 					"type": "string",
-					"default": "",
-					"description": "The location where screenshots will be stored. If blank, Dart Code will attempt to store it in the user's home directory.",
+					"description": "The path to a directory to save Flutter screenshots.",
 					"scope": "window"
 				},
 				"dart.flutterSdkPath": {
