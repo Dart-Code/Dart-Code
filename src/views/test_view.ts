@@ -368,13 +368,9 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		// TODO: Some notification that things are complete?
 		// TODO: Maybe a progress bar during the run?
 
-		// Remove all hidden/stale results.
-		suite.getAllGroups(true).filter((g) => g.isStale || g.isPhantomGroup || g.hidden).forEach((g) => {
-			suite.removeGroup(g);
-			this.updateNode(g.parent);
-		});
+		// Hide stale nodes.
 		suite.getAllTests(true).filter((t) => t.isStale || t.hidden).forEach((t) => {
-			suite.removeTest(t);
+			t.hidden = true;
 			this.updateNode(t.parent);
 		});
 
@@ -426,7 +422,7 @@ class SuiteData {
 		return _.uniq(
 			Object.keys(this.tests)
 				.map((tKey) => this.tests[tKey])
-				.filter((g) => includeHidden || !g.hidden),
+				.filter((t) => includeHidden || !t.hidden),
 		);
 	}
 	public getCurrentGroup(id: number) {
@@ -474,18 +470,6 @@ class SuiteData {
 			this.storeTest(test.id, match);
 		}
 		return match;
-	}
-	public removeGroup(group: GroupTreeItem) {
-		Object.keys(this.groups).forEach((gKey) => {
-			if (this.groups[gKey] === group)
-				delete this.groups[gKey];
-		});
-	}
-	public removeTest(test: TestTreeItem) {
-		Object.keys(this.tests).forEach((tKey) => {
-			if (this.tests[tKey] === test)
-				delete this.tests[tKey];
-		});
 	}
 }
 
