@@ -232,15 +232,23 @@ describe.only("dart test debugger", () => {
 		checkResults(`After initial run`);
 		const visitor = new TestOutlineVisitor();
 		visitor.visit(OpenFileTracker.getOutlineFor(helloWorldTestDupeNameFile));
-		// Re-run each test.
-		for (const test of visitor.tests.filter((t) => !t.isGroup)) {
-			await runWithoutDebugging(helloWorldTestDupeNameFile, ["--name", makeRegexForTest(test.fullName, test.isGroup)]);
-			checkResults(`After running ${numRuns++} tests (most recently the test: ${test.fullName})`);
-		}
-		// Re-run each group.
-		for (const group of visitor.tests.filter((t) => t.isGroup)) {
-			await runWithoutDebugging(helloWorldTestDupeNameFile, ["--name", makeRegexForTest(group.fullName, group.isGroup)]);
-			checkResults(`After running ${numRuns++} groups (most recently the group: ${group.fullName})`);
+		const doc = await vs.workspace.openTextDocument(helloWorldTestDupeNameFile);
+		const editor = await vs.window.showTextDocument(doc);
+		for (const modifyFile of [false, true]) {
+			// We'll run all this twice, once without modifying the file and then with new lines inserted (to
+			// shift the line)
+			if (modifyFile)
+				await editor.edit((e) => e.insert(doc.positionAt(0), "// These\n// are\n// inserted\n// lines.\n\n"));
+			// Re-run each test.
+			for (const test of visitor.tests.filter((t) => !t.isGroup)) {
+				await runWithoutDebugging(helloWorldTestDupeNameFile, ["--name", makeRegexForTest(test.fullName, test.isGroup)]);
+				checkResults(`After running ${numRuns++} tests (most recently the test: ${test.fullName})`);
+			}
+			// Re-run each group.
+			for (const group of visitor.tests.filter((t) => t.isGroup)) {
+				await runWithoutDebugging(helloWorldTestDupeNameFile, ["--name", makeRegexForTest(group.fullName, group.isGroup)]);
+				checkResults(`After running ${numRuns++} groups (most recently the group: ${group.fullName})`);
+			}
 		}
 	}).timeout(160000); // This test runs lots of tests, and they're quite slow to start up currently.
 
