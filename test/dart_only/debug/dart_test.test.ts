@@ -9,9 +9,9 @@ import { TestOutlineVisitor } from "../../../src/utils/outline";
 import { makeRegexForTest } from "../../../src/utils/test";
 import { TestResultsProvider, TestStatus } from "../../../src/views/test_view";
 import { DartDebugClient } from "../../dart_debug_client";
-import { activate, defer, delay, ext, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, openFile, positionOf, withTimeout } from "../../helpers";
+import { activate, defer, delay, ext, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, openFile, positionOf, withTimeout } from "../../helpers";
 
-describe("dart test debugger", () => {
+describe.only("dart test debugger", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	beforeEach("activate helloWorldTestMainFile", () => activate(helloWorldTestMainFile));
@@ -208,6 +208,41 @@ describe("dart test debugger", () => {
 			checkResults(`After running ${numRuns++} tests (most recently ${test.fullName})`);
 		}
 	}).timeout(120000); // This test runs lots of tests, and they're quite slow to start up currently.
+
+	it("merges same name groups but not tests from the same run", async () => {
+		// This test is similar to above but contains adjacent tests with the same name.
+		// In a single run the tests must not be merged (groups are ok). When individual tests
+		// are re-run we may re-use nodes, but always pick the cloest one (source line number)
+		// and only never a node that's already been "claimed" by the current run.
+		// We re-run the groups as well as tests, to ensure consistent results when running
+		// multiple of the duplicated tests.
+
+		function checkResults(description: string) {
+			log(description);
+			const expectedResults = getExpectedResults();
+			const actualResults = makeTextTree(helloWorldTestDupeNameFile, extApi.testTreeProvider).join("\n");
+
+			assert.ok(expectedResults);
+			assert.ok(actualResults);
+			assert.equal(actualResults, expectedResults);
+		}
+
+		await runWithoutDebugging(helloWorldTestDupeNameFile);
+		let numRuns = 1;
+		checkResults(`After initial run`);
+		const visitor = new TestOutlineVisitor();
+		visitor.visit(OpenFileTracker.getOutlineFor(helloWorldTestDupeNameFile));
+		// Re-run each test.
+		for (const test of visitor.tests.filter((t) => !t.isGroup)) {
+			await runWithoutDebugging(helloWorldTestDupeNameFile, ["--name", makeRegexForTest(test.fullName, test.isGroup)]);
+			checkResults(`After running ${numRuns++} tests (most recently the test: ${test.fullName})`);
+		}
+		// Re-run each group.
+		for (const group of visitor.tests.filter((t) => t.isGroup)) {
+			await runWithoutDebugging(helloWorldTestDupeNameFile, ["--name", makeRegexForTest(group.fullName, group.isGroup)]);
+			checkResults(`After running ${numRuns++} groups (most recently the group: ${group.fullName})`);
+		}
+	}).timeout(160000); // This test runs lots of tests, and they're quite slow to start up currently.
 
 	it.skip("removes stale results when running a full suite", () => {
 		// Need to rename a test or something to ensure we get a stale result

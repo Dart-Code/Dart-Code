@@ -50,6 +50,7 @@ export const helloWorldGoodbyeFile = vs.Uri.file(path.join(fsPath(helloWorldFold
 export const helloWorldHttpFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/http.dart"));
 export const helloWorldTestMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/basic_test.dart"));
 export const helloWorldTestTreeFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/tree_test.dart"));
+export const helloWorldTestDupeNameFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/dupe_name_test.dart"));
 export const helloWorldTestBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/broken_test.dart"));
 export const helloWorldTestSkipFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/skip_test.dart"));
 export const helloWorldCreateMethodClassAFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/create_method/class_a.dart"));
