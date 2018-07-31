@@ -599,6 +599,12 @@
 					"description": "Whether to automatically commit the selected completion item when pressing certain characters such as . , ( and [.",
 					"scope": "resource"
 				},
+				"dart.flutterTrackWidgetCreation": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to pass --track-widget-creation to Flutter apps (required to support 'Inspect Widget')",
+					"scope": "resource"
+				},
 				"dart.evaluateGettersInDebugViews": {
 					"type": "boolean",
 					"default": true,

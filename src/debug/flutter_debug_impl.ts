@@ -52,6 +52,10 @@ export class FlutterDebugSession extends DartDebugSession {
 			appArgs.push("--start-paused");
 		}
 
+		if (this.flutterTrackWidgetCreation) {
+			appArgs.push("--track-widget-creation");
+		}
+
 		if (args.args) {
 			appArgs = appArgs.concat(args.args);
 		}

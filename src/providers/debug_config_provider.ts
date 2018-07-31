@@ -172,11 +172,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		log(`Debug session starting...\n    ${JSON.stringify(debugConfig, undefined, 4).replace(/\n/g, "\n    ")}`);
 
 		// TODO: Remove this context (and associated condition on the command) when it is default, inc. for beta channel.
-		if (debugConfig.args) {
-			const args: string[] = debugConfig.args;
-			const trackWidgetCreationEnabled = args.indexOf("--track-widget-creation") !== -1;
-			vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, trackWidgetCreationEnabled);
-		}
+		vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, debugConfig.flutterTrackWidgetCreation);
 
 		return debugConfig;
 	}
@@ -285,6 +281,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || conf.debugSdkLibraries;
 		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || conf.debugExternalLibraries;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
+		debugConfig.flutterTrackWidgetCreation = debugConfig.flutterTrackWidgetCreation || conf.flutterTrackWidgetCreation;
 		if (isFlutter) {
 			debugConfig.flutterMode = debugConfig.flutterMode || "debug";
 			debugConfig.flutterPath = debugConfig.flutterPath || (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : null);

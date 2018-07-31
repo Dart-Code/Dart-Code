@@ -145,6 +145,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	debugSdkLibraries: boolean;
 	debugExternalLibraries: boolean;
 	evaluateGettersInDebugViews: boolean;
+	flutterTrackWidgetCreation: boolean;
 	program: string;
 	args: string[];
 	vmAdditionalArgs: string[];
@@ -157,11 +158,11 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 }
 
 export interface FlutterLaunchRequestArguments extends DartLaunchRequestArguments {
+	deviceId: string;
 	flutterPath: string;
 	flutterMode?: "debug" | "profile" | "release";
 	flutterRunLogFile: string;
 	flutterTestLogFile: string;
-	deviceId: string;
 }
 
 export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestArguments {

@@ -87,6 +87,7 @@ class ResourceConfig {
 	get debugExternalLibraries() { return this.getConfig<boolean>("debugExternalLibraries"); }
 	get enableCompletionCommitCharacters() { return this.getConfig<boolean>("enableCompletionCommitCharacters"); }
 	get evaluateGettersInDebugViews() { return this.getConfig<boolean>("evaluateGettersInDebugViews"); }
+	get flutterTrackWidgetCreation() { return this.getConfig<boolean>("flutterTrackWidgetCreation"); }
 	get insertArgumentPlaceholders() { return this.getConfig<boolean>("insertArgumentPlaceholders"); }
 	get lineLength() { return this.getConfig<number>("lineLength"); }
 	get pubAdditionalArgs() { return this.getConfig<string[]>("pubAdditionalArgs"); }
