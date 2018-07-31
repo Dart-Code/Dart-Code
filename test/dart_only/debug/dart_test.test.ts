@@ -11,7 +11,7 @@ import { TestResultsProvider, TestStatus } from "../../../src/views/test_view";
 import { DartDebugClient } from "../../dart_debug_client";
 import { activate, defer, delay, ext, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, openFile, positionOf, withTimeout } from "../../helpers";
 
-describe.only("dart test debugger", () => {
+describe("dart test debugger", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	beforeEach("activate helloWorldTestMainFile", () => activate(helloWorldTestMainFile));
