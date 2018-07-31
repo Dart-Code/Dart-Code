@@ -263,7 +263,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 
 	private handleTestStartNotifcation(suite: SuiteData, evt: TestStartNotification) {
 		let oldParent: SuiteTreeItem | GroupTreeItem;
-		const existingTest = suite.getCurrentTest(evt.test.id) || suite.reuseMatchingTest(evt.test, (parent) => oldParent = parent);
+		const existingTest = suite.getCurrentTest(evt.test.id) || suite.reuseMatchingTest(suite.currentRunNumber, evt.test, (parent) => oldParent = parent);
 		const testNode = existingTest || new TestTreeItem(suite, evt.test);
 
 		if (!existingTest)
@@ -323,7 +323,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 
 	private handleGroupNotification(suite: SuiteData, evt: GroupNotification) {
 		let oldParent: SuiteTreeItem | GroupTreeItem;
-		const existingGroup = suite.getCurrentGroup(evt.group.id) || suite.reuseMatchingGroup(evt.group, (parent) => oldParent = parent);
+		const existingGroup = suite.getCurrentGroup(evt.group.id) || suite.reuseMatchingGroup(suite.currentRunNumber, evt.group, (parent) => oldParent = parent);
 		const groupNode = existingGroup || new GroupTreeItem(suite, evt.group);
 
 		if (!existingGroup)
@@ -443,12 +443,11 @@ class SuiteData {
 	public storeTest(id: number, node: TestTreeItem) {
 		return this.tests[`${this.currentRunNumber}_${id}`] = node;
 	}
-	public reuseMatchingGroup(group: Group, handleOldParent: (parent: SuiteTreeItem | GroupTreeItem) => void): GroupTreeItem {
+	public reuseMatchingGroup(currentSuiteRunNumber: number, group: Group, handleOldParent: (parent: SuiteTreeItem | GroupTreeItem) => void): GroupTreeItem {
+		// To reuse a node, the name must match and it must have not been used for the current run.
 		const match = this.getAllGroups().find((g) => {
-			// It's more important that we don't match the wrong group than
-			// we find the right one.
 			return g.group.name === group.name
-				&& g.group.line === group.line;
+				&& g.suiteRunNumber !== currentSuiteRunNumber;
 		});
 		if (match) {
 			handleOldParent(match.parent);
@@ -457,12 +456,11 @@ class SuiteData {
 		}
 		return match;
 	}
-	public reuseMatchingTest(test: Test, handleOldParent: (parent: SuiteTreeItem | GroupTreeItem) => void): TestTreeItem {
+	public reuseMatchingTest(currentSuiteRunNumber: number, test: Test, handleOldParent: (parent: SuiteTreeItem | GroupTreeItem) => void): TestTreeItem | undefined {
+		// To reuse a node, the name must match and it must have not been used for the current run.
 		const match = this.getAllTests().find((t) => {
-			// It's more important that we don't match the wrong group than
-			// we find the right one.
 			return t.test.name === test.name
-				&& t.test.line === test.line;
+				&& t.suiteRunNumber !== currentSuiteRunNumber;
 		});
 		if (match) {
 			handleOldParent(match.parent);
