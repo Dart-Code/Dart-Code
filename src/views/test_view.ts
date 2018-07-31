@@ -445,10 +445,13 @@ class SuiteData {
 	}
 	public reuseMatchingGroup(currentSuiteRunNumber: number, group: Group, handleOldParent: (parent: SuiteTreeItem | GroupTreeItem) => void): GroupTreeItem {
 		// To reuse a node, the name must match and it must have not been used for the current run.
-		const match = this.getAllGroups().find((g) => {
+		const matches = this.getAllGroups().filter((g) => {
 			return g.group.name === group.name
 				&& g.suiteRunNumber !== currentSuiteRunNumber;
 		});
+		// Reuse the one nearest to ehs ource position.
+		const sortedMatches = _.sortBy(matches, (g) => Math.abs(g.group.line - group.line));
+		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
 			handleOldParent(match.parent);
 			match.suiteRunNumber = this.currentRunNumber;
@@ -458,10 +461,13 @@ class SuiteData {
 	}
 	public reuseMatchingTest(currentSuiteRunNumber: number, test: Test, handleOldParent: (parent: SuiteTreeItem | GroupTreeItem) => void): TestTreeItem | undefined {
 		// To reuse a node, the name must match and it must have not been used for the current run.
-		const match = this.getAllTests().find((t) => {
+		const matches = this.getAllTests().filter((t) => {
 			return t.test.name === test.name
 				&& t.suiteRunNumber !== currentSuiteRunNumber;
 		});
+		// Reuse the one nearest to ehs ource position.
+		const sortedMatches = _.sortBy(matches, (t) => Math.abs(t.test.line - test.line));
+		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
 			handleOldParent(match.parent);
 			match.suiteRunNumber = this.currentRunNumber;
