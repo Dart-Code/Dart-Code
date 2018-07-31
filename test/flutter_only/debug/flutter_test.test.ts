@@ -111,9 +111,7 @@ describe("flutter test debugger", () => {
 		]);
 	});
 
-	// Skipped due to
-	// https://github.com/flutter/flutter/issues/16352
-	it.skip("stops at a breakpoint", async () => {
+	it("stops at a breakpoint", async () => {
 		await openFile(flutterTestMainFile);
 		const config = await startDebugger(flutterTestMainFile);
 		await dc.hitBreakpoint(config, {
@@ -134,8 +132,6 @@ describe("flutter test debugger", () => {
 
 	// Skipped due to:
 	// https://github.com/dart-lang/sdk/issues/29156
-	// and
-	// https://github.com/flutter/flutter/issues/16352
 	it.skip("stops at the correct location on exception", async () => {
 		await openFile(flutterTestBrokenFile);
 		const config = await startDebugger(flutterTestBrokenFile);
