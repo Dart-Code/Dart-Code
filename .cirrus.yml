@@ -47,6 +47,8 @@ task:
   install_flutter_script: |
     mkdir -p $FLUTTER_PATH
     cd $FLUTTER_PATH
+    pwd
+    ls -la
     git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git .
     cd $CIRRUS_WORKING_DIR
 
