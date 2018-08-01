@@ -86,7 +86,7 @@ task:
     flutter doctor
 
   vscode_status_script: |
-    code --status
+    code --status --user-data-dir "$HOME/.vscode-user-data"
 
   install_npm_packages_script: |
     npm install --depth 0 --unsafe-perm
