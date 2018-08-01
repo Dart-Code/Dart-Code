@@ -1,7 +1,7 @@
 task:
   env:
     FLUTTER_PATH: "$CIRRUS_WORKING_DIR/with\ spaces/flutter"
-    DART_PATH: "$CIRRUS_WORKING_DIR/with\ spaces/flutter"
+    DART_PATH: "$CIRRUS_WORKING_DIR/with\ spaces/dart"
     PATH: "$FLUTTER_PATH/bin:$DART_PATH/bin:$PATH"
     ELECTRON_NO_ATTACH_CONSOLE: 1
 
