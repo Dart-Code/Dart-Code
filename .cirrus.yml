@@ -3,7 +3,9 @@ container:
 
 task:
   env:
+    PATH: "$CIRRUS_WORKING_DIR/with\ spaces/flutter/bin:$CIRRUS_WORKING_DIR/with\ spaces/dart-sdk/bin:$PATH"
     ELECTRON_NO_ATTACH_CONSOLE: 1
+    DART_OS: linux
 
   matrix:
     - name: Dart Stable, Code Stable
@@ -14,15 +16,26 @@ task:
   
   install_apt_packages_script: |
     apt-get update
-    apt-get -y install curl wget libsecret-1-dev libstdc++6 gcc-4.8 ruby2.5
+    apt-get -y install curl wget ruby2.5
     gem install dpl
 
+  vscode_setup_script: |
+    apt-get -y install libsecret-1-dev libstdc++6 gcc-4.8
+    export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0;
+    sh -e /etc/init.d/xvfb start;
+
   install_dart_script: |
+    mkdir -p with\ spaces
+    cd with\ spaces
     curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
     unzip dart-sdk.zip > /dev/null
+    cd ..
 
   install_flutter_script: |
+    mkdir -p with\ spaces
+    cd with\ spaces
     git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git
+    cd ..
 
   configure_flutter_script: |
     flutter/bin/flutter config --no-analytics
