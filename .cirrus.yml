@@ -48,6 +48,14 @@ task:
     git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git
     cd ..
 
+  pub_cache:
+    folder: $HOME/.pub-cache
+    fingerprint_script: find . -name 'pubspec.yaml' -exec grep -H 'PUBSPEC CHECKSUM' {} +
+
+  flutter_cache:
+    folder: with\ spaces/flutter/bin/cache
+    fingerprint_script: cat bin/internal/engine.version
+
   configure_flutter_script: |
     flutter config --no-analytics
     flutter update-packages
