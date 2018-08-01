@@ -1,7 +1,7 @@
 task:
   env:
-    FLUTTER_PATH: "$CIRRUS_WORKING_DIR/with spaces/flutter"
-    DART_PATH: "$CIRRUS_WORKING_DIR/with spaces/dart"
+    FLUTTER_PATH: "/tmp/with spaces/flutter"
+    DART_PATH: "/tmp/with spaces/dart"
     PATH: "$FLUTTER_PATH/bin:$DART_PATH/bin:$PATH"
     ELECTRON_NO_ATTACH_CONSOLE: 1
 
@@ -42,6 +42,7 @@ task:
     cd "$DART_PATH"
     curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$OS-x64-release.zip > dart-sdk.zip
     unzip dart-sdk.zip > /dev/null
+    mv dart-sdk/* .
     cd "$CIRRUS_WORKING_DIR"
 
   install_flutter_script: |
@@ -61,10 +62,6 @@ task:
     fingerprint_script: cat "$FLUTTER_PATH/bin/internal/engine.version"
 
   configure_flutter_script: |
-    echo $PATH
-    echo $FLUTTER_PATH
-    pwd
-    ls $FLUTTER_PATH
     flutter config --no-analytics
     flutter update-packages
 
