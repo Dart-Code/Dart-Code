@@ -1,6 +1,8 @@
 task:
   env:
-    PATH: "$CIRRUS_WORKING_DIR/with\ spaces/flutter/bin:$CIRRUS_WORKING_DIR/with\ spaces/dart-sdk/bin:$PATH"
+    FLUTTER_PATH: "$CIRRUS_WORKING_DIR/with\ spaces/flutter"
+    DART_PATH: "$CIRRUS_WORKING_DIR/with\ spaces/flutter"
+    PATH: "$FLUTTER_PATH/bin:$DART_PATH/bin:$PATH"
     ELECTRON_NO_ATTACH_CONSOLE: 1
 
   matrix:
@@ -36,25 +38,25 @@ task:
     fi;
 
   install_dart_script: |
-    mkdir -p with\ spaces
-    cd with\ spaces
+    mkdir -p $DART_PATH
+    cd $DART_PATH
     curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$OS-x64-release.zip > dart-sdk.zip
     unzip dart-sdk.zip > /dev/null
-    cd ..
+    cd $CIRRUS_WORKING_DIR
 
   install_flutter_script: |
-    mkdir -p with\ spaces
-    cd with\ spaces
-    git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git
-    cd ..
+    mkdir -p $FLUTTER_PATH
+    cd $FLUTTER_PATH
+    git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git .
+    cd $CIRRUS_WORKING_DIR
 
   pub_cache:
     folder: $HOME/.pub-cache
     fingerprint_script: find . -name 'pubspec.yaml' -exec grep -H 'PUBSPEC CHECKSUM' {} +
 
   flutter_cache:
-    folder: with\ spaces/flutter/bin/cache
-    fingerprint_script: cat bin/internal/engine.version
+    folder: $FLUTTER_PATH/bin/cache
+    fingerprint_script: cat $FLUTTER_PATH/bin/internal/engine.version
 
   configure_flutter_script: |
     flutter config --no-analytics
