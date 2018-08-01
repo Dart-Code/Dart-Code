@@ -61,6 +61,10 @@ task:
     fingerprint_script: cat "$FLUTTER_PATH/bin/internal/engine.version"
 
   configure_flutter_script: |
+    echo $PATH
+    echo $FLUTTER_PATH
+    pwd
+    ls $FLUTTER_PATH
     flutter config --no-analytics
     flutter update-packages
 
