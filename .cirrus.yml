@@ -39,7 +39,7 @@ task:
       mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
       echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list
       apt-get update
-      apt-get install code
+      apt-get -y install code
       # export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0;
       # sh -e Xvfb &;
     fi;
