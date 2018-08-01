@@ -29,7 +29,7 @@ task:
     gem install dpl
 
   vscode_setup_script: |
-    if [ "$OS" == "linux" ]; then
+    if [[ "$OS" == "linux" ]]; then
       apt-get -y install libsecret-1-dev libstdc++6 gcc-4.8 xvfb
       export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0;
       sh -e Xvfb;
@@ -73,7 +73,7 @@ task:
     npm install --depth 0 --unsafe-perm
 
   configure_code_climate_script: |
-    if [ "$OS" == "linux" ]; then
+    if [[ "$OS" == "linux" ]; then
       curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter;
     else
       curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-darwin-amd64 > ./cc-test-reporter;
@@ -98,12 +98,12 @@ task:
     fi;
 
   upload_logs_script: |
-    if [ $CIRRUS_PR = "" ]; then
+    if [[ "$CIRRUS_PR" = "" ]; then
       dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".test_results" --upload-dir="$CIRRUS_BRANCH/$CIRRUS_CHANGE_IN_REPO/Cirrus-$OS" --acl=public_read --default_text_charset=utf-8;
       dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".dart_code_test_logs" --upload-dir="logs/$CIRRUS_BRANCH/$CIRRUS_CHANGE_IN_REPO/Cirrus-$OS" --acl=public_read --default_text_charset=utf-8;
     fi
 
   upload_code_coverage_script: |
-    if [ $CODE_VERSION == "stable" ] && [ $DART_CHANNEL == "stable" ]; then
+    if [[ "$CODE_VERSION" == "stable" ]] && [[ "$DART_CHANNEL" == "stable" ]]; then
       ./cc-test-reporter after-build --prefix ../../;
     fi
