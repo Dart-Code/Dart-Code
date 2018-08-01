@@ -14,14 +14,14 @@ task:
         DART_CHANNEL: stable
         FLUTTER_BRANCH: dev
         CODE_VERSION: stable
-    - name: Mac, Dart Stable, Code Stable
-      osx_instance:
-        image: high-sierra-xcode-9.4.1
-      env:
-        OS: macos
-        DART_CHANNEL: stable
-        FLUTTER_BRANCH: dev
-        CODE_VERSION: stable
+    # - name: Mac, Dart Stable, Code Stable
+    #   osx_instance:
+    #     image: high-sierra-xcode-9.4.1
+    #   env:
+    #     OS: macos
+    #     DART_CHANNEL: stable
+    #     FLUTTER_BRANCH: dev
+    #     CODE_VERSION: stable
 
   install_apt_packages_script: |
     apt-get update
@@ -31,11 +31,11 @@ task:
     gem install dpl
 
   vscode_setup_script: |
-    if [[ "$OS" == "linux" ]]; then
-      apt-get -y install libsecret-1-dev libstdc++6 gcc-4.8 xvfb libgtk2.0
+    # if [[ "$OS" == "linux" ]]; then
+      apt-get -y install libsecret-1-dev libstdc++6 gcc-4.8 libgtk2.0
       export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0;
-      sh -e Xvfb;
-    fi;
+      # sh -e Xvfb &;
+    # fi;
 
   install_dart_script: |
     mkdir -p "$DART_PATH"
