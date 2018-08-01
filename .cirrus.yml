@@ -34,8 +34,13 @@ task:
 
   vscode_setup_script: |
     if [[ "$OS" == "linux" ]]; then
-      apt-get -y install gcc-4.8 libsecret-1-dev libstdc++6 libgtk2.0
-      export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0;
+      # Install VS Code's package as an easy way to get all dependencies
+      curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+      mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
+      echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list
+      apt-get update
+      apt-get install code
+      # export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0;
       # sh -e Xvfb &;
     fi;
     
