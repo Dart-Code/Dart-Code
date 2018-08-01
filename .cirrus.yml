@@ -1,7 +1,7 @@
 task:
   env:
-    FLUTTER_PATH: "$CIRRUS_WORKING_DIR/with\ spaces/flutter"
-    DART_PATH: "$CIRRUS_WORKING_DIR/with\ spaces/dart"
+    FLUTTER_PATH: "$CIRRUS_WORKING_DIR/with spaces/flutter"
+    DART_PATH: "$CIRRUS_WORKING_DIR/with spaces/dart"
     PATH: "$FLUTTER_PATH/bin:$DART_PATH/bin:$PATH"
     ELECTRON_NO_ATTACH_CONSOLE: 1
 
@@ -38,27 +38,27 @@ task:
     fi;
 
   install_dart_script: |
-    mkdir -p $DART_PATH
-    cd $DART_PATH
+    mkdir -p "$DART_PATH"
+    cd "$DART_PATH"
     curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$OS-x64-release.zip > dart-sdk.zip
     unzip dart-sdk.zip > /dev/null
-    cd $CIRRUS_WORKING_DIR
+    cd "$CIRRUS_WORKING_DIR"
 
   install_flutter_script: |
-    mkdir -p $FLUTTER_PATH
-    cd $FLUTTER_PATH
-    pwd
-    ls -la
+    mkdir -p "$FLUTTER_PATH"
+    cd "$FLUTTER_PATH"
     git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git .
-    cd $CIRRUS_WORKING_DIR
+    cd "$CIRRUS_WORKING_DIR"
 
   pub_cache:
-    folder: $HOME/.pub-cache
-    fingerprint_script: find . -name 'pubspec.yaml' -exec grep -H 'PUBSPEC CHECKSUM' {} +
+    folder: "$HOME/.pub-cache"
+    # Pub cache is unrelated to engine version, but it's a convenient thing that changes now and
+    # then which will prevent this cache just growing over time as versions changed.
+    fingerprint_script: cat "$FLUTTER_PATH/bin/internal/engine.version"
 
   flutter_cache:
-    folder: $FLUTTER_PATH/bin/cache
-    fingerprint_script: cat $FLUTTER_PATH/bin/internal/engine.version
+    folder: "$FLUTTER_PATH/bin/cache"
+    fingerprint_script: cat "$FLUTTER_PATH/bin/internal/engine.version"
 
   configure_flutter_script: |
     flutter config --no-analytics
@@ -94,7 +94,7 @@ task:
   test_script: |
     npm test
 
-  no_dart_processes_script: |
+  ensure_no_dart_processes_script: |
     ps -ax | grep -v grep | grep dart || true
     if [[ $(pgrep -x dart) ]]; then
       echo 'DART WAS FOUND';
