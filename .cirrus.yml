@@ -22,9 +22,10 @@ task:
         CODE_VERSION: stable
 
   install_apt_packages_script: |
-    curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
     apt-get update
-    apt-get -y install curl wget git nodejs ruby2.5
+    apt-get -y install curl wget git ruby2.5 gnupg
+    curl -sL https://deb.nodesource.com/setup_8.x | bash -
+    apt-get -y install nodejs
     gem install dpl
 
   vscode_setup_script: |
