@@ -5,7 +5,7 @@ task:
   env:
     PATH: "$CIRRUS_WORKING_DIR/with\ spaces/flutter/bin:$CIRRUS_WORKING_DIR/with\ spaces/dart-sdk/bin:$PATH"
     ELECTRON_NO_ATTACH_CONSOLE: 1
-    DART_OS: linux
+    OS: linux
 
   matrix:
     - name: Dart Stable, Code Stable
@@ -13,21 +13,23 @@ task:
         DART_CHANNEL: stable
         FLUTTER_BRANCH: dev
         CODE_VERSION: stable
-  
+
   install_apt_packages_script: |
     apt-get update
     apt-get -y install curl wget ruby2.5
     gem install dpl
 
   vscode_setup_script: |
-    apt-get -y install libsecret-1-dev libstdc++6 gcc-4.8
-    export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0;
-    sh -e /etc/init.d/xvfb start;
+    if [ $OS == "linux" ]; then
+      apt-get -y install libsecret-1-dev libstdc++6 gcc-4.8 xvfb
+      export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0;
+      sh -e Xvfb;
+    fi;
 
   install_dart_script: |
     mkdir -p with\ spaces
     cd with\ spaces
-    curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
+    curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$OS-x64-release.zip > dart-sdk.zip
     unzip dart-sdk.zip > /dev/null
     cd ..
 
@@ -49,3 +51,42 @@ task:
 
   flutter_doctor_script: |
     flutter doctor
+
+  install_npm_packages_script: |
+    npm install --depth 0
+
+  configure_code_climate_script: |
+    if [ $OS == "linux" ]; then
+      curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter;
+    else
+      curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-darwin-amd64 > ./cc-test-reporter;
+    fi
+    chmod +x ./cc-test-reporter;
+    ./cc-test-reporter before-build;
+
+  compile_script: |
+    npm run vscode:prepublish
+
+  lint_script: |
+    npm run lint
+
+  test_script: |
+    npm test
+
+  no_dart_processes_script: |
+    ps -ax | grep -v grep | grep dart || true
+    if [[ $(pgrep -x dart) ]]; then
+      echo 'DART WAS FOUND';
+      fail();
+    fi;
+
+  upload_logs_script: |
+    if [ $CIRRUS_PR = "" ]; then
+      dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".test_results" --upload-dir="$CIRRUS_BRANCH/$CIRRUS_CHANGE_IN_REPO/Cirrus-$OS" --acl=public_read --default_text_charset=utf-8;
+      dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".dart_code_test_logs" --upload-dir="logs/$CIRRUS_BRANCH/$CIRRUS_CHANGE_IN_REPO/Cirrus-$OS" --acl=public_read --default_text_charset=utf-8;
+    fi
+
+  upload_code_coverage_script: |
+    if [ $CODE_VERSION == "stable" ] && [ $DART_CHANNEL == "stable" ]; then
+      ./cc-test-reporter after-build --prefix ../../;
+    fi
