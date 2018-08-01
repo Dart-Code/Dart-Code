@@ -1,5 +1,7 @@
-task:
+container:
+  image: node:latest
 
+task:
   env:
     ELECTRON_NO_ATTACH_CONSOLE: 1
 
@@ -13,10 +15,10 @@ task:
   install_dart_script: |
     curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
     unzip dart-sdk.zip > /dev/null
-  
+
   install_flutter_script: |
     git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git
-  
+
   configure_flutter_script: |
     flutter/bin/flutter config --no-analytics
     flutter/bin/flutter update-packages
