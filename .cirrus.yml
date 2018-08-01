@@ -4,6 +4,7 @@ task:
     DART_PATH: "/tmp/with spaces/dart"
     PATH: "$FLUTTER_PATH/bin:$DART_PATH/bin:$PATH"
     CIRRUS_SHELL: bash
+    DEBIAN_FRONTEND: noninteractive
     ELECTRON_NO_ATTACH_CONSOLE: 1
 
   matrix:
@@ -32,7 +33,11 @@ task:
     gem install dpl
 
   vscode_setup_script: |
-    apt-get -y install libsecret-1-dev libstdc++6 gcc-4.8 libgtk2.0
+    if [[ "$OS" == "linux" ]]; then
+      apt-get -y install gcc-4.8 libsecret-1-dev libstdc++6 libgtk2.0
+      export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0;
+      # sh -e Xvfb &;
+    fi;
     
   install_dart_script: |
     mkdir -p "$DART_PATH"
