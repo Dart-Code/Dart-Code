@@ -22,8 +22,9 @@ task:
         CODE_VERSION: stable
 
   install_apt_packages_script: |
+    curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
     apt-get update
-    apt-get -y install curl wget ruby2.5 git
+    apt-get -y install curl wget git nodejs ruby2.5
     gem install dpl
 
   vscode_setup_script: |
