@@ -1,15 +1,22 @@
-container:
-  image: ubuntu:bionic
-
 task:
   env:
     PATH: "$CIRRUS_WORKING_DIR/with\ spaces/flutter/bin:$CIRRUS_WORKING_DIR/with\ spaces/dart-sdk/bin:$PATH"
     ELECTRON_NO_ATTACH_CONSOLE: 1
-    OS: linux
 
   matrix:
-    - name: Dart Stable, Code Stable
+    - name: Linux, Dart Stable, Code Stable
+      container:
+        image: ubuntu:bionic
       env:
+        OS: linux
+        DART_CHANNEL: stable
+        FLUTTER_BRANCH: dev
+        CODE_VERSION: stable
+    - name: Mac, Dart Stable, Code Stable
+      osx_instance:
+        image: high-sierra-xcode-9.4.1
+      env:
+        OS: macos
         DART_CHANNEL: stable
         FLUTTER_BRANCH: dev
         CODE_VERSION: stable
@@ -40,12 +47,12 @@ task:
     cd ..
 
   configure_flutter_script: |
-    flutter/bin/flutter config --no-analytics
-    flutter/bin/flutter update-packages
+    flutter config --no-analytics
+    flutter update-packages
 
   print_versions_script: |
-    dart-sdk/bin/dart --version
-    flutter/bin/flutter --version
+    dart --version
+    flutter --version
     node --version
     npm --version
 
