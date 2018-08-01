@@ -1,5 +1,5 @@
 container:
-  image: node:latest
+  image: ubuntu:bionic
 
 task:
   env:
@@ -11,6 +11,11 @@ task:
         DART_CHANNEL: stable
         FLUTTER_BRANCH: dev
         CODE_VERSION: stable
+  
+  install_apt_packages_script: |
+    apt-get update
+    apt-get -y install curl wget libsecret-1-dev libstdc++6 gcc-4.8 ruby2.5
+    gem install dpl
 
   install_dart_script: |
     curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
@@ -22,8 +27,8 @@ task:
   configure_flutter_script: |
     flutter/bin/flutter config --no-analytics
     flutter/bin/flutter update-packages
-  print_versions_script: |
 
+  print_versions_script: |
     dart-sdk/bin/dart --version
     flutter/bin/flutter --version
     node --version
