@@ -1,0 +1,31 @@
+task:
+
+  env:
+    ELECTRON_NO_ATTACH_CONSOLE: 1
+
+  matrix:
+    - name: Dart Stable, Code Stable
+      env:
+        DART_CHANNEL: stable
+        FLUTTER_BRANCH: dev
+        CODE_VERSION: stable
+
+  install_dart_script: |
+    curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
+    unzip dart-sdk.zip > /dev/null
+  
+  install_flutter_script: |
+    git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git
+  
+  configure_flutter_script: |
+    flutter/bin/flutter config --no-analytics
+    flutter/bin/flutter update-packages
+  print_versions_script: |
+
+    dart-sdk/bin/dart --version
+    flutter/bin/flutter --version
+    node --version
+    npm --version
+
+  flutter_doctor_script: |
+    flutter doctor
