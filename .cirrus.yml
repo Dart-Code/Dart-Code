@@ -16,11 +16,11 @@ task:
 
   install_apt_packages_script: |
     apt-get update
-    apt-get -y install curl wget ruby2.5
+    apt-get -y install curl wget ruby2.5 git
     gem install dpl
 
   vscode_setup_script: |
-    if [ $OS == "linux" ]; then
+    if [ "$OS" == "linux" ]; then
       apt-get -y install libsecret-1-dev libstdc++6 gcc-4.8 xvfb
       export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0;
       sh -e Xvfb;
