@@ -65,17 +65,17 @@ task:
     flutter config --no-analytics
     flutter update-packages
 
-  # print_versions_script: |
-  #   dart --version
-  #   flutter --version
-  #   node --version
-  #   npm --version
+  print_versions_script: |
+    dart --version
+    flutter --version
+    node --version
+    npm --version
 
-  # flutter_doctor_script: |
-  #   flutter doctor
+  flutter_doctor_script: |
+    flutter doctor
 
-  # install_npm_packages_script: |
-  #   npm install --depth 0 --unsafe-perm
+  install_npm_packages_script: |
+    npm install --depth 0 --unsafe-perm
 
   # configure_code_climate_script: |
   #   if [[ "$OS" == "linux" ]; then
@@ -86,14 +86,14 @@ task:
   #   chmod +x ./cc-test-reporter;
   #   ./cc-test-reporter before-build;
 
-  # compile_script: |
-  #   npm run vscode:prepublish
+  compile_script: |
+    npm run vscode:prepublish
 
-  # lint_script: |
-  #   npm run lint
+  lint_script: |
+    npm run lint
 
-  # test_script: |
-  #   npm test
+  test_script: |
+    npm test
 
   # ensure_no_dart_processes_script: |
   #   ps -ax | grep -v grep | grep dart || true
