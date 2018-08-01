@@ -64,6 +64,10 @@ task:
     # then which will prevent this cache just growing over time as versions changed.
     fingerprint_script: cat "$FLUTTER_PATH/bin/internal/engine.version"
 
+  node_modules_cache:
+    folder: node_modules
+    fingerprint_script: cat package-lock.json
+
   flutter_cache:
     folder: "$FLUTTER_PATH/bin/cache"
     fingerprint_script: cat "$FLUTTER_PATH/bin/internal/engine.version"
