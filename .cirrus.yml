@@ -3,6 +3,7 @@ task:
     FLUTTER_PATH: "/tmp/with spaces/flutter"
     DART_PATH: "/tmp/with spaces/dart"
     PATH: "$FLUTTER_PATH/bin:$DART_PATH/bin:$PATH"
+    CIRRUS_SHELL: bash
     ELECTRON_NO_ATTACH_CONSOLE: 1
 
   matrix:
