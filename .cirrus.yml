@@ -3,7 +3,6 @@ task:
     FLUTTER_PATH: "/tmp/with spaces/flutter"
     DART_PATH: "/tmp/with spaces/dart"
     PATH: "$FLUTTER_PATH/bin:$DART_PATH/bin:$PATH"
-    CIRRUS_SHELL: bash
     DEBIAN_FRONTEND: noninteractive
     ELECTRON_NO_ATTACH_CONSOLE: 1
 
@@ -12,7 +11,7 @@ task:
       container:
         image: ubuntu:bionic
       env:
-        OS: linux
+        DART_OS: linux
         DART_CHANNEL: stable
         FLUTTER_BRANCH: dev
         CODE_VERSION: stable
@@ -20,7 +19,7 @@ task:
     #   osx_instance:
     #     image: high-sierra-xcode-9.4.1
     #   env:
-    #     OS: macos
+    #     DART_OS: macos
     #     DART_CHANNEL: stable
     #     FLUTTER_BRANCH: dev
     #     CODE_VERSION: stable
@@ -42,7 +41,7 @@ task:
   install_dart_script: |
     mkdir -p "$DART_PATH"
     cd "$DART_PATH"
-    curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$OS-x64-release.zip > dart-sdk.zip
+    curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
     unzip dart-sdk.zip > /dev/null
     mv dart-sdk/* .
     cd "$CIRRUS_WORKING_DIR"
@@ -84,13 +83,13 @@ task:
     npm install --depth 0 --unsafe-perm
 
   # configure_code_climate_script: |
-  #   if [[ "$OS" == "linux" ]; then
-  #     curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter;
-  #   else
-  #     curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-darwin-amd64 > ./cc-test-reporter;
-  #   fi
-  #   chmod +x ./cc-test-reporter;
-  #   ./cc-test-reporter before-build;
+    if [[ "$OS" == "linux" ]]; then
+      curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter;
+    else
+      curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-darwin-amd64 > ./cc-test-reporter;
+    fi
+    chmod +x ./cc-test-reporter;
+    ./cc-test-reporter before-build;
 
   compile_script: |
     npm run vscode:prepublish
