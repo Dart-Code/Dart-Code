@@ -57,6 +57,7 @@ class Config {
 	get showLintNames() { return this.getConfig<boolean>("showLintNames"); }
 	get showTestCodeLens() { return this.getConfig<boolean>("showTestCodeLens"); }
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
+	get triggerSignatureHelpAutomatically() { return this.getConfig<boolean>("triggerSignatureHelpAutomatically"); }
 	get warnWhenEditingFilesOutsideWorkspace() { return this.getConfig<boolean>("warnWhenEditingFilesOutsideWorkspace"); }
 
 	public setGlobalDartSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Global); }
