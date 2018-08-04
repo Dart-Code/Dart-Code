@@ -486,7 +486,8 @@ function getSettingsThatRequireRestart() {
 		+ config.normalizeWindowsDriveLetters
 		+ config.analysisServerFolding
 		+ config.showTestCodeLens
-		+ config.previewHotReloadCoverageMarkers;
+		+ config.previewHotReloadCoverageMarkers
+		+ config.triggerSignatureHelpAutomatically;
 }
 
 export async function deactivate(isRestart: boolean = false): Promise<void> {
