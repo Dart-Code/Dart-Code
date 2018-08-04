@@ -596,7 +596,7 @@
 				"dart.enableCompletionCommitCharacters": {
 					"type": "boolean",
 					"default": false,
-					"description": "Whether to automatically commit the selected completion item when pressing certain characters such as . , ( and [.",
+					"description": "Whether to automatically commit the selected completion item when pressing certain keys such as . , ( and [.",
 					"scope": "resource"
 				},
 				"dart.flutterTrackWidgetCreation": {
