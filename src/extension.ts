@@ -209,8 +209,11 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, typeFormattingEditProvider, "}", ";"));
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, sourceCodeActionProvider, sourceCodeActionProvider.metadata));
 	context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, implementationProvider));
-	if (config.showTestCodeLens)
-		context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, new TestCodeLensProvider(analyzer)));
+	if (config.showTestCodeLens) {
+		const codeLensProvider = new TestCodeLensProvider(analyzer);
+		context.subscriptions.push(codeLensProvider);
+		context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
+	}
 
 	// Snippets are language-specific
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));
