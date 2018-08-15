@@ -145,6 +145,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	debugSdkLibraries: boolean;
 	debugExternalLibraries: boolean;
 	evaluateGettersInDebugViews: boolean;
+	env: any;
 	flutterTrackWidgetCreation: boolean;
 	program: string;
 	args: string[];
