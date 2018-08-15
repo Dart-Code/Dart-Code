@@ -180,7 +180,7 @@ export class DartDebugSession extends DebugSession {
 		if (args.cwd)
 			this.log(`..  in ${args.cwd}`);
 
-		const process = safeSpawn(args.cwd, args.dartPath, appArgs);
+		const process = safeSpawn(args.cwd, args.dartPath, appArgs, args.env);
 
 		return process;
 	}
