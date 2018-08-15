@@ -919,6 +919,9 @@
 									"type": "string"
 								}
 							},
+							"env": {
+								"description": "Environment variables passed to the Dart/Flutter process."
+							},
 							"vmAdditionalArgs": {
 								"type": "array",
 								"default": [],
