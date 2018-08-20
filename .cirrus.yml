@@ -39,7 +39,9 @@ task:
 
   vscode_setup_script: |
     if [[ "$OS" == "linux" ]]; then
-      apt-get -y install gcc-4.8 libsecret-1-dev libstdc++6 libgtk3.0 libxss1 xvfb
+      # package list copied from
+      #   https://github.com/Microsoft/vscode/blob/master/build/tfs/linux/continuous-build-linux.yml
+      apt-get -y install libxkbfile-dev pkg-config libsecret-1-dev libxss1 libgconf-2-4 dbus xvfb libgtk-3-0
       # export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0;
       # sh -e Xvfb &;
     fi;
