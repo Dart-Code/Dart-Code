@@ -3,10 +3,10 @@ import { StdIOService, UnknownNotification, UnknownResponse } from "../services/
 import { globalFlutterArgs, IAmDisposable, LogSeverity } from "./utils";
 
 export class FlutterRun extends StdIOService<UnknownNotification> {
-	constructor(flutterBinPath: string, projectFolder: string, args: string[], logFile: string, logger: (message: string, severity: LogSeverity) => void, maxLogLineLength: number) {
+	constructor(flutterBinPath: string, projectFolder: string, args: string[], envOverrides: any, logFile: string, logger: (message: string, severity: LogSeverity) => void, maxLogLineLength: number) {
 		super(() => logFile, logger, maxLogLineLength, true, true);
 
-		this.createProcess(projectFolder, flutterBinPath, globalFlutterArgs.concat(["run", "--machine"]).concat(args));
+		this.createProcess(projectFolder, flutterBinPath, globalFlutterArgs.concat(["run", "--machine"]).concat(args), envOverrides);
 	}
 
 	protected shouldHandleMessage(message: string): boolean {

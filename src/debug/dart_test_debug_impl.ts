@@ -52,11 +52,11 @@ export class DartTestDebugSession extends DartDebugSession {
 		}
 
 		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.PubTest)));
-		return this.createRunner(args.dartPath, args.cwd, args.program, appArgs, args.pubTestLogFile, logger);
+		return this.createRunner(args.dartPath, args.cwd, args.program, appArgs, args.env, args.pubTestLogFile, logger, args.maxLogLineLength);
 	}
 
-	protected createRunner(executable: string, projectFolder: string, program: string, args: string[], logFile: string, logger: (message: string, severity: LogSeverity) => void, envOverrides?: any) {
-		const runner = new TestRunner(executable, projectFolder, args, logFile, logger, envOverrides);
+	protected createRunner(executable: string, projectFolder: string, program: string, args: string[], envOverrides: any, logFile: string, logger: (message: string, severity: LogSeverity) => void, maxLogLineLength: number) {
+		const runner = new TestRunner(executable, projectFolder, args, envOverrides, logFile, logger, maxLogLineLength);
 
 		// Set up subscriptions.
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));

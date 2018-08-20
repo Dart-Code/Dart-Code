@@ -70,7 +70,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.allowTerminatingObservatoryVmPid = args.deviceId === "flutter-tester";
 
 		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.FlutterRun)));
-		this.flutter = new FlutterRun(args.flutterPath, args.cwd, appArgs, args.flutterRunLogFile, logger, this.maxLogLineLength);
+		this.flutter = new FlutterRun(args.flutterPath, args.cwd, appArgs, args.env, args.flutterRunLogFile, logger, this.maxLogLineLength);
 		this.flutter.registerForUnhandledMessages((msg) => this.logToUser(msg, "stdout"));
 
 		// Set up subscriptions.
