@@ -24,14 +24,17 @@ task:
         FLUTTER_BRANCH: dev
         CODE_VERSION: stable
 
-  install_apt_packages_script: |
+  install_packages_script: |
     if [[ "$OS" == "linux" ]]; then
       apt-get update
       apt-get -y install curl wget git ruby2.5 gnupg
       curl -sL https://deb.nodesource.com/setup_8.x | bash -
       apt-get -y install nodejs
+      gem install dpl
     fi;
-    sudo gem install dpl
+    if [[ "$OS" == "darwin" ]]; then
+      sudo gem install dpl
+    fi;
 
   vscode_setup_script: |
     if [[ "$OS" == "linux" ]]; then
