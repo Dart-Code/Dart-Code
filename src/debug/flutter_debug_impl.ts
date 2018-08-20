@@ -104,7 +104,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		} catch {
 			// Ignore failures here (see comment above).
 		}
-		super.terminateRequest(response, args);
+		await super.terminateRequest(response, args);
 	}
 
 	protected restartRequest(

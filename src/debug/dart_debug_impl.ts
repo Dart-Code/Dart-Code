@@ -85,6 +85,7 @@ export class DartDebugSession extends DebugSession {
 
 		this.childProcess = this.spawnProcess(args);
 		const process = this.childProcess;
+		this.processExited = false;
 		this.processExit = new Promise((resolve) => process.on("exit", resolve));
 
 		process.stdout.setEncoding("utf8");
@@ -106,8 +107,8 @@ export class DartDebugSession extends DebugSession {
 			this.sendEvent(new OutputEvent(`${error}`, "stderr"));
 		});
 		process.on("exit", (code, signal) => {
-			this.log(`Process exited with code ${code}`);
 			this.processExited = true;
+			this.log(`Process exited (${signal ? `${signal}`.toLowerCase() : code})`);
 			if (!code && !signal)
 				this.sendEvent(new OutputEvent("Exited"));
 			else
@@ -283,11 +284,18 @@ export class DartDebugSession extends DebugSession {
 					// wipe out the logfile with just a "process exited" or similar message.
 					this.logFile = null;
 				}
-				// This event arrives before the process exit event.
-				setTimeout(() => {
-					if (!this.processExited)
-						this.sendEvent(new TerminatedEvent());
-				}, 100);
+				// TODO: This was commented out as part of moving to support terminateRequest since it fires
+				// very early which causes VS Code to send disconnectRequest while we're still cleaning up.
+				// I don't believe this should be required, since if Observatory goes away, the process should
+				// also quit (and if it doesn't, quietly disconnecting the debugger may mask orphaned processes).
+				// Leaving code here in case we end up investigating bugs relating to this soon though. If not,
+				// this code can be removed after a few releases.
+				// (DanTup, 2018-08-20)
+				// // This event arrives before the process exit event.
+				// setTimeout(() => {
+				// 	if (!this.processExited)
+				// 		this.sendEvent(new TerminatedEvent());
+				// }, 100);
 			});
 
 			this.observatory.onError((error) => {
@@ -297,66 +305,66 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private async terminate(force: boolean): Promise<void> {
-		this.log(`Termination requested (force: ${force})`);
-		try {
+		const signal = force ? "SIGKILL" : "SIGINT";
+		const request = force ? "DISC" : "TERM";
+		if (this.childProcess != null && !this.processExited) {
 			for (const pid of this.additionalPidsToTerminate) {
 				try {
-					this.log(`Terminating related process ${pid}...`);
-					process.kill(pid);
+					this.log(`${request}: Terminating related process ${pid} with ${signal}...`);
+					process.kill(pid, signal);
 				} catch (e) {
 					// Sometimes this process will have already gone away (eg. the app finished/terminated)
 					// so logging here just results in lots of useless info.
 				}
 			}
-			// Don't do this - because the process might ignore our kill (eg. test framework lets the current
-			// test finish) so we may need to send again it we get the disconnectRequest (the first request
-			// will come from terminateRequest).
-			// this.additionalPidsToTerminate.length = 0;
-			if (this.childProcess != null) {
-				try {
-					this.log(`Terminating main process...`);
-					this.childProcess.kill();
-				} catch (e) {
-					// This tends to throw a lot because the shell process quit when we terminated the related
-					// VM process above, so just swallow the error.
-				}
-				// Don't do this - because the process might ignore our kill (eg. test framework lets the current
-				// test finish) so we may need to send again it we get another disconnectRequest.
-				// this.childProcess = null;
-			} else if (this.observatory) {
-				try {
-					this.log(`Disconnecting from process...`);
-					// Remove all breakpoints from the VM.
-					await Promise.all(this.threadManager.threads.map((thread) => thread.removeAllBreakpoints()));
-
-					// Restart any paused threads.
-					// Note: Only wait up to 500ms here because sometimes we don't get responses because the VM terminates.
-					// We can't check processExited here as we don't have a handle to the process (we attached).
-					this.log(`Unpausing all threads...`);
-					await Promise.race([
-						Promise.all(this.threadManager.threads.map((thread) => thread.resume())),
-						new Promise((resolve) => setTimeout(resolve, 500)),
-					]);
-				} finally {
-					this.observatory.close();
-					this.observatory = null;
-				}
+			// Don't remove these PIDs from the list as we don't know that they actually quit yet.
+			try {
+				this.log(`${request}: Terminating main process with ${signal}...`);
+				this.childProcess.kill(signal);
+			} catch (e) {
+				// This tends to throw a lot because the shell process quit when we terminated the related
+				// VM process above, so just swallow the error.
 			}
-			this.log(`Waiting for process to finish...`);
-			await this.processExit;
-		} finally {
-			this.log(`Removing all stored data...`);
-			this.threadManager.removeAllStoredData();
+			// Don't do this - because the process might ignore our kill (eg. test framework lets the current
+			// test finish) so we may need to send again it we get another disconnectRequest.
+			// this.childProcess = null;
+		} else if (this.observatory) {
+			try {
+				this.log(`${request}: Disconnecting from process...`);
+				// Remove all breakpoints from the VM.
+				await Promise.all(this.threadManager.threads.map((thread) => thread.removeAllBreakpoints()));
+
+				// Restart any paused threads.
+				// Note: Only wait up to 500ms here because sometimes we don't get responses because the VM terminates.
+				this.log(`${request}: Unpausing all threads...`);
+				await Promise.race([
+					Promise.all(this.threadManager.threads.map((thread) => thread.resume())),
+					new Promise((resolve) => setTimeout(resolve, 500)),
+				]);
+			} catch { }
+			try {
+				this.observatory.close();
+			} catch { } finally {
+				this.observatory = null;
+			}
 		}
-		this.log(`Disconnecting...`);
+
+		this.log(`${request}: Removing all stored data...`);
+		this.threadManager.removeAllStoredData();
+
+		this.log(`${request}: Waiting for process to finish...`);
+		await this.processExit;
+
+		this.log(`${request}: Disconnecting...`);
 	}
 
 	protected async terminateRequest(
 		response: DebugProtocol.TerminateResponse,
 		args: DebugProtocol.TerminateArguments,
 	): Promise<void> {
+		this.log(`Termination requested!`);
 		try {
-			this.terminate(false);
+			await this.terminate(false);
 		} catch (e) {
 			return this.errorResponse(response, `${e}`);
 		}
@@ -367,8 +375,9 @@ export class DartDebugSession extends DebugSession {
 		response: DebugProtocol.DisconnectResponse,
 		args: DebugProtocol.DisconnectArguments,
 	): Promise<void> {
+		this.log(`Disconnect requested!`);
 		try {
-			this.terminate(true);
+			await this.terminate(true);
 		} catch (e) {
 			return this.errorResponse(response, `${e}`);
 		}
