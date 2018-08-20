@@ -352,19 +352,21 @@ describe("flutter run debugger", () => {
 					source: { path: fsPath(flutterHelloWorldMainFile) },
 				});
 			}).then((response) => dc.configurationDoneRequest()),
-			dc.assertOutput("stdout", `The {year} is ${(new Date()).getFullYear()}`),
+			dc.assertOutputContains("stdout", `The {year} is ${(new Date()).getFullYear()}`),
 			dc.launch(config),
 		]);
 	});
 
-	it("writes failure output to stderr", async function () {
+	it("writes failure output", async function () {
+		// This test really wants to check stderr, but since the widgets library catches the exception is
+		// just comes via stdout.
 		if (extApi.daemonCapabilities.debuggerIncorrectlyPausesOnHandledExceptions)
 			this.skip();
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stderr", "Test failed. See exception logs above."),
+			dc.assertOutputContains("stdout", "Exception: Oops"),
 			dc.launch(config),
 		]);
 	});
