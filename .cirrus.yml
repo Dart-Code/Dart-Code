@@ -82,7 +82,7 @@ task:
   install_npm_packages_script: |
     npm install --depth 0 --unsafe-perm
 
-  # configure_code_climate_script: |
+  configure_code_climate_script: |
     if [[ "$OS" == "linux" ]]; then
       curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter;
     else
@@ -100,12 +100,12 @@ task:
   test_script: |
     npm test
 
-  # ensure_no_dart_processes_script: |
-  #   ps -ax | grep -v grep | grep dart || true
-  #   if [[ $(pgrep -x dart) ]]; then
-  #     echo 'DART WAS FOUND';
-  #     fail();
-  #   fi;
+  ensure_no_dart_processes_script: |
+    ps -ax | grep -v grep | grep dart || true
+    if [[ $(pgrep -x dart) ]]; then
+      echo 'DART WAS FOUND';
+      fail();
+    fi;
 
   # upload_logs_script: |
   #   if [[ "$CIRRUS_PR" = "" ]; then
