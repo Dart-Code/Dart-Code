@@ -299,7 +299,8 @@ describe("flutter run debugger", () => {
 		});
 	});
 
-	it("stops on exception", async function () {
+	// Skipped due to https://github.com/flutter/flutter/issues/17007.
+	it.skip("stops on exception", async function () {
 		if (extApi.daemonCapabilities.debuggerIncorrectlyPausesOnHandledExceptions)
 			this.skip();
 		await openFile(flutterHelloWorldBrokenFile);
@@ -314,7 +315,8 @@ describe("flutter run debugger", () => {
 		]);
 	});
 
-	it("provides exception details when stopped on exception", async function () {
+	// Skipped due to https://github.com/flutter/flutter/issues/17007.
+	it.skip("provides exception details when stopped on exception", async function () {
 		if (extApi.daemonCapabilities.debuggerIncorrectlyPausesOnHandledExceptions)
 			this.skip();
 		await openFile(flutterHelloWorldBrokenFile);
