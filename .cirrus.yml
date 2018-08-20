@@ -31,11 +31,11 @@ task:
       curl -sL https://deb.nodesource.com/setup_8.x | bash -
       apt-get -y install nodejs
     fi;
-    gem install dpl
+    sudo gem install dpl
 
   vscode_setup_script: |
     if [[ "$OS" == "linux" ]]; then
-      apt-get -y install gcc-4.8 libsecret-1-dev libstdc++6 libgtk3.0 libxss1
+      apt-get -y install gcc-4.8 libsecret-1-dev libstdc++6 libgtk3.0 libxss1 xvfb
       # export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0;
       # sh -e Xvfb &;
     fi;
