@@ -15,14 +15,14 @@ task:
         DART_CHANNEL: stable
         FLUTTER_BRANCH: dev
         CODE_VERSION: stable
-    # - name: Mac, Dart Stable, Code Stable
-    #   osx_instance:
-    #     image: high-sierra-xcode-9.4.1
-    #   env:
-    #     DART_OS: macos
-    #     DART_CHANNEL: stable
-    #     FLUTTER_BRANCH: dev
-    #     CODE_VERSION: stable
+    - name: Mac, Dart Stable, Code Stable
+      osx_instance:
+        image: high-sierra-base
+      env:
+        DART_OS: macos
+        DART_CHANNEL: stable
+        FLUTTER_BRANCH: dev
+        CODE_VERSION: stable
 
   install_apt_packages_script: |
     apt-get update
