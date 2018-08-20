@@ -2,7 +2,6 @@ import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeA
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { fsPath, isAnalyzableAndInWorkspace } from "../utils";
-import { logError } from "../utils/log";
 
 const supportedRefactors: { [key: string]: string } = {
 	EXTRACT_METHOD: "Extract Method",
@@ -26,9 +25,13 @@ export class RefactorCodeActionProvider implements CodeActionProvider {
 				offset: document.offsetAt(range.start),
 			}).then((result) => {
 				const availableRefactors = result.kinds.map((k) => this.getRefactorForKind(document, range, k)).filter((r) => r);
-
 				resolve(availableRefactors);
-			}, (e) => { logError(e); reject(); });
+			}, (e) => {
+				// TODO: Swap this back to logError/reject when https://github.com/dart-lang/sdk/issues/33471 is fixed.
+				resolve([]);
+				// logError(e);
+				// reject();
+			});
 		});
 	}
 
