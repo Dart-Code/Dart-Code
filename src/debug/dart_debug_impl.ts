@@ -54,6 +54,7 @@ export class DartDebugSession extends DebugSession {
 		response.body.supportsDelayedStackTraceLoading = true;
 		response.body.supportsConditionalBreakpoints = true;
 		response.body.supportsLogPoints = true;
+		response.body.supportsTerminateRequest = true;
 		response.body.exceptionBreakpointFilters = [
 			{ filter: "All", label: "All Exceptions", default: false },
 			{ filter: "Unhandled", label: "Uncaught Exceptions", default: true },
@@ -295,10 +296,8 @@ export class DartDebugSession extends DebugSession {
 		});
 	}
 
-	protected async disconnectRequest(
-		response: DebugProtocol.DisconnectResponse,
-		args: DebugProtocol.DisconnectArguments,
-	): Promise<void> {
+	private async terminate(force: boolean): Promise<void> {
+		this.log(`Termination requested (force: ${force})`);
 		try {
 			for (const pid of this.additionalPidsToTerminate) {
 				try {
@@ -310,7 +309,8 @@ export class DartDebugSession extends DebugSession {
 				}
 			}
 			// Don't do this - because the process might ignore our kill (eg. test framework lets the current
-			// test finish) so we may need to send again it we get another disconnectRequest.
+			// test finish) so we may need to send again it we get the disconnectRequest (the first request
+			// will come from terminateRequest).
 			// this.additionalPidsToTerminate.length = 0;
 			if (this.childProcess != null) {
 				try {
@@ -342,15 +342,36 @@ export class DartDebugSession extends DebugSession {
 					this.observatory = null;
 				}
 			}
-		} catch (e) {
-			return this.errorResponse(response, `${e}`);
+			this.log(`Waiting for process to finish...`);
+			await this.processExit;
 		} finally {
 			this.log(`Removing all stored data...`);
 			this.threadManager.removeAllStoredData();
 		}
-		this.log(`Waiting for process to finish...`);
-		await this.processExit;
 		this.log(`Disconnecting...`);
+	}
+
+	protected async terminateRequest(
+		response: DebugProtocol.TerminateResponse,
+		args: DebugProtocol.TerminateArguments,
+	): Promise<void> {
+		try {
+			this.terminate(false);
+		} catch (e) {
+			return this.errorResponse(response, `${e}`);
+		}
+		super.terminateRequest(response, args);
+	}
+
+	protected async disconnectRequest(
+		response: DebugProtocol.DisconnectResponse,
+		args: DebugProtocol.DisconnectArguments,
+	): Promise<void> {
+		try {
+			this.terminate(true);
+		} catch (e) {
+			return this.errorResponse(response, `${e}`);
+		}
 		super.disconnectRequest(response, args);
 	}
 
