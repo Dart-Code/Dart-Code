@@ -194,8 +194,8 @@ describe("flutter run debugger", () => {
 
 		it("stops at a breakpoint" + reloadDescription, async function () { // tslint:disable-line:only-arrow-functions
 			if (numReloads > 0) {
-				// Skipping due to https://github.com/flutter/flutter/issues/17838.
-				this.skip();
+				if (extApi.daemonCapabilities.debuggerIncorrectlyPausesOnHandledExceptions)
+					this.skip();
 			}
 
 			await openFile(flutterHelloWorldMainFile);
@@ -299,8 +299,9 @@ describe("flutter run debugger", () => {
 		});
 	});
 
-	// Skipped due to https://github.com/flutter/flutter/issues/17838
-	it.skip("stops on exception", async () => {
+	it("stops on exception", async function () {
+		if (extApi.daemonCapabilities.debuggerIncorrectlyPausesOnHandledExceptions)
+			this.skip();
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
 		await Promise.all([
@@ -313,8 +314,9 @@ describe("flutter run debugger", () => {
 		]);
 	});
 
-	// Skipped due to https://github.com/flutter/flutter/issues/17838
-	it.skip("provides exception details when stopped on exception", async () => {
+	it("provides exception details when stopped on exception", async function () {
+		if (extApi.daemonCapabilities.debuggerIncorrectlyPausesOnHandledExceptions)
+			this.skip();
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
 		await Promise.all([
@@ -330,8 +332,9 @@ describe("flutter run debugger", () => {
 		ensureVariable(variables, "$e.message", "message", `"(TODO WHEN UNSKIPPING)"`);
 	});
 
-	// Skipped due to https://github.com/flutter/flutter/issues/17838
-	it.skip("logs expected text (and does not stop) at a logpoint", async () => {
+	it("logs expected text (and does not stop) at a logpoint", async function () {
+		if (extApi.daemonCapabilities.debuggerIncorrectlyPausesOnHandledExceptions)
+			this.skip();
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
@@ -352,8 +355,9 @@ describe("flutter run debugger", () => {
 		]);
 	});
 
-	// Skipped due to https://github.com/flutter/flutter/issues/17838
-	it.skip("writes failure output to stderr", async () => {
+	it("writes failure output to stderr", async function () {
+		if (extApi.daemonCapabilities.debuggerIncorrectlyPausesOnHandledExceptions)
+			this.skip();
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
 		await Promise.all([

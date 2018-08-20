@@ -23,6 +23,9 @@ export class DaemonCapabilities {
 	// due to the test device not starting up properly. Never seen on master, so assumed to be an
 	// issue that's been fixed. If not we'll see new failures despite this and can investigate further.
 	get flutterTesterMayBeFlaky() { return !versionIsAtLeast(this.version, "0.4.0"); }
+
+	// https://github.com/flutter/flutter/issues/17838
+	get debuggerIncorrectlyPausesOnHandledExceptions() { return !versionIsAtLeast(this.version, "0.4.0"); }
 }
 
 export class FlutterDaemon extends StdIOService<UnknownNotification> {
