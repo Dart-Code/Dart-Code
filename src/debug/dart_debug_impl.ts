@@ -22,7 +22,7 @@ export class DartDebugSession extends DebugSession {
 	// We normally track the pid from Observatory to terminate the VM afterwards, but for Flutter Run it's
 	// a remote PID and therefore doesn't make sense to try and terminate.
 	protected allowTerminatingObservatoryVmPid = true;
-	private processExited: boolean = false;
+	private processExited = false;
 	public observatory: ObservatoryConnection;
 	protected cwd?: string;
 	private logFile: string;
@@ -284,18 +284,11 @@ export class DartDebugSession extends DebugSession {
 					// wipe out the logfile with just a "process exited" or similar message.
 					this.logFile = null;
 				}
-				// TODO: This was commented out as part of moving to support terminateRequest since it fires
-				// very early which causes VS Code to send disconnectRequest while we're still cleaning up.
-				// I don't believe this should be required, since if Observatory goes away, the process should
-				// also quit (and if it doesn't, quietly disconnecting the debugger may mask orphaned processes).
-				// Leaving code here in case we end up investigating bugs relating to this soon though. If not,
-				// this code can be removed after a few releases.
-				// (DanTup, 2018-08-20)
-				// // This event arrives before the process exit event.
-				// setTimeout(() => {
-				// 	if (!this.processExited)
-				// 		this.sendEvent(new TerminatedEvent());
-				// }, 100);
+				// If we don't have a process (eg. we're attached) then this is our signal to quit, since we won't
+				// get a process exit event.
+				if (this.childProcess == null) {
+					this.sendEvent(new TerminatedEvent());
+				}
 			});
 
 			this.observatory.onError((error) => {
@@ -327,6 +320,7 @@ export class DartDebugSession extends DebugSession {
 			}
 			// Don't do this - because the process might ignore our kill (eg. test framework lets the current
 			// test finish) so we may need to send again it we get another disconnectRequest.
+			// We also use childProcess == null to mean we're attached.
 			// this.childProcess = null;
 		} else if (this.observatory) {
 			try {
