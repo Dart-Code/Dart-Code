@@ -25,10 +25,12 @@ task:
         CODE_VERSION: stable
 
   install_apt_packages_script: |
-    apt-get update
-    apt-get -y install curl wget git ruby2.5 gnupg
-    curl -sL https://deb.nodesource.com/setup_8.x | bash -
-    apt-get -y install nodejs
+    if [[ "$OS" == "linux" ]]; then
+      apt-get update
+      apt-get -y install curl wget git ruby2.5 gnupg
+      curl -sL https://deb.nodesource.com/setup_8.x | bash -
+      apt-get -y install nodejs
+    fi;
     gem install dpl
 
   vscode_setup_script: |
