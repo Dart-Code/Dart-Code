@@ -33,6 +33,7 @@ task:
       gem install dpl
     fi;
     if [[ "$OS" == "darwin" ]]; then
+      brew install node
       sudo gem install dpl
     fi;
 
