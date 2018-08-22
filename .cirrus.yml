@@ -32,20 +32,6 @@ max_and_linux_task:
     #     DART_CHANNEL: stable
     #     FLUTTER_BRANCH: dev
     #     CODE_VERSION: stable
-
-  pub_cache:
-    folder: "$HOME/.pub-cache"
-    # Pub cache is unrelated to engine version, but it's a convenient thing that changes now and
-    # then which will prevent this cache just growing over time as versions changed.
-    fingerprint_script: cat "$FLUTTER_PATH/bin/internal/engine.version"
-
-  node_modules_cache:
-    folder: node_modules
-    fingerprint_script: cat package-lock.json
-
-  flutter_cache:
-    folder: "$FLUTTER_PATH/bin/cache"
-    fingerprint_script: cat "$FLUTTER_PATH/bin/internal/engine.version"
   
   install_packages_script: |
     if [[ "$OS" == "linux" ]]; then
@@ -84,6 +70,20 @@ max_and_linux_task:
     cd "$FLUTTER_PATH"
     git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git .
     cd "$CIRRUS_WORKING_DIR"
+
+  pub_cache:
+    folder: "$HOME/.pub-cache"
+    # Pub cache is unrelated to engine version, but it's a convenient thing that changes now and
+    # then which will prevent this cache just growing over time as versions changed.
+    fingerprint_script: cat "$FLUTTER_PATH/bin/internal/engine.version"
+
+  node_modules_cache:
+    folder: node_modules
+    fingerprint_script: cat package-lock.json
+
+  flutter_cache:
+    folder: "$FLUTTER_PATH/bin/cache"
+    fingerprint_script: cat "$FLUTTER_PATH/bin/internal/engine.version"
 
   configure_flutter_script: &configure_flutter |
     flutter config --no-analytics
@@ -154,20 +154,6 @@ windows_task:
         DART_CHANNEL: stable
         FLUTTER_BRANCH: dev
         CODE_VERSION: stable
-
-  pub_cache:
-    folder: "$APPDATA\\Pub\\Cache"
-    # Pub cache is unrelated to engine version, but it's a convenient thing that changes now and
-    # then which will prevent this cache just growing over time as versions changed.
-    fingerprint_script: type "$FLUTTER_PATH\bin\internal\engine.version"
-
-  node_modules_cache:
-    folder: node_modules
-    fingerprint_script: type package-lock.json
-
-  flutter_cache:
-    folder: "$FLUTTER_PATH\\bin\\cache"
-    fingerprint_script: type "$FLUTTER_PATH\bin\internal\engine.version"
   
   # install_packages_script: |
   #   if [[ "$OS" == "linux" ]]; then
@@ -202,6 +188,21 @@ windows_task:
     cd "$CIRRUS_WORKING_DIR"
 
   install_flutter_script: *install_flutter
+
+  pub_cache:
+    folder: "$APPDATA\\Pub\\Cache"
+    # Pub cache is unrelated to engine version, but it's a convenient thing that changes now and
+    # then which will prevent this cache just growing over time as versions changed.
+    fingerprint_script: type "$FLUTTER_PATH\bin\internal\engine.version"
+
+  node_modules_cache:
+    folder: node_modules
+    fingerprint_script: type package-lock.json
+
+  flutter_cache:
+    folder: "$FLUTTER_PATH\\bin\\cache"
+    fingerprint_script: type "$FLUTTER_PATH\bin\internal\engine.version"
+
   configure_flutter_script: *configure_flutter
   print_versions_script: *print_versions
   flutter_doctor_script: *flutter_doctor
