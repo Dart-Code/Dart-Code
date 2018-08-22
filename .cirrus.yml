@@ -182,16 +182,19 @@ task:
     cd "${env:DART_PATH}"
     Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
     Expand-Archive -Path dart.zip -Destination .
-    dir
     cd "${env:CIRRUS_WORKING_DIR}"
 
-  install_flutter_script: *install_flutter
+  install_flutter_script: |
+    mkdir -p "${env:FLUTTER_PATH}"
+    cd "${env:FLUTTER_PATH}"
+    git clone -b ${env:FLUTTER_BRANCH} https://github.com/flutter/flutter.git .
+    cd "${env:CIRRUS_WORKING_DIR}"
 
   pub_cache:
     folder: "$APPDATA\\Pub\\Cache"
     # Pub cache is unrelated to engine version, but it's a convenient thing that changes now and
     # then which will prevent this cache just growing over time as versions changed.
-    fingerprint_script: type "$FLUTTER_PATH\bin\internal\engine.version"
+    fingerprint_script: type "${env:FLUTTER_PATH}\bin\internal\engine.version"
 
   node_modules_cache:
     folder: node_modules
@@ -199,7 +202,7 @@ task:
 
   flutter_cache:
     folder: "$FLUTTER_PATH\\bin\\cache"
-    fingerprint_script: type "$FLUTTER_PATH\bin\internal\engine.version"
+    fingerprint_script: type "${env:FLUTTER_PATH}\bin\internal\engine.version"
 
   configure_flutter_script: *configure_flutter
   print_versions_script: *print_versions
