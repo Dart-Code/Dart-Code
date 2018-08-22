@@ -140,10 +140,10 @@ max_and_linux_task:
 windows_task:
   env:
     CIRRUS_SHELL: powershell
-    DART_PATH: "C:\Windows\Temp\with spaces\dart"
-    FLUTTER_PATH: "C:\Windows\Temp\with spaces\flutter"
-    FLUTTER_ROOT: "C:\Windows\Temp\with spaces\flutter"
-    PATH: "$FLUTTER_PATH\bin:$DART_PATH\bin:$PATH"
+    DART_PATH: "C:\\Windows\Temp\\with spaces\\dart"
+    FLUTTER_PATH: "C:\\Windows\\Temp\\with spaces\\flutter"
+    FLUTTER_ROOT: "C:\\Windows\\Temp\\with spaces\\flutter"
+    PATH: "$FLUTTER_PATH\\bin:$DART_PATH\\bin:$PATH"
     
   matrix:
     - name: Windows, Dart Stable, Code Stable
