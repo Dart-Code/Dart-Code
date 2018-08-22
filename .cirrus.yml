@@ -1,4 +1,4 @@
-mac_and_linux_task:
+task:
   env:
     DART_PATH: "/tmp/with spaces/dart"
     FLUTTER_PATH: "/tmp/with spaces/flutter"
@@ -135,7 +135,7 @@ mac_and_linux_task:
   #     ./cc-test-reporter after-build --prefix ../../;
   #   fi
 
-windows_task:
+task:
   env:
     CIRRUS_SHELL: powershell
     DART_PATH: "C:\\Windows\\Temp\\with spaces\\dart"
