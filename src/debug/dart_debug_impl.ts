@@ -166,8 +166,8 @@ export class DartDebugSession extends DebugSession {
 			appArgs.push("--enable-vm-service=0");
 			appArgs.push("--pause_isolates_on_start=true");
 		}
-		if (args.checkedMode) {
-			appArgs.push("--checked");
+		if (args.enableAsserts !== false) { // undefined = on
+			appArgs.push("--enable-asserts");
 		}
 		if (args.vmAdditionalArgs) {
 			appArgs = appArgs.concat(args.vmAdditionalArgs);

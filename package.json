@@ -890,10 +890,10 @@
 								"type": "string",
 								"description": "Workspace root."
 							},
-							"checkedMode": {
+							"enableAsserts": {
 								"type": "boolean",
-								"description": "Whether to run the VM in checked mode.",
-								"default": false
+								"description": "Whether to run the VM with --asserts-enabled.",
+								"default": true
 							},
 							"program": {
 								"type": "string",
