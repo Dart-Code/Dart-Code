@@ -141,7 +141,7 @@ task:
     DART_PATH: "C:\\Windows\\Temp\\with spaces\\dart"
     FLUTTER_PATH: "C:\\Windows\\Temp\\with spaces\\flutter"
     FLUTTER_ROOT: "C:\\Windows\\Temp\\with spaces\\flutter"
-    PATH: "$FLUTTER_PATH\\bin:$DART_PATH\\bin:$PATH"
+    PATH: "$FLUTTER_PATH\\bin;$DART_PATH\\bin;$PATH"
     
   matrix:
     - name: Windows, Dart Stable, Code Stable
@@ -164,7 +164,6 @@ task:
     cd "${env:CIRRUS_WORKING_DIR}"
 
   install_flutter_script: |
-    echo $env:PATH
     mkdir -p "${env:FLUTTER_PATH}"
     cd "${env:FLUTTER_PATH}"
     git clone -b ${env:FLUTTER_BRANCH} https://github.com/flutter/flutter.git .
