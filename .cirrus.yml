@@ -1,4 +1,4 @@
-max_and_linux_task:
+mac_and_linux_task:
   env:
     DART_PATH: "/tmp/with spaces/dart"
     FLUTTER_PATH: "/tmp/with spaces/flutter"
@@ -180,12 +180,12 @@ windows_task:
   #   fi;
     
   install_dart_script: |
-    mkdir -p "$DART_PATH"
-    cd "$DART_PATH"
+    mkdir -p "${env:DART_PATH}"
+    cd "${env:DART_PATH}"
     Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
     7z.exe x dart.zip | out-null
     mv dart-sdk/* .
-    cd "$CIRRUS_WORKING_DIR"
+    cd "${env:CIRRUS_WORKING_DIR}"
 
   install_flutter_script: *install_flutter
 
