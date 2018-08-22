@@ -8,14 +8,14 @@ task:
     ELECTRON_NO_ATTACH_CONSOLE: 1
 
   matrix:
-    - name: Linux, Dart Stable, Code Stable
-      container:
-        image: ubuntu:bionic
-      env:
-        DART_OS: linux
-        DART_CHANNEL: stable
-        FLUTTER_BRANCH: dev
-        CODE_VERSION: stable
+    # - name: Linux, Dart Stable, Code Stable
+    #   container:
+    #     image: ubuntu:bionic
+    #   env:
+    #     DART_OS: linux
+    #     DART_CHANNEL: stable
+    #     FLUTTER_BRANCH: dev
+    #     CODE_VERSION: stable
     # - name: Mac, Dart Stable, Code Stable
     #   osx_instance:
     #     image: high-sierra-base
@@ -24,6 +24,14 @@ task:
     #     DART_CHANNEL: stable
     #     FLUTTER_BRANCH: dev
     #     CODE_VERSION: stable
+    - name: Windows, Dart Stable, Code Stable
+      windows_container:
+        image: cirrusci/windowsservercore:2016
+      env:
+        DART_OS: win
+        DART_CHANNEL: stable
+        FLUTTER_BRANCH: dev
+        CODE_VERSION: stable
 
   install_packages_script: |
     if [[ "$OS" == "linux" ]]; then
