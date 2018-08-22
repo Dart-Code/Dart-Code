@@ -1,7 +1,8 @@
 task:
   env:
-    FLUTTER_PATH: "/tmp/with spaces/flutter"
     DART_PATH: "/tmp/with spaces/dart"
+    FLUTTER_PATH: "/tmp/with spaces/flutter"
+    FLUTTER_ROOT: "/tmp/with spaces/flutter"
     PATH: "$FLUTTER_PATH/bin:$DART_PATH/bin:$PATH"
     DEBIAN_FRONTEND: noninteractive
     ELECTRON_NO_ATTACH_CONSOLE: 1
