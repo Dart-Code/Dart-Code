@@ -687,7 +687,7 @@ function getIconPath(status: TestStatus, isStale: boolean): vs.Uri | undefined {
 			file = isStale ? "skip_stale" : "skip";
 			break;
 		case TestStatus.Unknown:
-			file = "stale";
+			file = "unknown";
 			break;
 		case TestStatus.Waiting:
 			file = "loading";
