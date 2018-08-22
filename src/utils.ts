@@ -163,11 +163,12 @@ export function isInsideFolderNamed(file: string, folderName: string): boolean {
 	if (!ws)
 		return false;
 
-	const relPath = path.sep + path.relative(fsPath(ws.uri), file);
+	const relPath = path.relative(fsPath(ws.uri), file).toLowerCase();
 
-	// We only want to check the relative path from the workspace root so that if the whole project is inside a
-	// test (etc.) folder (for ex. Dart Code's own tests) we don't falsely assume it's an end user test.
-	return relPath.toLowerCase().indexOf(`${path.sep}${folderName}${path.sep}`) !== -1;
+	// If we're either in a top-level test folder or the file ends with _test.dart then
+	// assume it's a test. We used to check for /test/ at any level, but sometimes people have
+	// non-test files named test (https://github.com/Dart-Code/Dart-Code/issues/1165).
+	return relPath.startsWith(`${folderName}${path.sep}`) || file.toLowerCase().endsWith("_test.dart");
 }
 
 function getExtensionVersion(): string {
