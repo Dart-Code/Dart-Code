@@ -16,14 +16,14 @@ task:
         DART_CHANNEL: stable
         FLUTTER_BRANCH: dev
         CODE_VERSION: stable
-    - name: Mac, Dart Stable, Code Stable
-      osx_instance:
-        image: high-sierra-base
-      env:
-        DART_OS: macos
-        DART_CHANNEL: stable
-        FLUTTER_BRANCH: dev
-        CODE_VERSION: stable
+    # - name: Mac, Dart Stable, Code Stable
+    #   osx_instance:
+    #     image: high-sierra-base
+    #   env:
+    #     DART_OS: macos
+    #     DART_CHANNEL: stable
+    #     FLUTTER_BRANCH: dev
+    #     CODE_VERSION: stable
 
   install_packages_script: |
     if [[ "$OS" == "linux" ]]; then
@@ -44,9 +44,9 @@ task:
       mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
       sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
       apt-get update
-      apt-get -y install code code-insiders libasound-dev libxkbfile-dev pkg-config libsecret-1-dev libxss1 libgconf-2-4 dbus xvfb libgtk-3-0
-      export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0;
-      # sh -e Xvfb &;
+      apt-get -y install code code-insiders libasound2 libxkbfile-dev pkg-config libsecret-1-dev libxss1 libgconf-2-4 dbus xvfb libgtk-3-0
+      export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0
+      bash -c Xvfb &
     fi;
     
   install_dart_script: |
