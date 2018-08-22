@@ -177,18 +177,17 @@ export class EditCommands implements vs.Disposable {
 		}
 
 		// If we weren't applying sequentially
-		if (changes) {
+		if (changes)
 			await vs.workspace.applyEdit(changes);
 
-			// Set the cursor position.
-			if (change.selection) {
-				const uri = vs.Uri.file(change.selection.file);
-				const document = await vs.workspace.openTextDocument(uri);
-				const editor = await vs.window.showTextDocument(document);
-				const pos = document.positionAt(change.selection.offset);
-				const selection = new vs.Selection(pos, pos);
-				editor.selection = selection;
-			}
+		// Set the cursor position.
+		if (change.selection) {
+			const uri = vs.Uri.file(change.selection.file);
+			const document = await vs.workspace.openTextDocument(uri);
+			const editor = await vs.window.showTextDocument(document);
+			const pos = document.positionAt(change.selection.offset);
+			const selection = new vs.Selection(pos, pos);
+			editor.selection = selection;
 		}
 	}
 
