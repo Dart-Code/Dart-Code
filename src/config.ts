@@ -33,6 +33,7 @@ class Config {
 	get analyzerPath() { return resolvePaths(this.getConfig<string>("analyzerPath")); }
 	get analyzerSshHost() { return this.getConfig<string>("analyzerSshHost"); }
 	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
+	public setCheckForSdkUpdates(value: boolean): Thenable<void> { return this.setConfig("checkForSdkUpdates", value, ConfigurationTarget.Global); }
 	get closingLabels() { return this.getConfig<boolean>("closingLabels"); }
 	get extensionLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("extensionLogFile"))); }
 	get flutterCreateAndroidLanguage() { return this.getConfig<string>("flutterCreateAndroidLanguage"); }
