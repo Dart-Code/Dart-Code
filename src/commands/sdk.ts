@@ -183,7 +183,7 @@ export class SdkCommands {
 		const f = await this.getWorkspace(placeHolder, selection);
 
 		const workspacePath = fsPath(vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri);
-		const shortPath = path.join(path.basename(f), path.relative(f, workspacePath));
+		const shortPath = path.relative(workspacePath, f);
 		return handler(f, args, shortPath);
 	}
 
