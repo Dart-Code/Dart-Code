@@ -181,8 +181,8 @@ task:
     mkdir -p "${env:DART_PATH}"
     cd "${env:DART_PATH}"
     Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
-    7z.exe x dart.zip | out-null
-    mv dart-sdk/* .
+    Expand-Archive -Path dart.zip -Destination .
+    dir
     cd "${env:CIRRUS_WORKING_DIR}"
 
   install_flutter_script: *install_flutter
