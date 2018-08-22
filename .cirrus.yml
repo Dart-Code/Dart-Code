@@ -164,6 +164,7 @@ task:
     cd "${env:CIRRUS_WORKING_DIR}"
 
   install_flutter_script: |
+    echo $env:PATH
     mkdir -p "${env:FLUTTER_PATH}"
     cd "${env:FLUTTER_PATH}"
     git clone -b ${env:FLUTTER_BRANCH} https://github.com/flutter/flutter.git .
