@@ -151,10 +151,13 @@ export class EditCommands implements vs.Disposable {
 				continue;
 			}
 			const document = fs.existsSync(edit.file) ? await vs.workspace.openTextDocument(uri) : undefined;
-			for (const e of edit.edits) {
-				if (!changes)
-					changes = new vs.WorkspaceEdit();
+			if (changes)
 				changes.createFile(uri, { ignoreIfExists: true });
+			for (const e of edit.edits) {
+				if (!changes) {
+					changes = new vs.WorkspaceEdit();
+					changes.createFile(uri, { ignoreIfExists: true });
+				}
 				const range = document
 					? new vs.Range(
 						document.positionAt(e.offset),
@@ -187,6 +190,7 @@ export class EditCommands implements vs.Disposable {
 				editor.selection = selection;
 			}
 		}
+	}
 
 	private async applyEditsWithSnippets(initiatingDocument: vs.TextDocument, change: as.SourceChange): Promise<void> {
 		const edit = change.edits[0];
