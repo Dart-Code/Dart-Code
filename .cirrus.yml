@@ -45,7 +45,7 @@ task:
       sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
       apt-get update
       apt-get -y install code code-insiders libasound-dev libxkbfile-dev pkg-config libsecret-1-dev libxss1 libgconf-2-4 dbus xvfb libgtk-3-0
-      # export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0;
+      export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0;
       # sh -e Xvfb &;
     fi;
     
