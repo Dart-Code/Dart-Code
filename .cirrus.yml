@@ -161,6 +161,7 @@ task:
     cd "${env:DART_PATH}"
     Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
     Expand-Archive -Path dart.zip -Destination .
+    mv dart-sdk/* .
     cd "${env:CIRRUS_WORKING_DIR}"
 
   install_flutter_script: |
