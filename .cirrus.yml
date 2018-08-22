@@ -50,7 +50,7 @@ mac_and_linux_task:
   vscode_xvfb_background_script: |
     if [[ "$OS" == "linux" ]]; then
       export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0
-      Xvfb &
+      Xvfb
     fi;
     
   install_dart_script: |
