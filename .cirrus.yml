@@ -52,7 +52,7 @@ task:
   
   vscode_xvfb_background_script: |
     if [[ "$OS" == "linux" ]]; then
-      Xvfb
+      Xvfb :99
     fi;
     
   install_dart_script: |
