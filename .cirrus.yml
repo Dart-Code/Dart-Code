@@ -156,7 +156,7 @@ windows_task:
         CODE_VERSION: stable
 
   pub_cache:
-    folder: "$APPDATA\Pub\Cache"
+    folder: "$APPDATA\\Pub\\Cache"
     # Pub cache is unrelated to engine version, but it's a convenient thing that changes now and
     # then which will prevent this cache just growing over time as versions changed.
     fingerprint_script: type "$FLUTTER_PATH\bin\internal\engine.version"
@@ -166,7 +166,7 @@ windows_task:
     fingerprint_script: type package-lock.json
 
   flutter_cache:
-    folder: "$FLUTTER_PATH\bin\cache"
+    folder: "$FLUTTER_PATH\\bin\\cache"
     fingerprint_script: type "$FLUTTER_PATH\bin\internal\engine.version"
   
   # install_packages_script: |
