@@ -153,8 +153,10 @@ task:
         FLUTTER_BRANCH: dev
         CODE_VERSION: stable
 
-  # install_packages_script: |
-    # TODO: Install Ruby (to upload logs)?
+  install_packages_script: |
+    Get-PackageProvider Chocolatey -Force
+    choco install -y ruby
+    choco install -y nodejs.install
   
   install_dart_script: |
     mkdir -p "${env:DART_PATH}"
