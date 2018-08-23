@@ -26,7 +26,8 @@ describe("flutter run debugger (launch)", () => {
 		dc = new DartDebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_debug_entry.js"), "dart");
 		dc.defaultTimeout = 30000;
 		const thisDc = dc;
-		defer(() => thisDc.stop());
+		// See comment in dart_cli.test.ts before removing these braces :-(
+		defer(async () => { await thisDc.stop(); });
 	});
 
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));

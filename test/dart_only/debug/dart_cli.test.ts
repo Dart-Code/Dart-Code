@@ -20,7 +20,14 @@ describe("dart cli debugger", () => {
 		dc = new DartDebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/dart_debug_entry.js"), "dart");
 		dc.defaultTimeout = 30000;
 		const thisDc = dc;
-		defer(() => thisDc.stop());
+		// For some reason on Cirrus Linux, if we remove the braces here like:
+		//   defer(() => dc.stop());
+		// then the process just hangs after all tests complete and never quits.
+		// Same code on local macOS with same nodejs version does not
+		//   (╯°□°）╯︵ ┻━┻)
+		defer(async () => {
+			await thisDc.stop();
+		});
 	});
 
 	async function startDebugger(script?: vs.Uri, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {

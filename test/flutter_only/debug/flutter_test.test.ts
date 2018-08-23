@@ -39,14 +39,17 @@ describe("flutter test debugger", () => {
 		// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
 		// a second request and that'll cause it to quit immediately.
 		const thisDc = dc;
-		defer(() => withTimeout(
-			Promise.all([
-				thisDc.terminateRequest().catch((e) => logInfo(e)),
-				delay(500).then(() => thisDc.stop()).catch((e) => logInfo(e)),
-			]),
-			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
-			60,
-		));
+		// See comment in dart_cli.test.ts before removing these braces :-(
+		defer(async () => {
+			await withTimeout(
+				Promise.all([
+					thisDc.terminateRequest().catch((e) => logInfo(e)),
+					delay(500).then(() => thisDc.stop()).catch((e) => logInfo(e)),
+				]),
+				"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
+				60,
+			);
+		});
 	});
 
 	afterEach(killFlutterTester);
