@@ -72,7 +72,9 @@ describe("flutter run debugger", () => {
 		]);
 	});
 
-	it("can quit during a build", async () => {
+	// Skipped due to leaving flutter_tester processes around:
+	// https://github.com/flutter/flutter/issues/20949
+	it.skip("can quit during a build", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		// Kick off a build, but do not await it...
 		Promise.all([
