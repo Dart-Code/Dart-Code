@@ -1,3 +1,161 @@
+blocks:
+  install_packages_mac_linux: &install_packages_mac_linux |
+    if [[ "$OS" == "linux" ]]; then
+      apt-get update
+      apt-get -y install curl wget git ruby2.5 gnupg
+      curl -sL https://deb.nodesource.com/setup_8.x | bash -
+      apt-get -y install nodejs
+      gem install dpl
+    fi;
+    if [[ "$OS" == "darwin" ]]; then
+      brew install node
+      sudo gem install dpl
+    fi;
+
+  install_packages_win: &install_packages_win |
+    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+    choco install -y ruby
+    choco install -y nodejs.install
+
+  install_dart_mac_linux: &install_dart_mac_linux |
+    mkdir -p "$DART_PATH"
+    cd "$DART_PATH"
+    curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
+    unzip dart-sdk.zip > /dev/null
+    mv dart-sdk/* .
+    cd "$CIRRUS_WORKING_DIR"
+
+  install_dart_win: &install_dart_win |
+    mkdir -p "${env:DART_PATH}"
+    cd "${env:DART_PATH}"
+    Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
+    Expand-Archive -Path dart.zip -Destination .
+    mv dart-sdk/* .
+    cd "${env:CIRRUS_WORKING_DIR}"
+
+  install_flutter_mac_linux: &install_flutter_mac_linux |
+    mkdir -p "$FLUTTER_PATH"
+    cd "$FLUTTER_PATH"
+    if [[ "$DART_CHANNEL" == "stable" ]]; then
+      export FLUTTER_BRANCH=dev
+    else
+      export FLUTTER_BRANCH=master
+    fi;
+    git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git .
+    cd "$CIRRUS_WORKING_DIR"
+  
+  install_flutter_win: &install_flutter_win |
+    mkdir -p "${env:FLUTTER_PATH}"
+    cd "${env:FLUTTER_PATH}"
+    git clone -b ${env:FLUTTER_BRANCH} https://github.com/flutter/flutter.git .
+    cd "${env:CIRRUS_WORKING_DIR}"
+
+  vscode_setup_mac_linux: &vscode_setup_mac_linux |
+    if [[ "$OS" == "linux" ]]; then
+      curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+      mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
+      sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
+      apt-get update
+      apt-get -y install code code-insiders libasound2 libxkbfile-dev pkg-config libsecret-1-dev libxss1 libgconf-2-4 dbus xvfb libgtk-3-0
+    fi;
+  
+  vscode_xvfb_background: &vscode_xvfb_background |
+    if [[ "$OS" == "linux" ]]; then
+      Xvfb :99
+    fi;
+  
+  pub_cache_mac_linux: &pub_cache_mac_linux
+    folder: "$HOME/.pub-cache"
+    # Pub cache is unrelated to engine version, but it's a convenient thing that changes now and
+    # then which will prevent this cache just growing over time as versions changed.
+    fingerprint_script: cat "$FLUTTER_PATH/bin/internal/engine.version"
+
+  pub_cache_win: &pub_cache_win
+    folder: "$APPDATA\\Pub\\Cache"
+    # Pub cache is unrelated to engine version, but it's a convenient thing that changes now and
+    # then which will prevent this cache just growing over time as versions changed.
+    fingerprint_script: type "${env:FLUTTER_PATH}\bin\internal\engine.version"
+
+  node_modules_cache_mac_linux: &node_modules_cache_mac_linux
+    folder: node_modules
+    fingerprint_script: cat package-lock.json
+
+  node_modules_cache_win: &node_modules_cache_win
+    folder: node_modules
+    fingerprint_script: type package-lock.json
+
+  flutter_cache_mac_linux: &flutter_cache_mac_linux
+    folder: "$FLUTTER_PATH/bin/cache"
+    fingerprint_script: cat "$FLUTTER_PATH/bin/internal/engine.version"
+
+  flutter_cache_win: &flutter_cache_win
+    folder: "$FLUTTER_PATH\\bin\\cache"
+    fingerprint_script: type "${env:FLUTTER_PATH}\bin\internal\engine.version"
+
+  configure_flutter: &configure_flutter |
+    flutter config --no-analytics
+    flutter update-packages
+
+  print_versions: &print_versions |
+    dart --version
+    flutter --version
+    node --version
+    npm --version
+
+  flutter_doctor: &flutter_doctor |
+    flutter doctor
+
+  install_npm_packages: &install_npm_packages |
+    npm install --depth 0 --unsafe-perm
+  
+  configure_code_climate_mac_linux: &configure_code_climate_mac_linux |
+    if [[ "$OS" == "linux" ]]; then
+      curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter;
+    else
+      curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-darwin-amd64 > ./cc-test-reporter;
+    fi
+    chmod +x ./cc-test-reporter;
+    ./cc-test-reporter before-build;
+
+  compile: &compile npm run vscode:prepublish
+  lint: &lint npm run lint
+  test: &test npm test
+
+  ensure_no_dart_processes_mac_linux: &ensure_no_dart_processes_mac_linux |
+    ps -ax | grep -v grep | grep dart || true
+    if [[ $(pgrep -x dart) ]]; then
+      echo 'DART WAS FOUND';
+      fail();
+    fi;
+
+  ensure_no_dart_processes_win: &ensure_no_dart_processes_win |
+    Get-WmiObject Win32_Process -Filter "name = 'dart.exe'" | Select-Object CommandLine
+    if (get-process dart -ErrorAction SilentlyContinue) {
+      throw "Dart processes were still running"
+    }
+
+  upload_logs_mac_linux: &upload_logs_mac_linux |
+    if [[ "$CIRRUS_PR" = "" ]]; then
+      dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".test_results" --upload-dir="$CIRRUS_BRANCH/$CIRRUS_CHANGE_IN_REPO/$OS" --acl=public_read --default_text_charset=utf-8;
+      dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".dart_code_test_logs" --upload-dir="logs/$CIRRUS_BRANCH/$CIRRUS_CHANGE_IN_REPO/$OS" --acl=public_read --default_text_charset=utf-8;
+    fi;
+
+  upload_logs_win: &upload_logs_win |
+    if ($env:CIRRUS_PR -eq "") {
+      dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".test_results" --upload-dir="${env:CIRRUS_BRANCH}/${env:CIRRUS_CHANGE_IN_REPO}/${env:OS}" --acl=public_read --default_text_charset=utf-8;
+      dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".dart_code_test_logs" --upload-dir="logs/${env:CIRRUS_BRANCH}/${env:CIRRUS_CHANGE_IN_REPO}/${env:OS}" --acl=public_read --default_text_charset=utf-8;
+    }
+
+  upload_code_coverage_mac_linux: &upload_code_coverage_mac_linux |
+    if [[ "$CODE_VERSION" == "stable" ]] && [[ "$DART_CHANNEL" == "stable" ]]; then
+      ./cc-test-reporter after-build --prefix ../../;
+    fi;
+
+env:
+  AWS_ACCESS_KEY_ID: ENCRYPTED[19600ef6da68a544b43be5b8a03da226b09d6aabeda0c204d380d548876cdd8638e3537290ce04f7922f67eb04d105f5]
+  AWS_SECRET_ACCESS_KEY: ENCRYPTED[56029ff5b0d2b0ca50831d1f070a4cd9cc687030ca6c226ff4ed72836f2de59cf937ca96b4bedd9b4dbcac54fddcdc8e]
+  CC: ENCRYPTED[b73f2f7be9a54bc508f796fda3afda84015d6afa42004cc278b65bb51bba1d9a80679567d58b01847a8421e34f64e1d1]
+
 task:
   env:
     DART_PATH: "/tmp/with spaces/dart"
@@ -34,117 +192,25 @@ task:
           CODE_VERSION: stable
           # CODE_VERSION: insiders
   
-  install_packages_script: |
-    if [[ "$OS" == "linux" ]]; then
-      apt-get update
-      apt-get -y install curl wget git ruby2.5 gnupg
-      curl -sL https://deb.nodesource.com/setup_8.x | bash -
-      apt-get -y install nodejs
-      gem install dpl
-    fi;
-    if [[ "$OS" == "darwin" ]]; then
-      brew install node
-      sudo gem install dpl
-    fi;
-
-  vscode_setup_script: |
-    if [[ "$OS" == "linux" ]]; then
-      curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
-      mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
-      sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
-      apt-get update
-      apt-get -y install code code-insiders libasound2 libxkbfile-dev pkg-config libsecret-1-dev libxss1 libgconf-2-4 dbus xvfb libgtk-3-0
-    fi;
-  
-  vscode_xvfb_background_script: |
-    if [[ "$OS" == "linux" ]]; then
-      Xvfb :99
-    fi;
-    
-  install_dart_script: |
-    mkdir -p "$DART_PATH"
-    cd "$DART_PATH"
-    curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
-    unzip dart-sdk.zip > /dev/null
-    mv dart-sdk/* .
-    cd "$CIRRUS_WORKING_DIR"
-
-  install_flutter_script: &install_flutter |
-    mkdir -p "$FLUTTER_PATH"
-    cd "$FLUTTER_PATH"
-    if [[ "$DART_CHANNEL" == "stable" ]]; then
-      export FLUTTER_BRANCH=dev
-    else
-      export FLUTTER_BRANCH=master
-    fi;
-    git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git .
-    cd "$CIRRUS_WORKING_DIR"
-
-  pub_cache:
-    folder: "$HOME/.pub-cache"
-    # Pub cache is unrelated to engine version, but it's a convenient thing that changes now and
-    # then which will prevent this cache just growing over time as versions changed.
-    fingerprint_script: cat "$FLUTTER_PATH/bin/internal/engine.version"
-
-  node_modules_cache:
-    folder: node_modules
-    fingerprint_script: cat package-lock.json
-
-  flutter_cache:
-    folder: "$FLUTTER_PATH/bin/cache"
-    fingerprint_script: cat "$FLUTTER_PATH/bin/internal/engine.version"
-
-  configure_flutter_script: &configure_flutter |
-    flutter config --no-analytics
-    flutter update-packages
-
-  print_versions_script: &print_versions |
-    dart --version
-    flutter --version
-    node --version
-    npm --version
-
-  flutter_doctor_script: &flutter_doctor |
-    flutter doctor
-
-  install_npm_packages_script: &install_npm_packages |
-    npm install --depth 0 --unsafe-perm
-
-  configure_code_climate_script: |
-    if [[ "$OS" == "linux" ]]; then
-      curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter;
-    else
-      curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-darwin-amd64 > ./cc-test-reporter;
-    fi
-    chmod +x ./cc-test-reporter;
-    ./cc-test-reporter before-build;
-
-  compile_script: &compile |
-    npm run vscode:prepublish
-
-  lint_script: &lint |
-    npm run lint
-
-  test_script: &test |
-    npm test
-
-  ensure_no_dart_processes_script: |
-    ps -ax | grep -v grep | grep dart || true
-    if [[ $(pgrep -x dart) ]]; then
-      echo 'DART WAS FOUND';
-      fail();
-    fi;
-
-  # upload_logs_script: |
-  #   if [[ "$CIRRUS_PR" = "" ]; then
-  #     dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".test_results" --upload-dir="$CIRRUS_BRANCH/$CIRRUS_CHANGE_IN_REPO/Cirrus-$OS" --acl=public_read --default_text_charset=utf-8;
-  #     dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".dart_code_test_logs" --upload-dir="logs/$CIRRUS_BRANCH/$CIRRUS_CHANGE_IN_REPO/Cirrus-$OS" --acl=public_read --default_text_charset=utf-8;
-  #   fi
-
-  # upload_code_coverage_script: |
-  #   if [[ "$CODE_VERSION" == "stable" ]] && [[ "$DART_CHANNEL" == "stable" ]]; then
-  #     ./cc-test-reporter after-build --prefix ../../;
-  #   fi
+  install_packages_script:         *install_packages_mac_linux
+  vscode_setup_script:             *vscode_setup_mac_linux
+  vscode_xvfb_background_script:   *vscode_xvfb_background
+  install_dart_script:             *install_dart_mac_linux
+  install_flutter_script:          *install_flutter_mac_linux
+  pub_cache:                       *pub_cache_mac_linux
+  node_modules_cache:              *node_modules_cache_mac_linux
+  flutter_cache:                   *flutter_cache_mac_linux
+  configure_flutter_script:        *configure_flutter
+  print_versions_script:           *print_versions
+  flutter_doctor_script:           *flutter_doctor
+  install_npm_packages_script:     *install_npm_packages
+  configure_code_climate_script:   *configure_code_climate_mac_linux
+  compile_script:                  *compile
+  lint_script:                     *lint
+  test_script:                     *test
+  ensure_no_dart_processes_script: *ensure_no_dart_processes_mac_linux
+  upload_logs_script:              *upload_logs_mac_linux
+  upload_code_coverage_script:     *upload_code_coverage_mac_linux
 
 task:
   env:
@@ -164,62 +230,18 @@ task:
         FLUTTER_BRANCH: dev
         CODE_VERSION: stable
 
-  install_packages_script: |
-    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-    choco install -y ruby
-    choco install -y nodejs.install
-  
-  install_dart_script: |
-    mkdir -p "${env:DART_PATH}"
-    cd "${env:DART_PATH}"
-    Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
-    Expand-Archive -Path dart.zip -Destination .
-    mv dart-sdk/* .
-    cd "${env:CIRRUS_WORKING_DIR}"
-
-  install_flutter_script: |
-    mkdir -p "${env:FLUTTER_PATH}"
-    cd "${env:FLUTTER_PATH}"
-    git clone -b ${env:FLUTTER_BRANCH} https://github.com/flutter/flutter.git .
-    cd "${env:CIRRUS_WORKING_DIR}"
-
-  pub_cache:
-    folder: "$APPDATA\\Pub\\Cache"
-    # Pub cache is unrelated to engine version, but it's a convenient thing that changes now and
-    # then which will prevent this cache just growing over time as versions changed.
-    fingerprint_script: type "${env:FLUTTER_PATH}\bin\internal\engine.version"
-
-  node_modules_cache:
-    folder: node_modules
-    fingerprint_script: type package-lock.json
-
-  flutter_cache:
-    folder: "$FLUTTER_PATH\\bin\\cache"
-    fingerprint_script: type "${env:FLUTTER_PATH}\bin\internal\engine.version"
-
-  configure_flutter_script: *configure_flutter
-  print_versions_script: *print_versions
-  flutter_doctor_script: *flutter_doctor
-  install_npm_packages_script: *install_npm_packages
-
-  compile_script: *compile
-  lint_script: *lint
-  test_script: *test
-
-  # ensure_no_dart_processes_script: |
-  #   ps -ax | grep -v grep | grep dart || true
-  #   if [[ $(pgrep -x dart) ]]; then
-  #     echo 'DART WAS FOUND';
-  #     fail();
-  #   fi;
-
-  # upload_logs_script: |
-  #   if [[ "$CIRRUS_PR" = "" ]; then
-  #     dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".test_results" --upload-dir="$CIRRUS_BRANCH/$CIRRUS_CHANGE_IN_REPO/Cirrus-$OS" --acl=public_read --default_text_charset=utf-8;
-  #     dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".dart_code_test_logs" --upload-dir="logs/$CIRRUS_BRANCH/$CIRRUS_CHANGE_IN_REPO/Cirrus-$OS" --acl=public_read --default_text_charset=utf-8;
-  #   fi
-
-  # upload_code_coverage_script: |
-  #   if [[ "$CODE_VERSION" == "stable" ]] && [[ "$DART_CHANNEL" == "stable" ]]; then
-  #     ./cc-test-reporter after-build --prefix ../../;
-  #   fi
+  install_packages_script:         *install_packages_win
+  install_dart_script:             *install_dart_win
+  install_flutter_script:          *install_flutter_win
+  pub_cache:                       *pub_cache_win
+  node_modules_cache:              *node_modules_cache_win
+  flutter_cache:                   *flutter_cache_win
+  configure_flutter_script:        *configure_flutter
+  print_versions_script:           *print_versions
+  flutter_doctor_script:           *flutter_doctor
+  install_npm_packages_script:     *install_npm_packages
+  compile_script:                  *compile
+  lint_script:                     *lint
+  test_script:                     *test
+  ensure_no_dart_processes_script: *ensure_no_dart_processes_win
+  upload_logs_script:              *upload_logs_win
