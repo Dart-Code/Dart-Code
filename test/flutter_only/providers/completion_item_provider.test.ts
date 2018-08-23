@@ -8,8 +8,8 @@ describe("completion_item_provider", () => {
 	it("returns expected items", async () => {
 		const completions = await getCompletionsAt("new ^Text");
 
-		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "Text(…)");
-		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "Text.rich(…)");
-		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "Padding(…)");
+		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "Text(…)", "Text");
+		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "Text.rich(…)", "Text.rich");
+		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "Padding(…)", "Padding");
 	});
 });
