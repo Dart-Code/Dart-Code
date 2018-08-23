@@ -22,7 +22,7 @@ function runNode(cwd: string, args: string[], env: any): Promise<number> {
 	return new Promise<number>((resolve, reject) => {
 		let timerWarn: NodeJS.Timer;
 		let timerKill: NodeJS.Timer;
-		console.log(`    Spawning test run:`);
+		console.log(`    Spawning node:`);
 		console.log(`        Command: node ${args.join(" ")}`);
 		console.log(`        CWD: ${cwd}`);
 		console.log(`        ENV: ${JSON.stringify(env, undefined, 4).replace(/    /gm, "                ").replace(/\n}/, "\n              }")}`);
