@@ -124,7 +124,6 @@ blocks:
   ensure_no_dart_processes_mac_linux: &ensure_no_dart_processes_mac_linux |
     ps -ax | grep -v grep | grep dart || true
     if [[ $(pgrep -x dart) ]]; then
-      echo 'DART WAS FOUND';
       fail();
     fi;
 
