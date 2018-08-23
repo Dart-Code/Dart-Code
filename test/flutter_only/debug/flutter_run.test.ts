@@ -68,7 +68,7 @@ describe("flutter run debugger", () => {
 
 		await Promise.all([
 			dc.waitForEvent("terminated"),
-			dc.disconnectRequest(),
+			dc.terminateRequest(),
 		]);
 	});
 
@@ -85,8 +85,8 @@ describe("flutter run debugger", () => {
 
 		// Send a disconnect request and ensure it happens within 5 seconds.
 		await Promise.race([
-			dc.disconnectRequest(),
-			new Promise((resolve, reject) => setTimeout(() => reject(new Error("Did not complete disconnectRequest within 5s")), 5000)),
+			dc.terminateRequest(),
+			new Promise((resolve, reject) => setTimeout(() => reject(new Error("Did not complete terminateRequest within 5s")), 5000)),
 		]);
 	});
 
@@ -104,7 +104,7 @@ describe("flutter run debugger", () => {
 
 		await Promise.all([
 			dc.waitForEvent("terminated"),
-			dc.disconnectRequest(),
+			dc.terminateRequest(),
 		]);
 	});
 
@@ -122,7 +122,7 @@ describe("flutter run debugger", () => {
 
 		await Promise.all([
 			dc.waitForEvent("terminated"),
-			dc.disconnectRequest(),
+			dc.terminateRequest(),
 		]);
 	});
 
@@ -137,7 +137,7 @@ describe("flutter run debugger", () => {
 
 		await Promise.all([
 			dc.waitForEvent("terminated"),
-			dc.disconnectRequest(),
+			dc.terminateRequest(),
 		]);
 	});
 
@@ -158,7 +158,7 @@ describe("flutter run debugger", () => {
 
 		await Promise.all([
 			dc.waitForEvent("terminated"),
-			dc.disconnectRequest(),
+			dc.terminateRequest(),
 		]);
 	});
 
@@ -182,7 +182,7 @@ describe("flutter run debugger", () => {
 
 		await Promise.all([
 			dc.waitForEvent("terminated"),
-			dc.disconnectRequest(),
+			dc.terminateRequest(),
 		]);
 	});
 
