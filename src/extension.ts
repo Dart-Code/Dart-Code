@@ -416,6 +416,7 @@ function buildLogHeaders(sdks: util.Sdks) {
 	addToLogHeader(() => ``);
 	addToLogHeader(() => `Dart Code extension: ${util.extensionVersion}`);
 	addToLogHeader(() => `Flutter extension: ${vs.extensions.getExtension(flutterExtensionIdentifier).packageJSON.version}`);
+	addToLogHeader(() => `VS Code: ${vs.version}`);
 	addToLogHeader(() => `Platform: ${platformName}`);
 	addToLogHeader(() => `Workspace type: ${util.ProjectType[sdks.projectType]}`);
 	addToLogHeader(() => `Multi-root?: ${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1}`);
