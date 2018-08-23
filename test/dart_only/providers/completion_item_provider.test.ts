@@ -23,6 +23,6 @@ describe("completion_item_provider", () => {
 
 		const completions = await getCompletionsAt("exi^ //");
 
-		ensureCompletion(completions, vs.CompletionItemKind.Function, "exit(…)");
+		ensureCompletion(completions, vs.CompletionItemKind.Function, "exit(…)", "exit");
 	});
 });
