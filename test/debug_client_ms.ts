@@ -184,7 +184,7 @@ export class DebugClient extends ProtocolClient {
 	}
 
 	public terminateRequest(args?: DebugProtocol.TerminateArguments): Promise<DebugProtocol.TerminateResponse> {
-		return this.send('disconnect', args);
+		return this.send('terminate', args);
 	}
 
 	public setBreakpointsRequest(args: DebugProtocol.SetBreakpointsArguments): Promise<DebugProtocol.SetBreakpointsResponse> {
