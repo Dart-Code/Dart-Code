@@ -35,16 +35,24 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		TestResultsProvider.isNewTestRun = true;
 		TestResultsProvider.nextFailureIsFirst = true;
 
-		if (suitePath && path.isAbsolute(suitePath)) {
-			const suite = suites[fsPath(suitePath)];
-			if (suite) {
-				suite.currentRunNumber++;
-				if (isRunningWholeSuite) {
-					suite.getAllGroups().forEach((g) => g.isStale = true);
-					suite.getAllTests().forEach((t) => t.isStale = true);
+		const suitesToRun = suitePath && path.isAbsolute(suitePath)
+			? [suitePath]
+			: Object.keys(suites);
+
+		// Mark any tests for the suites being run as stale before running them
+		// and increase the run number so we know which results come from the new run.
+		suitesToRun.forEach((p) => {
+			if (p && path.isAbsolute(p)) {
+				const suite = suites[fsPath(p)];
+				if (suite) {
+					suite.currentRunNumber++;
+					if (isRunningWholeSuite) {
+						suite.getAllGroups().forEach((g) => g.isStale = true);
+						suite.getAllTests().forEach((t) => t.isStale = true);
+					}
 				}
 			}
-		}
+		});
 	}
 
 	public setSelectedNodes(item: vs.TreeItem): void {
@@ -449,7 +457,7 @@ class SuiteData {
 			return g.group.name === group.name
 				&& g.suiteRunNumber !== currentSuiteRunNumber;
 		});
-		// Reuse the one nearest to ehs ource position.
+		// Reuse the one nearest to the source position.
 		const sortedMatches = _.sortBy(matches, (g) => Math.abs(g.group.line - group.line));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
@@ -465,7 +473,7 @@ class SuiteData {
 			return t.test.name === test.name
 				&& t.suiteRunNumber !== currentSuiteRunNumber;
 		});
-		// Reuse the one nearest to ehs ource position.
+		// Reuse the one nearest to the source position.
 		const sortedMatches = _.sortBy(matches, (t) => Math.abs(t.test.line - test.line));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
