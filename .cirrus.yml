@@ -185,7 +185,7 @@ task:
     #     matrix:
     #       CODE_VERSION: stable
     #       CODE_VERSION: insiders
-    - name: Mac, Dart Stable, Code Stable
+    - name: Mac, Dart $DART_CHANNEL, Code $CODE_VERSION
       osx_instance:
         image: high-sierra-base
       env:
@@ -226,7 +226,7 @@ task:
     PATH: "$FLUTTER_PATH\\bin;$DART_PATH\\bin;$ALLUSERSPROFILE\\chocolatey\\bin;C:\\Program Files\\nodejs;$PATH"
     
   matrix:
-    - name: Windows, Dart Stable, Code Stable
+    - name: Windows, Dart $DART_CHANNEL, Code $CODE_VERSION
       windows_container:
         image: cirrusci/windowsservercore:2016
       env:
