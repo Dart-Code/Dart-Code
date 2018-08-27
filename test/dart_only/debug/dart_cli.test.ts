@@ -5,7 +5,7 @@ import { isLinux, platformEol } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
 import { log } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
-import { ensureMapEntry, ensureVariable, spawnProcessPaused } from "../../debug_helpers";
+import { ensureMapEntry, ensureVariable, ensureVariableWithIndex, spawnProcessPaused } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, positionOf, sb } from "../../helpers";
 
 describe("dart cli debugger", () => {
@@ -343,7 +343,7 @@ describe("dart cli debugger", () => {
 
 		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l").variablesReference);
 		for (let i = 0; i <= 1; i++) {
-			ensureVariable(listVariables, `l[${i}]`, `[${i}]`, `${i}`);
+			ensureVariableWithIndex(listVariables, i, `l[${i}]`, `[${i}]`, `${i}`);
 		}
 
 		const longStringListVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings").variablesReference);

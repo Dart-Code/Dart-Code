@@ -27,6 +27,13 @@ export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName
 	}
 }
 
+export function ensureVariableWithIndex(variables: DebugProtocol.Variable[], index: number, evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {
+	assert.ok(variables && variables.length, "No variables given to search");
+	const foundIndex = variables.findIndex((v) => v.name === name);
+	assert.equal(index, foundIndex, `Found variable ${name} at index ${foundIndex} but expected ${index}`);
+	ensureVariable(variables, evaluateName, name, value);
+}
+
 export interface MapEntry {
 	key: {
 		evaluateName?: string | null;

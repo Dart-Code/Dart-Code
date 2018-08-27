@@ -724,7 +724,8 @@ export class DartDebugSession extends DebugSession {
 						} else if (instance.fields) {
 							// Add getters
 							if (this.evaluateGettersInDebugViews && instance.class) {
-								const getterNames = await this.getGetterNamesForHierarchy(thread.ref, instance.class);
+								let getterNames = await this.getGetterNamesForHierarchy(thread.ref, instance.class);
+								getterNames = _.sortBy(getterNames, (gn) => gn);
 
 								// Call each getter, adding the result as a variable.
 								for (const getterName of getterNames) {
@@ -759,9 +760,7 @@ export class DartDebugSession extends DebugSession {
 					}
 				}
 
-				response.body = {
-					variables: _.sortBy(variables, (v) => v.name),
-				};
+				response.body = { variables };
 				this.sendResponse(response);
 			} catch (error) {
 				this.errorResponse(response, `${error}`);
