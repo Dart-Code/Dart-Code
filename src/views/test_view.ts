@@ -35,23 +35,27 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		TestResultsProvider.isNewTestRun = true;
 		TestResultsProvider.nextFailureIsFirst = true;
 
-		const suitesToRun = suitePath && path.isAbsolute(suitePath)
-			? [suitePath]
-			: Object.keys(suites);
-
-		// Mark any tests for the suites being run as stale before running them
-		// and increase the run number so we know which results come from the new run.
-		suitesToRun.forEach((p) => {
-			if (p && path.isAbsolute(p)) {
-				const suite = suites[fsPath(p)];
-				if (suite) {
-					suite.currentRunNumber++;
-					if (isRunningWholeSuite) {
-						suite.getAllGroups().forEach((g) => g.isStale = true);
-						suite.getAllTests().forEach((t) => t.isStale = true);
-					}
-				}
+		// When running the whole suite, we flag all tests as being potentially deleted
+		// and then any tests that aren't run are removed from the tree. This is to ensure
+		// if a test is renamed, we don't keep the old version of it in the test tree forever
+		// since we don't have the necessary information to know the test was renamed.
+		if (isRunningWholeSuite && suitePath && path.isAbsolute(suitePath)) {
+			const suite = suites[fsPath(suitePath)];
+			if (suite) {
+				suite.getAllGroups().forEach((g) => g.isPotentiallyDeleted = true);
+				suite.getAllTests().forEach((t) => t.isPotentiallyDeleted = true);
 			}
+		}
+
+		// Mark all tests everywhere as "stale" which will make them faded, so that results from
+		// the "new" run are more obvious in the tree.
+		// All increase the currentRunNumber to ensure we know all results are from
+		// the newest run.
+		Object.keys(suites).forEach((p) => {
+			const suite = suites[fsPath(p)];
+			suite.currentRunNumber++;
+			suite.getAllGroups().forEach((g) => g.isStale = true);
+			suite.getAllTests().forEach((t) => t.isStale = true);
 		});
 	}
 
@@ -376,8 +380,10 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		// TODO: Some notification that things are complete?
 		// TODO: Maybe a progress bar during the run?
 
-		// Hide stale nodes.
-		suite.getAllTests(true).filter((t) => t.isStale || t.hidden).forEach((t) => {
+		// Hide nodes that were marked as potentially deleted and then never updated.
+		// This means they weren't run in the last run, so probably were deleted (or
+		// renamed and got new nodes, which still means the old ones should be removed).
+		suite.getAllTests(true).filter((t) => t.isPotentiallyDeleted || t.hidden).forEach((t) => {
 			t.hidden = true;
 			this.updateNode(t.parent);
 		});
@@ -494,6 +500,7 @@ abstract class TestItemTreeItem extends vs.TreeItem {
 	// never be used for rendering; only sorting.
 	private _sort: TestSortOrder = TestSortOrder.Middle; // tslint:disable-line:variable-name
 	public suiteRunNumber = 0;
+	public isPotentiallyDeleted = false;
 
 	get status(): TestStatus {
 		return this._status;
@@ -507,6 +514,7 @@ abstract class TestItemTreeItem extends vs.TreeItem {
 			|| status === TestStatus.Passed
 			|| status === TestStatus.Skipped) {
 			this.isStale = false;
+			this.isPotentiallyDeleted = false;
 			this._sort = getTestSortOrder(status);
 		}
 	}
