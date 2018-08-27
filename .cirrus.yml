@@ -161,6 +161,8 @@ env:
   AWS_SECRET_ACCESS_KEY: ENCRYPTED[56029ff5b0d2b0ca50831d1f070a4cd9cc687030ca6c226ff4ed72836f2de59cf937ca96b4bedd9b4dbcac54fddcdc8e]
   CC: ENCRYPTED[b73f2f7be9a54bc508f796fda3afda84015d6afa42004cc278b65bb51bba1d9a80679567d58b01847a8421e34f64e1d1]
 
+allow_failures: $DART_CHANNEL == 'dev' || $CODE_VERSION == 'insiders'
+
 task:
   env:
     DART_PATH: "/tmp/with spaces/dart"
