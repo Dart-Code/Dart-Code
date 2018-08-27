@@ -3,7 +3,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
-import { FlutterLaunchRequestArguments, LogCategory, LogMessage, LogSeverity } from "./utils";
+import { FlutterLaunchRequestArguments, isWin, LogCategory, LogMessage, LogSeverity } from "./utils";
 
 const objectGroupName = "my-group";
 
@@ -175,6 +175,12 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 	}
 
+	protected formatPathForPubRootDirectories(path: string | undefined): string | undefined {
+		return isWin
+			? path && `file:///${path.replace(/\\/g, "/")}`
+			: path;
+	}
+
 	protected async handleInspectEvent(event: VMEvent): Promise<void> {
 		// TODO: Move to only do this at the start of the session (only if required)
 		// TODO: We should send all open workspaces (arg0, arg1, arg2) so that it
@@ -183,7 +189,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			this.currentRunningAppId,
 			"ext.flutter.inspector.setPubRootDirectories",
 			{
-				arg0: this.cwd,
+				arg0: this.formatPathForPubRootDirectories(this.cwd),
 				// TODO: Is this OK???
 				isolateId: this.threadManager.threads[0].ref.id,
 			},
