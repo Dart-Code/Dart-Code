@@ -1,6 +1,6 @@
 main() {
   var s = "Hello!";
-  var l = [0, 1];
+  var l = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
   final longStrings = <String>[
     "This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string!!!"
   ];
