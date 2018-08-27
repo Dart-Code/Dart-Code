@@ -37,7 +37,7 @@ blocks:
     mkdir -p "$FLUTTER_PATH"
     cd "$FLUTTER_PATH"
     if [[ "$DART_CHANNEL" == "stable" ]]; then
-      export FLUTTER_BRANCH=dev
+      export FLUTTER_BRANCH=beta
     else
       export FLUTTER_BRANCH=master
     fi;
@@ -47,6 +47,11 @@ blocks:
   install_flutter_win: &install_flutter_win |
     mkdir -p "${env:FLUTTER_PATH}"
     cd "${env:FLUTTER_PATH}"
+    if ($env:DART_CHANNEL -eq "stable") {
+      $env:FLUTTER_BRANCH = "beta"
+    } else {
+      $env:FLUTTER_BRANCH = "master"
+    }
     git clone -b ${env:FLUTTER_BRANCH} https://github.com/flutter/flutter.git .
     cd "${env:CIRRUS_WORKING_DIR}"
 
@@ -169,17 +174,17 @@ task:
     DISPLAY: ":99.0"
 
   matrix:
-    - name: Linux, Dart Stable, Code Stable
-      container:
-        image: ubuntu:bionic
-      env:
-        DART_OS: linux
-        matrix:
-          DART_CHANNEL: stable
-          # DART_CHANNEL: dev
-        matrix:
-          CODE_VERSION: stable
-          # CODE_VERSION: insiders
+    # - name: Linux, Dart Stable, Code Stable
+    #   container:
+    #     image: ubuntu:bionic
+    #   env:
+    #     DART_OS: linux
+    #     matrix:
+    #       DART_CHANNEL: stable
+    #       DART_CHANNEL: dev
+    #     matrix:
+    #       CODE_VERSION: stable
+    #       CODE_VERSION: insiders
     - name: Mac, Dart Stable, Code Stable
       osx_instance:
         image: high-sierra-base
@@ -187,10 +192,10 @@ task:
         DART_OS: macos
         matrix:
           DART_CHANNEL: stable
-          # DART_CHANNEL: dev
+          DART_CHANNEL: dev
         matrix:
           CODE_VERSION: stable
-          # CODE_VERSION: insiders
+          CODE_VERSION: insiders
   
   install_packages_script:         *install_packages_mac_linux
   vscode_setup_script:             *vscode_setup_mac_linux
@@ -226,9 +231,12 @@ task:
         image: cirrusci/windowsservercore:2016
       env:
         DART_OS: win
-        DART_CHANNEL: stable
-        FLUTTER_BRANCH: dev
-        CODE_VERSION: stable
+        matrix:
+          DART_CHANNEL: stable
+          DART_CHANNEL: dev
+        matrix:
+          CODE_VERSION: stable
+          CODE_VERSION: insiders
 
   install_packages_script:         *install_packages_win
   install_dart_script:             *install_dart_win
