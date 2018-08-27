@@ -98,6 +98,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 		}
 
+		// Convert `program` to an absolute path (if possible).
+		if (debugConfig.program && !path.isAbsolute(debugConfig.program) && (debugConfig.cwd || folder)) {
+			debugConfig.program = path.join(debugConfig.cwd || fsPath(folder.uri), debugConfig.program);
+			log(`Converted program to absolute path: ${debugConfig.program}`);
+		}
+
 		// If we don't have a cwd then find the best one from the project root.
 		if (!debugConfig.cwd && folder) {
 			debugConfig.cwd = fsPath(folder.uri);
@@ -113,12 +119,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					}
 				}
 			}
-		}
-
-		// Ensure we have a full path.
-		if (debugConfig.program && debugConfig.cwd && !path.isAbsolute(debugConfig.program)) {
-			debugConfig.program = path.join(debugConfig.cwd, debugConfig.program);
-			log(`Converting program to absolute path: ${debugConfig.program}`);
 		}
 
 		// Disable Flutter mode for attach.
