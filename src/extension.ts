@@ -19,7 +19,7 @@ import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
-import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, isWin, isWithinPath, LogCategory, platformName } from "./debug/utils";
+import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, LogCategory, platformName } from "./debug/utils";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_decorations";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
@@ -433,29 +433,8 @@ function recalculateAnalysisRoots() {
 	});
 	analysisRoots = newRoots;
 
-	// Sometimes people open their home directories as the workspace root and
-	// have all sorts of performance issues because of PubCache and AppData folders
-	// so we will exclude them if the user has opened a parent folder (opening a
-	// child of these directly will still work).
-	const excludeFolders: string[] = [];
-	if (isWin) {
-		const addExcludeIfRequired = (folder: string) => {
-			if (!folder || !path.isAbsolute(folder))
-				return;
-			const containingRoot = analysisRoots.find((root: string) => isWithinPath(folder, root));
-			if (containingRoot) {
-				log(`Excluding folder ${folder} from analysis roots as it is a child of analysis root ${containingRoot} and may cause performance issues.`);
-				excludeFolders.push(folder);
-			}
-		};
-
-		addExcludeIfRequired(process.env.PUB_CACHE);
-		addExcludeIfRequired(process.env.APPDATA);
-		addExcludeIfRequired(process.env.LOCALAPPDATA);
-	}
-
 	analyzer.analysisSetAnalysisRoots({
-		excluded: excludeFolders,
+		excluded: [],
 		included: analysisRoots,
 	});
 }
