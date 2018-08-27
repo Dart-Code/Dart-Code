@@ -2,9 +2,9 @@ environment:
   CHAT_WEBHOOK_PATH:
     secure: Oawgup4p18hTqsE2qGz07QLvtL/xrDiGFmqs9ebmXATs6t/Mp6L/sVS0XbAgmXhuOtZ8Q3KDC//q0ViBEnNiaEcZg3cI3GGPchtIQYjAozEC+3d3SXQY9zcSymAPgYsmc1TOsC+3BbuYXskoTu6myDbRPfh2i0YuU2lr0SRRbGS+68fGhBiPhZtkS6DOfDfu
   AWS_ACCESS_KEY_ID:
-    secure: nQjpvf+MHWHTkWOMvX6/eNKByxvyRMUDJNGaE+m74OY=
+    secure: 2IDNrdK4BiM3+9TnW/K3nazF9S2pG7tyVQx249JDiY4=
   AWS_SECRET_ACCESS_KEY:
-    secure: Kqh0mg85kGAE2roKfIiMOQXjjbR9ib+uCwBaI11H0JfygkVP27adHUF3JYwqa9AE
+    secure: s6QyIIIqf3VPkCrGG9E0kqa6AXxyrygL+KDwdMSAj0yNE7RjN0nWCNob48syHA+a
   # https://github.com/flutter/flutter/issues/17768
   FLUTTER_TEST: true
   matrix:
