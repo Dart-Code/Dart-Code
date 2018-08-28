@@ -163,61 +163,61 @@ env:
 
 allow_failures: $DART_CHANNEL == 'dev' || $CODE_VERSION == 'insiders'
 
-task:
-  env:
-    DART_PATH: "/tmp/with spaces/dart"
-    FLUTTER_PATH: "/tmp/with spaces/flutter"
-    FLUTTER_ROOT: "/tmp/with spaces/flutter"
-    PATH: "$FLUTTER_PATH/bin:$DART_PATH/bin:$PATH"
-    DEBIAN_FRONTEND: noninteractive
-    ELECTRON_NO_ATTACH_CONSOLE: 1
-    CXX: "g++-4.8"
-    CC: "gcc-4.8" 
-    DISPLAY: ":99.0"
+# task:
+#   env:
+#     DART_PATH: "/tmp/with spaces/dart"
+#     FLUTTER_PATH: "/tmp/with spaces/flutter"
+#     FLUTTER_ROOT: "/tmp/with spaces/flutter"
+#     PATH: "$FLUTTER_PATH/bin:$DART_PATH/bin:$PATH"
+#     DEBIAN_FRONTEND: noninteractive
+#     ELECTRON_NO_ATTACH_CONSOLE: 1
+#     CXX: "g++-4.8"
+#     CC: "gcc-4.8" 
+#     DISPLAY: ":99.0"
 
-  matrix:
-    # - name: Linux
-    #   container:
-    #     image: ubuntu:bionic
-    #   env:
-    #     DART_OS: linux
-    #     matrix:
-    #       DART_CHANNEL: stable
-    #       DART_CHANNEL: dev
-    #     matrix:
-    #       CODE_VERSION: stable
-    #       CODE_VERSION: insiders
-    - name: Mac
-      osx_instance:
-        image: high-sierra-base
-      env:
-        DART_OS: macos
-        matrix:
-          DART_CHANNEL: stable
-          DART_CHANNEL: dev
-        matrix:
-          CODE_VERSION: stable
-          CODE_VERSION: insiders
+#   matrix:
+#     # - name: Linux
+#     #   container:
+#     #     image: ubuntu:bionic
+#     #   env:
+#     #     DART_OS: linux
+#     #     matrix:
+#     #       DART_CHANNEL: stable
+#     #       DART_CHANNEL: dev
+#     #     matrix:
+#     #       CODE_VERSION: stable
+#     #       CODE_VERSION: insiders
+#     - name: Mac
+#       osx_instance:
+#         image: high-sierra-base
+#       env:
+#         DART_OS: macos
+#         matrix:
+#           DART_CHANNEL: stable
+#           DART_CHANNEL: dev
+#         matrix:
+#           CODE_VERSION: stable
+#           CODE_VERSION: insiders
   
-  install_packages_script:         *install_packages_mac_linux
-  vscode_setup_script:             *vscode_setup_mac_linux
-  vscode_xvfb_background_script:   *vscode_xvfb_background
-  install_dart_script:             *install_dart_mac_linux
-  install_flutter_script:          *install_flutter_mac_linux
-  pub_cache:                       *pub_cache_mac_linux
-  node_modules_cache:              *node_modules_cache_mac_linux
-  flutter_cache:                   *flutter_cache_mac_linux
-  configure_flutter_script:        *configure_flutter
-  print_versions_script:           *print_versions
-  flutter_doctor_script:           *flutter_doctor
-  install_npm_packages_script:     *install_npm_packages
-  configure_code_climate_script:   *configure_code_climate_mac_linux
-  compile_script:                  *compile
-  lint_script:                     *lint
-  test_script:                     *test
-  ensure_no_dart_processes_script: *ensure_no_dart_processes_mac_linux
-  upload_logs_script:              *upload_logs_mac_linux
-  upload_code_coverage_script:     *upload_code_coverage_mac_linux
+#   install_packages_script:         *install_packages_mac_linux
+#   vscode_setup_script:             *vscode_setup_mac_linux
+#   vscode_xvfb_background_script:   *vscode_xvfb_background
+#   install_dart_script:             *install_dart_mac_linux
+#   install_flutter_script:          *install_flutter_mac_linux
+#   pub_cache:                       *pub_cache_mac_linux
+#   node_modules_cache:              *node_modules_cache_mac_linux
+#   flutter_cache:                   *flutter_cache_mac_linux
+#   configure_flutter_script:        *configure_flutter
+#   print_versions_script:           *print_versions
+#   flutter_doctor_script:           *flutter_doctor
+#   install_npm_packages_script:     *install_npm_packages
+#   configure_code_climate_script:   *configure_code_climate_mac_linux
+#   compile_script:                  *compile
+#   lint_script:                     *lint
+#   test_script:                     *test
+#   ensure_no_dart_processes_script: *ensure_no_dart_processes_mac_linux
+#   upload_logs_script:              *upload_logs_mac_linux
+#   upload_code_coverage_script:     *upload_code_coverage_mac_linux
 
 task:
   env:
