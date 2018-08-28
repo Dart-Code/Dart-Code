@@ -16,6 +16,7 @@ blocks:
     iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
     choco install -y ruby
     choco install -y nodejs.install
+    gem install dpl
 
   install_dart_mac_linux: &install_dart_mac_linux |
     mkdir -p "$DART_PATH"
