@@ -225,7 +225,7 @@ task:
     DART_PATH: "C:\\Windows\\Temp\\with spaces\\dart"
     FLUTTER_PATH: "C:\\Windows\\Temp\\with spaces\\flutter"
     FLUTTER_ROOT: "C:\\Windows\\Temp\\with spaces\\flutter"
-    PATH: "$FLUTTER_PATH\\bin;$DART_PATH\\bin;$ALLUSERSPROFILE\\chocolatey\\bin;C:\\Program Files\\nodejs;$PATH"
+    PATH: "$FLUTTER_PATH\\bin;$DART_PATH\\bin;$ALLUSERSPROFILE\\chocolatey\\bin;C:\\Program Files\\nodejs;C:\\tools\\ruby25\\bin;$PATH"
     
   matrix:
     - name: Windows
