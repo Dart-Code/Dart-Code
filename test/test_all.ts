@@ -147,18 +147,18 @@ async function runAllTests(): Promise<void> {
 	const flutterRoot = process.env.FLUTTER_ROOT || process.env.FLUTTER_PATH;
 	try {
 		await runTests("dart_only", "hello_world", dartSdkPath, codeVersion);
-		await runTests("multi_root", "projects.code-workspace", flutterSdkPath, codeVersion);
-		await runTests("multi_project_folder", "", flutterSdkPath, codeVersion);
-		await runTests("not_activated/flutter_create", "empty", flutterSdkPath, codeVersion);
-		if (flutterRoot) {
-			await runTests("flutter_repository", flutterSdkPath, sdkPath, codeVersion);
-		} else {
-			console.error("FLUTTER_ROOT/FLUTTER_PATH NOT SET, SKIPPING FLUTTER REPO TESTS");
-			exitCode = 1;
-		}
-		// This one is run last because it's the most fragile, and can bring down the following tests if it hangs in a
-		// way that doesn't get caught by the test timeout properly.
-		await runTests("flutter_only", "flutter_hello_world", flutterSdkPath, codeVersion);
+		// await runTests("multi_root", "projects.code-workspace", flutterSdkPath, codeVersion);
+		// await runTests("multi_project_folder", "", flutterSdkPath, codeVersion);
+		// await runTests("not_activated/flutter_create", "empty", flutterSdkPath, codeVersion);
+		// if (flutterRoot) {
+		// 	await runTests("flutter_repository", flutterSdkPath, sdkPath, codeVersion);
+		// } else {
+		// 	console.error("FLUTTER_ROOT/FLUTTER_PATH NOT SET, SKIPPING FLUTTER REPO TESTS");
+		// 	exitCode = 1;
+		// }
+		// // This one is run last because it's the most fragile, and can bring down the following tests if it hangs in a
+		// // way that doesn't get caught by the test timeout properly.
+		// await runTests("flutter_only", "flutter_hello_world", flutterSdkPath, codeVersion);
 	} catch (e) {
 		exitCode = 1;
 		console.error(e);
