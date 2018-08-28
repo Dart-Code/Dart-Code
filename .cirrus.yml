@@ -107,7 +107,6 @@ blocks:
     flutter update-packages
 
   print_versions: &print_versions |
-    echo $env:PATH
     dart --version
     flutter --version
     node --version
@@ -152,7 +151,7 @@ blocks:
     fi;
 
   upload_logs_win: &upload_logs_win |
-    if ($env:CIRRUS_PR -eq "") {
+    if (-not ($env:CIRRUS_PR)) {
       dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".test_results" --upload-dir="${env:CIRRUS_BRANCH}/${env:CIRRUS_CHANGE_IN_REPO}/${env:OS}" --acl=public_read --default_text_charset=utf-8;
       dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".dart_code_test_logs" --upload-dir="logs/${env:CIRRUS_BRANCH}/${env:CIRRUS_CHANGE_IN_REPO}/${env:OS}" --acl=public_read --default_text_charset=utf-8;
     }
@@ -246,8 +245,8 @@ task:
           CODE_VERSION: stable
           CODE_VERSION: insiders
 
-  install_packages_1_script:         *install_packages_win_1
-  install_packages_2_script:         *install_packages_win_2
+  install_packages_1_script:       *install_packages_win_1
+  install_packages_2_script:       *install_packages_win_2
   install_dart_script:             *install_dart_win
   install_flutter_script:          *install_flutter_win
   pub_cache:                       *pub_cache_win
