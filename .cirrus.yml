@@ -12,10 +12,14 @@ blocks:
       sudo gem install dpl
     fi;
 
-  install_packages_win: &install_packages_win |
+  install_packages_win_1: &install_packages_win_1 |
     iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
     choco install -y ruby --no-progress
     choco install -y nodejs.install --no-progress
+  
+  # This can't go in the one above, because Chocolatey seems to break PATH (it doesn't add ruby, and
+  # it removes the things that were added by Cirrus!). It's fixed for subsequent blocks though.
+  install_packages_win_2: &install_packages_win_2 |
     gem install dpl
 
   install_dart_mac_linux: &install_dart_mac_linux |
@@ -103,6 +107,7 @@ blocks:
     flutter update-packages
 
   print_versions: &print_versions |
+    echo $env:PATH
     dart --version
     flutter --version
     node --version
@@ -241,7 +246,8 @@ task:
           CODE_VERSION: stable
           CODE_VERSION: insiders
 
-  install_packages_script:         *install_packages_win
+  install_packages_1_script:         *install_packages_win_1
+  install_packages_2_script:         *install_packages_win_2
   install_dart_script:             *install_dart_win
   install_flutter_script:          *install_flutter_win
   pub_cache:                       *pub_cache_win
