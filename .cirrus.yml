@@ -146,7 +146,7 @@ blocks:
     fi;
 
   upload_logs_win: &upload_logs_win |
-    if (-not $env:CIRRUS_PR) {
+    if ($env:CIRRUS_PR -eq "") {
       dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".test_results" --upload-dir="${env:CIRRUS_BRANCH}/${env:CIRRUS_CHANGE_IN_REPO}/${env:OS}" --acl=public_read --default_text_charset=utf-8;
       dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".dart_code_test_logs" --upload-dir="logs/${env:CIRRUS_BRANCH}/${env:CIRRUS_CHANGE_IN_REPO}/${env:OS}" --acl=public_read --default_text_charset=utf-8;
     }
