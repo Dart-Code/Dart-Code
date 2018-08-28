@@ -14,8 +14,8 @@ blocks:
 
   install_packages_win: &install_packages_win |
     iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-    choco install -y ruby
-    choco install -y nodejs.install
+    choco install -y ruby --no-progress
+    choco install -y nodejs.install --no-progress
     gem install dpl
 
   install_dart_mac_linux: &install_dart_mac_linux |
