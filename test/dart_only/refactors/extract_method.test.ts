@@ -3,7 +3,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../src/commands/refactor";
 import { PromiseCompleter } from "../../../src/debug/utils";
-import { activate, currentDoc, ensureTestContent, positionOf, rangeOf, sb, setTestContent, waitForResult } from "../../helpers";
+import { activate, currentDoc, delay, ensureTestContent, positionOf, rangeOf, sb, setTestContent, waitForResult } from "../../helpers";
 
 describe("refactor", () => {
 
@@ -18,6 +18,8 @@ main() {
   print("Hello, world!");
 }
 		`);
+		// HACK: Avoid race condition (https://github.com/dart-lang/sdk/issues/32914)?
+		await delay(500);
 		await (vs.commands.executeCommand("_dart.performRefactor", currentDoc(), rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
 		await ensureTestContent(`
 main() {
