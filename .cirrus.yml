@@ -152,8 +152,8 @@ blocks:
 
   upload_logs_win: &upload_logs_win |
     if (-not ($env:CIRRUS_PR)) {
-      dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup="true" --local-dir=".test_results" --upload-dir="${env:CIRRUS_BRANCH}/${env:CIRRUS_CHANGE_IN_REPO}/${env:OS}" --acl=public_read --default_text_charset=utf-8 --verbose --max_threads=1;
-      dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup="true" --local-dir=".dart_code_test_logs" --upload-dir="logs/${env:CIRRUS_BRANCH}/${env:CIRRUS_CHANGE_IN_REPO}/${env:OS}" --acl=public_read --default_text_charset=utf-8 --verbose --max_threads=1;
+      dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup="true" --local-dir=".test_results" --upload-dir="${env:CIRRUS_BRANCH}/${env:CIRRUS_CHANGE_IN_REPO}/${env:OS}" --acl=public_read --default_text_charset=utf-8
+      dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup="true" --local-dir=".dart_code_test_logs" --upload-dir="logs/${env:CIRRUS_BRANCH}/${env:CIRRUS_CHANGE_IN_REPO}/${env:OS}" --acl=public_read --default_text_charset=utf-8
     }
 
   upload_code_coverage_mac_linux: &upload_code_coverage_mac_linux |
