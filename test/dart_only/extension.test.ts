@@ -10,7 +10,7 @@ const sampleFilePath = (isWin ? "X:\\" : "/tmp/") + "sample.dart";
 const sampleFileUri = vs.Uri.parse(`untitled:${sampleFilePath}`);
 
 describe("test environment", () => {
-	it("has opened the correct folder", () => {
+	it.only("has opened the correct folder", () => {
 		const wfs = vs.workspace.workspaceFolders || [];
 		assert.equal(wfs.length, 1);
 		assert.ok(

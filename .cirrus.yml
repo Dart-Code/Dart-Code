@@ -102,9 +102,9 @@ blocks:
     folder: "$FLUTTER_PATH\\bin\\cache"
     fingerprint_script: ${env:OS}; ${env:DART_CHANNEL}; type "${env:FLUTTER_PATH}\bin\internal\engine.version"
 
-  configure_flutter: &configure_flutter |
-    flutter config --no-analytics
-    flutter update-packages
+  # configure_flutter: &configure_flutter |
+  #   flutter config --no-analytics
+  #   flutter update-packages
 
   print_versions: &print_versions |
     dart --version
@@ -252,7 +252,7 @@ task:
   pub_cache:                       *pub_cache_win
   node_modules_cache:              *node_modules_cache_win
   flutter_cache:                   *flutter_cache_win
-  configure_flutter_script:        *configure_flutter
+  # configure_flutter_script:        *configure_flutter
   print_versions_script:           *print_versions
   flutter_doctor_script:           *flutter_doctor
   install_npm_packages_script:     *install_npm_packages
