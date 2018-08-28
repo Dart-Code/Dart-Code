@@ -248,13 +248,13 @@ task:
   install_packages_1_script:       *install_packages_win_1
   install_packages_2_script:       *install_packages_win_2
   install_dart_script:             *install_dart_win
-  install_flutter_script:          *install_flutter_win
-  pub_cache:                       *pub_cache_win
+  #install_flutter_script:          *install_flutter_win
+  #pub_cache:                       *pub_cache_win
   node_modules_cache:              *node_modules_cache_win
-  flutter_cache:                   *flutter_cache_win
+  #flutter_cache:                   *flutter_cache_win
   # configure_flutter_script:        *configure_flutter
   print_versions_script:           *print_versions
-  flutter_doctor_script:           *flutter_doctor
+  #flutter_doctor_script:           *flutter_doctor
   install_npm_packages_script:     *install_npm_packages
   compile_script:                  *compile
   lint_script:                     *lint
