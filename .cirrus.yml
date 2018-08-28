@@ -108,12 +108,12 @@ blocks:
 
   print_versions: &print_versions |
     dart --version
-    flutter --version
+    #flutter --version
     node --version
     npm --version
 
-  flutter_doctor: &flutter_doctor |
-    flutter doctor
+  # flutter_doctor: &flutter_doctor |
+  #   flutter doctor
 
   install_npm_packages: &install_npm_packages |
     npm install --depth 0 --unsafe-perm
