@@ -256,7 +256,6 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.attach", () => {
 			vs.debug.startDebugging(undefined, {
 				name: "Flutter: Attach to Process",
-				previewFlutterAttach: true,
 				request: "attach",
 				type: "dart",
 			});
