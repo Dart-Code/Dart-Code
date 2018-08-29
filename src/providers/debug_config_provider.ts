@@ -71,6 +71,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			folder = workspace.getWorkspaceFolder(Uri.file(openFile));
 			if (folder)
 				log(`Setting workspace based on open file: ${fsPath(folder.uri)}`);
+		} else if (!folder && vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length === 1) {
+			folder = vs.workspace.workspaceFolders[0];
+			if (folder)
+				log(`Setting workspace based on single open workspace: ${fsPath(folder.uri)}`);
 		}
 
 		const isAttachRequest = debugConfig.request === "attach";
