@@ -14,7 +14,10 @@
 				"${workspaceRoot}/out/src/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
-			"smartStep": true
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**"
+			]
 		},
 		{
 			"name": "Launch Tests (Multi-root)",
@@ -33,7 +36,10 @@
 				"${workspaceRoot}/out/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
-			"smartStep": true
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**"
+			]
 		},
 		{
 			"name": "Launch Tests (Multi-project folder)",
@@ -52,7 +58,10 @@
 				"${workspaceRoot}/out/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
-			"smartStep": true
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**"
+			]
 		},
 		{
 			"name": "Launch Tests (Dart)",
@@ -71,7 +80,10 @@
 				"${workspaceRoot}/out/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
-			"smartStep": true
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**"
+			]
 		},
 		{
 			"name": "Launch Tests (Flutter)",
@@ -90,7 +102,10 @@
 				"${workspaceRoot}/out/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
-			"smartStep": true
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**"
+			]
 		},
 		{
 			"name": "Launch Tests (Flutter Repository)",
@@ -109,7 +124,10 @@
 				"${workspaceRoot}/out/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
-			"smartStep": true
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**"
+			]
 		},
 		{
 			"name": "Launch Tests (Not Activated / Flutter Create)",
@@ -128,7 +146,10 @@
 				"${workspaceRoot}/out/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
-			"smartStep": true
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**"
+			]
 		}
 	]
 }
