@@ -188,7 +188,6 @@ export class FlutterDeviceManager implements vs.Disposable {
 	private async launchEmulator(emulator: { id: string, name: string }): Promise<boolean> {
 		try {
 			await vs.window.withProgress({
-				cancellable: false,
 				location: vs.ProgressLocation.Notification,
 				title: `Launching ${emulator.name}...`,
 			}, async (progress) => {
