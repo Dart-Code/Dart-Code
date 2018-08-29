@@ -88,7 +88,12 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.FlutterRun)));
 		this.flutter = new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterPath, args.cwd, appArgs, args.env, args.flutterRunLogFile, logger, this.maxLogLineLength);
-		this.flutter.registerForUnhandledMessages((msg) => this.logToUser(msg, "stdout"));
+		this.flutter.registerForUnhandledMessages((msg) => {
+			// Send a dummy progress message when we get the waiting message for an Attach.
+			if (msg && msg.indexOf("Waiting for a connection from Flutter on") !== -1 && !this.currentRunningAppId && !this.appHasStarted)
+				this.sendEvent(new Event("dart.progress", { message: msg, finished: false }));
+			this.logToUser(msg, "stdout");
+		});
 
 		// Set up subscriptions.
 		this.flutter.registerForDaemonConnect((n) => this.additionalPidsToTerminate.push(n.pid));
