@@ -113,10 +113,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			this.initObservatory(this.observatoryUri);
 	}
 
-	protected async terminateRequest(
-		response: DebugProtocol.DisconnectResponse,
-		args: DebugProtocol.DisconnectArguments,
-	): Promise<void> {
+	protected async terminate(force: boolean): Promise<void> {
 		try {
 			if (this.currentRunningAppId && this.appHasStarted && this.flutter.mode === RunMode.Run)
 				// Wait up to 1000ms for app to quit since we often don't get a
@@ -128,7 +125,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		} catch {
 			// Ignore failures here (see comment above).
 		}
-		await super.terminateRequest(response, args);
+		super.terminate(force);
 	}
 
 	protected restartRequest(

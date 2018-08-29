@@ -304,7 +304,7 @@ export class DartDebugSession extends DebugSession {
 		});
 	}
 
-	private async terminate(force: boolean): Promise<void> {
+	protected async terminate(force: boolean): Promise<void> {
 		const signal = force ? "SIGKILL" : "SIGINT";
 		const request = force ? "DISC" : "TERM";
 		if (!this.didAttach && this.childProcess != null && !this.processExited) {
@@ -382,7 +382,10 @@ export class DartDebugSession extends DebugSession {
 	): Promise<void> {
 		this.log(`Disconnect requested!`);
 		try {
-			await this.terminate(true);
+			await Promise.race([
+				this.terminate(false),
+				new Promise((resolve) => setTimeout(resolve, 2000)).then(() => this.terminate(true)),
+			]);
 		} catch (e) {
 			return this.errorResponse(response, `${e}`);
 		}
