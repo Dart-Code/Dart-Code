@@ -95,21 +95,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				}
 				return null; // null means open launch.json.
 			}
-		} else if (!debugConfig.previewFlutterAttach) {
-			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
-			debugConfig.observatoryUri = await this.getObservatoryUri(debugConfig.observatoryUri);
-
-			if (!debugConfig.observatoryUri) {
-				logWarn("No Observatory URI/port was provided");
-				window.showInformationMessage("You must provide an Observatory URI/port to attach a debugger");
-				// TODO: Remove this once we only support Code v1.28.
-				if (vsCodeVersion.requiresEmptyDebugConfigWithNullTypeToOpenLaunchJson) {
-					// Set type=null which causes launch.json to open.
-					debugConfig.type = undefined;
-					return debugConfig;
-				}
-				return undefined; // undefined means silent (don't open launch.json).
-			}
 		}
 
 		// Convert `program` to an absolute path (if possible).
@@ -139,7 +124,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (debugConfig.program && debugConfig.cwd && !path.isAbsolute(debugConfig.program))
 			debugConfig.program = path.join(debugConfig.cwd, debugConfig.program);
 
-		const isFlutter = (!isAttachRequest || debugConfig.previewFlutterAttach) && this.sdks.projectType !== ProjectType.Dart
+		const isFlutter = this.sdks.projectType !== ProjectType.Dart
 			&& debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string)
 			&& !isInsideFolderNamed(debugConfig.program, "bin") && !isInsideFolderNamed(debugConfig.program, "tool");
 		log(`Detected launch project as ${isFlutter ? "Flutter" : "Dart"}`);
@@ -153,6 +138,24 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			? (isTest ? DebuggerType.FlutterTest : DebuggerType.Flutter)
 			: (isTest && canPubRunTest ? DebuggerType.PubTest : DebuggerType.Dart);
 		log(`Using ${DebuggerType[debugType]} debug adapter for this session`);
+
+		// If we're attaching to Dart, ensure we get an observatory URI.
+		if (isAttachRequest && !isFlutter) {
+			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
+			debugConfig.observatoryUri = await this.getObservatoryUri(debugConfig.observatoryUri);
+
+			if (!debugConfig.observatoryUri) {
+				logWarn("No Observatory URI/port was provided");
+				window.showInformationMessage("You must provide an Observatory URI/port to attach a debugger");
+				// TODO: Remove this once we only support Code v1.28.
+				if (vsCodeVersion.requiresEmptyDebugConfigWithNullTypeToOpenLaunchJson) {
+					// Set type=null which causes launch.json to open.
+					debugConfig.type = undefined;
+					return debugConfig;
+				}
+				return undefined; // undefined means silent (don't open launch.json).
+			}
+		}
 
 		// Ensure we have a device
 		const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null;
