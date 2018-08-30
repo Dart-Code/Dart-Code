@@ -140,6 +140,7 @@ export function findSdks(): Sdks {
 	if (config.analyzerSshHost) {
 		return {
 			dart: config.sdkPath,
+			dartSdkIsFromFlutter: false,
 			flutter: null,
 			fuchsia: null,
 			projectType: ProjectType.Dart,
@@ -197,6 +198,7 @@ export function findSdks(): Sdks {
 
 	return {
 		dart: dartSdkPath,
+		dartSdkIsFromFlutter: dartSdkPath && isDartSdkFromFlutter(dartSdkPath),
 		flutter: flutterSdkPath,
 		fuchsia: fuchsiaRoot,
 		projectType: fuchsiaRoot && hasFuchsiaProjectThatIsNotVanillaFlutter
@@ -310,4 +312,10 @@ export function searchPaths(paths: Array<string | undefined>, filter: (s: string
 	log(`    Returning SDK path ${sdkPath} for ${executableName}`);
 
 	return sdkPath;
+}
+
+export function isDartSdkFromFlutter(dartSdkPath: string) {
+	const possibleFlutterSdkPath = path.dirname(path.dirname(path.dirname(dartSdkPath)));
+	const possibleFlutterBinFolder = path.join(possibleFlutterSdkPath, "bin");
+	return hasFlutterExecutable(possibleFlutterBinFolder);
 }

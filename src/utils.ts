@@ -242,6 +242,7 @@ export class Sdks {
 	public flutter?: string;
 	public fuchsia?: string;
 	public projectType = ProjectType.Dart;
+	public dartSdkIsFromFlutter: boolean;
 }
 
 export enum ProjectType {

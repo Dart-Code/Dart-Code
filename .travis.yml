@@ -71,6 +71,8 @@ before_install:
   - node --version
   - npm --version
   - flutter/bin/flutter doctor
+  - export FLUTTER_PATH=`pwd`/flutter
+  - export DART_PATH=`pwd`/dart-sdk
   - cd ..
 
 install:

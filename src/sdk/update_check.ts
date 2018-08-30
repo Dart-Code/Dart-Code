@@ -8,6 +8,12 @@ export async function checkForSdkUpdates(sdks: Sdks, dartSdkVersion: string): Pr
 	if (!config.checkForSdkUpdates || sdks.projectType !== ProjectType.Dart)
 		return;
 
+	// Someties people use the Dart SDK inside Flutter for non-Flutter projects. Since we'll never want
+	// to do SDK update checks in that situation (esp. as it's VERSION file is bad!) we should skip in
+	// that case.
+	if (sdks.dartSdkIsFromFlutter)
+		return;
+
 	try {
 		const version = await getLatestSdkVersion();
 		if (versionIsAtLeast(dartSdkVersion, version))

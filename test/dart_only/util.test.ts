@@ -1,4 +1,6 @@
 import * as assert from "assert";
+import * as path from "path";
+import { isDartSdkFromFlutter } from "../../src/sdk/utils";
 import * as util from "../../src/utils";
 
 describe("util.versionIsAtLeast", () => {
@@ -41,5 +43,20 @@ describe("util.isStableSdk", () => {
 		assert.equal(util.isStableSdk("1.2.3-alpha.3"), false);
 		assert.equal(util.isStableSdk("0.2.2-pre.55"), false);
 		assert.equal(util.isStableSdk("2.0.0-dev.37.0.flutter-7328726088"), false);
+	});
+});
+
+describe("util.isDartSdkFromFlutter", () => {
+	it("should consider Dart SDK to not be from Flutter", function () {
+		if (!process.env.DART_PATH)
+			this.skip();
+
+		assert.equal(isDartSdkFromFlutter(process.env.DART_PATH), false);
+	});
+	it("should consider Flutter's Dart SDK to be from Flutter", function () {
+		if (!process.env.FLUTTER_PATH)
+			this.skip();
+
+		assert.equal(isDartSdkFromFlutter(path.join(process.env.FLUTTER_PATH, "bin", "cache", "dart-sdk")), true);
 	});
 });
