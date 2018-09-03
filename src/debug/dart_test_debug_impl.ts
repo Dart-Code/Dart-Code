@@ -15,7 +15,6 @@ export class DartTestDebugSession extends DartDebugSession {
 		super();
 
 		this.sendStdOutToConsole = false;
-		this.parseObservatoryUriFromStdOut = false;
 		this.requiresProgram = false;
 	}
 
