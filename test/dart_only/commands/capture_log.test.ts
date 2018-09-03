@@ -4,7 +4,7 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { STOP_LOGGING } from "../../../src/commands/logging";
-import { LogCategory, LogSeverity, PromiseCompleter } from "../../../src/debug/utils";
+import { LogCategory, LogSeverity, platformEol, PromiseCompleter } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
 import { log } from "../../../src/utils/log";
 import { activate, defer, getRandomTempFolder, sb, waitFor } from "../../helpers";
@@ -60,9 +60,9 @@ describe("capture logs command", () => {
 		assert.ok(fs.existsSync(tempLogFile));
 		const lines = fs.readFileSync(tempLogFile).toString().trim().split("\n").map((l) => l.trim());
 		const lastLine = lines[lines.length - 1];
-		assert.ok(lines.find((l) => l.endsWith("Log file started")), "Did not find logged message");
-		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), "Did not find logged message");
-		assert.ok(lastLine.endsWith("Log file ended"), `Last line of log was ${lastLine}`);
+		assert.ok(lines.find((l) => l.endsWith("Log file started")), `Did not find 'Log file started' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lastLine.endsWith("Log file ended"), `Last line of log was '${lastLine}' instead of 'Log file ended'`);
 
 		// Ensure the log file was opened.
 		assert.equal(fsPath(vs.window.activeTextEditor.document.uri), tempLogFile);
@@ -99,8 +99,8 @@ describe("capture logs command", () => {
 
 		assert.ok(fs.existsSync(tempLogFile));
 		const lines = fs.readFileSync(tempLogFile).toString().trim().split("\n").map((l) => l.trim());
-		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), "Did not find logged message");
-		assert.ok(lines.find((l) => l.indexOf("This is an analyzer event") !== -1), "Did not find logged analyzer message");
+		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.indexOf("This is an analyzer event") !== -1), `Did not find 'This is an analyzer event' in ${platformEol}${lines.join(platformEol)}`);
 	});
 
 	it("always logs WARN and ERROR log to General", async () => {
@@ -114,8 +114,8 @@ describe("capture logs command", () => {
 
 		assert.ok(fs.existsSync(tempLogFile));
 		const lines = fs.readFileSync(tempLogFile).toString().trim().split("\n").map((l) => l.trim());
-		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), "Did not find logged message");
-		assert.ok(lines.find((l) => l.indexOf("This is an flutter daemon event") === -1), "Found logged flutter daemon message");
-		assert.ok(lines.find((l) => l.indexOf("This is an flutter daemon ERROR event") !== -1), "Did not find logged flutter daemon ERROR message");
+		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.indexOf("This is an flutter daemon event") === -1), "Unexpectedly found 'This is an flutter daemon event' in the log");
+		assert.ok(lines.find((l) => l.indexOf("This is an flutter daemon ERROR event") !== -1), `Did not find 'This is an flutter daemon ERROR event' in ${platformEol}${lines.join(platformEol)}`);
 	});
 });
