@@ -97,7 +97,7 @@ script:
   # This doesn't affect end users (since normally we're not spawning their device) so we
   # just kill them all and then to a check for remaining Dart processes (we still want
   # to ensure we're not leaking anything else).
-  - killall -q flutter_tester
+  - killall flutter_tester || true
   - ps -ax | grep -v grep | grep dart || true
   - if [[ $(pgrep -x dart) ]]; then
       echo 'DART WAS FOUND';
