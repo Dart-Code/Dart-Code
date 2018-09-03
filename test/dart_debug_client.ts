@@ -6,7 +6,7 @@ import { handleDebugLogEvent, log } from "../src/utils/log";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../src/views/test_protocol";
 import { TestResultsProvider } from "../src/views/test_view";
 import { DebugClient } from "./debug_client_ms";
-import { delay, withTimeout } from "./helpers";
+import { delay, watchPromise, withTimeout } from "./helpers";
 
 export class DartDebugClient extends DebugClient {
 	constructor(runtime: string, executable: string, debugType: string, spwanOptions?: SpawnOptions, testProvider?: TestResultsProvider) {
@@ -37,7 +37,7 @@ export class DartDebugClient extends DebugClient {
 		// We override the base method to swap for attachRequest when required, so that
 		// all the existing methods that provide useful functionality but assume launching
 		// (for ex. hitBreakpoint) can be used in attach tests.
-		const response = await this.initializeRequest();
+		const response = await watchPromise("launch->initializeRequest", this.initializeRequest());
 		if (response.body && response.body.supportsConfigurationDoneRequest) {
 			this._supportsConfigurationDoneRequest = true;
 		}
@@ -57,11 +57,11 @@ export class DartDebugClient extends DebugClient {
 			// so we will assume that if we get a terminate the resume worked.
 			log("Resuming and waiting for success or terminate...");
 			await Promise.race([
-				this.waitForEvent("terminated").then((_) => log("Terminated!")),
+				watchPromise("launch()->attach->terminated", this.waitForEvent("terminated")),
 				this.resume().then((_) => log("Resumed!")),
 			]);
 		} else {
-			await this.launchRequest(launchArgs);
+			await watchPromise("launch()->launchRequest", this.launchRequest(launchArgs));
 		}
 	}
 
@@ -201,7 +201,7 @@ export class DartDebugClient extends DebugClient {
 		await delay(500);
 
 		await Promise.all([
-			this.assertOutput("stdout", "Reloaded"),
+			this.assertOutputContains("stdout", "Reloaded"),
 			this.customRequest("hotReload"),
 		]);
 	}

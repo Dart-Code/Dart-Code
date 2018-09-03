@@ -7,7 +7,7 @@ import { fsPath } from "../../../src/utils";
 import { logError } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
+import { activate, defer, delay, ext, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, watchPromise } from "../../helpers";
 
 // When this issue is fixed and makes beta, we can delete this cool and the code
 // that is added because of it.
@@ -134,15 +134,15 @@ describe("flutter run debugger", () => {
 	it("hot reloads successfully", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
-			dc.configurationSequence(),
-			dc.launch(config),
+			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
+			watchPromise("hot_reloads_successfully->launch", dc.launch(config)),
 		]);
 
-		await dc.hotReload();
+		await watchPromise("hot_reloads_successfully->hotReload", dc.hotReload());
 
 		await Promise.all([
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
+			watchPromise("hot_reloads_successfully->waitForEvent:terminated", dc.waitForEvent("terminated")),
+			watchPromise("hot_reloads_successfully->terminateRequest", dc.terminateRequest()),
 		]);
 	});
 
@@ -157,7 +157,7 @@ describe("flutter run debugger", () => {
 		await delay(1000);
 
 		await Promise.all([
-			dc.assertOutput("stdout", "Restarted app"),
+			dc.assertOutputContains("stdout", "Restarted app"),
 			dc.customRequest("hotRestart"),
 		]);
 
@@ -343,22 +343,23 @@ describe("flutter run debugger", () => {
 		if (extApi.daemonCapabilities.debuggerIncorrectlyPausesOnHandledExceptions)
 			this.skip();
 		await openFile(flutterHelloWorldMainFile);
-		const config = await startDebugger(flutterHelloWorldMainFile);
+		const config = await watchPromise("logs_expected_text->startDebugger", startDebugger(flutterHelloWorldMainFile));
 		await Promise.all([
-			dc.waitForEvent("initialized").then((event) => {
-				return dc.setBreakpointsRequest({
-					// positionOf is 0-based, but seems to want 1-based
-					breakpoints: [{
-						line: positionOf("^// BREAKPOINT1").line,
-						// VS Code says to use {} for expressions, but we want to support Dart's native too, so
-						// we have examples of both (as well as "escaped" brackets).
-						logMessage: "The \\{year} is {(new DateTime.now()).year}",
-					}],
-					source: { path: fsPath(flutterHelloWorldMainFile) },
-				});
-			}).then((response) => dc.configurationDoneRequest()),
-			dc.assertOutputContains("stdout", `The {year} is ${(new Date()).getFullYear()}`),
-			dc.launch(config),
+			watchPromise("logs_expected_text->waitForEvent:initialized", dc.waitForEvent("initialized"))
+				.then((event) => {
+					return watchPromise("logs_expected_text->setBreakpointsRequest", dc.setBreakpointsRequest({
+						// positionOf is 0-based, but seems to want 1-based
+						breakpoints: [{
+							line: positionOf("^// BREAKPOINT1").line,
+							// VS Code says to use {} for expressions, but we want to support Dart's native too, so
+							// we have examples of both (as well as "escaped" brackets).
+							logMessage: "The \\{year} is {(new DateTime.now()).year}",
+						}],
+						source: { path: fsPath(flutterHelloWorldMainFile) },
+					}));
+				}).then((response) => watchPromise("logs_expected_text->configurationDoneRequest", dc.configurationDoneRequest())),
+			watchPromise("logs_expected_text->assertOutputContainsYear", dc.assertOutputContains("stdout", `The {year} is ${(new Date()).getFullYear()}`)),
+			watchPromise("logs_expected_text->launch", dc.launch(config)),
 		]);
 	});
 
