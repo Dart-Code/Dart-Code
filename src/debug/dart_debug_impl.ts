@@ -34,6 +34,7 @@ export class DartDebugSession extends DebugSession {
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
 	protected sendStdOutToConsole: boolean = true;
+	protected parseObservatoryUriFromStdOut: boolean = true;
 	protected requiresProgram: boolean = true;
 	protected pollforMemoryMs?: number; // If set, will poll for memory usage and send events back.
 	protected processExit: Promise<void> = Promise.resolve();
@@ -94,7 +95,7 @@ export class DartDebugSession extends DebugSession {
 		process.stdout.setEncoding("utf8");
 		process.stdout.on("data", (data) => {
 			let match: RegExpExecArray;
-			if (!this.observatory) {
+			if (this.parseObservatoryUriFromStdOut && !this.observatory) {
 				match = ObservatoryConnection.bannerRegex.exec(data.toString());
 			}
 			if (match) {
