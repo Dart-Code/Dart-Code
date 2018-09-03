@@ -6,7 +6,7 @@ import * as path from "path";
 import * as semver from "semver";
 import * as vs from "vscode";
 import { AnalyzerCapabilities } from "../src/analysis/analyzer";
-import { dartCodeExtensionIdentifier } from "../src/debug/utils";
+import { dartCodeExtensionIdentifier, LogCategory, LogSeverity } from "../src/debug/utils";
 import { DaemonCapabilities } from "../src/flutter/flutter_daemon";
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
@@ -552,4 +552,30 @@ export async function getAttachConfiguration(observatoryUri: string, extraConfig
 		request: "attach",
 	}, extraConfiguration);
 	return await getResolvedDebugConfiguration(attachConfig);
+}
+
+// Watches a promise and reports every 10s while it's unresolved. This is to aid tracking
+// down hangs in test runs where multiple promises can be spawned together and generate
+// lots of log output, making it hard to keep track of which did not complete.
+export function watchPromise<T>(name: string, promise: Promise<T>): Promise<T> {
+	let didComplete = false;
+	promise.then((_) => {
+		didComplete = true;
+		// log(`Promise ${name} resolved!`, LogSeverity.Info, LogCategory.CI);
+	});
+	promise.catch((_) => {
+		didComplete = true;
+		// log(`Promise ${name} rejected!`, LogSeverity.Warn, LogCategory.CI);
+	});
+
+	let checkResult: () => void;
+	checkResult = () => {
+		if (didComplete)
+			return;
+		log(`Promise ${name} is still unresolved!`, LogSeverity.Info, LogCategory.CI);
+		setTimeout(checkResult, 10000);
+	};
+	setTimeout(checkResult, 10000);
+
+	return promise;
 }
