@@ -113,6 +113,7 @@ export function killFlutterTester(): Promise<void> {
 				log("flutter_tester process(s) remained after test. These have been terminated to avoid affecting future tests, " +
 					"but may indicate something is not cleaning up correctly", LogSeverity.Warn, LogCategory.CI);
 			}
+			resolve();
 		});
 	});
 }
