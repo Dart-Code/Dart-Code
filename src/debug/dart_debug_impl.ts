@@ -329,7 +329,10 @@ export class DartDebugSession extends DebugSession {
 			try {
 				this.log(`${request}: Disconnecting from process...`);
 				// Remove all breakpoints from the VM.
-				await Promise.all(this.threadManager.threads.map((thread) => thread.removeAllBreakpoints()));
+				await await Promise.race([
+					Promise.all(this.threadManager.threads.map((thread) => thread.removeAllBreakpoints())),
+					new Promise((resolve) => setTimeout(resolve, 500)),
+				]);
 
 				// Restart any paused threads.
 				// Note: Only wait up to 500ms here because sometimes we don't get responses because the VM terminates.
