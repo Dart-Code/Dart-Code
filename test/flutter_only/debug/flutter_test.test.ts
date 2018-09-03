@@ -22,7 +22,8 @@ describe("flutter test debugger", () => {
 	beforeEach("create debug client", () => {
 		dc = new DartDebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_test_debug_entry.js"), "dart");
 		dc.defaultTimeout = 30000;
-		defer(dc.stop);
+		const thisDc = dc;
+		defer(() => thisDc.stop());
 	});
 
 	async function startDebugger(script?: vs.Uri | string): Promise<vs.DebugConfiguration> {
