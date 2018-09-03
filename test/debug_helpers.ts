@@ -3,7 +3,8 @@ import { ChildProcess } from "child_process";
 import { DebugConfiguration } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { ObservatoryConnection } from "../src/debug/dart_debug_protocol";
-import { safeSpawn } from "../src/debug/utils";
+import { LogCategory, LogSeverity, safeSpawn } from "../src/debug/utils";
+import { log } from "../src/utils/log";
 import { DartDebugClient } from "./dart_debug_client";
 import { defer } from "./helpers";
 
@@ -102,4 +103,16 @@ export class DartProcess {
 			process.on("exit", (code) => { this.exited = true; resolve(code); });
 		});
 	}
+}
+
+export function killFlutterTester(): Promise<void> {
+	return new Promise((resolve) => {
+		const proc = safeSpawn(undefined, "pkill", ["flutter_tester"]);
+		proc.on("exit", (code: number) => {
+			if (code === 0) {
+				log("flutter_tester process(s) remained after test. These have been terminated to avoid affecting future tests, " +
+					"but may indicate something is not cleaning up correctly", LogSeverity.Warn, LogCategory.CI);
+			}
+		});
+	});
 }
