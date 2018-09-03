@@ -340,6 +340,7 @@ export class DartDebugSession extends DebugSession {
 				]);
 			} catch { }
 			try {
+				this.log(`${request}: Closing observatory...`);
 				this.observatory.close();
 			} catch { } finally {
 				this.observatory = null;
