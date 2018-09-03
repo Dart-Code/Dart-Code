@@ -29,10 +29,11 @@ describe("dart test debugger", () => {
 		// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
 		// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
 		// a second request and that'll cause it to quit immediately.
+		const thisDc = dc;
 		defer(() => withTimeout(
 			Promise.all([
-				dc.terminateRequest().catch((e) => logInfo(e)),
-				delay(500).then(() => dc.stop()).catch((e) => logInfo(e)),
+				thisDc.terminateRequest().catch((e) => logInfo(e)),
+				delay(500).then(() => thisDc.stop()).catch((e) => logInfo(e)),
 			]),
 			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
 		));

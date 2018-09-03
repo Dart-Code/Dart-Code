@@ -14,9 +14,10 @@ describe("capture logs command", () => {
 	let tempLogFile: string;
 	beforeEach(() => {
 		tempLogFile = path.join(getRandomTempFolder(), "test_log.txt");
+		const thisTempLogFile = tempLogFile;
 		defer(() => {
-			if (fs.existsSync(tempLogFile))
-				fs.unlinkSync(tempLogFile);
+			if (fs.existsSync(thisTempLogFile))
+				fs.unlinkSync(thisTempLogFile);
 		});
 	});
 

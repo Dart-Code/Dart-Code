@@ -36,7 +36,7 @@ describe("flutter run debugger", () => {
 	beforeEach("create debug client", () => {
 		dc = new DartDebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_debug_entry.js"), "dart");
 		dc.defaultTimeout = 30000;
-		defer(() => dc.stop());
+		defer(dc.stop);
 	});
 
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
