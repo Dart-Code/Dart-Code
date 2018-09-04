@@ -558,6 +558,10 @@ export async function getAttachConfiguration(observatoryUri: string, extraConfig
 // down hangs in test runs where multiple promises can be spawned together and generate
 // lots of log output, making it hard to keep track of which did not complete.
 export function watchPromise<T>(name: string, promise: Promise<T>): Promise<T> {
+	// For convenience, this method might get wrapped around things that are not
+	// promises.
+	if (!promise || !promise.then || !promise.catch)
+		return promise;
 	let didComplete = false;
 	promise.then((_) => {
 		didComplete = true;
