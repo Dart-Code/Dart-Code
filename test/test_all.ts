@@ -102,22 +102,7 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	if (!fs.existsSync(env.DC_TEST_LOGS))
 		fs.mkdirSync(env.DC_TEST_LOGS);
 
-	let res: number;
-	try {
-		res = await runNode(cwd, args, env);
-	} catch (e) {
-		res = 999;
-		console.error(e);
-		console.log(yellow("############################################################"));
-		console.log(yellow("## Terminating Code processes to try and continue         ##"));
-		console.log(yellow("############################################################"));
-		await new Promise((resolve) => {
-			const proc = childProcess.spawn("pkill", ["code"], { stdio: "inherit" });
-			proc.on("data", (data: Buffer | string) => console.log(data.toString()));
-			proc.on("error", (data: Buffer | string) => console.warn(data.toString()));
-			proc.on("close", resolve);
-		});
-	}
+	let res = await runNode(cwd, args, env);
 	exitCode = exitCode || res;
 
 	// Remap coverage output.
