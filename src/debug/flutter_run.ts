@@ -70,6 +70,10 @@ export class FlutterRun extends StdIOService<UnknownNotification> {
 		return this.sendRequest("app.restart", { appId, fullRestart: hotRestart === true, pause });
 	}
 
+	public detach(appId: string): Thenable<UnknownResponse> {
+		return this.sendRequest("app.detach", { appId });
+	}
+
 	public stop(appId: string): Thenable<UnknownResponse> {
 		return this.sendRequest("app.stop", { appId });
 	}

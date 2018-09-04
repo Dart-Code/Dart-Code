@@ -67,7 +67,7 @@ export async function ensureMapEntry(mapEntries: DebugProtocol.Variable[], entry
 	assert.ok(results.find((r) => r), `Didn't find map entry for ${entry.key.value}=${entry.value.value}`);
 }
 
-export function spawnProcessPaused(config: DebugConfiguration): DartProcess {
+export function spawnDartProcessPaused(config: DebugConfiguration): DartProcess {
 	const process = safeSpawn(
 		config.cwd,
 		config.dartPath,
@@ -83,6 +83,27 @@ export function spawnProcessPaused(config: DebugConfiguration): DartProcess {
 			dartProcess.process.kill();
 	});
 	return dartProcess;
+}
+
+export function spawnFlutterProcess(config: DebugConfiguration): DartProcess {
+	const process = safeSpawn(
+		config.cwd,
+		config.flutterPath,
+		[
+			"run",
+			"-d",
+			"flutter-tester",
+		],
+	);
+	process.stdout.on("data", (data) => log(`SPROC: ${data}`, LogSeverity.Info, LogCategory.CI));
+	process.stderr.on("data", (data) => log(`SPROC: ${data}`, LogSeverity.Info, LogCategory.CI));
+	process.on("exit", (code) => log(`SPROC: Exited (${code})`, LogSeverity.Info, LogCategory.CI));
+	const flutterProcess = new DartProcess(process);
+	defer(() => {
+		if (!flutterProcess.hasExited)
+			flutterProcess.process.kill();
+	});
+	return flutterProcess;
 }
 
 export class DartProcess {

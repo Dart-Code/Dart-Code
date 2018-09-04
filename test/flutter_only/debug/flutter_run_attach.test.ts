@@ -7,9 +7,9 @@ import { fsPath } from "../../../src/utils";
 import { logError } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { spawnFlutterProcess } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterHelloWorldExampleSubFolder, flutterHelloWorldFolder, flutterHelloWorldMainFile, getAttachConfiguration, getLaunchConfiguration } from "../../helpers";
+import { activate, defer, delay, ext, extApi, flutterHelloWorldExampleSubFolder, flutterHelloWorldFolder, flutterHelloWorldMainFile, getAttachConfiguration, getLaunchConfiguration, watchPromise } from "../../helpers";
 
-describe.only("flutter run debugger (attach)", () => {
+describe("flutter run debugger (attach)", () => {
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 	beforeEach("set timeout", function () {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
@@ -34,17 +34,6 @@ describe.only("flutter run debugger (attach)", () => {
 		dc.defaultTimeout = 30000;
 		defer(() => dc.stop());
 	});
-
-	async function startDebugger(script?: vs.Uri): Promise<vs.DebugConfiguration> {
-		const config = await getLaunchConfiguration(script, { deviceId: "flutter-tester" });
-		await dc.start(config.debugServer);
-		// Make sure any stdErr is logged to console + log file for debugging.
-		dc.on("output", (event: DebugProtocol.OutputEvent) => {
-			if (event.body.category === "stderr")
-				logError(event.body.output);
-		});
-		return config;
-	}
 
 	async function attachDebugger(observatoryUri?: string): Promise<vs.DebugConfiguration> {
 		const config = await getAttachConfiguration({ deviceId: "flutter-tester", observatoryUri });
@@ -93,7 +82,7 @@ describe.only("flutter run debugger (attach)", () => {
 		]);
 
 		// Ensure the main process is still alive.
-		await delay(10000);
+		await delay(4000);
 		assert.equal(process.hasExited, false);
 
 	});

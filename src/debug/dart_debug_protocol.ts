@@ -317,7 +317,7 @@ export class RPCError {
 }
 
 export class ObservatoryConnection {
-	public static bannerRegex: RegExp = new RegExp("Observatory listening on (http:.+)");
+	public static bannerRegex: RegExp = new RegExp("Observatory (?:listening on|.* is available at:) (http:.+)");
 	public static httpLinkRegex: RegExp = new RegExp("(http://[\\d\\.:]+/)");
 
 	public socket: WebSocket;

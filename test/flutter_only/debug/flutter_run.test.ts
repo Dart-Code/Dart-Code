@@ -14,11 +14,12 @@ import { activate, defer, delay, ext, extApi, flutterHelloWorldBrokenFile, flutt
 // https://github.com/flutter/flutter/issues/17838
 const disableDebuggingToAvoidBreakingOnCaughtException = true;
 
-describe("flutter run debugger", () => {
+describe("flutter run debugger (launch)", () => {
+	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 	beforeEach("set timeout", function () {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
 	});
-	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
+
 	beforeEach("skip if no test device", function () {
 		if (extApi.daemonCapabilities.flutterTesterMayBeFlaky)
 			this.skip();
@@ -49,7 +50,7 @@ describe("flutter run debugger", () => {
 	afterEach(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 
 	async function startDebugger(script?: vs.Uri | string, cwd?: string): Promise<vs.DebugConfiguration> {
-		const config = await getLaunchConfiguration(script, { deviceId: "flutter-tester" });
+		const config = await getLaunchConfiguration(script, { deviceId: "flutter-tester", cwd });
 		await watchPromise("startDebugger->start", dc.start(config.debugServer));
 		// Make sure any stdErr is logged to console + log file for debugging.
 		dc.on("output", (event: DebugProtocol.OutputEvent) => {

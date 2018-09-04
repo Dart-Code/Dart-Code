@@ -41,13 +41,17 @@ export class DartDebugClient extends DebugClient {
 		if (response.body && response.body.supportsConfigurationDoneRequest) {
 			this._supportsConfigurationDoneRequest = true;
 		}
-		if (launchArgs.request === "attach") {
-			// Attach will be paused by default and issue a step when we connect; but our tests
-			// generally assume we will automatically resume.
+		// Attach will be paused by default and issue a step when we connect; but our tests
+		// generally assume we will automatically resume.
+		// TODO: For Flutter attach, the process isn't likely to be paused, so this code will
+		// stall on the waitForEvent(stopped). As a workaround, just follow the launchRequest
+		// path for Flutter tests, but we should probably come back and resolve these to work the
+		// same and just push the unpause logic up into a test helper.
+		if (launchArgs.request === "attach" && launchArgs.deviceId !== "flutter-tester") {
 			log("Attaching to process...");
-			await this.attachRequest(launchArgs);
+			await watchPromise("launch->attach->attachRequest", this.attachRequest(launchArgs));
 			log("Waiting for stopped (step) event...");
-			const event = await this.waitForEvent("stopped");
+			const event = await watchPromise("launch->attach->waitForEvent:stopped", this.waitForEvent("stopped"));
 			assert.equal(event.body.reason, "step");
 			// HACK: Put a fake delay in after attachRequest to ensure isolates become runnable and breakpoints are transmitted
 			// This should help fix the tests so we can be sure they're otherwise good, before we fix this properly.
@@ -58,7 +62,7 @@ export class DartDebugClient extends DebugClient {
 			log("Resuming and waiting for success or terminate...");
 			await Promise.race([
 				watchPromise("launch()->attach->terminated", this.waitForEvent("terminated")),
-				this.resume().then((_) => log("Resumed!")),
+				watchPromise("launch->attach->resume", this.resume()),
 			]);
 		} else {
 			await watchPromise("launch()->launchRequest", this.launchRequest(launchArgs));
