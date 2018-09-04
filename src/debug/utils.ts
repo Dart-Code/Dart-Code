@@ -175,6 +175,11 @@ export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestA
 	observatoryLogFile: string;
 }
 
+export interface FlutterAttachRequestArguments extends DartAttachRequestArguments {
+	deviceId: string;
+	flutterPath: string;
+}
+
 export interface CoverageData {
 	scriptPath: string;
 	// Lines that were it. These are 1-based, unlike VS Code!

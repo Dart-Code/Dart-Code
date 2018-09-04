@@ -39,7 +39,7 @@ export class DartDebugSession extends DebugSession {
 	protected pollforMemoryMs?: number; // If set, will poll for memory usage and send events back.
 	protected processExit: Promise<void> = Promise.resolve();
 	protected maxLogLineLength: number;
-	protected didAttach = false;
+	protected shouldKillProcessOnTerminate = true;
 
 	public constructor() {
 		super();
@@ -75,7 +75,7 @@ export class DartDebugSession extends DebugSession {
 		// Force relative paths to absolute.
 		if (args.program && !path.isAbsolute(args.program))
 			args.program = path.join(args.cwd, args.program);
-		this.didAttach = false;
+		this.shouldKillProcessOnTerminate = true;
 		this.cwd = args.cwd;
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program || args.cwd));
 		this.debugSdkLibraries = args.debugSdkLibraries;
@@ -129,7 +129,7 @@ export class DartDebugSession extends DebugSession {
 			return this.errorResponse(response, "Unable to attach; no Observatory address provided.");
 		}
 
-		this.didAttach = true;
+		this.shouldKillProcessOnTerminate = false;
 		this.cwd = args.cwd;
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
@@ -307,7 +307,8 @@ export class DartDebugSession extends DebugSession {
 	protected async terminate(force: boolean): Promise<void> {
 		const signal = force ? "SIGKILL" : "SIGINT";
 		const request = force ? "DISC" : "TERM";
-		if (!this.didAttach && this.childProcess != null && !this.processExited) {
+		this.log(`${request}: Going to terminate with ${signal}...`);
+		if (this.shouldKillProcessOnTerminate && this.childProcess != null && !this.processExited) {
 			for (const pid of this.additionalPidsToTerminate) {
 				try {
 					this.log(`${request}: Terminating related process ${pid} with ${signal}...`);
@@ -329,7 +330,7 @@ export class DartDebugSession extends DebugSession {
 			// test finish) so we may need to send again it we get another disconnectRequest.
 			// We also use childProcess == null to mean we're attached.
 			// this.childProcess = undefined;
-		} else if (this.didAttach && this.observatory) {
+		} else if (!this.shouldKillProcessOnTerminate && this.observatory) {
 			try {
 				this.log(`${request}: Disconnecting from process...`);
 				// Remove all breakpoints from the VM.

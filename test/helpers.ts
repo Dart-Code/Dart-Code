@@ -569,9 +569,8 @@ export async function getLaunchConfiguration(script?: vs.Uri | string, extraConf
 	return await getResolvedDebugConfiguration(launchConfig);
 }
 
-export async function getAttachConfiguration(observatoryUri: string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
+export async function getAttachConfiguration(extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
 	const attachConfig = Object.assign({}, {
-		observatoryUri,
 		request: "attach",
 	}, extraConfiguration);
 	return await getResolvedDebugConfiguration(attachConfig);
@@ -586,23 +585,29 @@ export function watchPromise<T>(name: string, promise: Promise<T>): Promise<T> {
 	if (!promise || !promise.then || !promise.catch)
 		return promise;
 	let didComplete = false;
+	// We'll log completion of the promise only if we'd logged that it was still in
+	// progress at some point.
+	let logCompletion = false;
 	promise.then((_) => {
 		didComplete = true;
-		// log(`Promise ${name} resolved!`, LogSeverity.Info, LogCategory.CI);
+		if (logCompletion)
+			log(`Promise ${name} resolved!`, LogSeverity.Info, LogCategory.CI);
 	});
 	promise.catch((_) => {
 		didComplete = true;
-		// log(`Promise ${name} rejected!`, LogSeverity.Warn, LogCategory.CI);
+		if (logCompletion)
+			log(`Promise ${name} rejected!`, LogSeverity.Warn, LogCategory.CI);
 	});
 
 	let checkResult: () => void;
 	checkResult = () => {
 		if (didComplete)
 			return;
+		logCompletion = true;
 		log(`Promise ${name} is still unresolved!`, LogSeverity.Info, LogCategory.CI);
 		setTimeout(checkResult, 10000);
 	};
-	setTimeout(checkResult, 10000);
+	setTimeout(checkResult, 3000); // First log is after 3s, rest are 10s.
 
 	return promise;
 }

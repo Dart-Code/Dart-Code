@@ -3,7 +3,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun, RunMode } from "./flutter_run";
-import { FlutterLaunchRequestArguments, isWin, LogCategory, LogMessage, LogSeverity } from "./utils";
+import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments, isWin, LogCategory, LogMessage, LogSeverity } from "./utils";
 
 const objectGroupName = "my-group";
 
@@ -57,6 +57,17 @@ export class FlutterDebugSession extends DartDebugSession {
 			appArgs.push(args.deviceId);
 		}
 
+		if (isAttach) {
+			// TODO: We need to handle just port numbers here, and also validation.
+			// https://github.com/Dart-Code/Dart-Code/issues/1190
+			const flutterAttach: FlutterAttachRequestArguments = args as any;
+			if (flutterAttach.observatoryUri) {
+				const observatoryPort = /:([0-9]+)\/?$/.exec(flutterAttach.observatoryUri)[1];
+				appArgs.push("--debug-port");
+				appArgs.push(observatoryPort);
+			}
+		}
+
 		if (!isAttach) {
 			if (args.flutterMode === "profile") {
 				appArgs.push("--profile");
@@ -84,7 +95,8 @@ export class FlutterDebugSession extends DartDebugSession {
 		// Normally for `flutter run` we don't allow terminating the pid we get from Observatory,
 		// because it's on a remote device, however in the case of the flutter-tester, it is local
 		// and otherwise might be left hanging around.
-		this.allowTerminatingObservatoryVmPid = args.deviceId === "flutter-tester";
+		// Unless, of course, we attached in which case we expect to detach by default.
+		this.allowTerminatingObservatoryVmPid = args.deviceId === "flutter-tester" && !isAttach;
 
 		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.FlutterRun)));
 		this.flutter = new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterPath, args.cwd, appArgs, args.env, args.flutterRunLogFile, logger, this.maxLogLineLength);
@@ -120,15 +132,19 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	protected async terminate(force: boolean): Promise<void> {
 		try {
-			if (this.currentRunningAppId && this.appHasStarted && this.flutter.mode === RunMode.Run)
+			if (this.currentRunningAppId && this.appHasStarted) {
+				const quitMethod = this.flutter.mode === RunMode.Run
+					? () => this.flutter.stop(this.currentRunningAppId)
+					: () => this.flutter.detach(this.currentRunningAppId);
 				// Wait up to 1000ms for app to quit since we often don't get a
 				// response here because the processes terminate immediately.
 				await Promise.race([
-					this.flutter.stop(this.currentRunningAppId),
+					quitMethod(),
 					new Promise((resolve) => setTimeout(resolve, 1000)),
 				]);
+			}
 		} catch {
-			// Ignore failures here (see comment above).
+			// Ignore failures here (we're shutting down and will send kill signals).
 		}
 		super.terminate(force);
 	}
