@@ -45,11 +45,11 @@ describe("flutter run debugger", () => {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
 	});
 
-	afterEach(killFlutterTester);
+	afterEach(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 
 	async function startDebugger(script?: vs.Uri | string, cwd?: string): Promise<vs.DebugConfiguration> {
 		const config = await getLaunchConfiguration(script, { deviceId: "flutter-tester" });
-		await dc.start(config.debugServer);
+		await watchPromise("startDebugger->start", dc.start(config.debugServer));
 		// Make sure any stdErr is logged to console + log file for debugging.
 		dc.on("output", (event: DebugProtocol.OutputEvent) => {
 			if (event.body.category === "stderr")
@@ -209,7 +209,7 @@ describe("flutter run debugger", () => {
 				line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
 				path: fsPath(flutterHelloWorldMainFile),
 			};
-			await dc.hitBreakpoint(config, expectedLocation);
+			await watchPromise("stops_at_a_breakpoint->hitBreakpoint", dc.hitBreakpoint(config, expectedLocation));
 			const stack = await dc.getStack();
 			const frames = stack.body.stackFrames;
 			assert.equal(frames[0].name, "MyHomePage.build");
@@ -371,9 +371,9 @@ describe("flutter run debugger", () => {
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
 		await Promise.all([
-			dc.configurationSequence(),
-			dc.assertOutputContains("stdout", "Exception: Oops"),
-			dc.launch(config),
+			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
+			watchPromise("writes_failure_output->assertOutputContains", dc.assertOutputContains("stdout", "Exception: Oops")),
+			watchPromise("writes_failure_output->launch", dc.launch(config)),
 		]);
 	});
 });
