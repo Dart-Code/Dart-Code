@@ -40,6 +40,7 @@ export class DartDebugSession extends DebugSession {
 	protected processExit: Promise<void> = Promise.resolve();
 	protected maxLogLineLength: number;
 	protected shouldKillProcessOnTerminate = true;
+	protected observatoryUriIsProbablyReconnectable = false;
 
 	public constructor() {
 		super();
@@ -129,6 +130,7 @@ export class DartDebugSession extends DebugSession {
 			return this.errorResponse(response, "Unable to attach; no Observatory address provided.");
 		}
 
+		this.observatoryUriIsProbablyReconnectable = true;
 		this.shouldKillProcessOnTerminate = false;
 		this.cwd = args.cwd;
 		this.debugSdkLibraries = args.debugSdkLibraries;
@@ -225,7 +227,13 @@ export class DartDebugSession extends DebugSession {
 				let browserFriendlyUri = uri.substring(0, uri.length - 3);
 				if (browserFriendlyUri.startsWith("ws:"))
 					browserFriendlyUri = "http:" + browserFriendlyUri.substring(3);
-				this.sendEvent(new Event("dart.observatoryUri", { observatoryUri: browserFriendlyUri.toString() }));
+				this.sendEvent(new Event("dart.observatoryUri", {
+					// If we won't be killing the process on terminate, then it's likely the
+					// process will remain around and can be reconnected to, so let the
+					// editor know that it should stash this URL for easier re-attaching.
+					isProbablyReconnectable: this.observatoryUriIsProbablyReconnectable,
+					observatoryUri: browserFriendlyUri.toString(),
+				}));
 			}
 			this.observatory = new ObservatoryConnection(uri);
 			this.observatory.onLogging((message) => this.log(message));

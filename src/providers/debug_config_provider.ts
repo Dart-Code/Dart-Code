@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { DebugSession } from "vscode-debugadapter";
 import { Analytics } from "../analytics";
-import { LastDebugSession } from "../commands/debug";
+import { LastDebugSession, mostRecentAttachedProbablyReusableObservatoryUri } from "../commands/debug";
 import { config, vsCodeVersion } from "../config";
 import { DartDebugSession } from "../debug/dart_debug_impl";
 import { DartTestDebugSession } from "../debug/dart_test_debug_impl";
@@ -140,11 +140,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		log(`Using ${DebuggerType[debugType]} debug adapter for this session`);
 
 		// If we're attaching to Dart, ensure we get an observatory URI.
-		if (isAttachRequest && !isFlutter) {
+		if (isAttachRequest) {
 			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
-			debugConfig.observatoryUri = await this.getObservatoryUri(debugConfig.observatoryUri);
+			debugConfig.observatoryUri = await this.getObservatoryUri(debugConfig.observatoryUri, mostRecentAttachedProbablyReusableObservatoryUri);
 
-			if (!debugConfig.observatoryUri) {
+			if (!debugConfig.observatoryUri && !isFlutter) {
 				logWarn("No Observatory URI/port was provided");
 				window.showInformationMessage("You must provide an Observatory URI/port to attach a debugger");
 				// TODO: Remove this once we only support Code v1.28.
@@ -231,7 +231,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 	}
 
-	private async getObservatoryUri(observatoryUri: string): Promise<string> {
+	private async getObservatoryUri(observatoryUri: string, defaultValue?: string): Promise<string> {
 		observatoryUri = observatoryUri || await vs.window.showInputBox({
 			ignoreFocusOut: true, // Don't close the window if the user tabs away to get the uri
 			placeHolder: "Paste an Observatory URI or port",
@@ -251,6 +251,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				if (!input.startsWith("http://") && !input.startsWith("https://"))
 					return "Please enter a valid Observatory URI or port number";
 			},
+			value: defaultValue,
 		});
 		observatoryUri = observatoryUri && observatoryUri.trim();
 
