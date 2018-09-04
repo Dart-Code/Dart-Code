@@ -18,6 +18,7 @@ let debugModeBannerEnabled = true;
 let paintBaselinesEnabled = false;
 let widgetInspectorEnabled = false;
 const debugSessions: DartDebugSessionInformation[] = [];
+export let mostRecentAttachedProbablyReusableObservatoryUri: string;
 
 export class LastDebugSession {
 	public static workspaceFolder: vs.WorkspaceFolder = null;
@@ -67,6 +68,11 @@ export class DebugCommands {
 				}
 			} else if (e.event === "dart.observatoryUri") {
 				session.observatoryUri = e.body.observatoryUri;
+				if (e.body.isProbablyReconnectable) {
+					mostRecentAttachedProbablyReusableObservatoryUri = session.observatoryUri;
+				} else {
+					mostRecentAttachedProbablyReusableObservatoryUri = undefined;
+				}
 			} else if (e.event === "dart.log") {
 				handleDebugLogEvent(e.event, e.body);
 			} else if (e.event === "dart.restartRequest") {
