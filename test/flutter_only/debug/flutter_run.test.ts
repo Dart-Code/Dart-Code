@@ -198,7 +198,7 @@ describe("flutter run debugger", () => {
 				? ""
 				: ` after ${numReloads} reload${numReloads === 1 ? "" : "s"}`;
 
-		it.skip("stops at a breakpoint" + reloadDescription, async function () { // tslint:disable-line:only-arrow-functions
+		it("stops at a breakpoint" + reloadDescription, async function () { // tslint:disable-line:only-arrow-functions
 			if (numReloads > 0) {
 				if (extApi.daemonCapabilities.debuggerIncorrectlyPausesOnHandledExceptions)
 					this.skip();
