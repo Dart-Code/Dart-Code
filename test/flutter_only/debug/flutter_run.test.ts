@@ -31,6 +31,7 @@ describe("flutter run debugger", () => {
 	// `flutter create .`!
 	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", path.join(fsPath(flutterHelloWorldFolder), "dummy"), "."));
 	before("run 'flutter create' for example", () => vs.commands.executeCommand("_flutter.create", path.join(fsPath(flutterHelloWorldExampleSubFolder), "dummy"), "."));
+	before("run 'flutter clean'", () => vs.commands.executeCommand("_flutter.clean", path.join(fsPath(flutterHelloWorldFolder), "dummy"), "."));
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {

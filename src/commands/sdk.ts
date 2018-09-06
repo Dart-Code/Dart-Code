@@ -165,6 +165,12 @@ export class SdkCommands {
 			args.push(projectName);
 			return this.runFlutterInFolder(path.dirname(projectPath), args, projectName);
 		}));
+		// Internal command that's fired in user_prompts to actually do the creation.
+		context.subscriptions.push(vs.commands.registerCommand("_flutter.clean", (projectPath: string, projectName?: string) => {
+			projectName = projectName || path.basename(projectPath);
+			const args = ["clean"];
+			return this.runFlutterInFolder(path.dirname(projectPath), args, projectName);
+		}));
 
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
