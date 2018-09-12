@@ -36,6 +36,7 @@ describe("dart test debugger", () => {
 				delay(500).then(() => thisDc.stop()).catch((e) => logInfo(e)),
 			]),
 			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
+			60,
 		));
 	});
 
