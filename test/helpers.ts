@@ -516,7 +516,7 @@ export async function withTimeout(promise: Promise<any>, message: string | (() =
 	]);
 }
 
-export async function timeoutIn(message: string | (() => string), seconds: number = 15) {
+export async function timeoutIn(message: string | (() => string), seconds: number = 30) {
 	return new Promise((resolve, reject) => setTimeout(() => {
 		const msg = typeof message === "string" ? message : message();
 		reject(new Error(`${msg} within ${seconds}s`));
