@@ -472,7 +472,7 @@ export async function waitFor(action: () => boolean, message?: string, milliseco
 		timeRemaining -= 20;
 	}
 	if (throwOnFailure)
-		throw new Error("Action didn't return true within specified timeout" + (message ? ` (${message})` : ""));
+		throw new Error(`Action didn't return true within ${milliseconds}ms (${message})`);
 }
 
 export async function tryFor(action: () => Promise<void> | void, milliseconds: number = 2000): Promise<void> {
