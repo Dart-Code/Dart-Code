@@ -133,6 +133,7 @@ export async function getPackages() {
 
 export async function closeAllOpenFiles(): Promise<void> {
 	while (vs.window.activeTextEditor) {
+		console.log(`Closing active editor ${vs.window.activeTextEditor.document.uri}...`);
 		await vs.commands.executeCommand("workbench.action.closeActiveEditor");
 		await delay(5);
 	}
@@ -141,6 +142,7 @@ export async function closeAllOpenFiles(): Promise<void> {
 export async function closeFile(file: vs.Uri): Promise<void> {
 	for (const editor of vs.window.visibleTextEditors) {
 		if (editor.document.uri === file) {
+			console.log(`Closing visible editor ${editor.document.uri}...`);
 			await vs.window.showTextDocument(editor.document);
 			await vs.commands.executeCommand("workbench.action.closeActiveEditor");
 		}
