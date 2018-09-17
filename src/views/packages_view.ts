@@ -31,6 +31,8 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 	}
 
 	private createWatcher() {
+		if (!this.workspaceRoot)
+			return;
 		this.watcher = vs.workspace.createFileSystemWatcher(new vs.RelativePattern(this.workspaceRoot, ".packages"));
 		this.watcher.onDidChange(this.refresh, this);
 		this.watcher.onDidCreate(this.refresh, this);
