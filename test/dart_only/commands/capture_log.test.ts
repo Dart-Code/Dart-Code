@@ -7,7 +7,7 @@ import { STOP_LOGGING } from "../../../src/commands/logging";
 import { LogCategory, LogSeverity, platformEol, PromiseCompleter } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
 import { log } from "../../../src/utils/log";
-import { activate, defer, delay, getRandomTempFolder, sb, waitFor } from "../../helpers";
+import { activate, defer, getRandomTempFolder, sb, waitFor } from "../../helpers";
 
 describe("capture logs command", () => {
 	beforeEach(() => activate());
@@ -37,9 +37,6 @@ describe("capture logs command", () => {
 		// Wait until the command has called for the filename and options (otherwise we'll send our log before
 		// the logger is set up because the above call is async).
 		await waitFor(() => showQuickPick.called);
-		// Add a small delay to ensure the code that creates the log has started (since there are lots of
-		// awaits we may have closed the quickPick but not started the log yet).
-		await delay(100);
 
 		return {
 			stopLogging: async () => {
