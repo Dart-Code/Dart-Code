@@ -273,9 +273,17 @@ export function rangeOf(searchText: string, inside?: vs.Range): vs.Range {
 	);
 }
 
-export async function getDocumentSymbols(): Promise<vs.SymbolInformation[]> {
-	const documentSymbolResult = await (vs.commands.executeCommand("vscode.executeDocumentSymbolProvider", currentDoc().uri) as Thenable<vs.SymbolInformation[]>);
-	return documentSymbolResult || [];
+export async function getDocumentSymbols(): Promise<Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol }>> {
+	const documentSymbolResult = await (vs.commands.executeCommand("vscode.executeDocumentSymbolProvider", currentDoc().uri) as Thenable<vs.DocumentSymbol[]>);
+	if (!documentSymbolResult)
+		return [];
+
+	// Return a flattened list with references to parent for simplified testing.
+	return documentSymbolResult.map((c) => Object.assign(c, { parent: undefined }))
+		.concat(_.flatMap(
+			documentSymbolResult,
+			(s) => s.children ? s.children.map((c) => Object.assign(c, { parent: s })) : [],
+		));
 }
 
 export async function getDefinitions(position: vs.Position): Promise<vs.Location[]> {
@@ -314,7 +322,7 @@ export function ensureError(errors: vs.Diagnostic[], text: string) {
 	);
 }
 
-export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName?: string, uri: vs.Uri = currentDoc().uri, shouldHaveRange = true): void {
+export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName: string, uri: vs.Uri): void {
 	let symbol = symbols.find((f) =>
 		f.name === name
 		&& f.kind === kind
@@ -328,15 +336,30 @@ export function ensureSymbol(symbols: vs.SymbolInformation[], name: string, kind
 	symbol = symbol!;
 	assert.equal(fsPath(symbol.location.uri), fsPath(uri));
 	assert.ok(symbol.location);
-	if (shouldHaveRange) {
-		assert.ok(symbol.location.range);
-		assert.ok(symbol.location.range.start);
-		assert.ok(symbol.location.range.start.line);
-		assert.ok(symbol.location.range.end);
-		assert.ok(symbol.location.range.end.line);
-	} else {
-		assert.ok(!symbol.location.range);
-	}
+	assert.ok(!symbol.location.range);
+}
+
+export function ensureDocumentSymbol(symbols: Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol }>, name: string, kind: vs.SymbolKind, containerName?: string): void {
+	let symbol = symbols.find((f) =>
+		f.name === name
+		&& f.kind === kind
+		// TODO: Once we're on Code v1.28 we can remove this containerName fallback.
+		&& (f.parent ? f.parent.name : (f as any as vs.SymbolInformation).containerName || "") === (containerName || ""),
+	);
+	assert.ok(
+		symbol,
+		`Couldn't find symbol for ${name}/${vs.SymbolKind[kind]}/${containerName} in\n`
+		// TODO: Once we're on Code v1.28 we can remove this containerName fallback.
+		+ symbols.map((s) => `        ${s.name}/${vs.SymbolKind[s.kind]}/${s.parent ? s.parent.name : (s as any as vs.SymbolInformation).containerName || ""}`).join("\n"),
+	);
+	symbol = symbol!;
+	// TODO: Once we're on Code v1.28 we don't need this location fallback.
+	const range = symbol.range || ((symbol as any as vs.SymbolInformation).location.range as vs.Range);
+	assert.ok(range);
+	assert.ok(range.start);
+	assert.ok(range.start.line);
+	assert.ok(range.end);
+	assert.ok(range.end.line);
 }
 
 function rangeString(range: vs.Range) {

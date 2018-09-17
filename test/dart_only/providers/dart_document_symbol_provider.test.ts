@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, ensureSymbol, everythingFile, getDocumentSymbols } from "../../helpers";
+import { activate, ensureDocumentSymbol, everythingFile, getDocumentSymbols } from "../../helpers";
+import _ = require("lodash");
 
 describe("document_symbol_provider", () => {
 
@@ -9,19 +10,19 @@ describe("document_symbol_provider", () => {
 	it("returns expected items for 'everything.dart'", async () => {
 		const symbols = await getDocumentSymbols();
 
-		ensureSymbol(symbols, "MyClass", vs.SymbolKind.Class);
-		ensureSymbol(symbols, "myNumField", vs.SymbolKind.Field, "MyClass");
-		ensureSymbol(symbols, "myNumGetter", vs.SymbolKind.Property, "MyClass");
-		ensureSymbol(symbols, "myNumSetter", vs.SymbolKind.Property, "MyClass");
-		ensureSymbol(symbols, "myFutureString", vs.SymbolKind.Field, "MyClass");
-		ensureSymbol(symbols, "myHttpClient", vs.SymbolKind.Field, "MyClass");
-		ensureSymbol(symbols, "MyClass", vs.SymbolKind.Constructor, "MyClass");
-		ensureSymbol(symbols, "MyClass.myNamed", vs.SymbolKind.Constructor, "MyClass");
-		ensureSymbol(symbols, "myVoidReturningMethod", vs.SymbolKind.Method, "MyClass");
-		ensureSymbol(symbols, "myStringReturningMethod", vs.SymbolKind.Method, "MyClass");
-		ensureSymbol(symbols, "methodTakingString", vs.SymbolKind.Method, "MyClass");
-		ensureSymbol(symbols, "methodTakingFunction", vs.SymbolKind.Method, "MyClass");
-		ensureSymbol(symbols, "doSomeStuff", vs.SymbolKind.Function);
+		ensureDocumentSymbol(symbols, "MyClass", vs.SymbolKind.Class);
+		ensureDocumentSymbol(symbols, "myNumField", vs.SymbolKind.Field, "MyClass");
+		ensureDocumentSymbol(symbols, "myNumGetter", vs.SymbolKind.Property, "MyClass");
+		ensureDocumentSymbol(symbols, "myNumSetter", vs.SymbolKind.Property, "MyClass");
+		ensureDocumentSymbol(symbols, "myFutureString", vs.SymbolKind.Field, "MyClass");
+		ensureDocumentSymbol(symbols, "myHttpClient", vs.SymbolKind.Field, "MyClass");
+		ensureDocumentSymbol(symbols, "MyClass", vs.SymbolKind.Constructor, "MyClass");
+		ensureDocumentSymbol(symbols, "MyClass.myNamed", vs.SymbolKind.Constructor, "MyClass");
+		ensureDocumentSymbol(symbols, "myVoidReturningMethod", vs.SymbolKind.Method, "MyClass");
+		ensureDocumentSymbol(symbols, "myStringReturningMethod", vs.SymbolKind.Method, "MyClass");
+		ensureDocumentSymbol(symbols, "methodTakingString", vs.SymbolKind.Method, "MyClass");
+		ensureDocumentSymbol(symbols, "methodTakingFunction", vs.SymbolKind.Method, "MyClass");
+		ensureDocumentSymbol(symbols, "doSomeStuff", vs.SymbolKind.Function);
 		assert.equal(symbols.length, 13);
 	});
 });

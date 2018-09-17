@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, ensureSymbol, flutterHelloWorldMainFile, getDocumentSymbols } from "../../helpers";
+import { activate, ensureDocumentSymbol, flutterHelloWorldMainFile, getDocumentSymbols } from "../../helpers";
 
 describe("dart_document_symbol_provider", () => {
 
@@ -11,13 +11,13 @@ describe("dart_document_symbol_provider", () => {
 
 		assert.ok(symbols && symbols.length, "Didn't get any symbols");
 
-		ensureSymbol(symbols, "main", vs.SymbolKind.Function);
-		ensureSymbol(symbols, "MyApp", vs.SymbolKind.Class);
-		ensureSymbol(symbols, "build", vs.SymbolKind.Method, "MyApp");
-		ensureSymbol(symbols, "MyHomePage", vs.SymbolKind.Class);
-		ensureSymbol(symbols, "MyHomePage", vs.SymbolKind.Constructor, "MyHomePage");
-		ensureSymbol(symbols, "build", vs.SymbolKind.Method, "MyHomePage");
-		ensureSymbol(symbols, "myTopLevelFunction", vs.SymbolKind.Function);
+		ensureDocumentSymbol(symbols, "main", vs.SymbolKind.Function);
+		ensureDocumentSymbol(symbols, "MyApp", vs.SymbolKind.Class);
+		ensureDocumentSymbol(symbols, "build", vs.SymbolKind.Method, "MyApp");
+		ensureDocumentSymbol(symbols, "MyHomePage", vs.SymbolKind.Class);
+		ensureDocumentSymbol(symbols, "MyHomePage", vs.SymbolKind.Constructor, "MyHomePage");
+		ensureDocumentSymbol(symbols, "build", vs.SymbolKind.Method, "MyHomePage");
+		ensureDocumentSymbol(symbols, "myTopLevelFunction", vs.SymbolKind.Function);
 		assert.equal(symbols.length, 7);
 	});
 });
