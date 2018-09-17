@@ -4,15 +4,16 @@ import * as https from "https";
 import * as os from "os";
 import * as path from "path";
 import * as semver from "semver";
-import { commands, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
+import { commands, extensions, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { config } from "./config";
-import { forceWindowsDriveLetterToUppercase } from "./debug/utils";
+import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase } from "./debug/utils";
 import { referencesFlutterSdk } from "./sdk/utils";
 import { getExtensionLogPath, logError } from "./utils/log";
 
 export const extensionVersion = getExtensionVersion();
 export const vsCodeVersionConstraint = getVsCodeVersionConstraint();
 export const isDevExtension = checkIsDevExtension();
+export const hasFlutterExtension = checkHasFlutterExtension();
 export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "dart_code_flutter_create.dart";
 export const showLogAction = "Show Log";
 
@@ -187,6 +188,10 @@ export function versionIsAtLeast(inputVersion: string, requiredVersion: string):
 
 function checkIsDevExtension() {
 	return extensionVersion.endsWith("-dev");
+}
+
+function checkHasFlutterExtension() {
+	return extensions.getExtension(flutterExtensionIdentifier) !== undefined;
 }
 
 export function isStableSdk(sdkVersion?: string): boolean {

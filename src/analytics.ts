@@ -1,8 +1,8 @@
 import * as https from "https";
 import * as querystring from "querystring";
-import { Uri, env, version as codeVersion } from "vscode";
+import { env, Uri, version as codeVersion } from "vscode";
 import { config } from "./config";
-import { ProjectType, Sdks, extensionVersion, isDevExtension } from "./utils";
+import { extensionVersion, hasFlutterExtension, isDevExtension, ProjectType, Sdks } from "./utils";
 import { logInfo, logWarn } from "./utils/log";
 
 // Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.
@@ -113,6 +113,7 @@ export class Analytics {
 			cd11: config.showLintNames ? "On" : "Off",
 			cd12: "Removed",
 			cd13: this.flutterSdkVersion,
+			cd14: hasFlutterExtension ? "Installed" : "Not Installed",
 			cd2: process.platform,
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,
