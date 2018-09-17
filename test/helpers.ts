@@ -132,6 +132,7 @@ export async function getPackages() {
 }
 
 export async function closeAllOpenFiles(): Promise<void> {
+	log(`Closing all open files until there is no active editor...`);
 	while (vs.window.activeTextEditor) {
 		console.log(`Closing active editor ${vs.window.activeTextEditor.document.uri}...`);
 		await vs.commands.executeCommand("workbench.action.closeActiveEditor");
