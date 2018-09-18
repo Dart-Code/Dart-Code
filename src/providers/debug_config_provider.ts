@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { DebugSession } from "vscode-debugadapter";
 import { Analytics } from "../analytics";
-import { config } from "../config";
+import { config, vsCodeVersion } from "../config";
 import { DartDebugSession } from "../debug/dart_debug_impl";
 import { DartTestDebugSession } from "../debug/dart_test_debug_impl";
 import { FlutterDebugSession } from "../debug/flutter_debug_impl";
@@ -79,22 +79,30 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 			// If we still don't have an entry point, the user will have to provide it.
 			if (!allowProgramlessRun && !debugConfig.program) {
-				// Set type=null which causes launch.json to open.
-				debugConfig.type = undefined;
 				logWarn("No program was set and programlessRun is not allowed");
 				window.showInformationMessage("Set the 'program' value in your launch config (eg 'bin/main.dart') then launch again");
-				return debugConfig;
+				// TODO: Remove this once we only support Code v1.28.
+				if (vsCodeVersion.requiresEmptyDebugConfigWithNullTypeToOpenLaunchJson) {
+					// Set type=null which causes launch.json to open.
+					debugConfig.type = undefined;
+					return debugConfig;
+				}
+				return null; // null means open launch.json.
 			}
 		} else {
 			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
 			debugConfig.observatoryUri = await this.getObservatoryUri(debugConfig.observatoryUri);
 
 			if (!debugConfig.observatoryUri) {
-				// Set type=null which causes launch.json to open.
-				debugConfig.type = undefined;
 				logWarn("No Observatory URI/port was provided");
 				window.showInformationMessage("You must provide an Observatory URI/port to attach a debugger");
-				return debugConfig;
+				// TODO: Remove this once we only support Code v1.28.
+				if (vsCodeVersion.requiresEmptyDebugConfigWithNullTypeToOpenLaunchJson) {
+					// Set type=null which causes launch.json to open.
+					debugConfig.type = undefined;
+					return debugConfig;
+				}
+				return undefined; // undefined means silent (don't open launch.json).
 			}
 		}
 
@@ -142,10 +150,15 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (isFlutter && !isTest && !deviceId && this.deviceManager && debugConfig.deviceId !== "flutter-tester") {
 			// Fetch a list of emulators
 			if (!await this.deviceManager.promptForAndLaunchEmulator(true)) {
-				// Set type=null which causes launch.json to open.
-				debugConfig.type = undefined;
+				logWarn("Unable to launch due to no active device");
 				window.showInformationMessage("Cannot launch without an active device");
-				return debugConfig;
+				// TODO: Remove this once we only support Code v1.28.
+				if (vsCodeVersion.requiresEmptyDebugConfigWithNullTypeToOpenLaunchJson) {
+					// Set type=null which causes launch.json to open.
+					debugConfig.type = undefined;
+					return debugConfig;
+				}
+				return undefined; // undefined means silent (don't open launch.json).
 			}
 		}
 
