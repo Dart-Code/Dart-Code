@@ -180,6 +180,8 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 	}
 
+	// TODO: Remove this function (and the call to it) once the fix has rolled to Flutter beta.
+	// https://github.com/flutter/flutter-intellij/issues/2217
 	protected formatPathForPubRootDirectories(path: string | undefined): string | undefined {
 		return isWin
 			? path && `file:///${path.replace(/\\/g, "/")}`
@@ -195,6 +197,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			"ext.flutter.inspector.setPubRootDirectories",
 			{
 				arg0: this.formatPathForPubRootDirectories(this.cwd),
+				arg1: this.cwd,
 				// TODO: Is this OK???
 				isolateId: this.threadManager.threads[0].ref.id,
 			},
