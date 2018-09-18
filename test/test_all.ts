@@ -70,7 +70,7 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 		.filter((p) => p && p.toLowerCase().indexOf("dart") !== -1 || p.toLowerCase().indexOf("flutter") !== -1)
 		.forEach((p) => console.log(`${yellow("##")}    ${p}`));
 	console.log(yellow("############################################################"));
-	const cwd = process.cwd();
+	const cwd = forceWindowsDriveLetterToLowercase(process.cwd());
 	const env = Object.create(process.env);
 	// For some reason, updating PATH here doesn't get through to Code
 	// even though other env vars do! 😢
@@ -161,6 +161,12 @@ async function runAllTests(): Promise<void> {
 		exitCode = 1;
 		console.error(e);
 	}
+}
+
+function forceWindowsDriveLetterToLowercase(p: string): string {
+	if (p && /^win/.test(process.platform) && path.isAbsolute(p) && p.charAt(0) === p.charAt(0).toUpperCase())
+		p = p.substr(0, 1).toLowerCase() + p.substr(1);
+	return p;
 }
 
 runAllTests().then(() => process.exit(exitCode));
