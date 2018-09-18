@@ -70,6 +70,8 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 		.filter((p) => p && p.toLowerCase().indexOf("dart") !== -1 || p.toLowerCase().indexOf("flutter") !== -1)
 		.forEach((p) => console.log(`${yellow("##")}    ${p}`));
 	console.log(yellow("############################################################"));
+	// HACK: Workaround for a VS Code bug - requires lowercase drive letters passed as launch args:
+	// https://github.com/Microsoft/vscode/issues/58388
 	const cwd = forceWindowsDriveLetterToLowercase(process.cwd());
 	const env = Object.create(process.env);
 	// For some reason, updating PATH here doesn't get through to Code
