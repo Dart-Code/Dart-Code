@@ -133,10 +133,14 @@ export async function getPackages() {
 
 export async function closeAllOpenFiles(): Promise<void> {
 	log(`Closing all open files until there is no active editor...`);
-	while (vs.window.activeTextEditor) {
+	// TODO: Remove the scheme=file check bsaed on response to https://github.com/Microsoft/vscode/issues/58865
+	while (vs.window.activeTextEditor && vs.window.activeTextEditor.document.uri.scheme === "file") {
 		console.log(`Closing active editor ${vs.window.activeTextEditor.document.uri}...`);
 		await vs.commands.executeCommand("workbench.action.closeActiveEditor");
 		await delay(5);
+	}
+	if (vs.window.activeTextEditor) {
+		console.log(`Stopped closing editors with ${vs.window.activeTextEditor.document.uri} active`);
 	}
 }
 
