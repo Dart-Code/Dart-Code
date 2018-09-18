@@ -134,6 +134,7 @@ export async function getPackages() {
 export async function closeAllOpenFiles(): Promise<void> {
 	log(`Closing all open editors...`);
 	await vs.commands.executeCommand("workbench.action.closeAllEditors");
+	await delay(50);
 }
 
 export async function closeFile(file: vs.Uri): Promise<void> {
