@@ -1,9 +1,8 @@
 import * as _ from "lodash";
-import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { LogCategory } from "../debug/utils";
-import { fsPath } from "../utils";
+import { createFolderForFile, fsPath } from "../utils";
 import { logTo, userSelectableLogCategories } from "../utils/log";
 
 export const STOP_LOGGING = "Stop Logging";
@@ -11,34 +10,16 @@ export const STOP_LOGGING = "Stop Logging";
 export class LoggingCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor() {
+	constructor(private extensionLogPath: string) {
 		this.disposables.push(
 			vs.commands.registerCommand("dart.startLogging", this.startLogging, this),
 		);
 	}
 
-	private lastUsedLogFolder?: string;
 	private async startLogging(): Promise<void> {
-		const defaultFilename = this.getDefaultFilename();
-		// Use last folder or inside first workspace folder.
-		const defaultFolder = this.lastUsedLogFolder || (
-			vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length
-				? fsPath(vs.workspace.workspaceFolders[0].uri)
-				: os.homedir()
-		);
-
-		const logUri = await vs.window.showSaveDialog({
-			defaultUri: vs.Uri.file(path.join(defaultFolder, defaultFilename)),
-			filters: {
-				"Log Files": ["txt", "log"],
-			},
-			saveLabel: "Start Logging",
-		});
-
-		if (!logUri)
-			return;
-
-		this.lastUsedLogFolder = path.dirname(fsPath(logUri));
+		const logFilename = path.join(this.extensionLogPath, this.generateFilename());
+		const logUri = vs.Uri.file(logFilename);
+		createFolderForFile(logFilename);
 
 		const selectedLogCategories = await vs.window.showQuickPick(
 			Object.keys(userSelectableLogCategories).map((k) => ({
@@ -60,7 +41,7 @@ export class LoggingCommands implements vs.Disposable {
 		this.disposables.push(logger);
 
 		await vs.window.showInformationMessage(
-			`Dart and Flutter logs are being written to ${fsPath(logUri)}`,
+			`Dart and Flutter logs are being captured. Reproduce your issue then click ${STOP_LOGGING}.`,
 			STOP_LOGGING,
 		);
 
@@ -70,10 +51,10 @@ export class LoggingCommands implements vs.Disposable {
 		await vs.window.showTextDocument(doc);
 	}
 
-	private getDefaultFilename(): string {
+	private generateFilename(): string {
 		const pad = (s: string | number) => `0${s.toString()}`.slice(-2);
 		const now = new Date();
-		const formattedDate = `${now.getFullYear()}-${pad(now.getMonth())}-${pad(now.getDay())} ${pad(now.getHours())}-${pad(now.getMinutes())}`;
+		const formattedDate = `${now.getFullYear()}-${pad(now.getMonth())}-${pad(now.getDay())} ${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
 		return `Dart-Code-Log-${formattedDate}.txt`;
 	}
 
