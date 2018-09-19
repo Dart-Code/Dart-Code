@@ -49,7 +49,7 @@ import { SourceCodeActionProvider } from "./providers/source_code_action_provide
 import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForSdkUpdates } from "./sdk/update_check";
-import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingSdks } from "./sdk/utils";
+import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingSdks, isDartSdkFromFlutter } from "./sdk/utils";
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { fsPath } from "./utils";
@@ -120,7 +120,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	if (dartSdkVersion) {
 		analytics.sdkVersion = dartSdkVersion;
 		checkForSdkUpdates(sdks, dartSdkVersion);
-		context.subscriptions.push(new StatusBarVersionTracker(sdks.projectType, dartSdkVersion, flutterSdkVersion));
+		context.subscriptions.push(new StatusBarVersionTracker(sdks.projectType, dartSdkVersion, flutterSdkVersion, isDartSdkFromFlutter(sdks.dart)));
 	}
 
 	// Fire up the analyzer process.

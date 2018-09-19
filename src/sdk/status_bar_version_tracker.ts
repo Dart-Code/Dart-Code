@@ -1,26 +1,30 @@
 import * as vs from "vscode";
 import { config } from "../config";
-import { ProjectType, isAnalyzable } from "../utils";
+import { isAnalyzable, ProjectType } from "../utils";
 
 export class StatusBarVersionTracker implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
 
-	constructor(projectType: ProjectType, dartSdkVersion: string, flutterSdkVersion: string) {
-		if (projectType === ProjectType.Flutter && flutterSdkVersion) {
-			this.addStatusBarItem(
-				"Flutter: " + (flutterSdkVersion.length > 20 ? flutterSdkVersion.substr(0, 17) + "…" : flutterSdkVersion),
-				`Flutter SDK: ${flutterSdkVersion}`,
-				config.flutterSdkPaths && config.flutterSdkPaths.length > 0 ? "dart.changeFlutterSdk" : null,
-			);
-		}
+	constructor(projectType: ProjectType, dartSdkVersion: string, flutterSdkVersion: string, isDartSdkFromFlutter: boolean) {
+		// Which switcher we show is based on whether we're in a Flutter project or not.
+		const switchSdkCommand = projectType === ProjectType.Flutter
+			? (config.flutterSdkPaths && config.flutterSdkPaths.length > 0 ? "dart.changeFlutterSdk" : null)
+			: (config.sdkPaths && config.sdkPaths.length > 0 ? "dart.changeSdk" : null);
 
-		// For now, don't show Dart versions if we're a flutter project
-		// https://github.com/flutter/flutter/issues/15348
-		if (dartSdkVersion && projectType !== ProjectType.Flutter) {
+		// Render an approprite label for what we're calling this SDK.
+		const label = projectType === ProjectType.Flutter
+			? "Flutter"
+			: (isDartSdkFromFlutter ? "Dart from Flutter" : "Dart");
+
+		const versionLabel = (projectType === ProjectType.Flutter || isDartSdkFromFlutter)
+			? flutterSdkVersion
+			: dartSdkVersion;
+
+		if (versionLabel) {
 			this.addStatusBarItem(
-				"Dart: " + (dartSdkVersion.length > 20 ? dartSdkVersion.substr(0, 17) + "…" : dartSdkVersion),
-				`Dart SDK: ${dartSdkVersion}`,
-				config.sdkPaths && config.sdkPaths.length > 0 ? "dart.changeSdk" : null,
+				`${label}: ` + (versionLabel.length > 20 ? versionLabel.substr(0, 17) + "…" : versionLabel),
+				`${label} SDK: ${versionLabel}`,
+				switchSdkCommand,
 			);
 		}
 	}
