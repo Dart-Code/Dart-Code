@@ -3,11 +3,13 @@ import * as _ from "lodash";
 const darkIconUrlFormat = "https://storage.googleapis.com/material-icons/external-assets/v4/icons/svg/ic_$1_white_36px.svg";
 const lightIconUrlFormat = "https://storage.googleapis.com/material-icons/external-assets/v4/icons/svg/ic_$1_black_36px.svg";
 const iconRegex = new RegExp(
-	_.escapeRegExp('<p><i class="material-icons md-36">')
+	`(?:${_.escapeRegExp("<p>")})?`
+	+ _.escapeRegExp('<i class="material-icons md-36">')
 	+ "([\\w\\s_]+)"
 	+ _.escapeRegExp('</i> &#x2014; material icon named "')
 	+ "([\\w\\s_]+)"
-	+ _.escapeRegExp('".</p>'),
+	+ _.escapeRegExp('".')
+	+ `(?:${_.escapeRegExp("</p>")})?`,
 	"gi",
 );
 
