@@ -40,6 +40,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 	}
 
 	public refresh(): void {
+		DartPackagesProvider.showTree();
 		this.onDidChangeTreeDataEmitter.fire();
 	}
 
