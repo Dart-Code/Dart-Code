@@ -40,7 +40,7 @@ import { DartRenameProvider } from "./providers/dart_rename_provider";
 import { DartSignatureHelpProvider } from "./providers/dart_signature_help_provider";
 import { DartTypeFormattingEditProvider } from "./providers/dart_type_formatting_edit_provider";
 import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
-import { DebugConfigProvider } from "./providers/debug_config_provider";
+import { DebugConfigProvider, HAS_LAST_DEBUG_CONFIG } from "./providers/debug_config_provider";
 import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
 import { LegacyDartWorkspaceSymbolProvider } from "./providers/legacy_dart_workspace_symbol_provider";
 import { RefactorCodeActionProvider } from "./providers/refactor_code_action_provider";
@@ -496,6 +496,7 @@ function getSettingsThatRequireRestart() {
 export async function deactivate(isRestart: boolean = false): Promise<void> {
 	setCommandVisiblity(false, null);
 	if (!isRestart) {
+		vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, false);
 		await analytics.logExtensionShutdown();
 		if (extensionLogger)
 			await extensionLogger.dispose();

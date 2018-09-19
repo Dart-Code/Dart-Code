@@ -5,6 +5,7 @@ import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { DebugSession } from "vscode-debugadapter";
 import { Analytics } from "../analytics";
+import { LastDebugSession } from "../commands/debug";
 import { config, vsCodeVersion } from "../config";
 import { DartDebugSession } from "../debug/dart_debug_impl";
 import { DartTestDebugSession } from "../debug/dart_test_debug_impl";
@@ -19,6 +20,7 @@ import { log, logWarn } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
 export const TRACK_WIDGET_CREATION_ENABLED = "dart-code:trackWidgetCreationEnabled";
+export const HAS_LAST_DEBUG_CONFIG = "dart-code:hasLastDebugConfig";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private sdks: Sdks;
@@ -186,6 +188,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// TODO: Remove this context (and associated condition on the command) when it is default, inc. for beta channel.
 		vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, debugConfig.flutterTrackWidgetCreation);
+
+		// Stash the config to support the "rerun last test(s)" command.
+		LastDebugSession.workspaceFolder = folder;
+		LastDebugSession.debugConfig = Object.assign({}, debugConfig);
+		vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, true);
 
 		return debugConfig;
 	}

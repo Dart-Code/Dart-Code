@@ -19,6 +19,11 @@ let paintBaselinesEnabled = false;
 let widgetInspectorEnabled = false;
 const debugSessions: DartDebugSessionInformation[] = [];
 
+export class LastDebugSession {
+	public static workspaceFolder: vs.WorkspaceFolder = null;
+	public static debugConfig: vs.DebugConfiguration = null;
+}
+
 export class DebugCommands {
 	private analytics: Analytics;
 
@@ -228,6 +233,9 @@ export class DebugCommands {
 					type: "dart",
 				});
 			}
+		}));
+		context.subscriptions.push(vs.commands.registerCommand("dart.rerunLastDebugSession", () => {
+			vs.debug.startDebugging(LastDebugSession.workspaceFolder, LastDebugSession.debugConfig);
 		}));
 
 		// Flutter toggle platform.
