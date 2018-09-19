@@ -9,6 +9,7 @@ export class PackageMap {
 
 	private map: { [name: string]: string } = {};
 	public readonly localPackageName: string | undefined;
+	public get packages(): { [name: string]: string } { return Object.assign({}, this.map); }
 
 	constructor(file?: string) {
 		if (!file) return;

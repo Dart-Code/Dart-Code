@@ -73,7 +73,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 				DartPackagesProvider.showTree();
 				const packagesPath = PackageMap.findPackagesFile(path.join(this.workspaceRoot, ".packages"));
 				if (packagesPath && fs.existsSync(packagesPath)) {
-					resolve(this.getDepsInPackages(packagesPath));
+					resolve(this.getDepsInPackages(new PackageMap(packagesPath)));
 				} else {
 					DartPackagesProvider.hideTree();
 					return resolve([]);
@@ -86,45 +86,20 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 		});
 	}
 
-	private getDepsInPackages(packagesPath: string): PackageDep[] {
-		const packageRoot = path.dirname(packagesPath);
-		// yaml:file:///Users/foo/.pub-cache/hosted/pub.dartlang.org/yaml-2.1.12/lib/
+	private getDepsInPackages(map: PackageMap): PackageDep[] {
+		const packages = map.packages;
 
-		if (fs.existsSync(packagesPath)) {
-			let lines = fs.readFileSync(packagesPath).toString().split("\n");
-			lines = lines.filter((l) => !l.startsWith("#") && l.trim().length > 0 && !l.endsWith(":lib/"));
-			lines.sort();
+		const packageNames = Object.keys(packages).sort();
+		const deps = packageNames.map((packageName) => {
+			const path = packages[packageName];
+			if (this.workspaceRoot !== path) {
+				return new PackageDep(`${packageName}`, vs.Uri.file(path), vs.TreeItemCollapsibleState.Collapsed);
+			}
+		}).filter((d) => d);
+		// Hide the tree if we had no dependencies to show.
+		DartPackagesProvider.setTreeVisible(!!deps && !!deps.length);
+		return deps;
 
-			const deps = lines.map((line) => {
-				const pos = line.indexOf(":");
-				if (pos === -1) return new PackageDep(line, undefined, vs.TreeItemCollapsibleState.None);
-
-				let packageName = line.substring(0, pos);
-				let p = line.substring(pos + 1);
-
-				if (p.endsWith("/"))
-					p = p.substring(0, p.length - 1);
-
-				if (p.endsWith("/lib"))
-					p = p.substring(0, p.length - 4);
-
-				if (!p.startsWith("file:"))
-					p = path.join(packageRoot, p);
-
-				if (this.workspaceRoot !== p) {
-					packageName = line.substring(0, line.indexOf(":"));
-					p = fsPath(vs.Uri.parse(p));
-					return new PackageDep(`${packageName}`, vs.Uri.file(p), vs.TreeItemCollapsibleState.Collapsed);
-				}
-			}).filter((d) => d);
-			// Hide the tree if we had no dependencies to show.
-			DartPackagesProvider.setTreeVisible(!!deps && !!deps.length);
-			return deps;
-		} else {
-			// Hide the tree in the case of no packages file.
-			DartPackagesProvider.hideTree();
-			return [];
-		}
 	}
 
 	private static setTreeVisible(visible: boolean) {
