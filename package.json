@@ -116,6 +116,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.rerunLastDebugSession",
+				"title": "Rerun Last Debug Session",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.startDebugging",
 				"title": "Start Debugging",
 				"category": "Dart"
@@ -295,6 +300,12 @@
 				"command": "flutter.hotRestart",
 				"when": "dart-code:flutterProjectLoaded && inDebugMode",
 				"key": "ctrl+f5"
+			},
+			{
+				"command": "dart.rerunLastDebugSession",
+				"when": "dart-code:dartProjectLoaded && dart-code:hasLastDebugConfig && !inDebugMode",
+				"key": "cmd+shift+f5",
+				"win": "ctrl+shift+f5"
 			}
 		],
 		"menus": {
@@ -317,6 +328,10 @@
 				{
 					"command": "dart.runAllTestsWithoutDebugging",
 					"when": "dart-code:dartProjectLoaded && !inDebugMode"
+				},
+				{
+					"command": "dart.rerunLastDebugSession",
+					"when": "dart-code:dartProjectLoaded && dart-code:hasLastDebugConfig && !inDebugMode"
 				},
 				{
 					"command": "dart.startWithoutDebugging",
