@@ -59,7 +59,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		});
 	}
 
-	public setSelectedNodes(item: vs.TreeItem): void {
+	public setSelectedNode(item: vs.TreeItem): void {
 		this.currentSelectedNode = item;
 	}
 

@@ -325,14 +325,21 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(new OpenInOtherEditorCommands(sdks));
 	context.subscriptions.push(new TestCommands());
 
-	// Register our view providers.
+	// Packages tree.
 	const dartPackagesProvider = new DartPackagesProvider();
 	dartPackagesProvider.setWorkspaces(util.getDartWorkspaceFolders());
 	context.subscriptions.push(dartPackagesProvider);
-	context.subscriptions.push(vs.window.registerTreeDataProvider("dartPackages", dartPackagesProvider));
+	const packagesTree = vs.window.createTreeView("dartPackages", { treeDataProvider: dartPackagesProvider });
 	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => {
 		dartPackagesProvider.setWorkspaces(util.getDartWorkspaceFolders());
 	}));
+	context.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => {
+		if (packagesTree.visible && e && e.document && !e.document.isUntitled && e.document.uri && e.document.uri.scheme === "file") {
+			dartPackagesProvider.highlightFile(packagesTree, e.document.uri);
+		}
+	}));
+
+	// Test tree.
 	const testTreeProvider = new TestResultsProvider();
 	const testTreeView = vs.window.createTreeView("dartTestTree", { treeDataProvider: testTreeProvider });
 	context.subscriptions.push(
@@ -347,7 +354,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 				testTreeView.reveal(node);
 		}),
 		testTreeView.onDidChangeSelection((e) => {
-			testTreeProvider.setSelectedNodes(e.selection && e.selection.length === 1 ? e.selection[0] : undefined);
+			testTreeProvider.setSelectedNode(e.selection && e.selection.length === 1 ? e.selection[0] : undefined);
 		}),
 	);
 
