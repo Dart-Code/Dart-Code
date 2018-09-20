@@ -2,30 +2,16 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { isWin } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
 import { logError } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, watchPromise } from "../../helpers";
-
-// When this issue is fixed and makes beta, we can delete this cool and the code
-// that is added because of it.
-// https://github.com/flutter/flutter/issues/17838
-const disableDebuggingToAvoidBreakingOnCaughtException = true;
+import { activate, defer, delay, ext, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, watchPromise } from "../../helpers";
 
 describe("flutter run debugger (launch)", () => {
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 	beforeEach("set timeout", function () {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
-	});
-
-	beforeEach("skip if no test device", function () {
-		if (extApi.daemonCapabilities.flutterTesterMayBeFlaky)
-			this.skip();
-		// Skip on Windows due to https://github.com/flutter/flutter/issues/17833
-		if (isWin)
-			this.skip();
 	});
 
 	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
@@ -172,8 +158,6 @@ describe("flutter run debugger (launch)", () => {
 	it("runs projects in sub-folders when the open file is in a project sub-folder", async () => {
 		await openFile(flutterHelloWorldExampleSubFolderMainFile);
 		const config = await startDebugger();
-		if (disableDebuggingToAvoidBreakingOnCaughtException)
-			config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -199,12 +183,7 @@ describe("flutter run debugger (launch)", () => {
 				? ""
 				: ` after ${numReloads} reload${numReloads === 1 ? "" : "s"}`;
 
-		it("stops at a breakpoint" + reloadDescription, async function () { // tslint:disable-line:only-arrow-functions
-			if (numReloads > 0) {
-				if (extApi.daemonCapabilities.debuggerIncorrectlyPausesOnHandledExceptions)
-					this.skip();
-			}
-
+		it("stops at a breakpoint" + reloadDescription, async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(flutterHelloWorldMainFile);
 			const expectedLocation = {
@@ -218,8 +197,6 @@ describe("flutter run debugger (launch)", () => {
 			assert.equal(frames[0].source.path, expectedLocation.path);
 			assert.equal(frames[0].source.name, path.relative(fsPath(flutterHelloWorldFolder), expectedLocation.path));
 
-			// Fails due to
-			// https://github.com/flutter/flutter/issues/17838
 			await watchPromise("stops_at_a_breakpoint->resume", dc.resume());
 
 			// Reload and ensure we hit the breakpoint on each one.
@@ -308,9 +285,7 @@ describe("flutter run debugger (launch)", () => {
 	});
 
 	// Skipped due to https://github.com/flutter/flutter/issues/17007.
-	it.skip("stops on exception", async function () {
-		if (extApi.daemonCapabilities.debuggerIncorrectlyPausesOnHandledExceptions)
-			this.skip();
+	it.skip("stops on exception", async () => {
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
 		await Promise.all([
@@ -324,9 +299,7 @@ describe("flutter run debugger (launch)", () => {
 	});
 
 	// Skipped due to https://github.com/flutter/flutter/issues/17007.
-	it.skip("provides exception details when stopped on exception", async function () {
-		if (extApi.daemonCapabilities.debuggerIncorrectlyPausesOnHandledExceptions)
-			this.skip();
+	it.skip("provides exception details when stopped on exception", async () => {
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
 		await Promise.all([
@@ -342,9 +315,7 @@ describe("flutter run debugger (launch)", () => {
 		ensureVariable(variables, "$e.message", "message", `"(TODO WHEN UNSKIPPING)"`);
 	});
 
-	it("logs expected text (and does not stop) at a logpoint", async function () {
-		if (extApi.daemonCapabilities.debuggerIncorrectlyPausesOnHandledExceptions)
-			this.skip();
+	it("logs expected text (and does not stop) at a logpoint", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await watchPromise("logs_expected_text->startDebugger", startDebugger(flutterHelloWorldMainFile));
 		await Promise.all([
@@ -366,11 +337,9 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	});
 
-	it("writes failure output", async function () {
+	it("writes failure output", async () => {
 		// This test really wants to check stderr, but since the widgets library catches the exception is
 		// just comes via stdout.
-		if (extApi.daemonCapabilities.debuggerIncorrectlyPausesOnHandledExceptions)
-			this.skip();
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
 		await Promise.all([
