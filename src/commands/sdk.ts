@@ -174,8 +174,20 @@ export class SdkCommands {
 
 		// Hook saving pubspec to run pub.get.
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
-			if (config.for(td.uri).runPubGetOnPubspecChanges && path.basename(fsPath(td.uri)).toLowerCase() === "pubspec.yaml")
-				vs.commands.executeCommand("dart.getPackages", td.uri);
+			const conf = config.for(td.uri);
+
+			if (path.basename(fsPath(td.uri)).toLowerCase() !== "pubspec.yaml")
+				return;
+
+			if (!conf.runPubGetOnPubspecChanges)
+				return;
+
+			// If we're in Fuchsia, we don't want to `pub get` by default but we do want to allow
+			// it to be overridden, so only read the setting if it's been declared explicitly.
+			if (sdks.projectType === ProjectType.Fuchsia && !conf.runPubGetOnPubspecChangesIsConfiguredExplicitly)
+				return;
+
+			vs.commands.executeCommand("dart.getPackages", td.uri);
 		}));
 	}
 
