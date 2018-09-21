@@ -145,7 +145,10 @@ export function isWithinWorkspace(file: string) {
 }
 
 export function isTestFile(file: string): boolean {
-	return isInsideFolderNamed(file, "test");
+	// If we're either in a top-level test folder or the file ends with _test.dart then
+	// assume it's a test. We used to check for /test/ at any level, but sometimes people have
+	// non-test files named test (https://github.com/Dart-Code/Dart-Code/issues/1165).
+	return isInsideFolderNamed(file, "test") || file.toLowerCase().endsWith("_test.dart");
 }
 
 export function supportsPubRunTest(folder: string, file: string): boolean {
@@ -167,10 +170,7 @@ export function isInsideFolderNamed(file: string, folderName: string): boolean {
 
 	const relPath = path.relative(fsPath(ws.uri), file).toLowerCase();
 
-	// If we're either in a top-level test folder or the file ends with _test.dart then
-	// assume it's a test. We used to check for /test/ at any level, but sometimes people have
-	// non-test files named test (https://github.com/Dart-Code/Dart-Code/issues/1165).
-	return relPath.startsWith(`${folderName}${path.sep}`) || file.toLowerCase().endsWith("_test.dart");
+	return relPath.startsWith(`${folderName}${path.sep}`);
 }
 
 function getExtensionVersion(): string {
