@@ -134,7 +134,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Disable Flutter mode for attach.
 		// TODO: Update FlutterDebugSession to understand attach mode, and remove this limitation.
 		const isFlutter = !isAttachRequest && this.sdks.projectType !== ProjectType.Dart
-			&& debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string);
+			&& debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string)
+			&& !isInsideFolderNamed(debugConfig.program, "bin") && !isInsideFolderNamed(debugConfig.program, "tool");
 		log(`Detected launch project as ${isFlutter ? "Flutter" : "Dart"}`);
 		const isTest = isFullTestRun || (debugConfig.program && isTestFile(debugConfig.program as string));
 		if (isTest)
