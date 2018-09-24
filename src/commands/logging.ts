@@ -16,7 +16,7 @@ export class LoggingCommands implements vs.Disposable {
 		);
 	}
 
-	private async startLogging(): Promise<void> {
+	private async startLogging(): Promise<string> {
 		const logFilename = path.join(this.extensionLogPath, this.generateFilename());
 		const logUri = vs.Uri.file(logFilename);
 		createFolderForFile(logFilename);
@@ -49,6 +49,8 @@ export class LoggingCommands implements vs.Disposable {
 
 		const doc = await vs.workspace.openTextDocument(logUri);
 		await vs.window.showTextDocument(doc);
+
+		return logFilename;
 	}
 
 	private generateFilename(): string {
