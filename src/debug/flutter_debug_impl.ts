@@ -38,7 +38,7 @@ export class FlutterDebugSession extends DartDebugSession {
 	protected async attachRequest(response: DebugProtocol.AttachResponse, args: any): Promise<void> {
 		// For flutter attach, we actually do the same thing as launch - we run a flutter process
 		// (flutter attach instead of flutter run).
-		this.observatoryUriIsProbablyReconnectable = true;
+		// this.observatoryUriIsProbablyReconnectable = true;
 		this.launchRequest(response, args);
 	}
 
