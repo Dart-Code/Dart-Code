@@ -81,17 +81,24 @@ export class FlutterDebugSession extends DartDebugSession {
 		// Set up subscriptions.
 		this.flutter.registerForDaemonConnect((n) => this.additionalPidsToTerminate.push(n.pid));
 		this.flutter.registerForAppStart((n) => this.currentRunningAppId = n.appId);
-		this.flutter.registerForAppDebugPort((n) => { this.observatoryUri = n.wsUri; });
+		this.flutter.registerForAppDebugPort((n) => {
+			this.observatoryUri = n.wsUri;
+			this.connectToObservatoryIfReady();
+		});
 		this.flutter.registerForAppStarted((n) => {
 			this.appHasStarted = true;
-			if (!args.noDebug && this.observatoryUri)
-				this.initObservatory(this.observatoryUri);
+			this.connectToObservatoryIfReady();
 		});
 		this.flutter.registerForAppStop((n) => { this.currentRunningAppId = undefined; this.flutter.dispose(); });
 		this.flutter.registerForAppProgress((e) => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished })));
 		this.flutter.registerForError((err) => this.sendEvent(new OutputEvent(err, "stderr")));
 
 		return this.flutter.process;
+	}
+
+	private connectToObservatoryIfReady() {
+		if (!this.noDebug && this.observatoryUri && this.appHasStarted && !this.observatory)
+			this.initObservatory(this.observatoryUri);
 	}
 
 	protected async terminateRequest(
