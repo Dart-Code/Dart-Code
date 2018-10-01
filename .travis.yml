@@ -63,7 +63,6 @@ before_install:
   - unzip dart-sdk.zip > /dev/null
   - git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git
   - export FLUTTER_ROOT=`pwd`/flutter
-  - export DART_SDK_PATHS=`pwd`/dart-sdk/bin:`pwd`/flutter/bin
   - echo Configuring Dart and Flutter...
   - flutter/bin/flutter config --no-analytics
   - flutter/bin/flutter update-packages

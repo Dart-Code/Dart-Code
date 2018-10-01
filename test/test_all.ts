@@ -140,25 +140,26 @@ async function runAllTests(): Promise<void> {
 	}
 
 	const codeVersion = process.env.ONLY_RUN_CODE_VERSION === "DEV" ? "insiders" : "*";
-	const sdkPath = process.env.DART_SDK_PATHS || process.env.PATH;
+	const dartSdkPath = process.env.DART_PATH || process.env.PATH;
+	const flutterSdkPath = process.env.FLUTTER_PATH || process.env.PATH;
 
 	const flutterRoot = process.env.FLUTTER_ROOT;
 	const totalRuns = 6;
 	let runNumber = 1;
 	try {
-		await runTests("dart_only", "hello_world", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("multi_root", "projects.code-workspace", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("multi_project_folder", "", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("not_activated/flutter_create", "empty", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("dart_only", "hello_world", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("multi_root", "projects.code-workspace", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("multi_project_folder", "", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("not_activated/flutter_create", "empty", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		if (flutterRoot) {
-			await runTests("flutter_repository", flutterRoot, sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+			await runTests("flutter_repository", flutterRoot, flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		} else {
 			console.error("FLUTTER_ROOT NOT SET, SKIPPING FLUTTER REPO TESTS");
 			exitCode = 1;
 		}
 		// This one is run last because it's the most fragile, and can bring down the following tests if it hangs in a
 		// way that doesn't get caught by the test timeout properly.
-		await runTests("flutter_only", "flutter_hello_world", sdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("flutter_only", "flutter_hello_world", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 	} catch (e) {
 		exitCode = 1;
 		console.error(e);

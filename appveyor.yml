@@ -49,7 +49,6 @@ install:
   - ps: 7z.exe x dart.zip | out-null
   - git clone -b %FLUTTER_BRANCH% https://github.com/flutter/flutter.git
   - ps: $env:FLUTTER_ROOT = "$pwd\flutter"
-  - ps: $env:DART_SDK_PATHS = "$pwd\dart-sdk\bin;$pwd\flutter\bin"
   - echo Configuring Dart and Flutter...
   - flutter\bin\flutter config --no-analytics
   - flutter\bin\flutter update-packages
