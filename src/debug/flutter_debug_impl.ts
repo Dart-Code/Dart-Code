@@ -85,7 +85,6 @@ export class FlutterDebugSession extends DartDebugSession {
 			}
 		}
 
-
 		if (args.args) {
 			appArgs = appArgs.concat(args.args);
 		}
