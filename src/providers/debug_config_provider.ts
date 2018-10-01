@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { DebugSession } from "vscode-debugadapter";
 import { Analytics } from "../analytics";
-import { LastDebugSession, mostRecentAttachedProbablyReusableObservatoryUri } from "../commands/debug";
+import { LastDebugSession } from "../commands/debug";
 import { config, vsCodeVersion } from "../config";
 import { DartDebugSession } from "../debug/dart_debug_impl";
 import { DartTestDebugSession } from "../debug/dart_test_debug_impl";
@@ -143,7 +143,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (isAttachRequest) {
 			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
 			if (!isFlutter) { // TEMP Condition because there's no point asking yet as the user doesn't know how to get this..
-				debugConfig.observatoryUri = await this.getObservatoryUri(debugConfig.observatoryUri, mostRecentAttachedProbablyReusableObservatoryUri);
+				debugConfig.observatoryUri = await this.getObservatoryUri(debugConfig.observatoryUri/*, mostRecentAttachedProbablyReusableObservatoryUri*/);
 			}
 
 			if (!debugConfig.observatoryUri && !isFlutter) {
