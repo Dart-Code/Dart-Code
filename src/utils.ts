@@ -100,10 +100,8 @@ export function toRangeOnLine(location: Location): Range {
 }
 
 export function getSdkVersion(sdkRoot?: string): string | undefined {
-	if (!sdkRoot)
-		return undefined;
 	const versionFile = path.join(sdkRoot, "version");
-	if (!fs.existsSync(versionFile))
+	if (!sdkRoot || !fs.existsSync(versionFile))
 		return undefined;
 	try {
 		return fs
