@@ -7,7 +7,7 @@ import { fsPath } from "../../../src/utils";
 import { logError } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { spawnFlutterProcess } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterHelloWorldExampleSubFolder, flutterHelloWorldFolder, flutterHelloWorldMainFile, getAttachConfiguration, getLaunchConfiguration, watchPromise } from "../../helpers";
+import { activate, defer, delay, ext, extApi, flutterHelloWorldExampleSubFolder, flutterHelloWorldFolder, flutterHelloWorldMainFile, getAttachConfiguration, watchPromise } from "../../helpers";
 
 describe("flutter run debugger (attach)", () => {
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
@@ -47,7 +47,7 @@ describe("flutter run debugger (attach)", () => {
 	}
 
 	it("attaches to a Flutter application and remains active until told to detach", async () => {
-		const process = spawnFlutterProcess(await getLaunchConfiguration(flutterHelloWorldMainFile));
+		const process = await spawnFlutterProcess(flutterHelloWorldMainFile);
 		const observatoryUri = await process.observatoryUri;
 		const config = await attachDebugger(observatoryUri);
 
@@ -67,7 +67,7 @@ describe("flutter run debugger (attach)", () => {
 	});
 
 	it("detaches without terminating the app", async () => {
-		const process = spawnFlutterProcess(await getLaunchConfiguration(flutterHelloWorldMainFile));
+		const process = await spawnFlutterProcess(flutterHelloWorldMainFile);
 		const observatoryUri = await process.observatoryUri;
 		const config = await attachDebugger(observatoryUri);
 

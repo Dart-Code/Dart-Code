@@ -1,12 +1,12 @@
 import * as assert from "assert";
 import { ChildProcess } from "child_process";
-import { DebugConfiguration } from "vscode";
+import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { ObservatoryConnection } from "../src/debug/dart_debug_protocol";
 import { LogCategory, LogSeverity, safeSpawn } from "../src/debug/utils";
 import { log } from "../src/utils/log";
 import { DartDebugClient } from "./dart_debug_client";
-import { defer } from "./helpers";
+import { defer, getLaunchConfiguration } from "./helpers";
 
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {
 	assert.ok(variables && variables.length, "No variables given to search");
@@ -85,14 +85,15 @@ export function spawnDartProcessPaused(config: DebugConfiguration): DartProcess 
 	return dartProcess;
 }
 
-export function spawnFlutterProcess(config: DebugConfiguration): DartProcess {
+export async function spawnFlutterProcess(script: string | Uri): Promise<DartProcess> {
+	const config = await getLaunchConfiguration(script, { deviceId: "flutter-tester" });
 	const process = safeSpawn(
 		config.cwd,
 		config.flutterPath,
 		[
 			"run",
 			"-d",
-			"flutter-tester",
+			config.deviceId,
 		],
 	);
 	process.stdout.on("data", (data) => log(`SPROC: ${data}`, LogSeverity.Info, LogCategory.CI));
