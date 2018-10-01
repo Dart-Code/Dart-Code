@@ -256,12 +256,19 @@ export class DartDebugSession extends DebugSession {
 
 					const isolates = await Promise.all(vm.isolates.map((isolateRef) => this.observatory.getIsolate(isolateRef.id)));
 
+					// TODO: Is it valid to assume the first (only?) isolate with a rootLib is the one we care about here?
+					// If it's always the first, could we even just query the first instead of getting them all before we
+					// start the other processing?
+					const rootIsolateResult = isolates.find((isolate) => !!(isolate.result as VMIsolate).rootLib);
+					const rootIsolate = rootIsolateResult && rootIsolateResult.result as VMIsolate;
+
+					if (rootIsolate && rootIsolate.extensionRPCs) {
+						// If we're attaching, we won't see ServiceExtensionAdded events for extensions already loaded so
+						// we need to enumerate them here.
+						rootIsolate.extensionRPCs.forEach((id) => this.notifyServiceExtensionAvailable(id));
+					}
+
 					if (!this.packageMap) {
-						// TODO: Is it valid to assume the first (only?) isolate with a rootLib is the one we care about here?
-						// If it's always the first, could we even just query the first instead of getting them all before we
-						// start the other processing?
-						const rootIsolateResult = isolates.find((isolate) => !!(isolate.result as VMIsolate).rootLib);
-						const rootIsolate = rootIsolateResult && rootIsolateResult.result as VMIsolate;
 						// TODO: There's a race here if the isolate is not yet runnable, it might not have rootLib yet. We don't
 						// currently fill this in later.
 						if (rootIsolate)
@@ -1148,8 +1155,12 @@ export class DartDebugSession extends DebugSession {
 
 	public handleServiceExtensionAdded(event: VMEvent) {
 		if (event && event.extensionRPC) {
-			this.sendEvent(new Event("dart.serviceExtensionAdded", { id: event.extensionRPC }));
+			this.notifyServiceExtensionAvailable(event.extensionRPC);
 		}
+	}
+
+	private notifyServiceExtensionAvailable(id: string) {
+		this.sendEvent(new Event("dart.serviceExtensionAdded", { id }));
 	}
 
 	private knownOpenFiles: string[] = []; // Keep track of these for internal requests
