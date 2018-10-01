@@ -143,7 +143,7 @@ async function runAllTests(): Promise<void> {
 	const dartSdkPath = process.env.DART_PATH || process.env.PATH;
 	const flutterSdkPath = process.env.FLUTTER_PATH || process.env.PATH;
 
-	const flutterRoot = process.env.FLUTTER_ROOT;
+	const flutterRoot = process.env.FLUTTER_ROOT || process.env.FLUTTER_PATH;
 	const totalRuns = 6;
 	let runNumber = 1;
 	try {
@@ -154,7 +154,7 @@ async function runAllTests(): Promise<void> {
 		if (flutterRoot) {
 			await runTests("flutter_repository", flutterRoot, flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		} else {
-			console.error("FLUTTER_ROOT NOT SET, SKIPPING FLUTTER REPO TESTS");
+			console.error("FLUTTER_ROOT/FLUTTER_PATH NOT SET, SKIPPING FLUTTER REPO TESTS");
 			exitCode = 1;
 		}
 		// This one is run last because it's the most fragile, and can bring down the following tests if it hangs in a
