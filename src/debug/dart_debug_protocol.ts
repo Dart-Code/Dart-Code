@@ -53,6 +53,7 @@ export interface VMIsolate extends VMResponse, VMIsolateRef {
 	libraries: VMLibraryRef[];
 	_heaps?: { new: VMHeapSpace, old: VMHeapSpace };
 	rootLib?: VMLibraryRef;
+	extensionRPCs?: string[];
 }
 
 export interface VMObjectRef extends VMResponse {
