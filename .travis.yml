@@ -62,7 +62,6 @@ before_install:
   - curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
   - unzip dart-sdk.zip > /dev/null
   - git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git
-  - export FLUTTER_ROOT=`pwd`/flutter
   - echo Configuring Dart and Flutter...
   - flutter/bin/flutter config --no-analytics
   - flutter/bin/flutter update-packages
