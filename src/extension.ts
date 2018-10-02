@@ -376,6 +376,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Prompt for pub get if required
 	function checkForPackages() {
+		// Don't prompt for package updates in the Fuchsia tree.
+		if (sdks.projectType === util.ProjectType.Fuchsia)
+			return;
 		const folders = util.getDartWorkspaceFolders();
 		const foldersRequiringPackageGet = folders.filter((ws: WorkspaceFolder) => config.for(ws.uri).promptToGetPackages).filter(isPubGetProbablyRequired);
 		if (foldersRequiringPackageGet.length > 0)
