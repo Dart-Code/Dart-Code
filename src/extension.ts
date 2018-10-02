@@ -360,7 +360,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		for (const wf of vs.workspace.workspaceFolders) {
 			const userPath = forceWindowsDriveLetterToUppercase(fsPath(wf.uri));
 			const realPath = forceWindowsDriveLetterToUppercase(util.trueCasePathSync(userPath));
-			if (userPath !== realPath) {
+			if (userPath && realPath && userPath !== realPath) {
 				vs.window.showWarningMessage(
 					`The casing of the open workspace folder does not match the casing on the underlying disk; please re-open the folder using the File Open dialog. `
 					+ `Expected ${realPath} but got ${userPath}`,
