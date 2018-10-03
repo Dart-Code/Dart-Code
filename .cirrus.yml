@@ -14,7 +14,7 @@ blocks:
 
   install_packages_win_1: &install_packages_win_1 |
     iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-    choco install -y ruby --no-progress
+    choco install -y ruby --no-progress --install-arguments "/verysilent /dir=""c:\tools\ruby"" /tasks=""assocfiles, modpath, noridkinstall""" --override-arguments
     choco install -y nodejs.install --no-progress
   
   # This can't go in the one above, because Chocolatey seems to break PATH (it doesn't add ruby, and
@@ -228,7 +228,7 @@ task:
     CIRRUS_SHELL: powershell
     DART_PATH: "C:\\Windows\\Temp\\with spaces\\dart"
     FLUTTER_PATH: "C:\\Windows\\Temp\\with spaces\\flutter"
-    PATH: "$FLUTTER_PATH\\bin;$DART_PATH\\bin;$ALLUSERSPROFILE\\chocolatey\\bin;C:\\Program Files\\nodejs;C:\\tools\\ruby25\\bin;$PATH"
+    PATH: "$FLUTTER_PATH\\bin;$DART_PATH\\bin;$ALLUSERSPROFILE\\chocolatey\\bin;C:\\Program Files\\nodejs;C:\\tools\\ruby\\bin;$PATH"
     
   matrix:
     - name: Windows
