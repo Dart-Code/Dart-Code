@@ -172,7 +172,6 @@ allow_failures: $DART_CHANNEL == 'dev' || $CODE_VERSION == 'insiders'
 #   env:
 #     DART_PATH: "/tmp/with spaces/dart"
 #     FLUTTER_PATH: "/tmp/with spaces/flutter"
-#     FLUTTER_ROOT: "/tmp/with spaces/flutter"
 #     PATH: "$FLUTTER_PATH/bin:$DART_PATH/bin:$PATH"
 #     DEBIAN_FRONTEND: noninteractive
 #     ELECTRON_NO_ATTACH_CONSOLE: 1
@@ -229,7 +228,6 @@ task:
     CIRRUS_SHELL: powershell
     DART_PATH: "C:\\Windows\\Temp\\with spaces\\dart"
     FLUTTER_PATH: "C:\\Windows\\Temp\\with spaces\\flutter"
-    FLUTTER_ROOT: "C:\\Windows\\Temp\\with spaces\\flutter"
     PATH: "$FLUTTER_PATH\\bin;$DART_PATH\\bin;$ALLUSERSPROFILE\\chocolatey\\bin;C:\\Program Files\\nodejs;C:\\tools\\ruby25\\bin;$PATH"
     
   matrix:
