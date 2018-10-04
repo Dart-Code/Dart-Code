@@ -6,7 +6,7 @@ import * as vs from "vscode";
 import { ProgressLocation, Uri, window } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { globalFlutterArgs, safeSpawn } from "../debug/utils";
+import { globalFlutterArgs, PromiseCompleter, safeSpawn } from "../debug/utils";
 import { locateBestProjectRoot } from "../project";
 import { DartHoverProvider } from "../providers/dart_hover_provider";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
@@ -22,7 +22,7 @@ export class SdkCommands {
 	private analytics: Analytics;
 	private flutterScreenshotPath: string;
 	// A map of any in-progress commands so we can terminate them if we want to run another.
-	private runningCommands: { [workspaceUriAndCommand: string]: child_process.ChildProcess | undefined; } = {};
+	private runningCommands: { [workspaceUriAndCommand: string]: ChainedProcess | undefined; } = {};
 	constructor(context: vs.ExtensionContext, sdks: Sdks, analytics: Analytics) {
 		this.sdks = sdks;
 		this.analytics = analytics;
@@ -232,48 +232,44 @@ export class SdkCommands {
 	}
 
 	private runCommandInFolder(shortPath: string, commandName: string, folder: string, binPath: string, args: string[], isStartingBecauseOfTermination: boolean = false): Thenable<number> {
+
+		const channelName = commandName.substr(0, 1).toUpperCase() + commandName.substr(1);
+		const channel = channels.createChannel(channelName);
+		channel.show(true);
+
+		// Figure out if there's already one of this command running, in which case we'll chain off the
+		// end of it.
+		const commandId = `${folder}|${commandName}|${args}`;
+		const existingProcess = this.runningCommands[commandId];
+		if (existingProcess && !existingProcess.hasStarted) {
+			// We already have a queued version of this command so there's no value in queueing another
+			// just bail.
+			return Promise.resolve(null);
+		}
+
 		return vs.window.withProgress({
 			cancellable: true,
 			location: ProgressLocation.Notification,
-			title: `Running ${commandName} ${args.join(" ")}`,
+			title: `${commandName} ${args.join(" ")}`,
 		}, (progress, token) => {
-			return new Promise((resolve, reject) => {
-				const channelName = commandName.substr(0, 1).toUpperCase() + commandName.substr(1);
-				const channel = channels.createChannel(channelName);
-				channel.show(true);
+			if (existingProcess) {
+				progress.report({ message: "terminating previous command..." });
+				existingProcess.cancel();
+			} else {
+				channel.clear();
+			}
 
-				// Create an ID to use so we can look whether there's already a running process for this command to terminate/restart.
-				const commandId = `${folder}|${commandName}|${args}`;
-
-				const existingProcess = this.runningCommands[commandId];
-				if (existingProcess) {
-					channel.appendLine(`${commandName} ${args.join(" ")} was already running; terminating…`);
-
-					// Queue up a request to re-do this when it terminates
-					// Wrap in a setTimeout to ensure all the other close handlers are processed (such as writing that the process
-					// exited) before we start up.
-					existingProcess.on("close", () => this.runCommandInFolder(shortPath, commandName, folder, binPath, args, true).then(resolve, reject));
-					existingProcess.kill();
-
-					this.runningCommands[commandId] = undefined;
-					return;
-				} else if (!isStartingBecauseOfTermination) {
-					channel.clear();
-				}
-
+			const process = new ChainedProcess(() => {
 				channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
+				progress.report({ message: "running..." });
+				const proc = safeSpawn(folder, binPath, args);
+				channels.runProcessInChannel(proc, channel);
+				return proc;
+			}, existingProcess);
+			this.runningCommands[commandId] = process;
+			token.onCancellationRequested(() => process.cancel());
 
-				const process = safeSpawn(folder, binPath, args);
-				token.onCancellationRequested(() => process.kill());
-				this.runningCommands[commandId] = process;
-				process.on("close", (code) => {
-					// Check it's still the same process before nulling out, in case our replacement has already been inserted.
-					if (this.runningCommands[commandId] === process)
-						this.runningCommands[commandId] = null;
-				});
-				process.on("close", (code) => resolve(code));
-				channels.runProcessInChannel(process, channel);
-			});
+			return process.completed;
 		});
 	}
 
@@ -315,5 +311,39 @@ export class SdkCommands {
 		const bannedNames = ["flutter", "flutter_test"];
 		if (bannedNames.indexOf(input) !== -1)
 			return `You may not use ${input} as the name for a flutter project`;
+	}
+}
+
+class ChainedProcess {
+	private static processNumber = 1;
+	public processNumber = ChainedProcess.processNumber++;
+	private completer: PromiseCompleter<number> = new PromiseCompleter<number>();
+	public readonly completed = this.completer.promise;
+	public process: child_process.ChildProcess;
+	private isCancelled = false;
+	public get hasStarted() { return this.process !== undefined; }
+
+	constructor(private readonly spawn: () => child_process.ChildProcess, private parent: ChainedProcess) {
+		// We'll either start immediately, or if given a parent process only when it completes.
+		if (parent) {
+			parent.completed.then(() => this.start());
+		} else {
+			this.start();
+		}
+	}
+
+	public start(): void {
+		if (this.process)
+			throw new Error(`${this.processNumber} Can't start an already started process!`);
+		if (this.isCancelled) {
+			this.completer.resolve(null);
+			return;
+		}
+		this.process = this.spawn();
+		this.process.on("close", (code) => this.completer.resolve(code));
+	}
+
+	public cancel(): void {
+		this.isCancelled = true;
 	}
 }
