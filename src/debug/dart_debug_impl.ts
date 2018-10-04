@@ -440,7 +440,7 @@ export class DartDebugSession extends DebugSession {
 				const result = await this.threadManager.setBreakpoints(uri, breakpoints);
 				const bpResponse: DebugProtocol.Breakpoint[] = [];
 				for (const bp of result) {
-					bpResponse.push(this.breakpointFromVm(bp));
+					bpResponse.push(await this.breakpointFromVm(bp[0].ref, bp[1]));
 				}
 
 				response.body = { breakpoints: bpResponse };
@@ -451,16 +451,16 @@ export class DartDebugSession extends DebugSession {
 		}));
 	}
 
-	private breakpointFromVm(bp: VMBreakpoint): DebugProtocol.Breakpoint {
+	private async breakpointFromVm(isolate: VMIsolateRef, bp: VMBreakpoint): Promise<DebugProtocol.Breakpoint> {
 		let line: number;
 		let column: number;
 		if (bp.location.type === "SourceLocation") {
-			logError({ message: "Need to get location from tokenPos" });
-			// const location = bp.location as VMSourceLocation;
-			// const script = await thread.getScript(location.script);
-			// const loc = this.resolveFileLocation(script, location.tokenPos);
-			// line = loc.line;
-			// column = loc.column;
+			const thread = this.threadManager.getThreadInfoFromRef(isolate);
+			const location = bp.location as VMSourceLocation;
+			const script = await thread.getScript(location.script);
+			const loc = this.resolveFileLocation(script, location.tokenPos);
+			line = loc.line;
+			column = loc.column;
 		} else if (bp.location.type === "UnresolvedSourceLocation") {
 			const location = bp.location as VMUnresolvedSourceLocation;
 			if (location.tokenPos) {
@@ -1081,11 +1081,11 @@ export class DartDebugSession extends DebugSession {
 			} else if (kind === "Inspect") {
 				await this.handleInspectEvent(event);
 			} else if (kind === "BreakpointAdded") {
-				this.sendEvent(new BreakpointEvent("new", this.breakpointFromVm(event.breakpoint)));
+				this.sendEvent(new BreakpointEvent("new", await this.breakpointFromVm(event.isolate, event.breakpoint)));
 			} else if (kind === "BreakpointResolved") {
-				this.sendEvent(new BreakpointEvent("changed", this.breakpointFromVm(event.breakpoint)));
+				this.sendEvent(new BreakpointEvent("changed", await this.breakpointFromVm(event.isolate, event.breakpoint)));
 			} else if (kind === "BreakpointRemoved") {
-				this.sendEvent(new BreakpointEvent("removed", this.breakpointFromVm(event.breakpoint)));
+				this.sendEvent(new BreakpointEvent("removed", await this.breakpointFromVm(event.isolate, event.breakpoint)));
 			}
 		} catch (e) {
 			logError(e);
@@ -1589,7 +1589,7 @@ class ThreadManager {
 		return Promise.all(promises);
 	}
 
-	public async setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<VMBreakpoint[]> {
+	public async setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<Array<[ThreadInfo, VMBreakpoint]>> {
 		// Remember these bps for when new threads start.
 		if (breakpoints.length === 0)
 			delete this.bps[uri];
@@ -1597,7 +1597,11 @@ class ThreadManager {
 			this.bps[uri] = breakpoints;
 
 		const allResults = await Promise.all(
-			this.threads.filter((t) => t.runnable).map((t) => t.setBreakpoints(uri, breakpoints)),
+			this.threads.filter((t) => t.runnable)
+				.map(
+					(t) => t.setBreakpoints(uri, breakpoints)
+						.then((bps) => bps.map((b): [ThreadInfo, VMBreakpoint] => [t, b])),
+				),
 		);
 		return _.flatMap(allResults);
 	}
