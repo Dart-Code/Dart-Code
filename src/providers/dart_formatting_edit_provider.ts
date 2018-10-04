@@ -9,22 +9,14 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 	constructor(private readonly analyzer: Analyzer) { }
 
 	public provideDocumentFormattingEdits(document: TextDocument, options: FormattingOptions, token: CancellationToken): Thenable<TextEdit[]> {
-		return new Promise<TextEdit[]>((resolve, reject) => {
-			this.analyzer.editFormat({
-				file: fsPath(document.uri),
-				lineLength: config.for(document.uri).lineLength,
-				selectionLength: 0,
-				selectionOffset: 0,
-			}).then((resp) => {
-				if (resp.edits.length === 0)
-					resolve(null);
-				else
-					resolve(resp.edits.map((e) => this.convertData(document, e)));
-			}, (e) => { logError(e); reject(); });
-		});
+		return this.doFormat(document, true);
 	}
 
 	public provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, token: CancellationToken): Thenable<TextEdit[]> {
+		return this.doFormat(document, false);
+	}
+
+	private doFormat(document: TextDocument, doLogError = true): Thenable<TextEdit[]> {
 		return new Promise<TextEdit[]>((resolve, reject) => {
 			this.analyzer.editFormat({
 				file: fsPath(document.uri),
@@ -36,7 +28,11 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 					resolve(null);
 				else
 					resolve(resp.edits.map((e) => this.convertData(document, e)));
-			}, (e) => { reject(); });
+			}, (e) => {
+				if (doLogError)
+					logError(e);
+				reject();
+			});
 		});
 	}
 
