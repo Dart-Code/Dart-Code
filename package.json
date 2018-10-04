@@ -660,6 +660,14 @@
 					},
 					"scope": "window"
 				},
+				"dart.doNotFormat": {
+					"type": "array",
+					"description": "An array of glob patterns that should be excluded for formatting. The pattern is matched against the absolute path of the file. Use **/test/** to skip formatting for all test folders.",
+					"items": {
+						"type": "string"
+					},
+					"scope": "resource"
+				},
 				"dart.lineLength": {
 					"type": "integer",
 					"default": 80,

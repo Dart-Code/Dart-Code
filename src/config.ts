@@ -87,6 +87,7 @@ class ResourceConfig {
 
 	get debugSdkLibraries() { return this.getConfig<boolean>("debugSdkLibraries"); }
 	get debugExternalLibraries() { return this.getConfig<boolean>("debugExternalLibraries"); }
+	get doNotFormat() { return this.getConfig<string[]>("doNotFormat"); }
 	get enableCompletionCommitCharacters() { return this.getConfig<boolean>("enableCompletionCommitCharacters"); }
 	get evaluateGettersInDebugViews() { return this.getConfig<boolean>("evaluateGettersInDebugViews"); }
 	get flutterTrackWidgetCreation() { return this.getConfig<boolean>("flutterTrackWidgetCreation"); }

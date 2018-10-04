@@ -1,16 +1,20 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, currentEditor, documentEol, positionOf, setTestContent } from "../../helpers";
+import { activate, currentDoc, currentEditor, documentEol, emptyExcludedFile, emptyFileInExcludedFolder, openFile, positionOf, setTestContent } from "../../helpers";
 
 describe("dart_formatting_edit_provider", () => {
 
 	beforeEach("activate", () => activate());
 
-	async function formatDocument(): Promise<void> {
+	async function formatDocument(expectResult = true): Promise<void> {
 		const formatResult = await (vs.commands.executeCommand("vscode.executeFormatDocumentProvider", currentDoc().uri) as Thenable<vs.TextEdit[]>);
-		assert.ok(formatResult);
-		assert.ok(formatResult.length);
-		await currentEditor().edit((b) => formatResult.forEach((f) => b.replace(f.range, f.newText)));
+		if (expectResult) {
+			assert.ok(formatResult);
+			assert.ok(formatResult.length);
+			await currentEditor().edit((b) => formatResult.forEach((f) => b.replace(f.range, f.newText)));
+		} else {
+			assert.ok(!formatResult);
+		}
 	}
 
 	async function formatOnType(searchText: string, character: string): Promise<void> {
@@ -32,5 +36,19 @@ describe("dart_formatting_edit_provider", () => {
 		await setTestContent("   main ( ) { }");
 		await formatOnType("{ ^", "}");
 		assert.equal(currentDoc().getText(), `main() {}${documentEol}`);
+	});
+
+	it("does not format an excluded file", async () => {
+		await openFile(emptyExcludedFile);
+		await setTestContent("   main ( ) {     }");
+		await formatDocument(false);
+		assert.equal(currentDoc().getText(), "   main ( ) {     }");
+	});
+
+	it("does not format a file in an excluded folder", async () => {
+		await openFile(emptyFileInExcludedFolder);
+		await setTestContent("   main ( ) {     }");
+		await formatDocument(false);
+		assert.equal(currentDoc().getText(), "   main ( ) {     }");
 	});
 });

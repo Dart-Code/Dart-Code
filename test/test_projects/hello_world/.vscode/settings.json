@@ -1,3 +1,7 @@
 {
-	"files.insertFinalNewline": true
+	"files.insertFinalNewline": true,
+	"dart.doNotFormat": [
+		"**/excluded/**",
+		"**/excluded_*.dart"
+	]
 }
