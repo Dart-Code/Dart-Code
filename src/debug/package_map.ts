@@ -62,11 +62,11 @@ export class PackageMap {
 			return undefined;
 	}
 
-	public convertFileToPackageUri(file: string, allowSelf = true): string | undefined {
+	public convertFileToPackageUri(file: string): string | undefined {
 		for (const name of Object.keys(this.map)) {
 			const dir = this.map[name];
 			if (isWithinPath(file, dir)) {
-				if (!allowSelf && name === this.localPackageName)
+				if (name === this.localPackageName)
 					return undefined;
 				let rest = file.substring(dir.length);
 				// package: uri should always use forward slashes.
