@@ -60,7 +60,7 @@ export class DartHoverProvider implements HoverProvider {
 			documentation = `*${containingLibraryName}*\n\n` + documentation;
 		} else if (containingLibraryPath) {
 			const packageMap = DartHoverProvider.getPackageMapFor(documentUri);
-			const packagePath = packageMap && packageMap.convertFileToPackageUri(containingLibraryPath, false);
+			const packagePath = packageMap && packageMap.convertFileToPackageUri(containingLibraryPath);
 			const packageName = packagePath && packagePath.split("/")[0];
 			if (packageName)
 				documentation = `*${packageName}*\n\n` + documentation;
