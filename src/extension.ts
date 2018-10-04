@@ -38,7 +38,6 @@ import { DartLanguageConfiguration } from "./providers/dart_language_configurati
 import { DartReferenceProvider } from "./providers/dart_reference_provider";
 import { DartRenameProvider } from "./providers/dart_rename_provider";
 import { DartSignatureHelpProvider } from "./providers/dart_signature_help_provider";
-import { DartTypeFormattingEditProvider } from "./providers/dart_type_formatting_edit_provider";
 import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
 import { DebugConfigProvider, HAS_LAST_DEBUG_CONFIG } from "./providers/debug_config_provider";
 import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
@@ -175,7 +174,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// TODO: Do we need to push all these to subscriptions?!
 	const hoverProvider = new DartHoverProvider(analyzer);
 	const formattingEditProvider = new DartFormattingEditProvider(analyzer);
-	const typeFormattingEditProvider = new DartTypeFormattingEditProvider(analyzer);
 	const completionItemProvider = new DartCompletionItemProvider(analyzer);
 	const referenceProvider = new DartReferenceProvider(analyzer);
 	const documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
@@ -207,7 +205,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	});
 
 	// Some actions only apply to Dart.
-	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, typeFormattingEditProvider, "}", ";"));
+	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, formattingEditProvider, "}", ";"));
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, sourceCodeActionProvider, sourceCodeActionProvider.metadata));
 	context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, implementationProvider));
 	if (config.showTestCodeLens) {
