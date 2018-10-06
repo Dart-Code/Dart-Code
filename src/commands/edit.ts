@@ -147,7 +147,7 @@ export class EditCommands implements vs.Disposable {
 			// If we create the file ourselves, it won't go into the single undo buffer.
 			if (!fs.existsSync(edit.file) && edit.edits.find((e) => e.offset !== 1 || e.length !== 0)) {
 				logError(`Unable to edit file ${edit.file} because it does not exist and had an edit that was not the start of the file`);
-				vs.window.showErrorMessage(`Enable to edit file ${edit.file} because it does not exist and had an edit that was not the start of the file`);
+				vs.window.showErrorMessage(`Unable to edit file ${edit.file} because it does not exist and had an edit that was not the start of the file`);
 				continue;
 			}
 			const document = fs.existsSync(edit.file) ? await vs.workspace.openTextDocument(uri) : undefined;
