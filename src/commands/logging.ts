@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import * as path from "path";
 import * as vs from "vscode";
-import { LogCategory } from "../debug/utils";
+import { forceWindowsDriveLetterToUppercase, LogCategory } from "../debug/utils";
 import { createFolderForFile, fsPath } from "../utils";
 import { logTo, userSelectableLogCategories } from "../utils/log";
 
@@ -17,7 +17,7 @@ export class LoggingCommands implements vs.Disposable {
 	}
 
 	private async startLogging(): Promise<string> {
-		const logFilename = path.join(this.extensionLogPath, this.generateFilename());
+		const logFilename = path.join(forceWindowsDriveLetterToUppercase(this.extensionLogPath), this.generateFilename());
 		const logUri = vs.Uri.file(logFilename);
 		createFolderForFile(logFilename);
 
