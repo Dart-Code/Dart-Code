@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
+import { config } from "../../../src/config";
 import { isLinux, platformEol } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
 import { log } from "../../../src/utils/log";
@@ -376,11 +377,11 @@ describe("dart cli debugger", () => {
 			value: { evaluateName: `m["s"]`, name: "value", value: `"Hello!"` },
 		}, dc);
 		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: null, name: "key", value: `DateTime` },
+			key: { evaluateName: null, name: "key", value: config.previewToStringInDebugViews ? `DateTime (2000-02-14 00:00:00.000)` : `DateTime` },
 			value: { evaluateName: null, name: "value", value: `"valentines-2000"` },
 		}, dc);
 		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: null, name: "key", value: `DateTime` },
+			key: { evaluateName: null, name: "key", value: config.previewToStringInDebugViews ? `DateTime (2005-01-01 00:00:00.000)` : `DateTime` },
 			value: { evaluateName: null, name: "value", value: `"new-year-2005"` },
 		}, dc);
 		await ensureMapEntry(mapVariables, {

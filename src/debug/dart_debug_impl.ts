@@ -1117,6 +1117,13 @@ export class DartDebugSession extends DebugSession {
 			text = this.valueAsString(instanceRef, false);
 		if (!text)
 			text = await this.callToString(isolate, instanceRef, true);
+		// If it has a custom toString(), put that in parens after the type name.
+		if (instanceRef.kind === "PlainInstance" && instanceRef.class && instanceRef.class.name) {
+			if (text === `Instance of '${instanceRef.class.name}'`)
+				text = instanceRef.class.name;
+			else
+				text = `${instanceRef.class.name} (${text})`;
+		}
 		return text;
 	}
 
@@ -1328,7 +1335,7 @@ export class DartDebugSession extends DebugSession {
 			// (or a string expression) in the response.
 			val.evaluateName = canEvaluate ? evaluateName : undefined;
 
-			let str = config.previewToStringInDebugViews
+			let str = config.previewToStringInDebugViews && !val.valueAsString
 				? await this.fullValueAsString(thread.ref, val)
 				: this.valueAsString(val);
 			if (!val.valueAsString && !str)
