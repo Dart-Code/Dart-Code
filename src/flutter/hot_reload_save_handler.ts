@@ -1,5 +1,6 @@
-import { DiagnosticCollection, DiagnosticSeverity, ExtensionContext, commands, workspace } from "vscode";
+import { commands, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, workspace } from "vscode";
 import { config } from "../config";
+import { restartReasonSave } from "../constants";
 import { shouldTriggerHotReload } from "../utils";
 
 export function setUpHotReloadOnSave(context: ExtensionContext, diagnostics: DiagnosticCollection) {
@@ -22,7 +23,7 @@ export function setUpHotReloadOnSave(context: ExtensionContext, diagnostics: Dia
 
 		hotReloadDelayTimer = setTimeout(() => {
 			hotReloadDelayTimer = undefined;
-			commands.executeCommand("flutter.hotReload");
+			commands.executeCommand("flutter.hotReload", { reason: restartReasonSave });
 		}, 200);
 	}));
 }

@@ -1,5 +1,6 @@
 import { Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { restartReasonManual } from "../constants";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun, RunMode } from "./flutter_run";
@@ -155,13 +156,13 @@ export class FlutterDebugSession extends DartDebugSession {
 		args: DebugProtocol.RestartArguments,
 	): void {
 		this.sendEvent(new Event("dart.restartRequest"));
-		this.performReload(false);
+		this.performReload(false, restartReasonManual);
 		// Notify the Extension we had a restart request so it's able to
 		// log the hotReload.
 		super.restartRequest(response, args);
 	}
 
-	private async performReload(hotRestart: boolean): Promise<any> {
+	private async performReload(hotRestart: boolean, reason: string): Promise<any> {
 		if (!this.appHasStarted)
 			return;
 
@@ -171,7 +172,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 		this.isReloadInProgress = true;
 		try {
-			await this.flutter.restart(this.currentRunningAppId, !this.noDebug, hotRestart);
+			await this.flutter.restart(this.currentRunningAppId, !this.noDebug, hotRestart, reason);
 			this.requestCoverageUpdate(hotRestart ? "hot-restart" : "hot-reload");
 		} catch (e) {
 			this.sendEvent(new OutputEvent(e, "stderr"));
@@ -199,13 +200,13 @@ export class FlutterDebugSession extends DartDebugSession {
 
 				case "hotReload":
 					if (this.currentRunningAppId)
-						await this.performReload(false);
+						await this.performReload(false, args && args.reason || restartReasonManual);
 					this.sendResponse(response);
 					break;
 
 				case "hotRestart":
 					if (this.currentRunningAppId)
-						await this.performReload(true);
+						await this.performReload(true, args && args.reason || restartReasonManual);
 					this.sendResponse(response);
 					break;
 
