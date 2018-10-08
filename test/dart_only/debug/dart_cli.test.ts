@@ -357,8 +357,8 @@ describe("dart cli debugger", () => {
 		ensureVariable(mapVariables, undefined, "0", `"l" -> List (12 items)`);
 		ensureVariable(mapVariables, undefined, "1", `"longStrings" -> List (1 item)`);
 		ensureVariable(mapVariables, undefined, "2", `"s" -> "Hello!"`);
-		ensureVariable(mapVariables, undefined, "3", `DateTime -> "today"`);
-		ensureVariable(mapVariables, undefined, "4", `DateTime -> "tomorrow"`);
+		ensureVariable(mapVariables, undefined, "3", `DateTime -> "valentines-2000"`);
+		ensureVariable(mapVariables, undefined, "4", `DateTime -> "new-year-2005"`);
 		ensureVariable(mapVariables, undefined, "5", `true -> true`);
 		ensureVariable(mapVariables, undefined, "6", `1 -> "one"`);
 		ensureVariable(mapVariables, undefined, "7", `1.1 -> "one-point-one"`);
@@ -377,11 +377,11 @@ describe("dart cli debugger", () => {
 		}, dc);
 		await ensureMapEntry(mapVariables, {
 			key: { evaluateName: null, name: "key", value: `DateTime` },
-			value: { evaluateName: null, name: "value", value: `"today"` },
+			value: { evaluateName: null, name: "value", value: `"valentines-2000"` },
 		}, dc);
 		await ensureMapEntry(mapVariables, {
 			key: { evaluateName: null, name: "key", value: `DateTime` },
-			value: { evaluateName: null, name: "value", value: `"tomorrow"` },
+			value: { evaluateName: null, name: "value", value: `"new-year-2005"` },
 		}, dc);
 		await ensureMapEntry(mapVariables, {
 			key: { evaluateName: null, name: "key", value: "true" },
