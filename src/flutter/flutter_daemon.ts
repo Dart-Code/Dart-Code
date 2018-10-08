@@ -67,6 +67,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	protected shouldHandleMessage(message: string): boolean {
 		// Everything in flutter is wrapped in [] so we can tell what to handle.
 		if (message.startsWith("[") && message.endsWith("]")) {
+			// When we get the first message to handle, complete the status notifications.
 			if (!this.hasStarted) {
 				this.hasStarted = true;
 				this.daemonStartedCompleter.resolve();
@@ -103,9 +104,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 				} else {
 					vs.window.withProgress({
 						location: ProgressLocation.Notification,
-						title: message,
+						title: "Flutter Setup",
 					}, (progressReporter) => {
 						this.startupReporter = progressReporter;
+						this.startupReporter.report({ message });
 						return this.daemonStartedCompleter.promise;
 					});
 				}
