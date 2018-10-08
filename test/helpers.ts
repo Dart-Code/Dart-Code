@@ -56,6 +56,7 @@ export const helloWorldTestSkipFile = vs.Uri.file(path.join(fsPath(helloWorldFol
 export const helloWorldCreateMethodClassAFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/create_method/class_a.dart"));
 export const helloWorldCreateMethodClassBFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/create_method/class_b.dart"));
 export const emptyFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/empty.dart"));
+export const missingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/missing.dart"));
 export const emptyFileInExcludedFolder = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/excluded/empty.dart"));
 export const emptyExcludedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/excluded_empty.dart"));
 export const helloWorldCompletionFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/completion.dart"));
@@ -151,6 +152,17 @@ export async function closeFile(file: vs.Uri): Promise<void> {
 
 export async function openFile(file: vs.Uri): Promise<vs.TextEditor> {
 	return vs.window.showTextDocument(await vs.workspace.openTextDocument(file));
+}
+
+export function tryDelete(file: vs.Uri) {
+	const path = fsPath(file);
+	if (fs.existsSync(path)) {
+		try {
+			fs.unlinkSync(path);
+		} catch {
+			console.warn(`Failed to delete file $path.`);
+		}
+	}
 }
 
 beforeEach("set logger", async function () {
