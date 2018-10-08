@@ -50,21 +50,25 @@ export interface MapEntry {
 
 export async function ensureMapEntry(mapEntries: DebugProtocol.Variable[], entry: MapEntry, dc: DartDebugClient) {
 	assert.ok(mapEntries);
-	const results = await Promise.all(mapEntries.map(async (mapEntry) => {
+	let found = false;
+	const keyValues: string[] = [];
+	await Promise.all(mapEntries.map(async (mapEntry) => {
 		const variable = await dc.getVariables(mapEntry.variablesReference);
 
 		const key = variable[0] as DebugProtocol.Variable;
 		const value = variable[1] as DebugProtocol.Variable;
 		assert.ok(key);
 		assert.ok(value);
-		return key.evaluateName === entry.key.evaluateName
-			&& key.name === entry.key.name
-			&& key.value === entry.key.value
-			&& value.evaluateName === entry.value.evaluateName
-			&& value.name === entry.value.name
-			&& value.value === entry.value.value;
+		if (key.name === entry.key.name && key.value === entry.key.value) {
+			assert.equal(key.evaluateName, entry.key.evaluateName);
+			assert.equal(value.evaluateName, entry.value.evaluateName);
+			assert.equal(value.name, entry.value.name);
+			assert.equal(value.value, entry.value.value);
+			found = true;
+		}
+		keyValues.push(`${key.value}=${value.value}`);
 	}));
-	assert.ok(results.find((r) => r), `Didn't find map entry for ${entry.key.value}=${entry.value.value}`);
+	assert.ok(found, `Didn't find map entry for ${entry.key.value}=${entry.value.value}\nGot:\n  ${keyValues.join("\n  ")})`);
 }
 
 export function spawnDartProcessPaused(config: DebugConfiguration): DartProcess {
