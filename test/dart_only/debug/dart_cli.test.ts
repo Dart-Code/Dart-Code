@@ -330,8 +330,8 @@ describe("dart cli debugger", () => {
 
 	it("provides local variables when stopped at a breakpoint", async () => {
 		await openFile(helloWorldMainFile);
-		const config = await startDebugger(helloWorldMainFile);
-		await dc.hitBreakpoint(config, {
+		const debugConfig = await startDebugger(helloWorldMainFile);
+		await dc.hitBreakpoint(debugConfig, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 			path: fsPath(helloWorldMainFile),
 		});
