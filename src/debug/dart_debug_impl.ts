@@ -566,23 +566,12 @@ export class DartDebugSession extends DebugSession {
 					return;
 				}
 
-				const uri = location.script.uri;
-				const shortName = this.convertVMUriToUserName(uri);
-				let sourcePath: string | undefined = this.convertVMUriToSourcePath(uri);
-				let canShowSource = fs.existsSync(sourcePath);
-
-				// Download the source if from a "dart:" uri.
-				let sourceReference: number;
-				if (uri.startsWith("dart:")) {
-					sourcePath = undefined;
-					sourceReference = thread.storeData(location.script);
-					canShowSource = true;
-				}
+				const { source, uri } = this.mapToSource(location, thread);
 
 				const stackFrame: DebugProtocol.StackFrame = new StackFrame(
 					frameId,
 					frameName,
-					canShowSource ? new Source(shortName, sourcePath, sourceReference, null, location.script) : undefined,
+					source,
 					0, 0,
 				);
 				// If we wouldn't debug this source, then deemphasize in the stack.
@@ -619,7 +608,23 @@ export class DartDebugSession extends DebugSession {
 		}).catch((error) => this.errorResponse(response, `${error}`));
 	}
 
-	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
+	private mapToSource(location: VMSourceLocation, thread: ThreadInfo) {
+		const uri = location.script.uri;
+		const shortName = this.convertVMUriToUserName(uri);
+		let sourcePath: string | undefined = this.convertVMUriToSourcePath(uri);
+		let canShowSource = fs.existsSync(sourcePath);
+		// Download the source if from a "dart:" uri.
+		let sourceReference: number | undefined;
+		if (uri.startsWith("dart:")) {
+			sourcePath = undefined;
+			sourceReference = thread.storeData(location.script);
+			canShowSource = true;
+		}
+		const source = canShowSource ? new Source(shortName, sourcePath, sourceReference, null, location.script) : undefined;
+		return { source, uri };
+	}
+
+	protected async scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): Promise<void> {
 		const frameId = args.frameId;
 		const data = this.threadManager.getStoredData(frameId);
 		const frame: VMFrame = data.data as VMFrame;
@@ -633,7 +638,28 @@ export class DartDebugSession extends DebugSession {
 			scopes.push(new Scope("Exception", data.thread.exceptionReference));
 		}
 
-		scopes.push(new Scope("Locals", variablesReference));
+		const variablesScope = new Scope("Locals", variablesReference) as DebugProtocol.Scope;
+		// If we know the range of this scope, provide it so that debug.inlineValues knows where to start/stop
+		// looking for variables.
+		if (frame.location && frame.location.tokenPos && frame.location.script) {
+			const script = await data.thread.getScript(frame.location.script);
+			const { source } = this.mapToSource(frame.location, data.thread);
+			variablesScope.source = source;
+			variablesScope.line = 6;
+			variablesScope.column = 0;
+			variablesScope.endLine = 11;
+			variablesScope.endColumn = 0;
+			// const start = this.resolveFileLocation(script, frame.location.tokenPos);
+			// variablesScope.line = start.line;
+			// variablesScope.column = start.column;
+			// if (frame.location.endTokenPos) {
+			// 	const end = this.resolveFileLocation(script, frame.location.endTokenPos);
+			// 	variablesScope.endLine = end.line;
+			// 	variablesScope.endColumn = end.column;
+			// } else {
+			// }
+		}
+		scopes.push(variablesScope);
 
 		response.body = { scopes };
 		this.sendResponse(response);
