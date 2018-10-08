@@ -904,6 +904,12 @@
 					"default": true,
 					"description": "Whether to show a warning when modifying files outside of the workspace.",
 					"scope": "window"
+				},
+				"dart.previewToStringInDebugViews": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to call toString() on objects when rendering them in debug views (such as the Variables, Watch and Hovers views).",
+					"scope": "window"
 				}
 			}
 		},

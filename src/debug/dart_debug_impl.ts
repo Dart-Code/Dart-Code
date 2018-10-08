@@ -4,6 +4,7 @@ import * as _ from "lodash";
 import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { config } from "../config";
 import { getLogHeader, logError } from "../utils/log";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
@@ -654,7 +655,7 @@ export class DartDebugSession extends DebugSession {
 			const variables: DebugProtocol.Variable[] = [];
 			if (frame.vars) {
 				for (const variable of frame.vars)
-					variables.push(this.instanceRefToVariable(thread, true, variable.name, variable.name, variable.value));
+					variables.push(await this.instanceRefToVariable(thread, true, variable.name, variable.name, variable.value));
 			}
 			response.body = { variables };
 			this.sendResponse(response);
@@ -672,7 +673,7 @@ export class DartDebugSession extends DebugSession {
 			const keyInstanceRef = keyDebuggerResult.result as VMInstanceRef;
 			const valueInstanceRef = valueDebuggerResult.result as VMInstanceRef;
 
-			variables.push(this.instanceRefToVariable(thread, false, "key", "key", keyInstanceRef));
+			variables.push(await this.instanceRefToVariable(thread, false, "key", "key", keyInstanceRef));
 
 			let canEvaluateValueName = false;
 			let valueEvaluateName = "value";
@@ -681,7 +682,7 @@ export class DartDebugSession extends DebugSession {
 				valueEvaluateName = `${mapRef.mapEvaluateName}[${this.valueAsString(keyInstanceRef)}]`;
 			}
 
-			variables.push(this.instanceRefToVariable(thread, canEvaluateValueName, valueEvaluateName, "value", valueInstanceRef));
+			variables.push(await this.instanceRefToVariable(thread, canEvaluateValueName, valueEvaluateName, "value", valueInstanceRef));
 
 			response.body = { variables };
 			this.sendResponse(response);
@@ -709,14 +710,14 @@ export class DartDebugSession extends DebugSession {
 
 						// TODO: show by kind instead
 						if (this.isSimpleKind(instance.kind)) {
-							variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}`, instance.kind, instanceRef));
+							variables.push(await this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}`, instance.kind, instanceRef));
 						} else if (instance.elements) {
 							const len = instance.elements.length;
 							if (!start)
 								start = 0;
 							for (let i = 0; i < len; i++) {
 								const element = instance.elements[i];
-								variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + start}]`, `[${i + start}]`, element));
+								variables.push(await this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + start}]`, `[${i + start}]`, element));
 							}
 						} else if (instance.associations) {
 							const len = instance.associations.length;
@@ -764,7 +765,7 @@ export class DartDebugSession extends DebugSession {
 										variables.push({ name: getterDisplayName, value: (getterResult.result as VMSentinel).valueAsString, variablesReference: 0 });
 									} else {
 										const getterResultInstanceRef = getterResult.result as VMInstanceRef;
-										variables.push(this.instanceRefToVariable(
+										variables.push(await this.instanceRefToVariable(
 											thread, canEvaluate,
 											`${instanceRef.evaluateName}.${getterName}`,
 											getterDisplayName,
@@ -776,7 +777,7 @@ export class DartDebugSession extends DebugSession {
 
 							// Add all of the fields.
 							for (const field of instance.fields)
-								variables.push(this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value));
+								variables.push(await this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value));
 						} else {
 							// TODO: unhandled kind
 							this.logToUser(instance.kind);
@@ -1311,9 +1312,9 @@ export class DartDebugSession extends DebugSession {
 		return ref.kind !== "PlainInstance" ? ref.kind : ref.class.name;
 	}
 
-	private instanceRefToVariable(
+	private async instanceRefToVariable(
 		thread: ThreadInfo, canEvaluate: boolean, evaluateName: string, name: string, ref: VMInstanceRef | VMSentinel,
-	): DebugProtocol.Variable {
+	): Promise<DebugProtocol.Variable> {
 		if (ref.type === "Sentinel") {
 			return {
 				name,
@@ -1327,7 +1328,9 @@ export class DartDebugSession extends DebugSession {
 			// (or a string expression) in the response.
 			val.evaluateName = canEvaluate ? evaluateName : undefined;
 
-			let str = this.valueAsString(val);
+			let str = config.previewToStringInDebugViews
+				? await this.fullValueAsString(thread.ref, val)
+				: this.valueAsString(val);
 			if (!val.valueAsString && !str)
 				str = "";
 

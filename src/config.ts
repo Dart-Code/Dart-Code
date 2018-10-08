@@ -66,6 +66,7 @@ class Config {
 
 	// Preview features.
 	get previewHotReloadCoverageMarkers() { return this.getConfig<boolean>("previewHotReloadCoverageMarkers"); }
+	get previewToStringInDebugViews() { return this.getConfig<boolean>("previewToStringInDebugViews"); }
 
 	public for(uri?: Uri): ResourceConfig {
 		return new ResourceConfig(uri);
