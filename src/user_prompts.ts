@@ -4,14 +4,15 @@ import * as vs from "vscode";
 import { config } from "./config";
 import { Context } from "./context";
 import { StagehandTemplate } from "./pub/stagehand";
-import { DART_CREATE_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, isDevExtension, openInBrowser } from "./utils";
+import { DART_CREATE_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, ProjectType, Sdks } from "./utils";
 
-export function showUserPrompts(context: vs.ExtensionContext) {
+export function showUserPrompts(context: vs.ExtensionContext, sdks: Sdks) {
 	handleNewProjects(Context.for(context));
 
 	const versionLink = extensionVersion.split(".").slice(0, 2).join(".").replace(".", "-");
 	return (
-		(isDevExtension || prompt(context, `release_notes_${extensionVersion}`, () => promptToShowReleaseNotes(extensionVersion, versionLink)))
+		(sdks.projectType !== ProjectType.Flutter || hasFlutterExtension || prompt(context, "install_flutter_extension", () => promptToInstallFlutterExtension()))
+		&& (isDevExtension || prompt(context, `release_notes_${extensionVersion}`, () => promptToShowReleaseNotes(extensionVersion, versionLink)))
 		&& !config.closingLabels && prompt(context, "closingLabelsDisabled", promptForClosingLabelsDisabled)
 	);
 }
@@ -30,6 +31,18 @@ function prompt(context: vs.ExtensionContext, key: string, prompt: () => Thenabl
 	}
 
 	return false;
+}
+
+async function promptToInstallFlutterExtension(): Promise<boolean> {
+	const res = await vs.window.showInformationMessage(
+		"Working on a Flutter project? Install the Flutter extension for additional future functionality.",
+		"Show Me",
+	);
+	if (res) {
+		// TODO: Can we open this in the Extensions side bar?
+		openInBrowser("https://marketplace.visualstudio.com/items?itemName=Dart-Code.flutter");
+	}
+	return true; // Always mark this as done; we don't want to re-prompt if the user clicks Close.
 }
 
 async function promptForClosingLabelsDisabled(): Promise<boolean> {

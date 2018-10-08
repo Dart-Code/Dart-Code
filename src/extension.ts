@@ -388,7 +388,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Prompt user for any special config we might want to set.
 	if (!isRestart)
-		showUserPrompts(context);
+		showUserPrompts(context, sdks);
 
 	// Turn on all the commands.
 	setCommandVisiblity(true, sdks.projectType);
