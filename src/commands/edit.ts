@@ -145,7 +145,7 @@ export class EditCommands implements vs.Disposable {
 			const uri = vs.Uri.file(edit.file);
 			// We can only create files with edits that are at 0/0 because we can't open the document if it doesn't exist.
 			// If we create the file ourselves, it won't go into the single undo buffer.
-			if (!fs.existsSync(edit.file) && edit.edits.find((e) => e.offset !== 1 || e.length !== 0)) {
+			if (!fs.existsSync(edit.file) && edit.edits.find((e) => e.offset !== 0 || e.length !== 0)) {
 				logError(`Unable to edit file ${edit.file} because it does not exist and had an edit that was not the start of the file`);
 				vs.window.showErrorMessage(`Unable to edit file ${edit.file} because it does not exist and had an edit that was not the start of the file`);
 				continue;
