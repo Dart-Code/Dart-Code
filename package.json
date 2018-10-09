@@ -751,12 +751,6 @@
 					"description": "Prompt to get packages when opening a project with out of date packages.",
 					"scope": "resource"
 				},
-				"dart.showLintNames": {
-					"type": "boolean",
-					"default": false,
-					"description": "Whether to show the names of linter rules in the problems panel to make it easier to `// ignore:`.",
-					"scope": "window"
-				},
 				"dart.flutterScreenshotPath": {
 					"type": "string",
 					"description": "The path to a directory to save Flutter screenshots.",

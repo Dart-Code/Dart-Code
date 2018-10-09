@@ -110,7 +110,7 @@ export class Analytics {
 			av: extensionVersion,
 			cd1: isDevExtension,
 			cd10: config.showTodos ? "On" : "Off",
-			cd11: config.showLintNames ? "On" : "Off",
+			// cd11: config.showLintNames ? "On" : "Off",
 			cd12: "Removed",
 			cd13: this.flutterSdkVersion,
 			cd14: hasFlutterExtension ? "Installed" : "Not Installed",

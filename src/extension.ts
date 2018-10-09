@@ -72,7 +72,6 @@ let analysisRoots: string[] = [];
 let analytics: Analytics;
 
 let showTodos: boolean | undefined;
-let showLintNames: boolean | undefined;
 let previousSettings: string;
 let extensionLogger: { dispose: () => Promise<void> | void };
 
@@ -99,7 +98,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	}));
 
 	showTodos = config.showTodos;
-	showLintNames = config.showLintNames;
 	previousSettings = getSettingsThatRequireRestart();
 
 	extensionPath = context.extensionPath;
@@ -465,17 +463,12 @@ function handleConfigurationChange(sdks: util.Sdks) {
 	const todoSettingChanged = showTodos !== newShowTodoSetting;
 	showTodos = newShowTodoSetting;
 
-	// Lint names.
-	const newShowLintNameSetting = config.showLintNames;
-	const showLintNameSettingChanged = showLintNames !== newShowLintNameSetting;
-	showLintNames = newShowLintNameSetting;
-
 	// SDK
 	const newSettings = getSettingsThatRequireRestart();
 	const settingsChanged = previousSettings !== newSettings;
 	previousSettings = newSettings;
 
-	if (todoSettingChanged || showLintNameSettingChanged) {
+	if (todoSettingChanged) {
 		reanalyze();
 	}
 

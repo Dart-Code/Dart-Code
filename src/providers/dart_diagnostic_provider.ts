@@ -23,10 +23,9 @@ export class DartDiagnosticProvider {
 	}
 
 	public static createDiagnostic(error: as.AnalysisError): Diagnostic {
-		const message = ((error.type === "HINT" || error.type === "LINT") && config.showLintNames ? `${error.code}: ` : "") + error.message;
 		const diag = new Diagnostic(
 			toRangeOnLine(error.location),
-			message,
+			error.message,
 			DartDiagnosticProvider.getSeverity(error.severity, error.type),
 		);
 		diag.code = error.code;
