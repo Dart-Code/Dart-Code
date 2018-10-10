@@ -10,6 +10,8 @@ import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoi
 import { PackageMap } from "./package_map";
 import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm, LogCategory, LogMessage, LogSeverity, PromiseCompleter, safeSpawn, uriToFilePath } from "./utils";
 
+const maxValuesToCallToString = 15;
+
 // TODO: supportsSetVariable
 // TODO: class variables?
 // TODO: library variables?
@@ -655,7 +657,7 @@ export class DartDebugSession extends DebugSession {
 			const variables: DebugProtocol.Variable[] = [];
 			if (frame.vars) {
 				for (const variable of frame.vars)
-					variables.push(await this.instanceRefToVariable(thread, true, variable.name, variable.name, variable.value));
+					variables.push(await this.instanceRefToVariable(thread, true, variable.name, variable.name, variable.value, frame.vars.length <= maxValuesToCallToString));
 			}
 			response.body = { variables };
 			this.sendResponse(response);
@@ -673,7 +675,7 @@ export class DartDebugSession extends DebugSession {
 			const keyInstanceRef = keyDebuggerResult.result as VMInstanceRef;
 			const valueInstanceRef = valueDebuggerResult.result as VMInstanceRef;
 
-			variables.push(await this.instanceRefToVariable(thread, false, "key", "key", keyInstanceRef));
+			variables.push(await this.instanceRefToVariable(thread, false, "key", "key", keyInstanceRef, true));
 
 			let canEvaluateValueName = false;
 			let valueEvaluateName = "value";
@@ -682,7 +684,7 @@ export class DartDebugSession extends DebugSession {
 				valueEvaluateName = `${mapRef.mapEvaluateName}[${this.valueAsString(keyInstanceRef)}]`;
 			}
 
-			variables.push(await this.instanceRefToVariable(thread, canEvaluateValueName, valueEvaluateName, "value", valueInstanceRef));
+			variables.push(await this.instanceRefToVariable(thread, canEvaluateValueName, valueEvaluateName, "value", valueInstanceRef, true));
 
 			response.body = { variables };
 			this.sendResponse(response);
@@ -710,14 +712,14 @@ export class DartDebugSession extends DebugSession {
 
 						// TODO: show by kind instead
 						if (this.isSimpleKind(instance.kind)) {
-							variables.push(await this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}`, instance.kind, instanceRef));
+							variables.push(await this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}`, instance.kind, instanceRef, true));
 						} else if (instance.elements) {
 							const len = instance.elements.length;
 							if (!start)
 								start = 0;
 							for (let i = 0; i < len; i++) {
 								const element = instance.elements[i];
-								variables.push(await this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + start}]`, `[${i + start}]`, element));
+								variables.push(await this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + start}]`, `[${i + start}]`, element, len <= maxValuesToCallToString));
 							}
 						} else if (instance.associations) {
 							const len = instance.associations.length;
@@ -750,10 +752,12 @@ export class DartDebugSession extends DebugSession {
 								});
 							}
 						} else if (instance.fields) {
+							let len = instance.fields.length;
 							// Add getters
 							if (this.evaluateGettersInDebugViews && instance.class) {
 								let getterNames = await this.getGetterNamesForHierarchy(thread.ref, instance.class);
 								getterNames = _.sortBy(getterNames, (gn) => gn);
+								len += getterNames.length;
 
 								// Call each getter, adding the result as a variable.
 								for (const getterName of getterNames) {
@@ -770,6 +774,7 @@ export class DartDebugSession extends DebugSession {
 											`${instanceRef.evaluateName}.${getterName}`,
 											getterDisplayName,
 											getterResultInstanceRef,
+											len <= maxValuesToCallToString,
 										));
 									}
 								}
@@ -777,7 +782,7 @@ export class DartDebugSession extends DebugSession {
 
 							// Add all of the fields.
 							for (const field of instance.fields)
-								variables.push(await this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value));
+								variables.push(await this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value, len <= maxValuesToCallToString));
 						} else {
 							// TODO: unhandled kind
 							this.logToUser(instance.kind);
@@ -946,14 +951,14 @@ export class DartDebugSession extends DebugSession {
 					result = await this.observatory.evaluate(thread.ref.id, exceptionId, expression.substr(3));
 			}
 			if (!result) {
-				// Don't wait more than a second for the response:
+				// Don't wait more than half a second for the response:
 				//   1. VS Code's watch window behaves badly when there are incomplete evaluate requests
 				//      https://github.com/Microsoft/vscode/issues/52317
 				//   2. The VM sometimes doesn't respond to your requests at all
 				//      https://github.com/flutter/flutter/issues/18595
 				result = await Promise.race([
 					this.observatory.evaluateInFrame(thread.ref.id, frame.index, expression),
-					new Promise<never>((resolve, reject) => setTimeout(() => reject(new Error("<timed out>")), 1000)),
+					new Promise<never>((resolve, reject) => setTimeout(() => reject(new Error("<timed out>")), 500)),
 				]);
 			}
 
@@ -1320,7 +1325,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private async instanceRefToVariable(
-		thread: ThreadInfo, canEvaluate: boolean, evaluateName: string, name: string, ref: VMInstanceRef | VMSentinel,
+		thread: ThreadInfo, canEvaluate: boolean, evaluateName: string, name: string, ref: VMInstanceRef | VMSentinel, allowFetchFullString: boolean,
 	): Promise<DebugProtocol.Variable> {
 		if (ref.type === "Sentinel") {
 			return {
@@ -1335,7 +1340,7 @@ export class DartDebugSession extends DebugSession {
 			// (or a string expression) in the response.
 			val.evaluateName = canEvaluate ? evaluateName : undefined;
 
-			let str = config.previewToStringInDebugViews && !val.valueAsString
+			let str = config.previewToStringInDebugViews && allowFetchFullString && !val.valueAsString
 				? await this.fullValueAsString(thread.ref, val)
 				: this.valueAsString(val);
 			if (!val.valueAsString && !str)

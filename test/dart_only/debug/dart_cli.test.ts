@@ -340,8 +340,10 @@ describe("dart cli debugger", () => {
 		const variables = await dc.getTopFrameVariables("Locals");
 		ensureVariable(variables, "l", "l", `List (12 items)`);
 		ensureVariable(variables, "longStrings", "longStrings", `List (1 item)`);
+		ensureVariable(variables, "tenDates", "tenDates", `List (10 items)`);
+		ensureVariable(variables, "hundredDates", "hundredDates", `List (100 items)`);
 		ensureVariable(variables, "s", "s", `"Hello!"`);
-		ensureVariable(variables, "m", "m", `Map (8 items)`);
+		ensureVariable(variables, "m", "m", `Map (10 items)`);
 
 		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l").variablesReference);
 		for (let i = 0; i <= 1; i++) {
@@ -354,15 +356,23 @@ describe("dart cli debugger", () => {
 			starts: "\"This is a long string that is 300 characters!",
 		});
 
+		const shortdateListVariables = await dc.getVariables(variables.find((v) => v.name === "tenDates").variablesReference);
+		ensureVariable(shortdateListVariables, "tenDates[0]", "[0]", config.previewToStringInDebugViews ? "DateTime (2005-01-01 00:00:00.000)" : "DateTime");
+
+		const longdateListVariables = await dc.getVariables(variables.find((v) => v.name === "hundredDates").variablesReference);
+		ensureVariable(longdateListVariables, "hundredDates[0]", "[0]", "DateTime"); // This doesn't call toString() because it's a long list'.
+
 		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m").variablesReference);
 		ensureVariable(mapVariables, undefined, "0", `"l" -> List (12 items)`);
 		ensureVariable(mapVariables, undefined, "1", `"longStrings" -> List (1 item)`);
-		ensureVariable(mapVariables, undefined, "2", `"s" -> "Hello!"`);
-		ensureVariable(mapVariables, undefined, "3", `DateTime -> "valentines-2000"`);
-		ensureVariable(mapVariables, undefined, "4", `DateTime -> "new-year-2005"`);
-		ensureVariable(mapVariables, undefined, "5", `true -> true`);
-		ensureVariable(mapVariables, undefined, "6", `1 -> "one"`);
-		ensureVariable(mapVariables, undefined, "7", `1.1 -> "one-point-one"`);
+		ensureVariable(mapVariables, undefined, "2", `"tenDates" -> List (10 items)`);
+		ensureVariable(mapVariables, undefined, "3", `"hundredDates" -> List (100 items)`);
+		ensureVariable(mapVariables, undefined, "4", `"s" -> "Hello!"`);
+		ensureVariable(mapVariables, undefined, "5", `DateTime -> "valentines-2000"`);
+		ensureVariable(mapVariables, undefined, "6", `DateTime -> "new-year-2005"`);
+		ensureVariable(mapVariables, undefined, "7", `true -> true`);
+		ensureVariable(mapVariables, undefined, "8", `1 -> "one"`);
+		ensureVariable(mapVariables, undefined, "9", `1.1 -> "one-point-one"`);
 
 		await ensureMapEntry(mapVariables, {
 			key: { evaluateName: null, name: "key", value: `"l"` },
