@@ -47,6 +47,10 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				case "\\":
 					return line.startsWith("import \"") || line.startsWith("export \"")
 						|| line.startsWith("import '") || line.startsWith("export '");
+				// Only trigger on spaces in arg lists, not on the space between parens and braces
+				// of a function definition (#1256).
+				case " ":
+					return line.endsWith(", ");
 			}
 		}
 
