@@ -284,8 +284,9 @@ describe("flutter run debugger (launch)", () => {
 			]);
 
 			const evaluateResult = await dc.evaluate(`new DateTime.now()`);
+			const thisYear = new Date().getFullYear().toString();
 			assert.ok(evaluateResult);
-			assert.ok(evaluateResult.result.startsWith(new Date().getFullYear().toString()));
+			assert.ok(evaluateResult.result.startsWith("DateTime (" + thisYear), `Result '${evaluateResult.result}' did not start with ${thisYear}`);
 			assert.ok(evaluateResult.variablesReference);
 		});
 
