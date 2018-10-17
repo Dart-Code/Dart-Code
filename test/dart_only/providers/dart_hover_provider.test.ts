@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, everythingFile, extApi, getPackages, positionOf, rangeOf } from "../../helpers";
+import { activate, currentDoc, everythingFile, getPackages, positionOf, rangeOf } from "../../helpers";
 
 describe("dart_hover_provider", () => {
 
@@ -63,18 +63,10 @@ describe("dart_hover_provider", () => {
 		assert.deepStrictEqual(hover.range, rangeOf("get |myNumGetter|"));
 	});
 
-	// tslint:disable-next-line:only-arrow-functions
-	it("returns expected information for a setter", async function () {
-		// https://github.com/dart-lang/sdk/issues/32703
-		if (extApi.analyzerCapabilities.isDart2)
-			this.skip();
-
+	// Skipped due to https://github.com/dart-lang/sdk/issues/32703.
+	it.skip("returns expected information for a setter", async () => {
 		const hover = await getHoverAt("my^NumSetter(");
-		if (extApi.analyzerCapabilities.isDart2) {
-			assert.equal(hover.displayText, "set myNumSetter(num value) → void");
-		} else {
-			assert.equal(hover.displayText, "set myNumSetter(num value) → dynamic");
-		}
+		assert.equal(hover.displayText, "set myNumSetter(num value) → void");
 		assert.equal(hover.documentation, "This is my num setter.");
 		assert.deepStrictEqual(hover.range, rangeOf("|myNumSetter|"));
 	});

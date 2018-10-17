@@ -2,12 +2,12 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { config } from "../../../src/config";
-import { isLinux, platformEol } from "../../../src/debug/utils";
+import { platformEol } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
 import { log } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureMapEntry, ensureVariable, ensureVariableWithIndex, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, positionOf, sb } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, positionOf, sb } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -512,14 +512,6 @@ describe("dart cli debugger", () => {
 	it.skip("writes exception to stderr");
 
 	describe("attaches", () => {
-		beforeEach("skip if on Linux and not Dart 2", function () {
-			// Some of these tests are super-flaky on Linux on Dart v1. Since Dart v2
-			// is getting close and I haven't (yet) since this flake there, I'm just skipping.
-			// If it fails on Dart 2, we'll need to investigate in case it's a real bug.
-			if (isLinux && !extApi.analyzerCapabilities.isDart2)
-				this.skip();
-		});
-
 		it("to a paused Dart script and can unpause to run it to completion", async () => {
 			const process = spawnDartProcessPaused(await getLaunchConfiguration(helloWorldMainFile));
 			const observatoryUri = await process.observatoryUri;
@@ -563,11 +555,7 @@ describe("dart cli debugger", () => {
 			assert.ok(showInputBox.calledOnce);
 		});
 
-		it("to a paused Dart script and can set breakpoints", async function () {
-			// This test can be flaky on Dart v1 (seen on Mac and Linux Travis)
-			if (!extApi.analyzerCapabilities.isDart2)
-				this.skip();
-
+		it("to a paused Dart script and can set breakpoints", async () => {
 			const process = spawnDartProcessPaused(await getLaunchConfiguration(helloWorldMainFile));
 			const observatoryUri = await process.observatoryUri;
 
