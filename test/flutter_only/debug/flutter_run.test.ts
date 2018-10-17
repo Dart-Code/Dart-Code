@@ -7,7 +7,7 @@ import { fsPath } from "../../../src/utils";
 import { logError } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, watchPromise } from "../../helpers";
+import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, watchPromise } from "../../helpers";
 
 // When this issue is fixed and makes beta, we can delete this cool and the code
 // that is added because of it.
@@ -50,7 +50,14 @@ describe("flutter run debugger (launch)", () => {
 	afterEach(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 
 	async function startDebugger(script?: vs.Uri | string, cwd?: string): Promise<vs.DebugConfiguration> {
-		const config = await getLaunchConfiguration(script, { deviceId: "flutter-tester", cwd });
+		const config = await getLaunchConfiguration(script, {
+			// Use pid-file as a convenient way of getting the test name into the command line args
+			// for easier debugging of processes that hang around on CI (we dump the process command
+			// line at the end of the test run).
+			args: ["--pid-file", `/tmp/dart_code_tests/${fileSafeCurrentTestName}`],
+			cwd,
+			deviceId: "flutter-tester",
+		});
 		await watchPromise("startDebugger->start", dc.start(config.debugServer));
 		// Make sure any stdErr is logged to console + log file for debugging.
 		dc.on("output", (event: DebugProtocol.OutputEvent) => {

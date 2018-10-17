@@ -5,7 +5,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath, versionIsAtLeast } from "../../../src/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { killFlutterTester } from "../../debug_helpers";
-import { activate, defer, ext, extApi, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
+import { activate, defer, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
 
 describe("flutter test debugger", () => {
 
@@ -35,7 +35,12 @@ describe("flutter test debugger", () => {
 	afterEach(killFlutterTester);
 
 	async function startDebugger(script?: vs.Uri | string): Promise<vs.DebugConfiguration> {
-		const config = await getLaunchConfiguration(script);
+		const config = await getLaunchConfiguration(script, {
+			// Use pid-file as a convenient way of getting the test name into the command line args
+			// for easier debugging of processes that hang around on CI (we dump the process command
+			// line at the end of the test run).
+			args: ["--pid-file", `/tmp/dart_code_tests/${fileSafeCurrentTestName}`],
+		});
 		await dc.start(config.debugServer);
 		return config;
 	}
