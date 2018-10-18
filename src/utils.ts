@@ -154,7 +154,7 @@ export function isTestFile(file: string): boolean {
 	return isInsideFolderNamed(file, "test") || (file && file.toLowerCase().endsWith("_test.dart"));
 }
 
-export function supportsPubRunTest(folder: string, file: string): boolean {
+export function projectSupportsPubRunTest(folder: string): boolean {
 	return hasPackagesFile(folder) && hasPubspec(folder);
 }
 

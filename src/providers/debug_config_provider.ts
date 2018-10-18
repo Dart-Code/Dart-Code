@@ -15,7 +15,7 @@ import { FlutterLaunchRequestArguments, forceWindowsDriveLetterToUppercase, isWi
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { dartVMPath, flutterPath, pubPath, pubSnapshotPath } from "../sdk/utils";
-import { fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, ProjectType, Sdks, supportsPubRunTest } from "../utils";
+import { fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, projectSupportsPubRunTest, ProjectType, Sdks } from "../utils";
 import { log, logWarn } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
@@ -131,7 +131,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const isTest = isFullTestRun || (debugConfig.program && isTestFile(debugConfig.program as string));
 		if (isTest)
 			log(`Detected launch project as a Test project`);
-		const canPubRunTest = isTest && supportsPubRunTest(debugConfig.cwd as string, debugConfig.program as string);
+		const canPubRunTest = isTest && debugConfig.cwd && projectSupportsPubRunTest(debugConfig.cwd as string);
 		if (isTest && !canPubRunTest)
 			log(`Project does not appear to support 'pub run test', will use VM directly`);
 		const debugType = isFlutter
