@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as _ from "lodash";
 import * as path from "path";
 import { commands, ExtensionContext, window } from "vscode";
 import { Analytics } from "../analytics";
@@ -6,6 +7,7 @@ import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
 import { isWin, platformName } from "../debug/utils";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, openExtensionLogFile, openInBrowser, ProjectType, reloadExtension, resolvePaths, Sdks, showLogAction } from "../utils";
+import { getChildFolders, hasPubspec } from "../utils/fs";
 import { log } from "../utils/log";
 
 const dartExecutableName = isWin ? "dart.exe" : "dart";
@@ -149,17 +151,21 @@ export function findSdks(): Sdks {
 
 	let fuchsiaRoot: string | undefined;
 	let flutterProject: string | undefined;
+	folders.forEach((folder) => fuchsiaRoot = fuchsiaRoot || findFuchsiaRoot(folder));
 	// Keep track of whether we have Fuchsia projects that are not "vanilla Flutter" because
 	// if not we will set project type to Flutter to allow daemon to run (and debugging support).
 	let hasFuchsiaProjectThatIsNotVanillaFlutter: boolean;
-	folders.forEach((folder) => {
-		fuchsiaRoot = fuchsiaRoot || findFuchsiaRoot(folder);
+	// If the folder doesn't directly contain a pubspec.yaml then we'll look at the first-level of
+	// children, as the user may have opened a folder that contains multiple projects (including a
+	// Flutter project) and we want to be sure to detect that.
+	const nestedProjectFolders = _.flatMap(folders, getChildFolders);
+	folders.concat(nestedProjectFolders).forEach((folder) => {
 		flutterProject = flutterProject
 			|| (referencesFlutterSdk(folder) ? folder : undefined)
 			|| (fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE)) ? folder : undefined)
 			// Special case to detect the Flutter repo root, so we always consider it a Flutter project and will use the local SDK
 			|| (fs.existsSync(path.join(folder, "bin/flutter")) && fs.existsSync(path.join(folder, "bin/cache/dart-sdk")) ? folder : undefined);
-		hasFuchsiaProjectThatIsNotVanillaFlutter = hasFuchsiaProjectThatIsNotVanillaFlutter || !referencesFlutterSdk(folder);
+		hasFuchsiaProjectThatIsNotVanillaFlutter = hasFuchsiaProjectThatIsNotVanillaFlutter || (hasPubspec(folder) && !referencesFlutterSdk(folder));
 	});
 
 	if (fuchsiaRoot) {
@@ -210,7 +216,7 @@ export function findSdks(): Sdks {
 }
 
 export function referencesFlutterSdk(folder?: string): boolean {
-	if (folder && fs.existsSync(path.join(folder, "pubspec.yaml"))) {
+	if (folder && hasPubspec(folder)) {
 		const regex = new RegExp("sdk\\s*:\\s*flutter", "i");
 		return regex.test(fs.readFileSync(path.join(folder, "pubspec.yaml")).toString());
 	}

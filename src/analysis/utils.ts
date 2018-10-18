@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import { getChildFolders, hasPubspec } from "../utils/fs";
 import { logInfo } from "../utils/log";
 import { Analyzer } from "./analyzer";
 
@@ -20,21 +21,19 @@ export function findPackageRoots(analyzer: Analyzer, root: string): string[] {
 
 	const roots = getChildren(root, 3);
 
-	if (roots.length === 0 || fs.existsSync(path.join(root, "pubspec.yaml")))
+	if (roots.length === 0 || hasPubspec(root))
 		roots.push(root);
 
 	return roots;
 
 	function getChildren(parent: string, numLevels: number): string[] {
 		let packageRoots: string[] = [];
-		const dirs = fs.readdirSync(parent).filter((item) => fs.statSync(path.join(parent, item)).isDirectory());
-		dirs.forEach((folder) => {
-			const folderPath = path.join(parent, folder);
+		getChildFolders(parent).forEach((folder) => {
 			// If this is a package, add it. Else, recurse (if we still have levels to go).
-			if (fs.existsSync(path.join(folderPath, "pubspec.yaml"))) {
-				packageRoots.push(folderPath);
+			if (hasPubspec(folder)) {
+				packageRoots.push(folder);
 			} else if (numLevels > 1)
-				packageRoots = packageRoots.concat(getChildren(folderPath, numLevels - 1));
+				packageRoots = packageRoots.concat(getChildren(folder, numLevels - 1));
 		});
 		return packageRoots;
 	}

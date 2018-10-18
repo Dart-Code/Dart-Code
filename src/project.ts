@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as util from "./utils";
+import { hasPackagesFile, hasPubspec } from "./utils/fs";
 
 export const UPGRADE_TO_WORKSPACE_FOLDERS = "Mark Projects as Workspace Folders";
 
@@ -10,7 +11,7 @@ export function locateBestProjectRoot(folder: string): string | undefined {
 
 	let dir = folder;
 	while (dir !== path.dirname(dir)) {
-		if (fs.existsSync(path.join(dir, "pubspec.yaml")) || fs.existsSync(path.join(dir, ".packages")))
+		if (hasPubspec(dir) || hasPackagesFile(dir))
 			return dir;
 		dir = path.dirname(dir);
 	}
@@ -28,7 +29,7 @@ function getChildProjects(folder: string, levelsToGo: number): string[] {
 
 	let projects: string[] = [];
 	for (const dir of children) {
-		if (fs.existsSync(path.join(dir, "pubspec.yaml"))) {
+		if (hasPubspec(dir)) {
 			projects.push(dir);
 		}
 		if (levelsToGo > 0)

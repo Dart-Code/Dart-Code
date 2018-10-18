@@ -8,6 +8,7 @@ import { commands, extensions, Position, Range, TextDocument, Uri, window, works
 import { config } from "./config";
 import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase } from "./debug/utils";
 import { referencesFlutterSdk } from "./sdk/utils";
+import { hasPackagesFile, hasPubspec } from "./utils/fs";
 import { getExtensionLogPath, logError } from "./utils/log";
 
 export const extensionVersion = getExtensionVersion();
@@ -154,8 +155,7 @@ export function isTestFile(file: string): boolean {
 }
 
 export function supportsPubRunTest(folder: string, file: string): boolean {
-	return fs.existsSync(path.join(folder, ".packages"))
-		&& fs.existsSync(path.join(folder, "pubspec.yaml"));
+	return hasPackagesFile(folder) && hasPubspec(folder);
 }
 
 export function isInsideFolderNamed(file: string, folderName: string): boolean {

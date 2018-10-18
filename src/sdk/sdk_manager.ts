@@ -2,7 +2,8 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { config } from "../config";
-import { Sdks, getSdkVersion, versionIsAtLeast } from "../utils";
+import { getSdkVersion, Sdks, versionIsAtLeast } from "../utils";
+import { getChildFolders } from "../utils/fs";
 import { dartVMPath, flutterPath } from "./utils";
 
 abstract class SdkManager {
@@ -31,7 +32,8 @@ abstract class SdkManager {
 		let allPaths: string[] = [];
 		sdkPaths.filter(fs.existsSync).forEach((sdkPath) => {
 			allPaths.push(sdkPath);
-			allPaths = allPaths.concat(fs.readdirSync(sdkPath).map((p) => path.join(sdkPath, p)));
+			// Add immediate children to support folders-of-SDKs.
+			allPaths = allPaths.concat(getChildFolders(sdkPath));
 		});
 
 		// Add in the current path if it's not there.
