@@ -1491,8 +1491,17 @@ class ThreadManager {
 		this.exceptionMode = mode;
 
 		for (const thread of this.threads) {
-			if (thread.runnable)
-				this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, mode);
+			if (thread.runnable) {
+				let threadMode = mode;
+
+				// If the mode is set to "All Exceptions" but the thread is a snapshot from pub
+				// then downgrade it to Uncaught because the user is unlikely to want to be stopping
+				// on internal exceptions such trying to parse versions.
+				if (mode === "All" && thread.isInfrastructure)
+					threadMode = "Unhandled";
+
+				this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, threadMode);
+			}
 		}
 	}
 
@@ -1607,6 +1616,12 @@ class ThreadInfo {
 	public atAsyncSuspension: boolean = false;
 	public exceptionReference = 0;
 	public paused: boolean = false;
+
+	// Whether this thread is infrastructure (eg. not user code), useful for avoiding breaking
+	// on handled exceptions, etc.
+	get isInfrastructure(): boolean {
+		return this.ref && this.ref.name && this.ref.name.startsWith("pub.dart.snapshot");
+	}
 
 	constructor(
 		public readonly manager: ThreadManager,
