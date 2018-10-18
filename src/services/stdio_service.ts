@@ -35,6 +35,8 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 		this.process = safeSpawn(workingDirectory, binPath, args, envOverrides);
 
+		this.logTraffic(`    PID: ${process.pid}`);
+
 		this.process.stdout.on("data", (data: Buffer) => {
 			const message = data.toString();
 

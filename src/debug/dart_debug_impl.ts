@@ -192,6 +192,8 @@ export class DartDebugSession extends DebugSession {
 
 		const process = safeSpawn(args.cwd, args.dartPath, appArgs, args.env);
 
+		this.log(`    PID: ${process.pid}`);
+
 		return process;
 	}
 
