@@ -1,9 +1,8 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { forceWindowsDriveLetterToUppercase } from "../../src/debug/utils";
 import { fsPath } from "../../src/utils";
-import { activate, extApi, flutterHelloWorldFolder, flutterHelloWorldMainFile } from "../helpers";
+import { activate, extApi, helloWorldFolder, helloWorldMainFile } from "../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -23,13 +22,12 @@ describe("extension", () => {
 			vs.workspace.workspaceFolders![0],
 			{
 				name: "Dart",
-				program: fsPath(flutterHelloWorldMainFile),
+				program: fsPath(helloWorldMainFile),
 				request: "launch",
 				type: "dart",
 			},
 		);
 
-		// TODO: Remove forceWindowsDriveLetterToUppercase when it becomes default.
-		assert.equal(forceWindowsDriveLetterToUppercase(resolvedConfig.cwd), forceWindowsDriveLetterToUppercase(fsPath(flutterHelloWorldFolder)));
+		assert.equal(resolvedConfig.cwd, fsPath(helloWorldFolder));
 	});
 });
