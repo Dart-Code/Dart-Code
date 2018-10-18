@@ -165,13 +165,6 @@ export function tryDelete(file: vs.Uri) {
 	}
 }
 
-export let currentTestName: string | undefined;
-export let fileSafeCurrentTestName: string | undefined;
-beforeEach("stash current test name", async function () {
-	currentTestName = this.currentTest && this.currentTest.fullTitle();
-	fileSafeCurrentTestName = currentTestName && filenameSafe(currentTestName);
-});
-
 beforeEach("set logger", async function () {
 	if (!this.currentTest)
 		return;
