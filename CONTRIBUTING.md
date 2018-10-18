@@ -1,6 +1,10 @@
 [![Gitter Chat](https://img.shields.io/badge/chat-online-blue.svg)](https://gitter.im/dart-code/Dart-Code) [![Follow on Twitter](https://img.shields.io/badge/twitter-dartcode-blue.svg)](https://twitter.com/DartCode) [![Contribute to Dart Code](https://img.shields.io/badge/help-contribute-551A8B.svg)](https://github.com/Dart-Code/Dart-Code/blob/master/CONTRIBUTING.md) [![Linux & Mac build status](https://img.shields.io/travis/Dart-Code/Dart-Code/master.svg?label=mac+%26+linux)](https://travis-ci.org/Dart-Code/Dart-Code) [![Windows build status](https://img.shields.io/appveyor/ci/DanTup/Dart-Code/master.svg?label=windows&logoWidth=-1)](https://ci.appveyor.com/project/DanTup/dart-code)
 
-# Contributing to Dart Code
+# Raising Issues in Dart Code
+
+If you you've found an issue or have a suggestion for Dart Code, please do [open an issue](https://github.com/Dart-Code/Dart-Code/issues/new). For bugs, it is beneficial to attach a log file recorded while reproducing the issue. Information on using the `Capture Logs` command or enabling background logging is available [on the Dart Code website](https://dartcode.org/docs/logging/).
+
+# Contributing Code to Dart Code
 
 If you're going to work on an issue, please add a comment to the issue so others know it's being looked at. If there isn't an issue for the work you want to do, please create one. The [good first issue](https://github.com/Dart-Code/Dart-Code/labels/good%20first%20issue) issues might make good starting points for new contributors.
 
