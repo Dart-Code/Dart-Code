@@ -94,14 +94,13 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 						completionText.appendPlaceholder(arg);
 					}
 				} else
-					completionText.appendTabstop(); // Put a tap stop between parens since there are optional args.
+					completionText.appendTabstop(0); // Put a tap stop between parens since there are optional args.
 				completionText.appendText(")");
-				completionText.appendTabstop();
 			} else if (insertArgumentPlaceholders && !nextCharacterIsOpenParen) {
 				completionText.appendText(suggestion.completion);
 				completionText.appendText("(");
 				if (hasParams)
-					completionText.appendTabstop();
+					completionText.appendTabstop(0);
 				completionText.appendText(")");
 			} else {
 				completionText.appendText(suggestion.completion);
@@ -120,7 +119,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			if (selection)
 				completionText.appendPlaceholder(selection);
 			else
-				completionText.appendTabstop();
+				completionText.appendTabstop(0);
 			completionText.appendText(after);
 		} else {
 			completionText.appendText(suggestion.completion);
