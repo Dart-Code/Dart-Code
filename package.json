@@ -695,7 +695,7 @@
 				"dart.showTodos": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to show TODOs in the Problems list.\n\nNote: Flutter projects have a default analysis_options.yaml file that hides TODOs so you will first need to override that to see TODOs.",
+					"description": "Whether to show TODOs in the Problems list.",
 					"scope": "window"
 				},
 				"dart.openTestView": {
