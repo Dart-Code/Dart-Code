@@ -47,6 +47,7 @@ import { LegacyDartWorkspaceSymbolProvider } from "./providers/legacy_dart_works
 import { RefactorCodeActionProvider } from "./providers/refactor_code_action_provider";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
 import { SourceCodeActionProvider } from "./providers/source_code_action_provider";
+import { PubBuildRunnerTaskProvider } from "./pub/build_runner_task_provider";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForSdkUpdates } from "./sdk/update_check";
@@ -216,6 +217,11 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		const codeLensProvider = new TestCodeLensProvider(analyzer);
 		context.subscriptions.push(codeLensProvider);
 		context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
+	}
+
+	// Task handlers.
+	if (config.previewBuildRunnerTasks) {
+		context.subscriptions.push(vs.tasks.registerTaskProvider("pub", new PubBuildRunnerTaskProvider(sdks)));
 	}
 
 	// Attach project-type-specific snippets.
@@ -513,6 +519,7 @@ function getSettingsThatRequireRestart() {
 		+ config.analysisServerFolding
 		+ config.showTestCodeLens
 		+ config.previewHotReloadCoverageMarkers
+		+ config.previewBuildRunnerTasks
 		+ config.triggerSignatureHelpAutomatically;
 }
 

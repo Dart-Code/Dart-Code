@@ -30,7 +30,7 @@ export class LogMessage {
 	constructor(public readonly message: string, public readonly severity: LogSeverity, public readonly category: LogCategory) { }
 }
 
-const toolEnv = Object.create(process.env);
+export const toolEnv = Object.create(process.env);
 toolEnv.FLUTTER_HOST = "VSCode";
 toolEnv.PUB_ENVIRONMENT = (toolEnv.PUB_ENVIRONMENT ? `${toolEnv.PUB_ENVIRONMENT}:` : "") + "vscode.dart-code";
 export const globalFlutterArgs: string[] = [];

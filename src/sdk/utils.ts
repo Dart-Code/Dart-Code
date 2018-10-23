@@ -225,6 +225,14 @@ export function referencesFlutterSdk(folder?: string): boolean {
 	return false;
 }
 
+export function referencesBuildRunner(folder?: string): boolean {
+	if (folder && hasPubspec(folder)) {
+		const regex = new RegExp("build_runner\\s*:", "i");
+		return regex.test(fs.readFileSync(path.join(folder, "pubspec.yaml")).toString());
+	}
+	return false;
+}
+
 function extractFlutterSdkPathFromPackagesFile(file: string): string {
 	if (!fs.existsSync(file))
 		return null;
