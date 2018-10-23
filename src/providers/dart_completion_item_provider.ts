@@ -15,7 +15,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		const nextCharacter = document.getText(new Range(position, position.translate({ characterDelta: 200 }))).trim().substr(0, 1);
 		const conf = config.for(document.uri);
 		const enableCommitCharacters = conf.enableCompletionCommitCharacters;
-		const insertArgumentPlaceholders = !enableCommitCharacters && conf.insertArgumentPlaceholders;
+		const insertArgumentPlaceholders = !enableCommitCharacters && conf.insertArgumentPlaceholders && this.shouldAllowArgPlaceholders(line);
 
 		if (!this.shouldAllowCompletion(line, context))
 			return;
@@ -33,6 +33,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 	}
 
 	private shouldAllowCompletion(line: string, context: CompletionContext): boolean {
+		line = line.trim();
 		// Filter out auto triggered completions on certain characters based on the previous
 		// characters (eg. to allow completion on " if it's part of an import).
 		if (context.triggerKind === CompletionTriggerKind.TriggerCharacter) {
@@ -45,7 +46,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 					return line.endsWith("import \"") || line.endsWith("export \"");
 				case "/":
 				case "\\":
-					line = line.trim();
 					return line.startsWith("import \"") || line.startsWith("export \"")
 						|| line.startsWith("import '") || line.startsWith("export '");
 				// Only trigger on spaces in arg lists, not on the space between parens and braces
@@ -54,12 +54,27 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 					return line.endsWith(", ");
 				// Don't trigger for colons if we're in a case statement
 				case ":":
-					line = line.trim();
 					return !line.startsWith("case");
 			}
 		}
 
 		// Otherwise, allow through.
+		return true;
+	}
+
+	private shouldAllowArgPlaceholders(line: string): boolean {
+		line = line.trim();
+
+		// Disallow args on imports/exports since they're likely show/hide and
+		// we only want the function name. This doesn't catch all cases (for ex.
+		// where a show/hide is split across multiple lines) but it's better than
+		// nothing. We'd need more semantic info to handle this better, and probably
+		// this will go away if commit characters is fixed properly.
+		if (line.startsWith("import \"") || line.startsWith("export \"")
+			|| line.startsWith("import '") || line.startsWith("export '")) {
+			return false;
+		}
+
 		return true;
 	}
 
