@@ -212,13 +212,15 @@ describe("flutter run debugger (launch)", () => {
 			const config = await startDebugger(flutterHelloWorldMainFile);
 			const expectedLocation = {
 				line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
+				packagePath: "package:hello_world/main.dart", // Stash this to compare against since new versions of Flutter will return it.
 				path: fsPath(flutterHelloWorldMainFile),
 			};
 			await watchPromise("stops_at_a_breakpoint->hitBreakpoint", dc.hitBreakpoint(config, expectedLocation));
 			const stack = await dc.getStack();
 			const frames = stack.body.stackFrames;
 			assert.equal(frames[0].name, "MyHomePage.build");
-			assert.equal(frames[0].source.path, expectedLocation.path);
+			if (frames[0].source.path !== expectedLocation.packagePath)
+				assert.equal(frames[0].source.path, expectedLocation.path);
 			assert.equal(frames[0].source.name, path.relative(fsPath(flutterHelloWorldFolder), expectedLocation.path));
 
 			// Fails due to
