@@ -12,6 +12,10 @@ const iconRegex = new RegExp(
 	+ `(?:${_.escapeRegExp("</p>")})?`,
 	"gi",
 );
+const dartDocDirectives = new RegExp(
+	`(\\n\\s*{@.*?}$)|(^{@.*?}\\s*\\n)`,
+	"gim",
+);
 
 export function cleanDartdoc(doc: string): string {
 	if (!doc)
@@ -33,6 +37,9 @@ export function cleanDartdoc(doc: string): string {
 
 	// TODO: Use light/dark theme as appropriate.
 	doc = doc.replace(iconRegex, `![$1](${darkIconUrlFormat}|width=100,height=100)`);
+
+	// Remove any directives like {@template xxx}
+	doc = doc.replace(dartDocDirectives, "");
 
 	return doc;
 }
