@@ -243,7 +243,7 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it("downloads SDK source code from the VM", async () => {
+	it.skip("downloads SDK source code from the VM", async () => {
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
