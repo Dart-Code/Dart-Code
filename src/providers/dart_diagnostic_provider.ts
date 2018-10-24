@@ -23,7 +23,7 @@ export class DartDiagnosticProvider {
 	}
 
 	public static createDiagnostic(error: as.AnalysisError): Diagnostic {
-		const diag = new Diagnostic(
+		const diag = new DartDiagnostic(
 			toRangeOnLine(error.location),
 			error.message,
 			DartDiagnosticProvider.getSeverity(error.severity, error.type),
@@ -31,6 +31,7 @@ export class DartDiagnosticProvider {
 		diag.code = error.code;
 		diag.source = "dart";
 		diag.tags = DartDiagnosticProvider.getTags(error);
+		diag.type = error.type;
 		return diag;
 	}
 
@@ -63,4 +64,8 @@ export class DartDiagnosticProvider {
 		const entries = notification.files.map<[Uri, Diagnostic[]]>((file) => [Uri.file(file), undefined]);
 		this.diagnostics.set(entries);
 	}
+}
+
+export class DartDiagnostic extends Diagnostic {
+	public type: string;
 }

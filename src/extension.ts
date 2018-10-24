@@ -41,6 +41,7 @@ import { DartSignatureHelpProvider } from "./providers/dart_signature_help_provi
 import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
 import { DebugConfigProvider, HAS_LAST_DEBUG_CONFIG } from "./providers/debug_config_provider";
 import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
+import { IgnoreLintCodeActionProvider } from "./providers/ignore_lint_code_action_provider";
 import { LegacyDartWorkspaceSymbolProvider } from "./providers/legacy_dart_workspace_symbol_provider";
 import { RefactorCodeActionProvider } from "./providers/refactor_code_action_provider";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
@@ -179,6 +180,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const fixCodeActionProvider = new FixCodeActionProvider(analyzer);
 	const refactorCodeActionProvider = new RefactorCodeActionProvider(analyzer);
 	const sourceCodeActionProvider = new SourceCodeActionProvider(analyzer);
+	const ignoreLintCodeActionProvider = new IgnoreLintCodeActionProvider(analyzer);
 	const renameProvider = new DartRenameProvider(analyzer);
 	const implementationProvider = new DartImplementationProvider(analyzer);
 
@@ -205,6 +207,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// Some actions only apply to Dart.
 	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, formattingEditProvider, "}", ";"));
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, sourceCodeActionProvider, sourceCodeActionProvider.metadata));
+	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, ignoreLintCodeActionProvider, ignoreLintCodeActionProvider.metadata));
 	context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, implementationProvider));
 	if (config.showTestCodeLens) {
 		const codeLensProvider = new TestCodeLensProvider(analyzer);

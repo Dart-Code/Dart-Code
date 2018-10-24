@@ -899,6 +899,12 @@
 					"description": "Whether to show a warning when modifying files outside of the workspace.",
 					"scope": "window"
 				},
+				"dart.showIgnoreQuickFixes": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to show quick fixes for ignore hints and lints.",
+					"scope": "window"
+				},
 				"dart.previewToStringInDebugViews": {
 					"type": "boolean",
 					"default": false,
