@@ -43,7 +43,7 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		// We should only show the Code Lens for projects we know can actually handle `pub run` (for ex. the
 		// SDK codebase cannot, and will therefore run all tests when you click them).
 		const projectRoot = locateBestProjectRoot(fsPath(document.uri));
-		if (!projectSupportsPubRunTest(projectRoot))
+		if (!projectRoot || !projectSupportsPubRunTest(projectRoot))
 			return;
 
 		const visitor = new TestOutlineVisitor();
