@@ -223,8 +223,6 @@ describe("flutter run debugger (launch)", () => {
 			if (frames[0].source.name !== path.relative(fsPath(flutterHelloWorldFolder), expectedLocation.path))
 				assert.equal(frames[0].source.name, "package:hello_world/main.dart");
 
-			// Fails due to
-			// https://github.com/flutter/flutter/issues/17838
 			await watchPromise("stops_at_a_breakpoint->resume", dc.resume());
 
 			// Reload and ensure we hit the breakpoint on each one.
@@ -236,7 +234,9 @@ describe("flutter run debugger (launch)", () => {
 							const frames = stack.body.stackFrames;
 							assert.equal(frames[0].name, "MyHomePage.build");
 							assert.equal(frames[0].source.path, expectedLocation.path);
-							assert.equal(frames[0].source.name, path.relative(fsPath(flutterHelloWorldFolder), expectedLocation.path));
+							// TODO: Remove this if when flutter beta is returning package URIs
+							if (frames[0].source.name !== path.relative(fsPath(flutterHelloWorldFolder), expectedLocation.path))
+								assert.equal(frames[0].source.name, "package:hello_world/main.dart");
 						})
 						.then((_) => watchPromise(`stops_at_a_breakpoint->reload:${i}->resume`, dc.resume())),
 					watchPromise(`stops_at_a_breakpoint->reload:${i}->hotReload:breakpoint`, dc.hotReload()),
