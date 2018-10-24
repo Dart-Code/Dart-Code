@@ -49,20 +49,3 @@ describe("cleanDartDoc", () => {
 		assert.equal(cleanDartdoc(input), expected);
 	});
 });
-
-/// {@template flutter.widgets.widgetsApp.navigatorKey}
-/// A key to use when building the [Navigator].
-///
-/// If a [navigatorKey] is specified, the [Navigator] can be directly
-/// manipulated without first obtaining it from a [BuildContext] via
-/// [Navigator.of]: from the [navigatorKey], use the [GlobalKey.currentState]
-/// getter.
-///
-/// If this is changed, a new [Navigator] will be created, losing all the
-/// application state in the process; in that case, the [navigatorObservers]
-/// must also be changed, since the previous observers will be attached to the
-/// previous navigator.
-///
-/// The [Navigator] is only built if [onGenerateRoute] is not null; if it is
-/// null, [navigatorKey] must also be null.
-/// {@endTemplate}
