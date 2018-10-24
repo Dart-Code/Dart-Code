@@ -48,4 +48,41 @@ describe("cleanDartDoc", () => {
 		`;
 		assert.equal(cleanDartdoc(input), expected);
 	});
+	it("strips section names from code block headers", () => {
+		const input = `
+		Would you like to see some code?
+		\`\`\`dart xxx
+		class Foo extends StatelessWidget {
+		}
+		\`\`\`
+		More?
+		\`\`\`dart yyy
+		class Foo extends StatelessWidget {
+		}
+		\`\`\`
+		How about one without?
+		\`\`\`dart
+		class Foo extends StatelessWidget {
+		}
+		\`\`\`
+		`;
+		const expected = `
+		Would you like to see some code?
+		\`\`\`dart
+		class Foo extends StatelessWidget {
+		}
+		\`\`\`
+		More?
+		\`\`\`dart
+		class Foo extends StatelessWidget {
+		}
+		\`\`\`
+		How about one without?
+		\`\`\`dart
+		class Foo extends StatelessWidget {
+		}
+		\`\`\`
+		`;
+		assert.equal(cleanDartdoc(input), expected);
+	});
 });

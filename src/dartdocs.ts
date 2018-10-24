@@ -16,6 +16,10 @@ const dartDocDirectives = new RegExp(
 	`(\\n\\s*{@.*?}$)|(^{@.*?}\\s*\\n)`,
 	"gim",
 );
+const dartDocCodeBlockSections = new RegExp(
+	`(\`\`\`\\w+) +\\w+`,
+	"gi",
+);
 
 export function cleanDartdoc(doc: string): string {
 	if (!doc)
@@ -40,6 +44,9 @@ export function cleanDartdoc(doc: string): string {
 
 	// Remove any directives like {@template xxx}
 	doc = doc.replace(dartDocDirectives, "");
+
+	// Remove any code block section names like ```dart preamble
+	doc = doc.replace(dartDocCodeBlockSections, "$1");
 
 	return doc;
 }
