@@ -15,7 +15,7 @@ import { PackageMap } from "../shared/pub/package_map";
 import { errorString, flatMap, throttle, uniq, uriToFilePath } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
 import { applyColor, grey, grey2 } from "../shared/utils/colors";
-import { DebuggerResult, ObservatoryConnection, SourceReportKind, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
+import { DebuggerResult, ObservatoryConnection, SourceReportKind, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceReport, VMStack, VMTypeRef, VMVersion } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
 import { ThreadInfo, ThreadManager } from "./threads";
 import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm } from "./utils";
@@ -73,6 +73,7 @@ export class DartDebugSession extends DebugSession {
 	protected shouldKillProcessOnTerminate = true;
 	protected logCategory = LogCategory.General; // This isn't used as General, since both Flutter and FlutterWeb override it.
 	// protected observatoryUriIsProbablyReconnectable = false;
+	private serviceProtocolVersion: VMVersion = { type: "Version", major: 0, minor: 0 };
 	private readonly logger = new DebugAdapterLogger(this, LogCategory.Observatory);
 
 	protected readonly capabilities = VmServiceCapabilities.empty;
@@ -317,7 +318,7 @@ export class DartDebugSession extends DebugSession {
 			// fires immediately opon opening, not when all the code in the getVM
 			// callback fires (so it may as well have come first - unless it's
 			// a bug/race and it was supposed to be after all the setup!).
-			this.observatory.onOpen(() => {
+			this.observatory.onOpen(async () => {
 				if (!this.observatory)
 					return;
 
@@ -385,6 +386,7 @@ export class DartDebugSession extends DebugSession {
 					});
 				});
 
+				await this.fetchVmProtocolVersion();
 				resolve();
 			});
 
@@ -441,6 +443,19 @@ export class DartDebugSession extends DebugSession {
 				// TODO: Remove this catch block if/when the stable release does not throw.
 			});
 		}
+	}
+
+	private async fetchVmProtocolVersion(): Promise<void> {
+		if (!this.observatory)
+			return;
+
+		const result = await this.observatory.getVersion();
+		this.serviceProtocolVersion = result.result as VMVersion;
+	}
+
+	private serviceProtocolIsAtLeast(major: number, minor: number): boolean {
+		return this.serviceProtocolVersion.major > major
+			|| (this.serviceProtocolVersion.major === major && this.serviceProtocolVersion.minor >= minor);
 	}
 
 	protected async terminate(force: boolean): Promise<void> {
@@ -990,8 +1005,13 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private async callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef, getFullString: boolean = false): Promise<string | undefined> {
+		if (!this.observatory)
+			return;
+
 		try {
-			const result = await this.observatory!.evaluate(isolate.id, instanceRef.id, "toString()", true);
+			const result = this.serviceProtocolIsAtLeast(3, 10)
+				? await this.observatory.invoke(isolate.id, instanceRef.id, "toString", [])
+				: await this.observatory.evaluate(isolate.id, instanceRef.id, "toString()", true);
 			if (result.result.type === "@Error") {
 				return undefined;
 			} else {

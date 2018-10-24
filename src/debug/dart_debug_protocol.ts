@@ -303,6 +303,11 @@ export interface VMLogRecord extends VMResponse {
 	stackTrace: VMInstanceRef;
 }
 
+export interface VMVersion extends VMResponse {
+	major: number;
+	minor: number;
+}
+
 export interface VMSourceReport extends VMResponse {
 	// A list of ranges in the program source.  These ranges correspond
 	// to ranges of executable code in the user's program (functions,
@@ -495,6 +500,15 @@ export class ObservatoryConnection {
 			expression,
 			frameIndex,
 			isolateId,
+		});
+	}
+
+	public invoke(isolateId: string, targetId: string, selector: string, argumentIds: string[]): Promise<DebuggerResult> {
+		return this.callMethod("invoke", {
+			argumentIds,
+			isolateId,
+			selector,
+			targetId,
 		});
 	}
 
