@@ -902,7 +902,7 @@
 				"dart.showIgnoreQuickFixes": {
 					"type": "boolean",
 					"default": false,
-					"description": "Whether to show quick fixes for ignore hints and lints.",
+					"description": "Whether to show quick fixes for ignoring hints and lints.",
 					"scope": "window"
 				},
 				"dart.previewToStringInDebugViews": {
