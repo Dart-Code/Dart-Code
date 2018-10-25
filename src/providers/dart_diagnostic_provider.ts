@@ -4,6 +4,7 @@ import { Analyzer } from "../analysis/analyzer";
 import { config } from "../config";
 import { toRangeOnLine } from "../utils";
 
+// TODO: This is not a provider?
 export class DartDiagnosticProvider {
 	constructor(private readonly analyzer: Analyzer, private readonly diagnostics: DiagnosticCollection) {
 		this.analyzer.registerForAnalysisErrors((es) => this.handleErrors(es));
