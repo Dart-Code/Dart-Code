@@ -7,6 +7,7 @@ import * as semver from "semver";
 import * as vs from "vscode";
 import { AnalyzerCapabilities } from "../src/analysis/analyzer";
 import { dartCodeExtensionIdentifier, LogCategory, LogSeverity } from "../src/debug/utils";
+import { FlutterCapabilities } from "../src/flutter/capabilities";
 import { DaemonCapabilities } from "../src/flutter/flutter_daemon";
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
@@ -21,6 +22,7 @@ export let extApi: {
 	analyzerCapabilities: AnalyzerCapabilities,
 	currentAnalysis: () => Promise<void>,
 	daemonCapabilities: DaemonCapabilities,
+	flutterCapabilities: FlutterCapabilities,
 	debugProvider: DebugConfigProvider,
 	nextAnalysis: () => Promise<void>,
 	initialAnalysis: Promise<void>,

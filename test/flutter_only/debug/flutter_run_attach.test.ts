@@ -37,11 +37,12 @@ describe("flutter run debugger (attach)", () => {
 
 	async function attachDebugger(observatoryUri?: string): Promise<vs.DebugConfiguration> {
 		const config = await getAttachConfiguration({
-			// TODO: Remove all the copies of this...
 			// Use pid-file as a convenient way of getting the test name into the command line args
 			// for easier debugging of processes that hang around on CI (we dump the process command
 			// line at the end of the test run).
-			args: ["--pid-file", `/tmp/dart_code_tests/${fileSafeCurrentTestName}`],
+			args: extApi.flutterCapabilities.supportsPidFileForAttach
+				? ["--pid-file", `/tmp/dart_code_tests/${fileSafeCurrentTestName}`]
+				: [],
 			deviceId: "flutter-tester",
 			observatoryUri,
 		});
@@ -54,7 +55,7 @@ describe("flutter run debugger (attach)", () => {
 		return config;
 	}
 
-	it("attaches to a Flutter application and remains active until told to detach", async () => {
+	it.only("attaches to a Flutter application and remains active until told to detach", async () => {
 		const process = await spawnFlutterProcess(flutterHelloWorldMainFile);
 		const observatoryUri = await process.observatoryUri;
 		const config = await attachDebugger(observatoryUri);

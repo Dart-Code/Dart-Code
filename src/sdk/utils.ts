@@ -6,7 +6,7 @@ import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
 import { isWin, platformName } from "../debug/utils";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, openExtensionLogFile, openInBrowser, ProjectType, reloadExtension, resolvePaths, Sdks, showLogAction } from "../utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, getSdkVersion, openExtensionLogFile, openInBrowser, ProjectType, reloadExtension, resolvePaths, Sdks, showLogAction } from "../utils";
 import { getChildFolders, hasPubspec } from "../utils/fs";
 import { log } from "../utils/log";
 
@@ -207,7 +207,9 @@ export function findSdks(): Sdks {
 	return {
 		dart: dartSdkPath,
 		dartSdkIsFromFlutter: dartSdkPath && isDartSdkFromFlutter(dartSdkPath),
+		dartVersion: getSdkVersion(dartSdkPath),
 		flutter: flutterSdkPath,
+		flutterVersion: getSdkVersion(flutterSdkPath),
 		fuchsia: fuchsiaRoot,
 		projectType: fuchsiaRoot && hasFuchsiaProjectThatIsNotVanillaFlutter
 			? ProjectType.Fuchsia

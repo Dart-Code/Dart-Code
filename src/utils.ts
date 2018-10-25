@@ -247,7 +247,9 @@ export function openInBrowser(url: string) {
 
 export class Sdks {
 	public dart?: string;
+	public dartVersion?: string;
 	public flutter?: string;
+	public flutterVersion?: string;
 	public fuchsia?: string;
 	public projectType = ProjectType.Dart;
 	public dartSdkIsFromFlutter: boolean;

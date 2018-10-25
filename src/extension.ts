@@ -22,6 +22,7 @@ import { config } from "./config";
 import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, isWin, isWithinPath, LogCategory, platformName } from "./debug/utils";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_decorations";
+import { FlutterCapabilities } from "./flutter/capabilities";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { DaemonCapabilities, FlutterDaemon } from "./flutter/flutter_daemon";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
@@ -49,7 +50,7 @@ import { SourceCodeActionProvider } from "./providers/source_code_action_provide
 import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForSdkUpdates } from "./sdk/update_check";
-import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingSdks, isDartSdkFromFlutter } from "./sdk/utils";
+import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingSdks } from "./sdk/utils";
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { fsPath } from "./utils";
@@ -69,6 +70,7 @@ export let extensionPath: string | undefined;
 
 let analyzer: Analyzer;
 let flutterDaemon: FlutterDaemon;
+const flutterCapabilities = FlutterCapabilities.empty;
 let analysisRoots: string[] = [];
 let analytics: Analytics;
 
@@ -113,13 +115,14 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		return handleMissingSdks(context, analytics, sdks);
 	}
 
+	if (sdks.flutterVersion)
+		flutterCapabilities.version = sdks.flutterVersion;
+
 	// Show the SDK version in the status bar.
-	const dartSdkVersion = util.getSdkVersion(sdks.dart);
-	const flutterSdkVersion = util.getSdkVersion(sdks.flutter);
-	if (dartSdkVersion) {
-		analytics.sdkVersion = dartSdkVersion;
-		checkForSdkUpdates(sdks, dartSdkVersion);
-		context.subscriptions.push(new StatusBarVersionTracker(sdks.projectType, dartSdkVersion, flutterSdkVersion, isDartSdkFromFlutter(sdks.dart)));
+	if (sdks.dartVersion) {
+		analytics.sdkVersion = sdks.dartVersion;
+		checkForSdkUpdates(sdks, sdks.dartVersion);
+		context.subscriptions.push(new StatusBarVersionTracker(sdks.projectType, sdks.dartVersion, sdks.flutterVersion, sdks.dartSdkIsFromFlutter));
 	}
 
 	// Fire up the analyzer process.
@@ -405,6 +408,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			currentAnalysis: () => analyzer.currentAnalysis,
 			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
 			debugProvider,
+			flutterCapabilities,
 			initialAnalysis,
 			nextAnalysis,
 			reanalyze,
