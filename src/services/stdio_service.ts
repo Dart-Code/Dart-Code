@@ -13,15 +13,15 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	private nextRequestID = 1;
 	private readonly activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] | "CANCELLED" } = {};
 	private messageBuffer: string[] = [];
-	private currentLogFile: string;
+	private currentLogFile: string | undefined;
 	private logStream?: fs.WriteStream;
 	private readonly requestErrorSubscriptions: Array<(notification: any) => void> = [];
 	private processExited = false;
 
 	constructor(
-		public readonly getLogFile: () => string,
+		public readonly getLogFile: () => string | undefined,
 		public readonly logger: (message: string, severity: LogSeverity) => void,
-		public readonly maxLogLineLength: number,
+		public readonly maxLogLineLength: number | undefined,
 		public messagesWrappedInBrackets: boolean = false,
 		public readonly treatHandlingErrorsAsUnhandledMessages: boolean = false) {
 		this.currentLogFile = getLogFile();
@@ -86,7 +86,10 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 	protected sendMessage<T>(json: string) {
 		this.logTraffic(`==> ${json}`);
-		this.process.stdin.write(json);
+		if (this.process)
+			this.process.stdin.write(json);
+		else
+			this.logTraffic(`  (not sent: no process)`);
 	}
 
 	protected processMessageBuffer() {
@@ -241,7 +244,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	public dispose() {
 		if (this.logStream) {
 			this.logStream.end();
-			this.logStream = null;
+			this.logStream = undefined;
 		}
 
 		for (const pid of this.additionalPidsToTerminate) {
@@ -266,23 +269,23 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 }
 
-export class Request<T> {
-	public id: string;
-	public method: string;
-	public params: T;
+export interface Request<T> {
+	id: string;
+	method: string;
+	params: T;
 }
 
-export class Response<T> {
-	public id: string;
-	public error: any;
-	public result: T;
+export interface Response<T> {
+	id: string;
+	error: any;
+	result: T;
 }
 
-export class UnknownResponse extends Response<any> { }
+export interface UnknownResponse extends Response<any> { }
 
-export class Notification<T> {
-	public event: string;
-	public params: T;
+export interface Notification<T> {
+	event: string;
+	params: T;
 }
 
-export class UnknownNotification extends Notification<any> { }
+export interface UnknownNotification extends Notification<any> { }

@@ -55,11 +55,11 @@ abstract class SdkManager {
 				description: f === this.currentSdk && this.configuredSdk ? "Current setting" : "",
 				detail: f,
 				folder: f,
-				label: this.getLabel(version),
+				label: version ? this.getLabel(version) : "Unknown version",
 				version,
 			};
 		})
-			.sort((a, b) => versionIsAtLeast(a.version, b.version) ? 1 : -1);
+			.sort((a, b) => versionIsAtLeast(a.version || "0.0.0", b.version || "0.0.0") ? 1 : -1);
 
 		if (sdkItems.length === 0)
 			return;

@@ -24,7 +24,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	public readonly onDidStartTests: vs.Event<vs.TreeItem | undefined> = this.onDidStartTestsEmitter.event;
 	private onFirstFailureEmitter: vs.EventEmitter<vs.TreeItem | undefined> = new vs.EventEmitter<vs.TreeItem | undefined>();
 	public readonly onFirstFailure: vs.Event<vs.TreeItem | undefined> = this.onFirstFailureEmitter.event;
-	private currentSelectedNode: vs.TreeItem;
+	private currentSelectedNode: vs.TreeItem | undefined;
 
 	// Set this flag we know when a new run starts so we can show the tree; however
 	// we can't show it until we render a node (we can only call reveal on a node) so
@@ -64,7 +64,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		this.currentSelectedNode = item;
 	}
 
-	private owningDebugSessions: { [key: string]: vs.DebugSession } = {};
+	private owningDebugSessions: { [key: string]: vs.DebugSession | undefined } = {};
 
 	constructor() {
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
@@ -339,7 +339,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 	}
 
 	private handleGroupNotification(suite: SuiteData, evt: GroupNotification) {
-		let oldParent: SuiteTreeItem | GroupTreeItem;
+		let oldParent: SuiteTreeItem | GroupTreeItem | undefined;
 		const existingGroup = suite.getCurrentGroup(evt.group.id) || suite.reuseMatchingGroup(suite.currentRunNumber, evt.group, (parent) => oldParent = parent);
 		const groupNode = existingGroup || new GroupTreeItem(suite, evt.group);
 
@@ -349,7 +349,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 
 		// Remove from old parent if required
 		const hasChangedParent = oldParent && oldParent !== groupNode.parent;
-		if (hasChangedParent) {
+		if (oldParent && hasChangedParent) {
 			oldParent.groups.splice(oldParent.groups.indexOf(groupNode), 1);
 			this.updateNode(oldParent);
 		}
@@ -462,7 +462,7 @@ class SuiteData {
 	public storeTest(id: number, node: TestTreeItem) {
 		return this.tests[`${this.currentRunNumber}_${id}`] = node;
 	}
-	public reuseMatchingGroup(currentSuiteRunNumber: number, group: Group, handleOldParent: (parent: SuiteTreeItem | GroupTreeItem) => void): GroupTreeItem {
+	public reuseMatchingGroup(currentSuiteRunNumber: number, group: Group, handleOldParent: (parent: SuiteTreeItem | GroupTreeItem) => void): GroupTreeItem | undefined {
 		// To reuse a node, the name must match and it must have not been used for the current run.
 		const matches = this.getAllGroups().filter((g) => {
 			return g.group.name === group.name
