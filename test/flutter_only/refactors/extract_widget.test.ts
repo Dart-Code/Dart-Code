@@ -3,15 +3,10 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../src/commands/refactor";
 import { PromiseCompleter } from "../../../src/debug/utils";
-import { activate, currentDoc, ensureTestContent, extApi, rangeOf, sb, setTestContent, waitFor } from "../../helpers";
+import { activate, currentDoc, ensureTestContent, rangeOf, sb, setTestContent, waitFor } from "../../helpers";
 
 describe("refactor", () => {
 	beforeEach("activate", () => activate());
-	// tslint:disable-next-line:only-arrow-functions
-	beforeEach("skip if not updated widget snippets", function () {
-		if (!extApi.analyzerCapabilities.hasUpdatedWidgetSnippets)
-			this.skip();
-	});
 
 	it("can extract simple code into a widget", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");

@@ -362,22 +362,19 @@ export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: str
 	assert.ok(!symbol.location.range);
 }
 
-export function ensureDocumentSymbol(symbols: Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol }>, name: string, kind: vs.SymbolKind, containerName?: string): void {
+export function ensureDocumentSymbol(symbols: Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol }>, name: string, kind: vs.SymbolKind, parentName?: string): void {
 	let symbol = symbols.find((f) =>
 		f.name === name
 		&& f.kind === kind
-		// TODO: Once we're on Code v1.28 we can remove this containerName fallback.
-		&& (f.parent ? f.parent.name : (f as any as vs.SymbolInformation).containerName || "") === (containerName || ""),
+		&& (f.parent ? f.parent.name : "") === (parentName || ""),
 	);
 	assert.ok(
 		symbol,
-		`Couldn't find symbol for ${name}/${vs.SymbolKind[kind]}/${containerName} in\n`
-		// TODO: Once we're on Code v1.28 we can remove this containerName fallback.
-		+ symbols.map((s) => `        ${s.name}/${vs.SymbolKind[s.kind]}/${s.parent ? s.parent.name : (s as any as vs.SymbolInformation).containerName || ""}`).join("\n"),
+		`Couldn't find symbol for ${name}/${vs.SymbolKind[kind]}/${parentName} in\n`
+		+ symbols.map((s) => `        ${s.name}/${vs.SymbolKind[s.kind]}/${s.parent ? s.parent.name : ""}`).join("\n"),
 	);
 	symbol = symbol!;
-	// TODO: Once we're on Code v1.28 we don't need this location fallback.
-	const range = symbol.range || ((symbol as any as vs.SymbolInformation).location.range as vs.Range);
+	const range = symbol.range;
 	assert.ok(range);
 	assert.ok(range.start);
 	assert.ok(range.start.line);

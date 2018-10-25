@@ -1,5 +1,5 @@
 import { ConfigurationTarget, Uri, version as codeVersion, workspace, WorkspaceConfiguration } from "vscode";
-import { createFolderForFile, resolvePaths, versionIsAtLeast } from "./utils";
+import { createFolderForFile, resolvePaths } from "./utils";
 
 class Config {
 	private config: WorkspaceConfiguration;
@@ -114,9 +114,7 @@ export class CodeCapabilities {
 	constructor(version: string) {
 		this.version = version;
 	}
-	// HACK: Use 1.27.9 because 1.28 doesn't match 1.28.0-insiders, and it's highly unlikely there will be 7 more minor
-	// releases before v1.28 ships.
-	get requiresEmptyDebugConfigWithNullTypeToOpenLaunchJson() { return !versionIsAtLeast(this.version, "1.27.9"); }
+	// get requiresEmptyDebugConfigWithNullTypeToOpenLaunchJson() { return !versionIsAtLeast(this.version, "1.27.9"); }
 }
 
 export const config = new Config();

@@ -6,7 +6,7 @@ import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, Prov
 import { DebugSession } from "vscode-debugadapter";
 import { Analytics } from "../analytics";
 import { LastDebugSession } from "../commands/debug";
-import { config, vsCodeVersion } from "../config";
+import { config } from "../config";
 import { DartDebugSession } from "../debug/dart_debug_impl";
 import { DartTestDebugSession } from "../debug/dart_test_debug_impl";
 import { FlutterDebugSession } from "../debug/flutter_debug_impl";
@@ -87,12 +87,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			if (!allowProgramlessRun && !debugConfig.program) {
 				logWarn("No program was set and programlessRun is not allowed");
 				window.showInformationMessage("Set the 'program' value in your launch config (eg 'bin/main.dart') then launch again");
-				// TODO: Remove this once we only support Code v1.28.
-				if (vsCodeVersion.requiresEmptyDebugConfigWithNullTypeToOpenLaunchJson) {
-					// Set type=null which causes launch.json to open.
-					debugConfig.type = undefined;
-					return debugConfig;
-				}
 				return null; // null means open launch.json.
 			}
 		}
@@ -149,12 +143,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			if (!debugConfig.observatoryUri && !isFlutter) {
 				logWarn("No Observatory URI/port was provided");
 				window.showInformationMessage("You must provide an Observatory URI/port to attach a debugger");
-				// TODO: Remove this once we only support Code v1.28.
-				if (vsCodeVersion.requiresEmptyDebugConfigWithNullTypeToOpenLaunchJson) {
-					// Set type=null which causes launch.json to open.
-					debugConfig.type = undefined;
-					return debugConfig;
-				}
 				return undefined; // undefined means silent (don't open launch.json).
 			}
 		}
@@ -166,12 +154,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			if (!await this.deviceManager.promptForAndLaunchEmulator(true)) {
 				logWarn("Unable to launch due to no active device");
 				window.showInformationMessage("Cannot launch without an active device");
-				// TODO: Remove this once we only support Code v1.28.
-				if (vsCodeVersion.requiresEmptyDebugConfigWithNullTypeToOpenLaunchJson) {
-					// Set type=null which causes launch.json to open.
-					debugConfig.type = undefined;
-					return debugConfig;
-				}
 				return undefined; // undefined means silent (don't open launch.json).
 			}
 		}

@@ -27,10 +27,6 @@ export class AnalyzerCapabilities {
 	get supportsGetDeclerationsForFile() { return versionIsAtLeast(this.version, "1.19.0"); }
 	get supportsGetSignature() { return versionIsAtLeast(this.version, "1.20.5"); }
 	get isDart2() { return versionIsAtLeast(this.version, "1.19.0"); }
-
-	// TODO: Remove this after next beta update, it's to stop tests failing on
-	// "stable"(beta) builds because of an upcoming change.
-	get hasUpdatedWidgetSnippets() { return versionIsAtLeast(this.version, "1.20.1"); }
 }
 
 export class Analyzer extends AnalyzerGen {

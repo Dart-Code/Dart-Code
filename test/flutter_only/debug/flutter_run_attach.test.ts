@@ -16,8 +16,6 @@ describe("flutter run debugger (attach)", () => {
 	});
 
 	beforeEach("skip if no test device", function () {
-		if (extApi.daemonCapabilities.flutterTesterMayBeFlaky)
-			this.skip();
 		// Skip on Windows due to https://github.com/flutter/flutter/issues/17833
 		if (isWin)
 			this.skip();
