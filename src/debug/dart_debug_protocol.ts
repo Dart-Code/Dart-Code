@@ -332,8 +332,8 @@ export class RPCError {
 		this.data = data;
 	}
 
-	public details(): string {
-		return this.data == null ? null : this.data.details;
+	public details(): string | undefined {
+		return this.data ? this.data.details : undefined;
 	}
 
 	public toString(): string {

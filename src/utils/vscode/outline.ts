@@ -163,7 +163,7 @@ export class TestOutlineVisitor extends OutlineVisitor {
 
 	private addTest(outline: as.Outline, base: (outline: as.Outline) => void) {
 		const name = this.extractTestName(outline.element.name);
-		if (!name)
+		if (!name || !outline.element.location)
 			return;
 		this.names.push(name);
 		const fullName = this.names.join(" ");

@@ -14,7 +14,7 @@ describe("dart_hover_provider", () => {
 
 		// Our hovers are aways in the form:
 		// [{ language: "dart", value: data.displayString }, data.documentation || undefined],
-		if (hoverResult == null || hoverResult.length === 0)
+		if (!hoverResult || hoverResult.length === 0)
 			return [];
 
 		return hoverResult.map((h) => {

@@ -33,7 +33,7 @@ describe("dart cli debugger", () => {
 		return config;
 	}
 
-	async function attachDebugger(observatoryUri: string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
+	async function attachDebugger(observatoryUri: string | undefined, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
 		const config = await getAttachConfiguration(Object.assign({ observatoryUri }, extraConfiguration));
 		await dc.start(config.debugServer);
 		return config;
@@ -429,13 +429,13 @@ describe("dart cli debugger", () => {
 		await Promise.all([
 			dc.assertStoppedLocation("step", {
 				// SDK source will have no filename, because we download it
-				path: null,
+				path: undefined,
 			}).then(async (response) => {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
-				assert.equal(frame.source.path, null);
-				assert.equal(frame.source.name, "dart:core/print.dart");
-				const source = await dc.sourceRequest({ source: frame.source, sourceReference: frame.source.sourceReference });
+				assert.equal(frame.source!.path, null);
+				assert.equal(frame.source!.name, "dart:core/print.dart");
+				const source = await dc.sourceRequest({ source: frame.source, sourceReference: frame.source!.sourceReference! });
 				assert.ok(source.body.content);
 				assert.notEqual(source.body.content.indexOf("void print(Object object) {"), -1);
 				// Ensure comments are present (see #178).
@@ -618,24 +618,24 @@ describe("dart cli debugger", () => {
 		ensureVariable(variables, "s", "s", `"Hello!"`);
 		ensureVariable(variables, "m", "m", `Map (10 items)`);
 
-		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l").variablesReference);
+		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l")!.variablesReference);
 		for (let i = 0; i <= 1; i++) {
 			ensureVariableWithIndex(listVariables, i, `l[${i}]`, `[${i}]`, `${i}`);
 		}
 
-		const longStringListVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings").variablesReference);
+		const longStringListVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference);
 		ensureVariable(longStringListVariables, "longStrings[0]", "[0]", {
 			ends: "…\"", // String is truncated here.
 			starts: "\"This is a long string that is 300 characters!",
 		});
 
-		const shortdateListVariables = await dc.getVariables(variables.find((v) => v.name === "tenDates").variablesReference);
+		const shortdateListVariables = await dc.getVariables(variables.find((v) => v.name === "tenDates")!.variablesReference);
 		ensureVariable(shortdateListVariables, "tenDates[0]", "[0]", config.previewToStringInDebugViews ? "DateTime (2005-01-01 00:00:00.000)" : "DateTime");
 
-		const longdateListVariables = await dc.getVariables(variables.find((v) => v.name === "hundredDates").variablesReference);
+		const longdateListVariables = await dc.getVariables(variables.find((v) => v.name === "hundredDates")!.variablesReference);
 		ensureVariable(longdateListVariables, "hundredDates[0]", "[0]", "DateTime"); // This doesn't call toString() because it's a long list'.
 
-		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m").variablesReference);
+		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m")!.variablesReference);
 		ensureVariable(mapVariables, undefined, "0", `"l" -> List (12 items)`);
 		ensureVariable(mapVariables, undefined, "1", `"longStrings" -> List (1 item)`);
 		ensureVariable(mapVariables, undefined, "2", `"tenDates" -> List (10 items)`);
@@ -823,7 +823,7 @@ describe("dart cli debugger", () => {
 		it("when provided only a port in launch.config", async () => {
 			const process = spawnDartProcessPaused(await getLaunchConfiguration(helloWorldMainFile));
 			const observatoryUri = await process.observatoryUri;
-			const observatoryPort = /:([0-9]+)\/?$/.exec(observatoryUri)[1];
+			const observatoryPort = /:([0-9]+)\/?$/.exec(observatoryUri)![1];
 
 			// Include whitespace as a test for trimming.
 			const config = await attachDebugger(` ${observatoryPort} `);
@@ -841,7 +841,7 @@ describe("dart cli debugger", () => {
 			const showInputBox = sb.stub(vs.window, "showInputBox");
 			showInputBox.resolves(observatoryUri);
 
-			const config = await attachDebugger(null);
+			const config = await attachDebugger(undefined);
 			await Promise.all([
 				dc.configurationSequence(),
 				dc.waitForEvent("terminated"),

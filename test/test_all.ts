@@ -146,6 +146,11 @@ async function runAllTests(): Promise<void> {
 	const dartSdkPath = process.env.DART_PATH_SYMLINK || process.env.DART_PATH || process.env.PATH;
 	const flutterSdkPath = process.env.FLUTTER_PATH_SYMLINK || process.env.FLUTTER_PATH || process.env.PATH;
 
+	if (!dartSdkPath)
+		throw "Could not find Dart SDK";
+	if (!flutterSdkPath)
+		throw "Could not find Flutter SDK";
+
 	const flutterRoot = process.env.FLUTTER_ROOT || process.env.FLUTTER_PATH;
 	const totalRuns = 9;
 	let runNumber = 1;
