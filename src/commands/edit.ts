@@ -27,7 +27,7 @@ export class EditCommands implements vs.Disposable {
 
 	private organizeImports(document: vs.TextDocument): Thenable<void> {
 		document = document || this.getActiveDoc();
-		return this.sendEdit(this.analyzer.editOrganizeDirectives, "Organize Imports", document || vs.window.activeTextEditor.document);
+		return this.sendEdit(this.analyzer.editOrganizeDirectives, "Organize Imports", document);
 	}
 
 	private async jumpToLineColInUri(uri: vs.Uri, lineNumber?: number, columnNumber?: number) {
@@ -63,7 +63,7 @@ export class EditCommands implements vs.Disposable {
 	}
 
 	private async sendEdit(f: (a: { file: string }) => Thenable<{ edit: as.SourceFileEdit }>, commandName: string, document: vs.TextDocument): Promise<void> {
-		if (!editors.isDartDocument(document)) {
+		if (!document || !editors.isDartDocument(document)) {
 			vs.window.showWarningMessage("Not a Dart file.");
 			return;
 		}

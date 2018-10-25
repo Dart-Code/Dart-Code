@@ -58,7 +58,7 @@ describe("capture logs command", () => {
 		assert.ok(lastLine.endsWith("Log file ended"), `Last line of log was '${lastLine}' instead of 'Log file ended'`);
 
 		// Ensure the log file was opened.
-		assert.equal(fsPath(vs.window.activeTextEditor.document.uri), logFilename);
+		assert.equal(fsPath(vs.window.activeTextEditor!.document.uri), logFilename);
 	});
 
 	it("does not start logging if cancelled", async () => {

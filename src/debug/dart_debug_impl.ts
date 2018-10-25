@@ -332,7 +332,7 @@ export class DartDebugSession extends DebugSession {
 				}
 				// If we don't have a process (eg. we're attached) then this is our signal to quit, since we won't
 				// get a process exit event.
-				if (this.childProcess == null) {
+				if (!this.childProcess) {
 					this.sendEvent(new TerminatedEvent());
 				} else {
 					// In some cases Observatory closes but we never get the exit/close events from the process
@@ -356,7 +356,7 @@ export class DartDebugSession extends DebugSession {
 		const signal = force ? "SIGKILL" : "SIGINT";
 		const request = force ? "DISC" : "TERM";
 		this.log(`${request}: Going to terminate with ${signal}...`);
-		if (this.shouldKillProcessOnTerminate && this.childProcess != null && !this.processExited) {
+		if (this.shouldKillProcessOnTerminate && this.childProcess && !this.processExited) {
 			for (const pid of this.additionalPidsToTerminate) {
 				try {
 					this.log(`${request}: Terminating related process ${pid} with ${signal}...`);
@@ -376,7 +376,7 @@ export class DartDebugSession extends DebugSession {
 			}
 			// Don't do this - because the process might ignore our kill (eg. test framework lets the current
 			// test finish) so we may need to send again it we get another disconnectRequest.
-			// We also use childProcess == null to mean we're attached.
+			// We also use !childProcess to mean we're attached.
 			// this.childProcess = undefined;
 		} else if (!this.shouldKillProcessOnTerminate && this.observatory) {
 			try {
@@ -547,7 +547,7 @@ export class DartDebugSession extends DebugSession {
 		this.observatory.getStack(thread.ref.id).then((result: DebuggerResult) => {
 			const stack: VMStack = result.result as VMStack;
 			let vmFrames: VMFrame[] = stack.asyncCausalFrames;
-			if (vmFrames == null)
+			if (!vmFrames)
 				vmFrames = stack.frames;
 			const totalFrames = vmFrames.length;
 
@@ -577,7 +577,7 @@ export class DartDebugSession extends DebugSession {
 					: frame.code.name;
 				const location: VMSourceLocation = frame.location;
 
-				if (location == null) {
+				if (!location) {
 					const stackFrame: DebugProtocol.StackFrame = new StackFrame(frameId, frameName);
 					stackFrame.presentationHint = "subtle";
 					stackFrames.push(stackFrame);
