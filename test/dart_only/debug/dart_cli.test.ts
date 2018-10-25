@@ -43,6 +43,10 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
+	it.skip("prompts the user if trying to run with errors");
+	it.skip("does not prompts the user if trying to run with errors that are in test scripts");
+	it.skip("prompts the user if trying to run with errors in the test script being run");
+
 	it("receives the expected output from a Dart script", async () => {
 		const config = await startDebugger(helloWorldMainFile);
 		await Promise.all([
