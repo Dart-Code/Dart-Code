@@ -20,7 +20,7 @@ const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
 export class SdkCommands {
 	private sdks: Sdks;
 	private analytics: Analytics;
-	private flutterScreenshotPath: string;
+	private flutterScreenshotPath?: string;
 	// A map of any in-progress commands so we can terminate them if we want to run another.
 	private runningCommands: { [workspaceUriAndCommand: string]: ChainedProcess | undefined; } = {};
 	constructor(context: vs.ExtensionContext, sdks: Sdks, analytics: Analytics) {
@@ -86,6 +86,7 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", async (uri) => {
 			let shouldNotify = false;
+			// TODO: Why do we do this? What is the uri used for?!
 			if (!uri || !(uri instanceof Uri)) {
 
 				// If there is no path for this session, or it differs from config, use the one from config.
