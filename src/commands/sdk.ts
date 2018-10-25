@@ -35,7 +35,7 @@ export class SdkCommands {
 		}
 		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", async (uri: string | Uri) => {
 			if (!uri || !(uri instanceof Uri))
-				uri = await this.getWorkspace("Select which folder to get packages for");
+				uri = await this.getFolderToRunCommandIn("Select which folder to get packages for");
 			if (typeof uri === "string")
 				uri = vs.Uri.file(uri);
 			try {
@@ -50,7 +50,7 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages", async (uri: string | Uri) => {
 			if (!uri || !(uri instanceof Uri))
-				uri = await this.getWorkspace("Select which folder to upgrade packages in");
+				uri = await this.getFolderToRunCommandIn("Select which folder to upgrade packages in");
 			if (typeof uri === "string")
 				uri = vs.Uri.file(uri);
 			if (isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(uri)))
@@ -70,7 +70,7 @@ export class SdkCommands {
 		// Flutter commands.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", async (selection): Promise<number> => {
 			if (!selection)
-				selection = vs.Uri.file(await this.getWorkspace(`Select the folder to run "flutter packages get" in`, selection));
+				selection = vs.Uri.file(await this.getFolderToRunCommandIn(`Select the folder to run "flutter packages get" in`, selection));
 
 			// If we're working on the flutter repository, map this on to update-packages.
 			if (selection && fsPath(selection) === sdks.flutter) {
@@ -199,14 +199,19 @@ export class SdkCommands {
 		selection?: vs.Uri,
 	): Promise<number> {
 
-		const f = await this.getWorkspace(placeHolder, selection);
+		const folderToRunCommandIn = await this.getFolderToRunCommandIn(placeHolder, selection);
+		const containingWorkspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(folderToRunCommandIn));
+		const containingWorkspacePath = fsPath(containingWorkspace.uri);
 
-		const workspacePath = fsPath(vs.workspace.getWorkspaceFolder(vs.Uri.file(f)).uri);
-		const shortPath = path.relative(workspacePath, f) || path.relative(path.dirname(workspacePath), f);
-		return handler(f, args, shortPath);
+		// Display the relative path from the workspace root to the folder we're running, or if they're
+		// the same then the folder name we're running in.
+		const shortPath = path.relative(containingWorkspacePath, folderToRunCommandIn)
+			|| path.basename(folderToRunCommandIn);
+
+		return handler(folderToRunCommandIn, args, shortPath);
 	}
 
-	private async getWorkspace(placeHolder: string, selection?: vs.Uri): Promise<string> {
+	private async getFolderToRunCommandIn(placeHolder: string, selection?: vs.Uri): Promise<string> {
 		let file = selection && fsPath(selection);
 		file = file || (vs.window.activeTextEditor && fsPath(vs.window.activeTextEditor.document.uri));
 		let folder = file && locateBestProjectRoot(file);
