@@ -1600,8 +1600,6 @@ class ThreadManager {
 			this.debugSession.sendEvent(new ThreadEvent("exited", threadInfo.num));
 			this.threads.splice(this.threads.indexOf(threadInfo), 1);
 			this.removeStoredData(threadInfo);
-		} else {
-			logError(`Failed to find thread for ${ref.id} during exit`, LogCategory.Observatory);
 		}
 	}
 }
