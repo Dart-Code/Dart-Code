@@ -4,14 +4,14 @@ import * as vs from "vscode";
 const channels: { [key: string]: vs.OutputChannel } = {};
 
 export function createChannel(name: string): vs.OutputChannel {
-	if (channels[name] == null)
+	if (!channels[name])
 		channels[name] = vs.window.createOutputChannel(name);
 
 	return channels[name];
 }
 
 export function getChannel(name: string): vs.OutputChannel {
-	if (channels[name] == null)
+	if (!channels[name])
 		return createChannel(name);
 
 	return channels[name];
