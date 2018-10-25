@@ -315,6 +315,15 @@ export class DartDebugSession extends DebugSession {
 				// get a process exit event.
 				if (this.childProcess == null) {
 					this.sendEvent(new TerminatedEvent());
+				} else {
+					// In some cases Observatory closes but we never get the exit/close events from the process
+					// so this is a fallback to termiante the session after a short period. Without this, we have
+					// issues like https://github.com/Dart-Code/Dart-Code/issues/1268 even though when testing from
+					// the terminal the app does terminate as expected.
+					setTimeout(() => {
+						if (!this.processExited)
+							this.sendEvent(new TerminatedEvent());
+					}, 500);
 				}
 			});
 
