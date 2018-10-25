@@ -38,7 +38,7 @@ describe("flutter run debugger (attach)", () => {
 			// Use pid-file as a convenient way of getting the test name into the command line args
 			// for easier debugging of processes that hang around on CI (we dump the process command
 			// line at the end of the test run).
-			args: extApi.flutterCapabilities.supportsPidFileForAttach
+			args: extApi.flutterCapabilities.supportsPidFileForMachine
 				? ["--pid-file", `/tmp/dart_code_tests/${fileSafeCurrentTestName}`]
 				: [],
 			deviceId: "flutter-tester",
