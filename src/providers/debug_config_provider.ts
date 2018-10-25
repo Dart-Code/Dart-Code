@@ -198,6 +198,36 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.program = forceWindowsDriveLetterToUppercase(debugConfig.program);
 		debugConfig.cwd = forceWindowsDriveLetterToUppercase(debugConfig.cwd);
 
+		// If we're launching (not attaching) then check there are no errors before we launch.
+		if (!isAttachRequest && debugConfig.cwd) {
+			const dartErrors = vs.languages.getDiagnostics()
+				.filter((file) => file[1].find((d) => d.source === "dart" && d.severity === vs.DiagnosticSeverity.Error));
+			// Check if any are inside our CWD.
+			const hasDartErrorsInProject = dartErrors.find((fd) => {
+				const file = fsPath(fd[0]);
+				return isWithinPath(file, debugConfig.cwd)
+					// Ignore errors in tests unless it's the file we're running.
+					&& (!isTestFile(file) || file === debugConfig.program);
+			});
+			const showErrorsAction = "Show Errors";
+			const debugAnywayAction = "Debug Anyway";
+			if (hasDartErrorsInProject) {
+				const action = await window.showErrorMessage(
+					"Build errors exist in your project.",
+					{ modal: true },
+					debugAnywayAction,
+					showErrorsAction,
+				);
+				if (action === debugAnywayAction) {
+					// Do nothing, we'll just carry on.
+				} else {
+					if (action === showErrorsAction)
+						vs.commands.executeCommand("workbench.action.showErrorsWarnings");
+					return undefined; // undefined means silent (don't open launch.json).
+				}
+			}
+		}
+
 		// Start port listener on launch of first debug session.
 		const debugServer = this.getDebugServer(debugType, debugConfig.debugServer);
 
