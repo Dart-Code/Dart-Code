@@ -1,4 +1,5 @@
 import * as assert from "assert";
+import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
@@ -53,7 +54,7 @@ describe("flutter run debugger (launch)", () => {
 			// for easier debugging of processes that hang around on CI (we dump the process command
 			// line at the end of the test run).
 			args: extApi.flutterCapabilities.supportsPidFileForMachine
-				? ["--pid-file", `/tmp/dart_code_tests/${fileSafeCurrentTestName}`]
+				? ["--pid-file", path.join(os.tmpdir(), fileSafeCurrentTestName)]
 				: [],
 			cwd,
 			deviceId: "flutter-tester",
