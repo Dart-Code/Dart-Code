@@ -14,17 +14,17 @@ export class PubBuildRunnerTaskProvider implements vs.TaskProvider {
 		const tasks: vs.Task[] = [];
 		dartProjects.forEach((folder) => {
 			if (referencesBuildRunner(fsPath(folder.uri))) {
-				tasks.push(this.createBuildRunnerCommandBackgroundTask(folder, "watch"));
-				tasks.push(this.createBuildRunnerCommandBackgroundTask(folder, "build"));
-				tasks.push(this.createBuildRunnerCommandBackgroundTask(folder, "serve"));
-				tasks.push(this.createBuildRunnerCommandBackgroundTask(folder, "test"));
+				tasks.push(this.createBuildRunnerCommandBackgroundTask(folder, "watch", vs.TaskGroup.Build));
+				tasks.push(this.createBuildRunnerCommandBackgroundTask(folder, "build", vs.TaskGroup.Build));
+				tasks.push(this.createBuildRunnerCommandBackgroundTask(folder, "serve", vs.TaskGroup.Build));
+				tasks.push(this.createBuildRunnerCommandBackgroundTask(folder, "test", vs.TaskGroup.Test));
 			}
 		});
 
 		return tasks;
 	}
 
-	private createBuildRunnerCommandBackgroundTask(folder: vs.WorkspaceFolder, subCommand: string) {
+	private createBuildRunnerCommandBackgroundTask(folder: vs.WorkspaceFolder, subCommand: string, group: vs.TaskGroup) {
 		const isFlutter = util.isFlutterWorkspaceFolder(folder) && this.sdks.flutter;
 		const type = isFlutter ? "flutter" : "pub";
 		const program = isFlutter ? path.join(this.sdks.flutter, flutterPath) : path.join(this.sdks.dart, pubPath);
@@ -44,7 +44,7 @@ export class PubBuildRunnerTaskProvider implements vs.TaskProvider {
 				{ cwd: fsPath(folder.uri), env: toolEnv },
 			),
 			"dart-pub-build_runner");
-		task.group = vs.TaskGroup.Build;
+		task.group = group;
 		task.isBackground = true;
 		task.name = `build_runner ${subCommand}`;
 		return task;
