@@ -599,12 +599,14 @@ export class DartDebugSession extends DebugSession {
 					0, 0,
 				);
 				// If we wouldn't debug this source, then deemphasize in the stack.
-				if (stackFrame.source && (
-					!this.isValidToDebug(uri)
-					|| (this.isSdkLibrary(uri) && !this.debugSdkLibraries)
-					|| (this.isExternalLibrary(uri) && !this.debugExternalLibraries))
-				) {
-					stackFrame.source.presentationHint = "deemphasize";
+				if (stackFrame.source) {
+					if (!this.isValidToDebug(uri) || (this.isSdkLibrary(uri) && !this.debugSdkLibraries)) {
+						stackFrame.source.origin = "from the Dart SDK";
+						stackFrame.source.presentationHint = "deemphasize";
+					} else if (this.isExternalLibrary(uri) && !this.debugExternalLibraries) {
+						stackFrame.source.origin = uri.startsWith("package:flutter/") ? "from the Flutter framework" : "from Pub packages";
+						stackFrame.source.presentationHint = "deemphasize";
+					}
 				}
 				stackFrames.push(stackFrame);
 
