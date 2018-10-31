@@ -228,7 +228,7 @@ task:
     CIRRUS_SHELL: powershell
     DART_PATH: "C:\\Windows\\Temp\\with spaces\\dart"
     FLUTTER_PATH: "C:\\Windows\\Temp\\with spaces\\flutter"
-    PATH: "$FLUTTER_PATH\\bin;$DART_PATH\\bin;$ALLUSERSPROFILE\\chocolatey\\bin;C:\\Program Files\\nodejs;C:\\tools\\ruby\\bin;$PATH"
+    PATH: "$FLUTTER_PATH\\bin;$DART_PATH\\bin;$ALLUSERSPROFILE\\chocolatey\\bin;C:\\Program Files\\nodejs;C:\\tools\\ruby25\\bin;$PATH"
     
   matrix:
     - name: Windows
