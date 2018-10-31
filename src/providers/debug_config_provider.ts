@@ -20,6 +20,7 @@ import { fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolde
 import { log, logWarn } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
+export const TRACK_WIDGET_CREATION_ENABLED = "dart-code:trackWidgetCreationEnabled";
 export const HAS_LAST_DEBUG_CONFIG = "dart-code:hasLastDebugConfig";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {

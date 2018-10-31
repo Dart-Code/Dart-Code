@@ -4,6 +4,7 @@ import * as vs from "vscode";
 import { Analytics } from "../analytics";
 import { CoverageData, PromiseCompleter } from "../debug/utils";
 import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
+import { TRACK_WIDGET_CREATION_ENABLED } from "../providers/debug_config_provider";
 import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../utils";
 import { handleDebugLogEvent } from "../utils/log";
 
@@ -82,10 +83,16 @@ export class DebugCommands {
 				this.onWillHotReloadEmitter.fire();
 			} else if (e.event === "dart.serviceExtensionAdded") {
 				this.enableServiceExtension(e.body.id);
+				// If the isWidgetCreationTracked extension loads, call it to get the value.
+				if (e.body.id === "ext.flutter.inspector.isWidgetCreationTracked") {
+					this.sendCustomFlutterDebugCommand(session, "checkIsWidgetCreationTracked");
+				}
 			} else if (e.event === "dart.flutter.firstFrame") {
 				// Send the current value to ensure it persists for the user.
 				this.sendAllServiceSettings();
 				this.onFirstFrameEmitter.fire();
+			} else if (e.event === "dart.flutter.updateIsWidgetCreationTracked") {
+				vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, e.body.isWidgetCreationTracked);
 			} else if (e.event === "dart.debugMetrics") {
 				const memory = e.body.memory;
 				const message = `${Math.ceil(memory.current / 1024 / 1024)}MB of ${Math.ceil(memory.total / 1024 / 1024)}MB`;
@@ -342,6 +349,7 @@ export class DebugCommands {
 			vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${id}`, undefined);
 		}
 		this.enabledServiceExtensions.length = 0;
+		vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, false);
 	}
 }
 

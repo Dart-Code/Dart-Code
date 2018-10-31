@@ -198,6 +198,14 @@ export class FlutterDebugSession extends DartDebugSession {
 					this.sendResponse(response);
 					break;
 
+				case "checkIsWidgetCreationTracked":
+					if (this.currentRunningAppId) {
+						const result = await this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.inspector.isWidgetCreationTracked", null);
+						this.sendEvent(new Event("dart.flutter.updateIsWidgetCreationTracked", { isWidgetCreationTracked: result.result }));
+					}
+					this.sendResponse(response);
+					break;
+
 				case "hotReload":
 					if (this.currentRunningAppId)
 						await this.performReload(false, args && args.reason || restartReasonManual);
