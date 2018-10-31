@@ -12,6 +12,7 @@ import { DartTestDebugSession } from "../debug/dart_test_debug_impl";
 import { FlutterDebugSession } from "../debug/flutter_debug_impl";
 import { FlutterTestDebugSession } from "../debug/flutter_test_debug_impl";
 import { FlutterLaunchRequestArguments, forceWindowsDriveLetterToUppercase, isWithinPath } from "../debug/utils";
+import { FlutterCapabilities } from "../flutter/capabilities";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { dartVMPath, flutterPath, pubPath, pubSnapshotPath } from "../sdk/utils";
@@ -23,12 +24,9 @@ export const TRACK_WIDGET_CREATION_ENABLED = "dart-code:trackWidgetCreationEnabl
 export const HAS_LAST_DEBUG_CONFIG = "dart-code:hasLastDebugConfig";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
-	private sdks: Sdks;
-	private analytics: Analytics;
-	private deviceManager: FlutterDeviceManager;
 	private debugServers: { [index: string]: net.Server } = {};
 
-	constructor(sdks: Sdks, analytics: Analytics, deviceManager: FlutterDeviceManager) {
+	constructor(private sdks: Sdks, private analytics: Analytics, private deviceManager: FlutterDeviceManager, private flutterCapabilities: FlutterCapabilities) {
 		this.sdks = sdks;
 		this.analytics = analytics;
 		this.deviceManager = deviceManager;
@@ -296,7 +294,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || conf.debugSdkLibraries;
 		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || conf.debugExternalLibraries;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
-		debugConfig.flutterTrackWidgetCreation = debugConfig.flutterTrackWidgetCreation || conf.flutterTrackWidgetCreation;
+		debugConfig.flutterTrackWidgetCreation =
+			// Use from the launch.json if configured.
+			debugConfig.flutterTrackWidgetCreation !== undefined
+				? debugConfig.flutterTrackWidgetCreation :
+				// Otherwise use the config, falling back to the version-dependant default.
+				conf.flutterTrackWidgetCreationIsConfiguredExplicitly
+					? conf.flutterTrackWidgetCreation
+					: this.flutterCapabilities.trackWidgetCreationDefault;
 		if (isFlutter) {
 			debugConfig.flutterMode = debugConfig.flutterMode || "debug";
 			debugConfig.flutterPath = debugConfig.flutterPath || (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : null);

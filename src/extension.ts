@@ -257,7 +257,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	util.logTime("All other stuff before debugger..");
 
 	// Set up debug stuff.
-	const debugProvider = new DebugConfigProvider(sdks, analytics, flutterDaemon && flutterDaemon.deviceManager);
+	const debugProvider = new DebugConfigProvider(sdks, analytics, flutterDaemon && flutterDaemon.deviceManager, flutterCapabilities);
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
 	context.subscriptions.push(debugProvider);
 
