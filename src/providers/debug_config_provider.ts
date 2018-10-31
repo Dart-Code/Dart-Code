@@ -20,7 +20,6 @@ import { fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolde
 import { log, logWarn } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
-export const TRACK_WIDGET_CREATION_ENABLED = "dart-code:trackWidgetCreationEnabled";
 export const HAS_LAST_DEBUG_CONFIG = "dart-code:hasLastDebugConfig";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
@@ -177,9 +176,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		log(`Debug session starting...\n    ${JSON.stringify(debugConfig, undefined, 4).replace(/\n/g, "\n    ")}`);
-
-		// TODO: Remove this context (and associated condition on the command) when it is default, inc. for beta channel.
-		vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, debugConfig.flutterTrackWidgetCreation);
 
 		// Stash the config to support the "rerun last test(s)" command.
 		LastDebugSession.workspaceFolder = folder;

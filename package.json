@@ -430,11 +430,11 @@
 				},
 				{
 					"command": "flutter.inspectWidget",
-					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.debugWidgetInspector && dart-code:trackWidgetCreationEnabled"
+					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.inspector.isWidgetCreationTracked"
 				},
 				{
 					"command": "flutter.cancelInspectWidget",
-					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.debugWidgetInspector && dart-code:trackWidgetCreationEnabled && dart-code:flutter.isInspectingWidget"
+					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.inspector.isWidgetCreationTracked && dart-code:flutter.isInspectingWidget"
 				},
 				{
 					"command": "flutter.hotRestart",
