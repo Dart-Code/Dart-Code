@@ -97,9 +97,9 @@ class ResourceConfig {
 	get pubAdditionalArgs() { return this.getConfig<string[]>("pubAdditionalArgs"); }
 	get runPubGetOnPubspecChanges() { return this.getConfig<boolean>("runPubGetOnPubspecChanges"); }
 	get runPubGetOnPubspecChangesIsConfiguredExplicitly() {
-		const runPubSpec = this.config.inspect("runPubGetOnPubspecChanges");
+		const runPubGet = this.config.inspect("runPubGetOnPubspecChanges");
 		// Return whether any of them are explicitly set, in which case we'll then read normally from the settings.
-		return runPubSpec.globalValue !== undefined || runPubSpec.workspaceValue !== undefined || runPubSpec.workspaceFolderValue !== undefined;
+		return runPubGet.globalValue !== undefined || runPubGet.workspaceValue !== undefined || runPubGet.workspaceFolderValue !== undefined;
 	}
 	get flutterRunLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("flutterRunLogFile"))); }
 	get flutterTestLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("flutterTestLogFile"))); }
