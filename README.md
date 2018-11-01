@@ -1,11 +1,13 @@
 [![Gitter Chat](https://img.shields.io/badge/chat-online-blue.svg)](https://gitter.im/dart-code/Dart-Code) [![Follow on Twitter](https://img.shields.io/badge/twitter-dartcode-blue.svg)](https://twitter.com/DartCode) [![Contribute to Dart Code](https://img.shields.io/badge/help-contribute-551A8B.svg)](https://github.com/Dart-Code/Dart-Code/blob/master/CONTRIBUTING.md) [![Linux & Mac build status](https://img.shields.io/travis/Dart-Code/Dart-Code/master.svg?label=mac+%26+linux)](https://travis-ci.org/Dart-Code/Dart-Code) [![Windows build status](https://img.shields.io/appveyor/ci/DanTup/Dart-Code/master.svg?label=windows&logoWidth=-1)](https://ci.appveyor.com/project/DanTup/dart-code)
 
+
 ## Introduction
 
 Dart Code extends [VS Code](https://code.visualstudio.com/) with support for the
 [Dart](https://www.dartlang.org/) programming language, and provides tools for
 effectively editing, refactoring, running, and reloading [Flutter](https://flutter.io/)
 mobile apps, and [AngularDart](https://angulardart.org) web apps.
+
 
 ## Installation
 
