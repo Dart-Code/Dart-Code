@@ -114,7 +114,7 @@ export class AnalyzerStatusReporter {
 
 		const data = `
 Please review the below report for any information you do not wish to share and report to
-  https://github.com/dart-lang/sdk/issues/new
+  https://github.com/dart-lang/sdk/issues/new?labels=area-analyzer,analyzer-crash-report
 
 Exception from analysis server (running from VSCode / Dart Code)
 
