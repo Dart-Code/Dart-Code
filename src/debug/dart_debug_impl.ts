@@ -2,7 +2,7 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import * as _ from "lodash";
 import * as path from "path";
-import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
+import { BreakpointEvent, DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { config } from "../config";
 import { getLogHeader, logError } from "../utils/log";
@@ -432,30 +432,32 @@ export class DartDebugSession extends DebugSession {
 		if (!breakpoints)
 			breakpoints = [];
 
-		// This is a list of breakpoints we'll hand back to VS Code. They'll use the VM-provided
-		// IDs so that they can be updated later. We store them in a lookup so that if the VM gives us
-		// the same breakpoint back at all, we will only have one in the list we give to Code.
-		const codeBps: { [id: string]: DebugProtocol.Breakpoint } = {};
+		// Tell VS Code to remove all of the breakpoints because we'll re-create them
+		// with IDs later (we can't get IDs now if the VM has no threads, because
+		// we can't send the breakpoints request).
+		args.breakpoints.forEach((b, i) => {
+			this.sendEvent(
+				new BreakpointEvent("removed",
+					{
+						column: b.column,
+						line: b.line,
+						source: new Source(args.source.name, args.source.path),
+					} as DebugProtocol.Breakpoint,
+				),
+			);
 
-		// Get all possible valid source uris for the given path.
+			console.log(`Removing Code BP line: ${b.line} col: ${b.column} in ${source.path}`);
+		});
+
+		// Send back an empty array, since VS Code now thinks there are 0 breakpoints.
+		response.body = { breakpoints: [] };
+		this.sendResponse(response);
+
+		// Now kick off the requests to send our breakpoints to the VM.
 		const uris = this.getPossibleSourceUris(source.path);
-
-		try {
-			for (const uri of uris) {
-				this.threadManager.storeBreakpoints(uri, breakpoints);
-				const results = await this.threadManager.sendUriBreakpointsToAllThreads(uri);
-
-				for (const vmBp of results) {
-					const bp = await this.vmBpToCodeBp(vmBp.thread.ref, vmBp.bp);
-					console.log(`${bp.id} Sending BP to VS Code (RESPONSE) ${bp.source && bp.source.name} ${bp.line} ${bp.column}`);
-					codeBps[bp.id] = bp;
-				}
-			}
-
-			response.body = { breakpoints: Object.keys(codeBps).map((id) => codeBps[id]) };
-			this.sendResponse(response);
-		} catch (error) {
-			this.errorResponse(response, `${error}`);
+		for (const uri of uris) {
+			this.threadManager.storeBreakpoints(uri, breakpoints);
+			await this.threadManager.sendUriBreakpointsToAllThreads(uri);
 		}
 	}
 
@@ -1096,8 +1098,8 @@ export class DartDebugSession extends DebugSession {
 
 	private async sendBreakPointToCode(action: string, isolate: VMIsolateRef, breakpoint: VMBreakpoint): Promise<void> {
 		const bp = await this.vmBpToCodeBp(isolate, breakpoint);
-		console.log(`Sending ${action} BP to Code (ID: ${bp.id}) line: ${bp.line} col: ${bp.column} in ${bp.source.path}`);
-		//this.sendEvent(new BreakpointEvent(action, bp));
+		console.log(`Sending ${action} BP to Code (ID: ${bp.id}, resolved: ${bp.verified}) line: ${bp.line} col: ${bp.column} in ${bp.source.path}`);
+		this.sendEvent(new BreakpointEvent(action, bp));
 	}
 
 	private async handlePauseEvent(event: VMEvent) {
@@ -1601,20 +1603,14 @@ class ThreadManager {
 			this.bps[uri] = breakpoints;
 	}
 
-	public async sendUriBreakpointsToThread(thread: ThreadInfo, uri: string): Promise<VMBreakpoint[]> {
+	public async sendUriBreakpointsToThread(thread: ThreadInfo, uri: string): Promise<void> {
 		const breakpoints = this.bps[uri];
-		return thread.setBreakpoints(uri, breakpoints);
+		await thread.setBreakpoints(uri, breakpoints);
 	}
 
-	public async sendUriBreakpointsToAllThreads(uri: string): Promise<Array<{ thread: ThreadInfo, bp: VMBreakpoint }>> {
+	public async sendUriBreakpointsToAllThreads(uri: string): Promise<void> {
 		const runnableThreads = this.threads.filter((t) => t.runnable);
-		const sendBpsToThread = async (thread: ThreadInfo): Promise<Array<{ thread: ThreadInfo, bp: VMBreakpoint }>> => {
-			const bps = await this.sendUriBreakpointsToThread(thread, uri);
-			return bps.map((bp) => ({ thread, bp }));
-		};
-		const sendToAllThreads = runnableThreads.map(sendBpsToThread);
-		const allThreadsResults = await Promise.all(sendToAllThreads);
-		return _.flatMap(allThreadsResults);
+		await Promise.all(runnableThreads.map((thread) => this.sendUriBreakpointsToThread(thread, uri)));
 	}
 
 	public nextDataId: number = 1;
