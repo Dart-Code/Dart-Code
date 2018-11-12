@@ -5,7 +5,7 @@ import * as path from "path";
 import { BreakpointEvent, DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { config } from "../config";
-import { getLogHeader, logError } from "../utils/log";
+import { getLogHeader, logError, logInfo } from "../utils/log";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef, VMUnresolvedSourceLocation } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
 import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm, LogCategory, LogMessage, LogSeverity, PromiseCompleter, safeSpawn, uriToFilePath } from "./utils";
@@ -432,32 +432,34 @@ export class DartDebugSession extends DebugSession {
 		if (!breakpoints)
 			breakpoints = [];
 
-		// Tell VS Code to remove all of the breakpoints because we'll re-create them
-		// with IDs later (we can't get IDs now if the VM has no threads, because
-		// we can't send the breakpoints request).
-		args.breakpoints.forEach((b, i) => {
-			this.sendEvent(
-				new BreakpointEvent("removed",
-					{
-						column: b.column,
-						line: b.line,
-						source: new Source(args.source.name, args.source.path),
-					} as DebugProtocol.Breakpoint,
-				),
-			);
-
-			console.log(`Removing Code BP line: ${b.line} col: ${b.column} in ${source.path}`);
-		});
-
+		// Map the breakpoints to DebugProtocol.Breakpoint to send back.
+		response.body = {
+			breakpoints: breakpoints.map((breakpoint) => ({
+				column: breakpoint.column,
+				line: breakpoint.line,
+				source: new Source(args.source.name, args.source.path),
+			} as DebugProtocol.Breakpoint)),
+		};
 		// Send back an empty array, since VS Code now thinks there are 0 breakpoints.
-		response.body = { breakpoints: [] };
 		this.sendResponse(response);
 
-		// Now kick off the requests to send our breakpoints to the VM.
-		const uris = this.getPossibleSourceUris(source.path);
-		for (const uri of uris) {
-			this.threadManager.storeBreakpoints(uri, breakpoints);
-			await this.threadManager.sendUriBreakpointsToAllThreads(uri);
+		// Only do this for .dart files, since it's destructive (removes breakpoints
+		// and we might not get them back if we sent C++ breakpoints (etc.) to the VM!)
+		if (source && source.path && path.extname(source.path).toLowerCase() === ".dart") {
+			// Tell VS Code to remove all of the breakpoints because we'll re-create them
+			// with IDs later (we can't get IDs now if the VM has no threads, because
+			// we can't send the breakpoints request).
+			response.body.breakpoints.forEach((breakpoint) => {
+				this.sendEvent(new BreakpointEvent("removed", breakpoint));
+				logInfo(`Removing Code BP line: ${breakpoint.line} col: ${breakpoint.column} in ${source.path}`);
+			});
+
+			// Now kick off the requests to send our breakpoints to the VM.
+			const uris = this.getPossibleSourceUris(source.path);
+			for (const uri of uris) {
+				this.threadManager.storeBreakpoints(uri, breakpoints);
+				await this.threadManager.sendUriBreakpointsToAllThreads(uri);
+			}
 		}
 	}
 
@@ -466,6 +468,7 @@ export class DartDebugSession extends DebugSession {
 		const thread = this.threadManager.getThreadInfoFromRef(isolate);
 		let line: number;
 		let column: number;
+		let scriptUri = bp.location.script ? bp.location.script.uri : undefined;
 		if (bp.location.script && bp.location.tokenPos) {
 			const script = await thread.getScript(bp.location.script);
 			const loc = this.resolveFileLocation(script, bp.location.tokenPos);
@@ -475,8 +478,15 @@ export class DartDebugSession extends DebugSession {
 			const location = bp.location as VMUnresolvedSourceLocation;
 			line = location.line;
 			column = location.column;
+			// UnresolveLocations may have a scriptUri instead of a script (as aread above).
+			scriptUri = scriptUri || location.scriptUri;
 		} else {
-			logError({ message: `${bp.breakpointNumber} Unknown breakpoint location type: ${bp.location.type}` });
+			logError({ message: `${bp.breakpointNumber} Unknown breakpoint location type: ${bp.location.type}` }, LogCategory.Observatory);
+			return;
+		}
+
+		if (!scriptUri) {
+			logError({ message: `${bp.breakpointNumber} Unknown breakpoint location: ${JSON.stringify(bp.location)}` }, LogCategory.Observatory);
 			return;
 		}
 
@@ -485,7 +495,7 @@ export class DartDebugSession extends DebugSession {
 			column,
 			id: bp.breakpointNumber,
 			line,
-			source: { path: uriToFilePath(bp.location.script.uri) },
+			source: { path: uriToFilePath(scriptUri) },
 			verified: bp.resolved,
 		};
 	}
@@ -1092,14 +1102,18 @@ export class DartDebugSession extends DebugSession {
 				this.sendBreakPointToCode("removed", event.isolate, event.breakpoint);
 			}
 		} catch (e) {
-			logError(e);
+			logError(e, LogCategory.Observatory);
 		}
 	}
 
 	private async sendBreakPointToCode(action: string, isolate: VMIsolateRef, breakpoint: VMBreakpoint): Promise<void> {
 		const bp = await this.vmBpToCodeBp(isolate, breakpoint);
-		console.log(`Sending ${action} BP to Code (ID: ${bp.id}, resolved: ${bp.verified}) line: ${bp.line} col: ${bp.column} in ${bp.source.path}`);
-		this.sendEvent(new BreakpointEvent(action, bp));
+		if (bp) {
+			logInfo(`Sending ${action} BP to Code (ID: ${bp.id}, resolved: ${bp.verified}) line: ${bp.line} col: ${bp.column} in ${bp.source.path}`, LogCategory.Observatory);
+			this.sendEvent(new BreakpointEvent(action, bp));
+		} else {
+			logError(`Skipped sending ${JSON.stringify(breakpoint)} to Code as it could not be mapped`, LogCategory.Observatory);
+		}
 	}
 
 	private async handlePauseEvent(event: VMEvent) {
@@ -1687,7 +1701,7 @@ class ThreadInfo {
 		const breakpoints = this.vmBps[uri];
 		if (breakpoints) {
 			for (const bp of breakpoints) {
-				console.log(`Removing BP from VM ${this.ref.id} ${bp.id} in ${uri}`);
+				logInfo(`Removing BP from VM ${this.ref.id} ${bp.id} in ${uri}`, LogCategory.Observatory);
 				removeBreakpointPromises.push(this.manager.debugSession.observatory.removeBreakpoint(this.ref.id, bp.id));
 			}
 			delete this.vmBps[uri];
@@ -1712,7 +1726,7 @@ class ThreadInfo {
 
 		return Promise.all(
 			breakpoints.map(async (bp) => {
-				console.log(`Sending BP to VM for thread ${this.ref.id} ${uri} ${bp.line}:${bp.column}`);
+				logInfo(`Sending BP to VM for thread ${this.ref.id} ${uri} ${bp.line}:${bp.column}`, LogCategory.Observatory);
 				const result = await this.manager.debugSession.observatory.addBreakpointWithScriptUri(this.ref.id, uri, bp.line, bp.column);
 				const vmBp: VMBreakpoint = result.result as VMBreakpoint;
 				this.vmBps[uri].push(vmBp);

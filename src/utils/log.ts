@@ -57,9 +57,9 @@ export function logWarn(warning: string, category = LogCategory.General) {
 	console.warn(warning);
 	log(`WARN: ${warning}`, LogSeverity.Warn, category);
 }
-export function logInfo(info: string) {
+export function logInfo(info: string, category = LogCategory.General) {
 	console.log(info);
-	log(info, LogSeverity.Info, LogCategory.General);
+	log(info, LogSeverity.Info, category);
 }
 export function handleDebugLogEvent(event: string, message: LogMessage) {
 	if (event)
