@@ -2,7 +2,7 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import * as _ from "lodash";
 import * as path from "path";
-import { BreakpointEvent, DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
+import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { config } from "../config";
 import { getLogHeader, logError } from "../utils/log";
@@ -452,34 +452,7 @@ export class DartDebugSession extends DebugSession {
 				}
 			}
 
-			response.body = { breakpoints: [] };
-			setTimeout(() => {
-				this.sendEvent(
-					new BreakpointEvent("new",
-						{
-							column: undefined,
-							id: 2,
-							lineNumber: 9,
-							source: new Source("test.dart", "/Users/dantup/Desktop/Dart Sample/bin/donotformat/test.dart"),
-							verified: false,
-						} as DebugProtocol.Breakpoint,
-					),
-				);
-			}, 2000);
-			setTimeout(() => {
-				this.sendEvent(
-					new BreakpointEvent("changed",
-						{
-							column: undefined,
-							id: 2,
-							lineNumber: 10,
-							source: new Source("test.dart", "/Users/dantup/Desktop/Dart Sample/bin/donotformat/test.dart"),
-							verified: true,
-						} as DebugProtocol.Breakpoint,
-					),
-				);
-			}, 4000);
-
+			response.body = { breakpoints: Object.keys(codeBps).map((id) => codeBps[id]) };
 			this.sendResponse(response);
 		} catch (error) {
 			this.errorResponse(response, `${error}`);
@@ -1122,9 +1095,9 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private async sendBreakPointToCode(action: string, isolate: VMIsolateRef, breakpoint: VMBreakpoint): Promise<void> {
-		// const bp = await this.vmBpToCodeBp(isolate, breakpoint);
-		// console.log(`Sending ${action} BP to Code (ID: ${bp.id}) line: ${bp.line} col: ${bp.column} in ${bp.source.path}`);
-		// this.sendEvent(new BreakpointEvent(action, bp));
+		const bp = await this.vmBpToCodeBp(isolate, breakpoint);
+		console.log(`Sending ${action} BP to Code (ID: ${bp.id}) line: ${bp.line} col: ${bp.column} in ${bp.source.path}`);
+		//this.sendEvent(new BreakpointEvent(action, bp));
 	}
 
 	private async handlePauseEvent(event: VMEvent) {
