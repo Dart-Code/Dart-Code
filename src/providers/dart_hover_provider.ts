@@ -47,10 +47,7 @@ export class DartHoverProvider implements HoverProvider {
 		const elementDescription = hover.elementDescription;
 		const elementKind = hover.elementKind;
 		const dartdoc: string = hover.dartdoc;
-		const containingClassDescription = hover.containingClassDescription;
 		const propagatedType = hover.propagatedType;
-		const callable = (elementKind === "function" || elementKind === "method");
-		const field = (elementKind === "getter" || elementKind === "setter" || elementKind === "field");
 		const containingLibraryName = hover.containingLibraryName;
 		const containingLibraryPath = hover.containingLibraryPath;
 
