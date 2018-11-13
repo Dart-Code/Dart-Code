@@ -237,11 +237,11 @@ export class DebugCommands {
 				const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(folder));
 				const name = path.basename(path.dirname(folder));
 				vs.debug.startDebugging(ws, {
-					cwd: path.dirname(folder),
 					name: `Dart ${name}`,
 					noDebug: true,
+					// To run all tests, we set `program` to a test folder.
+					program: folder,
 					request: "launch",
-					runner: "tests",
 					type: "dart",
 				});
 			}

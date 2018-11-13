@@ -946,7 +946,7 @@
 							},
 							"program": {
 								"type": "string",
-								"description": "Path to the script to start (eg. bin/main.dart or lib/main.dart)."
+								"description": "Path to the script to start (eg. bin/main.dart or lib/main.dart) or optionally a test folder to run a whole suite."
 							},
 							"showMemoryUsage": {
 								"type": "boolean",
@@ -1010,6 +1010,25 @@
 						}
 					},
 					{
+						"label": "Dart: Attach",
+						"description": "Debug an already-running Dart application",
+						"body": {
+							"name": "Dart: Attach to Process",
+							"type": "dart",
+							"request": "attach"
+						}
+					},
+					{
+						"label": "Dart: Run all Tests",
+						"description": "Run all tests in a Dart application",
+						"body": {
+							"name": "Dart: Run all Tests",
+							"type": "dart",
+							"request": "launch",
+							"program": "./test/"
+						}
+					},
+					{
 						"label": "Flutter: Launch",
 						"description": "Launch and debug Flutter applications",
 						"body": {
@@ -1020,12 +1039,22 @@
 						}
 					},
 					{
-						"label": "Dart: Attach",
-						"description": "Debug an already-running Dart application",
+						"label": "Flutter: Attach",
+						"description": "Attach to Flutter in an already-running mobile application",
 						"body": {
-							"name": "Dart: Attach to Process",
+							"name": "Flutter: Attach to Process",
 							"type": "dart",
 							"request": "attach"
+						}
+					},
+					{
+						"label": "Flutter: Run all Tests",
+						"description": "Run all tests in a Flutter application",
+						"body": {
+							"name": "Flutter: Run all Tests",
+							"type": "dart",
+							"request": "launch",
+							"program": "./test/"
 						}
 					}
 				]

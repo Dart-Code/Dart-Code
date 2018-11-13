@@ -16,7 +16,7 @@ import { FlutterCapabilities } from "../flutter/capabilities";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { dartVMPath, flutterPath, pubPath, pubSnapshotPath } from "../sdk/utils";
-import { fsPath, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, projectSupportsPubRunTest, ProjectType, Sdks } from "../utils";
+import { fsPath, isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, projectSupportsPubRunTest, ProjectType, Sdks } from "../utils";
 import { log, logWarn } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
@@ -44,8 +44,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration> {
 		const openFile = window.activeTextEditor && window.activeTextEditor.document ? fsPath(window.activeTextEditor.document.uri) : null;
-		const isFullTestRun = debugConfig && debugConfig.runner === "tests";
-		const allowProgramlessRun = isFullTestRun;
 
 		function resolveVariables(input: string): string {
 			if (!input) return input;
@@ -78,12 +76,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const isAttachRequest = debugConfig.request === "attach";
 		if (!isAttachRequest) {
 			// If there's no program set, try to guess one.
-			if (!allowProgramlessRun)
-				debugConfig.program = debugConfig.program || this.guessBestEntryPoint(openFile, folder);
+			debugConfig.program = debugConfig.program || this.guessBestEntryPoint(openFile, folder);
 
 			// If we still don't have an entry point, the user will have to provide it.
-			if (!allowProgramlessRun && !debugConfig.program) {
-				logWarn("No program was set and programlessRun is not allowed");
+			if (!debugConfig.program) {
+				logWarn("No program was set in launch config");
 				window.showInformationMessage("Set the 'program' value in your launch config (eg 'bin/main.dart') then launch again");
 				return null; // null means open launch.json.
 			}
@@ -120,7 +117,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			&& debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string)
 			&& !isInsideFolderNamed(debugConfig.program, "bin") && !isInsideFolderNamed(debugConfig.program, "tool");
 		log(`Detected launch project as ${isFlutter ? "Flutter" : "Dart"}`);
-		const isTest = isFullTestRun || (debugConfig.program && isTestFile(debugConfig.program as string));
+		const isTest = debugConfig.program && isTestFileOrFolder(debugConfig.program as string);
 		if (isTest)
 			log(`Detected launch project as a Test project`);
 		const canPubRunTest = isTest && debugConfig.cwd && projectSupportsPubRunTest(debugConfig.cwd as string);
@@ -188,7 +185,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	private guessBestEntryPoint(openFile: string, workspaceFolder: WorkspaceFolder | undefined): string | undefined {
 		// For certain open files, assume the user wants to run them.
-		if (isTestFile(openFile) || isInsideFolderNamed(openFile, "bin") || isInsideFolderNamed(openFile, "tool")) {
+		if (isDartFile(openFile) &&
+			(isTestFile(openFile) || (isInsideFolderNamed(openFile, "bin") || isInsideFolderNamed(openFile, "tool")))) {
 			log(`Using open file as entry point: ${openFile}`);
 			return openFile;
 		}
