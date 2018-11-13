@@ -1056,13 +1056,28 @@
 				"name": "dart-pub-build_runner",
 				"label": "Pub: build_runner",
 				"source": "pub",
-				"pattern": {
-					"regexp": "__________"
-				},
+				"pattern": [
+					{
+						"regexp": "^\\[SEVERE\\] \\w+ on (.*?)(?: \\(cached\\))?:$",
+						"file": 1
+					},
+					{
+						"regexp": "^Error running .*$"
+					},
+					{
+						"regexp": "^(.*)$",
+						"message": 1
+					},
+					{
+						"regexp": "^package:.*:(\\d+):(\\d+)$",
+						"line": 1,
+						"column": 2
+					}
+				],
 				"background": {
 					"activeOnStart": true,
 					"beginsPattern": "^\\[INFO\\] Starting Build",
-					"endsPattern": "^\\[INFO\\] Succeeded after"
+					"endsPattern": "^(\\[INFO\\] Succeeded|\\[SEVERE\\] Failed) after"
 				}
 			}
 		]
