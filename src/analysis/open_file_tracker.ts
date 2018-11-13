@@ -1,4 +1,4 @@
-import { Disposable, Uri, window, workspace } from "vscode";
+import { Disposable, TextDocument, Uri, window, workspace } from "vscode";
 import { IAmDisposable } from "../debug/utils";
 import * as util from "../utils";
 import { fsPath } from "../utils";
@@ -29,17 +29,24 @@ export class OpenFileTracker implements IAmDisposable {
 	}
 
 	public updatePriorityFiles() {
+		const isAnalyzeable = this.analyzer.capabilities.supportsPriorityFilesOutsideAnalysisRoots
+			? util.isAnalyzable
+			: util.isAnalyzableAndInWorkspace;
+
+		const validPathsFor = (paths: TextDocument[]): string[] =>
+			paths
+				.filter((doc) => !doc.isClosed && isAnalyzeable(doc))
+				.map((doc) => fsPath(doc.uri))
+				.sort((path1, path2) => path1.localeCompare(path2));
+
 		// Within visible/otherActive we sort by name so we get the same results if files are in a different
 		// order; this is to reduce changing too much in the AS (causing more work) since we don't really care about
 		// about the relative difference within these groups.
-		const visibleDocuments = window.visibleTextEditors.map((e) => e.document).sort((d1, d2) => fsPath(d1.uri).localeCompare(fsPath(d2.uri)));
-		const otherOpenDocuments = workspace.textDocuments
-			.filter((doc) => !doc.isClosed)
-			.filter((doc) => visibleDocuments.indexOf(doc) === -1)
-			.sort((d1, d2) => fsPath(d1.uri).localeCompare(fsPath(d2.uri)));
+		const visibleDocumentPaths = validPathsFor(window.visibleTextEditors.map((editor) => editor.document));
+		const otherOpenDocuments = validPathsFor(workspace.textDocuments)
+			.filter((path) => visibleDocumentPaths.indexOf(path) === -1);
 
-		const priorityDocuments = visibleDocuments.concat(otherOpenDocuments).filter((d) => this.analyzer.capabilities.supportsPriorityFilesOutsideAnalysisRoots ? util.isAnalyzable(d) : util.isAnalyzableAndInWorkspace(d));
-		const priorityFiles = priorityDocuments.map((doc) => fsPath(doc.uri));
+		const priorityFiles = visibleDocumentPaths.concat(otherOpenDocuments);
 
 		// Check the files have changed before sending the results.
 		const filesHaveChanged =
