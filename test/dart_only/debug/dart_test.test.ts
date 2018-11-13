@@ -184,6 +184,20 @@ describe("dart test debugger", () => {
 		assert.equal(`${topLevelNodes[3].label} (${TestStatus[topLevelNodes[3].status]})`, "skip_test.dart (Skipped)");
 	});
 
+	it("runs all tests if given a folder", async () => {
+		const config = await startDebugger("./test/");
+		config.noDebug = true;
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		]);
+
+		const topLevelNodes = extApi.testTreeProvider.getChildren();
+		assert.ok(topLevelNodes);
+		assert.equal(topLevelNodes.length, 5);
+	});
+
 	it("does not overwrite unrelated test nodes due to overlapping IDs", async () => {
 		// When we run an individual test, it will always have an ID of 1. Since the test we ran might
 		// not have been ID=1 in the previous run, we need to be sure we update the correct node in the tree.
