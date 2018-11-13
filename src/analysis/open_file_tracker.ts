@@ -58,25 +58,14 @@ export class OpenFileTracker implements IAmDisposable {
 		}).then(() => { }, logError); // tslint:disable-line:no-empty
 
 		// Set subscriptions.
-		if (this.analyzer.capabilities.supportsClosingLabels) {
-			this.analyzer.analysisSetSubscriptions({
-				subscriptions: {
-					CLOSING_LABELS: priorityFiles,
-					FOLDING: priorityFiles,
-					OCCURRENCES: priorityFiles,
-					OUTLINE: priorityFiles,
-				},
-			}).then(() => { }, logError); // tslint:disable-line:no-empty
-		} else {
-			this.analyzer.analysisSetSubscriptions({
-				subscriptions: {
-					FOLDING: priorityFiles,
-					HIGHLIGHTS: priorityFiles,
-					OCCURRENCES: priorityFiles,
-					OUTLINE: priorityFiles,
-				},
-			}).then(() => { }, logError); // tslint:disable-line:no-empty
-		}
+		this.analyzer.analysisSetSubscriptions({
+			subscriptions: {
+				CLOSING_LABELS: this.analyzer.capabilities.supportsClosingLabels ? priorityFiles : undefined,
+				FOLDING: priorityFiles,
+				OCCURRENCES: priorityFiles,
+				OUTLINE: priorityFiles,
+			},
+		}).then(() => { }, logError); // tslint:disable-line:no-empty
 	}
 
 	public static getOutlineFor(file: Uri): Outline | undefined {
