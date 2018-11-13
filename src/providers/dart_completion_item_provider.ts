@@ -1,3 +1,4 @@
+import * as path from "path";
 import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, MarkdownString, Position, Range, SnippetString, TextDocument } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
@@ -169,7 +170,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 
 		const kind = suggestion.element
 			? this.getElementKind(suggestion.element.kind)
-			: this.getSuggestionKind(suggestion.kind);
+			: this.getSuggestionKind(suggestion.kind, label);
 
 		const completion = new CompletionItem(label, kind);
 		completion.label = label;
@@ -209,12 +210,16 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		return completion;
 	}
 
-	private getSuggestionKind(kind: as.CompletionSuggestionKind): CompletionItemKind {
+	private getSuggestionKind(kind: as.CompletionSuggestionKind, label: string): CompletionItemKind {
 		switch (kind) {
 			case "ARGUMENT_LIST":
 				return CompletionItemKind.Variable;
 			case "IMPORT":
-				return CompletionItemKind.Module;
+				return label.startsWith("dart:")
+					? CompletionItemKind.Module
+					: path.extname(label.toLowerCase()) === ".dart"
+						? CompletionItemKind.File
+						: CompletionItemKind.Folder;
 			case "IDENTIFIER":
 				return CompletionItemKind.Variable;
 			case "INVOCATION":
