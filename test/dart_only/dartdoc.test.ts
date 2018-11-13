@@ -24,15 +24,6 @@ describe("cleanDartDoc", () => {
 		`;
 		assert.equal(cleanDartdoc(input), expected);
 	});
-	it("changes [code] to `code`", () => {
-		const input = `
-		See the [Widget] section.
-		`;
-		const expected = `
-		See the \`Widget\` section.
-		`;
-		assert.equal(cleanDartdoc(input), expected);
-	});
 	it("strips dartdoc directives", () => {
 		const input = `
 		{@template flutter.widgets.widgetsApp.navigatorKey}
