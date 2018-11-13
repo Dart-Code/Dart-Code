@@ -18,7 +18,7 @@ abstract class SdkManager {
 	protected abstract get configuredSdk(): string;
 	protected abstract get configName(): string;
 	protected abstract get executablePath(): string;
-	protected abstract getLabel(path: string): string;
+	protected abstract getLabel(version: string): string;
 	protected abstract setSdk(folder: string): void;
 
 	public changeSdk() {
@@ -52,8 +52,8 @@ abstract class SdkManager {
 
 			const version = getSdkVersion(actualFolder);
 			return {
-				description: f,
-				detail: f === this.currentSdk && this.configuredSdk ? "Current setting" : "",
+				description: f === this.currentSdk && this.configuredSdk ? "Current setting" : "",
+				detail: f,
 				folder: f,
 				label: this.getLabel(version),
 				version,
@@ -65,8 +65,8 @@ abstract class SdkManager {
 			return;
 
 		const items = [{
-			description: !this.configuredSdk ? `Found at ${this.currentSdk}` : undefined,
-			detail: !this.configuredSdk ? "Current setting" : "",
+			description: !this.configuredSdk ? "Current setting" : "",
+			detail: !this.configuredSdk ? `Found at ${this.currentSdk}` : undefined,
 			folder: undefined,
 			label: "Auto-detect SDK location",
 		}].concat(sdkItems);
