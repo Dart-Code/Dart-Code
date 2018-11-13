@@ -7,6 +7,7 @@ import { ProgressLocation, Uri, window } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { globalFlutterArgs, PromiseCompleter, safeSpawn } from "../debug/utils";
+import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { DartHoverProvider } from "../providers/dart_hover_provider";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
@@ -18,12 +19,11 @@ import * as channels from "./channels";
 const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
 
 export class SdkCommands {
-	private sdks: Sdks;
-	private analytics: Analytics;
 	private flutterScreenshotPath?: string;
 	// A map of any in-progress commands so we can terminate them if we want to run another.
 	private runningCommands: { [workspaceUriAndCommand: string]: ChainedProcess | undefined; } = {};
-	constructor(context: vs.ExtensionContext, sdks: Sdks, analytics: Analytics) {
+
+	constructor(context: vs.ExtensionContext, private sdks: Sdks, private analytics: Analytics, private deviceManager: FlutterDeviceManager) {
 		this.sdks = sdks;
 		this.analytics = analytics;
 
@@ -114,7 +114,9 @@ export class SdkCommands {
 				util.mkDirRecursive(this.flutterScreenshotPath);
 			}
 
-			await this.runFlutterInFolder(this.flutterScreenshotPath, ["screenshot"], "screenshot");
+			const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null;
+			const args = deviceId ? ["screenshot", "-d", deviceId] : ["screenshot"];
+			await this.runFlutterInFolder(this.flutterScreenshotPath, args, "screenshot");
 
 			if (shouldNotify) {
 				const res = await vs.window.showInformationMessage(`Screenshots will be saved to ${this.flutterScreenshotPath}`, "Show Folder");

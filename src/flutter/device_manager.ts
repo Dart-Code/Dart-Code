@@ -40,7 +40,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	public deviceRemoved(dev: f.Device) {
 		this.devices = this.devices.filter((d) => d.id !== dev.id);
-		if (this.currentDevice.id === dev.id)
+		if (this.currentDevice && this.currentDevice.id === dev.id)
 			this.currentDevice = this.devices.length === 0 ? null : this.devices[this.devices.length - 1];
 		this.updateStatusBar();
 	}

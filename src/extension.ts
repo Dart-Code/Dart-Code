@@ -312,7 +312,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	}));
 
 	// Register SDK commands.
-	const sdkCommands = new SdkCommands(context, sdks, analytics);
+	const sdkCommands = new SdkCommands(context, sdks, analytics, flutterDaemon && flutterDaemon.deviceManager);
 	const debug = new DebugCommands(context, analytics);
 
 	// Set up commands for Dart editors.
