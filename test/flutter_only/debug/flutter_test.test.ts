@@ -3,9 +3,10 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath, versionIsAtLeast } from "../../../src/utils";
+import { logInfo } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { killFlutterTester } from "../../debug_helpers";
-import { activate, defer, ext, extApi, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getLaunchConfiguration, openFile, positionOf } from "../../helpers";
+import { activate, defer, delay, ext, extApi, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getLaunchConfiguration, openFile, positionOf, withTimeout } from "../../helpers";
 
 describe("flutter test debugger", () => {
 
@@ -26,7 +27,13 @@ describe("flutter test debugger", () => {
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
-		dc = new DartDebugClient(process.execPath, path.join(ext.extensionPath, "out/src/debug/flutter_test_debug_entry.js"), "dart");
+		dc = new DartDebugClient(
+			process.execPath,
+			path.join(ext.extensionPath, "out/src/debug/flutter_test_debug_entry.js"),
+			"dart",
+			undefined,
+			extApi.testTreeProvider,
+		);
 		dc.defaultTimeout = 30000;
 		// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
 		// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
@@ -128,6 +135,20 @@ describe("flutter test debugger", () => {
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
+	});
+
+	it("runs all tests if given a folder", async () => {
+		const config = await startDebugger("./test/");
+		config.noDebug = true;
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		]);
+
+		const topLevelNodes = extApi.testTreeProvider.getChildren();
+		assert.ok(topLevelNodes);
+		assert.equal(topLevelNodes.length, 3);
 	});
 
 	it("stops at a breakpoint", async () => {
