@@ -345,7 +345,7 @@ export function ensureError(errors: vs.Diagnostic[], text: string) {
 	);
 }
 
-export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName: string, uri: vs.Uri): void {
+export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName: string, uriOrMatch: vs.Uri | { endsWith?: string }): void {
 	let symbol = symbols.find((f) =>
 		f.name === name
 		&& f.kind === kind
@@ -357,7 +357,12 @@ export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: str
 		+ symbols.map((s) => `        ${s.name}/${vs.SymbolKind[s.kind]}/${s.containerName}`).join("\n"),
 	);
 	symbol = symbol!;
-	assert.equal(fsPath(symbol.location.uri), fsPath(uri));
+	if (uriOrMatch instanceof vs.Uri)
+		assert.equal(fsPath(symbol.location.uri), fsPath(uriOrMatch));
+	else if (uriOrMatch.endsWith)
+		assert.ok(fsPath(symbol.location.uri).endsWith(uriOrMatch.endsWith));
+	else
+		assert.equal(symbol.location.uri, uriOrMatch);
 	assert.ok(symbol.location);
 	assert.ok(!symbol.location.range);
 }

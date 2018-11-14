@@ -3,6 +3,8 @@ name: hello_world
 dependencies:
   http:
   convert: ^2.0.1
+  protobuf:
+    git: git://github.com/dart-lang/protobuf.git
 
 dev_dependencies:
   test: '>=0.12.34'

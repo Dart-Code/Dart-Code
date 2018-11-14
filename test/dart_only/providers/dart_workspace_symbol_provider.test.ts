@@ -30,4 +30,24 @@ describe("workspace_symbol_provider", () => {
 		ensureWorkspaceSymbol(symbols, "MyClass.myVoidReturningMethod()", vs.SymbolKind.Method, `lib${path.sep}everything.dart`, everythingFile);
 		ensureWorkspaceSymbol(symbols, "MyClass.myStringReturningMethod()", vs.SymbolKind.Method, `lib${path.sep}everything.dart`, everythingFile);
 	});
+
+	it("includes items from pub packages", async function () {
+		// Results in legacy version are kinda junk.
+		if (!extApi.analyzerCapabilities.isDart2)
+			this.skip();
+
+		const symbols = await getWorkspaceSymbols("IOClient");
+
+		ensureWorkspaceSymbol(symbols, "IOClient", vs.SymbolKind.Class, "package:http/src/io_client.dart", { endsWith: "/src/io_client.dart" });
+	});
+
+	it.skip("includes items from git dependencies", async function () {
+		// Results in legacy version are kinda junk.
+		if (!extApi.analyzerCapabilities.isDart2)
+			this.skip();
+
+		const symbols = await getWorkspaceSymbols("ProtobufEnum");
+
+		ensureWorkspaceSymbol(symbols, "ProtobufEnum", vs.SymbolKind.Class, "package:protobuf/protobuf.dart", { endsWith: "/protobuf.dart" });
+	});
 });
