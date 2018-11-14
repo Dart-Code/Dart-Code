@@ -2,6 +2,8 @@ import * as fs from "fs";
 import * as path from "path";
 
 export function getChildFolders(parent: string): string[] {
+	if (!fs.existsSync(parent))
+		return [];
 	return fs.readdirSync(parent)
 		.map((item) => path.join(parent, item))
 		.filter((item) => fs.statSync(item).isDirectory());
