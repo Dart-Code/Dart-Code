@@ -939,6 +939,10 @@
 								"type": "string",
 								"description": "Workspace root."
 							},
+							"deviceId": {
+								"type": "string",
+								"description": "The ID of the device to launch your Flutter app on (or attach to). If not supplied, will use the selected device shown in the status bar."
+							},
 							"enableAsserts": {
 								"type": "boolean",
 								"description": "Whether to run the VM with --asserts-enabled.",
