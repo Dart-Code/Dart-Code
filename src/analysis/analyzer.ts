@@ -251,6 +251,7 @@ export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind
 	switch (kind) {
 		case "CLASS":
 		case "CLASS_TYPE_ALIAS":
+		case "MIXIN":
 			return vs.SymbolKind.Class;
 		case "COMPILATION_UNIT":
 			return vs.SymbolKind.Module;
