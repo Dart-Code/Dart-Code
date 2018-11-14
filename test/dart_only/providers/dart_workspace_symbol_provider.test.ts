@@ -41,13 +41,13 @@ describe("workspace_symbol_provider", () => {
 		ensureWorkspaceSymbol(symbols, "IOClient", vs.SymbolKind.Class, "package:http/src/io_client.dart", { endsWith: "/src/io_client.dart" });
 	});
 
-	it.skip("includes items from git dependencies", async function () {
+	it("includes items from git dependencies", async function () {
 		// Results in legacy version are kinda junk.
 		if (!extApi.analyzerCapabilities.isDart2)
 			this.skip();
 
 		const symbols = await getWorkspaceSymbols("ProtobufEnum");
 
-		ensureWorkspaceSymbol(symbols, "ProtobufEnum", vs.SymbolKind.Class, "package:protobuf/protobuf.dart", { endsWith: "/protobuf.dart" });
+		ensureWorkspaceSymbol(symbols, "ProtobufEnum", vs.SymbolKind.Class, "package:protobuf/src/protobuf/protobuf_enum.dart", { endsWith: "/src/protobuf/protobuf_enum.dart" });
 	});
 });

@@ -1,3 +1,4 @@
+import * as _ from "lodash";
 import * as path from "path";
 import { CancellationToken, Location, SymbolInformation, Uri, workspace, WorkspaceSymbolProvider } from "vscode";
 import * as as from "../analysis/analysis_server_types";
@@ -84,29 +85,27 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		// workspace.rootPath we rewrite the path to there which gives us a nice
 		// relative path.
 
-		// Currently I only do this for "hosted\pub.dartlang.org" as I'm not sure of the
-		// rules for these paths!
-
-		const pubCachePath = "hosted" + path.sep + "pub.dartlang.org";
-		const pubCachePathIndex = inputPath.indexOf(pubCachePath);
-		if (pubCachePathIndex > -1) {
-			const relativePath = inputPath.substring(pubCachePathIndex + pubCachePath.length + 1);
-
-			// Packages in pubcache are versioned so trim the "-x.x.x" off the end of the foldername.
-			const pathComponents = relativePath.split(path.sep);
-			pathComponents[0] = pathComponents[0].split("-")[0];
-
-			// Symlink goes into the lib folder, so strip that out of the path.
-			if (pathComponents[1] === "lib")
-				pathComponents.splice(1, 1);
-
-			// Return 'package:foo/bar.dart'.
-			inputPath = `package:${pathComponents[0]}/${pathComponents.slice(1).join("/")}`;
-		} else {
-			const root = workspace.getWorkspaceFolder(Uri.file(inputPath));
+		const root = workspace.getWorkspaceFolder(Uri.file(inputPath));
+		if (root) {
 			inputPath = root && path.relative(fsPath(root.uri), inputPath);
-		}
+		} else {
+			const pathSlash = _.escapeRegExp(path.sep);
+			const notSlashes = `[^${pathSlash}]+`;
+			const pattern = new RegExp(`.*${pathSlash}(?:hosted${pathSlash}${notSlashes}|git)${pathSlash}(${notSlashes})${pathSlash}(.*)`);
+			const matches = pattern.exec(inputPath);
+			if (matches && matches.length === 3) {
+				// Packages in pubcache are versioned so trim the "-x.x.x" off the end of the foldername.
+				const packageName = matches[1].split("-")[0];
 
+				// Trim /lib/ off the start if present.
+				const filePath = matches[2].startsWith(`lib${path.sep}`) ? matches[2].substr(4) : matches[2];
+
+				// Return 'package:foo/bar.dart'.
+				inputPath = `package:${packageName}/${filePath.replace("\\", "/")}`;
+			} else {
+				return undefined;
+			}
+		}
 		return inputPath;
 	}
 }
