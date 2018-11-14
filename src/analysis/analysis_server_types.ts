@@ -330,10 +330,7 @@ export interface AnalysisGetReachableSourcesResponse {
  * for the given file has not yet been computed, or the most
  * recently computed signature information for the given file
  * is out of date, then the response for this request will be
- * delayed until it has been computed. If the content of the
- * file changes after this request was received but before a
- * response could be sent, then an error of type
- * CONTENT_MODIFIED will be generated.
+ * delayed until it has been computed.
  * 
  * If a request is made for a file which does not exist, or
  * which is not currently subject to analysis (e.g. because it
@@ -368,10 +365,7 @@ export interface AnalysisGetSignatureRequest {
  * for the given file has not yet been computed, or the most
  * recently computed signature information for the given file
  * is out of date, then the response for this request will be
- * delayed until it has been computed. If the content of the
- * file changes after this request was received but before a
- * response could be sent, then an error of type
- * CONTENT_MODIFIED will be generated.
+ * delayed until it has been computed.
  * 
  * If a request is made for a file which does not exist, or
  * which is not currently subject to analysis (e.g. because it
@@ -395,6 +389,11 @@ export interface AnalysisGetSignatureResponse {
 	name: string;
 
 	/**
+	 * A list of information about each of the parameters of the function being invoked.
+	 */
+	parameters: ParameterInfo[];
+
+	/**
 	 * The dartdoc associated with the function being invoked. Other
 	 * than the removal of the comment delimiters, including leading
 	 * asterisks in the case of a block comment, the dartdoc is
@@ -402,11 +401,6 @@ export interface AnalysisGetSignatureResponse {
 	 * referenced element, or if the element has no dartdoc.
 	 */
 	dartdoc?: string;
-
-	/**
-	 * A list of information about each of the parameters of the function being invoked.
-	 */
-	parameters: ParameterInfo[];
 }
 
 /**
@@ -1038,6 +1032,55 @@ export interface EditGetAvailableRefactoringsResponse {
 }
 
 /**
+ * Analyze the specified sources for recommended changes
+ * and return a set of suggested edits for those sources.
+ * These edits may include changes to sources outside the set
+ * of specified sources if a change in a specified source requires it.
+ */
+export interface EditDartfixRequest {
+	/**
+	 * A list of the files and directories for which edits should be suggested.
+	 * 
+	 * If a request is made with a path that is invalid, e.g. is not absolute and normalized,
+	 * an error of type INVALID_FILE_PATH_FORMAT will be generated.
+	 * If a request is made for a file which does not exist, or which is not currently subject to analysis
+	 * (e.g. because it is not associated with any analysis root specified to analysis.setAnalysisRoots),
+	 * an error of type FILE_NOT_ANALYZED will be generated.
+	 */
+	included: FilePath[];
+}
+
+/**
+ * Analyze the specified sources for recommended changes
+ * and return a set of suggested edits for those sources.
+ * These edits may include changes to sources outside the set
+ * of specified sources if a change in a specified source requires it.
+ */
+export interface EditDartfixResponse {
+	/**
+	 * A list of recommended changes that can be automatically made
+	 * by applying the 'edits' included in this response.
+	 */
+	suggestions: DartFixSuggestion[];
+
+	/**
+	 * A list of recommended changes that could not be automatically made.
+	 */
+	otherSuggestions: DartFixSuggestion[];
+
+	/**
+	 * True if the analyzed source contains errors that might impact the correctness
+	 * of the recommended changes that can be automatically applied.
+	 */
+	hasErrors: boolean;
+
+	/**
+	 * A list of source edits to apply the recommended changes.
+	 */
+	edits: SourceFileEdit[];
+}
+
+/**
  * Return the set of fixes that are available for the errors at
  * a given offset in a given file.
  */
@@ -1328,13 +1371,12 @@ export interface EditImportElementsRequest {
  */
 export interface EditImportElementsResponse {
 	/**
-	 * The edits to be applied in order to make the specified elements
-	 * accessible. The file to be edited will be the defining compilation
-	 * unit of the library containing the file specified in the request,
-	 * which can be different than the file specified in the request if the
-	 * specified file is a part file.
+	 * The edits to be applied in order to make the specified elements accessible. The file to be edited will be the
+	 * defining compilation unit of the library containing the file specified in the request, which can be different
+	 * than the file specified in the request if the specified file is a part file. This field will be omitted if
+	 * there are no edits that need to be applied.
 	 */
-	edit: SourceFileEdit;
+	edit?: SourceFileEdit;
 }
 
 /**
@@ -1951,6 +1993,9 @@ export interface ServerStatusNotification {
 	/**
 	 * The current status of pub execution, indicating whether we are
 	 * currently running pub.
+	 * 
+	 * Note: this status type is deprecated, and is no longer sent by
+	 * the server.
 	 */
 	pub?: PubStatus;
 }
@@ -2615,6 +2660,12 @@ export interface ElementDeclaration {
 	className?: string;
 
 	/**
+	 * The name of the mixin enclosing this declaration. If the declaration
+	 * is not a mixin member, this field will be absent.
+	 */
+	mixinName?: string;
+
+	/**
 	 * The parameter list for the element. If the element is not a method or
 	 * function this field will not be defined. If the element doesn't have
 	 * parameters (e.g. getter), this field will not be defined. If the
@@ -2657,9 +2708,9 @@ export type ExecutionContextId = string;
 
 /**
  * An expression for which we want to know its runtime type.
- * In expressions like `a.b.c.where((e) => e.^)` we want to know the
- * runtime type of `a.b.c` to enforce it statically at the time when we
- * compute completion suggestions, and get better type for `e`.
+ * In expressions like 'a.b.c.where((e) => e.^)' we want to know the
+ * runtime type of 'a.b.c' to enforce it statically at the time when we
+ * compute completion suggestions, and get better type for 'e'.
  */
 export interface RuntimeCompletionExpression {
 	/**
@@ -3236,9 +3287,7 @@ export type RequestErrorCode =
 	| "SERVER_ERROR"
 	| "SORT_MEMBERS_INVALID_FILE"
 	| "SORT_MEMBERS_PARSE_ERRORS"
-	| "UNANALYZED_PRIORITY_FILES"
 	| "UNKNOWN_REQUEST"
-	| "UNKNOWN_SOURCE"
 	| "UNSUPPORTED_FEATURE";
 
 /**
@@ -3246,6 +3295,21 @@ export type RequestErrorCode =
  * request.
  */
 export type SearchId = string;
+
+/**
+ * A suggestion from an edit.dartfix request.
+ */
+export interface DartFixSuggestion {
+	/**
+	 * A human readable description of the suggested change.
+	 */
+	description: string;
+
+	/**
+	 * The location of the suggested change.
+	 */
+	location?: Location;
+}
 
 /**
  * A single result from a search request.
@@ -3888,6 +3952,7 @@ export type ElementKind =
 	| "LIBRARY"
 	| "LOCAL_VARIABLE"
 	| "METHOD"
+	| "MIXIN"
 	| "PARAMETER"
 	| "PREFIX"
 	| "SETTER"
