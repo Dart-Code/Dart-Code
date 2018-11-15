@@ -3,7 +3,6 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { isWin } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
 import { logError } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
@@ -14,12 +13,6 @@ describe("flutter run debugger (attach)", () => {
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 	beforeEach("set timeout", function () {
 		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
-	});
-
-	beforeEach("skip if no test device", function () {
-		// Skip on Windows due to https://github.com/flutter/flutter/issues/17833
-		if (isWin)
-			this.skip();
 	});
 
 	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
