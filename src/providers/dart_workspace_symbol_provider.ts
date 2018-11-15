@@ -101,7 +101,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 				const filePath = matches[2].startsWith(`lib${path.sep}`) ? matches[2].substr(4) : matches[2];
 
 				// Return 'package:foo/bar.dart'.
-				inputPath = `package:${packageName}/${filePath.replace("\\", "/")}`;
+				inputPath = `package:${packageName}/${filePath.replace(/\\/g, "/")}`;
 			} else {
 				return undefined;
 			}
