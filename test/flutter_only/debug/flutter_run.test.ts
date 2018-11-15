@@ -222,6 +222,7 @@ describe("flutter run debugger (launch)", () => {
 
 			// Reload and ensure we hit the breakpoint on each one.
 			for (let i = 0; i < numReloads; i++) {
+				await delay(2000); // TODO: Remove this attempt to see if reloading too fast is causing our flakes...
 				await Promise.all([
 					watchPromise(`stops_at_a_breakpoint->reload:${i}->assertStoppedLocation:breakpoint`, dc.assertStoppedLocation("breakpoint", expectedLocation))
 						.then(async (_) => {
