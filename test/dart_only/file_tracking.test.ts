@@ -11,7 +11,7 @@ const file1 = helloWorldBrokenFile;
 const file2 = helloWorldMainFile;
 const allowSlowSubscriptionTests = true;
 
-describe.only("file tracker", () => {
+describe("file tracker", () => {
 	beforeEach("activate", () => activate(null));
 	it("includes visible editors in the priority list", async () => {
 		await closeAllOpenFiles();
