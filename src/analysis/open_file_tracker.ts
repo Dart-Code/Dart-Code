@@ -62,7 +62,7 @@ export class OpenFileTracker implements IAmDisposable {
 		// Set priority files.
 		this.analyzer.analysisSetPriorityFiles({
 			files: priorityFiles,
-		}).then(() => { }, logError); // tslint:disable-line:no-empty
+		}).then(() => { }, (e) => logError(e)); // tslint:disable-line:no-empty
 
 		// Set subscriptions.
 		this.analyzer.analysisSetSubscriptions({
@@ -72,7 +72,7 @@ export class OpenFileTracker implements IAmDisposable {
 				OCCURRENCES: priorityFiles,
 				OUTLINE: priorityFiles,
 			},
-		}).then(() => { }, logError); // tslint:disable-line:no-empty
+		}).then(() => { }, (e) => logError(e)); // tslint:disable-line:no-empty
 	}
 
 	public static getOutlineFor(file: Uri): Outline | undefined {
