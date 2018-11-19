@@ -360,7 +360,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 		vs.workspace.openTextDocument(filePath).then((document) => {
 			vs.window.showTextDocument(document, { preview: true });
-		}, (error) => logError);
+		}, (error) => logError(error));
 	}));
 
 	// Warn the user if they've opened a folder with mismatched casing.
