@@ -3,11 +3,12 @@ import * as path from "path";
 import * as vs from "vscode";
 import { config } from "../../../src/config";
 import { platformEol } from "../../../src/debug/utils";
-import { fsPath } from "../../../src/utils";
+import { debugAnywayAction, showErrorsAction } from "../../../src/providers/debug_config_provider";
+import { fsPath, getRandomInt } from "../../../src/utils";
 import { log } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureMapEntry, ensureVariable, ensureVariableWithIndex, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, positionOf, sb } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, positionOf, sb, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -24,7 +25,9 @@ describe("dart cli debugger", () => {
 
 	async function startDebugger(script?: vs.Uri, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
 		const config = await getLaunchConfiguration(script, extraConfiguration);
-		await dc.start(config.debugServer);
+		if (config) {
+			await dc.start(config.debugServer);
+		}
 		return config;
 	}
 
@@ -43,10 +46,91 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	// TODO: Implement these! Will need to stub showModalDialog.
-	it.skip("prompts the user if trying to run with errors");
-	it.skip("does not prompts the user if trying to run with errors that are in test scripts");
-	it.skip("prompts the user if trying to run with errors in the test script being run");
+	describe("prompts the user if trying to run with errors", () => {
+		function getTempProjectFile() {
+			const fileName = `temp-${getRandomInt(0x1000, 0x10000).toString(16)}.dart`;
+			return vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin", fileName));
+		}
+		function getTempTestFile() {
+			const fileName = `temp-${getRandomInt(0x1000, 0x10000).toString(16)}.dart`;
+			return vs.Uri.file(path.join(fsPath(helloWorldFolder), "test", fileName));
+		}
+		it("and cancels launch if they click Show Errors", async () => {
+			const nextAnalysis = extApi.nextAnalysis();
+			await writeBrokenDartCodeIntoFileForTest(getTempProjectFile());
+			await nextAnalysis;
+
+			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
+			showErrorMessage.resolves(showErrorsAction);
+
+			const config = await getLaunchConfiguration(helloWorldMainFile);
+
+			// Since we clicked Show Errors, we expect the resolved config to be undefined, since
+			// launch will have been aborted.
+			assert.strictEqual(config, undefined);
+			assert(showErrorMessage.calledOnce);
+		});
+		it("and launches if they click Debug Anyway", async () => {
+			const nextAnalysis = extApi.nextAnalysis();
+			log(`Creating!`);
+			await writeBrokenDartCodeIntoFileForTest(getTempProjectFile());
+			await nextAnalysis;
+
+			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
+			showErrorMessage.resolves(debugAnywayAction);
+
+			const config = await startDebugger(helloWorldMainFile);
+
+			// If we got a debug config, then we will launch normally.
+			assert(config);
+			assert(showErrorMessage.calledOnce);
+
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.assertOutput("stdout", "Hello, world!"),
+				dc.waitForEvent("terminated"),
+				dc.launch(config),
+			]);
+		});
+		it("unless the errors are in test scripts", async () => {
+			const nextAnalysis = extApi.nextAnalysis();
+			log(`Creating!`);
+			await writeBrokenDartCodeIntoFileForTest(getTempTestFile());
+			await nextAnalysis;
+
+			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
+			showErrorMessage.resolves(debugAnywayAction);
+
+			const config = await startDebugger(helloWorldMainFile);
+
+			// Although we have errors, they're in test scripts, so we expect
+			// them to be ignored.
+			assert(config);
+			assert(!showErrorMessage.calledOnce);
+
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.assertOutput("stdout", "Hello, world!"),
+				dc.waitForEvent("terminated"),
+				dc.launch(config),
+			]);
+		});
+		it("in the test script being run", async () => {
+			const nextAnalysis = extApi.nextAnalysis();
+			const tempTestScript = getTempProjectFile();
+			await writeBrokenDartCodeIntoFileForTest(tempTestScript);
+			await nextAnalysis;
+
+			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
+			showErrorMessage.resolves(showErrorsAction);
+
+			const config = await getLaunchConfiguration(tempTestScript);
+
+			// Since the error is in the test script we're running, we expect the prompt.
+			assert.strictEqual(config, undefined);
+			assert(showErrorMessage.calledOnce);
+		});
+	});
 
 	it("receives the expected output from a Dart script", async () => {
 		const config = await startDebugger(helloWorldMainFile);

@@ -22,6 +22,9 @@ import { TestResultsProvider } from "../views/test_view";
 
 export const TRACK_WIDGET_CREATION_ENABLED = "dart-code:trackWidgetCreationEnabled";
 export const HAS_LAST_DEBUG_CONFIG = "dart-code:hasLastDebugConfig";
+export const showErrorsAction = "Show Errors";
+export const debugAnywayAction = "Debug Anyway";
+
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugServers: { [index: string]: net.Server } = {};
@@ -203,14 +206,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			const dartErrors = vs.languages.getDiagnostics()
 				.filter((file) => file[1].find((d) => d.source === "dart" && d.severity === vs.DiagnosticSeverity.Error));
 			// Check if any are inside our CWD.
-			const hasDartErrorsInProject = dartErrors.find((fd) => {
+			const hasDartErrorsInProject = !!dartErrors.find((fd) => {
 				const file = fsPath(fd[0]);
 				return isWithinPath(file, debugConfig.cwd)
 					// Ignore errors in tests unless it's the file we're running.
 					&& (!isTestFile(file) || file === debugConfig.program);
 			});
-			const showErrorsAction = "Show Errors";
-			const debugAnywayAction = "Debug Anyway";
 			if (hasDartErrorsInProject) {
 				const action = await window.showErrorMessage(
 					"Build errors exist in your project.",

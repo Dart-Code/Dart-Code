@@ -601,6 +601,11 @@ export async function getAttachConfiguration(extraConfiguration?: { [key: string
 	return await getResolvedDebugConfiguration(attachConfig);
 }
 
+export function writeBrokenDartCodeIntoFileForTest(file: vs.Uri) {
+	fs.writeFileSync(fsPath(file), "this is broken dart code");
+	defer(() => tryDelete(file));
+}
+
 // Watches a promise and reports every 10s while it's unresolved. This is to aid tracking
 // down hangs in test runs where multiple promises can be spawned together and generate
 // lots of log output, making it hard to keep track of which did not complete.
