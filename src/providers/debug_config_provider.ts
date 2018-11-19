@@ -100,10 +100,27 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				log(`Setting workspace based on single open workspace: ${fsPath(folder.uri)}`);
 		}
 
+		// Convert to an absolute paths (if possible).
+		if (debugConfig.cwd && !path.isAbsolute(debugConfig.cwd) && folder) {
+			debugConfig.cwd = path.join(fsPath(folder.uri), debugConfig.cwd);
+			log(`Converted cwd to absolute path: ${debugConfig.cwd}`);
+		}
+		if (debugConfig.program && !path.isAbsolute(debugConfig.program) && (debugConfig.cwd || folder)) {
+			debugConfig.program = path.join(debugConfig.cwd || fsPath(folder.uri), debugConfig.program);
+			log(`Converted program to absolute path: ${debugConfig.program}`);
+		}
+
 		const isAttachRequest = debugConfig.request === "attach";
 		if (!isAttachRequest) {
 			// If there's no program set, try to guess one.
-			debugConfig.program = debugConfig.program || this.guessBestEntryPoint(openFile, folder);
+			const preferredFolder = debugConfig.cwd
+				? debugConfig.cwd
+				: folder
+					? fsPath(folder.uri)
+					: undefined;
+			// If we have a folder specificed, we should only consider open files if it's inside it.
+			const preferredFile = preferredFolder == null || isWithinPath(openFile, preferredFolder) ? openFile : undefined;
+			debugConfig.program = debugConfig.program || this.guessBestEntryPoint(preferredFile, preferredFolder);
 
 			// If we still don't have an entry point, the user will have to provide it.
 			if (!debugConfig.program) {
@@ -111,12 +128,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				window.showInformationMessage("Set the 'program' value in your launch config (eg 'bin/main.dart') then launch again");
 				return null; // null means open launch.json.
 			}
-		}
-
-		// Convert `program` to an absolute path (if possible).
-		if (debugConfig.program && !path.isAbsolute(debugConfig.program) && (debugConfig.cwd || folder)) {
-			debugConfig.program = path.join(debugConfig.cwd || fsPath(folder.uri), debugConfig.program);
-			log(`Converted program to absolute path: ${debugConfig.program}`);
 		}
 
 		// If we don't have a cwd then find the best one from the project root.
@@ -210,7 +221,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return debugConfig;
 	}
 
-	private guessBestEntryPoint(openFile: string, workspaceFolder: WorkspaceFolder | undefined): string | undefined {
+	private guessBestEntryPoint(openFile: string, folder: string | undefined): string | undefined {
 		// For certain open files, assume the user wants to run them.
 		if (isDartFile(openFile) &&
 			(isTestFile(openFile) || (isInsideFolderNamed(openFile, "bin") || isInsideFolderNamed(openFile, "tool")))) {
@@ -219,7 +230,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		// Use the open file as a clue to find the best project root, then search from there.
-		const projectRoot = locateBestProjectRoot(openFile) || fsPath(workspaceFolder.uri);
+		const projectRoot = locateBestProjectRoot(openFile) || folder;
 		if (!projectRoot)
 			return;
 
