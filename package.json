@@ -915,6 +915,12 @@
 					"default": false,
 					"description": "Whether to call toString() on objects when rendering them in debug views (such as the Variables, Watch and Hovers views). Only applies to views of 15 or fewer values for performance reasons.",
 					"scope": "window"
+				},
+				"dart.previewPromptToRunIfErrors": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to prompt before running if there are errors in your project. Test scripts will be excluded from the check unless they're the script being run.",
+					"scope": "window"
 				}
 			}
 		},

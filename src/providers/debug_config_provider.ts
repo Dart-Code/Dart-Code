@@ -202,7 +202,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.cwd = forceWindowsDriveLetterToUppercase(debugConfig.cwd);
 
 		// If we're launching (not attaching) then check there are no errors before we launch.
-		if (!isAttachRequest && debugConfig.cwd) {
+		if (!isAttachRequest && debugConfig.cwd && config.previewPromptToRunIfErrors) {
 			const dartErrors = vs.languages.getDiagnostics()
 				.filter((file) => file[1].find((d) => d.source === "dart" && d.severity === vs.DiagnosticSeverity.Error));
 			// Check if any are inside our CWD.
