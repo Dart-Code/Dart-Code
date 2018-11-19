@@ -6,7 +6,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../src/utils";
 import { logError } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
-import { spawnFlutterProcess } from "../../debug_helpers";
+import { killFlutterTester, spawnFlutterProcess } from "../../debug_helpers";
 import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldExampleSubFolder, flutterHelloWorldFolder, flutterHelloWorldMainFile, getAttachConfiguration, watchPromise } from "../../helpers";
 
 describe("flutter run debugger (attach)", () => {
@@ -19,6 +19,8 @@ describe("flutter run debugger (attach)", () => {
 	// `flutter create .`!
 	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", path.join(fsPath(flutterHelloWorldFolder), "dummy"), "."));
 	before("run 'flutter create' for example", () => vs.commands.executeCommand("_flutter.create", path.join(fsPath(flutterHelloWorldExampleSubFolder), "dummy"), "."));
+
+	afterEach(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
