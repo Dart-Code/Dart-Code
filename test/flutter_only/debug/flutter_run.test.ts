@@ -78,9 +78,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	});
 
-	// Skipped due to leaving flutter_tester processes around:
-	// https://github.com/flutter/flutter/issues/20949
-	it.skip("can quit during a build", async () => {
+	it("can quit during a build", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		// Kick off a build, but do not await it...
 		Promise.all([
@@ -170,9 +168,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	});
 
-	// Skipped while it leaks processes
-	// https://github.com/Dart-Code/Dart-Code/issues/1269
-	it.skip("runs projects in sub-folders when the open file is in a project sub-folder", async () => {
+	it("runs projects in sub-folders when the open file is in a project sub-folder", async () => {
 		await openFile(flutterHelloWorldExampleSubFolderMainFile);
 		const config = await startDebugger();
 		if (disableDebuggingToAvoidBreakingOnCaughtException)
