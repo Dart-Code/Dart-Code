@@ -202,8 +202,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// If we're launching (not attaching) then check there are no errors before we launch.
 		if (!isAttachRequest && debugConfig.cwd && config.previewPromptToRunIfErrors) {
-			const dartErrors = vs.languages.getDiagnostics()
-				.filter((file) => file[1].find((d) => d.source === "dart" && d.severity === vs.DiagnosticSeverity.Error));
+			const isDartError = (d: vs.Diagnostic) => d.source === "dart" && d.severity === vs.DiagnosticSeverity.Error;
+			const dartErrors = vs.languages
+				.getDiagnostics()
+				.filter((file) => file[1].find(isDartError));
 			// Check if any are inside our CWD.
 			const hasDartErrorsInProject = !!dartErrors.find((fd) => {
 				const file = fsPath(fd[0]);
