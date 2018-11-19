@@ -25,7 +25,6 @@ export const HAS_LAST_DEBUG_CONFIG = "dart-code:hasLastDebugConfig";
 export const showErrorsAction = "Show Errors";
 export const debugAnywayAction = "Debug Anyway";
 
-
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugServers: { [index: string]: net.Server } = {};
 
