@@ -155,11 +155,11 @@ export function isTestFile(file: string): boolean {
 	// If we're either in a top-level test folder or the file ends with _test.dart then
 	// assume it's a test. We used to check for /test/ at any level, but sometimes people have
 	// non-test files named test (https://github.com/Dart-Code/Dart-Code/issues/1165).
-	return isDartFile(file) && (isInsideFolderNamed(file, "test") || (file && file.toLowerCase().endsWith("_test.dart")));
+	return file && isDartFile(file) && (isInsideFolderNamed(file, "test") || (file && file.toLowerCase().endsWith("_test.dart")));
 }
 
 export function isTestFolder(path: string): boolean {
-	return isInsideFolderNamed(path, "test") && fs.existsSync(path) && fs.statSync(path).isDirectory();
+	return path && isInsideFolderNamed(path, "test") && fs.existsSync(path) && fs.statSync(path).isDirectory();
 }
 
 export function projectSupportsPubRunTest(folder: string): boolean {
@@ -167,7 +167,7 @@ export function projectSupportsPubRunTest(folder: string): boolean {
 }
 
 export function isDartFile(file: string) {
-	return path.extname(file.toLowerCase()) === ".dart" && fs.existsSync(file) && fs.statSync(file).isFile();
+	return file && path.extname(file.toLowerCase()) === ".dart" && fs.existsSync(file) && fs.statSync(file).isFile();
 }
 
 export function isInsideFolderNamed(file: string, folderName: string): boolean {

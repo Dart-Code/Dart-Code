@@ -192,6 +192,29 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	});
 
+	it("runs projects in sub-folders when cwd is set to a project sub-folder", async () => {
+		const config = await startDebugger(undefined, "example");
+		if (disableDebuggingToAvoidBreakingOnCaughtException)
+			config.noDebug = true;
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.launch(config),
+		]);
+
+		// If we restart too fast, things fail :-/
+		await delay(1000);
+
+		await Promise.all([
+			dc.assertOutputContains("stdout", "This output is from an example sub-folder!"),
+			dc.customRequest("hotRestart"),
+		]);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
 	[0, 1, 2].forEach((numReloads) => {
 		const reloadDescription =
 			numReloads === 0
