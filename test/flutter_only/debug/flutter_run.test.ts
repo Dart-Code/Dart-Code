@@ -9,11 +9,6 @@ import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
 import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, watchPromise } from "../../helpers";
 
-// When this issue is fixed and makes beta, we can delete this cool and the code
-// that is added because of it.
-// https://github.com/flutter/flutter/issues/17838
-const disableDebuggingToAvoidBreakingOnCaughtException = true;
-
 describe("flutter run debugger (launch)", () => {
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 	beforeEach("set timeout", function () {
@@ -171,8 +166,6 @@ describe("flutter run debugger (launch)", () => {
 	it("runs projects in sub-folders when the open file is in a project sub-folder", async () => {
 		await openFile(flutterHelloWorldExampleSubFolderMainFile);
 		const config = await startDebugger();
-		if (disableDebuggingToAvoidBreakingOnCaughtException)
-			config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
