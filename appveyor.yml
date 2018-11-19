@@ -1,6 +1,4 @@
 environment:
-  CHAT_WEBHOOK_PATH:
-    secure: Oawgup4p18hTqsE2qGz07QLvtL/xrDiGFmqs9ebmXATs6t/Mp6L/sVS0XbAgmXhuOtZ8Q3KDC//q0ViBEnNiaEcZg3cI3GGPchtIQYjAozEC+3d3SXQY9zcSymAPgYsmc1TOsC+3BbuYXskoTu6myDbRPfh2i0YuU2lr0SRRbGS+68fGhBiPhZtkS6DOfDfu
   AWS_ACCESS_KEY_ID:
     secure: 2IDNrdK4BiM3+9TnW/K3nazF9S2pG7tyVQx249JDiY4=
   AWS_SECRET_ACCESS_KEY:
@@ -77,4 +75,3 @@ on_failure:
 on_finish:
   - IF NOT DEFINED APPVEYOR_PULL_REQUEST_NUMBER dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup="true" --local-dir=".dart_code_test_logs" --upload-dir="logs/%APPVEYOR_REPO_BRANCH%/%APPVEYOR_REPO_COMMIT%/win" --acl=public_read --default_text_charset=utf-8
   - IF NOT DEFINED APPVEYOR_PULL_REQUEST_NUMBER dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup="true" --local-dir=".test_results" --upload-dir="%APPVEYOR_REPO_BRANCH%/%APPVEYOR_REPO_COMMIT%/win" --acl=public_read --default_text_charset=utf-8
-  - npm run post_result_to_chat

@@ -1127,8 +1127,7 @@
 		"remap_empty_coverage": "cd out/src && run-for-every-file --src \"../../.nyc_output/*.json\" --run \"remap-istanbul -i {{src-file}} -o {{src-file}}\" && cd ../..",
 		"test-only": "node ./out/test/test_all.js",
 		"report_lcov": "nyc report -r lcovonly",
-		"report_screen": "nyc report",
-		"post_result_to_chat": "node ./out/tool/post_to_chat.js"
+		"report_screen": "nyc report"
 	},
 	"dependencies": {
 		"@types/minimatch": "^3.0.3",
