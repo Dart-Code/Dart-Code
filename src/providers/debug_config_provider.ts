@@ -17,7 +17,7 @@ import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { dartVMPath, flutterPath, pubPath, pubSnapshotPath } from "../sdk/utils";
 import { fsPath, isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, projectSupportsPubRunTest, ProjectType, Sdks } from "../utils";
-import { log, logWarn } from "../utils/log";
+import { log, logError, logWarn } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
 export const TRACK_WIDGET_CREATION_ENABLED = "dart-code:trackWidgetCreationEnabled";
@@ -45,11 +45,33 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration> {
 		const openFile = window.activeTextEditor && window.activeTextEditor.document ? fsPath(window.activeTextEditor.document.uri) : null;
 
-		function resolveVariables(input: string): string {
+		function resolveVariables(input?: string): string {
 			if (!input) return input;
-			if (input === "${file}") return openFile;
-			if (!folder) return input;
-			return input.replace(/\${workspaceFolder}/, fsPath(folder.uri));
+			input = input.replace(/\${file}/gi, openFile);
+			if (folder) {
+				const folderPath = fsPath(folder.uri);
+				input = input.replace(/\${(workspaceFolder|workspaceRoot)}/gi, folderPath);
+			}
+			return input;
+		}
+
+		/** Gets the first unresolved variable from the given string. */
+		function getUnresolvedVariable(input?: string): string | undefined {
+			if (!input) return undefined;
+			const matches = /\${\w+}/.exec(input);
+			return matches ? matches[0] : undefined;
+		}
+
+		function warnOnUnresolvedVariables(property: string, input?: string): boolean {
+			if (!input) return false;
+			const v = getUnresolvedVariable(input);
+
+			if (v) {
+				logError(`Launch config property '${property}' has unresolvable variable ${v}`);
+				window.showErrorMessage(`Launch config property '${property}' has unresolvable variable ${v}`);
+				return true;
+			}
+			return false;
 		}
 
 		log(`Starting debug session...`);
@@ -62,6 +84,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		debugConfig.program = resolveVariables(debugConfig.program);
 		debugConfig.cwd = resolveVariables(debugConfig.cwd);
+
+		if (warnOnUnresolvedVariables("program", debugConfig.program) || warnOnUnresolvedVariables("cwd", debugConfig.cwd)) {
+			// Warning is shown from inside warnOnUnresolvedVariables.
+			return null; // null means open launch.json.
+		}
 
 		if (openFile && !folder) {
 			folder = workspace.getWorkspaceFolder(Uri.file(openFile));
