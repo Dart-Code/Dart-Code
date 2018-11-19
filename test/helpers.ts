@@ -32,6 +32,7 @@ export let extApi: {
 	sdks: Sdks,
 	testTreeProvider: TestResultsProvider,
 };
+export const threeMinutesInMilliseconds = 1000 * 60 * 3;
 
 if (!ext) {
 	if (semver.satisfies(vs.version, vsCodeVersionConstraint)) {
@@ -99,9 +100,9 @@ export async function activateWithoutAnalysis(): Promise<void> {
 	extApi = ext.exports[internalApiSymbol];
 }
 
-export async function activate(file?: vs.Uri): Promise<void> {
+export async function activate(file?: vs.Uri | null | undefined): Promise<void> {
 	await activateWithoutAnalysis();
-	if (!file)
+	if (file === undefined) // undefined means use default, but explicit null will result in no file open.
 		file = getDefaultFile();
 
 	if (extApi && extApi.sdks && extApi.sdks.projectType === ProjectType.Flutter) {
@@ -111,11 +112,11 @@ export async function activate(file?: vs.Uri): Promise<void> {
 
 	log(`Closing all open files`);
 	await closeAllOpenFiles();
-	log(`Opening ${fsPath(file)}`);
-	const doc = await vs.workspace.openTextDocument(file);
-	log(`Showing ${fsPath(file)}`);
-	await vs.window.showTextDocument(doc);
-	documentEol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
+	if (file) {
+		await openFile(file);
+	} else {
+		log(`Not opening any file`);
+	}
 	log(`Waiting for initial and any in-progress analysis`);
 	await extApi.initialAnalysis;
 	// Opening a file above may start analysis after a short period so give it time to start
@@ -143,9 +144,14 @@ export async function closeAllOpenFiles(): Promise<void> {
 	await delay(100);
 }
 
+export async function waitUntilAllTextDocumentsAreClosed(): Promise<void> {
+	log(`Waiting for VS Code to mark all documents as closed...`);
+	await waitFor(() => vs.workspace.textDocuments.length === 0, "Some TextDocuments did not close", threeMinutesInMilliseconds);
+}
+
 export async function closeFile(file: vs.Uri): Promise<void> {
 	for (const editor of vs.window.visibleTextEditors) {
-		if (editor.document.uri === file) {
+		if (fsPath(editor.document.uri) === fsPath(file)) {
 			console.log(`Closing visible editor ${editor.document.uri}...`);
 			await vs.window.showTextDocument(editor.document);
 			await vs.commands.executeCommand("workbench.action.closeActiveEditor");
@@ -154,7 +160,13 @@ export async function closeFile(file: vs.Uri): Promise<void> {
 }
 
 export async function openFile(file: vs.Uri): Promise<vs.TextEditor> {
-	return vs.window.showTextDocument(await vs.workspace.openTextDocument(file));
+	log(`Opening ${fsPath(file)}`);
+	const doc = await vs.workspace.openTextDocument(file);
+	documentEol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
+	log(`Showing ${fsPath(file)}`);
+	const editor = await vs.window.showTextDocument(doc);
+	await delay(100);
+	return editor;
 }
 
 export function tryDelete(file: vs.Uri) {

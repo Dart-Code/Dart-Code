@@ -54,7 +54,7 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 		if (!this.isDebugging)
 			return;
 
-		const editor = vs.window.visibleTextEditors.find((editor) => editor.document.uri === e.document.uri);
+		const editor = vs.window.visibleTextEditors.find((editor) => fsPath(editor.document.uri) === fsPath(e.document.uri));
 		if (!editor)
 			return;
 
