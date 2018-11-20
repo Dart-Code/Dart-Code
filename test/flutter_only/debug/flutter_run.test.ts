@@ -187,8 +187,6 @@ describe("flutter run debugger (launch)", () => {
 
 	it("runs projects in sub-folders when cwd is set to a project sub-folder", async () => {
 		const config = await startDebugger(undefined, "example");
-		if (disableDebuggingToAvoidBreakingOnCaughtException)
-			config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
