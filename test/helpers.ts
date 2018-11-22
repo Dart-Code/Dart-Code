@@ -9,6 +9,7 @@ import { AnalyzerCapabilities } from "../src/analysis/analyzer";
 import { dartCodeExtensionIdentifier, LogCategory, LogSeverity } from "../src/debug/utils";
 import { FlutterCapabilities } from "../src/flutter/capabilities";
 import { DaemonCapabilities } from "../src/flutter/flutter_daemon";
+import { DartReferenceProvider } from "../src/providers/dart_reference_provider";
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
 import { internalApiSymbol } from "../src/symbols";
@@ -27,6 +28,7 @@ export let extApi: {
 	nextAnalysis: () => Promise<void>,
 	initialAnalysis: Promise<void>,
 	reanalyze: () => void,
+	referenceProvider: DartReferenceProvider,
 	renameProvider: DartRenameProvider,
 	sdks: Sdks,
 	testTreeProvider: TestResultsProvider,

@@ -418,6 +418,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			initialAnalysis,
 			nextAnalysis,
 			reanalyze,
+			referenceProvider,
 			renameProvider,
 			sdks,
 			testTreeProvider,

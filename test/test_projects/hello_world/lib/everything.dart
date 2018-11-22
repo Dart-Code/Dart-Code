@@ -53,5 +53,6 @@ void doSomeStuff() {
   print(b.myStringReturningMethod());
   b.myVoidReturningMethod();
   b.methodTakingString("Hello");
+  b.methodTakingString("World!");
   b.methodTakingFunction((s) => print(s));
 }
