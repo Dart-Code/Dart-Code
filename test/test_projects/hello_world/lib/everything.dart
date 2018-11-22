@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
+import 'package:protobuf/protobuf.dart';
 
 // Before blank line
 
@@ -47,6 +49,10 @@ class MyClass {
 void doSomeStuff() {
   var a = new MyClass();
   var b = new MyClass.myNamed();
+  // Force some references to things used in tests to ensure the analyzer
+  // scans them.
+  var c = new IOClient();
+  var d = new ProtobufEnum(1, '');
   print(a.myNumField);
   print(a.myNumGetter);
   a.myNumSetter = 1;
