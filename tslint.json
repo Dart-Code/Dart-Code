@@ -5,7 +5,8 @@
 	"linterOptions": {
 		"exclude": [
 			"src/analysis/analysis_server_types.ts",
-			"src/analysis/analyzer_gen.ts"
+			"src/analysis/analyzer_gen.ts",
+			"node_modules/**"
 		]
 	},
 	"rulesDirectory": "lints/",
