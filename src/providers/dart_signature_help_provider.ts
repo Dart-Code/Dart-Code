@@ -14,7 +14,7 @@ export class DartSignatureHelpProvider implements vs.SignatureHelpProvider {
 				offset: document.offsetAt(position),
 			});
 
-			const sig = new vs.SignatureInformation(this.getSignatureLabel(resp), cleanDartdoc(resp.dartdoc));
+			const sig = new vs.SignatureInformation(this.getSignatureLabel(resp), new vs.MarkdownString(cleanDartdoc(resp.dartdoc)));
 			sig.parameters = resp.parameters.map((p) => new vs.ParameterInformation(this.getLabel(p)));
 
 			const sigs = new vs.SignatureHelp();
@@ -44,7 +44,7 @@ export class DartSignatureHelpProvider implements vs.SignatureHelpProvider {
 
 	private getLabel(p: ParameterInfo): string {
 		const def = p.defaultValue
-			? p.kind === "NAMED" ? `: ${p.defaultValue}` : ` = ${p.defaultValue}`
+			? ` = ${p.defaultValue}`
 			: "";
 		return `${p.type} ${p.name}${def}`;
 	}

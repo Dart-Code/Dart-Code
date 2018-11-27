@@ -30,16 +30,17 @@ main() {
   print("here
 }
 		`);
-		const sig = await getSignatureAt("here^");
-		assert.ok(sig);
+		const sigs = await getSignatureAt("here^");
+		assert.ok(sigs);
 		// assert.equal(sig.activeParameter, 0);
-		assert.equal(sig.activeSignature, 0);
-		assert.equal(sig.signatures.length, 1);
-		assert.equal(sig.signatures[0].label, "print(Object object)");
-		assert.equal(sig.signatures[0].documentation, "Prints a string representation of the object to the console.");
-		assert.equal(sig.signatures[0].parameters.length, 1);
-		assert.equal(sig.signatures[0].parameters[0].label, "Object object");
-		assert.equal(sig.signatures[0].parameters[0].documentation, undefined);
+		assert.equal(sigs.activeSignature, 0);
+		assert.equal(sigs.signatures.length, 1);
+		const sig = sigs.signatures[0];
+		assert.equal(sig.label, "print(Object object)");
+		assert.equal(sig.parameters.length, 1);
+		assert.equal(sig.parameters[0].label, "Object object");
+		assert.equal(sig.parameters[0].documentation, undefined);
+		assert.equal((sig.documentation as vs.MarkdownString).value, "Prints a string representation of the object to the console.");
 	});
 
 	it("displays optional params correctly", async () => {
@@ -109,6 +110,6 @@ main() {
 		assert.ok(sig);
 		// assert.equal(sig.activeParameter, 0);
 		assert.equal(sig.activeSignature, 0);
-		assert.equal(sig.signatures[0].label, "a(String name, {int age, int otherAge: 2})");
+		assert.equal(sig.signatures[0].label, "a(String name, {int age, int otherAge = 2})");
 	});
 });
