@@ -2,12 +2,14 @@ import * as assert from "assert";
 import * as vs from "vscode";
 import { activate, currentDoc, currentEditor, documentEol, emptyExcludedFile, emptyFileInExcludedFolder, openFile, positionOf, setTestContent } from "../../helpers";
 
+const formattingOptions: vs.FormattingOptions = { tabSize: 2, insertSpaces: true };
+
 describe("dart_formatting_edit_provider", () => {
 
 	beforeEach("activate", () => activate());
 
 	async function formatDocument(expectResult = true): Promise<void> {
-		const formatResult = await (vs.commands.executeCommand("vscode.executeFormatDocumentProvider", currentDoc().uri) as Thenable<vs.TextEdit[]>);
+		const formatResult = await (vs.commands.executeCommand("vscode.executeFormatDocumentProvider", currentDoc().uri, formattingOptions) as Thenable<vs.TextEdit[]>);
 		if (expectResult) {
 			assert.ok(formatResult);
 			assert.ok(formatResult.length);
@@ -19,7 +21,7 @@ describe("dart_formatting_edit_provider", () => {
 
 	async function formatOnType(searchText: string, character: string): Promise<void> {
 		const position = positionOf(searchText);
-		const formatResult = await (vs.commands.executeCommand("vscode.executeFormatOnTypeProvider", currentDoc().uri, position, character) as Thenable<vs.TextEdit[]>);
+		const formatResult = await (vs.commands.executeCommand("vscode.executeFormatOnTypeProvider", currentDoc().uri, position, character, formattingOptions) as Thenable<vs.TextEdit[]>);
 		assert.ok(formatResult);
 		assert.ok(formatResult.length);
 		await currentEditor().edit((b) => formatResult.forEach((f) => b.replace(f.range, f.newText)));
