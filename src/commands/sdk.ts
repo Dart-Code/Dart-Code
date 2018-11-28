@@ -13,7 +13,7 @@ import { DartHoverProvider } from "../providers/dart_hover_provider";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
 import { flutterPath, pubPath, showFlutterActivationFailure } from "../sdk/utils";
 import * as util from "../utils";
-import { fsPath, isFlutterWorkspaceFolder, ProjectType, Sdks } from "../utils";
+import { fsPath, ProjectType, Sdks } from "../utils";
 import * as channels from "./channels";
 
 const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
@@ -39,7 +39,7 @@ export class SdkCommands {
 			if (typeof uri === "string")
 				uri = vs.Uri.file(uri);
 			try {
-				if (isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(uri)))
+				if (util.isInsideFlutterProject(uri))
 					return this.runFlutter(["packages", "get"], uri);
 				else
 					return this.runPub(["get"], uri);
@@ -53,7 +53,7 @@ export class SdkCommands {
 				uri = await this.getFolderToRunCommandIn("Select which folder to upgrade packages in");
 			if (typeof uri === "string")
 				uri = vs.Uri.file(uri);
-			if (isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(uri)))
+			if (util.isInsideFlutterProject(uri))
 				return this.runFlutter(["packages", "upgrade"], uri);
 			else
 				return this.runPub(["upgrade"], uri);

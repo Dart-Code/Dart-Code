@@ -7,6 +7,7 @@ import * as semver from "semver";
 import { commands, extensions, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { config } from "./config";
 import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase } from "./debug/utils";
+import { locateBestProjectRoot } from "./project";
 import { referencesFlutterSdk } from "./sdk/utils";
 import { hasPackagesFile, hasPubspec } from "./utils/fs";
 import { getExtensionLogPath, logError } from "./utils/log";
@@ -28,6 +29,17 @@ export function fsPath(uri: Uri | string) {
 
 export function isFlutterWorkspaceFolder(folder?: WorkspaceFolder): boolean {
 	return !!(folder && isDartWorkspaceFolder(folder) && isFlutterProjectFolder(fsPath(folder.uri)));
+}
+
+export function isInsideFlutterProject(uri?: Uri): boolean {
+	if (!uri)
+		return false;
+
+	const projectRoot = locateBestProjectRoot(fsPath(uri));
+	if (projectRoot)
+		return isFlutterProjectFolder(projectRoot);
+	else
+		return isFlutterWorkspaceFolder(workspace.getWorkspaceFolder(uri));
 }
 
 export function isFlutterProjectFolder(folder?: string): boolean {
