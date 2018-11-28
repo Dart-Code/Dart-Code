@@ -7,7 +7,7 @@ import { fsPath } from "../../../src/utils";
 import { logError } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, watchPromise } from "../../helpers";
+import { activate, defer, delay, ensureFrameName, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, watchPromise } from "../../helpers";
 
 describe("flutter run debugger (launch)", () => {
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
@@ -222,7 +222,7 @@ describe("flutter run debugger (launch)", () => {
 			await watchPromise("stops_at_a_breakpoint->hitBreakpoint", dc.hitBreakpoint(config, expectedLocation));
 			const stack = await dc.getStack();
 			const frames = stack.body.stackFrames;
-			assert.equal(frames[0].name, "MyHomePage.build");
+			ensureFrameName(frames[0].name, "MyHomePage.build");
 			assert.equal(frames[0].source.path, expectedLocation.path);
 			assert.equal(frames[0].source.name, "package:hello_world/main.dart");
 
@@ -236,7 +236,7 @@ describe("flutter run debugger (launch)", () => {
 						.then(async (_) => {
 							const stack = await watchPromise(`stops_at_a_breakpoint->reload:${i}->getStack`, dc.getStack());
 							const frames = stack.body.stackFrames;
-							assert.equal(frames[0].name, "MyHomePage.build");
+							ensureFrameName(frames[0].name, "MyHomePage.build");
 							assert.equal(frames[0].source.path, expectedLocation.path);
 							assert.equal(frames[0].source.name, "package:hello_world/main.dart");
 						})

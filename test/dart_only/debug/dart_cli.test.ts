@@ -8,7 +8,7 @@ import { fsPath, getRandomInt } from "../../../src/utils";
 import { log } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureMapEntry, ensureVariable, ensureVariableWithIndex, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, positionOf, sb, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ensureFrameName, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, positionOf, sb, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -208,7 +208,7 @@ describe("dart cli debugger", () => {
 		});
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
-		assert.equal(frames[0].name, "main");
+		ensureFrameName(frames[0].name, "main");
 		assert.equal(frames[0].source!.path, fsPath(helloWorldMainFile));
 		assert.equal(frames[0].source!.name, path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile)));
 	});
@@ -225,7 +225,7 @@ describe("dart cli debugger", () => {
 		});
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
-		assert.equal(frames[0].name, "print");
+		ensureFrameName(frames[0].name, "print");
 		assert.equal(frames[0].source!.path, fsPath(def.uri));
 		assert.equal(frames[0].source!.name, "dart:core/print.dart");
 	});
@@ -241,7 +241,7 @@ describe("dart cli debugger", () => {
 		});
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
-		assert.equal(frames[0].name, "read");
+		ensureFrameName(frames[0].name, "read");
 		assert.equal(frames[0].source!.path, fsPath(def.uri));
 		assert.equal(frames[0].source!.name, "package:http/http.dart");
 	});
@@ -262,7 +262,7 @@ describe("dart cli debugger", () => {
 			}).then((response) => {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
-				assert.equal(frame.name, "print");
+				ensureFrameName(frame.name, "print");
 				// We don't get a source path, because the source is downloaded from the VM
 				assert.equal(frame.source!.path, null);
 				assert.equal(frame.source!.name, "dart:core/print.dart");
@@ -306,7 +306,7 @@ describe("dart cli debugger", () => {
 			}).then((response) => {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
-				assert.equal(frame.name, "read");
+				ensureFrameName(frame.name, "read");
 				assert.equal(frame.source!.path, fsPath(httpReadDef.uri));
 				assert.equal(frame.source!.name, "package:http/http.dart");
 			}),
