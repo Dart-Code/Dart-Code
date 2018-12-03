@@ -68,6 +68,27 @@
 					}
 				},
 				{
+					"match": "    .*",
+					"captures": {
+						"0": {
+							"name": "variable.name.source.dart"
+						}
+					}
+				},
+				{
+					"begin": "```.*?$",
+					"end": "```",
+					"contentName": "variable.other.source.dart"
+				},
+				{
+					"match": "(`.*?`)",
+					"captures": {
+						"0": {
+							"name": "variable.other.source.dart"
+						}
+					}
+				},
+				{
 					"match": "(`.*?`)",
 					"captures": {
 						"0": {
@@ -127,31 +148,14 @@
 		"comments-doc": {
 			"patterns": [
 				{
-					"match": "(///)     (.*?)$",
-					"captures": {
-						"1": {
-							"name": "comment.block.triple-slash.dart"
-						},
-						"2": {
-							"name": "variable.other.source.dart"
+					"begin": "///",
+					"while": "///",
+					"patterns": [
+						{
+							"include": "#dartdoc"
 						}
-					}
-				},
-				{
-					"match": "(///)(.*?)$",
-					"captures": {
-						"1": {
-							"name": "comment.block.triple-slash.dart"
-						},
-						"2": {
-							"name": "comment.block.documentation.dart",
-							"patterns": [
-								{
-									"include": "#dartdoc"
-								}
-							]
-						}
-					}
+					],
+					"name": "comment.block.documentation.dart"
 				}
 			]
 		},
