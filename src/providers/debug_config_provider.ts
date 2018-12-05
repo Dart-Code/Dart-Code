@@ -117,14 +117,17 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const isAttachRequest = debugConfig.request === "attach";
 		if (!isAttachRequest) {
 			// If there's no program set, try to guess one.
-			const preferredFolder = debugConfig.cwd
-				? debugConfig.cwd
-				: folder
-					? fsPath(folder.uri)
-					: undefined;
-			// If we have a folder specificed, we should only consider open files if it's inside it.
-			const preferredFile = preferredFolder == null || isWithinPath(openFile, preferredFolder) ? openFile : undefined;
-			debugConfig.program = debugConfig.program || this.guessBestEntryPoint(preferredFile, preferredFolder);
+			if (!debugConfig.program) {
+				const preferredFolder = debugConfig.cwd
+					? debugConfig.cwd
+					: folder
+						? fsPath(folder.uri)
+						: undefined;
+
+				// If we have a folder specified, we should only consider open files if it's inside it.
+				const preferredFile = preferredFolder == null || (openFile && isWithinPath(openFile, preferredFolder)) ? openFile : undefined;
+				debugConfig.program = debugConfig.program || this.guessBestEntryPoint(preferredFile, preferredFolder);
+			}
 
 			// If we still don't have an entry point, the user will have to provide it.
 			if (!debugConfig.program) {
