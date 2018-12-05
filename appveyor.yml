@@ -35,10 +35,10 @@ install:
   - ps: >-
        if ($env:ONLY_RUN_DART_VERSION -eq "STABLE") {
          $env:DART_CHANNEL="stable"
-         $env:FLUTTER_BRANCH="beta"
+         $env:FLUTTER_BRANCH="stable"
        } else {
          $env:DART_CHANNEL="dev"
-         $env:FLUTTER_BRANCH="master"
+         $env:FLUTTER_BRANCH="dev"
        }
   - ps: mkdir "with spaces"
   - ps: cd "with spaces"

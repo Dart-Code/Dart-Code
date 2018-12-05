@@ -49,10 +49,10 @@ before_install:
   - echo Setting variables...
   - if [[ $ONLY_RUN_DART_VERSION == "STABLE" ]]; then
       export DART_CHANNEL=stable;
-      export FLUTTER_BRANCH=beta;
+      export FLUTTER_BRANCH=stable;
     else
       export DART_CHANNEL=dev;
-      export FLUTTER_BRANCH=master;
+      export FLUTTER_BRANCH=dev;
     fi
   - mkdir with\ spaces
   - cd with\ spaces
