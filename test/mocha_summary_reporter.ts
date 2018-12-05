@@ -27,7 +27,7 @@ export class SummaryReporter extends reporters.Base {
 				return;
 			const name = this.options.reporterOptions.testRunName || "Unknown";
 			fs.appendFileSync(this.options.reporterOptions.summaryFile,
-				`${name},${this.passed},${this.skipped},${this.failed}`);
+				`${name},${this.passed},${this.skipped},${this.failed}\n`);
 		});
 	}
 }
