@@ -45,7 +45,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration> {
-		const openFile = window.activeTextEditor && window.activeTextEditor.document ? fsPath(window.activeTextEditor.document.uri) : null;
+		const openFile = window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri.scheme === "file"
+			? fsPath(window.activeTextEditor.document.uri)
+			: null;
 
 		function resolveVariables(input?: string): string {
 			if (!input) return input;
