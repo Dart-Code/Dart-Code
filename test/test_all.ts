@@ -90,9 +90,12 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	const codeFriendlyName = codeVersion === "*" ? "stable" : "insiders";
 
 	// Set some paths that are used inside the test run.
-	env.DC_TEST_LOGS = path.join(cwd, ".dart_code_test_logs", `${testFolder.replace("/", "_")}_${dartFriendlyName}_${codeFriendlyName}`);
-	env.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testFolder.replace("/", "_")}_${dartFriendlyName}_${codeFriendlyName}.json`);
-	env.TEST_XML_OUTPUT = path.join(cwd, ".test_results", `${testFolder.replace("/", "_")}_${dartFriendlyName}_${codeFriendlyName}.xml`);
+	const testRunName = testFolder.replace("/", "_");
+	env.TEST_RUN_NAME = testRunName;
+	env.DC_TEST_LOGS = path.join(cwd, ".dart_code_test_logs", `${testRunName}_${dartFriendlyName}_${codeFriendlyName}`);
+	env.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testRunName}_${dartFriendlyName}_${codeFriendlyName}.json`);
+	env.TEST_XML_OUTPUT = path.join(cwd, ".test_results", `${testRunName}_${dartFriendlyName}_${codeFriendlyName}.xml`);
+	env.TEST_CSV_SUMMARY = path.join(cwd, ".test_results", `${dartFriendlyName}_${codeFriendlyName}_summary.csv`);
 
 	// Ensure any necessary folders exist.
 	if (!fs.existsSync(".nyc_output"))

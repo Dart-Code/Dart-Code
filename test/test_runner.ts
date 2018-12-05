@@ -24,6 +24,8 @@ testRunner.configure({
 	reporter: MultiReporter,
 	reporterOptions: {
 		output: process.env.TEST_XML_OUTPUT,
+		summaryFile: process.env.TEST_CSV_SUMMARY,
+		testRunName: process.env.TEST_RUN_NAME,
 	},
 	slow: 10000,       // increased threshold before marking a test as slow
 	timeout: 60000,   // increased timeout because starting up Code, Analyzer, etc. is slooow
