@@ -110,6 +110,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	public async promptForAndLaunchEmulator(allowAutomaticSelection = false): Promise<boolean> {
 		const emulators = (await this.getEmulators())
 			.map((e) => ({
+				alwaysShow: false,
 				description: e.id,
 				emulator: e,
 				isCreateEntry: false,
@@ -124,6 +125,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		// Add an option to create a new emulator if the daemon supports it.
 		if (this.daemon.capabilities.canCreateEmulators) {
 			emulators.push({
+				alwaysShow: true,
 				description: "Creates and launches a new Android emulator",
 				emulator: undefined,
 				isCreateEntry: true,
