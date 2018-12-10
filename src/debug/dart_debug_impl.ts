@@ -432,25 +432,26 @@ export class DartDebugSession extends DebugSession {
 		if (!breakpoints)
 			breakpoints = [];
 
-		// Map the breakpoints to DebugProtocol.Breakpoint to send back.
+		// Map the breakpoints to unverified DebugProtocol.Breakpoint to send back.
+		logInfo(`VS Code wants ${JSON.stringify(breakpoints, undefined, 4)}`);
 		response.body = {
-			breakpoints: breakpoints.map((breakpoint) => ({
-				column: breakpoint.column,
-				line: breakpoint.line,
-				source: new Source(args.source.name, args.source.path),
+			breakpoints: breakpoints.map((_) => ({
+				verified: false,
 			} as DebugProtocol.Breakpoint)),
 		};
-		// Send back an empty array, since VS Code now thinks there are 0 breakpoints.
 		this.sendResponse(response);
 
-		// Only do this for .dart files, since it's destructive (removes breakpoints
-		// and we might not get them back if we sent C++ breakpoints (etc.) to the VM!)
+		// Only try to process breakpoints for .dart files.
 		if (source && source.path && path.extname(source.path).toLowerCase() === ".dart") {
 			// Tell VS Code to remove all of the breakpoints because we'll re-create them
 			// with IDs later (we can't get IDs now if the VM has no threads, because
 			// we can't send the breakpoints request).
-			response.body.breakpoints.forEach((breakpoint) => {
-				this.sendEvent(new BreakpointEvent("removed", breakpoint));
+			breakpoints.forEach((breakpoint) => {
+				this.sendEvent(new BreakpointEvent("removed", {
+					column: breakpoint.column,
+					line: breakpoint.line,
+					source: new Source(args.source.name, args.source.path),
+				} as DebugProtocol.Breakpoint));
 				logInfo(`Removing Code BP line: ${breakpoint.line} col: ${breakpoint.column} in ${source.path}`);
 			});
 
