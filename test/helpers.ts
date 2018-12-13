@@ -12,7 +12,7 @@ import { DartReferenceProvider } from "../src/providers/dart_reference_provider"
 import { DartRenameProvider } from "../src/providers/dart_rename_provider";
 import { DebugConfigProvider } from "../src/providers/debug_config_provider";
 import { internalApiSymbol } from "../src/symbols";
-import { fsPath, ProjectType, Sdks, vsCodeVersionConstraint } from "../src/utils";
+import { fsPath, isAnalyzable, ProjectType, Sdks, vsCodeVersionConstraint } from "../src/utils";
 import { log, logError, logTo, logWarn } from "../src/utils/log";
 import { TestResultsProvider } from "../src/views/test_view";
 import sinon = require("sinon");
@@ -146,9 +146,11 @@ export async function closeAllOpenFiles(): Promise<void> {
 
 export async function waitUntilAllTextDocumentsAreClosed(): Promise<void> {
 	log(`Waiting for VS Code to mark all documents as closed...`);
-	await waitFor(() => vs.workspace.textDocuments.length === 0, "Some TextDocuments did not close", threeMinutesInMilliseconds, false);
-	if (vs.workspace.textDocuments.length) {
-		throw new Error(`All open files were not closed (for ex: ${fsPath(vs.workspace.textDocuments[0].uri)})`);
+	const getAllOpenDocs = () => vs.workspace.textDocuments.filter(isAnalyzable);
+	await waitFor(() => getAllOpenDocs().length === 0, "Some TextDocuments did not close", threeMinutesInMilliseconds, false);
+	const openDocs = getAllOpenDocs();
+	if (openDocs.length) {
+		throw new Error(`All open files were not closed (for ex: ${fsPath(openDocs[0].uri)})`);
 	}
 }
 
