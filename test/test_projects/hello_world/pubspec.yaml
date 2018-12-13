@@ -4,7 +4,9 @@ dependencies:
   http:
   convert: ^2.0.1
   protobuf:
-    git: git://github.com/dart-lang/protobuf.git
+    git:
+      url: git://github.com/dart-lang/protobuf.git
+      path: protobuf
 
 dev_dependencies:
   test: '>=0.12.34'
