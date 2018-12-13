@@ -18,14 +18,6 @@
 			"runOptions": {
 				"runOn": "folderOpen",
 			}
-		},
-		{
-			"type": "npm",
-			"script": "lint",
-			"problemMatcher": {
-				"base": "$tslint5",
-				"fileLocation": "relative"
-			}
 		}
 	]
 }
