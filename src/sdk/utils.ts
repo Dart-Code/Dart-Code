@@ -347,6 +347,5 @@ export function searchPaths(paths: Array<string | undefined>, filter: (s: string
 
 export function isDartSdkFromFlutter(dartSdkPath: string) {
 	const possibleFlutterSdkPath = path.dirname(path.dirname(path.dirname(dartSdkPath)));
-	const possibleFlutterBinFolder = path.join(possibleFlutterSdkPath, "bin");
-	return hasFlutterExecutable(possibleFlutterBinFolder);
+	return hasFlutterExecutable(possibleFlutterSdkPath);
 }
