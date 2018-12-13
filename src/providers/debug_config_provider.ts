@@ -221,6 +221,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			});
 			if (hasDartErrorsInProject) {
 				logWarn("Project has errors, prompting user");
+				// Temp debug code for Travis...
+				logWarn(JSON.stringify(dartErrors));
 				const action = await window.showErrorMessage(
 					"Build errors exist in your project.",
 					{ modal: true },
