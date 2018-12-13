@@ -96,6 +96,10 @@ export class FlutterDebugSession extends DartDebugSession {
 			appArgs = appArgs.concat(args.args);
 		}
 
+		if (args.forceFlutterVerboseMode === true && appArgs.indexOf("-v") === -1 && appArgs.indexOf("--verbose") === -1) {
+			appArgs.push("-v");
+		}
+
 		if (args.showMemoryUsage) {
 			this.pollforMemoryMs = 1000;
 		}

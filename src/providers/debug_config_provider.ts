@@ -6,6 +6,7 @@ import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, Prov
 import { DebugSession } from "vscode-debugadapter";
 import { Analytics } from "../analytics";
 import { LastDebugSession } from "../commands/debug";
+import { isLogging } from "../commands/logging";
 import { config } from "../config";
 import { DartDebugSession } from "../debug/dart_debug_impl";
 import { DartTestDebugSession } from "../debug/dart_test_debug_impl";
@@ -369,6 +370,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || conf.debugExternalLibraries;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		if (isFlutter) {
+			debugConfig.forceFlutterVerboseMode = isLogging;
 			debugConfig.flutterTrackWidgetCreation =
 				// Use from the launch.json if configured.
 				debugConfig.flutterTrackWidgetCreation !== undefined

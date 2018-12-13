@@ -7,6 +7,8 @@ import { logTo, userSelectableLogCategories } from "../utils/log";
 
 export const STOP_LOGGING = "Stop Logging";
 
+export let isLogging = false;
+
 export class LoggingCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
@@ -38,6 +40,7 @@ export class LoggingCommands implements vs.Disposable {
 		const allLoggedCategories = _.concat(LogCategory.General, selectedLogCategories.map((s) => s.logCategory));
 
 		const logger = logTo(fsPath(logUri), allLoggedCategories);
+		isLogging = true;
 		this.disposables.push(logger);
 
 		await vs.window.showInformationMessage(
@@ -45,6 +48,7 @@ export class LoggingCommands implements vs.Disposable {
 			STOP_LOGGING,
 		);
 
+		isLogging = false;
 		await logger.dispose();
 
 		const doc = await vs.workspace.openTextDocument(logUri);
