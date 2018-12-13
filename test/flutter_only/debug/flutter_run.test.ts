@@ -7,7 +7,7 @@ import { fsPath } from "../../../src/utils";
 import { logError } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ensureFrameName, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, watchPromise, withTimeout } from "../../helpers";
+import { activate, defer, delay, ensureFrameName, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, watchPromise } from "../../helpers";
 
 describe("flutter run debugger (launch)", () => {
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
@@ -85,7 +85,10 @@ describe("flutter run debugger (launch)", () => {
 		await delay(3000);
 
 		// Send a disconnect request and ensure it happens within 5 seconds.
-		await withTimeout(dc.terminateRequest(), "Did not complete terminateRequest within 5s", 5000);
+		await Promise.race([
+			dc.terminateRequest(),
+			new Promise((resolve, reject) => setTimeout(() => reject(new Error("Did not complete terminateRequest within 5s")), 5000)),
+		]);
 	});
 
 	it("runs a Flutter application with a relative path", async () => {
