@@ -42,7 +42,7 @@ export class FileChangeHandler implements vs.Disposable {
 		const filePath = fsPath(e.document.uri);
 
 		if (config.warnWhenEditingFilesOutsideWorkspace && !this.filesWarnedAbout.has(filePath) && !util.isWithinWorkspace(filePath)) {
-			vs.window.showWarningMessage(`You are modifying a file outside of your current workspace: ${filePath}`);
+			vs.window.showWarningMessage(`You are modifying a file outside of your open folders: ${filePath}`);
 			this.filesWarnedAbout.add(filePath);
 		}
 
