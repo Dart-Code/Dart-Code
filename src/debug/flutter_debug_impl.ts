@@ -10,6 +10,7 @@ const objectGroupName = "my-group";
 
 export class FlutterDebugSession extends DartDebugSession {
 	private flutter?: FlutterRun;
+	public flutterTrackWidgetCreation: boolean;
 	private currentRunningAppId?: string;
 	private appHasStarted = false;
 	private observatoryUri?: string;
@@ -34,6 +35,11 @@ export class FlutterDebugSession extends DartDebugSession {
 	): void {
 		response.body.supportsRestartRequest = true;
 		super.initializeRequest(response, args);
+	}
+
+	protected launchRequest(response: DebugProtocol.LaunchResponse, args: FlutterLaunchRequestArguments): void {
+		this.flutterTrackWidgetCreation = args && args.flutterTrackWidgetCreation;
+		return super.launchRequest(response, args);
 	}
 
 	protected async attachRequest(response: DebugProtocol.AttachResponse, args: any): Promise<void> {

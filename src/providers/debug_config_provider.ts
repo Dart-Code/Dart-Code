@@ -368,15 +368,15 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || conf.debugSdkLibraries;
 		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || conf.debugExternalLibraries;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
-		debugConfig.flutterTrackWidgetCreation =
-			// Use from the launch.json if configured.
-			debugConfig.flutterTrackWidgetCreation !== undefined
-				? debugConfig.flutterTrackWidgetCreation :
-				// Otherwise use the config, falling back to the version-dependant default.
-				conf.flutterTrackWidgetCreationIsConfiguredExplicitly
-					? conf.flutterTrackWidgetCreation
-					: this.flutterCapabilities.trackWidgetCreationDefault;
 		if (isFlutter) {
+			debugConfig.flutterTrackWidgetCreation =
+				// Use from the launch.json if configured.
+				debugConfig.flutterTrackWidgetCreation !== undefined
+					? debugConfig.flutterTrackWidgetCreation :
+					// Otherwise use the config, falling back to the version-dependant default.
+					conf.flutterTrackWidgetCreationIsConfiguredExplicitly
+						? conf.flutterTrackWidgetCreation
+						: this.flutterCapabilities.trackWidgetCreationDefault;
 			debugConfig.flutterMode = debugConfig.flutterMode || "debug";
 			debugConfig.flutterPath = debugConfig.flutterPath || (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : null);
 			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || conf.flutterRunLogFile;
