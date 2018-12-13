@@ -60,10 +60,13 @@ export class DartDebugClient extends DebugClient {
 			// It's possible the resume will never return because the process will terminate as soon as it starts resuming
 			// so we will assume that if we get a terminate the resume worked.
 			log("Resuming and waiting for success or terminate...");
-			await Promise.race([
-				watchPromise("launch()->attach->terminated", this.waitForEvent("terminated")),
-				watchPromise("launch->attach->resume", this.resume()),
-			]);
+			await watchPromise(
+				"launch()->attach->terminate/resume",
+				Promise.race([
+					this.waitForEvent("terminated"),
+					this.resume(),
+				]),
+			);
 		} else {
 			await watchPromise("launch()->launchRequest", this.launchRequest(launchArgs));
 		}
