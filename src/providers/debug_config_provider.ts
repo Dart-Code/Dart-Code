@@ -207,6 +207,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// If we're launching (not attaching) then check there are no errors before we launch.
 		if (!isAttachRequest && debugConfig.cwd && config.previewPromptToRunIfErrors) {
+			log("Checking for errors before launching");
 			const isDartError = (d: vs.Diagnostic) => d.source === "dart" && d.severity === vs.DiagnosticSeverity.Error;
 			const dartErrors = vs.languages
 				.getDiagnostics()
@@ -219,6 +220,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					&& (!isTestFile(file) || file === debugConfig.program);
 			});
 			if (hasDartErrorsInProject) {
+				logWarn("Project has errors, prompting user");
 				const action = await window.showErrorMessage(
 					"Build errors exist in your project.",
 					{ modal: true },
@@ -226,8 +228,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					showErrorsAction,
 				);
 				if (action === debugAnywayAction) {
+					log("Debugging anyway!");
 					// Do nothing, we'll just carry on.
 				} else {
+					log("Aborting!");
 					if (action === showErrorsAction)
 						vs.commands.executeCommand("workbench.action.showErrorsWarnings");
 					return undefined; // undefined means silent (don't open launch.json).
