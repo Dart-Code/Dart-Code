@@ -288,8 +288,12 @@ function makeTextTree(suite: vs.Uri, provider: TestResultsProvider, parent?: vs.
 		.filter((item) => fsPath(item.resourceUri) === fsPath(suite) || !!parent);
 	const wsPath = fsPath(vs.workspace.getWorkspaceFolder(suite).uri);
 	items.forEach((item) => {
+		// Suites don't have a .label (since the rendering is based on the resourceUri) so just
+		// fabricate one here that can be compared in the test. Note: For simplity we always use
+		// forward slashes in these names, since the comparison is against hard-coded comments
+		// in the file that can only be on way.
 		const expectedLabel = item instanceof SuiteTreeItem
-			? path.relative(wsPath, fsPath(item.resourceUri))
+			? path.relative(wsPath, fsPath(item.resourceUri)).replace("\\", "/")
 			: item.label;
 		buffer.push(`${" ".repeat(indent * 4)}${expectedLabel} (${TestStatus[item.status]})`);
 		makeTextTree(suite, provider, item, buffer, indent + 1);
