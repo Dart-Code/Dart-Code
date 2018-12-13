@@ -4,7 +4,7 @@ import "package:test/test.dart";
 // built from the tree provider in the test. It must be maintained to match
 // the results from teh tests below.
 // == EXPECTED RESULTS ==
-// tree_test.dart (Failed)
+// test/tree_test.dart (Failed)
 //     failing group 1 (Failed)
 //         group 1.1 (Passed)
 //             passing test 1 (Passed)

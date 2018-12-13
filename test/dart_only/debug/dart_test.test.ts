@@ -7,7 +7,7 @@ import { fsPath } from "../../../src/utils";
 import { log, logInfo } from "../../../src/utils/log";
 import { TestOutlineVisitor } from "../../../src/utils/outline";
 import { makeRegexForTest } from "../../../src/utils/test";
-import { TestResultsProvider, TestStatus } from "../../../src/views/test_view";
+import { SuiteTreeItem, TestResultsProvider, TestStatus } from "../../../src/views/test_view";
 import { DartDebugClient } from "../../dart_debug_client";
 import { activate, defer, delay, ext, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, openFile, positionOf, withTimeout } from "../../helpers";
 
@@ -172,10 +172,14 @@ describe("dart test debugger", () => {
 		assert.ok(topLevelNodes);
 		assert.equal(topLevelNodes.length, 4);
 
-		assert.equal(`${topLevelNodes[0].label} (${TestStatus[topLevelNodes[0].status]})`, "broken_test.dart (Failed)");
-		assert.equal(`${topLevelNodes[1].label} (${TestStatus[topLevelNodes[1].status]})`, "tree_test.dart (Failed)");
-		assert.equal(`${topLevelNodes[2].label} (${TestStatus[topLevelNodes[2].status]})`, "basic_test.dart (Passed)");
-		assert.equal(`${topLevelNodes[3].label} (${TestStatus[topLevelNodes[3].status]})`, "skip_test.dart (Skipped)");
+		assert.equal(topLevelNodes[0].resourceUri.toString(), helloWorldTestBrokenFile.toString());
+		assert.equal(topLevelNodes[0].status, TestStatus.Failed);
+		assert.equal(topLevelNodes[1].resourceUri.toString(), helloWorldTestTreeFile.toString());
+		assert.equal(topLevelNodes[1].status, TestStatus.Failed);
+		assert.equal(topLevelNodes[2].resourceUri.toString(), helloWorldTestMainFile.toString());
+		assert.equal(topLevelNodes[2].status, TestStatus.Passed);
+		assert.equal(topLevelNodes[3].resourceUri.toString(), helloWorldTestSkipFile.toString());
+		assert.equal(topLevelNodes[3].status, TestStatus.Skipped);
 	});
 
 	it("runs all tests if given a folder", async () => {
@@ -282,8 +286,12 @@ function makeTextTree(suite: vs.Uri, provider: TestResultsProvider, parent?: vs.
 	const items = provider.getChildren(parent)
 		// Filter to only the suite we were given (though includes all children).
 		.filter((item) => fsPath(item.resourceUri) === fsPath(suite) || !!parent);
+	const wsPath = fsPath(vs.workspace.getWorkspaceFolder(suite).uri);
 	items.forEach((item) => {
-		buffer.push(`${" ".repeat(indent * 4)}${item.label} (${TestStatus[item.status]})`);
+		const expectedLabel = item instanceof SuiteTreeItem
+			? path.relative(wsPath, fsPath(item.resourceUri))
+			: item.label;
+		buffer.push(`${" ".repeat(indent * 4)}${expectedLabel} (${TestStatus[item.status]})`);
 		makeTextTree(suite, provider, item, buffer, indent + 1);
 	});
 	return buffer;
