@@ -179,6 +179,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		completion.detail = (suggestion.isDeprecated ? "(deprecated) " : "") + detail;
 		completion.documentation = new MarkdownString(cleanDartdoc(suggestion.docSummary));
 		completion.insertText = completionText;
+		completion.keepWhitespace = true;
 		completion.range = new Range(
 			document.positionAt(notification.replacementOffset),
 			document.positionAt(notification.replacementOffset + notification.replacementLength),
