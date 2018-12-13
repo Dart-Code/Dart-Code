@@ -543,19 +543,10 @@ export class SuiteTreeItem extends TestItemTreeItem {
 		this.suite = suite;
 		this.contextValue = DART_TEST_SUITE_NODE;
 		this.resourceUri = vs.Uri.file(suite.path);
+		this.description = true;
 		this.id = `suite_${this.suite.path}_${this.suiteRunNumber}_${this.suite.id}`;
 		this.status = TestStatus.Unknown;
 		this.command = { command: "_dart.displaySuite", arguments: [this], title: "" };
-	}
-
-	private getLabel(file: string): string {
-		const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(file));
-		if (!ws)
-			return path.basename(file);
-		const rel = path.relative(fsPath(ws.uri), file);
-		return rel.startsWith(`test${path.sep}`)
-			? rel.substr(5)
-			: rel;
 	}
 
 	get children(): TestItemTreeItem[] {
@@ -574,7 +565,6 @@ export class SuiteTreeItem extends TestItemTreeItem {
 
 	set suite(suite: Suite) {
 		this._suite = suite;
-		this.label = this.getLabel(suite.path);
 	}
 }
 
