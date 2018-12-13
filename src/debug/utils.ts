@@ -120,6 +120,17 @@ export function isWithinPath(file: string, folder: string) {
 	return !!relative && !relative.startsWith("..") && !path.isAbsolute(relative);
 }
 
+export function withTimeoutAll<T>(promises: Array<Promise<T>>, timeoutMilliseconds: number): Promise<T[]> {
+	return withTimeout(Promise.all(promises), timeoutMilliseconds);
+}
+
+export function withTimeout<T>(promise: Promise<T>, timeoutMilliseconds: number): Promise<T> {
+	return Promise.race([
+		promise,
+		new Promise<never>((_, reject) => setTimeout(() => reject(new Error("<timed out>")), timeoutMilliseconds)),
+	]);
+}
+
 export class PromiseCompleter<T> {
 	public promise: Promise<T>;
 	public resolve: (value?: T | PromiseLike<T>) => void;

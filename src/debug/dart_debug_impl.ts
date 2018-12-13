@@ -8,7 +8,7 @@ import { config } from "../config";
 import { getLogHeader, logError } from "../utils/log";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
-import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm, LogCategory, LogMessage, LogSeverity, PromiseCompleter, safeSpawn, uriToFilePath } from "./utils";
+import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm, LogCategory, LogMessage, LogSeverity, PromiseCompleter, safeSpawn, uriToFilePath, withTimeout, withTimeoutAll } from "./utils";
 
 const maxValuesToCallToString = 15;
 
@@ -361,18 +361,12 @@ export class DartDebugSession extends DebugSession {
 			try {
 				this.log(`${request}: Disconnecting from process...`);
 				// Remove all breakpoints from the VM.
-				await await Promise.race([
-					Promise.all(this.threadManager.threads.map((thread) => thread.removeAllBreakpoints())),
-					new Promise((resolve) => setTimeout(resolve, 500)),
-				]);
+				await withTimeoutAll(this.threadManager.threads.map((thread) => thread.removeAllBreakpoints()), 500);
 
 				// Restart any paused threads.
 				// Note: Only wait up to 500ms here because sometimes we don't get responses because the VM terminates.
 				this.log(`${request}: Unpausing all threads...`);
-				await Promise.race([
-					Promise.all(this.threadManager.threads.map((thread) => thread.resume())),
-					new Promise((resolve) => setTimeout(resolve, 500)),
-				]);
+				await withTimeoutAll(this.threadManager.threads.map((thread) => thread.resume()), 500);
 			} catch { }
 			try {
 				this.log(`${request}: Closing observatory...`);
@@ -410,10 +404,8 @@ export class DartDebugSession extends DebugSession {
 	): Promise<void> {
 		this.log(`Disconnect requested!`);
 		try {
-			await Promise.race([
-				this.terminate(false),
-				new Promise((resolve) => setTimeout(resolve, 2000)).then(() => this.terminate(true)),
-			]);
+			withTimeout(this.terminate(false), 2000)
+				.catch(() => this.terminate(true));
 		} catch (e) {
 			return this.errorResponse(response, `${e}`);
 		}
@@ -967,10 +959,7 @@ export class DartDebugSession extends DebugSession {
 				//      https://github.com/Microsoft/vscode/issues/52317
 				//   2. The VM sometimes doesn't respond to your requests at all
 				//      https://github.com/flutter/flutter/issues/18595
-				result = await Promise.race([
-					this.observatory.evaluateInFrame(thread.ref.id, frame.index, expression),
-					new Promise<never>((resolve, reject) => setTimeout(() => reject(new Error("<timed out>")), 500)),
-				]);
+				result = await withTimeout(this.observatory.evaluateInFrame(thread.ref.id, frame.index, expression), 500);
 			}
 
 			// InstanceRef or ErrorRef

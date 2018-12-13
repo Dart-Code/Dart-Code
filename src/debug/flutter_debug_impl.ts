@@ -1,10 +1,11 @@
 import { Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { restartReasonManual } from "../constants";
+import { UnknownResponse } from "../services/stdio_service";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun, RunMode } from "./flutter_run";
-import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments, isWin, LogCategory, LogMessage, LogSeverity } from "./utils";
+import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments, isWin, LogCategory, LogMessage, LogSeverity, withTimeout } from "./utils";
 
 const objectGroupName = "my-group";
 
@@ -150,10 +151,7 @@ export class FlutterDebugSession extends DartDebugSession {
 					: () => this.flutter.detach(this.currentRunningAppId);
 				// Wait up to 1000ms for app to quit since we often don't get a
 				// response here because the processes terminate immediately.
-				await Promise.race([
-					quitMethod(),
-					new Promise((resolve) => setTimeout(resolve, 1000)),
-				]);
+				await withTimeout(quitMethod() as Promise<UnknownResponse>, 1000);
 			}
 		} catch {
 			// Ignore failures here (we're shutting down and will send kill signals).
