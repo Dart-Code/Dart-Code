@@ -63,7 +63,7 @@ export function showFluttersDartSdkActivationFailure() {
 export function showFlutterActivationFailure(commandToReRun: string = null) {
 	showSdkActivationFailure(
 		"Flutter",
-		(paths) => searchPaths(paths, hasFlutterExecutable, flutterExecutableName),
+		findFlutterSdk,
 		FLUTTER_DOWNLOAD_URL,
 		(p) => config.setGlobalFlutterSdkPath(p),
 		commandToReRun,
@@ -72,7 +72,7 @@ export function showFlutterActivationFailure(commandToReRun: string = null) {
 export function showDartActivationFailure() {
 	showSdkActivationFailure(
 		"Dart",
-		(paths) => searchPaths(paths, hasDartExecutable, dartExecutableName),
+		findDartSdk,
 		DART_DOWNLOAD_URL,
 		(p) => config.setGlobalDartSdkPath(p),
 	);
@@ -185,7 +185,7 @@ export function findSdks(): Sdks {
 		process.env.FLUTTER_ROOT,
 	].concat(paths);
 
-	const flutterSdkPath = searchPaths(flutterSdkSearchPaths, hasFlutterExecutable, flutterExecutableName);
+	const flutterSdkPath = findFlutterSdk(flutterSdkSearchPaths);
 
 	const dartSdkSearchPaths = [
 		fuchsiaRoot && path.join(fuchsiaRoot, "topaz/tools/prebuilt-dart-sdk", `${platformName}-x64`),
@@ -201,8 +201,7 @@ export function findSdks(): Sdks {
 		// we don't prioritise it over any real Dart versions.
 		.concat([flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk")]);
 
-	const dartSdkPath =
-		searchPaths(dartSdkSearchPaths, hasDartExecutable, dartExecutableName);
+	const dartSdkPath = findDartSdk(dartSdkSearchPaths);
 
 	return {
 		dart: dartSdkPath,
@@ -296,21 +295,35 @@ function findFuchsiaRoot(folder: string): string | undefined {
 	return undefined;
 }
 
-export const hasDartExecutable = (pathToTest: string) => hasExecutable(pathToTest, dartExecutableName);
-export const hasFlutterExecutable = (pathToTest: string) => hasExecutable(pathToTest, flutterExecutableName);
-
-function hasExecutable(pathToTest: string, executableName: string): boolean {
-	return fs.existsSync(path.join(pathToTest, executableName));
+function findDartSdk(folders: string[]) {
+	const isDartSdk = (folder: string) => {
+		if (!hasDartExecutable(folder))
+			return false;
+		if (!hasDartAnalysisServer(folder)) {
+			log(`Found dart at ${folder} without an analysis server snapshot, so skipping...`);
+			return false;
+		}
+		return true;
+	};
+	return searchPaths(folders, isDartSdk, dartVMPath);
 }
 
-export function searchPaths(paths: Array<string | undefined>, filter: (s: string) => boolean, executableName: string): string {
-	log(`Searching for ${executableName}`);
+function findFlutterSdk(folders: string[]) {
+	return searchPaths(folders, hasFlutterExecutable, flutterPath);
+}
+
+export const hasDartExecutable = (folder: string) => fs.existsSync(path.join(folder, dartVMPath));
+export const hasDartAnalysisServer = (folder: string) => fs.existsSync(path.join(folder, analyzerSnapshotPath));
+export const hasFlutterExecutable = (folder: string) => fs.existsSync(path.join(folder, flutterPath));
+
+export function searchPaths(paths: Array<string | undefined>, filter: (s: string) => boolean, executablePath: string): string {
+	log(`Searching for ${executablePath}`);
 
 	const sdkPaths =
 		paths
 			.filter((p) => p)
 			.map(resolvePaths)
-			.map((p) => path.basename(p) !== "bin" ? path.join(p, "bin") : p); // Ensure /bin on end.
+			.map((p) => path.basename(p) !== "bin" ? p : path.dirname(p)); // Remove any /bin from the end.
 
 	log("    Looking in:");
 	for (const p of sdkPaths)
@@ -322,12 +335,12 @@ export function searchPaths(paths: Array<string | undefined>, filter: (s: string
 		log(`    Found at ${sdkPath}`);
 
 	// In order to handle symlinks on the binary (not folder), we need to add the executableName and then realpath.
-	sdkPath = sdkPath && fs.realpathSync(path.join(sdkPath, executableName));
+	sdkPath = sdkPath && fs.realpathSync(path.join(sdkPath, executablePath));
 
 	// Then we need to take the executable name and /bin back off
 	sdkPath = sdkPath && path.dirname(path.dirname(sdkPath));
 
-	log(`    Returning SDK path ${sdkPath} for ${executableName}`);
+	log(`    Returning SDK path ${sdkPath} for ${executablePath}`);
 
 	return sdkPath;
 }
