@@ -369,13 +369,6 @@ export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: str
 	assert.ok(!symbol.location.range);
 }
 
-export function ensureFrameName(actual: string, expected: string) {
-	if (actual.startsWith("[Unoptimized]")) // In Dart v2.1.xxx the frame names got this prefix
-		assert.equal(actual, `[Unoptimized] ${expected}`);
-	else
-		assert.equal(actual, expected);
-}
-
 export function ensureDocumentSymbol(symbols: Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol }>, name: string, kind: vs.SymbolKind, parentName?: string): void {
 	let symbol = symbols.find((f) =>
 		f.name === name

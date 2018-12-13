@@ -11,6 +11,9 @@ import { PackageMap } from "./package_map";
 import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm, LogCategory, LogMessage, LogSeverity, PromiseCompleter, safeSpawn, uriToFilePath } from "./utils";
 
 const maxValuesToCallToString = 15;
+// Prefix that appears at the start of stack frame names that are unoptimized
+// which we'd prefer not to show to the user.
+const unoptimizedPrefix = "[Unoptimized] ";
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -567,7 +570,9 @@ export class DartDebugSession extends DebugSession {
 					return;
 				}
 
-				const frameName = frame.code.name;
+				const frameName = frame.code.name.startsWith(unoptimizedPrefix)
+					? frame.code.name.substring(unoptimizedPrefix.length)
+					: frame.code.name;
 				const location: VMSourceLocation = frame.location;
 
 				if (location == null) {
