@@ -146,7 +146,10 @@ export async function closeAllOpenFiles(): Promise<void> {
 
 export async function waitUntilAllTextDocumentsAreClosed(): Promise<void> {
 	log(`Waiting for VS Code to mark all documents as closed...`);
-	await waitFor(() => vs.workspace.textDocuments.length === 0, "Some TextDocuments did not close", threeMinutesInMilliseconds);
+	await waitFor(() => vs.workspace.textDocuments.length === 0, "Some TextDocuments did not close", threeMinutesInMilliseconds, false);
+	if (vs.workspace.textDocuments.length) {
+		throw new Error(`All open files were not closed (for ex: ${fsPath(vs.workspace.textDocuments[0].uri)})`);
+	}
 }
 
 export async function closeFile(file: vs.Uri): Promise<void> {
