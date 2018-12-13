@@ -370,7 +370,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || conf.debugExternalLibraries;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		if (isFlutter) {
-			debugConfig.forceFlutterVerboseMode = isLogging;
+			debugConfig.forceFlutterVerboseMode = isLogging || !!process.env.CI;
 			debugConfig.flutterTrackWidgetCreation =
 				// Use from the launch.json if configured.
 				debugConfig.flutterTrackWidgetCreation !== undefined
