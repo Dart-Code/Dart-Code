@@ -97,8 +97,12 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 				// Packages in pubcache are versioned so trim the "-x.x.x" off the end of the foldername.
 				const packageName = matches[1].split("-")[0];
 
-				// Trim /lib/ off the start if present.
-				const filePath = matches[2].startsWith(`lib${path.sep}`) ? matches[2].substr(4) : matches[2];
+				// Trim off anything up to lib/ to make it more like the uri you'd import.
+				const libPrefix = `lib${path.sep}`;
+				const libIndex = matches[2].indexOf(libPrefix);
+				const filePath = libIndex !== -1
+					? matches[2].substr(libIndex + libPrefix.length)
+					: matches[2];
 
 				// Return 'package:foo/bar.dart'.
 				inputPath = `package:${packageName}/${filePath.replace(/\\/g, "/")}`;
