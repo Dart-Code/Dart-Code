@@ -300,7 +300,7 @@ function findDartSdk(folders: string[]) {
 		if (!hasDartExecutable(folder))
 			return false;
 		if (!hasDartAnalysisServer(folder)) {
-			log(`Found dart at ${folder} without an analysis server snapshot, so skipping...`);
+			log(`            Skipping ${folder} because it has dart but no analysis server snapshot...`);
 			return false;
 		}
 		return true;
