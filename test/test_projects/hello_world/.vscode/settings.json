@@ -1,7 +1,6 @@
 {
 	"files.insertFinalNewline": true,
 	"dart.maxLogLineLength": 20000,
-	"dart.previewPromptToRunIfErrors": true,
 	"dart.doNotFormat": [
 		"**/excluded/**",
 		"**/excluded_*.dart"

@@ -69,7 +69,7 @@ class Config {
 	get previewHotReloadCoverageMarkers() { return this.getConfig<boolean>("previewHotReloadCoverageMarkers"); }
 	get previewBuildRunnerTasks() { return this.getConfig<boolean>("previewBuildRunnerTasks"); }
 	get previewToStringInDebugViews() { return this.getConfig<boolean>("previewToStringInDebugViews"); }
-	get previewPromptToRunIfErrors() { return this.getConfig<boolean>("previewPromptToRunIfErrors"); }
+	get promptToRunIfErrors() { return this.getConfig<boolean>("promptToRunIfErrors"); }
 
 	public for(uri?: Uri): ResourceConfig {
 		return new ResourceConfig(uri);
