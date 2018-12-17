@@ -16,8 +16,8 @@ function color(col: number, message: string) {
 	return "\u001b[" + col + "m" + message + "\u001b[0m";
 }
 
-// Set timeout at 20 mins (Travis kills us with no output for too long).
-const timeoutInMilliseconds = 1000 * 60 * 20;
+// Set timeout at 30 mins (Travis kills us with no output for too long).
+const timeoutInMilliseconds = 1000 * 60 * 30;
 function runNode(cwd: string, args: string[], env: any): Promise<number> {
 	return new Promise<number>((resolve, reject) => {
 		let timerWarn: NodeJS.Timer;
