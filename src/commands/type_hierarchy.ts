@@ -21,6 +21,7 @@ export class TypeHierarchyCommand implements vs.Disposable {
 		}
 
 		const document = editor.document;
+		const originalSelection = editor.selection;
 
 		const response = await this.analyzer.searchGetTypeHierarchy({
 			file: fsPath(document.uri),
@@ -33,7 +34,10 @@ export class TypeHierarchyCommand implements vs.Disposable {
 			return;
 		}
 
-		const options = { placeHolder: name(items, 0) };
+		const options: vs.QuickPickOptions = {
+			onDidSelectItem: (item: vs.QuickPickItem & { location?: as.Location; }) => this.openLocation(item, true),
+			placeHolder: name(items, 0),
+		};
 
 		// TODO: How / where to show implements?
 		const tree = [];
@@ -45,15 +49,27 @@ export class TypeHierarchyCommand implements vs.Disposable {
 
 		const result = await vs.window.showQuickPick(tree.map((item) => itemToPick(item, items)), options);
 		if (result) {
-			// TODO: extract out so we have one way of jumping to code
-			// Currently we have Type Hierarchy, Go To Super, Flutter Outline
-			const location: as.Location = result.location;
-			const document = await vs.workspace.openTextDocument(location.file);
-			const editor = await vs.window.showTextDocument(document);
-			const range = toRangeOnLine(location);
-			editor.revealRange(range, vs.TextEditorRevealType.InCenterIfOutsideViewport);
-			editor.selection = new vs.Selection(range.end, range.start);
+			await this.openLocation(result);
+		} else {
+			// Move the use back to where they were.
+			const ed = await vs.window.showTextDocument(document);
+			ed.revealRange(editor.selection, vs.TextEditorRevealType.InCenterIfOutsideViewport);
+			ed.selection = originalSelection;
 		}
+	}
+
+	private async openLocation(result: vs.QuickPickItem & { location?: as.Location; }, asPreview = false) {
+		// TODO: extract out so we have one way of jumping to code
+		// Currently we have Type Hierarchy, Go To Super, Flutter Outline
+		const location: as.Location = result.location;
+		const document = await vs.workspace.openTextDocument(location.file);
+		const editor = await vs.window.showTextDocument(document, {
+			preserveFocus: asPreview,
+			preview: asPreview,
+		});
+		const range = toRangeOnLine(location);
+		editor.revealRange(range, vs.TextEditorRevealType.InCenterIfOutsideViewport);
+		editor.selection = new vs.Selection(range.end, range.start);
 	}
 
 	public dispose(): any {
@@ -108,7 +124,7 @@ function itemToPick(item: as.TypeHierarchyItem, items: as.TypeHierarchyItem[]): 
 		desc += `with ${item.mixins.map((i) => name(items, i)).join(", ")}`;
 	}
 
-	const result = {
+	const result: vs.QuickPickItem & { location?: as.Location } = {
 		description: desc,
 		label: item.classElement.name,
 		location: item.classElement.location,
