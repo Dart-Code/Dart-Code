@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import * as _ from "lodash";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
@@ -98,7 +97,7 @@ export function logTo(file: string, logCategories?: LogCategory[]): ({ dispose: 
 		if (!logStream)
 			return;
 
-		const message = _.trimEnd(e.message);
+		const message = e.message.trimRight();
 		const maxLogLineLength = config.maxLogLineLength;
 		const logMessage = maxLogLineLength && message.length > maxLogLineLength
 			? message.substring(0, maxLogLineLength) + "…"

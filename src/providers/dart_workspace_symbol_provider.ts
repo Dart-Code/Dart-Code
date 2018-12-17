@@ -1,8 +1,8 @@
-import * as _ from "lodash";
 import * as path from "path";
 import { CancellationToken, Location, SymbolInformation, Uri, workspace, WorkspaceSymbolProvider } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
+import { escapeRegExp } from "../debug/utils";
 import { fsPath, toRange } from "../utils";
 
 export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
@@ -89,7 +89,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		if (root) {
 			inputPath = root && path.relative(fsPath(root.uri), inputPath);
 		} else {
-			const pathSlash = _.escapeRegExp(path.sep);
+			const pathSlash = escapeRegExp(path.sep);
 			const notSlashes = `[^${pathSlash}]+`;
 			const pattern = new RegExp(`.*${pathSlash}(?:hosted${pathSlash}${notSlashes}|git)${pathSlash}(${notSlashes})${pathSlash}(.*)`);
 			const matches = pattern.exec(inputPath);

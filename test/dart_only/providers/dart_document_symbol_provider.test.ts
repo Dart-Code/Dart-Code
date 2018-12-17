@@ -1,7 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
 import { activate, ensureDocumentSymbol, everythingFile, getDocumentSymbols } from "../../helpers";
-import _ = require("lodash");
 
 describe("document_symbol_provider", () => {
 

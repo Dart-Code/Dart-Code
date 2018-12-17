@@ -1,7 +1,7 @@
-import * as _ from "lodash";
 import * as vs from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
+import { flatMap } from "../debug/utils";
 import { fsPath, toRange } from "../utils";
 import { findNearestOutlineNode } from "../utils/outline";
 
@@ -38,10 +38,10 @@ export class DartImplementationProvider implements vs.ImplementationProvider {
 
 		const isClass = !currentItem.memberElement;
 		function getDescendants(item: as.TypeHierarchyItem): as.TypeHierarchyItem[] {
-			return _.concat(
-				item.subclasses.map((i) => hierarchy.hierarchyItems[i]),
-				_.flatMap(item.subclasses, (i) => getDescendants(hierarchy.hierarchyItems[i])),
-			);
+			return [
+				...item.subclasses.map((i) => hierarchy.hierarchyItems[i]),
+				...flatMap(item.subclasses, (i) => getDescendants(hierarchy.hierarchyItems[i])),
+			];
 		}
 		const descendants = getDescendants(currentItem)
 			.map((d) => isClass ? d.classElement : d.memberElement)

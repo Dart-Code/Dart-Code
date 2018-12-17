@@ -120,6 +120,39 @@ export function isWithinPath(file: string, folder: string) {
 	return !!relative && !relative.startsWith("..") && !path.isAbsolute(relative);
 }
 
+export function uniq<T>(array: T[]): T[] {
+	return array.filter((value, index) => array.indexOf(value) === index);
+}
+
+export function flatMap<T1, T2>(input: T1[], f: (input: T1) => T2[]): T2[] {
+	return input.reduce((acc, x) => acc.concat(f(x)), []);
+}
+
+export function throttle(fn: (...args: any[]) => void, limitMilliseconds: number): (...args: any[]) => void {
+	let timer: NodeJS.Timer;
+	let lastRunTime: number;
+	const run = (args: any[]) => {
+		lastRunTime = Date.now();
+		fn(...args);
+	};
+	return (...args: any[]) => {
+		const now = Date.now();
+		if (lastRunTime && now < lastRunTime + limitMilliseconds) {
+			// Delay the call until the timer has expired.
+			clearTimeout(timer);
+			// Set the timer in future, but compensate for how far through we are.
+			const runInMilliseconds = limitMilliseconds - (now - lastRunTime);
+			timer = setTimeout(run, runInMilliseconds);
+		} else {
+			run(args);
+		}
+	};
+}
+
+export function escapeRegExp(input: string): string {
+	return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+}
+
 export class PromiseCompleter<T> {
 	public promise: Promise<T>;
 	public resolve: (value?: T | PromiseLike<T>) => void;

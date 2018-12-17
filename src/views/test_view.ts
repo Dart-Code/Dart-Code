@@ -1,7 +1,7 @@
-import * as _ from "lodash";
 import * as path from "path";
 import * as vs from "vscode";
 import { getChannel } from "../commands/channels";
+import { flatMap, uniq } from "../debug/utils";
 import { extensionPath } from "../extension";
 import { fsPath } from "../utils";
 import { getLaunchConfig } from "../utils/test";
@@ -165,10 +165,14 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		items = items.filter((item) => item);
 		// Only sort suites, as tests may have a useful order themselves.
 		if (!element) {
-			items = _.sortBy(items, [
-				(t: TestItemTreeItem) => t.sort,
-				(t: TestItemTreeItem) => t.label,
-			]);
+			items = items.sort((a, b) => {
+				// Sort by .sort first.
+				if (a.sort > b.sort) return 1;
+				if (a.sort < b.sort) return -1;
+				// If they're the same, sort by label.
+				if (a.label > b.label) return 1;
+				if (a.label < b.label) return -1;
+			});
 		}
 		return items;
 	}
@@ -424,7 +428,7 @@ class SuiteData {
 	public getAllGroups(includeHidden = false) {
 		// Have to unique these, as we keep dupes in the lookup with the "old" IDs
 		// so that stale nodes can still look up their parents.
-		return _.uniq(
+		return uniq(
 			Object.keys(this.groups)
 				.map((gKey) => this.groups[gKey])
 				.filter((g) => includeHidden || (!g.hidden && !g.isPhantomGroup)),
@@ -433,7 +437,7 @@ class SuiteData {
 	public getAllTests(includeHidden = false) {
 		// Have to unique these, as we keep dupes in the lookup with the "old" IDs
 		// so that stale nodes can still look up their parents.
-		return _.uniq(
+		return uniq(
 			Object.keys(this.tests)
 				.map((tKey) => this.tests[tKey])
 				.filter((t) => includeHidden || !t.hidden),
@@ -464,7 +468,7 @@ class SuiteData {
 				&& g.suiteRunNumber !== currentSuiteRunNumber;
 		});
 		// Reuse the one nearest to the source position.
-		const sortedMatches = _.sortBy(matches, (g) => Math.abs(g.group.line - group.line));
+		const sortedMatches = matches.sort((g1, g2) => Math.abs(g1.group.line - group.line) - Math.abs(g2.group.line - group.line));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
 			handleOldParent(match.parent);
@@ -480,7 +484,7 @@ class SuiteData {
 				&& t.suiteRunNumber !== currentSuiteRunNumber;
 		});
 		// Reuse the one nearest to the source position.
-		const sortedMatches = _.sortBy(matches, (t) => Math.abs(t.test.line - test.line));
+		const sortedMatches = sortBy(matches, (t) => Math.abs(t.test.line - test.line));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
 			handleOldParent(match.parent);
@@ -553,10 +557,11 @@ export class SuiteTreeItem extends TestItemTreeItem {
 		// Children should be:
 		// 1. All children of any of our phantom groups
 		// 2. Our children excluding our phantom groups
-		return []
-			.concat(_.flatMap(this.groups.filter((g) => g.isPhantomGroup), (g) => g.children))
-			.concat(this.groups.filter((g) => !g.isPhantomGroup && !g.hidden))
-			.concat(this.tests.filter((t) => !t.hidden));
+		return [
+			...flatMap(this.groups.filter((g) => g.isPhantomGroup), (g) => g.children),
+			...this.groups.filter((g) => !g.isPhantomGroup && !g.hidden),
+			...this.tests.filter((t) => !t.hidden),
+		];
 	}
 
 	get suite(): Suite {
@@ -732,4 +737,14 @@ function getTestSortOrder(status: TestStatus): TestSortOrder {
 	// if (status === TestStatus.Skipped)
 	// 	return TestSortOrder.Bottom;
 	return TestSortOrder.Middle;
+}
+
+function sortBy<T>(items: T[], f: (item: T) => number): T[] {
+	return items.sort((item1, item2) => {
+		const r1 = f(item1);
+		const r2 = f(item2);
+		if (r1 < r2) return -1;
+		if (r1 > r2) return 1;
+		return 0;
+	});
 }

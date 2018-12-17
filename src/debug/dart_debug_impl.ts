@@ -1,6 +1,5 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
-import * as _ from "lodash";
 import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
@@ -8,7 +7,7 @@ import { config } from "../config";
 import { getLogHeader, logError } from "../utils/log";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
-import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm, LogCategory, LogMessage, LogSeverity, PromiseCompleter, safeSpawn, uriToFilePath } from "./utils";
+import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, flatMap, formatPathForVm, LogCategory, LogMessage, LogSeverity, PromiseCompleter, safeSpawn, throttle, uniq, uriToFilePath } from "./utils";
 
 const maxValuesToCallToString = 15;
 // Prefix that appears at the start of stack frame names that are unoptimized
@@ -772,7 +771,7 @@ export class DartDebugSession extends DebugSession {
 							// Add getters
 							if (this.evaluateGettersInDebugViews && instance.class) {
 								let getterNames = await this.getGetterNamesForHierarchy(thread.ref, instance.class);
-								getterNames = _.sortBy(getterNames, (gn) => gn);
+								getterNames = getterNames.sort();
 								len += getterNames.length;
 
 								// Call each getter, adding the result as a variable.
@@ -834,7 +833,7 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		// Distinct the list; since we may have got dupes from the super-classes.
-		getterNames = _.uniq(getterNames);
+		getterNames = uniq(getterNames);
 
 		// Remove _identityHashCode because it seems to throw (and probably isn't useful to the user).
 		return getterNames.filter((g) => g !== "_identityHashCode");
@@ -1193,7 +1192,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private knownOpenFiles: string[] = []; // Keep track of these for internal requests
-	protected requestCoverageUpdate = _.throttle(async (reason: string): Promise<void> => {
+	protected requestCoverageUpdate = throttle(async (reason: string): Promise<void> => {
 		if (!this.knownOpenFiles || !this.knownOpenFiles.length)
 			return;
 
@@ -1201,7 +1200,7 @@ export class DartDebugSession extends DebugSession {
 
 		// Unwrap tokenPos into real locations.
 		const coverageData: CoverageData[] = coverageReport.map((r) => {
-			const allTokens = _.concat(r.startPos, r.endPos, r.hits, r.misses);
+			const allTokens = [r.startPos, r.endPos, ...r.hits, ...r.misses];
 			const hitLines: number[] = [];
 			r.hits.forEach((h) => {
 				const startTokenIndex = allTokens.indexOf(h);
@@ -1251,7 +1250,7 @@ export class DartDebugSession extends DebugSession {
 			const libraryResponses = await Promise.all(libraryPromises);
 			const libraries = libraryResponses.map((response) => response.result as VMLibrary);
 
-			const scriptRefs = _.flatMap(libraries, (library) => library.scripts);
+			const scriptRefs = flatMap(libraries, (library) => library.scripts);
 
 			// Filter scripts to the ones we care about.
 			const scripts = scriptRefs.filter((s) => realScriptUris[removeFilePrefix(s.uri)]);
