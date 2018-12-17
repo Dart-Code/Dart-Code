@@ -139,6 +139,9 @@
 					"name": "comment.block.documentation.dart",
 					"patterns": [
 						{
+							"include": "#comments-doc-oldschool"
+						},
+						{
 							"include": "#dartdoc"
 						}
 					]
