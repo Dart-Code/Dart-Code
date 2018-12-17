@@ -1,6 +1,6 @@
 import * as path from "path";
 import { isArray } from "util";
-import { CancellationToken, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, MarkdownString, Position, SnippetString, TextDocument, Uri } from "vscode";
+import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, MarkdownString, Position, SnippetString, TextDocument, Uri } from "vscode";
 
 export class SnippetCompletionItemProvider implements CompletionItemProvider {
 	private completions = new CompletionList();
@@ -28,9 +28,27 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 	}
 
 	public provideCompletionItems(
-		document: TextDocument, position: Position, token: CancellationToken,
+		document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext,
 	): CompletionList {
+		const line = document.lineAt(position.line).text.slice(0, position.character);
+
+		if (!this.shouldAllowCompletion(line, context))
+			return;
+
 		if (this.shouldRender(document.uri))
 			return this.completions;
+	}
+
+	private shouldAllowCompletion(line: string, context: CompletionContext): boolean {
+		line = line.trim();
+
+		// Don't provide completions after comment markers. This isn't perfect since it'll
+		// suppress them for ex if // appears inside strings, but it's a reasonable
+		// approximation given we don't have a reliable way to tell that.
+		if (line.indexOf("//") !== -1)
+			return false;
+
+		// Otherwise, allow through.
+		return true;
 	}
 }

@@ -224,10 +224,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		context.subscriptions.push(vs.tasks.registerTaskProvider("pub", new PubBuildRunnerTaskProvider(sdks)));
 	}
 
-	// Attach project-type-specific snippets.
-	// Dart snippets aren't registered here (they're in package.json) because VS Code's "tab completion" feature
-	// only works with static snippets. This way, that will work for Dart at least.
-	// See https://github.com/Dart-Code/Dart-Code/issues/1119.
+	// Snippets are language-specific
+	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => util.isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(uri)))));
 
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE[0].language, new DartLanguageConfiguration()));
