@@ -1,12 +1,11 @@
 import * as assert from "assert";
 import * as fs from "fs";
-import * as _ from "lodash";
 import { tmpdir } from "os";
 import * as path from "path";
 import * as semver from "semver";
 import * as vs from "vscode";
 import { AnalyzerCapabilities } from "../src/analysis/analyzer";
-import { dartCodeExtensionIdentifier, LogCategory, LogSeverity } from "../src/debug/utils";
+import { dartCodeExtensionIdentifier, flatMap, LogCategory, LogSeverity } from "../src/debug/utils";
 import { FlutterCapabilities } from "../src/flutter/capabilities";
 import { DaemonCapabilities } from "../src/flutter/flutter_daemon";
 import { DartReferenceProvider } from "../src/providers/dart_reference_provider";
@@ -212,7 +211,7 @@ const deferredToLastItems: Array<(result?: "failed" | "passed") => Promise<any> 
 // tslint:disable-next-line:only-arrow-functions
 afterEach("run deferred functions", async function () {
 	let firstError: any;
-	for (const d of _.concat(deferredItems, deferredToLastItems)) {
+	for (const d of [...deferredItems, ...deferredToLastItems]) {
 		try {
 			await watchPromise(`afterEach->deferred->${d.toString()}`, d(this.currentTest ? this.currentTest.state : undefined));
 		} catch (e) {
@@ -305,7 +304,7 @@ export async function getDocumentSymbols(): Promise<Array<vs.DocumentSymbol & { 
 
 	// Return a flattened list with references to parent for simplified testing.
 	return documentSymbolResult.map((c) => Object.assign(c, { parent: undefined }))
-		.concat(_.flatMap(
+		.concat(flatMap(
 			documentSymbolResult,
 			(s) => s.children ? s.children.map((c) => Object.assign(c, { parent: s })) : [],
 		));

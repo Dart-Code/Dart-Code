@@ -1,6 +1,6 @@
-import * as _ from "lodash";
 import { CancellationToken, DefinitionLink, DefinitionProvider, Location, Position, ReferenceContext, ReferenceProvider, TextDocument, Uri } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
+import { flatMap } from "../debug/utils";
 import * as util from "../utils";
 import { fsPath } from "../utils";
 
@@ -38,7 +38,7 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 			offset: document.offsetAt(position),
 		});
 
-		return _.flatMap(resp.regions, (region) => {
+		return flatMap(resp.regions, (region) => {
 			return region.targets.map((targetIndex) => {
 				const target = resp.targets[targetIndex];
 				// HACK: We sometimes get a startColumn of 0 (should be 1-based). Just treat this as 1 for now.

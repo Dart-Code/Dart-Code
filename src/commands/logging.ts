@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import * as path from "path";
 import * as vs from "vscode";
 import { forceWindowsDriveLetterToUppercase, LogCategory } from "../debug/utils";
@@ -37,7 +36,7 @@ export class LoggingCommands implements vs.Disposable {
 		if (!selectedLogCategories || !selectedLogCategories.length)
 			return;
 
-		const allLoggedCategories = _.concat(LogCategory.General, selectedLogCategories.map((s) => s.logCategory));
+		const allLoggedCategories = [LogCategory.General].concat(selectedLogCategories.map((s) => s.logCategory));
 
 		const logger = logTo(fsPath(logUri), allLoggedCategories);
 		isLogging = true;

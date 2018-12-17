@@ -1,8 +1,7 @@
-import * as _ from "lodash";
 import { CancellationToken, CodeLens, CodeLensProvider, commands, debug, Event, EventEmitter, TextDocument, Uri, workspace } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import { OpenFileTracker } from "../analysis/open_file_tracker";
-import { IAmDisposable } from "../debug/utils";
+import { flatMap, IAmDisposable } from "../debug/utils";
 import { locateBestProjectRoot } from "../project";
 import { fsPath, projectSupportsPubRunTest, toRange } from "../utils";
 import { TestOutlineInfo, TestOutlineVisitor } from "../utils/outline";
@@ -48,7 +47,7 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 
 		const visitor = new TestOutlineVisitor();
 		visitor.visit(outline);
-		return _.flatMap(
+		return flatMap(
 			visitor.tests
 				.filter((test) => test.offset && test.length)
 				.map((test) => {
@@ -71,6 +70,7 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 						),
 					];
 				}),
+			(x) => x,
 		);
 	}
 

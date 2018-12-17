@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import * as vs from "vscode";
 import { config } from "../config";
 import { LogCategory, PromiseCompleter } from "../debug/utils";
@@ -74,7 +73,7 @@ export class Analyzer extends AnalyzerGen {
 		this.registerForServerConnected((e) => { this.version = e.version; this.capabilities.version = this.version; });
 
 		let binaryPath = dartVMPath;
-		let processArgs = _.clone(analyzerArgs);
+		let processArgs = analyzerArgs.slice();
 
 		// Since we communicate with the analysis server over STDOUT/STDIN, it is trivial for us
 		// to support launching it on a remote machine over SSH. This can be useful if the codebase

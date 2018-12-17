@@ -1,11 +1,10 @@
 import * as fs from "fs";
-import * as _ from "lodash";
 import * as path from "path";
 import { commands, ExtensionContext, window } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
-import { isWin, platformName } from "../debug/utils";
+import { flatMap, isWin, platformName } from "../debug/utils";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, getSdkVersion, openExtensionLogFile, openInBrowser, ProjectType, reloadExtension, resolvePaths, Sdks, showLogAction } from "../utils";
 import { getChildFolders, hasPubspec } from "../utils/fs";
 import { log } from "../utils/log";
@@ -158,7 +157,7 @@ export function findSdks(): Sdks {
 	// If the folder doesn't directly contain a pubspec.yaml then we'll look at the first-level of
 	// children, as the user may have opened a folder that contains multiple projects (including a
 	// Flutter project) and we want to be sure to detect that.
-	const nestedProjectFolders = _.flatMap(folders, getChildFolders);
+	const nestedProjectFolders = flatMap(folders, getChildFolders);
 	folders.concat(nestedProjectFolders).forEach((folder) => {
 		flutterProject = flutterProject
 			|| (referencesFlutterSdk(folder) ? folder : undefined)
