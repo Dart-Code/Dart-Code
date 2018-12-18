@@ -22,7 +22,7 @@ export class FlutterSampleUriHandler {
 		}
 
 		// Create a temp folder for the sample.
-		const tempSamplePath = path.join(os.tmpdir(), dartCodeExtensionIdentifier, "flutter", "sample", sampleID);
+		const tempSamplePath = path.join(os.tmpdir(), dartCodeExtensionIdentifier, "flutter", "sample", sampleID, util.getRandomInt(0x1000, 0x10000).toString(16));
 
 		// Create the empty folder so we can open it.
 		util.mkDirRecursive(tempSamplePath);

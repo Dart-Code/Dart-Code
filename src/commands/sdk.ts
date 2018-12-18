@@ -151,7 +151,6 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
 		// Internal command that's fired in user_prompts to actually do the creation.
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.create", (projectPath: string, projectName?: string, sampleID?: string) => {
-			projectName = projectName || path.basename(projectPath);
 			const args = ["create"];
 			if (projectName) {
 				args.push("--project-name");
