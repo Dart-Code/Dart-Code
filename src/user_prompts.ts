@@ -75,7 +75,8 @@ function handleNewProjects(context: Context) {
 }
 
 async function createFlutterProject(projectPath: string, sampleID: string): Promise<boolean> {
-	const code = await vs.commands.executeCommand("_flutter.create", projectPath, undefined, sampleID) as number;
+	const projectName = sampleID ? "sample" : undefined;
+	const code = await vs.commands.executeCommand("_flutter.create", projectPath, projectName, sampleID) as number;
 	return code === 0;
 }
 
