@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { config } from "./config";
 import { Context } from "./context";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, extensionVersion, fsPath, getDartWorkspaceFolders, isDevExtension, openInBrowser } from "./utils";
+import { extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, isDevExtension, openInBrowser } from "./utils";
 
 export function showUserPrompts(context: vs.ExtensionContext) {
 	handleNewProjects(Context.for(context));
@@ -61,10 +61,12 @@ function handleNewProjects(context: Context) {
 	getDartWorkspaceFolders().find((wf) => {
 		const triggerFile = path.join(fsPath(wf.uri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
 		if (fs.existsSync(triggerFile)) {
+			let sampleID = fs.readFileSync(triggerFile).toString().trim();
+			sampleID = sampleID ? sampleID : undefined;
 			fs.unlinkSync(triggerFile);
-			createFlutterProject(fsPath(wf.uri)).then((success) => {
+			createFlutterProject(fsPath(wf.uri), sampleID).then((success) => {
 				if (success)
-					handleFlutterWelcome(wf);
+					handleFlutterWelcome(wf, sampleID);
 			});
 			// Bail out of find so we only do this at most once.
 			return true;
@@ -72,12 +74,17 @@ function handleNewProjects(context: Context) {
 	});
 }
 
-async function createFlutterProject(projectPath: string): Promise<boolean> {
-	const code = await vs.commands.executeCommand("_flutter.create", projectPath) as number;
+async function createFlutterProject(projectPath: string, sampleID: string): Promise<boolean> {
+	const code = await vs.commands.executeCommand("_flutter.create", projectPath, ".", sampleID) as number;
 	return code === 0;
 }
 
-function handleFlutterWelcome(workspaceFolder: vs.WorkspaceFolder) {
-	vs.commands.executeCommand("vscode.open", vs.Uri.file(path.join(fsPath(workspaceFolder.uri), "lib/main.dart")));
-	vs.window.showInformationMessage("Your Flutter project is ready! Connect a device and press F5 to start running.");
+function handleFlutterWelcome(workspaceFolder: vs.WorkspaceFolder, sampleID: string) {
+	const entryFile = path.join(fsPath(workspaceFolder.uri), "lib/main.dart");
+	if (fs.existsSync(entryFile))
+		vs.commands.executeCommand("vscode.open", vs.Uri.file(entryFile));
+	if (sampleID)
+		vs.window.showInformationMessage(`${sampleID} sample ready! Connect a device and press F5 to run.`);
+	else
+		vs.window.showInformationMessage("Your Flutter project is ready! Connect a device and press F5 to start running.");
 }

@@ -150,7 +150,7 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
 		// Internal command that's fired in user_prompts to actually do the creation.
-		context.subscriptions.push(vs.commands.registerCommand("_flutter.create", (projectPath: string, projectName?: string) => {
+		context.subscriptions.push(vs.commands.registerCommand("_flutter.create", (projectPath: string, projectName?: string, sampleID?: string) => {
 			projectName = projectName || path.basename(projectPath);
 			const args = ["create"];
 			if (config.flutterCreateOrganization) {
@@ -164,6 +164,10 @@ export class SdkCommands {
 			if (config.flutterCreateAndroidLanguage) {
 				args.push("--android-language");
 				args.push(config.flutterCreateAndroidLanguage);
+			}
+			if (sampleID) {
+				args.push("--sample");
+				args.push(sampleID);
 			}
 			args.push(projectName);
 			if (projectName !== ".")

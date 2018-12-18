@@ -36,7 +36,8 @@
 		"workspaceContains:**/pubspec.yaml",
 		"workspaceContains:**/*.dart",
 		"onCommand:flutter.createProject",
-		"onCommand:flutter.doctor"
+		"onCommand:flutter.doctor",
+		"onUri"
 	],
 	"main": "./out/src/extension",
 	"contributes": {
