@@ -8,7 +8,7 @@ import { fsPath, getRandomInt } from "../../../src/utils";
 import { log } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureMapEntry, ensureVariable, ensureVariableWithIndex, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, positionOf, sb, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, positionOf, sb, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -56,9 +56,7 @@ describe("dart cli debugger", () => {
 			return vs.Uri.file(path.join(fsPath(helloWorldFolder), "test", fileName));
 		}
 		it("and cancels launch if they click Show Errors", async () => {
-			const nextAnalysis = extApi.nextAnalysis();
 			await writeBrokenDartCodeIntoFileForTest(getTempProjectFile());
-			await nextAnalysis;
 
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 			showErrorMessage.resolves(showErrorsAction);
@@ -71,10 +69,8 @@ describe("dart cli debugger", () => {
 			assert(showErrorMessage.calledOnce);
 		});
 		it("and launches if they click Debug Anyway", async () => {
-			const nextAnalysis = extApi.nextAnalysis();
 			log(`Creating!`);
 			await writeBrokenDartCodeIntoFileForTest(getTempProjectFile());
-			await nextAnalysis;
 
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 			showErrorMessage.resolves(debugAnywayAction);
@@ -93,10 +89,8 @@ describe("dart cli debugger", () => {
 			]);
 		});
 		it("unless the errors are in test scripts", async () => {
-			const nextAnalysis = extApi.nextAnalysis();
 			log(`Creating!`);
 			await writeBrokenDartCodeIntoFileForTest(getTempTestFile());
-			await nextAnalysis;
 
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 			showErrorMessage.resolves(debugAnywayAction);
@@ -116,10 +110,8 @@ describe("dart cli debugger", () => {
 			]);
 		});
 		it("in the test script being run", async () => {
-			const nextAnalysis = extApi.nextAnalysis();
 			const tempTestScript = getTempProjectFile();
 			await writeBrokenDartCodeIntoFileForTest(tempTestScript);
-			await nextAnalysis;
 
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 			showErrorMessage.resolves(showErrorsAction);

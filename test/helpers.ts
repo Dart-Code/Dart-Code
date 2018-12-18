@@ -602,8 +602,14 @@ export async function getAttachConfiguration(extraConfiguration?: { [key: string
 	return await getResolvedDebugConfiguration(attachConfig);
 }
 
-export function writeBrokenDartCodeIntoFileForTest(file: vs.Uri) {
+export async function writeBrokenDartCodeIntoFileForTest(file: vs.Uri): Promise<void> {
+	const nextAnalysis = extApi.nextAnalysis();
 	fs.writeFileSync(fsPath(file), "this is broken dart code");
+	await nextAnalysis;
+	// HACK: Sometimes we see analysis the analysis flag toggle quickly and we get an empty error list
+	// so we need to add a small delay here and then wait for any in progress analysis.
+	await delay(500);
+	await extApi.currentAnalysis;
 	defer(() => tryDelete(file));
 }
 
