@@ -53,6 +53,7 @@ import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForSdkUpdates } from "./sdk/update_check";
 import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingSdks } from "./sdk/utils";
+import { DartUriHandler } from "./uri_handlers/uri_handler";
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { fsPath } from "./utils";
@@ -313,6 +314,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// Register SDK commands.
 	const sdkCommands = new SdkCommands(context, sdks, analytics, flutterDaemon && flutterDaemon.deviceManager);
 	const debug = new DebugCommands(context, analytics);
+
+	// Register URI handler.
+	context.subscriptions.push(vs.window.registerUriHandler(new DartUriHandler(flutterCapabilities)));
 
 	// Set up commands for Dart editors.
 	context.subscriptions.push(new EditCommands(context, analyzer));
