@@ -153,6 +153,10 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.create", (projectPath: string, projectName?: string, sampleID?: string) => {
 			projectName = projectName || path.basename(projectPath);
 			const args = ["create"];
+			if (projectName) {
+				args.push("--project-name");
+				args.push(projectName);
+			}
 			if (config.flutterCreateOrganization) {
 				args.push("--org");
 				args.push(config.flutterCreateOrganization);
@@ -169,9 +173,7 @@ export class SdkCommands {
 				args.push("--sample");
 				args.push(sampleID);
 			}
-			args.push(projectName);
-			if (projectName !== ".")
-				projectPath = path.dirname(projectPath);
+			args.push(".");
 			return this.runFlutterInFolder(projectPath, args, projectName);
 		}));
 		// Internal command that's fired in user_prompts to actually do the creation.
