@@ -166,7 +166,9 @@ export class SdkCommands {
 				args.push(config.flutterCreateAndroidLanguage);
 			}
 			args.push(projectName);
-			return this.runFlutterInFolder(path.dirname(projectPath), args, projectName);
+			if (projectName !== ".")
+				projectPath = path.dirname(projectPath);
+			return this.runFlutterInFolder(projectPath, args, projectName);
 		}));
 		// Internal command that's fired in user_prompts to actually do the creation.
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.clean", (projectPath: string, projectName?: string) => {

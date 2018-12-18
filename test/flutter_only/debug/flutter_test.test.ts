@@ -22,8 +22,8 @@ describe("flutter test debugger", () => {
 
 	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
 	// `flutter create .`!
-	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", path.join(fsPath(flutterHelloWorldFolder), "dummy"), "."));
-	before("run 'flutter clean'", () => vs.commands.executeCommand("_flutter.clean", path.join(fsPath(flutterHelloWorldFolder), "dummy"), "."));
+	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldFolder), "."));
+	before("run 'flutter clean'", () => vs.commands.executeCommand("_flutter.clean", fsPath(flutterHelloWorldFolder), "."));
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
