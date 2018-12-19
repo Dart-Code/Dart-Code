@@ -9,7 +9,7 @@ export const outlineTrackingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder
 
 const file1 = helloWorldBrokenFile;
 const file2 = helloWorldMainFile;
-const allowSlowSubscriptionTests = true;
+const allowSlowSubscriptionTests = false;
 
 describe("file tracker", () => {
 	beforeEach("activate", () => activate(null));
