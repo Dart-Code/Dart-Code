@@ -3,7 +3,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../src/commands/refactor";
 import { PromiseCompleter } from "../../../src/debug/utils";
-import { activate, currentDoc, ensureTestContent, positionOf, rangeOf, sb, setTestContent, waitFor } from "../../helpers";
+import { activate, currentDoc, ensureTestContent, positionOf, rangeOf, sb, setTestContent, waitForResult } from "../../helpers";
 
 describe("refactor", () => {
 
@@ -141,7 +141,7 @@ main() {
 		const refactorCommand = (vs.commands.executeCommand("_dart.performRefactor", currentDoc(), rangeOf("|print(\"Hello, world!\");|"), "EXTRACT_METHOD"));
 
 		// Wait for the message to appear.
-		await waitFor(() => refactorPrompt.called);
+		await waitForResult(() => refactorPrompt.called);
 
 		// Change the document in the meantime.
 		await setTestContent(`

@@ -3,7 +3,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../src/commands/refactor";
 import { PromiseCompleter } from "../../../src/debug/utils";
-import { activate, currentDoc, ensureTestContent, rangeOf, sb, setTestContent, waitFor } from "../../helpers";
+import { activate, currentDoc, ensureTestContent, rangeOf, sb, setTestContent, waitForResult } from "../../helpers";
 
 describe("refactor", () => {
 	beforeEach("activate", () => activate());
@@ -208,7 +208,7 @@ class MyWidget extends StatelessWidget {
 		const refactorCommand = (vs.commands.executeCommand("_dart.performRefactor", currentDoc(), rangeOf("||Container()"), "EXTRACT_WIDGET"));
 
 		// Wait for the message to appear.
-		await waitFor(() => refactorPrompt.called);
+		await waitForResult(() => refactorPrompt.called);
 
 		// Change the document in the meantime.
 		await setTestContent(`
