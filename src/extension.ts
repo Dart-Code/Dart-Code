@@ -17,6 +17,7 @@ import { LoggingCommands } from "./commands/logging";
 import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
 import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
+import { TestCommands } from "./commands/test";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
 import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, isWin, isWithinPath, LogCategory, platformName } from "./debug/utils";
@@ -322,6 +323,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(new GoToSuperCommand(analyzer));
 	context.subscriptions.push(new LoggingCommands(context.logPath));
 	context.subscriptions.push(new OpenInOtherEditorCommands(sdks));
+	context.subscriptions.push(new TestCommands());
 
 	// Register our view providers.
 	const dartPackagesProvider = new DartPackagesProvider();

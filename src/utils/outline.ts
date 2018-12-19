@@ -172,8 +172,8 @@ export class TestOutlineVisitor extends OutlineVisitor {
 			file: outline.element.location.file,
 			fullName,
 			isGroup,
-			length: outline.element.location.length,
-			offset: outline.element.location.offset,
+			length: outline.codeLength || outline.element.location.length,
+			offset: outline.codeOffset || outline.element.location.offset,
 		});
 		try {
 			base.bind(this)(outline);
