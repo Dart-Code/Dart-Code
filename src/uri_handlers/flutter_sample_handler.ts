@@ -10,7 +10,6 @@ export class FlutterSampleUriHandler {
 	constructor(private flutterCapabilities: FlutterCapabilities) { }
 
 	public async handle(sampleID: string): Promise<void> {
-		// TODO: This requires tests!
 		if (!this.isValidSampleName(sampleID)) {
 			vs.window.showErrorMessage(`${sampleID} is not a valid Flutter sample identifier`);
 			return;
