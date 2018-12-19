@@ -5,11 +5,10 @@ import { fsPath, projectSupportsPubRunTest } from "../utils";
 import { TestOutlineInfo, TestOutlineVisitor } from "../utils/outline";
 
 export const CURSOR_IS_IN_TEST = "dart-code:cursorIsInTest";
+export let cursorIsInTest = false; // HACK: Used for testing since we can't read contexts?
 
 export class TestCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
-
-	// TODO: Tests!
 
 	constructor() {
 		this.disposables.push(
@@ -36,6 +35,7 @@ export class TestCommands implements vs.Disposable {
 	private updateContext(e: vs.TextEditorSelectionChangeEvent): void {
 		const isValidTestLocation = !!(e.textEditor && e.selections && e.selections.length === 1 && this.testForCursor(e.textEditor));
 		vs.commands.executeCommand("setContext", CURSOR_IS_IN_TEST, isValidTestLocation);
+		cursorIsInTest = isValidTestLocation;
 	}
 
 	private testForCursor(editor: vs.TextEditor): TestOutlineInfo {
