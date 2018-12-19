@@ -171,6 +171,23 @@ export function tryDelete(file: vs.Uri) {
 	}
 }
 
+export function deleteDirectoryRecursive(folder: string) {
+	if (!fs.existsSync(folder))
+		return;
+	if (!fs.statSync(folder).isDirectory()) {
+		logError(`deleteDirectoryRecursive was passed a file: ${folder}`);
+	}
+	fs.readdirSync(folder)
+		.map((item) => path.join(folder, item))
+		.forEach((item) => {
+			if (fs.statSync(item).isDirectory()) {
+				deleteDirectoryRecursive(item);
+			} else
+				fs.unlinkSync(item);
+		});
+	fs.rmdirSync(folder);
+}
+
 export let currentTestName: string | undefined;
 export let fileSafeCurrentTestName: string | undefined;
 beforeEach("stash current test name", async function () {
