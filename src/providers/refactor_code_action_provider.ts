@@ -5,6 +5,7 @@ import { fsPath, isAnalyzableAndInWorkspace } from "../utils";
 
 const supportedRefactors: { [key: string]: string } = {
 	CONVERT_METHOD_TO_GETTER: "Convert Method to Getter",
+	EXTRACT_LOCAL_VARIABLE: "Extract Local Variable",
 	EXTRACT_METHOD: "Extract Method",
 	EXTRACT_WIDGET: "Extract Widget",
 };

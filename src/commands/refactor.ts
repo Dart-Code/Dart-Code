@@ -7,6 +7,7 @@ export const REFACTOR_FAILED_DOC_MODIFIED = "This refactor cannot be applied bec
 export const REFACTOR_ANYWAY = "Refactor Anyway";
 
 const refactorOptions: { [key: string]: (feedback?: as.RefactoringFeedback) => as.RefactoringOptions } = {
+	EXTRACT_LOCAL_VARIABLE: getExtractLocalVariableArgs,
 	EXTRACT_METHOD: getExtractMethodArgs,
 	EXTRACT_WIDGET: getExtractWidgetArgs,
 };
@@ -118,6 +119,12 @@ export class RefactorCommands implements vs.Disposable {
 		for (const command of this.commands)
 			command.dispose();
 	}
+}
+
+async function getExtractLocalVariableArgs(f?: as.RefactoringFeedback): Promise<as.RefactoringOptions | undefined> {
+	const name = await vs.window.showInputBox({ prompt: "Enter a name for the variable" });
+
+	return name ? { name, extractAll: false } : undefined;
 }
 
 async function getExtractMethodArgs(f?: as.RefactoringFeedback): Promise<as.RefactoringOptions | undefined> {
