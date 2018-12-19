@@ -32,10 +32,13 @@ export class RefactorCommands implements vs.Disposable {
 		if (this.shouldAbortRefactor(validationResult))
 			return;
 
-		// Request the options from the user.
-		const options = await refactorOptions[refactorKind](validationResult.feedback);
-		if (!options)
-			return;
+		// Request the options from the user if required.
+		let options = null;
+		if (refactorOptions[refactorKind]) {
+			options = await refactorOptions[refactorKind](validationResult.feedback);
+			if (!options)
+				return;
+		}
 
 		// Send the request for the refactor edits and prompt to apply if required.
 		const editResult = await this.getRefactor(document, refactorKind, range, false, options);
