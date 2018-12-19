@@ -6,7 +6,7 @@ import { STOP_LOGGING } from "../../../src/commands/logging";
 import { LogCategory, LogSeverity, platformEol, PromiseCompleter } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
 import { log } from "../../../src/utils/log";
-import { activate, sb, waitFor } from "../../helpers";
+import { activate, sb, waitForResult } from "../../helpers";
 
 describe("capture logs command", () => {
 	beforeEach(() => activate());
@@ -27,7 +27,7 @@ describe("capture logs command", () => {
 		const loggingCommand = vs.commands.executeCommand("dart.startLogging") as Thenable<string>;
 		// Wait until the command has called for the filename and options (otherwise we'll send our log before
 		// the logger is set up because the above call is async).
-		await waitFor(() => showQuickPick.called);
+		await waitForResult(() => showQuickPick.called);
 
 		return {
 			loggingCommand,

@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { OpenFileTracker } from "../../src/analysis/open_file_tracker";
 import { fsPath } from "../../src/utils";
-import { activate, closeAllOpenFiles, closeFile, helloWorldBrokenFile, helloWorldFolder, helloWorldMainFile, openFile, threeMinutesInMilliseconds, waitFor, waitUntilAllTextDocumentsAreClosed } from "../helpers";
+import { activate, closeAllOpenFiles, closeFile, helloWorldBrokenFile, helloWorldFolder, helloWorldMainFile, openFile, threeMinutesInMilliseconds, waitForResult, waitUntilAllTextDocumentsAreClosed } from "../helpers";
 
 export const outlineTrackingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/outline_tracking/empty.dart"));
 
@@ -71,22 +71,22 @@ describe("file tracker", () => {
 
 			// Close the file and ensure it disappears within the expected timeframe (3 minutes!!).
 			await closeFile(file1);
-			await waitFor(() => OpenFileTracker.getLastSubscribedFiles().length === 0, "Closed file was not removed from subscription list", threeMinutesInMilliseconds);
+			await waitForResult(() => OpenFileTracker.getLastSubscribedFiles().length === 0, "Closed file was not removed from subscription list", threeMinutesInMilliseconds);
 		});
 
 		it("tracks outlines for open files", async () => {
-			await waitFor(() => !OpenFileTracker.getOutlineFor(outlineTrackingFile), "Outline was already present");
+			await waitForResult(() => !OpenFileTracker.getOutlineFor(outlineTrackingFile), "Outline was already present");
 			await openFile(outlineTrackingFile);
-			await waitFor(() => !!OpenFileTracker.getOutlineFor(outlineTrackingFile), "Outline was not added");
+			await waitForResult(() => !!OpenFileTracker.getOutlineFor(outlineTrackingFile), "Outline was not added");
 		});
 		it("removes tracked outlines when files are closed", async () => {
 			// Ensure the outline is present first, else the test is invalid.
 			await openFile(outlineTrackingFile);
-			await waitFor(() => !!OpenFileTracker.getOutlineFor(outlineTrackingFile), "Outline was never present");
+			await waitForResult(() => !!OpenFileTracker.getOutlineFor(outlineTrackingFile), "Outline was never present");
 
 			// Close the file and ensure it disappears within the expected timeframe (3 minutes!!).
 			await closeAllOpenFiles();
-			await waitFor(() => !OpenFileTracker.getOutlineFor(outlineTrackingFile), "Outline was not removed", threeMinutesInMilliseconds);
+			await waitForResult(() => !OpenFileTracker.getOutlineFor(outlineTrackingFile), "Outline was not removed", threeMinutesInMilliseconds);
 		});
 	});
 });

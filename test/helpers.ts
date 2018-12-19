@@ -9,6 +9,7 @@ import { ExtensionApi } from "../src/extension";
 import { internalApiSymbol } from "../src/symbols";
 import { fsPath, isAnalyzable, ProjectType, vsCodeVersionConstraint } from "../src/utils";
 import { log, logError, logTo, logWarn } from "../src/utils/log";
+import { waitFor } from "../src/utils/promises";
 import sinon = require("sinon");
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
@@ -132,7 +133,7 @@ export async function closeAllOpenFiles(): Promise<void> {
 export async function waitUntilAllTextDocumentsAreClosed(): Promise<void> {
 	log(`Waiting for VS Code to mark all documents as closed...`);
 	const getAllOpenDocs = () => vs.workspace.textDocuments.filter(isAnalyzable);
-	await waitFor(() => getAllOpenDocs().length === 0, "Some TextDocuments did not close", threeMinutesInMilliseconds, false);
+	await waitForResult(() => getAllOpenDocs().length === 0, "Some TextDocuments did not close", threeMinutesInMilliseconds, false);
 	const openDocs = getAllOpenDocs();
 	if (openDocs.length) {
 		throw new Error(`All open files were not closed (for ex: ${fsPath(openDocs[0].uri)})`);
@@ -480,7 +481,7 @@ export function ensureNoSnippet(items: vs.CompletionItem[], label: string): void
 export async function ensureTestContent(expected: string): Promise<void> {
 	const doc = currentDoc();
 	// Wait for a short period before checking to reduce changes of flaky tests.
-	await waitFor(() =>
+	await waitForResult(() =>
 		doc.getText().replace(/\r/g, "").trim() === expected.replace(/\r/g, "").trim(),
 		"Document content did not match expected",
 		100,
@@ -519,15 +520,9 @@ export function getRandomTempFolder(): string {
 	return tmpPath;
 }
 
-export async function waitFor(action: () => boolean, message?: string, milliseconds: number = 2000, throwOnFailure = true): Promise<void> {
-	let timeRemaining = milliseconds;
-	while (timeRemaining > 0) {
-		if (action())
-			return;
-		await new Promise((resolve) => setTimeout(resolve, 20));
-		timeRemaining -= 20;
-	}
-	if (throwOnFailure)
+export async function waitForResult(action: () => boolean, message?: string, milliseconds: number = 2000, throwOnFailure = true): Promise<void> {
+	const res = await waitFor(action, undefined, milliseconds);
+	if (throwOnFailure && !res)
 		throw new Error(`Action didn't return true within ${milliseconds}ms (${message})`);
 }
 
