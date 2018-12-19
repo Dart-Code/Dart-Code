@@ -34,4 +34,12 @@ describe("URL handler", async () => {
 		assert.ok(fs.existsSync(triggerFile));
 		assert.equal(fs.readFileSync(triggerFile).toString(), "my.sample.id");
 	});
+
+	it("Rejects sample IDs that do not conform", async () => {
+		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
+
+		await urlHandler.handleUri(vs.Uri.parse(`vscode://Dart-Code.dart-code/flutter/sample/my fake/sample`));
+
+		assert(showErrorMessage.calledOnce);
+	});
 });
