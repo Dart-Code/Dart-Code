@@ -34,7 +34,7 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	public async provideCodeLenses(document: TextDocument, token: CancellationToken): Promise<CodeLens[]> {
 		// This method has to be FAST because it affects layout of the document (adds extra lines) so
 		// we don't already have an outline, we won't wait for one. A new outline arriving will trigger a
-		// re-requesrt anyway.
+		// re-request anyway.
 		const outline = OpenFileTracker.getOutlineFor(document.uri);
 		if (!outline || !outline.children || !outline.children.length)
 			return;
