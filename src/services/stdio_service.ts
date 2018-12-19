@@ -151,6 +151,10 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	private handleResponse(evt: UnknownResponse) {
 		const handler = this.activeRequests[evt.id];
 		delete this.activeRequests[evt.id];
+		if (handler == null) {
+			logError(`Unable to handle response with ID ${evt.id} because its handler is not available`);
+			return;
+		}
 		const method: string = handler[2];
 		const error = evt.error;
 
