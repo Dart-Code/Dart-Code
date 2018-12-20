@@ -251,7 +251,7 @@ export function deferUntilLast(callback: (result?: "failed" | "passed") => Promi
 	deferredToLastItems.push(callback);
 }
 
-export async function setTestContent(content: string): Promise<boolean> {
+export async function setTestContent(content: string): Promise<void> {
 	const doc = currentDoc();
 	const all = new vs.Range(
 		doc.positionAt(0),
@@ -261,7 +261,12 @@ export async function setTestContent(content: string): Promise<boolean> {
 	// return editor.edit((eb) => eb.replace(all, content));
 	// once the fix for https://github.com/dart-lang/sdk/issues/32914
 	// has made it all the way through.
-	return currentEditor().edit((eb) => eb.replace(all, content));
+	await currentEditor().edit((eb) => eb.replace(all, content));
+
+	// HACK: Add a small delay to try and reduce the chance of a "Requested result
+	// might be inconsistent with previously returned results" error.
+	await delay(100);
+	await extApi.currentAnalysis;
 }
 
 export async function uncommentTestFile(): Promise<void> {
