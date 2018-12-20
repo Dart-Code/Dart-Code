@@ -1,7 +1,7 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
 import { IAmDisposable, LogSeverity, safeSpawn } from "../debug/utils";
-import { getLogHeader, logError } from "../utils/log";
+import { getLogHeader, logError, logInfo } from "../utils/log";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
@@ -10,7 +10,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	public process?: child_process.ChildProcess;
 	protected additionalPidsToTerminate: number[] = [];
 	private nextRequestID = 1;
-	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] } = {};
+	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] | "CANCELLED" } = {};
 	private messageBuffer: string[] = [];
 	private currentLogFile: string;
 	private logStream?: fs.WriteStream;
@@ -73,6 +73,10 @@ export abstract class StdIOService<T> implements IAmDisposable {
 				: JSON.stringify(req) + "\r\n";
 			this.sendMessage(json);
 		});
+	}
+
+	public cancelAllRequests() {
+		Object.keys(this.activeRequests).forEach((key) => this.activeRequests[key] = "CANCELLED");
 	}
 
 	protected sendMessage<T>(json: string) {
@@ -151,7 +155,11 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	private handleResponse(evt: UnknownResponse) {
 		const handler = this.activeRequests[evt.id];
 		delete this.activeRequests[evt.id];
-		if (handler == null) {
+
+		if (handler === "CANCELLED") {
+			logInfo(`Ignoring response to ${evt.id} because it was cancelled:\n\n${JSON.stringify(evt, undefined, 4)}`);
+			return;
+		} else if (!handler) {
 			logError(`Unable to handle response with ID ${evt.id} because its handler is not available`);
 			return;
 		}
