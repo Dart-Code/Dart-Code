@@ -4,34 +4,15 @@ import { tmpdir } from "os";
 import * as path from "path";
 import * as semver from "semver";
 import * as vs from "vscode";
-import { AnalyzerCapabilities } from "../src/analysis/analyzer";
 import { dartCodeExtensionIdentifier, flatMap, LogCategory, LogSeverity } from "../src/debug/utils";
-import { FlutterCapabilities } from "../src/flutter/capabilities";
-import { DaemonCapabilities } from "../src/flutter/flutter_daemon";
-import { DartReferenceProvider } from "../src/providers/dart_reference_provider";
-import { DartRenameProvider } from "../src/providers/dart_rename_provider";
-import { DebugConfigProvider } from "../src/providers/debug_config_provider";
+import { ExtensionApi } from "../src/extension";
 import { internalApiSymbol } from "../src/symbols";
-import { fsPath, isAnalyzable, ProjectType, Sdks, vsCodeVersionConstraint } from "../src/utils";
+import { fsPath, isAnalyzable, ProjectType, vsCodeVersionConstraint } from "../src/utils";
 import { log, logError, logTo, logWarn } from "../src/utils/log";
-import { TestResultsProvider } from "../src/views/test_view";
 import sinon = require("sinon");
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
-export let extApi: {
-	analyzerCapabilities: AnalyzerCapabilities,
-	currentAnalysis: () => Promise<void>,
-	daemonCapabilities: DaemonCapabilities,
-	flutterCapabilities: FlutterCapabilities,
-	debugProvider: DebugConfigProvider,
-	nextAnalysis: () => Promise<void>,
-	initialAnalysis: Promise<void>,
-	reanalyze: () => void,
-	referenceProvider: DartReferenceProvider,
-	renameProvider: DartRenameProvider,
-	sdks: Sdks,
-	testTreeProvider: TestResultsProvider,
-};
+export let extApi: ExtensionApi;
 export const threeMinutesInMilliseconds = 1000 * 60 * 3;
 
 if (!ext) {
@@ -123,6 +104,10 @@ export async function activate(file?: vs.Uri | null | undefined): Promise<void> 
 	// before we continue.
 	await delay(200);
 	await extApi.currentAnalysis();
+
+	log(`Cancelling any in-progress requests`);
+	extApi.cancelAllAnalysisRequests();
+
 	log(`Ready to start test`);
 }
 

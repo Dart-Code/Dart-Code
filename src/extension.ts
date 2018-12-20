@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { WorkspaceFolder } from "vscode";
 import { internalApiSymbol } from "../src/symbols";
-import { Analyzer } from "./analysis/analyzer";
+import { Analyzer, AnalyzerCapabilities } from "./analysis/analyzer";
 import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
 import { FileChangeHandler } from "./analysis/file_change_handler";
 import { OpenFileTracker } from "./analysis/open_file_tracker";
@@ -148,7 +148,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	});
 
 	const nextAnalysis = () =>
-		new Promise((resolve, reject) => {
+		new Promise<void>((resolve, reject) => {
 			const disposable = analyzer.registerForServerStatus((ss) => {
 				if (ss.analysis && !ss.analysis.isAnalyzing) {
 					resolve();
@@ -409,6 +409,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	return {
 		[internalApiSymbol]: {
 			analyzerCapabilities: analyzer.capabilities,
+			cancelAllAnalysisRequests: analyzer.cancelAllRequests,
 			currentAnalysis: () => analyzer.currentAnalysis,
 			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
 			debugProvider,
@@ -420,7 +421,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			renameProvider,
 			sdks,
 			testTreeProvider,
-		},
+		} as ExtensionApi,
 	};
 }
 
@@ -536,4 +537,20 @@ export async function deactivate(isRestart: boolean = false): Promise<void> {
 function setCommandVisiblity(enable: boolean, projectType: util.ProjectType) {
 	vs.commands.executeCommand("setContext", DART_PROJECT_LOADED, enable);
 	vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && projectType === util.ProjectType.Flutter);
+}
+
+export interface ExtensionApi {
+	analyzerCapabilities: AnalyzerCapabilities;
+	cancelAllAnalysisRequests: () => void;
+	currentAnalysis: () => Promise<void>;
+	daemonCapabilities: DaemonCapabilities;
+	flutterCapabilities: FlutterCapabilities;
+	debugProvider: DebugConfigProvider;
+	nextAnalysis: () => Promise<void>;
+	initialAnalysis: Promise<void>;
+	reanalyze: () => void;
+	referenceProvider: DartReferenceProvider;
+	renameProvider: DartRenameProvider;
+	sdks: util.Sdks;
+	testTreeProvider: TestResultsProvider;
 }
