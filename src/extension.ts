@@ -409,7 +409,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	return {
 		[internalApiSymbol]: {
 			analyzerCapabilities: analyzer.capabilities,
-			cancelAllAnalysisRequests: analyzer.cancelAllRequests,
+			cancelAllAnalysisRequests: () => analyzer.cancelAllRequests(),
 			currentAnalysis: () => analyzer.currentAnalysis,
 			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
 			debugProvider,
