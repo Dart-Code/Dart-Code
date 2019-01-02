@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "flutter_create_basic"
+		},
+		{
+			"path": "flutter_create_sample"
+		}
+	],
+	"settings": {
+		"files.insertFinalNewline": true
+	}
+}
