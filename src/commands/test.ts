@@ -2,6 +2,7 @@ import * as vs from "vscode";
 import { OpenFileTracker } from "../analysis/open_file_tracker";
 import { locateBestProjectRoot } from "../project";
 import { fsPath, projectSupportsPubRunTest } from "../utils";
+import { logInfo } from "../utils/log";
 import { TestOutlineInfo, TestOutlineVisitor } from "../utils/outline";
 
 export const CURSOR_IS_IN_TEST = "dart-code:cursorIsInTest";
@@ -36,6 +37,7 @@ export class TestCommands implements vs.Disposable {
 		const isValidTestLocation = !!(e.textEditor && e.selections && e.selections.length === 1 && this.testForCursor(e.textEditor));
 		vs.commands.executeCommand("setContext", CURSOR_IS_IN_TEST, isValidTestLocation);
 		cursorIsInTest = isValidTestLocation;
+		logInfo(`${e.textEditor.document.uri}: ${isValidTestLocation}`);
 	}
 
 	private testForCursor(editor: vs.TextEditor): TestOutlineInfo {
