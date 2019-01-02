@@ -59,7 +59,7 @@ function error(err: any) {
 
 function handleNewProjects(context: Context) {
 	// TODO: Allow this to create multiple, but only show one message (when all have completed).
-	getDartWorkspaceFolders().find((wf) => {
+	getDartWorkspaceFolders().forEach((wf) => {
 		const triggerFile = path.join(fsPath(wf.uri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
 		if (fs.existsSync(triggerFile)) {
 			let sampleID = fs.readFileSync(triggerFile).toString().trim();
@@ -69,8 +69,6 @@ function handleNewProjects(context: Context) {
 				if (success)
 					handleFlutterWelcome(wf, sampleID);
 			});
-			// Bail out of find so we only do this at most once.
-			return true;
 		}
 	});
 }
