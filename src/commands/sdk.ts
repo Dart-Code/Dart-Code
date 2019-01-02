@@ -171,6 +171,7 @@ export class SdkCommands {
 			if (sampleID) {
 				args.push("--sample");
 				args.push(sampleID);
+				args.push("--overwrite");
 			}
 			args.push(".");
 			return this.runFlutterInFolder(projectPath, args, projectName);
