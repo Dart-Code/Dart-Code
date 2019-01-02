@@ -6,15 +6,15 @@ import { getLogHeader, logError, logInfo } from "../utils/log";
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
 export abstract class StdIOService<T> implements IAmDisposable {
-	private disposables: IAmDisposable[] = [];
+	private readonly disposables: IAmDisposable[] = [];
 	public process?: child_process.ChildProcess;
-	protected additionalPidsToTerminate: number[] = [];
+	protected readonly additionalPidsToTerminate: number[] = [];
 	private nextRequestID = 1;
-	private activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] | "CANCELLED" } = {};
+	private readonly activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] | "CANCELLED" } = {};
 	private messageBuffer: string[] = [];
 	private currentLogFile: string;
 	private logStream?: fs.WriteStream;
-	private requestErrorSubscriptions: Array<(notification: any) => void> = [];
+	private readonly requestErrorSubscriptions: Array<(notification: any) => void> = [];
 	private processExited = false;
 
 	constructor(
