@@ -14,6 +14,7 @@ export function getExtensionLogPath() {
 }
 export const userSelectableLogCategories: { [key: string]: LogCategory } = {
 	"Analysis Server": LogCategory.Analyzer,
+	"Command Processes": LogCategory.CommandProcesses,
 	"Debugger (Observatory)": LogCategory.Observatory,
 	"Flutter Device Daemon": LogCategory.FlutterDaemon,
 	"Flutter Run": LogCategory.FlutterRun,

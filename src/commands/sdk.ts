@@ -6,7 +6,7 @@ import * as vs from "vscode";
 import { ProgressLocation, Uri, window } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { globalFlutterArgs, PromiseCompleter, safeSpawn } from "../debug/utils";
+import { globalFlutterArgs, LogCategory, LogSeverity, PromiseCompleter, safeSpawn } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { DartHoverProvider } from "../providers/dart_hover_provider";
@@ -14,6 +14,7 @@ import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
 import { flutterPath, pubPath, showFlutterActivationFailure } from "../sdk/utils";
 import * as util from "../utils";
 import { fsPath, ProjectType, Sdks } from "../utils";
+import { log } from "../utils/log";
 import * as channels from "./channels";
 
 const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
@@ -292,6 +293,7 @@ export class SdkCommands {
 				progress.report({ message: "running..." });
 				const proc = safeSpawn(folder, binPath, args);
 				channels.runProcessInChannel(proc, channel);
+				this.logProcess(proc);
 				return proc;
 			}, existingProcess);
 			this.runningCommands[commandId] = process;
@@ -299,6 +301,12 @@ export class SdkCommands {
 
 			return process.completed;
 		});
+	}
+
+	private logProcess(process: child_process.ChildProcess): void {
+		process.stdout.on("data", (data) => log(data.toString(), LogSeverity.Info, LogCategory.CommandProcesses));
+		process.stderr.on("data", (data) => log(data.toString(), LogSeverity.Info, LogCategory.CommandProcesses));
+		process.on("close", (code) => log(`exit code ${code}`, LogSeverity.Info, LogCategory.CommandProcesses));
 	}
 
 	private async createFlutterProject(): Promise<void> {
