@@ -1,5 +1,0 @@
-# We don't want any files created as part of this test to show up as needing committing, we only
-# want the trigger file that's already committed.
-*
-!.gitignore
-!dart_code_flutter_create.dart
