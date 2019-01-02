@@ -14,6 +14,7 @@ export const platformEol = isWin ? "\r\n" : "\n";
 export enum LogCategory {
 	General,
 	CI,
+	CommandProcesses,
 	Analyzer,
 	PubTest,
 	FlutterDaemon,
