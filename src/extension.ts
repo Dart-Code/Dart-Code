@@ -437,6 +437,8 @@ function buildLogHeaders(sdks: util.Sdks) {
 	addToLogHeader(() => `Multi-root?: ${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1}`);
 	addToLogHeader(() => `Dart SDK:\n    Loc: ${sdks.dart}\n    Ver: ${util.getSdkVersion(sdks.dart)}`);
 	addToLogHeader(() => `Flutter SDK:\n    Loc: ${sdks.flutter}\n    Ver: ${util.getSdkVersion(sdks.flutter)}`);
+	addToLogHeader(() => `HTTP_PROXY: ${process.env.HTTP_PROXY}`);
+	addToLogHeader(() => `NO_PROXY: ${process.env.NO_PROXY}`);
 }
 
 function recalculateAnalysisRoots() {
