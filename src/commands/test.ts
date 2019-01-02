@@ -34,6 +34,7 @@ export class TestCommands implements vs.Disposable {
 	}
 
 	private updateContext(e: vs.TextEditorSelectionChangeEvent): void {
+		logInfo(`Checking ${e.textEditor.document.uri}...`);
 		const isValidTestLocation = !!(e.textEditor && e.selections && e.selections.length === 1 && this.testForCursor(e.textEditor));
 		vs.commands.executeCommand("setContext", CURSOR_IS_IN_TEST, isValidTestLocation);
 		cursorIsInTest = isValidTestLocation;
@@ -43,14 +44,18 @@ export class TestCommands implements vs.Disposable {
 	private testForCursor(editor: vs.TextEditor): TestOutlineInfo {
 		const document = editor.document;
 		const outline = OpenFileTracker.getOutlineFor(document.uri);
-		if (!outline || !outline.children || !outline.children.length)
+		if (!outline || !outline.children || !outline.children.length) {
+			logInfo(`No outline for ${document.uri} so bailing`);
 			return;
+		}
 
 		// We should only show the Code Lens for projects we know can actually handle `pub run` (for ex. the
 		// SDK codebase cannot, and will therefore run all tests when you click them).
 		const projectRoot = locateBestProjectRoot(fsPath(document.uri));
-		if (!projectRoot || !projectSupportsPubRunTest(projectRoot))
+		if (!projectRoot || !projectSupportsPubRunTest(projectRoot)) {
+			logInfo(`Project doesn't support pub run test so bailing`);
 			return;
+		}
 
 		const visitor = new TestOutlineVisitor();
 		visitor.visit(outline);
