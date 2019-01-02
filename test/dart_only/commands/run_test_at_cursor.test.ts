@@ -2,10 +2,11 @@ import * as assert from "assert";
 import * as vs from "vscode";
 import { OpenFileTracker } from "../../../src/analysis/open_file_tracker";
 import { cursorIsInTest } from "../../../src/commands/test";
-import { activate, helloWorldTestMainFile, openFile, positionOf, waitForResult } from "../../helpers";
+import { activate, getPackages, helloWorldTestMainFile, openFile, positionOf, waitForResult } from "../../helpers";
 
 describe("run test at cursor", () => {
 
+	before("get packages", () => getPackages());
 	beforeEach("activate and wait for outline", async () => {
 		await activate(helloWorldTestMainFile);
 		await waitForResult(() => !!OpenFileTracker.getOutlineFor(helloWorldTestMainFile));
