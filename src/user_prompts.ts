@@ -58,7 +58,6 @@ function error(err: any) {
 }
 
 function handleNewProjects(context: Context) {
-	// TODO: Allow this to create multiple, but only show one message (when all have completed).
 	getDartWorkspaceFolders().forEach((wf) => {
 		const triggerFile = path.join(fsPath(wf.uri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
 		if (fs.existsSync(triggerFile)) {
