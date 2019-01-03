@@ -439,8 +439,8 @@ export class DartDebugSession extends DebugSession {
 		try {
 			const result = await this.threadManager.setBreakpoints(uri, breakpoints);
 			const bpResponse = [];
-			for (const verified of result) {
-				bpResponse.push({ verified });
+			for (const bpRes of result) {
+				bpResponse.push({ verified: !!bpRes });
 			}
 
 			response.body = { breakpoints: bpResponse };
