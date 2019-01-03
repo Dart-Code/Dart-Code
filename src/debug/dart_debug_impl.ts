@@ -432,7 +432,9 @@ export class DartDebugSession extends DebugSession {
 			breakpoints = [];
 
 		// Get the correct format for the path depending on whether it's a package.
-		const uri = this.packageMap.convertFileToPackageUri(source.path) || formatPathForVm(source.path);
+		const uri = this.packageMap
+			? this.packageMap.convertFileToPackageUri(source.path) || formatPathForVm(source.path)
+			: formatPathForVm(source.path);
 
 		this.threadManager.setBreakpoints(uri, breakpoints).then((result: boolean[]) => {
 			const bpResponse = [];
