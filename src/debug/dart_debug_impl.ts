@@ -1580,7 +1580,7 @@ class ThreadManager {
 	public async sendAllBreakpointsToThread(thread: ThreadInfo): Promise<void> {
 		const promises = [];
 		for (const uri of Object.keys(this.bps)) {
-			promises.push(this.sendUriBreakpointsToThread(thread, uri));
+			promises.push(this.sendBreakpointsForUriToThread(thread, uri));
 		}
 		await Promise.all(promises);
 	}
@@ -1593,14 +1593,14 @@ class ThreadManager {
 			this.bps[uri] = breakpoints;
 	}
 
-	public async sendUriBreakpointsToThread(thread: ThreadInfo, uri: string): Promise<void> {
+	public async sendBreakpointsForUriToThread(thread: ThreadInfo, uri: string): Promise<void> {
 		const breakpoints = this.bps[uri];
 		await thread.setBreakpoints(uri, breakpoints);
 	}
 
 	public async sendUriBreakpointsToAllThreads(uri: string): Promise<void> {
 		const runnableThreads = this.threads.filter((t) => t.runnable);
-		await Promise.all(runnableThreads.map((thread) => this.sendUriBreakpointsToThread(thread, uri)));
+		await Promise.all(runnableThreads.map((thread) => this.sendBreakpointsForUriToThread(thread, uri)));
 	}
 
 	public nextDataId: number = 1;
