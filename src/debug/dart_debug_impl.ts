@@ -480,7 +480,7 @@ export class DartDebugSession extends DebugSession {
 			const location = bp.location as VMUnresolvedSourceLocation;
 			line = location.line;
 			column = location.column;
-			// UnresolveLocations may have a scriptUri instead of a script (as aread above).
+			// UnresolveLocations may also have a scriptUri on them instead of the .script read above.
 			scriptUri = scriptUri || location.scriptUri;
 		} else {
 			logError({ message: `${bp.breakpointNumber} Unknown breakpoint location type: ${bp.location.type}` }, LogCategory.Observatory);
