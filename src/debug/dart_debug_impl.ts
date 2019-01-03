@@ -445,23 +445,27 @@ export class DartDebugSession extends DebugSession {
 		};
 		this.sendResponse(response);
 
-		// Only try to process breakpoints for .dart files.
-		if (source && source.path && path.extname(source.path).toLowerCase() === ".dart") {
-			// Tell VS Code to remove all of the breakpoints because we'll re-create them
-			// with IDs later (we can't get IDs now if the VM has no threads, because
-			// we can't send the breakpoints request).
-			breakpoints.forEach((breakpoint) => {
-				this.sendEvent(new BreakpointEvent("removed", {
-					column: breakpoint.column,
-					line: breakpoint.line,
-					source: new Source(args.source.name, args.source.path),
-				} as DebugProtocol.Breakpoint));
-				logInfo(`Removing Code BP line: ${breakpoint.line} col: ${breakpoint.column} in ${source.path}`);
-			});
+		try {
+			// Only try to process breakpoints for .dart files.
+			if (source && source.path && path.extname(source.path).toLowerCase() === ".dart") {
+				// Tell VS Code to remove all of the breakpoints because we'll re-create them
+				// with IDs later (we can't get IDs now if the VM has no threads, because
+				// we can't send the breakpoints request).
+				breakpoints.forEach((breakpoint) => {
+					this.sendEvent(new BreakpointEvent("removed", {
+						column: breakpoint.column,
+						line: breakpoint.line,
+						source: new Source(args.source.name, args.source.path),
+					} as DebugProtocol.Breakpoint));
+					logInfo(`Removing Code BP line: ${breakpoint.line} col: ${breakpoint.column} in ${source.path}`);
+				});
 
-			// Now kick off the requests to send our breakpoints to the VM.
-			this.threadManager.storeBreakpoints(uri, breakpoints);
-			await this.threadManager.sendUriBreakpointsToAllThreads(uri);
+				// Now kick off the requests to send our breakpoints to the VM.
+				this.threadManager.storeBreakpoints(uri, breakpoints);
+				await this.threadManager.sendUriBreakpointsToAllThreads(uri);
+			}
+		} catch (error) {
+			this.log(`${error}`, LogSeverity.Error);
 		}
 	}
 
