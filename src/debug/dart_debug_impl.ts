@@ -1088,10 +1088,15 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	private async sendBreakPointToCode(action: string, isolate: VMIsolateRef, breakpoint: VMBreakpoint): Promise<void> {
+	private async sendBreakPointToCode(action: "new" | "changed" | "removed", isolate: VMIsolateRef, breakpoint: BreakpointWithColumnFlag): Promise<void> {
 		const bp = await this.vmBpToCodeBp(isolate, breakpoint);
 		if (bp) {
 			logInfo(`Sending ${action} BP to Code (ID: ${bp.id}, resolved: ${bp.verified}) line: ${bp.line} col: ${bp.column} in ${bp.source.path}`, LogCategory.Observatory);
+			// If we're sending a breakpoint as new to VS Code, we need to ensure we only include the column if the user
+			// originally asked for it, otherwise we'll convert it from a line-BP to a column-BP. This happens only because
+			// of how we delete them all and re-create them (in order to provide out own IDs and support resolution).
+			if (action === "new" && !breakpoint.userDidSupplyColumn && bp.column)
+				bp.column = undefined;
 			this.sendEvent(new BreakpointEvent(action, bp));
 		} else {
 			logError(`Skipped sending ${JSON.stringify(breakpoint)} to Code as it could not be mapped`, LogCategory.Observatory);
@@ -1708,7 +1713,10 @@ class ThreadInfo {
 			breakpoints.map(async (bp) => {
 				logInfo(`Sending BP to VM for thread ${this.ref.id} ${uri} ${bp.line}:${bp.column}`, LogCategory.Observatory);
 				const result = await this.manager.debugSession.observatory.addBreakpointWithScriptUri(this.ref.id, uri, bp.line, bp.column);
-				const vmBp: VMBreakpoint = result.result as VMBreakpoint;
+				const vmBp: BreakpointWithColumnFlag = result.result as BreakpointWithColumnFlag;
+				// Store whether we requested a column breakpoint, so we can provide the same to VS Code (so it can match them up).
+				if (bp.column)
+					vmBp.userDidSupplyColumn = true;
 				this.vmBps[uri].push(vmBp);
 				this.breakpoints[vmBp.id] = bp;
 				return vmBp;
@@ -1804,4 +1812,9 @@ interface InstanceWithEvaluateName extends VMInstanceRef {
 	// Null means we use the name
 	// Otherwise we use the string
 	evaluateName: string | null | undefined;
+}
+
+interface BreakpointWithColumnFlag extends VMBreakpoint {
+	// truthy means the user supplied the column.
+	userDidSupplyColumn?: boolean;
 }
