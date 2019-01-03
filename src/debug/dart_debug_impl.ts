@@ -1022,12 +1022,13 @@ export class DartDebugSession extends DebugSession {
 				await this.handleInspectEvent(event);
 			}
 		} catch (e) {
-			logError(e);
+			logError(e, LogCategory.Observatory);
 		}
 	}
 
 	private async handlePauseEvent(event: VMEvent) {
 		const kind = event.kind;
+		const thread = event.isolate ? this.threadManager.getThreadInfoFromRef(event.isolate) : undefined;
 
 		// For PausePostRequest we need to re-send all breakpoints; this happens after a flutter restart
 		if (kind === "PausePostRequest") {
@@ -1041,7 +1042,6 @@ export class DartDebugSession extends DebugSession {
 			}
 		} else if (kind === "PauseStart") {
 			// "PauseStart" should auto-resume after breakpoints are set if we launched the process.
-			const thread = this.threadManager.getThreadInfoFromRef(event.isolate);
 			if (this.childProcess)
 				thread.receivedPauseStart();
 			else {
@@ -1051,8 +1051,6 @@ export class DartDebugSession extends DebugSession {
 				await thread.resume("Into");
 			}
 		} else {
-			const thread = this.threadManager.getThreadInfoFromRef(event.isolate);
-
 			// PauseStart, PauseExit, PauseBreakpoint, PauseInterrupted, PauseException
 			let reason = "pause";
 			let exceptionText = null;
@@ -1512,15 +1510,15 @@ class ThreadManager {
 	}
 
 	// Just resends existing breakpoints
-	public resetBreakpoints() {
+	public async resetBreakpoints(): Promise<void> {
 		const promises = [];
 		for (const uri of Object.keys(this.bps)) {
 			promises.push(this.setBreakpoints(uri, this.bps[uri]));
 		}
-		return Promise.all(promises);
+		await Promise.all(promises);
 	}
 
-	public setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {
+	public setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<any[]> {
 		// Remember these bps for when new threads start.
 		if (breakpoints.length === 0)
 			delete this.bps[uri];
@@ -1639,7 +1637,7 @@ class ThreadInfo {
 		});
 	}
 
-	public async setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {
+	public async setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<VMBreakpoint[]> {
 		// Remove all current bps.
 		await this.removeBreakpointsAtUri(uri);
 		this.vmBps[uri] = [];
@@ -1649,7 +1647,7 @@ class ThreadInfo {
 			const vmBp: VMBreakpoint = (result.result as VMBreakpoint);
 			this.vmBps[uri].push(vmBp);
 			this.breakpoints[vmBp.id] = bp;
-			return true;
+			return vmBp;
 		}));
 	}
 
