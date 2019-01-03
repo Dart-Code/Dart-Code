@@ -1639,33 +1639,18 @@ class ThreadInfo {
 		});
 	}
 
-	public setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {
+	public async setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<boolean[]> {
 		// Remove all current bps.
-		const removeBreakpointPromises = this.removeBreakpointsAtUri(uri);
-
+		await this.removeBreakpointsAtUri(uri);
 		this.vmBps[uri] = [];
 
-		return removeBreakpointPromises.then(() => {
-			// Set new ones.
-			const promises = [];
-
-			for (const bp of breakpoints) {
-				const promise = this.manager.debugSession.observatory.addBreakpointWithScriptUri(
-					this.ref.id, uri, bp.line, bp.column,
-				).then((result: DebuggerResult) => {
-					const vmBp: VMBreakpoint = result.result as VMBreakpoint;
-					this.vmBps[uri].push(vmBp);
-					this.breakpoints[vmBp.id] = bp;
-					return true;
-				}).catch((error) => {
-					return false;
-				});
-
-				promises.push(promise);
-			}
-
-			return Promise.all(promises);
-		});
+		return Promise.all(breakpoints.map(async (bp) => {
+			const result = await this.manager.debugSession.observatory.addBreakpointWithScriptUri(this.ref.id, uri, bp.line, bp.column);
+			const vmBp: VMBreakpoint = (result.result as VMBreakpoint);
+			this.vmBps[uri].push(vmBp);
+			this.breakpoints[vmBp.id] = bp;
+			return true;
+		}));
 	}
 
 	private gotPauseStart = false;
