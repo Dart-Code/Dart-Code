@@ -422,10 +422,10 @@ export class DartDebugSession extends DebugSession {
 		super.disconnectRequest(response, args);
 	}
 
-	protected setBreakPointsRequest(
+	protected async setBreakPointsRequest(
 		response: DebugProtocol.SetBreakpointsResponse,
 		args: DebugProtocol.SetBreakpointsArguments,
-	): void {
+	): Promise<void> {
 		const source: DebugProtocol.Source = args.source;
 		let breakpoints: DebugProtocol.SourceBreakpoint[] = args.breakpoints;
 		if (!breakpoints)
@@ -436,7 +436,8 @@ export class DartDebugSession extends DebugSession {
 			? this.packageMap.convertFileToPackageUri(source.path) || formatPathForVm(source.path)
 			: formatPathForVm(source.path);
 
-		this.threadManager.setBreakpoints(uri, breakpoints).then((result: boolean[]) => {
+		try {
+			const result = await this.threadManager.setBreakpoints(uri, breakpoints);
 			const bpResponse = [];
 			for (const verified of result) {
 				bpResponse.push({ verified });
@@ -444,7 +445,9 @@ export class DartDebugSession extends DebugSession {
 
 			response.body = { breakpoints: bpResponse };
 			this.sendResponse(response);
-		}).catch((error) => this.errorResponse(response, `${error}`));
+		} catch (error) {
+			this.errorResponse(response, `${error}`);
+		}
 	}
 
 	protected setExceptionBreakPointsRequest(
