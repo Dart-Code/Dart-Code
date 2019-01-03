@@ -1642,13 +1642,15 @@ class ThreadInfo {
 		await this.removeBreakpointsAtUri(uri);
 		this.vmBps[uri] = [];
 
-		return Promise.all(breakpoints.map(async (bp) => {
-			const result = await this.manager.debugSession.observatory.addBreakpointWithScriptUri(this.ref.id, uri, bp.line, bp.column);
-			const vmBp: VMBreakpoint = (result.result as VMBreakpoint);
-			this.vmBps[uri].push(vmBp);
-			this.breakpoints[vmBp.id] = bp;
-			return vmBp;
-		}));
+		return Promise.all(
+			breakpoints.map(async (bp) => {
+				const result = await this.manager.debugSession.observatory.addBreakpointWithScriptUri(this.ref.id, uri, bp.line, bp.column);
+				const vmBp: VMBreakpoint = (result.result as VMBreakpoint);
+				this.vmBps[uri].push(vmBp);
+				this.breakpoints[vmBp.id] = bp;
+				return vmBp;
+			}),
+		);
 	}
 
 	private gotPauseStart = false;
