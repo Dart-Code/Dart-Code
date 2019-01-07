@@ -7,6 +7,8 @@ import { FlutterRun, RunMode } from "./flutter_run";
 import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments, isWin, LogCategory, LogMessage, LogSeverity } from "./utils";
 
 const objectGroupName = "my-group";
+const flutterExceptionStartBannerPrefix = "══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═";
+const flutterExceptionEndBannerPrefix = "══════════════════════════════════════════";
 
 export class FlutterDebugSession extends DartDebugSession {
 	private flutter?: FlutterRun;
@@ -16,6 +18,9 @@ export class FlutterDebugSession extends DartDebugSession {
 	private observatoryUri?: string;
 	private noDebug = false;
 	private isReloadInProgress = false;
+
+	// Allow flipping into stderr mode for red exceptions when we see the start/end of a Flutter exception dump.
+	private outputCategory: "stdout" | "stderr" = "stdout";
 
 	constructor() {
 		super();
@@ -39,6 +44,7 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: FlutterLaunchRequestArguments): void {
 		this.flutterTrackWidgetCreation = args && args.flutterTrackWidgetCreation;
+		this.outputCategory = "stdout";
 		return super.launchRequest(response, args);
 	}
 
@@ -116,7 +122,17 @@ export class FlutterDebugSession extends DartDebugSession {
 			// Send a dummy progress message when we get the waiting message for an Attach.
 			if (msg && msg.indexOf("Waiting for a connection from Flutter on") !== -1 && !this.currentRunningAppId && !this.appHasStarted)
 				this.sendEvent(new Event("dart.progress", { message: msg, finished: false }));
-			this.logToUser(msg, "stdout");
+			if (msg.indexOf(flutterExceptionStartBannerPrefix) !== -1) {
+				// Change before logging.
+				this.outputCategory = "stderr";
+				this.logToUser(msg, this.outputCategory);
+			} else if (msg.indexOf(flutterExceptionEndBannerPrefix) !== -1) {
+				// Log before changing back.
+				this.logToUser(msg, this.outputCategory);
+				this.outputCategory = "stdout";
+			} else {
+				this.logToUser(msg, this.outputCategory);
+			}
 		});
 
 		// Set up subscriptions.
