@@ -562,7 +562,6 @@ export class DartDebugSession extends DebugSession {
 				}
 
 				const uri = location.script.uri;
-				const shortName = this.convertVMUriToUserName(uri);
 				let sourcePath: string | undefined = this.convertVMUriToSourcePath(uri);
 				let canShowSource = fs.existsSync(sourcePath);
 
@@ -574,6 +573,7 @@ export class DartDebugSession extends DebugSession {
 					canShowSource = true;
 				}
 
+				const shortName = this.formatUriForShortDisplay(uri);
 				const stackFrame: DebugProtocol.StackFrame = new StackFrame(
 					frameId,
 					frameName,
@@ -1264,14 +1264,21 @@ export class DartDebugSession extends DebugSession {
 		this.sendResponse(response);
 	}
 
-	private convertVMUriToUserName(uri: string): string {
+	private formatUriForShortDisplay(uri: string): string {
 		if (uri.startsWith("file:")) {
 			uri = uriToFilePath(uri);
 			if (this.cwd)
 				uri = path.relative(this.cwd, uri);
 		}
 
-		return uri;
+		// Split on the separators and return only the first and last two parts.
+		const sep = uri.indexOf("/") === -1 && uri.indexOf("\\") !== -1 ? "\\" : "/";
+		const parts = uri.split(sep);
+		if (parts.length > 3) {
+			return [parts[0], "…", parts[parts.length - 2], parts[parts.length - 1]].join(sep);
+		} else {
+			return uri;
+		}
 	}
 
 	protected convertVMUriToSourcePath(uri: string, returnWindowsPath?: boolean): string {
@@ -1421,7 +1428,8 @@ export class DartDebugSession extends DebugSession {
 
 			const sourcePath: string | undefined = this.convertVMUriToSourcePath(sourceUri);
 			const canShowSource = sourcePath && sourcePath !== sourceUri && fs.existsSync(sourcePath);
-			const source = canShowSource ? new Source(sourceUri, sourcePath, null, null, null) : undefined;
+			const shortName = this.formatUriForShortDisplay(sourceUri);
+			const source = canShowSource ? new Source(shortName, sourcePath, null, null, null) : undefined;
 
 			if (source) {
 				output.body.source = source;
