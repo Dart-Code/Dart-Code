@@ -77,7 +77,7 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	env.DART_PATH_OVERRIDE = sdkPaths;
 	env.CODE_VERSION = codeVersion;
 	env.DART_CODE_IS_TEST_RUN = true;
-	//env.MOCHA_FORBID_ONLY = true;
+	env.MOCHA_FORBID_ONLY = false;
 	if (path.isAbsolute(workspaceFolder)) {
 		env.CODE_TESTS_WORKSPACE = workspaceFolder;
 	} else {
