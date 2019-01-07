@@ -504,7 +504,6 @@ describe("dart cli debugger", () => {
 		ensureVariable(classInstance, "danny.kind", "kind", `"Person"`);
 		ensureVariable(classInstance, "danny.name", "name", `"Danny"`);
 		ensureVariable(classInstance, undefined, "throws", { starts: "Unhandled exception:\nOops!" });
-
 	});
 
 	it("watch expressions provide same info as locals", async () => {

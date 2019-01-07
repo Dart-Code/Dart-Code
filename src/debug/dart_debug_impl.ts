@@ -1152,10 +1152,10 @@ export class DartDebugSession extends DebugSession {
 			if (result.result.type !== "@Error") {
 				return result.result as VMInstanceRef;
 			} else {
-				this.logToUser(`Debugger failed to evaluate expression \`${expression}\`\n`);
+				this.logToUser(`Debugger failed to evaluate expression \`${expression}\``);
 			}
 		} catch {
-			this.logToUser(`Debugger failed to evaluate expression \`${expression}\`\n`);
+			this.logToUser(`Debugger failed to evaluate expression \`${expression}\``);
 		}
 	}
 
@@ -1413,6 +1413,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected logToUser(message: string, category?: string) {
+		message = message.trimRight();
 		// If we get a multi-line message that looks like it contains an error/stack trace, then process each
 		// line individually, so we can attach location metadata to individual lines.
 		if (message.indexOf("\n") !== -1 && message.indexOf("Unhandled exception") !== -1) {
