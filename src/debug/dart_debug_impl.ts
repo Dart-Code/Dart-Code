@@ -651,8 +651,12 @@ export class DartDebugSession extends DebugSession {
 			const frame: VMFrame = data.data as VMFrame;
 			const variables: DebugProtocol.Variable[] = [];
 			if (frame.vars) {
-				for (const variable of frame.vars)
+				for (const variable of frame.vars) {
+					// Skip variables that don't evaluate nicely.
+					if (variable.value && variable.value.type === "@TypeArguments")
+						continue;
 					variables.push(await this.instanceRefToVariable(thread, true, variable.name, variable.name, variable.value, frame.vars.length <= maxValuesToCallToString));
+				}
 			}
 			response.body = { variables };
 			this.sendResponse(response);
