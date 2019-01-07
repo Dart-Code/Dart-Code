@@ -4,7 +4,7 @@ import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { config } from "../config";
-import { getLogHeader, logError } from "../utils/log";
+import { getLogHeader, logError, logInfo } from "../utils/log";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
 import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, flatMap, formatPathForVm, LogCategory, LogMessage, LogSeverity, PromiseCompleter, safeSpawn, throttle, uniq, uriToFilePath } from "./utils";
@@ -1426,7 +1426,10 @@ export class DartDebugSession extends DebugSession {
 		// If the output line looks like a stack frame with users code, attempt to link it up to make
 		// it clickable.
 		const match = message && stackFrameWithUriPattern.exec(message);
+
+		logInfo(`Testing: ${message}`, LogCategory.CI);
 		if (match) {
+			logInfo("DID MATCH!!!", LogCategory.CI);
 			// TODO: Handle dart: uris (using source references)?
 			const prefix = match[1];
 			const functionName = match[2];
@@ -1435,6 +1438,7 @@ export class DartDebugSession extends DebugSession {
 			const col = parseInt(match[5], 10);
 
 			const sourcePath: string | undefined = this.convertVMUriToSourcePath(sourceUri);
+			logInfo(`sourcePath: ${sourcePath}`, LogCategory.CI);
 			const canShowSource = sourcePath && sourcePath !== sourceUri && fs.existsSync(sourcePath);
 			const shortName = this.formatUriForShortDisplay(sourceUri);
 			const source = canShowSource ? new Source(shortName, sourcePath, null, null, null) : undefined;

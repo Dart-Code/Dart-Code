@@ -372,7 +372,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	});
 
-	it("moves known files from call stacks to metadata", async () => {
+	it.only("moves known files from call stacks to metadata", async () => {
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
 		await Promise.all([
