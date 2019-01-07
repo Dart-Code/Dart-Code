@@ -13,6 +13,7 @@ const maxValuesToCallToString = 15;
 // Prefix that appears at the start of stack frame names that are unoptimized
 // which we'd prefer not to show to the user.
 const unoptimizedPrefix = "[Unoptimized] ";
+const stackFrameWithUriPattern = new RegExp(`^(flutter: #\\d+)(.*)\\(((?:package|dart):.*\\.dart):(\\d+):(\\d+)\\)$`);
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -1405,7 +1406,33 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected logToUser(message: string, category?: string) {
-		this.sendEvent(new OutputEvent(`${message}\n`, category));
+		const output = new OutputEvent(`${message}\n`, category) as OutputEvent & DebugProtocol.OutputEvent;
+
+		// If the output line looks like a stack frame with users code, attempt to link it up to make
+		// it clickable.
+		const match = message && stackFrameWithUriPattern.exec(message);
+		if (match) {
+			// TODO: Handle dart: uris (using source references)?
+			const prefix = match[1];
+			const functionName = match[2];
+			const sourceUri = match[3];
+			const line = parseInt(match[4], 10);
+			const col = parseInt(match[5], 10);
+
+			const sourcePath: string | undefined = this.convertVMUriToSourcePath(sourceUri);
+			const canShowSource = sourcePath && sourcePath !== sourceUri && fs.existsSync(sourcePath);
+			const source = canShowSource ? new Source(sourceUri, sourcePath, null, null, null) : undefined;
+
+			if (source) {
+				output.body.source = source;
+				output.body.line = line;
+				output.body.column = col;
+				// Replace the output to only the text part to avoid the duplicated uri.
+				output.body.output = `${prefix}${functionName}\n`;
+			}
+		}
+
+		this.sendEvent(output);
 	}
 }
 
