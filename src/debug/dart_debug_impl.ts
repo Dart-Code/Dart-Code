@@ -13,7 +13,7 @@ const maxValuesToCallToString = 15;
 // Prefix that appears at the start of stack frame names that are unoptimized
 // which we'd prefer not to show to the user.
 const unoptimizedPrefix = "[Unoptimized] ";
-const stackFrameWithUriPattern = new RegExp(`^(flutter: #\\d+)(.*)\\(((?:package|dart):.*\\.dart):(\\d+):(\\d+)\\)$`);
+const stackFrameWithUriPattern = new RegExp(`^((?:flutter: )?#\\d+)(.*)\\(((?:package|dart):.*\\.dart):(\\d+):(\\d+)\\)$`);
 
 // TODO: supportsSetVariable
 // TODO: class variables?
