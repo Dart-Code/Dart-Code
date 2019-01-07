@@ -4,6 +4,7 @@ import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { config } from "../config";
+import { white } from "../utils/colors";
 import { getLogHeader, logError } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
@@ -1448,13 +1449,21 @@ export class DartDebugSession extends DebugSession {
 			const shortName = this.formatUriForShortDisplay(sourceUri);
 			const source = canShowSource ? new Source(shortName, sourcePath, null, null, null) : undefined;
 
+			let text = `${functionName}(${sourceUri}:${line}:${col})`;
 			if (source) {
 				output.body.source = source;
 				output.body.line = line;
 				output.body.column = col;
 				// Replace the output to only the text part to avoid the duplicated uri.
-				output.body.output = `${prefix}${functionName}\n`;
+				text = functionName;
 			}
+
+			// Colour based on whether it's framework code or not.
+			const isFramework = this.isSdkLibrary(sourceUri) || (this.isExternalLibrary(sourceUri) && sourceUri.startsWith("package:flutter/"));
+			// In both dark and light themes, white() is more subtle than default text. VS Code maps black/white
+			// to ensure it's always visible regardless of theme (eg. white-on-white is still visible).
+			const colouredText = isFramework ? white(text) : text;
+			output.body.output = `${prefix}${colouredText}\n`;
 		}
 
 		this.sendEvent(output);
