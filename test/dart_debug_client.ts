@@ -122,14 +122,14 @@ export class DartDebugClient extends DebugClient {
 		return result.body;
 	}
 
-	public assertOutputContains(category: string, text: string) {
+	public assertOutputContains(category: string, text: string): Promise<DebugProtocol.OutputEvent> {
 		let output = "";
 		return withTimeout(
 			new Promise((resolve, reject) => this.on("output", (event: DebugProtocol.OutputEvent) => {
 				if (event.body.category === category) {
 					output += event.body.output;
 					if (output.indexOf(text) !== -1)
-						resolve();
+						resolve(event);
 				}
 			})),
 			() => `Didn't find text "${text}" in ${category}\nGot: ${output}`,
