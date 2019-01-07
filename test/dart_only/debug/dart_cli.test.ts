@@ -360,7 +360,7 @@ describe("dart cli debugger", () => {
 					: dc.waitForEvent("terminated");
 			const errorOutputEvent: Promise<any> =
 				expectedError
-					? dc.assertOutput("stderr", expectedError)
+					? dc.assertOutput("console", expectedError)
 					: Promise.resolve();
 			await Promise.all([
 				dc.waitForEvent("initialized").then((event) => {
