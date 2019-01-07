@@ -1413,6 +1413,13 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected logToUser(message: string, category?: string) {
+		// If we get a multi-line message that looks like it contains an error/stack trace, then process each
+		// line individually, so we can attach location metadata to individual lines.
+		if (message.indexOf("\n") !== -1 && message.indexOf("Unhandled exception") !== -1) {
+			message.split("\n").forEach((line) => this.logToUser(line, category));
+			return;
+		}
+
 		const output = new OutputEvent(`${message}\n`, category) as OutputEvent & DebugProtocol.OutputEvent;
 
 		// If the output line looks like a stack frame with users code, attempt to link it up to make
