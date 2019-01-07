@@ -378,4 +378,24 @@ describe("flutter run debugger (launch)", () => {
 			watchPromise("writes_failure_output->launch", dc.launch(config)),
 		]);
 	});
+
+	it("moves known files from call stacks to metadata", async () => {
+		await openFile(flutterHelloWorldBrokenFile);
+		const config = await startDebugger(flutterHelloWorldBrokenFile);
+		await Promise.all([
+			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
+			watchPromise(
+				"writes_failure_output->assertOutputContains",
+				dc.assertOutputContains("stdout", "#0      MyBrokenHomePage.build")
+					.then((event) => {
+						assert.equal(event.body.output.indexOf("package:hello_world/broken.dart"), -1);
+						assert.equal(event.body.source.name, "package:hello_world/broken.dart");
+						assert.equal(event.body.source.path, fsPath(flutterHelloWorldBrokenFile));
+						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
+						assert.equal(event.body.column, 5);
+					}),
+			),
+			watchPromise("writes_failure_output->launch", dc.launch(config)),
+		]);
+	});
 });
