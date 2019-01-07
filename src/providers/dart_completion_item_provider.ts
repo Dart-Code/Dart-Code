@@ -52,7 +52,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				// Only trigger on spaces in arg lists, not on the space between parens and braces
 				// of a function definition (#1256).
 				case " ":
-					return line.endsWith(",");
+					return line.endsWith(",") || line.endsWith(":");
 				// Don't trigger for colons if we're in a case statement
 				case ":":
 					return !line.startsWith("case");
