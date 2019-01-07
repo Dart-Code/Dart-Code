@@ -5,7 +5,7 @@ import { BreakpointEvent, DebugSession, Event, InitializedEvent, OutputEvent, Sc
 import { DebugProtocol } from "vscode-debugprotocol";
 import { config } from "../config";
 import { getLogHeader, logError, logInfo } from "../utils/log";
-import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef, VMUnresolvedSourceLocation } from "./dart_debug_protocol";
+import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMBreakpoint, VMClass, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMResponse, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef, VMUnresolvedSourceLocation } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
 import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, flatMap, formatPathForVm, LogCategory, LogMessage, LogSeverity, PromiseCompleter, safeSpawn, throttle, uniq, uriToFilePath } from "./utils";
 
@@ -422,6 +422,7 @@ export class DartDebugSession extends DebugSession {
 		super.disconnectRequest(response, args);
 	}
 
+	private id = 1;
 	protected async setBreakPointsRequest(
 		response: DebugProtocol.SetBreakpointsResponse,
 		args: DebugProtocol.SetBreakpointsArguments,
@@ -430,6 +431,39 @@ export class DartDebugSession extends DebugSession {
 		let breakpoints: DebugProtocol.SourceBreakpoint[] = args.breakpoints;
 		if (!breakpoints)
 			breakpoints = [];
+
+		// Send back all unverified breakpoints.
+		response.body = {
+			breakpoints: breakpoints.map((_) => ({
+				verified: false,
+			} as DebugProtocol.Breakpoint)),
+		};
+		this.sendResponse(response);
+
+		// Now remove them all.
+		breakpoints.forEach((breakpoint) => {
+			this.sendEvent(new BreakpointEvent("removed", {
+				column: breakpoint.column,
+				line: breakpoint.line,
+				source: new Source(args.source.name, args.source.path),
+			} as DebugProtocol.Breakpoint));
+		});
+
+		// Now re-add them all.
+		breakpoints.forEach((breakpoint) => {
+			this.sendEvent(new BreakpointEvent("new", {
+				column: breakpoint.column,
+				id: this.id++,
+				line: breakpoint.line,
+				source: new Source(args.source.name, args.source.path),
+				verified: true,
+			} as DebugProtocol.Breakpoint));
+		});
+
+
+
+
+		return;
 
 		// Get the correct format for the path depending on whether it's a package.
 		const uri = this.packageMap
@@ -1097,6 +1131,7 @@ export class DartDebugSession extends DebugSession {
 			// of how we delete them all and re-create them (in order to provide out own IDs and support resolution).
 			if (action === "new" && !breakpoint.userDidSupplyColumn && bp.column)
 				bp.column = undefined;
+			logInfo(JSON.stringify(bp, undefined, 4));
 			this.sendEvent(new BreakpointEvent(action, bp));
 		} else {
 			logError(`Skipped sending ${JSON.stringify(breakpoint)} to Code as it could not be mapped`, LogCategory.Observatory);
