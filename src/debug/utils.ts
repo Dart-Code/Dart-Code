@@ -55,6 +55,7 @@ export function safeSpawn(workingDirectory: string | undefined, binPath: string,
 	return child_process.spawn(`"${binPath}"`, args.map((a) => `"${a}"`), { cwd: workingDirectory, env: customEnv, shell: true });
 }
 
+// TODO: Remove this, or document why we need it as well as fsPath().
 export function uriToFilePath(uri: string, returnWindowsPath: boolean = isWin): string {
 	let filePath = uri;
 	if (uri.startsWith("file://"))
