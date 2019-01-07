@@ -2,9 +2,7 @@ import * as assert from "assert";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../src/utils";
-import { logError } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
 import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, watchPromise } from "../../helpers";
@@ -48,11 +46,6 @@ describe("flutter run debugger (launch)", () => {
 			deviceId: "flutter-tester",
 		});
 		await watchPromise("startDebugger->start", dc.start(config.debugServer));
-		// Make sure any stdErr is logged to console + log file for debugging.
-		dc.on("output", (event: DebugProtocol.OutputEvent) => {
-			if (event.body.category === "stderr")
-				logError(event.body.output);
-		});
 		return config;
 	}
 
