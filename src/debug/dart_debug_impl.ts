@@ -73,7 +73,7 @@ export class DartDebugSession extends DebugSession {
 
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: DartLaunchRequestArguments): void {
 		if (!args || !args.dartPath || (this.requiresProgram && !args.program)) {
-			this.sendEvent(new OutputEvent("Unable to restart debugging. Please try ending the debug session and starting again."));
+			this.logToUser("Unable to restart debugging. Please try ending the debug session and starting again.");
 			this.sendEvent(new TerminatedEvent());
 			return;
 		}
@@ -106,22 +106,22 @@ export class DartDebugSession extends DebugSession {
 			if (match) {
 				this.initObservatory(this.websocketUriForObservatoryUri(match[1]));
 			} else if (this.sendStdOutToConsole)
-				this.sendEvent(new OutputEvent(data.toString(), "stdout"));
+				this.logToUser(data.toString(), "stdout");
 		});
 		process.stderr.setEncoding("utf8");
 		process.stderr.on("data", (data) => {
-			this.sendEvent(new OutputEvent(data.toString(), "stderr"));
+			this.logToUser(data.toString(), "stderr");
 		});
 		process.on("error", (error) => {
-			this.sendEvent(new OutputEvent(`${error}`, "stderr"));
+			this.logToUser(`${error}`, "stderr");
 		});
 		process.on("exit", (code, signal) => {
 			this.processExited = true;
 			this.log(`Process exited (${signal ? `${signal}`.toLowerCase() : code})`);
 			if (!code && !signal)
-				this.sendEvent(new OutputEvent("Exited"));
+				this.logToUser("Exited");
 			else
-				this.sendEvent(new OutputEvent(`Exited (${signal ? `${signal}`.toLowerCase() : code})`));
+				this.logToUser(`Exited (${signal ? `${signal}`.toLowerCase() : code})`);
 			this.sendEvent(new TerminatedEvent());
 		});
 
@@ -1152,10 +1152,10 @@ export class DartDebugSession extends DebugSession {
 			if (result.result.type !== "@Error") {
 				return result.result as VMInstanceRef;
 			} else {
-				this.sendEvent(new OutputEvent(`Debugger failed to evaluate expression \`${expression}\`\n`, "stderr"));
+				this.logToUser(`Debugger failed to evaluate expression \`${expression}\`\n`);
 			}
 		} catch {
-			this.sendEvent(new OutputEvent(`Debugger failed to evaluate expression \`${expression}\`\n`, "stderr"));
+			this.logToUser(`Debugger failed to evaluate expression \`${expression}\`\n`);
 		}
 	}
 
