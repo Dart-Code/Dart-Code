@@ -488,6 +488,20 @@ describe("dart cli debugger", () => {
 		}, dc);
 	});
 
+	it("excludes type args from local variables when stopped at a breakpoint in a generic method", async () => {
+		await openFile(helloWorldMainFile);
+		const debugConfig = await startDebugger(helloWorldMainFile);
+		await dc.hitBreakpoint(debugConfig, {
+			line: positionOf("^// BREAKPOINT2").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(helloWorldMainFile),
+		});
+
+		const variables = await dc.getTopFrameVariables("Locals");
+		ensureVariable(variables, "a", "a", `1`);
+		// Ensure there were no others.
+		assert.equal(variables.length, 1);
+	});
+
 	it("includes getters in variables when stopped at a breakpoint", async () => {
 		await openFile(helloWorldGettersFile);
 		const config = await startDebugger(helloWorldGettersFile);

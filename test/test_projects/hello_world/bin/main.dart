@@ -21,4 +21,14 @@ main() {
   if (m[true]) {
     print("Hello, world!"); // BREAKPOINT1
   }
+  genericMethod<bool, double, int, String>();
+}
+
+void genericMethod<TBool, TDouble, TInt, TString>() {
+  int a = 1;
+  print(a);
+  print('TBool: ' + TBool.toString()); // BREAKPOINT2
+  print('TDouble: ' + TDouble.toString());
+  print('TInt: ' + TInt.toString());
+  print('TString: ' + TString.toString());
 }
