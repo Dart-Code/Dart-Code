@@ -53,6 +53,8 @@ void doSomeStuff() {
   // scans them.
   var c = new IOClient();
   var d = new ProtobufEnum(1, '');
+  print(c);
+  print(d);
   print(a.myNumField);
   print(a.myNumGetter);
   a.myNumSetter = 1;
