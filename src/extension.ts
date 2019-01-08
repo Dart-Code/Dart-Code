@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import { isArray } from "util";
 import * as vs from "vscode";
 import { WorkspaceFolder } from "vscode";
 import { internalApiSymbol } from "../src/symbols";
@@ -474,6 +475,20 @@ function recalculateAnalysisRoots() {
 		addExcludeIfRequired(process.env.APPDATA);
 		addExcludeIfRequired(process.env.LOCALAPPDATA);
 	}
+
+	// For each workspace, handle excluded folders.
+	util.getDartWorkspaceFolders().forEach((f) => {
+		const excludedForWorkspace = config.for(f.uri).analysisExcludedFolders;
+		const workspacePath = fsPath(f.uri);
+		if (excludedForWorkspace && isArray(excludedForWorkspace)) {
+			excludedForWorkspace.forEach((folder) => {
+				// Handle both relative and absolute paths.
+				if (!path.isAbsolute(folder))
+					folder = path.join(workspacePath, folder);
+				excludeFolders.push(folder);
+			});
+		}
+	});
 
 	analyzer.analysisSetAnalysisRoots({
 		excluded: excludeFolders,

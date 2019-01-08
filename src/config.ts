@@ -89,6 +89,7 @@ class ResourceConfig {
 		return this.config.get<T>(key);
 	}
 
+	get analysisExcludedFolders() { return this.getConfig<string[]>("analysisExcludedFolders"); }
 	get debugSdkLibraries() { return this.getConfig<boolean>("debugSdkLibraries"); }
 	get debugExternalLibraries() { return this.getConfig<boolean>("debugExternalLibraries"); }
 	get doNotFormat() { return this.getConfig<string[]>("doNotFormat"); }

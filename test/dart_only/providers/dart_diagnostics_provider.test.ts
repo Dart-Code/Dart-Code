@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, emptyFile, ensureError, setTestContent, waitForDiagnosticChange } from "../../helpers";
+import { activate, delay, emptyFile, emptyFileInExcludedFolder, ensureError, openFile, setTestContent, waitForDiagnosticChange } from "../../helpers";
 
 describe("diagnostics_provider", () => {
 
@@ -32,5 +32,21 @@ main() {
 
 		const errors = vs.languages.getDiagnostics(emptyFile);
 		ensureError(errors, "Unterminated string literal");
+	});
+
+	it("does not return errors for an excluded file", async () => {
+		await openFile(emptyFileInExcludedFolder);
+		await setTestContent(`
+main() {
+  print("Hello, world!);
+}
+		`);
+
+		// Wait for 5 seconds and ensure we don't have any errors. We can't wait on a change
+		// to diagnostics because if things are working correctly we won't be getting any.
+		await delay(5000);
+
+		const errors = vs.languages.getDiagnostics(emptyFileInExcludedFolder);
+		assert.equal(0, errors.length);
 	});
 });

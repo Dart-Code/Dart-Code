@@ -4,5 +4,8 @@
 	"dart.doNotFormat": [
 		"**/excluded/**",
 		"**/excluded_*.dart"
+	],
+	"dart.analysisExcludedFolders": [
+		"lib/excluded"
 	]
 }
