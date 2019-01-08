@@ -517,9 +517,7 @@ function handleConfigurationChange(sdks: util.Sdks) {
 }
 
 function reanalyze() {
-	analyzer.analysisReanalyze({
-		roots: analysisRoots,
-	});
+	analyzer.analysisReanalyze();
 }
 
 function getSettingsThatRequireRestart() {

@@ -404,25 +404,6 @@ export interface AnalysisGetSignatureResponse {
 }
 
 /**
- * Force the re-analysis of everything contained in the specified
- * analysis roots. This will cause all previously computed analysis
- * results to be discarded and recomputed, and will cause all subscribed
- * notifications to be re-sent.
- * 
- * If no analysis roots are provided, then all current analysis roots
- * will be re-analyzed. If an empty list of analysis roots is provided,
- * then nothing will be re-analyzed. If the list contains one or more
- * paths that are not currently analysis roots, then an error of type
- * INVALID_ANALYSIS_ROOT will be generated.
- */
-export interface AnalysisReanalyzeRequest {
-	/**
-	 * A list of the analysis roots that are to be re-analyzed.
-	 */
-	roots?: FilePath[];
-}
-
-/**
  * Sets the root paths used to determine which files to analyze. The set
  * of files to be analyzed are all of the files in one of the root paths
  * that are not either explicitly or implicitly excluded. A file is
@@ -3611,7 +3592,7 @@ export interface AddContentOverlay {
 	/**
 	 * 
 	 */
-	type: string;
+	type: "add";
 
 	/**
 	 * The new content of the file.
@@ -3713,7 +3694,7 @@ export interface ChangeContentOverlay {
 	/**
 	 * 
 	 */
-	type: string;
+	type: "change";
 
 	/**
 	 * The edits to be applied to the file.
@@ -4530,7 +4511,7 @@ export interface RemoveContentOverlay {
 	/**
 	 * 
 	 */
-	type: string;
+	type: "remove";
 }
 
 /**

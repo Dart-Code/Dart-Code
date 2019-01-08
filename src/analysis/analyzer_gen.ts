@@ -393,15 +393,11 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	}
 
 	/**
-	Force the re-analysis of everything contained in the specified analysis roots. This will cause all previously computed analysis
-	results to be discarded and recomputed, and will cause all subscribed notifications to be re-sent.
-	If no analysis roots are provided, then all current analysis roots will be re-analyzed. If an empty list of analysis roots
-	is provided, then nothing will be re-analyzed. If the list contains one or more paths that are not currently analysis
-	roots, then an error of type
-	INVALID_ANALYSIS_ROOT will be generated.
+	Force re-reading of all potentially changed files, re-resolving of all referenced URIs, and corresponding re-analysis
+	of everything affected in the current analysis roots.
 	*/
-	analysisReanalyze(request: as.AnalysisReanalyzeRequest): Thenable<UnknownResponse> {
-		return this.sendRequest("analysis.reanalyze", request);
+	analysisReanalyze(): Thenable<UnknownResponse> {
+		return this.sendRequest("analysis.reanalyze");
 	}
 
 	/**
