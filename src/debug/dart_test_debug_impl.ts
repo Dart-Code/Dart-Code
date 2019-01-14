@@ -67,13 +67,13 @@ export class DartTestDebugSession extends DartDebugSession {
 				this.handleTestEvent(n);
 			} catch (e) {
 				this.log(e);
-				this.logToUser(e);
+				this.logToUser(`${e}\n`);
 			}
 			try {
 				this.sendTestEventToEditor(n);
 			} catch (e) {
 				this.log(e);
-				this.logToUser(e);
+				this.logToUser(`${e}\n`);
 			}
 		});
 

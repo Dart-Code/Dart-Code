@@ -74,7 +74,7 @@ export class DartDebugSession extends DebugSession {
 
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: DartLaunchRequestArguments): void {
 		if (!args || !args.dartPath || (this.requiresProgram && !args.program)) {
-			this.logToUser("Unable to restart debugging. Please try ending the debug session and starting again.");
+			this.logToUser("Unable to restart debugging. Please try ending the debug session and starting again.\n");
 			this.sendEvent(new TerminatedEvent());
 			return;
 		}
@@ -114,15 +114,15 @@ export class DartDebugSession extends DebugSession {
 			this.logToUser(data.toString(), "stderr");
 		});
 		process.on("error", (error) => {
-			this.logToUser(`${error}`, "stderr");
+			this.logToUser(`${error}\n`, "stderr");
 		});
 		process.on("exit", (code, signal) => {
 			this.processExited = true;
 			this.log(`Process exited (${signal ? `${signal}`.toLowerCase() : code})`);
 			if (!code && !signal)
-				this.logToUser("Exited");
+				this.logToUser("Exited\n");
 			else
-				this.logToUser(`Exited (${signal ? `${signal}`.toLowerCase() : code})`);
+				this.logToUser(`Exited (${signal ? `${signal}`.toLowerCase() : code})\n`);
 			this.sendEvent(new TerminatedEvent());
 		});
 
@@ -1152,10 +1152,10 @@ export class DartDebugSession extends DebugSession {
 			if (result.result.type !== "@Error") {
 				return result.result as VMInstanceRef;
 			} else {
-				this.logToUser(`Debugger failed to evaluate expression \`${expression}\``);
+				this.logToUser(`Debugger failed to evaluate expression \`${expression}\`\n`);
 			}
 		} catch {
-			this.logToUser(`Debugger failed to evaluate expression \`${expression}\``);
+			this.logToUser(`Debugger failed to evaluate expression \`${expression}\`\n`);
 		}
 	}
 
@@ -1413,15 +1413,14 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected logToUser(message: string, category?: string) {
-		message = message.trimRight();
 		// If we get a multi-line message that looks like it contains an error/stack trace, then process each
 		// line individually, so we can attach location metadata to individual lines.
 		if (message.indexOf("\n") !== -1 && message.indexOf("Unhandled exception") !== -1) {
-			message.split("\n").forEach((line) => this.logToUser(line, category));
+			message.split("\n").forEach((line) => this.logToUser(`${line}\n`, category));
 			return;
 		}
 
-		const output = new OutputEvent(`${message}\n`, category) as OutputEvent & DebugProtocol.OutputEvent;
+		const output = new OutputEvent(`${message}`, category) as OutputEvent & DebugProtocol.OutputEvent;
 
 		// If the output line looks like a stack frame with users code, attempt to link it up to make
 		// it clickable.
