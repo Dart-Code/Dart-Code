@@ -1147,11 +1147,6 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private async evaluateAndSendErrors(thread: ThreadInfo, expression: string): Promise<VMInstanceRef> {
-		function trimToFirstNewline(s: string) {
-			s = s && s.toString();
-			const newlinePos = s.indexOf("\n");
-			return s.substr(0, newlinePos).trim();
-		}
 		try {
 			const result = await this.observatory.evaluateInFrame(thread.ref.id, 0, expression);
 			if (result.result.type !== "@Error") {
