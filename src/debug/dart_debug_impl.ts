@@ -14,6 +14,7 @@ const maxValuesToCallToString = 15;
 // which we'd prefer not to show to the user.
 const unoptimizedPrefix = "[Unoptimized] ";
 const stackFrameWithUriPattern = new RegExp(`(#\\d+)(.*)\\(((?:package|dart|file):.*\\.dart):(\\d+):(\\d+)\\)$`);
+const pleaseReportBug = "Please raise a bug against the Dart extension for VS Code.";
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -784,11 +785,11 @@ export class DartDebugSession extends DebugSession {
 								variables.push(await this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value, len <= maxValuesToCallToString));
 						} else {
 							// TODO: unhandled kind
-							this.logToUser(instance.kind);
+							this.logToUser(`Unknown instance kind: ${instance.kind}. ${pleaseReportBug}\n`);
 						}
 					} else {
 						// TODO: unhandled type
-						this.logToUser(obj.type);
+						this.logToUser(`Unknown object type: ${obj.type}. ${pleaseReportBug}\n`);
 					}
 				}
 
