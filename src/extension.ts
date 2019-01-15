@@ -313,7 +313,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	}));
 
 	// Register SDK commands.
-	const sdkCommands = new SdkCommands(context, sdks, analytics, flutterDaemon && flutterDaemon.deviceManager);
+	const sdkCommands = new SdkCommands(context, sdks, analytics, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
 	const debug = new DebugCommands(context, analytics);
 
 	// Register URI handler.
