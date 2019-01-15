@@ -362,6 +362,7 @@ export class SdkCommands {
 			snippets = await this.getFlutterSnippets();
 		} catch {
 			vs.window.showErrorMessage("Unable to download Flutter documentation snippets");
+			return;
 		}
 
 		const selectedSnippet = await vs.window.showQuickPick(
