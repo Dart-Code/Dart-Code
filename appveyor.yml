@@ -34,16 +34,19 @@ install:
   - echo Setting variables...
   - ps: >-
        if ($env:ONLY_RUN_DART_VERSION -eq "STABLE") {
-         $env:DART_CHANNEL="stable"
+         $env:DART_CHANNEL="stable/release"
          $env:FLUTTER_BRANCH="stable"
-       } else {
-         $env:DART_CHANNEL="dev"
+       } elseif ($env:ONLY_RUN_DART_VERSION -eq "DEV") {
+         $env:DART_CHANNEL="dev/release"
          $env:FLUTTER_BRANCH="dev"
+       } else {
+         $env:DART_CHANNEL="be/raw"
+         $env:FLUTTER_BRANCH="master"
        }
   - ps: mkdir "with spaces"
   - ps: cd "with spaces"
   - echo Downloading Dart and Flutter...
-  - ps: Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/release/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
+  - ps: Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
   - ps: 7z.exe x dart.zip | out-null
   - git clone -b %FLUTTER_BRANCH% https://github.com/flutter/flutter.git
   - echo Configuring Dart and Flutter...

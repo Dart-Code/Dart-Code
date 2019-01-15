@@ -48,16 +48,19 @@ before_install:
     fi
   - echo Setting variables...
   - if [[ $ONLY_RUN_DART_VERSION == "STABLE" ]]; then
-      export DART_CHANNEL=stable;
+      export DART_CHANNEL=stable/release;
       export FLUTTER_BRANCH=stable;
-    else
-      export DART_CHANNEL=dev;
+    elif [[ $ONLY_RUN_DART_VERSION == "DEV" ]]; then
+      export DART_CHANNEL=dev/release;
       export FLUTTER_BRANCH=dev;
+    else
+      export DART_CHANNEL=be/raw;
+      export FLUTTER_BRANCH=master;
     fi
   - mkdir with\ spaces
   - cd with\ spaces
   - echo Downloading Dart and Flutter...
-  - curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/release/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
+  - curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
   - unzip dart-sdk.zip > /dev/null
   - git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git
   - echo Configuring Dart and Flutter...
