@@ -17,6 +17,7 @@ import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
 import { flutterPath, pubPath, showFlutterActivationFailure } from "../sdk/utils";
 import * as util from "../utils";
 import { fsPath, ProjectType, Sdks } from "../utils";
+import { sortBy } from "../utils/array";
 import { log } from "../utils/log";
 import * as channels from "./channels";
 
@@ -365,8 +366,10 @@ export class SdkCommands {
 			return;
 		}
 
+		const sortedSnippets = sortBy(snippets, (s) => s.element);
+
 		const selectedSnippet = await vs.window.showQuickPick(
-			snippets.map((s) => ({
+			sortedSnippets.map((s) => ({
 				description: `${s.package}/${s.library}`,
 				detail: s.description,
 				label: s.element,
