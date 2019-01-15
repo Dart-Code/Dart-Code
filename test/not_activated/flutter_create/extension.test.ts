@@ -47,4 +47,8 @@ describe("command", () => {
 		assert.ok(openFolder.calledOnce);
 		assert.ok(fs.existsSync(path.join(tempFolder, "my_test_flutter_proj", FLUTTER_CREATE_PROJECT_TRIGGER_FILE)));
 	});
+
+	it.skip("Flutter: Create Sample Project can be invoked and creates trigger file", async () => {
+		// TODO
+	});
 });

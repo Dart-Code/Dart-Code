@@ -1,5 +1,6 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
+import * as https from "https";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
@@ -7,9 +8,11 @@ import { ProgressLocation, Uri, window } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { globalFlutterArgs, LogCategory, LogSeverity, PromiseCompleter, safeSpawn } from "../debug/utils";
+import { FlutterCapabilities } from "../flutter/capabilities";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { DartHoverProvider } from "../providers/dart_hover_provider";
+import { createFlutterSampleInTempFolder } from "../sdk/flutter_samples";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
 import { flutterPath, pubPath, showFlutterActivationFailure } from "../sdk/utils";
 import * as util from "../utils";
@@ -18,13 +21,17 @@ import { log } from "../utils/log";
 import * as channels from "./channels";
 
 const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
+// TODO: This needs fixing when the snippets indexs is on the live site.
+// TODO: Automated Tests
+// TODO: Test missing SDKs, etc.
+const flutterDocsHost = "master-docs.flutter.io";
 
 export class SdkCommands {
 	private flutterScreenshotPath?: string;
 	// A map of any in-progress commands so we can terminate them if we want to run another.
 	private runningCommands: { [workspaceUriAndCommand: string]: ChainedProcess | undefined; } = {};
 
-	constructor(context: vs.ExtensionContext, private sdks: Sdks, private analytics: Analytics, private deviceManager: FlutterDeviceManager) {
+	constructor(context: vs.ExtensionContext, private sdks: Sdks, private analytics: Analytics, private flutterCapabilities: FlutterCapabilities, private deviceManager: FlutterDeviceManager) {
 		this.sdks = sdks;
 		this.analytics = analytics;
 
@@ -150,6 +157,7 @@ export class SdkCommands {
 			await util.reloadExtension();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.createSampleProject", (_) => this.createFlutterSampleProject()));
 		// Internal command that's fired in user_prompts to actually do the creation.
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.create", (projectPath: string, projectName?: string, sampleID?: string) => {
 			const args = ["create"];
@@ -311,7 +319,7 @@ export class SdkCommands {
 
 	private async createFlutterProject(): Promise<void> {
 		if (!this.sdks || !this.sdks.flutter) {
-			showFlutterActivationFailure("flutter.newProject");
+			showFlutterActivationFailure("flutter.createProject");
 			return;
 		}
 
@@ -341,12 +349,70 @@ export class SdkCommands {
 		vs.commands.executeCommand("vscode.openFolder", projectFolderUri, openInNewWindow);
 	}
 
+	private async createFlutterSampleProject(): Promise<void> {
+		if (!this.sdks || !this.sdks.flutter) {
+			showFlutterActivationFailure("flutter.createSampleProject");
+			return;
+		}
+
+		// Fetch the JSON for the available samples.
+
+		let snippets: FlutterSampleSnippet[];
+		try {
+			snippets = await this.getFlutterSnippets();
+		} catch {
+			vs.window.showErrorMessage("Unable to download Flutter documentation snippets");
+		}
+
+		const selectedSnippet = await vs.window.showQuickPick(
+			snippets.map((s) => ({
+				description: `${s.package}/${s.library}`,
+				detail: s.description,
+				label: s.element,
+				snippet: s,
+			})),
+			{
+				placeHolder: "Which Flutter sample?",
+			},
+		);
+		if (!selectedSnippet)
+			return;
+
+		createFlutterSampleInTempFolder(this.flutterCapabilities, selectedSnippet.snippet.id);
+	}
+
 	private validateFlutterProjectName(input: string) {
 		if (!flutterNameRegex.test(input))
 			return "Flutter project names should be all lowercase, with underscores to separate words";
 		const bannedNames = ["flutter", "flutter_test"];
 		if (bannedNames.indexOf(input) !== -1)
 			return `You may not use ${input} as the name for a flutter project`;
+	}
+
+	private getFlutterSnippets(): Promise<FlutterSampleSnippet[]> {
+		const flutterDocsSamplesIndex = `https://${flutterDocsHost}`;
+		return new Promise<FlutterSampleSnippet[]>((resolve, reject) => {
+			const options: https.RequestOptions = {
+				hostname: flutterDocsHost,
+				method: "GET",
+				path: "/snippets/index.json",
+				port: 443,
+			};
+
+			const req = https.request(options, (resp) => {
+				if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
+					reject({ message: `Failed to get Flutter samples ${resp && resp.statusCode}: ${resp && resp.statusMessage}` });
+				} else {
+					const chunks: string[] = [];
+					resp.on("data", (b) => chunks.push(b.toString()));
+					resp.on("end", () => {
+						const json = chunks.join("");
+						resolve(JSON.parse(json));
+					});
+				}
+			});
+			req.end();
+		});
 	}
 }
 
@@ -382,4 +448,15 @@ class ChainedProcess {
 	public cancel(): void {
 		this.isCancelled = true;
 	}
+}
+
+interface FlutterSampleSnippet {
+	readonly sourcePath: string;
+	readonly sourceLine: number;
+	readonly package: string;
+	readonly library: string;
+	readonly element: string;
+	readonly id: string;
+	readonly file: string;
+	readonly description: string;
 }

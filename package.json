@@ -36,6 +36,7 @@
 		"workspaceContains:**/pubspec.yaml",
 		"workspaceContains:**/*.dart",
 		"onCommand:flutter.createProject",
+		"onCommand:flutter.createSampleProject",
 		"onCommand:flutter.doctor",
 		"onUri"
 	],
@@ -75,6 +76,11 @@
 			{
 				"command": "flutter.createProject",
 				"title": "New Project",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.createSampleProject",
+				"title": "Create Sample Project",
 				"category": "Flutter"
 			},
 			{
@@ -322,6 +328,9 @@
 			"commandPalette": [
 				{
 					"command": "flutter.createProject"
+				},
+				{
+					"command": "flutter.createSampleProject"
 				},
 				{
 					"command": "pub.get",

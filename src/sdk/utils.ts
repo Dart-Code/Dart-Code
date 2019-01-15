@@ -32,6 +32,10 @@ export function handleMissingSdks(context: ExtensionContext, analytics: Analytic
 		sdks.projectType = ProjectType.Flutter;
 		commandToReRun = "flutter.createProject";
 	}));
+	context.subscriptions.push(commands.registerCommand("flutter.createSampleProject", (_) => {
+		sdks.projectType = ProjectType.Flutter;
+		commandToReRun = "flutter.createSampleProject";
+	}));
 	context.subscriptions.push(commands.registerCommand("flutter.doctor", (_) => {
 		sdks.projectType = ProjectType.Flutter;
 		commandToReRun = "flutter.doctor";
