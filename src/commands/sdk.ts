@@ -391,7 +391,6 @@ export class SdkCommands {
 	}
 
 	private getFlutterSnippets(): Promise<FlutterSampleSnippet[]> {
-		const flutterDocsSamplesIndex = `https://${flutterDocsHost}`;
 		return new Promise<FlutterSampleSnippet[]>((resolve, reject) => {
 			const options: https.RequestOptions = {
 				hostname: flutterDocsHost,
