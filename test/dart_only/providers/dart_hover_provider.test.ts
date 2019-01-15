@@ -18,8 +18,13 @@ describe("dart_hover_provider", () => {
 			return [];
 
 		return hoverResult.map((h) => {
-			const displayText = ((h.contents[0] as any).value as string).trim();
-			const docs = ((h.contents[1] as any).value as string).trim();
+
+			// TODO: Once VS Code updates (and we require that version), we may be able to simplify this.
+			// For the existing VS Code impl we get an array here, but for LSP we return '---' as a separator since
+			// we only get a single item. To treat them the same, join with `---` then split on `---`.
+			const sections = h.contents.map((c) => ((c as any).value as string).trim()).join("\n---\n").split("\n---\n");
+			const displayText = sections[0];
+			const docs = sections[1];
 			assert.equal(displayText.substr(0, 7), "```dart");
 			assert.equal(displayText.substr(-3), "```");
 			return {
