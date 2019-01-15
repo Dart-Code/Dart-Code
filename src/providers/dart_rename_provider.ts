@@ -2,7 +2,7 @@ import { CancellationToken, OutputChannel, Position, Range, RenameProvider, Text
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import * as channels from "../commands/channels";
-import { fsPath } from "../utils";
+import { fsPath, toRange } from "../utils";
 
 export class DartRenameProvider implements RenameProvider {
 	constructor(private readonly analyzer: Analyzer) { }
@@ -98,12 +98,16 @@ export class DartRenameProvider implements RenameProvider {
 
 		const feedback = (resp.feedback as as.RenameFeedback);
 
-		// VS Code will reject the rename if our range doesn't span the position it gave us, but sometimes this isn't the case
-		// such as `import "x" as y` when invoking rename on `import`, so we just it back the position is asked for.
+		// The dart server returns -1 when the old name doesn't exist (for ex. renaming an unprefixed import to add a prefix)
+		// so we use a zero-character range at the requested position in this case.
+		const range = feedback.offset === -1
+			? new Range(position, position)
+			: toRange(document, feedback.offset, feedback.length);
+
 		if (feedback) {
 			return {
 				placeholder: feedback.oldName,
-				range: new Range(position, position),
+				range,
 			};
 		} else {
 			const fatalProblems = resp.initialProblems
