@@ -55,6 +55,14 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		});
 	}
 
+	protected buildRequest<TReq>(id: number, method: string, params?: TReq): { id: string, method: string, params: TReq } {
+		return {
+			id: id.toString(),
+			method,
+			params,
+		};
+	}
+
 	protected sendRequest<TReq, TResp>(method: string, params?: TReq): Thenable<TResp> {
 		// Generate an ID for this request so we can match up the response.
 		const id = this.nextRequestID++;
@@ -63,11 +71,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			// Stash the callbacks so we can call them later.
 			this.activeRequests[id.toString()] = [resolve, reject, method];
 
-			const req = {
-				id: id.toString(),
-				method,
-				params,
-			};
+			const req = this.buildRequest(id, method, params);
 			const json = this.messagesWrappedInBrackets
 				? "[" + JSON.stringify(req) + "]\r\n"
 				: JSON.stringify(req) + "\r\n";

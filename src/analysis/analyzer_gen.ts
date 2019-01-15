@@ -14,6 +14,13 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 		super(getLogFile, (message, severity) => log(message, severity, LogCategory.Analyzer), maxLogLineLength);
 	}
 
+	protected buildRequest<TReq>(id: number, method: string, params?: TReq): { id: string, method: string, params: TReq } {
+		return Object.assign(
+			super.buildRequest(id, method, params),
+			{ clientRequestTime: Date.now() },
+		);
+	}
+
 	private serverConnectedSubscriptions: ((notification: as.ServerConnectedNotification) => void)[] = [];
 	private serverErrorSubscriptions: ((notification: as.ServerErrorNotification) => void)[] = [];
 	private serverStatusSubscriptions: ((notification: as.ServerStatusNotification) => void)[] = [];
