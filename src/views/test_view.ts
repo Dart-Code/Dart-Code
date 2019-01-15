@@ -4,6 +4,7 @@ import { getChannel } from "../commands/channels";
 import { flatMap, uniq } from "../debug/utils";
 import { extensionPath } from "../extension";
 import { fsPath } from "../utils";
+import { sortBy } from "../utils/array";
 import { getLaunchConfig } from "../utils/test";
 import { ErrorNotification, Group, GroupNotification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "./test_protocol";
 
@@ -737,14 +738,4 @@ function getTestSortOrder(status: TestStatus): TestSortOrder {
 	// if (status === TestStatus.Skipped)
 	// 	return TestSortOrder.Bottom;
 	return TestSortOrder.Middle;
-}
-
-function sortBy<T>(items: T[], f: (item: T) => number): T[] {
-	return items.sort((item1, item2) => {
-		const r1 = f(item1);
-		const r2 = f(item2);
-		if (r1 < r2) return -1;
-		if (r1 > r2) return 1;
-		return 0;
-	});
 }
