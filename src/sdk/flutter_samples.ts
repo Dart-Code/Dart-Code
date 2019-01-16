@@ -6,7 +6,7 @@ import { dartCodeExtensionIdentifier } from "../debug/utils";
 import { FlutterCapabilities } from "../flutter/capabilities";
 import * as util from "../utils";
 
-export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapabilities, sampleID: string) {
+export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapabilities, sampleID: string): vs.Uri {
 	// Ensure we're on at least Flutter v1 so we know creating samples works.
 	if (!flutterCapabilities.supportsCreatingSamples) {
 		vs.window.showErrorMessage("Opening sample projects requires Flutter v1.0 or later");
@@ -24,5 +24,8 @@ export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapa
 
 	const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
 	const openInNewWindow = hasFoldersOpen;
-	vs.commands.executeCommand("vscode.openFolder", vs.Uri.file(tempSamplePath), openInNewWindow);
+	const folderUri = vs.Uri.file(tempSamplePath);
+	vs.commands.executeCommand("vscode.openFolder", folderUri, openInNewWindow);
+
+	return folderUri;
 }

@@ -22,7 +22,6 @@ import { log } from "../utils/log";
 import * as channels from "./channels";
 
 const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
-// TODO: Automated Tests
 // TODO: Test missing SDKs, etc.
 
 export class SdkCommands {
@@ -348,7 +347,7 @@ export class SdkCommands {
 		vs.commands.executeCommand("vscode.openFolder", projectFolderUri, openInNewWindow);
 	}
 
-	private async createFlutterSampleProject(): Promise<void> {
+	private async createFlutterSampleProject(): Promise<vs.Uri> {
 		if (!this.sdks || !this.sdks.flutter) {
 			showFlutterActivationFailure("flutter.createSampleProject");
 			return;
@@ -380,7 +379,7 @@ export class SdkCommands {
 		if (!selectedSnippet)
 			return;
 
-		createFlutterSampleInTempFolder(this.flutterCapabilities, selectedSnippet.snippet.id);
+		return createFlutterSampleInTempFolder(this.flutterCapabilities, selectedSnippet.snippet.id);
 	}
 
 	private validateFlutterProjectName(input: string) {
@@ -453,7 +452,7 @@ class ChainedProcess {
 	}
 }
 
-interface FlutterSampleSnippet {
+export interface FlutterSampleSnippet {
 	readonly sourcePath: string;
 	readonly sourceLine: number;
 	readonly package: string;
