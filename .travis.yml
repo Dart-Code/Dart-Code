@@ -9,7 +9,7 @@ node_js: lts/*
 
 env:
   global:
-    - CC_TEST_REPORTER_ID=c923ee28c767fab893630ca20ea78949069bbeb216ecf65a5fc8bc24ea3e3f18
+    - CC_TEST_REPORTER_ID=f2af8ead3f06fab9ee221478fa43d8ff05a0ac7e0103d91a35b43a0ddb198c94
     - FLUTTER_TEST=true
   matrix:
     - ONLY_RUN_CODE_VERSION=STABLE ONLY_RUN_DART_VERSION=STABLE
