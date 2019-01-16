@@ -22,7 +22,6 @@ import { log } from "../utils/log";
 import * as channels from "./channels";
 
 const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
-// TODO: Test missing SDKs, etc.
 
 export class SdkCommands {
 	private flutterScreenshotPath?: string;
