@@ -24,7 +24,7 @@ describe("flutter", () => {
 	});
 	it("created a sample project", async () => {
 		const sampleProjectFolder = fsPath(vs.workspace.workspaceFolders[1].uri);
-		const expectedString = "title: 'Flutter Code Sample for scaffold.Scaffold'";
+		const expectedString = "title: 'Flutter Code Sample for material.IconButton'";
 		const mainFile = path.join(sampleProjectFolder, "lib", "main.dart");
 		// Creating the sample may be a little slow, so allow up to 60 seconds for it.
 		await waitForResult(() => fs.existsSync(mainFile), "lib/main.dart did not exist", 60000);
