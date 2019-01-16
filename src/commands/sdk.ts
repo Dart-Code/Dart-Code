@@ -22,10 +22,8 @@ import { log } from "../utils/log";
 import * as channels from "./channels";
 
 const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
-// TODO: This needs fixing when the snippets indexs is on the live site.
 // TODO: Automated Tests
 // TODO: Test missing SDKs, etc.
-const flutterDocsHost = "master-docs.flutter.io";
 
 export class SdkCommands {
 	private flutterScreenshotPath?: string;
@@ -395,8 +393,10 @@ export class SdkCommands {
 
 	private getFlutterSnippets(): Promise<FlutterSampleSnippet[]> {
 		return new Promise<FlutterSampleSnippet[]>((resolve, reject) => {
+			if (!config.flutterDocsHost)
+				reject("No Flutter docs host set");
 			const options: https.RequestOptions = {
-				hostname: flutterDocsHost,
+				hostname: config.flutterDocsHost,
 				method: "GET",
 				path: "/snippets/index.json",
 				port: 443,
