@@ -330,7 +330,8 @@
 					"command": "flutter.createProject"
 				},
 				{
-					"command": "flutter.createSampleProject"
+					"command": "flutter.createSampleProject",
+					"when": "config.dart.flutterDocsHost"
 				},
 				{
 					"command": "pub.get",
