@@ -80,7 +80,7 @@
 			},
 			{
 				"command": "flutter.createSampleProject",
-				"title": "Create Sample Project",
+				"title": "New Project From Docs",
 				"category": "Flutter"
 			},
 			{
