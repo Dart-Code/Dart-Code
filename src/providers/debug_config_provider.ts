@@ -25,6 +25,7 @@ export const TRACK_WIDGET_CREATION_ENABLED = "dart-code:trackWidgetCreationEnabl
 export const HAS_LAST_DEBUG_CONFIG = "dart-code:hasLastDebugConfig";
 export const showErrorsAction = "Show Errors";
 export const debugAnywayAction = "Debug Anyway";
+const isCI = !!process.env.CI;
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugServers: { [index: string]: net.Server } = {};
@@ -370,7 +371,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || conf.debugExternalLibraries;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		if (isFlutter) {
-			debugConfig.forceFlutterVerboseMode = isLogging || !!process.env.CI;
+			debugConfig.forceFlutterVerboseMode = isLogging || isCI;
 			debugConfig.flutterTrackWidgetCreation =
 				// Use from the launch.json if configured.
 				debugConfig.flutterTrackWidgetCreation !== undefined
