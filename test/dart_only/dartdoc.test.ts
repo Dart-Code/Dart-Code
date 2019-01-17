@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { cleanDartdoc } from "../../src/dartdocs";
+import { cleanDartdoc, stripMarkdown } from "../../src/dartdocs";
 
 describe("cleanDartDoc", () => {
 	it("replaces Flutter's image tags with external Material image tags", () => {
@@ -75,5 +75,21 @@ describe("cleanDartDoc", () => {
 		\`\`\`
 		`;
 		assert.equal(cleanDartdoc(input), expected);
+	});
+});
+
+describe("stripMarkdown", () => {
+	it("removes links and references", () => {
+		const input = `
+		This example shows a [Scaffold] with an [AppBar], a [BottomAppBar] and a
+		[FloatingActionButton]. The [body] is a [Text] placed in a [Center] in order
+		to center the text within the
+		`;
+		const expected = `
+		This example shows a Scaffold with an AppBar, a BottomAppBar and a
+		FloatingActionButton. The body is a Text placed in a Center in order
+		to center the text within the
+		`;
+		assert.equal(stripMarkdown(input), expected);
 	});
 });

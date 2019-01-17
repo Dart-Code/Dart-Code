@@ -7,6 +7,7 @@ import * as vs from "vscode";
 import { ProgressLocation, Uri, window } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
+import { stripMarkdown } from "../dartdocs";
 import { globalFlutterArgs, LogCategory, LogSeverity, PromiseCompleter, safeSpawn } from "../debug/utils";
 import { FlutterCapabilities } from "../flutter/capabilities";
 import { FlutterDeviceManager } from "../flutter/device_manager";
@@ -367,7 +368,7 @@ export class SdkCommands {
 		const selectedSnippet = await vs.window.showQuickPick(
 			sortedSnippets.map((s) => ({
 				description: `${s.package}/${s.library}`,
-				detail: s.description,
+				detail: stripMarkdown(s.description),
 				label: s.element,
 				snippet: s,
 			})),
