@@ -40,8 +40,12 @@ export class SdkCommands {
 			context.subscriptions.push(vs.commands.registerCommand("dart.changeFlutterSdk", () => flutterSdkManager.changeSdk()));
 		}
 		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", async (uri: string | Uri) => {
-			if (!uri || !(uri instanceof Uri))
+			if (!uri || !(uri instanceof Uri)) {
 				uri = await this.getFolderToRunCommandIn("Select which folder to get packages for");
+				// If the user cancelled, bail out (otherwise we'll prompt them again below).
+				if (!uri)
+					return;
+			}
 			if (typeof uri === "string")
 				uri = vs.Uri.file(uri);
 			try {
