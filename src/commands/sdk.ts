@@ -373,6 +373,7 @@ export class SdkCommands {
 				snippet: s,
 			})),
 			{
+				matchOnDescription: true,
 				placeHolder: "Which Flutter sample?",
 			},
 		);
