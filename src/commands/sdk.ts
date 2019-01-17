@@ -248,7 +248,12 @@ export class SdkCommands {
 			? Promise.resolve(folder)
 			// TODO: Can we get this filtered?
 			// https://github.com/Microsoft/vscode/issues/39132
-			: vs.window.showWorkspaceFolderPick({ placeHolder }).then((f) => f && util.isDartWorkspaceFolder(f) && fsPath(f.uri)); // TODO: What if the user didn't pick anything?
+			: this.showProjectPicker(placeHolder); // TODO: What if the user didn't pick anything?
+	}
+
+	private async showProjectPicker(placeHolder: string): Promise<string> {
+		const selectedFolder = await vs.window.showWorkspaceFolderPick({ placeHolder });
+		return selectedFolder && util.isDartWorkspaceFolder(selectedFolder) && fsPath(selectedFolder.uri);
 	}
 
 	private runFlutter(args: string[], selection?: vs.Uri): Thenable<number> {
