@@ -8,7 +8,7 @@ import { ProgressLocation, Uri, window } from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { stripMarkdown } from "../dartdocs";
-import { globalFlutterArgs, LogCategory, LogSeverity, PromiseCompleter, safeSpawn } from "../debug/utils";
+import { flatMap, globalFlutterArgs, LogCategory, LogSeverity, PromiseCompleter, safeSpawn } from "../debug/utils";
 import { FlutterCapabilities } from "../flutter/capabilities";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
@@ -19,6 +19,7 @@ import { flutterPath, pubPath, showFlutterActivationFailure } from "../sdk/utils
 import * as util from "../utils";
 import { fsPath, ProjectType, Sdks } from "../utils";
 import { sortBy } from "../utils/array";
+import { getChildFolders, hasPubspec } from "../utils/fs";
 import { log } from "../utils/log";
 import * as channels from "./channels";
 
@@ -233,27 +234,44 @@ export class SdkCommands {
 	}
 
 	private async getFolderToRunCommandIn(placeHolder: string, selection?: vs.Uri): Promise<string> {
+		// Attempt to find a project based on the supplied folder of active file.
 		let file = selection && fsPath(selection);
 		file = file || (vs.window.activeTextEditor && fsPath(vs.window.activeTextEditor.document.uri));
-		let folder = file && locateBestProjectRoot(file);
+		const folder = file && locateBestProjectRoot(file);
 
-		// If there's only one folder, just use it to avoid prompting the user.
-		if (!folder && vs.workspace.workspaceFolders) {
-			const allowedProjects = util.getDartWorkspaceFolders();
-			if (allowedProjects.length === 1)
-				folder = fsPath(allowedProjects[0].uri);
-		}
+		if (folder)
+			return folder;
 
-		return folder
-			? Promise.resolve(folder)
-			// TODO: Can we get this filtered?
-			// https://github.com/Microsoft/vscode/issues/39132
-			: this.showProjectPicker(placeHolder); // TODO: What if the user didn't pick anything?
+		// Otherwise look for what projects we have.
+		const rootFolders = util.getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
+		const nestedProjectFolders = flatMap(rootFolders, getChildFolders);
+		const selectableFolders = rootFolders.concat(nestedProjectFolders).filter(hasPubspec);
+
+		return this.showFolderPicker(selectableFolders, placeHolder); // TODO: What if the user didn't pick anything?
 	}
 
-	private async showProjectPicker(placeHolder: string): Promise<string> {
-		const selectedFolder = await vs.window.showWorkspaceFolderPick({ placeHolder });
-		return selectedFolder && util.isDartWorkspaceFolder(selectedFolder) && fsPath(selectedFolder.uri);
+	private async showFolderPicker(folders: string[], placeHolder: string): Promise<string> {
+		if (!folders || !folders.length) {
+			vs.window.showWarningMessage("No Dart/Flutter projects were found.");
+			return undefined;
+		}
+
+		// No point asking the user if there's only one.
+		if (folders.length === 1) {
+			return folders[0];
+		}
+
+		const items = folders.map((f) => {
+			const workspacePathParent = path.dirname(fsPath(vs.workspace.getWorkspaceFolder(Uri.file(f)).uri));
+			return {
+				description: util.homeRelativePath(workspacePathParent),
+				label: path.relative(workspacePathParent, f),
+				path: f,
+			} as vs.QuickPickItem & { path: string };
+		});
+
+		const selectedFolder = await vs.window.showQuickPick(items, { placeHolder });
+		return selectedFolder && selectedFolder.path;
 	}
 
 	private runFlutter(args: string[], selection?: vs.Uri): Thenable<number> {
