@@ -257,7 +257,7 @@ export class SdkCommands {
 	}
 
 	private runPub(args: string[], selection?: vs.Uri): Thenable<number> {
-		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${args.join(" ")}")}" in`, args, selection);
+		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${args.join(" ")}" in`, args, selection);
 	}
 
 	private runPubInFolder(folder: string, args: string[], shortPath: string): Thenable<number> {
