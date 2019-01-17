@@ -330,8 +330,7 @@
 					"command": "flutter.createProject"
 				},
 				{
-					"command": "flutter.createSampleProject",
-					"when": "config.dart.flutterDocsHost"
+					"command": "flutter.createSampleProject"
 				},
 				{
 					"command": "pub.get",
@@ -673,6 +672,7 @@
 				},
 				"dart.flutterDocsHost": {
 					"type": "string",
+					"default": "docs.flutter.io",
 					"description": "The hostname to use for Flutter Docs, for example when fetching available samples.",
 					"scope": "window"
 				},
