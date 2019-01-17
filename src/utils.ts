@@ -6,7 +6,7 @@ import * as path from "path";
 import * as semver from "semver";
 import { commands, extensions, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { config } from "./config";
-import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase } from "./debug/utils";
+import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, isWithinPath } from "./debug/utils";
 import { locateBestProjectRoot } from "./project";
 import { referencesFlutterSdk } from "./sdk/utils";
 import { hasPackagesFile, hasPubspec } from "./utils/fs";
@@ -69,6 +69,15 @@ export function resolvePaths(p?: string) {
 		return path.join(os.homedir(), p.substr(2));
 	if (!path.isAbsolute(p) && workspace.workspaceFolders && workspace.workspaceFolders.length)
 		return path.join(fsPath(workspace.workspaceFolders[0].uri), p);
+	return p;
+}
+
+/// Shortens a path to use ~ if it's inside the home directory.
+export function homeRelativePath(p?: string) {
+	if (!p) return undefined;
+	const homedir = os.homedir();
+	if (isWithinPath(p, homedir))
+		return path.join("~", path.relative(homedir, p));
 	return p;
 }
 
