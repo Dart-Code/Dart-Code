@@ -5,7 +5,7 @@ import * as path from "path";
 import * as semver from "semver";
 import * as vs from "vscode";
 import { dartCodeExtensionIdentifier, flatMap, LogCategory, LogSeverity } from "../src/debug/utils";
-import { ExtensionApi } from "../src/extension";
+import { InternalExtensionApi } from "../src/extension";
 import { internalApiSymbol } from "../src/symbols";
 import { fsPath, isAnalyzable, ProjectType, vsCodeVersionConstraint } from "../src/utils";
 import { log, logError, logTo, logWarn } from "../src/utils/log";
@@ -13,7 +13,7 @@ import { waitFor } from "../src/utils/promises";
 import sinon = require("sinon");
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
-export let extApi: ExtensionApi;
+export let extApi: InternalExtensionApi;
 export const threeMinutesInMilliseconds = 1000 * 60 * 3;
 
 if (!ext) {

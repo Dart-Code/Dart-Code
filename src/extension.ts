@@ -428,7 +428,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			renameProvider,
 			sdks,
 			testTreeProvider,
-		} as ExtensionApi,
+		} as InternalExtensionApi,
 	};
 }
 
@@ -560,7 +560,7 @@ function setCommandVisiblity(enable: boolean, projectType: util.ProjectType) {
 	vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && projectType === util.ProjectType.Flutter);
 }
 
-export interface ExtensionApi {
+export interface InternalExtensionApi {
 	analyzerCapabilities: AnalyzerCapabilities;
 	cancelAllAnalysisRequests: () => void;
 	currentAnalysis: () => Promise<void>;
