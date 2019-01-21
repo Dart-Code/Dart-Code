@@ -2,6 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { config } from "../../../src/config";
+import { platformEol } from "../../../src/debug/utils";
 import { debugAnywayAction, showErrorsAction } from "../../../src/providers/debug_config_provider";
 import { fsPath, getRandomInt } from "../../../src/utils";
 import { log } from "../../../src/utils/log";
@@ -404,7 +405,7 @@ describe("dart cli debugger", () => {
 				});
 			}).then((response) => dc.configurationDoneRequest()),
 			dc.waitForEvent("terminated"),
-			dc.assertOutputContains("stdout", `Hello! The {year} is ${(new Date()).getFullYear()}\n`),
+			dc.assertOutputContains("stdout", `Hello! The {year} is ${(new Date()).getFullYear()}${platformEol}`),
 			dc.launch(config),
 		]);
 	});
