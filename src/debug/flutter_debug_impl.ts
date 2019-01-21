@@ -87,15 +87,18 @@ export class FlutterDebugSession extends DartDebugSession {
 				appArgs.push("--profile");
 			} else if (args.flutterMode === "release") {
 				appArgs.push("--release");
+			} else {
+				// Debug mode
+
+				if (this.flutterTrackWidgetCreation) {
+					appArgs.push("--track-widget-creation");
+				}
 			}
 
 			if (debug) {
 				appArgs.push("--start-paused");
 			}
 
-			if (this.flutterTrackWidgetCreation) {
-				appArgs.push("--track-widget-creation");
-			}
 		}
 
 		if (args.args) {
