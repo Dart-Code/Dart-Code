@@ -60,7 +60,7 @@ describe("command", () => {
 		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves();
 		executeCommand.callThrough();
 
-		const sampleFolderUri: string = await vs.commands.executeCommand("flutter.createSampleProject");
+		const sampleFolderUri: string = await vs.commands.executeCommand("_dart.flutter.createSampleProject");
 
 		assert.ok(showQuickPick.calledOnce);
 		assert.ok(openFolder.calledOnce);

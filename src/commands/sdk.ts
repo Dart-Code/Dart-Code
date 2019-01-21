@@ -159,7 +159,7 @@ export class SdkCommands {
 			await util.reloadExtension();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.createSampleProject", (_) => this.createFlutterSampleProject()));
+		context.subscriptions.push(vs.commands.registerCommand("_dart.flutter.createSampleProject", (_) => this.createFlutterSampleProject()));
 		// Internal command that's fired in user_prompts to actually do the creation.
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.create", (projectPath: string, projectName?: string, sampleID?: string) => {
 			const args = ["create"];
@@ -358,7 +358,7 @@ export class SdkCommands {
 
 	private async createFlutterSampleProject(): Promise<vs.Uri> {
 		if (!this.sdks || !this.sdks.flutter) {
-			showFlutterActivationFailure("flutter.createSampleProject");
+			showFlutterActivationFailure("_dart.flutter.createSampleProject");
 			return;
 		}
 
