@@ -406,6 +406,15 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	if (!isRestart)
 		checkForPackages();
 
+	// Begin activating dependant packages.
+	if (sdks.projectType === util.ProjectType.Flutter || sdks.projectType === util.ProjectType.Fuchsia) {
+		const flutterExtension = vs.extensions.getExtension(flutterExtensionIdentifier);
+		if (flutterExtension) {
+			log(`Activating Flutter extension for ${util.ProjectType[sdks.projectType]} project...`);
+			flutterExtension.activate();
+		}
+	}
+
 	// Log how long all this startup took.
 	const extensionEndTime = new Date();
 	if (isRestart) {
