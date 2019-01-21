@@ -10,6 +10,7 @@ import { FileChangeHandler } from "./analysis/file_change_handler";
 import { OpenFileTracker } from "./analysis/open_file_tracker";
 import { findPackageRoots } from "./analysis/utils";
 import { Analytics } from "./analytics";
+import { DartExtensionApi } from "./api";
 import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
 import { DebugCommands } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
@@ -414,6 +415,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	}
 
 	return {
+		...new DartExtensionApi(),
 		[internalApiSymbol]: {
 			analyzerCapabilities: analyzer.capabilities,
 			cancelAllAnalysisRequests: () => analyzer.cancelAllRequests(),
