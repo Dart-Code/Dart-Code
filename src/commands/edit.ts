@@ -212,7 +212,10 @@ export class EditCommands implements vs.Disposable {
 		change.linkedEditGroups.forEach((leg) => {
 			leg.positions.forEach((pos) => {
 				const defaultValue = documentText.substr(pos.offset, leg.length);
-				const choices = leg.suggestions ? leg.suggestions.map((s) => s.value) : undefined;
+				let choices = leg.suggestions ? leg.suggestions.map((s) => s.value) : undefined;
+				if (defaultValue && choices.indexOf(defaultValue) === -1) {
+					choices = [defaultValue, ...choices];
+				}
 				placeholders.push({ offset: pos.offset, length: leg.length, defaultValue, choices, placeholderNumber });
 			});
 			placeholderNumber++;
