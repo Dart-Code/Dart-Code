@@ -52,7 +52,7 @@ export class TestCommands implements vs.Disposable {
 
 		const visitor = new TestOutlineVisitor();
 		visitor.visit(outline);
-		return visitor.tests.find((t) => {
+		return visitor.tests.reverse().find((t) => {
 			const start = document.positionAt(t.offset);
 			const end = document.positionAt(t.offset + t.length);
 			return new vs.Range(start, end).contains(editor.selection);
