@@ -52,7 +52,7 @@ describe("flutter run debugger (launch)", () => {
 	it("runs a Flutter application and remains active until told to quit", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
-			dc.assertOutputContains("stdout", "Launching lib/main.dart on Flutter test device in debug mode...\n"),
+			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
 			dc.configurationSequence(),
 			dc.launch(config),
 		]);
