@@ -101,7 +101,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		}
 
 		// Process the complete messages in the buffer.
-		fullBuffer.split("\n").filter((m) => m.trim() !== "").forEach((m) => this.handleMessage(m));
+		fullBuffer.split("\n").filter((m) => m.trim() !== "").forEach((m) => this.handleMessage(`${m}\n`));
 	}
 
 	protected abstract shouldHandleMessage(message: string): boolean;
@@ -109,10 +109,9 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	protected processUnhandledMessage(message: string): void { }
 
 	public handleMessage(message: string): void {
-		message = message.trim();
-		this.logTraffic(`<== ${message}\r\n`);
+		this.logTraffic(`<== ${message.trimRight()}\r\n`);
 
-		if (!this.shouldHandleMessage(message)) {
+		if (!this.shouldHandleMessage(message.trim())) {
 			this.processUnhandledMessage(message);
 			return;
 		}
