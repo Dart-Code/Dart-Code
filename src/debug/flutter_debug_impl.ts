@@ -7,7 +7,7 @@ import { FlutterRun, RunMode } from "./flutter_run";
 import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments, isWin, LogCategory, LogMessage, LogSeverity } from "./utils";
 
 const objectGroupName = "my-group";
-const flutterExceptionStartBannerPrefix = "══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═";
+const flutterExceptionStartBannerPrefix = "══╡ EXCEPTION CAUGHT BY";
 const flutterExceptionEndBannerPrefix = "══════════════════════════════════════════";
 
 export class FlutterDebugSession extends DartDebugSession {
