@@ -122,9 +122,9 @@ export class RefactorCommands implements vs.Disposable {
 }
 
 async function getExtractLocalVariableArgs(f?: as.RefactoringFeedback): Promise<as.RefactoringOptions | undefined> {
-	const name = await vs.window.showInputBox({ prompt: "Enter a name for the variable" });
-
-	return name ? { name, extractAll: false } : undefined;
+	const feedback = f as as.ExtractLocalVariableFeedback | undefined;
+	const proposedName = feedback && feedback.names && feedback.names.length ? feedback.names[0] : "x";
+	return { name: proposedName, extractAll: false };
 }
 
 async function getExtractMethodArgs(f?: as.RefactoringFeedback): Promise<as.RefactoringOptions | undefined> {
