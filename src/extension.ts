@@ -439,7 +439,10 @@ function buildLogHeaders(sdks: util.Sdks) {
 	addToLogHeader(() => `!! PLEASE REVIEW THIS LOG FOR SENSITIVE INFORMATION BEFORE SHARING !!`);
 	addToLogHeader(() => ``);
 	addToLogHeader(() => `Dart Code extension: ${util.extensionVersion}`);
-	addToLogHeader(() => `Flutter extension: ${vs.extensions.getExtension(flutterExtensionIdentifier).packageJSON.version}`);
+	addToLogHeader(() => {
+		const ext = vs.extensions.getExtension(flutterExtensionIdentifier);
+		return `Flutter extension: ${ext.packageJSON.version} (${ext.isActive ? "" : "not "}activated)`;
+	});
 	addToLogHeader(() => `VS Code: ${vs.version}`);
 	addToLogHeader(() => `Platform: ${platformName}`);
 	addToLogHeader(() => `Workspace type: ${util.ProjectType[sdks.projectType]}`);
