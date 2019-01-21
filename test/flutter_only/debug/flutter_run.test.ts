@@ -368,7 +368,7 @@ describe("flutter run debugger (launch)", () => {
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
 		await Promise.all([
 			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
-			watchPromise("writes_failure_output->assertOutputContains", dc.assertOutputContains("stderr", "Exception: Oops")),
+			watchPromise("writes_failure_output->assertOutputContains", dc.assertOutputContains("stderr", "Exception: Oops\n")),
 			watchPromise("writes_failure_output->launch", dc.launch(config)),
 		]);
 	});

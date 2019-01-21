@@ -151,7 +151,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		});
 		this.flutter.registerForAppStop((n) => { this.currentRunningAppId = undefined; this.flutter.dispose(); });
 		this.flutter.registerForAppProgress((e) => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished })));
-		this.flutter.registerForError((err) => this.sendEvent(new OutputEvent(err, "stderr")));
+		this.flutter.registerForError((err) => this.sendEvent(new OutputEvent(`${err}\n`, "stderr")));
 
 		return this.flutter.process;
 	}
@@ -252,7 +252,7 @@ export class FlutterDebugSession extends DartDebugSession {
 					break;
 			}
 		} catch (e) {
-			this.sendEvent(new OutputEvent(e, "stderr"));
+			this.sendEvent(new OutputEvent(`${e}\n`, "stderr"));
 		}
 	}
 

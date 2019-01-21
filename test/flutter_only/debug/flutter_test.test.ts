@@ -210,7 +210,7 @@ describe("flutter test debugger", () => {
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertErroringTest(`${testPrefix}Hello world test`),
-			dc.assertOutput("stderr", "Test failed. See exception logs above."),
+			dc.assertOutput("stderr", "Test failed. See exception logs above.\n"),
 			dc.assertOutputContains("stdout", "EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK"),
 			dc.launch(config),
 		]);
