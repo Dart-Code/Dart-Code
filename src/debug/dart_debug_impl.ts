@@ -14,7 +14,7 @@ const maxValuesToCallToString = 15;
 // Prefix that appears at the start of stack frame names that are unoptimized
 // which we'd prefer not to show to the user.
 const unoptimizedPrefix = "[Unoptimized] ";
-const stackFrameWithUriPattern = new RegExp(`(#\\d+)(.*)\\(((?:package|dart|file):.*\\.dart):(\\d+):(\\d+)\\)\\s*$`);
+const stackFrameWithUriPattern = new RegExp(`(.*#\\d+)(.*)\\(((?:package|dart|file):.*\\.dart):(\\d+):(\\d+)\\)\\s*$`);
 const pleaseReportBug = "Please raise a bug against the Dart extension for VS Code.";
 
 // TODO: supportsSetVariable
