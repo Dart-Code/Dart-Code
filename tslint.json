@@ -11,6 +11,7 @@
 	},
 	"rulesDirectory": "lints/",
 	"rules": {
+		// Try to keep synced with Flutter extension!
 		"disallow-fspath": true,
 		"disallow-vscode-in-debuggers": true,
 		"indent": {
