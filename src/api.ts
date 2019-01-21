@@ -2,5 +2,5 @@ import * as vs from "vscode";
 
 export class DartExtensionApi {
 	public readonly version = 1;
-	public createSampleProject = () => vs.commands.executeCommand("_dart.flutter.createSampleProject");
+	public flutterCreateSampleProject = () => vs.commands.executeCommand("_dart.flutter.createSampleProject");
 }
