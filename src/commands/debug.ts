@@ -185,12 +185,9 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.toggleServiceSetting(extRepaintRainbow)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => this.toggleServiceSetting(extDebugAllowBanner)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.toggleServiceSetting(extDebugPaintBaselinesEnabled)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => {
-			currentExtensionState[extTimeDilation] = currentExtensionState[extTimeDilation] !== timeDilationNormal ? timeDilationNormal : timeDilationSlow;
-			this.sendServiceSetting(extTimeDilation);
-		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.inspectWidget", () => { currentExtensionState[extInspectorShow] = true; this.sendServiceSetting(extInspectorShow); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => { currentExtensionState[extInspectorShow] = false; this.sendServiceSetting(extInspectorShow); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.toggleServiceSetting(extTimeDilation, timeDilationNormal, timeDilationSlow)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.inspectWidget", () => this.toggleServiceSetting(extInspectorShow, true, true)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => this.toggleServiceSetting(extInspectorShow, false, false)));
 
 		// Open Observatory.
 		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", async () => {
@@ -318,8 +315,10 @@ export class DebugCommands {
 		return selectedItem && selectedItem.session;
 	}
 
-	private toggleServiceSetting(id: string) {
-		currentExtensionState[id] = !currentExtensionState[id];
+	/// Toggles between two values. Always picks the value1 if the current value
+	// is not already value1 (eg. if it's neither of those, it'll pick val1).
+	private toggleServiceSetting(id: string, val1: any = true, val2: any = false) {
+		currentExtensionState[id] = currentExtensionState[id] !== val1 ? val1 : val2;
 		this.sendServiceSetting(id);
 	}
 
