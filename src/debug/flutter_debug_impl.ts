@@ -308,6 +308,8 @@ export class FlutterDebugSession extends DartDebugSession {
 			this.sendEvent(new Event("dart.flutter.firstFrame", {}));
 		} else if (event.kind === "Extension" && event.extensionKind === "Flutter.Frame") {
 			this.requestCoverageUpdate("frame");
+		} else if (event.kind === "Extension" && event.extensionKind === "Flutter.ServiceExtensionStateChanged") {
+			this.sendEvent(new Event("dart.flutter.serviceExtensionStateChanged", event.extensionData));
 		} else {
 			super.handleExtensionEvent(event);
 		}

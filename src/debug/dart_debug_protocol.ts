@@ -19,6 +19,7 @@ export interface VMEvent {
 	atAsyncSuspension?: boolean;
 	extensionRPC?: string;
 	extensionKind?: string;
+	extensionData?: any;
 }
 
 export interface VMBreakpoint extends VMObj {
@@ -538,4 +539,9 @@ export class ObservatoryConnection {
 	public close() {
 		this.socket.close();
 	}
+}
+
+export interface FlutterServiceExtensionStateChangedData {
+	extension: string;
+	value: any;
 }
