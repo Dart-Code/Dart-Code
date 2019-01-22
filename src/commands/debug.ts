@@ -328,9 +328,13 @@ export class DebugCommands {
 		if (this.serviceSettings[id] && this.enabledServiceExtensions.indexOf(id) !== -1) {
 			this.serviceSettings[id]();
 
-			if (id === extInspectorShow)
-				vs.commands.executeCommand("setContext", IS_INSPECTING_WIDGET_CONTEXT, currentExtensionState[id]);
+			this.updateInspectingWidgetContextIfRequired(id);
 		}
+	}
+
+	private updateInspectingWidgetContextIfRequired(id: string) {
+		if (id === extInspectorShow)
+			vs.commands.executeCommand("setContext", IS_INSPECTING_WIDGET_CONTEXT, currentExtensionState[id]);
 	}
 
 	private sendAllServiceSettings() {
