@@ -3,7 +3,8 @@ import * as path from "path";
 import * as vs from "vscode";
 import { config } from "./config";
 import { Context } from "./context";
-import { extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, isDevExtension, openInBrowser } from "./utils";
+import { StagehandTemplate } from "./pub/stagehand";
+import { DART_CREATE_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, isDevExtension, openInBrowser } from "./utils";
 
 export function showUserPrompts(context: vs.ExtensionContext) {
 	handleNewProjects(Context.for(context));
@@ -59,17 +60,38 @@ function error(err: any) {
 
 function handleNewProjects(context: Context) {
 	getDartWorkspaceFolders().forEach((wf) => {
-		const triggerFile = path.join(fsPath(wf.uri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
-		if (fs.existsSync(triggerFile)) {
-			let sampleID = fs.readFileSync(triggerFile).toString().trim();
+		const dartTriggerFile = path.join(fsPath(wf.uri), DART_CREATE_PROJECT_TRIGGER_FILE);
+		if (fs.existsSync(dartTriggerFile)) {
+			const templateJson = fs.readFileSync(dartTriggerFile).toString().trim();
+			let template: StagehandTemplate;
+			try {
+				template = JSON.parse(templateJson);
+			} catch (e) {
+				vs.window.showErrorMessage("Failed to run Stagehand to create project");
+				return;
+			}
+			fs.unlinkSync(dartTriggerFile);
+			createDartProject(fsPath(wf.uri), template.name).then((success) => {
+				if (success)
+					handleDartWelcome(wf, template);
+			});
+		}
+		const flutterTriggerFile = path.join(fsPath(wf.uri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
+		if (fs.existsSync(flutterTriggerFile)) {
+			let sampleID = fs.readFileSync(flutterTriggerFile).toString().trim();
 			sampleID = sampleID ? sampleID : undefined;
-			fs.unlinkSync(triggerFile);
+			fs.unlinkSync(flutterTriggerFile);
 			createFlutterProject(fsPath(wf.uri), sampleID).then((success) => {
 				if (success)
 					handleFlutterWelcome(wf, sampleID);
 			});
 		}
 	});
+}
+
+async function createDartProject(projectPath: string, templateName: string): Promise<boolean> {
+	const code = await vs.commands.executeCommand("_dart.create", projectPath, templateName) as number;
+	return code === 0;
 }
 
 async function createFlutterProject(projectPath: string, sampleID: string): Promise<boolean> {
@@ -86,4 +108,13 @@ function handleFlutterWelcome(workspaceFolder: vs.WorkspaceFolder, sampleID: str
 		vs.window.showInformationMessage(`${sampleID} sample ready! Connect a device and press F5 to run.`);
 	else
 		vs.window.showInformationMessage("Your Flutter project is ready! Connect a device and press F5 to start running.");
+}
+
+function handleDartWelcome(workspaceFolder: vs.WorkspaceFolder, template: StagehandTemplate) {
+	const workspacePath = fsPath(workspaceFolder.uri);
+	const projectName = path.basename(workspacePath);
+	const entryFile = path.join(workspacePath, template.entrypoint.replace("__projectName__", projectName));
+	if (fs.existsSync(entryFile))
+		vs.commands.executeCommand("vscode.open", vs.Uri.file(entryFile));
+	vs.window.showInformationMessage(`${template.label} project ready!`);
 }

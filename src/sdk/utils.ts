@@ -32,6 +32,9 @@ export function handleMissingSdks(context: ExtensionContext, analytics: Analytic
 		sdks.projectType = ProjectType.Flutter;
 		commandToReRun = "flutter.createProject";
 	}));
+	context.subscriptions.push(commands.registerCommand("dart.createProject", (_) => {
+		commandToReRun = "dart.createProject";
+	}));
 	context.subscriptions.push(commands.registerCommand("_dart.flutter.createSampleProject", (_) => {
 		sdks.projectType = ProjectType.Flutter;
 		commandToReRun = "_dart.flutter.createSampleProject";
@@ -63,7 +66,7 @@ export function showFluttersDartSdkActivationFailure() {
 		true,
 	);
 }
-export function showFlutterActivationFailure(commandToReRun: string = null) {
+export function showFlutterActivationFailure(commandToReRun?: string) {
 	showSdkActivationFailure(
 		"Flutter",
 		findFlutterSdk,
@@ -72,12 +75,13 @@ export function showFlutterActivationFailure(commandToReRun: string = null) {
 		commandToReRun,
 	);
 }
-export function showDartActivationFailure() {
+export function showDartActivationFailure(commandToReRun?: string) {
 	showSdkActivationFailure(
 		"Dart",
 		findDartSdk,
 		DART_DOWNLOAD_URL,
 		(p) => config.setGlobalDartSdkPath(p),
+		commandToReRun,
 	);
 }
 

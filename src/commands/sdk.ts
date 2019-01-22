@@ -13,9 +13,10 @@ import { FlutterCapabilities } from "../flutter/capabilities";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { DartHoverProvider } from "../providers/dart_hover_provider";
+import { Stagehand, StagehandTemplate } from "../pub/stagehand";
 import { createFlutterSampleInTempFolder } from "../sdk/flutter_samples";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
-import { flutterPath, pubPath, showFlutterActivationFailure } from "../sdk/utils";
+import { flutterPath, pubPath, showDartActivationFailure, showFlutterActivationFailure } from "../sdk/utils";
 import * as util from "../utils";
 import { fsPath, ProjectType, Sdks } from "../utils";
 import { sortBy } from "../utils/array";
@@ -24,7 +25,7 @@ import { log } from "../utils/log";
 import { logProcess } from "../utils/processes";
 import * as channels from "./channels";
 
-const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
+const packageNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
 
 export class SdkCommands {
 	private flutterScreenshotPath?: string;
@@ -162,7 +163,11 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.flutter.createSampleProject", (_) => this.createFlutterSampleProject()));
-		// Internal command that's fired in user_prompts to actually do the creation.
+		context.subscriptions.push(vs.commands.registerCommand("dart.createProject", (_) => this.createDartProject()));
+		context.subscriptions.push(vs.commands.registerCommand("_dart.create", (projectPath: string, templateName: string) => {
+			const args = ["global", "run", "stagehand", templateName];
+			return this.runPubInFolder(projectPath, args, templateName);
+		}));
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.create", (projectPath: string, projectName?: string, sampleID?: string) => {
 			const args = ["create"];
 			if (projectName) {
@@ -189,7 +194,6 @@ export class SdkCommands {
 			args.push(".");
 			return this.runFlutterInFolder(projectPath, args, projectName);
 		}));
-		// Internal command that's fired in user_prompts to actually do the creation.
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.clean", (projectPath: string, projectName?: string) => {
 			projectName = projectName || path.basename(projectPath);
 			const args = ["clean"];
@@ -339,6 +343,70 @@ export class SdkCommands {
 		});
 	}
 
+	private async createDartProject(): Promise<vs.Uri> {
+		if (!this.sdks || !this.sdks.dart) {
+			showDartActivationFailure("dart.createProject");
+			return;
+		}
+
+		// Get the JSON for the available templates by calling stagehand.
+
+		const stagehand = new Stagehand(this.sdks);
+		const isAvailable = await stagehand.promptToInstallIfRequired();
+		if (!isAvailable) {
+			return;
+		}
+		let templates: StagehandTemplate[];
+		try {
+			templates = await stagehand.getTemplates();
+		} catch (e) {
+			vs.window.showErrorMessage(`Unable to execute Stagehand. ${e}`);
+			return;
+		}
+
+		const sortedTemplates = sortBy(templates, (s) => s.label);
+
+		const selectedTemplate = await vs.window.showQuickPick(
+			sortedTemplates.map((t) => ({
+				description: t.name,
+				detail: t.description,
+				label: t.label,
+				template: t,
+			})),
+			{
+				matchOnDescription: true,
+				placeHolder: "Which Dart template?",
+			},
+		);
+		if (!selectedTemplate)
+			return;
+
+		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: "hello_world", validateInput: this.validateDartProjectName });
+		if (!name)
+			return;
+
+		// If already in a workspace, set the default folder to something nearby.
+		const folders = await vs.window.showOpenDialog({ canSelectFolders: true, openLabel: "Select a folder to create the project in" });
+		if (!folders || folders.length !== 1)
+			return;
+		const folderUri = folders[0];
+		const projectFolderUri = Uri.file(path.join(fsPath(folderUri), name));
+
+		if (fs.existsSync(fsPath(projectFolderUri))) {
+			vs.window.showErrorMessage(`A folder named ${name} already exists in ${fsPath(folderUri)}`);
+			return;
+		}
+
+		// Create the empty folder so we can open it.
+		fs.mkdirSync(fsPath(projectFolderUri));
+		// Create a temp dart file to force extension to load when we open this folder.
+		fs.writeFileSync(path.join(fsPath(projectFolderUri), util.DART_CREATE_PROJECT_TRIGGER_FILE), JSON.stringify(selectedTemplate.template));
+
+		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
+		const openInNewWindow = hasFoldersOpen;
+		vs.commands.executeCommand("vscode.openFolder", projectFolderUri, openInNewWindow);
+	}
+
 	private async createFlutterProject(): Promise<void> {
 		if (!this.sdks || !this.sdks.flutter) {
 			showFlutterActivationFailure("flutter.createProject");
@@ -349,7 +417,7 @@ export class SdkCommands {
 		if (!name)
 			return;
 
-		// If already in a workspace, set the default folder to somethign nearby.
+		// If already in a workspace, set the default folder to something nearby.
 		const folders = await vs.window.showOpenDialog({ canSelectFolders: true, openLabel: "Select a folder to create the project in" });
 		if (!folders || folders.length !== 1)
 			return;
@@ -407,8 +475,16 @@ export class SdkCommands {
 		return createFlutterSampleInTempFolder(this.flutterCapabilities, selectedSnippet.snippet.id);
 	}
 
+	private validateDartProjectName(input: string) {
+		if (!packageNameRegex.test(input))
+			return "Dart project names should be all lowercase, with underscores to separate words";
+		const bannedNames = ["dart", "test"];
+		if (bannedNames.indexOf(input) !== -1)
+			return `You may not use ${input} as the name for a dart project`;
+	}
+
 	private validateFlutterProjectName(input: string) {
-		if (!flutterNameRegex.test(input))
+		if (!packageNameRegex.test(input))
 			return "Flutter project names should be all lowercase, with underscores to separate words";
 		const bannedNames = ["flutter", "flutter_test"];
 		if (bannedNames.indexOf(input) !== -1)
