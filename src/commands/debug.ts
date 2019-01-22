@@ -183,12 +183,12 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.toggleServiceSetting(extDebugPaint)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.toggleServiceSetting(extShowPerformanceOverlay)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.toggleServiceSetting(extRepaintRainbow)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => this.toggleServiceSetting(extDebugAllowBanner)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.toggleServiceSetting(extDebugPaintBaselinesEnabled)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => {
 			currentExtensionState[extTimeDilation] = currentExtensionState[extTimeDilation] !== timeDilationNormal ? timeDilationNormal : timeDilationSlow;
 			this.sendServiceSetting(extTimeDilation);
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => this.toggleServiceSetting(extDebugAllowBanner)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.toggleServiceSetting(extDebugPaintBaselinesEnabled)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.inspectWidget", () => { currentExtensionState[extInspectorShow] = true; this.sendServiceSetting(extInspectorShow); }));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => { currentExtensionState[extInspectorShow] = false; this.sendServiceSetting(extInspectorShow); }));
 
