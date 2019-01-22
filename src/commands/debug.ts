@@ -3,45 +3,9 @@ import * as path from "path";
 import * as vs from "vscode";
 import { Analytics } from "../analytics";
 import { CoverageData, PromiseCompleter } from "../debug/utils";
-import { SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
-import { TRACK_WIDGET_CREATION_ENABLED } from "../providers/debug_config_provider";
+import { FlutterServiceExtension, FlutterServiceExtensionArgs, FlutterVmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../flutter/vm_service_extensions";
 import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../utils";
 import { handleDebugLogEvent } from "../utils/log";
-
-export const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidget";
-
-const keyTimeDilation = "timeDilation";
-const keyEnabled = "enabled";
-const extDebugAllowBanner = "ext.flutter.debugAllowBanner";
-const extDebugPaint = "ext.flutter.debugPaint";
-const extDebugPaintBaselinesEnabled = "ext.flutter.debugPaintBaselinesEnabled";
-const extInspectorShow = "ext.flutter.inspector.show";
-const extRepaintRainbow = "ext.flutter.repaintRainbow";
-const extShowPerformanceOverlay = "ext.flutter.showPerformanceOverlay";
-const extTimeDilation = "ext.flutter.timeDilation";
-
-const timeDilationNormal = 1.0;
-const timeDilationSlow = 5.0;
-
-const extensionStateKeys: { [key: string]: string } = {
-	[extDebugAllowBanner]: keyEnabled,
-	[extDebugPaint]: keyEnabled,
-	[extDebugPaintBaselinesEnabled]: keyEnabled,
-	[extInspectorShow]: keyEnabled,
-	[extRepaintRainbow]: keyEnabled,
-	[extShowPerformanceOverlay]: keyEnabled,
-	[extTimeDilation]: keyTimeDilation,
-};
-const defaultExtensionState: { [key: string]: any } = {
-	[extDebugAllowBanner]: true,
-	[extDebugPaint]: false,
-	[extDebugPaintBaselinesEnabled]: false,
-	[extInspectorShow]: false,
-	[extRepaintRainbow]: false,
-	[extShowPerformanceOverlay]: false,
-	[extTimeDilation]: timeDilationNormal,
-};
-let currentExtensionState = Object.assign({}, defaultExtensionState);
 
 const debugSessions: DartDebugSessionInformation[] = [];
 // export let mostRecentAttachedProbablyReusableObservatoryUri: string;
@@ -63,14 +27,17 @@ export class DebugCommands {
 	public readonly onReceiveCoverage: vs.Event<CoverageData[]> = this.onReceiveCoverageEmitter.event;
 	private onFirstFrameEmitter: vs.EventEmitter<CoverageData[]> = new vs.EventEmitter<CoverageData[]>();
 	public readonly onFirstFrame: vs.Event<CoverageData[]> = this.onFirstFrameEmitter.event;
+	private readonly flutterExtensions: FlutterVmServiceExtensions;
 
 	constructor(context: vs.ExtensionContext, analytics: Analytics) {
 		this.analytics = analytics;
+		this.flutterExtensions = new FlutterVmServiceExtensions(this.sendServiceSetting);
 		context.subscriptions.push(this.debugMetrics);
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
 			const session = debugSessions.find((ds) => ds.session === e.session);
 			if (!session)
 				return;
+			this.flutterExtensions.handleDebugEvent(e);
 			if (e.event === "dart.progress") {
 				if (e.body.message) {
 					// Clear any old progress first
@@ -107,20 +74,8 @@ export class DebugCommands {
 				// in the hotReload command).
 				analytics.logDebuggerHotReload();
 				this.onWillHotReloadEmitter.fire();
-			} else if (e.event === "dart.serviceExtensionAdded") {
-				this.enableServiceExtension(e.body.id);
-				// If the isWidgetCreationTracked extension loads, call it to get the value.
-				if (e.body.id === "ext.flutter.inspector.isWidgetCreationTracked") {
-					this.sendCustomFlutterDebugCommand(session, "checkIsWidgetCreationTracked");
-				}
 			} else if (e.event === "dart.flutter.firstFrame") {
-				// Send the current value to ensure it persists for the user.
-				this.sendAllServiceSettings();
 				this.onFirstFrameEmitter.fire();
-			} else if (e.event === "dart.flutter.updateIsWidgetCreationTracked") {
-				vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, e.body.isWidgetCreationTracked);
-			} else if (e.event === "dart.flutter.serviceExtensionStateChanged") {
-				this.updateServiceExtensionState(e.body.extension, e.body.value);
 			} else if (e.event === "dart.debugMetrics") {
 				const memory = e.body.memory;
 				const message = `${Math.ceil(memory.current / 1024 / 1024)}MB of ${Math.ceil(memory.total / 1024 / 1024)}MB`;
@@ -150,7 +105,7 @@ export class DebugCommands {
 				// If we're the first fresh debug session, reset all settings to default.
 				// Subsequent launches will inherit the "current" values.
 				if (debugSessions.length === 0)
-					this.resetFlutterSettings();
+					this.flutterExtensions.resetToDefaults();
 				debugSessions.push(session);
 			}
 		}));
@@ -172,17 +127,17 @@ export class DebugCommands {
 			// Really we should track these per-session, but the changes of them being different given we only support one
 			// SDK at a time are practically zero.
 			if (debugSessions.length === 0)
-				this.disableAllServiceExtensions();
+				this.flutterExtensions.markAllServiceExtensionsUnloaded();
 		}));
 
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.toggleServiceSetting(extDebugPaint)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.toggleServiceSetting(extShowPerformanceOverlay)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.toggleServiceSetting(extRepaintRainbow)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => this.toggleServiceSetting(extDebugAllowBanner)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.toggleServiceSetting(extDebugPaintBaselinesEnabled)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.toggleServiceSetting(extTimeDilation, timeDilationNormal, timeDilationSlow)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.inspectWidget", () => this.toggleServiceSetting(extInspectorShow, true, true)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => this.toggleServiceSetting(extInspectorShow, false, false)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.flutterExtensions.toggle(FlutterServiceExtension.DebugPaint)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.flutterExtensions.toggle(FlutterServiceExtension.PerformanceOverlay)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.flutterExtensions.toggle(FlutterServiceExtension.RepaintRainbow)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => this.flutterExtensions.toggle(FlutterServiceExtension.DebugBanner)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.flutterExtensions.toggle(FlutterServiceExtension.PaintBaselines)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.flutterExtensions.toggle(FlutterServiceExtension.SlowAnimations, timeDilationNormal, timeDilationSlow)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.inspectWidget", () => this.flutterExtensions.toggle(FlutterServiceExtension.InspectorSelectMode, true, true)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => this.flutterExtensions.toggle(FlutterServiceExtension.InspectorSelectMode, false, false)));
 
 		// Open Observatory.
 		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", async () => {
@@ -213,21 +168,21 @@ export class DebugCommands {
 			if (!debugSessions.length)
 				return;
 			this.onWillHotReloadEmitter.fire();
-			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "hotReload", args));
+			debugSessions.forEach((s) => s.session.customRequest("hotReload", args));
 			analytics.logDebuggerHotReload();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.hotRestart", (args: any) => {
 			if (!debugSessions.length)
 				return;
 			this.onWillHotRestartEmitter.fire();
-			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "hotRestart", args));
+			debugSessions.forEach((s) => s.session.customRequest("hotRestart", args));
 			analytics.logDebuggerRestart();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.requestCoverageUpdate", (scriptUris: string[]) => {
-			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "requestCoverageUpdate", { scriptUris }));
+			debugSessions.forEach((s) => s.session.customRequest("requestCoverageUpdate", { scriptUris }));
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.coverageFilesUpdate", (scriptUris: string[]) => {
-			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "coverageFilesUpdate", { scriptUris }));
+			debugSessions.forEach((s) => s.session.customRequest("coverageFilesUpdate", { scriptUris }));
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugging", (resource: vs.Uri) => {
 			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), {
@@ -272,10 +227,11 @@ export class DebugCommands {
 		}));
 
 		// Flutter toggle platform.
-		// We can't just use a service command here, as we need to call it twice (once to get, once to change) and
+		// We can't just use the service extension directly here, as we need to call it twice (once to get, once to change) and
 		// currently it seems like the DA can't return responses to us here, so we'll have to do them both inside the DA.
+		// TODO: Find out if there's a better way to do this now we get updates to service extension values.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => {
-			debugSessions.forEach((s) => this.sendCustomFlutterDebugCommand(s, "togglePlatform"));
+			debugSessions.forEach((s) => s.session.customRequest("togglePlatform"));
 		}));
 
 		// Attach commands.
@@ -310,71 +266,10 @@ export class DebugCommands {
 		return selectedItem && selectedItem.session;
 	}
 
-	/// Toggles between two values. Always picks the value1 if the current value
-	// is not already value1 (eg. if it's neither of those, it'll pick val1).
-	private toggleServiceSetting(id: string, val1: any = true, val2: any = false) {
-		currentExtensionState[id] = currentExtensionState[id] !== val1 ? val1 : val2;
-		this.sendServiceSetting(id);
-	}
-
-	private sendServiceSetting(id: string) {
-		if (currentExtensionState[id] !== undefined && this.enabledServiceExtensions.indexOf(id) !== -1) {
-			debugSessions.forEach((s) => this.runServiceCommand(s, id));
-
-			this.updateInspectingWidgetContextIfRequired(id);
-		}
-	}
-
-	private updateInspectingWidgetContextIfRequired(id: string) {
-		if (id === extInspectorShow)
-			vs.commands.executeCommand("setContext", IS_INSPECTING_WIDGET_CONTEXT, currentExtensionState[id]);
-	}
-
-	private sendAllServiceSettings() {
-		for (const id in currentExtensionState)
-			this.sendServiceSetting(id);
-	}
-
-	private runServiceCommand(session: DartDebugSessionInformation, method: string) {
-		const params = { [extensionStateKeys[method]]: currentExtensionState[method] };
-		this.sendCustomFlutterDebugCommand(session, "serviceExtension", { type: method, params });
-	}
-
-	private sendCustomFlutterDebugCommand(session: DartDebugSessionInformation, type: string, args?: any) {
-		session.session.customRequest(type, args);
-	}
-
-	private resetFlutterSettings() {
-		currentExtensionState = Object.assign({}, defaultExtensionState);
-	}
-
-	private enabledServiceExtensions: string[] = [];
-	private enableServiceExtension(id: string) {
-		this.enabledServiceExtensions.push(id);
-		vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${id}`, true);
-	}
-
-	private disableAllServiceExtensions() {
-		for (const id of this.enabledServiceExtensions) {
-			vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${id}`, undefined);
-		}
-		this.enabledServiceExtensions.length = 0;
-		vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, false);
-	}
-
-	private updateServiceExtensionState(id: string, value: any) {
-		// Don't try to process service extension we don't know about.
-		if (currentExtensionState[id] === undefined) {
-			return;
-		}
-
-		// HACK: This is because the values we get are currently all strings.
-		if (typeof value === "string") {
-			value = JSON.parse(value);
-		}
-
-		currentExtensionState[id] = value;
-		this.updateInspectingWidgetContextIfRequired(id);
+	private sendServiceSetting(extension: FlutterServiceExtension, args: FlutterServiceExtensionArgs) {
+		debugSessions.forEach((session) => {
+			session.session.customRequest("serviceExtension", args);
+		});
 	}
 }
 
