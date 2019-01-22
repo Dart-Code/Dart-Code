@@ -10,10 +10,23 @@ import { handleDebugLogEvent } from "../utils/log";
 
 export const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidget";
 
+const keyTimeDilation = "timeDilation";
+const keyEnabled = "enabled";
+const extDebugAllowBanner = "ext.flutter.debugAllowBanner";
+const extDebugPaint = "ext.flutter.debugPaint";
+const extDebugPaintBaselinesEnabled = "ext.flutter.debugPaintBaselinesEnabled";
+const extInspectorShow = "ext.flutter.inspector.show";
+const extRepaintRainbow = "ext.flutter.repaintRainbow";
+const extShowPerformanceOverlay = "ext.flutter.showPerformanceOverlay";
+const extTimeDilation = "ext.flutter.timeDilation";
+
+const timeDilationNormal = 1.0;
+const timeDilationSlow = 5.0;
+
 let debugPaintingEnabled = false;
 let performanceOverlayEnabled = false;
 let repaintRainbowEnabled = false;
-let timeDilation = 1.0;
+let timeDilation = timeDilationNormal;
 let debugModeBannerEnabled = true;
 let paintBaselinesEnabled = false;
 let widgetInspectorEnabled = false;
@@ -147,21 +160,21 @@ export class DebugCommands {
 				this.disableAllServiceExtensions();
 		}));
 
-		this.registerBoolServiceCommand("ext.flutter.debugPaint", () => debugPaintingEnabled);
-		this.registerBoolServiceCommand("ext.flutter.showPerformanceOverlay", () => performanceOverlayEnabled);
-		this.registerBoolServiceCommand("ext.flutter.repaintRainbow", () => repaintRainbowEnabled);
-		this.registerServiceCommand("ext.flutter.timeDilation", () => ({ timeDilation }));
-		this.registerBoolServiceCommand("ext.flutter.debugAllowBanner", () => debugModeBannerEnabled);
-		this.registerBoolServiceCommand("ext.flutter.debugPaintBaselinesEnabled", () => paintBaselinesEnabled);
-		this.registerBoolServiceCommand("ext.flutter.inspector.show", () => widgetInspectorEnabled);
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => { debugPaintingEnabled = !debugPaintingEnabled; this.sendServiceSetting("ext.flutter.debugPaint"); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => { performanceOverlayEnabled = !performanceOverlayEnabled; this.sendServiceSetting("ext.flutter.showPerformanceOverlay"); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => { repaintRainbowEnabled = !repaintRainbowEnabled; this.sendServiceSetting("ext.flutter.repaintRainbow"); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => { timeDilation = 6.0 - timeDilation; this.sendServiceSetting("ext.flutter.timeDilation"); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => { debugModeBannerEnabled = !debugModeBannerEnabled; this.sendServiceSetting("ext.flutter.debugAllowBanner"); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => { paintBaselinesEnabled = !paintBaselinesEnabled; this.sendServiceSetting("ext.flutter.debugPaintBaselinesEnabled"); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.inspectWidget", () => { widgetInspectorEnabled = true; this.sendServiceSetting("ext.flutter.inspector.show"); }));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => { widgetInspectorEnabled = false; this.sendServiceSetting("ext.flutter.inspector.show"); }));
+		this.registerBoolServiceCommand(extDebugPaint, () => debugPaintingEnabled);
+		this.registerBoolServiceCommand(extShowPerformanceOverlay, () => performanceOverlayEnabled);
+		this.registerBoolServiceCommand(extRepaintRainbow, () => repaintRainbowEnabled);
+		this.registerServiceCommand(extTimeDilation, () => ({ timeDilation }));
+		this.registerBoolServiceCommand(extDebugAllowBanner, () => debugModeBannerEnabled);
+		this.registerBoolServiceCommand(extDebugPaintBaselinesEnabled, () => paintBaselinesEnabled);
+		this.registerBoolServiceCommand(extInspectorShow, () => widgetInspectorEnabled);
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => { debugPaintingEnabled = !debugPaintingEnabled; this.sendServiceSetting(extDebugPaint); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => { performanceOverlayEnabled = !performanceOverlayEnabled; this.sendServiceSetting(extShowPerformanceOverlay); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => { repaintRainbowEnabled = !repaintRainbowEnabled; this.sendServiceSetting(extRepaintRainbow); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => { timeDilation = timeDilationSlow - timeDilation; this.sendServiceSetting(extTimeDilation); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => { debugModeBannerEnabled = !debugModeBannerEnabled; this.sendServiceSetting(extDebugAllowBanner); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => { paintBaselinesEnabled = !paintBaselinesEnabled; this.sendServiceSetting(extDebugPaintBaselinesEnabled); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.inspectWidget", () => { widgetInspectorEnabled = true; this.sendServiceSetting(extInspectorShow); }));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => { widgetInspectorEnabled = false; this.sendServiceSetting(extInspectorShow); }));
 
 		// Open Observatory.
 		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", async () => {
@@ -294,7 +307,7 @@ export class DebugCommands {
 		if (this.serviceSettings[id] && this.enabledServiceExtensions.indexOf(id) !== -1) {
 			this.serviceSettings[id]();
 
-			if (id === "ext.flutter.inspector.show")
+			if (id === extInspectorShow)
 				vs.commands.executeCommand("setContext", IS_INSPECTING_WIDGET_CONTEXT, widgetInspectorEnabled);
 		}
 	}
@@ -332,7 +345,7 @@ export class DebugCommands {
 		debugPaintingEnabled = false;
 		performanceOverlayEnabled = false;
 		repaintRainbowEnabled = false;
-		timeDilation = 1.0;
+		timeDilation = timeDilationNormal;
 		debugModeBannerEnabled = true;
 		paintBaselinesEnabled = false;
 		widgetInspectorEnabled = false;
