@@ -6,6 +6,7 @@ export const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidge
 
 /// The service extensions we know about and allow toggling via commands.
 export enum FlutterServiceExtension {
+	PlatformOverride = "ext.flutter.platformOverride",
 	DebugBanner = "ext.flutter.debugAllowBanner",
 	DebugPaint = "ext.flutter.debugPaint",
 	PaintBaselines = "ext.flutter.debugPaintBaselinesEnabled",
@@ -17,6 +18,7 @@ export enum FlutterServiceExtension {
 
 const keyTimeDilation = "timeDilation";
 const keyEnabled = "enabled";
+const keyValue = "value";
 
 /// Service extension values must be wrapped in objects when sent to the VM, eg:
 ///
@@ -25,6 +27,7 @@ const keyEnabled = "enabled";
 ///
 /// This map tracks the name of the key for a fivengiven extension.
 const extensionStateKeys: { [key: string]: string } = {
+	[FlutterServiceExtension.PlatformOverride]: keyValue,
 	[FlutterServiceExtension.DebugBanner]: keyEnabled,
 	[FlutterServiceExtension.DebugPaint]: keyEnabled,
 	[FlutterServiceExtension.PaintBaselines]: keyEnabled,
@@ -39,6 +42,7 @@ export const timeDilationSlow = 5.0;
 
 /// Default values for each service extension.
 const defaultExtensionState: { [key: string]: any } = {
+	[FlutterServiceExtension.PlatformOverride]: null, // We don't know the default here so we need to ask for it when the extension loads.
 	[FlutterServiceExtension.DebugBanner]: true,
 	[FlutterServiceExtension.DebugPaint]: false,
 	[FlutterServiceExtension.PaintBaselines]: false,
@@ -82,6 +86,9 @@ export class FlutterVmServiceExtensions {
 			// asking it to query whether it's enabled (it'll send us an event back with the answer).
 			if (e.body.id === "ext.flutter.inspector.isWidgetCreationTracked") {
 				e.session.customRequest("checkIsWidgetCreationTracked");
+				// If it's the PlatformOverride, send a request to get the current value.
+			} else if (e.body.id === FlutterServiceExtension.PlatformOverride) {
+				e.session.customRequest("checkPlatformOverride");
 			}
 
 		} else if (e.event === "dart.flutter.firstFrame") {
@@ -90,6 +97,8 @@ export class FlutterVmServiceExtensions {
 				this.sendValueToVM(extension as FlutterServiceExtension);
 		} else if (e.event === "dart.flutter.updateIsWidgetCreationTracked") {
 			vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, e.body.isWidgetCreationTracked);
+		} else if (e.event === "dart.flutter.updatePlatformOverride") {
+			this.currentExtensionState[FlutterServiceExtension.PlatformOverride] = e.body.platform;
 		} else if (e.event === "dart.flutter.serviceExtensionStateChanged") {
 			this.handleRemoteValueUpdate(e.body.extension, e.body.value);
 		}
