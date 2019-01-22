@@ -130,6 +130,7 @@ export class DebugCommands {
 				this.flutterExtensions.markAllServiceExtensionsUnloaded();
 		}));
 
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => this.flutterExtensions.toggle(FlutterServiceExtension.PlatformOverride, "iOS", "android")));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.flutterExtensions.toggle(FlutterServiceExtension.DebugPaint)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.flutterExtensions.toggle(FlutterServiceExtension.PerformanceOverlay)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.flutterExtensions.toggle(FlutterServiceExtension.RepaintRainbow)));
@@ -224,14 +225,6 @@ export class DebugCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.rerunLastDebugSession", () => {
 			vs.debug.startDebugging(LastDebugSession.workspaceFolder, LastDebugSession.debugConfig);
-		}));
-
-		// Flutter toggle platform.
-		// We can't just use the service extension directly here, as we need to call it twice (once to get, once to change) and
-		// currently it seems like the DA can't return responses to us here, so we'll have to do them both inside the DA.
-		// TODO: Find out if there's a better way to do this now we get updates to service extension values.
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => {
-			debugSessions.forEach((s) => s.session.customRequest("togglePlatform"));
 		}));
 
 		// Attach commands.
