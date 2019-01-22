@@ -119,6 +119,8 @@ export class DebugCommands {
 				this.onFirstFrameEmitter.fire();
 			} else if (e.event === "dart.flutter.updateIsWidgetCreationTracked") {
 				vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, e.body.isWidgetCreationTracked);
+			} else if (e.event === "dart.flutter.serviceExtensionStateChanged") {
+				this.updateServiceExtensionState(e.body.extension, e.body.value);
 			} else if (e.event === "dart.debugMetrics") {
 				const memory = e.body.memory;
 				const message = `${Math.ceil(memory.current / 1024 / 1024)}MB of ${Math.ceil(memory.total / 1024 / 1024)}MB`;
@@ -358,6 +360,21 @@ export class DebugCommands {
 		}
 		this.enabledServiceExtensions.length = 0;
 		vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, false);
+	}
+
+	private updateServiceExtensionState(id: string, value: any) {
+		// Don't try to process service extension we don't know about.
+		if (currentExtensionState[id] === undefined) {
+			return;
+		}
+
+		// HACK: This is because the values we get are currently all strings.
+		if (typeof value === "string") {
+			value = JSON.parse(value);
+		}
+
+		currentExtensionState[id] = value;
+		this.updateInspectingWidgetContextIfRequired(id);
 	}
 }
 
