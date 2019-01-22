@@ -173,13 +173,6 @@ export class DebugCommands {
 				this.disableAllServiceExtensions();
 		}));
 
-		this.registerServiceCommand(extDebugPaint);
-		this.registerServiceCommand(extShowPerformanceOverlay);
-		this.registerServiceCommand(extRepaintRainbow);
-		this.registerServiceCommand(extTimeDilation);
-		this.registerServiceCommand(extDebugAllowBanner);
-		this.registerServiceCommand(extDebugPaintBaselinesEnabled);
-		this.registerServiceCommand(extInspectorShow);
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.toggleServiceSetting(extDebugPaint)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.toggleServiceSetting(extShowPerformanceOverlay)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.toggleServiceSetting(extRepaintRainbow)));
@@ -322,10 +315,9 @@ export class DebugCommands {
 		this.sendServiceSetting(id);
 	}
 
-	private serviceSettings: { [id: string]: () => void } = {};
 	private sendServiceSetting(id: string) {
-		if (this.serviceSettings[id] && this.enabledServiceExtensions.indexOf(id) !== -1) {
-			this.serviceSettings[id]();
+		if (currentExtensionState[id] !== undefined && this.enabledServiceExtensions.indexOf(id) !== -1) {
+			debugSessions.forEach((s) => this.runServiceCommand(s, id));
 
 			this.updateInspectingWidgetContextIfRequired(id);
 		}
@@ -337,14 +329,8 @@ export class DebugCommands {
 	}
 
 	private sendAllServiceSettings() {
-		for (const id in this.serviceSettings)
+		for (const id in currentExtensionState)
 			this.sendServiceSetting(id);
-	}
-
-	private registerServiceCommand(id: string): void {
-		this.serviceSettings[id] = () => {
-			debugSessions.forEach((s) => this.runServiceCommand(s, id));
-		};
 	}
 
 	private runServiceCommand(session: DartDebugSessionInformation, method: string) {
