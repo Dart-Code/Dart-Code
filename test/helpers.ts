@@ -268,7 +268,7 @@ export async function setTestContent(content: string): Promise<void> {
 
 	// HACK: Add a small delay to try and reduce the chance of a "Requested result
 	// might be inconsistent with previously returned results" error.
-	await delay(100);
+	await delay(300);
 	await extApi.currentAnalysis;
 }
 
