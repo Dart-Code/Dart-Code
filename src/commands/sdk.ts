@@ -5,7 +5,6 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { ProgressLocation, Uri, window } from "vscode";
-import { Analytics } from "../analytics";
 import { config } from "../config";
 import { stripMarkdown } from "../dartdocs";
 import { flatMap, globalFlutterArgs, LogCategory, LogSeverity, PromiseCompleter, safeSpawn } from "../debug/utils";
@@ -13,6 +12,7 @@ import { FlutterCapabilities } from "../flutter/capabilities";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { DartHoverProvider } from "../providers/dart_hover_provider";
+import { PubGlobal } from "../pub/global";
 import { Stagehand, StagehandTemplate } from "../pub/stagehand";
 import { createFlutterSampleInTempFolder } from "../sdk/flutter_samples";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
@@ -32,10 +32,7 @@ export class SdkCommands {
 	// A map of any in-progress commands so we can terminate them if we want to run another.
 	private runningCommands: { [workspaceUriAndCommand: string]: ChainedProcess | undefined; } = {};
 
-	constructor(context: vs.ExtensionContext, private sdks: Sdks, private analytics: Analytics, private flutterCapabilities: FlutterCapabilities, private deviceManager: FlutterDeviceManager) {
-		this.sdks = sdks;
-		this.analytics = analytics;
-
+	constructor(context: vs.ExtensionContext, private sdks: Sdks, private pubGlobal: PubGlobal, private flutterCapabilities: FlutterCapabilities, private deviceManager: FlutterDeviceManager) {
 		const dartSdkManager = new DartSdkManager(sdks);
 		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => dartSdkManager.changeSdk()));
 		if (sdks.projectType === ProjectType.Flutter) {
@@ -351,7 +348,7 @@ export class SdkCommands {
 
 		// Get the JSON for the available templates by calling stagehand.
 
-		const stagehand = new Stagehand(this.sdks);
+		const stagehand = new Stagehand(this.sdks, this.pubGlobal);
 		const isAvailable = await stagehand.promptToInstallIfRequired();
 		if (!isAvailable) {
 			return;

@@ -1,48 +1,18 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { stagehandInstallationInstructionsUrl } from "../constants";
 import { safeSpawn } from "../debug/utils";
 import { pubPath } from "../sdk/utils";
-import { openInBrowser, Sdks } from "../utils";
+import { Sdks } from "../utils";
+import { PubGlobal } from "./global";
+
+const packageName = "Stagehand";
+const packageID = "stagehand";
 
 export class Stagehand {
-	constructor(private sdks: Sdks) { }
+	constructor(private sdks: Sdks, private pubGlobal: PubGlobal) { }
 
-	public async promptToInstallIfRequired(): Promise<boolean> {
-		const isAvailable = await this.isAvailable();
-		if (isAvailable)
-			return true;
-
-		if (!isAvailable) {
-			const moreInfo = "More Info";
-			const activateForMe = "Activate Stagehand";
-			let action = await vs.window.showErrorMessage("Stagehand has not been activated. Please run 'pub global activate stagehand'.", activateForMe, moreInfo);
-
-			if (action === moreInfo) {
-				openInBrowser(stagehandInstallationInstructionsUrl);
-				return false;
-			} else if (action === activateForMe) {
-				const output = await this.runCommandWithProgress("Activating Stagehand...", ["global", "activate", "stagehand"]);
-				if (output.indexOf("Installed executable stagehand") !== -1) {
-					return true;
-				} else if (await this.isAvailable()) {
-					return true;
-				} else {
-					action = await vs.window.showErrorMessage("Failed to install Stagehand. Please try installing manually.", moreInfo);
-					if (action === moreInfo) {
-						openInBrowser(stagehandInstallationInstructionsUrl);
-					}
-					return false;
-				}
-			}
-
-			return false;
-		}
-	}
-
-	private async isAvailable(): Promise<boolean> {
-		const output = await this.runCommand(["global", "list"]);
-		return output.indexOf("stagehand") !== -1;
+	public promptToInstallIfRequired() {
+		return this.pubGlobal.promptToInstallIfRequired(packageName, packageID);
 	}
 
 	public async getTemplates(): Promise<StagehandTemplate[]> {
