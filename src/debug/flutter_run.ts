@@ -49,7 +49,7 @@ export class FlutterRun extends StdIOService<UnknownNotification> {
 				this.notify(this.appStopSubscriptions, evt.params as f.AppEvent);
 				break;
 			case "app.progress":
-				this.notify(this.appProgressSubscriptions, evt.params as f.AppEvent);
+				this.notify(this.appProgressSubscriptions, evt.params as f.AppProgress);
 				break;
 		}
 	}

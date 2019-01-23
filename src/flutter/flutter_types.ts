@@ -28,6 +28,8 @@ export interface AppDebugPort extends AppEvent {
 export interface AppProgress extends AppEvent {
 	message?: string;
 	finished?: boolean;
+	id: number;
+	progressId: string;
 }
 
 export interface LogMessage {
