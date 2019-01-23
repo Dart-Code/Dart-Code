@@ -5,6 +5,7 @@ import { Analytics } from "../analytics";
 import { CoverageData, PromiseCompleter } from "../debug/utils";
 import { FlutterServiceExtension, FlutterServiceExtensionArgs, FlutterVmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../flutter/vm_service_extensions";
 import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../utils";
+import { DartDebugSessionInformation } from "../utils/debug";
 import { handleDebugLogEvent } from "../utils/log";
 
 const debugSessions: DartDebugSessionInformation[] = [];
