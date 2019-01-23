@@ -265,10 +265,3 @@ export class DebugCommands {
 		});
 	}
 }
-
-class DartDebugSessionInformation {
-	public observatoryUri?: string;
-	public progressPromise?: PromiseCompleter<void>;
-	public readonly sessionStart: Date = new Date();
-	constructor(public readonly session: vs.DebugSession) { }
-}
