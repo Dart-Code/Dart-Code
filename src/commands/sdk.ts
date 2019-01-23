@@ -21,6 +21,7 @@ import { fsPath, ProjectType, Sdks } from "../utils";
 import { sortBy } from "../utils/array";
 import { getChildFolders, hasPubspec } from "../utils/fs";
 import { log } from "../utils/log";
+import { logProcess } from "../utils/processes";
 import * as channels from "./channels";
 
 const flutterNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
@@ -326,7 +327,9 @@ export class SdkCommands {
 				progress.report({ message: "running..." });
 				const proc = safeSpawn(folder, binPath, args);
 				channels.runProcessInChannel(proc, channel);
-				this.logProcess(proc);
+				const logPrefix = `(PROC ${proc.pid})`;
+				log(`${logPrefix} Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogSeverity.Info, LogCategory.CommandProcesses);
+				logProcess(LogCategory.CommandProcesses, logPrefix, proc);
 				return proc;
 			}, existingProcess);
 			this.runningCommands[commandId] = process;
@@ -334,12 +337,6 @@ export class SdkCommands {
 
 			return process.completed;
 		});
-	}
-
-	private logProcess(process: child_process.ChildProcess): void {
-		process.stdout.on("data", (data) => log(data.toString(), LogSeverity.Info, LogCategory.CommandProcesses));
-		process.stderr.on("data", (data) => log(data.toString(), LogSeverity.Info, LogCategory.CommandProcesses));
-		process.on("close", (code) => log(`exit code ${code}`, LogSeverity.Info, LogCategory.CommandProcesses));
 	}
 
 	private async createFlutterProject(): Promise<void> {
