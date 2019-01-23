@@ -62,6 +62,10 @@ export class FlutterDebugSession extends DartDebugSession {
 		const debug = !args.noDebug;
 		const isAttach = args.request === "attach";
 		let appArgs = [];
+		if (isAttach)
+			this.sendEvent(new Event("dart.launching", { message: "Waiting for Flutter Application to connect...", finished: false }));
+		else
+			this.sendEvent(new Event("dart.launching", { message: "Launching Flutter Application...", finished: false }));
 
 		if (!isAttach) {
 			appArgs.push("-t");
@@ -128,9 +132,6 @@ export class FlutterDebugSession extends DartDebugSession {
 		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.FlutterRun)));
 		this.flutter = new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterPath, args.cwd, appArgs, args.env, args.flutterRunLogFile, logger, this.maxLogLineLength);
 		this.flutter.registerForUnhandledMessages((msg) => {
-			// Send a dummy progress message when we get the waiting message for an Attach.
-			if (msg && msg.indexOf("Waiting for a connection from Flutter on") !== -1 && !this.currentRunningAppId && !this.appHasStarted)
-				this.sendEvent(new Event("dart.progress", { message: msg, finished: false }));
 			if (msg.indexOf(flutterExceptionStartBannerPrefix) !== -1) {
 				// Change before logging.
 				this.outputCategory = "stderr";
@@ -154,9 +155,10 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.flutter.registerForAppStarted((n) => {
 			this.appHasStarted = true;
 			this.connectToObservatoryIfReady();
+			this.sendEvent(new Event("dart.launched"));
 		});
 		this.flutter.registerForAppStop((n) => { this.currentRunningAppId = undefined; this.flutter.dispose(); });
-		this.flutter.registerForAppProgress((e) => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished })));
+		this.flutter.registerForAppProgress((e) => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished, progressID: e.progressId || e.id })));
 		this.flutter.registerForError((err) => this.sendEvent(new OutputEvent(`${err}\n`, "stderr")));
 
 		return this.flutter.process;

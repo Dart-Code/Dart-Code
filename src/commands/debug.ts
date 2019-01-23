@@ -17,8 +17,6 @@ export class LastDebugSession {
 }
 
 export class DebugCommands {
-	private analytics: Analytics;
-
 	private debugMetrics = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 0);
 	private onWillHotReloadEmitter: vs.EventEmitter<void> = new vs.EventEmitter<void>();
 	public readonly onWillHotReload: vs.Event<void> = this.onWillHotReloadEmitter.event;
@@ -30,8 +28,7 @@ export class DebugCommands {
 	public readonly onFirstFrame: vs.Event<CoverageData[]> = this.onFirstFrameEmitter.event;
 	private readonly flutterExtensions: FlutterVmServiceExtensions;
 
-	constructor(context: vs.ExtensionContext, analytics: Analytics) {
-		this.analytics = analytics;
+	constructor(context: vs.ExtensionContext, private analytics: Analytics) {
 		this.flutterExtensions = new FlutterVmServiceExtensions(this.sendServiceSetting);
 		context.subscriptions.push(this.debugMetrics);
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
@@ -39,25 +36,47 @@ export class DebugCommands {
 			if (!session)
 				return;
 			this.flutterExtensions.handleDebugEvent(e);
-			if (e.event === "dart.progress") {
+			if (e.event === "dart.launching") {
+				vs.window.withProgress(
+					{ location: vs.ProgressLocation.Notification },
+					(progress) => {
+						progress.report({ message: e.body.message });
+						session.launchProgressReporter = progress;
+						return session.launchProgressPromise.promise;
+					},
+				);
+			} else if (e.event === "dart.launched") {
+				this.clearProgressIndicators(session);
+			} else if (e.event === "dart.progress") {
 				if (e.body.message) {
-					// Clear any old progress first
-					if (session.progressPromise)
-						session.progressPromise.resolve();
-					session.progressPromise = new PromiseCompleter();
-					vs.window.withProgress(
-						{ location: vs.ProgressLocation.Notification, title: e.body.message },
-						(_) => {
-							if (!session.progressPromise)
-								session.progressPromise = new PromiseCompleter();
-							return session.progressPromise.promise;
-						},
-					);
+					if (session.launchProgressReporter) {
+						session.launchProgressReporter.report({ message: e.body.message });
+					} else if (session.progressReporter) {
+						session.progressReporter.report({ message: e.body.message });
+					} else {
+						session.progressID = e.body.progressID;
+						vs.window.withProgress(
+							{ location: vs.ProgressLocation.Notification },
+							(progress) => {
+								progress.report({ message: e.body.message });
+								session.progressReporter = progress;
+								if (!session.progressPromise)
+									session.progressPromise = new PromiseCompleter<void>();
+								return session.progressPromise.promise;
+							},
+						);
+					}
 				}
 				if (e.body.finished) {
-					if (session.progressPromise) {
-						session.progressPromise.resolve();
+					if (session.launchProgressReporter) {
+						// Ignore "finished" events during launch, as we'll keep the progress indicator
+						// until we get dart.launched.
+					} else if (session.progressID === e.body.progressID) {
+						// Otherwise, signal completion if it matches the thing that started the progress.
+						if (session.progressPromise)
+							session.progressPromise.resolve();
 						session.progressPromise = undefined;
+						session.progressReporter = undefined;
 					}
 				}
 			} else if (e.event === "dart.observatoryUri") {
@@ -119,8 +138,7 @@ export class DebugCommands {
 			const session = debugSessions[sessionIndex];
 			debugSessions.splice(sessionIndex, 1);
 
-			if (session.progressPromise)
-				session.progressPromise.resolve();
+			this.clearProgressIndicators(session);
 			this.debugMetrics.hide();
 			const debugSessionEnd = new Date();
 			analytics.logDebugSessionDuration(debugSessionEnd.getTime() - session.sessionStart.getTime());
@@ -243,6 +261,16 @@ export class DebugCommands {
 				type: "dart",
 			});
 		}));
+	}
+
+	private clearProgressIndicators(session: DartDebugSessionInformation): void {
+		if (session.launchProgressPromise)
+			session.launchProgressPromise.resolve();
+		session.launchProgressReporter = undefined;
+		if (session.progressPromise)
+			session.progressPromise.resolve();
+		session.progressPromise = undefined;
+		session.progressReporter = undefined;
 	}
 
 	private async promptForDebugSession(): Promise<DartDebugSessionInformation | undefined> {
