@@ -40,7 +40,7 @@ export class Stagehand {
 			proc.stdout.on("data", (data) => stdout.push(data.toString()));
 			proc.stderr.on("data", (data) => stderr.push(data.toString()));
 			proc.on("close", (code) => {
-				if (code === 0) {
+				if (!code) {
 					resolve(stdout.join(""));
 				} else {
 					reject(`Stagehand exited with code ${code}.\n\n${stdout.join("")}\n\n${stderr.join("")}`);
