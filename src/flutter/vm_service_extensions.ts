@@ -123,9 +123,13 @@ export class FlutterVmServiceExtensions {
 			return;
 		}
 
-		// HACK: This is because the values we get are currently all strings.
+		// HACK: Everything comes through as strings, but we need bools/ints and sometimes strings,
+		// so attempt to parse it, but keep the original string in the case of failure.
 		if (typeof value === "string") {
-			value = JSON.parse(value);
+			try {
+				value = JSON.parse(value);
+			} catch {
+			}
 		}
 
 		this.currentExtensionState[id] = value;
