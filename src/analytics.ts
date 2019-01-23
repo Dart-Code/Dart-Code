@@ -23,6 +23,7 @@ enum EventAction {
 	HotReload,
 	OpenObservatory,
 	OpenTimeline,
+	OpenDevTools,
 }
 
 enum TimingVariable {
@@ -60,6 +61,7 @@ export class Analytics {
 	public logDebuggerHotReload() { this.event(Category.Debugger, EventAction.HotReload); }
 	public logDebuggerOpenObservatory() { this.event(Category.Debugger, EventAction.OpenObservatory); }
 	public logDebuggerOpenTimeline() { this.event(Category.Debugger, EventAction.OpenTimeline); }
+	public logDebuggerOpenDevTools() { this.event(Category.Debugger, EventAction.OpenDevTools); }
 
 	private event(category: Category, action: EventAction, resourceUri?: Uri): PromiseLike<void> {
 		const data: any = {

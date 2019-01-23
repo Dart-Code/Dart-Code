@@ -287,6 +287,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.openDevTools",
+				"title": "Open Dev Tools",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.selectDevice",
 				"title": "Select Device",
 				"category": "Flutter"
@@ -475,6 +480,10 @@
 				{
 					"command": "flutter.openTimeline",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "flutter.openDevTools",
+					"when": "config.dart.previewFlutterDevTools && dart-code:flutterProjectLoaded && inDebugMode"
 				},
 				{
 					"command": "flutter.selectDevice",
@@ -962,6 +971,17 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Whether to show quick fixes for ignoring hints and lints.",
+					"scope": "window"
+				},
+				"dart.previewFlutterDevTools": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to enable Flutter Dev Tools preview. Must also set previewFlutterDevToolsRepositoryPath.",
+					"scope": "window"
+				},
+				"dart.previewFlutterDevToolsRepositoryPath": {
+					"type": "string",
+					"description": "The path to a clone of https://github.com/flutter/devtools. You must have run `pub get`/`pub run build_runner build` in it first.",
 					"scope": "window"
 				},
 				"dart.previewBuildRunnerTasks": {
