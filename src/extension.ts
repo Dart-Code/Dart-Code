@@ -51,6 +51,7 @@ import { RefactorCodeActionProvider } from "./providers/refactor_code_action_pro
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
 import { SourceCodeActionProvider } from "./providers/source_code_action_provider";
 import { PubBuildRunnerTaskProvider } from "./pub/build_runner_task_provider";
+import { PubGlobal } from "./pub/global";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForSdkUpdates } from "./sdk/update_check";
@@ -314,7 +315,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	}));
 
 	// Register SDK commands.
-	const sdkCommands = new SdkCommands(context, sdks, analytics, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
+	const pubGlobal = new PubGlobal(sdks);
+	const sdkCommands = new SdkCommands(context, sdks, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
 	const debug = new DebugCommands(context, analytics);
 
 	// Register URI handler.

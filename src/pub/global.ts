@@ -38,7 +38,7 @@ export class PubGlobal {
 		}
 	}
 
-	private async isAvailable(packageName: string, packageID: string): Promise<boolean> {
+	public async isAvailable(packageName: string, packageID: string): Promise<boolean> {
 		const output = await this.runCommand(packageName, ["global", "list"]);
 		return output.indexOf(`${packageID} `) !== -1;
 	}
