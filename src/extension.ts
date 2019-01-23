@@ -317,7 +317,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// Register SDK commands.
 	const pubGlobal = new PubGlobal(sdks);
 	const sdkCommands = new SdkCommands(context, sdks, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
-	const debug = new DebugCommands(context, analytics);
+	const debug = new DebugCommands(context, sdks, analytics, pubGlobal);
 
 	// Register URI handler.
 	context.subscriptions.push(vs.window.registerUriHandler(new DartUriHandler(flutterCapabilities)));

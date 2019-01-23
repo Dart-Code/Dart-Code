@@ -2,9 +2,12 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { Analytics } from "../analytics";
+import { config } from "../config";
 import { CoverageData, PromiseCompleter } from "../debug/utils";
+import { FlutterDevTools } from "../flutter/dev_tools";
 import { FlutterServiceExtension, FlutterServiceExtensionArgs, FlutterVmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../flutter/vm_service_extensions";
-import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../utils";
+import { PubGlobal } from "../pub/global";
+import { fsPath, getDartWorkspaceFolders, openInBrowser, Sdks } from "../utils";
 import { DartDebugSessionInformation } from "../utils/debug";
 import { handleDebugLogEvent } from "../utils/log";
 
@@ -28,7 +31,7 @@ export class DebugCommands {
 	public readonly onFirstFrame: vs.Event<CoverageData[]> = this.onFirstFrameEmitter.event;
 	private readonly flutterExtensions: FlutterVmServiceExtensions;
 
-	constructor(context: vs.ExtensionContext, private analytics: Analytics) {
+	constructor(context: vs.ExtensionContext, private sdks: Sdks, private analytics: Analytics, private pubGlobal: PubGlobal) {
 		this.flutterExtensions = new FlutterVmServiceExtensions(this.sendServiceSetting);
 		context.subscriptions.push(this.debugMetrics);
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
@@ -186,6 +189,27 @@ export class DebugCommands {
 			if (session && session.observatoryUri) {
 				openInBrowser(session.observatoryUri + "/#/timeline-dashboard");
 				analytics.logDebuggerOpenTimeline();
+			}
+		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.openDevTools", async () => {
+			if (!debugSessions.length)
+				return;
+			const session = debugSessions.length === 1
+				? debugSessions[0]
+				: await this.promptForDebugSession();
+			// TODO: If the app hasn't finished launching yet (we don't have an Observatory port etc.) then find a way to wait on
+			// it, rather than silently failing.
+			if (session && session.observatoryUri && config.previewFlutterDevTools && config.previewFlutterDevToolsRepositoryPath) {
+				const devTools = new FlutterDevTools(this.sdks, this.pubGlobal, session);
+				// When the debug session terminates, terminate this task too since the connection will become invalid.
+				let sub: vs.Disposable;
+				sub = vs.debug.onDidTerminateDebugSession((e) => {
+					if (e.id === session.session.id) {
+						devTools.dispose();
+						sub.dispose();
+					}
+				});
+				analytics.logDebuggerOpenDevTools();
 			}
 		}));
 
