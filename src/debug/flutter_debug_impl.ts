@@ -1,6 +1,7 @@
 import { Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { restartReasonManual } from "../constants";
+import { extractObservatoryPort } from "../utils/debug";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun, RunMode } from "./flutter_run";
@@ -76,7 +77,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			// https://github.com/Dart-Code/Dart-Code/issues/1190
 			const flutterAttach: FlutterAttachRequestArguments = args as any;
 			if (flutterAttach.observatoryUri) {
-				const observatoryPort = /:([0-9]+)\/?$/.exec(flutterAttach.observatoryUri)[1];
+				const observatoryPort = extractObservatoryPort(flutterAttach.observatoryUri);
 				appArgs.push("--debug-port");
 				appArgs.push(observatoryPort);
 			}
