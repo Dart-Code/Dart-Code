@@ -111,7 +111,7 @@ export async function getPackages() {
 	log("Restoring packages and waiting for next analysis to complete");
 	await activateWithoutAnalysis();
 	if (!vs.workspace.workspaceFolders || !vs.workspace.workspaceFolders.length) {
-		logError("Cannoy getPackages because there is no workspace folder");
+		logError("Cannot getPackages because there is no workspace folder");
 		return;
 	}
 	await waitForNextAnalysis(async () => {
