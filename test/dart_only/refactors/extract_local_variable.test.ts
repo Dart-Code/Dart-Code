@@ -5,7 +5,7 @@ describe("refactor", () => {
 
 	beforeEach("activate", () => activate());
 
-	it("can extract simple code into a method", async () => {
+	it("can extract simple code into a local variable", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("myName");
 
