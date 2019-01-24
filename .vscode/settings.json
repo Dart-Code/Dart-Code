@@ -23,6 +23,7 @@
 	"dart.flutterDaemonLogFile": "logs/flutter_daemon.txt",
 	"dart.observatoryLogFile": "logs/observatory.txt",
 	"dart.analysisExcludedFolders": [
+		"test/test_projects/dart_create_template",
 		"test/test_projects/flutter_create_basic",
 		"test/test_projects/flutter_create_sample"
 	]
