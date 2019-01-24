@@ -145,13 +145,14 @@ async function runAllTests(): Promise<void> {
 	const flutterSdkPath = process.env.FLUTTER_PATH_SYMLINK || process.env.FLUTTER_PATH || process.env.PATH;
 
 	const flutterRoot = process.env.FLUTTER_ROOT || process.env.FLUTTER_PATH;
-	const totalRuns = 6;
+	const totalRuns = 8;
 	let runNumber = 1;
 	try {
 		await runTests("dart_only", "hello_world", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("multi_root", "projects.code-workspace", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("multi_project_folder", "", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("not_activated/flutter_create", "empty", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("not_activated/dart_create", "empty", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("flutter_create", "flutter_create.code-workspace", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		if (flutterRoot) {
 			await runTests("flutter_repository", flutterRoot, flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
