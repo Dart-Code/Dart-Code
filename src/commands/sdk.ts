@@ -340,7 +340,7 @@ export class SdkCommands {
 		});
 	}
 
-	private async createDartProject(): Promise<vs.Uri> {
+	private async createDartProject(): Promise<void> {
 		if (!this.sdks || !this.sdks.dart) {
 			showDartActivationFailure("dart.createProject");
 			return;
