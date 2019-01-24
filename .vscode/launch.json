@@ -42,14 +42,14 @@
 			]
 		},
 		{
-			"name": "Launch Tests (Flutter Create Execution)",
+			"name": "Launch Tests (Create Command Execution)",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				"${workspaceRoot}/test/test_projects/flutter_create.code-workspace",
+				"${workspaceRoot}/test/test_projects/create_tests.code-workspace",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/test/flutter_create"
+				"--extensionTestsPath=${workspaceRoot}/out/test/create_tests"
 			],
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"

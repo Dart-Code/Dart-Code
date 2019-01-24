@@ -1,6 +1,9 @@
 {
 	"folders": [
 		{
+			"path": "dart_create_template"
+		},
+		{
 			"path": "flutter_create_basic"
 		},
 		{
