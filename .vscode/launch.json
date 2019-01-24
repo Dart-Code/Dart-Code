@@ -152,6 +152,28 @@
 			]
 		},
 		{
+			"name": "Launch Tests (Not Activated / Dart Create)",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"${workspaceRoot}/test/test_projects/empty",
+				"--extensionDevelopmentPath=${workspaceRoot}",
+				"--extensionTestsPath=${workspaceRoot}/out/test/not_activated/dart_create"
+			],
+			"env": {
+				"DART_CODE_IS_TEST_RUN": "true"
+			},
+			"outFiles": [
+				"${workspaceRoot}/out/test/**/*.js"
+			],
+			"preLaunchTask": "npm: watch",
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**"
+			]
+		},
+		{
 			"name": "Launch Tests (Not Activated / Flutter Create)",
 			"type": "extensionHost",
 			"request": "launch",
