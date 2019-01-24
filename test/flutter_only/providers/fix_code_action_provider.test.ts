@@ -1,9 +1,10 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, flutterEmptyFile, rangeOf, setTestContent } from "../../helpers";
+import { activate, currentDoc, flutterEmptyFile, getPackages, rangeOf, setTestContent } from "../../helpers";
 
 describe("fix_code_action_provider", () => {
-
+	// We have tests that require external packages.
+	before("get packages", () => getPackages());
 	beforeEach("activate flutterEmptyFile and add test content", async () => {
 		await activate(flutterEmptyFile);
 		await setTestContent(`

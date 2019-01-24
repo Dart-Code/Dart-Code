@@ -6,10 +6,12 @@ import { fsPath, versionIsAtLeast } from "../../../src/utils";
 import { logInfo } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getLaunchConfiguration, openFile, positionOf, withTimeout } from "../../helpers";
+import { activate, defer, delay, ext, extApi, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getLaunchConfiguration, getPackages, openFile, positionOf, withTimeout } from "../../helpers";
 
 describe("flutter test debugger", () => {
 
+	// We have tests that require external packages.
+	before("get packages", () => getPackages());
 	let testPrefix = "- ";
 	beforeEach("activate flutterTestMainFile", async () => {
 		await activate(flutterTestMainFile);

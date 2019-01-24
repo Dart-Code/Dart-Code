@@ -1,9 +1,11 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, ensureDocumentSymbol, flutterHelloWorldMainFile, getDocumentSymbols } from "../../helpers";
+import { activate, ensureDocumentSymbol, flutterHelloWorldMainFile, getDocumentSymbols, getPackages } from "../../helpers";
 
 describe("dart_document_symbol_provider", () => {
 
+	// We have tests that require external packages.
+	before("get packages", () => getPackages());
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 
 	it("returns expected items for 'flutter/hello_world'", async () => {

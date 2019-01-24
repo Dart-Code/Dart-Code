@@ -87,11 +87,6 @@ export async function activate(file?: vs.Uri | null | undefined): Promise<void> 
 	if (file === undefined) // undefined means use default, but explicit null will result in no file open.
 		file = getDefaultFile();
 
-	if (extApi && extApi.sdks && extApi.sdks.projectType === ProjectType.Flutter) {
-		log("Restoring packages for Flutter project");
-		await vs.commands.executeCommand("dart.getPackages", vs.workspace.workspaceFolders ? [0] : undefined);
-	}
-
 	log(`Closing all open files`);
 	await closeAllOpenFiles();
 	if (file) {
