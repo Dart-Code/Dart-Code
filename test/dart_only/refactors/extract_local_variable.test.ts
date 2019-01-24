@@ -1,14 +1,11 @@
 import * as vs from "vscode";
-import { activate, currentDoc, ensureTestContent, rangeOf, sb, setTestContent } from "../../helpers";
+import { activate, currentDoc, ensureTestContent, rangeOf, setTestContent } from "../../helpers";
 
 describe("refactor", () => {
 
 	beforeEach("activate", () => activate());
 
 	it("can extract simple code into a local variable", async () => {
-		const showInputBox = sb.stub(vs.window, "showInputBox");
-		showInputBox.resolves("myName");
-
 		await setTestContent(`
 String name() {
   return "Danny";
@@ -19,8 +16,8 @@ String name() {
 		// When that's fixed, this test will fail and we can fix it up.
 		await ensureTestContent(`
 String name() {
-  var myName = "Danny";
-    return myName;
+  var s = "Danny";
+    return s;
 }
 		`);
 	});
