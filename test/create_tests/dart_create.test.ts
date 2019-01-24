@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { fsPath } from "../../src/utils";
 import { waitForResult } from "../helpers";
 
-describe.only("dart", () => {
+describe("dart", () => {
 	it("created a templated project", async () => {
 		const sampleProjectFolder = fsPath(vs.workspace.workspaceFolders[0].uri);
 		const expectedString = "Hello world";
