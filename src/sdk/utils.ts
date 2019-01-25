@@ -302,10 +302,12 @@ function findDartSdk(folders: string[]) {
 	const isDartSdk = (folder: string) => {
 		if (!hasDartExecutable(folder))
 			return false;
-		if (!hasDartAnalysisServer(folder)) {
-			log(`            Skipping ${folder} because it has dart but no analysis server snapshot...`);
-			return false;
-		}
+		// Commented out to fix https://github.com/Dart-Code/Dart-Code/issues/1423
+		// Needs restoring (https://github.com/Dart-Code/Dart-Code/issues/1424)
+		// if (!hasDartAnalysisServer(folder)) {
+		// 	log(`            Skipping ${folder} because it has dart but no analysis server snapshot...`);
+		// 	return false;
+		// }
 		return true;
 	};
 	return searchPaths(folders, isDartSdk, dartVMPath);
