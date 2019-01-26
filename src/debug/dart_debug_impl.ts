@@ -826,7 +826,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private isSimpleKind(kind: string) {
-		return kind === "String" || kind === "Bool" || kind === "Int" || kind === "Num" || kind === "Double";
+		return kind === "String" || kind === "Bool" || kind === "Int" || kind === "Num" || kind === "Double" || kind === "Null";
 	}
 
 	private async callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef, getFullString: boolean = false): Promise<string> {
