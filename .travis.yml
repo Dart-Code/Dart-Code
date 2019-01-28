@@ -71,10 +71,10 @@ before_install:
   # To ensure we follow symlinks properly, put links
   # in folders that we'll use in PATHs.
   - mkdir dartsymlinkbins
-  - ln -s `pwd`/dart-sdk/bin/dart dartsymlinkbins
+  - ln -s ../dart-sdk/bin/dart dartsymlinkbins/dart
   - export DART_PATH_SYMLINK=`pwd`/dartsymlinkbins
   - mkdir fluttersymlinkbins
-  - ln -s `pwd`/flutter/bin/flutter fluttersymlinkbins
+  - ln -s ../flutter/bin/flutter fluttersymlinkbins/flutter
   - export FLUTTER_PATH_SYMLINK=`pwd`/fluttersymlinkbins
   - dart-sdk/bin/dart --version
   - flutter/bin/flutter --version
