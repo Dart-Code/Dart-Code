@@ -299,19 +299,16 @@ function findFuchsiaRoot(folder: string): string | undefined {
 }
 
 function findDartSdk(folders: string[]) {
-	return searchPaths(folders, hasDartExecutable, dartExecutableName);
+	return searchPaths(folders, dartExecutableName, hasDartAnalysisServer);
 }
 
 function findFlutterSdk(folders: string[]) {
-	return searchPaths(folders, hasFlutterExecutable, flutterExecutableName);
+	return searchPaths(folders, flutterExecutableName);
 }
 
-function hasDartExecutable(folder: string) { return fs.existsSync(path.join(folder, dartExecutableName)); }
-function hasFlutterExecutable(folder: string) { return fs.existsSync(path.join(folder, flutterExecutableName)); }
-// Must be called with an SDK root, not an unresolved Dart binary path!
-// export const hasDartAnalysisServer = (folder: string) => fs.existsSync(path.join(folder, analyzerSnapshotPath));
+export const hasDartAnalysisServer = (folder: string) => fs.existsSync(path.join(folder, analyzerSnapshotPath));
 
-export function searchPaths(paths: Array<string | undefined>, isSdk: (s: string) => boolean, executableFilename: string): string {
+export function searchPaths(paths: Array<string | undefined>, executableFilename: string, postFilter?: (s: string) => boolean): string {
 	log(`Searching for ${executableFilename}`);
 
 	let sdkPaths =
@@ -325,6 +322,8 @@ export function searchPaths(paths: Array<string | undefined>, isSdk: (s: string)
 	const isBinFolder = (f: string) => ["bin", "sbin"].indexOf(path.basename(f)) !== -1;
 	sdkPaths = flatMap(sdkPaths, (p) => isBinFolder(p) ? [p] : [p, path.join(p, "bin")]);
 
+	// Add on the executable name, as we need to do filtering based on the resolve path.
+
 	// TODO: Make the list unique, but preserve the order of the first occurrences. We currently
 	// have uniq() and unique(), so also consolidate them.
 
@@ -332,16 +331,26 @@ export function searchPaths(paths: Array<string | undefined>, isSdk: (s: string)
 	for (const p of sdkPaths)
 		log(`        ${p}`);
 
-	let sdkPath = sdkPaths.find(isSdk);
+	// Restrict only to the paths that have the executable.
+	sdkPaths = sdkPaths.filter((p) => fs.existsSync(path.join(p, executableFilename)));
+
+	// Convert all the paths to their resolved locations.
+	sdkPaths = sdkPaths.map((p) => {
+		// In order to handle symlinks on the binary (not folder), we need to add the executableName before calling realpath.
+		const realExecutableLocation = p && fs.realpathSync(path.join(p, executableFilename));
+
+		// Then we need to take the executable name and /bin back off
+		return path.dirname(path.dirname(realExecutableLocation));
+	});
+
+	// Now apply any post-filters.
+	log("    Candidate paths to be post-filtered:");
+	for (const p of sdkPaths)
+		log(`        ${p}`);
+	const sdkPath = sdkPaths.find(postFilter || ((_) => true));
 
 	if (sdkPath)
 		log(`    Found at ${sdkPath}`);
-
-	// In order to handle symlinks on the binary (not folder), we need to add the executableName and then realpath.
-	sdkPath = sdkPath && fs.realpathSync(path.join(sdkPath, executableFilename));
-
-	// Then we need to take the executable name and /bin back off
-	sdkPath = sdkPath && path.dirname(path.dirname(sdkPath));
 
 	log(`    Returning SDK path ${sdkPath} for ${executableFilename}`);
 
@@ -350,5 +359,5 @@ export function searchPaths(paths: Array<string | undefined>, isSdk: (s: string)
 
 export function isDartSdkFromFlutter(dartSdkPath: string) {
 	const possibleFlutterSdkPath = path.join(path.dirname(path.dirname(path.dirname(dartSdkPath))), "bin");
-	return hasFlutterExecutable(possibleFlutterSdkPath);
+	return fs.existsSync(path.join(possibleFlutterSdkPath, flutterExecutableName));
 }
