@@ -68,13 +68,20 @@ before_install:
   - flutter/bin/flutter update-packages
   - export FLUTTER_PATH=`pwd`/flutter
   - export DART_PATH=`pwd`/dart-sdk
+
   # To ensure we follow symlinks properly, put links
   # in folders that we'll use in PATHs.
   - mkdir dartsymlinkbins
   - ln -s ../dart-sdk/bin/dart dartsymlinkbins/dart
-  - export DART_PATH_SYMLINK=`pwd`/dartsymlinkbins
   - mkdir fluttersymlinkbins
   - ln -s ../flutter/bin/flutter fluttersymlinkbins/flutter
+
+  # To ensure we detectonly detect real SDKs and not non-Dartlang
+  # dart binaries, add a fake dart that is actually just echo
+  - mkdir fakedart
+  - ln -s /bin/echo fakedart/dart
+
+  - export DART_PATH_SYMLINK=`pwd`/fakedart:`pwd`/dartsymlinkbins
   - export FLUTTER_PATH_SYMLINK=`pwd`/fluttersymlinkbins
   - dart-sdk/bin/dart --version
   - flutter/bin/flutter --version
