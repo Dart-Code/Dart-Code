@@ -141,8 +141,8 @@ async function runAllTests(): Promise<void> {
 	}
 
 	const codeVersion = process.env.ONLY_RUN_CODE_VERSION === "DEV" ? "insiders" : "*";
-	const dartSdkPath = process.env.DART_PATH || process.env.PATH;
-	const flutterSdkPath = process.env.FLUTTER_PATH || process.env.PATH;
+	const dartSdkPath = process.env.DART_PATH_SYMLINK || process.env.PATH;
+	const flutterSdkPath = process.env.FLUTTER_PATH_SYMLINK || process.env.PATH;
 
 	const flutterRoot = process.env.FLUTTER_ROOT || process.env.FLUTTER_PATH;
 	const totalRuns = 6;

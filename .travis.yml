@@ -73,11 +73,14 @@ before_install:
   - flutter/bin/flutter doctor
   - export FLUTTER_PATH=`pwd`/flutter
   - export DART_PATH=`pwd`/dart-sdk
-  - mkdir symlinkbins
-  - cd symlinkbins
-  - ln dart-sdk/bin/dart
-  - ln flutter/bin/flutter
-  - cd  ..
+  # To ensure we follow symlinks properly, put links
+  # in folders that we'll use in PATHs.
+  - mkdir dartsymlinkbins
+  - ln dartsymlinkbins/dart dart-sdk/bin/dart
+  - export DART_PATH_SYMLINK=`pwd`/dartsymlinkbins
+  - mkdir fluttersymlinkbins
+  - ln fluttersymlinkbins/flutter flutter/bin/flutter
+  - export FLUTTER_PATH_SYMLINK=`pwd`/fluttersymlinkbins
   - cd ..
 
 install:
