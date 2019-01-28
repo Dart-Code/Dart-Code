@@ -460,7 +460,7 @@ export async function getSnippetCompletionsAt(searchText: string, triggerCharact
 export function ensureCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind, label: string, filterText?: string, documentation?: string): void {
 	let completion = items.find((item) =>
 		item.label === label
-		&& item.filterText === filterText
+		&& (item.filterText && item.filterText.trim()) === (filterText && filterText.trim())
 		&& item.kind === kind,
 	);
 	assert.ok(
