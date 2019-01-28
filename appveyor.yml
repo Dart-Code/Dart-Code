@@ -59,6 +59,14 @@ install:
   - flutter\bin\flutter doctor
   - ps: $env:FLUTTER_PATH = "$pwd\flutter"
   - ps: $env:DART_PATH = "$pwd\dart-sdk"
+  # To ensure we follow symlinks properly, put links
+  # in folders that we'll use in PATHs.
+  - mkdir dartsymlinkbins
+  - mklink dartsymlinkbins\dart dart-sdk\bin\dart
+  - ps: $env:DART_PATH_SYMLINK = "$pwd\dartsymlinkbins"
+  - mkdir fluttersymlinkbins
+  - mklink fluttersymlinkbins\flutter flutter\bin\flutter
+  - ps: $env:FLUTTER_PATH_SYMLINK = "$pwd\fluttersymlinkbins"
   - cd ..
 
 build_script:
