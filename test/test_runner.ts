@@ -20,7 +20,7 @@ onExit(() => {
 });
 
 testRunner.configure({
-	forbidOnly: !!process.env.MOCHA_FORBID_ONLY,
+	// forbidOnly: !!process.env.MOCHA_FORBID_ONLY,
 	reporter: MultiReporter,
 	reporterOptions: {
 		output: process.env.TEST_XML_OUTPUT,
