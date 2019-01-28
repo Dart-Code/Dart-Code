@@ -210,10 +210,12 @@ beforeEach("set logger", async function () {
 			} catch { }
 		}
 	});
+});
 
+before("Set of console logging", () => {
 	const consoleLogger: vs.Disposable | undefined = onLog((e) => {
 		const message = e.message.trimRight();
-		console.log(message);
+		console.warn(message);
 	});
 	deferUntilLast(consoleLogger.dispose);
 });
