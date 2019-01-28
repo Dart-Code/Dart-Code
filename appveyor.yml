@@ -57,10 +57,10 @@ install:
   # To ensure we follow symlinks properly, put links
   # in folders that we'll use in PATHs.
   - mkdir dartsymlinkbins
-  - mklink dartsymlinkbins\dart.exe dart-sdk\bin\dart.exe
+  - ps: mklink "$pwd\dartsymlinkbins\dart.exe" "$pwd\dart-sdk\bin\dart.exe"
   - ps: $env:DART_PATH_SYMLINK = "$pwd\dartsymlinkbins"
   - mkdir fluttersymlinkbins
-  - mklink fluttersymlinkbins\flutter.bat flutter\bin\flutter.bat
+  - ps: mklink "$pwd\fluttersymlinkbins\flutter.bat" "$pwd\flutter\bin\flutter.bat"
   - ps: $env:FLUTTER_PATH_SYMLINK = "$pwd\fluttersymlinkbins"
   - node --version
   - dartsymlinkbins\dart --version
