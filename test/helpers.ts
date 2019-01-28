@@ -8,7 +8,7 @@ import { dartCodeExtensionIdentifier, flatMap, LogCategory, LogSeverity } from "
 import { InternalExtensionApi } from "../src/extension";
 import { internalApiSymbol } from "../src/symbols";
 import { fsPath, isAnalyzable, ProjectType, vsCodeVersionConstraint } from "../src/utils";
-import { log, logError, logTo, logWarn } from "../src/utils/log";
+import { log, logError, logTo, logWarn, onLog } from "../src/utils/log";
 import { waitFor } from "../src/utils/promises";
 import sinon = require("sinon");
 
@@ -210,6 +210,12 @@ beforeEach("set logger", async function () {
 			} catch { }
 		}
 	});
+
+	const consoleLogger: vs.Disposable | undefined = onLog((e) => {
+		const message = e.message.trimRight();
+		console.log(message);
+	});
+	deferUntilLast(consoleLogger.dispose);
 });
 
 export let sb: sinon.SinonSandbox;
