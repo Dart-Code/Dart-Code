@@ -79,11 +79,18 @@ function getDefaultFile(): vs.Uri {
 export async function activateWithoutAnalysis(): Promise<void> {
 	log("Activating");
 	await ext.activate();
-	extApi = ext.exports[internalApiSymbol];
+	if (ext.exports)
+		extApi = ext.exports[internalApiSymbol];
+	else
+		console.warn("Extension has no exports, it may not have activated correctly!");
 }
 
 export async function activate(file?: vs.Uri | null | undefined): Promise<void> {
 	await activateWithoutAnalysis();
+	if (!extApi) {
+		console.warn("Skipping rest of activation due to missing extension API!");
+		return;
+	}
 	if (file === undefined) // undefined means use default, but explicit null will result in no file open.
 		file = getDefaultFile();
 
@@ -212,7 +219,7 @@ beforeEach("set logger", async function () {
 	});
 });
 
-before("Set of console logging", () => {
+before("Enable console logging", () => {
 	const consoleLogger: vs.Disposable | undefined = onLog((e) => {
 		const message = e.message.trimRight();
 		console.warn(message);
