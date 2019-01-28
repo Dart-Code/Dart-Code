@@ -208,11 +208,12 @@ export class FlutterDebugSession extends DartDebugSession {
 			return;
 		}
 		this.isReloadInProgress = true;
+		const restartType = hotRestart ? "hot-restart" : "hot-reload";
 		try {
 			await this.flutter.restart(this.currentRunningAppId, !this.noDebug, hotRestart, reason);
-			this.requestCoverageUpdate(hotRestart ? "hot-restart" : "hot-reload");
+			this.requestCoverageUpdate(restartType);
 		} catch (e) {
-			this.sendEvent(new OutputEvent(e, "stderr"));
+			this.sendEvent(new OutputEvent(`Error running ${restartType}: ${e}\n`, "stderr"));
 		} finally {
 			this.isReloadInProgress = false;
 		}
