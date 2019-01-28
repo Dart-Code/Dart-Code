@@ -8,7 +8,7 @@ import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../utils";
 import { DartDebugSessionInformation } from "../utils/debug";
 import { handleDebugLogEvent } from "../utils/log";
 
-const debugSessions: DartDebugSessionInformation[] = [];
+export const debugSessions: DartDebugSessionInformation[] = [];
 // export let mostRecentAttachedProbablyReusableObservatoryUri: string;
 
 export class LastDebugSession {
