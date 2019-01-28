@@ -314,7 +314,7 @@ function findDartSdk(folders: string[]) {
 }
 
 function findFlutterSdk(folders: string[]) {
-	const isFlutterSdk = (folder: string) => fs.existsSync(path.join(folder, dartExecutableName));
+	const isFlutterSdk = (folder: string) => fs.existsSync(path.join(folder, flutterExecutableName));
 	return searchPaths(folders, isFlutterSdk, flutterExecutableName);
 }
 
