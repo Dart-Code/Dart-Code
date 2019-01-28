@@ -54,10 +54,10 @@ install:
   - flutter\bin\flutter update-packages
   - ps: $env:FLUTTER_PATH = "$pwd\flutter"
   - ps: $env:DART_PATH = "$pwd\dart-sdk"
-  - node --version
-  - npm --version
   - dart-sdk\bin\dart --version
   - flutter\bin\flutter --version
+  - node --version
+  - npm --version
   - flutter\bin\flutter doctor
   - cd ..
 
