@@ -20,7 +20,7 @@ describe("test environment", () => {
 	});
 });
 
-describe("extension", () => {
+describe.only("extension", () => {
 	it("activated", async () => {
 		await activateWithoutAnalysis();
 		assert.equal(ext.isActive, true);
