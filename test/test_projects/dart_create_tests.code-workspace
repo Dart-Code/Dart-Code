@@ -1,0 +1,10 @@
+{
+	"folders": [
+		{
+			"path": "dart_create_template"
+		}
+	],
+	"settings": {
+		"files.insertFinalNewline": true
+	}
+}
