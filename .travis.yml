@@ -66,11 +66,6 @@ before_install:
   - echo Configuring Dart and Flutter...
   - flutter/bin/flutter config --no-analytics
   - flutter/bin/flutter update-packages
-  - dart-sdk/bin/dart --version
-  - flutter/bin/flutter --version
-  - node --version
-  - npm --version
-  - flutter/bin/flutter doctor
   - export FLUTTER_PATH=`pwd`/flutter
   - export DART_PATH=`pwd`/dart-sdk
   # To ensure we follow symlinks properly, put links
@@ -81,6 +76,13 @@ before_install:
   - mkdir fluttersymlinkbins
   - ln -s flutter/bin/flutter fluttersymlinkbins/flutter
   - export FLUTTER_PATH_SYMLINK=`pwd`/fluttersymlinkbins
+  - dart-sdk/bin/dart --version
+  - flutter/bin/flutter --version
+  - dartsymlinkbins/dart --version
+  - fluttersymlinkbins/flutter --version
+  - node --version
+  - npm --version
+  - flutter/bin/flutter doctor
   - cd ..
 
 install:

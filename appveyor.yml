@@ -52,11 +52,6 @@ install:
   - echo Configuring Dart and Flutter...
   - flutter\bin\flutter config --no-analytics
   - flutter\bin\flutter update-packages
-  - dart-sdk\bin\dart --version
-  - flutter\bin\flutter --version
-  - node --version
-  - npm --version
-  - flutter\bin\flutter doctor
   - ps: $env:FLUTTER_PATH = "$pwd\flutter"
   - ps: $env:DART_PATH = "$pwd\dart-sdk"
   # To ensure we follow symlinks properly, put links
@@ -67,6 +62,11 @@ install:
   - mkdir fluttersymlinkbins
   - mklink fluttersymlinkbins\flutter flutter\bin\flutter
   - ps: $env:FLUTTER_PATH_SYMLINK = "$pwd\fluttersymlinkbins"
+  - node --version
+  - dartsymlinkbins\dart --version
+  - fluttersymlinkbins\flutter --version
+  - npm --version
+  - flutter\bin\flutter doctor
   - cd ..
 
 build_script:
