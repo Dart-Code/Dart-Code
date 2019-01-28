@@ -314,14 +314,24 @@ function hasFlutterExecutable(folder: string) { return fs.existsSync(path.join(f
 export function searchPaths(paths: Array<string | undefined>, isSdk: (s: string) => boolean, executableFilename: string): string {
 	log(`Searching for ${executableFilename}`);
 
-	const sdkPaths =
+	let sdkPaths =
 		paths
 			.filter((p) => p)
 			.map(resolvePaths);
 
+	// Any that don't end with bin, add it on (as an extra path) since some of our
+	// paths may come from places that don't already include it (for ex. the
+	// user config.sdkPath).
+	const isBinFolder = (f: string) => ["bin", "sbin"].indexOf(path.basename(f)) !== -1;
+	sdkPaths = flatMap(sdkPaths, (p) => isBinFolder(p) ? [p] : [p, path.join(p, "bin")]);
+
+	// TODO: Make the list unique, but preserve the order of the first occurrences. We currently
+	// have uniq() and unique(), so also consolidate them.
+
 	log("    Looking in:");
 	for (const p of sdkPaths)
 		log(`        ${p}`);
+
 
 	let sdkPath = sdkPaths.find(isSdk);
 
