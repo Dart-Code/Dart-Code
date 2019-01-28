@@ -82,15 +82,11 @@ export async function activateWithoutAnalysis(): Promise<void> {
 	if (ext.exports)
 		extApi = ext.exports[internalApiSymbol];
 	else
-		console.warn("Extension has no exports, it may not have activated correctly!");
+		console.warn("Extension has no exports, it probably has not activated correctly! Check the extension startup logs.");
 }
 
 export async function activate(file?: vs.Uri | null | undefined): Promise<void> {
 	await activateWithoutAnalysis();
-	if (!extApi) {
-		console.warn("Skipping rest of activation due to missing extension API!");
-		return;
-	}
 	if (file === undefined) // undefined means use default, but explicit null will result in no file open.
 		file = getDefaultFile();
 
