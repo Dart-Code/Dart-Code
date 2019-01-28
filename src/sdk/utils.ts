@@ -299,29 +299,19 @@ function findFuchsiaRoot(folder: string): string | undefined {
 }
 
 function findDartSdk(folders: string[]) {
-	const isDartSdk = (folder: string) => {
-		if (!fs.existsSync(path.join(folder, dartExecutableName)))
-			return false;
-		// Commented out to fix https://github.com/Dart-Code/Dart-Code/issues/1423
-		// Needs restoring (https://github.com/Dart-Code/Dart-Code/issues/1424)
-		// if (!hasDartAnalysisServer(folder)) {
-		// 	log(`            Skipping ${folder} because it has dart but no analysis server snapshot...`);
-		// 	return false;
-		// }
-		return true;
-	};
-	return searchPaths(folders, isDartSdk, dartExecutableName);
+	return searchPaths(folders, hasDartExecutable, dartExecutableName);
 }
 
 function findFlutterSdk(folders: string[]) {
-	const isFlutterSdk = (folder: string) => fs.existsSync(path.join(folder, flutterExecutableName));
-	return searchPaths(folders, isFlutterSdk, flutterExecutableName);
+	return searchPaths(folders, hasFlutterExecutable, flutterExecutableName);
 }
 
+function hasDartExecutable(folder: string) { return fs.existsSync(path.join(folder, dartExecutableName)); }
+function hasFlutterExecutable(folder: string) { return fs.existsSync(path.join(folder, flutterExecutableName)); }
 // Must be called with an SDK root, not an unresolved Dart binary path!
 // export const hasDartAnalysisServer = (folder: string) => fs.existsSync(path.join(folder, analyzerSnapshotPath));
 
-export function searchPaths(paths: Array<string | undefined>, filter: (s: string) => boolean, executableFilename: string): string {
+export function searchPaths(paths: Array<string | undefined>, isSdk: (s: string) => boolean, executableFilename: string): string {
 	log(`Searching for ${executableFilename}`);
 
 	const sdkPaths =
@@ -333,7 +323,7 @@ export function searchPaths(paths: Array<string | undefined>, filter: (s: string
 	for (const p of sdkPaths)
 		log(`        ${p}`);
 
-	let sdkPath = sdkPaths.find(filter);
+	let sdkPath = sdkPaths.find(isSdk);
 
 	if (sdkPath)
 		log(`    Found at ${sdkPath}`);
@@ -350,6 +340,6 @@ export function searchPaths(paths: Array<string | undefined>, filter: (s: string
 }
 
 export function isDartSdkFromFlutter(dartSdkPath: string) {
-	const possibleFlutterSdkPath = path.dirname(path.dirname(path.dirname(dartSdkPath)));
+	const possibleFlutterSdkPath = path.join(path.dirname(path.dirname(path.dirname(dartSdkPath))), "bin");
 	return hasFlutterExecutable(possibleFlutterSdkPath);
 }
