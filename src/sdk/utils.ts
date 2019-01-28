@@ -300,7 +300,7 @@ function findFuchsiaRoot(folder: string): string | undefined {
 
 function findDartSdk(folders: string[]) {
 	const isDartSdk = (folder: string) => {
-		if (!hasDartExecutable(folder))
+		if (!fs.existsSync(path.join(folder, dartExecutableName)))
 			return false;
 		// Commented out to fix https://github.com/Dart-Code/Dart-Code/issues/1423
 		// Needs restoring (https://github.com/Dart-Code/Dart-Code/issues/1424)
@@ -310,25 +310,24 @@ function findDartSdk(folders: string[]) {
 		// }
 		return true;
 	};
-	return searchPaths(folders, isDartSdk, dartVMPath);
+	return searchPaths(folders, isDartSdk, dartExecutableName);
 }
 
 function findFlutterSdk(folders: string[]) {
-	return searchPaths(folders, hasFlutterExecutable, flutterPath);
+	const isFlutterSdk = (folder: string) => fs.existsSync(path.join(folder, dartExecutableName));
+	return searchPaths(folders, isFlutterSdk, flutterExecutableName);
 }
 
-export const hasDartExecutable = (folder: string) => fs.existsSync(path.join(folder, dartVMPath));
-export const hasDartAnalysisServer = (folder: string) => fs.existsSync(path.join(folder, analyzerSnapshotPath));
-export const hasFlutterExecutable = (folder: string) => fs.existsSync(path.join(folder, flutterPath));
+// Must be called with an SDK root, not an unresolved Dart binary path!
+// export const hasDartAnalysisServer = (folder: string) => fs.existsSync(path.join(folder, analyzerSnapshotPath));
 
-export function searchPaths(paths: Array<string | undefined>, filter: (s: string) => boolean, executablePath: string): string {
-	log(`Searching for ${executablePath}`);
+export function searchPaths(paths: Array<string | undefined>, filter: (s: string) => boolean, executableFilename: string): string {
+	log(`Searching for ${executableFilename}`);
 
 	const sdkPaths =
 		paths
 			.filter((p) => p)
-			.map(resolvePaths)
-			.map((p) => path.basename(p) !== "bin" ? p : path.dirname(p)); // Remove any /bin from the end.
+			.map(resolvePaths);
 
 	log("    Looking in:");
 	for (const p of sdkPaths)
@@ -340,12 +339,12 @@ export function searchPaths(paths: Array<string | undefined>, filter: (s: string
 		log(`    Found at ${sdkPath}`);
 
 	// In order to handle symlinks on the binary (not folder), we need to add the executableName and then realpath.
-	sdkPath = sdkPath && fs.realpathSync(path.join(sdkPath, executablePath));
+	sdkPath = sdkPath && fs.realpathSync(path.join(sdkPath, executableFilename));
 
 	// Then we need to take the executable name and /bin back off
 	sdkPath = sdkPath && path.dirname(path.dirname(sdkPath));
 
-	log(`    Returning SDK path ${sdkPath} for ${executablePath}`);
+	log(`    Returning SDK path ${sdkPath} for ${executableFilename}`);
 
 	return sdkPath;
 }
