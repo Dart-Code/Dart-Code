@@ -7,5 +7,6 @@
 	],
 	"dart.analysisExcludedFolders": [
 		"lib/excluded"
-	]
+	],
+	"dart.extensionLogFile": "../../../.dart_code_test_logs/ext_log.txt"
 }
