@@ -332,7 +332,6 @@ export function searchPaths(paths: Array<string | undefined>, isSdk: (s: string)
 	for (const p of sdkPaths)
 		log(`        ${p}`);
 
-
 	let sdkPath = sdkPaths.find(isSdk);
 
 	if (sdkPath)
