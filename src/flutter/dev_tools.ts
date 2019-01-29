@@ -1,7 +1,6 @@
 import * as child_process from "child_process";
 import * as path from "path";
 import * as vs from "vscode";
-import { config } from "../config";
 import { LogCategory, LogSeverity, safeSpawn } from "../debug/utils";
 import { PubGlobal } from "../pub/global";
 import { pubPath } from "../sdk/utils";
@@ -10,17 +9,13 @@ import { DartDebugSessionInformation, extractObservatoryPort } from "../utils/de
 import { log, logError } from "../utils/log";
 import { logProcess } from "../utils/processes";
 
-const webdevPackageID = "webdev";
-const webdevPackageName = webdevPackageID;
+// TODO: Update this before shipping!
+const tempActivationGitUrl = "https://github.com/DanTup/devtools/";
+const devtools = "devtools";
+const devtoolsPackageName = "Dart DevTools";
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// TODO: HACK: THIS NEEDS REMOVING :)
-// https://github.com/flutter/devtools/issues/153
-const dartSdkPath = "/Users/dantup/Dev/dart-sdk/v2.1/";
-
-// Serving `web` on http://localhost:8080
-const webdevServingRegex = /Serving.*? on http:\/\/localhost:([0-9]+)\/?$/m;
-
+// TODO: We should just create one instance of this class, and reuse it when the command is run (so the port can
+// stay stable).
 export class FlutterDevTools implements vs.Disposable {
 	private proc: child_process.ChildProcess;
 
@@ -29,7 +24,7 @@ export class FlutterDevTools implements vs.Disposable {
 	}
 
 	private async spawnForSession(): Promise<void> {
-		const isAvailable = await this.pubGlobal.promptToInstallIfRequired(webdevPackageName, webdevPackageID);
+		const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtools, undefined, tempActivationGitUrl);
 		if (!isAvailable) {
 			return;
 		}
@@ -37,25 +32,24 @@ export class FlutterDevTools implements vs.Disposable {
 		const observatoryPort = extractObservatoryPort(this.session.observatoryUri);
 		await vs.window.withProgress({
 			location: vs.ProgressLocation.Notification,
-			title: "Starting Flutter Dev Tools...",
+			title: "Starting Dart DevTools...",
 		}, async (_) => {
-			const toolsPort = await this.webdevServe();
-			openInBrowser(`http://localhost:${toolsPort}/?port=${observatoryPort}`);
+			const devtoolsUrl = await this.spawnDevTools();
+			openInBrowser(`${devtoolsUrl}?port=${observatoryPort}`);
 		});
 	}
 
-	/// Starts the webdev server and returns the port of the running app.
-	private webdevServe(): Promise<number> {
+	/// Starts the devtools server and returns the URL of the running app.
+	private spawnDevTools(): Promise<string> {
 		return new Promise((resolve, reject) => {
-			const toolsPath = config.previewFlutterDevToolsRepositoryPath;
-			const pubBinPath = path.join(/*this.sdks.dart*/dartSdkPath, pubPath);
-			const args = ["global", "run", "webdev", "serve", "web"];
+			const pubBinPath = path.join(this.sdks.dart, pubPath);
+			const args = ["global", "run", "devtools", "--machine"];
 
-			const proc = safeSpawn(toolsPath, pubBinPath, args);
+			const proc = safeSpawn(undefined, pubBinPath, args);
 			this.proc = proc;
 
 			const logPrefix = `(PROC ${proc.pid})`;
-			log(`${logPrefix} Spawned ${pubBinPath} ${args.join(" ")} in ${toolsPath}`, LogSeverity.Info, LogCategory.CommandProcesses);
+			log(`${logPrefix} Spawned ${pubBinPath} ${args.join(" ")}`, LogSeverity.Info, LogCategory.CommandProcesses);
 			logProcess(LogCategory.CommandProcesses, logPrefix, proc);
 
 			const stdout: string[] = [];
@@ -63,15 +57,19 @@ export class FlutterDevTools implements vs.Disposable {
 			this.proc.stdout.on("data", (data) => {
 				const output = data.toString();
 				stdout.push(output);
-				const matches = webdevServingRegex.exec(output);
-				if (matches) {
-					resolve(parseInt(matches[1], 10));
+				try {
+					const evt = JSON.parse(output);
+					if (evt.method === "server.started") {
+						resolve(`http://${evt.params.host}:${evt.params.port}/`);
+					}
+				} catch {
+					console.warn(`Non-JSON output from DevTools: ${output}`);
 				}
 			});
 			this.proc.stderr.on("data", (data) => stderr.push(data.toString()));
 			this.proc.on("close", (code) => {
 				if (code && code !== 0) {
-					const errorMessage = `${webdevPackageName} exited with code ${code}.\n\n${stdout.join("")}\n\n${stderr.join("")}`;
+					const errorMessage = `${devtoolsPackageName} exited with code ${code}.\n\n${stdout.join("")}\n\n${stderr.join("")}`;
 					logError(errorMessage);
 					reject(errorMessage);
 				} else {

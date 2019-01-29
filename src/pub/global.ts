@@ -8,7 +8,7 @@ import { openInBrowser, Sdks } from "../utils";
 export class PubGlobal {
 	constructor(private sdks: Sdks) { }
 
-	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl): Promise<boolean> {
+	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, tempActivateGitSource?: string): Promise<boolean> {
 		const isAvailable = await this.isAvailable(packageName, packageID);
 		if (isAvailable)
 			return true;
@@ -23,7 +23,10 @@ export class PubGlobal {
 				openInBrowser(moreInfoLink);
 				return false;
 			} else if (action === activateForMe) {
-				const output = await this.runCommandWithProgress(packageName, `Activating ${packageName}...`, ["global", "activate", packageID]);
+				const args = tempActivateGitSource
+					? ["global", "activate", "--source", "git", tempActivateGitSource]
+					: ["global", "activate", packageID];
+				await this.runCommandWithProgress(packageName, `Activating ${packageName}...`, args);
 				if (await this.isAvailable(packageName, packageID)) {
 					return true;
 				} else {
