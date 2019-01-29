@@ -5,6 +5,7 @@ import * as vs from "vscode";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
 import { analyzerSnapshotPath, dartPlatformName, dartVMPath, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, isWin, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
+import { FlutterOutlineProvider } from "../shared/flutter_outline_view";
 import { IFlutterDaemon, Sdks } from "../shared/interfaces";
 import { captureLogs, EmittingLogger, logToConsole } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
@@ -26,6 +27,7 @@ import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
 import { AnalyzerCommands } from "./commands/analyzer";
 import { DebugCommands } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
+import { FlutterOutlineCommands } from "./commands/flutter_outline";
 import { GoToSuperCommand } from "./commands/go_to_super";
 import { LoggingCommands } from "./commands/logging";
 import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
@@ -353,6 +355,21 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 				subscriptions: ["AVAILABLE_SUGGESTION_SETS"],
 			});
 		}
+
+		if (config.previewFlutterOutline && analyzer.capabilities.supportsFlutterOutline) {
+			const treeDataProvider = new FlutterOutlineProvider(analyzer);
+			const tree = vs.window.createTreeView("dartFlutterOutline", { treeDataProvider });
+
+			context.subscriptions.push(vs.window.onDidChangeTextEditorSelection((e) => {
+				if (e.selections && e.selections.length) {
+					const node = treeDataProvider.getNodeAt(e.textEditor.document.uri, e.selections[0].start);
+					if (node)
+						tree.reveal(node);
+				}
+			}));
+			context.subscriptions.push(tree);
+			context.subscriptions.push(treeDataProvider);
+		}
 	});
 
 	// Handle config changes so we can reanalyze if necessary.
@@ -362,6 +379,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const analyzerCommands = new AnalyzerCommands(context, analyzer);
 	const sdkCommands = new SdkCommands(logger, context, workspaceContext, sdkUtils, pubGlobal, flutterCapabilities, deviceManager);
 	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, analytics, pubGlobal);
+	const flutterOutlineCommands = new FlutterOutlineCommands(context);
 
 	// Wire up handling of Hot Reload on Save.
 	if (workspaceContext.hasAnyFlutterProjects) {
@@ -630,6 +648,7 @@ function getSettingsThatRequireRestart() {
 		+ config.showTestCodeLens
 		+ config.previewHotReloadCoverageMarkers
 		+ config.previewBuildRunnerTasks
+		+ config.previewFlutterOutline
 		+ config.triggerSignatureHelpAutomatically
 		+ config.flutterAdbConnectOnChromeOs;
 }
