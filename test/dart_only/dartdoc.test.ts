@@ -24,7 +24,7 @@ describe("cleanDartDoc", () => {
 		`;
 		assert.equal(cleanDartdoc(input), expected);
 	});
-	it("strips dartdoc directives", () => {
+	it("strips dartdoc directives from multiline strings", () => {
 		const input = `
 		{@template flutter.widgets.widgetsApp.navigatorKey}
 		A key to use when building the Navigator.
@@ -37,6 +37,11 @@ describe("cleanDartDoc", () => {
 		A key to use when building the Navigator.
 		A key to use when building the Navigator.
 		`;
+		assert.equal(cleanDartdoc(input), expected);
+	});
+	it("strips dartdoc directives from single line strings", () => {
+		const input = `{@macro flutter.widgets.widgetsApp.debugShowCheckedModeBanner}`;
+		const expected = ``;
 		assert.equal(cleanDartdoc(input), expected);
 	});
 	it("strips section names from code block headers", () => {

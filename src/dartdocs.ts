@@ -13,7 +13,7 @@ const iconRegex = new RegExp(
 	"gi",
 );
 const dartDocDirectives = new RegExp(
-	`(\\n\\s*{@.*?}$)|(^{@.*?}\\s*\\n)`,
+	`(\\n\\s*{@.*?}$)|(^{@.*?}\\s*\\n)|(^{@.*?}$)`,
 	"gim",
 );
 const dartDocCodeBlockSections = new RegExp(
