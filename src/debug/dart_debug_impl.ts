@@ -1392,8 +1392,6 @@ export class DartDebugSession extends DebugSession {
 		const result = await this.observatory.getVM();
 		const vm = result.result as VM;
 
-		const promises: Array<Promise<DebuggerResult>> = [];
-
 		const isolatePromises = vm.isolates.map((isolateRef) => this.observatory.getIsolate(isolateRef.id));
 		const isolatesResponses = await Promise.all(isolatePromises);
 		const isolates = isolatesResponses.map((response) => response.result as VMIsolate);
