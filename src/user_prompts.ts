@@ -6,19 +6,34 @@ import { Context } from "./context";
 import { StagehandTemplate } from "./pub/stagehand";
 import { DART_CREATE_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, ProjectType, Sdks } from "./utils";
 
+const promptPrefix = "hasPrompted.";
+const installFlutterExtensionPromptKey = "install_flutter_extension";
+
 export function showUserPrompts(context: vs.ExtensionContext, sdks: Sdks) {
 	handleNewProjects(Context.for(context));
 
+	function hasPrompted(key: string): boolean {
+		const stateKey = `${promptPrefix}${key}`;
+		return context.globalState.get(stateKey) === true;
+	}
+
+	function showPrompt(key: string, prompt: () => Thenable<boolean>): void {
+		const stateKey = `${promptPrefix}${key}`;
+		prompt().then((res) => context.globalState.update(stateKey, res), error);
+	}
+
 	const versionLink = extensionVersion.split(".").slice(0, 2).join(".").replace(".", "-");
+	if (sdks.projectType === ProjectType.Flutter && !hasFlutterExtension && !hasPrompted(installFlutterExtensionPromptKey))
+		return showPrompt(installFlutterExtensionPromptKey, promptToInstallFlutterExtension);
+
 	return (
-		(sdks.projectType !== ProjectType.Flutter || hasFlutterExtension || prompt(context, "install_flutter_extension", () => promptToInstallFlutterExtension()))
-		&& (isDevExtension || prompt(context, `release_notes_${extensionVersion}`, () => promptToShowReleaseNotes(extensionVersion, versionLink)))
+		(isDevExtension || prompt(context, `release_notes_${extensionVersion}`, () => promptToShowReleaseNotes(extensionVersion, versionLink)))
 		&& !config.closingLabels && prompt(context, "closingLabelsDisabled", promptForClosingLabelsDisabled)
 	);
 }
 
 function prompt(context: vs.ExtensionContext, key: string, prompt: () => Thenable<boolean>): boolean {
-	const stateKey = `hasPrompted.${key}`;
+	const stateKey = `${promptPrefix}${key}`;
 
 	// Uncomment this to reset all state (useful for debugging).
 	// context.globalState.update(stateKey, undefined);
