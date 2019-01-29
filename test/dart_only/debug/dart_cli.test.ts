@@ -603,7 +603,17 @@ describe("dart cli debugger", () => {
 		ensureVariable(variables, "$e.message", "message", `"Oops"`);
 	});
 
-	it.skip("writes exception to stderr");
+	it("writes exception to stderr", async () => {
+		await openFile(helloWorldBrokenFile);
+		const config = await startDebugger(helloWorldBrokenFile);
+		config.noDebug = true;
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.assertOutput("stderr", "Unhandled exception:"),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		]);
+	});
 
 	describe("attaches", () => {
 		it("to a paused Dart script and can unpause to run it to completion", async () => {
