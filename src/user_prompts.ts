@@ -8,8 +8,9 @@ import { DART_CREATE_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJ
 
 const promptPrefix = "hasPrompted.";
 const installFlutterExtensionPromptKey = "install_flutter_extension";
+const closingLabelsDisabledPromptKey = "closingLabelsDisabled";
 
-export function showUserPrompts(context: vs.ExtensionContext, sdks: Sdks) {
+export function showUserPrompts(context: vs.ExtensionContext, sdks: Sdks): void {
 	handleNewProjects(Context.for(context));
 
 	function hasPrompted(key: string): boolean {
@@ -26,29 +27,16 @@ export function showUserPrompts(context: vs.ExtensionContext, sdks: Sdks) {
 	}
 
 	const versionLink = extensionVersion.split(".").slice(0, 2).join(".").replace(".", "-");
+	const releaseNotesKeyForThisVersion = `release_notes_${extensionVersion}`;
+
 	if (sdks.projectType === ProjectType.Flutter && !hasFlutterExtension && !hasPrompted(installFlutterExtensionPromptKey))
 		return showPrompt(installFlutterExtensionPromptKey, promptToInstallFlutterExtension);
 
-	return (
-		(isDevExtension || prompt(context, `release_notes_${extensionVersion}`, () => promptToShowReleaseNotes(extensionVersion, versionLink)))
-		&& !config.closingLabels && prompt(context, "closingLabelsDisabled", promptForClosingLabelsDisabled)
-	);
-}
+	if (!isDevExtension && !hasPrompted(releaseNotesKeyForThisVersion))
+		return showPrompt(releaseNotesKeyForThisVersion, () => promptToShowReleaseNotes(extensionVersion, versionLink));
 
-function prompt(context: vs.ExtensionContext, key: string, prompt: () => Thenable<boolean>): boolean {
-	const stateKey = `${promptPrefix}${key}`;
-
-	// Uncomment this to reset all state (useful for debugging).
-	// context.globalState.update(stateKey, undefined);
-
-	// If we've not prompted the user with this question before...
-	if (context.globalState.get(stateKey) !== true) {
-		// Prompt, but only record if the user responded.
-		prompt().then((res) => context.globalState.update(stateKey, res), error);
-		return true;
-	}
-
-	return false;
+	if (!config.closingLabels && !hasPrompted(closingLabelsDisabledPromptKey))
+		return showPrompt(closingLabelsDisabledPromptKey, promptForClosingLabelsDisabled);
 }
 
 async function promptToInstallFlutterExtension(): Promise<boolean> {
