@@ -118,7 +118,7 @@ export async function getPackages() {
 		return;
 	}
 	await waitForNextAnalysis(async () => {
-		await vs.commands.executeCommand("dart.getPackages", vs.workspace.workspaceFolders[0]);
+		await vs.commands.executeCommand("dart.getPackages", vs.workspace.workspaceFolders[0].uri);
 	}, 60);
 }
 
