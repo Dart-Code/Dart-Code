@@ -17,6 +17,9 @@ export function showUserPrompts(context: vs.ExtensionContext, sdks: Sdks) {
 		return context.globalState.get(stateKey) === true;
 	}
 
+	/// Shows a prompt and stores the return value. Prompt should return `true` to mark
+	/// this extension as seen-forever and it won't be shown again. Returning anything
+	/// else will allow the prompt to appear again next time.
 	function showPrompt(key: string, prompt: () => Thenable<boolean>): void {
 		const stateKey = `${promptPrefix}${key}`;
 		prompt().then((res) => context.globalState.update(stateKey, res), error);
@@ -50,7 +53,7 @@ function prompt(context: vs.ExtensionContext, key: string, prompt: () => Thenabl
 
 async function promptToInstallFlutterExtension(): Promise<boolean> {
 	const res = await vs.window.showInformationMessage(
-		"Working on a Flutter project? Install the Flutter extension for additional future functionality.",
+		"Working on a Flutter project? Install the Flutter extension for additional functionality.",
 		"Show Me",
 	);
 	if (res) {
