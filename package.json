@@ -923,6 +923,15 @@
 						"type": "string"
 					}
 				},
+				"dart.buildRunnerAdditionalArgs": {
+					"type": "array",
+					"default": [],
+					"description": "Additional args to pass to the buid_runner when building/watching/serving.",
+					"scope": "window",
+					"items": {
+						"type": "string"
+					}
+				},
 				"dart.flutterSelectDeviceWhenConnected": {
 					"type": "boolean",
 					"default": true,

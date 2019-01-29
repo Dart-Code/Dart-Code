@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as vs from "vscode";
+import { config } from "../config";
 import { toolEnv } from "../debug/utils";
 import { flutterPath, pubPath, referencesBuildRunner } from "../sdk/utils";
 import * as util from "../utils";
@@ -29,6 +30,9 @@ export class PubBuildRunnerTaskProvider implements vs.TaskProvider {
 		const type = isFlutter ? "flutter" : "pub";
 		const program = isFlutter ? path.join(this.sdks.flutter, flutterPath) : path.join(this.sdks.dart, pubPath);
 		const args = isFlutter ? ["packages", "pub", "run", "build_runner", subCommand] : ["run", "build_runner", subCommand];
+		if (config.buildRunnerAdditionalArgs) {
+			args.push(...config.buildRunnerAdditionalArgs);
+		}
 
 		const task = new vs.Task(
 			{

@@ -32,6 +32,7 @@ class Config {
 	get analyzerObservatoryPort() { return this.getConfig<number>("analyzerObservatoryPort"); }
 	get analyzerPath() { return resolvePaths(this.getConfig<string>("analyzerPath")); }
 	get analyzerSshHost() { return this.getConfig<string>("analyzerSshHost"); }
+	get buildRunnerAdditionalArgs() { return this.getConfig<string[]>("buildRunnerAdditionalArgs"); }
 	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
 	public setCheckForSdkUpdates(value: boolean): Thenable<void> { return this.setConfig("checkForSdkUpdates", value, ConfigurationTarget.Global); }
 	get closingLabels() { return this.getConfig<boolean>("closingLabels"); }
