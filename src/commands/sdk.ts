@@ -26,6 +26,8 @@ import { logProcess } from "../utils/processes";
 import * as channels from "./channels";
 
 const packageNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
+let runPubGetDelayTimer: NodeJS.Timer | undefined;
+let lastSaveReason: vs.TextDocumentSaveReason;
 
 export class SdkCommands {
 	private flutterScreenshotPath?: string;
@@ -198,6 +200,7 @@ export class SdkCommands {
 		}));
 
 		// Hook saving pubspec to run pub.get.
+		context.subscriptions.push(vs.workspace.onWillSaveTextDocument((e) => lastSaveReason = e.reason));
 		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
 			const conf = config.for(td.uri);
 
@@ -212,7 +215,24 @@ export class SdkCommands {
 			if (sdks.projectType === ProjectType.Fuchsia && !conf.runPubGetOnPubspecChangesIsConfiguredExplicitly)
 				return;
 
-			vs.commands.executeCommand("dart.getPackages", td.uri);
+			// Cancel any existing delayed timer.
+			if (runPubGetDelayTimer) {
+				clearTimeout(runPubGetDelayTimer);
+			}
+
+			// If the save was triggered by one of the auto-save options, then debounce.
+			if (lastSaveReason === vs.TextDocumentSaveReason.FocusOut
+				|| lastSaveReason === vs.TextDocumentSaveReason.AfterDelay) {
+
+				runPubGetDelayTimer = setTimeout(() => {
+					runPubGetDelayTimer = undefined;
+					vs.commands.executeCommand("dart.getPackages", td.uri);
+
+				}, 10000); // TODO: Does this need to be configurable?
+			} else {
+				// Otherwise execute immediately.
+				vs.commands.executeCommand("dart.getPackages", td.uri);
+			}
 		}));
 	}
 
