@@ -191,7 +191,7 @@ export class DebugCommands {
 				analytics.logDebuggerOpenTimeline();
 			}
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.openDevTools", async () => {
+		context.subscriptions.push(vs.commands.registerCommand("dart.openDevTools", async () => {
 			if (!debugSessions.length)
 				return;
 			const session = debugSessions.length === 1
@@ -199,7 +199,7 @@ export class DebugCommands {
 				: await this.promptForDebugSession();
 			// TODO: If the app hasn't finished launching yet (we don't have an Observatory port etc.) then find a way to wait on
 			// it, rather than silently failing.
-			if (session && session.observatoryUri && config.previewFlutterDevTools && config.previewFlutterDevToolsRepositoryPath) {
+			if (session && session.observatoryUri && config.previewDartDevTools) {
 				const devTools = new FlutterDevTools(this.sdks, this.pubGlobal, session);
 				// When the debug session terminates, terminate this task too since the connection will become invalid.
 				let sub: vs.Disposable;

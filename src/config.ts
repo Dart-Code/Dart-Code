@@ -72,8 +72,7 @@ class Config {
 	get previewHotReloadCoverageMarkers() { return this.getConfig<boolean>("previewHotReloadCoverageMarkers"); }
 	get previewBuildRunnerTasks() { return this.getConfig<boolean>("previewBuildRunnerTasks"); }
 	get previewToStringInDebugViews() { return this.getConfig<boolean>("previewToStringInDebugViews"); }
-	get previewFlutterDevTools() { return this.getConfig<boolean>("previewFlutterDevTools"); }
-	get previewFlutterDevToolsRepositoryPath() { return this.getConfig<string>("previewFlutterDevToolsRepositoryPath"); }
+	get previewDartDevTools() { return this.getConfig<boolean>("previewDartDevTools"); }
 	get promptToRunIfErrors() { return this.getConfig<boolean>("promptToRunIfErrors"); }
 
 	public for(uri?: Uri): ResourceConfig {
