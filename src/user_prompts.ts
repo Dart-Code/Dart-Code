@@ -1,14 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { config } from "./config";
 import { Context } from "./context";
 import { StagehandTemplate } from "./pub/stagehand";
 import { DART_CREATE_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, ProjectType, Sdks } from "./utils";
 
 const promptPrefix = "hasPrompted.";
 const installFlutterExtensionPromptKey = "install_flutter_extension";
-const closingLabelsDisabledPromptKey = "closingLabelsDisabled";
 
 export function showUserPrompts(context: vs.ExtensionContext, sdks: Sdks): void {
 	handleNewProjects(Context.for(context));
@@ -34,9 +32,6 @@ export function showUserPrompts(context: vs.ExtensionContext, sdks: Sdks): void 
 
 	if (!isDevExtension && !hasPrompted(releaseNotesKeyForThisVersion))
 		return showPrompt(releaseNotesKeyForThisVersion, () => promptToShowReleaseNotes(extensionVersion, versionLink));
-
-	if (!config.closingLabels && !hasPrompted(closingLabelsDisabledPromptKey))
-		return showPrompt(closingLabelsDisabledPromptKey, promptForClosingLabelsDisabled);
 }
 
 async function promptToInstallFlutterExtension(): Promise<boolean> {
@@ -47,17 +42,6 @@ async function promptToInstallFlutterExtension(): Promise<boolean> {
 	if (res) {
 		// TODO: Can we open this in the Extensions side bar?
 		openInBrowser("https://marketplace.visualstudio.com/items?itemName=Dart-Code.flutter");
-	}
-	return true; // Always mark this as done; we don't want to re-prompt if the user clicks Close.
-}
-
-async function promptForClosingLabelsDisabled(): Promise<boolean> {
-	const res = await vs.window.showInformationMessage(
-		"Please consider providing feedback about Closing Labels so it may be improved",
-		"Open Feedback Issue on GitHub",
-	);
-	if (res) {
-		openInBrowser("https://github.com/Dart-Code/Dart-Code/issues/445");
 	}
 	return true; // Always mark this as done; we don't want to re-prompt if the user clicks Close.
 }
