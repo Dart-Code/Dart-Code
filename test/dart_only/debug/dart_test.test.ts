@@ -222,7 +222,7 @@ describe("dart test debugger", () => {
 			await runWithoutDebugging(helloWorldTestTreeFile, ["--name", makeRegexForTest(test.fullName, test.isGroup)]);
 			checkResults(`After running ${numRuns++} tests (most recently ${test.fullName})`);
 		}
-	}).timeout(120000); // This test runs lots of tests, and they're quite slow to start up currently.
+	}).timeout(180000); // This test runs lots of tests, and they're quite slow to start up currently.
 
 	it("merges same name groups but not tests from the same run", async () => {
 		// This test is similar to above but contains adjacent tests with the same name.
