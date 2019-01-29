@@ -984,7 +984,7 @@
 							},
 							"deviceId": {
 								"type": "string",
-								"description": "The ID of the device to launch your Flutter app on (or attach to). If not supplied, will use the selected device shown in the status bar."
+								"description": "The ID of the device to launch your Flutter app on. If not supplied, will use the selected device shown in the status bar."
 							},
 							"enableAsserts": {
 								"type": "boolean",
@@ -1033,6 +1033,10 @@
 							"cwd": {
 								"type": "string",
 								"description": "Workspace root."
+							},
+							"deviceId": {
+								"type": "string",
+								"description": "The ID of the device to attach to. If not supplied, will use the selected device shown in the status bar."
 							},
 							"packages": {
 								"type": "string",
