@@ -2,7 +2,6 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { Analytics } from "../analytics";
-import { config } from "../config";
 import { CoverageData, PromiseCompleter } from "../debug/utils";
 import { FlutterDevTools } from "../flutter/dev_tools";
 import { FlutterServiceExtension, FlutterServiceExtensionArgs, FlutterVmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../flutter/vm_service_extensions";
@@ -30,9 +29,12 @@ export class DebugCommands {
 	private onFirstFrameEmitter: vs.EventEmitter<CoverageData[]> = new vs.EventEmitter<CoverageData[]>();
 	public readonly onFirstFrame: vs.Event<CoverageData[]> = this.onFirstFrameEmitter.event;
 	private readonly flutterExtensions: FlutterVmServiceExtensions;
+	private readonly devTools: FlutterDevTools;
 
-	constructor(context: vs.ExtensionContext, private sdks: Sdks, private analytics: Analytics, private pubGlobal: PubGlobal) {
+	constructor(context: vs.ExtensionContext, sdks: Sdks, analytics: Analytics, pubGlobal: PubGlobal) {
 		this.flutterExtensions = new FlutterVmServiceExtensions(this.sendServiceSetting);
+		this.devTools = new FlutterDevTools(sdks, analytics, pubGlobal);
+		context.subscriptions.push(this.devTools);
 		context.subscriptions.push(this.debugMetrics);
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
 			const session = debugSessions.find((ds) => ds.session === e.session);
@@ -192,24 +194,20 @@ export class DebugCommands {
 			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.openDevTools", async () => {
-			if (!debugSessions.length)
+			if (!debugSessions.length) {
+				vs.window.showInformationMessage("Dart DevTools requires an active debug session.");
 				return;
+			}
 			const session = debugSessions.length === 1
 				? debugSessions[0]
 				: await this.promptForDebugSession();
-			// TODO: If the app hasn't finished launching yet (we don't have an Observatory port etc.) then find a way to wait on
-			// it, rather than silently failing.
-			if (session && session.observatoryUri && config.previewDartDevTools) {
-				const devTools = new FlutterDevTools(this.sdks, this.pubGlobal, session);
-				// When the debug session terminates, terminate this task too since the connection will become invalid.
-				let sub: vs.Disposable;
-				sub = vs.debug.onDidTerminateDebugSession((e) => {
-					if (e.id === session.session.id) {
-						devTools.dispose();
-						sub.dispose();
-					}
-				});
-				analytics.logDebuggerOpenDevTools();
+			if (!session)
+				return; // User cancelled
+
+			if (session.observatoryUri) {
+				this.devTools.spawnForSession(session);
+			} else {
+				vs.window.showInformationMessage("This debug session is not ready yet.");
 			}
 		}));
 

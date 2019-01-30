@@ -1,6 +1,7 @@
 import * as child_process from "child_process";
 import * as path from "path";
 import * as vs from "vscode";
+import { Analytics } from "../analytics";
 import { LogCategory, LogSeverity, safeSpawn } from "../debug/utils";
 import { PubGlobal } from "../pub/global";
 import { pubPath } from "../sdk/utils";
@@ -18,26 +19,36 @@ const devtoolsPackageName = "Dart DevTools";
 // TODO: We should just create one instance of this class, and reuse it when the command is run (so the port can
 // stay stable).
 export class FlutterDevTools implements vs.Disposable {
+	private devToolsStatusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 100);
 	private proc: child_process.ChildProcess;
+	/// Resolves to the DevTools URL. This is created immediately when a new process is being spawned so that
+	/// concurrent launches can wait on the same promise.
+	private devtoolsUrl: Thenable<string>;
 
-	constructor(private sdks: Sdks, private pubGlobal: PubGlobal, private session: DartDebugSessionInformation) {
-		this.spawnForSession();
-	}
+	constructor(private sdks: Sdks, private analytics: Analytics, private pubGlobal: PubGlobal) { }
 
-	private async spawnForSession(): Promise<void> {
+	public async spawnForSession(session: DartDebugSessionInformation): Promise<void> {
+		this.analytics.logDebuggerOpenDevTools();
+
 		const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtools, undefined, tempActivationGitUrl);
 		if (!isAvailable) {
 			return;
 		}
 
-		const observatoryPort = extractObservatoryPort(this.session.observatoryUri);
-		await vs.window.withProgress({
-			location: vs.ProgressLocation.Notification,
-			title: "Starting Dart DevTools...",
-		}, async (_) => {
-			const devtoolsUrl = await this.spawnDevTools();
-			openInBrowser(`${devtoolsUrl}?port=${observatoryPort}`);
-		});
+		const observatoryPort = extractObservatoryPort(session.observatoryUri);
+
+		if (!this.devtoolsUrl) {
+			this.devtoolsUrl = vs.window.withProgress({
+				location: vs.ProgressLocation.Notification,
+				title: "Starting Dart DevTools...",
+			}, async (_) => this.spawnDevTools());
+		}
+		const url = await this.devtoolsUrl;
+		this.devToolsStatusBarItem.text = "Dart DevTools";
+		this.devToolsStatusBarItem.tooltip = `Dart DevTools is running at ${url}`;
+		this.devToolsStatusBarItem.command = "dart.openDevTools";
+		this.devToolsStatusBarItem.show();
+		openInBrowser(`${url}?port=${observatoryPort}`);
 	}
 
 	/// Starts the devtools server and returns the URL of the running app.
@@ -69,6 +80,9 @@ export class FlutterDevTools implements vs.Disposable {
 			});
 			this.proc.stderr.on("data", (data) => stderr.push(data.toString()));
 			this.proc.on("close", (code) => {
+				this.proc = null;
+				this.devtoolsUrl = null;
+				this.devToolsStatusBarItem.hide();
 				if (code && code !== 0) {
 					const errorMessage = `${devtoolsPackageName} exited with code ${code}.\n\n${stdout.join("")}\n\n${stderr.join("")}`;
 					logError(errorMessage);
@@ -83,6 +97,7 @@ export class FlutterDevTools implements vs.Disposable {
 	}
 
 	public dispose(): void {
+		this.devToolsStatusBarItem.dispose();
 		if (this.proc && !this.proc.killed) {
 			this.proc.kill();
 		}
