@@ -191,8 +191,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 		try {
 			await vs.window.withProgress({
 				location: vs.ProgressLocation.Notification,
-				title: `Launching ${emulator.name}...`,
 			}, async (progress) => {
+				progress.report({ message: `Launching ${emulator.name}...` });
 				await this.daemon.launchEmulator(emulator.id);
 				progress.report({ message: `Waiting for ${emulator.name} to connect...` });
 				// Wait up to 60 seconds for emulator to launch.
