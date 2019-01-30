@@ -43,7 +43,7 @@ export class FlutterDevTools implements vs.Disposable {
 	private spawnDevTools(): Promise<string> {
 		return new Promise((resolve, reject) => {
 			const pubBinPath = path.join(this.sdks.dart, pubPath);
-			const args = ["global", "run", "devtools", "--machine"];
+			const args = ["global", "run", "devtools", "--machine", "--port", "0"];
 
 			const proc = safeSpawn(undefined, pubBinPath, args);
 			this.proc = proc;
