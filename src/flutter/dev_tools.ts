@@ -11,6 +11,7 @@ import { logProcess } from "../utils/processes";
 
 // TODO: Update this before shipping!
 const tempActivationGitUrl = "https://github.com/DanTup/devtools-test/";
+// TODO: Implement a min version check that can prompt to re-activate.
 const devtools = "devtools";
 const devtoolsPackageName = "Dart DevTools";
 
