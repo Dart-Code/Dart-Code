@@ -224,6 +224,14 @@ describe("flutter run debugger (launch)", () => {
 
 			await watchPromise("stops_at_a_breakpoint->resume", dc.resume());
 
+			// Add some invalid breakpoints because in the past they've caused us issues
+			// https://github.com/Dart-Code/Dart-Code/issues/1437.
+			// We need to also include expectedLocation since this overwrites all BPs.
+			await dc.setBreakpointsRequest({
+				breakpoints: [{ line: 0 }, expectedLocation],
+				source: { path: fsPath(flutterHelloWorldMainFile) },
+			});
+
 			// Reload and ensure we hit the breakpoint on each one.
 			for (let i = 0; i < numReloads; i++) {
 				await delay(2000); // TODO: Remove this attempt to see if reloading too fast is causing our flakes...
