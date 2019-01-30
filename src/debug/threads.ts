@@ -1,8 +1,9 @@
 import { Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { logError } from "../utils/log";
 import { DartDebugSession, InstanceWithEvaluateName } from "./dart_debug_impl";
 import { DebuggerResult, VMBreakpoint, VMInstanceRef, VMIsolate, VMIsolateRef, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
-import { PromiseCompleter } from "./utils";
+import { LogCategory, PromiseCompleter } from "./utils";
 
 export class ThreadManager {
 	public nextThreadId: number = 0;
@@ -238,11 +239,16 @@ export class ThreadInfo {
 
 		return Promise.all(
 			breakpoints.map(async (bp) => {
-				const result = await this.manager.debugSession.observatory.addBreakpointWithScriptUri(this.ref.id, uri, bp.line, bp.column);
-				const vmBp: VMBreakpoint = (result.result as VMBreakpoint);
-				this.vmBps[uri].push(vmBp);
-				this.breakpoints[vmBp.id] = bp;
-				return vmBp;
+				try {
+					const result = await this.manager.debugSession.observatory.addBreakpointWithScriptUri(this.ref.id, uri, bp.line, bp.column);
+					const vmBp: VMBreakpoint = (result.result as VMBreakpoint);
+					this.vmBps[uri].push(vmBp);
+					this.breakpoints[vmBp.id] = bp;
+					return vmBp;
+				} catch (e) {
+					logError(e, LogCategory.Observatory);
+					return undefined;
+				}
 			}),
 		);
 	}
