@@ -10,7 +10,7 @@ import { log, logError } from "../utils/log";
 import { logProcess } from "../utils/processes";
 
 // TODO: Update this before shipping!
-const tempActivationGitUrl = "https://github.com/DanTup/devtools/";
+const tempActivationGitUrl = "https://github.com/DanTup/devtools-test/";
 const devtools = "devtools";
 const devtoolsPackageName = "Dart DevTools";
 
