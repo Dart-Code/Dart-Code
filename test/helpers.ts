@@ -30,6 +30,7 @@ if (!ext) {
 
 export const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/hello_world"));
 export const helloWorldMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/main.dart"));
+export const helloWorldPubspec = vs.Uri.file(path.join(fsPath(helloWorldFolder), "pubspec.yaml"));
 export const helloWorldGettersFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/getters.dart"));
 export const helloWorldBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/broken.dart"));
 export const helloWorldGoodbyeFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/goodbye.dart"));
@@ -664,4 +665,11 @@ export function watchPromise<T>(name: string, promise: Promise<T>): Promise<T> {
 	setTimeout(checkResult, 3000); // First log is after 3s, rest are 10s.
 
 	return promise;
+}
+
+export async function setConfigForTest(section: string, key: string, value: any): Promise<void> {
+	const conf = vs.workspace.getConfiguration(section);
+	const oldValue = conf.inspect(key).globalValue;
+	await conf.update(key, value, vs.ConfigurationTarget.Global);
+	defer(() => conf.update(key, oldValue, vs.ConfigurationTarget.Global));
 }
