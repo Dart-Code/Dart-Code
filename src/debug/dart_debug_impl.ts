@@ -1039,7 +1039,11 @@ export class DartDebugSession extends DebugSession {
 
 		// For PausePostRequest we need to re-send all breakpoints; this happens after a flutter restart
 		if (kind === "PausePostRequest") {
-			await this.threadManager.resetBreakpoints();
+			try {
+				await this.threadManager.resetBreakpoints();
+			} catch (e) {
+				logError(e, LogCategory.Observatory);
+			}
 			try {
 				await this.observatory.resume(event.isolate.id);
 			} catch (e) {
