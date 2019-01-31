@@ -73,9 +73,8 @@ main() {
 	it("does not apply changes when there are warnings if the user does not approve", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("Aaaa");
-		const showWarningMessage = sb.stub(vs.window, "showWarningMessage");
+		const showWarningMessage = sb.stub(vs.window, "showWarningMessage").callThrough();
 		const refactorPrompt = showWarningMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves();
-		showWarningMessage.callThrough();
 
 		await setTestContent(`
 main() {
@@ -96,9 +95,8 @@ main() {
 	it("applies changes when there are warnings if the user approves", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("Aaaa");
-		const showWarningMessage = sb.stub(vs.window, "showWarningMessage");
+		const showWarningMessage = sb.stub(vs.window, "showWarningMessage").callThrough();
 		const refactorPrompt = showWarningMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves(REFACTOR_ANYWAY);
-		showWarningMessage.callThrough();
 
 		await setTestContent(`
 main() {

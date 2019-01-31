@@ -19,9 +19,8 @@ describe("URL handler", async () => {
 
 	it("URL handler creates trigger file with sample ID in it", async () => {
 		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
-		const executeCommand = sb.stub(vs.commands, "executeCommand");
-		executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves();
-		executeCommand.callThrough();
+		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
+		const openFolderCommand = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves();
 
 		await urlHandler.handleUri(vs.Uri.parse(`vscode://Dart-Code.dart-code/flutter/sample/my.sample.id`));
 
@@ -33,6 +32,7 @@ describe("URL handler", async () => {
 		const triggerFile = path.join(projectFolder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
 		assert.ok(fs.existsSync(triggerFile));
 		assert.equal(fs.readFileSync(triggerFile).toString(), "my.sample.id");
+		assert.ok(openFolderCommand.calledOnce);
 	});
 
 	it("Rejects sample IDs that do not conform", async () => {

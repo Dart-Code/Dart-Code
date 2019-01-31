@@ -141,9 +141,8 @@ class MyWidget extends StatelessWidget {
 	it("applies changes when there are errors if the user approves", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("MyWidget");
-		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
+		const showErrorMessage = sb.stub(vs.window, "showErrorMessage").callThrough();
 		const refactorPrompt = showErrorMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).resolves(REFACTOR_ANYWAY);
-		showErrorMessage.callThrough();
 
 		await setTestContent(`
 import 'package:flutter/widgets.dart';
@@ -186,12 +185,11 @@ class MyWidget extends StatelessWidget {
 	it("rejects the edit if the document has been modified before the user approves", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("MyWidget");
-		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
+		const showErrorMessage = sb.stub(vs.window, "showErrorMessage").callThrough();
 		// Accept after some time (so the doc can be edited by the test).
 		const refactorAnywayChoice = new PromiseCompleter();
 		const refactorPrompt = showErrorMessage.withArgs(sinon.match.any, REFACTOR_ANYWAY).returns(refactorAnywayChoice.promise);
 		const rejectMessage = showErrorMessage.withArgs(REFACTOR_FAILED_DOC_MODIFIED).resolves();
-		showErrorMessage.callThrough();
 
 		await setTestContent(`
 import 'package:flutter/widgets.dart';

@@ -37,9 +37,8 @@ describe("command", () => {
 		showOpenDialog.resolves([vs.Uri.file(tempFolder)]);
 
 		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
-		const executeCommand = sb.stub(vs.commands, "executeCommand");
+		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves();
-		executeCommand.callThrough();
 
 		await vs.commands.executeCommand("flutter.createProject");
 
@@ -56,9 +55,8 @@ describe("command", () => {
 		showQuickPick.callsFake((items: SnippetOption[]) => items.find((s) => s.snippet.id === sampleID));
 
 		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
-		const executeCommand = sb.stub(vs.commands, "executeCommand");
+		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves();
-		executeCommand.callThrough();
 
 		const sampleFolderUri: string = await vs.commands.executeCommand("_dart.flutter.createSampleProject");
 
