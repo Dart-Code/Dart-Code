@@ -1,7 +1,5 @@
 import * as vs from "vscode";
 import { OpenFileTracker } from "../analysis/open_file_tracker";
-import { locateBestProjectRoot } from "../project";
-import { fsPath, projectSupportsPubRunTest } from "../utils";
 import { TestOutlineInfo, TestOutlineVisitor } from "../utils/outline";
 
 export const CURSOR_IS_IN_TEST = "dart-code:cursorIsInTest";
@@ -44,10 +42,9 @@ export class TestCommands implements vs.Disposable {
 		if (!outline || !outline.children || !outline.children.length)
 			return;
 
-		// We should only show the Code Lens for projects we know can actually handle `pub run` (for ex. the
-		// SDK codebase cannot, and will therefore run all tests when you click them).
-		const projectRoot = locateBestProjectRoot(fsPath(document.uri));
-		if (!projectRoot || !projectSupportsPubRunTest(projectRoot))
+		// We should only allow running for projects we know can actually handle `pub run` (for ex. the
+		// SDK codebase cannot, and will therefore run all tests).
+		if (!OpenFileTracker.supportsPubRunTest(document.uri))
 			return;
 
 		const visitor = new TestOutlineVisitor();

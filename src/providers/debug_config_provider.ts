@@ -17,7 +17,7 @@ import { FlutterCapabilities } from "../flutter/capabilities";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { dartVMPath, flutterPath, pubPath, pubSnapshotPath } from "../sdk/utils";
-import { fsPath, isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, projectSupportsPubRunTest, ProjectType, Sdks } from "../utils";
+import { fsPath, isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, checkProjectSupportsPubRunTest, ProjectType, Sdks } from "../utils";
 import { log, logError, logWarn } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
@@ -167,7 +167,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const isTest = debugConfig.program && isTestFileOrFolder(debugConfig.program as string);
 		if (isTest)
 			log(`Detected launch project as a Test project`);
-		const canPubRunTest = isTest && debugConfig.cwd && projectSupportsPubRunTest(debugConfig.cwd as string);
+		const canPubRunTest = isTest && debugConfig.cwd && checkProjectSupportsPubRunTest(debugConfig.cwd as string);
 		if (isTest && !canPubRunTest)
 			log(`Project does not appear to support 'pub run test', will use VM directly`);
 		const debugType = isFlutter

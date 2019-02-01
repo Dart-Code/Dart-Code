@@ -2,8 +2,7 @@ import { CancellationToken, CodeLens, CodeLensProvider, commands, debug, Event, 
 import { Analyzer } from "../analysis/analyzer";
 import { OpenFileTracker } from "../analysis/open_file_tracker";
 import { flatMap, IAmDisposable } from "../debug/utils";
-import { locateBestProjectRoot } from "../project";
-import { fsPath, projectSupportsPubRunTest, toRange } from "../utils";
+import { toRange } from "../utils";
 import { TestOutlineInfo, TestOutlineVisitor } from "../utils/outline";
 import { getLaunchConfig } from "../utils/test";
 
@@ -41,8 +40,7 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 
 		// We should only show the Code Lens for projects we know can actually handle `pub run` (for ex. the
 		// SDK codebase cannot, and will therefore run all tests when you click them).
-		const projectRoot = locateBestProjectRoot(fsPath(document.uri));
-		if (!projectRoot || !projectSupportsPubRunTest(projectRoot))
+		if (!OpenFileTracker.supportsPubRunTest(document.uri))
 			return;
 
 		const visitor = new TestOutlineVisitor();
