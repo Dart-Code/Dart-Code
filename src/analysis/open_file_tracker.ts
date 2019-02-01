@@ -1,5 +1,6 @@
 import { Disposable, TextDocument, Uri, window, workspace } from "vscode";
 import { IAmDisposable } from "../debug/utils";
+import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
 import { fsPath } from "../utils";
 import { logError } from "../utils/log";
@@ -9,17 +10,22 @@ import { Analyzer } from "./analyzer";
 const outlines: { [key: string]: Outline } = {};
 const occurrences: { [key: string]: Occurrences[] } = {};
 const folding: { [key: string]: FoldingRegion[] } = {};
+const pubRunTestSupport: { [key: string]: boolean } = {};
 let lastPriorityFiles: string[] = [];
 let lastSubscribedFiles: string[] = [];
 
 export class OpenFileTracker implements IAmDisposable {
 	private disposables: Disposable[] = [];
 	constructor(private readonly analyzer: Analyzer) {
-		this.disposables.push(workspace.onDidOpenTextDocument((td) => this.updateSubscriptions()));
+		this.disposables.push(workspace.onDidOpenTextDocument((td) => {
+			this.updateSubscriptions();
+		}));
 		this.disposables.push(workspace.onDidCloseTextDocument((td) => {
-			delete outlines[fsPath(td.uri)];
-			delete occurrences[fsPath(td.uri)];
-			delete folding[fsPath(td.uri)];
+			const path = fsPath(td.uri);
+			delete outlines[path];
+			delete occurrences[path];
+			delete folding[path];
+			delete pubRunTestSupport[path];
 			this.updateSubscriptions();
 		}));
 		this.disposables.push(window.onDidChangeVisibleTextEditors((e) => this.updatePriorityFiles()));
@@ -94,6 +100,15 @@ export class OpenFileTracker implements IAmDisposable {
 
 	public static getOccurrencesFor(file: Uri): Occurrences[] | undefined {
 		return occurrences[fsPath(file)];
+	}
+
+	public static supportsPubRunTest(file: Uri): boolean | undefined {
+		const path = fsPath(file);
+		if (pubRunTestSupport[path] === undefined) {
+			const projectRoot = locateBestProjectRoot(path);
+			pubRunTestSupport[path] = projectRoot && util.checkProjectSupportsPubRunTest(projectRoot);
+		}
+		return pubRunTestSupport[fsPath(file)];
 	}
 
 	public static getFoldingRegionsFor(file: Uri): FoldingRegion[] | undefined {

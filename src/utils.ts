@@ -177,7 +177,7 @@ export function isTestFolder(path: string): boolean {
 	return path && isInsideFolderNamed(path, "test") && fs.existsSync(path) && fs.statSync(path).isDirectory();
 }
 
-export function projectSupportsPubRunTest(folder: string): boolean {
+export function checkProjectSupportsPubRunTest(folder: string): boolean {
 	return hasPackagesFile(folder) && hasPubspec(folder);
 }
 
