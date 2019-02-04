@@ -3,48 +3,61 @@ import * as vs from "vscode";
 import { pubGlobalDocsUrl } from "../constants";
 import { safeSpawn } from "../debug/utils";
 import { pubPath } from "../sdk/utils";
-import { openInBrowser, Sdks } from "../utils";
+import { openInBrowser, Sdks, versionIsAtLeast } from "../utils";
 
 export class PubGlobal {
 	constructor(private sdks: Sdks) { }
 
-	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, tempActivateGitSource?: string): Promise<boolean> {
-		const isAvailable = await this.isAvailable(packageName, packageID);
-		if (isAvailable)
+	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion?: string, tempActivateGitSource?: string): Promise<boolean> {
+		const versionStatus = await this.getInstalledStatus(packageName, packageID, requiredVersion);
+		if (versionStatus === VersionStatus.Valid)
 			return true;
 
-		if (!isAvailable) {
-			const moreInfo = "More Info";
-			const activateForMe = `Activate ${packageName}`;
-			const message = `${packageName} needs to be installed with 'pub global activate ${packageID}' to use this feature.`;
-			let action = await vs.window.showWarningMessage(message, activateForMe, moreInfo);
+		const moreInfo = "More Info";
+		const activateForMe = versionStatus === VersionStatus.UpdateRequired ? `Update ${packageName}` : `Activate ${packageName}`;
+		const message = versionStatus === VersionStatus.UpdateRequired
+			? `${packageName} needs to be updated with 'pub global activate ${packageID}' to use this feature.`
+			: `${packageName} needs to be installed with 'pub global activate ${packageID}' to use this feature.`;
+		const actionName = versionStatus === VersionStatus.UpdateRequired ? `update` : `install`;
+		let action = await vs.window.showWarningMessage(message, activateForMe, moreInfo);
 
-			if (action === moreInfo) {
-				openInBrowser(moreInfoLink);
-				return false;
-			} else if (action === activateForMe) {
-				const args = tempActivateGitSource
-					? ["global", "activate", "--source", "git", tempActivateGitSource]
-					: ["global", "activate", packageID];
-				await this.runCommandWithProgress(packageName, `Activating ${packageName}...`, args);
-				if (await this.isAvailable(packageName, packageID)) {
-					return true;
-				} else {
-					action = await vs.window.showErrorMessage(`Failed to install ${packageName}. Please try installing manually.`, moreInfo);
-					if (action === moreInfo) {
-						openInBrowser(moreInfoLink);
-					}
-					return false;
-				}
-			}
-
+		if (action === moreInfo) {
+			openInBrowser(moreInfoLink);
 			return false;
+		} else if (action === activateForMe) {
+			const args = tempActivateGitSource
+				? ["global", "activate", "--source", "git", tempActivateGitSource]
+				: ["global", "activate", packageID];
+			await this.runCommandWithProgress(packageName, `Activating ${packageName}...`, args);
+			if (await this.getInstalledStatus(packageName, packageID) === VersionStatus.Valid) {
+				return true;
+			} else {
+				action = await vs.window.showErrorMessage(`Failed to ${actionName} ${packageName}. Please try running 'pub global activate ${packageID}' manually.`, moreInfo);
+				if (action === moreInfo) {
+					openInBrowser(moreInfoLink);
+				}
+				return false;
+			}
 		}
+
+		return false;
 	}
 
-	public async isAvailable(packageName: string, packageID: string): Promise<boolean> {
+	public async getInstalledStatus(packageName: string, packageID: string, requiredVersion?: string): Promise<VersionStatus> {
 		const output = await this.runCommand(packageName, ["global", "list"]);
-		return output.indexOf(`${packageID} `) !== -1;
+		const versionMatch = new RegExp(`^${packageID} (\\d+\\.\\d+\\.\\d+)$`, "m");
+		const match = versionMatch.exec(output);
+
+		// No match = not installed.
+		if (!match)
+			return VersionStatus.NotInstalled;
+
+		// If we need a specific version, check it here.
+		if (requiredVersion && !versionIsAtLeast(match[1], requiredVersion))
+			return VersionStatus.UpdateRequired;
+
+		// Otherwise, we're installed and have a new enough version.
+		return VersionStatus.Valid;
 	}
 
 	private runCommandWithProgress(packageName: string, title: string, args: string[]): Thenable<string> {
@@ -71,4 +84,10 @@ export class PubGlobal {
 			});
 		});
 	}
+}
+
+export enum VersionStatus {
+	NotInstalled,
+	UpdateRequired,
+	Valid,
 }
