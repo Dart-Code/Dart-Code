@@ -43,12 +43,17 @@ export class FlutterDevTools implements vs.Disposable {
 				title: "Starting Dart DevTools...",
 			}, async (_) => this.spawnDevTools());
 		}
-		const url = await this.devtoolsUrl;
-		this.devToolsStatusBarItem.text = "Dart DevTools";
-		this.devToolsStatusBarItem.tooltip = `Dart DevTools is running at ${url}`;
-		this.devToolsStatusBarItem.command = "dart.openDevTools";
-		this.devToolsStatusBarItem.show();
-		openInBrowser(`${url}?port=${observatoryPort}`);
+		try {
+			const url = await this.devtoolsUrl;
+			this.devToolsStatusBarItem.text = "Dart DevTools";
+			this.devToolsStatusBarItem.tooltip = `Dart DevTools is running at ${url}`;
+			this.devToolsStatusBarItem.command = "dart.openDevTools";
+			this.devToolsStatusBarItem.show();
+			openInBrowser(`${url}?port=${observatoryPort}`);
+		} catch (e) {
+			this.devToolsStatusBarItem.hide();
+			vs.window.showErrorMessage(`${e}`);
+		}
 	}
 
 	/// Starts the devtools server and returns the URL of the running app.
@@ -84,7 +89,7 @@ export class FlutterDevTools implements vs.Disposable {
 				this.devtoolsUrl = null;
 				this.devToolsStatusBarItem.hide();
 				if (code && code !== 0) {
-					const errorMessage = `${devtoolsPackageName} exited with code ${code}.\n\n${stdout.join("")}\n\n${stderr.join("")}`;
+					const errorMessage = `${devtoolsPackageName} exited with code ${code}: ${stdout.join("")} ${stderr.join("")}`;
 					logError(errorMessage);
 					reject(errorMessage);
 				} else {
