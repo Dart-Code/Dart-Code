@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as vs from "vscode";
+import { stagehandInstallationInstructionsUrl } from "../constants";
 import { safeSpawn } from "../debug/utils";
 import { pubPath } from "../sdk/utils";
 import { Sdks } from "../utils";
@@ -12,7 +13,7 @@ export class Stagehand {
 	constructor(private sdks: Sdks, private pubGlobal: PubGlobal) { }
 
 	public promptToInstallIfRequired() {
-		return this.pubGlobal.promptToInstallIfRequired(packageName, packageID);
+		return this.pubGlobal.promptToInstallIfRequired(packageName, packageID, stagehandInstallationInstructionsUrl, "1.0.0");
 	}
 
 	public async getTemplates(): Promise<StagehandTemplate[]> {
