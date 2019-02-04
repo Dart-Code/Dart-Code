@@ -45,7 +45,7 @@ export class PubGlobal {
 
 	public async getInstalledStatus(packageName: string, packageID: string, requiredVersion?: string): Promise<VersionStatus> {
 		const output = await this.runCommand(packageName, ["global", "list"]);
-		const versionMatch = new RegExp(`^${packageID} (\\d+\\.\\d+\\.\\d+)$`, "m");
+		const versionMatch = new RegExp(`^${packageID} (\\d+\\.\\d+\\.\\d+)(?: from|$)`, "m");
 		const match = versionMatch.exec(output);
 
 		// No match = not installed.
