@@ -30,7 +30,7 @@ export class FlutterDevTools implements vs.Disposable {
 	public async spawnForSession(session: DartDebugSessionInformation): Promise<void> {
 		this.analytics.logDebuggerOpenDevTools();
 
-		const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtools, undefined, tempActivationGitUrl);
+		const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtools, undefined, "0.0.1", tempActivationGitUrl);
 		if (!isAvailable) {
 			return;
 		}
