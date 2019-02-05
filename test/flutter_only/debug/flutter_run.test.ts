@@ -103,7 +103,7 @@ describe("flutter run debugger (launch)", () => {
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		]);
-	});
+	}).timeout(90000); // The 10 second delay makes this test slower and sometimes hit 60s.
 
 	it("runs a Flutter application with a variable in cwd", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile, "${workspaceFolder}/");
