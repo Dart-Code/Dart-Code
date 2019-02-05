@@ -3,7 +3,7 @@ import * as querystring from "querystring";
 import { env, Uri, version as codeVersion } from "vscode";
 import { config } from "./config";
 import { extensionVersion, hasFlutterExtension, isDevExtension, ProjectType, Sdks } from "./utils";
-import { logInfo, logWarn } from "./utils/log";
+import { logError, logInfo, logWarn } from "./utils/log";
 
 // Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.
 // This is only required for debugging analytics and needn't be sent for standard Dart Code development (dev hits are already filtered with isDevelopment).
@@ -144,30 +144,35 @@ export class Analytics {
 			port: 443,
 		};
 
-		await new Promise((resolve, reject) => {
-			const req = https.request(options, (resp) => {
-				if (debug)
-					resp.on("data", (c) => {
-						try {
-							const gaDebugResp = JSON.parse(c.toString());
-							if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
-								logInfo("Sent OK!");
-							else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
-								logWarn(c.toString());
-							else
-								logWarn("Unexpected GA debug response: " + c.toString());
-						} catch (e) {
-							logWarn("Error in GA debug response: " + c.toString());
-						}
-					});
+		await new Promise((resolve) => {
+			try {
+				const req = https.request(options, (resp) => {
+					if (debug)
+						resp.on("data", (c) => {
+							try {
+								const gaDebugResp = JSON.parse(c.toString());
+								if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
+									logInfo("Sent OK!");
+								else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
+									logWarn(c.toString());
+								else
+									logWarn("Unexpected GA debug response: " + c.toString());
+							} catch (e) {
+								logWarn("Error in GA debug response: " + c.toString());
+							}
+						});
 
-				if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
-					logInfo(`Failed to send analytics ${resp && resp.statusCode}: ${resp && resp.statusMessage}`);
-				}
+					if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
+						logInfo(`Failed to send analytics ${resp && resp.statusCode}: ${resp && resp.statusMessage}`);
+					}
+					resolve();
+				});
+				req.write(querystring.stringify(data));
+				req.end();
+			} catch (e) {
+				logError(`Failed to send analytics: ${e}`);
 				resolve();
-			});
-			req.write(querystring.stringify(data));
-			req.end();
+			}
 		});
 	}
 
