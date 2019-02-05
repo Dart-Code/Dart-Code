@@ -369,6 +369,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.pubTestLogFile = debugConfig.pubTestLogFile || conf.pubTestLogFile;
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || conf.debugSdkLibraries;
 		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || conf.debugExternalLibraries;
+		debugConfig.flutterDebuggerRestartBehaviour = debugConfig.flutterDebuggerRestartBehaviour || config.flutterDebuggerRestartBehaviour;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		if (isFlutter) {
 			debugConfig.forceFlutterVerboseMode = isLogging || isCI;

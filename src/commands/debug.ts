@@ -88,10 +88,16 @@ export class DebugCommands {
 				// }
 			} else if (e.event === "dart.log") {
 				handleDebugLogEvent(e.event, e.body);
-			} else if (e.event === "dart.restartRequest") {
+			} else if (e.event === "dart.hotRestartRequest") {
 				// This event comes back when the user restarts with the Restart button
 				// (eg. it wasn't intiated from our extension, so we don't get to log it
-				// in the hotReload command).
+				// in the command).
+				analytics.logDebuggerRestart();
+				this.onWillHotRestartEmitter.fire();
+			} else if (e.event === "dart.hotReloadRequest") {
+				// This event comes back when the user restarts with the Restart button
+				// (eg. it wasn't intiated from our extension, so we don't get to log it
+				// in the command).
 				analytics.logDebuggerHotReload();
 				this.onWillHotReloadEmitter.fire();
 			} else if (e.event === "dart.flutter.firstFrame") {
