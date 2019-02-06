@@ -16,7 +16,8 @@ export class PubGlobal {
 		if (!isAvailable) {
 			const moreInfo = "More Info";
 			const activateForMe = `Activate ${packageName}`;
-			let action = await vs.window.showErrorMessage(`${packageName} has not been activated. Please run 'pub global activate ${packageID}'.`, activateForMe, moreInfo);
+			const message = `${packageName} needs to be installed with 'pub global activate ${packageID}' to use this feature.`;
+			let action = await vs.window.showWarningMessage(message, activateForMe, moreInfo);
 
 			if (action === moreInfo) {
 				openInBrowser(moreInfoLink);
