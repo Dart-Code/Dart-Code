@@ -8,7 +8,7 @@ import { openInBrowser, Sdks, versionIsAtLeast } from "../utils";
 export class PubGlobal {
 	constructor(private sdks: Sdks) { }
 
-	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion?: string, tempActivateGitSource?: string): Promise<boolean> {
+	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion?: string): Promise<boolean> {
 		const versionStatus = await this.getInstalledStatus(packageName, packageID, requiredVersion);
 		if (versionStatus === VersionStatus.Valid)
 			return true;
@@ -25,9 +25,7 @@ export class PubGlobal {
 			openInBrowser(moreInfoLink);
 			return false;
 		} else if (action === activateForMe) {
-			const args = tempActivateGitSource
-				? ["global", "activate", "--source", "git", tempActivateGitSource]
-				: ["global", "activate", packageID];
+			const args = ["global", "activate", packageID];
 			await this.runCommandWithProgress(packageName, `Activating ${packageName}...`, args);
 			if (await this.getInstalledStatus(packageName, packageID) === VersionStatus.Valid) {
 				return true;

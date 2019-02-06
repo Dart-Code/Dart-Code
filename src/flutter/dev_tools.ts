@@ -10,9 +10,6 @@ import { DartDebugSessionInformation, extractObservatoryPort } from "../utils/de
 import { log, logError } from "../utils/log";
 import { logProcess } from "../utils/processes";
 
-// TODO: Update this before shipping!
-const tempActivationGitUrl = "https://github.com/DanTup/devtools-test/";
-// TODO: Implement a min version check that can prompt to re-activate.
 const devtools = "devtools";
 const devtoolsPackageName = "Dart DevTools";
 
@@ -30,7 +27,7 @@ export class FlutterDevTools implements vs.Disposable {
 	public async spawnForSession(session: DartDebugSessionInformation): Promise<void> {
 		this.analytics.logDebuggerOpenDevTools();
 
-		const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtools, undefined, "0.0.1", tempActivationGitUrl);
+		const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtools, undefined, "0.0.1");
 		if (!isAvailable) {
 			return;
 		}
