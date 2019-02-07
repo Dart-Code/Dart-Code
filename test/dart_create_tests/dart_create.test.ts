@@ -11,7 +11,7 @@ describe("dart", () => {
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const getPackagesCommand = executeCommand.withArgs("dart.getPackages", sinon.match.any).resolves();
 
-		const sampleProjectFolder = fsPath(vs.workspace.workspaceFolders[0].uri);
+		const sampleProjectFolder = fsPath(vs.workspace.workspaceFolders![0].uri);
 		const expectedString = "Hello world";
 		const mainFile = path.join(sampleProjectFolder, "bin", "main.dart");
 

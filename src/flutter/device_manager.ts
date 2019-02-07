@@ -10,7 +10,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
 	private statusBarItem: vs.StatusBarItem;
 	private devices: f.Device[] = [];
-	public currentDevice: f.Device = null;
+	public currentDevice?: f.Device;
 
 	constructor(private daemon: FlutterDaemon) {
 		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
@@ -32,7 +32,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	public deviceAdded(dev: f.Device) {
 		this.devices.push(dev);
-		if (this.currentDevice == null || config.flutterSelectDeviceWhenConnected) {
+		if (!this.currentDevice || config.flutterSelectDeviceWhenConnected) {
 			this.currentDevice = dev;
 		}
 		this.updateStatusBar();
@@ -41,7 +41,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	public deviceRemoved(dev: f.Device) {
 		this.devices = this.devices.filter((d) => d.id !== dev.id);
 		if (this.currentDevice && this.currentDevice.id === dev.id)
-			this.currentDevice = this.devices.length === 0 ? null : this.devices[this.devices.length - 1];
+			this.currentDevice = this.devices.length === 0 ? undefined : this.devices[this.devices.length - 1];
 		this.updateStatusBar();
 	}
 
