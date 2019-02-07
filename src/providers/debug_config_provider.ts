@@ -124,7 +124,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 						: undefined;
 
 				// If we have a folder specified, we should only consider open files if it's inside it.
-				const preferredFile = preferredFolder == null || (openFile && isWithinPath(openFile, preferredFolder)) ? openFile : undefined;
+				const preferredFile = !preferredFolder || (!!openFile && isWithinPath(openFile, preferredFolder)) ? openFile : undefined;
 				debugConfig.program = debugConfig.program || this.guessBestEntryPoint(preferredFile, preferredFolder);
 			}
 
@@ -269,7 +269,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return debugConfig;
 	}
 
-	private guessBestEntryPoint(openFile: string, folder: string | undefined): string | undefined {
+	private guessBestEntryPoint(openFile: string | undefined, folder: string | undefined): string | undefined {
 		// For certain open files, assume the user wants to run them.
 		if (isDartFile(openFile) &&
 			(isTestFile(openFile) || (isInsideFolderNamed(openFile, "bin") || isInsideFolderNamed(openFile, "tool")))) {
@@ -383,14 +383,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.forceFlutterVerboseMode = isLogging || isCI;
 			debugConfig.flutterTrackWidgetCreation =
 				// Use from the launch.json if configured.
-				debugConfig.flutterTrackWidgetCreation !== undefined
+				!!(debugConfig.flutterTrackWidgetCreation !== undefined
 					? debugConfig.flutterTrackWidgetCreation :
 					// Otherwise use the config, falling back to the version-dependant default.
 					conf.flutterTrackWidgetCreationIsConfiguredExplicitly
 						? conf.flutterTrackWidgetCreation
-						: this.flutterCapabilities.trackWidgetCreationDefault;
+						: this.flutterCapabilities.trackWidgetCreationDefault);
 			debugConfig.flutterMode = debugConfig.flutterMode || "debug";
-			debugConfig.flutterPath = debugConfig.flutterPath || (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : null);
+			debugConfig.flutterPath = debugConfig.flutterPath || (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : undefined);
 			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || conf.flutterRunLogFile;
 			debugConfig.flutterTestLogFile = debugConfig.flutterTestLogFile || conf.flutterTestLogFile;
 			if (!debugConfig.deviceId && device) {
@@ -398,7 +398,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				debugConfig.deviceName = `${device.name} (${device.platform})`;
 			}
 			debugConfig.showMemoryUsage =
-				debugConfig.showMemoryUsage !== undefined && debugConfig.showMemoryUsage !== null
+				debugConfig.showMemoryUsage || debugConfig.showMemoryUsage === false
 					? debugConfig.showMemoryUsage
 					: debugConfig.flutterMode === "profile";
 		}

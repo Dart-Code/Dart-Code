@@ -2,12 +2,12 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { PackageMap } from "../debug/package_map";
-import { fsPath } from "../utils";
+import { fsPath, notUndefined } from "../utils";
 
 const DART_HIDE_PACKAGE_TREE = "dart-code:hidePackageTree";
 
 export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataProvider<PackageDep> {
-	private watcher: vs.FileSystemWatcher;
+	private watcher?: vs.FileSystemWatcher;
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this.onDidChangeTreeDataEmitter.event;
 	public workspaceRoot?: string;
@@ -26,7 +26,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 	private disposeWatcher() {
 		if (this.watcher) {
 			this.watcher.dispose();
-			this.watcher = null;
+			this.watcher = undefined;
 		}
 	}
 
@@ -95,11 +95,10 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 			if (this.workspaceRoot !== path) {
 				return new PackageDep(`${packageName}`, vs.Uri.file(path), vs.TreeItemCollapsibleState.Collapsed);
 			}
-		}).filter((d) => d);
+		}).filter(notUndefined);
 		// Hide the tree if we had no dependencies to show.
 		DartPackagesProvider.setTreeVisible(!!deps && !!deps.length);
 		return deps;
-
 	}
 
 	private static setTreeVisible(visible: boolean) {
