@@ -147,11 +147,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			// If we have an entry point, see if we can make this more specific by finding a .packages file
 			if (debugConfig.program) {
 				const bestProjectRoot = locateBestProjectRoot(debugConfig.program);
-				if (bestProjectRoot) {
-					if (!folder || isWithinPath(bestProjectRoot, fsPath(folder.uri))) {
-						debugConfig.cwd = bestProjectRoot;
-						log(`Found better project root to use as cwd: ${debugConfig.cwd}`);
-					}
+				if (bestProjectRoot && isWithinPath(bestProjectRoot, fsPath(folder.uri))) {
+					debugConfig.cwd = bestProjectRoot;
+					log(`Found better project root to use as cwd: ${debugConfig.cwd}`);
 				}
 			}
 		}
