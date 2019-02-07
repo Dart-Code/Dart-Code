@@ -22,7 +22,7 @@ let portToBind = 0;
 
 // TODO: We should just create one instance of this class, and reuse it when the command is run (so the port can
 // stay stable).
-export class FlutterDevTools implements vs.Disposable {
+export class DevTools implements vs.Disposable {
 	private devToolsStatusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 100);
 	private proc: child_process.ChildProcess;
 	/// Resolves to the DevTools URL. This is created immediately when a new process is being spawned so that
