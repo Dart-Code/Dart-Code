@@ -87,7 +87,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		let triggerCompletion = false;
 
 		const nextCharacterIsOpenParen = nextCharacter === "(";
-		const nextCharacterIsColon = nextCharacter === ":";
 
 		// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its parameters.
 		if (element && element.parameters && elementKind !== CompletionItemKind.Property && suggestion.kind !== "OVERRIDE"
