@@ -14,27 +14,9 @@ import { tryDeleteFile } from "../src/utils/fs";
 import { log, logError, logTo, logWarn } from "../src/utils/log";
 import { waitFor } from "../src/utils/promises";
 
-<<<<<<< HEAD
-export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
+export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
 export let extApi: InternalExtensionApi;
 export const threeMinutesInMilliseconds = 1000 * 60 * 3;
-=======
-export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
-export let extApi: {
-	analyzerCapabilities: AnalyzerCapabilities,
-	currentAnalysis: () => Promise<void>,
-	daemonCapabilities: DaemonCapabilities,
-	flutterCapabilities: FlutterCapabilities,
-	debugProvider: DebugConfigProvider,
-	nextAnalysis: () => Promise<void>,
-	initialAnalysis: Promise<void>,
-	reanalyze: () => void,
-	referenceProvider: DartReferenceProvider,
-	renameProvider: DartRenameProvider,
-	sdks: Sdks,
-	testTreeProvider: TestResultsProvider,
-};
->>>>>>> TS strict mode fixes
 
 if (!ext) {
 	if (semver.satisfies(vs.version, vsCodeVersionConstraint)) {
@@ -649,7 +631,7 @@ async function getResolvedDebugConfiguration(extraConfiguration?: { [key: string
 		request: "launch",
 		type: "dart",
 	}, extraConfiguration);
-	return await extApi.debugProvider.resolveDebugConfiguration(vs.workspace.workspaceFolders[0], debugConfig);
+	return await extApi.debugProvider.resolveDebugConfiguration(vs.workspace.workspaceFolders![0], debugConfig);
 }
 
 export async function getLaunchConfiguration(script?: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
@@ -717,7 +699,8 @@ export function watchPromise<T>(name: string, promise: Promise<T>): Promise<T> {
 
 export async function setConfigForTest(section: string, key: string, value: any): Promise<void> {
 	const conf = vs.workspace.getConfiguration(section);
-	const oldValue = conf.inspect(key).globalValue;
+	const values = conf.inspect(key);
+	const oldValue = values && values.globalValue;
 	await conf.update(key, value, vs.ConfigurationTarget.Global);
 	defer(() => conf.update(key, oldValue, vs.ConfigurationTarget.Global));
 }

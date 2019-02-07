@@ -13,7 +13,7 @@ describe("flutter", () => {
 	});
 	beforeEach("activate", () => activate());
 	it("created a basic default project", async () => {
-		const basicProjectFolder = fsPath(vs.workspace.workspaceFolders[0].uri);
+		const basicProjectFolder = fsPath(vs.workspace.workspaceFolders![0].uri);
 		const expectedString = "title: 'Flutter Demo'";
 		const mainFile = path.join(basicProjectFolder, "lib", "main.dart");
 		// Creating the sample may be a little slow, so allow up to 60 seconds for it.
@@ -36,7 +36,7 @@ describe("flutter", () => {
 			return;
 		}
 
-		const sampleProjectFolder = fsPath(vs.workspace.workspaceFolders[1].uri);
+		const sampleProjectFolder = fsPath(vs.workspace.workspaceFolders![1].uri);
 		const expectedString = "Flutter code sample for material.IconButton.1";
 		const mainFile = path.join(sampleProjectFolder, "lib", "main.dart");
 		// Creating the sample may be a little slow, so allow up to 60 seconds for it.
