@@ -106,7 +106,7 @@ export class DartDebugSession extends DebugSession {
 
 		process.stdout.setEncoding("utf8");
 		process.stdout.on("data", (data) => {
-			let match: RegExpExecArray;
+			let match: RegExpExecArray | undefined;
 			if (!this.noDebug && this.parseObservatoryUriFromStdOut && !this.observatory) {
 				match = ObservatoryConnection.bannerRegex.exec(data.toString());
 			}
@@ -399,7 +399,7 @@ export class DartDebugSession extends DebugSession {
 				this.log(`${request}: Closing observatory...`);
 				this.observatory.close();
 			} catch { } finally {
-				this.observatory = null;
+				this.observatory = undefined;
 			}
 		}
 
@@ -589,7 +589,7 @@ export class DartDebugSession extends DebugSession {
 				let canShowSource = fs.existsSync(sourcePath);
 
 				// Download the source if from a "dart:" uri.
-				let sourceReference: number;
+				let sourceReference: number | undefined = undefined;
 				if (uri.startsWith("dart:")) {
 					sourcePath = undefined;
 					sourceReference = thread.storeData(location.script);
@@ -600,7 +600,7 @@ export class DartDebugSession extends DebugSession {
 				const stackFrame: DebugProtocol.StackFrame = new StackFrame(
 					frameId,
 					frameName,
-					canShowSource ? new Source(shortName, sourcePath, sourceReference, null, location.script) : undefined,
+					canShowSource ? new Source(shortName, sourcePath, sourceReference, undefined, location.script) : undefined,
 					0, 0,
 				);
 				// The top frame is only allowed to be deemphasized when it's an exception (so the editor walks
