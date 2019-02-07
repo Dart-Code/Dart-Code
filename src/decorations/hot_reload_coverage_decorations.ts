@@ -145,11 +145,9 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 	private async onWillHotReload(): Promise<void> {
 		for (const file of Object.keys(this.fileState)) {
-			for (const line of Object.keys(this.fileState[file]).map((k) => parseInt(k, 10))) {
-				const fileState = this.fileState[file];
-				fileState.modified.forEach((r) => fileState.notRun.push(r));
-				fileState.modified.length = 0;
-			}
+			const fileState = this.fileState[file];
+			fileState.modified.forEach((r) => fileState.notRun.push(r));
+			fileState.modified.length = 0;
 		}
 
 		// After the above code we may have new files to track, so re-send them here.
