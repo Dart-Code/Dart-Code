@@ -1208,17 +1208,9 @@ export class DartDebugSession extends DebugSession {
 		const result = await this.observatory.getVM();
 		const vm = result.result as VM;
 
-		const promises: Array<Promise<DebuggerResult>> = [];
-
 		const isolatePromises = vm.isolates.map((isolateRef) => this.observatory.getIsolate(isolateRef.id));
 		const isolatesResponses = await Promise.all(isolatePromises);
 		const isolates = isolatesResponses.map((response) => response.result as VMIsolate);
-
-		// Our handling of file:// prefixes is inconsistent until
-		// https://github.com/flutter/flutter/issues/18441 is resolved.
-		function removeFilePrefix(uri: string) {
-			return uri.replace("file://", "");
-		}
 
 		// Make a quick map for looking up with scripts we are tracking.
 		const trackedScriptUris: { [key: string]: boolean } = {};
