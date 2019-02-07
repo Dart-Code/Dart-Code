@@ -15,9 +15,10 @@ import { FlutterTestDebugSession } from "../debug/flutter_test_debug_impl";
 import { FlutterLaunchRequestArguments, forceWindowsDriveLetterToUppercase, isWithinPath } from "../debug/utils";
 import { FlutterCapabilities } from "../flutter/capabilities";
 import { FlutterDeviceManager } from "../flutter/device_manager";
+import { Device } from "../flutter/flutter_types";
 import { locateBestProjectRoot } from "../project";
 import { dartVMPath, flutterPath, pubPath, pubSnapshotPath } from "../sdk/utils";
-import { fsPath, isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, checkProjectSupportsPubRunTest, ProjectType, Sdks } from "../utils";
+import { checkProjectSupportsPubRunTest, fsPath, isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, ProjectType, Sdks } from "../utils";
 import { log, logError, logWarn } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
@@ -188,18 +189,20 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		// Ensure we have a device
-		const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null;
-		if (isFlutter && !isTest && !deviceId && this.deviceManager && debugConfig.deviceId !== "flutter-tester") {
+		let currentDevice = this.deviceManager && this.deviceManager.currentDevice;
+		if (isFlutter && !isTest && !currentDevice && this.deviceManager && debugConfig.deviceId !== "flutter-tester") {
 			// Fetch a list of emulators
 			if (!await this.deviceManager.promptForAndLaunchEmulator(true)) {
 				logWarn("Unable to launch due to no active device");
 				window.showInformationMessage("Cannot launch without an active device");
 				return undefined; // undefined means silent (don't open launch.json).
 			}
+			// Otherwise try to read again.
+			currentDevice = this.deviceManager && this.deviceManager.currentDevice;
 		}
 
 		// TODO: This cast feels nasty?
-		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isFlutter, deviceId);
+		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isFlutter, currentDevice);
 
 		// Debugger always uses uppercase drive letters to ensure our paths have them regardless of where they came from.
 		debugConfig.program = forceWindowsDriveLetterToUppercase(debugConfig.program);
@@ -349,7 +352,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return this.debugServers[type];
 	}
 
-	private setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, isFlutter: boolean, deviceId: string) {
+	private setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, isFlutter: boolean, device: Device | undefined) {
 		const conf = config.for(folder && folder.uri || null);
 
 		// Attach any properties that weren't explicitly set.
@@ -383,7 +386,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.flutterPath = debugConfig.flutterPath || (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : null);
 			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || conf.flutterRunLogFile;
 			debugConfig.flutterTestLogFile = debugConfig.flutterTestLogFile || conf.flutterTestLogFile;
-			debugConfig.deviceId = debugConfig.deviceId || deviceId;
+			if (!debugConfig.deviceId && device) {
+				debugConfig.deviceId = device.id;
+				debugConfig.deviceName = `${device.name} (${device.platform})`;
+			}
 			debugConfig.showMemoryUsage =
 				debugConfig.showMemoryUsage !== undefined && debugConfig.showMemoryUsage !== null
 					? debugConfig.showMemoryUsage
