@@ -1,6 +1,7 @@
 import { escapeRegExp } from "./debug/utils";
 
 const darkIconUrlFormat = "https://storage.googleapis.com/material-icons/external-assets/v4/icons/svg/ic_$1_white_36px.svg";
+// TODO: Add a setting for light/dark icons (etc.).
 const lightIconUrlFormat = "https://storage.googleapis.com/material-icons/external-assets/v4/icons/svg/ic_$1_black_36px.svg";
 const iconRegex = new RegExp(
 	`(?:${escapeRegExp("<p>")})?`
