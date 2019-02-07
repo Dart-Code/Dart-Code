@@ -4,11 +4,11 @@ import * as vs from "vscode";
 import { Analytics } from "../analytics";
 import { LogCategory, LogSeverity, safeSpawn } from "../debug/utils";
 import { PubGlobal } from "../pub/global";
-import { pubPath } from "../sdk/utils";
 import { openInBrowser, Sdks } from "../utils";
 import { DartDebugSessionInformation, extractObservatoryPort } from "../utils/debug";
 import { log, logError } from "../utils/log";
 import { logProcess } from "../utils/processes";
+import { pubPath } from "./utils";
 
 const devtools = "devtools";
 const devtoolsPackageName = "Dart DevTools";
