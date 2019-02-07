@@ -79,7 +79,7 @@ export function getLogHeader() {
 }
 export function addToLogHeader(f: () => string) {
 	try {
-		logHeader.push(f().replace("\r", "").replace("\n", "\r\n"));
+		logHeader.push(f().replace(/\r/g, "").replace(/\n/g, "\r\n"));
 	} catch {
 		// Don't log here; we may be trying to access things that aren't available yet.
 	}
