@@ -244,10 +244,19 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// Start port listener on launch of first debug session.
 		const debugServer = this.getDebugServer(debugType, debugConfig.debugServer);
+		const serverAddress = debugServer.address();
+
+		// Updated node bindings say address can be a string (used for pipes) but
+		// this should never be the case here. This check is to keep the types happy.
+		if (typeof serverAddress === "string") {
+			log("Debug server does not have a valid address");
+			window.showErrorMessage("Debug server does not have a valid address");
+			return undefined;
+		}
 
 		// Make VS Code connect to debug server instead of launching debug adapter.
 		// TODO: Why do we need this cast? The node-mock-debug does not?
-		(debugConfig as any).debugServer = debugServer.address().port;
+		(debugConfig as any).debugServer = serverAddress.port;
 
 		this.analytics.logDebuggerStart(folder && folder.uri);
 		if (debugType === DebuggerType.FlutterTest || debugType === DebuggerType.PubTest) {
