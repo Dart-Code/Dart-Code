@@ -919,8 +919,7 @@ export class DartDebugSession extends DebugSession {
 		const expression: string = args.expression;
 		// Stack frame scope; if not specified, the expression is evaluated in the global scope.
 		const frameId: number = args.frameId;
-		// Values are "watch", "repl", and "hover".
-		const context: string = args.context;
+		// const context: string = args.context; // "watch", "repl", "hover"
 
 		if (!frameId) {
 			this.errorResponse(response, "global evaluation not supported");
