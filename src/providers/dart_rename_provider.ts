@@ -34,7 +34,7 @@ export class DartRenameProvider implements RenameProvider {
 		if (resp.change && resp.change.message)
 			outputChannel.appendLine(`[INFO] ${resp.change.message}…`);
 
-		const hasError = this.handleProblem(
+		this.handleProblem(
 			resp.initialProblems
 				.concat(resp.optionsProblems)
 				.concat(resp.finalProblems),
@@ -71,7 +71,7 @@ export class DartRenameProvider implements RenameProvider {
 		return workspaceEdit;
 	}
 
-	private handleProblem(problems: as.RefactoringProblem[], outputChannel: OutputChannel): boolean {
+	private handleProblem(problems: as.RefactoringProblem[], outputChannel: OutputChannel): void {
 		// Log all in output channel.
 		problems.forEach((problem) => outputChannel.appendLine(`[${problem.severity}] ${problem.message}`));
 
@@ -79,12 +79,10 @@ export class DartRenameProvider implements RenameProvider {
 			.filter((p) => p.severity !== "INFO" && p.severity !== "WARNING")
 			.sort((p1, p2) => p2.severity.localeCompare(p1.severity));
 
-		if (errors.length === 0)
-			return false;
-
-		outputChannel.appendLine("[INFO] Rename aborted.");
-		// Popups just the first error.
-		throw errors[0].message;
+		if (errors.length !== 0) {
+			outputChannel.appendLine("[INFO] Rename aborted.");
+			throw errors[0].message;
+		}
 	}
 
 	private async getLocation(document: TextDocument, position: Position): Promise<{ range: Range, placeholder: string }> {
