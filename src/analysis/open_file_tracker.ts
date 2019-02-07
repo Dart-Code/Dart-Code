@@ -104,6 +104,8 @@ export class OpenFileTracker implements IAmDisposable {
 
 	public static supportsPubRunTest(file: Uri): boolean | undefined {
 		const path = fsPath(file);
+		if (!util.isTestFile(path))
+			return;
 		if (pubRunTestSupport[path] === undefined) {
 			const projectRoot = locateBestProjectRoot(path);
 			pubRunTestSupport[path] = !!(projectRoot && util.checkProjectSupportsPubRunTest(projectRoot));
