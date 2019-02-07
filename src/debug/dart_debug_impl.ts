@@ -853,11 +853,9 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments): void {
-		const variablesReference: number = args.variablesReference;
-		// The name of the variable.
-		const name: string = args.name;
-		// The value of the variable.
-		const value: string = args.value;
+		// const variablesReference: number = args.variablesReference;
+		// const name: string = args.name;
+		// const value: string = args.value;
 
 		// TODO: Use eval to implement this.
 		this.errorResponse(response, "not supported");
