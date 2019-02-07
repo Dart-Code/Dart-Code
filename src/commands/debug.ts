@@ -304,7 +304,8 @@ export class DebugCommands {
 	private async promptForDebugSession(): Promise<DartDebugSessionInformation | undefined> {
 		const selectedItem = await vs.window.showQuickPick(
 			debugSessions.map((s) => ({
-				description: `Started ${s.sessionStart.toLocaleTimeString()}`,
+				description: s.session.workspaceFolder.name,
+				detail: s.session.configuration.deviceName || `Started ${s.sessionStart.toLocaleTimeString()}`,
 				label: s.session.name,
 				session: s,
 			})),
