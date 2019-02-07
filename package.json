@@ -1231,7 +1231,7 @@
 		"signal-exit": "^3.0.2",
 		"sinon": "^7.1.1",
 		"tslint": "^5.12.1",
-		"typescript": "^3.2.2",
+		"typescript": "^3.3.1",
 		"vscode": "^1.1.28",
 		"vscode-debugadapter-testsupport": "^1.33.0"
 	}
