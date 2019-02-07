@@ -4,7 +4,7 @@ import * as https from "https";
 import * as os from "os";
 import * as path from "path";
 import * as semver from "semver";
-import { commands, extensions, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
+import { commands, env as vsEnv, extensions, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { config } from "./config";
 import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, isWithinPath } from "./debug/utils";
 import { locateBestProjectRoot } from "./project";
@@ -272,7 +272,7 @@ export function escapeShell(args: string[]) {
 }
 
 export function openInBrowser(url: string) {
-	commands.executeCommand("vscode.open", Uri.parse(url));
+	vsEnv.openExternal(Uri.parse(url));
 }
 
 export class Sdks {
