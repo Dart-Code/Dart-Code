@@ -20,8 +20,6 @@ const devtoolsPackageName = "Dart DevTools";
 // if it's in use that's on them :-))
 let portToBind = 0;
 
-// TODO: We should just create one instance of this class, and reuse it when the command is run (so the port can
-// stay stable).
 export class DevTools implements vs.Disposable {
 	private devToolsStatusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 100);
 	private proc: child_process.ChildProcess;
