@@ -11,7 +11,7 @@ describe("flutter", () => {
 		const expectedString = "title: 'Flutter Demo'";
 		const mainFile = path.join(basicProjectFolder, "lib", "main.dart");
 		// Creating the sample may be a little slow, so allow up to 60 seconds for it.
-		await waitForResult(() => fs.existsSync(mainFile), "lib/main.dart did not exist", 60000);
+		await waitForResult(() => fs.existsSync(mainFile), "lib/main.dart did not exist", 100000);
 		// Wait for up to 10 seconds for the content to match, as the file may be updated after creation.
 		await waitForResult(() => {
 			const contents = fs.readFileSync(mainFile);
@@ -27,7 +27,7 @@ describe("flutter", () => {
 		const expectedString = "title: 'Flutter Code Sample for material.IconButton'";
 		const mainFile = path.join(sampleProjectFolder, "lib", "main.dart");
 		// Creating the sample may be a little slow, so allow up to 60 seconds for it.
-		await waitForResult(() => fs.existsSync(mainFile), "lib/main.dart did not exist", 60000);
+		await waitForResult(() => fs.existsSync(mainFile), "lib/main.dart did not exist", 100000);
 		// Wait for up to 10 seconds for the content to match, as the file may be updated after creation.
 		await waitForResult(() => {
 			const contents = fs.readFileSync(mainFile);
