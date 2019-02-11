@@ -334,6 +334,10 @@
 					"command": "dart.createProject"
 				},
 				{
+					"command": "dart.startLogging",
+					"when": "dart-code:dartProjectLoaded"
+				},
+				{
 					"command": "pub.get",
 					"when": "dart-code:dartProjectLoaded"
 				},
