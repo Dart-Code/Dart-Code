@@ -39,6 +39,7 @@
 		"onCommand:dart.createProject",
 		"onCommand:_dart.flutter.createSampleProject",
 		"onCommand:flutter.doctor",
+		"onCommand:flutter.upgrade",
 		"onUri"
 	],
 	"main": "./out/src/extension",
