@@ -562,7 +562,7 @@ export async function waitForEditorChange(action: () => Thenable<void>): Promise
 	const doc = currentDoc();
 	const oldVersion = doc.version;
 	await action();
-	await waitFor(() => doc.version !== oldVersion);
+	await waitFor(() => doc.version !== oldVersion, 20, 2000);
 }
 
 export async function waitForNextAnalysis(action: () => void | Thenable<void>, timeoutSeconds?: number): Promise<void> {
