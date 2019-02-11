@@ -425,8 +425,7 @@
 					"command": "flutter.doctor"
 				},
 				{
-					"command": "flutter.upgrade",
-					"when": "dart-code:flutterProjectLoaded"
+					"command": "flutter.upgrade"
 				},
 				{
 					"command": "flutter.toggleDebugPainting",
