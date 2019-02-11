@@ -38,4 +38,4 @@ describe("flutter", () => {
 		if (contents.indexOf(expectedString) === -1)
 			assert.fail(`Did not find "${expectedString}'" in the sample file:\n\n${contents}`);
 	});
-});
+}).timeout(120000);
