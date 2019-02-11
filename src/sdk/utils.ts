@@ -43,10 +43,6 @@ export function handleMissingSdks(context: ExtensionContext, analytics: Analytic
 		sdks.projectType = ProjectType.Flutter;
 		commandToReRun = "flutter.doctor";
 	}));
-	context.subscriptions.push(commands.registerCommand("flutter.upgrade", (_) => {
-		sdks.projectType = ProjectType.Flutter;
-		commandToReRun = "flutter.upgrade";
-	}));
 	// Wait a while before showing the error to allow the code above to have run.
 	setTimeout(() => {
 		if (sdks.projectType === ProjectType.Flutter) {
