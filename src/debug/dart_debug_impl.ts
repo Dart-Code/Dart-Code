@@ -72,6 +72,7 @@ export class DartDebugSession extends DebugSession {
 		response.body.supportsConditionalBreakpoints = true;
 		response.body.supportsLogPoints = true;
 		response.body.supportsTerminateRequest = true;
+		response.body.supportsExceptionInfoRequest = true;
 		response.body.exceptionBreakpointFilters = [
 			{ filter: "All", label: "All Exceptions", default: false },
 			{ filter: "Unhandled", label: "Uncaught Exceptions", default: true },
@@ -674,6 +675,27 @@ export class DartDebugSession extends DebugSession {
 			this.sendResponse(response);
 		});
 		// }).catch((error) => this.errorResponse(response, `${error}`));
+	}
+
+	protected async exceptionInfoRequest(response: DebugProtocol.ExceptionInfoResponse, args: DebugProtocol.ExceptionInfoArguments): Promise<void> {
+		try {
+			const thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
+			if (!thread) {
+				return this.errorResponse(response, "Unknown thread");
+			}
+			if (thread.exceptionReference === 0) {
+				return this.errorResponse(response, "Thread does not have an exception");
+			}
+			const exceptionRef = thread.getException();
+			response.body = {
+				breakMode: "unhandled", // TODO: Can we do better?
+				description: await this.fullValueAsString(thread.ref, exceptionRef),
+				exceptionId: this.getFriendlyTypeName(exceptionRef),
+			};
+			this.sendResponse(response);
+		} catch (error) {
+			this.errorResponse(response, `${error}`);
+		}
 	}
 
 	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {

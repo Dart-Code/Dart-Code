@@ -335,4 +335,11 @@ export class ThreadInfo {
 		}
 		this.paused = true;
 	}
+
+	public getException(): VMInstanceRef | undefined {
+		if (this.exceptionReference === 0)
+			return undefined;
+		const storedData = this.manager.getStoredData(this.exceptionReference);
+		return storedData ? storedData.data as VMInstanceRef : undefined;
+	}
 }
