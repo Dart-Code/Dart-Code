@@ -58,7 +58,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 
 	protected shouldHandleMessage(message: string): boolean {
 		// Everything in flutter is wrapped in [] so we can tell what to handle.
-		if (message.startsWith("[") && message.endsWith("]")) {
+		if (message.startsWith("[{") && message.endsWith("}]")) {
 			// When we get the first message to handle, complete the status notifications.
 			if (!this.hasStarted) {
 				this.hasStarted = true;

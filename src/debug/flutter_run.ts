@@ -13,7 +13,7 @@ export class FlutterRun extends StdIOService<UnknownNotification> {
 
 	protected shouldHandleMessage(message: string): boolean {
 		// Everything in flutter is wrapped in [] so we can tell what to handle.
-		return message.startsWith("[") && message.endsWith("]");
+		return message.startsWith("[{") && message.endsWith("}]");
 	}
 
 	protected processUnhandledMessage(message: string): void {
