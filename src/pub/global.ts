@@ -18,19 +18,20 @@ export class PubGlobal {
 		const message = versionStatus === VersionStatus.UpdateRequired
 			? `${packageName} needs to be updated with 'pub global activate ${packageID}' to use this feature.`
 			: `${packageName} needs to be installed with 'pub global activate ${packageID}' to use this feature.`;
-		const actionName = versionStatus === VersionStatus.UpdateRequired ? `update` : `install`;
 		let action = await vs.window.showWarningMessage(message, activateForMe, moreInfo);
 
 		if (action === moreInfo) {
 			openInBrowser(moreInfoLink);
 			return false;
 		} else if (action === activateForMe) {
+			const actionName = versionStatus === VersionStatus.UpdateRequired ? `Updating ${packageName}` : `Activating ${packageName}`;
+
 			const args = ["global", "activate", packageID];
-			await this.runCommandWithProgress(packageName, `Activating ${packageName}...`, args);
+			await this.runCommandWithProgress(packageName, `${actionName}...`, args);
 			if (await this.getInstalledStatus(packageName, packageID) === VersionStatus.Valid) {
 				return true;
 			} else {
-				action = await vs.window.showErrorMessage(`Failed to ${actionName} ${packageName}. Please try running 'pub global activate ${packageID}' manually.`, moreInfo);
+				action = await vs.window.showErrorMessage(`${actionName} failed. Please try running 'pub global activate ${packageID}' manually.`, moreInfo);
 				if (action === moreInfo) {
 					openInBrowser(moreInfoLink);
 				}
