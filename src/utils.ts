@@ -173,6 +173,12 @@ export function isTestFile(file: string): boolean {
 	return file && isDartFile(file) && (isInsideFolderNamed(file, "test") || file.toLowerCase().endsWith("_test.dart"));
 }
 
+// Similate to isTestFile, but requires that the file is _test.dart because it will be used as
+// an entry point for pub test running.
+export function isPubRunnableTestFile(file: string): boolean {
+	return file && isDartFile(file) && file.toLowerCase().endsWith("_test.dart");
+}
+
 export function isTestFolder(path: string): boolean {
 	return path && isInsideFolderNamed(path, "test") && fs.existsSync(path) && fs.statSync(path).isDirectory();
 }
