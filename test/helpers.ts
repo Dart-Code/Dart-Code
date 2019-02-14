@@ -125,7 +125,15 @@ export async function getPackages() {
 
 export async function closeAllOpenFiles(): Promise<void> {
 	log(`Closing all open editors...`);
-	await vs.commands.executeCommand("workbench.action.closeAllEditors");
+	try {
+		await withTimeout(
+			vs.commands.executeCommand("workbench.action.closeAllEditors"),
+			"closeAllEditors all editors did not complete within 10 seconds",
+			10,
+		);
+	} catch (e) {
+		logWarn(e);
+	}
 	await delay(100);
 }
 
@@ -576,7 +584,7 @@ export async function waitForNextAnalysis(action: () => void | Thenable<void>, t
 	await withTimeout(nextAnalysis, "Analysis did not complete within specified timeout", timeoutSeconds);
 }
 
-export async function withTimeout(promise: Promise<any>, message: string | (() => string), seconds?: number) {
+export async function withTimeout(promise: Thenable<any>, message: string | (() => string), seconds?: number) {
 	return Promise.race([
 		promise,
 		timeoutIn(message, seconds),
