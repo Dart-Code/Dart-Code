@@ -6,7 +6,7 @@ export function getChildFolders(parent: string): string[] {
 		return [];
 	return fs.readdirSync(parent)
 		.map((item) => path.join(parent, item))
-		.filter((item) => fs.statSync(item).isDirectory());
+		.filter((item) => fs.existsSync(item) && fs.statSync(item).isDirectory());
 }
 
 export function hasPackagesFile(folder: string): boolean {
