@@ -562,7 +562,8 @@ function getSettingsThatRequireRestart() {
 		+ config.showTestCodeLens
 		+ config.previewHotReloadCoverageMarkers
 		+ config.previewBuildRunnerTasks
-		+ config.triggerSignatureHelpAutomatically;
+		+ config.triggerSignatureHelpAutomatically
+		+ JSON.stringify(config.env);
 }
 
 export async function deactivate(isRestart: boolean = false): Promise<void> {
