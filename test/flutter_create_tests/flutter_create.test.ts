@@ -5,12 +5,13 @@ import * as vs from "vscode";
 import { LogCategory, LogSeverity } from "../../src/debug/utils";
 import { fsPath } from "../../src/utils";
 import { log } from "../../src/utils/log";
-import { extApi, waitForResult } from "../helpers";
+import { activate, extApi, waitForResult } from "../helpers";
 
 describe("flutter", () => {
 	beforeEach("set timeout", function () {
 		this.timeout(120000); // These tests can be slooooow.
 	});
+	beforeEach("activate", () => activate());
 	it("created a basic default project", async () => {
 		const basicProjectFolder = fsPath(vs.workspace.workspaceFolders[0].uri);
 		const expectedString = "title: 'Flutter Demo'";
