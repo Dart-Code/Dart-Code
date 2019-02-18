@@ -1,4 +1,5 @@
 import { ConfigurationTarget, Uri, version as codeVersion, workspace, WorkspaceConfiguration } from "vscode";
+import { setupToolEnv } from "./debug/utils";
 import { createFolderForFile, resolvePaths } from "./utils";
 
 class Config {
@@ -11,6 +12,7 @@ class Config {
 
 	private loadConfig() {
 		this.config = workspace.getConfiguration("dart");
+		setupToolEnv(this.env);
 	}
 
 	private getConfig<T>(key: string): T | undefined {
@@ -37,6 +39,7 @@ class Config {
 	public setCheckForSdkUpdates(value: boolean): Thenable<void> { return this.setConfig("checkForSdkUpdates", value, ConfigurationTarget.Global); }
 	get closingLabels() { return this.getConfig<boolean>("closingLabels"); }
 	get extensionLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("extensionLogFile"))); }
+	get env() { return this.getConfig<object>("env"); }
 	get flutterCreateAndroidLanguage() { return this.getConfig<string>("flutterCreateAndroidLanguage"); }
 	get flutterCreateIOSLanguage() { return this.getConfig<string>("flutterCreateIOSLanguage"); }
 	get flutterCreateOrganization() { return this.getConfig<string>("flutterCreateOrganization"); }

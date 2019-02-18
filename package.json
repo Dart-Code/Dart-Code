@@ -636,6 +636,11 @@
 			"type": "object",
 			"title": "Dart Configuration",
 			"properties": {
+				"dart.env": {
+					"type": "object",
+					"description": "Additional environment variables to add to all Dart/Flutter processes spawned by the Dart and Flutter extensions.",
+					"scope": "window"
+				},
 				"dart.closingLabels": {
 					"type": "boolean",
 					"default": true,

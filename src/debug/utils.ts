@@ -31,14 +31,26 @@ export class LogMessage {
 	constructor(public readonly message: string, public readonly severity: LogSeverity, public readonly category: LogCategory) { }
 }
 
-export const toolEnv = Object.create(process.env);
-toolEnv.FLUTTER_HOST = "VSCode";
-toolEnv.PUB_ENVIRONMENT = (toolEnv.PUB_ENVIRONMENT ? `${toolEnv.PUB_ENVIRONMENT}:` : "") + "vscode.dart-code";
-export const globalFlutterArgs: string[] = [];
-if (process.env.DART_CODE_IS_TEST_RUN) {
-	toolEnv.PUB_ENVIRONMENT += ".test.bot";
-	globalFlutterArgs.push("--suppress-analytics");
+// Environment used when spawning Dart and Flutter processes.
+export let toolEnv: { [key: string]: string } = {};
+export let globalFlutterArgs: string[] = [];
+
+export function setupToolEnv(envOverrides?: object) {
+	toolEnv = Object.create(process.env);
+	globalFlutterArgs = [];
+
+	toolEnv.FLUTTER_HOST = "VSCode";
+	toolEnv.PUB_ENVIRONMENT = (toolEnv.PUB_ENVIRONMENT ? `${toolEnv.PUB_ENVIRONMENT}:` : "") + "vscode.dart-code";
+	if (process.env.DART_CODE_IS_TEST_RUN) {
+		toolEnv.PUB_ENVIRONMENT += ".test.bot";
+		globalFlutterArgs.push("--suppress-analytics");
+	}
+
+	// Add on any overrides.
+	if (envOverrides)
+		toolEnv = Object.assign(Object.create(toolEnv), envOverrides);
 }
+setupToolEnv();
 
 export interface IAmDisposable {
 	dispose(): void;
