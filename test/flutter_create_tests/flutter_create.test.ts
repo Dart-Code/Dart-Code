@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { LogCategory, LogSeverity } from "../../src/debug/utils";
 import { fsPath } from "../../src/utils";
 import { log } from "../../src/utils/log";
-import { waitForResult } from "../helpers";
+import { extApi, waitForResult } from "../helpers";
 
 describe("flutter", () => {
 	beforeEach("set timeout", function () {
@@ -29,7 +29,10 @@ describe("flutter", () => {
 		if (contents.indexOf(expectedString) === -1)
 			assert.fail(`Did not find "${expectedString}'" in the sample file:\n\n${contents}`);
 	});
-	it("created a sample project", async () => {
+	it("created a sample project", async function () {
+		if (!extApi.flutterCapabilities.supportsMultipleSamplesPerElement)
+			this.skip();
+
 		const sampleProjectFolder = fsPath(vs.workspace.workspaceFolders[1].uri);
 		const expectedString = "title: 'Flutter Code Sample for material.IconButton'";
 		const mainFile = path.join(sampleProjectFolder, "lib", "main.dart");
