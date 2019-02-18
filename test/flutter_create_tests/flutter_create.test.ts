@@ -6,6 +6,9 @@ import { fsPath } from "../../src/utils";
 import { waitForResult } from "../helpers";
 
 describe("flutter", () => {
+	beforeEach("set timeout", function () {
+		this.timeout(120000); // These tests can be slooooow.
+	});
 	it("created a basic default project", async () => {
 		const basicProjectFolder = fsPath(vs.workspace.workspaceFolders[0].uri);
 		const expectedString = "title: 'Flutter Demo'";
@@ -38,4 +41,4 @@ describe("flutter", () => {
 		if (contents.indexOf(expectedString) === -1)
 			assert.fail(`Did not find "${expectedString}'" in the sample file:\n\n${contents}`);
 	});
-}).timeout(120000);
+});
