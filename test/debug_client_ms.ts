@@ -476,9 +476,9 @@ export class DebugClient extends ProtocolClient {
 				return this.configurationDone();
 			}),
 
-			this.launch(launchArgs),
-
 			setupBreakpointWait(),
+
+			this.launch(launchArgs),
 		]);
 	}
 }
