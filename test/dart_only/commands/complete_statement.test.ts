@@ -2,7 +2,7 @@ import * as vs from "vscode";
 import { activate, ensureTestContentWithCursorPos, rangeOf, select, setTestContent, waitForEditorChange } from "../../helpers";
 
 describe("complete statement", () => {
-	beforeEach(() => activate());
+	beforeEach("activate", () => activate());
 
 	it("completes a simple print", async () => {
 		await setTestContent(`

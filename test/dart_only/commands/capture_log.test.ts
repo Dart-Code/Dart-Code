@@ -9,7 +9,7 @@ import { log } from "../../../src/utils/log";
 import { activate, sb, waitForResult } from "../../helpers";
 
 describe("capture logs command", () => {
-	beforeEach(() => activate());
+	beforeEach("activate", () => activate());
 
 	async function configureLog(...logCategories: LogCategory[]) {
 		// When prompted for categories, pick just Analyzer.
