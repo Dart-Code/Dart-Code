@@ -36,7 +36,7 @@ describe("file tracker", () => {
 	});
 
 	describe("subscriptions", function () {
-		this.timeout(threeMinutesInMilliseconds + 1000 * 30);
+		this.timeout(threeMinutesInMilliseconds + (1000 * 30));
 
 		beforeEach(async function () {
 			// These tests are (usually) disabled by default because they're ~3min each.
