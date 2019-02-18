@@ -128,7 +128,7 @@ export async function closeAllOpenFiles(): Promise<void> {
 	try {
 		await withTimeout(
 			vs.commands.executeCommand("workbench.action.closeAllEditors"),
-			"closeAllEditors all editors did not complete within 10 seconds",
+			"closeAllEditors all editors did not complete",
 			10,
 		);
 	} catch (e) {
@@ -584,18 +584,20 @@ export async function waitForNextAnalysis(action: () => void | Thenable<void>, t
 	await withTimeout(nextAnalysis, "Analysis did not complete within specified timeout", timeoutSeconds);
 }
 
-export async function withTimeout(promise: Thenable<any>, message: string | (() => string), seconds?: number) {
-	return Promise.race([
-		promise,
-		timeoutIn(message, seconds),
-	]);
-}
+export async function withTimeout<T>(promise: Thenable<T>, message: string | (() => string), seconds: number = 30): Promise<T> {
+	return new Promise<T>((resolve, reject) => {
+		// Set a timeout to reject the promise after the timout period.
+		const timeoutTimer = setTimeout(() => {
+			const msg = typeof message === "string" ? message : message();
+			reject(new Error(`${msg} within ${seconds}s`));
+		}, seconds * 1000);
 
-export async function timeoutIn(message: string | (() => string), seconds: number = 30) {
-	return new Promise((resolve, reject) => setTimeout(() => {
-		const msg = typeof message === "string" ? message : message();
-		reject(new Error(`${msg} within ${seconds}s`));
-	}, seconds * 1000));
+		// When the main promise completes, cancel the timeout and return its result.
+		promise.then((result) => {
+			clearTimeout(timeoutTimer);
+			resolve(result);
+		});
+	});
 }
 
 // This same logic exists in the website to link back to logs.
