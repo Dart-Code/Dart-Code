@@ -2,6 +2,7 @@ import * as vs from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { fsPath, unique } from "../utils";
+import { logError, logInfo } from "../utils/log";
 
 export const REFACTOR_FAILED_DOC_MODIFIED = "This refactor cannot be applied because the document has changed.";
 export const REFACTOR_ANYWAY = "Refactor Anyway";
@@ -49,21 +50,35 @@ export class RefactorCommands implements vs.Disposable {
 			await vs.commands.executeCommand("_dart.applySourceChange", document, editResult.change);
 	}
 
-	private getRefactor(
+	private async getRefactor(
 		document: vs.TextDocument,
 		refactorKind: as.RefactoringKind,
 		range: vs.Range,
 		validateOnly: boolean,
 		options?: as.RefactoringOptions)
-		: Thenable<as.EditGetRefactoringResponse> {
-		return this.analyzer.editGetRefactoring({
-			file: fsPath(document.uri),
-			kind: refactorKind,
-			length: document.offsetAt(range.end) - document.offsetAt(range.start),
-			offset: document.offsetAt(range.start),
-			options,
-			validateOnly,
-		});
+		: Promise<as.EditGetRefactoringResponse> {
+
+		let remainingTries = 3;
+		while (true) {
+			try {
+				remainingTries--;
+				// await is important for the catch!
+				return await this.analyzer.editGetRefactoring({
+					file: fsPath(document.uri),
+					kind: refactorKind,
+					length: document.offsetAt(range.end) - document.offsetAt(range.start),
+					offset: document.offsetAt(range.start),
+					options,
+					validateOnly,
+				});
+			} catch (e) {
+				logError(e);
+				if (remainingTries <= 0 || e.code !== "REFACTORING_REQUEST_CANCELLED")
+					throw e;
+				else
+					logInfo(`getRefactor failed, will try ${remainingTries} more times...`);
+			}
+		}
 	}
 
 	private shouldAbortRefactor(validationResult: as.EditGetRefactoringResponse) {
