@@ -35,7 +35,7 @@ describe("flutter", () => {
 			this.skip();
 
 		const sampleProjectFolder = fsPath(vs.workspace.workspaceFolders[1].uri);
-		const expectedString = "title: 'Flutter Code Sample for material.IconButton'";
+		const expectedString = "Flutter code sample for material.IconButton.1";
 		const mainFile = path.join(sampleProjectFolder, "lib", "main.dart");
 		// Creating the sample may be a little slow, so allow up to 60 seconds for it.
 		log("Waiting for file to exist", LogSeverity.Error, LogCategory.CI);
