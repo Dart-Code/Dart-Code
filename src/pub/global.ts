@@ -6,6 +6,8 @@ import { pubPath } from "../sdk/utils";
 import { openInBrowser, Sdks, versionIsAtLeast } from "../utils";
 
 export class PubGlobal {
+	// TODO: Add integration tests for this class, since the existing Stagehand/DevTools tests
+	// have it pre-installed via the CI scripts.
 	constructor(private sdks: Sdks) { }
 
 	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion?: string): Promise<boolean> {
