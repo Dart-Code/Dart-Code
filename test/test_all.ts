@@ -14,7 +14,7 @@ function color(col: number, message: string) {
 
 // Set timeout at 30 mins (Travis kills us with no output for too long).
 const timeoutInMilliseconds = 1000 * 60 * 30;
-function runNode(cwd: string, args: string[], env: any): Promise<number> {
+function runNode(cwd: string, args: string[], env: any, printTimes = false): Promise<number> {
 	return new Promise<number>((resolve, reject) => {
 		let timerWarn: NodeJS.Timer;
 		let timerKill: NodeJS.Timer;
@@ -33,7 +33,8 @@ function runNode(cwd: string, args: string[], env: any): Promise<number> {
 				clearTimeout(timerKill);
 			const testRunEnd = Date.now();
 			const timeTaken = testRunEnd - testRunStart;
-			console.log(`      Ended after: ${timeTaken / 1000}s`);
+			if (printTimes)
+				console.log(`      Ended after: ${timeTaken / 1000}s`);
 			resolve(code);
 		});
 		timerWarn = setTimeout(() => {
@@ -105,7 +106,7 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	if (!fs.existsSync(env.DC_TEST_LOGS))
 		fs.mkdirSync(env.DC_TEST_LOGS);
 
-	let res = await runNode(cwd, args, env);
+	let res = await runNode(cwd, args, env, true);
 	exitCode = exitCode || res;
 
 	// Remap coverage output.
