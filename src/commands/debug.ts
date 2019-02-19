@@ -205,7 +205,7 @@ export class DebugCommands {
 				return; // User cancelled
 
 			if (session.observatoryUri) {
-				this.devTools.spawnForSession(session);
+				return this.devTools.spawnForSession(session);
 			} else {
 				vs.window.showInformationMessage("This debug session is not ready yet.");
 			}
