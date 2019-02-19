@@ -2,6 +2,7 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import * as sinon from "sinon";
 import * as vs from "vscode";
 import { dartCodeExtensionIdentifier } from "../../src/debug/utils";
 import { FlutterCapabilities } from "../../src/flutter/capabilities";
@@ -9,7 +10,6 @@ import { DartUriHandler } from "../../src/uri_handlers/uri_handler";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../src/utils";
 import { getChildFolders } from "../../src/utils/fs";
 import { deleteDirectoryRecursive, sb } from "../helpers";
-import sinon = require("sinon");
 
 describe("URL handler", async () => {
 	const urlHandler = new DartUriHandler(new FlutterCapabilities("1.0.0"));

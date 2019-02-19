@@ -31,7 +31,7 @@ export class DevTools implements vs.Disposable {
 
 	/// Spawns DevTools and returns the full URL to open for that session
 	///   eg. http://localhost:8123/?port=8543
-	public async spawnForSession(session: DartDebugSessionInformation): Promise<string> {
+	public async spawnForSession(session: DartDebugSessionInformation): Promise<{ url: string, dispose: () => void }> {
 		this.analytics.logDebuggerOpenDevTools();
 
 		const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtools, undefined, "0.0.3");
@@ -55,7 +55,7 @@ export class DevTools implements vs.Disposable {
 			this.devToolsStatusBarItem.command = "dart.openDevTools";
 			this.devToolsStatusBarItem.show();
 			openInBrowser(fullUrl);
-			return fullUrl;
+			return { url: fullUrl, dispose: () => this.dispose() };
 		} catch (e) {
 			this.devToolsStatusBarItem.hide();
 			vs.window.showErrorMessage(`${e}`);
@@ -112,6 +112,7 @@ export class DevTools implements vs.Disposable {
 
 	public dispose(): void {
 		this.devToolsStatusBarItem.dispose();
+		this.devtoolsUrl = null;
 		if (this.proc && !this.proc.killed) {
 			this.proc.kill();
 		}

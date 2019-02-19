@@ -2,6 +2,8 @@ import * as assert from "assert";
 import { SpawnOptions } from "child_process";
 import { DebugSessionCustomEvent } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { debugSessions } from "../src/commands/debug";
+import { DartDebugSessionInformation } from "../src/utils/debug";
 import { handleDebugLogEvent, log } from "../src/utils/log";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../src/views/test_protocol";
 import { TestResultsProvider } from "../src/views/test_view";
@@ -9,15 +11,22 @@ import { DebugClient } from "./debug_client_ms";
 import { delay, watchPromise, withTimeout } from "./helpers";
 
 export class DartDebugClient extends DebugClient {
-	constructor(runtime: string, executable: string, debugType: string, spwanOptions?: SpawnOptions, testProvider?: TestResultsProvider) {
-		super(runtime, executable, debugType, spwanOptions);
+	private readonly id: string;
+	constructor(runtime: string, executable: string, debugType: string, spawnOptions?: SpawnOptions, testProvider?: TestResultsProvider) {
+		super(runtime, executable, debugType, spawnOptions);
 		this.on("dart.log", (e: DebugSessionCustomEvent) => handleDebugLogEvent(e.event, e.body));
+		// TODO: Make it so we don't have to keep copying logic from debug.ts into here...
+		this.on("dart.observatoryUri", (e: DebugSessionCustomEvent) => debugSessions[0].observatoryUri = e.body.observatoryUri);
 		// Log important events to make troubleshooting tests easier.
 		this.on("output", (event: DebugProtocol.OutputEvent) => {
 			log(`[${event.body.category}] ${event.body.output}`);
 		});
 		this.on("terminated", (event: DebugProtocol.TerminatedEvent) => {
 			log(`[terminated]`);
+			if (debugSessions.length > 1) {
+				throw new Error(`Integration tests unexpectedly had ${debugSessions.length} active debug sessions`);
+			}
+			debugSessions.length = 0;
 		});
 		this.on("stopped", (event: DebugProtocol.StoppedEvent) => {
 			log(`[stopped] ${event.body.reason}`);
@@ -34,6 +43,22 @@ export class DartDebugClient extends DebugClient {
 		}
 	}
 	public async launch(launchArgs: any): Promise<void> {
+		// Add our session to the list of open sessions. Normally this is done via a VS Code event
+		// but when we spawn the debug client manually, that event does not fire. We must also
+		// remove this when terminating.
+		if (debugSessions.length !== 0) {
+			throw new Error("Integration tests unexpectedly already had a debug session");
+		}
+		const session = new DartDebugSessionInformation({
+			configuration: null,
+			customRequest: this.customRequest,
+			id: "INTEGRATION-TEST",
+			name: "Dart & Flutter",
+			type: "dart",
+			workspaceFolder: null,
+		});
+		debugSessions.push(session);
+
 		// We override the base method to swap for attachRequest when required, so that
 		// all the existing methods that provide useful functionality but assume launching
 		// (for ex. hitBreakpoint) can be used in attach tests.

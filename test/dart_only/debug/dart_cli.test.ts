@@ -1,10 +1,12 @@
 import * as assert from "assert";
 import * as path from "path";
+import * as sinon from "sinon";
 import * as vs from "vscode";
 import { config } from "../../../src/config";
 import { platformEol } from "../../../src/debug/utils";
 import { debugAnywayAction, showErrorsAction } from "../../../src/providers/debug_config_provider";
 import { fsPath, getRandomInt } from "../../../src/utils";
+import { fetch } from "../../../src/utils/fetch";
 import { log } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureMapEntry, ensureVariable, ensureVariableWithIndex, spawnDartProcessPaused } from "../../debug_helpers";
@@ -189,6 +191,29 @@ describe("dart cli debugger", () => {
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
+	});
+
+	it("can launch DevTools", async () => {
+		// Intercept vscode.open so we don't spawn browsers!
+		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
+		const open = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
+
+		await openFile(helloWorldMainFile);
+		const config = await startDebugger(helloWorldMainFile);
+		// Stop at a breakpoint so the app won't quit while we're verifying DevTools.
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(helloWorldMainFile),
+		});
+
+		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
+		assert.ok(open.calledOnce);
+		assert.ok(devTools);
+		assert.ok(devTools.url);
+		defer(devTools.dispose);
+
+		const serverResponse = await fetch(devTools.url);
+		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1);
 	});
 
 	it("stops at a breakpoint", async () => {
