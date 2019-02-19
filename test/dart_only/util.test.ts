@@ -55,14 +55,18 @@ describe("util.isStableSdk", () => {
 
 describe("util.isDartSdkFromFlutter", () => {
 	it("should consider Dart SDK to not be from Flutter", function () {
-		if (!process.env.DART_PATH)
+		if (!process.env.DART_PATH) {
 			this.skip();
+			return;
+		}
 
 		assert.equal(isDartSdkFromFlutter(process.env.DART_PATH), false);
 	});
 	it("should consider Flutter's Dart SDK to be from Flutter", function () {
-		if (!process.env.FLUTTER_PATH)
+		if (!process.env.FLUTTER_PATH) {
 			this.skip();
+			return;
+		}
 
 		assert.equal(isDartSdkFromFlutter(path.join(process.env.FLUTTER_PATH, "bin", "cache", "dart-sdk")), true);
 	});

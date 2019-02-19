@@ -31,8 +31,10 @@ describe("flutter", () => {
 			assert.fail(`Did not find "${expectedString}'" in the sample file:\n\n${contents}`);
 	});
 	it("created a sample project", async function () {
-		if (!extApi.flutterCapabilities.supportsMultipleSamplesPerElement)
+		if (!extApi.flutterCapabilities.supportsMultipleSamplesPerElement) {
 			this.skip();
+			return;
+		}
 
 		const sampleProjectFolder = fsPath(vs.workspace.workspaceFolders[1].uri);
 		const expectedString = "Flutter code sample for material.IconButton.1";
