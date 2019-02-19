@@ -53,6 +53,7 @@ import { SourceCodeActionProvider } from "./providers/source_code_action_provide
 import { PubBuildRunnerTaskProvider } from "./pub/build_runner_task_provider";
 import { PubGlobal } from "./pub/global";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
+import { DartCapabilities } from "./sdk/capabilities";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForSdkUpdates } from "./sdk/update_check";
 import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingSdks } from "./sdk/utils";
@@ -76,6 +77,7 @@ export let extensionPath: string | undefined;
 
 let analyzer: Analyzer;
 let flutterDaemon: FlutterDaemon;
+const dartCapabilities = DartCapabilities.empty;
 const flutterCapabilities = FlutterCapabilities.empty;
 let analysisRoots: string[] = [];
 let analytics: Analytics;
@@ -126,6 +128,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Show the SDK version in the status bar.
 	if (sdks.dartVersion) {
+		dartCapabilities.version = sdks.dartVersion;
 		analytics.sdkVersion = sdks.dartVersion;
 		checkForSdkUpdates(sdks, sdks.dartVersion);
 		context.subscriptions.push(new StatusBarVersionTracker(sdks.projectType, sdks.dartVersion, sdks.flutterVersion, sdks.dartSdkIsFromFlutter));
@@ -432,6 +435,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			cancelAllAnalysisRequests: () => analyzer.cancelAllRequests(),
 			currentAnalysis: () => analyzer.currentAnalysis,
 			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
+			dartCapabilities,
 			debugProvider,
 			flutterCapabilities,
 			initialAnalysis,
@@ -581,10 +585,11 @@ export interface InternalExtensionApi {
 	cancelAllAnalysisRequests: () => void;
 	currentAnalysis: () => Promise<void>;
 	daemonCapabilities: DaemonCapabilities;
-	flutterCapabilities: FlutterCapabilities;
+	dartCapabilities: DartCapabilities;
 	debugProvider: DebugConfigProvider;
-	nextAnalysis: () => Promise<void>;
+	flutterCapabilities: FlutterCapabilities;
 	initialAnalysis: Promise<void>;
+	nextAnalysis: () => Promise<void>;
 	reanalyze: () => void;
 	referenceProvider: DartReferenceProvider;
 	renameProvider: DartRenameProvider;
