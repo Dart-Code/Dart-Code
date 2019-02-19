@@ -30,10 +30,6 @@ export class DartDebugClient extends DebugClient {
 		});
 		this.on("stopped", (event: DebugProtocol.StoppedEvent) => {
 			log(`[stopped] ${event.body.reason}`);
-			if (debugSessions.length > 1) {
-				throw new Error(`Integration tests unexpectedly had ${debugSessions.length} active debug sessions`);
-			}
-			debugSessions.length = 0;
 		});
 		this.on("initialized", (event: DebugProtocol.InitializedEvent) => {
 			log(`[initialized]`);
