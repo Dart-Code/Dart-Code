@@ -440,6 +440,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			flutterCapabilities,
 			initialAnalysis,
 			nextAnalysis,
+			pubGlobal,
 			reanalyze,
 			referenceProvider,
 			renameProvider,
@@ -590,6 +591,7 @@ export interface InternalExtensionApi {
 	flutterCapabilities: FlutterCapabilities;
 	initialAnalysis: Promise<void>;
 	nextAnalysis: () => Promise<void>;
+	pubGlobal: PubGlobal;
 	reanalyze: () => void;
 	referenceProvider: DartReferenceProvider;
 	renameProvider: DartRenameProvider;
