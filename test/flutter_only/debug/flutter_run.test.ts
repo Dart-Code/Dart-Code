@@ -205,7 +205,7 @@ describe("flutter run debugger (launch)", () => {
 	});
 
 	it("can launch DevTools", async function () {
-		if (extApi.flutterCapabilities.supportsDevTools) {
+		if (!extApi.flutterCapabilities.supportsDevTools) {
 			this.skip();
 			return;
 		}
