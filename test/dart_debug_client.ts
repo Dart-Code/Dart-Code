@@ -23,10 +23,6 @@ export class DartDebugClient extends DebugClient {
 		});
 		this.on("terminated", (event: DebugProtocol.TerminatedEvent) => {
 			log(`[terminated]`);
-			if (debugSessions.length > 1) {
-				throw new Error(`Integration tests unexpectedly had ${debugSessions.length} active debug sessions`);
-			}
-			debugSessions.length = 0;
 		});
 		this.on("stopped", (event: DebugProtocol.StoppedEvent) => {
 			log(`[stopped] ${event.body.reason}`);
@@ -43,12 +39,12 @@ export class DartDebugClient extends DebugClient {
 		}
 	}
 	public async launch(launchArgs: any): Promise<void> {
+		// Tests only run one debug session at a time so clear out any orphaned sessions (these
+		// can happen if a session is forcefully terminated and the TermianteEvent is never received).
+		debugSessions.length = 0;
 		// Add our session to the list of open sessions. Normally this is done via a VS Code event
 		// but when we spawn the debug client manually, that event does not fire. We must also
 		// remove this when terminating.
-		if (debugSessions.length !== 0) {
-			throw new Error("Integration tests unexpectedly already had a debug session");
-		}
 		const session = new DartDebugSessionInformation({
 			configuration: null,
 			customRequest: this.customRequest,
