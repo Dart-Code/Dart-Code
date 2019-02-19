@@ -10,7 +10,7 @@ import { fetch } from "../../../src/utils/fetch";
 import { log } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureMapEntry, ensureVariable, ensureVariableWithIndex, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, positionOf, sb, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, positionOf, sb, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -193,7 +193,12 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it("can launch DevTools", async () => {
+	it("can launch DevTools", async function () {
+		if (extApi.dartCapabilities.supportsDevTools) {
+			this.skip();
+			return;
+		}
+
 		// Intercept vscode.open so we don't spawn browsers!
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const open = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
