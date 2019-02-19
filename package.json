@@ -1221,7 +1221,6 @@
 		"run-for-every-file": "^1.1.0",
 		"signal-exit": "^3.0.2",
 		"sinon": "^7.1.1",
-		"supports-color": "^6.1.0",
 		"tslint": "^5.12.1",
 		"typescript": "^3.2.2",
 		"vscode": "^1.1.28",

@@ -1,7 +1,6 @@
 import * as childProcess from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-const supportsColor = require("supports-color"); // tslint:disable-line:no-var-requires
 
 const args = ["node_modules/vscode/bin/test"];
 let exitCode = 0;
@@ -10,9 +9,6 @@ function red(message: string): string { return color(91, message); }
 function yellow(message: string): string { return color(93, message); }
 function green(message: string): string { return color(92, message); }
 function color(col: number, message: string) {
-	if (!supportsColor) {
-		return message;
-	}
 	return "\u001b[" + col + "m" + message + "\u001b[0m";
 }
 
