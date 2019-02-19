@@ -28,7 +28,7 @@ testRunner.configure({
 		testRunName: process.env.TEST_RUN_NAME,
 	},
 	slow: 10000,       // increased threshold before marking a test as slow
-	timeout: 60000,   // increased timeout because starting up Code, Analyzer, etc. is slooow
+	timeout: 90000,   // increased timeout because starting up Code, Analyzer, etc. is slooow
 	ui: "bdd",        // the TDD UI is being used in extension.test.ts (suite, test, etc.)
 	useColors: true,  // colored output from test results
 } as MochaSetupOptions & { reporterOptions: any });
