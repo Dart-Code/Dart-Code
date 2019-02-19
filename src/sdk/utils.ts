@@ -307,11 +307,16 @@ function findFuchsiaRoot(folder: string): string | undefined {
 }
 
 function findDartSdk(folders: string[]) {
-	return searchPaths(folders, dartExecutableName, hasDartAnalysisServer);
+	return searchPaths(folders, dartExecutableName, (p) => hasExecutable(p, dartVMPath) && hasDartAnalysisServer(p));
 }
 
 function findFlutterSdk(folders: string[]) {
-	return searchPaths(folders, flutterExecutableName);
+	return searchPaths(folders, flutterExecutableName, (p) => hasExecutable(p, flutterPath));
+}
+
+function hasExecutable(folder: string, executablePath: string) {
+	const fullPath = path.join(folder, executablePath);
+	return fs.existsSync(fullPath) && fs.statSync(fullPath).isFile();
 }
 
 export const hasDartAnalysisServer = (folder: string) => fs.existsSync(path.join(folder, analyzerSnapshotPath));
