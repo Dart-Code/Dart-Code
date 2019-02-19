@@ -196,7 +196,7 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.clean", (projectPath: string, projectName?: string) => {
 			projectName = projectName || path.basename(projectPath);
 			const args = ["clean"];
-			return this.runFlutterInFolder(path.dirname(projectPath), args, projectName);
+			return this.runFlutterInFolder(projectPath, args, projectName);
 		}));
 
 		// Hook saving pubspec to run pub.get.
