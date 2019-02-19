@@ -204,7 +204,12 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	});
 
-	it("can launch DevTools", async () => {
+	it("can launch DevTools", async function () {
+		if (extApi.flutterCapabilities.supportsDevTools) {
+			this.skip();
+			return;
+		}
+
 		// Intercept vscode.open so we don't spawn browsers!
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const open = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
