@@ -26,6 +26,7 @@ function runNode(cwd: string, args: string[], env: any): Promise<number> {
 		console.log(`        Command: node ${args.join(" ")}`);
 		console.log(`        CWD: ${cwd}`);
 		console.log(`        ENV: ${JSON.stringify(env, undefined, 4).replace(/    /gm, "                ").replace(/\n}/, "\n              }")}`);
+		const testRunStart = Date.now();
 		const proc = childProcess.spawn("node", args, { env, stdio: "inherit", cwd });
 		proc.on("data", (data: Buffer | string) => console.log(data.toString()));
 		proc.on("error", (data: Buffer | string) => console.warn(data.toString()));
@@ -34,6 +35,9 @@ function runNode(cwd: string, args: string[], env: any): Promise<number> {
 				clearTimeout(timerWarn);
 			if (timerKill)
 				clearTimeout(timerKill);
+			const testRunEnd = Date.now();
+			const timeTaken = testRunEnd - testRunStart;
+			console.log(`      Ended after: ${timeTaken / 1000}s`);
 			resolve(code);
 		});
 		timerWarn = setTimeout(() => {
