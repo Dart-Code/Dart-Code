@@ -335,17 +335,26 @@ export function searchPaths(paths: Array<string | undefined>, executableFilename
 	// TODO: Make the list unique, but preserve the order of the first occurrences. We currently
 	// have uniq() and unique(), so also consolidate them.
 
-	log("    Looking in:");
+	log(`    Looking for ${executableFilename} in:`);
 	for (const p of sdkPaths)
 		log(`        ${p}`);
 
 	// Restrict only to the paths that have the executable.
 	sdkPaths = sdkPaths.filter((p) => fs.existsSync(path.join(p, executableFilename)));
 
+	log(`    Found at:`);
+	for (const p of sdkPaths)
+		log(`        ${p}`);
+
 	// Convert all the paths to their resolved locations.
 	sdkPaths = sdkPaths.map((p) => {
+		const fullPath = path.join(p, executableFilename);
+
 		// In order to handle symlinks on the binary (not folder), we need to add the executableName before calling realpath.
-		const realExecutableLocation = p && fs.realpathSync(path.join(p, executableFilename));
+		const realExecutableLocation = p && fs.realpathSync(fullPath);
+
+		if (realExecutableLocation.toLowerCase() !== fullPath.toLowerCase())
+			log(`Following symlink: ${fullPath} ==> ${realExecutableLocation}`);
 
 		// Then we need to take the executable name and /bin back off
 		return path.dirname(path.dirname(realExecutableLocation));
