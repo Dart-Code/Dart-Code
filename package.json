@@ -506,6 +506,28 @@
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				}
 			],
+			"touchBar": [
+				{
+					"command": "flutter.hotReload",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode",
+					"group": "91_flutter"
+				},
+				{
+					"command": "flutter.hotRestart",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode",
+					"group": "91_flutter"
+				},
+				{
+					"command": "dart.openDevTools",
+					"when": "inDebugMode",
+					"group": "92_debug_tools"
+				},
+				{
+					"command": "flutter.screenshot",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode",
+					"group": "93_utils"
+				}
+			],
 			"editor/title": [
 				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
