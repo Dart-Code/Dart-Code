@@ -1,6 +1,7 @@
 import * as f from "../flutter/flutter_types";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
-import { globalFlutterArgs, IAmDisposable, LogSeverity } from "./utils";
+import { globalFlutterArgs } from "../utils/processes";
+import { IAmDisposable, LogSeverity } from "./utils";
 
 export class FlutterRun extends StdIOService<UnknownNotification> {
 	constructor(public mode: RunMode, flutterBinPath: string, projectFolder: string, args: string[], envOverrides: any, logFile: string, logger: (message: string, severity: LogSeverity) => void, maxLogLineLength: number) {

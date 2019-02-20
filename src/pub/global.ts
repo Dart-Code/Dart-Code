@@ -1,9 +1,9 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { pubGlobalDocsUrl } from "../constants";
-import { safeSpawn } from "../debug/utils";
 import { pubPath } from "../sdk/utils";
 import { openInBrowser, Sdks, versionIsAtLeast } from "../utils";
+import { safeSpawn } from "../utils/processes";
 
 export class PubGlobal {
 	constructor(private sdks: Sdks) { }

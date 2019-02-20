@@ -5,10 +5,11 @@ import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, Stac
 import { DebugProtocol } from "vscode-debugprotocol";
 import { config } from "../config";
 import { getLogHeader, logError } from "../utils/log";
+import { safeSpawn } from "../utils/processes";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
 import { ThreadInfo, ThreadManager } from "./threads";
-import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, flatMap, formatPathForVm, LogCategory, LogMessage, LogSeverity, safeSpawn, throttle, uniq, uriToFilePath } from "./utils";
+import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, flatMap, formatPathForVm, LogCategory, LogMessage, LogSeverity, throttle, uniq, uriToFilePath } from "./utils";
 
 const maxValuesToCallToString = 15;
 // Prefix that appears at the start of stack frame names that are unoptimized
