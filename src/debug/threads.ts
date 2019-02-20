@@ -51,20 +51,20 @@ export class ThreadManager {
 			thread.receivedConfigurationDone();
 	}
 
-	public getThreadInfoFromRef(ref: VMIsolateRef): ThreadInfo {
+	public getThreadInfoFromRef(ref: VMIsolateRef): ThreadInfo | undefined {
 		for (const thread of this.threads) {
 			if (thread.ref.id === ref.id)
 				return thread;
 		}
-		return null;
+		return undefined;
 	}
 
-	public getThreadInfoFromNumber(num: number): ThreadInfo {
+	public getThreadInfoFromNumber(num: number): ThreadInfo | undefined {
 		for (const thread of this.threads) {
 			if (thread.num === num)
 				return thread;
 		}
-		return null;
+		return undefined;
 	}
 
 	public getThreads(): Thread[] {

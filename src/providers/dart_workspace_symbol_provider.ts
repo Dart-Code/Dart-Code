@@ -9,9 +9,9 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	private badChars: RegExp = new RegExp("[^0-9a-z\-]", "gi");
 	constructor(public readonly analyzer: Analyzer) { }
 
-	public async provideWorkspaceSymbols(query: string, token: CancellationToken): Promise<SymbolInformation[] | null> {
+	public async provideWorkspaceSymbols(query: string, token: CancellationToken): Promise<SymbolInformation[] | undefined> {
 		if (query.length === 0)
-			return null;
+			return undefined;
 
 		// Turn query into a case-insensitive fuzzy search.
 		const pattern = ".*" + query.replace(this.badChars, "").split("").map((c) => `[${c.toUpperCase()}${c.toLowerCase()}]`).join(".*") + ".*";
@@ -20,9 +20,9 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		return results.declarations.map((d) => this.convertWorkspaceResult(d, results.files[d.fileIndex]));
 	}
 
-	public async resolveWorkspaceSymbol(symbol: SymbolInformation, token: CancellationToken): Promise<SymbolInformation> {
+	public async resolveWorkspaceSymbol(symbol: SymbolInformation, token: CancellationToken): Promise<SymbolInformation | undefined> {
 		if (!(symbol instanceof PartialSymbolInformation))
-			return;
+			return undefined;
 
 		const document = await workspace.openTextDocument(Uri.file(symbol.locationData.file));
 		symbol.location = new Location(

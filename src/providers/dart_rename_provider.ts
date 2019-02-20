@@ -7,15 +7,15 @@ import { fsPath, toRange } from "../utils";
 export class DartRenameProvider implements RenameProvider {
 	constructor(private readonly analyzer: Analyzer) { }
 
-	public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): Thenable<WorkspaceEdit> {
+	public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken | undefined): Thenable<WorkspaceEdit> {
 		return this.doRename(document, position, newName, token);
 	}
 
-	public prepareRename(document: TextDocument, position: Position, token: CancellationToken): Thenable<{ range: Range, placeholder: string }> {
+	public prepareRename(document: TextDocument, position: Position, token: CancellationToken | undefined): Thenable<{ range: Range, placeholder: string }> {
 		return this.getLocation(document, position);
 	}
 
-	private async doRename(document: TextDocument, position: Position, newName: string, token: CancellationToken): Promise<WorkspaceEdit> {
+	private async doRename(document: TextDocument, position: Position, newName: string, token: CancellationToken | undefined): Promise<WorkspaceEdit> {
 		const outputChannel = channels.getChannel("Refactorings");
 		outputChannel.appendLine("");
 

@@ -18,7 +18,7 @@ export function setUpHotReloadOnSave(context: ExtensionContext, diagnostics: Dia
 
 		// Don't do if we have errors for the saved file.
 		const errors = diagnostics.get(td.uri);
-		const hasErrors = errors && errors.find((d) => d.severity === DiagnosticSeverity.Error) != null;
+		const hasErrors = errors && !!errors.find((d) => d.severity === DiagnosticSeverity.Error);
 		if (hasErrors)
 			return;
 

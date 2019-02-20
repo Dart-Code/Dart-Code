@@ -33,12 +33,12 @@ export class DevTools implements vs.Disposable {
 
 	/// Spawns DevTools and returns the full URL to open for that session
 	///   eg. http://localhost:8123/?port=8543
-	public async spawnForSession(session: DartDebugSessionInformation): Promise<{ url: string, dispose: () => void }> {
+	public async spawnForSession(session: DartDebugSessionInformation): Promise<{ url: string, dispose: () => void } | undefined> {
 		this.analytics.logDebuggerOpenDevTools();
 
 		const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtools, undefined, "0.0.11", true);
 		if (!isAvailable) {
-			return;
+			return undefined;
 		}
 
 		const observatoryPort = extractObservatoryPort(session.vmServiceUri);
@@ -94,8 +94,8 @@ export class DevTools implements vs.Disposable {
 			});
 			this.proc.stderr.on("data", (data) => stderr.push(data.toString()));
 			this.proc.on("close", (code) => {
-				this.proc = null;
-				this.devtoolsUrl = null;
+				this.proc = undefined;
+				this.devtoolsUrl = undefined;
 				this.devToolsStatusBarItem.hide();
 				if (code && code !== 0) {
 					// Reset the port to 0 on error in case it was from us trying to reuse the previous port.

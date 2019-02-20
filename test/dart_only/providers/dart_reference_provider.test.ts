@@ -11,12 +11,12 @@ describe("dart_reference_provider", () => {
 
 	async function getDefinitionFor(searchText: string): Promise<vs.DefinitionLink[]> {
 		const position = positionOf(searchText);
-		return extApi.referenceProvider.provideDefinition(currentDoc(), position, null);
+		return extApi.referenceProvider.provideDefinition(currentDoc(), position, undefined);
 	}
 
 	async function getReferencesFor(searchText: string): Promise<vs.Location[]> {
 		const position = positionOf(searchText);
-		return extApi.referenceProvider.provideReferences(currentDoc(), position, { includeDeclaration: true }, null);
+		return extApi.referenceProvider.provideReferences(currentDoc(), position, { includeDeclaration: true }, undefined);
 	}
 
 	it("returns expected location for definition of field reference", async () => {

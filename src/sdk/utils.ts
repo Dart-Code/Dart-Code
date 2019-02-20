@@ -294,7 +294,7 @@ function findFuchsiaRoot(folder: string): string | undefined {
 		// exists a directory which has ".jiri_root" directory as a child.
 		// If such directory is found, that is our fuchsia root.
 		let dir = folder;
-		while (dir != null) {
+		while (dir) {
 			try {
 				if (fs.statSync(path.join(dir, ".jiri_root")).isDirectory()) {
 					return dir;

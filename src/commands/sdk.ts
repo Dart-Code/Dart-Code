@@ -126,7 +126,7 @@ export class SdkCommands {
 			// Ensure folder exists.
 			util.mkDirRecursive(this.flutterScreenshotPath);
 
-			const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null;
+			const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : undefined;
 			const args = deviceId ? ["screenshot", "-d", deviceId] : ["screenshot"];
 			await this.runFlutterInFolder(this.flutterScreenshotPath, args, "screenshot");
 
@@ -301,7 +301,7 @@ export class SdkCommands {
 		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection);
 	}
 
-	private runFlutterInFolder(folder: string, args: string[], shortPath: string): Thenable<number> {
+	private runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined): Thenable<number> {
 		const binPath = path.join(this.sdks.flutter, flutterPath);
 		return this.runCommandInFolder(shortPath, "flutter", folder, binPath, globalFlutterArgs.concat(args));
 	}
@@ -316,7 +316,7 @@ export class SdkCommands {
 		return this.runCommandInFolder(shortPath, "pub", folder, binPath, args);
 	}
 
-	private runCommandInFolder(shortPath: string, commandName: string, folder: string, binPath: string, args: string[], isStartingBecauseOfTermination: boolean = false): Thenable<number> {
+	private runCommandInFolder(shortPath: string | undefined, commandName: string, folder: string, binPath: string, args: string[], isStartingBecauseOfTermination: boolean = false): Thenable<number | undefined> {
 
 		const channelName = commandName.substr(0, 1).toUpperCase() + commandName.substr(1);
 		const channel = channels.createChannel(channelName);
@@ -329,7 +329,7 @@ export class SdkCommands {
 		if (existingProcess && !existingProcess.hasStarted) {
 			// We already have a queued version of this command so there's no value in queueing another
 			// just bail.
-			return Promise.resolve(null);
+			return Promise.resolve(undefined);
 		}
 
 		return vs.window.withProgress({
@@ -511,13 +511,13 @@ export class SdkCommands {
 class ChainedProcess {
 	private static processNumber = 1;
 	public processNumber = ChainedProcess.processNumber++;
-	private completer: PromiseCompleter<number> = new PromiseCompleter<number>();
+	private completer: PromiseCompleter<number | undefined> = new PromiseCompleter<number | undefined>();
 	public readonly completed = this.completer.promise;
 	public process: child_process.ChildProcess;
 	private isCancelled = false;
 	public get hasStarted() { return this.process !== undefined; }
 
-	constructor(private readonly spawn: () => child_process.ChildProcess, private parent: ChainedProcess) {
+	constructor(private readonly spawn: () => child_process.ChildProcess, parent: ChainedProcess | undefined) {
 		// We'll either start immediately, or if given a parent process only when it completes.
 		if (parent) {
 			parent.completed.then(() => this.start());
@@ -530,7 +530,7 @@ class ChainedProcess {
 		if (this.process)
 			throw new Error(`${this.processNumber} Can't start an already started process!`);
 		if (this.isCancelled) {
-			this.completer.resolve(null);
+			this.completer.resolve(undefined);
 			return;
 		}
 		this.process = this.spawn();
