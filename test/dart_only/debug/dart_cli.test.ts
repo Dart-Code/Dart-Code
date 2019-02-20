@@ -319,7 +319,7 @@ describe("dart cli debugger", () => {
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "print");
 				// We don't get a source path, because the source is downloaded from the VM
-				assert.equal(frame.source!.path, null);
+				assert.equal(frame.source!.path, undefined);
 				assert.equal(frame.source!.name, "dart:core/print.dart");
 			}),
 			dc.stepIn(),
@@ -433,7 +433,7 @@ describe("dart cli debugger", () => {
 			}).then(async (response) => {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
-				assert.equal(frame.source!.path, null);
+				assert.equal(frame.source!.path, undefined);
 				assert.equal(frame.source!.name, "dart:core/print.dart");
 				const source = await dc.sourceRequest({ source: frame.source, sourceReference: frame.source!.sourceReference! });
 				assert.ok(source.body.content);
