@@ -1,9 +1,9 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { stagehandInstallationInstructionsUrl } from "../constants";
-import { safeSpawn } from "../debug/utils";
 import { pubPath } from "../sdk/utils";
 import { Sdks } from "../utils";
+import { safeSpawn } from "../utils/processes";
 import { PubGlobal } from "./global";
 
 const packageName = "Stagehand";

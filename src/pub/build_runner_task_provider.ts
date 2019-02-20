@@ -1,10 +1,10 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { config } from "../config";
-import { toolEnv } from "../debug/utils";
 import { flutterPath, pubPath, referencesBuildRunner } from "../sdk/utils";
 import * as util from "../utils";
 import { fsPath } from "../utils";
+import { toolEnv } from "../utils/processes";
 
 export class PubBuildRunnerTaskProvider implements vs.TaskProvider {
 	constructor(private sdks: util.Sdks) { }
