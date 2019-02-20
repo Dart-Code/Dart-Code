@@ -51,12 +51,16 @@ export class DartDebugClient extends DebugClient {
 		// but when we spawn the debug client manually, that event does not fire. We must also
 		// remove this when terminating.
 		const session = new DartDebugSessionInformation({
-			configuration: null,
+			configuration: {
+				name: "Dart & Flutter",
+				request: "launch",
+				type: "dart",
+			},
 			customRequest: this.customRequest,
 			id: "INTEGRATION-TEST",
 			name: "Dart & Flutter",
 			type: "dart",
-			workspaceFolder: null,
+			workspaceFolder: undefined,
 		});
 		debugSessions.push(session);
 

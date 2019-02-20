@@ -64,30 +64,29 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 		}
 	}
 
-	public provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, token: CancellationToken): Thenable<TextEdit[]> {
+	public provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, token: CancellationToken): Thenable<TextEdit[] | undefined> | undefined {
 		return this.doFormat(document, false);
 	}
 
-	private doFormat(document: TextDocument, doLogError: boolean): Thenable<TextEdit[]> {
+	private async doFormat(document: TextDocument, doLogError = true): Promise<TextEdit[] | undefined> {
 		if (!this.shouldFormat(document))
-			return;
-		return new Promise<TextEdit[]>((resolve, reject) => {
-			this.analyzer.editFormat({
+			return undefined;
+		try {
+			const resp = await this.analyzer.editFormat({
 				file: fsPath(document.uri),
 				lineLength: config.for(document.uri).lineLength,
 				selectionLength: 0,
 				selectionOffset: 0,
-			}).then((resp) => {
-				if (resp.edits.length === 0)
-					resolve(null);
-				else
-					resolve(resp.edits.map((e) => this.convertData(document, e)));
-			}, (e) => {
-				if (doLogError)
-					logError(e);
-				reject();
 			});
-		});
+			if (resp.edits.length === 0)
+				return undefined;
+			else
+				return resp.edits.map((e) => this.convertData(document, e));
+		} catch (e) {
+			if (doLogError)
+				logError(e);
+			throw e;
+		}
 	}
 
 	private shouldFormat(document: TextDocument): boolean {

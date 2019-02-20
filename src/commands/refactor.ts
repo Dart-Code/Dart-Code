@@ -35,7 +35,7 @@ export class RefactorCommands implements vs.Disposable {
 			return;
 
 		// Request the options from the user if required.
-		let options = null;
+		let options;
 		if (refactorOptions[refactorKind]) {
 			options = await refactorOptions[refactorKind](validationResult.feedback);
 			if (!options)

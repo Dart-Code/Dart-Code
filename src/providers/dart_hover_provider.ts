@@ -9,14 +9,14 @@ import { logError } from "../utils/log";
 export class DartHoverProvider implements HoverProvider {
 	constructor(private readonly analyzer: Analyzer) { }
 
-	public provideHover(document: TextDocument, position: Position, token: CancellationToken): Thenable<Hover> {
-		return new Promise<Hover>((resolve, reject) => {
+	public provideHover(document: TextDocument, position: Position, token: CancellationToken): Thenable<Hover | undefined> {
+		return new Promise<Hover | undefined>((resolve, reject) => {
 			this.analyzer.analysisGetHover({
 				file: fsPath(document.uri),
 				offset: document.offsetAt(position),
 			}).then((resp) => {
 				if (resp.hovers.length === 0) {
-					resolve(null);
+					resolve(undefined);
 				} else {
 					const hover = resp.hovers[0];
 					const data = this.getHoverData(document.uri, hover);
@@ -30,7 +30,7 @@ export class DartHoverProvider implements HoverProvider {
 							range.isSingleLine ? range : undefined, // Workaround for https://github.com/dart-lang/sdk/issues/35386
 						));
 					} else {
-						resolve(null);
+						resolve(undefined);
 					}
 				}
 			}, (e) => { logError(e); reject(); });
@@ -38,14 +38,15 @@ export class DartHoverProvider implements HoverProvider {
 	}
 
 	private getHoverData(documentUri: Uri, hover: as.HoverInformation): any {
-		if (!hover.elementDescription) return null;
+		if (!hover.elementDescription) return undefined;
 
 		// Import prefix tooltips are not useful currently.
 		// https://github.com/dart-lang/sdk/issues/32735
-		if (hover.elementKind === "import prefix") return null;
+		if (hover.elementKind === "import prefix") return undefined;
 
 		const elementDescription = hover.elementDescription;
-		const dartdoc: string = hover.dartdoc;
+		const dartdoc: string | undefined = hover.dartdoc;
+		const elementKind = hover.elementKind;
 		const propagatedType = hover.propagatedType;
 		const containingLibraryName = hover.containingLibraryName;
 		const containingLibraryPath = hover.containingLibraryPath;
