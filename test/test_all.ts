@@ -13,7 +13,7 @@ function color(col: number, message: string) {
 }
 
 // Set timeout at 30 mins (Travis kills us with no output for too long).
-const timeoutInMilliseconds = 1000 * 60 * 30;
+const timeoutInMilliseconds = 1000 * 60 * 20;
 function runNode(cwd: string, args: string[], env: any, printTimes = false): Promise<number> {
 	return new Promise<number>((resolve, reject) => {
 		let timerWarn: NodeJS.Timer;
