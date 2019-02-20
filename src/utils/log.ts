@@ -1,3 +1,4 @@
+import * as child_process from "child_process";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -121,4 +122,10 @@ export function logTo(file: string, logCategories?: LogCategory[]): ({ dispose: 
 			});
 		},
 	};
+}
+
+export function logProcess(category: LogCategory, prefix: string, process: child_process.ChildProcess): void {
+	process.stdout.on("data", (data) => log(`${prefix} ${data}`, LogSeverity.Info, category));
+	process.stderr.on("data", (data) => log(`${prefix} ${data}`, LogSeverity.Info, category));
+	process.on("close", (code) => log(`${prefix} exit code ${code}`, LogSeverity.Info, category));
 }

@@ -1,7 +1,8 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
-import { IAmDisposable, LogSeverity, safeSpawn } from "../debug/utils";
+import { IAmDisposable, LogSeverity } from "../debug/utils";
 import { getLogHeader, logError, logInfo } from "../utils/log";
+import { safeSpawn } from "../utils/processes";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 

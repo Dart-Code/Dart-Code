@@ -1,6 +1,6 @@
 import { ConfigurationTarget, Uri, version as codeVersion, workspace, WorkspaceConfiguration } from "vscode";
-import { setupToolEnv } from "./debug/utils";
 import { createFolderForFile, resolvePaths } from "./utils";
+import { setupToolEnv } from "./utils/processes";
 
 class Config {
 	private config: WorkspaceConfiguration;
