@@ -192,7 +192,7 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it.only("can launch DevTools", async function () {
+	it("can launch DevTools", async function () {
 		if (!extApi.dartCapabilities.supportsDevTools) {
 			this.skip();
 			return;
