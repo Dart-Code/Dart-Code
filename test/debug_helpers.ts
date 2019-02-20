@@ -38,12 +38,12 @@ export function ensureVariableWithIndex(variables: DebugProtocol.Variable[], ind
 
 export interface MapEntry {
 	key: {
-		evaluateName: string | null | undefined;
+		evaluateName: string | undefined;
 		name: string;
 		value: string;
 	};
 	value: {
-		evaluateName: string | null | undefined;
+		evaluateName: string | undefined;
 		name: string;
 		value: string;
 	};

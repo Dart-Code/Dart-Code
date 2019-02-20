@@ -648,35 +648,35 @@ describe("dart cli debugger", () => {
 		ensureVariable(mapVariables, undefined, "9", `1.1 -> "one-point-one"`);
 
 		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: null, name: "key", value: `"l"` },
+			key: { evaluateName: undefined, name: "key", value: `"l"` },
 			value: { evaluateName: `m["l"]`, name: "value", value: "List (12 items)" },
 		}, dc);
 		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: null, name: "key", value: `"longStrings"` },
+			key: { evaluateName: undefined, name: "key", value: `"longStrings"` },
 			value: { evaluateName: `m["longStrings"]`, name: "value", value: "List (1 item)" },
 		}, dc);
 		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: null, name: "key", value: `"s"` },
+			key: { evaluateName: undefined, name: "key", value: `"s"` },
 			value: { evaluateName: `m["s"]`, name: "value", value: `"Hello!"` },
 		}, dc);
 		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: null, name: "key", value: config.previewToStringInDebugViews ? `DateTime (2000-02-14 00:00:00.000)` : `DateTime` },
-			value: { evaluateName: null, name: "value", value: `"valentines-2000"` },
+			key: { evaluateName: undefined, name: "key", value: config.previewToStringInDebugViews ? `DateTime (2000-02-14 00:00:00.000)` : `DateTime` },
+			value: { evaluateName: undefined, name: "value", value: `"valentines-2000"` },
 		}, dc);
 		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: null, name: "key", value: config.previewToStringInDebugViews ? `DateTime (2005-01-01 00:00:00.000)` : `DateTime` },
-			value: { evaluateName: null, name: "value", value: `"new-year-2005"` },
+			key: { evaluateName: undefined, name: "key", value: config.previewToStringInDebugViews ? `DateTime (2005-01-01 00:00:00.000)` : `DateTime` },
+			value: { evaluateName: undefined, name: "value", value: `"new-year-2005"` },
 		}, dc);
 		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: null, name: "key", value: "true" },
+			key: { evaluateName: undefined, name: "key", value: "true" },
 			value: { evaluateName: `m[true]`, name: "value", value: "true" },
 		}, dc);
 		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: null, name: "key", value: "1" },
+			key: { evaluateName: undefined, name: "key", value: "1" },
 			value: { evaluateName: `m[1]`, name: "value", value: `"one"` },
 		}, dc);
 		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: null, name: "key", value: "1.1" },
+			key: { evaluateName: undefined, name: "key", value: "1.1" },
 			value: { evaluateName: `m[1.1]`, name: "value", value: `"one-point-one"` },
 		}, dc);
 	});
