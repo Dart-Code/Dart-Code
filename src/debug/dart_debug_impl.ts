@@ -105,7 +105,7 @@ export class DartDebugSession extends DebugSession {
 		process.stdout.setEncoding("utf8");
 		process.stdout.on("data", (data) => {
 			let match: RegExpExecArray;
-			if (this.parseObservatoryUriFromStdOut && !this.observatory) {
+			if (!args.noDebug && this.parseObservatoryUriFromStdOut && !this.observatory) {
 				match = ObservatoryConnection.bannerRegex.exec(data.toString());
 			}
 			if (match) {
