@@ -96,35 +96,32 @@ export class SdkCommands {
 				DartHoverProvider.clearPackageMapCaches();
 			}
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", async (uri) => {
+		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", async () => {
 			let shouldNotify = false;
-			// TODO: Why do we do this? What is the uri used for?!
-			if (!uri || !(uri instanceof Uri)) {
 
-				// If there is no path for this session, or it differs from config, use the one from config.
-				if (!this.flutterScreenshotPath ||
-					(config.flutterScreenshotPath && this.flutterScreenshotPath !== config.flutterScreenshotPath)) {
-					this.flutterScreenshotPath = config.flutterScreenshotPath;
-					shouldNotify = true;
-				}
-
-				// If path is still empty, bring up the folder selector.
-				if (!this.flutterScreenshotPath) {
-					const selectedFolder =
-						await window.showOpenDialog({ canSelectFolders: true, openLabel: "Set screenshots folder" });
-					if (selectedFolder && selectedFolder.length > 0) {
-						// Set variable to selected path. This allows prompting the user only once.
-						this.flutterScreenshotPath = selectedFolder[0].path;
-						shouldNotify = true;
-					} else {
-						// Do nothing if the user cancelled the folder selection.
-						return;
-					}
-				}
-
-				// Ensure folder exists.
-				util.mkDirRecursive(this.flutterScreenshotPath);
+			// If there is no path for this session, or it differs from config, use the one from config.
+			if (!this.flutterScreenshotPath ||
+				(config.flutterScreenshotPath && this.flutterScreenshotPath !== config.flutterScreenshotPath)) {
+				this.flutterScreenshotPath = config.flutterScreenshotPath;
+				shouldNotify = true;
 			}
+
+			// If path is still empty, bring up the folder selector.
+			if (!this.flutterScreenshotPath) {
+				const selectedFolder =
+					await window.showOpenDialog({ canSelectFolders: true, openLabel: "Set screenshots folder" });
+				if (selectedFolder && selectedFolder.length > 0) {
+					// Set variable to selected path. This allows prompting the user only once.
+					this.flutterScreenshotPath = selectedFolder[0].path;
+					shouldNotify = true;
+				} else {
+					// Do nothing if the user cancelled the folder selection.
+					return;
+				}
+			}
+
+			// Ensure folder exists.
+			util.mkDirRecursive(this.flutterScreenshotPath);
 
 			const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : null;
 			const args = deviceId ? ["screenshot", "-d", deviceId] : ["screenshot"];
