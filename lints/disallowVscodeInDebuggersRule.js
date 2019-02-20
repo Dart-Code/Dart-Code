@@ -9,7 +9,7 @@ const excludedPaths = ["src/debug/flutter_run.ts", "src/debug/flutter_test.ts"]
 
 class Rule extends Lint.Rules.AbstractRule {
 	apply(sourceFile) {
-		if (sourceFile.fileName.indexOf("src/debug/") === 0 && excludedPaths.indexOf(sourceFile.fileName) === -1) {
+		if (sourceFile.fileName.indexOf("src/debug/") !== -1 && excludedPaths.indexOf(sourceFile.fileName) === -1) {
 			return this.applyWithWalker(new NoVsCodeInDebuggers(sourceFile, this.getOptions()));
 		}
 	}
