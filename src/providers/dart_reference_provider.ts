@@ -7,11 +7,11 @@ import { fsPath } from "../utils";
 export class DartReferenceProvider implements ReferenceProvider, DefinitionProvider {
 	constructor(private readonly analyzer: Analyzer) { }
 
-	public async provideReferences(document: TextDocument, position: Position, context: ReferenceContext, token: CancellationToken): Promise<Location[]> {
+	public async provideReferences(document: TextDocument, position: Position, context: ReferenceContext, token: CancellationToken): Promise<Location[] | undefined> {
 		// If we want to include the decleration, kick off a request for that.
 		const definitions = context.includeDeclaration
 			? await this.provideDefinition(document, position, token)
-			: null;
+			: undefined;
 
 		const resp = await this.analyzer.searchFindElementReferencesResults({
 			file: fsPath(document.uri),
@@ -31,7 +31,7 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 			: locations;
 	}
 
-	public async provideDefinition(document: TextDocument, position: Position, token: CancellationToken): Promise<DefinitionLink[]> {
+	public async provideDefinition(document: TextDocument, position: Position, token: CancellationToken | undefined): Promise<DefinitionLink[]> {
 		const resp = await this.analyzer.analysisGetNavigation({
 			file: fsPath(document.uri),
 			length: 0,

@@ -23,7 +23,7 @@ const dartDocCodeBlockSections = new RegExp(
 	"gi",
 );
 
-export function cleanDartdoc(doc: string): string {
+export function cleanDartdoc(doc: string | undefined): string {
 	if (!doc)
 		return "";
 

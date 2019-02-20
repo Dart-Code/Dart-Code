@@ -234,7 +234,7 @@ export class FlutterDebugSession extends DartDebugSession {
 
 				case "checkPlatformOverride":
 					if (this.currentRunningAppId) {
-						const result = await this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", null);
+						const result = await this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", undefined);
 						this.sendEvent(new Event("dart.flutter.updatePlatformOverride", { platform: result.value }));
 					}
 					this.sendResponse(response);
@@ -242,7 +242,7 @@ export class FlutterDebugSession extends DartDebugSession {
 
 				case "checkIsWidgetCreationTracked":
 					if (this.currentRunningAppId) {
-						const result = await this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.inspector.isWidgetCreationTracked", null);
+						const result = await this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.inspector.isWidgetCreationTracked", undefined);
 						this.sendEvent(new Event("dart.flutter.updateIsWidgetCreationTracked", { isWidgetCreationTracked: result.result }));
 					}
 					this.sendResponse(response);

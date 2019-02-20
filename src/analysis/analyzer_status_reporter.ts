@@ -144,7 +144,7 @@ ${error.message}
 \`\`\`text
 ${error.stackTrace.trim()}
 \`\`\`
-${diagnostics ? "\nDiagnostics requested after the error occurred are:\n\n```js\n" + JSON.stringify(diagnostics, null, 4) + "\n```\n" : ""}
+${diagnostics ? "\nDiagnostics requested after the error occurred are:\n\n```js\n" + JSON.stringify(diagnostics, undefined, 4) + "\n```\n" : ""}
 `;
 
 		const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.md`;

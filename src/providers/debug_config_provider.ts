@@ -43,12 +43,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}];
 	}
 
-	public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration> {
+	public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration | undefined | null> {
 		const openFile = window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri.scheme === "file"
 			? fsPath(window.activeTextEditor.document.uri)
-			: null;
+			: undefined;
 
-		function resolveVariables(input?: string): string {
+		function resolveVariables(input?: string): string | undefined {
 			if (!input) return input;
 			input = input.replace(/\${file}/gi, openFile);
 			if (folder) {
@@ -357,7 +357,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	private setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, isFlutter: boolean, device: Device | undefined) {
-		const conf = config.for(folder && folder.uri || null);
+		const conf = config.for(folder && folder.uri);
 
 		// Attach any properties that weren't explicitly set.
 		debugConfig.name = debugConfig.name || "Dart & Flutter";

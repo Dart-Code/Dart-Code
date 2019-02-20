@@ -7,9 +7,9 @@ import { fsPath, isWithinWorkspace, toRangeOnLine } from "../utils";
 export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	constructor(private readonly analyzer: Analyzer) { }
 
-	public provideWorkspaceSymbols(query: string, token: CancellationToken): Thenable<SymbolInformation[]> {
+	public provideWorkspaceSymbols(query: string, token: CancellationToken): Thenable<SymbolInformation[]> | undefined {
 		if (query.length === 0)
-			return null;
+			return undefined;
 		query = this.sanitizeUserQuery(query);
 		const pattern = this.makeCaseInsensitiveFuzzyRegex(query);
 		return new Promise<SymbolInformation[]>((resolve, reject) => {

@@ -8,9 +8,9 @@ export class SourceCodeActionProvider implements CodeActionProvider {
 		providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports, SourceSortMembers],
 	};
 
-	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): CodeAction[] {
+	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): CodeAction[] | undefined {
 		if (!isAnalyzableAndInWorkspace(document))
-			return null;
+			return undefined;
 		return [{
 			command: {
 				arguments: [document],

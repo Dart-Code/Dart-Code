@@ -110,7 +110,7 @@ export class EditCommands implements vs.Disposable {
 
 	private async applyEdits(initiatingDocument: vs.TextDocument, change: as.SourceChange): Promise<void> {
 		// We can only apply with snippets if there's a single change.
-		if (change.edits.length === 1 && change.linkedEditGroups != null && change.linkedEditGroups.length !== 0)
+		if (change.edits.length === 1 && change.linkedEditGroups && change.linkedEditGroups.length !== 0)
 			return this.applyEditsWithSnippets(initiatingDocument, change);
 
 		// VS Code expects offsets to be based on the original document, but the analysis server provides
@@ -199,7 +199,7 @@ export class EditCommands implements vs.Disposable {
 			leg.positions.forEach((pos) => {
 				const defaultValue = documentText.substr(pos.offset, leg.length);
 				let choices = leg.suggestions ? leg.suggestions.map((s) => s.value) : undefined;
-				if (defaultValue && choices.indexOf(defaultValue) === -1) {
+				if (defaultValue && choices && choices.indexOf(defaultValue) === -1) {
 					choices = [defaultValue, ...choices];
 				}
 				placeholders.push({ offset: pos.offset, length: leg.length, defaultValue, choices, placeholderNumber });
