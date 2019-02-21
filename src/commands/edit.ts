@@ -4,6 +4,7 @@ import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import * as editors from "../editors";
 import { fsPath } from "../utils";
+import { showCode } from "../utils/editor";
 import { logError, logWarn } from "../utils/log";
 
 export class EditCommands implements vs.Disposable {
@@ -15,7 +16,7 @@ export class EditCommands implements vs.Disposable {
 			vs.commands.registerCommand("dart.sortMembers", this.sortMembers, this),
 			vs.commands.registerCommand("_dart.applySourceChange", this.applyEdits, this),
 			vs.commands.registerCommand("_dart.jumpToLineColInUri", this.jumpToLineColInUri, this),
-			vs.commands.registerCommand("_dart.showCode", this.showCode, this),
+			vs.commands.registerCommand("_dart.showCode", showCode, this),
 			vs.commands.registerCommand("dart.completeStatement", this.completeStatement, this),
 		);
 	}
@@ -38,23 +39,8 @@ export class EditCommands implements vs.Disposable {
 		if (lineNumber && columnNumber) {
 			const line = doc.lineAt(lineNumber > 0 ? lineNumber - 1 : 0);
 			const firstChar = line.range.start.translate({ characterDelta: line.firstNonWhitespaceCharacterIndex });
-			this.showCode(editor, line.range, line.range, new vs.Range(firstChar, firstChar));
+			showCode(editor, line.range, line.range, new vs.Range(firstChar, firstChar));
 		}
-	}
-
-	private showCode(editor: vs.TextEditor, displayRange: vs.Range, highlightRange: vs.Range, selectionRange?: vs.Range): void {
-		if (selectionRange)
-			editor.selection = new vs.Selection(selectionRange.start, selectionRange.end);
-
-		// Ensure the code is visible on screen.
-		editor.revealRange(displayRange, vs.TextEditorRevealType.InCenterIfOutsideViewport);
-
-		// Re-reveal the first line, to ensure it was always visible (eg. in case the main range was bigger than the screen).
-		// Using .Default means it'll do as little scrolling as possible.
-		editor.revealRange(new vs.Range(displayRange.start, displayRange.start), vs.TextEditorRevealType.Default);
-
-		// TODO: Implement highlighting
-		// See https://github.com/Microsoft/vscode/issues/45059
 	}
 
 	private sortMembers(document: vs.TextDocument): Thenable<void> {
