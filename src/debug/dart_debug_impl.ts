@@ -788,11 +788,9 @@ export class DartDebugSession extends DebugSession {
 							for (const field of instance.fields)
 								variables.push(await this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value, len <= maxValuesToCallToString));
 						} else {
-							// TODO: unhandled kind
 							this.logToUser(`Unknown instance kind: ${instance.kind}. ${pleaseReportBug}\n`);
 						}
 					} else {
-						// TODO: unhandled type
 						this.logToUser(`Unknown object type: ${obj.type}. ${pleaseReportBug}\n`);
 					}
 				}
