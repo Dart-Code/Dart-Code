@@ -3,8 +3,8 @@ import { Analyzer } from "../analysis/analyzer";
 import { OpenFileTracker } from "../analysis/open_file_tracker";
 import { flatMap, IAmDisposable } from "../debug/utils";
 import { toRange } from "../utils";
-import { TestOutlineInfo, TestOutlineVisitor } from "../utils/outline";
 import { getLaunchConfig } from "../utils/test";
+import { TestOutlineInfo, TestOutlineVisitor } from "../utils/vscode/outline";
 
 export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	private disposables: IAmDisposable[] = [];

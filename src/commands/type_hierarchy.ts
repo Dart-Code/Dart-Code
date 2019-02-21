@@ -3,7 +3,7 @@ import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import * as editors from "../editors";
 import { fsPath, toRangeOnLine } from "../utils";
-import { showCode } from "../utils/editor";
+import { showCode } from "../utils/vscode/editor";
 
 export class TypeHierarchyCommand implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];

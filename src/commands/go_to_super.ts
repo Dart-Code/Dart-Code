@@ -2,8 +2,8 @@ import * as vs from "vscode";
 import { Analyzer } from "../analysis/analyzer";
 import * as editors from "../editors";
 import { fsPath, toRangeOnLine } from "../utils";
-import { showCode } from "../utils/editor";
-import { findNearestOutlineNode } from "../utils/outline";
+import { showCode } from "../utils/vscode/editor";
+import { findNearestOutlineNode } from "../utils/vscode/outline";
 
 export class GoToSuperCommand implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
