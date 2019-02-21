@@ -3,6 +3,7 @@ import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import * as editors from "../editors";
 import { fsPath, toRangeOnLine } from "../utils";
+import { showCode } from "../utils/editor";
 
 export class TypeHierarchyCommand implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
@@ -59,8 +60,6 @@ export class TypeHierarchyCommand implements vs.Disposable {
 	}
 
 	private async openLocation(result: vs.QuickPickItem & { location?: as.Location; }, asPreview = false) {
-		// TODO: extract out so we have one way of jumping to code
-		// Currently we have Type Hierarchy, Go To Super, Flutter Outline
 		const location: as.Location = result.location;
 		const document = await vs.workspace.openTextDocument(location.file);
 		const editor = await vs.window.showTextDocument(document, {
@@ -68,8 +67,7 @@ export class TypeHierarchyCommand implements vs.Disposable {
 			preview: asPreview,
 		});
 		const range = toRangeOnLine(location);
-		editor.revealRange(range, vs.TextEditorRevealType.InCenterIfOutsideViewport);
-		editor.selection = new vs.Selection(range.end, range.start);
+		showCode(editor, range, range, range);
 	}
 
 	public dispose(): any {
