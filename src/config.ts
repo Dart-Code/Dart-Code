@@ -21,7 +21,6 @@ class Config {
 
 	private async setConfig<T>(key: string, value: T, target: ConfigurationTarget): Promise<void> {
 		await this.config.update(key, value, target);
-		this.loadConfig(); // TODO: Do we need this or does it get done via onDidChangeConfiguration?
 	}
 
 	get allowAnalytics() { return this.getConfig<boolean>("allowAnalytics"); }
