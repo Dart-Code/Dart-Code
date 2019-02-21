@@ -430,13 +430,13 @@ describe("dart cli debugger", () => {
 						line: positionOf("^// BREAKPOINT1").line + 1,
 						// VS Code says to use {} for expressions, but we want to support Dart's native too, so
 						// we have examples of both (as well as "escaped" brackets).
-						logMessage: "${s} The \\{year} is {(new DateTime.now()).year}",
+						logMessage: '${s} The \\{year} is """{(new DateTime.now()).year}"""',
 					}],
 					source: { path: fsPath(helloWorldMainFile) },
 				});
 			}).then((response) => dc.configurationDoneRequest()),
 			dc.waitForEvent("terminated"),
-			dc.assertOutputContains("stdout", `Hello! The {year} is ${(new Date()).getFullYear()}${platformEol}`),
+			dc.assertOutputContains("stdout", `Hello! The {year} is """${(new Date()).getFullYear()}"""${platformEol}`),
 			dc.launch(config),
 		]);
 	});
