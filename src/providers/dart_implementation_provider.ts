@@ -3,7 +3,7 @@ import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { flatMap } from "../debug/utils";
 import { fsPath, toRange } from "../utils";
-import { findNearestOutlineNode } from "../utils/outline";
+import { findNearestOutlineNode } from "../utils/vscode/outline";
 
 export class DartImplementationProvider implements vs.ImplementationProvider {
 	constructor(readonly analyzer: Analyzer) { }

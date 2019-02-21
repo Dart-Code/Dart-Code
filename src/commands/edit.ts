@@ -4,8 +4,8 @@ import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import * as editors from "../editors";
 import { fsPath } from "../utils";
-import { showCode } from "../utils/editor";
 import { logError, logWarn } from "../utils/log";
+import { showCode } from "../utils/vscode/editor";
 
 export class EditCommands implements vs.Disposable {
 	private commands: vs.Disposable[] = [];

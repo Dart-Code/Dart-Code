@@ -1,7 +1,7 @@
 import * as vs from "vscode";
-import * as as from "../analysis/analysis_server_types";
-import { OpenFileTracker } from "../analysis/open_file_tracker";
-import { logError } from "./log";
+import * as as from "../../analysis/analysis_server_types";
+import { OpenFileTracker } from "../../analysis/open_file_tracker";
+import { logError } from "../log";
 
 function findNode(outlines: as.Outline[] | undefined, offset: number, useReducedRange: boolean, kinds: as.ElementKind[]): as.Outline | undefined {
 	if (!outlines)

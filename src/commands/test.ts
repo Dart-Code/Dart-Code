@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { OpenFileTracker } from "../analysis/open_file_tracker";
-import { TestOutlineInfo, TestOutlineVisitor } from "../utils/outline";
+import { TestOutlineInfo, TestOutlineVisitor } from "../utils/vscode/outline";
 
 export const CURSOR_IS_IN_TEST = "dart-code:cursorIsInTest";
 export let cursorIsInTest = false; // HACK: Used for testing since we can't read contexts?
