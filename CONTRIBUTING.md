@@ -2,7 +2,7 @@
 
 # Raising Issues in Dart Code
 
-If you you've found an issue or have a suggestion for Dart Code, please do [open an issue](https://github.com/Dart-Code/Dart-Code/issues/new). For bugs, it is beneficial to attach a log file recorded while reproducing the issue. Information on using the `Capture Logs` command or enabling background logging is available [on the Dart Code website](https://dartcode.org/docs/logging/).
+If you've found an issue or have a suggestion for Dart Code, please do [open an issue](https://github.com/Dart-Code/Dart-Code/issues/new). For bugs, it is beneficial to attach a log file recorded while reproducing the issue. Information on using the `Capture Logs` command or enabling background logging is available [on the Dart Code website](https://dartcode.org/docs/logging/).
 
 # Contributing Code to Dart Code
 
