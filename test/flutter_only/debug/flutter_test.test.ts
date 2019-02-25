@@ -36,7 +36,7 @@ describe("flutter test debugger", () => {
 			undefined,
 			extApi.testTreeProvider,
 		);
-		dc.defaultTimeout = 30000;
+		dc.defaultTimeout = 60000;
 		// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
 		// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
 		// a second request and that'll cause it to quit immediately.
