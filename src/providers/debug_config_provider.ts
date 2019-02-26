@@ -258,7 +258,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// TODO: Why do we need this cast? The node-mock-debug does not?
 		(debugConfig as any).debugServer = serverAddress.port;
 
-		this.analytics.logDebuggerStart(folder && folder.uri);
+		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
 		if (debugType === DebuggerType.FlutterTest || debugType === DebuggerType.PubTest) {
 			const isRunningTestSubset = debugConfig.args && (debugConfig.args.indexOf("--name") !== -1 || debugConfig.args.indexOf("--pname") !== -1);
 			TestResultsProvider.flagSuiteStart(debugConfig.program, !isRunningTestSubset);

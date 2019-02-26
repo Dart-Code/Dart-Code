@@ -65,19 +65,28 @@ export class Analytics {
 	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
 	public logDebugSessionDuration(timeInMS: number) { this.time(Category.Debugger, TimingVariable.SessionDuration, timeInMS); }
 	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS); }
-	public logDebuggerStart(resourceUri: Uri) { this.event(Category.Debugger, EventAction.Activated, resourceUri); }
+	public logDebuggerStart(resourceUri: Uri, debuggerType: string, runType: string) {
+		const customData = {
+			cd15: debuggerType,
+			cd16: runType,
+		};
+		this.event(Category.Debugger, EventAction.Activated, resourceUri, customData);
+	}
 	public logDebuggerRestart() { this.event(Category.Debugger, EventAction.Restart); }
 	public logDebuggerHotReload() { this.event(Category.Debugger, EventAction.HotReload); }
 	public logDebuggerOpenObservatory() { this.event(Category.Debugger, EventAction.OpenObservatory); }
 	public logDebuggerOpenTimeline() { this.event(Category.Debugger, EventAction.OpenTimeline); }
 	public logDebuggerOpenDevTools() { this.event(Category.Debugger, EventAction.OpenDevTools); }
 
-	private event(category: Category, action: EventAction, resourceUri?: Uri): PromiseLike<void> {
+	private event(category: Category, action: EventAction, resourceUri?: Uri, customData?: any): PromiseLike<void> {
 		const data: any = {
 			ea: EventAction[action],
 			ec: Category[category],
 			t: "event",
 		};
+
+		// Copy custom data over.
+		Object.assign(data, customData);
 
 		// Force a session start if this is extension activation.
 		if (category === Category.Extension && action === EventAction.Activated)
