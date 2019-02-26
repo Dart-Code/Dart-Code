@@ -9,11 +9,12 @@ import { logError, logInfo, logWarn } from "./utils/log";
 // This is only required for debugging analytics and needn't be sent for standard Dart Code development (dev hits are already filtered with isDevelopment).
 const debug = false;
 
-/// Analytics require that we send a value for uid or cid, but when running in the VS Code dev host we don't
+/// Analytics require that we send a value for uid or cid, but when running in the VS Code
+// dev host we don't have either.
 const sendAnalyticsFromExtensionDevHost = false;
 
-// Machine ID is not set for extension dev host unless the boolean above is set to true (which is done
-// generally for testing purposes).
+// Machine ID is not set for extension dev host unless the boolean above is set to true (which
+// is usually done for testing purposes).
 const machineId = env.machineId !== "someValue.machineId"
 	? env.machineId
 	: (sendAnalyticsFromExtensionDevHost ? "35009a79-1a05-49d7-dede-dededededede" : undefined);
