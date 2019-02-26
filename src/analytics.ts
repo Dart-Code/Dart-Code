@@ -9,6 +9,15 @@ import { logError, logInfo, logWarn } from "./utils/log";
 // This is only required for debugging analytics and needn't be sent for standard Dart Code development (dev hits are already filtered with isDevelopment).
 const debug = false;
 
+/// Analytics require that we send a value for uid or cid, but when running in the VS Code dev host we don't
+const sendAnalyticsFromExtensionDevHost = false;
+
+// Machine ID is not set for extension dev host unless the boolean above is set to true (which is done
+// generally for testing purposes).
+const machineId = env.machineId !== "someValue.machineId"
+	? env.machineId
+	: (sendAnalyticsFromExtensionDevHost ? "35009a79-1a05-49d7-dede-dededededede" : undefined);
+
 enum Category {
 	Extension,
 	Analyzer,
@@ -103,7 +112,7 @@ export class Analytics {
 	}
 
 	private async send(customData: any, resourceUri?: Uri): Promise<void> {
-		if (!config.allowAnalytics || process.env.DART_CODE_IS_TEST_RUN)
+		if (!machineId || !config.allowAnalytics || process.env.DART_CODE_IS_TEST_RUN)
 			return;
 
 		const data: any = {
@@ -124,7 +133,7 @@ export class Analytics {
 			cd7: ProjectType[this.sdks.projectType],
 			cd8: config.closingLabels ? "On" : "Off",
 			cd9: this.sdks.projectType === ProjectType.Flutter ? (config.flutterHotReloadOnSave ? "On" : "Off") : null,
-			cid: env.machineId === "someValue.machineId" ? undefined : env.machineId,
+			cid: machineId,
 			tid: "UA-2201586-19",
 			ul: env.language,
 			v: "1", // API Version.
