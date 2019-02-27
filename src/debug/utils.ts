@@ -1,4 +1,3 @@
-import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { DebugProtocol } from "vscode-debugprotocol";
@@ -157,7 +156,6 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	dartPath: string;
 	debugSdkLibraries: boolean;
 	debugExternalLibraries: boolean;
-	flutterDebuggerRestartBehaviour: "hotReload" | "hotRestart";
 	evaluateGettersInDebugViews: boolean;
 	env: any;
 	program: string;
