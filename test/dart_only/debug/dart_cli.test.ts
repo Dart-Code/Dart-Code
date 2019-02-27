@@ -9,7 +9,7 @@ import { fetch } from "../../../src/utils/fetch";
 import { log } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureMapEntry, ensureVariable, ensureVariableWithIndex, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, openFile, positionOf, sb, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, openFile, positionOf, sb, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -234,6 +234,23 @@ describe("dart cli debugger", () => {
 		assert.equal(frames[0].name, "main");
 		assert.equal(frames[0].source!.path, fsPath(helloWorldMainFile));
 		assert.equal(frames[0].source!.name, path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile)));
+	});
+
+	// Failing due to:
+	//   https://github.com/Dart-Code/Dart-Code/issues/1443
+	//   https://github.com/dart-lang/sdk/issues/35859
+	it.skip("stops at a breakpoint in a part file", async () => {
+		await openFile(helloWorldPartFile);
+		const config = await startDebugger(helloWorldPartEntryFile);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line,
+			path: fsPath(helloWorldPartFile),
+		});
+		const stack = await dc.getStack();
+		const frames = stack.body.stackFrames;
+		assert.equal(frames[0].name, "do_print");
+		assert.equal(frames[0].source!.path, fsPath(helloWorldPartFile));
+		assert.equal(frames[0].source!.name, path.relative(fsPath(helloWorldFolder), fsPath(helloWorldPartFile)));
 	});
 
 	// Known not to work; https://github.com/Dart-Code/Dart-Code/issues/821
