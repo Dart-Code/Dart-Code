@@ -509,22 +509,22 @@
 			"touchBar": [
 				{
 					"command": "flutter.hotReload",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode && debugType == dart",
 					"group": "91_flutter"
 				},
 				{
 					"command": "flutter.hotRestart",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode && debugType == dart",
 					"group": "91_flutter"
 				},
 				{
 					"command": "dart.openDevTools",
-					"when": "inDebugMode",
+					"when": "inDebugMode && debugType == dart",
 					"group": "92_debug_tools"
 				},
 				{
 					"command": "flutter.screenshot",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode && debugType == dart",
 					"group": "93_utils"
 				}
 			],
