@@ -5,7 +5,7 @@
 	"version": "2.25.0-dev",
 	"publisher": "Dart-Code",
 	"engines": {
-		"vscode": "^1.31.0"
+		"vscode": "^1.32.0"
 	},
 	"license": "SEE LICENSE IN LICENSE",
 	"bugs": {
@@ -279,7 +279,11 @@
 			{
 				"command": "flutter.hotReload",
 				"title": "Hot Reload",
-				"category": "Flutter"
+				"category": "Flutter",
+				"icon": {
+					"dark": "media/commands/hot-reload.svg",
+					"light": "media/commands/hot-reload-bordered.svg"
+				}
 			},
 			{
 				"command": "flutter.openTimeline",
@@ -510,6 +514,12 @@
 				{
 					"command": "flutter.screenshot",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				}
+			],
+			"debug/toolbar": [
+				{
+					"command": "flutter.hotReload",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode && debugType == dart"
 				}
 			],
 			"touchBar": [
