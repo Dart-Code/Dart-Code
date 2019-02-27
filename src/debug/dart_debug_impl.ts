@@ -40,7 +40,6 @@ export class DartDebugSession extends DebugSession {
 	public debugSdkLibraries: boolean;
 	public debugExternalLibraries: boolean;
 	public evaluateGettersInDebugViews: boolean;
-	public flutterRestartBehaviour: "hotReload" | "hotRestart";
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
 	protected sendStdOutToConsole: boolean = true;
@@ -92,7 +91,6 @@ export class DartDebugSession extends DebugSession {
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
-		this.flutterRestartBehaviour = args.flutterDebuggerRestartBehaviour;
 		this.logFile = args.observatoryLogFile;
 		this.maxLogLineLength = args.maxLogLineLength;
 

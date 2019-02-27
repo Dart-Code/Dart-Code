@@ -156,7 +156,6 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	dartPath: string;
 	debugSdkLibraries: boolean;
 	debugExternalLibraries: boolean;
-	flutterDebuggerRestartBehaviour: "hotReload" | "hotRestart";
 	evaluateGettersInDebugViews: boolean;
 	env: any;
 	program: string;

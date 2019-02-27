@@ -192,13 +192,8 @@ export class FlutterDebugSession extends DartDebugSession {
 		response: DebugProtocol.RestartResponse,
 		args: DebugProtocol.RestartArguments,
 	): void {
-		if (this.flutterRestartBehaviour === "hotRestart") {
-			this.sendEvent(new Event("dart.hotRestartRequest"));
-			this.performReload(true, restartReasonManual);
-		} else {
-			this.sendEvent(new Event("dart.hotReloadRequest"));
-			this.performReload(false, restartReasonManual);
-		}
+		this.sendEvent(new Event("dart.hotRestartRequest"));
+		this.performReload(true, restartReasonManual);
 		super.restartRequest(response, args);
 	}
 

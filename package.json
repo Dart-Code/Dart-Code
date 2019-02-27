@@ -740,15 +740,6 @@
 					"description": "Whether to evaluate getters in order to display them in debug views (such as the Variables, Watch and Hovers views).",
 					"scope": "resource"
 				},
-				"dart.flutterDebuggerRestartBehaviour": {
-					"enum": [
-						"hotReload",
-						"hotRestart"
-					],
-					"default": "hotReload",
-					"description": "The behaviour of the Restart button on the debug toolbar and the Restart Debugging menu item/command. Note: This setting only takes effect from the start of the next debugging session.",
-					"scope": "window"
-				},
 				"dart.sdkPath": {
 					"type": "string",
 					"description": "The location of the Dart SDK to use for analyzing and executing code. If blank, Dart Code will attempt to find it from the PATH environment variable. When editing a Flutter project, the version of Dart included in the Flutter SDK is used in preference.",
