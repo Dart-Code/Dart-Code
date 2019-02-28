@@ -3,14 +3,14 @@ import { OpenFileTracker } from "../../../src/analysis/open_file_tracker";
 import { TestOutlineVisitor } from "../../../src/utils/vscode/outline";
 import { activate, extApi, flutterTestOtherFile, getPackages, waitForResult } from "../../helpers";
 
-describe.only("test_outline_visitor", () => {
+describe("test_outline_visitor", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate and wait for outline", async () => {
 		await activate(flutterTestOtherFile);
 		await waitForResult(() => !!OpenFileTracker.getOutlineFor(flutterTestOtherFile));
 	});
 
-	it("reads the correct groups and tests", async function () {
+	it("reads the correct groups and tests", function () {
 		if (!extApi.flutterCapabilities.hasTestGroupFix) {
 			this.skip();
 			return;

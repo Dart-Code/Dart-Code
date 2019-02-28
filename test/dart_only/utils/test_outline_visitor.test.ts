@@ -11,7 +11,7 @@ describe("test_outline_visitor", () => {
 		await waitForResult(() => !!OpenFileTracker.getOutlineFor(helloWorldTestMainFile));
 	});
 
-	it("reads the correct groups and tests", async () => {
+	it("reads the correct groups and tests", () => {
 		const outline = OpenFileTracker.getOutlineFor(helloWorldTestMainFile);
 
 		const visitor = new TestOutlineVisitor();
