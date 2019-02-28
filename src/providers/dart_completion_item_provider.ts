@@ -166,6 +166,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 
 		const completion = new CompletionItem(label, kind);
 		completion.label = label;
+		completion.filterText = label.split("(")[0]; // Don't ever include anything after a ( in filtering.
 		completion.kind = kind;
 		completion.detail = (suggestion.isDeprecated ? "(deprecated) " : "") + detail;
 		completion.documentation = new MarkdownString(cleanDartdoc(suggestion.docSummary));
