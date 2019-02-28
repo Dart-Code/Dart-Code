@@ -49,9 +49,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				case "\\":
 					return line.startsWith("import \"") || line.startsWith("export \"")
 						|| line.startsWith("import '") || line.startsWith("export '");
-				// Don't trigger for colons if we're in a case statement
-				case ":":
-					return !line.startsWith("case");
 			}
 		}
 
@@ -169,11 +166,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 
 		const completion = new CompletionItem(label, kind);
 		completion.label = label;
-		// Always prefix filterText with a space, so completion doesn't filter it out
-		// if the user types whitespace, eg. in:
-		//   func(foo: bar);
-		// the colon is the trigger, but we want the list to remain when the user hits space.
-		completion.filterText = " " + label.split("(")[0]; // Don't ever include anything after a ( in filtering.
 		completion.kind = kind;
 		completion.detail = (suggestion.isDeprecated ? "(deprecated) " : "") + detail;
 		completion.documentation = new MarkdownString(cleanDartdoc(suggestion.docSummary));
