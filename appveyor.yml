@@ -60,6 +60,8 @@ install:
   - npm --version
   - flutter\bin\flutter doctor
   - dart-sdk\bin\pub global activate stagehand
+  - dart-sdk\bin\pub global activate args 1.5.0
+  - dart-sdk\bin\pub global activate meta 1.1.6
   - dart-sdk\bin\pub global activate devtools
   - cd ..
 

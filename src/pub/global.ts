@@ -8,7 +8,7 @@ import { safeSpawn } from "../utils/processes";
 export class PubGlobal {
 	constructor(private sdks: Sdks) { }
 
-	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion?: string): Promise<boolean> {
+	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion?: string, autoUpdate: boolean = false): Promise<boolean> {
 		const versionStatus = await this.getInstalledStatus(packageName, packageID, requiredVersion);
 		if (versionStatus === VersionStatus.Valid)
 			return true;
@@ -18,7 +18,12 @@ export class PubGlobal {
 		const message = versionStatus === VersionStatus.UpdateRequired
 			? `${packageName} needs to be updated with 'pub global activate ${packageID}' to use this feature.`
 			: `${packageName} needs to be installed with 'pub global activate ${packageID}' to use this feature.`;
-		let action = await vs.window.showWarningMessage(message, activateForMe, moreInfo);
+		let action =
+			// If we need an update and we're allowed to auto-update, to the same as if the user
+			// clicked the activate button, otherwise prompt them.
+			versionStatus === VersionStatus.UpdateRequired && autoUpdate
+				? activateForMe
+				: await vs.window.showWarningMessage(message, activateForMe, moreInfo);
 
 		if (action === moreInfo) {
 			openInBrowser(moreInfoLink);
