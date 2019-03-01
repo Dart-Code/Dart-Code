@@ -272,6 +272,9 @@ export function escapeShell(args: string[]) {
 }
 
 export function openInBrowser(url: string) {
+	// Don't use vs.env.openExternal unless
+	// https://github.com/Microsoft/vscode/issues/69608
+	// is fixed, as it complicates testing.
 	commands.executeCommand("vscode.open", Uri.parse(url));
 }
 
