@@ -1,12 +1,13 @@
 import * as assert from "assert";
 import * as os from "os";
 import * as path from "path";
+import * as sinon from "sinon";
 import * as vs from "vscode";
 import { fsPath } from "../../../src/utils";
 import { fetch } from "../../../src/utils/fetch";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, getPackages, openFile, positionOf, watchPromise } from "../../helpers";
+import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, getPackages, openFile, positionOf, sb, watchPromise } from "../../helpers";
 
 describe("flutter run debugger (launch)", () => {
 	// We have tests that require external packages.
@@ -212,10 +213,9 @@ describe("flutter run debugger (launch)", () => {
 			return;
 		}
 
-		// TODO: This doesn't work (openExternal is a setter?)
-		// // Intercept vs.env.openExternal so we don't spawn browsers!
-		// const executeCommand = sb.stub(vs.env, "openExternal").callThrough();
-		// const open = executeCommand.withArgs(sinon.match.any).resolves();
+		// Intercept vscode.open so we don't spawn browsers!
+		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
+		const open = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
 
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
@@ -225,7 +225,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 
 		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
-		// assert.ok(open.calledOnce);
+		assert.ok(open.calledOnce);
 		assert.ok(devTools);
 		assert.ok(devTools.url);
 		defer(devTools.dispose);

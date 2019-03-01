@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import * as path from "path";
+import * as sinon from "sinon";
 import * as vs from "vscode";
 import { config } from "../../../src/config";
 import { platformEol } from "../../../src/debug/utils";
@@ -198,10 +199,9 @@ describe("dart cli debugger", () => {
 			return;
 		}
 
-		// TODO: This doesn't work (openExternal is a setter?)
-		// // Intercept vs.env.openExternal so we don't spawn browsers!
-		// const executeCommand = sb.stub(vs.env, "openExternal").callThrough();
-		// const open = executeCommand.withArgs(sinon.match.any).resolves();
+		// Intercept vscode.open so we don't spawn browsers!
+		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
+		const open = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
 
 		await openFile(helloWorldMainFile);
 		const config = await startDebugger(helloWorldMainFile);
@@ -212,8 +212,7 @@ describe("dart cli debugger", () => {
 		});
 
 		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
-		// TODO: Uncomment when above is fixed
-		// assert.ok(open.calledOnce);
+		assert.ok(open.calledOnce);
 		assert.ok(devTools);
 		assert.ok(devTools.url);
 		defer(devTools.dispose);
