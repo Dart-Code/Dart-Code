@@ -108,8 +108,8 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(flutterTestOtherFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ ${testPrefix}Other test\n`),
-			dc.assertPassingTest(`${testPrefix}Other test`),
+			dc.assertOutput("stdout", `✓ ${testPrefix}Other tests group Other test\n`),
+			dc.assertPassingTest(`${testPrefix}Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -120,8 +120,8 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(undefined);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ ${testPrefix}Other test\n`),
-			dc.assertPassingTest(`${testPrefix}Other test`),
+			dc.assertOutput("stdout", `✓ ${testPrefix}Other tests group Other test\n`),
+			dc.assertPassingTest(`${testPrefix}Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -132,8 +132,8 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger("${file}");
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ ${testPrefix}Other test\n`),
-			dc.assertPassingTest(`${testPrefix}Other test`),
+			dc.assertOutput("stdout", `✓ ${testPrefix}Other tests group Other test\n`),
+			dc.assertPassingTest(`${testPrefix}Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
