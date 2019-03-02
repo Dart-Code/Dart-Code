@@ -443,7 +443,7 @@ export class DartDebugSession extends DebugSession {
 			: formatPathForVm(source.path);
 
 		try {
-			const result = await this.threadManager.setBreakpoints(uri, breakpoints);
+			const result = await this.threadManager.setBreakpoints(source.path, breakpoints);
 			const bpResponse = [];
 			for (const bpRes of result) {
 				bpResponse.push({ verified: !!bpRes });

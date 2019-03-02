@@ -2,8 +2,8 @@ import { Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { logError } from "../utils/log";
 import { DartDebugSession, InstanceWithEvaluateName } from "./dart_debug_impl";
-import { DebuggerResult, VMBreakpoint, VMInstanceRef, VMIsolate, VMIsolateRef, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
-import { LogCategory, PromiseCompleter } from "./utils";
+import { DebuggerResult, VMBreakpoint, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
+import { formatPathForVm, LogCategory, PromiseCompleter } from "./utils";
 
 export class ThreadManager {
 	public nextThreadId: number = 0;
@@ -124,7 +124,7 @@ export class ThreadManager {
 
 		for (const thread of this.threads) {
 			if (thread.runnable) {
-				const result = thread.setBreakpoints(uri, breakpoints);
+				const result = thread.setBreakpointsEx(uri, breakpoints);
 				if (!promise)
 					promise = result;
 			}
@@ -230,6 +230,107 @@ export class ThreadInfo {
 		return Promise.all(removeBreakpointPromises).then((results) => {
 			return [].concat.apply([], results);
 		});
+	}
+
+	public async setBreakpointsEx(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<VMBreakpoint[]> {
+		// Remove all current bps.
+		await this.removeBreakpointsAtUri(uri);
+		this.vmBps[uri] = [];
+
+		let fileUri: string;
+		if (uri.indexOf("\\") === -1) {
+			fileUri = "file://" + uri;
+		} else {
+			fileUri = "file:///" + uri.split("\\").join("/");
+		}
+
+		const debugSession = this.manager.debugSession;
+		const packageUri = debugSession.packageMap
+			? debugSession.packageMap.convertFileToPackageUri(uri) || formatPathForVm(uri)
+			: formatPathForVm(uri);
+
+		const observatory = this.manager.debugSession.observatory;
+
+		// Warm up isolate.
+		// Not a good place but it guarantees 100% warm-up of the isolate and
+		// this procedure are not so expensive.
+		// Preload the root library script guarantees that the root of the
+		// script tree will be initialized.
+		const isolateId = this.ref.id;
+		const isolate = (await observatory.getIsolate(isolateId)).result as VMIsolate;
+		const rootLib = (await observatory.getObject(isolateId, isolate.rootLib.id)).result as VMLibrary;
+		const rootScript = (await observatory.getObject(isolateId, rootLib.scripts[0].id)).result as VMScript;
+
+		const libraries = await Promise.all(isolate.libraries.map(async (libraryRef) => {
+			try {
+				const library = (await observatory.getObject(isolateId, libraryRef.id)).result as VMLibrary;
+				return library;
+			} catch (e) {
+				logError(e, LogCategory.Observatory);
+				return undefined;
+			}
+		}));
+
+		const scriptRefs: VMScriptRef[] = [];
+		for (const library of libraries) {
+			if (library !== undefined) {
+				for (const scriptRef of library.scripts) {
+					scriptRefs.push(scriptRef);
+				}
+			}
+		}
+
+		const scripts: VMScript[] = await Promise.all(scriptRefs.map(async (scriptRef) => {
+			try {
+				if (scriptRef !== undefined) {
+					const script = (await observatory.getObject(isolateId, scriptRef.id)).result as VMScript;
+					return script;
+				}
+
+				return undefined;
+			} catch (e) {
+				logError(e, LogCategory.Observatory);
+				return undefined;
+			}
+		}));
+
+		const foundScripts = scripts.filter((script) => {
+			if (script !== undefined) {
+				return script.uri === fileUri || script.uri === packageUri;
+			}
+
+			return false;
+		});
+
+		// Possibly Dart VM contains the bug because Dart debugger cannot add
+		// breakpoint even if the Dart VM creates more then one script
+		// reference for differently referenced (imported) the same source
+		// code.
+		// This caused because above mentioned script references will have more
+		// then a single canonicalized url and it is considered as ambiguity,
+		// although in reality this is not quite so.
+		// Most likely this can be described as “by the design,” but, in
+		// principle, it has a solution that is slightly more complicated than
+		// the very simple.
+		return Promise.all(
+			breakpoints.map(async (bp) => {
+				try {
+					if (foundScripts.length !== 0) {
+						const result = await this.manager.debugSession.observatory.addBreakpoint(this.ref.id, foundScripts[0].id, bp.line, bp.column);
+						const vmBp: VMBreakpoint = (result.result as VMBreakpoint);
+						this.vmBps[uri].push(vmBp);
+						this.breakpoints[vmBp.id] = bp;
+						return vmBp;
+					} else {
+						return undefined;
+					}
+
+				} catch (e) {
+					logError(e, LogCategory.Observatory);
+					return undefined;
+				}
+			}),
+		);
 	}
 
 	public async setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<VMBreakpoint[]> {

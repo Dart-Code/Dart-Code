@@ -385,6 +385,19 @@ export class ObservatoryConnection {
 		this.callMethod("streamListen", { streamId });
 	}
 
+	public addBreakpoint(isolateId: string, scriptId: string, line: number, column?: number): Promise<DebuggerResult> {
+		let data: {
+			isolateId: string,
+			scriptId: string,
+			line: number,
+			column?: number,
+		};
+		data = { isolateId, scriptId, line };
+		if (column)
+			data.column = column;
+		return this.callMethod("addBreakpoint", data);
+	}
+
 	public addBreakpointWithScriptUri(isolateId: string, scriptUri: string, line: number, column?: number): Promise<DebuggerResult> {
 		let data: {
 			isolateId: string,
