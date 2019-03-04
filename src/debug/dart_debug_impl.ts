@@ -585,8 +585,14 @@ export class DartDebugSession extends DebugSession {
 					canShowSource ? new Source(shortName, sourcePath, sourceReference, null, location.script) : undefined,
 					0, 0,
 				);
+				// The top frame is only allowed to be deemphasized when it's an exception (so the editor walks
+				// up the stack to user code). If the reson for stopping was a breakpoint, step, etc., then we
+				// should always leave the frame focusable.
+				const isTopFrame = stackFrames.length === 0;
+				const isStoppedAtException = thread.exceptionReference !== 0;
+				const allowDeemphasizingFrame = !isTopFrame || isStoppedAtException;
 				// If we wouldn't debug this source, then deemphasize in the stack.
-				if (stackFrame.source) {
+				if (stackFrame.source && allowDeemphasizingFrame) {
 					if (!this.isValidToDebug(uri) || (this.isSdkLibrary(uri) && !this.debugSdkLibraries)) {
 						stackFrame.source.origin = "from the Dart SDK";
 						stackFrame.source.presentationHint = "deemphasize";
