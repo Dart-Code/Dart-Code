@@ -1360,8 +1360,19 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	public isExternalLibrary(uri: string) {
-		// If we don't know the local package name, we have to assume nothing is external, else we might disable debugging for the local library.
-		return uri.startsWith("package:") && this.packageMap && this.packageMap.localPackageName && !uri.startsWith(`package:${this.packageMap.localPackageName}/`);
+		// If it's not a package URI, or we don't have a package map, so we assume not external. We don't want
+		// to ever disable debugging of something if we're not certain.
+		if (!uri.startsWith("package:") || !this.packageMap)
+			return false;
+
+		const path = this.packageMap.resolvePackageUri(uri);
+
+		// If we don't have the path, we can't tell if it's external or not.
+		if (!path)
+			return false;
+
+		// HACK: Take a guess at whether it's inside the pubcache (in which case we're considering it external).
+		return path.indexOf("/hosted/pub.dartlang.org/") !== -1 || path.indexOf("\\hosted\\pub.dartlang.org\\") !== -1;
 	}
 
 	private resolveFileLocation(script: VMScript, tokenPos: number): FileLocation {
