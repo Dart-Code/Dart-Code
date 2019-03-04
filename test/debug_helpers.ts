@@ -146,3 +146,31 @@ export function killFlutterTester(): Promise<void> {
 		});
 	});
 }
+
+export function isSdkFrame(frame: DebugProtocol.StackFrame) {
+	return !frame.source || frame.source.name.startsWith("dart:");
+}
+
+export function isExternalPackage(frame: DebugProtocol.StackFrame) {
+	return frame.source && frame.source.name.startsWith("package:") && !isLocalPackage(frame);
+}
+
+export function isLocalPackage(frame: DebugProtocol.StackFrame) {
+	return frame.source && frame.source.name.startsWith("package:") &&
+		// Packages known to be local (from our test projects).
+		(frame.source!.name.startsWith("package:my_package")
+			|| frame.source!.name.startsWith("package:hello_world")
+			|| frame.source!.name.startsWith("package:example"));
+}
+
+export function isUserCode(frame: DebugProtocol.StackFrame) {
+	return frame.source && !frame.source.name.startsWith("dart:") && !frame.source!.name.startsWith("package:");
+}
+
+export function ensureFrameCategories(frames: DebugProtocol.StackFrame[], presentationHint: string, origin: string) {
+	assert.notEqual(frames.length, 0);
+	for (const frame of frames) {
+		assert.equal(frame.source!.presentationHint, presentationHint);
+		assert.equal(frame.source!.origin, origin);
+	}
+}

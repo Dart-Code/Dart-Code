@@ -9,8 +9,8 @@ import { fsPath, getRandomInt } from "../../../src/utils";
 import { fetch } from "../../../src/utils/fetch";
 import { log } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
-import { ensureMapEntry, ensureVariable, ensureVariableWithIndex, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalLibFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, openFile, positionOf, sb, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused } from "../../debug_helpers";
+import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, openFile, positionOf, sb, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -420,6 +420,71 @@ describe("dart cli debugger", () => {
 			}),
 			dc.stepIn(),
 		]);
+	});
+
+	it("correctly marks non-debuggable SDK frames when debugSdkLibraries is false", async () => {
+		await openFile(helloWorldThrowInSdkFile);
+		const config = await startDebugger(helloWorldThrowInSdkFile, { debugSdkLibraries: false });
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.waitForEvent("stopped"),
+			dc.launch(config),
+		]);
+		const stack = await dc.getStack();
+		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), "deemphasize", "from the Dart SDK");
+		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+	});
+
+	it("correctly marks debuggable SDK frames when debugSdkLibraries is true", async () => {
+		await openFile(helloWorldThrowInSdkFile);
+		const config = await startDebugger(helloWorldThrowInSdkFile, { debugSdkLibraries: true });
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.waitForEvent("stopped"),
+			dc.launch(config),
+		]);
+		const stack = await dc.getStack();
+		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), undefined, undefined);
+		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+	});
+
+	it("correctly marks non-debuggable external library frames when debugExternalLibraries is false", async () => {
+		await openFile(helloWorldThrowInExternalPackageFile);
+		const config = await startDebugger(helloWorldThrowInExternalPackageFile, { debugExternalLibraries: false });
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.waitForEvent("stopped"),
+			dc.launch(config),
+		]);
+		const stack = await dc.getStack();
+		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), "deemphasize", "from Pub packages");
+		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+	});
+
+	it("correctly marks debuggable external library frames when debugExternalLibraries is true", async () => {
+		await openFile(helloWorldThrowInExternalPackageFile);
+		const config = await startDebugger(helloWorldThrowInExternalPackageFile, { debugExternalLibraries: true });
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.waitForEvent("stopped"),
+			dc.launch(config),
+		]);
+		const stack = await dc.getStack();
+		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), undefined, undefined);
+		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+	});
+
+	it("correctly marks debuggable local library frames even when debugExternalLibraries is false", async () => {
+		await openFile(helloWorldThrowInLocalPackageFile);
+		const config = await startDebugger(helloWorldThrowInLocalPackageFile, { debugExternalLibraries: false });
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.waitForEvent("stopped"),
+			dc.launch(config),
+		]);
+		const stack = await dc.getStack();
+		ensureFrameCategories(stack.body.stackFrames.filter(isLocalPackage), undefined, undefined);
+		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 	});
 
 	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
