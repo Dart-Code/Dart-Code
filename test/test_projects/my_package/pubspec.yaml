@@ -1,4 +1,4 @@
-name: my_library
+name: my_package
 
 environment:
   sdk: '>=2.0.0 <3.0.0'

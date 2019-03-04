@@ -1,3 +1,0 @@
-printMyThing() {
-  print("myThing");
-}

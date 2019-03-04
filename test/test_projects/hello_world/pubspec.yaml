@@ -6,8 +6,8 @@ environment:
 dependencies:
   http:
   convert: ^2.0.1
-  my_library:
-    path: ../my_library
+  my_package:
+    path: ../my_package
   protobuf:
     git:
       url: git://github.com/dart-lang/protobuf.git

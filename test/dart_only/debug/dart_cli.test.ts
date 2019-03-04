@@ -372,14 +372,14 @@ describe("dart cli debugger", () => {
 	});
 
 	it("steps into a local library even if debugExternalLibraries is false", async () => {
-		await openFile(helloWorldLocalLibFile);
+		await openFile(helloWorldLocalPackageFile);
 		// Get location for `printMyThing()`
 		const printMyThingCall = positionOf("printMy^Thing(");
 		const printMyThingDef = await getDefinition(printMyThingCall);
-		const config = await startDebugger(helloWorldLocalLibFile, { debugExternalLibraries: false });
+		const config = await startDebugger(helloWorldLocalPackageFile, { debugExternalLibraries: false });
 		await dc.hitBreakpoint(config, {
 			line: printMyThingCall.line + 1,
-			path: fsPath(helloWorldLocalLibFile),
+			path: fsPath(helloWorldLocalPackageFile),
 		});
 		await Promise.all([
 			dc.assertStoppedLocation("step", {
