@@ -282,7 +282,7 @@
 				"category": "Flutter",
 				"icon": {
 					"dark": "media/commands/hot-reload.svg",
-					"light": "media/commands/hot-reload-bordered.svg"
+					"light": "media/commands/hot-reload.svg"
 				}
 			},
 			{
