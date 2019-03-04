@@ -390,7 +390,7 @@ describe("dart cli debugger", () => {
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "printMyThing");
 				assert.equal(frame.source!.path, fsPath(printMyThingDef.uri));
-				assert.equal(frame.source!.name, "package:my_library/my_thing.dart");
+				assert.equal(frame.source!.name, "package:my_package/my_thing.dart");
 			}),
 			dc.stepIn(),
 		]);
