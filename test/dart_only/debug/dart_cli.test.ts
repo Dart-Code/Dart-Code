@@ -10,7 +10,7 @@ import { fetch } from "../../../src/utils/fetch";
 import { log } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureMapEntry, ensureVariable, ensureVariableWithIndex, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, openFile, positionOf, sb, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalLibFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, openFile, positionOf, sb, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -366,6 +366,31 @@ describe("dart cli debugger", () => {
 			dc.assertStoppedLocation("step", {
 				// Ensure we stayed in the current file
 				path: fsPath(helloWorldHttpFile),
+			}),
+			dc.stepIn(),
+		]);
+	});
+
+	it("steps into a local library even if debugExternalLibraries is false", async () => {
+		await openFile(helloWorldLocalLibFile);
+		// Get location for `printMyThing()`
+		const printMyThingCall = positionOf("printMy^Thing(");
+		const printMyThingDef = await getDefinition(printMyThingCall);
+		const config = await startDebugger(helloWorldLocalLibFile, { debugExternalLibraries: false });
+		await dc.hitBreakpoint(config, {
+			line: printMyThingCall.line + 1,
+			path: fsPath(helloWorldLocalLibFile),
+		});
+		await Promise.all([
+			dc.assertStoppedLocation("step", {
+				// Ensure we stepped into the external file
+				path: fsPath(printMyThingDef.uri),
+			}).then((response) => {
+				// Ensure the top stack frame matches
+				const frame = response.body.stackFrames[0];
+				assert.equal(frame.name, "printMyThing");
+				assert.equal(frame.source!.path, fsPath(printMyThingDef.uri));
+				assert.equal(frame.source!.name, "package:my_library/my_thing.dart");
 			}),
 			dc.stepIn(),
 		]);
