@@ -1,0 +1,3 @@
+printMyThing() {
+  print("myThing");
+}

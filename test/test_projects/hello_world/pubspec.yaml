@@ -1,8 +1,13 @@
 name: hello_world
 
+environment:
+  sdk: '>=2.0.0 <3.0.0'
+
 dependencies:
   http:
   convert: ^2.0.1
+  my_library:
+    path: ../my_library
   protobuf:
     git:
       url: git://github.com/dart-lang/protobuf.git
@@ -10,4 +15,3 @@ dependencies:
 
 dev_dependencies:
   test: '>=0.12.34'
- 
