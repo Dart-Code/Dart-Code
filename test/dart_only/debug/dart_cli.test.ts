@@ -330,7 +330,7 @@ describe("dart cli debugger", () => {
 
 	it("steps into an external library if debugExternalLibraries is true", async () => {
 		await openFile(helloWorldHttpFile);
-		// Get location for `print`
+		// Get location for `http.read(`
 		const httpReadCall = positionOf("http.re^ad(");
 		const httpReadDef = await getDefinition(httpReadCall);
 		const config = await startDebugger(helloWorldHttpFile, { debugExternalLibraries: true });
@@ -355,7 +355,7 @@ describe("dart cli debugger", () => {
 
 	it("does not step into an external library if debugExternalLibraries is false", async () => {
 		await openFile(helloWorldHttpFile);
-		// Get location for `print`
+		// Get location for `http.read(`
 		const httpReadCall = positionOf("http.re^ad(");
 		const config = await startDebugger(helloWorldHttpFile, { debugExternalLibraries: false });
 		await dc.hitBreakpoint(config, {
