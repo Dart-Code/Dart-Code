@@ -2,6 +2,7 @@ import * as child_process from "child_process";
 import * as path from "path";
 import * as vs from "vscode";
 import { Analytics } from "../analytics";
+import { config } from "../config";
 import { LogCategory, LogSeverity } from "../debug/utils";
 import { PubGlobal } from "../pub/global";
 import { openInBrowser, Sdks } from "../utils";
@@ -49,7 +50,7 @@ export class DevTools implements vs.Disposable {
 		}
 		try {
 			const url = await this.devtoolsUrl;
-			const fullUrl = `${url}?hide=debugger&port=${observatoryPort}`;
+			const fullUrl = `${url}?hide=debugger&port=${observatoryPort}${config.useDarkTheme ? "&theme=dark" : ""}`;
 			this.devToolsStatusBarItem.text = "Dart DevTools";
 			this.devToolsStatusBarItem.tooltip = `Dart DevTools is running at ${url}`;
 			this.devToolsStatusBarItem.command = "dart.openDevTools";

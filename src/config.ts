@@ -63,6 +63,7 @@ class Config {
 	get showTestCodeLens() { return this.getConfig<boolean>("showTestCodeLens"); }
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
 	get showIgnoreQuickFixes() { return this.getConfig<boolean>("showIgnoreQuickFixes"); }
+	get theme() { return this.getConfig<string>("theme"); }
 	get triggerSignatureHelpAutomatically() { return this.getConfig<boolean>("triggerSignatureHelpAutomatically"); }
 	get warnWhenEditingFilesOutsideWorkspace() { return this.getConfig<boolean>("warnWhenEditingFilesOutsideWorkspace"); }
 	public setWarnWhenEditingFilesOutsideWorkspace(value: boolean): Thenable<void> { return this.setConfig("warnWhenEditingFilesOutsideWorkspace", value, ConfigurationTarget.Global); }
@@ -75,6 +76,9 @@ class Config {
 	get previewBuildRunnerTasks() { return this.getConfig<boolean>("previewBuildRunnerTasks"); }
 	get previewToStringInDebugViews() { return this.getConfig<boolean>("previewToStringInDebugViews"); }
 	get promptToRunIfErrors() { return this.getConfig<boolean>("promptToRunIfErrors"); }
+
+	// Helpers
+	get useDarkTheme() { return this.theme !== "light"; }
 
 	public for(uri?: Uri): ResourceConfig {
 		return new ResourceConfig(uri);
