@@ -329,6 +329,12 @@
 				"when": "dart-code:dartProjectLoaded && dart-code:hasLastDebugConfig && !inDebugMode",
 				"key": "cmd+shift+f5",
 				"win": "ctrl+shift+f5"
+			},
+			{
+				"command": "dart.openDevTools",
+				"when": "dart-code:dartProjectLoaded && inDebugMode",
+				"key": "cmd+shift+a",
+				"win": "ctrl+shift+a"
 			}
 		],
 		"menus": {
