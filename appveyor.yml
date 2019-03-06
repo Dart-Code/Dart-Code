@@ -58,15 +58,15 @@ install:
       echo Installing Dart...
       Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
       7z.exe x dart.zip | out-null
-      dart-sdk\bin\pub global activate stagehand
-      dart-sdk\bin\pub global activate args 1.5.0
-      dart-sdk\bin\pub global activate meta 1.1.6
-      dart-sdk\bin\pub global activate devtools
+      dart-sdk\bin\pub global activate --no-executables stagehand
+      dart-sdk\bin\pub global activate --no-executables args 1.5.0
+      dart-sdk\bin\pub global activate --no-executables meta 1.1.6
+      dart-sdk\bin\pub global activate --no-executables devtools
 
 
 
       echo Installing Flutter
-      git clone -b $env:FLUTTER_BRANCH https://github.com/flutter/flutter.git
+      git clone -q -b $env:FLUTTER_BRANCH https://github.com/flutter/flutter.git
       flutter\bin\flutter config --no-analytics
       flutter\bin\flutter update-packages
       flutter\bin\flutter doctor
