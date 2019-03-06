@@ -45,7 +45,6 @@ export class DartHoverProvider implements HoverProvider {
 		if (hover.elementKind === "import prefix") return null;
 
 		const elementDescription = hover.elementDescription;
-		const elementKind = hover.elementKind;
 		const dartdoc: string = hover.dartdoc;
 		const propagatedType = hover.propagatedType;
 		const containingLibraryName = hover.containingLibraryName;

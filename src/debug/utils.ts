@@ -1,4 +1,3 @@
-import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { DebugProtocol } from "vscode-debugprotocol";
