@@ -134,10 +134,7 @@ export class ThreadManager {
 			return promise;
 
 		const completer = new PromiseCompleter<boolean[]>();
-		const result = [];
-		for (const b of breakpoints)
-			result.push(true);
-		completer.resolve(result);
+		completer.resolve(breakpoints.map((_) => true));
 		return completer.promise;
 	}
 
