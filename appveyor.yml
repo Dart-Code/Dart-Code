@@ -26,44 +26,52 @@ matrix:
       ONLY_RUN_DART_VERSION: DEV
 
 install:
-  - echo Misc setup
-  - ps: $env:PATH="C:\Ruby25-x64\bin;$env:PATH"
-  - ps: Install-Product node ''
-  - ps: $env:ELECTRON_NO_ATTACH_CONSOLE = 1
-  - ps: gem install dpl
-  - echo Setting variables...
-  - ps: >-
-       if ($env:ONLY_RUN_DART_VERSION -eq "STABLE") {
-         $env:DART_CHANNEL="stable/release"
-         $env:FLUTTER_BRANCH="stable"
-       } elseif ($env:ONLY_RUN_DART_VERSION -eq "DEV") {
-         $env:DART_CHANNEL="dev/release"
-         $env:FLUTTER_BRANCH="dev"
-       } else {
-         $env:DART_CHANNEL="be/raw"
-         $env:FLUTTER_BRANCH="master"
-       }
-  - ps: mkdir "with spaces"
-  - ps: cd "with spaces"
-  - echo Downloading Dart and Flutter...
-  - ps: Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
-  - ps: 7z.exe x dart.zip | out-null
-  - git clone -b %FLUTTER_BRANCH% https://github.com/flutter/flutter.git
-  - echo Configuring Dart and Flutter...
-  - flutter\bin\flutter config --no-analytics
-  - flutter\bin\flutter update-packages
-  - ps: $env:FLUTTER_PATH = "$pwd\flutter"
-  - ps: $env:DART_PATH = "$pwd\dart-sdk"
-  - dart-sdk\bin\dart --version
-  - flutter\bin\flutter --version
-  - node --version
-  - npm --version
-  - flutter\bin\flutter doctor
-  - dart-sdk\bin\pub global activate stagehand
-  - dart-sdk\bin\pub global activate args 1.5.0
-  - dart-sdk\bin\pub global activate meta 1.1.6
-  - dart-sdk\bin\pub global activate devtools
-  - cd ..
+  - ps: |
+      echo Misc setup
+      $env:PATH="C:\Ruby25-x64\bin;$env:PATH"
+      Install-Product node ''
+      $env:ELECTRON_NO_ATTACH_CONSOLE = 1
+      gem install dpl
+
+      echo Setting variables...
+      if ($env:ONLY_RUN_DART_VERSION -eq "STABLE") {
+        $env:DART_CHANNEL="stable/release"
+        $env:FLUTTER_BRANCH="stable"
+      } elseif ($env:ONLY_RUN_DART_VERSION -eq "DEV") {
+        $env:DART_CHANNEL="dev/release"
+        $env:FLUTTER_BRANCH="dev"
+      } else {
+        $env:DART_CHANNEL="be/raw"
+        $env:FLUTTER_BRANCH="master"
+      }
+
+      mkdir "with spaces"
+      cd "with spaces"
+
+      echo Downloading Dart and Flutter...
+      Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
+      7z.exe x dart.zip | out-null
+      git clone -b %FLUTTER_BRANCH% https://github.com/flutter/flutter.git
+
+      echo Configuring Dart and Flutter...
+      flutter\bin\flutter config --no-analytics
+      flutter\bin\flutter update-packages
+      $env:FLUTTER_PATH = "$pwd\flutter"
+      $env:DART_PATH = "$pwd\dart-sdk"
+
+      dart-sdk\bin\dart --version
+      flutter\bin\flutter --version
+      node --version
+      npm --version
+
+      flutter\bin\flutter doctor
+
+      dart-sdk\bin\pub global activate stagehand
+      dart-sdk\bin\pub global activate args 1.5.0
+      dart-sdk\bin\pub global activate meta 1.1.6
+      dart-sdk\bin\pub global activate devtools
+
+      cd ..
 
 build_script:
   - npm install --depth 0
