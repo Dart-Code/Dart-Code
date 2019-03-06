@@ -27,13 +27,14 @@ matrix:
 
 install:
   - ps: |
-      echo Misc setup
-      $env:PATH="C:\Ruby25-x64\bin;$env:PATH"
-      Install-Product node ''
-      $env:ELECTRON_NO_ATTACH_CONSOLE = 1
-      gem install dpl
+      mkdir "with spaces"
+      cd "with spaces"
 
       echo Setting variables...
+
+      $env:PATH="C:\Ruby25-x64\bin;$env:PATH"
+      $env:ELECTRON_NO_ATTACH_CONSOLE = 1
+
       if ($env:ONLY_RUN_DART_VERSION -eq "STABLE") {
         $env:DART_CHANNEL="stable/release"
         $env:FLUTTER_BRANCH="stable"
@@ -45,31 +46,37 @@ install:
         $env:FLUTTER_BRANCH="master"
       }
 
-      mkdir "with spaces"
-      cd "with spaces"
-
-      echo Downloading Dart and Flutter...
-      Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
-      7z.exe x dart.zip | out-null
-      git clone -b $env:FLUTTER_BRANCH https://github.com/flutter/flutter.git
-
-      echo Configuring Dart and Flutter...
-      flutter\bin\flutter config --no-analytics
-      flutter\bin\flutter update-packages
       $env:FLUTTER_PATH = "$pwd\flutter"
       $env:DART_PATH = "$pwd\dart-sdk"
+
+
+      echo Installing misc...
+      Install-Product node ''
+      gem install dpl
+
+
+      echo Installing Dart...
+      Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
+      7z.exe x dart.zip | out-null
+      dart-sdk\bin\pub global activate stagehand
+      dart-sdk\bin\pub global activate args 1.5.0
+      dart-sdk\bin\pub global activate meta 1.1.6
+      dart-sdk\bin\pub global activate devtools
+
+
+
+      echo Installing Flutter
+      git clone -b $env:FLUTTER_BRANCH https://github.com/flutter/flutter.git
+      flutter\bin\flutter config --no-analytics
+      flutter\bin\flutter update-packages
+      flutter\bin\flutter doctor
+
 
       dart-sdk\bin\dart --version
       flutter\bin\flutter --version
       node --version
       npm --version
 
-      flutter\bin\flutter doctor
-
-      dart-sdk\bin\pub global activate stagehand
-      dart-sdk\bin\pub global activate args 1.5.0
-      dart-sdk\bin\pub global activate meta 1.1.6
-      dart-sdk\bin\pub global activate devtools
 
       cd ..
 
