@@ -51,6 +51,7 @@ install:
 
 
       Start-Job {
+        Set-Location $using:PWD
         echo Installing misc...
         Install-Product node ''
         gem install dpl
@@ -58,6 +59,7 @@ install:
 
 
       Start-Job {
+        Set-Location $using:PWD
         echo Installing Dart...
         Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
         7z.exe x dart.zip | out-null
@@ -69,6 +71,7 @@ install:
 
 
       Start-Job {
+        Set-Location $using:PWD
         echo Installing Flutter
         git clone -q -b $env:FLUTTER_BRANCH https://github.com/flutter/flutter.git
         flutter\bin\flutter config --no-analytics
