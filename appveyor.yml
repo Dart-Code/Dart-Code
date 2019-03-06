@@ -50,26 +50,34 @@ install:
       $env:DART_PATH = "$pwd\dart-sdk"
 
 
-      echo Installing misc...
-      Install-Product node ''
-      gem install dpl
+      Start-Job {
+        echo Installing misc...
+        Install-Product node ''
+        gem install dpl
+      }
 
 
-      echo Installing Dart...
-      Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
-      7z.exe x dart.zip | out-null
-      dart-sdk\bin\pub global activate --no-executables stagehand
-      dart-sdk\bin\pub global activate --no-executables args 1.5.0
-      dart-sdk\bin\pub global activate --no-executables meta 1.1.6
-      dart-sdk\bin\pub global activate --no-executables devtools
+      Start-Job {
+        echo Installing Dart...
+        Invoke-WebRequest "https://storage.googleapis.com/dart-archive/channels/${env:DART_CHANNEL}/latest/sdk/dartsdk-windows-x64-release.zip" -OutFile "dart.zip"
+        7z.exe x dart.zip | out-null
+        dart-sdk\bin\pub global activate --no-executables stagehand
+        dart-sdk\bin\pub global activate --no-executables args 1.5.0
+        dart-sdk\bin\pub global activate --no-executables meta 1.1.6
+        dart-sdk\bin\pub global activate --no-executables devtools
+      }
 
 
+      Start-Job {
+        echo Installing Flutter
+        git clone -q -b $env:FLUTTER_BRANCH https://github.com/flutter/flutter.git
+        flutter\bin\flutter config --no-analytics
+        flutter\bin\flutter update-packages
+        flutter\bin\flutter doctor
+      }
 
-      echo Installing Flutter
-      git clone -q -b $env:FLUTTER_BRANCH https://github.com/flutter/flutter.git
-      flutter\bin\flutter config --no-analytics
-      flutter\bin\flutter update-packages
-      flutter\bin\flutter doctor
+
+      Get-Job | Wait-Job | Receive-Job
 
 
       dart-sdk\bin\dart --version
