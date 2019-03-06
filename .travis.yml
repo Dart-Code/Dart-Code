@@ -66,32 +66,42 @@ before_install:
     export FLUTTER_PATH_SYMLINK=`pwd`/fluttersymlinkbins
 
 
-    (
-      echo Installing Misc...
-      gem install dpl
-    ) &
+    time (
+      (
+        time (
+          echo Installing Misc...
+          gem install dpl
+        )
+      ) &
 
 
-    (
-      echo Installing Dart...
-      curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
-      unzip dart-sdk.zip > /dev/null
-      dart-sdk/bin/pub global activate --no-executables stagehand
-      dart-sdk/bin/pub global activate --no-executables args 1.5.0
-      dart-sdk/bin/pub global activate --no-executables meta 1.1.6
-      dart-sdk/bin/pub global activate --no-executables devtools
-    ) &
+      (
+        time (
+          echo Installing Dart...
+          curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
+          unzip dart-sdk.zip > /dev/null
+          dart-sdk/bin/pub global activate --no-executables stagehand
+          dart-sdk/bin/pub global activate --no-executables args 1.5.0
+          dart-sdk/bin/pub global activate --no-executables meta 1.1.6
+          dart-sdk/bin/pub global activate --no-executables devtools
+        )
+      ) &
 
 
-    (
-      echo Installing Flutter...
-      git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git
-      flutter/bin/flutter config --no-analytics
-      flutter/bin/flutter update-packages
-      flutter/bin/flutter doctor
-    ) &
+      (
+        time (
+          echo Installing Flutter...
+          git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git
+          flutter/bin/flutter config --no-analytics
+          flutter/bin/flutter update-packages
+          flutter/bin/flutter doctor
+        )
+      ) &
 
-    wait
+      wait
+      echo
+      echo Total time for parallel tasks...
+    )
 
     # To ensure we follow symlinks properly, put links
     # in folders that we'll use in PATHs.
