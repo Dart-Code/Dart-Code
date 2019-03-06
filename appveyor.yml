@@ -52,7 +52,7 @@ install:
 
       Start-Job {
         Set-Location $using:PWD
-        echo Installing misc...
+        echo Installing Misc...
         Install-Product node ''
         gem install dpl
       }

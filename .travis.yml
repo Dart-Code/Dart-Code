@@ -32,21 +32,23 @@ addons:
       - gcc-4.8
 
 before_install:
-  - echo Misc setup
-  - export ELECTRON_NO_ATTACH_CONSOLE=1
-  - export TRAVIS_COMMIT_AUTHOR="$(git log -1 $TRAVIS_COMMIT --pretty="%aN")"
-  - gem install dpl
+  - mkdir with\ spaces
+  - cd with\ spaces
+
+
+  - echo Setting variables...
   - if [ $TRAVIS_OS_NAME == "linux" ]; then
       export CXX="g++-4.8" CC="gcc-4.8" DISPLAY=:99.0;
       sh -e /etc/init.d/xvfb start;
       sleep 3;
     fi
+  - export ELECTRON_NO_ATTACH_CONSOLE=1
+  - export TRAVIS_COMMIT_AUTHOR="$(git log -1 $TRAVIS_COMMIT --pretty="%aN")"
   - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
       export DART_OS=macos;
     else
       export DART_OS=linux;
     fi
-  - echo Setting variables...
   - if [[ $ONLY_RUN_DART_VERSION == "STABLE" ]]; then
       export DART_CHANNEL=stable/release;
       export FLUTTER_BRANCH=stable;
@@ -57,17 +59,30 @@ before_install:
       export DART_CHANNEL=be/raw;
       export FLUTTER_BRANCH=master;
     fi
-  - mkdir with\ spaces
-  - cd with\ spaces
-  - echo Downloading Dart and Flutter...
-  - curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
-  - unzip dart-sdk.zip > /dev/null
-  - git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git
-  - echo Configuring Dart and Flutter...
-  - flutter/bin/flutter config --no-analytics
-  - flutter/bin/flutter update-packages
   - export FLUTTER_PATH=`pwd`/flutter
   - export DART_PATH=`pwd`/dart-sdk
+  - export DART_PATH_SYMLINK=`pwd`/fakedart:`pwd`/dartsymlinkbins
+  - export FLUTTER_PATH_SYMLINK=`pwd`/fluttersymlinkbins
+
+
+  - echo Installing Misc...
+  - gem install dpl
+
+
+  - echo Installing Dart...
+  - curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
+  - unzip dart-sdk.zip > /dev/null
+  - dart-sdk/bin/pub global activate --no-executables stagehand
+  - dart-sdk/bin/pub global activate --no-executables args 1.5.0
+  - dart-sdk/bin/pub global activate --no-executables meta 1.1.6
+  - dart-sdk/bin/pub global activate --no-executables devtools
+
+
+  - echo Installing Flutter...
+  - git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git
+  - flutter/bin/flutter config --no-analytics
+  - flutter/bin/flutter update-packages
+  - flutter/bin/flutter doctor
 
   # To ensure we follow symlinks properly, put links
   # in folders that we'll use in PATHs.
@@ -81,19 +96,15 @@ before_install:
   - mkdir fakedart
   - ln -s /bin/echo fakedart/dart
 
-  - export DART_PATH_SYMLINK=`pwd`/fakedart:`pwd`/dartsymlinkbins
-  - export FLUTTER_PATH_SYMLINK=`pwd`/fluttersymlinkbins
+
   - dart-sdk/bin/dart --version
   - flutter/bin/flutter --version
   - dartsymlinkbins/dart --version
   - fluttersymlinkbins/flutter --version
   - node --version
   - npm --version
-  - flutter/bin/flutter doctor
-  - dart-sdk/bin/pub global activate stagehand
-  - dart-sdk/bin/pub global activate args 1.5.0
-  - dart-sdk/bin/pub global activate meta 1.1.6
-  - dart-sdk/bin/pub global activate devtools
+
+
   - cd ..
 
 install:
