@@ -125,6 +125,7 @@ script:
     fi;
 
 after_script:
+  # TODO: Consider failing the build if these exist, and adding to Windows
   - cp -v $TMPDIR/exthost-*.cpuprofile .dart_code_test_logs
   - cp -v /tmp/exthost-*.cpuprofile .dart_code_test_logs
   - if [ $TRAVIS_PULL_REQUEST = "false" ]; then
