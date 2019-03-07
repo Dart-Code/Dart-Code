@@ -134,7 +134,6 @@ script:
       echo 'CPU PROFILES WERE FOUND';
       travis_result 1;
     fi
-}
 
 after_script:
   - if [ $TRAVIS_PULL_REQUEST = "false" ]; then
