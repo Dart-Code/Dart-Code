@@ -149,14 +149,19 @@ async function runAllTests(): Promise<void> {
 	const totalRuns = 9;
 	let runNumber = 1;
 	try {
+		// Run all non-Flutter tests first, as `flutter update-packages` runs in the background for better performance...
+		// TODO: Move the installation into scripts, so we can handle that better...
+		await runTests("dart_only", "hello_world", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("dart_create_tests", "dart_create_tests.code-workspace", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("not_activated/dart_create", "empty", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+
+		await runTests("flutter_only", "flutter_hello_world", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("flutter_create_tests", "flutter_create_tests.code-workspace", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("not_activated/flutter_create", "empty", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+
 		await runTests("multi_root", "projects.code-workspace", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("multi_project_folder", "", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("not_activated/dart_create", "empty", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("not_activated/flutter_create", "empty", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("dart_create_tests", "dart_create_tests.code-workspace", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("flutter_create_tests", "flutter_create_tests.code-workspace", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("dart_only", "hello_world", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("flutter_only", "flutter_hello_world", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+
 		if (flutterRoot) {
 			await runTests("flutter_repository", flutterRoot, flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		} else {

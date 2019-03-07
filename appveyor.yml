@@ -75,12 +75,20 @@ install:
         echo Installing Flutter
         git clone -q -b $env:FLUTTER_BRANCH https://github.com/flutter/flutter.git
         flutter\bin\flutter config --no-analytics
-        flutter\bin\flutter update-packages
-        flutter\bin\flutter doctor
       }
 
 
       Get-Job | Wait-Job | Receive-Job
+
+
+      Start-Job {
+        Set-Location $using:PWD
+        echo Running update-packages and doctor in background...
+        echo If these don't complete before tests get to Flutter tests,
+        echo things may fail, but if they do, it will have saved many minutes!
+        flutter\bin\flutter update-packages
+        flutter\bin\flutter doctor
+      }
 
 
       dart-sdk\bin\dart --version

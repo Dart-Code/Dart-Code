@@ -93,8 +93,6 @@ before_install:
           echo Installing Flutter...
           git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git
           flutter/bin/flutter config --no-analytics
-          flutter/bin/flutter update-packages
-          flutter/bin/flutter doctor
         )
       ) &
 
@@ -102,6 +100,14 @@ before_install:
       echo
       echo Total time for parallel tasks...
     )
+
+    (
+      echo Running update-packages and doctor in background...
+      echo If these don't complete before tests get to Flutter tests,
+      echo things may fail, but if they do, it will have saved many minutes!
+      flutter/bin/flutter update-packages
+      flutter/bin/flutter doctor
+    ) &
 
     # To ensure we follow symlinks properly, put links
     # in folders that we'll use in PATHs.
