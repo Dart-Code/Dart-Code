@@ -104,7 +104,7 @@ before_install:
     (
       echo Running update-packages and doctor in background...
       echo If these don't complete before tests get to Flutter tests,
-      echo things may fail, but if they do, it will have saved many minutes!
+      echo things may fail, but if they do, it will have saved many minutes
       flutter/bin/flutter update-packages
       flutter/bin/flutter doctor
     ) &
