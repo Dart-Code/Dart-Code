@@ -1372,6 +1372,10 @@ export class DartDebugSession extends DebugSession {
 		if (!uri.startsWith("package:") || !this.packageMap)
 			return false;
 
+		// package:flutter won't be in pub-cache, but should be considered external.
+		if (uri.startsWith("package:flutter/"))
+			return true;
+
 		const path = this.packageMap.resolvePackageUri(uri);
 
 		// If we don't have the path, we can't tell if it's external or not.
