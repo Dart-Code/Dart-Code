@@ -6,7 +6,8 @@ import { CoverageData, PromiseCompleter } from "../debug/utils";
 import { FlutterServiceExtension, FlutterServiceExtensionArgs, FlutterVmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../flutter/vm_service_extensions";
 import { PubGlobal } from "../pub/global";
 import { DevTools } from "../sdk/dev_tools";
-import { fsPath, getDartWorkspaceFolders, openInBrowser, Sdks } from "../utils";
+import { showDevToolsNotificationIfAppropriate } from "../user_prompts";
+import { fsPath, getDartWorkspaceFolders, openInBrowser, ProjectType, Sdks } from "../utils";
 import { DartDebugSessionInformation } from "../utils/debug";
 import { handleDebugLogEvent } from "../utils/log";
 
@@ -86,6 +87,8 @@ export class DebugCommands {
 				}
 			} else if (e.event === "dart.observatoryUri") {
 				session.observatoryUri = e.body.observatoryUri;
+				if (sdks.projectType === ProjectType.Flutter)
+					showDevToolsNotificationIfAppropriate(context);
 				// if (e.body.isProbablyReconnectable) {
 				// 	mostRecentAttachedProbablyReusableObservatoryUri = session.observatoryUri;
 				// } else {

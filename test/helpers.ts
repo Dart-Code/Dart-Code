@@ -5,6 +5,7 @@ import * as path from "path";
 import * as semver from "semver";
 import * as sinon from "sinon";
 import * as vs from "vscode";
+import { Context } from "../src/context";
 import { dartCodeExtensionIdentifier, flatMap, LogCategory, LogSeverity } from "../src/debug/utils";
 import { InternalExtensionApi } from "../src/extension";
 import { internalApiSymbol } from "../src/symbols";
@@ -689,4 +690,14 @@ export async function setConfigForTest(section: string, key: string, value: any)
 	const oldValue = conf.inspect(key).globalValue;
 	await conf.update(key, value, vs.ConfigurationTarget.Global);
 	defer(() => conf.update(key, oldValue, vs.ConfigurationTarget.Global));
+}
+
+export function clearAllContext(context: Context): Promise<void> {
+	context.devToolsNotificationsShown = undefined;
+	context.devToolsNotificationLastShown = undefined;
+	context.devToolsNotificationDoNotShow = undefined;
+
+	// HACK Updating context is async, but since we use setters we can't easily wait
+	// and this is only test code...
+	return new Promise((resolve) => setTimeout(resolve, 50));
 }

@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { doNotAskAgainAction, noThanksAction, openDevToolsAction, wantToTryDevToolsPrompt } from "./constants";
 import { Context } from "./context";
 import { StagehandTemplate } from "./pub/stagehand";
 import { DART_CREATE_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, ProjectType, Sdks } from "./utils";
@@ -32,6 +33,37 @@ export function showUserPrompts(context: vs.ExtensionContext, sdks: Sdks): void 
 
 	if (!isDevExtension && !hasPrompted(releaseNotesKeyForThisVersion))
 		return showPrompt(releaseNotesKeyForThisVersion, () => promptToShowReleaseNotes(extensionVersion, versionLink));
+}
+
+export async function showDevToolsNotificationIfAppropriate(extContext: vs.ExtensionContext): Promise<boolean> {
+	const context = Context.for(extContext);
+	const lastShown = context.devToolsNotificationLastShown;
+	const timesShown = context.devToolsNotificationsShown;
+	const doNotShow = context.devToolsNotificationDoNotShow;
+
+	// Don't show this notification more than 10 times or if user said not to.
+	if (doNotShow || timesShown >= 10)
+		return false;
+
+	// Don't show this notification if we've shown it in the last 20 hours.
+	const twentyHoursInMs = 1000 * 60 * 60 * 20;
+	if (lastShown && Date.now() - lastShown < twentyHoursInMs)
+		return false;
+
+	context.devToolsNotificationsShown++;
+	context.devToolsNotificationLastShown = Date.now();
+
+	const choice = await vs.window.showInformationMessage(wantToTryDevToolsPrompt, openDevToolsAction, noThanksAction, doNotAskAgainAction);
+	if (choice === doNotAskAgainAction) {
+		context.devToolsNotificationDoNotShow = true;
+		return false;
+	} else if (choice === openDevToolsAction) {
+		vs.commands.executeCommand("dart.openDevTools");
+		return true;
+	} else {
+		// No thanks.
+		return false;
+	}
 }
 
 async function promptToInstallFlutterExtension(): Promise<boolean> {

@@ -433,6 +433,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		[internalApiSymbol]: {
 			analyzerCapabilities: analyzer.capabilities,
 			cancelAllAnalysisRequests: () => analyzer.cancelAllRequests(),
+			context,
 			currentAnalysis: () => analyzer.currentAnalysis,
 			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
 			dartCapabilities,
@@ -583,6 +584,7 @@ function setCommandVisiblity(enable: boolean, projectType: util.ProjectType) {
 
 export interface InternalExtensionApi {
 	analyzerCapabilities: AnalyzerCapabilities;
+	context: vs.ExtensionContext;
 	cancelAllAnalysisRequests: () => void;
 	currentAnalysis: () => Promise<void>;
 	daemonCapabilities: DaemonCapabilities;
