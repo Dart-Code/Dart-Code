@@ -1,5 +1,6 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
+import { performance } from "perf_hooks";
 import { IAmDisposable, LogSeverity } from "../debug/utils";
 import { getLogHeader, logError, logInfo } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
@@ -119,7 +120,14 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 		let msg: any;
 		try {
+			const start = performance.now();
 			msg = JSON.parse(message);
+			const end = performance.now();
+			const milliseconds = end - start;
+			if (milliseconds > 30) {
+				this.logTraffic(`### Last incoming message had a length of ${message.length} and took ${milliseconds} to deserialize!`);
+				console.warn(`### Last incoming message had a length of ${message.length} and took ${milliseconds} to deserialize!`);
+			}
 
 			if (this.messagesWrappedInBrackets && msg && msg.length === 1)
 				msg = msg[0];
