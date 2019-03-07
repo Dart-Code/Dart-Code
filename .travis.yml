@@ -123,11 +123,20 @@ script:
       echo 'DART WAS FOUND';
       travis_result 1;
     fi;
-
-after_script:
-  # TODO: Consider failing the build if these exist, and adding to Windows
+  - # TODO: Add to Windows
   - cp -v $TMPDIR/exthost-*.cpuprofile .dart_code_test_logs
   - cp -v /tmp/exthost-*.cpuprofile .dart_code_test_logs
+  - |
+    function exists {
+      test -e "$1"
+    }
+    if exists .dart_code_test_logs/*.cpuprofile; then
+      echo 'CPU PROFILES WERE FOUND';
+      travis_result 1;
+    fi
+}
+
+after_script:
   - if [ $TRAVIS_PULL_REQUEST = "false" ]; then
       dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".test_results" --upload-dir="$TRAVIS_BRANCH/$TRAVIS_COMMIT/$TRAVIS_OS_NAME" --acl=public_read --default_text_charset=utf-8;
       dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".dart_code_test_logs" --upload-dir="logs/$TRAVIS_BRANCH/$TRAVIS_COMMIT/$TRAVIS_OS_NAME" --acl=public_read --default_text_charset=utf-8;
