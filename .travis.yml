@@ -107,6 +107,7 @@ before_install:
       echo "things may fail, but if they do, it will have saved many minutes"
       flutter/bin/flutter update-packages
       flutter/bin/flutter doctor
+      fluttersymlinkbins/flutter --version
     ) &
 
     # To ensure we follow symlinks properly, put links
@@ -125,7 +126,7 @@ before_install:
     dart-sdk/bin/dart --version
     flutter/bin/flutter --version
     dartsymlinkbins/dart --version
-    fluttersymlinkbins/flutter --version
+    # Flutter version is run above in the background job, to avoid it hanging here on startup lock.
     node --version
     npm --version
 
