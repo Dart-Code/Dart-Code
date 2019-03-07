@@ -47,7 +47,7 @@ export class PubBuildRunnerTaskProvider implements vs.TaskProvider {
 				args,
 				{ cwd: fsPath(folder.uri), env: toolEnv },
 			),
-			"dart-pub-build_runner");
+			"$dart-pub-build_runner");
 		task.group = group;
 		task.isBackground = true;
 		task.name = `build_runner ${subCommand}`;
