@@ -124,8 +124,8 @@ script:
       travis_result 1;
     fi;
   - # TODO: Add to Windows
-  - cp -v $TMPDIR/exthost-*.cpuprofile .dart_code_test_logs
-  - cp -v /tmp/exthost-*.cpuprofile .dart_code_test_logs
+  - cp -v $TMPDIR/exthost-*.cpuprofile .dart_code_test_logs || true
+  - cp -v /tmp/exthost-*.cpuprofile .dart_code_test_logs || true
   - |
     function exists {
       test -e "$1"
