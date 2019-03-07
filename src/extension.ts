@@ -86,6 +86,12 @@ let showTodos: boolean | undefined;
 let previousSettings: string;
 let extensionLogger: { dispose: () => Promise<void> | void };
 
+let total = 0;
+for (let i = 0; i < 100000000; i++) {
+	total += Date.now();
+}
+console.log(total);
+
 export function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
 	if (!extensionLogger)
 		extensionLogger = logTo(getExtensionLogPath(), [LogCategory.General]);
