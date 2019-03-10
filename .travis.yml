@@ -24,6 +24,12 @@ matrix:
     - env: ONLY_RUN_CODE_VERSION=STABLE ONLY_RUN_DART_VERSION=DEV
     - env: ONLY_RUN_CODE_VERSION=DEV    ONLY_RUN_DART_VERSION=DEV
 
+cache:
+  directories:
+    - $HOME/.pub-cache
+    - with\ spaces/flutter
+    - node_modules
+
 addons:
   apt:
     packages:
@@ -57,12 +63,21 @@ before_install:
       export DART_CHANNEL=be/raw;
       export FLUTTER_BRANCH=master;
     fi
-  - mkdir with\ spaces
+  - mkdir -p with\ spaces
   - cd with\ spaces
   - echo Downloading Dart and Flutter...
   - curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
   - unzip dart-sdk.zip > /dev/null
-  - git clone -b $FLUTTER_BRANCH https://github.com/flutter/flutter.git
+  - mkdir -p flutter
+  - cd flutter
+  - if [[ ! -d .git ]]; then
+      git init;
+      git remote add origin https://github.com/flutter/flutter.git;
+    fi
+  - git fetch
+  - git reset --hard origin/$FLUTTER_BRANCH
+  - git checkout origin/$FLUTTER_BRANCH
+  - cd ..
   - echo Configuring Dart and Flutter...
   - flutter/bin/flutter config --no-analytics
   - flutter/bin/flutter update-packages
