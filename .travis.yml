@@ -110,6 +110,8 @@ before_install:
       fluttersymlinkbins/flutter --version
     ) &
 
+    wait
+
     # To ensure we follow symlinks properly, put links
     # in folders that we'll use in PATHs.
     mkdir dartsymlinkbins
