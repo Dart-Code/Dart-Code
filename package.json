@@ -529,11 +529,6 @@
 					"group": "91_flutter"
 				},
 				{
-					"command": "flutter.hotRestart",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode && debugType == dart",
-					"group": "91_flutter"
-				},
-				{
 					"command": "dart.openDevTools",
 					"when": "inDebugMode && debugType == dart",
 					"group": "92_debug_tools"
