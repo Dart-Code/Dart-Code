@@ -212,10 +212,10 @@ describe("dart cli debugger", () => {
 		});
 
 		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
+		defer(devTools.dispose);
 		assert.ok(open.calledOnce);
 		assert.ok(devTools);
 		assert.ok(devTools.url);
-		defer(devTools.dispose);
 
 		const serverResponse = await fetch(devTools.url);
 		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1);
