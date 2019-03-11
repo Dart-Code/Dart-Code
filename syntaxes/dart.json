@@ -142,6 +142,9 @@
 							"include": "#comments-doc-oldschool"
 						},
 						{
+							"include": "#comments-inline"
+						},
+						{
 							"include": "#dartdoc"
 						}
 					]
@@ -167,7 +170,12 @@
 				{
 					"begin": "/\\*",
 					"end": "\\*/",
-					"name": "comment.block.dart"
+					"name": "comment.block.dart",
+					"patterns": [
+						{
+							"include": "#comments-inline"
+						}
+					]
 				},
 				{
 					"captures": {
