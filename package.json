@@ -324,7 +324,7 @@
 				"when": "editorLangId == dart"
 			},
 			{
-				"command": "flutter.hotRestart",
+				"command": "flutter.hotReload",
 				"when": "dart-code:flutterProjectLoaded && inDebugMode",
 				"key": "ctrl+f5"
 			},
