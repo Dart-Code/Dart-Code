@@ -551,13 +551,13 @@ export function getRandomTempFolder(): string {
 	return tmpPath;
 }
 
-export async function waitForResult(action: () => boolean, message?: string, milliseconds: number = 2000, throwOnFailure = true): Promise<void> {
+export async function waitForResult(action: () => boolean, message?: string, milliseconds: number = 3000, throwOnFailure = true): Promise<void> {
 	const res = await waitFor(action, undefined, milliseconds);
 	if (throwOnFailure && !res)
 		throw new Error(`Action didn't return true within ${milliseconds}ms (${message})`);
 }
 
-export async function tryFor(action: () => Promise<void> | void, milliseconds: number = 2000): Promise<void> {
+export async function tryFor(action: () => Promise<void> | void, milliseconds: number = 3000): Promise<void> {
 	let timeRemaining = milliseconds;
 	while (timeRemaining > 0) {
 		try {
