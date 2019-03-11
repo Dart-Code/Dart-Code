@@ -12,7 +12,7 @@ const installedButOutOfDatePackage1 = "pedantic";
 const installedButOutOfDatePackage2 = "json_annotation";
 const definitelyNotInstalledPackage = "path";
 
-describe.only("pub global", () => {
+describe("pub global", () => {
 	beforeEach("activate", () => activate(null));
 
 	it("reports not-installed for a package that's not installed", async () => {
