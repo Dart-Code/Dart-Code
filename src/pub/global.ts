@@ -1,8 +1,11 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { pubGlobalDocsUrl } from "../constants";
+import { LogCategory } from "../debug/utils";
 import { pubPath } from "../sdk/utils";
 import { openInBrowser, Sdks, versionIsAtLeast } from "../utils";
+import { fetch } from "../utils/fetch";
+import { logWarn } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 
 export class PubGlobal {
@@ -14,14 +17,19 @@ export class PubGlobal {
 			return true;
 
 		const moreInfo = "More Info";
-		const activateForMe = versionStatus === VersionStatus.UpdateRequired ? `Update ${packageName}` : `Activate ${packageName}`;
-		const message = versionStatus === VersionStatus.UpdateRequired
-			? `${packageName} needs to be updated with 'pub global activate ${packageID}' to use this feature.`
-			: `${packageName} needs to be installed with 'pub global activate ${packageID}' to use this feature.`;
+		const activateForMe = versionStatus === VersionStatus.NotInstalled ? `Activate ${packageName}` : `Update ${packageName}`;
+		const message = versionStatus === VersionStatus.NotInstalled
+			? `${packageName} needs to be installed with 'pub global activate ${packageID}' to use this feature.`
+			: (
+				versionStatus === VersionStatus.UpdateRequired
+					? `${packageName} needs to be updated with 'pub global activate ${packageID}' to use this feature.`
+					: `A new version of ${packageName} is available and can be installed with 'pub global activate ${packageID}'.`
+			);
+
 		let action =
 			// If we need an update and we're allowed to auto-update, to the same as if the user
 			// clicked the activate button, otherwise prompt them.
-			versionStatus === VersionStatus.UpdateRequired && autoUpdate
+			(versionStatus === VersionStatus.UpdateRequired || versionStatus === VersionStatus.UpdateAvailable) && autoUpdate
 				? activateForMe
 				: await vs.window.showWarningMessage(message, activateForMe, moreInfo);
 
@@ -29,7 +37,7 @@ export class PubGlobal {
 			openInBrowser(moreInfoLink);
 			return false;
 		} else if (action === activateForMe) {
-			const actionName = versionStatus === VersionStatus.UpdateRequired ? `Updating ${packageName}` : `Activating ${packageName}`;
+			const actionName = versionStatus === VersionStatus.NotInstalled ? `Activating ${packageName}` : `Updating ${packageName}`;
 
 			const args = ["global", "activate", packageID];
 			await this.runCommandWithProgress(packageName, `${actionName}...`, args);
@@ -65,6 +73,18 @@ export class PubGlobal {
 		if (requiredVersion && !versionIsAtLeast(match[1], requiredVersion))
 			return VersionStatus.UpdateRequired;
 
+		// Check if there's an update available.
+		try {
+			const packageJson = JSON.parse(await fetch(`https://pub.dartlang.org/api/packages/${packageID}`));
+			if (!versionIsAtLeast(match[1], packageJson.latest.version))
+				return VersionStatus.UpdateAvailable;
+		} catch (e) {
+			// If we fail to call the API to check for a new version, then we can run
+			// with what we have.
+			logWarn(`Failed to check for new version of ${packageID}: ${e}`, LogCategory.CommandProcesses);
+			return VersionStatus.Valid;
+		}
+
 		// Otherwise, we're installed and have a new enough version.
 		return VersionStatus.Valid;
 	}
@@ -98,5 +118,6 @@ export class PubGlobal {
 export enum VersionStatus {
 	NotInstalled,
 	UpdateRequired,
+	UpdateAvailable,
 	Valid,
 }
