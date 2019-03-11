@@ -12,7 +12,7 @@ import { log } from "../utils/log";
 const dartExecutableName = isWin ? "dart.exe" : "dart";
 const pubExecutableName = isWin ? "pub.bat" : "pub";
 const flutterExecutableName = isWin ? "flutter.bat" : "flutter";
-const androidStudioExecutableName = isWin ? "studio64.exe" : "studio";
+const androidStudioExecutableName = isWin ? "studio64.exe" : "studio.sh";
 export const dartVMPath = "bin/" + dartExecutableName;
 export const pubPath = "bin/" + pubExecutableName;
 export const pubSnapshotPath = "bin/snapshots/pub.dart.snapshot";
