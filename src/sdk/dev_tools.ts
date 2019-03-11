@@ -23,10 +23,11 @@ let portToBind = 0;
 
 export class DevTools implements vs.Disposable {
 	private devToolsStatusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 100);
-	private proc: child_process.ChildProcess;
+	private proc: child_process.ChildProcess | undefined;
+	private realPid: number | undefined;
 	/// Resolves to the DevTools URL. This is created immediately when a new process is being spawned so that
 	/// concurrent launches can wait on the same promise.
-	private devtoolsUrl: Thenable<string>;
+	private devtoolsUrl: Thenable<string> | undefined;
 
 	constructor(private sdks: Sdks, private analytics: Analytics, private pubGlobal: PubGlobal) { }
 
@@ -85,6 +86,7 @@ export class DevTools implements vs.Disposable {
 					const evt = JSON.parse(output);
 					if (evt.method === "server.started") {
 						portToBind = evt.params.port;
+						this.realPid = evt.params.pid;
 						resolve(`http://${evt.params.host}:${evt.params.port}/`);
 					}
 				} catch {
@@ -113,9 +115,18 @@ export class DevTools implements vs.Disposable {
 
 	public dispose(): void {
 		this.devToolsStatusBarItem.dispose();
-		this.devtoolsUrl = null;
+		this.devtoolsUrl = undefined;
 		if (this.proc && !this.proc.killed) {
 			this.proc.kill();
+		}
+		if (this.realPid) {
+			try {
+				process.kill(this.realPid);
+			} catch (e) {
+				// Sometimes this process will have already gone away (eg. the initial kill() worked)
+				// so logging here just results in lots of useless info.
+			}
+			this.realPid = undefined;
 		}
 	}
 }
