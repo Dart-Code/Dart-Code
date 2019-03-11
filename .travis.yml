@@ -110,7 +110,7 @@ before_install:
   - dart-sdk/bin/pub global activate --no-executables meta 1.1.6
   - dart-sdk/bin/pub global activate --no-executables pedantic 1.4.0
   - dart-sdk/bin/pub global activate --no-executables json_annotation 1.2.0
-  - dart-sdk/bin/pub global activate --no-executables devtools
+  - dart-sdk/bin/pub global activate --no-executables devtools 0.0.13-dev.1
   - cd ..
 
 install:
