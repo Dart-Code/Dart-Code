@@ -206,6 +206,8 @@ export class DebugCommands {
 
 			if (session.observatoryUri) {
 				return this.devTools.spawnForSession(session);
+			} else if (session.session.configuration.noDebug) {
+				vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
 			} else {
 				vs.window.showInformationMessage("This debug session is not ready yet.");
 			}
