@@ -2,7 +2,7 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import { performance } from "perf_hooks";
 import { IAmDisposable, LogSeverity } from "../debug/utils";
-import { getLogHeader, logError, logInfo } from "../utils/log";
+import { getLogHeader, logError, logInfo, logWarn } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
@@ -112,6 +112,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 	public handleMessage(message: string): void {
 		this.logTraffic(`<== ${message.trimRight()}\r\n`);
+		const start = performance.now();
 
 		if (!this.shouldHandleMessage(message.trim())) {
 			this.processUnhandledMessage(message);
@@ -120,14 +121,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 		let msg: any;
 		try {
-			const start = performance.now();
 			msg = JSON.parse(message);
-			const end = performance.now();
-			const milliseconds = end - start;
-			if (milliseconds > 30) {
-				this.logTraffic(`### Last incoming message had a length of ${message.length} and took ${milliseconds} to deserialize!`);
-				console.warn(`### Last incoming message had a length of ${message.length} and took ${milliseconds} to deserialize!`);
-			}
 
 			if (this.messagesWrappedInBrackets && msg && msg.length === 1)
 				msg = msg[0];
@@ -157,6 +151,14 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			} else {
 				throw e;
 			}
+		}
+
+		const end = performance.now();
+		const milliseconds = end - start;
+		if (milliseconds > 1000) {
+			const messagePrefix = message.length > 100 ? message.substring(0, 100) : message;
+			this.logTraffic(`Last message was ${message.length} characters and took ${milliseconds}ms: ${messagePrefix}`);
+			logWarn(`Last message was ${message.length} characters and took ${milliseconds}ms: ${messagePrefix}`);
 		}
 	}
 
