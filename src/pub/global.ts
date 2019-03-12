@@ -74,16 +74,21 @@ export class PubGlobal {
 		if (requiredVersion && !versionIsAtLeast(match[1], requiredVersion))
 			return VersionStatus.UpdateRequired;
 
-		// Check if there's an update available.
-		try {
-			const packageJson = JSON.parse(await fetch(`https://pub.dartlang.org/api/packages/${packageID}`));
-			if (!versionIsAtLeast(match[1], packageJson.latest.version))
-				return VersionStatus.UpdateAvailable;
-		} catch (e) {
-			// If we fail to call the API to check for a new version, then we can run
-			// with what we have.
-			logWarn(`Failed to check for new version of ${packageID}: ${e}`, LogCategory.CommandProcesses);
-			return VersionStatus.Valid;
+		// If we haven't checked in the last 24 hours, check if there's an update available.
+		const lastChecked = this.context.getPackageLastCheckedForUpdates(packageID);
+		const twentyHoursInMs = 1000 * 60 * 60 * 20;
+		if (!lastChecked || lastChecked <= Date.now() - twentyHoursInMs) {
+			this.context.setPackageLastCheckedForUpdates(packageID, Date.now());
+			try {
+				const packageJson = JSON.parse(await fetch(`https://pub.dartlang.org/api/packages/${packageID}`));
+				if (!versionIsAtLeast(match[1], packageJson.latest.version))
+					return VersionStatus.UpdateAvailable;
+			} catch (e) {
+				// If we fail to call the API to check for a new version, then we can run
+				// with what we have.
+				logWarn(`Failed to check for new version of ${packageID}: ${e}`, LogCategory.CommandProcesses);
+				return VersionStatus.Valid;
+			}
 		}
 
 		// Otherwise, we're installed and have a new enough version.

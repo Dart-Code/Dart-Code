@@ -31,6 +31,22 @@ describe("pub global", () => {
 		assert.equal(status, VersionStatus.UpdateRequired);
 	});
 
+	it("does not report update-available for an out-of-date package if checked within 24 hours", async () => {
+		const twoHoursInMs = 1000 * 60 * 60 * 2;
+		extApi.context.setPackageLastCheckedForUpdates(installedButOutOfDatePackage1, Date.now() - twoHoursInMs);
+
+		const status = await extApi.pubGlobal.getInstalledStatus(installedButOutOfDatePackage1, installedButOutOfDatePackage1);
+		assert.equal(status, VersionStatus.Valid);
+	});
+
+	it("does report update-available for an out-of-date package last checked over 24 hours ago", async () => {
+		const twentyFiveHoursInMs = 1000 * 60 * 60 * 25;
+		extApi.context.setPackageLastCheckedForUpdates(installedButOutOfDatePackage1, Date.now() - twentyFiveHoursInMs);
+
+		const status = await extApi.pubGlobal.getInstalledStatus(installedButOutOfDatePackage1, installedButOutOfDatePackage1);
+		assert.equal(status, VersionStatus.UpdateAvailable);
+	});
+
 	it("can install a package that's not installed", async () => {
 		const installPrompt = sb.stub(vs.window, "showWarningMessage").resolves(`Activate ${definitelyNotInstalledPackage}`);
 
@@ -59,6 +75,8 @@ describe("pub global", () => {
 	});
 
 	it("can prompt to update an out-of-date package", async () => {
+		extApi.context.setPackageLastCheckedForUpdates(installedButOutOfDatePackage1, undefined);
+
 		const installPrompt = sb.stub(vs.window, "showWarningMessage").resolves(`Update ${installedButOutOfDatePackage1}`);
 
 		// Prompt to update it, and ensure it's successful.
@@ -72,6 +90,7 @@ describe("pub global", () => {
 	});
 
 	it("can auto-update a below-minimum package", async () => {
+		extApi.context.setPackageLastCheckedForUpdates(installedButOutOfDatePackage1, undefined);
 		const installPrompt = sb.stub(vs.window, "showWarningMessage");
 
 		// Ensure we're not prompted but it's updated.
