@@ -20,6 +20,8 @@ export class AnalyzerStatusReporter {
 	private analyzingPromise?: PromiseCompleter<void>;
 
 	constructor(private readonly analyzer: Analyzer, private readonly workspaceContext: WorkspaceContext, private readonly analytics: Analytics) {
+		// TODO: Should these go in disposables?
+		// If so, do we need to worry about server cleaning them up if it diposes first?
 		analyzer.registerForServerStatus((n) => this.handleServerStatus(n));
 		analyzer.registerForServerError((e) => this.handleServerError(e));
 		analyzer.registerForRequestError((e) => this.handleRequestError(e));
