@@ -625,6 +625,118 @@ export interface CompletionGetSuggestionsResponse {
 }
 
 /**
+ * Subscribe for completion services. All previous subscriptions are
+ * replaced by the given set of services.
+ * 
+ * It is an error if any of the elements in the list are not valid
+ * services. If there is an error, then the current subscriptions will
+ * remain unchanged.
+ */
+export interface CompletionSetSubscriptionsRequest {
+	/**
+	 * A list of the services being subscribed to.
+	 */
+	subscriptions: CompletionService[];
+}
+
+/**
+ * The client can make this request to express interest in certain
+ * libraries to receive completion suggestions from based on the client path.
+ * If this request is received before the client has used
+ * 'completion.setSubscriptions' to subscribe to the AVAILABLE_SUGGESTION_SETS
+ * service, then an error of type NOT_SUBSCRIBED_TO_AVAILABLE_SUGGESTION_SETS
+ * will be generated. All previous paths are replaced by the given set of paths.
+ */
+export interface CompletionRegisterLibraryPathsRequest {
+	/**
+	 * A list of objects each containing a path and the additional libraries from which
+	 * the client is interested in receiving completion suggestions.
+	 * If one configured path is beneath another, the descendent
+	 * will override the ancestors' configured libraries of interest.
+	 */
+	paths: LibraryPathSet[];
+}
+
+/**
+ * Clients must make this request when the user has selected a completion
+ * suggestion from an AvailableSuggestionSet. Analysis server will respond with
+ * the text to insert as well as any SourceChange that needs to be applied
+ * in case the completion requires an additional import to be added. It is an error
+ * if the id is no longer valid, for instance if the library has been removed after
+ * the completion suggestion is accepted.
+ */
+export interface CompletionGetSuggestionDetailsRequest {
+	/**
+	 * The path of the file into which this completion is being inserted.
+	 */
+	file: FilePath;
+
+	/**
+	 * The identifier of the AvailableSuggestionSet containing
+	 * the selected label.
+	 */
+	id: number;
+
+	/**
+	 * The label from the AvailableSuggestionSet with the `id`
+	 * for which insertion information is requested.
+	 */
+	label: string;
+
+	/**
+	 * The offset in the file where the completion will be inserted.
+	 */
+	offset: number;
+}
+
+/**
+ * Clients must make this request when the user has selected a completion
+ * suggestion from an AvailableSuggestionSet. Analysis server will respond with
+ * the text to insert as well as any SourceChange that needs to be applied
+ * in case the completion requires an additional import to be added. It is an error
+ * if the id is no longer valid, for instance if the library has been removed after
+ * the completion suggestion is accepted.
+ */
+export interface CompletionGetSuggestionDetailsResponse {
+	/**
+	 * The full text to insert, including any optional import prefix.
+	 */
+	completion: string;
+
+	/**
+	 * A change for the client to apply in case the library containing
+	 * the accepted completion suggestion needs to be imported. The field
+	 * will be omitted if there are no additional changes that need to be made.
+	 */
+	change?: SourceChange;
+}
+
+/**
+ * Inspect analysis server's knowledge about all of a file's tokens including
+ * their lexeme, type, and what element kinds would have been appropriate for
+ * the token's program location.
+ */
+export interface CompletionListTokenDetailsRequest {
+	/**
+	 * The path to the file from which tokens should be returned.
+	 */
+	file: FilePath;
+}
+
+/**
+ * Inspect analysis server's knowledge about all of a file's tokens including
+ * their lexeme, type, and what element kinds would have been appropriate for
+ * the token's program location.
+ */
+export interface CompletionListTokenDetailsResponse {
+	/**
+	 * A list of the file's scanned tokens including analysis information
+	 * about them.
+	 */
+	tokens: TokenDetails[];
+}
+
+/**
  * Perform a search for references to the element defined or
  * referenced at the given offset in the given file.
  * 
@@ -1013,10 +1125,31 @@ export interface EditGetAvailableRefactoringsResponse {
 }
 
 /**
+ * Request information about edit.dartfix
+ * such as the list of known fixes that can be specified
+ * in an edit.dartfix request.
+ */
+export interface EditGetDartfixInfoResponse {
+	/**
+	 * A list of fixes that can be specified
+	 * in an edit.dartfix request.
+	 */
+	fixes: DartFix[];
+}
+
+/**
  * Analyze the specified sources for recommended changes
  * and return a set of suggested edits for those sources.
  * These edits may include changes to sources outside the set
  * of specified sources if a change in a specified source requires it.
+ * 
+ * If includedFixes is specified, then those fixes will be applied.
+ * If includeRequiredFixes is specified, then "required" fixes will be applied
+ * in addition to whatever fixes are specified in includedFixes if any.
+ * If neither includedFixes nor includeRequiredFixes is specified,
+ * then all fixes will be applied.
+ * If excludedFixes is specified, then those fixes will not be applied
+ * regardless of whether they are "required" or specified in includedFixes.
  */
 export interface EditDartfixRequest {
 	/**
@@ -1029,6 +1162,27 @@ export interface EditDartfixRequest {
 	 * an error of type FILE_NOT_ANALYZED will be generated.
 	 */
 	included: FilePath[];
+
+	/**
+	 * A list of names indicating which fixes should be applied.
+	 * 
+	 * If a name is specified that does not match the name of a known fix,
+	 * an error of type UNKNOWN_FIX will be generated.
+	 */
+	includedFixes?: string[];
+
+	/**
+	 * A flag indicating that "required" fixes should be applied.
+	 */
+	includeRequiredFixes?: boolean;
+
+	/**
+	 * A list of names indicating which fixes should not be applied.
+	 * 
+	 * If a name is specified that does not match the name of a known fix,
+	 * an error of type UNKNOWN_FIX will be generated.
+	 */
+	excludedFixes?: string[];
 }
 
 /**
@@ -1036,6 +1190,14 @@ export interface EditDartfixRequest {
  * and return a set of suggested edits for those sources.
  * These edits may include changes to sources outside the set
  * of specified sources if a change in a specified source requires it.
+ * 
+ * If includedFixes is specified, then those fixes will be applied.
+ * If includeRequiredFixes is specified, then "required" fixes will be applied
+ * in addition to whatever fixes are specified in includedFixes if any.
+ * If neither includedFixes nor includeRequiredFixes is specified,
+ * then all fixes will be applied.
+ * If excludedFixes is specified, then those fixes will not be applied
+ * regardless of whether they are "required" or specified in includedFixes.
  */
 export interface EditDartfixResponse {
 	/**
@@ -2334,6 +2496,56 @@ export interface CompletionResultsNotification {
 	 * returned for the indicated completion.
 	 */
 	isLast: boolean;
+
+	/**
+	 * References to AvailableSuggestionSet objects previously sent
+	 * to the client. The client can include applicable names from the
+	 * referenced library in code completion suggestions.
+	 */
+	includedSuggestionSets?: IncludedSuggestionSet[];
+
+	/**
+	 * The client is expected to check this list against the
+	 * ElementKind sent in IncludedSuggestionSet to decide
+	 * whether or not these symbols should should be presented to the user.
+	 */
+	includedElementKinds?: ElementKind[];
+
+	/**
+	 * The client is expected to check this list against the values of the
+	 * field relevanceTags of AvailableSuggestion to
+	 * decide if the suggestion should be given a different relevance than
+	 * the IncludedSuggestionSet that contains it. This might be
+	 * used for example to give higher relevance to suggestions of matching
+	 * types.
+	 * 
+	 * If an AvailableSuggestion has relevance tags that match more
+	 * than one IncludedSuggestionRelevanceTag, the maximum
+	 * relevance boost is used.
+	 */
+	includedSuggestionRelevanceTags?: IncludedSuggestionRelevanceTag[];
+}
+
+/**
+ * Reports the pre-computed, candidate completions from symbols defined
+ * in a corresponding library. This notification may be sent multiple times.
+ * When a notification is processed, clients should replace any previous
+ * information about the libraries in the list of changedLibraries, discard
+ * any information about the libraries in the list of removedLibraries, and
+ * preserve any previously received information about any libraries that are
+ * not included in either list.
+ */
+export interface CompletionAvailableSuggestionsNotification {
+	/**
+	 * A list of pre-computed, potential completions coming from
+	 * this set of completion suggestions.
+	 */
+	changedLibraries?: AvailableSuggestionSet[];
+
+	/**
+	 * A list of library ids that no longer apply.
+	 */
+	removedLibraries?: number[];
 }
 
 /**
@@ -2688,6 +2900,177 @@ export type ExecutableKind =
 export type ExecutionContextId = string;
 
 /**
+ * A partial completion suggestion that can be used in combination with
+ * info from completion.results to build completion suggestions
+ * for not yet imported library tokens.
+ */
+export interface AvailableSuggestion {
+	/**
+	 * The identifier to present to the user for code completion.
+	 */
+	label: string;
+
+	/**
+	 * Information about the element reference being suggested.
+	 */
+	element: Element;
+
+	/**
+	 * A default String for use in generating argument list source contents
+	 * on the client side.
+	 */
+	defaultArgumentListString?: string;
+
+	/**
+	 * Pairs of offsets and lengths describing 'defaultArgumentListString'
+	 * text ranges suitable for use by clients to set up linked edits of
+	 * default argument source contents. For example, given an argument list
+	 * string 'x, y', the corresponding text range [0, 1, 3, 1], indicates
+	 * two text ranges of length 1, starting at offsets 0 and 3. Clients can
+	 * use these ranges to treat the 'x' and 'y' values specially for linked
+	 * edits.
+	 */
+	defaultArgumentListTextRanges?: number[];
+
+	/**
+	 * The Dartdoc associated with the element being suggested. This field
+	 * is omitted if there is no Dartdoc associated with the element.
+	 */
+	docComplete?: string;
+
+	/**
+	 * An abbreviated version of the Dartdoc associated with the element being suggested.
+	 * This field is omitted if there is no Dartdoc associated with the element.
+	 */
+	docSummary?: string;
+
+	/**
+	 * If the element is an executable, the names of the formal parameters of
+	 * all kinds - required, optional positional, and optional named. The
+	 * names of positional parameters are empty strings. Omitted if the element
+	 * is not an executable.
+	 */
+	parameterNames?: string[];
+
+	/**
+	 * If the element is an executable, the declared types of the formal parameters
+	 * of all kinds - required, optional positional, and optional named.
+	 * Omitted if the element is not an executable.
+	 */
+	parameterTypes?: string[];
+
+	/**
+	 * This field is set if the relevance of this suggestion might be
+	 * changed depending on where completion is requested.
+	 */
+	relevanceTags?: AvailableSuggestionRelevanceTag[];
+
+	/**
+	 * 
+	 */
+	requiredParameterCount?: number;
+}
+
+/**
+ * The opaque tag value.
+ */
+export type AvailableSuggestionRelevanceTag = string;
+
+/**
+ * 
+ */
+export interface AvailableSuggestionSet {
+	/**
+	 * The id associated with the library.
+	 */
+	id: number;
+
+	/**
+	 * The URI of the library.
+	 */
+	uri: string;
+
+	/**
+	 * 
+	 */
+	items: AvailableSuggestion[];
+}
+
+/**
+ * A reference to an AvailableSuggestionSet noting
+ * that the library's members which match the kind of this ref
+ * should be presented to the user.
+ */
+export interface IncludedSuggestionSet {
+	/**
+	 * Clients should use it to access the set of precomputed completions
+	 * to be displayed to the user.
+	 */
+	id: number;
+
+	/**
+	 * The relevance of completion suggestions from this
+	 * library where a higher number indicates a higher relevance.
+	 */
+	relevance: number;
+
+	/**
+	 * The optional string that should be displayed instead of the
+	 * uri of the referenced AvailableSuggestionSet.
+	 * 
+	 * For example libraries in the "test" directory of a package have only
+	 * "file://" URIs, so are usually long, and don't look nice, but actual
+	 * import directives will use relative URIs, which are short, so we
+	 * probably want to display such relative URIs to the user.
+	 */
+	displayUri?: string;
+}
+
+/**
+ * Each AvailableSuggestion can specify zero or more tags in the
+ * field relevanceTags, so that when the included tag is equal to
+ * one of the relevanceTags, the suggestion is given higher
+ * relevance than the whole IncludedSuggestionSet.
+ */
+export interface IncludedSuggestionRelevanceTag {
+	/**
+	 * The opaque value of the tag.
+	 */
+	tag: AvailableSuggestionRelevanceTag;
+
+	/**
+	 * The boost to the relevance of the completion suggestions that match
+	 * this tag, which is added to the relevance of the containing
+	 * IncludedSuggestionSet.
+	 */
+	relevanceBoost: number;
+}
+
+/**
+ * An enumeration of the completion services to which a client can subscribe.
+ */
+export type CompletionService =
+	"AVAILABLE_SUGGESTION_SETS";
+
+/**
+ * A list of associations between paths and the libraries that should be
+ * included for code completion when editing a file beneath that path.
+ */
+export interface LibraryPathSet {
+	/**
+	 * The filepath for which this request's libraries should be active
+	 * in completion suggestions. This object associates filesystem regions
+	 * to libraries and library directories of interest to the client.
+	 */
+	scope: FilePath;
+
+	/**
+	 * The paths of the libraries of interest to the client for completion suggestions.
+	 */
+	libraryPaths: FilePath[];
+}
+
+/**
  * An expression for which we want to know its runtime type.
  * In expressions like 'a.b.c.where((e) => e.^)' we want to know the
  * runtime type of 'a.b.c' to enforce it statically at the time when we
@@ -2786,6 +3169,26 @@ export type RuntimeCompletionExpressionTypeKind =
 	"DYNAMIC"
 	| "FUNCTION"
 	| "INTERFACE";
+
+/**
+ * A scanned token along with its inferred type information.
+ */
+export interface TokenDetails {
+	/**
+	 * The raw token text.
+	 */
+	lexeme: string;
+
+	/**
+	 * The type of this token.
+	 */
+	type: string;
+
+	/**
+	 * The kinds of elements which could validly replace this token.
+	 */
+	validElementKinds: ElementKind[];
+}
 
 /**
  * An enumeration of the services provided by the execution
@@ -3268,6 +3671,7 @@ export type RequestErrorCode =
 	| "SERVER_ERROR"
 	| "SORT_MEMBERS_INVALID_FILE"
 	| "SORT_MEMBERS_PARSE_ERRORS"
+	| "UNKNOWN_FIX"
 	| "UNKNOWN_REQUEST"
 	| "UNSUPPORTED_FEATURE";
 
@@ -3276,6 +3680,26 @@ export type RequestErrorCode =
  * request.
  */
 export type SearchId = string;
+
+/**
+ * A "fix" that can be specified in an edit.dartfix request.
+ */
+export interface DartFix {
+	/**
+	 * The name of the fix.
+	 */
+	name: string;
+
+	/**
+	 * A human readable description of the fix.
+	 */
+	description?: string;
+
+	/**
+	 * `true` if the fix is in the "required" fixes group.
+	 */
+	isRequired?: boolean;
+}
 
 /**
  * A suggestion from an edit.dartfix request.
@@ -3848,12 +4272,6 @@ export interface CompletionSuggestion {
 	 * omitted if the parameterName field is omitted.
 	 */
 	parameterType?: string;
-
-	/**
-	 * The import to be added if the suggestion is out of scope and needs
-	 * an import to be added to be in scope.
-	 */
-	importUri?: string;
 }
 
 /**
