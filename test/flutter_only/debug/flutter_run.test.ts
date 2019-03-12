@@ -3,6 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
+import { isLinux } from "../../../src/debug/utils";
 import { fsPath } from "../../../src/utils";
 import { fetch } from "../../../src/utils/fetch";
 import { DartDebugClient } from "../../dart_debug_client";
@@ -209,6 +210,13 @@ describe("flutter run debugger (launch)", () => {
 
 	it("can launch DevTools", async function () {
 		if (!extApi.flutterCapabilities.supportsDevTools) {
+			this.skip();
+			return;
+		}
+
+		// TODO: Unskip this when we've fixed the orphaned process issue.
+		// https://github.com/Dart-Code/Dart-Code/issues/1511
+		if (isLinux) {
 			this.skip();
 			return;
 		}
