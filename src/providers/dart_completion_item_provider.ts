@@ -87,7 +87,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			parameters: suggestion.element ? suggestion.element.parameters : undefined,
 			relevance: suggestion.relevance,
 			replacementLength: notification.replacementLength,
-			replacementOffset: notification.replacementLength,
+			replacementOffset: notification.replacementOffset,
 			requiredParameterCount: suggestion.requiredParameterCount,
 			returnType: suggestion.returnType,
 			selectionLength: suggestion.selectionLength,
