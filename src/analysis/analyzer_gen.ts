@@ -37,6 +37,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	private analysisOutlineSubscriptions: ((notification: as.AnalysisOutlineNotification) => void)[] = [];
 	private analysisOverridesSubscriptions: ((notification: as.AnalysisOverridesNotification) => void)[] = [];
 	private completionResultsSubscriptions: ((notification: as.CompletionResultsNotification) => void)[] = [];
+	private completionAvailableSuggestionsSubscriptions: ((notification: as.CompletionAvailableSuggestionsNotification) => void)[] = [];
 	private searchResultsSubscriptions: ((notification: as.SearchResultsNotification) => void)[] = [];
 	private executionLaunchDataSubscriptions: ((notification: as.ExecutionLaunchDataNotification) => void)[] = [];
 	private flutterOutlineSubscriptions: ((notification: as.FlutterOutlineNotification) => void)[] = [];
@@ -90,6 +91,9 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 				break;
 			case "completion.results":
 				this.notify(this.completionResultsSubscriptions, <as.CompletionResultsNotification>evt.params);
+				break;
+			case "completion.availableSuggestions":
+				this.notify(this.completionAvailableSuggestionsSubscriptions, <as.CompletionAvailableSuggestionsNotification>evt.params);
 				break;
 			case "search.results":
 				this.notify(this.searchResultsSubscriptions, <as.SearchResultsNotification>evt.params);
@@ -253,6 +257,19 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	*/
 	registerForCompletionResults(subscriber: (notification: as.CompletionResultsNotification) => void): vs.Disposable {
 		return this.subscribe(this.completionResultsSubscriptions, subscriber);
+	}
+
+	/**
+	Reports the pre-computed, candidate completions from symbols defined
+	in a corresponding library. This notification may be sent multiple times.
+	When a notification is processed, clients should replace any previous
+	information about the libraries in the list of changedLibraries, discard
+	any information about the libraries in the list of removedLibraries, and
+	preserve any previously received information about any libraries that are
+	not included in either list.
+	*/
+	registerForCompletionAvailableSuggestions(subscriber: (notification: as.CompletionAvailableSuggestionsNotification) => void): vs.Disposable {
+		return this.subscribe(this.completionAvailableSuggestionsSubscriptions, subscriber);
 	}
 
 	/**
@@ -497,6 +514,50 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	}
 
 	/**
+	Subscribe for completion services. All previous subscriptions are
+	replaced by the given set of services.
+	It is an error if any of the elements in the list are not valid
+	services. If there is an error, then the current subscriptions will
+	remain unchanged.
+	*/
+	completionSetSubscriptions(request: as.CompletionSetSubscriptionsRequest): Thenable<UnknownResponse> {
+		return this.sendRequest("completion.setSubscriptions", request);
+	}
+
+	/**
+	The client can make this request to express interest in certain
+	libraries to receive completion suggestions from based on the client path.
+	If this request is received before the client has used
+	'completion.setSubscriptions' to subscribe to the AVAILABLE_SUGGESTION_SETS
+	service, then an error of type NOT_SUBSCRIBED_TO_AVAILABLE_SUGGESTION_SETS
+	will be generated. All previous paths are replaced by the given set of paths.
+	*/
+	completionRegisterLibraryPaths(request: as.CompletionRegisterLibraryPathsRequest): Thenable<UnknownResponse> {
+		return this.sendRequest("completion.registerLibraryPaths", request);
+	}
+
+	/**
+	Clients must make this request when the user has selected a completion
+	suggestion from an AvailableSuggestionSet. Analysis server will respond with
+	the text to insert as well as any SourceChange that needs to be applied
+	in case the completion requires an additional import to be added. It is an error
+	if the id is no longer valid, for instance if the library has been removed after
+	the completion suggestion is accepted.
+	*/
+	completionGetSuggestionDetails(request: as.CompletionGetSuggestionDetailsRequest): Thenable<as.CompletionGetSuggestionDetailsResponse> {
+		return this.sendRequest("completion.getSuggestionDetails", request);
+	}
+
+	/**
+	Inspect analysis server's knowledge about all of a file's tokens including
+	their lexeme, type, and what element kinds would have been appropriate for
+	the token's program location.
+	*/
+	completionListTokenDetails(request: as.CompletionListTokenDetailsRequest): Thenable<as.CompletionListTokenDetailsResponse> {
+		return this.sendRequest("completion.listTokenDetails", request);
+	}
+
+	/**
 	Perform a search for references to the element defined or referenced at the given offset in the given file.
 	An identifier is returned immediately, and individual results will be returned via the search.results notification as they
 	become available.
@@ -576,6 +637,32 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	*/
 	editGetAvailableRefactorings(request: as.EditGetAvailableRefactoringsRequest): Thenable<as.EditGetAvailableRefactoringsResponse> {
 		return this.sendRequest("edit.getAvailableRefactorings", request);
+	}
+
+	/**
+	Request information about edit.dartfix
+	such as the list of known fixes that can be specified
+	in an edit.dartfix request.
+	*/
+	editGetDartfixInfo(request: as.EditGetDartfixInfoRequest): Thenable<as.EditGetDartfixInfoResponse> {
+		return this.sendRequest("edit.getDartfixInfo", request);
+	}
+
+	/**
+	Analyze the specified sources for recommended changes
+	and return a set of suggested edits for those sources.
+	These edits may include changes to sources outside the set
+	of specified sources if a change in a specified source requires it.
+	If includedFixes is specified, then those fixes will be applied.
+	If includeRequiredFixes is specified, then "required" fixes will be applied
+	in addition to whatever fixes are specified in includedFixes if any.
+	If neither includedFixes nor includeRequiredFixes is specified,
+	then all fixes will be applied.
+	If excludedFixes is specified, then those fixes will not be applied
+	regardless of whether they are "required" or specified in includedFixes.
+	*/
+	editDartfix(request: as.EditDartfixRequest): Thenable<as.EditDartfixResponse> {
+		return this.sendRequest("edit.dartfix", request);
 	}
 
 	/**
