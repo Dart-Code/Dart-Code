@@ -9,9 +9,9 @@ import { fsPath } from "../utils";
 export class DartCompletionItemProvider implements CompletionItemProvider {
 	constructor(private readonly analyzer: Analyzer) { }
 
-	public provideCompletionItems(
+	public async provideCompletionItems(
 		document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext,
-	): Thenable<CompletionList> {
+	): Promise<CompletionList> {
 		const line = document.lineAt(position.line).text.slice(0, position.character);
 		const nextCharacter = document.getText(new Range(position, position.translate({ characterDelta: 200 }))).trim().substr(0, 1);
 		const conf = config.for(document.uri);
@@ -21,16 +21,12 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		if (!this.shouldAllowCompletion(line, context))
 			return;
 
-		return new Promise<CompletionList>((resolve, reject) => {
-			this.analyzer.completionGetSuggestionsResults({
-				file: fsPath(document.uri),
-				offset: document.offsetAt(position),
-			}).then((resp) => {
-				resolve(new CompletionList(resp.results.map((r) => this.convertResult(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, resp, r))));
-			},
-				() => reject(),
-			);
+		const resp = await this.analyzer.completionGetSuggestionsResults({
+			file: fsPath(document.uri),
+			offset: document.offsetAt(position),
 		});
+
+		return new CompletionList(resp.results.map((r) => this.convertResult(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, resp, r)));
 	}
 
 	private shouldAllowCompletion(line: string, context: CompletionContext): boolean {
