@@ -19,4 +19,13 @@ export class Context {
 	set devToolsNotificationLastShown(value: number) { this.context.globalState.update("devToolsNotificationLastShown", value); }
 	get devToolsNotificationDoNotShow(): boolean { return !!this.context.globalState.get("devToolsNotificationDoNotShowAgain"); }
 	set devToolsNotificationDoNotShow(value: boolean) { this.context.globalState.update("devToolsNotificationDoNotShowAgain", value); }
+
+	public update(key: string, value: any): any {
+		return this.context.globalState.update(key, value);
+	}
+	public get(key: string): any {
+		return this.context.globalState.get(key);
+	}
+
+	get subscriptions(): Array<{ dispose(): any }> { return this.context.subscriptions; }
 }

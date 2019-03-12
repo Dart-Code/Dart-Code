@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { Analytics } from "../analytics";
+import { Context } from "../context";
 import { CoverageData, PromiseCompleter } from "../debug/utils";
 import { FlutterServiceExtension, FlutterServiceExtensionArgs, FlutterVmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../flutter/vm_service_extensions";
 import { PubGlobal } from "../pub/global";
@@ -32,7 +33,7 @@ export class DebugCommands {
 	private readonly flutterExtensions: FlutterVmServiceExtensions;
 	private readonly devTools: DevTools;
 
-	constructor(context: vs.ExtensionContext, sdks: Sdks, analytics: Analytics, pubGlobal: PubGlobal) {
+	constructor(context: Context, sdks: Sdks, analytics: Analytics, pubGlobal: PubGlobal) {
 		this.flutterExtensions = new FlutterVmServiceExtensions(this.sendServiceSetting);
 		this.devTools = new DevTools(sdks, analytics, pubGlobal);
 		context.subscriptions.push(this.devTools);

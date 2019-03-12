@@ -2,14 +2,13 @@ import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { doNotAskAgainAction, openDevToolsAction, wantToTryDevToolsPrompt } from "../../src/constants";
-import { Context } from "../../src/context";
 import { showDevToolsNotificationIfAppropriate } from "../../src/user_prompts";
 import { activateWithoutAnalysis, clearAllContext, extApi, sb } from "../helpers";
 
 describe("DevTools notification", async () => {
 	beforeEach("activate", () => activateWithoutAnalysis());
-	beforeEach("clearExtensionContext", () => clearAllContext(Context.for(extApi.context)));
-	afterEach("clearExtensionContext", () => clearAllContext(Context.for(extApi.context)));
+	beforeEach("clearExtensionContext", () => clearAllContext(extApi.context));
+	afterEach("clearExtensionContext", () => clearAllContext(extApi.context));
 
 	it("is shown from a blank slate and updates context values", async () => {
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
@@ -26,7 +25,7 @@ describe("DevTools notification", async () => {
 		assert.equal(res, true);
 
 		// Flags were updated.
-		const context = Context.for(extApi.context);
+		const context = extApi.context;
 		assert.equal(context.devToolsNotificationDoNotShow, false);
 		assert.equal(context.devToolsNotificationsShown, 1);
 		// Marked as shown within the last 10 seconds.
@@ -34,7 +33,7 @@ describe("DevTools notification", async () => {
 	});
 
 	it("shows and updates context values when already set", async () => {
-		const context = Context.for(extApi.context);
+		const context = extApi.context;
 		context.devToolsNotificationsShown = 3;
 		const twentyFiveHoursInMs = 1000 * 60 * 60 * 25;
 		context.devToolsNotificationLastShown = Date.now() - twentyFiveHoursInMs;
@@ -60,7 +59,7 @@ describe("DevTools notification", async () => {
 	});
 
 	it("does not show if shown in the last 20 hours", async () => {
-		const context = Context.for(extApi.context);
+		const context = extApi.context;
 		context.devToolsNotificationsShown = 3;
 		const fiveHoursInMs = 1000 * 60 * 60 * 5;
 		context.devToolsNotificationLastShown = Date.now() - fiveHoursInMs;
@@ -94,13 +93,11 @@ describe("DevTools notification", async () => {
 		assert.equal(res, false);
 
 		// Flag was written.
-		const context = Context.for(extApi.context);
-		assert.equal(context.devToolsNotificationDoNotShow, true);
+		assert.equal(extApi.context.devToolsNotificationDoNotShow, true);
 	});
 
 	it("does not prompt if told not to ask again", async () => {
-		const context = Context.for(extApi.context);
-		context.devToolsNotificationDoNotShow = true;
+		extApi.context.devToolsNotificationDoNotShow = true;
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const wantToTryPrompt = showInformationMessage.withArgs(wantToTryDevToolsPrompt, sinon.match.any).resolves(doNotAskAgainAction);

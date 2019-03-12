@@ -22,6 +22,7 @@ import { SdkCommands } from "./commands/sdk";
 import { TestCommands } from "./commands/test";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
+import { Context } from "./context";
 import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, isWin, isWithinPath, LogCategory, platformName } from "./debug/utils";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_decorations";
@@ -318,9 +319,10 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	}));
 
 	// Register SDK commands.
-	const pubGlobal = new PubGlobal(sdks);
+	const extContext = Context.for(context);
+	const pubGlobal = new PubGlobal(extContext, sdks);
 	const sdkCommands = new SdkCommands(context, sdks, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
-	const debug = new DebugCommands(context, sdks, analytics, pubGlobal);
+	const debug = new DebugCommands(extContext, sdks, analytics, pubGlobal);
 
 	// Register URI handler.
 	context.subscriptions.push(vs.window.registerUriHandler(new DartUriHandler(flutterCapabilities)));
@@ -391,7 +393,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Prompt user for any special config we might want to set.
 	if (!isRestart)
-		showUserPrompts(context, sdks);
+		showUserPrompts(extContext, sdks);
 
 	// Turn on all the commands.
 	setCommandVisiblity(true, sdks.projectType);
@@ -433,7 +435,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		[internalApiSymbol]: {
 			analyzerCapabilities: analyzer.capabilities,
 			cancelAllAnalysisRequests: () => analyzer.cancelAllRequests(),
-			context,
+			context: extContext,
 			currentAnalysis: () => analyzer.currentAnalysis,
 			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
 			dartCapabilities,
@@ -584,7 +586,7 @@ function setCommandVisiblity(enable: boolean, projectType: util.ProjectType) {
 
 export interface InternalExtensionApi {
 	analyzerCapabilities: AnalyzerCapabilities;
-	context: vs.ExtensionContext;
+	context: Context;
 	cancelAllAnalysisRequests: () => void;
 	currentAnalysis: () => Promise<void>;
 	daemonCapabilities: DaemonCapabilities;

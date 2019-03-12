@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { pubGlobalDocsUrl } from "../constants";
+import { Context } from "../context";
 import { LogCategory } from "../debug/utils";
 import { pubPath } from "../sdk/utils";
 import { openInBrowser, Sdks, versionIsAtLeast } from "../utils";
@@ -9,7 +10,7 @@ import { logWarn } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 
 export class PubGlobal {
-	constructor(private sdks: Sdks) { }
+	constructor(private context: Context, private sdks: Sdks) { }
 
 	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion?: string, autoUpdate: boolean = false): Promise<boolean> {
 		const versionStatus = await this.getInstalledStatus(packageName, packageID, requiredVersion);

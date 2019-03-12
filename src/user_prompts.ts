@@ -9,12 +9,12 @@ import { DART_CREATE_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJ
 const promptPrefix = "hasPrompted.";
 const installFlutterExtensionPromptKey = "install_flutter_extension";
 
-export function showUserPrompts(context: vs.ExtensionContext, sdks: Sdks): void {
-	handleNewProjects(Context.for(context));
+export function showUserPrompts(context: Context, sdks: Sdks): void {
+	handleNewProjects(context);
 
 	function hasPrompted(key: string): boolean {
 		const stateKey = `${promptPrefix}${key}`;
-		return context.globalState.get(stateKey) === true;
+		return context.get(stateKey) === true;
 	}
 
 	/// Shows a prompt and stores the return value. Prompt should return `true` to mark
@@ -22,7 +22,7 @@ export function showUserPrompts(context: vs.ExtensionContext, sdks: Sdks): void 
 	/// else will allow the prompt to appear again next time.
 	function showPrompt(key: string, prompt: () => Thenable<boolean>): void {
 		const stateKey = `${promptPrefix}${key}`;
-		prompt().then((res) => context.globalState.update(stateKey, res), error);
+		prompt().then((res) => context.update(stateKey, res), error);
 	}
 
 	const versionLink = extensionVersion.split(".").slice(0, 2).join(".").replace(".", "-");
@@ -35,8 +35,7 @@ export function showUserPrompts(context: vs.ExtensionContext, sdks: Sdks): void 
 		return showPrompt(releaseNotesKeyForThisVersion, () => promptToShowReleaseNotes(extensionVersion, versionLink));
 }
 
-export async function showDevToolsNotificationIfAppropriate(extContext: vs.ExtensionContext): Promise<boolean> {
-	const context = Context.for(extContext);
+export async function showDevToolsNotificationIfAppropriate(context: Context): Promise<boolean> {
 	const lastShown = context.devToolsNotificationLastShown;
 	const timesShown = context.devToolsNotificationsShown;
 	const doNotShow = context.devToolsNotificationDoNotShow;
