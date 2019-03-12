@@ -75,10 +75,48 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 	private convertResult(
 		document: TextDocument, nextCharacter: string, enableCommitCharacters: boolean, insertArgumentPlaceholders: boolean, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion,
 	): CompletionItem {
-		const element = suggestion.element;
-		const elementKind = element ? this.getElementKind(element.kind) : null;
+		return this.makeCompletion(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, {
+			completionText: suggestion.completion,
+			displayText: suggestion.displayText,
+			docSummary: suggestion.docSummary,
+			elementKind: suggestion.element ? suggestion.element.kind : undefined,
+			isDeprecated: suggestion.isDeprecated,
+			kind: suggestion.kind,
+			parameterNames: suggestion.parameterNames,
+			parameterType: suggestion.parameterType,
+			parameters: suggestion.element ? suggestion.element.parameters : undefined,
+			relevance: suggestion.relevance,
+			replacementLength: notification.replacementLength,
+			replacementOffset: notification.replacementLength,
+			requiredParameterCount: suggestion.requiredParameterCount,
+			returnType: suggestion.returnType,
+			selectionLength: suggestion.selectionLength,
+			selectionOffset: suggestion.selectionOffset,
+		});
+	}
 
-		let label = suggestion.displayText || suggestion.completion;
+	private makeCompletion(
+		document: TextDocument, nextCharacter: string, enableCommitCharacters: boolean, insertArgumentPlaceholders: boolean, suggestion: {
+			completionText: string,
+			displayText: string | undefined,
+			docSummary: string | undefined,
+			elementKind: as.ElementKind | undefined,
+			isDeprecated: boolean,
+			kind: as.CompletionSuggestionKind,
+			parameterNames: string[] | undefined,
+			parameters: string | undefined,
+			parameterType: string | undefined,
+			relevance: number,
+			replacementLength: number,
+			replacementOffset: number,
+			requiredParameterCount: number | undefined,
+			returnType: string | undefined,
+			selectionLength: number,
+			selectionOffset: number,
+		},
+	): CompletionItem {
+		const completionItemKind = suggestion.elementKind ? this.getElementKind(suggestion.elementKind) : undefined;
+		let label = suggestion.displayText || suggestion.completionText;
 		let detail = "";
 		const completionText = new SnippetString();
 		let triggerCompletion = false;
@@ -86,18 +124,18 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		const nextCharacterIsOpenParen = nextCharacter === "(";
 
 		// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its parameters.
-		if (element && element.parameters && elementKind !== CompletionItemKind.Property && suggestion.kind !== "OVERRIDE"
+		if (suggestion.parameters && completionItemKind !== CompletionItemKind.Property && suggestion.kind !== "OVERRIDE"
 			// Don't ever show if there is already a paren! (#969).
 			&& label.indexOf("(") === -1
 		) {
-			label += element.parameters.length === 2 ? "()" : "(…)";
-			detail = element.parameters;
+			label += suggestion.parameters.length === 2 ? "()" : "(…)";
+			detail = suggestion.parameters;
 
 			const hasParams = suggestion.parameterNames && suggestion.parameterNames.length > 0;
 
 			// Add placeholders for params to the completion.
 			if (insertArgumentPlaceholders && hasParams && !nextCharacterIsOpenParen) {
-				completionText.appendText(suggestion.completion);
+				completionText.appendText(suggestion.completionText);
 				const args = suggestion.parameterNames.slice(0, suggestion.requiredParameterCount);
 				completionText.appendText("(");
 				if (args.length) {
@@ -110,23 +148,23 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 					completionText.appendTabstop(0); // Put a tap stop between parens since there are optional args.
 				completionText.appendText(")");
 			} else if (insertArgumentPlaceholders && !nextCharacterIsOpenParen) {
-				completionText.appendText(suggestion.completion);
+				completionText.appendText(suggestion.completionText);
 				completionText.appendText("(");
 				if (hasParams)
 					completionText.appendTabstop(0);
 				completionText.appendText(")");
 			} else {
-				completionText.appendText(suggestion.completion);
+				completionText.appendText(suggestion.completionText);
 			}
 		} else if (suggestion.selectionOffset > 0) {
-			const before = suggestion.completion.slice(0, suggestion.selectionOffset);
-			const selection = suggestion.completion.slice(suggestion.selectionOffset, suggestion.selectionOffset + suggestion.selectionLength);
+			const before = suggestion.completionText.slice(0, suggestion.selectionOffset);
+			const selection = suggestion.completionText.slice(suggestion.selectionOffset, suggestion.selectionOffset + suggestion.selectionLength);
 			// If we have a selection offset (eg. a place to put the cursor) but not any text to pre-select then
 			// pop open the completion to help the user type the value.
 			// Only do this if it ends with a space (argument completion), see #730.
-			if (!selection && suggestion.completion.slice(suggestion.selectionOffset - 1, suggestion.selectionOffset) === " ")
+			if (!selection && suggestion.completionText.slice(suggestion.selectionOffset - 1, suggestion.selectionOffset) === " ")
 				triggerCompletion = true;
-			const after = suggestion.completion.slice(suggestion.selectionOffset + suggestion.selectionLength);
+			const after = suggestion.completionText.slice(suggestion.selectionOffset + suggestion.selectionLength);
 
 			completionText.appendText(before);
 			if (selection)
@@ -135,23 +173,23 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				completionText.appendTabstop(0);
 			completionText.appendText(after);
 		} else {
-			completionText.appendText(suggestion.completion);
+			completionText.appendText(suggestion.completionText);
 		}
 
 		// If we're a property, work out the type.
-		if (elementKind === CompletionItemKind.Property) {
+		if (completionItemKind === CompletionItemKind.Property) {
 			// Setters appear as methods with one arg (and cause getters to not appear),
 			// so treat them both the same and just display with the properties type.
-			detail = element.kind === "GETTER"
-				? element.returnType
+			detail = suggestion.elementKind === "GETTER"
+				? suggestion.returnType
 				// See https://github.com/dart-lang/sdk/issues/27747
-				: element.parameters ? element.parameters.substring(1, element.parameters.lastIndexOf(" ")) : "";
+				: suggestion.parameters ? suggestion.parameters.substring(1, suggestion.parameters.lastIndexOf(" ")) : "";
 			// Otherwise, get return type from method.
-		} else if (element && element.returnType) {
+		} else if (suggestion.returnType) {
 			detail =
 				detail === ""
-					? element.returnType
-					: detail + " → " + element.returnType;
+					? suggestion.returnType
+					: detail + " → " + suggestion.returnType;
 		} else if (suggestion.parameterType) {
 			detail = suggestion.parameterType;
 		}
@@ -160,9 +198,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		if (label.endsWith(","))
 			label = label.substr(0, label.length - 1).trim();
 
-		const kind = suggestion.element
-			? this.getElementKind(suggestion.element.kind)
-			: this.getSuggestionKind(suggestion.kind, label);
+		const kind = completionItemKind || this.getSuggestionKind(suggestion.kind, label);
 
 		const completion = new CompletionItem(label, kind);
 		completion.label = label;
@@ -173,8 +209,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		completion.insertText = completionText;
 		completion.keepWhitespace = true;
 		completion.range = new Range(
-			document.positionAt(notification.replacementOffset),
-			document.positionAt(notification.replacementOffset + notification.replacementLength),
+			document.positionAt(suggestion.replacementOffset),
+			document.positionAt(suggestion.replacementOffset + suggestion.replacementLength),
 		);
 		if (enableCommitCharacters)
 			completion.commitCharacters = this.getCommitCharacters(suggestion.kind);
