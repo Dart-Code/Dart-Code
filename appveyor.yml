@@ -5,7 +5,6 @@ environment:
     secure: s6QyIIIqf3VPkCrGG9E0kqa6AXxyrygL+KDwdMSAj0yNE7RjN0nWCNob48syHA+a
   # https://github.com/flutter/flutter/issues/17768
   FLUTTER_TEST: true
-  APPVEYOR_CACHE_SKIP_RESTORE: true
   matrix:
     - ONLY_RUN_CODE_VERSION: STABLE
       ONLY_RUN_DART_VERSION: STABLE
