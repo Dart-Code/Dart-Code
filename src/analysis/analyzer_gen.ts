@@ -644,8 +644,8 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	such as the list of known fixes that can be specified
 	in an edit.dartfix request.
 	*/
-	editGetDartfixInfo(request: as.EditGetDartfixInfoRequest): Thenable<as.EditGetDartfixInfoResponse> {
-		return this.sendRequest("edit.getDartfixInfo", request);
+	editGetDartfixInfo(): Thenable<as.EditGetDartfixInfoResponse> {
+		return this.sendRequest("edit.getDartfixInfo");
 	}
 
 	/**
