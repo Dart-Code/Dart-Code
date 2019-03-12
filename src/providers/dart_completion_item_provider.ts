@@ -1,13 +1,22 @@
 import * as path from "path";
-import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, MarkdownString, Position, Range, SnippetString, TextDocument } from "vscode";
+import * as vs from "vscode";
+import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, Disposable, MarkdownString, Position, Range, SnippetString, TextDocument } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
+import { hasOverlappingEdits } from "../commands/edit";
 import { config } from "../config";
 import { cleanDartdoc } from "../dartdocs";
+import { flatMap, IAmDisposable } from "../debug/utils";
 import { fsPath } from "../utils";
+import { logError, logWarn } from "../utils/log";
 
-export class DartCompletionItemProvider implements CompletionItemProvider {
-	constructor(private readonly analyzer: Analyzer) { }
+export class DartCompletionItemProvider implements CompletionItemProvider, IAmDisposable {
+	private disposables: Disposable[] = [];
+	private cachedCompletions: { [key: number]: as.AvailableSuggestion[] } = {};
+
+	constructor(private readonly analyzer: Analyzer) {
+		this.disposables.push(analyzer.registerForCompletionAvailableSuggestions((n) => this.storeCompletionSuggestions(n)));
+	}
 
 	public async provideCompletionItems(
 		document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext,
@@ -26,7 +35,12 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			offset: document.offsetAt(position),
 		});
 
-		return new CompletionList(resp.results.map((r) => this.convertResult(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, resp, r)));
+		const includedResults = resp.results.map((r) => this.convertResult(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, resp, r));
+		const cachedResults = this.getCachedResults(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, document.offsetAt(position), resp);
+
+		const allResults = [...includedResults, ...cachedResults];
+
+		return new CompletionList(allResults);
 	}
 
 	private shouldAllowCompletion(line: string, context: CompletionContext): boolean {
@@ -68,8 +82,109 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 		return true;
 	}
 
+	private storeCompletionSuggestions(notification: as.CompletionAvailableSuggestionsNotification) {
+		if (notification.changedLibraries) {
+			for (const completionSet of notification.changedLibraries) {
+				this.cachedCompletions[completionSet.id] = completionSet.items;
+			}
+		}
+		if (notification.removedLibraries) {
+			for (const completionSetID of notification.removedLibraries) {
+				delete this.cachedCompletions[completionSetID];
+			}
+		}
+	}
+
+	public async resolveCompletionItem?(item: DelayedCompletionItem, token: CancellationToken): Promise<CompletionItem> {
+		if (!item.suggestion)
+			return;
+
+		const suggestion: as.AvailableSuggestion = item.suggestion;
+
+		const res = await this.analyzer.completionGetSuggestionDetails({
+			file: item.filePath,
+			id: item.suggestionSetID,
+			label: item.suggestion.label,
+			offset: item.offset,
+		});
+
+		const completionItem = this.makeCompletion(item.document, item.nextCharacter, item.enableCommitCharacters, item.insertArgumentPlaceholders, {
+			completionText: res.completion,
+			displayText: undefined,
+			docSummary: suggestion.docSummary,
+			elementKind: suggestion.element ? suggestion.element.kind : undefined,
+			isDeprecated: false, // Not supported for unimported completions
+			kind: "ARGUMENT_LIST", // TODO: NEED THIS???? NEED THIS???? NEED THIS???? NEED THIS???? NEED THIS???? NEED THIS???? NEED THIS????
+			parameterNames: suggestion.parameterNames,
+			parameterType: "TODO: PARAMETER TYPE??", // TODO
+			parameters: suggestion.element ? suggestion.element.parameters : undefined,
+			relevance: 0, // TODO: !!
+			replacementLength: item.replacementLength,
+			replacementOffset: item.replacementOffset,
+			requiredParameterCount: suggestion.requiredParameterCount,
+			returnType: suggestion.element ? suggestion.element.returnType : undefined,
+			selectionLength: res.change && res.change.selection ? 0 : undefined,
+			selectionOffset: res.change && res.change.selection ? res.change.selection.offset : undefined,
+		});
+
+		// Additional edits for the imports.
+		completionItem.additionalTextEdits = convertSimpleEdits(item.document, res.change);
+
+		return completionItem;
+	}
+
+	private getCachedResults(
+		document: TextDocument,
+		nextCharacter: string,
+		enableCommitCharacters: boolean,
+		insertArgumentPlaceholders: boolean,
+		offset: number,
+		resp: as.CompletionResultsNotification,
+	): CompletionItem[] {
+		if (!resp.includedSuggestionSets)
+			return;
+
+		const suggestionSetResults: CompletionItem[][] = [];
+		for (let i = 0; i < resp.includedSuggestionSets.length; i++) {
+			const suggestionSet = resp.includedSuggestionSets[i];
+			const elementKinds = resp.includedElementKinds[i];
+			// TODO: Use this somewhere?
+			const relevanceTags = resp.includedSuggestionRelevanceTags[i];
+
+			const results = this.cachedCompletions[suggestionSet.id];
+			if (!results) {
+				logWarn(`Suggestion set ${suggestionSet.id} was not available and therefore not included in the completion results`);
+				return;
+			}
+
+			const unresolvedItems = results
+				// TODO: How should we do this?
+				.filter((r) => !elementKinds || elementKinds.indexOf(r.element.kind) !== -1)
+				.map((r) => new DelayedCompletionItem(
+					document,
+					nextCharacter,
+					enableCommitCharacters,
+					insertArgumentPlaceholders,
+					r,
+					resp.replacementOffset,
+					resp.replacementLength,
+					offset,
+					fsPath(document.uri),
+					suggestionSet.id,
+				));
+			suggestionSetResults.push(unresolvedItems);
+		}
+
+		return [].concat(...suggestionSetResults);
+	}
+
 	private convertResult(
-		document: TextDocument, nextCharacter: string, enableCommitCharacters: boolean, insertArgumentPlaceholders: boolean, notification: as.CompletionResultsNotification, suggestion: as.CompletionSuggestion,
+		document: TextDocument,
+		nextCharacter: string,
+		enableCommitCharacters: boolean,
+		insertArgumentPlaceholders: boolean,
+		notification: as.CompletionResultsNotification,
+		suggestion: as.CompletionSuggestion,
 	): CompletionItem {
 		return this.makeCompletion(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, {
 			completionText: suggestion.completion,
@@ -314,4 +429,61 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 				return [".", ",", "(", "["];
 		}
 	}
+
+	public dispose(): any {
+		this.disposables.forEach((d) => d.dispose());
+	}
+}
+
+class DelayedCompletionItem extends CompletionItem {
+	constructor(
+		public readonly document: TextDocument,
+		public readonly nextCharacter: string,
+		public readonly enableCommitCharacters: boolean,
+		public readonly insertArgumentPlaceholders: boolean,
+		public readonly suggestion: as.AvailableSuggestion,
+		public readonly replacementOffset: number,
+		public readonly replacementLength: number,
+		public readonly offset: number,
+		public readonly filePath: string,
+		public readonly suggestionSetID: number,
+		kind?: CompletionItemKind) {
+		super(suggestion.label, kind);
+	}
+}
+
+function convertSimpleEdits(document: vs.TextDocument, change: as.SourceChange | undefined): vs.TextEdit[] | undefined {
+	if (!change)
+		return undefined;
+
+	// VS Code expects offsets to be based on the original document, but the analysis server provides
+	// them assuming all previous edits have already been made. This means if the server provides us a
+	// set of edits where any edits offset is *equal to or greater than* a previous edit, it will do the wrong thing.
+	// If this happens; we will fall back to sequential edits and write a warning.
+	const hasProblematicEdits = hasOverlappingEdits(change);
+
+	if (hasProblematicEdits) {
+		logError("Unable to insert imports because of overlapping edits from the server.");
+		vs.window.showErrorMessage(`Unable to insert imports because of overlapping edits from the server`);
+		return undefined;
+	}
+
+	const filePath = fsPath(document.uri);
+
+	if (change.edits.find((e) => e.file !== filePath)) {
+		logError("Unable to insert imports because of edits included other files.");
+		vs.window.showErrorMessage(`Unable to insert imports because of edits included other files`);
+		return undefined;
+	}
+
+	return flatMap(change.edits, (edit) => {
+		return edit.edits.map((edit) => {
+			const range = new vs.Range(
+				document.positionAt(edit.offset),
+				document.positionAt(edit.offset + edit.length),
+			);
+			return new vs.TextEdit(range, edit.replacement);
+		});
+	});
+
 }
