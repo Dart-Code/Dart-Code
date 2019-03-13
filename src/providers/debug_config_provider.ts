@@ -31,7 +31,7 @@ const isCI = !!process.env.CI;
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugServers: { [index: string]: net.Server } = {};
 
-	constructor(private sdks: Sdks, private analytics: Analytics, private deviceManager: FlutterDeviceManager, private flutterCapabilities: FlutterCapabilities) {}
+	constructor(private sdks: Sdks, private analytics: Analytics, private deviceManager: FlutterDeviceManager, private flutterCapabilities: FlutterCapabilities) { }
 
 	public provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
 		const isFlutter = isFlutterWorkspaceFolder(folder);
@@ -373,8 +373,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.pubPath = debugConfig.pubPath || path.join(this.sdks.dart, pubPath);
 		debugConfig.pubSnapshotPath = debugConfig.pubSnapshotPath || path.join(this.sdks.dart, pubSnapshotPath);
 		debugConfig.pubTestLogFile = debugConfig.pubTestLogFile || conf.pubTestLogFile;
-		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries || conf.debugSdkLibraries;
-		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries || conf.debugExternalLibraries;
+		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries !== undefined && debugConfig.debugSdkLibraries !== null
+			? debugConfig.debugSdkLibraries
+			: !!conf.debugSdkLibraries;
+		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries !== undefined && debugConfig.debugExternalLibraries !== null
+			? debugConfig.debugExternalLibraries
+			: !!conf.debugExternalLibraries;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		if (isFlutter) {
 			debugConfig.forceFlutterVerboseMode = isLogging || isCI;
