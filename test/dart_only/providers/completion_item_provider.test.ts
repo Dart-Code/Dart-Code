@@ -119,4 +119,8 @@ main() {
 }
 		`);
 	});
+
+	it("inserts imports into the library file while inserting code into the part file", () => {
+		throw new Error("NYI");
+	});
 });
