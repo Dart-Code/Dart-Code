@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { acceptFirstSuggestion, activate, currentDoc, ensureCompletion, ensureTestContentWithSelection, everythingFile, getCompletionsAt, helloWorldCompletionFile, openFile, rangeOf, select, setTestContent } from "../../helpers";
+import { acceptFirstSuggestion, activate, currentDoc, ensureCompletion, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, openFile, rangeOf, select, setTestContent } from "../../helpers";
 
 describe("completion_item_provider", () => {
 
@@ -81,4 +81,42 @@ class Student extends Person {
 	`);
 	});
 
+	it("includes unimported symbols", async function () {
+		if (!extApi.analyzerCapabilities.supportsAvailableSuggestions) {
+			this.skip();
+			return;
+		}
+
+		await setTestContent(`
+main() {
+  ProcessInf
+}
+		`);
+		const completions = await getCompletionsAt("ProcessInf^");
+
+		ensureCompletion(completions, vs.CompletionItemKind.Property, "ProcessInfo", undefined);
+	});
+
+	it("insert imports automatically when completing unimported symbols", async function () {
+		if (!extApi.analyzerCapabilities.supportsAvailableSuggestions) {
+			this.skip();
+			return;
+		}
+
+		await setTestContent(`
+main() {
+  ProcessInf
+}
+		`);
+		select(rangeOf("ProcessInf||"));
+
+		await acceptFirstSuggestion();
+		await ensureTestContentWithCursorPos(`
+import 'dart:io';
+
+main() {
+  ProcessInfo^
+}
+		`);
+	});
 });
