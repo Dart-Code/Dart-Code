@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { acceptFirstSuggestion, activate, currentDoc, ensureCompletion, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, openFile, rangeOf, select, setTestContent } from "../../helpers";
+import { acceptFirstSuggestion, activate, currentDoc, ensureCompletion, ensureTestContent, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent } from "../../helpers";
 
 describe("completion_item_provider", () => {
 
@@ -116,8 +116,33 @@ main() {
 		`);
 		});
 
-		it("inserts imports into the library file while inserting code into the part file", () => {
-			throw new Error("NYI");
+		it("inserts imports into the library file while inserting code into the part file", async () => {
+			await openFile(helloWorldPartFile);
+			await setTestContent(`
+part of 'part_wrapper.dart';
+
+main() {
+  ProcessInf
+}
+		`);
+			select(rangeOf("ProcessInf||"));
+
+			await acceptFirstSuggestion();
+			await ensureTestContentWithCursorPos(`
+part of 'part_wrapper.dart';
+
+main() {
+  ProcessInfo^
+}
+		`);
+
+			// Now ensure the import was added to the wrapper file.
+			await openFile(helloWorldPartWrapperFile);
+			await ensureTestContent(`
+import 'dart:io';
+
+part 'part.dart';
+					`);
 		});
 	});
 });
