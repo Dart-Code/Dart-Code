@@ -533,7 +533,7 @@ export async function ensureTestContent(expected: string): Promise<void> {
 
 export async function ensureTestSelection(expected: vs.Range): Promise<void> {
 	const editor = currentEditor();
-	assert.equal(editor.selection.isEqual(expected), true);
+	assert.equal(editor.selection.isEqual(expected), true, `${editor.selection && editor.selection.toString()} vs ${expected && expected.toString()}`);
 }
 
 export async function ensureTestContentWithCursorPos(expected: string): Promise<void> {
