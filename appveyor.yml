@@ -58,6 +58,8 @@ install:
   - IF NOT EXIST ".git" (
       git init
       git remote add origin https://github.com/flutter/flutter.git
+    ) else (
+      git remote set-url origin https://github.com/flutter/flutter.git
     )
   - git fetch
   - git reset --hard origin/%FLUTTER_BRANCH%
