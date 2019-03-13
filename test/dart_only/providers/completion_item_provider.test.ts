@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { activate, currentDoc, ensureCompletion, getCompletionsAt, helloWorldCompletionFile, setTestContent } from "../../helpers";
+import { acceptFirstSuggestion, activate, currentDoc, ensureCompletion, ensureTestContentWithSelection, everythingFile, getCompletionsAt, helloWorldCompletionFile, openFile, rangeOf, select, setTestContent } from "../../helpers";
 
 describe("completion_item_provider", () => {
 
@@ -25,4 +25,60 @@ describe("completion_item_provider", () => {
 
 		ensureCompletion(completions, vs.CompletionItemKind.Function, "exit(…)", "exit");
 	});
+
+	it("includes expected completions", async () => {
+		await openFile(everythingFile);
+		const completions = await getCompletionsAt(`^return str`);
+
+		// From the class
+		ensureCompletion(completions, vs.CompletionItemKind.Class, "MyClass", "MyClass");
+		ensureCompletion(completions, vs.CompletionItemKind.Field, "myNumField", "myNumField");
+		ensureCompletion(completions, vs.CompletionItemKind.Property, "myNumGetter", "myNumGetter");
+		ensureCompletion(completions, vs.CompletionItemKind.Property, "myNumSetter", "myNumSetter");
+		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "MyClass()", "MyClass");
+		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "MyClass.myNamed()", "MyClass.myNamed");
+		ensureCompletion(completions, vs.CompletionItemKind.Method, "myVoidReturningMethod()", "myVoidReturningMethod");
+		ensureCompletion(completions, vs.CompletionItemKind.Method, "myStringReturningMethod()", "myStringReturningMethod");
+		ensureCompletion(completions, vs.CompletionItemKind.Method, "methodTakingString(…)", "methodTakingString");
+		ensureCompletion(completions, vs.CompletionItemKind.Method, "methodTakingFunction(…)", "methodTakingFunction");
+		ensureCompletion(completions, vs.CompletionItemKind.Variable, "str", "str");
+
+		// Top levels
+		ensureCompletion(completions, vs.CompletionItemKind.Function, "doSomeStuff()", "doSomeStuff");
+		ensureCompletion(completions, vs.CompletionItemKind.Variable, "foo", "foo"); // We don't know it's constant from DAS.
+		ensureCompletion(completions, vs.CompletionItemKind.Enum, "Theme", "Theme");
+		ensureCompletion(completions, vs.CompletionItemKind.EnumMember, "Theme.Light", "Theme.Light");
+
+		// TODO: vs.CompletionItemKind.File/Folder?
+
+		// Keywords
+		ensureCompletion(completions, vs.CompletionItemKind.Keyword, "final", "final");
+	});
+
+	it("inserts full text for overrides", async () => {
+		await setTestContent(`
+abstract class Person {
+  String get name;
+}
+
+class Student extends Person {
+  na //
+}
+	`);
+		select(rangeOf("na|| //"));
+
+		await acceptFirstSuggestion();
+		await ensureTestContentWithSelection(`
+abstract class Person {
+  String get name;
+}
+
+class Student extends Person {
+  @override
+  // TODO: implement name
+  String get name => |null|; //
+}
+	`);
+	});
+
 });

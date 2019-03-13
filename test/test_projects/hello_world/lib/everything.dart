@@ -8,6 +8,8 @@ import 'package:protobuf/protobuf.dart';
 
 // After blank line
 
+const foo = "foo";
+
 /// This is my class.
 class MyClass {
   /// This is my num field.
@@ -36,7 +38,8 @@ class MyClass {
 
   /// This is my string returning method.
   String myStringReturningMethod() {
-    return "";
+    final str = "str";
+    return str;
   }
 
   /// This is my method taking a string.
@@ -64,3 +67,5 @@ void doSomeStuff() {
   b.methodTakingString("World!");
   b.methodTakingFunction((s) => print(s));
 }
+
+enum Theme { Light, Dark }

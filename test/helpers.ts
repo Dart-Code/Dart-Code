@@ -377,6 +377,15 @@ export function waitForDiagnosticChange(resource?: vs.Uri): Promise<void> {
 	});
 }
 
+export async function acceptFirstSuggestion(): Promise<void> {
+	// TODO: Can we make this better (we're essentially waiting to ensure resolve completed
+	// before we accept, so that we don't insert the standard label without the extra
+	// edits which are added in in resolve).
+	await vs.commands.executeCommand("editor.action.triggerSuggest");
+	await delay(500);
+	await waitForEditorChange(() => vs.commands.executeCommand("acceptSelectedSuggestion"));
+}
+
 export function ensureError(errors: vs.Diagnostic[], text: string) {
 	const error = errors.find((e) => e.message.indexOf(text) !== -1);
 	assert.ok(
@@ -531,6 +540,11 @@ export async function ensureTestContentWithCursorPos(expected: string): Promise<
 	await ensureTestContent(expected.replace(/\^/g, ""));
 	const pos = positionOf(expected);
 	await ensureTestSelection(new vs.Range(pos, pos));
+}
+
+export async function ensureTestContentWithSelection(expected: string): Promise<void> {
+	await ensureTestContent(expected.replace(/\|/g, ""));
+	await ensureTestSelection(rangeOf(expected));
 }
 
 export function delay(milliseconds: number): Promise<void> {
