@@ -271,8 +271,9 @@ export class DartCompletionItemProvider implements CompletionItemProvider {
 			case "CONSTRUCTOR_INVOCATION":
 				return CompletionItemKind.Constructor;
 			case "ENUM":
-			case "ENUM_CONSTANT":
 				return CompletionItemKind.Enum;
+			case "ENUM_CONSTANT":
+				return CompletionItemKind.EnumMember;
 			case "FIELD":
 				return CompletionItemKind.Field;
 			case "FILE":
