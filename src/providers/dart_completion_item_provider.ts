@@ -99,8 +99,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		if (!item.suggestion)
 			return;
 
-		const suggestion: as.AvailableSuggestion = item.suggestion;
-
 		const res = await this.analyzer.completionGetSuggestionDetails({
 			file: item.filePath,
 			id: item.suggestionSetID,
@@ -108,27 +106,52 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			offset: item.offset,
 		});
 
-		const completionItem = this.makeCompletion(item.document, item.nextCharacter, item.enableCommitCharacters, item.insertArgumentPlaceholders, {
-			completionText: res.completion,
+		// Rebuild the completion using the additional resolved info.
+		return this.createCompletionItemFromSuggestion(
+			item.document,
+			item.nextCharacter,
+			item.enableCommitCharacters,
+			item.insertArgumentPlaceholders,
+			item.replacementOffset,
+			item.replacementLength,
+			item.suggestion,
+			res,
+		);
+	}
+
+	private createCompletionItemFromSuggestion(
+		document: TextDocument,
+		nextCharacter: string,
+		enableCommitCharacters: boolean,
+		insertArgumentPlaceholders: boolean,
+		replacementOffset: number,
+		replacementLength: number,
+		suggestion: as.AvailableSuggestion,
+		resolvedResult: as.CompletionGetSuggestionDetailsResponse | undefined,
+	) {
+		const completionItem = this.makeCompletion(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, {
+			completionText: (resolvedResult && resolvedResult.completion) || suggestion.label,
 			displayText: undefined,
 			docSummary: suggestion.docSummary,
 			elementKind: suggestion.element ? suggestion.element.kind : undefined,
-			isDeprecated: false, // Not supported for unimported completions
-			kind: "ARGUMENT_LIST", // TODO: NEED THIS???? NEED THIS???? NEED THIS???? NEED THIS???? NEED THIS???? NEED THIS???? NEED THIS????
+			isDeprecated: false,
+			kind: "ARGUMENT_LIST",
 			parameterNames: suggestion.parameterNames,
-			parameterType: "TODO: PARAMETER TYPE??", // TODO
+			parameterType: "TODO: PARAMETER TYPE??",
 			parameters: suggestion.element ? suggestion.element.parameters : undefined,
-			relevance: 0, // TODO: !!
-			replacementLength: item.replacementLength,
-			replacementOffset: item.replacementOffset,
+			relevance: 0,
+			replacementLength,
+			replacementOffset,
 			requiredParameterCount: suggestion.requiredParameterCount,
 			returnType: suggestion.element ? suggestion.element.returnType : undefined,
-			selectionLength: res.change && res.change.selection ? 0 : undefined,
-			selectionOffset: res.change && res.change.selection ? res.change.selection.offset : undefined,
+			selectionLength: resolvedResult && resolvedResult.change && resolvedResult.change.selection ? 0 : undefined,
+			selectionOffset: resolvedResult && resolvedResult.change && resolvedResult.change.selection ? resolvedResult.change.selection.offset : undefined,
 		});
 
 		// Additional edits for the imports.
-		completionItem.additionalTextEdits = convertSimpleEdits(item.document, res.change);
+		if (resolvedResult) {
+			completionItem.additionalTextEdits = convertSimpleEdits(document, resolvedResult.change);
+		}
 
 		return completionItem;
 	}
@@ -144,6 +167,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		if (!resp.includedSuggestionSets)
 			return;
 
+		const filePath = fsPath(document.uri);
 		const suggestionSetResults: CompletionItem[][] = [];
 		for (let i = 0; i < resp.includedSuggestionSets.length; i++) {
 			const suggestionSet = resp.includedSuggestionSets[i];
@@ -160,18 +184,35 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			const unresolvedItems = results
 				// TODO: How should we do this?
 				.filter((r) => !elementKinds || elementKinds.indexOf(r.element.kind) !== -1)
-				.map((r) => new DelayedCompletionItem(
-					document,
-					nextCharacter,
-					enableCommitCharacters,
-					insertArgumentPlaceholders,
-					r,
-					resp.replacementOffset,
-					resp.replacementLength,
-					offset,
-					fsPath(document.uri),
-					suggestionSet.id,
-				));
+				.map((suggestion): DelayedCompletionItem => {
+					const completionItem = this.createCompletionItemFromSuggestion(
+						document,
+						nextCharacter,
+						enableCommitCharacters,
+						insertArgumentPlaceholders,
+						resp.replacementOffset,
+						resp.replacementLength,
+						suggestion,
+						undefined,
+					);
+
+					// Attach additional info that resolve will need.
+					const delayedCompletionItem: DelayedCompletionItem = {
+						document,
+						enableCommitCharacters,
+						filePath,
+						insertArgumentPlaceholders,
+						nextCharacter,
+						offset,
+						replacementLength: resp.replacementLength,
+						replacementOffset: resp.replacementOffset,
+						suggestion,
+						suggestionSetID: suggestionSet.id,
+						...completionItem,
+					};
+
+					return delayedCompletionItem;
+				});
 			suggestionSetResults.push(unresolvedItems);
 		}
 
@@ -435,21 +476,17 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	}
 }
 
-class DelayedCompletionItem extends CompletionItem {
-	constructor(
-		public readonly document: TextDocument,
-		public readonly nextCharacter: string,
-		public readonly enableCommitCharacters: boolean,
-		public readonly insertArgumentPlaceholders: boolean,
-		public readonly suggestion: as.AvailableSuggestion,
-		public readonly replacementOffset: number,
-		public readonly replacementLength: number,
-		public readonly offset: number,
-		public readonly filePath: string,
-		public readonly suggestionSetID: number,
-		kind?: CompletionItemKind) {
-		super(suggestion.label, kind);
-	}
+interface DelayedCompletionItem extends CompletionItem {
+	document: TextDocument;
+	nextCharacter: string;
+	enableCommitCharacters: boolean;
+	insertArgumentPlaceholders: boolean;
+	suggestion: as.AvailableSuggestion;
+	replacementOffset: number;
+	replacementLength: number;
+	offset: number;
+	filePath: string;
+	suggestionSetID: number;
 }
 
 function convertSimpleEdits(document: vs.TextDocument, change: as.SourceChange | undefined): vs.TextEdit[] | undefined {
