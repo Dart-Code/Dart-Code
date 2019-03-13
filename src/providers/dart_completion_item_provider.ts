@@ -10,6 +10,9 @@ import { flatMap, IAmDisposable } from "../debug/utils";
 import { fsPath } from "../utils";
 import { logError, logWarn } from "../utils/log";
 
+// TODO: This code has become messy with the SuggestionSet changes. It could do with some refactoring
+// (such as creating a mapping from CompletionSuggestion -> x and SuggestionSet -> x, and then x -> CompletionItem).
+
 export class DartCompletionItemProvider implements CompletionItemProvider, IAmDisposable {
 	private disposables: Disposable[] = [];
 	private cachedCompletions: { [key: number]: as.AvailableSuggestion[] } = {};
