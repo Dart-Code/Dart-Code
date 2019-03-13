@@ -1,3 +1,4 @@
+import * as assert from "assert";
 import * as vs from "vscode";
 import { acceptFirstSuggestion, activate, currentDoc, ensureCompletion, ensureTestContent, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent } from "../../helpers";
 
@@ -53,6 +54,27 @@ describe("completion_item_provider", () => {
 
 		// Keywords
 		ensureCompletion(completions, vs.CompletionItemKind.Keyword, "final", "final");
+	});
+
+	it("full populates a completion", async () => {
+		await openFile(everythingFile);
+		const completions = await getCompletionsAt(`^return str`);
+
+		const cl = ensureCompletion(completions, vs.CompletionItemKind.Method, "methodWithArgsAndReturnValue(…)", "methodWithArgsAndReturnValue");
+		assert.equal(cl.additionalTextEdits, undefined); // Tested in the unimported imports test.
+		assert.equal(cl.command, undefined); // Tested in the unimported imports in part-file test.
+		assert.equal(cl.commitCharacters, undefined); // TODO: ??
+		assert.equal(cl.detail, "(int i) → int");
+		assert.equal((cl.documentation as vs.MarkdownString).value, "This is my method taking arguments and returning a value.");
+		assert.equal(cl.filterText, "methodWithArgsAndReturnValue");
+		assert.equal((cl.insertText as vs.SnippetString).value, "methodWithArgsAndReturnValue(${1:i})");
+		assert.equal(cl.keepWhitespace, true);
+		assert.equal(cl.kind, vs.CompletionItemKind.Method);
+		assert.equal(cl.label, "methodWithArgsAndReturnValue(…)");
+		assert.notEqual(cl.preselect, true);
+		assert.equal(cl.range.isEqual(rangeOf("|return| str")), true);
+		assert.equal(cl.sortText, "998943methodWithArgsAndReturnValue(…)"); // TODO: This may be fragile...
+		assert.equal(cl.textEdit, undefined); // We don't use this (we use insertText and range).
 	});
 
 	it("sorts completions by relevance", async () => {

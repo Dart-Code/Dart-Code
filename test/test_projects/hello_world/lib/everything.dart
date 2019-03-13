@@ -47,6 +47,11 @@ class MyClass {
 
   /// This is my method taking a function.
   void methodTakingFunction(void Function(String) myFunc) {}
+
+  /// This is my method taking arguments and returning a value.
+  int methodWithArgsAndReturnValue(int i) {
+    return i;
+  }
 }
 
 @deprecated
