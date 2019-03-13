@@ -492,7 +492,7 @@ export async function getSnippetCompletionsAt(searchText: string, triggerCharact
 	return completions.filter((c) => c.kind === vs.CompletionItemKind.Snippet);
 }
 
-export function ensureCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind, label: string, filterText?: string, documentation?: string): void {
+export function ensureCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind, label: string, filterText?: string, documentation?: string): vs.CompletionItem {
 	let completion = items.find((item) =>
 		item.label === label
 		&& item.filterText === filterText
@@ -505,8 +505,9 @@ export function ensureCompletion(items: vs.CompletionItem[], kind: vs.Completion
 	);
 	completion = completion!;
 	if (documentation) {
-		assert.equal(((completion.documentation as any).value as string).trim(), documentation);
+		assert.equal((completion.documentation as any).value.trim(), documentation);
 	}
+	return completion;
 }
 
 export function ensureSnippet(items: vs.CompletionItem[], label: string, filterText: string, documentation?: string): void {
