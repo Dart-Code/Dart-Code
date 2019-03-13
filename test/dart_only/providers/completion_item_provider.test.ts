@@ -81,46 +81,43 @@ class Student extends Person {
 	`);
 	});
 
-	it("includes unimported symbols", async function () {
-		if (!extApi.analyzerCapabilities.supportsAvailableSuggestions) {
-			this.skip();
-			return;
-		}
+	describe("with SuggestionSet support", () => {
+		before("ensure SuggestionSets are supported", function () {
+			if (!extApi.analyzerCapabilities.supportsAvailableSuggestions)
+				this.skip();
+		});
 
-		await setTestContent(`
+		it("includes unimported symbols", async () => {
+			await setTestContent(`
 main() {
   ProcessInf
 }
 		`);
-		const completions = await getCompletionsAt("ProcessInf^");
+			const completions = await getCompletionsAt("ProcessInf^");
 
-		ensureCompletion(completions, vs.CompletionItemKind.Property, "ProcessInfo", undefined);
-	});
+			ensureCompletion(completions, vs.CompletionItemKind.Function, "ProcessInfo", undefined);
+		});
 
-	it("insert imports automatically when completing unimported symbols", async function () {
-		if (!extApi.analyzerCapabilities.supportsAvailableSuggestions) {
-			this.skip();
-			return;
-		}
-
-		await setTestContent(`
+		it("insert imports automatically when completing unimported symbols", async () => {
+			await setTestContent(`
 main() {
   ProcessInf
 }
 		`);
-		select(rangeOf("ProcessInf||"));
+			select(rangeOf("ProcessInf||"));
 
-		await acceptFirstSuggestion();
-		await ensureTestContentWithCursorPos(`
+			await acceptFirstSuggestion();
+			await ensureTestContentWithCursorPos(`
 import 'dart:io';
 
 main() {
   ProcessInfo^
 }
 		`);
-	});
+		});
 
-	it("inserts imports into the library file while inserting code into the part file", () => {
-		throw new Error("NYI");
+		it("inserts imports into the library file while inserting code into the part file", () => {
+			throw new Error("NYI");
+		});
 	});
 });
