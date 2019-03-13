@@ -95,7 +95,7 @@ main() {
 		`);
 			const completions = await getCompletionsAt("ProcessInf^");
 
-			ensureCompletion(completions, vs.CompletionItemKind.Function, "ProcessInfo", undefined);
+			ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
 		});
 
 		it("insert imports automatically when completing unimported symbols", async () => {
