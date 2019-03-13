@@ -55,6 +55,10 @@ describe("completion_item_provider", () => {
 		ensureCompletion(completions, vs.CompletionItemKind.Keyword, "final", "final");
 	});
 
+	it("sorts completions by relevance", async () => {
+		throw new Error("NYI");
+	});
+
 	it("inserts full text for overrides", async () => {
 		await setTestContent(`
 abstract class Person {
@@ -143,6 +147,10 @@ import 'dart:io';
 
 part 'part.dart';
 					`);
+		});
+
+		it("sorts unimported completions correctly relative to imported completions", async () => {
+			throw new Error("NYI");
 		});
 	});
 });
