@@ -511,6 +511,8 @@ function convertSimpleEdits(document: vs.TextDocument, change: as.SourceChange |
 	const filePath = fsPath(document.uri);
 
 	if (change.edits.find((e) => e.file !== filePath)) {
+		// TODO: This is not an allowed assumption. We may get imports for other files!
+		// We should try using the Command property of CompletionItem to apply them.
 		logError("Unable to insert imports because of edits included other files.");
 		vs.window.showErrorMessage(`Unable to insert imports because of edits included other files`);
 		return undefined;
