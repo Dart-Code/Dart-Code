@@ -317,9 +317,11 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		context.subscriptions.push(new OpenFileTracker(analyzer));
 
 		// Set up completions for unimported items.
-		analyzer.completionSetSubscriptions({
-			subscriptions: ["AVAILABLE_SUGGESTION_SETS"],
-		});
+		if (analyzer.capabilities.supportsAvailableSuggestions) {
+			analyzer.completionSetSubscriptions({
+				subscriptions: ["AVAILABLE_SUGGESTION_SETS"],
+			});
+		}
 	});
 
 	// Handle config changes so we can reanalyze if necessary.
