@@ -522,19 +522,15 @@ export async function ensureTestContent(expected: string): Promise<void> {
 	assert.equal(doc.getText().replace(/\r/g, "").trim(), expected.replace(/\r/g, "").trim());
 }
 
-export async function ensureTestContentWithCursorPos(expected: string): Promise<void> {
-	await ensureTestContent(expected.replace("^", ""));
-	// To avoid issues with newlines not matching up in `expected`, we'll just stick the
-	// placeholder character ^ in the cursor location then call ensureTextContent.
+export async function ensureTestSelection(expected: vs.Range): Promise<void> {
 	const editor = currentEditor();
-	const doc = editor.document;
-	const originalSelection = doc.getText(editor.selection);
-	try {
-		await editor.edit((builder) => builder.replace(editor.selection, "^"));
-		await ensureTestContent(expected);
-	} finally {
-		await editor.edit((builder) => builder.replace(editor.selection, originalSelection));
-	}
+	assert.equal(editor.selection.isEqual(expected), true);
+}
+
+export async function ensureTestContentWithCursorPos(expected: string): Promise<void> {
+	await ensureTestContent(expected.replace(/\^/g, ""));
+	const pos = positionOf(expected);
+	await ensureTestSelection(new vs.Range(pos, pos));
 }
 
 export function delay(milliseconds: number): Promise<void> {
