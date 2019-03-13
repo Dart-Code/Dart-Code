@@ -22,6 +22,10 @@ describe("document_symbol_provider", () => {
 		ensureDocumentSymbol(symbols, "methodTakingString", vs.SymbolKind.Method, "MyClass");
 		ensureDocumentSymbol(symbols, "methodTakingFunction", vs.SymbolKind.Method, "MyClass");
 		ensureDocumentSymbol(symbols, "doSomeStuff", vs.SymbolKind.Function);
-		assert.equal(symbols.length, 13);
+		ensureDocumentSymbol(symbols, "foo", vs.SymbolKind.Variable);
+		ensureDocumentSymbol(symbols, "Theme", vs.SymbolKind.Enum);
+		ensureDocumentSymbol(symbols, "Light", vs.SymbolKind.EnumMember, "Theme");
+		ensureDocumentSymbol(symbols, "Dark", vs.SymbolKind.EnumMember, "Theme");
+		assert.equal(symbols.length, 17);
 	});
 });

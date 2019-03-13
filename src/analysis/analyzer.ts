@@ -258,8 +258,9 @@ export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind
 		case "CONSTRUCTOR_INVOCATION":
 			return vs.SymbolKind.Constructor;
 		case "ENUM":
-		case "ENUM_CONSTANT":
 			return vs.SymbolKind.Enum;
+		case "ENUM_CONSTANT":
+			return vs.SymbolKind.EnumMember;
 		case "FIELD":
 			return vs.SymbolKind.Field;
 		case "FILE":
