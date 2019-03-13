@@ -15,7 +15,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	private cachedCompletions: { [key: number]: as.AvailableSuggestion[] } = {};
 
 	constructor(private readonly analyzer: Analyzer) {
-		this.disposables.push(analyzer.registerForCompletionAvailableSuggestions((n) => this.storeCompletionSuggestions(n)));
+		if (analyzer.capabilities.supportsAvailableSuggestions)
+			this.disposables.push(analyzer.registerForCompletionAvailableSuggestions((n) => this.storeCompletionSuggestions(n)));
 	}
 
 	public async provideCompletionItems(
