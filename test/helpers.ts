@@ -8,6 +8,7 @@ import * as vs from "vscode";
 import { Context } from "../src/context";
 import { dartCodeExtensionIdentifier, flatMap, LogCategory, LogSeverity } from "../src/debug/utils";
 import { InternalExtensionApi } from "../src/extension";
+import { DelayedCompletionItem } from "../src/providers/dart_completion_item_provider";
 import { internalApiSymbol } from "../src/symbols";
 import { fsPath, isAnalyzable, vsCodeVersionConstraint } from "../src/utils";
 import { tryDeleteFile } from "../src/utils/fs";
@@ -487,6 +488,18 @@ export async function getCompletionsAt(searchText: string, triggerCharacter?: st
 	return results.items;
 }
 
+export async function getCompletionsViaProviderAt(searchText: string, triggerCharacter?: string): Promise<vs.CompletionItem[]> {
+	const position = positionOf(searchText);
+	const results = await extApi.completionItemProvider.provideCompletionItems(
+		currentDoc(),
+		position,
+		undefined,
+		{ triggerCharacter, triggerKind: triggerCharacter ? vs.CompletionTriggerKind.TriggerCharacter : vs.CompletionTriggerKind.Invoke },
+	);
+
+	return results.items;
+}
+
 export async function getSnippetCompletionsAt(searchText: string, triggerCharacter?: string): Promise<vs.CompletionItem[]> {
 	const completions = await getCompletionsAt(searchText, triggerCharacter);
 	return completions.filter((c) => c.kind === vs.CompletionItemKind.Snippet);
@@ -508,6 +521,11 @@ export function ensureCompletion(items: vs.CompletionItem[], kind: vs.Completion
 		assert.equal((completion.documentation as any).value.trim(), documentation);
 	}
 	return completion;
+}
+
+export async function resolveCompletion(completion: vs.CompletionItem): Promise<vs.CompletionItem> {
+	const resolved = await extApi.completionItemProvider.resolveCompletionItem(completion as DelayedCompletionItem, undefined);
+	return resolved || completion;
 }
 
 export function ensureSnippet(items: vs.CompletionItem[], label: string, filterText: string, documentation?: string): void {
