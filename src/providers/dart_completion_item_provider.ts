@@ -15,7 +15,7 @@ import { logError, logWarn } from "../utils/log";
 
 export class DartCompletionItemProvider implements CompletionItemProvider, IAmDisposable {
 	private disposables: Disposable[] = [];
-	private cachedCompletions: { [key: number]: as.AvailableSuggestion[] } = {};
+	private cachedCompletions: { [key: number]: as.AvailableSuggestionSet } = {};
 
 	constructor(private readonly analyzer: Analyzer) {
 		this.disposables.push(analyzer.registerForCompletionAvailableSuggestions((n) => this.storeCompletionSuggestions(n)));
@@ -88,7 +88,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	private storeCompletionSuggestions(notification: as.CompletionAvailableSuggestionsNotification) {
 		if (notification.changedLibraries) {
 			for (const completionSet of notification.changedLibraries) {
-				this.cachedCompletions[completionSet.id] = completionSet.items;
+				this.cachedCompletions[completionSet.id] = completionSet;
 			}
 		}
 		if (notification.removedLibraries) {
@@ -173,18 +173,18 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		const filePath = fsPath(document.uri);
 		const suggestionSetResults: CompletionItem[][] = [];
 		for (let i = 0; i < resp.includedSuggestionSets.length; i++) {
-			const suggestionSet = resp.includedSuggestionSets[i];
+			const includedSuggestionSet = resp.includedSuggestionSets[i];
 			const elementKinds = resp.includedElementKinds[i];
 			// TODO: Use this somewhere?
 			const relevanceTags = resp.includedSuggestionRelevanceTags[i];
 
-			const results = this.cachedCompletions[suggestionSet.id];
-			if (!results) {
-				logWarn(`Suggestion set ${suggestionSet.id} was not available and therefore not included in the completion results`);
+			const suggestionSet = this.cachedCompletions[includedSuggestionSet.id];
+			if (!suggestionSet) {
+				logWarn(`Suggestion set ${includedSuggestionSet.id} was not available and therefore not included in the completion results`);
 				return;
 			}
 
-			const unresolvedItems = results
+			const unresolvedItems = suggestionSet.items
 				// TODO: How should we do this?
 				.filter((r) => !elementKinds || elementKinds.indexOf(r.element.kind) !== -1)
 				.map((suggestion): DelayedCompletionItem => {
@@ -210,7 +210,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 						replacementLength: resp.replacementLength,
 						replacementOffset: resp.replacementOffset,
 						suggestion,
-						suggestionSetID: suggestionSet.id,
+						suggestionSetID: includedSuggestionSet.id,
 						...completionItem,
 					};
 
