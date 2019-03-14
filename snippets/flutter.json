@@ -66,6 +66,59 @@
 				"  }",
 				"}"
 			]
+		},
+		"Material App": {
+			"prefix": "mateapp",
+			"description": "Create a Material App",
+			"body": [
+				"import 'package:flutter/material.dart';",
+				" ",
+				"void main() => runApp(MyApp());",
+				" ",
+				"class MyApp extends StatelessWidget {",
+				"  @override",
+				"  Widget build(BuildContext context) {",
+				"    return MaterialApp(",
+				"      title: 'Material App'",
+				"      home: Scaffold(",
+				"        appBar: AppBar(",
+				"          title: Text('Material App Bar'),",
+				"        ),",
+				"        body: Center(",
+				"          child: Container(",
+				"            child: Text('Hello World'),",
+				"          ),",
+				"        ),",
+				"      ),",
+				"    );",
+				"  }",
+				"}"
+			]
+		},
+		"Cupertino App": {
+			"prefix": "cupeapp",
+			"description": "Create a Cupertino App",
+			"body": [
+				"import 'package:flutter/cupertino.dart';",
+				" ",
+				"void main() => runApp(MyApp());",
+				" ",
+				"class MyApp extends StatelessWidget {",
+				"  @override",
+				"  Widget build(BuildContext context) {",
+				"    return CupertinoApp(",
+				"      title: 'Cupertino App'",
+				"      home: CupertinoPageScaffold(",
+				"        body: Center(",
+				"          child: Container(",
+				"            child: Text('Hello World'),",
+				"          ),",
+				"        ),",
+				"      ),",
+				"    );",
+				"  }",
+				"}"
+			]
 		}
 	}
 }
