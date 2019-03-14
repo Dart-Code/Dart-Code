@@ -130,7 +130,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		insertArgumentPlaceholders: boolean,
 		replacementOffset: number,
 		replacementLength: number,
-		displayUri: string,
+		displayUri: string | undefined,
 		suggestion: as.AvailableSuggestion,
 		resolvedResult: as.CompletionGetSuggestionDetailsResponse | undefined,
 	) {
@@ -155,8 +155,11 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		});
 
 		// Additional edits for the imports.
-		if (resolvedResult)
+		if (resolvedResult && resolvedResult.change && resolvedResult.change.edits && resolvedResult.change.edits.length) {
 			appendAdditionalEdits(completionItem, document, resolvedResult.change);
+			if (displayUri)
+				completionItem.detail = `Auto import from '${displayUri}'` + (completionItem.detail ? `\n\n${completionItem.detail}` : "");
+		}
 
 		return completionItem;
 	}
@@ -197,7 +200,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 						insertArgumentPlaceholders,
 						resp.replacementOffset,
 						resp.replacementLength,
-						includedSuggestionSet.displayUri || suggestionSet.uri,
+						undefined,
 						suggestion,
 						undefined,
 					);
@@ -364,9 +367,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		completion.label = label;
 		completion.filterText = label.split("(")[0]; // Don't ever include anything after a ( in filtering.
 		completion.kind = kind;
-		completion.detail = (suggestion.autoImportUri ? `Auto import from '${suggestion.autoImportUri}'\n\n` : "")
-			+ (suggestion.isDeprecated ? "(deprecated) " : "")
-			+ detail;
+		completion.detail = (suggestion.isDeprecated ? "(deprecated) " : "") + detail;
 		completion.documentation = new MarkdownString(cleanDartdoc(suggestion.docSummary));
 		completion.insertText = completionText;
 		completion.keepWhitespace = true;
@@ -486,7 +487,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	}
 }
 
-interface DelayedCompletionItem extends CompletionItem {
+export interface DelayedCompletionItem extends CompletionItem {
 	autoImportUri: string;
 	document: TextDocument;
 	enableCommitCharacters: boolean;
