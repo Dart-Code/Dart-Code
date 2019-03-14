@@ -2,7 +2,6 @@ import * as fs from "fs";
 import * as path from "path";
 import { isArray } from "util";
 import * as vs from "vscode";
-import { WorkspaceFolder } from "vscode";
 import { internalApiSymbol } from "../src/symbols";
 import { Analyzer, AnalyzerCapabilities } from "./analysis/analyzer";
 import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
@@ -423,7 +422,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		if (workspaceContext.isInFuchsiaTree) // TODO: This should be tested per-project.
 			return;
 		const folders = util.getDartWorkspaceFolders();
-		const foldersRequiringPackageGet = folders.filter((ws: WorkspaceFolder) => config.for(ws.uri).promptToGetPackages).filter(isPubGetProbablyRequired);
+		const foldersRequiringPackageGet = folders.filter((ws: vs.WorkspaceFolder) => config.for(ws.uri).promptToGetPackages).filter(isPubGetProbablyRequired);
 		if (foldersRequiringPackageGet.length > 0)
 			promptToRunPubGet(foldersRequiringPackageGet);
 	}
@@ -453,6 +452,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		[internalApiSymbol]: {
 			analyzerCapabilities: analyzer.capabilities,
 			cancelAllAnalysisRequests: () => analyzer.cancelAllRequests(),
+			completionItemProvider,
 			context: extContext,
 			currentAnalysis: () => analyzer.currentAnalysis,
 			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
@@ -606,8 +606,9 @@ function setCommandVisiblity(enable: boolean, workspaceContext?: util.WorkspaceC
 
 export interface InternalExtensionApi {
 	analyzerCapabilities: AnalyzerCapabilities;
-	context: Context;
 	cancelAllAnalysisRequests: () => void;
+	completionItemProvider: DartCompletionItemProvider;
+	context: Context;
 	currentAnalysis: () => Promise<void>;
 	daemonCapabilities: DaemonCapabilities;
 	dartCapabilities: DartCapabilities;
