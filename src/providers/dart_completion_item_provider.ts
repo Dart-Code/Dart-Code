@@ -155,9 +155,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		});
 
 		// Additional edits for the imports.
-		if (resolvedResult) {
-			completionItem.additionalTextEdits = convertSimpleEdits(document, resolvedResult.change);
-		}
+		if (resolvedResult)
+			appendAdditionalEdits(completionItem, document, resolvedResult.change);
 
 		return completionItem;
 	}
@@ -490,18 +489,18 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 interface DelayedCompletionItem extends CompletionItem {
 	autoImportUri: string;
 	document: TextDocument;
-	nextCharacter: string;
 	enableCommitCharacters: boolean;
-	insertArgumentPlaceholders: boolean;
-	suggestion: as.AvailableSuggestion;
-	replacementOffset: number;
-	replacementLength: number;
-	offset: number;
 	filePath: string;
+	insertArgumentPlaceholders: boolean;
+	nextCharacter: string;
+	offset: number;
+	replacementLength: number;
+	replacementOffset: number;
+	suggestion: as.AvailableSuggestion;
 	suggestionSetID: number;
 }
 
-function convertSimpleEdits(document: vs.TextDocument, change: as.SourceChange | undefined): vs.TextEdit[] | undefined {
+function appendAdditionalEdits(completionItem: vs.CompletionItem, document: vs.TextDocument, change: as.SourceChange | undefined): void {
 	if (!change)
 		return undefined;
 
@@ -518,23 +517,33 @@ function convertSimpleEdits(document: vs.TextDocument, change: as.SourceChange |
 	}
 
 	const filePath = fsPath(document.uri);
+	const thisFilesEdits = change.edits.filter((e) => e.file === filePath);
+	const otherFilesEdits = change.edits.filter((e) => e.file !== filePath);
 
-	if (change.edits.find((e) => e.file !== filePath)) {
-		// TODO: This is not an allowed assumption. We may get imports for other files!
-		// We should try using the Command property of CompletionItem to apply them.
-		logError("Unable to insert imports because of edits included other files.");
-		vs.window.showErrorMessage(`Unable to insert imports because of edits included other files`);
-		return undefined;
-	}
-
-	return flatMap(change.edits, (edit) => {
-		return edit.edits.map((edit) => {
-			const range = new vs.Range(
-				document.positionAt(edit.offset),
-				document.positionAt(edit.offset + edit.length),
-			);
-			return new vs.TextEdit(range, edit.replacement);
+	if (thisFilesEdits.length) {
+		completionItem.additionalTextEdits = flatMap(thisFilesEdits, (edit) => {
+			return edit.edits.map((edit) => {
+				const range = new vs.Range(
+					document.positionAt(edit.offset),
+					document.positionAt(edit.offset + edit.length),
+				);
+				return new vs.TextEdit(range, edit.replacement);
+			});
 		});
-	});
+	}
+	if (otherFilesEdits.length) {
+		const filteredSourceChange: as.SourceChange = {
+			edits: otherFilesEdits,
+			id: change.id,
+			linkedEditGroups: undefined,
+			message: change.message,
+			selection: change.selection,
+		};
+		completionItem.command = {
+			arguments: [document, filteredSourceChange],
+			command: "_dart.applySourceChange",
+			title: "Automatically add imports",
+		};
+	}
 
 }
