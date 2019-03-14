@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { acceptFirstSuggestion, activate, currentDoc, ensureCompletion, ensureTestContent, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent } from "../../helpers";
+import { acceptFirstSuggestion, activate, currentDoc, ensureCompletion, ensureTestContent, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, getCompletionsViaProviderAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, resolveCompletion, select, setTestContent } from "../../helpers";
 
 describe("completion_item_provider", () => {
 
@@ -64,7 +64,7 @@ describe("completion_item_provider", () => {
 		assert.equal(cl.additionalTextEdits, undefined); // Tested in the unimported imports test.
 		assert.equal(cl.command, undefined); // Tested in the unimported imports in part-file test.
 		assert.equal(cl.commitCharacters, undefined); // TODO: ??
-		assert.equal(cl.detail, "(int i) → int");
+		assert.equal(cl.detail, "(int i) → int"); // No auto import message here
 		assert.equal((cl.documentation as vs.MarkdownString).value, "This is my method taking arguments and returning a value.");
 		assert.equal(cl.filterText, "methodWithArgsAndReturnValue");
 		assert.equal((cl.insertText as vs.SnippetString).value, "methodWithArgsAndReturnValue(${1:i})");
@@ -75,6 +75,16 @@ describe("completion_item_provider", () => {
 		assert.equal(cl.range.isEqual(rangeOf("|return| str")), true);
 		assert.equal(cl.sortText, "998943methodWithArgsAndReturnValue(…)"); // TODO: This may be fragile...
 		assert.equal(cl.textEdit, undefined); // We don't use this (we use insertText and range).
+	});
+
+	it("full does not include auto-import notes on an in-scope completion", async () => {
+		await openFile(everythingFile);
+		const completions = await getCompletionsViaProviderAt(`^return str`);
+
+		let completion = ensureCompletion(completions, vs.CompletionItemKind.Method, "methodWithArgsAndReturnValue(…)", "methodWithArgsAndReturnValue");
+		completion = await resolveCompletion(completion);
+
+		assert.equal(completion.detail, "(int i) → int"); // No auto import message here
 	});
 
 	it("sorts completions by relevance", async () => {
@@ -121,7 +131,19 @@ main() {
 		`);
 			const completions = await getCompletionsAt("ProcessInf^");
 
-			const completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
+			ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
+		});
+
+		it("includes auto-import notes on unimported symbols", async () => {
+			await setTestContent(`
+main() {
+  ProcessInf
+}
+		`);
+			const completions = await getCompletionsViaProviderAt("ProcessInf^");
+
+			let completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
+			completion = await resolveCompletion(completion);
 			assert.equal(completion.detail.startsWith("Auto import from 'dart:io'\n\n"), true);
 		});
 
