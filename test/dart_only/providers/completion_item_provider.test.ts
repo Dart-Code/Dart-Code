@@ -108,7 +108,7 @@ class Student extends Person {
 	});
 
 	describe("with SuggestionSet support", () => {
-		before("ensure SuggestionSets are supported", function () {
+		beforeEach("ensure SuggestionSets are supported", function () {
 			if (!extApi.analyzerCapabilities.supportsAvailableSuggestions)
 				this.skip();
 		});
