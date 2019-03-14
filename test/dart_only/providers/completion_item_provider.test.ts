@@ -121,7 +121,8 @@ main() {
 		`);
 			const completions = await getCompletionsAt("ProcessInf^");
 
-			ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
+			const completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
+			assert.equal(completion.detail.startsWith("Auto import from 'dart:io'\n\n"), true);
 		});
 
 		it("insert imports automatically when completing unimported symbols", async () => {

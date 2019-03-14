@@ -117,6 +117,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			item.insertArgumentPlaceholders,
 			item.replacementOffset,
 			item.replacementLength,
+			item.autoImportUri,
 			item.suggestion,
 			res,
 		);
@@ -129,10 +130,12 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		insertArgumentPlaceholders: boolean,
 		replacementOffset: number,
 		replacementLength: number,
+		displayUri: string,
 		suggestion: as.AvailableSuggestion,
 		resolvedResult: as.CompletionGetSuggestionDetailsResponse | undefined,
 	) {
 		const completionItem = this.makeCompletion(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, {
+			autoImportUri: displayUri,
 			completionText: (resolvedResult && resolvedResult.completion) || suggestion.label,
 			displayText: undefined,
 			docSummary: suggestion.docSummary,
@@ -195,12 +198,14 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 						insertArgumentPlaceholders,
 						resp.replacementOffset,
 						resp.replacementLength,
+						includedSuggestionSet.displayUri || suggestionSet.uri,
 						suggestion,
 						undefined,
 					);
 
 					// Attach additional info that resolve will need.
 					const delayedCompletionItem: DelayedCompletionItem = {
+						autoImportUri: includedSuggestionSet.displayUri || suggestionSet.uri,
 						document,
 						enableCommitCharacters,
 						filePath,
@@ -252,6 +257,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 	private makeCompletion(
 		document: TextDocument, nextCharacter: string, enableCommitCharacters: boolean, insertArgumentPlaceholders: boolean, suggestion: {
+			autoImportUri?: string,
 			completionText: string,
 			displayText: string | undefined,
 			docSummary: string | undefined,
@@ -359,7 +365,9 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		completion.label = label;
 		completion.filterText = label.split("(")[0]; // Don't ever include anything after a ( in filtering.
 		completion.kind = kind;
-		completion.detail = (suggestion.isDeprecated ? "(deprecated) " : "") + detail;
+		completion.detail = (suggestion.autoImportUri ? `Auto import from '${suggestion.autoImportUri}'\n\n` : "")
+			+ (suggestion.isDeprecated ? "(deprecated) " : "")
+			+ detail;
 		completion.documentation = new MarkdownString(cleanDartdoc(suggestion.docSummary));
 		completion.insertText = completionText;
 		completion.keepWhitespace = true;
@@ -480,6 +488,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 }
 
 interface DelayedCompletionItem extends CompletionItem {
+	autoImportUri: string;
 	document: TextDocument;
 	nextCharacter: string;
 	enableCommitCharacters: boolean;
