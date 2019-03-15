@@ -3,7 +3,7 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { config } from "../../../src/config";
-import { isLinux, platformEol } from "../../../src/debug/utils";
+import { platformEol } from "../../../src/debug/utils";
 import { debugAnywayAction, showErrorsAction } from "../../../src/providers/debug_config_provider";
 import { fsPath, getRandomInt } from "../../../src/utils";
 import { fetch } from "../../../src/utils/fetch";
@@ -195,13 +195,6 @@ describe("dart cli debugger", () => {
 
 	it("can launch DevTools", async function () {
 		if (!extApi.dartCapabilities.supportsDevTools) {
-			this.skip();
-			return;
-		}
-
-		// TODO: Unskip this when we've fixed the orphaned process issue.
-		// https://github.com/Dart-Code/Dart-Code/issues/1511
-		if (isLinux) {
 			this.skip();
 			return;
 		}
