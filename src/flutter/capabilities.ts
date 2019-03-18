@@ -15,4 +15,5 @@ export class FlutterCapabilities {
 	get supportsMultipleSamplesPerElement() { return versionIsAtLeast(this.version, "1.2.2"); }
 	get supportsDevTools() { return versionIsAtLeast(this.version, "1.1.0"); }
 	get hasTestGroupFix() { return versionIsAtLeast(this.version, "1.3.4"); }
+	get supportsFlutterCreateListSamples() { return versionIsAtLeast(this.version, "1.3.10"); }
 }
