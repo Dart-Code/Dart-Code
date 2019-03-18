@@ -49,10 +49,10 @@ describe("command", () => {
 	});
 
 	it("Flutter: Create Sample Project can be invoked and creates trigger file", async () => {
-		const sampleID = "material.IconButton";
 		const showQuickPick = sb.stub(vs.window, "showQuickPick");
 		type SnippetOption = vs.QuickPickItem & { snippet: FlutterSampleSnippet };
-		showQuickPick.callsFake((items: SnippetOption[]) => items.find((s) => s.snippet.id === sampleID));
+		// TODO: Remove "material.IconButton" without the suffix after the next stable Flutter release (the one after v1.2).
+		showQuickPick.callsFake((items: SnippetOption[]) => items.find((s) => s.snippet.id === "material.IconButton" || s.snippet.id === "material.IconButton.1"));
 
 		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
@@ -65,6 +65,8 @@ describe("command", () => {
 		const triggerFile = path.join(fsPath(sampleFolderUri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
 		assert.ok(fs.existsSync(triggerFile));
 		const recordedSampleId = fs.readFileSync(triggerFile).toString().trim();
-		assert.equal(recordedSampleId, sampleID);
+		// TODO: Remove next line and uncomment the following one after the next stable Flutter release (the one after v1.2).
+		assert.equal(recordedSampleId === "material.IconButton" || recordedSampleId === "material.IconButton.1", true);
+		// assert.equal(recordedSampleId, "material.IconButton.1");
 	});
 });
