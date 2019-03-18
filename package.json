@@ -725,7 +725,7 @@
 				},
 				"dart.flutterDocsHost": {
 					"type": "string",
-					"default": "docs.flutter.io",
+					"default": "api.flutter.dev",
 					"description": "The hostname to use for Flutter Docs, for example when fetching available samples.",
 					"scope": "window"
 				},
