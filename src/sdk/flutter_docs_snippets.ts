@@ -1,5 +1,13 @@
+import * as fs from "fs";
 import * as https from "https";
+import * as os from "os";
+import * as path from "path";
 import { config } from "../config";
+import { FlutterCapabilities } from "../flutter/capabilities";
+import { getRandomInt, Sdks } from "../utils";
+import { tryDeleteFile } from "../utils/fs";
+import { runProcess } from "../utils/processes";
+import { flutterPath } from "./utils";
 
 export interface FlutterSampleSnippet {
 	readonly sourcePath: string;
@@ -12,7 +20,32 @@ export interface FlutterSampleSnippet {
 	readonly description: string;
 }
 
-export function getFlutterSnippets(): Promise<FlutterSampleSnippet[]> {
+export function getFlutterSnippets(sdks: Sdks, capabilities: FlutterCapabilities): Promise<FlutterSampleSnippet[]> {
+	if (capabilities.supportsFlutterCreateListSamples)
+		return getFlutterSnippetsFromSdk(sdks);
+	return getFlutterSnippetsFromWeb();
+}
+
+async function getFlutterSnippetsFromSdk(sdks: Sdks): Promise<FlutterSampleSnippet[]> {
+	const binPath = path.join(sdks.flutter, flutterPath);
+
+	const fileName = `flutter-samples-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`;
+	const tempPath = path.join(os.tmpdir(), fileName);
+
+	try {
+		const res = await runProcess(undefined, binPath, ["create", "--list-samples", tempPath]);
+		if (res.exitCode !== 0)
+			throw new Error(`Failed to get Flutter samples from SDK (${res.exitCode})\n\n${res.stderr}\n\n${res.stdout}`);
+
+		const json = fs.readFileSync(tempPath, { encoding: "utf8" });
+
+		return JSON.parse(json);
+	} finally {
+		tryDeleteFile(tempPath);
+	}
+}
+
+function getFlutterSnippetsFromWeb(): Promise<FlutterSampleSnippet[]> {
 	return new Promise<FlutterSampleSnippet[]>((resolve, reject) => {
 		if (!config.flutterDocsHost)
 			reject("No Flutter docs host set");

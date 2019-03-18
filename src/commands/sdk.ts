@@ -460,12 +460,11 @@ export class SdkCommands {
 		}
 
 		// Fetch the JSON for the available samples.
-
 		let snippets: FlutterSampleSnippet[];
 		try {
-			snippets = await getFlutterSnippets();
+			snippets = await getFlutterSnippets(this.sdks, this.flutterCapabilities);
 		} catch {
-			vs.window.showErrorMessage("Unable to download Flutter documentation snippets");
+			vs.window.showErrorMessage("Unable to retrieve Flutter documentation snippets");
 			return;
 		}
 
