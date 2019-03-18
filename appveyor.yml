@@ -24,14 +24,16 @@ matrix:
 # Don't build tags.
 skip_tags: true
 
-# Don't build Stable/Dev or Dev/Stable unless master as the changes of
-# a failure showing up in those and not in either Stable/Stable or Dev/Dev
-# are pretty slim so this will half the time for branch builds.
+# Don't build Stable/Dev or Dev/Stable unless master (and not a PR->master merge build)
+# as the changes of a failure showing up in those and not in either Stable/Stable or
+# Dev/Dev are pretty slim so this will half the time for branch builds.
 for:
   -
     branches:
       only:
         - master
+    # TODO: Skip master builds that are PR-merges
+    # https://help.appveyor.com/discussions/questions/35664-how-to-conditionally-skip-some-matrix-builds-for-the-prs-merge-into-branch-builds
     environment:
       matrix:
         - ONLY_RUN_CODE_VERSION: DEV
