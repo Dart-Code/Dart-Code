@@ -16,3 +16,13 @@ export function hasPackagesFile(folder: string): boolean {
 export function hasPubspec(folder: string): boolean {
 	return fs.existsSync(path.join(folder, "pubspec.yaml"));
 }
+
+export function tryDeleteFile(filePath: string) {
+	if (fs.existsSync(filePath)) {
+		try {
+			fs.unlinkSync(filePath);
+		} catch {
+			console.warn(`Failed to delete file $path.`);
+		}
+	}
+}

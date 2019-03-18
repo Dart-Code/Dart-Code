@@ -10,6 +10,7 @@ import { dartCodeExtensionIdentifier, flatMap, LogCategory, LogSeverity } from "
 import { InternalExtensionApi } from "../src/extension";
 import { internalApiSymbol } from "../src/symbols";
 import { fsPath, isAnalyzable, ProjectType, vsCodeVersionConstraint } from "../src/utils";
+import { tryDeleteFile } from "../src/utils/fs";
 import { log, logError, logTo, logWarn } from "../src/utils/log";
 import { waitFor } from "../src/utils/promises";
 
@@ -176,14 +177,7 @@ export async function openFile(file: vs.Uri): Promise<vs.TextEditor> {
 }
 
 export function tryDelete(file: vs.Uri) {
-	const path = fsPath(file);
-	if (fs.existsSync(path)) {
-		try {
-			fs.unlinkSync(path);
-		} catch {
-			console.warn(`Failed to delete file $path.`);
-		}
-	}
+	tryDeleteFile(fsPath(file));
 }
 
 export function deleteDirectoryRecursive(folder: string) {
