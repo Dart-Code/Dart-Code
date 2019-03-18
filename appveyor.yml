@@ -31,7 +31,7 @@ for:
   -
     branches:
       only:
-        - master
+        - run-less-builds
     environment:
       matrix:
         - ONLY_RUN_CODE_VERSION: DEV
