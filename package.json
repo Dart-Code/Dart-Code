@@ -723,12 +723,6 @@
 					"description": "Whether to pass --track-widget-creation to Flutter apps (required to support 'Inspect Widget'). If this setting is not set, it will default to true for Flutter >= 10.2 and false for any previous versions of Flutter. The setting is always ignored when running in Profile or Release mode.",
 					"scope": "resource"
 				},
-				"dart.flutterDocsHost": {
-					"type": "string",
-					"default": "api.flutter.dev",
-					"description": "The hostname to use for Flutter Docs, for example when fetching available samples.",
-					"scope": "window"
-				},
 				"dart.evaluateGettersInDebugViews": {
 					"type": "boolean",
 					"default": true,
