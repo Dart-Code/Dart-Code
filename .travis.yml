@@ -24,6 +24,9 @@ matrix:
     - env: ONLY_RUN_CODE_VERSION=STABLE ONLY_RUN_DART_VERSION=DEV
     - env: ONLY_RUN_CODE_VERSION=DEV    ONLY_RUN_DART_VERSION=DEV
 
+# Don't build tags.
+if: tag IS blank
+
 cache:
   directories:
     - $HOME/.pub-cache
