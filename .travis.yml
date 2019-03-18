@@ -30,7 +30,7 @@ if: tag IS blank
 # Don't build Stable/Dev or Dev/Stable unless master as the changes of
 # a failure showing up in those and not in either Stable/Stable or Dev/Dev
 # are pretty slim so this will half the time for branch builds.
-if: branch = master OR (env(ONLY_RUN_DART_VERSION) = env(ONLY_RUN_CODE_VERSION))
+if: branch = run-less-builds OR (env(ONLY_RUN_DART_VERSION) = env(ONLY_RUN_CODE_VERSION))
 
 cache:
   directories:
