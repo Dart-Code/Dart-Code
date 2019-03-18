@@ -441,16 +441,18 @@ export class ObservatoryConnection {
 		return this.callMethod("getObject", data);
 	}
 
-	public evaluate(isolateId: string, targetId: string, expression: string): Promise<DebuggerResult> {
+	public evaluate(isolateId: string, targetId: string, expression: string, disableBreakpoints: boolean | undefined): Promise<DebuggerResult> {
 		return this.callMethod("evaluate", {
+			disableBreakpoints,
 			expression,
 			isolateId,
 			targetId,
 		});
 	}
 
-	public evaluateInFrame(isolateId: string, frameIndex: number, expression: string): Promise<DebuggerResult> {
+	public evaluateInFrame(isolateId: string, frameIndex: number, expression: string, disableBreakpoints: boolean | undefined): Promise<DebuggerResult> {
 		return this.callMethod("evaluateInFrame", {
+			disableBreakpoints,
 			expression,
 			frameIndex,
 			isolateId,

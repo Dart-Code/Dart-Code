@@ -771,7 +771,7 @@ export class DartDebugSession extends DebugSession {
 								// Call each getter, adding the result as a variable.
 								for (const getterName of getterNames) {
 									const getterDisplayName = getterName; // `get ${getterName}`;
-									const getterResult = await this.observatory.evaluate(thread.ref.id, instanceRef.id, getterName);
+									const getterResult = await this.observatory.evaluate(thread.ref.id, instanceRef.id, getterName, true);
 									if (getterResult.result.type === "@Error") {
 										variables.push({ name: getterDisplayName, value: (getterResult.result as VMErrorRef).message, variablesReference: 0 });
 									} else if (getterResult.result.type === "Sentinel") {
@@ -837,7 +837,7 @@ export class DartDebugSession extends DebugSession {
 
 	private async callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef, getFullString: boolean = false): Promise<string> {
 		try {
-			const result = await this.observatory.evaluate(isolate.id, instanceRef.id, "toString()");
+			const result = await this.observatory.evaluate(isolate.id, instanceRef.id, "toString()", true);
 			if (result.result.type === "@Error") {
 				return null;
 			} else {
@@ -952,7 +952,7 @@ export class DartDebugSession extends DebugSession {
 				const exceptionId = exceptionInstanceRef && exceptionInstanceRef.id;
 
 				if (exceptionId)
-					result = await this.observatory.evaluate(thread.ref.id, exceptionId, expression.substr(3));
+					result = await this.observatory.evaluate(thread.ref.id, exceptionId, expression.substr(3), true);
 			}
 			if (!result) {
 				// Don't wait more than half a second for the response:
@@ -961,7 +961,7 @@ export class DartDebugSession extends DebugSession {
 				//   2. The VM sometimes doesn't respond to your requests at all
 				//      https://github.com/flutter/flutter/issues/18595
 				result = await Promise.race([
-					this.observatory.evaluateInFrame(thread.ref.id, frame.index, expression),
+					this.observatory.evaluateInFrame(thread.ref.id, frame.index, expression, true),
 					new Promise<never>((resolve, reject) => setTimeout(() => reject(new Error("<timed out>")), 500)),
 				]);
 			}
@@ -1156,7 +1156,7 @@ export class DartDebugSession extends DebugSession {
 
 	private async evaluateAndSendErrors(thread: ThreadInfo, expression: string): Promise<VMInstanceRef> {
 		try {
-			const result = await this.observatory.evaluateInFrame(thread.ref.id, 0, expression);
+			const result = await this.observatory.evaluateInFrame(thread.ref.id, 0, expression, true);
 			if (result.result.type !== "@Error") {
 				return result.result as VMInstanceRef;
 			} else {
