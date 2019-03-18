@@ -1,4 +1,6 @@
 import * as child_process from "child_process";
+import { LogCategory } from "../debug/utils";
+import { logProcess } from "./log";
 
 // Environment used when spawning Dart and Flutter processes.
 export let toolEnv: { [key: string]: string } = {};
@@ -37,6 +39,7 @@ export function safeSpawn(workingDirectory: string | undefined, binPath: string,
 export function runProcess(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any): Promise<RunProcessResult> {
 	return new Promise((resolve) => {
 		const proc = safeSpawn(workingDirectory, binPath, args, envOverrides);
+		logProcess(LogCategory.CommandProcesses, proc);
 		const out: string[] = [];
 		const err: string[] = [];
 		proc.stdout.on("data", (data: Buffer) => out.push(data.toString()));

@@ -73,9 +73,8 @@ export class DevTools implements vs.Disposable {
 			const proc = safeSpawn(undefined, pubBinPath, args);
 			this.proc = proc;
 
-			const logPrefix = `(PROC ${proc.pid})`;
-			log(`${logPrefix} Spawned ${pubBinPath} ${args.join(" ")}`, LogSeverity.Info, LogCategory.CommandProcesses);
-			logProcess(LogCategory.CommandProcesses, logPrefix, proc);
+			log(`(PROC ${proc.pid}) Spawned ${pubBinPath} ${args.join(" ")}`, LogSeverity.Info, LogCategory.CommandProcesses);
+			logProcess(LogCategory.CommandProcesses, proc);
 
 			const stdout: string[] = [];
 			const stderr: string[] = [];

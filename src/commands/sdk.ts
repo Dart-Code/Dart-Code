@@ -345,9 +345,8 @@ export class SdkCommands {
 				progress.report({ message: "running..." });
 				const proc = safeSpawn(folder, binPath, args);
 				channels.runProcessInChannel(proc, channel);
-				const logPrefix = `(PROC ${proc.pid})`;
-				log(`${logPrefix} Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogSeverity.Info, LogCategory.CommandProcesses);
-				logProcess(LogCategory.CommandProcesses, logPrefix, proc);
+				log(`(PROC ${proc.pid}) Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogSeverity.Info, LogCategory.CommandProcesses);
+				logProcess(LogCategory.CommandProcesses, proc);
 				return proc;
 			}, existingProcess);
 			this.runningCommands[commandId] = process;

@@ -124,7 +124,8 @@ export function logTo(file: string, logCategories?: LogCategory[]): ({ dispose: 
 	};
 }
 
-export function logProcess(category: LogCategory, prefix: string, process: child_process.ChildProcess): void {
+export function logProcess(category: LogCategory, process: child_process.ChildProcess): void {
+	const prefix = `(PROC ${process.pid})`;
 	process.stdout.on("data", (data) => log(`${prefix} ${data}`, LogSeverity.Info, category));
 	process.stderr.on("data", (data) => log(`${prefix} ${data}`, LogSeverity.Info, category));
 	process.on("close", (code) => log(`${prefix} exit code ${code}`, LogSeverity.Info, category));
