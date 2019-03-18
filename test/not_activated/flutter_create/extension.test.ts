@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { FlutterSampleSnippet } from "../../../src/commands/sdk";
+import { FlutterSampleSnippet } from "../../../src/sdk/flutter_docs_snippets";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath } from "../../../src/utils";
 import { ext, getRandomTempFolder, sb } from "../../helpers";
 
