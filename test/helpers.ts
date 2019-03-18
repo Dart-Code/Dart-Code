@@ -302,10 +302,14 @@ export function select(range: vs.Range) {
 }
 
 export function positionOf(searchText: string): vs.Position {
+	// Normalise search text to match the document, since our literal template
+	// strings in tests end up compiled as only \n on Windows even thouh the
+	// source file is \r\n!
+	searchText = searchText.replace(/\r/g, "").replace(/\n/g, documentEol);
 	const doc = currentDoc();
 	const caretOffset = searchText.indexOf("^");
 	assert.notEqual(caretOffset, -1, `Couldn't find a ^ in search text (${searchText})`);
-	const matchedTextIndex = doc.getText().indexOf(searchText.replace("^", "").replace(/\n/g, documentEol));
+	const matchedTextIndex = doc.getText().indexOf(searchText.replace("^", ""));
 	assert.notEqual(matchedTextIndex, -1, `Couldn't find string ${searchText.replace("^", "")} in the document to get position of`);
 
 	return doc.positionAt(matchedTextIndex + caretOffset);
