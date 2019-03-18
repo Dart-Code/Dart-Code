@@ -179,6 +179,7 @@ export function initWorkspace(): WorkspaceContext {
 	folders.concat(nestedProjectFolders).forEach((folder) => {
 		flutterProject = flutterProject
 			|| (referencesFlutterSdk(folder) ? folder : undefined)
+			|| (referencesFlutterWeb(folder) ? folder : undefined)
 			|| (fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE)) ? folder : undefined)
 			// Special case to detect the Flutter repo root, so we always consider it a Flutter project and will use the local SDK
 			|| (fs.existsSync(path.join(folder, "bin/flutter")) && fs.existsSync(path.join(folder, "bin/cache/dart-sdk")) ? folder : undefined);
@@ -236,6 +237,14 @@ export function initWorkspace(): WorkspaceContext {
 export function referencesFlutterSdk(folder?: string): boolean {
 	if (folder && hasPubspec(folder)) {
 		const regex = new RegExp("sdk\\s*:\\s*flutter", "i");
+		return regex.test(fs.readFileSync(path.join(folder, "pubspec.yaml")).toString());
+	}
+	return false;
+}
+
+export function referencesFlutterWeb(folder?: string): boolean {
+	if (folder && hasPubspec(folder)) {
+		const regex = new RegExp("\\s*flutter_web\\s*:", "i");
 		return regex.test(fs.readFileSync(path.join(folder, "pubspec.yaml")).toString());
 	}
 	return false;

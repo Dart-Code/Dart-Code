@@ -12,13 +12,15 @@ import { DartDebugSession } from "../debug/dart_debug_impl";
 import { DartTestDebugSession } from "../debug/dart_test_debug_impl";
 import { FlutterDebugSession } from "../debug/flutter_debug_impl";
 import { FlutterTestDebugSession } from "../debug/flutter_test_debug_impl";
+import { FlutterWebDebugSession } from "../debug/flutter_web_debug_impl";
+import { FlutterWebTestDebugSession } from "../debug/flutter_web_test_debug_impl";
 import { FlutterLaunchRequestArguments, forceWindowsDriveLetterToUppercase, isWithinPath } from "../debug/utils";
 import { FlutterCapabilities } from "../flutter/capabilities";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { Device } from "../flutter/flutter_types";
 import { locateBestProjectRoot } from "../project";
 import { dartVMPath, flutterPath, pubPath, pubSnapshotPath } from "../sdk/utils";
-import { checkProjectSupportsPubRunTest, fsPath, isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, Sdks } from "../utils";
+import { checkProjectSupportsPubRunTest, fsPath, isDartFile, isFlutterProjectFolder, isFlutterWebProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, Sdks } from "../utils";
 import { log, logError, logWarn } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
@@ -155,28 +157,56 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (debugConfig.program && debugConfig.cwd && !path.isAbsolute(debugConfig.program))
 			debugConfig.program = path.join(debugConfig.cwd, debugConfig.program);
 
-		const isFlutter = debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string)
-			&& !isInsideFolderNamed(debugConfig.program, "bin") && !isInsideFolderNamed(debugConfig.program, "tool");
-		log(`Detected launch project as ${isFlutter ? "Flutter" : "Dart"}`);
+		let debugType = DebuggerType.Dart;
+		if (debugConfig.cwd
+			&& !isInsideFolderNamed(debugConfig.program, "bin")
+			&& !isInsideFolderNamed(debugConfig.program, "tool")) {
+			// Check if we're a Flutter or FlutterWeb project.
+			if (isFlutterWebProjectFolder(debugConfig.cwd as string))
+				debugType = DebuggerType.FlutterWeb;
+			else if (isFlutterProjectFolder(debugConfig.cwd as string))
+				debugType = DebuggerType.Flutter;
+			else
+				log(`Non-Dart Project not recognised as Flutter or FlutterWeb, will use Dart debugger`);
+		}
+		log(`Detected launch project as ${DebuggerType[debugType]}`);
+
+		// Some helpers for conditions below.
+		const isAnyFlutter = debugType === DebuggerType.Flutter || debugType === DebuggerType.FlutterWeb;
+		const isStandardFlutter = debugType === DebuggerType.Flutter;
+
 		const isTest = debugConfig.program && isTestFileOrFolder(debugConfig.program as string);
 		if (isTest)
 			log(`Detected launch project as a Test project`);
 		const canPubRunTest = isTest && debugConfig.cwd && checkProjectSupportsPubRunTest(debugConfig.cwd as string);
 		if (isTest && !canPubRunTest)
 			log(`Project does not appear to support 'pub run test', will use VM directly`);
-		const debugType = isFlutter
-			? (isTest ? DebuggerType.FlutterTest : DebuggerType.Flutter)
-			: (isTest && canPubRunTest ? DebuggerType.PubTest : DebuggerType.Dart);
+		if (isTest) {
+			switch (debugType) {
+				case DebuggerType.Dart:
+					if (canPubRunTest)
+						debugType = DebuggerType.PubTest;
+					break;
+				case DebuggerType.Flutter:
+					debugType = DebuggerType.FlutterTest;
+					break;
+				case DebuggerType.FlutterWeb:
+					debugType = DebuggerType.FlutterWebTest;
+					break;
+				default:
+					log("Unknown debugType, unable to switch to test debugger");
+			}
+		}
 		log(`Using ${DebuggerType[debugType]} debug adapter for this session`);
 
 		// If we're attaching to Dart, ensure we get an observatory URI.
 		if (isAttachRequest) {
 			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
-			if (!isFlutter) { // TEMP Condition because there's no point asking yet as the user doesn't know how to get this..
+			if (!isStandardFlutter) { // TEMP Condition because there's no point asking yet as the user doesn't know how to get this..
 				debugConfig.observatoryUri = await this.getObservatoryUri(debugConfig.observatoryUri/*, mostRecentAttachedProbablyReusableObservatoryUri*/);
 			}
 
-			if (!debugConfig.observatoryUri && !isFlutter) {
+			if (!debugConfig.observatoryUri && !isStandardFlutter) {
 				logWarn("No Observatory URI/port was provided");
 				window.showInformationMessage("You must provide an Observatory URI/port to attach a debugger");
 				return undefined; // undefined means silent (don't open launch.json).
@@ -185,7 +215,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// Ensure we have a device
 		let currentDevice = this.deviceManager && this.deviceManager.currentDevice;
-		if (isFlutter && !isTest && !currentDevice && this.deviceManager && debugConfig.deviceId !== "flutter-tester") {
+		if (isStandardFlutter && !isTest && !currentDevice && this.deviceManager && debugConfig.deviceId !== "flutter-tester") {
 			// Fetch a list of emulators
 			if (!await this.deviceManager.promptForAndLaunchEmulator(true)) {
 				logWarn("Unable to launch due to no active device");
@@ -197,7 +227,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		// TODO: This cast feels nasty?
-		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isFlutter, currentDevice);
+		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isAnyFlutter, currentDevice);
 
 		// Debugger always uses uppercase drive letters to ensure our paths have them regardless of where they came from.
 		debugConfig.program = forceWindowsDriveLetterToUppercase(debugConfig.program);
@@ -254,7 +284,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		(debugConfig as any).debugServer = serverAddress.port;
 
 		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
-		if (debugType === DebuggerType.FlutterTest || debugType === DebuggerType.PubTest) {
+		if (debugType === DebuggerType.FlutterTest || debugType === DebuggerType.FlutterWebTest || debugType === DebuggerType.PubTest) {
 			const isRunningTestSubset = debugConfig.args && (debugConfig.args.indexOf("--name") !== -1 || debugConfig.args.indexOf("--pname") !== -1);
 			TestResultsProvider.flagSuiteStart(debugConfig.program, !isRunningTestSubset);
 		}
@@ -332,6 +362,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				return this.spawnOrGetServer("flutter", port, () => new FlutterDebugSession());
 			case DebuggerType.FlutterTest:
 				return this.spawnOrGetServer("flutterTest", port, () => new FlutterTestDebugSession());
+			case DebuggerType.FlutterWeb:
+				return this.spawnOrGetServer("flutterWeb", port, () => new FlutterWebDebugSession());
+			case DebuggerType.FlutterWebTest:
+				return this.spawnOrGetServer("pubTest", port, () => new FlutterWebTestDebugSession());
 			case DebuggerType.Dart:
 				return this.spawnOrGetServer("dart", port, () => new DartDebugSession());
 			case DebuggerType.PubTest:
@@ -417,4 +451,6 @@ enum DebuggerType {
 	PubTest,
 	Flutter,
 	FlutterTest,
+	FlutterWeb,
+	FlutterWebTest,
 }

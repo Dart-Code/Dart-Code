@@ -8,7 +8,7 @@ import { commands, extensions, Position, Range, TextDocument, Uri, window, works
 import { config } from "./config";
 import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, isWithinPath } from "./debug/utils";
 import { locateBestProjectRoot } from "./project";
-import { referencesFlutterSdk } from "./sdk/utils";
+import { referencesFlutterSdk, referencesFlutterWeb } from "./sdk/utils";
 import { hasPackagesFile, hasPubspec } from "./utils/fs";
 import { getExtensionLogPath, logError } from "./utils/log";
 
@@ -45,6 +45,10 @@ export function isInsideFlutterProject(uri?: Uri): boolean {
 
 export function isFlutterProjectFolder(folder?: string): boolean {
 	return referencesFlutterSdk(folder);
+}
+
+export function isFlutterWebProjectFolder(folder?: string): boolean {
+	return referencesFlutterWeb(folder);
 }
 
 export function getDartWorkspaceFolders(): WorkspaceFolder[] {
