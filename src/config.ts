@@ -63,6 +63,7 @@ class Config {
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
 	get showIgnoreQuickFixes() { return this.getConfig<boolean>("showIgnoreQuickFixes"); }
 	get theme() { return this.getConfig<string>("theme"); }
+	get devToolsTheme() { return this.getConfig<string>("devToolsTheme"); }
 	get triggerSignatureHelpAutomatically() { return this.getConfig<boolean>("triggerSignatureHelpAutomatically"); }
 	get warnWhenEditingFilesOutsideWorkspace() { return this.getConfig<boolean>("warnWhenEditingFilesOutsideWorkspace"); }
 	public setWarnWhenEditingFilesOutsideWorkspace(value: boolean): Thenable<void> { return this.setConfig("warnWhenEditingFilesOutsideWorkspace", value, ConfigurationTarget.Global); }
@@ -78,6 +79,7 @@ class Config {
 
 	// Helpers
 	get useDarkTheme() { return this.theme !== "light"; }
+	get useDevToolsDarkTheme() { return this.devToolsTheme === "dark"; } // TODO: Change this to !== "light" when we want to flip default
 
 	public for(uri?: Uri): ResourceConfig {
 		return new ResourceConfig(uri);
