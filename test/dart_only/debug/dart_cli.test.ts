@@ -252,6 +252,10 @@ describe("dart cli debugger", () => {
 		assert.equal(frames[0].source!.name, path.relative(fsPath(helloWorldFolder), fsPath(helloWorldPartFile)));
 	});
 
+	it.skip("stops at a breakpoint in a deferred file", async () => {
+		// TODO!
+	});
+
 	// Known not to work; https://github.com/Dart-Code/Dart-Code/issues/821
 	it.skip("stops at a breakpoint in the SDK", async () => {
 		await openFile(helloWorldMainFile);
