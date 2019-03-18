@@ -25,6 +25,9 @@ matrix:
     - ONLY_RUN_CODE_VERSION: DEV
       ONLY_RUN_DART_VERSION: DEV
 
+# Don't build tags.
+skip_tags: true
+
 cache:
   - "%APPDATA%\\Pub\\Cache"
   - "with spaces\\flutter"
