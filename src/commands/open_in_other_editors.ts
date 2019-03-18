@@ -53,6 +53,7 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 	}
 
 	private getAndroidStudioDir(folder: string): Promise<string> {
+		// TODO: Move this to call shared runProcess().
 		return new Promise((resolve, reject) => {
 			const binPath = path.join(this.sdks.flutter, flutterPath);
 			const proc = safeSpawn(folder, binPath, ["config", "--machine"]);
