@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
+import { fiveMinutesInMs } from "../../src/constants";
 import { activate, flutterHelloWorldMainFile, helloWorldMainFile } from "../helpers";
 
 describe("dart.getPackages", () => {
@@ -16,5 +17,5 @@ describe("dart.getPackages", () => {
 		// the correct folder, it'll do the same.
 		const res = await vs.commands.executeCommand("dart.getPackages", flutterHelloWorldMainFile);
 		assert.equal(res, 0); // If we run the wrong command, we'll get an error code.
-	}).timeout(1000 * 60 * 5); // 5 minutes
+	}).timeout(fiveMinutesInMs);
 });

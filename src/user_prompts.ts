@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { doNotAskAgainAction, noThanksAction, openDevToolsAction, wantToTryDevToolsPrompt } from "./constants";
+import { doNotAskAgainAction, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, wantToTryDevToolsPrompt } from "./constants";
 import { Context } from "./context";
 import { StagehandTemplate } from "./pub/stagehand";
 import { DART_CREATE_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, ProjectType, Sdks } from "./utils";
@@ -45,8 +45,7 @@ export async function showDevToolsNotificationIfAppropriate(context: Context): P
 		return false;
 
 	// Don't show this notification if we've shown it in the last 20 hours.
-	const twentyHoursInMs = 1000 * 60 * 60 * 20;
-	if (lastShown && Date.now() - lastShown < twentyHoursInMs)
+	if (lastShown && Date.now() - lastShown < noRepeatPromptThreshold)
 		return false;
 
 	context.devToolsNotificationsShown++;

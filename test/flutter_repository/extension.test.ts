@@ -1,11 +1,12 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
+import { tenMinutesInMs } from "../../src/constants";
 import { fsPath } from "../../src/utils";
 import { activate, activateWithoutAnalysis, ext } from "../helpers";
 
 beforeEach("set timeout", function () {
-	this.timeout(90000); // These tests can be slow due to having to analyzer the whole Flutter repo.
+	this.timeout(tenMinutesInMs); // These tests can be slow due to having to analyzer the whole Flutter repo.
 });
 
 describe("test environment", () => {
@@ -50,5 +51,5 @@ describe("extension", () => {
 					.join("\n"),
 			);
 		}
-	}).timeout(1000 * 60 * 5); // 5 minutes
+	}).timeout(tenMinutesInMs);
 });

@@ -8,3 +8,15 @@ export const wantToTryDevToolsPrompt = "Dart DevTools (preview) includes additio
 export const openDevToolsAction = "Open DevTools";
 export const noThanksAction = "No Thanks";
 export const doNotAskAgainAction = "Don't Ask Again";
+
+// Minutes.
+export const fiveMinutesInMs = 1000 * 60 * 5;
+export const tenMinutesInMs = 1000 * 60 * 10;
+export const twentyMinutesInMs = 1000 * 60 * 20;
+
+// Hours.
+export const twoHoursInMs = 1000 * 60 * 60 * 2;
+export const twentyHoursInMs = 1000 * 60 * 60 * 20;
+
+// Duration for not showing a prompt that has been shown before.
+export const noRepeatPromptThreshold = twentyHoursInMs;

@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { pubGlobalDocsUrl } from "../constants";
+import { noRepeatPromptThreshold, pubGlobalDocsUrl } from "../constants";
 import { Context } from "../context";
 import { LogCategory } from "../debug/utils";
 import { pubPath } from "../sdk/utils";
@@ -76,8 +76,7 @@ export class PubGlobal {
 
 		// If we haven't checked in the last 24 hours, check if there's an update available.
 		const lastChecked = this.context.getPackageLastCheckedForUpdates(packageID);
-		const twentyHoursInMs = 1000 * 60 * 60 * 20;
-		if (!lastChecked || lastChecked <= Date.now() - twentyHoursInMs) {
+		if (!lastChecked || lastChecked <= Date.now() - noRepeatPromptThreshold) {
 			this.context.setPackageLastCheckedForUpdates(packageID, Date.now());
 			try {
 				const packageJson = JSON.parse(await fetch(`https://pub.dartlang.org/api/packages/${packageID}`));

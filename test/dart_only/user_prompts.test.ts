@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { doNotAskAgainAction, openDevToolsAction, wantToTryDevToolsPrompt } from "../../src/constants";
+import { doNotAskAgainAction, noRepeatPromptThreshold, openDevToolsAction, twoHoursInMs, wantToTryDevToolsPrompt } from "../../src/constants";
 import { showDevToolsNotificationIfAppropriate } from "../../src/user_prompts";
 import { activateWithoutAnalysis, clearAllContext, extApi, sb } from "../helpers";
 
@@ -35,8 +35,7 @@ describe("DevTools notification", async () => {
 	it("shows and updates context values when already set", async () => {
 		const context = extApi.context;
 		context.devToolsNotificationsShown = 3;
-		const twentyFiveHoursInMs = 1000 * 60 * 60 * 25;
-		context.devToolsNotificationLastShown = Date.now() - twentyFiveHoursInMs;
+		context.devToolsNotificationLastShown = Date.now() - (noRepeatPromptThreshold + twoHoursInMs);
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const wantToTryPrompt = showInformationMessage.withArgs(wantToTryDevToolsPrompt, sinon.match.any).resolves(openDevToolsAction);

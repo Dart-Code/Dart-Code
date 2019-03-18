@@ -1,6 +1,7 @@
 import * as childProcess from "child_process";
 import * as fs from "fs";
 import * as path from "path";
+import { twentyMinutesInMs } from "../src/constants";
 
 const args = ["node_modules/vscode/bin/test"];
 let exitCode = 0;
@@ -13,7 +14,7 @@ function color(col: number, message: string) {
 }
 
 // Set timeout at 30 mins (Travis kills us with no output for too long).
-const timeoutInMilliseconds = 1000 * 60 * 20;
+const timeoutInMilliseconds = twentyMinutesInMs;
 function runNode(cwd: string, args: string[], env: any, printTimes = false): Promise<number> {
 	return new Promise<number>((resolve, reject) => {
 		let timerWarn: NodeJS.Timer;

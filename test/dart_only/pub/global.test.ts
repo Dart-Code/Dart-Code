@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
+import { twoHoursInMs } from "../../../src/constants";
 import { VersionStatus } from "../../../src/pub/global";
 import { activate, defer, extApi, sb } from "../../helpers";
 
@@ -32,7 +33,6 @@ describe("pub global", () => {
 	});
 
 	it("does not report update-available for an out-of-date package if checked within 24 hours", async () => {
-		const twoHoursInMs = 1000 * 60 * 60 * 2;
 		extApi.context.setPackageLastCheckedForUpdates(installedButOutOfDatePackage1, Date.now() - twoHoursInMs);
 
 		const status = await extApi.pubGlobal.getInstalledStatus(installedButOutOfDatePackage1, installedButOutOfDatePackage1);
