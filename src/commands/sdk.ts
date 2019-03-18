@@ -520,7 +520,7 @@ export class SdkCommands {
 				if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
 					// TODO: Remove this check after the live docs host has the index file.
 					if (resp.statusCode === 404)
-						resolve(tempraryFlutterSnipetsIndexFor1dot0);
+						resolve(temporaryFlutterSnipetsIndexFor1dot0);
 					else
 						reject({ message: `Failed to get Flutter samples ${resp && resp.statusCode}: ${resp && resp.statusMessage}` });
 				} else {
@@ -582,7 +582,7 @@ export interface FlutterSampleSnippet {
 	readonly description: string;
 }
 
-const tempraryFlutterSnipetsIndexFor1dot0 = [
+const temporaryFlutterSnipetsIndexFor1dot0 = [
 	/* tslint:disable */
 	{
 		"sourcePath": "lib/src/material/icon_button.dart",
