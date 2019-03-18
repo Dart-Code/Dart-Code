@@ -32,3 +32,21 @@ export function safeSpawn(workingDirectory: string | undefined, binPath: string,
 		: toolEnv;
 	return child_process.spawn(`"${binPath}"`, args.map((a) => `"${a}"`), { cwd: workingDirectory, env: customEnv, shell: true });
 }
+
+/// Runs a process and returns the exit code, stdout, stderr. Always resolves even for non-zero exit codes.
+export function runProcess(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any): Promise<RunProcessResult> {
+	return new Promise((resolve) => {
+		const proc = safeSpawn(workingDirectory, binPath, args, envOverrides);
+		const out: string[] = [];
+		const err: string[] = [];
+		proc.stdout.on("data", (data: Buffer) => out.push(data.toString()));
+		proc.stderr.on("data", (data: Buffer) => err.push(data.toString()));
+		proc.on("exit", (code) => {
+			resolve(new RunProcessResult(code, out.join(""), err.join("")));
+		});
+	});
+}
+
+export class RunProcessResult {
+	constructor(public readonly exitCode: number, public readonly stdout: string, public readonly stderr: string) { }
+}
