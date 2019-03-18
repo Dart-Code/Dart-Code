@@ -667,7 +667,7 @@
 		},
 		"configuration": {
 			"type": "object",
-			"title": "Dart Configuration",
+			"title": "Dart & Flutter",
 			"properties": {
 				"dart.env": {
 					"type": "object",
