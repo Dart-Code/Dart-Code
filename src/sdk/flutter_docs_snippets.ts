@@ -2,7 +2,6 @@ import * as fs from "fs";
 import * as https from "https";
 import * as os from "os";
 import * as path from "path";
-import { config } from "../config";
 import { FlutterCapabilities } from "../flutter/capabilities";
 import { getRandomInt, Sdks } from "../utils";
 import { tryDeleteFile } from "../utils/fs";
@@ -47,10 +46,8 @@ async function getFlutterSnippetsFromSdk(sdks: Sdks): Promise<FlutterSampleSnipp
 
 function getFlutterSnippetsFromWeb(): Promise<FlutterSampleSnippet[]> {
 	return new Promise<FlutterSampleSnippet[]>((resolve, reject) => {
-		if (!config.flutterDocsHost)
-			reject("No Flutter docs host set");
 		const options: https.RequestOptions = {
-			hostname: config.flutterDocsHost,
+			hostname: "api.flutter.dev",
 			method: "GET",
 			path: "/snippets/index.json",
 			port: 443,

@@ -43,7 +43,6 @@ class Config {
 	get flutterCreateIOSLanguage() { return this.getConfig<string>("flutterCreateIOSLanguage"); }
 	get flutterCreateOrganization() { return this.getConfig<string>("flutterCreateOrganization"); }
 	get flutterDaemonLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("flutterDaemonLogFile"))); }
-	get flutterDocsHost() { return this.getConfig<string>("flutterDocsHost"); }
 	get flutterHotReloadOnSave() { return this.getConfig<boolean>("flutterHotReloadOnSave"); }
 	get flutterScreenshotPath() { return resolvePaths(this.getConfig<string>("flutterScreenshotPath")); }
 	get flutterSdkPath() { return resolvePaths(this.getConfig<string>("flutterSdkPath")); }
