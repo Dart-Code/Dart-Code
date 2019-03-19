@@ -12,6 +12,7 @@ import { findPackageRoots } from "./analysis/utils";
 import { Analytics } from "./analytics";
 import { DartExtensionApi } from "./api";
 import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
+import { AnalyzerCommands } from "./commands/analyzer";
 import { DebugCommands } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
 import { GoToSuperCommand } from "./commands/go_to_super";
@@ -320,7 +321,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		handleConfigurationChange(sdks);
 	}));
 
-	// Register SDK commands.
+	// Register additional commands.
+	const analyzerCommands = new AnalyzerCommands(context, analyzer);
 	const pubGlobal = new PubGlobal(extContext, sdks);
 	const sdkCommands = new SdkCommands(context, sdks, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
 	const debug = new DebugCommands(extContext, sdks, analytics, pubGlobal);

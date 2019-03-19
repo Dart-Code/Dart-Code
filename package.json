@@ -184,6 +184,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.openAnalyzerDiagnostics",
+				"title": "Open Analyzer Diagnostics",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.changeSdk",
 				"title": "Change SDK",
 				"category": "Dart"
@@ -420,6 +425,10 @@
 				{
 					"command": "dart.openObservatory",
 					"when": "dart-code:dartProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "dart.openAnalyzerDiagnostics",
+					"when": "dart-code:dartProjectLoaded"
 				},
 				{
 					"command": "dart.changeSdk",
