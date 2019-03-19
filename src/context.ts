@@ -18,6 +18,8 @@ export class Context {
 	set devToolsNotificationLastShown(value: number) { this.context.globalState.update("devToolsNotificationLastShown", value); }
 	get devToolsNotificationDoNotShow(): boolean { return !!this.context.globalState.get("devToolsNotificationDoNotShowAgain"); }
 	set devToolsNotificationDoNotShow(value: boolean) { this.context.globalState.update("devToolsNotificationDoNotShowAgain", value); }
+	get hasWarnedAboutFormatterSyntaxLimitation(): boolean { return !!this.context.globalState.get("hasWarnedAboutFormatterSyntaxLimitation"); }
+	set hasWarnedAboutFormatterSyntaxLimitation(value: boolean) { this.context.globalState.update("hasWarnedAboutFormatterSyntaxLimitation", value); }
 
 	public getPackageLastCheckedForUpdates(packageID: string): number | undefined { return this.context.globalState.get(`packageLastCheckedForUpdates:${packageID}`) as number; }
 	public setPackageLastCheckedForUpdates(packageID: string, value: number) { this.context.globalState.update(`packageLastCheckedForUpdates:${packageID}`, value); }

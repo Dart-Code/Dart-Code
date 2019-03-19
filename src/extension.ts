@@ -91,6 +91,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	if (!extensionLogger)
 		extensionLogger = logTo(getExtensionLogPath(), [LogCategory.General]);
 
+	const extContext = Context.for(context);
+
 	util.logTime("Code called activate");
 	// Wire up a reload command that will re-initialise everything.
 	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", (_) => {
@@ -185,7 +187,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// Set up providers.
 	// TODO: Do we need to push all these to subscriptions?!
 	const hoverProvider = new DartHoverProvider(analyzer);
-	const formattingEditProvider = new DartFormattingEditProvider(analyzer);
+	const formattingEditProvider = new DartFormattingEditProvider(analyzer, extContext);
 	const completionItemProvider = new DartCompletionItemProvider(analyzer);
 	const referenceProvider = new DartReferenceProvider(analyzer);
 	const documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
@@ -319,7 +321,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	}));
 
 	// Register SDK commands.
-	const extContext = Context.for(context);
 	const pubGlobal = new PubGlobal(extContext, sdks);
 	const sdkCommands = new SdkCommands(context, sdks, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
 	const debug = new DebugCommands(extContext, sdks, analytics, pubGlobal);
