@@ -709,6 +709,12 @@
 			"type": "object",
 			"title": "Dart & Flutter",
 			"properties": {
+				"dart.enableSdkFormatter": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to enable the dart_style formatter included with the Dart SDK.",
+					"scope": "window"
+				},
 				"dart.env": {
 					"type": "object",
 					"description": "Additional environment variables to add to all Dart/Flutter processes spawned by the Dart and Flutter extensions.",

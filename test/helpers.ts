@@ -231,6 +231,7 @@ beforeEach("set logger", async function () {
 export let sb: sinon.SinonSandbox;
 beforeEach("create sinon sandbox", function () { sb = sinon.createSandbox(); }); // tslint:disable-line:only-arrow-functions
 afterEach("destroy sinon sandbox", () => sb.restore());
+afterEach("make empty file empty", () => fs.writeFileSync(fsPath(emptyFile), ""));
 
 before("throw if DART_CODE_IS_TEST_RUN is not set", () => {
 	if (!process.env.DART_CODE_IS_TEST_RUN)
@@ -242,7 +243,7 @@ const deferredToLastItems: Array<(result?: "failed" | "passed") => Promise<any> 
 // tslint:disable-next-line:only-arrow-functions
 afterEach("run deferred functions", async function () {
 	let firstError: any;
-	for (const d of [...deferredItems, ...deferredToLastItems]) {
+	for (const d of [...deferredItems.reverse(), ...deferredToLastItems.reverse()]) {
 		try {
 			await watchPromise(`afterEach->deferred->${d.toString()}`, d(this.currentTest ? this.currentTest.state : undefined));
 		} catch (e) {

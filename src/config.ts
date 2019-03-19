@@ -37,6 +37,7 @@ class Config {
 	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
 	public setCheckForSdkUpdates(value: boolean): Thenable<void> { return this.setConfig("checkForSdkUpdates", value, ConfigurationTarget.Global); }
 	get closingLabels() { return this.getConfig<boolean>("closingLabels"); }
+	get devToolsTheme() { return this.getConfig<string>("devToolsTheme"); }
 	get extensionLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("extensionLogFile"))); }
 	get env() { return this.getConfig<object>("env"); }
 	get flutterCreateAndroidLanguage() { return this.getConfig<string>("flutterCreateAndroidLanguage"); }
@@ -62,8 +63,8 @@ class Config {
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
 	get showIgnoreQuickFixes() { return this.getConfig<boolean>("showIgnoreQuickFixes"); }
 	get theme() { return this.getConfig<string>("theme"); }
-	get devToolsTheme() { return this.getConfig<string>("devToolsTheme"); }
 	get triggerSignatureHelpAutomatically() { return this.getConfig<boolean>("triggerSignatureHelpAutomatically"); }
+	get enableSdkFormatter() { return this.getConfig<boolean>("enableSdkFormatter"); }
 	get warnWhenEditingFilesOutsideWorkspace() { return this.getConfig<boolean>("warnWhenEditingFilesOutsideWorkspace"); }
 	public setWarnWhenEditingFilesOutsideWorkspace(value: boolean): Thenable<void> { return this.setConfig("warnWhenEditingFilesOutsideWorkspace", value, ConfigurationTarget.Global); }
 
