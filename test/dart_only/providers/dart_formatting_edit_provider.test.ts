@@ -50,7 +50,6 @@ describe("dart_formatting_edit_provider", () => {
 		assert.equal(currentDoc().getText(), unformattedContent);
 	});
 
-
 	it("formats the document if re-enabled", async () => {
 		await setConfigForTest("dart", "enableSdkFormatter", false);
 		await setConfigForTest("dart", "enableSdkFormatter", true);
