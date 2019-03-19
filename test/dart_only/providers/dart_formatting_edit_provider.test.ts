@@ -38,12 +38,14 @@ describe("dart_formatting_edit_provider", () => {
 	});
 
 	it("formats the document on save", async () => {
+		await setConfigForTest("editor", "formatOnSave", true);
 		await setTestContent(unformattedContent);
 		await currentDoc().save();
 		assert.equal(currentDoc().getText(), formattedContent);
 	});
 
 	it("does not format the document if disabled", async () => {
+		await setConfigForTest("editor", "formatOnSave", true);
 		await setConfigForTest("dart", "enableSdkFormatter", false);
 		await setTestContent(unformattedContent);
 		await currentDoc().save();
@@ -52,6 +54,7 @@ describe("dart_formatting_edit_provider", () => {
 
 	it("formats the document if re-enabled", async () => {
 		await setConfigForTest("dart", "enableSdkFormatter", false);
+		await setConfigForTest("editor", "formatOnSave", true);
 		await setConfigForTest("dart", "enableSdkFormatter", true);
 		await setTestContent(unformattedContent);
 		await currentDoc().save();
