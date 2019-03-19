@@ -179,7 +179,7 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	protected async terminate(force: boolean): Promise<void> {
 		try {
-			if (this.currentRunningAppId && this.appHasStarted) {
+			if (this.currentRunningAppId && this.appHasStarted && !this.processExited) {
 				const quitMethod = this.flutter.mode === RunMode.Run
 					? () => this.flutter.stop(this.currentRunningAppId)
 					: () => this.flutter.detach(this.currentRunningAppId);
