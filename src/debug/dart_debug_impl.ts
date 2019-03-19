@@ -32,7 +32,7 @@ export class DartDebugSession extends DebugSession {
 	// We normally track the pid from Observatory to terminate the VM afterwards, but for Flutter Run it's
 	// a remote PID and therefore doesn't make sense to try and terminate.
 	protected allowTerminatingObservatoryVmPid = true;
-	private processExited = false;
+	protected processExited = false;
 	public observatory?: ObservatoryConnection;
 	protected cwd?: string;
 	private logFile?: string;
