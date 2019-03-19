@@ -41,6 +41,15 @@ for:
         - ONLY_RUN_CODE_VERSION: STABLE
           ONLY_RUN_DART_VERSION: DEV
 
+# The above seems to also include pr-to-master merge builds from PRs and there's no clear
+# way to exclude them, so we do it here.
+# https://help.appveyor.com/discussions/questions/35664-how-to-conditionally-skip-some-matrix-builds-for-the-prs-merge-into-branch-builds
+init:
+  - ps: >-
+      if ($env:APPVEYOR_PULL_REQUEST_NUMBER -gt 0 -and ($env:ONLY_RUN_DART_VERSION -ne $env:ONLY_RUN_CODE_VERSION)) {
+        Exit-AppveyorBuild
+      }
+
 cache:
   - "%APPDATA%\\Pub\\Cache"
   - "with spaces\\flutter"
