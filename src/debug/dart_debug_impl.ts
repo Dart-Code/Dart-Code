@@ -417,10 +417,13 @@ export class DartDebugSession extends DebugSession {
 	): Promise<void> {
 		this.log(`Disconnect requested!`);
 		try {
-			await Promise.race([
-				this.terminate(false),
-				new Promise((resolve) => setTimeout(resolve, 2000)).then(() => this.terminate(true)),
+			const didTimeout = await Promise.race([
+				this.terminate(false).then((_) => false),
+				new Promise((resolve) => setTimeout(() => resolve(true), 2000)),
 			]);
+			// If we hit the 2s timeout, then terminate more forcefully.
+			if (didTimeout)
+				await this.terminate(true);
 		} catch (e) {
 			return this.errorResponse(response, `${e}`);
 		}
