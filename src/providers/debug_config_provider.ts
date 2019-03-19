@@ -30,6 +30,8 @@ export const showErrorsAction = "Show Errors";
 export const debugAnywayAction = "Debug Anyway";
 const isCI = !!process.env.CI;
 
+let hasShownFlutterWebDebugWarning = false;
+
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugServers: { [index: string]: net.Server } = {};
 
@@ -282,6 +284,16 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Make VS Code connect to debug server instead of launching debug adapter.
 		// TODO: Why do we need this cast? The node-mock-debug does not?
 		(debugConfig as any).debugServer = serverAddress.port;
+
+		// We don't currently support debug for FlutterWeb
+		if (debugType === DebuggerType.FlutterWeb && !debugConfig.noDebug) {
+			// TODO: Remove this, or tidy it up...
+			debugConfig.noDebug = true;
+			if (!hasShownFlutterWebDebugWarning) {
+				window.showWarningMessage("Debugging not currently available for FlutterWeb projects. Running without debugging.");
+				hasShownFlutterWebDebugWarning = true;
+			}
+		}
 
 		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
 		if (debugType === DebuggerType.FlutterTest || debugType === DebuggerType.FlutterWebTest || debugType === DebuggerType.PubTest) {
