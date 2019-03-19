@@ -62,9 +62,9 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.noDebug = args.noDebug;
 		const isAttach = args.request === "attach";
 		if (isAttach)
-			this.sendEvent(new Event("dart.launching", { message: "Waiting for Flutter Application to connect...", finished: false }));
+			this.sendEvent(new Event("dart.launching", { message: "Waiting for Application to connect...", finished: false }));
 		else
-			this.sendEvent(new Event("dart.launching", { message: "Launching Flutter Application...", finished: false }));
+			this.sendEvent(new Event("dart.launching", { message: "Launching...", finished: false }));
 
 		if (args.showMemoryUsage) {
 			this.pollforMemoryMs = 1000;
