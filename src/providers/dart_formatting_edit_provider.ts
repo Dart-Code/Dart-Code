@@ -1,14 +1,56 @@
 import * as minimatch from "minimatch";
-import { CancellationToken, DocumentFormattingEditProvider, FormattingOptions, OnTypeFormattingEditProvider, Position, Range, TextDocument, TextEdit, window } from "vscode";
+import { CancellationToken, DocumentFilter, DocumentFormattingEditProvider, FormattingOptions, languages, OnTypeFormattingEditProvider, Position, Range, TextDocument, TextEdit, window, workspace } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { config } from "../config";
 import { Context } from "../context";
+import { IAmDisposable } from "../debug/utils";
 import { fsPath } from "../utils";
 import { logError } from "../utils/log";
 
-export class DartFormattingEditProvider implements DocumentFormattingEditProvider, OnTypeFormattingEditProvider {
-	constructor(private readonly analyzer: Analyzer, private readonly context: Context) { }
+export class DartFormattingEditProvider implements DocumentFormattingEditProvider, OnTypeFormattingEditProvider, IAmDisposable {
+	constructor(private readonly analyzer: Analyzer, private readonly context: Context) {
+		workspace.onDidChangeConfiguration((e) => {
+			if (e.affectsConfiguration("dart.enableSdkFormatter")) {
+				if (config.enableSdkFormatter)
+					this.registerAllFormatters();
+				else
+					this.unregisterAllFormatters();
+			}
+		});
+	}
+
+	private readonly registeredFormatters: IAmDisposable[] = [];
+	private readonly formatterRegisterFuncs: Array<() => void> = [];
+
+	public registerDocumentFormatter(filter: DocumentFilter[]): void {
+		this.registerFormatter(() => languages.registerDocumentFormattingEditProvider(filter, this));
+	}
+
+	public registerTypingFormatter(filter: DocumentFilter[], firstTriggerCharacter: string, ...moreTriggerCharacters: string[]): void {
+		this.registerFormatter(() => languages.registerOnTypeFormattingEditProvider(filter, this, firstTriggerCharacter, ...moreTriggerCharacters));
+	}
+
+	private registerFormatter(reg: () => IAmDisposable) {
+		const registerAndTrack = () => this.registeredFormatters.push(reg());
+		// Register the formatter immediately if enabled.
+		if (config.enableSdkFormatter)
+			registerAndTrack();
+
+		// Add it to our list so we can re-register later..
+		this.formatterRegisterFuncs.push(registerAndTrack);
+	}
+
+	private registerAllFormatters() {
+		for (const formatterReg of this.formatterRegisterFuncs) {
+			formatterReg();
+		}
+	}
+
+	private unregisterAllFormatters() {
+		this.registeredFormatters.forEach((s) => s.dispose());
+		this.registeredFormatters.length = 0;
+	}
 
 	public async provideDocumentFormattingEdits(document: TextDocument, options: FormattingOptions, token: CancellationToken): Promise<TextEdit[]> {
 		try {
@@ -63,5 +105,9 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 			new Range(document.positionAt(edit.offset), document.positionAt(edit.offset + edit.length)),
 			edit.replacement,
 		);
+	}
+
+	public dispose() {
+		this.unregisterAllFormatters();
 	}
 }

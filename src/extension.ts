@@ -189,6 +189,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// TODO: Do we need to push all these to subscriptions?!
 	const hoverProvider = new DartHoverProvider(analyzer);
 	const formattingEditProvider = new DartFormattingEditProvider(analyzer, extContext);
+	context.subscriptions.push(formattingEditProvider);
 	const completionItemProvider = new DartCompletionItemProvider(analyzer);
 	const referenceProvider = new DartReferenceProvider(analyzer);
 	const documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
@@ -209,7 +210,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const triggerCharacters = ".(${'\"/\\".split("");
 	activeFileFilters.forEach((filter) => {
 		context.subscriptions.push(vs.languages.registerHoverProvider(filter, hoverProvider));
-		context.subscriptions.push(vs.languages.registerDocumentFormattingEditProvider(filter, formattingEditProvider));
+		formattingEditProvider.registerDocumentFormatter(filter);
 		context.subscriptions.push(vs.languages.registerCompletionItemProvider(filter, completionItemProvider, ...triggerCharacters));
 		context.subscriptions.push(vs.languages.registerDefinitionProvider(filter, referenceProvider));
 		context.subscriptions.push(vs.languages.registerReferenceProvider(filter, referenceProvider));
@@ -221,7 +222,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	});
 
 	// Some actions only apply to Dart.
-	context.subscriptions.push(vs.languages.registerOnTypeFormattingEditProvider(DART_MODE, formattingEditProvider, "}", ";"));
+	formattingEditProvider.registerTypingFormatter(DART_MODE, "}", ";");
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, sourceCodeActionProvider, sourceCodeActionProvider.metadata));
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, ignoreLintCodeActionProvider, ignoreLintCodeActionProvider.metadata));
 	context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, implementationProvider));

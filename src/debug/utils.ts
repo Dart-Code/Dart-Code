@@ -31,7 +31,7 @@ export class LogMessage {
 }
 
 export interface IAmDisposable {
-	dispose(): void;
+	dispose(): void | Promise<void>;
 }
 
 // TODO: Remove this, or document why we need it as well as fsPath().
