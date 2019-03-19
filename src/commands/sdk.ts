@@ -96,6 +96,7 @@ export class SdkCommands {
 				DartHoverProvider.clearPackageMapCaches();
 			}
 		}));
+		context.subscriptions.push(vs.commands.registerCommand("_flutter.screenshot.touchBar", (args: any) => vs.commands.executeCommand("flutter.screenshot", args)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", async () => {
 			let shouldNotify = false;
 

@@ -277,6 +277,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "_flutter.screenshot.touchBar",
+				"title": "Screenshot",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.hotRestart",
 				"title": "Hot Restart",
 				"category": "Flutter"
@@ -307,6 +312,11 @@
 			{
 				"command": "dart.openDevTools",
 				"title": "Open DevTools",
+				"category": "Dart"
+			},
+			{
+				"command": "_dart.openDevTools.touchBar",
+				"title": "DevTools",
 				"category": "Dart"
 			},
 			{
@@ -518,6 +528,10 @@
 					"when": "dart-code:dartProjectLoaded && inDebugMode"
 				},
 				{
+					"command": "_dart.openDevTools.touchBar",
+					"when": "false"
+				},
+				{
 					"command": "flutter.selectDevice",
 					"when": "dart-code:flutterProjectLoaded"
 				},
@@ -536,6 +550,10 @@
 				{
 					"command": "flutter.screenshot",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "_flutter.screenshot.touchBar",
+					"when": "false"
 				}
 			],
 			"debug/toolbar": [
@@ -551,12 +569,12 @@
 					"group": "9_debug@9"
 				},
 				{
-					"command": "dart.openDevTools",
+					"command": "_dart.openDevTools.touchBar",
 					"when": "inDebugMode && debugType == dart",
 					"group": "92_debug_tools"
 				},
 				{
-					"command": "flutter.screenshot",
+					"command": "_flutter.screenshot.touchBar",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode && debugType == dart",
 					"group": "93_utils"
 				}
