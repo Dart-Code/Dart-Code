@@ -567,7 +567,7 @@
 				{
 					"command": "_flutter.hotReload.touchBar",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode && debugType == dart",
-					"group": "9_debug@9"
+					"group": "9_debug@4"
 				},
 				{
 					"command": "_dart.openDevTools.touchBar",
