@@ -30,8 +30,6 @@ export const showErrorsAction = "Show Errors";
 export const debugAnywayAction = "Debug Anyway";
 const isCI = !!process.env.CI;
 
-let hasShownFlutterWebDebugWarning = false;
-
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugServers: { [index: string]: net.Server } = {};
 
@@ -287,12 +285,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// We don't currently support debug for FlutterWeb
 		if (debugType === DebuggerType.FlutterWeb && !debugConfig.noDebug) {
-			// TODO: Remove this, or tidy it up...
+			// TODO: Support this! :)
 			debugConfig.noDebug = true;
-			if (!hasShownFlutterWebDebugWarning) {
-				window.showWarningMessage("Debugging not currently available for FlutterWeb projects. Running without debugging.");
-				hasShownFlutterWebDebugWarning = true;
-			}
 		}
 
 		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
