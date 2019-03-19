@@ -291,6 +291,15 @@
 				}
 			},
 			{
+				"command": "_flutter.hotReload.touchBar",
+				"title": "Hot Reload",
+				"category": "Flutter",
+				"icon": {
+					"dark": "media/commands/hot-reload-tb.png",
+					"light": "media/commands/hot-reload-tb.png"
+				}
+			},
+			{
 				"command": "flutter.openTimeline",
 				"title": "Open Observatory Timeline",
 				"category": "Flutter"
@@ -497,6 +506,10 @@
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				},
 				{
+					"command": "_flutter.hotReload.touchBar",
+					"when": "false"
+				},
+				{
 					"command": "flutter.openTimeline",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode"
 				},
@@ -533,9 +546,9 @@
 			],
 			"touchBar": [
 				{
-					"command": "flutter.hotReload",
+					"command": "_flutter.hotReload.touchBar",
 					"when": "dart-code:flutterProjectLoaded && inDebugMode && debugType == dart",
-					"group": "91_flutter"
+					"group": "9_debug@9"
 				},
 				{
 					"command": "dart.openDevTools",

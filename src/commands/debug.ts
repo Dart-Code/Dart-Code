@@ -218,6 +218,7 @@ export class DebugCommands {
 		}));
 
 		// Misc custom debug commands.
+		context.subscriptions.push(vs.commands.registerCommand("_flutter.hotReload.touchBar", (args: any) => vs.commands.executeCommand("flutter.hotReload", args)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", (args: any) => {
 			if (!debugSessions.length)
 				return;
