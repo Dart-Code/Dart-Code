@@ -5,7 +5,8 @@ import { extractObservatoryPort } from "../utils/debug";
 import { logWarn } from "../utils/log";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
-import { FlutterRun, RunMode } from "./flutter_run";
+import { FlutterRun } from "./flutter_run";
+import { FlutterRunBase, RunMode } from "./flutter_run_base";
 import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments, isWin, LogCategory, LogMessage, LogSeverity } from "./utils";
 
 const objectGroupName = "my-group";
@@ -13,7 +14,7 @@ const flutterExceptionStartBannerPrefix = "══╡ EXCEPTION CAUGHT BY";
 const flutterExceptionEndBannerPrefix = "══════════════════════════════════════════";
 
 export class FlutterDebugSession extends DartDebugSession {
-	private flutter?: FlutterRun;
+	private flutter?: FlutterRunBase;
 	public flutterTrackWidgetCreation: boolean;
 	private currentRunningAppId?: string;
 	private appHasStarted = false;
@@ -59,14 +60,59 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	protected spawnProcess(args: FlutterLaunchRequestArguments): any {
 		this.noDebug = args.noDebug;
-		const debug = !args.noDebug;
 		const isAttach = args.request === "attach";
-		let appArgs = [];
 		if (isAttach)
 			this.sendEvent(new Event("dart.launching", { message: "Waiting for Flutter Application to connect...", finished: false }));
 		else
 			this.sendEvent(new Event("dart.launching", { message: "Launching Flutter Application...", finished: false }));
 
+		if (args.showMemoryUsage) {
+			this.pollforMemoryMs = 1000;
+		}
+
+		// Normally for `flutter run` we don't allow terminating the pid we get from Observatory,
+		// because it's on a remote device, however in the case of the flutter-tester, it is local
+		// and otherwise might be left hanging around.
+		// Unless, of course, we attached in which case we expect to detach by default.
+		this.allowTerminatingObservatoryVmPid = args.deviceId === "flutter-tester" && !isAttach;
+
+		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.FlutterRun)));
+		this.flutter = this.spawnRunDaemon(isAttach, args, logger);
+		this.flutter.registerForUnhandledMessages((msg) => {
+			if (msg.indexOf(flutterExceptionStartBannerPrefix) !== -1) {
+				// Change before logging.
+				this.outputCategory = "stderr";
+				this.logToUser(msg, this.outputCategory);
+			} else if (msg.indexOf(flutterExceptionEndBannerPrefix) !== -1) {
+				// Log before changing back.
+				this.logToUser(msg, this.outputCategory);
+				this.outputCategory = "stdout";
+			} else {
+				this.logToUser(msg, this.outputCategory);
+			}
+		});
+
+		// Set up subscriptions.
+		this.flutter.registerForDaemonConnect((n) => this.additionalPidsToTerminate.push(n.pid));
+		this.flutter.registerForAppStart((n) => this.currentRunningAppId = n.appId);
+		this.flutter.registerForAppDebugPort((n) => {
+			this.observatoryUri = n.wsUri;
+			this.connectToObservatoryIfReady();
+		});
+		this.flutter.registerForAppStarted((n) => {
+			this.appHasStarted = true;
+			this.connectToObservatoryIfReady();
+			this.sendEvent(new Event("dart.launched"));
+		});
+		this.flutter.registerForAppStop((n) => { this.currentRunningAppId = undefined; this.flutter.dispose(); });
+		this.flutter.registerForAppProgress((e) => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished, progressID: e.progressId || e.id })));
+		this.flutter.registerForError((err) => this.sendEvent(new OutputEvent(`${err}\n`, "stderr")));
+
+		return this.flutter.process;
+	}
+
+	protected spawnRunDaemon(isAttach: boolean, args: FlutterLaunchRequestArguments, logger: (message: string, severity: LogSeverity) => void): FlutterRunBase {
+		let appArgs = [];
 		if (!isAttach) {
 			appArgs.push("-t");
 			appArgs.push(this.sourceFileForArgs(args));
@@ -105,10 +151,9 @@ export class FlutterDebugSession extends DartDebugSession {
 				}
 			}
 
-			if (debug) {
+			if (!args.noDebug) {
 				appArgs.push("--start-paused");
 			}
-
 		}
 
 		if (args.args) {
@@ -119,49 +164,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			appArgs.push("-v");
 		}
 
-		if (args.showMemoryUsage) {
-			this.pollforMemoryMs = 1000;
-		}
-
-		// Normally for `flutter run` we don't allow terminating the pid we get from Observatory,
-		// because it's on a remote device, however in the case of the flutter-tester, it is local
-		// and otherwise might be left hanging around.
-		// Unless, of course, we attached in which case we expect to detach by default.
-		this.allowTerminatingObservatoryVmPid = args.deviceId === "flutter-tester" && !isAttach;
-
-		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.FlutterRun)));
-		this.flutter = new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterPath, args.cwd, appArgs, args.env, args.flutterRunLogFile, logger, this.maxLogLineLength);
-		this.flutter.registerForUnhandledMessages((msg) => {
-			if (msg.indexOf(flutterExceptionStartBannerPrefix) !== -1) {
-				// Change before logging.
-				this.outputCategory = "stderr";
-				this.logToUser(msg, this.outputCategory);
-			} else if (msg.indexOf(flutterExceptionEndBannerPrefix) !== -1) {
-				// Log before changing back.
-				this.logToUser(msg, this.outputCategory);
-				this.outputCategory = "stdout";
-			} else {
-				this.logToUser(msg, this.outputCategory);
-			}
-		});
-
-		// Set up subscriptions.
-		this.flutter.registerForDaemonConnect((n) => this.additionalPidsToTerminate.push(n.pid));
-		this.flutter.registerForAppStart((n) => this.currentRunningAppId = n.appId);
-		this.flutter.registerForAppDebugPort((n) => {
-			this.observatoryUri = n.wsUri;
-			this.connectToObservatoryIfReady();
-		});
-		this.flutter.registerForAppStarted((n) => {
-			this.appHasStarted = true;
-			this.connectToObservatoryIfReady();
-			this.sendEvent(new Event("dart.launched"));
-		});
-		this.flutter.registerForAppStop((n) => { this.currentRunningAppId = undefined; this.flutter.dispose(); });
-		this.flutter.registerForAppProgress((e) => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished, progressID: e.progressId || e.id })));
-		this.flutter.registerForError((err) => this.sendEvent(new OutputEvent(`${err}\n`, "stderr")));
-
-		return this.flutter.process;
+		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterPath, args.cwd, appArgs, args.env, args.flutterRunLogFile, logger, this.maxLogLineLength);
 	}
 
 	private connectToObservatoryIfReady() {
