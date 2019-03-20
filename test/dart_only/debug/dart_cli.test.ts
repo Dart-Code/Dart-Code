@@ -10,7 +10,7 @@ import { fetch } from "../../../src/utils/fetch";
 import { log } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldPathFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, openFile, positionOf, sb, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldPathFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, openFile, positionOf, sb, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -252,8 +252,18 @@ describe("dart cli debugger", () => {
 		assert.equal(frames[0].source!.name, "package:hello_world/part.dart");
 	});
 
-	it.skip("stops at a breakpoint in a deferred file", async () => {
-		// TODO!
+	it("stops at a breakpoint in a deferred file", async () => {
+		await openFile(helloWorldDeferredScriptFile);
+		const config = await startDebugger(helloWorldDeferredEntryFile);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line,
+			path: fsPath(helloWorldDeferredScriptFile),
+		});
+		const stack = await dc.getStack();
+		const frames = stack.body.stackFrames;
+		assert.equal(frames[0].name, "do_print");
+		assert.equal(frames[0].source!.path, fsPath(helloWorldDeferredScriptFile));
+		assert.equal(frames[0].source!.name, "package:hello_world/deferred_script.dart");
 	});
 
 	// Known not to work; https://github.com/Dart-Code/Dart-Code/issues/821

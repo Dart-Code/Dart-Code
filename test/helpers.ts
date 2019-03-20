@@ -32,6 +32,7 @@ if (!ext) {
 
 export const helloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/hello_world"));
 export const helloWorldMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/main.dart"));
+export const helloWorldDeferredEntryFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/deferred_entry.dart"));
 export const helloWorldPartEntryFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/part.dart"));
 export const helloWorldPubspec = vs.Uri.file(path.join(fsPath(helloWorldFolder), "pubspec.yaml"));
 export const helloWorldGettersFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/getters.dart"));
@@ -55,6 +56,7 @@ export const missingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/
 export const emptyFileInExcludedFolder = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/excluded/empty.dart"));
 export const emptyExcludedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/excluded_empty.dart"));
 export const helloWorldCompletionFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/completion.dart"));
+export const helloWorldDeferredScriptFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/deferred_script.dart"));
 export const helloWorldPartFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/part.dart"));
 export const everythingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/everything.dart"));
 export const flutterHelloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/flutter_hello_world"));
