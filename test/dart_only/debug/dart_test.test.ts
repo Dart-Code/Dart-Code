@@ -85,9 +85,9 @@ describe("dart test debugger", () => {
 		]);
 	});
 
-	// Skipped due to:
-	// https://github.com/dart-lang/sdk/issues/29156
 	it.skip("stops at the correct location on exception", async () => {
+		// TODO: Check the expected location is in the call stack, and that the frames above it are all marked
+		// as deemphasized.
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile);
 		await Promise.all([
