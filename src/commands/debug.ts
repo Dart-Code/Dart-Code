@@ -39,7 +39,7 @@ export class DebugCommands {
 		context.subscriptions.push(this.devTools);
 		context.subscriptions.push(this.debugMetrics);
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
-			const session = debugSessions.find((ds) => ds.session === e.session);
+			const session = debugSessions.find((ds) => ds.session.id === e.session.id);
 			if (!session)
 				return;
 			this.flutterExtensions.handleDebugEvent(e);
@@ -145,7 +145,7 @@ export class DebugCommands {
 			}
 		}));
 		context.subscriptions.push(vs.debug.onDidTerminateDebugSession((s) => {
-			const sessionIndex = debugSessions.findIndex((ds) => ds.session === s);
+			const sessionIndex = debugSessions.findIndex((ds) => ds.session.id === s.id);
 			if (sessionIndex === -1)
 				return;
 
