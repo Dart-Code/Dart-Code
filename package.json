@@ -66,7 +66,7 @@
 		"colors": [
 			{
 				"id": "dart.closingLabels",
-				"description": "Color of closing labels rendered for nested Dart constructs.",
+				"description": "The color of the 'closing label' annotations shown against constructor, method invocations and lists that span multiple lines. If not supplied, the color for 'tab.inactiveForeground' will be used.",
 				"defaults": {
 					"dark": "tab.inactiveForeground",
 					"light": "tab.inactiveForeground",
@@ -956,7 +956,7 @@
 				},
 				"dart.analyzerAdditionalArgs": {
 					"type": "array",
-					"description": "Additional arguments to pass to the Dart analysis server.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "Additional arguments to pass to the Dart analysis server.",
 					"scope": "window",
 					"items": {
 						"type": "string"
@@ -964,12 +964,12 @@
 				},
 				"dart.analyzerDiagnosticsPort": {
 					"type": "number",
-					"description": "The port number to be used for the Dart analysis server diagnostic server.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The port number to be used for the Dart analysis server diagnostic server.",
 					"scope": "window"
 				},
 				"dart.analyzerInstrumentationLogFile": {
 					"type": "string",
-					"description": "The path to a log file for the Dart analysis server built-in instrumentation.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The path to a log file for very detailed logging in the Dart analysis server that may be useful when trying to diagnose analysis server issues.",
 					"scope": "window"
 				},
 				"dart.analyzerSshHost": {
@@ -980,48 +980,48 @@
 				},
 				"dart.extensionLogFile": {
 					"type": "string",
-					"description": "The path to a log file for the Dart Code extension.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The path to a low-traffic log file for basic extension and editor issues.",
 					"scope": "window"
 				},
 				"dart.analyzerLogFile": {
 					"type": "string",
-					"description": "The path to a log file for the Dart analysis server communication.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The path to a log file for communication between Dart Code and the analysis server.",
 					"scope": "window"
 				},
 				"dart.analyzerObservatoryPort": {
 					"type": "number",
-					"description": "The port number to be used for the Dart analysis server observatory.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The port number to be used for the Dart analysis server observatory.",
 					"scope": "window"
 				},
 				"dart.analyzerPath": {
 					"type": "string",
 					"default": null,
-					"description": "The path to a custom Dart analysis server.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The path to a custom Dart analysis server.",
 					"scope": "window"
 				},
 				"dart.flutterDaemonLogFile": {
 					"type": "string",
-					"description": "The path to a log file for 'flutter daemon' communication.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The path to a log file for the 'flutter daemon' communication which is the service that provides information about connected devices used to show in the status bar.",
 					"scope": "window"
 				},
 				"dart.flutterRunLogFile": {
 					"type": "string",
-					"description": "The path to a log file for 'flutter run' communication.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The path to a log file for 'flutter run' which is used to launch Flutter applications from VS Code. This is useful when trying to diagnose issues with applications launching (or failing to) on simulators and devices.",
 					"scope": "resource"
 				},
 				"dart.flutterTestLogFile": {
 					"type": "string",
-					"description": "The path to a log file for 'flutter test' communication.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The path to a log file for 'flutter test' which is used to run unit tests from VS Code. This is useful when trying to diagnose issues with unit test executions.",
 					"scope": "resource"
 				},
 				"dart.pubTestLogFile": {
 					"type": "string",
-					"description": "The path to a log file for 'pub run test' communication.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The path to a log file for 'pub run test' runs. This is useful when trying to diagnose issues with unit test executions.",
 					"scope": "resource"
 				},
 				"dart.observatoryLogFile": {
 					"type": "string",
-					"description": "The path to a log file for Observatory communication.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The path to a log file for communication between Dart Code and Observatory (the VM debugger). This is useful when trying to diagnose issues with debugging such as missed breakpoints.",
 					"scope": "resource"
 				},
 				"dart.vmAdditionalArgs": {
