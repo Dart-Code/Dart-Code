@@ -249,7 +249,7 @@ describe("dart cli debugger", () => {
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "do_print");
 		assert.equal(frames[0].source!.path, fsPath(helloWorldPartFile));
-		assert.equal(frames[0].source!.name, path.relative(fsPath(helloWorldFolder), fsPath(helloWorldPartFile)));
+		assert.equal(frames[0].source!.name, "package:hello_world/part.dart");
 	});
 
 	it.skip("stops at a breakpoint in a deferred file", async () => {
