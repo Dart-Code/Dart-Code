@@ -410,7 +410,12 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it.skip("downloads SDK source code from the VM", async () => {
+	it("downloads SDK source code from the VM", async function () {
+		if (!extApi.dartCapabilities.includesSourceForSdkLibs) {
+			this.skip();
+			return;
+		}
+
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
@@ -431,6 +436,34 @@ describe("dart cli debugger", () => {
 				const source = await dc.sourceRequest({ source: frame.source, sourceReference: frame.source.sourceReference });
 				assert.ok(source.body.content);
 				assert.notEqual(source.body.content.indexOf("void print(Object object) {"), -1);
+			}),
+			dc.stepIn(),
+		]);
+	});
+
+	it("downloaded source code contains comments", async function () {
+		if (!extApi.dartCapabilities.includesSourceForSdkLibs) {
+			this.skip();
+			return;
+		}
+
+		await openFile(helloWorldMainFile);
+		// Get location for `print`
+		const printCall = positionOf("pri^nt(");
+		const config = await startDebugger(helloWorldMainFile, { debugSdkLibraries: true });
+		await dc.hitBreakpoint(config, {
+			line: printCall.line + 1,
+			path: fsPath(helloWorldMainFile),
+		});
+		await Promise.all([
+			dc.assertStoppedLocation("step", {
+				// SDK source will have no filename, because we download it
+				path: null,
+			}).then(async (response) => {
+				const frame = response.body.stackFrames[0];
+				const source = await dc.sourceRequest({ source: frame.source, sourceReference: frame.source.sourceReference });
+				assert.ok(source.body.content);
+				assert.notEqual(source.body.content.indexOf("\n//"), -1);
 			}),
 			dc.stepIn(),
 		]);
