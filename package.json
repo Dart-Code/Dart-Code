@@ -888,7 +888,7 @@
 				"dart.runPubGetOnPubspecChanges": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to automatically run `pub get` whenever pubspec.yaml is saved.",
+					"description": "Whether to automatically run 'pub get' whenever pubspec.yaml is saved.",
 					"scope": "resource"
 				},
 				"dart.promptToGetPackages": {
@@ -923,7 +923,7 @@
 				},
 				"dart.flutterCreateOrganization": {
 					"type": "string",
-					"description": "The organization responsible for your new Flutter project, in reverse domain name notation. This string is used in Java package names and as prefix in the iOS bundle identifier when creating new projects using the `Flutter: New Project` command.",
+					"description": "The organization responsible for your new Flutter project, in reverse domain name notation. This string is used in Java package names and as prefix in the iOS bundle identifier when creating new projects using the 'Flutter: New Project' command.",
 					"scope": "window"
 				},
 				"dart.flutterCreateIOSLanguage": {
@@ -931,7 +931,7 @@
 						"objc",
 						"swift"
 					],
-					"description": "The programming language to use for IOS apps when creating new projects using the `Flutter: New Project` command.",
+					"description": "The programming language to use for IOS apps when creating new projects using the 'Flutter: New Project' command.",
 					"scope": "window"
 				},
 				"dart.flutterCreateAndroidLanguage": {
@@ -939,7 +939,7 @@
 						"java",
 						"kotlin"
 					],
-					"description": "The programming language to use for Android apps when creating new projects using the `Flutter: New Project` command.",
+					"description": "The programming language to use for Android apps when creating new projects using the 'Flutter: New Project' command.",
 					"scope": "window"
 				},
 				"dart.analyzeAngularTemplates": {
@@ -951,7 +951,7 @@
 				"dart.normalizeWindowsDriveLetters": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to always force Windows drive letters to uppercase to improve compatibility when interacting with the analysis server and debugger.",
+					"description": "Whether to always force Windows drive letters to uppercase when interacting with other tools. This should reduce spurious errors from tools that are accidentally case-sensitive with Windows paths.",
 					"scope": "window"
 				},
 				"dart.analyzerAdditionalArgs": {
@@ -1001,22 +1001,22 @@
 				},
 				"dart.flutterDaemonLogFile": {
 					"type": "string",
-					"description": "The path to a log file for `flutter daemon` communication.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The path to a log file for 'flutter daemon' communication.\nThis is a diagnostic setting that should not normally be set.",
 					"scope": "window"
 				},
 				"dart.flutterRunLogFile": {
 					"type": "string",
-					"description": "The path to a log file for `flutter run` communication.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The path to a log file for 'flutter run' communication.\nThis is a diagnostic setting that should not normally be set.",
 					"scope": "resource"
 				},
 				"dart.flutterTestLogFile": {
 					"type": "string",
-					"description": "The path to a log file for `flutter test` communication.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The path to a log file for 'flutter test' communication.\nThis is a diagnostic setting that should not normally be set.",
 					"scope": "resource"
 				},
 				"dart.pubTestLogFile": {
 					"type": "string",
-					"description": "The path to a log file for `pub run test` communication.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The path to a log file for 'pub run test' communication.\nThis is a diagnostic setting that should not normally be set.",
 					"scope": "resource"
 				},
 				"dart.observatoryLogFile": {
