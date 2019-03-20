@@ -157,5 +157,8 @@ describe("dart_hover_provider", () => {
 		assert.deepStrictEqual(hover.range, rangeOf("|Future|<String>"));
 	});
 
-	it("displays the correct thing for a deprecated method");
+	it("returns expected information for a type from an SDK library", async () => {
+		const hover = await getHoverAt("doSome^Stuff()");
+		assert.equal(hover.displayText, "(deprecated) doSomeStuff() → void");
+	});
 });

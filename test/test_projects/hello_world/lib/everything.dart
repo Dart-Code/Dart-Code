@@ -49,6 +49,7 @@ class MyClass {
   void methodTakingFunction(void Function(String) myFunc) {}
 }
 
+@deprecated
 void doSomeStuff() {
   var a = new MyClass();
   var b = new MyClass.myNamed();
