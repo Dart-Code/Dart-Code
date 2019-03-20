@@ -717,7 +717,7 @@
 				},
 				"dart.env": {
 					"type": "object",
-					"description": "Additional environment variables to add to all Dart/Flutter processes spawned by the Dart and Flutter extensions.",
+					"description": "Additional environment variables to be added to all Dart/Flutter processes spawned by the Dart and Flutter extensions.",
 					"scope": "window"
 				},
 				"dart.closingLabels": {
@@ -743,13 +743,13 @@
 				"dart.debugSdkLibraries": {
 					"type": "boolean",
 					"default": false,
-					"description": "Whether SDK libraries should be marked as debuggable.",
+					"description": "Whether to mark SDK libraries as debuggable, enabling stepping into them while debugging.",
 					"scope": "resource"
 				},
 				"dart.debugExternalLibraries": {
 					"type": "boolean",
 					"default": false,
-					"description": "Whether external libraries should be marked as debuggable.",
+					"description": "Whether to mark external pub package libraries as debuggable, enabling stepping into them while debugging.",
 					"scope": "resource"
 				},
 				"dart.enableCompletionCommitCharacters": {
@@ -835,7 +835,7 @@
 				"dart.showTestCodeLens": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to show Code Lens for Tests.",
+					"description": "Whether to show Code Lens actions in the editor for quick running/debugging tests.",
 					"scope": "window"
 				},
 				"dart.showTodos": {
@@ -861,19 +861,19 @@
 				"dart.reportAnalyzerErrors": {
 					"type": "boolean",
 					"default": true,
-					"description": "Offer to report analysis server exceptions when they occur.",
+					"description": "Whether to offer to report analysis server exceptions when they occur.",
 					"scope": "window"
 				},
 				"dart.allowAnalytics": {
 					"type": "boolean",
 					"default": true,
-					"description": "Sends analytics such as startup timings, frequency of use of features and analysis server crashes.",
+					"description": "Whether to send analytics such as startup timings, frequency of use of features and analysis server crashes.",
 					"scope": "window"
 				},
 				"dart.checkForSdkUpdates": {
 					"type": "boolean",
 					"default": true,
-					"description": "Checks whether you are using the latest version of the Dart SDK at startup.",
+					"description": "Whether to check you are using the latest version of the Dart SDK at startup.",
 					"scope": "window"
 				},
 				"dart.pubAdditionalArgs": {
@@ -888,13 +888,13 @@
 				"dart.runPubGetOnPubspecChanges": {
 					"type": "boolean",
 					"default": true,
-					"description": "Automatically runs `pub get` whenever pubspec.yaml is saved.",
+					"description": "Whether to automatically run `pub get` whenever pubspec.yaml is saved.",
 					"scope": "resource"
 				},
 				"dart.promptToGetPackages": {
 					"type": "boolean",
 					"default": true,
-					"description": "Prompt to get packages when opening a project with out of date packages.",
+					"description": "Whether to prompt to get packages when opening a project with out of date packages.",
 					"scope": "resource"
 				},
 				"dart.flutterScreenshotPath": {
@@ -951,7 +951,7 @@
 				"dart.normalizeWindowsDriveLetters": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to force Windows drive letters always to uppercase to improve compatibility.",
+					"description": "Whether to always force Windows drive letters to uppercase to improve compatibility when interacting with the analysis server and debugger.",
 					"scope": "window"
 				},
 				"dart.analyzerAdditionalArgs": {
@@ -964,7 +964,7 @@
 				},
 				"dart.analyzerDiagnosticsPort": {
 					"type": "number",
-					"description": "The port number to be used for the Dart analysis server diagnostics.\nThis is a diagnostic setting that should not normally be set.",
+					"description": "The port number to be used for the Dart analysis server diagnostic server.\nThis is a diagnostic setting that should not normally be set.",
 					"scope": "window"
 				},
 				"dart.analyzerInstrumentationLogFile": {
@@ -1036,7 +1036,7 @@
 				"dart.buildRunnerAdditionalArgs": {
 					"type": "array",
 					"default": [],
-					"description": "Additional args to pass to the buid_runner when building/watching/serving.",
+					"description": "Additional args to pass to the build_runner when building/watching/serving.",
 					"scope": "window",
 					"items": {
 						"type": "string"
@@ -1107,7 +1107,7 @@
 							},
 							"enableAsserts": {
 								"type": "boolean",
-								"description": "Whether to run the VM with --asserts-enabled.",
+								"description": "Run the VM with --asserts-enabled.",
 								"default": true
 							},
 							"program": {
@@ -1116,7 +1116,7 @@
 							},
 							"showMemoryUsage": {
 								"type": "boolean",
-								"description": "Whether to show memory usage for your Flutter app in the status bar during debug sessions (if not set, will automatically show for profile builds).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage."
+								"description": "Show memory usage for your Flutter app in the status bar during debug sessions (if not set, will automatically show for profile builds).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage."
 							},
 							"flutterMode": {
 								"description": "The mode for launching the Flutter application:\n\ndebug: Turns on all assertions, includes all debug information, enables all debugger aids and optimizes for fast dev cycles\n\nrelease: Turns off all assertions, strips as much debug information as possible, turns of debugger aids and optimises for fast startup, fast execution and small package sizes.\n\nprofile: Same as release mode exept profiling aids and tracing are enabled.",
