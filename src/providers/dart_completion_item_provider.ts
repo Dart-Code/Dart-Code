@@ -178,16 +178,17 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		if (!resp.includedSuggestionSets)
 			return;
 
+		// Create a fast lookup for which kinds to include.
+		const elementKinds: { [key: string]: boolean } = {};
+		resp.includedElementKinds.forEach((k) => elementKinds[k] = true);
+
+		// Create a fast lookup for relevance boosts based on tag string.
+		const tagBoosts: { [key: string]: number } = {};
+		resp.includedSuggestionRelevanceTags.forEach((r) => tagBoosts[r.tag] = r.relevanceBoost);
+
 		const filePath = fsPath(document.uri);
 		const suggestionSetResults: CompletionItem[][] = [];
-		for (let i = 0; i < resp.includedSuggestionSets.length; i++) {
-			const includedSuggestionSet = resp.includedSuggestionSets[i];
-			const elementKinds = resp.includedElementKinds[i];
-
-			// Create a fast lookup for relevance boosts based on tag string.
-			const tagBoosts: { [key: string]: number } = {};
-			resp.includedSuggestionRelevanceTags.forEach((r) => tagBoosts[r.tag] = r.relevanceBoost);
-
+		for (const includedSuggestionSet of resp.includedSuggestionSets) {
 			const suggestionSet = this.cachedCompletions[includedSuggestionSet.id];
 			if (!suggestionSet) {
 				logWarn(`Suggestion set ${includedSuggestionSet.id} was not available and therefore not included in the completion results`);
