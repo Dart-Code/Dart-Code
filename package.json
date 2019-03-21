@@ -361,8 +361,8 @@
 			{
 				"command": "dart.openDevTools",
 				"when": "dart-code:dartProjectLoaded && inDebugMode",
-				"key": "cmd+shift+a",
-				"win": "ctrl+shift+a"
+				"key": "ctrl+alt+d",
+				"win": "ctrl+alt+d"
 			}
 		],
 		"menus": {
