@@ -221,8 +221,20 @@ part 'part.dart';
 					`);
 		});
 
-		it("sorts unimported completions correctly relative to imported completions", async () => {
-			throw new Error("NYI");
+		it("sorts completions from suggestion sets", async () => {
+			await setTestContent(`
+import 'package:hello_world/enum.dart';
+
+foo(Theme theme) {
+	theme =
+}
+			`);
+			const completions = await getCompletionsAt("theme =^");
+
+			const completion = ensureCompletion(completions, vs.CompletionItemKind.EnumMember, "Theme.Dark", "Theme.Dark");
+			// 1100 from boost
+			//    8 from includedSuggestionSet
+			assert.equal(completion.sortText, "998892Theme.Dark"); // TODO: This might be fragile!
 		});
 	});
 });
