@@ -31,6 +31,11 @@ describe("util.versionIsAtLeast", () => {
 		assert.equal(util.versionIsAtLeast("0.10.3-pre.119", "0.10.2-a"), true);
 		assert.equal(util.versionIsAtLeast("0.10.2-alpha.1", "0.10.2-a"), true);
 		assert.equal(util.versionIsAtLeast("0.10.2-beta.1", "0.10.2-a"), true);
+		assert.equal(util.versionIsAtLeast("2.2.0", "2.2.1-edge"), false);
+		assert.equal(util.versionIsAtLeast("2.2.1-dev", "2.2.1-edge"), false);
+		assert.equal(util.versionIsAtLeast("2.2.1-dev.1", "2.2.1-edge"), false);
+		assert.equal(util.versionIsAtLeast("2.2.1-edge", "2.2.1-edge"), true);
+		assert.equal(util.versionIsAtLeast("2.2.1-edge.foo", "2.2.1-edge"), true);
 	});
 });
 
