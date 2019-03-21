@@ -118,6 +118,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			item.replacementOffset,
 			item.replacementLength,
 			item.autoImportUri,
+			item.relevance,
 			item.suggestion,
 			res,
 		);
@@ -131,6 +132,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		replacementOffset: number,
 		replacementLength: number,
 		displayUri: string | undefined,
+		relevance: number,
 		suggestion: as.AvailableSuggestion,
 		resolvedResult: as.CompletionGetSuggestionDetailsResponse | undefined,
 	) {
@@ -146,7 +148,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			// TODO: Confirm this is correct...
 			parameterType: undefined, // Unimported completions can't be parameters?
 			parameters: suggestion.element ? suggestion.element.parameters : undefined,
-			relevance: 0,
+			relevance,
 			replacementLength,
 			replacementOffset,
 			requiredParameterCount: suggestion.requiredParameterCount,
@@ -181,8 +183,10 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		for (let i = 0; i < resp.includedSuggestionSets.length; i++) {
 			const includedSuggestionSet = resp.includedSuggestionSets[i];
 			const elementKinds = resp.includedElementKinds[i];
-			// TODO: Use this somewhere?
-			const relevanceTags = resp.includedSuggestionRelevanceTags[i];
+
+			// Create a fast lookup for relevance boosts based on tag string.
+			const tagBoosts: { [key: string]: number } = {};
+			resp.includedSuggestionRelevanceTags.forEach((r) => tagBoosts[r.tag] = r.relevanceBoost);
 
 			const suggestionSet = this.cachedCompletions[includedSuggestionSet.id];
 			if (!suggestionSet) {
@@ -194,6 +198,12 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 				// TODO: How should we do this?
 				.filter((r) => !elementKinds || elementKinds.indexOf(r.element.kind) !== -1)
 				.map((suggestion): DelayedCompletionItem => {
+
+					// Calculate the relevance for this item.
+					let relevance = includedSuggestionSet.relevance;
+					if (suggestion.relevanceTags)
+						suggestion.relevanceTags.forEach((t) => relevance += (tagBoosts[t] || 0));
+
 					const completionItem = this.createCompletionItemFromSuggestion(
 						document,
 						nextCharacter,
@@ -202,6 +212,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 						resp.replacementOffset,
 						resp.replacementLength,
 						undefined,
+						relevance,
 						suggestion,
 						undefined,
 					);
@@ -215,6 +226,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 						insertArgumentPlaceholders,
 						nextCharacter,
 						offset,
+						relevance,
 						replacementLength: resp.replacementLength,
 						replacementOffset: resp.replacementOffset,
 						suggestion,
@@ -498,6 +510,7 @@ export interface DelayedCompletionItem extends CompletionItem {
 	insertArgumentPlaceholders: boolean;
 	nextCharacter: string;
 	offset: number;
+	relevance: number;
 	replacementLength: number;
 	replacementOffset: number;
 	suggestion: as.AvailableSuggestion;
