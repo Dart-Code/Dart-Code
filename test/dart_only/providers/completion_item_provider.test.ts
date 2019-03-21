@@ -56,6 +56,26 @@ describe("completion_item_provider", () => {
 		ensureCompletion(completions, vs.CompletionItemKind.Keyword, "final", "final");
 	});
 
+	it("includes classes and constructors from other files", async () => {
+		await openFile(emptyFile);
+		await setTestContent(`
+import 'dart:io';
+
+main() {
+  ProcessInf
+}
+		`);
+		const completions = await getCompletionsAt(`ProcessInf^`);
+
+		const classComp = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
+		assert.equal((classComp.documentation as vs.MarkdownString).value, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
+		assert.equal(classComp.detail, "");
+
+		const constrComp = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
+		assert.equal((constrComp.documentation as vs.MarkdownString).value, "");
+		assert.equal(constrComp.detail, "() → ProcessInfo");
+	});
+
 	it("full populates a completion", async () => {
 		await openFile(everythingFile);
 		const completions = await getCompletionsAt(`^return str`);
