@@ -243,7 +243,7 @@ part 'part.dart';
 
 		it("sorts completions from suggestion sets", async () => {
 			await setTestContent(`
-import 'package:hello_world/enum.dart';
+import 'package:hello_world/everything.dart';
 
 foo(Theme theme) {
 	theme =
@@ -259,7 +259,7 @@ foo(Theme theme) {
 
 		it("correctly filters (includes enum constants in methods)", async () => {
 			await setTestContent(`
-import 'package:hello_world/enum.dart';
+import 'package:hello_world/everything.dart';
 
 foo(Theme theme) {
 	theme =
@@ -273,7 +273,7 @@ foo(Theme theme) {
 
 		it("correctly filters (does not include enum constants at top level)", async () => {
 			await setTestContent(`
-import 'package:hello_world/enum.dart';
+import 'package:hello_world/everything.dart';
 
 // top level
 			`);
