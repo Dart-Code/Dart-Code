@@ -191,7 +191,7 @@ main() {
 
 			let completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
 			completion = await resolveCompletion(completion);
-			assert.equal(completion.detail.startsWith("Auto import from 'dart:io'\n\n"), true);
+			assert.equal(completion.detail.startsWith("Auto import from 'dart:io'"), true);
 		});
 
 		it("insert imports automatically when completing unimported symbols", async () => {
