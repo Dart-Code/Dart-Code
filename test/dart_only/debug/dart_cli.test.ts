@@ -235,10 +235,12 @@ describe("dart cli debugger", () => {
 		assert.equal(frames[0].source!.name, path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile)));
 	});
 
-	// Failing due to:
-	//   https://github.com/Dart-Code/Dart-Code/issues/1443
-	//   https://github.com/dart-lang/sdk/issues/35859
-	it.skip("stops at a breakpoint in a part file", async () => {
+	it("stops at a breakpoint in a part file", async function () {
+		if (!extApi.dartCapabilities.handlesBreakpointsInPartFiles) {
+			this.skip();
+			return;
+		}
+
 		await openFile(helloWorldPartFile);
 		const config = await startDebugger(helloWorldPartEntryFile);
 		await dc.hitBreakpoint(config, {

@@ -11,4 +11,5 @@ export class DartCapabilities {
 
 	get supportsDevTools() { return versionIsAtLeast(this.version, "2.1.0"); }
 	get includesSourceForSdkLibs() { return versionIsAtLeast(this.version, "2.2.1"); }
+	get handlesBreakpointsInPartFiles() { return versionIsAtLeast(this.version, "2.2.1-edge"); }
 }
