@@ -154,7 +154,7 @@ main() {
 			ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
 		});
 
-		it("fully populates a completion for an unimported library", async () => {
+		it("fully populates a completion for a class in an unimported library", async () => {
 			await setTestContent(`
 main() {
   ProcessInf
@@ -163,6 +163,33 @@ main() {
 			const completions = await getCompletionsViaProviderAt("ProcessInf^");
 
 			let completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
+			completion = await resolveCompletion(completion);
+
+			assert.ok(completion.additionalTextEdits.length);
+			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
+			assert.equal(completion.commitCharacters, undefined); // TODO: ??
+			assert.equal(completion.detail, "Auto import from 'dart:io'");
+			assert.equal((completion.documentation as vs.MarkdownString).value, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
+			assert.equal(completion.filterText, "ProcessInfo");
+			assert.equal((completion.insertText as vs.SnippetString).value, "ProcessInfo");
+			assert.equal(completion.keepWhitespace, true);
+			assert.equal(completion.kind, vs.CompletionItemKind.Class);
+			assert.equal(completion.label, "ProcessInfo");
+			assert.notEqual(completion.preselect, true);
+			assert.equal(completion.range.isEqual(rangeOf("|ProcessInf|")), true);
+			assert.equal(completion.sortText, "999997ProcessInfo"); // TODO: This may be fragile...
+			assert.equal(completion.textEdit, undefined); // We don't use this (we use insertText and range).
+		});
+
+		it("fully populates a completion for a constructor in an unimported library", async () => {
+			await setTestContent(`
+main() {
+  ProcessInf
+}
+		`);
+			const completions = await getCompletionsViaProviderAt("ProcessInf^");
+
+			let completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo()", "ProcessInfo");
 			completion = await resolveCompletion(completion);
 
 			assert.ok(completion.additionalTextEdits.length);
