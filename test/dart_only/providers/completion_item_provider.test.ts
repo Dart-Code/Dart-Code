@@ -256,5 +256,31 @@ foo(Theme theme) {
 			//    8 from includedSuggestionSet
 			assert.equal(completion.sortText, "998892Theme.Dark"); // TODO: This might be fragile!
 		});
+
+		it("correctly filters (includes enum constants in methods)", async () => {
+			await setTestContent(`
+import 'package:hello_world/enum.dart';
+
+foo(Theme theme) {
+	theme =
+}
+			`);
+			const completions = await getCompletionsAt("theme =^");
+
+			ensureCompletion(completions, vs.CompletionItemKind.Enum, "Theme", "Theme");
+			ensureCompletion(completions, vs.CompletionItemKind.EnumMember, "Theme.Dark", "Theme.Dark");
+		});
+
+		it("correctly filters (does not include enum constants at top level)", async () => {
+			await setTestContent(`
+import 'package:hello_world/enum.dart';
+
+// top level
+			`);
+			const completions = await getCompletionsAt("^// top level");
+
+			ensureCompletion(completions, vs.CompletionItemKind.Enum, "Theme", "Theme");
+			ensureNoCompletion(completions, vs.CompletionItemKind.EnumMember, "Theme.Dark");
+		});
 	});
 });
