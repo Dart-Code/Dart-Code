@@ -196,8 +196,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			}
 
 			const unresolvedItems = suggestionSet.items
-				// TODO: How should we do this?
-				.filter((r) => !elementKinds || elementKinds.indexOf(r.element.kind) !== -1)
+				.filter((r) => elementKinds[r.element.kind])
 				.map((suggestion): DelayedCompletionItem => {
 
 					// Calculate the relevance for this item.
