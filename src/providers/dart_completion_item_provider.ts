@@ -143,7 +143,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			isDeprecated: false,
 			kind: undefined, // This is only used when there's no element (eg. keyword completions) that won't happen here.
 			parameterNames: suggestion.parameterNames,
-			parameterType: "TODO: PARAMETER TYPE??",
+			// TODO: Confirm this is correct...
+			parameterType: undefined, // Unimported completions can't be parameters?
 			parameters: suggestion.element ? suggestion.element.parameters : undefined,
 			relevance: 0,
 			replacementLength,
