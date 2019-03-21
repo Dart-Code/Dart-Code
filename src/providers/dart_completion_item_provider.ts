@@ -141,7 +141,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			docSummary: suggestion.docSummary,
 			elementKind: suggestion.element ? suggestion.element.kind : undefined,
 			isDeprecated: false,
-			kind: "ARGUMENT_LIST",
+			kind: undefined, // This is only used when there's no element (eg. keyword completions) that won't happen here.
 			parameterNames: suggestion.parameterNames,
 			parameterType: "TODO: PARAMETER TYPE??",
 			parameters: suggestion.element ? suggestion.element.parameters : undefined,
@@ -265,7 +265,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			docSummary: string | undefined,
 			elementKind: as.ElementKind | undefined,
 			isDeprecated: boolean,
-			kind: as.CompletionSuggestionKind,
+			kind: as.CompletionSuggestionKind | undefined,
 			parameterNames: string[] | undefined,
 			parameters: string | undefined,
 			parameterType: string | undefined,
@@ -361,7 +361,9 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		if (label.endsWith(","))
 			label = label.substr(0, label.length - 1).trim();
 
-		const kind = completionItemKind || this.getSuggestionKind(suggestion.kind, label);
+		// If we didnt have a CompletionItemKind from our element, base it on the CompletionSuggestionKind.
+		// This covers things like Keywords that don't have elements.
+		const kind = completionItemKind || (suggestion.kind ? this.getSuggestionKind(suggestion.kind, label) : undefined);
 
 		const completion = new CompletionItem(label, kind);
 		completion.label = label;
