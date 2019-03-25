@@ -175,8 +175,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		offset: number,
 		resp: as.CompletionResultsNotification,
 	): CompletionItem[] {
-		if (!resp.includedSuggestionSets)
-			return;
+		if (!resp.includedSuggestionSets || !resp.includedElementKinds)
+			return [];
 
 		// Create a fast lookup for which kinds to include.
 		const elementKinds: { [key: string]: boolean } = {};
@@ -192,7 +192,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			const suggestionSet = this.cachedCompletions[includedSuggestionSet.id];
 			if (!suggestionSet) {
 				logWarn(`Suggestion set ${includedSuggestionSet.id} was not available and therefore not included in the completion results`);
-				return;
+				return [];
 			}
 
 			const unresolvedItems = suggestionSet.items
