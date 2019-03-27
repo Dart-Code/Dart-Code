@@ -1,6 +1,4 @@
-export async function waitFor<T>(action: () => T, checkEveryMilliseconds: number, tryForMilliseconds: number, token?: { isCancellationRequested: boolean }): Promise<T | undefined> {
-	checkEveryMilliseconds = checkEveryMilliseconds || 500;
-	tryForMilliseconds = tryForMilliseconds || 10000;
+export async function waitFor<T>(action: () => T, checkEveryMilliseconds: number = 500, tryForMilliseconds: number = 10000, token?: { isCancellationRequested: boolean }): Promise<T | undefined> {
 	let timeRemaining = tryForMilliseconds;
 	while (timeRemaining > 0 && !(token && token.isCancellationRequested)) {
 		const res = action();
