@@ -3639,6 +3639,12 @@ export interface AnalysisError {
 	 */
 	code: string;
 
+
+	/**
+	 * The URL of a page containing documentation associated with this error.
+	 */
+	url?: string;
+
 	/**
 	 * A hint to indicate to interested clients that this error has an
 	 * associated fix (or fixes). The absence of this field implies there
