@@ -7,5 +7,6 @@
 	],
 	"dart.analysisExcludedFolders": [
 		"lib/excluded"
-	]
+	],
+	"dart.previewAutoImportCompletions": true,
 }
