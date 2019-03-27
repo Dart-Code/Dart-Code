@@ -194,7 +194,7 @@ export interface AnalysisGetLibraryDependenciesResponse {
 	 * package names to source directories for use in client-side
 	 * package URI resolution.
 	 */
-	packageMap: { [key: string]: { [key: string]: FilePath[]; }; };
+	packageMap: { [key: string]: { [key: string]: FilePath[] | undefined; } | undefined; };
 }
 
 /**
@@ -321,7 +321,7 @@ export interface AnalysisGetReachableSourcesResponse {
 	 * check
 	 * for its presence in the resulting key set.
 	 */
-	sources: { [key: string]: string[]; };
+	sources: { [key: string]: string[] | undefined; };
 }
 
 /**
@@ -472,7 +472,7 @@ export interface AnalysisSetAnalysisRootsRequest {
 	 * or the empty map is specified, that indicates that the
 	 * normal pubspec.yaml mechanism should always be used.
 	 */
-	packageRoots?: { [key: string]: FilePath; };
+	packageRoots?: { [key: string]: FilePath | undefined; };
 }
 
 /**
@@ -556,7 +556,7 @@ export interface AnalysisSetSubscriptionsRequest {
 	 * A table mapping services to a list of the files being
 	 * subscribed to the service.
 	 */
-	subscriptions: { [key: string]: FilePath[]; };
+	subscriptions: { [key: string]: FilePath[] | undefined; };
 }
 
 /**
@@ -574,7 +574,7 @@ export interface AnalysisUpdateContentRequest {
 	 * A table mapping the files whose content has changed to a
 	 * description of the content change.
 	 */
-	files: { [key: string]: AddContentOverlay | ChangeContentOverlay | RemoveContentOverlay; };
+	files: { [key: string]: AddContentOverlay | ChangeContentOverlay | RemoveContentOverlay | undefined; };
 }
 
 /**
@@ -1892,7 +1892,7 @@ export interface FlutterSetSubscriptionsRequest {
 	 * A table mapping services to a list of the files being
 	 * subscribed to the service.
 	 */
-	subscriptions: { [key: string]: FilePath[]; };
+	subscriptions: { [key: string]: FilePath[] | undefined; };
 }
 
 /**
