@@ -72,7 +72,9 @@ export async function ensureMapEntry(mapEntries: DebugProtocol.Variable[], entry
 	assert.ok(found, `Didn't find map entry for ${entry.key.value}=${entry.value.value}\nGot:\n  ${keyValues.join("\n  ")})`);
 }
 
-export function spawnDartProcessPaused(config: DebugConfiguration): DartProcess {
+export function spawnDartProcessPaused(config: DebugConfiguration | undefined | null): DartProcess {
+	if (!config)
+		throw new Error(`Debug config resolved to ${config}!`);
 	const process = safeSpawn(
 		config.cwd,
 		config.dartPath,
@@ -92,6 +94,8 @@ export function spawnDartProcessPaused(config: DebugConfiguration): DartProcess 
 
 export async function spawnFlutterProcess(script: string | Uri): Promise<DartProcess> {
 	const config = await getLaunchConfiguration(script, { deviceId: "flutter-tester" });
+	if (!config)
+		throw new Error(`Could not get launch configuration (got ${config})`);
 	const process = safeSpawn(
 		config.cwd,
 		config.flutterPath,
@@ -114,7 +118,7 @@ export async function spawnFlutterProcess(script: string | Uri): Promise<DartPro
 
 export class DartProcess {
 	public readonly observatoryUri: Promise<string>;
-	public readonly exitCode: Promise<number>;
+	public readonly exitCode: Promise<number | null>;
 	public get hasExited() { return this.exited; }
 	private exited: boolean = false;
 
@@ -126,7 +130,7 @@ export class DartProcess {
 					resolve(match[1]);
 			});
 		});
-		this.exitCode = new Promise<number>((resolve, reject) => {
+		this.exitCode = new Promise<number | null>((resolve, reject) => {
 			process.on("exit", (code) => { this.exited = true; resolve(code); });
 		});
 	}
@@ -148,15 +152,15 @@ export function killFlutterTester(): Promise<void> {
 }
 
 export function isSdkFrame(frame: DebugProtocol.StackFrame) {
-	return !frame.source || frame.source.name.startsWith("dart:");
+	return !frame.source || frame.source.name && frame.source.name.startsWith("dart:");
 }
 
 export function isExternalPackage(frame: DebugProtocol.StackFrame) {
-	return frame.source && frame.source.name.startsWith("package:") && !isLocalPackage(frame);
+	return frame.source && frame.source.name && frame.source.name.startsWith("package:") && !isLocalPackage(frame);
 }
 
 export function isLocalPackage(frame: DebugProtocol.StackFrame) {
-	return frame.source && frame.source.name.startsWith("package:") &&
+	return frame.source && frame.source.name && frame.source.name.startsWith("package:") &&
 		// Packages known to be local (from our test projects).
 		(frame.source!.name.startsWith("package:my_package")
 			|| frame.source!.name.startsWith("package:hello_world")
@@ -164,10 +168,10 @@ export function isLocalPackage(frame: DebugProtocol.StackFrame) {
 }
 
 export function isUserCode(frame: DebugProtocol.StackFrame) {
-	return frame.source && !frame.source.name.startsWith("dart:") && !frame.source!.name.startsWith("package:");
+	return frame.source && frame.source.name && !frame.source.name.startsWith("dart:") && !frame.source!.name.startsWith("package:");
 }
 
-export function ensureFrameCategories(frames: DebugProtocol.StackFrame[], presentationHint: string, origin: string) {
+export function ensureFrameCategories(frames: DebugProtocol.StackFrame[], presentationHint: string | undefined, origin: string | undefined) {
 	assert.notEqual(frames.length, 0);
 	for (const frame of frames) {
 		assert.equal(frame.source!.presentationHint, presentationHint);

@@ -41,6 +41,6 @@ describe("extension", () => {
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.equal(sdks.dartSdkIsFromFlutter, false);
-		assert.equal(sdks.dart.indexOf("flutter"), -1);
+		assert.equal(sdks.dart!.indexOf("flutter"), -1);
 	});
 });

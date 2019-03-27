@@ -28,6 +28,7 @@ describe("extension", () => {
 			},
 		);
 
-		assert.equal(resolvedConfig.cwd, fsPath(helloWorldFolder));
+		assert.ok(resolvedConfig);
+		assert.equal(resolvedConfig!.cwd, fsPath(helloWorldFolder));
 	});
 });

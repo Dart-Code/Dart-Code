@@ -25,7 +25,7 @@ describe("dart cli debugger", () => {
 		defer(() => thisDc.stop());
 	});
 
-	async function startDebugger(script?: vs.Uri, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
+	async function startDebugger(script?: vs.Uri, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {
 		const config = await getLaunchConfiguration(script, extraConfiguration);
 		if (config) {
 			await dc.start(config.debugServer);
@@ -33,8 +33,10 @@ describe("dart cli debugger", () => {
 		return config;
 	}
 
-	async function attachDebugger(observatoryUri: string | undefined, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
+	async function attachDebugger(observatoryUri: string | undefined, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {
 		const config = await getAttachConfiguration(Object.assign({ observatoryUri }, extraConfiguration));
+		if (!config)
+			throw new Error(`Could not get launch configuration (got ${config})`);
 		await dc.start(config.debugServer);
 		return config;
 	}
@@ -138,7 +140,7 @@ describe("dart cli debugger", () => {
 
 	it("passes launch.json's vmAdditionalArgs to the VM", async () => {
 		const config = await startDebugger(helloWorldMainFile);
-		config.vmAdditionalArgs = ["--fake-flag"];
+		config!.vmAdditionalArgs = ["--fake-flag"];
 		await Promise.all([
 			// TODO: Figure out if this is a bug - because we never connect to Observatory, we never
 			// resolve this properly.
@@ -151,7 +153,7 @@ describe("dart cli debugger", () => {
 
 	it("successfully runs a Dart script with a relative path", async () => {
 		const config = await startDebugger(helloWorldMainFile);
-		config.program = path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile));
+		config!.program = path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile));
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", "Hello, world!"),
@@ -212,9 +214,9 @@ describe("dart cli debugger", () => {
 		});
 
 		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
+		assert.ok(devTools);
 		defer(devTools.dispose);
 		assert.ok(open.calledOnce);
-		assert.ok(devTools);
 		assert.ok(devTools.url);
 
 		const serverResponse = await fetch(devTools.url);
@@ -798,7 +800,7 @@ describe("dart cli debugger", () => {
 	it("writes exception to stderr", async () => {
 		await openFile(helloWorldBrokenFile);
 		const config = await startDebugger(helloWorldBrokenFile);
-		config.noDebug = true;
+		config!.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutput("stderr", "Unhandled exception:"),

@@ -1,7 +1,7 @@
 
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, ensureLocation, everythingFile, extApi, getPackages, positionOf, rangeOf } from "../../helpers";
+import { activate, currentDoc, ensureLocation, everythingFile, extApi, fakeCancellationToken, getPackages, positionOf, rangeOf } from "../../helpers";
 
 describe("dart_reference_provider", () => {
 
@@ -14,9 +14,9 @@ describe("dart_reference_provider", () => {
 		return extApi.referenceProvider.provideDefinition(currentDoc(), position, undefined);
 	}
 
-	async function getReferencesFor(searchText: string): Promise<vs.Location[]> {
+	async function getReferencesFor(searchText: string): Promise<vs.Location[] | undefined> {
 		const position = positionOf(searchText);
-		return extApi.referenceProvider.provideReferences(currentDoc(), position, { includeDeclaration: true }, undefined);
+		return extApi.referenceProvider.provideReferences(currentDoc(), position, { includeDeclaration: true }, fakeCancellationToken);
 	}
 
 	it("returns expected location for definition of field reference", async () => {
@@ -32,7 +32,7 @@ describe("dart_reference_provider", () => {
 	it("returns expected location for references of field reference", async () => {
 		const references = await getReferencesFor("void meth^odTakingString(String a)");
 		assert.ok(references);
-		assert.equal(references.length, 3);
+		assert.equal(references!.length, 3);
 		const expectedUri = currentDoc().uri;
 		ensureLocation(references, expectedUri, rangeOf(`b.|methodTakingString|("Hello")`));
 		ensureLocation(references, expectedUri, rangeOf(`b.|methodTakingString|("World!")`));
