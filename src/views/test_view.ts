@@ -60,7 +60,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		});
 	}
 
-	public setSelectedNodes(item: vs.TreeItem): void {
+	public setSelectedNodes(item: vs.TreeItem | undefined): void {
 		this.currentSelectedNode = item;
 	}
 
@@ -171,8 +171,11 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 				if (a.sort > b.sort) return 1;
 				if (a.sort < b.sort) return -1;
 				// If they're the same, sort by label.
-				if (a.label > b.label) return 1;
-				if (a.label < b.label) return -1;
+				const aLabel = a.label || (a.resourceUri ? a.resourceUri.toString() : "");
+				const bLabel = b.label || (b.resourceUri ? b.resourceUri.toString() : "");
+				if (aLabel > bLabel) return 1;
+				if (aLabel < bLabel) return -1;
+				return 0;
 			});
 		}
 		return items;
@@ -626,12 +629,12 @@ class GroupTreeItem extends TestItemTreeItem {
 	set group(group: Group) {
 		this._group = group;
 		const parent = this.parent;
-		this.label = parent && parent instanceof GroupTreeItem && parent.fullName && group.name.startsWith(`${parent.fullName} `)
+		this.label = parent && parent instanceof GroupTreeItem && parent.fullName && group.name && group.name.startsWith(`${parent.fullName} `)
 			? group.name.substr(parent.fullName.length + 1) // +1 because of the space (included above).
 			: group.name;
 	}
 
-	get fullName(): string {
+	get fullName(): string | undefined {
 		return this._group.name;
 	}
 }
@@ -676,7 +679,7 @@ class TestTreeItem extends TestItemTreeItem {
 			: test.name;
 	}
 
-	get fullName(): string {
+	get fullName(): string | undefined {
 		return this._test.name;
 	}
 }

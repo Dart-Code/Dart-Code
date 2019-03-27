@@ -36,7 +36,7 @@ export class TestCommands implements vs.Disposable {
 		cursorIsInTest = isValidTestLocation;
 	}
 
-	private testForCursor(editor: vs.TextEditor): TestOutlineInfo {
+	private testForCursor(editor: vs.TextEditor): TestOutlineInfo | undefined {
 		const document = editor.document;
 		const outline = OpenFileTracker.getOutlineFor(document.uri);
 		if (!outline || !outline.children || !outline.children.length)

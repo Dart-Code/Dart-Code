@@ -492,7 +492,7 @@ function recalculateAnalysisRoots() {
 	// child of these directly will still work).
 	const excludeFolders: string[] = [];
 	if (isWin) {
-		const addExcludeIfRequired = (folder: string) => {
+		const addExcludeIfRequired = (folder: string | undefined) => {
 			if (!folder || !path.isAbsolute(folder))
 				return;
 			const containingRoot = analysisRoots.find((root: string) => isWithinPath(folder, root));
