@@ -8,7 +8,7 @@ describe("dart_hover_provider", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate everythingFile", () => activate(everythingFile));
 
-	async function getHoversAt(searchText: string): Promise<Array<{ displayText: string, documentation?: string, range: vs.Range }>> {
+	async function getHoversAt(searchText: string): Promise<Array<{ displayText: string, documentation?: string, range: vs.Range | undefined }>> {
 		const position = positionOf(searchText);
 		const hoverResult = await (vs.commands.executeCommand("vscode.executeHoverProvider", currentDoc().uri, position) as Thenable<vs.Hover[]>);
 
@@ -36,7 +36,7 @@ describe("dart_hover_provider", () => {
 	}
 
 	// Helper to get just a single hover when exactly one is expected.
-	async function getHoverAt(searchText: string): Promise<{ displayText: string, documentation?: string, range: vs.Range }> {
+	async function getHoverAt(searchText: string): Promise<{ displayText: string, documentation?: string, range: vs.Range | undefined }> {
 		const hovers = await getHoversAt(searchText);
 		assert.equal(hovers.length, 1);
 		return hovers[0];

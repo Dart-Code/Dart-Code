@@ -49,6 +49,8 @@ describe("flutter run debugger (launch)", () => {
 			cwd,
 			deviceId: "flutter-tester",
 		});
+		if (!config)
+			throw new Error(`Could not get launch configuration (got ${config})`);
 		await watchPromise("startDebugger->start", dc.start(config.debugServer));
 		return config;
 	}
@@ -256,8 +258,8 @@ describe("flutter run debugger (launch)", () => {
 			const stack = await dc.getStack();
 			const frames = stack.body.stackFrames;
 			assert.equal(frames[0].name, "MyHomePage.build");
-			assert.equal(frames[0].source.path, expectedLocation.path);
-			assert.equal(frames[0].source.name, "package:hello_world/main.dart");
+			assert.equal(frames[0].source!.path, expectedLocation.path);
+			assert.equal(frames[0].source!.name, "package:hello_world/main.dart");
 
 			await watchPromise("stops_at_a_breakpoint->resume", dc.resume());
 
@@ -278,8 +280,8 @@ describe("flutter run debugger (launch)", () => {
 							const stack = await watchPromise(`stops_at_a_breakpoint->reload:${i}->getStack`, dc.getStack());
 							const frames = stack.body.stackFrames;
 							assert.equal(frames[0].name, "MyHomePage.build");
-							assert.equal(frames[0].source.path, expectedLocation.path);
-							assert.equal(frames[0].source.name, "package:hello_world/main.dart");
+							assert.equal(frames[0].source!.path, expectedLocation.path);
+							assert.equal(frames[0].source!.name, "package:hello_world/main.dart");
 						})
 						.then((_) => watchPromise(`stops_at_a_breakpoint->reload:${i}->resume`, dc.resume())),
 					watchPromise(`stops_at_a_breakpoint->reload:${i}->hotReload:breakpoint`, dc.hotReload()),
@@ -430,8 +432,8 @@ describe("flutter run debugger (launch)", () => {
 				dc.assertOutputContains("stderr", "#0      MyBrokenHomePage.build")
 					.then((event) => {
 						assert.equal(event.body.output.indexOf("package:hello_world/broken.dart"), -1);
-						assert.equal(event.body.source.name, "package:hello_world/broken.dart");
-						assert.equal(event.body.source.path, fsPath(flutterHelloWorldBrokenFile));
+						assert.equal(event.body.source!.name, "package:hello_world/broken.dart");
+						assert.equal(event.body.source!.path, fsPath(flutterHelloWorldBrokenFile));
 						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
 						assert.equal(event.body.column, 5);
 					}),
