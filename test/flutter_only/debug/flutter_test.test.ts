@@ -55,6 +55,8 @@ describe("flutter test debugger", () => {
 
 	async function startDebugger(script?: vs.Uri | string): Promise<vs.DebugConfiguration> {
 		const config = await getLaunchConfiguration(script);
+		if (!config)
+			throw new Error(`Could not get launch configuration (got ${config})`);
 		await dc.start(config.debugServer);
 		return config;
 	}
