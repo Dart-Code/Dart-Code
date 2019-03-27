@@ -111,7 +111,7 @@ export class DartDebugSession extends DebugSession {
 				match = ObservatoryConnection.bannerRegex.exec(data.toString());
 			}
 			if (match) {
-				this.initObservatory(this.websocketUriForObservatoryUri(match[1]));
+				this.initDebugger(this.websocketUriForObservatoryUri(match[1]));
 			} else if (this.sendStdOutToConsole)
 				this.logToUser(data.toString(), "stdout");
 		});
@@ -165,7 +165,7 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		try {
-			await this.initObservatory(this.websocketUriForObservatoryUri(args.observatoryUri));
+			await this.initDebugger(this.websocketUriForObservatoryUri(args.observatoryUri));
 			this.sendResponse(response);
 		} catch (e) {
 			this.errorResponse(response, `Unable to connect to Observatory: ${e}`);
@@ -233,7 +233,7 @@ export class DartDebugSession extends DebugSession {
 		this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.Observatory)));
 	}
 
-	protected initObservatory(uri: string): Promise<void> {
+	protected initDebugger(uri: string): Promise<void> {
 		// Send the uri back to the editor so it can be used to launch browsers etc.
 		let browserFriendlyUri: string;
 		if (uri.endsWith("/ws")) {
@@ -249,6 +249,8 @@ export class DartDebugSession extends DebugSession {
 			// process will remain around and can be reconnected to, so let the
 			// editor know that it should stash this URL for easier re-attaching.
 			// isProbablyReconnectable: this.observatoryUriIsProbablyReconnectable,
+
+			// If we don't support Observatory, don't send its URL back to the editor.
 			observatoryUri: this.supportsObservatory ? browserFriendlyUri.toString() : undefined,
 			vmServiceUri: browserFriendlyUri.toString(),
 		}));

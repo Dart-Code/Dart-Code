@@ -60,7 +60,7 @@ export class DartTestDebugSession extends DartDebugSession {
 		// Set up subscriptions.
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
 		runner.registerForUnhandledMessages((msg) => this.logToUserIfAppropriate(msg, "stdout"));
-		runner.registerForTestStartedProcess((n) => this.initObservatory(`${n.observatoryUri}ws`));
+		runner.registerForTestStartedProcess((n) => this.initDebugger(`${n.observatoryUri}ws`));
 		runner.registerForAllTestNotifications((n) => {
 			try {
 				this.handleTestEvent(n);
@@ -105,7 +105,7 @@ export class DartTestDebugSession extends DartDebugSession {
 				if (observatoryUri) {
 					const match = ObservatoryConnection.httpLinkRegex.exec(observatoryUri);
 					if (match) {
-						this.initObservatory(this.websocketUriForObservatoryUri(match[1]));
+						this.initDebugger(this.websocketUriForObservatoryUri(match[1]));
 					}
 				}
 				break;
