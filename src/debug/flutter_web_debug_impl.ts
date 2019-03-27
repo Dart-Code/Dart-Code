@@ -5,6 +5,14 @@ import { FlutterWebRun } from "./flutter_web_run";
 import { FlutterLaunchRequestArguments, LogSeverity } from "./utils";
 
 export class FlutterWebDebugSession extends FlutterDebugSession {
+	constructor() {
+		super();
+
+		// There is no observatory web app, so we shouldn't send an ObservatoryURI
+		// back to the editor, since that enables "Dart: Open Observatory" and friends.
+		this.supportsObservatory = false;
+	}
+
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: FlutterLaunchRequestArguments): void {
 		// We don't current support debugging.
 		// TODO: When we get support for this, we may need to gate on the version?
