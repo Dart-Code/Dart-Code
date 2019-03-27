@@ -59,6 +59,7 @@ export class DartDebugSession extends DebugSession {
 	public showDartDeveloperLogs = true;
 	public useFlutterStructuredErrors = false;
 	public evaluateGettersInDebugViews = false;
+	public debuggerHandlesPathsEverywhereForBreakpoints: boolean;
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
 	protected sendStdOutToConsole: boolean = true;
@@ -126,6 +127,7 @@ export class DartDebugSession extends DebugSession {
 		this.showDartDeveloperLogs = args.showDartDeveloperLogs;
 		this.useFlutterStructuredErrors = args.useFlutterStructuredErrors;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
+		this.debuggerHandlesPathsEverywhereForBreakpoints = args.debuggerHandlesPathsEverywhereForBreakpoints;
 		this.logFile = args.observatoryLogFile;
 		this.maxLogLineLength = args.maxLogLineLength;
 
@@ -540,12 +542,15 @@ export class DartDebugSession extends DebugSession {
 		if (!breakpoints)
 			breakpoints = [];
 
-		// Get the correct format for the path depending on whether it's a package.
+		// Format the path correctly for the VM. In older SDKs we had to use
+		// package: URIs in many places, however as of 2.2.2 (?) file URIs should
+		// work everywhere.
 		// TODO: The `|| source.name` stops a crash (#1566) but doesn't actually make
 		// the breakpoints work. This needs more work.
-		const uri = this.packageMap
-			? this.packageMap.convertFileToPackageUri(source.path) || formatPathForVm(source.path || source.name)
-			: formatPathForVm(source.path || source.name);
+		const usePaths = this.debuggerHandlesPathsEverywhereForBreakpoints || !this.packageMap;
+		const uri = usePaths
+			? formatPathForVm(source.path || source.name)
+			: (this.packageMap.convertFileToPackageUri(source.path) || formatPathForVm(source.path || source.name));
 
 		try {
 			const result = await this.threadManager.setBreakpoints(uri, breakpoints);
