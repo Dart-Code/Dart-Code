@@ -17,6 +17,10 @@ import { waitFor } from "../src/utils/promises";
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
 export let extApi: InternalExtensionApi;
 export const threeMinutesInMilliseconds = 1000 * 60 * 3;
+export const fakeCancellationToken: vs.CancellationToken = {
+	isCancellationRequested: false,
+	onCancellationRequested: (_) => ({ dispose: () => undefined }),
+};
 
 if (!ext) {
 	if (semver.satisfies(vs.version, vsCodeVersionConstraint)) {
@@ -131,7 +135,7 @@ export async function getPackages() {
 		return;
 	}
 	await waitForNextAnalysis(async () => {
-		await vs.commands.executeCommand("dart.getPackages", vs.workspace.workspaceFolders[0].uri);
+		await vs.commands.executeCommand("dart.getPackages", vs.workspace.workspaceFolders![0].uri);
 	}, 60);
 }
 
@@ -200,11 +204,11 @@ export function deleteDirectoryRecursive(folder: string) {
 	fs.rmdirSync(folder);
 }
 
-export let currentTestName: string | undefined;
-export let fileSafeCurrentTestName: string | undefined;
+export let currentTestName = "unknown";
+export let fileSafeCurrentTestName: string = "unknown";
 beforeEach("stash current test name", async function () {
-	currentTestName = this.currentTest && this.currentTest.fullTitle();
-	fileSafeCurrentTestName = currentTestName && filenameSafe(currentTestName);
+	currentTestName = this.currentTest ? this.currentTest.fullTitle() : "unknown";
+	fileSafeCurrentTestName = filenameSafe(currentTestName);
 });
 
 beforeEach("set logger", async function () {
@@ -292,7 +296,7 @@ export async function uncommentTestFile(): Promise<void> {
 export function getExpectedResults() {
 	const start = positionOf("// == EXPECTED RESULTS ==^");
 	const end = positionOf("^// == /EXPECTED RESULTS ==");
-	const doc = vs.window.activeTextEditor.document;
+	const doc = vs.window.activeTextEditor!.document;
 	const results = doc.getText(new vs.Range(start, end));
 	return results.split("\n")
 		.map((l) => l.trim())
@@ -339,17 +343,17 @@ export function rangeOf(searchText: string, inside?: vs.Range): vs.Range {
 	);
 }
 
-export async function getDocumentSymbols(): Promise<Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol }>> {
+export async function getDocumentSymbols(): Promise<Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol | undefined }>> {
 	const documentSymbolResult = await (vs.commands.executeCommand("vscode.executeDocumentSymbolProvider", currentDoc().uri) as Thenable<vs.DocumentSymbol[]>);
 	if (!documentSymbolResult)
 		return [];
 
 	// Return a flattened list with references to parent for simplified testing.
-	return documentSymbolResult.map((c) => Object.assign(c, { parent: undefined }))
-		.concat(flatMap(
-			documentSymbolResult,
-			(s) => s.children ? s.children.map((c) => Object.assign(c, { parent: s })) : [],
-		));
+	const resultWithEmptyParents = documentSymbolResult.map((c) => Object.assign(c, { parent: undefined as vs.DocumentSymbol | undefined }));
+	return resultWithEmptyParents.concat(flatMap(
+		documentSymbolResult,
+		(s) => s.children ? s.children.map((c) => Object.assign(c, { parent: s })) : [],
+	));
 }
 
 export async function getDefinitions(position: vs.Position): Promise<vs.Location[]> {
@@ -419,7 +423,7 @@ export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: str
 	assert.ok(!symbol.location.range);
 }
 
-export function ensureDocumentSymbol(symbols: Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol }>, name: string, kind: vs.SymbolKind, parentName?: string): void {
+export function ensureDocumentSymbol(symbols: Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol | undefined }>, name: string, kind: vs.SymbolKind, parentName?: string): void {
 	let symbol = symbols.find((f) =>
 		f.name === name
 		&& f.kind === kind
@@ -443,7 +447,9 @@ function rangeString(range: vs.Range) {
 	return `${range.start.line}:${range.start.character}-${range.end.line}:${range.end.character}`;
 }
 
-export function ensureLocation(locations: vs.Location[], uri: vs.Uri, range: vs.Range): void {
+export function ensureLocation(locations: vs.Location[] | undefined, uri: vs.Uri, range: vs.Range): void {
+	if (!locations)
+		throw new Error("Locations to search was undefined");
 	const location = locations.find((l) =>
 		l.uri.toString() === uri.toString()
 		&& l.range.isEqual(range),
@@ -625,7 +631,7 @@ export function filenameSafe(input: string) {
 	return input.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
 }
 
-async function getResolvedDebugConfiguration(extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
+async function getResolvedDebugConfiguration(extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {
 	const debugConfig: vs.DebugConfiguration = Object.assign({}, {
 		name: "Dart & Flutter",
 		request: "launch",
@@ -634,7 +640,7 @@ async function getResolvedDebugConfiguration(extraConfiguration?: { [key: string
 	return await extApi.debugProvider.resolveDebugConfiguration(vs.workspace.workspaceFolders![0], debugConfig);
 }
 
-export async function getLaunchConfiguration(script?: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
+export async function getLaunchConfiguration(script?: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {
 	if (script instanceof vs.Uri)
 		script = fsPath(script);
 	const launchConfig = Object.assign({}, {
@@ -643,7 +649,7 @@ export async function getLaunchConfiguration(script?: vs.Uri | string, extraConf
 	return await getResolvedDebugConfiguration(launchConfig);
 }
 
-export async function getAttachConfiguration(extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
+export async function getAttachConfiguration(extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {
 	const attachConfig = Object.assign({}, {
 		request: "attach",
 	}, extraConfiguration);

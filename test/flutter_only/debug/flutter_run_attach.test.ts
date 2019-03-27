@@ -42,6 +42,8 @@ describe("flutter run debugger (attach)", () => {
 			deviceId: "flutter-tester",
 			observatoryUri,
 		});
+		if (!config)
+			throw new Error(`Could not get attach configuration (got ${config})`);
 		await dc.start(config.debugServer);
 		// Make sure any stdErr is logged to console + log file for debugging.
 		dc.on("output", (event: DebugProtocol.OutputEvent) => {

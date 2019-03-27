@@ -40,8 +40,10 @@ describe("dart test debugger", () => {
 		));
 	});
 
-	async function startDebugger(script: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
+	async function startDebugger(script: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {
 		const config = await getLaunchConfiguration(script, extraConfiguration);
+		if (!config)
+			throw new Error(`Could not get launch configuration (got ${config})`);
 		await dc.start(config.debugServer);
 		return config;
 	}
@@ -128,7 +130,7 @@ describe("dart test debugger", () => {
 	it("sends failure results for failing tests", async () => {
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile);
-		config.noDebug = true;
+		config!.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertFailingTest("might fail today"),
@@ -140,7 +142,7 @@ describe("dart test debugger", () => {
 	it("builds the expected tree from a test run", async () => {
 		await openFile(helloWorldTestTreeFile);
 		const config = await startDebugger(helloWorldTestTreeFile);
-		config.noDebug = true;
+		config!.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
@@ -160,7 +162,7 @@ describe("dart test debugger", () => {
 		for (const file of [helloWorldTestSkipFile, helloWorldTestMainFile, helloWorldTestTreeFile, helloWorldTestBrokenFile]) {
 			await openFile(file);
 			const config = await startDebugger(file);
-			config.noDebug = true;
+			config!.noDebug = true;
 			await Promise.all([
 				dc.configurationSequence(),
 				dc.waitForEvent("terminated"),
@@ -172,19 +174,19 @@ describe("dart test debugger", () => {
 		assert.ok(topLevelNodes);
 		assert.equal(topLevelNodes.length, 4);
 
-		assert.equal(topLevelNodes[0].resourceUri.toString(), helloWorldTestBrokenFile.toString());
+		assert.equal(topLevelNodes[0].resourceUri!.toString(), helloWorldTestBrokenFile.toString());
 		assert.equal(topLevelNodes[0].status, TestStatus.Failed);
-		assert.equal(topLevelNodes[1].resourceUri.toString(), helloWorldTestTreeFile.toString());
+		assert.equal(topLevelNodes[1].resourceUri!.toString(), helloWorldTestTreeFile.toString());
 		assert.equal(topLevelNodes[1].status, TestStatus.Failed);
-		assert.equal(topLevelNodes[2].resourceUri.toString(), helloWorldTestMainFile.toString());
+		assert.equal(topLevelNodes[2].resourceUri!.toString(), helloWorldTestMainFile.toString());
 		assert.equal(topLevelNodes[2].status, TestStatus.Passed);
-		assert.equal(topLevelNodes[3].resourceUri.toString(), helloWorldTestSkipFile.toString());
+		assert.equal(topLevelNodes[3].resourceUri!.toString(), helloWorldTestSkipFile.toString());
 		assert.equal(topLevelNodes[3].status, TestStatus.Skipped);
 	});
 
 	it("runs all tests if given a folder", async () => {
 		const config = await startDebugger("./test/");
-		config.noDebug = true;
+		config!.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
@@ -216,7 +218,10 @@ describe("dart test debugger", () => {
 		let numRuns = 1;
 		checkResults(`After initial run`);
 		const visitor = new TestOutlineVisitor();
-		visitor.visit(OpenFileTracker.getOutlineFor(helloWorldTestTreeFile));
+		const outline = OpenFileTracker.getOutlineFor(helloWorldTestTreeFile);
+		if (!outline)
+			throw new Error(`Did not get outline for ${helloWorldTestTreeFile}`);
+		visitor.visit(outline);
 		for (const test of visitor.tests.filter((t) => !t.isGroup)) {
 			// Run the test.
 			await runWithoutDebugging(helloWorldTestTreeFile, ["--name", makeRegexForTest(test.fullName, test.isGroup)]);
@@ -246,7 +251,10 @@ describe("dart test debugger", () => {
 		let numRuns = 1;
 		checkResults(`After initial run`);
 		const visitor = new TestOutlineVisitor();
-		visitor.visit(OpenFileTracker.getOutlineFor(helloWorldTestDupeNameFile));
+		const outline = OpenFileTracker.getOutlineFor(helloWorldTestDupeNameFile);
+		if (!outline)
+			throw new Error(`Did not get outline for ${helloWorldTestDupeNameFile}`);
+		visitor.visit(outline);
 		const doc = await vs.workspace.openTextDocument(helloWorldTestDupeNameFile);
 		const editor = await vs.window.showTextDocument(doc);
 		for (const modifyFile of [false, true]) {
@@ -285,15 +293,15 @@ describe("dart test debugger", () => {
 function makeTextTree(suite: vs.Uri, provider: TestResultsProvider, parent?: vs.TreeItem, buffer: string[] = [], indent = 0) {
 	const items = provider.getChildren(parent)
 		// Filter to only the suite we were given (though includes all children).
-		.filter((item) => fsPath(item.resourceUri) === fsPath(suite) || !!parent);
-	const wsPath = fsPath(vs.workspace.getWorkspaceFolder(suite).uri);
+		.filter((item) => (fsPath(item.resourceUri!) === fsPath(suite)) || !!parent);
+	const wsPath = fsPath(vs.workspace.getWorkspaceFolder(suite)!.uri);
 	items.forEach((item) => {
 		// Suites don't have a .label (since the rendering is based on the resourceUri) so just
 		// fabricate one here that can be compared in the test. Note: For simplity we always use
 		// forward slashes in these names, since the comparison is against hard-coded comments
 		// in the file that can only be on way.
 		const expectedLabel = item instanceof SuiteTreeItem
-			? path.relative(wsPath, fsPath(item.resourceUri)).replace("\\", "/")
+			? path.relative(wsPath, fsPath(item.resourceUri!)).replace("\\", "/")
 			: item.label;
 		buffer.push(`${" ".repeat(indent * 4)}${expectedLabel} (${TestStatus[item.status]})`);
 		makeTextTree(suite, provider, item, buffer, indent + 1);

@@ -58,11 +58,12 @@ describe("command", () => {
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves();
 
-		const sampleFolderUri: string = await vs.commands.executeCommand("_dart.flutter.createSampleProject");
+		const sampleFolderUri: string | undefined = await vs.commands.executeCommand("_dart.flutter.createSampleProject");
 
+		assert.ok(sampleFolderUri);
 		assert.ok(showQuickPick.calledOnce);
 		assert.ok(openFolder.calledOnce);
-		const triggerFile = path.join(fsPath(sampleFolderUri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
+		const triggerFile = path.join(fsPath(sampleFolderUri!), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
 		assert.ok(fs.existsSync(triggerFile));
 		const recordedSampleId = fs.readFileSync(triggerFile).toString().trim();
 		// TODO: Remove next line and uncomment the following one after the next stable Flutter release (the one after v1.2).
