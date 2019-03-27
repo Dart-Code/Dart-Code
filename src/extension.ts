@@ -49,6 +49,7 @@ import { DebugConfigProvider, HAS_LAST_DEBUG_CONFIG } from "./providers/debug_co
 import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
 import { IgnoreLintCodeActionProvider } from "./providers/ignore_lint_code_action_provider";
 import { LegacyDartWorkspaceSymbolProvider } from "./providers/legacy_dart_workspace_symbol_provider";
+import { OpenErrorHelpCodeActionProvider } from "./providers/open_error_help_code_action_provider";
 import { RefactorCodeActionProvider } from "./providers/refactor_code_action_provider";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
 import { SourceCodeActionProvider } from "./providers/source_code_action_provider";
@@ -197,7 +198,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const fixCodeActionProvider = new FixCodeActionProvider(analyzer);
 	const refactorCodeActionProvider = new RefactorCodeActionProvider(analyzer);
 	const sourceCodeActionProvider = new SourceCodeActionProvider(analyzer);
-	const ignoreLintCodeActionProvider = new IgnoreLintCodeActionProvider(analyzer);
+	const ignoreLintCodeActionProvider = new IgnoreLintCodeActionProvider();
+	const openErrorHelpCodeActionProvider = new OpenErrorHelpCodeActionProvider();
 	const renameProvider = new DartRenameProvider(analyzer);
 	const implementationProvider = new DartImplementationProvider(analyzer);
 
@@ -225,6 +227,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	formattingEditProvider.registerTypingFormatter(DART_MODE, "}", ";");
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, sourceCodeActionProvider, sourceCodeActionProvider.metadata));
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, ignoreLintCodeActionProvider, ignoreLintCodeActionProvider.metadata));
+	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, openErrorHelpCodeActionProvider, openErrorHelpCodeActionProvider.metadata));
 	context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, implementationProvider));
 	if (config.showTestCodeLens) {
 		const codeLensProvider = new TestCodeLensProvider(analyzer);

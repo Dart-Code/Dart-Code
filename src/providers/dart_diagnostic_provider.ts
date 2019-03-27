@@ -33,6 +33,7 @@ export class DartDiagnosticProvider {
 		diag.source = "dart";
 		diag.tags = DartDiagnosticProvider.getTags(error);
 		diag.type = error.type;
+		diag.url = error.url || "https://www.google.co.uk/";
 		if (error.correction)
 			diag.message += `\n${error.correction}`;
 		return diag;
@@ -70,5 +71,6 @@ export class DartDiagnosticProvider {
 }
 
 export class DartDiagnostic extends Diagnostic {
-	public type: string;
+	public type: as.AnalysisErrorType;
+	public url?: string;
 }
