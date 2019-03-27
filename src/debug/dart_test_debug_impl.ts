@@ -4,13 +4,12 @@ import { ErrorNotification, GroupNotification, PrintNotification, SuiteNotificat
 import { DartDebugSession } from "./dart_debug_impl";
 import { ObservatoryConnection } from "./dart_debug_protocol";
 import { TestRunner } from "./test_runner";
-import { DartLaunchRequestArguments, FlutterLaunchRequestArguments, LogCategory, LogMessage, LogSeverity } from "./utils";
+import { DartLaunchRequestArguments, LogCategory, LogMessage, LogSeverity } from "./utils";
 
 const tick = "✓";
 const cross = "✖";
 
 export class DartTestDebugSession extends DartDebugSession {
-	protected args: FlutterLaunchRequestArguments;
 	constructor() {
 		super();
 

@@ -16,7 +16,10 @@ export class DartDebugClient extends DebugClient {
 		super(runtime, executable, debugType, spawnOptions);
 		this.on("dart.log", (e: DebugSessionCustomEvent) => handleDebugLogEvent(e.event, e.body));
 		// TODO: Make it so we don't have to keep copying logic from debug.ts into here...
-		this.on("dart.observatoryUri", (e: DebugSessionCustomEvent) => debugSessions[0].observatoryUri = e.body.observatoryUri);
+		this.on("dart.debuggerUris", (e: DebugSessionCustomEvent) => {
+			debugSessions[0].observatoryUri = e.body.observatoryUri;
+			debugSessions[0].vmServiceUri = e.body.vmServiceUri;
+		});
 		// Log important events to make troubleshooting tests easier.
 		this.on("output", (event: DebugProtocol.OutputEvent) => {
 			log(`[${event.body.category}] ${event.body.output}`);

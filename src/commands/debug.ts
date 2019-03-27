@@ -10,7 +10,7 @@ import { DevTools } from "../sdk/dev_tools";
 import { showDevToolsNotificationIfAppropriate } from "../user_prompts";
 import { fsPath, getDartWorkspaceFolders, openInBrowser, ProjectType, Sdks } from "../utils";
 import { DartDebugSessionInformation } from "../utils/debug";
-import { handleDebugLogEvent } from "../utils/log";
+import { handleDebugLogEvent, logWarn } from "../utils/log";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
 // export let mostRecentAttachedProbablyReusableObservatoryUri: string;
@@ -86,8 +86,9 @@ export class DebugCommands {
 						session.progressReporter = undefined;
 					}
 				}
-			} else if (e.event === "dart.observatoryUri") {
+			} else if (e.event === "dart.debuggerUris") {
 				session.observatoryUri = e.body.observatoryUri;
+				session.vmServiceUri = e.body.vmServiceUri;
 				if (sdks.projectType === ProjectType.Flutter)
 					showDevToolsNotificationIfAppropriate(context);
 				// if (e.body.isProbablyReconnectable) {
@@ -181,9 +182,11 @@ export class DebugCommands {
 			const session = debugSessions.length === 1
 				? debugSessions[0]
 				: await this.promptForDebugSession();
-			if (session && session.observatoryUri) {
+			if (session && !session.session.configuration.noDebug && session.observatoryUri) {
 				openInBrowser(session.observatoryUri);
 				analytics.logDebuggerOpenObservatory();
+			} else if (session) {
+				logWarn("Cannot start Observatory for session without debug/observatoryUri");
 			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.openTimeline", async () => {
@@ -192,9 +195,11 @@ export class DebugCommands {
 			const session = debugSessions.length === 1
 				? debugSessions[0]
 				: await this.promptForDebugSession();
-			if (session && session.observatoryUri) {
+			if (session && !session.session.configuration.noDebug && session.observatoryUri) {
 				openInBrowser(session.observatoryUri + "/#/timeline-dashboard");
 				analytics.logDebuggerOpenTimeline();
+			} else if (session) {
+				logWarn("Cannot start Observatory for session without debug/observatoryUri");
 			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", (args: any) => vs.commands.executeCommand("dart.openDevTools", args)));
@@ -209,7 +214,7 @@ export class DebugCommands {
 			if (!session)
 				return; // User cancelled
 
-			if (session.observatoryUri) {
+			if (session.vmServiceUri) {
 				return this.devTools.spawnForSession(session);
 			} else if (session.session.configuration.noDebug) {
 				vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");

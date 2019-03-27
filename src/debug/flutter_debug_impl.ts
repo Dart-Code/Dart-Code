@@ -19,7 +19,6 @@ export class FlutterDebugSession extends DartDebugSession {
 	private currentRunningAppId?: string;
 	private appHasStarted = false;
 	private observatoryUri?: string;
-	private noDebug = false;
 	private isReloadInProgress = false;
 
 	// Allow flipping into stderr mode for red exceptions when we see the start/end of a Flutter exception dump.
@@ -59,7 +58,6 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	protected spawnProcess(args: FlutterLaunchRequestArguments): any {
-		this.noDebug = args.noDebug;
 		const isAttach = args.request === "attach";
 		if (isAttach)
 			this.sendEvent(new Event("dart.launching", { message: "Waiting for Application to connect...", finished: false }));
@@ -173,7 +171,7 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	private connectToObservatoryIfReady() {
-		if (!this.noDebug && this.observatoryUri && this.appHasStarted && !this.observatory)
+		if (this.observatoryUri && this.appHasStarted && !this.observatory)
 			this.initObservatory(this.observatoryUri);
 	}
 
