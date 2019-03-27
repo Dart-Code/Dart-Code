@@ -30,7 +30,7 @@ export function log(message: string, severity = LogSeverity.Info, category = Log
 		onLogEmitter.fire(new LogMessage(`[${LogCategory[category]}] ${message}`, severity, LogCategory.General));
 	}
 }
-export function logError(error: any, category = LogCategory.General) {
+export function logError(error: any, category = LogCategory.General): string {
 	if (!error)
 		error = "Empty error";
 	if (error instanceof Error)
@@ -50,6 +50,7 @@ export function logError(error: any, category = LogCategory.General) {
 	// 	vs.window.showErrorMessage("DEBUG: " + error);
 	console.error(error);
 	log(error, LogSeverity.Error, category);
+	return `${error}`;
 }
 export function logWarn(warning: string, category = LogCategory.General) {
 	// TODO: Find a way to handle this better withotu vs depenency

@@ -21,7 +21,7 @@ import * as util from "../utils";
 import { fsPath } from "../utils";
 import { sortBy } from "../utils/array";
 import { getChildFolders, hasPubspec } from "../utils/fs";
-import { log, logProcess } from "../utils/log";
+import { log, logError, logProcess } from "../utils/log";
 import { globalFlutterArgs, safeSpawn } from "../utils/processes";
 import * as channels from "./channels";
 
@@ -43,7 +43,7 @@ export class SdkCommands {
 			const flutterSdkManager = new FlutterSdkManager(workspace.sdks);
 			context.subscriptions.push(vs.commands.registerCommand("dart.changeFlutterSdk", () => flutterSdkManager.changeSdk()));
 		}
-		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", async (uri: string | Uri) => {
+		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", async (uri: string | Uri | undefined) => {
 			if (!uri || !(uri instanceof Uri)) {
 				uri = await this.getFolderToRunCommandIn("Select which folder to get packages for");
 				// If the user cancelled, bail out (otherwise we'll prompt them again below).
@@ -62,7 +62,8 @@ export class SdkCommands {
 				DartHoverProvider.clearPackageMapCaches();
 			}
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages", async (uri: string | Uri) => {
+		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages", async (uri: string | Uri | undefined) => {
+			// TODO: Doesn't this instanceof mean passing a string can't work?
 			if (!uri || !(uri instanceof Uri))
 				uri = await this.getFolderToRunCommandIn("Select which folder to upgrade packages in");
 			if (typeof uri === "string")
@@ -82,9 +83,13 @@ export class SdkCommands {
 		}));
 
 		// Flutter commands.
-		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", async (selection): Promise<number> => {
-			if (!selection)
-				selection = vs.Uri.file(await this.getFolderToRunCommandIn(`Select the folder to run "flutter packages get" in`, selection));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", async (selection): Promise<number | undefined> => {
+			if (!selection) {
+				const path = await this.getFolderToRunCommandIn(`Select the folder to run "flutter packages get" in`, selection);
+				if (!path)
+					return;
+				selection = vs.Uri.file(path);
+			}
 
 			// If we're working on the flutter repository, map this on to update-packages.
 			if (selection && fsPath(selection) === workspace.sdks.flutter) {
@@ -242,10 +247,15 @@ export class SdkCommands {
 		placeHolder: string,
 		args: string[],
 		selection?: vs.Uri,
-	): Promise<number> {
+	): Promise<number | undefined> {
 
 		const folderToRunCommandIn = await this.getFolderToRunCommandIn(placeHolder, selection);
+		if (!folderToRunCommandIn)
+			return;
 		const containingWorkspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(folderToRunCommandIn));
+		if (!containingWorkspace) {
+			throw new Error(logError(`Failed to get workspace folder for ${folderToRunCommandIn}`));
+		}
 		const containingWorkspacePath = fsPath(containingWorkspace.uri);
 
 		// Display the relative path from the workspace root to the folder we're running, or if they're
@@ -256,7 +266,7 @@ export class SdkCommands {
 		return handler(folderToRunCommandIn, args, shortPath);
 	}
 
-	private async getFolderToRunCommandIn(placeHolder: string, selection?: vs.Uri): Promise<string> {
+	private async getFolderToRunCommandIn(placeHolder: string, selection?: vs.Uri): Promise<string | undefined> {
 		// Attempt to find a project based on the supplied folder of active file.
 		let file = selection && fsPath(selection);
 		file = file || (vs.window.activeTextEditor && fsPath(vs.window.activeTextEditor.document.uri));
@@ -273,7 +283,7 @@ export class SdkCommands {
 		return this.showFolderPicker(selectableFolders, placeHolder); // TODO: What if the user didn't pick anything?
 	}
 
-	private async showFolderPicker(folders: string[], placeHolder: string): Promise<string> {
+	private async showFolderPicker(folders: string[], placeHolder: string): Promise<string | undefined> {
 		if (!folders || !folders.length) {
 			vs.window.showWarningMessage("No Dart/Flutter projects were found.");
 			return undefined;
@@ -285,7 +295,8 @@ export class SdkCommands {
 		}
 
 		const items = folders.map((f) => {
-			const workspacePathParent = path.dirname(fsPath(vs.workspace.getWorkspaceFolder(Uri.file(f)).uri));
+			const workspaceFolder = vs.workspace.getWorkspaceFolder(Uri.file(f));
+			const workspacePathParent = path.dirname(fsPath(workspaceFolder.uri));
 			return {
 				description: util.homeRelativePath(workspacePathParent),
 				label: path.relative(workspacePathParent, f),
@@ -297,20 +308,20 @@ export class SdkCommands {
 		return selectedFolder && selectedFolder.path;
 	}
 
-	private runFlutter(args: string[], selection?: vs.Uri): Thenable<number> {
+	private runFlutter(args: string[], selection?: vs.Uri): Thenable<number | undefined> {
 		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection);
 	}
 
-	private runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined): Thenable<number> {
+	private runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined): Thenable<number | undefined> {
 		const binPath = path.join(this.sdks.flutter, flutterPath);
 		return this.runCommandInFolder(shortPath, "flutter", folder, binPath, globalFlutterArgs.concat(args));
 	}
 
-	private runPub(args: string[], selection?: vs.Uri): Thenable<number> {
+	private runPub(args: string[], selection?: vs.Uri): Thenable<number | undefined> {
 		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${args.join(" ")}" in`, args, selection);
 	}
 
-	private runPubInFolder(folder: string, args: string[], shortPath: string): Thenable<number> {
+	private runPubInFolder(folder: string, args: string[], shortPath: string): Thenable<number | undefined> {
 		const binPath = path.join(this.sdks.dart, pubPath);
 		args = args.concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
 		return this.runCommandInFolder(shortPath, "pub", folder, binPath, args);
@@ -456,7 +467,7 @@ export class SdkCommands {
 		vs.commands.executeCommand("vscode.openFolder", projectFolderUri, openInNewWindow);
 	}
 
-	private async createFlutterSampleProject(): Promise<vs.Uri> {
+	private async createFlutterSampleProject(): Promise<vs.Uri | undefined> {
 		if (!this.sdks || !this.sdks.flutter) {
 			showFlutterActivationFailure("_dart.flutter.createSampleProject");
 			return;
