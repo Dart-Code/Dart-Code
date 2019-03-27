@@ -33,6 +33,8 @@ export class DartDiagnosticProvider {
 		diag.source = "dart";
 		diag.tags = DartDiagnosticProvider.getTags(error);
 		diag.type = error.type;
+		if (error.correction)
+			diag.message += `\n${error.correction}`;
 		return diag;
 	}
 
