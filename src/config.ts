@@ -76,6 +76,7 @@ class Config {
 	get previewHotReloadCoverageMarkers() { return this.getConfig<boolean>("previewHotReloadCoverageMarkers"); }
 	get previewBuildRunnerTasks() { return this.getConfig<boolean>("previewBuildRunnerTasks"); }
 	get previewToStringInDebugViews() { return this.getConfig<boolean>("previewToStringInDebugViews"); }
+	get previewAutoImportCompletions() { return this.getConfig<boolean>("previewAutoImportCompletions"); }
 
 	// Helpers
 	get useDarkTheme() { return this.theme !== "light"; }
