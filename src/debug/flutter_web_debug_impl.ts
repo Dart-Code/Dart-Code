@@ -1,9 +1,17 @@
+import { DebugProtocol } from "vscode-debugprotocol";
 import { FlutterDebugSession } from "./flutter_debug_impl";
 import { FlutterRunBase, RunMode } from "./flutter_run_base";
 import { FlutterWebRun } from "./flutter_web_run";
 import { FlutterLaunchRequestArguments, LogSeverity } from "./utils";
 
 export class FlutterWebDebugSession extends FlutterDebugSession {
+	protected launchRequest(response: DebugProtocol.LaunchResponse, args: FlutterLaunchRequestArguments): void {
+		// We don't current support debugging.
+		// TODO: When we get support for this, we may need to gate on the version?
+		args.noDebug = true;
+		super.launchRequest(response, args);
+	}
+
 	protected spawnRunDaemon(isAttach: boolean, args: FlutterLaunchRequestArguments, logger: (message: string, severity: LogSeverity) => void): FlutterRunBase {
 		let appArgs: string[] = [];
 

@@ -283,12 +283,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// TODO: Why do we need this cast? The node-mock-debug does not?
 		(debugConfig as any).debugServer = serverAddress.port;
 
-		// We don't currently support debug for FlutterWeb
-		if (debugType === DebuggerType.FlutterWeb && !debugConfig.noDebug) {
-			// TODO: Support this! :)
-			debugConfig.noDebug = true;
-		}
-
 		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
 		if (debugType === DebuggerType.FlutterTest || debugType === DebuggerType.FlutterWebTest || debugType === DebuggerType.PubTest) {
 			const isRunningTestSubset = debugConfig.args && (debugConfig.args.indexOf("--name") !== -1 || debugConfig.args.indexOf("--pname") !== -1);
