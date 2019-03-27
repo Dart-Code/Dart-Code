@@ -35,6 +35,7 @@ export class DartDebugSession extends DebugSession {
 	protected processExited = false;
 	public observatory?: ObservatoryConnection;
 	protected cwd?: string;
+	protected noDebug?: boolean;
 	private logFile?: string;
 	private logStream?: fs.WriteStream;
 	public debugSdkLibraries: boolean;
@@ -43,6 +44,7 @@ export class DartDebugSession extends DebugSession {
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
 	protected sendStdOutToConsole: boolean = true;
+	protected supportsObservatory: boolean = true;
 	protected parseObservatoryUriFromStdOut: boolean = true;
 	protected requiresProgram: boolean = true;
 	protected pollforMemoryMs?: number; // If set, will poll for memory usage and send events back.
@@ -87,6 +89,7 @@ export class DartDebugSession extends DebugSession {
 			args.program = path.join(args.cwd, args.program);
 		this.shouldKillProcessOnTerminate = true;
 		this.cwd = args.cwd;
+		this.noDebug = args.noDebug;
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program || args.cwd));
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
@@ -104,7 +107,7 @@ export class DartDebugSession extends DebugSession {
 		process.stdout.setEncoding("utf8");
 		process.stdout.on("data", (data) => {
 			let match: RegExpExecArray;
-			if (!args.noDebug && this.parseObservatoryUriFromStdOut && !this.observatory) {
+			if (!this.noDebug && this.parseObservatoryUriFromStdOut && !this.observatory) {
 				match = ObservatoryConnection.bannerRegex.exec(data.toString());
 			}
 			if (match) {
@@ -231,20 +234,29 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected initObservatory(uri: string): Promise<void> {
+		// Send the uri back to the editor so it can be used to launch browsers etc.
+		let browserFriendlyUri: string;
+		if (uri.endsWith("/ws")) {
+			browserFriendlyUri = uri.substring(0, uri.length - 3);
+			if (browserFriendlyUri.startsWith("ws:"))
+				browserFriendlyUri = "http:" + browserFriendlyUri.substring(3);
+		} else {
+			browserFriendlyUri = uri;
+		}
+
+		this.sendEvent(new Event("dart.debuggerUris", {
+			// If we won't be killing the process on terminate, then it's likely the
+			// process will remain around and can be reconnected to, so let the
+			// editor know that it should stash this URL for easier re-attaching.
+			// isProbablyReconnectable: this.observatoryUriIsProbablyReconnectable,
+			observatoryUri: this.supportsObservatory ? browserFriendlyUri.toString() : undefined,
+			vmServiceUri: browserFriendlyUri.toString(),
+		}));
+
+		if (this.noDebug)
+			return;
+
 		return new Promise<void>((resolve, reject) => {
-			// Send the uri back to the editor so it can be used to launch browsers etc.
-			if (uri.endsWith("/ws")) {
-				let browserFriendlyUri = uri.substring(0, uri.length - 3);
-				if (browserFriendlyUri.startsWith("ws:"))
-					browserFriendlyUri = "http:" + browserFriendlyUri.substring(3);
-				this.sendEvent(new Event("dart.observatoryUri", {
-					// If we won't be killing the process on terminate, then it's likely the
-					// process will remain around and can be reconnected to, so let the
-					// editor know that it should stash this URL for easier re-attaching.
-					// isProbablyReconnectable: this.observatoryUriIsProbablyReconnectable,
-					observatoryUri: browserFriendlyUri.toString(),
-				}));
-			}
 			this.observatory = new ObservatoryConnection(uri);
 			this.observatory.onLogging((message) => this.log(message));
 			this.observatory.onOpen(() => {

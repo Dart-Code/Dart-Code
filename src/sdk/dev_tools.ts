@@ -41,7 +41,7 @@ export class DevTools implements vs.Disposable {
 			return;
 		}
 
-		const observatoryPort = extractObservatoryPort(session.observatoryUri);
+		const observatoryPort = extractObservatoryPort(session.vmServiceUri);
 
 		if (!this.devtoolsUrl) {
 			this.devtoolsUrl = vs.window.withProgress({

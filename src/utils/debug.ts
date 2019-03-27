@@ -9,6 +9,7 @@ export function extractObservatoryPort(observatoryUri: string): number | undefin
 
 export class DartDebugSessionInformation {
 	public observatoryUri?: string;
+	public vmServiceUri?: string;
 	/// Reporting for the launch step.
 	public readonly launchProgressPromise = new PromiseCompleter<void>();
 	public launchProgressReporter: vs.Progress<{ message?: string; increment?: number; }>; // Set to undefined when launch finishes as a signal.
