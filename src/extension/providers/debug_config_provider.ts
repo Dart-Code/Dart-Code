@@ -25,6 +25,7 @@ import { config } from "../config";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
+import { DartCapabilities } from "../sdk/capabilities";
 import { checkProjectSupportsPubRunTest, isDartFile, isFlutterProjectFolder, isFlutterWebProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder } from "../utils";
 import { TestResultsProvider } from "../views/test_view";
 
@@ -35,7 +36,7 @@ let hasShownFlutterWebDebugWarning = false;
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugServers: { [index: string]: net.Server } = {};
 
-	constructor(private readonly logger: Logger, private readonly sdks: Sdks, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly daemon: IFlutterDaemon, private readonly deviceManager: FlutterDeviceManager, private readonly flutterCapabilities: FlutterCapabilities) { }
+	constructor(private readonly logger: Logger, private readonly sdks: Sdks, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly daemon: IFlutterDaemon, private readonly deviceManager: FlutterDeviceManager, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
 
 	public provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
 		const isFlutter = isFlutterWorkspaceFolder(folder);
@@ -463,6 +464,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			: conf.debugExternalLibraries;
 		debugConfig.showDartDeveloperLogs = conf.showDartDeveloperLogs;
 		debugConfig.useFlutterStructuredErrors = conf.previewFlutterStructuredErrors;
+		debugConfig.debuggerHandlesPathsEverywhereForBreakpoints = debugConfig.debuggerHandlesPathsEverywhereForBreakpoints !== undefined && debugConfig.debuggerHandlesPathsEverywhereForBreakpoints !== null
+			? debugConfig.debuggerHandlesPathsEverywhereForBreakpoints
+			: this.dartCapabilities.handlesPathsEverywhereForBreakpoints;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		if (isFlutter) {
 			debugConfig.args = debugConfig.args.concat(conf.flutterAdditionalArgs);
