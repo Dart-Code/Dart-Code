@@ -106,7 +106,7 @@ export class DartDebugSession extends DebugSession {
 
 		process.stdout.setEncoding("utf8");
 		process.stdout.on("data", (data) => {
-			let match: RegExpExecArray | undefined;
+			let match: RegExpExecArray | null = null;
 			if (!this.noDebug && this.parseObservatoryUriFromStdOut && !this.observatory) {
 				match = ObservatoryConnection.bannerRegex.exec(data.toString());
 			}
@@ -572,10 +572,15 @@ export class DartDebugSession extends DebugSession {
 					return;
 				}
 
-				const frameName = frame.code.name.startsWith(unoptimizedPrefix)
-					? frame.code.name.substring(unoptimizedPrefix.length)
-					: frame.code.name;
-				const location: VMSourceLocation = frame.location;
+				const frameName =
+					frame && frame.code && frame.code.name
+						? (
+							frame.code.name.startsWith(unoptimizedPrefix)
+								? frame.code.name.substring(unoptimizedPrefix.length)
+								: frame.code.name
+						)
+						: "<unknown>";
+				const location: VMSourceLocation | undefined = frame.location;
 
 				if (!location) {
 					const stackFrame: DebugProtocol.StackFrame = new StackFrame(frameId, frameName);

@@ -203,7 +203,7 @@ export class DebugCommands {
 			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", (args: any) => vs.commands.executeCommand("dart.openDevTools", args)));
-		context.subscriptions.push(vs.commands.registerCommand("dart.openDevTools", async (): Promise<{ url: string, dispose: () => void }> => {
+		context.subscriptions.push(vs.commands.registerCommand("dart.openDevTools", async (): Promise<{ url: string, dispose: () => void } | undefined> => {
 			if (!debugSessions.length) {
 				vs.window.showInformationMessage("Dart DevTools requires an active debug session.");
 				return;
