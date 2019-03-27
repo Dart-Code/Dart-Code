@@ -172,7 +172,7 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	private connectToObservatoryIfReady() {
 		if (this.observatoryUri && this.appHasStarted && !this.observatory)
-			this.initObservatory(this.observatoryUri);
+			this.initDebugger(this.observatoryUri);
 	}
 
 	protected async terminate(force: boolean): Promise<void> {
