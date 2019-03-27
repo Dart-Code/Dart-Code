@@ -38,8 +38,9 @@ class Config {
 	public setCheckForSdkUpdates(value: boolean): Thenable<void> { return this.setConfig("checkForSdkUpdates", value, ConfigurationTarget.Global); }
 	get closingLabels() { return this.getConfig<boolean>("closingLabels"); }
 	get devToolsTheme() { return this.getConfig<string>("devToolsTheme"); }
-	get extensionLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("extensionLogFile"))); }
+	get enableSdkFormatter() { return this.getConfig<boolean>("enableSdkFormatter"); }
 	get env() { return this.getConfig<object>("env"); }
+	get extensionLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("extensionLogFile"))); }
 	get flutterCreateAndroidLanguage() { return this.getConfig<string>("flutterCreateAndroidLanguage"); }
 	get flutterCreateIOSLanguage() { return this.getConfig<string>("flutterCreateIOSLanguage"); }
 	get flutterCreateOrganization() { return this.getConfig<string>("flutterCreateOrganization"); }
@@ -50,21 +51,21 @@ class Config {
 	public setFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Workspace); }
 	get flutterSdkPaths() { return (this.getConfig<string[]>("flutterSdkPaths") || []).map(resolvePaths); }
 	get flutterSelectDeviceWhenConnected() { return this.getConfig<boolean>("flutterSelectDeviceWhenConnected"); }
-	get normalizeWindowsDriveLetters() { return this.getConfig<boolean>("normalizeWindowsDriveLetters"); }
 	get maxLogLineLength() { return this.getConfig<number>("maxLogLineLength"); }
+	get normalizeWindowsDriveLetters() { return this.getConfig<boolean>("normalizeWindowsDriveLetters"); }
 	get openTestView() { return this.getConfig<string[]>("openTestView") || []; }
 	get openTestViewOnFailure() { return this.openTestView.indexOf("testFailure") !== -1; }
 	get openTestViewOnStart() { return this.openTestView.indexOf("testRunStart") !== -1; }
+	get promptToRunIfErrors() { return this.getConfig<boolean>("promptToRunIfErrors"); }
 	get reportAnalyzerErrors() { return this.getConfig<boolean>("reportAnalyzerErrors"); }
 	get sdkPath() { return resolvePaths(this.getConfig<string>("sdkPath")) || undefined; }
 	public setSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
 	get sdkPaths() { return (this.getConfig<string[]>("sdkPaths") || []).map(resolvePaths); }
+	get showIgnoreQuickFixes() { return this.getConfig<boolean>("showIgnoreQuickFixes"); }
 	get showTestCodeLens() { return this.getConfig<boolean>("showTestCodeLens"); }
 	get showTodos() { return this.getConfig<boolean>("showTodos"); }
-	get showIgnoreQuickFixes() { return this.getConfig<boolean>("showIgnoreQuickFixes"); }
 	get theme() { return this.getConfig<string>("theme"); }
 	get triggerSignatureHelpAutomatically() { return this.getConfig<boolean>("triggerSignatureHelpAutomatically"); }
-	get enableSdkFormatter() { return this.getConfig<boolean>("enableSdkFormatter"); }
 	get warnWhenEditingFilesOutsideWorkspace() { return this.getConfig<boolean>("warnWhenEditingFilesOutsideWorkspace"); }
 	public setWarnWhenEditingFilesOutsideWorkspace(value: boolean): Thenable<void> { return this.setConfig("warnWhenEditingFilesOutsideWorkspace", value, ConfigurationTarget.Global); }
 
@@ -75,7 +76,6 @@ class Config {
 	get previewHotReloadCoverageMarkers() { return this.getConfig<boolean>("previewHotReloadCoverageMarkers"); }
 	get previewBuildRunnerTasks() { return this.getConfig<boolean>("previewBuildRunnerTasks"); }
 	get previewToStringInDebugViews() { return this.getConfig<boolean>("previewToStringInDebugViews"); }
-	get promptToRunIfErrors() { return this.getConfig<boolean>("promptToRunIfErrors"); }
 
 	// Helpers
 	get useDarkTheme() { return this.theme !== "light"; }
