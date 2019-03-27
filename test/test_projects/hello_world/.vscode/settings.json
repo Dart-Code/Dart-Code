@@ -8,5 +8,6 @@
 	"dart.analysisExcludedFolders": [
 		"lib/excluded"
 	],
-	"dart.showIgnoreQuickFixes": true
+	"dart.showIgnoreQuickFixes": true,
+	"dart.previewAutoImportCompletions": true,
 }
