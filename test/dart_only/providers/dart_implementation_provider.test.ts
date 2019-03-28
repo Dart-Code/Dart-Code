@@ -16,7 +16,6 @@ describe("dart_implementation_provider", () => {
 		return definitionResults || [];
 	}
 
-	// tslint:disable-next-line:only-arrow-functions
 	it("does not return anything for blank areas of the document", async () => {
 		const impls = await getImplementationsAt("\n^\n");
 		assert.equal(impls.length, 0, "Unexpected results: " + JSON.stringify(impls, undefined, 4));

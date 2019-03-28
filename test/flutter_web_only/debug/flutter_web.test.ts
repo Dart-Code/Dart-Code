@@ -280,8 +280,8 @@ describe("flutter web debugger", () => {
 		});
 	});
 
-	describe("can evaluate at breakpoint", function () { // tslint:disable-line:only-arrow-functions
-		it("simple expressions", async () => {
+	describe("can evaluate at breakpoint", () => {
+		it("simple expressions", async function () {
 			await openFile(flutterWebHelloWorldMainFile);
 			const config = await startDebugger(flutterWebHelloWorldMainFile);
 			await Promise.all([

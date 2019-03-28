@@ -285,7 +285,7 @@ describe("flutter run debugger (launch)", () => {
 		});
 	});
 
-	describe("can evaluate at breakpoint", function () { // tslint:disable-line:only-arrow-functions
+	describe("can evaluate at breakpoint", () => {
 		it("simple expressions", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(flutterHelloWorldMainFile);
