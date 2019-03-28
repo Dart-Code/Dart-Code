@@ -27,7 +27,7 @@ export class DartHoverProvider implements HoverProvider {
 						);
 						resolve(new Hover(
 							[{ language: "dart", value: data.displayString }, data.documentation || undefined],
-							range,
+							range.isSingleLine ? range : undefined, // Workaround for https://github.com/dart-lang/sdk/issues/35386
 						));
 					} else {
 						resolve(null);
