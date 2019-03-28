@@ -8,18 +8,18 @@ environment:
   matrix:
     - ONLY_RUN_CODE_VERSION: STABLE
       ONLY_RUN_DART_VERSION: STABLE
-    - ONLY_RUN_CODE_VERSION: DEV
-      ONLY_RUN_DART_VERSION: DEV
-
-matrix:
-  fast_finish: true
-  allow_failures:
-    - ONLY_RUN_CODE_VERSION: DEV
-      ONLY_RUN_DART_VERSION: STABLE
     - ONLY_RUN_CODE_VERSION: STABLE
-      ONLY_RUN_DART_VERSION: DEV
-    - ONLY_RUN_CODE_VERSION: DEV
-      ONLY_RUN_DART_VERSION: DEV
+      ONLY_RUN_DART_VERSION: MASTER
+
+# matrix:
+#   fast_finish: true
+#   allow_failures:
+#     - ONLY_RUN_CODE_VERSION: DEV
+#       ONLY_RUN_DART_VERSION: STABLE
+#     - ONLY_RUN_CODE_VERSION: STABLE
+#       ONLY_RUN_DART_VERSION: DEV
+#     - ONLY_RUN_CODE_VERSION: DEV
+#       ONLY_RUN_DART_VERSION: DEV
 
 # Don't build tags.
 skip_tags: true
@@ -27,19 +27,19 @@ skip_tags: true
 # Don't build Stable/Dev or Dev/Stable unless master (and not a PR->master merge build)
 # as the changes of a failure showing up in those and not in either Stable/Stable or
 # Dev/Dev are pretty slim so this will half the time for branch builds.
-for:
-  -
-    branches:
-      only:
-        - master
-    # TODO: Skip master builds that are PR-merges
-    # https://help.appveyor.com/discussions/questions/35664-how-to-conditionally-skip-some-matrix-builds-for-the-prs-merge-into-branch-builds
-    environment:
-      matrix:
-        - ONLY_RUN_CODE_VERSION: DEV
-          ONLY_RUN_DART_VERSION: STABLE
-        - ONLY_RUN_CODE_VERSION: STABLE
-          ONLY_RUN_DART_VERSION: DEV
+# for:
+#   -
+#     branches:
+#       only:
+#         - master
+#     # TODO: Skip master builds that are PR-merges
+#     # https://help.appveyor.com/discussions/questions/35664-how-to-conditionally-skip-some-matrix-builds-for-the-prs-merge-into-branch-builds
+#     environment:
+#       matrix:
+#         - ONLY_RUN_CODE_VERSION: DEV
+#           ONLY_RUN_DART_VERSION: STABLE
+#         - ONLY_RUN_CODE_VERSION: STABLE
+#           ONLY_RUN_DART_VERSION: DEV
 
 # The above seems to also include pr-to-master merge builds from PRs and there's no clear
 # way to exclude them, so we do it here.
