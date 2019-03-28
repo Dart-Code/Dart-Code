@@ -108,7 +108,11 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.flutter.registerForError((err) => this.sendEvent(new OutputEvent(`${err}\n`, "stderr")));
 		this.flutter.registerForDaemonLogMessage((msg) => {
 			const category = msg.level === "error" ? "stderr" : "stdout";
-			this.logToUser(`${msg.message}\n`, category);
+			this.logToUser(`${msg.message.trimRight()}\n`, category);
+		});
+		this.flutter.registerForAppLogMessage((msg) => {
+			const category = msg.error ? "stderr" : "stdout";
+			this.logToUser(`${msg.log.trimRight()}\n`, category);
 		});
 
 		return this.flutter.process;

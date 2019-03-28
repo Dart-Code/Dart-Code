@@ -53,6 +53,9 @@ export abstract class FlutterRunBase extends StdIOService<UnknownNotification> {
 			case "app.progress":
 				this.notify(this.appProgressSubscriptions, evt.params as f.AppProgress);
 				break;
+			case "app.log":
+				this.notify(this.appLogMessageSubscriptions, evt.params as f.AppLogMessage);
+				break;
 			case "daemon.logMessage":
 				this.notify(this.daemonLogMessageSubscriptions, evt.params as f.LogMessage);
 				break;
@@ -67,6 +70,7 @@ export abstract class FlutterRunBase extends StdIOService<UnknownNotification> {
 	private appStartedSubscriptions: Array<(notification: f.AppEvent) => void> = [];
 	private appStopSubscriptions: Array<(notification: f.AppEvent) => void> = [];
 	private appProgressSubscriptions: Array<(notification: f.AppProgress) => void> = [];
+	private appLogMessageSubscriptions: Array<(notification: f.AppLogMessage) => void> = [];
 	private errorSubscriptions: Array<(notification: string) => void> = [];
 	private daemonLogMessageSubscriptions: Array<(notification: f.LogMessage) => void> = [];
 
@@ -112,6 +116,10 @@ export abstract class FlutterRunBase extends StdIOService<UnknownNotification> {
 
 	public registerForAppProgress(subscriber: (notification: f.AppProgress) => void): IAmDisposable {
 		return this.subscribe(this.appProgressSubscriptions, subscriber);
+	}
+
+	public registerForAppLogMessage(subscriber: (notification: f.AppLogMessage) => void): IAmDisposable {
+		return this.subscribe(this.appLogMessageSubscriptions, subscriber);
 	}
 
 	public registerForError(subscriber: (error: string) => void): IAmDisposable {

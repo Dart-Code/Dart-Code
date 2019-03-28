@@ -38,6 +38,12 @@ export interface LogMessage {
 	stackTrace?: string;
 }
 
+export interface AppLogMessage {
+	error: boolean;
+	log: string;
+
+}
+
 export interface ShowMessage {
 	level: "info" | "warning" | "error";
 	title: string;

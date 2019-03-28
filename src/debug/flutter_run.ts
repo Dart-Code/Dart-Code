@@ -10,5 +10,4 @@ export class FlutterRun extends FlutterRunBase {
 
 		this.createProcess(projectFolder, flutterBinPath, globalFlutterArgs.concat([command, "--machine"]).concat(args), envOverrides);
 	}
-
 }
