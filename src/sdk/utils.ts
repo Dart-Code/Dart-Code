@@ -5,7 +5,7 @@ import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
 import { flatMap, isWin, platformName } from "../debug/utils";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, getSdkVersion, openExtensionLogFile, openInBrowser, ProjectType, reloadExtension, resolvePaths, Sdks, showLogAction } from "../utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, getSdkVersion, openExtensionLogFile, openInBrowser, ProjectType, reloadExtension, resolvePaths, Sdks, showLogAction, WorkspaceContext } from "../utils";
 import { getChildFolders, hasPubspec } from "../utils/fs";
 import { log } from "../utils/log";
 
@@ -135,7 +135,7 @@ export async function showSdkActivationFailure(
 	}
 }
 
-export function findSdks(): Sdks {
+export function initWorkspace(): WorkspaceContext {
 	log("Searching for SDKs...");
 	const folders = getDartWorkspaceFolders()
 		.map((w) => fsPath(w.uri));
@@ -151,13 +151,13 @@ export function findSdks(): Sdks {
 	// of the other SDKs will work remotely. Also, there is no need to validate the sdk path,
 	// since that file will exist on a remote machine.
 	if (config.analyzerSshHost) {
-		return {
+		return new WorkspaceContext({
 			dart: config.sdkPath,
 			dartSdkIsFromFlutter: false,
 			flutter: null,
 			fuchsia: null,
 			projectType: ProjectType.Dart,
-		};
+		});
 	}
 
 	let fuchsiaRoot: string | undefined;
@@ -214,7 +214,7 @@ export function findSdks(): Sdks {
 
 	const dartSdkPath = findDartSdk(dartSdkSearchPaths);
 
-	return {
+	return new WorkspaceContext({
 		dart: dartSdkPath,
 		dartSdkIsFromFlutter: dartSdkPath && isDartSdkFromFlutter(dartSdkPath),
 		dartVersion: getSdkVersion(dartSdkPath),
@@ -224,7 +224,7 @@ export function findSdks(): Sdks {
 		projectType: fuchsiaRoot && hasFuchsiaProjectThatIsNotVanillaFlutter
 			? ProjectType.Fuchsia
 			: (flutterProject ? ProjectType.Flutter : ProjectType.Dart),
-	};
+	});
 }
 
 export function referencesFlutterSdk(folder?: string): boolean {
