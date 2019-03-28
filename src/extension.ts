@@ -124,7 +124,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const sdks = workspaceContext.sdks;
 	buildLogHeaders(sdks);
 	util.logTime("findSdks");
-	analytics = new Analytics(sdks);
+	analytics = new Analytics(workspaceContext);
 	if (!sdks.dart || (workspaceContext.hasAnyFlutterMobileProjects && !sdks.flutter)) {
 		// Don't set anything else up; we can't work like this!
 		return handleMissingSdks(context, analytics, sdks);
@@ -328,7 +328,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const analyzerCommands = new AnalyzerCommands(context, analyzer);
 	const pubGlobal = new PubGlobal(extContext, sdks);
 	const sdkCommands = new SdkCommands(context, sdks, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
-	const debug = new DebugCommands(extContext, sdks, analytics, pubGlobal);
+	const debug = new DebugCommands(extContext, workspaceContext, analytics, pubGlobal);
 
 	// Register URI handler.
 	context.subscriptions.push(vs.window.registerUriHandler(new DartUriHandler(flutterCapabilities)));
@@ -453,8 +453,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			reanalyze,
 			referenceProvider,
 			renameProvider,
-			sdks,
 			testTreeProvider,
+			workspaceContext,
 		} as InternalExtensionApi,
 	};
 }
@@ -606,6 +606,6 @@ export interface InternalExtensionApi {
 	reanalyze: () => void;
 	referenceProvider: DartReferenceProvider;
 	renameProvider: DartRenameProvider;
-	sdks: util.Sdks;
 	testTreeProvider: TestResultsProvider;
+	workspaceContext: util.WorkspaceContext;
 }
