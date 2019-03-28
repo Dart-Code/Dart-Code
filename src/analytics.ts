@@ -2,7 +2,7 @@ import * as https from "https";
 import * as querystring from "querystring";
 import { env, Uri, version as codeVersion } from "vscode";
 import { config } from "./config";
-import { extensionVersion, hasFlutterExtension, isDevExtension, ProjectType, Sdks } from "./utils";
+import { extensionVersion, hasFlutterExtension, isDevExtension, ProjectType, WorkspaceContext } from "./utils";
 import { logError, logInfo, logWarn } from "./utils/log";
 
 // Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.
@@ -43,13 +43,11 @@ enum TimingVariable {
 }
 
 export class Analytics {
-	public sdks: Sdks;
 	public sdkVersion?: string;
 	public flutterSdkVersion?: string;
 	public analysisServerVersion?: string;
 
-	constructor(sdks: Sdks) {
-		this.sdks = sdks;
+	constructor(public workspaceContext: WorkspaceContext) {
 	}
 
 	public logExtensionStartup(timeInMS: number) {
@@ -140,9 +138,9 @@ export class Analytics {
 			cd4: this.analysisServerVersion,
 			cd5: codeVersion,
 			cd6: resourceUri ? this.getDebuggerPreference(resourceUri) : null,
-			cd7: ProjectType[this.sdks.projectType],
+			cd7: ProjectType[this.workspaceContext.sdks.projectType],
 			cd8: config.closingLabels ? "On" : "Off",
-			cd9: this.sdks.projectType === ProjectType.Flutter ? (config.flutterHotReloadOnSave ? "On" : "Off") : null,
+			cd9: this.workspaceContext.hasAnyFlutterProjects ? (config.flutterHotReloadOnSave ? "On" : "Off") : null,
 			cid: machineId,
 			tid: "UA-2201586-19",
 			ul: env.language,

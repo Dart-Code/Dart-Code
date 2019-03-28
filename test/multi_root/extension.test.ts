@@ -27,7 +27,8 @@ describe("extension", () => {
 	it("found the Dart and Flutter SDK", async () => {
 		await activateWithoutAnalysis();
 		assert.ok(extApi);
-		const sdks: Sdks = extApi.sdks;
+		// TODO: Add tests for the workspaceContext flags (here and elsewhere).
+		const sdks: Sdks = extApi.workspaceContext.sdks;
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.ok(sdks.flutter);
@@ -35,7 +36,7 @@ describe("extension", () => {
 	it("used Flutter's version of the Dart SDK", async () => {
 		await activateWithoutAnalysis();
 		assert.ok(extApi);
-		const sdks: Sdks = extApi.sdks;
+		const sdks: Sdks = extApi.workspaceContext.sdks;
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.notEqual(sdks.dart!.indexOf("flutter"), -1);
