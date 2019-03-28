@@ -7,21 +7,13 @@ import { fsPath } from "../../../src/utils";
 import { fetch } from "../../../src/utils/fetch";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterWebHelloWorldBrokenFile, flutterWebHelloWorldExampleSubFolder, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, getPackages, openFile, positionOf, sb, watchPromise } from "../../helpers";
+import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterWebHelloWorldBrokenFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, sb, watchPromise } from "../../helpers";
 
 describe("flutter web debugger", () => {
-	// We have tests that require external packages.
-	before("get packages", () => getPackages());
 	beforeEach("activate flutterWebHelloWorldMainFile", () => activate(flutterWebHelloWorldMainFile));
 	beforeEach("set timeout", function () {
-		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
+		this.timeout(60000); // These tests can be slow due to long builds.
 	});
-
-	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
-	// `flutter create .`!
-	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterWebHelloWorldFolder)));
-	before("run 'flutter create' for example", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterWebHelloWorldExampleSubFolder)));
-	before("run 'flutter clean'", () => vs.commands.executeCommand("_flutter.clean", fsPath(flutterWebHelloWorldFolder)));
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {

@@ -2,30 +2,19 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { fsPath, versionIsAtLeast } from "../../../src/utils";
+import { fsPath } from "../../../src/utils";
 import { logInfo } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterWebHelloWorldFolder, flutterWebTestBrokenFile, flutterWebTestMainFile, flutterWebTestOtherFile, getLaunchConfiguration, getPackages, openFile, positionOf, withTimeout } from "../../helpers";
+import { activate, defer, delay, ext, extApi, flutterWebHelloWorldFolder, flutterWebTestBrokenFile, flutterWebTestMainFile, flutterWebTestOtherFile, getLaunchConfiguration, openFile, positionOf, withTimeout } from "../../helpers";
 
 describe("flutter web test debugger", () => {
-
-	// We have tests that require external packages.
-	before("get packages", () => getPackages());
-	let testPrefix = "- ";
 	beforeEach("activate flutterWebTestMainFile", async () => {
 		await activate(flutterWebTestMainFile);
-		if (versionIsAtLeast(extApi.analyzerCapabilities.version, "1.20.3"))
-			testPrefix = "";
 	});
 	beforeEach("set timeout", function () {
-		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
+		this.timeout(60000); // These tests can be slow due to long builds.
 	});
-
-	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
-	// `flutter create .`!
-	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterWebHelloWorldFolder)));
-	before("run 'flutter clean'", () => vs.commands.executeCommand("_flutter.clean", fsPath(flutterWebHelloWorldFolder)));
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
@@ -72,9 +61,9 @@ describe("flutter web test debugger", () => {
 		const config = await startDebugger(flutterWebTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ ${testPrefix}Hello world test`),
+			dc.assertOutput("stdout", `✓ Hello world test`),
 			dc.waitForEvent("terminated"),
-			dc.assertPassingTest(`${testPrefix}Hello world test`),
+			dc.assertPassingTest(`Hello world test`),
 			dc.launch(config),
 		]);
 	});
@@ -84,8 +73,8 @@ describe("flutter web test debugger", () => {
 		const config = await startDebugger(`\${workspaceFolder}/${relativePath}`);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ ${testPrefix}Hello world test`),
-			dc.assertPassingTest(`${testPrefix}Hello world test`),
+			dc.assertOutput("stdout", `✓ Hello world test`),
+			dc.assertPassingTest(`Hello world test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -96,8 +85,8 @@ describe("flutter web test debugger", () => {
 		config.program = path.relative(fsPath(flutterWebHelloWorldFolder), fsPath(flutterWebTestMainFile));
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ ${testPrefix}Hello world test`),
-			dc.assertPassingTest(`${testPrefix}Hello world test`),
+			dc.assertOutput("stdout", `✓ Hello world test`),
+			dc.assertPassingTest(`Hello world test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -108,8 +97,8 @@ describe("flutter web test debugger", () => {
 		const config = await startDebugger(flutterWebTestOtherFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ ${testPrefix}Other tests group Other test\n`),
-			dc.assertPassingTest(`${testPrefix}Other tests group Other test`),
+			dc.assertOutput("stdout", `✓ Other tests group Other test\n`),
+			dc.assertPassingTest(`Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -120,8 +109,8 @@ describe("flutter web test debugger", () => {
 		const config = await startDebugger(undefined);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ ${testPrefix}Other tests group Other test\n`),
-			dc.assertPassingTest(`${testPrefix}Other tests group Other test`),
+			dc.assertOutput("stdout", `✓ Other tests group Other test\n`),
+			dc.assertPassingTest(`Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -132,8 +121,8 @@ describe("flutter web test debugger", () => {
 		const config = await startDebugger("${file}");
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ ${testPrefix}Other tests group Other test\n`),
-			dc.assertPassingTest(`${testPrefix}Other tests group Other test`),
+			dc.assertOutput("stdout", `✓ Other tests group Other test\n`),
+			dc.assertPassingTest(`Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -211,7 +200,7 @@ describe("flutter web test debugger", () => {
 		config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertErroringTest(`${testPrefix}Hello world test`),
+			dc.assertErroringTest(`Hello world test`),
 			dc.assertOutput("stderr", "Test failed. See exception logs above.\n"),
 			dc.assertOutputContains("stdout", "EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK"),
 			dc.launch(config),
