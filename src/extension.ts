@@ -244,7 +244,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => util.isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(uri)))));
 
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE.language, new DartLanguageConfiguration()));
-	const statusReporter = new AnalyzerStatusReporter(analyzer, sdks, analytics);
+	const statusReporter = new AnalyzerStatusReporter(analyzer, workspaceContext, analytics);
 
 	// Set up diagnostics.
 	const diagnostics = vs.languages.createDiagnosticCollection("dart");
