@@ -9,7 +9,7 @@ import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
 import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterWebHelloWorldBrokenFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, sb, watchPromise } from "../../helpers";
 
-describe.only("flutter web debugger", () => {
+describe("flutter web debugger", () => {
 	beforeEach("activate flutterWebHelloWorldMainFile", () => activate(flutterWebHelloWorldMainFile));
 	beforeEach("set timeout", function () {
 		this.timeout(60000); // These tests can be slow due to long builds.
@@ -45,7 +45,7 @@ describe.only("flutter web debugger", () => {
 		return config;
 	}
 
-	it.only("runs a Flutter Web application and remains active until told to quit", async () => {
+	it("runs a Flutter Web application and remains active until told to quit", async () => {
 		const config = await startDebugger(flutterWebHelloWorldMainFile);
 		await Promise.all([
 			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
