@@ -36,7 +36,7 @@ describe("flutter web debugger", () => {
 	it("runs a Flutter Web application and remains active until told to quit", async () => {
 		const config = await startDebugger(flutterWebHelloWorldMainFile);
 		await Promise.all([
-			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
+			dc.assertOutputContains("stdout", "Serving `web` on http://localhost:"),
 			dc.configurationSequence(),
 			dc.launch(config),
 		]);
