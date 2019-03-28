@@ -74,6 +74,8 @@ export const flutterHelloWorldBrokenFile = vs.Uri.file(path.join(fsPath(flutterH
 export const flutterTestMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/widget_test.dart"));
 export const flutterTestOtherFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/other_test.dart"));
 export const flutterTestBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/broken_test.dart"));
+export const flutterWebHelloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/flutter_web_hello_world"));
+export const flutterWebHelloWorldMainFile = vs.Uri.file(path.join(fsPath(flutterWebHelloWorldFolder), "lib/main.dart"));
 
 export function currentEditor(): vs.TextEditor {
 	if (!vs.window.activeTextEditor)
