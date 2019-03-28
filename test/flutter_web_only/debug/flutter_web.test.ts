@@ -113,6 +113,10 @@ describe("flutter web debugger", () => {
 		await Promise.all([
 			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
 			watchPromise("hot_reloads_successfully->launch", dc.launch(config)),
+			// TODO: Remove this when we're not forced into noDebug mode, which
+			// results in InitializedEvent coming immediately, before the debugger
+			// is ready to accept reloads.
+			dc.waitForEvent("dart.launched"),
 		]);
 
 		await watchPromise("hot_reloads_successfully->hotReload", dc.hotReload());
@@ -128,6 +132,10 @@ describe("flutter web debugger", () => {
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
+			// TODO: Remove this when we're not forced into noDebug mode, which
+			// results in InitializedEvent coming immediately, before the debugger
+			// is ready to accept reloads.
+			dc.waitForEvent("dart.launched"),
 		]);
 
 		// If we restart too fast, things fail :-/
@@ -150,6 +158,10 @@ describe("flutter web debugger", () => {
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
+			// TODO: Remove this when we're not forced into noDebug mode, which
+			// results in InitializedEvent coming immediately, before the debugger
+			// is ready to accept reloads.
+			dc.waitForEvent("dart.launched"),
 		]);
 
 		// If we restart too fast, things fail :-/
@@ -171,6 +183,10 @@ describe("flutter web debugger", () => {
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
+			// TODO: Remove this when we're not forced into noDebug mode, which
+			// results in InitializedEvent coming immediately, before the debugger
+			// is ready to accept reloads.
+			dc.waitForEvent("dart.launched"),
 		]);
 
 		// If we restart too fast, things fail :-/
