@@ -5,7 +5,7 @@ import { env, ProgressLocation, version as codeVersion, window, workspace } from
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { LogCategory, PromiseCompleter } from "../debug/utils";
-import { extensionVersion, getRandomInt, getSdkVersion, isStableSdk, Sdks } from "../utils";
+import { extensionVersion, getRandomInt, getSdkVersion, isStableSdk, WorkspaceContext } from "../utils";
 import { logError } from "../utils/log";
 import { RequestError, ServerErrorNotification, ServerStatusNotification } from "./analysis_server_types";
 import { Analyzer } from "./analyzer";
@@ -19,7 +19,7 @@ export class AnalyzerStatusReporter {
 	private analysisInProgress = false;
 	private analyzingPromise?: PromiseCompleter<void>;
 
-	constructor(private readonly analyzer: Analyzer, private readonly sdks: Sdks, private readonly analytics: Analytics) {
+	constructor(private readonly analyzer: Analyzer, private readonly workspaceContext: WorkspaceContext, private readonly analytics: Analytics) {
 		analyzer.registerForServerStatus((n) => this.handleServerStatus(n));
 		analyzer.registerForServerError((e) => this.handleServerError(e));
 		analyzer.registerForRequestError((e) => this.handleRequestError(e));
@@ -98,12 +98,16 @@ export class AnalyzerStatusReporter {
 	}
 
 	private shouldReportErrors(): boolean {
-		return !isStableSdk(getSdkVersion(this.sdks.flutter || this.sdks.dart));
+		const sdks = this.workspaceContext.sdks;
+		if (this.workspaceContext.hasAnyFlutterProjects && sdks.flutter)
+			return !isStableSdk(getSdkVersion(sdks.flutter));
+		else
+			return !isStableSdk(getSdkVersion(sdks.dart));
 	}
 
 	private reportError(error: ServerErrorNotification, method?: string) {
-		const sdkVersion = getSdkVersion(this.sdks.dart);
-		const flutterSdkVersion = getSdkVersion(this.sdks.flutter);
+		const sdkVersion = getSdkVersion(this.workspaceContext.sdks.dart);
+		const flutterSdkVersion = getSdkVersion(this.workspaceContext.sdks.flutter);
 
 		// Attempt to get the last diagnostics
 		const diagnostics = this.analyzer.getLastDiagnostics();
