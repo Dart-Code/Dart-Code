@@ -225,7 +225,12 @@ describe("flutter web debugger", () => {
 				? ""
 				: ` after ${numReloads} reload${numReloads === 1 ? "" : "s"}`;
 
-		it("stops at a breakpoint" + reloadDescription, async () => {
+		it("stops at a breakpoint" + reloadDescription, async function () {
+			if (!extApi.flutterCapabilities.webSupportsDebugging) {
+				this.skip();
+				return;
+			}
+
 			await openFile(flutterWebHelloWorldMainFile);
 			const config = await startDebugger(flutterWebHelloWorldMainFile);
 			const expectedLocation = {
@@ -270,6 +275,11 @@ describe("flutter web debugger", () => {
 
 	describe("can evaluate at breakpoint", () => {
 		it("simple expressions", async function () {
+			if (!extApi.flutterCapabilities.webSupportsDebugging) {
+				this.skip();
+				return;
+			}
+
 			await openFile(flutterWebHelloWorldMainFile);
 			const config = await startDebugger(flutterWebHelloWorldMainFile);
 			await Promise.all([
@@ -285,7 +295,12 @@ describe("flutter web debugger", () => {
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
 
-		it("complex expression expressions", async () => {
+		it("complex expression expressions", async function () {
+			if (!extApi.flutterCapabilities.webSupportsDebugging) {
+				this.skip();
+				return;
+			}
+
 			await openFile(flutterWebHelloWorldMainFile);
 			const config = await startDebugger(flutterWebHelloWorldMainFile);
 			await Promise.all([
@@ -301,7 +316,12 @@ describe("flutter web debugger", () => {
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
 
-		it("an expression that returns a variable", async () => {
+		it("an expression that returns a variable", async function () {
+			if (!extApi.flutterCapabilities.webSupportsDebugging) {
+				this.skip();
+				return;
+			}
+
 			await openFile(flutterWebHelloWorldMainFile);
 			const config = await startDebugger(flutterWebHelloWorldMainFile);
 			await Promise.all([
@@ -318,7 +338,12 @@ describe("flutter web debugger", () => {
 			assert.ok(evaluateResult.variablesReference);
 		});
 
-		it("complex expression expressions when in a top level function", async () => {
+		it("complex expression expressions when in a top level function", async function () {
+			if (!extApi.flutterCapabilities.webSupportsDebugging) {
+				this.skip();
+				return;
+			}
+
 			await openFile(flutterWebHelloWorldMainFile);
 			const config = await startDebugger(flutterWebHelloWorldMainFile);
 			await Promise.all([
@@ -336,7 +361,12 @@ describe("flutter web debugger", () => {
 	});
 
 	// Skipped due to https://github.com/flutter/flutter/issues/17007.
-	it.skip("stops on exception", async () => {
+	it.skip("stops on exception", async function () {
+		if (!extApi.flutterCapabilities.webSupportsDebugging) {
+			this.skip();
+			return;
+		}
+
 		await openFile(flutterWebHelloWorldBrokenFile);
 		const config = await startDebugger(flutterWebHelloWorldBrokenFile);
 		await Promise.all([
@@ -350,7 +380,12 @@ describe("flutter web debugger", () => {
 	});
 
 	// Skipped due to https://github.com/flutter/flutter/issues/17007.
-	it.skip("provides exception details when stopped on exception", async () => {
+	it.skip("provides exception details when stopped on exception", async function () {
+		if (!extApi.flutterCapabilities.webSupportsDebugging) {
+			this.skip();
+			return;
+		}
+
 		await openFile(flutterWebHelloWorldBrokenFile);
 		const config = await startDebugger(flutterWebHelloWorldBrokenFile);
 		await Promise.all([
@@ -366,7 +401,12 @@ describe("flutter web debugger", () => {
 		ensureVariable(variables, "$e.message", "message", `"(TODO WHEN UNSKIPPING)"`);
 	});
 
-	it("logs expected text (and does not stop) at a logpoint", async () => {
+	it("logs expected text (and does not stop) at a logpoint", async function () {
+		if (!extApi.flutterCapabilities.webSupportsDebugging) {
+			this.skip();
+			return;
+		}
+
 		await openFile(flutterWebHelloWorldMainFile);
 		const config = await watchPromise("logs_expected_text->startDebugger", startDebugger(flutterWebHelloWorldMainFile));
 		await Promise.all([
