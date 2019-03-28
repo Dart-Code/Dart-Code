@@ -278,6 +278,21 @@ export function openInBrowser(url: string) {
 	commands.executeCommand("vscode.open", Uri.parse(url));
 }
 
+export class WorkspaceContext {
+	// TODO: Move things from Sdks to this class that aren't related to the SDKs.
+	constructor(
+		public readonly sdks: Sdks,
+	) { }
+
+	get hasAnyFlutterMobileProjects() { return this.sdks.projectType === ProjectType.Flutter; }
+	get hasAnyFlutterProjects() { return this.sdks.projectType !== ProjectType.Dart; }
+	get shouldLoadFlutterExtension() { return this.sdks.projectType === ProjectType.Flutter || this.sdks.projectType === ProjectType.Fuchsia; }
+	get isInFuchsiaTree() { return this.sdks.projectType === ProjectType.Fuchsia; }
+
+	// TODO: Since this class is passed around, we may need to make it update itself
+	// (eg. if the last Flutter project is removed from the multi-root workspace)?
+}
+
 export class Sdks {
 	public dart?: string;
 	public dartVersion?: string;
