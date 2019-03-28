@@ -1,5 +1,4 @@
 import * as assert from "assert";
-import * as os from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
@@ -7,7 +6,7 @@ import { fsPath } from "../../../src/utils";
 import { fetch } from "../../../src/utils/fetch";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterWebHelloWorldBrokenFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, sb, watchPromise } from "../../helpers";
+import { activate, defer, delay, ext, extApi, flutterWebHelloWorldBrokenFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, sb, watchPromise } from "../../helpers";
 
 describe("flutter web debugger", () => {
 	beforeEach("activate flutterWebHelloWorldMainFile", () => activate(flutterWebHelloWorldMainFile));
@@ -23,21 +22,10 @@ describe("flutter web debugger", () => {
 		defer(() => thisDc.stop());
 	});
 
-	beforeEach("activate flutterWebHelloWorldMainFile", () => activate(flutterWebHelloWorldMainFile));
-	beforeEach("set timeout", function () {
-		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
-	});
-
 	afterEach(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 
 	async function startDebugger(script?: vs.Uri | string, cwd?: string): Promise<vs.DebugConfiguration> {
 		const config = await getLaunchConfiguration(script, {
-			// Use pid-file as a convenient way of getting the test name into the command line args
-			// for easier debugging of processes that hang around on CI (we dump the process command
-			// line at the end of the test run).
-			args: extApi.flutterCapabilities.supportsPidFileForMachine
-				? ["--pid-file", path.join(os.tmpdir(), fileSafeCurrentTestName)]
-				: [],
 			cwd,
 			deviceId: "flutter-tester",
 		});
