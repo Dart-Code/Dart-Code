@@ -31,11 +31,6 @@ describe("flutter run debugger (launch)", () => {
 		defer(() => thisDc.stop());
 	});
 
-	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
-	beforeEach("set timeout", function () {
-		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
-	});
-
 	afterEach(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 
 	async function startDebugger(script?: vs.Uri | string, cwd?: string): Promise<vs.DebugConfiguration> {
