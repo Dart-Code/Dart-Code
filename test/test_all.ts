@@ -152,7 +152,7 @@ async function runAllTests(): Promise<void> {
 		throw "Could not find Flutter SDK";
 
 	const flutterRoot = process.env.FLUTTER_ROOT || process.env.FLUTTER_PATH;
-	const totalRuns = 9;
+	const totalRuns = 10;
 	let runNumber = 1;
 	try {
 		await runTests("multi_root", "projects.code-workspace", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
@@ -163,6 +163,7 @@ async function runAllTests(): Promise<void> {
 		await runTests("flutter_create_tests", "flutter_create_tests.code-workspace", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("dart_only", "hello_world", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("flutter_only", "flutter_hello_world", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("flutter_web_only", "flutter_web_hello_world", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		if (flutterRoot) {
 			await runTests("flutter_repository", flutterRoot, flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		} else {
