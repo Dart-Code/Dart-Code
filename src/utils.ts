@@ -284,6 +284,7 @@ export class WorkspaceContext {
 		public readonly sdks: Sdks,
 	) { }
 
+	get hasOnlyDartProjects() { return this.sdks.projectType === ProjectType.Dart; }
 	get hasAnyFlutterMobileProjects() { return this.sdks.projectType === ProjectType.Flutter; }
 	get hasAnyFlutterProjects() { return this.sdks.projectType !== ProjectType.Dart; }
 	get shouldLoadFlutterExtension() { return this.sdks.projectType === ProjectType.Flutter || this.sdks.projectType === ProjectType.Fuchsia; }

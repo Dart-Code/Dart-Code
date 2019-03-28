@@ -57,7 +57,7 @@ import { PubGlobal } from "./pub/global";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
 import { DartCapabilities } from "./sdk/capabilities";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
-import { checkForSdkUpdates } from "./sdk/update_check";
+import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
 import { analyzerSnapshotPath, dartVMPath, flutterPath, handleMissingSdks, initWorkspace } from "./sdk/utils";
 import { DartUriHandler } from "./uri_handlers/uri_handler";
 import { showUserPrompts } from "./user_prompts";
@@ -137,7 +137,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	if (sdks.dartVersion) {
 		dartCapabilities.version = sdks.dartVersion;
 		analytics.sdkVersion = sdks.dartVersion;
-		checkForSdkUpdates(sdks, sdks.dartVersion);
+		checkForStandardDartSdkUpdates(workspaceContext);
 		context.subscriptions.push(new StatusBarVersionTracker(sdks.projectType, sdks.dartVersion, sdks.flutterVersion, sdks.dartSdkIsFromFlutter));
 	}
 

@@ -18,7 +18,7 @@ import { FlutterDeviceManager } from "../flutter/device_manager";
 import { Device } from "../flutter/flutter_types";
 import { locateBestProjectRoot } from "../project";
 import { dartVMPath, flutterPath, pubPath, pubSnapshotPath } from "../sdk/utils";
-import { checkProjectSupportsPubRunTest, fsPath, isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, ProjectType, Sdks } from "../utils";
+import { checkProjectSupportsPubRunTest, fsPath, isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, Sdks } from "../utils";
 import { log, logError, logWarn } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
@@ -155,8 +155,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (debugConfig.program && debugConfig.cwd && !path.isAbsolute(debugConfig.program))
 			debugConfig.program = path.join(debugConfig.cwd, debugConfig.program);
 
-		const isFlutter = this.sdks.projectType !== ProjectType.Dart
-			&& debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string)
+		const isFlutter = debugConfig.cwd && isFlutterProjectFolder(debugConfig.cwd as string)
 			&& !isInsideFolderNamed(debugConfig.program, "bin") && !isInsideFolderNamed(debugConfig.program, "tool");
 		log(`Detected launch project as ${isFlutter ? "Flutter" : "Dart"}`);
 		const isTest = debugConfig.program && isTestFileOrFolder(debugConfig.program as string);

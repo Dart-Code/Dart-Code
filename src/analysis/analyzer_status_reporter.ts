@@ -5,7 +5,7 @@ import { env, ProgressLocation, version as codeVersion, window, workspace } from
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { LogCategory, PromiseCompleter } from "../debug/utils";
-import { extensionVersion, getRandomInt, getSdkVersion, isStableSdk, ProjectType, Sdks } from "../utils";
+import { extensionVersion, getRandomInt, getSdkVersion, isStableSdk, Sdks } from "../utils";
 import { logError } from "../utils/log";
 import { RequestError, ServerErrorNotification, ServerStatusNotification } from "./analysis_server_types";
 import { Analyzer } from "./analyzer";
@@ -98,10 +98,7 @@ export class AnalyzerStatusReporter {
 	}
 
 	private shouldReportErrors(): boolean {
-		if (this.sdks.projectType === ProjectType.Flutter && this.sdks.flutter)
-			return !isStableSdk(getSdkVersion(this.sdks.flutter));
-		else
-			return !isStableSdk(getSdkVersion(this.sdks.dart));
+		return !isStableSdk(getSdkVersion(this.sdks.flutter || this.sdks.dart));
 	}
 
 	private reportError(error: ServerErrorNotification, method?: string) {
