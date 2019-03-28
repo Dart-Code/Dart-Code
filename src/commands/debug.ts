@@ -8,7 +8,7 @@ import { FlutterServiceExtension, FlutterServiceExtensionArgs, FlutterVmServiceE
 import { PubGlobal } from "../pub/global";
 import { DevTools } from "../sdk/dev_tools";
 import { showDevToolsNotificationIfAppropriate } from "../user_prompts";
-import { fsPath, getDartWorkspaceFolders, openInBrowser, ProjectType, Sdks } from "../utils";
+import { fsPath, getDartWorkspaceFolders, openInBrowser, WorkspaceContext } from "../utils";
 import { handleDebugLogEvent, logWarn } from "../utils/log";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
@@ -33,9 +33,9 @@ export class DebugCommands {
 	private readonly flutterExtensions: FlutterVmServiceExtensions;
 	private readonly devTools: DevTools;
 
-	constructor(context: Context, sdks: Sdks, analytics: Analytics, pubGlobal: PubGlobal) {
+	constructor(context: Context, workspaceContext: WorkspaceContext, analytics: Analytics, pubGlobal: PubGlobal) {
 		this.flutterExtensions = new FlutterVmServiceExtensions(this.sendServiceSetting);
-		this.devTools = new DevTools(sdks, analytics, pubGlobal);
+		this.devTools = new DevTools(workspaceContext.sdks, analytics, pubGlobal);
 		context.subscriptions.push(this.devTools);
 		context.subscriptions.push(this.debugMetrics);
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
@@ -89,7 +89,7 @@ export class DebugCommands {
 			} else if (e.event === "dart.debuggerUris") {
 				session.observatoryUri = e.body.observatoryUri;
 				session.vmServiceUri = e.body.vmServiceUri;
-				if (sdks.projectType === ProjectType.Flutter)
+				if (workspaceContext.hasAnyFlutterProjects)
 					showDevToolsNotificationIfAppropriate(context);
 				// if (e.body.isProbablyReconnectable) {
 				// 	mostRecentAttachedProbablyReusableObservatoryUri = session.observatoryUri;
