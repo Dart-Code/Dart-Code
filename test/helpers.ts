@@ -9,7 +9,7 @@ import { Context } from "../src/context";
 import { dartCodeExtensionIdentifier, flatMap, LogCategory, LogSeverity } from "../src/debug/utils";
 import { InternalExtensionApi } from "../src/extension";
 import { internalApiSymbol } from "../src/symbols";
-import { fsPath, isAnalyzable, ProjectType, vsCodeVersionConstraint } from "../src/utils";
+import { fsPath, isAnalyzable, vsCodeVersionConstraint } from "../src/utils";
 import { tryDeleteFile } from "../src/utils/fs";
 import { log, logError, logTo, logWarn } from "../src/utils/log";
 import { waitFor } from "../src/utils/promises";
@@ -82,10 +82,11 @@ export function currentDoc(): vs.TextDocument {
 export let documentEol: string;
 
 function getDefaultFile(): vs.Uri {
-	if (extApi.sdks.projectType === ProjectType.Dart)
-		return emptyFile;
-	else
+	// TODO: Web?
+	if (extApi.workspaceContext.hasAnyFlutterProjects)
 		return flutterEmptyFile;
+	else
+		return emptyFile;
 }
 
 export async function activateWithoutAnalysis(): Promise<void> {
