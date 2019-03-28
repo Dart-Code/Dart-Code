@@ -454,9 +454,11 @@ export class DartDebugSession extends DebugSession {
 			breakpoints = [];
 
 		// Get the correct format for the path depending on whether it's a package.
+		// TODO: The `|| source.name` stops a crash (#1566) but doesn't actually make
+		// the breakpoints work. This needs more work.
 		const uri = this.packageMap
-			? this.packageMap.convertFileToPackageUri(source.path) || formatPathForVm(source.path)
-			: formatPathForVm(source.path);
+			? this.packageMap.convertFileToPackageUri(source.path) || formatPathForVm(source.path || source.name)
+			: formatPathForVm(source.path || source.name);
 
 		try {
 			const result = await this.threadManager.setBreakpoints(uri, breakpoints);
