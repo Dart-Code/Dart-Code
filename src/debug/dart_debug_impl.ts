@@ -256,6 +256,7 @@ export class DartDebugSession extends DebugSession {
 		}));
 
 		return new Promise<void>((resolve, reject) => {
+			this.log(`Connecting to VM Service at ${uri}`);
 			this.observatory = new ObservatoryConnection(uri);
 			this.observatory.onLogging((message) => this.log(message));
 			this.observatory.onOpen(() => {
