@@ -105,7 +105,7 @@ export function uniq<T>(array: T[]): T[] {
 	return array.filter((value, index) => array.indexOf(value) === index);
 }
 
-export function flatMap<T1, T2>(input: T1[], f: (input: T1) => T2[]): T2[] {
+export function flatMap<T1, T2>(input: readonly T1[], f: (input: T1) => readonly T2[]): T2[] {
 	return input.reduce((acc, x) => acc.concat(f(x)), []);
 }
 
