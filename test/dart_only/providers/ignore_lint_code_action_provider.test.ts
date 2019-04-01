@@ -27,8 +27,10 @@ describe("ignore_lint_code_action_provider", () => {
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
 
-		const index = fixResults.findIndex((r) => r.title.indexOf("Ignore hint 'unused_local_variable' for this line") !== -1);
-		assert.equal(index, fixResults.length - 1);
+		const filteredResults = fixResults.filter((f) => !vs.CodeActionKind.Source.contains(f.kind));
+
+		const index = filteredResults.findIndex((r) => r.title.indexOf("Ignore hint 'unused_local_variable' for this line") !== -1);
+		assert.equal(index, filteredResults.length - 1);
 	});
 
 	it("edits in '// ignore: ' comment", async () => {

@@ -1,12 +1,15 @@
-import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, CodeActionProviderMetadata, Range, TextDocument } from "vscode";
+import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, DocumentSelector, Range, TextDocument } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { fsPath, isAnalyzableAndInWorkspace } from "../utils";
 import { logError } from "../utils/log";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
+import { RankedCodeActionProvider } from "./ranking_code_action_provider";
 
-export class FixCodeActionProvider implements CodeActionProvider {
-	constructor(private readonly analyzer: Analyzer) { }
+export class FixCodeActionProvider implements RankedCodeActionProvider {
+	constructor(public readonly selector: DocumentSelector, private readonly analyzer: Analyzer) { }
+
+	public readonly rank = 1;
 
 	public readonly metadata: CodeActionProviderMetadata = {
 		providedCodeActionKinds: [CodeActionKind.QuickFix],
