@@ -5,10 +5,7 @@ import { fsPath } from "../../../src/utils";
 import { activate, currentDoc, defer, emptyFile, helloWorldCreateMethodClassAFile, helloWorldCreateMethodClassBFile, missingFile, openFile, rangeOf, setTestContent, tryDelete, uncommentTestFile, waitForNextAnalysis } from "../../helpers";
 
 describe("fix_code_action_provider", () => {
-
-	beforeEach("activate helloWorldCreateMethodClassBFile", async () => {
-		await activate();
-	});
+	beforeEach("activate", () => activate());
 
 	it("modifies correct file when single edit is not in the original file", async () => {
 		await openFile(helloWorldCreateMethodClassBFile);
