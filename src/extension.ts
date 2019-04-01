@@ -49,6 +49,7 @@ import { DebugConfigProvider, HAS_LAST_DEBUG_CONFIG } from "./providers/debug_co
 import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
 import { IgnoreLintCodeActionProvider } from "./providers/ignore_lint_code_action_provider";
 import { LegacyDartWorkspaceSymbolProvider } from "./providers/legacy_dart_workspace_symbol_provider";
+import { RankingCodeActionProvider } from "./providers/ranking_code_action_provider";
 import { RefactorCodeActionProvider } from "./providers/refactor_code_action_provider";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
 import { SourceCodeActionProvider } from "./providers/source_code_action_provider";
@@ -196,11 +197,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const completionItemProvider = new DartCompletionItemProvider(analyzer);
 	const referenceProvider = new DartReferenceProvider(analyzer);
 	const documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
-	const assistCodeActionProvider = new AssistCodeActionProvider(analyzer);
-	const fixCodeActionProvider = new FixCodeActionProvider(analyzer);
-	const refactorCodeActionProvider = new RefactorCodeActionProvider(analyzer);
 	const sourceCodeActionProvider = new SourceCodeActionProvider();
-	const ignoreLintCodeActionProvider = new IgnoreLintCodeActionProvider();
 
 	const renameProvider = new DartRenameProvider(analyzer);
 	const implementationProvider = new DartImplementationProvider(analyzer);
@@ -211,6 +208,10 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		activeFileFilters.push(HTML_MODE);
 	}
 
+	// This is registered with VS Code further down, so it's metadata can be collected from all
+	// registered providers.
+	const rankingCodeActionProvider = new RankingCodeActionProvider();
+
 	const triggerCharacters = ".(${'\"/\\".split("");
 	context.subscriptions.push(vs.languages.registerHoverProvider(activeFileFilters, hoverProvider));
 	formattingEditProvider.registerDocumentFormatter(activeFileFilters);
@@ -218,21 +219,24 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(vs.languages.registerDefinitionProvider(activeFileFilters, referenceProvider));
 	context.subscriptions.push(vs.languages.registerReferenceProvider(activeFileFilters, referenceProvider));
 	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(activeFileFilters, documentHighlightProvider));
-	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, assistCodeActionProvider, assistCodeActionProvider.metadata));
-	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, fixCodeActionProvider, fixCodeActionProvider.metadata));
-	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, refactorCodeActionProvider, refactorCodeActionProvider.metadata));
+	rankingCodeActionProvider.registerProvider(new AssistCodeActionProvider(activeFileFilters, analyzer));
+	rankingCodeActionProvider.registerProvider(new FixCodeActionProvider(activeFileFilters, analyzer));
+	rankingCodeActionProvider.registerProvider(new RefactorCodeActionProvider(activeFileFilters, analyzer));
 	context.subscriptions.push(vs.languages.registerRenameProvider(activeFileFilters, renameProvider));
 
 	// Some actions only apply to Dart.
 	formattingEditProvider.registerTypingFormatter(DART_MODE, "}", ";");
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, sourceCodeActionProvider, sourceCodeActionProvider.metadata));
-	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, ignoreLintCodeActionProvider, ignoreLintCodeActionProvider.metadata));
-	context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, implementationProvider));
+
+	rankingCodeActionProvider.registerProvider(new IgnoreLintCodeActionProvider(activeFileFilters));
 	if (config.showTestCodeLens) {
 		const codeLensProvider = new TestCodeLensProvider(analyzer);
 		context.subscriptions.push(codeLensProvider);
 		context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
 	}
+
+	// Register the ranking provider from VS Code now that it has all of its delegates.
+	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, rankingCodeActionProvider, rankingCodeActionProvider.metadata));
 
 	// Task handlers.
 	if (config.previewBuildRunnerTasks) {
