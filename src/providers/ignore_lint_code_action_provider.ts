@@ -1,17 +1,14 @@
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, CodeActionProviderMetadata, Range, TextDocument, WorkspaceEdit } from "vscode";
-import { Analyzer } from "../analysis/analyzer";
 import { config } from "../config";
 import { isAnalyzableAndInWorkspace } from "../utils";
 import { DartDiagnostic } from "./dart_diagnostic_provider";
 
 export class IgnoreLintCodeActionProvider implements CodeActionProvider {
-	constructor(private readonly analyzer: Analyzer) { }
-
 	public readonly metadata: CodeActionProviderMetadata = {
 		providedCodeActionKinds: [CodeActionKind.QuickFix],
 	};
 
-	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): CodeAction[] {
+	public async provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Promise<CodeAction[]> {
 		if (!isAnalyzableAndInWorkspace(document))
 			return null;
 

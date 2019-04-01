@@ -11,7 +11,7 @@ export class AssistCodeActionProvider implements CodeActionProvider {
 		providedCodeActionKinds: [CodeActionKind.Refactor],
 	};
 
-	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Thenable<CodeAction[]> {
+	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Promise<CodeAction[]> {
 		if (!isAnalyzableAndInWorkspace(document))
 			return null;
 		return new Promise<CodeAction[]>((resolve, reject) => {
