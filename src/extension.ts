@@ -67,8 +67,8 @@ import { addToLogHeader, clearLogHeader, getExtensionLogPath, log, logError, log
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestResultsProvider } from "./views/test_view";
 
-const DART_MODE: vs.DocumentFilter[] = [{ language: "dart", scheme: "file" }];
-const HTML_MODE: vs.DocumentFilter[] = [{ language: "html", scheme: "file" }];
+const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
+const HTML_MODE: vs.DocumentFilter = { language: "html", scheme: "file" };
 
 const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
@@ -196,8 +196,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const assistCodeActionProvider = new AssistCodeActionProvider(analyzer);
 	const fixCodeActionProvider = new FixCodeActionProvider(analyzer);
 	const refactorCodeActionProvider = new RefactorCodeActionProvider(analyzer);
-	const sourceCodeActionProvider = new SourceCodeActionProvider(analyzer);
-	const ignoreLintCodeActionProvider = new IgnoreLintCodeActionProvider(analyzer);
+	const sourceCodeActionProvider = new SourceCodeActionProvider();
+	const ignoreLintCodeActionProvider = new IgnoreLintCodeActionProvider();
+
 	const renameProvider = new DartRenameProvider(analyzer);
 	const implementationProvider = new DartImplementationProvider(analyzer);
 
@@ -208,18 +209,16 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	}
 
 	const triggerCharacters = ".(${'\"/\\".split("");
-	activeFileFilters.forEach((filter) => {
-		context.subscriptions.push(vs.languages.registerHoverProvider(filter, hoverProvider));
-		formattingEditProvider.registerDocumentFormatter(filter);
-		context.subscriptions.push(vs.languages.registerCompletionItemProvider(filter, completionItemProvider, ...triggerCharacters));
-		context.subscriptions.push(vs.languages.registerDefinitionProvider(filter, referenceProvider));
-		context.subscriptions.push(vs.languages.registerReferenceProvider(filter, referenceProvider));
-		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(filter, documentHighlightProvider));
-		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, assistCodeActionProvider, assistCodeActionProvider.metadata));
-		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, fixCodeActionProvider, fixCodeActionProvider.metadata));
-		context.subscriptions.push(vs.languages.registerCodeActionsProvider(filter, refactorCodeActionProvider, refactorCodeActionProvider.metadata));
-		context.subscriptions.push(vs.languages.registerRenameProvider(filter, renameProvider));
-	});
+	context.subscriptions.push(vs.languages.registerHoverProvider(activeFileFilters, hoverProvider));
+	formattingEditProvider.registerDocumentFormatter(activeFileFilters);
+	context.subscriptions.push(vs.languages.registerCompletionItemProvider(activeFileFilters, completionItemProvider, ...triggerCharacters));
+	context.subscriptions.push(vs.languages.registerDefinitionProvider(activeFileFilters, referenceProvider));
+	context.subscriptions.push(vs.languages.registerReferenceProvider(activeFileFilters, referenceProvider));
+	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(activeFileFilters, documentHighlightProvider));
+	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, assistCodeActionProvider, assistCodeActionProvider.metadata));
+	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, fixCodeActionProvider, fixCodeActionProvider.metadata));
+	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, refactorCodeActionProvider, refactorCodeActionProvider.metadata));
+	context.subscriptions.push(vs.languages.registerRenameProvider(activeFileFilters, renameProvider));
 
 	// Some actions only apply to Dart.
 	formattingEditProvider.registerTypingFormatter(DART_MODE, "}", ";");
@@ -241,7 +240,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => util.isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(uri)))));
 
-	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE[0].language, new DartLanguageConfiguration()));
+	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE.language, new DartLanguageConfiguration()));
 	const statusReporter = new AnalyzerStatusReporter(analyzer, sdks, analytics);
 
 	// Set up diagnostics.
