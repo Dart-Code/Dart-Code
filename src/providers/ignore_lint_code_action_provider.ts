@@ -1,9 +1,14 @@
-import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, CodeActionProviderMetadata, Range, TextDocument, WorkspaceEdit } from "vscode";
+import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, DocumentSelector, Range, TextDocument, WorkspaceEdit } from "vscode";
 import { config } from "../config";
 import { isAnalyzableAndInWorkspace } from "../utils";
 import { DartDiagnostic } from "./dart_diagnostic_provider";
+import { RankedCodeActionProvider } from "./ranking_code_action_provider";
 
-export class IgnoreLintCodeActionProvider implements CodeActionProvider {
+export class IgnoreLintCodeActionProvider implements RankedCodeActionProvider {
+	constructor(public readonly selector: DocumentSelector) { }
+
+	public readonly rank = 100;
+
 	public readonly metadata: CodeActionProviderMetadata = {
 		providedCodeActionKinds: [CodeActionKind.QuickFix],
 	};
