@@ -12,26 +12,28 @@ export class FixCodeActionProvider implements CodeActionProvider {
 		providedCodeActionKinds: [CodeActionKind.QuickFix],
 	};
 
-	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Thenable<CodeAction[]> {
+	public async provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Promise<CodeAction[]> {
 		if (!isAnalyzableAndInWorkspace(document))
 			return null;
-		return new Promise<CodeAction[]>((resolve, reject) => {
-			this.analyzer.editGetFixes({
+		try {
+			const result = await this.analyzer.editGetFixes({
 				file: fsPath(document.uri),
 				offset: document.offsetAt(range.start),
-			}).then((result) => {
-				// Because fixes may be the same for multiple errors, we'll de-dupe them based on their edit.
-				const allActions: { [key: string]: CodeAction } = {};
+			});
+			// Because fixes may be the same for multiple errors, we'll de-dupe them based on their edit.
+			const allActions: { [key: string]: CodeAction } = {};
 
-				for (const errorFix of result.fixes) {
-					for (const fix of errorFix.fixes) {
-						allActions[JSON.stringify(fix.edits)] = this.convertResult(document, fix, errorFix.error);
-					}
+			for (const errorFix of result.fixes) {
+				for (const fix of errorFix.fixes) {
+					allActions[JSON.stringify(fix.edits)] = this.convertResult(document, fix, errorFix.error);
 				}
+			}
 
-				resolve(Object.keys(allActions).map((a) => allActions[a]));
-			}, (e) => { logError(e); reject(); });
-		});
+			return Object.keys(allActions).map((a) => allActions[a]);
+		} catch (e) {
+			logError(e);
+			throw e;
+		}
 	}
 
 	private convertResult(document: TextDocument, change: as.SourceChange, error: as.AnalysisError): CodeAction {
