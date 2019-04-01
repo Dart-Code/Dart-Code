@@ -1,12 +1,9 @@
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, CodeActionProviderMetadata, Range, TextDocument } from "vscode";
-import { Analyzer } from "../analysis/analyzer";
 import { isAnalyzableAndInWorkspace } from "../utils";
 
 const SourceSortMembers = CodeActionKind.Source.append("sortMembers");
 
 export class SourceCodeActionProvider implements CodeActionProvider {
-	constructor(private readonly analyzer: Analyzer) { }
-
 	public readonly metadata: CodeActionProviderMetadata = {
 		providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports, SourceSortMembers],
 	};
