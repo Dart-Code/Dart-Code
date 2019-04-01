@@ -18,6 +18,19 @@ describe("ignore_lint_code_action_provider", () => {
 		assert.ok(ignoreLintAction);
 	});
 
+	it("puts ignore options at the end of the list", async () => {
+		await openFile(emptyFile);
+		await setTestContent(`main() {
+  var a = 1;
+}`);
+		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("|a| = 1")) as Thenable<vs.CodeAction[]>);
+		assert.ok(fixResults);
+		assert.ok(fixResults.length);
+
+		const index = fixResults.findIndex((r) => r.title.indexOf("Ignore hint 'unused_local_variable' for this line") !== -1);
+		assert.equal(index, fixResults.length - 1);
+	});
+
 	it("edits in '// ignore: ' comment", async () => {
 		await openFile(emptyFile);
 		await setTestContent(`main() {
