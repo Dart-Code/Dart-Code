@@ -556,7 +556,7 @@
 					"when": "false"
 				}
 			],
-			"debug/toolbar": [
+			"debug/toolBar": [
 				{
 					"command": "flutter.hotReload",
 					"group": "navigation@59",
