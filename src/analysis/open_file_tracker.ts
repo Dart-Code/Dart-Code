@@ -126,6 +126,8 @@ export class OpenFileTracker implements IAmDisposable {
 	}
 
 	public dispose(): any {
+		// TODO: This (and others) should probably await, in case thye're promises.
+		// And also not fail on first error.
 		this.disposables.forEach((d) => d.dispose());
 	}
 }
