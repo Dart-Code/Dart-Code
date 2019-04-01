@@ -1,5 +1,5 @@
 import * as minimatch from "minimatch";
-import { CancellationToken, DocumentFilter, DocumentFormattingEditProvider, FormattingOptions, languages, OnTypeFormattingEditProvider, Position, Range, TextDocument, TextEdit, window, workspace } from "vscode";
+import { CancellationToken, DocumentFormattingEditProvider, DocumentSelector, FormattingOptions, languages, OnTypeFormattingEditProvider, Position, Range, TextDocument, TextEdit, window, workspace } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { config } from "../config";
@@ -23,11 +23,11 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 	private readonly registeredFormatters: IAmDisposable[] = [];
 	private readonly formatterRegisterFuncs: Array<() => void> = [];
 
-	public registerDocumentFormatter(filter: DocumentFilter[]): void {
+	public registerDocumentFormatter(filter: DocumentSelector): void {
 		this.registerFormatter(() => languages.registerDocumentFormattingEditProvider(filter, this));
 	}
 
-	public registerTypingFormatter(filter: DocumentFilter[], firstTriggerCharacter: string, ...moreTriggerCharacters: string[]): void {
+	public registerTypingFormatter(filter: DocumentSelector, firstTriggerCharacter: string, ...moreTriggerCharacters: string[]): void {
 		this.registerFormatter(() => languages.registerOnTypeFormattingEditProvider(filter, this, firstTriggerCharacter, ...moreTriggerCharacters));
 	}
 
