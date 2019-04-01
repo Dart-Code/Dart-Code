@@ -41,7 +41,7 @@ main() async {
 
 		await waitForEditorChange(() => vs.commands.executeCommand("_dart.organizeImports"));
 
-		ensureTestContent(`
+		await ensureTestContent(`
 import "dart:async";
 
 main() async {
