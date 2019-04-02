@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { doNotAskAgainAction, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, wantToTryDevToolsPrompt } from "./constants";
 import { Context } from "./context";
 import { StagehandTemplate } from "./pub/stagehand";
-import { DART_CREATE_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, ProjectType, Sdks } from "./utils";
+import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, ProjectType, Sdks } from "./utils";
 
 const promptPrefix = "hasPrompted.";
 const installFlutterExtensionPromptKey = "install_flutter_extension";
@@ -93,33 +93,41 @@ function error(err: any) {
 
 function handleNewProjects(context: Context) {
 	getDartWorkspaceFolders().forEach((wf) => {
-		const dartTriggerFile = path.join(fsPath(wf.uri), DART_CREATE_PROJECT_TRIGGER_FILE);
-		if (fs.existsSync(dartTriggerFile)) {
-			const templateJson = fs.readFileSync(dartTriggerFile).toString().trim();
-			let template: StagehandTemplate;
-			try {
-				template = JSON.parse(templateJson);
-			} catch (e) {
-				vs.window.showErrorMessage("Failed to run Stagehand to create project");
-				return;
-			}
-			fs.unlinkSync(dartTriggerFile);
-			createDartProject(fsPath(wf.uri), template.name).then((success) => {
-				if (success)
-					handleDartWelcome(wf, template);
-			});
-		}
-		const flutterTriggerFile = path.join(fsPath(wf.uri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
-		if (fs.existsSync(flutterTriggerFile)) {
-			let sampleID = fs.readFileSync(flutterTriggerFile).toString().trim();
-			sampleID = sampleID ? sampleID : undefined;
-			fs.unlinkSync(flutterTriggerFile);
-			createFlutterProject(fsPath(wf.uri), sampleID).then((success) => {
-				if (success)
-					handleFlutterWelcome(wf, sampleID);
-			});
-		}
+		handleStagehandTrigger(wf, DART_STAGEHAND_PROJECT_TRIGGER_FILE);
+		handleFlutterCreateTrigger(wf);
 	});
+}
+
+function handleStagehandTrigger(wf: vs.WorkspaceFolder, triggerFilename: string) {
+	const dartTriggerFile = path.join(fsPath(wf.uri), triggerFilename);
+	if (fs.existsSync(dartTriggerFile)) {
+		const templateJson = fs.readFileSync(dartTriggerFile).toString().trim();
+		let template: StagehandTemplate;
+		try {
+			template = JSON.parse(templateJson);
+		} catch (e) {
+			vs.window.showErrorMessage("Failed to run Stagehand to create project");
+			return;
+		}
+		fs.unlinkSync(dartTriggerFile);
+		createDartProject(fsPath(wf.uri), template.name).then((success) => {
+			if (success)
+				handleDartWelcome(wf, template);
+		});
+	}
+}
+
+function handleFlutterCreateTrigger(wf: vs.WorkspaceFolder) {
+	const flutterTriggerFile = path.join(fsPath(wf.uri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
+	if (fs.existsSync(flutterTriggerFile)) {
+		let sampleID = fs.readFileSync(flutterTriggerFile).toString().trim();
+		sampleID = sampleID ? sampleID : undefined;
+		fs.unlinkSync(flutterTriggerFile);
+		createFlutterProject(fsPath(wf.uri), sampleID).then((success) => {
+			if (success)
+				handleFlutterWelcome(wf, sampleID);
+		});
+	}
 }
 
 async function createDartProject(projectPath: string, templateName: string): Promise<boolean> {
