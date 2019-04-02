@@ -142,7 +142,7 @@
 							"include": "#comments-doc-oldschool"
 						},
 						{
-							"include": "#comments-inline"
+							"include": "#comments-block"
 						},
 						{
 							"include": "#dartdoc"
@@ -168,14 +168,7 @@
 		"comments-inline": {
 			"patterns": [
 				{
-					"begin": "/\\*",
-					"end": "\\*/",
-					"name": "comment.block.dart",
-					"patterns": [
-						{
-							"include": "#comments-inline"
-						}
-					]
+					"include": "#comments-block"
 				},
 				{
 					"captures": {
@@ -184,6 +177,20 @@
 						}
 					},
 					"match": "((//).*)$"
+				}
+			]
+		},
+		"comments-block": {
+			"patterns": [
+				{
+					"begin": "/\\*",
+					"end": "\\*/",
+					"name": "comment.block.dart",
+					"patterns": [
+						{
+							"include": "#comments-block"
+						}
+					]
 				}
 			]
 		},
