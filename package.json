@@ -767,7 +767,7 @@
 				},
 				"dart.flutterTrackWidgetCreation": {
 					"type": "boolean",
-					"description": "Whether to pass --track-widget-creation to Flutter apps (required to support 'Inspect Widget'). If this setting is not set, it will default to true for Flutter >= 10.2 and false for any previous versions of Flutter. The setting is always ignored when running in Profile or Release mode.",
+					"description": "Whether to pass --track-widget-creation to Flutter apps (required to support 'Inspect Widget'). If this setting is not set, it will default to true for Flutter >= 0.10.2 and false for any previous versions of Flutter. The setting is always ignored when running in Profile or Release mode.",
 					"scope": "resource"
 				},
 				"dart.evaluateGettersInDebugViews": {
