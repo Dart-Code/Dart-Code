@@ -1,0 +1,1 @@
+{"name":"flutter-web-preview","label":"Flutter Web App","description":"A Flutter web app.","entrypoint":"web/index.html"}

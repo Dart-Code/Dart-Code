@@ -152,15 +152,17 @@ async function runAllTests(): Promise<void> {
 		throw "Could not find Flutter SDK";
 
 	const flutterRoot = process.env.FLUTTER_ROOT || process.env.FLUTTER_PATH;
-	const totalRuns = 10;
+	const totalRuns = 12;
 	let runNumber = 1;
 	try {
 		await runTests("multi_root", "projects.code-workspace", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("multi_project_folder", "", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("not_activated/dart_create", "empty", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("not_activated/flutter_create", "empty", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("not_activated/flutter_web_create", "empty", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("dart_create_tests", "dart_create_tests.code-workspace", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("flutter_create_tests", "flutter_create_tests.code-workspace", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("flutter_web_create_tests", "flutter_web_create_tests.code-workspace", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("dart_only", "hello_world", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("flutter_only", "flutter_hello_world", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("flutter_web_only", "flutter_web_hello_world", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);

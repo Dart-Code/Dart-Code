@@ -86,6 +86,28 @@
 			]
 		},
 		{
+			"name": "Launch Tests (Flutter: New Web Project)",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"${workspaceRoot}/test/test_projects/flutter_web_create_tests.code-workspace",
+				"--extensionDevelopmentPath=${workspaceRoot}",
+				"--extensionTestsPath=${workspaceRoot}/out/test/flutter_web_create_tests"
+			],
+			"env": {
+				"DART_CODE_IS_TEST_RUN": "true"
+			},
+			"outFiles": [
+				"${workspaceRoot}/out/test/**/*.js"
+			],
+			"preLaunchTask": "npm: watch",
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**"
+			]
+		},
+		{
 			"name": "Launch Tests (Multi-project folder)",
 			"type": "extensionHost",
 			"request": "launch",
@@ -226,6 +248,28 @@
 				"${workspaceRoot}/test/test_projects/empty",
 				"--extensionDevelopmentPath=${workspaceRoot}",
 				"--extensionTestsPath=${workspaceRoot}/out/test/not_activated/flutter_create"
+			],
+			"env": {
+				"DART_CODE_IS_TEST_RUN": "true"
+			},
+			"outFiles": [
+				"${workspaceRoot}/out/test/**/*.js"
+			],
+			"preLaunchTask": "npm: watch",
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**"
+			]
+		},
+		{
+			"name": "Launch Tests (Not Activated / Flutter Web Create)",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"${workspaceRoot}/test/test_projects/empty",
+				"--extensionDevelopmentPath=${workspaceRoot}",
+				"--extensionTestsPath=${workspaceRoot}/out/test/not_activated/flutter_web_create"
 			],
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
