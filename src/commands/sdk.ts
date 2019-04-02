@@ -379,17 +379,17 @@ export class SdkCommands {
 	}
 
 	private async createDartProject(): Promise<void> {
-		return this.createStagehandProject("dart.createProject", util.DART_STAGEHAND_PROJECT_TRIGGER_FILE, (t) => !this.isFlutterWebTemplate(t));
+		return this.createStagehandProject("dart.createProject", util.DART_STAGEHAND_PROJECT_TRIGGER_FILE, false, (t) => !this.isFlutterWebTemplate(t));
 	}
 
 	private async createFlutterWebProject(): Promise<void> {
 		// TODO: auto-select if only one
 		// TODO: tests!
 		// TODO: Should it use flutter trigger file??
-		return this.createStagehandProject("flutter.createWebProject", util.FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, (t) => this.isFlutterWebTemplate(t));
+		return this.createStagehandProject("flutter.createWebProject", util.FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, true, (t) => this.isFlutterWebTemplate(t));
 	}
 
-	private async createStagehandProject(command: string, triggerFilename: string, filter: (t: StagehandTemplate) => boolean): Promise<void> {
+	private async createStagehandProject(command: string, triggerFilename: string, autoPickIfSingleItem: boolean, filter: (t: StagehandTemplate) => boolean): Promise<void> {
 		if (!this.sdks || !this.sdks.dart) {
 			showDartActivationFailure(command);
 			return;
@@ -412,19 +412,26 @@ export class SdkCommands {
 
 		const filteredTemplate = templates.filter(filter);
 		const sortedTemplates = sortBy(filteredTemplate, (s) => s.label);
+		const pickItems = sortedTemplates.map((t) => ({
+			description: t.name,
+			detail: t.description,
+			label: t.label,
+			template: t,
+		}));
 
-		const selectedTemplate = await vs.window.showQuickPick(
-			sortedTemplates.map((t) => ({
-				description: t.name,
-				detail: t.description,
-				label: t.label,
-				template: t,
-			})),
-			{
-				matchOnDescription: true,
-				placeHolder: "Which Dart template?",
-			},
-		);
+		// Get the user to pick a template (but pick for them if there's only one
+		// and autoPickIfSingleItem).
+		const selectedTemplate =
+			autoPickIfSingleItem && pickItems.length === 1
+				? pickItems[0]
+				: await vs.window.showQuickPick(
+					pickItems,
+					{
+						matchOnDescription: true,
+						placeHolder: "Which Dart template?",
+					},
+				);
+
 		if (!selectedTemplate)
 			return;
 
