@@ -98,10 +98,10 @@ function handleNewProjects(context: Context) {
 	});
 }
 
-function handleStagehandTrigger(wf: vs.WorkspaceFolder, triggerFilename: string) {
-	const dartTriggerFile = path.join(fsPath(wf.uri), triggerFilename);
-	if (fs.existsSync(dartTriggerFile)) {
-		const templateJson = fs.readFileSync(dartTriggerFile).toString().trim();
+async function handleStagehandTrigger(wf: vs.WorkspaceFolder, triggerFilename: string): Promise<void> {
+	const triggerFile = path.join(fsPath(wf.uri), triggerFilename);
+	if (fs.existsSync(triggerFile)) {
+		const templateJson = fs.readFileSync(triggerFile).toString().trim();
 		let template: StagehandTemplate;
 		try {
 			template = JSON.parse(templateJson);
@@ -109,11 +109,12 @@ function handleStagehandTrigger(wf: vs.WorkspaceFolder, triggerFilename: string)
 			vs.window.showErrorMessage("Failed to run Stagehand to create project");
 			return;
 		}
-		fs.unlinkSync(dartTriggerFile);
-		createDartProject(fsPath(wf.uri), template.name).then((success) => {
-			if (success)
-				handleDartWelcome(wf, template);
-		});
+		fs.unlinkSync(triggerFile);
+		const success = await createDartProject(fsPath(wf.uri), template.name);
+		if (success) {
+			await vs.commands.executeCommand("dart.getPackages", wf.uri);
+			handleDartWelcome(wf, template);
+		}
 	}
 }
 
