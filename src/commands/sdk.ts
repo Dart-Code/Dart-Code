@@ -414,7 +414,7 @@ export class SdkCommands {
 		// Create the empty folder so we can open it.
 		fs.mkdirSync(fsPath(projectFolderUri));
 		// Create a temp dart file to force extension to load when we open this folder.
-		fs.writeFileSync(path.join(fsPath(projectFolderUri), util.DART_CREATE_PROJECT_TRIGGER_FILE), JSON.stringify(selectedTemplate.template));
+		fs.writeFileSync(path.join(fsPath(projectFolderUri), util.DART_STAGEHAND_PROJECT_TRIGGER_FILE), JSON.stringify(selectedTemplate.template));
 
 		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
 		const openInNewWindow = hasFoldersOpen;
