@@ -12,11 +12,11 @@ describe("flutter web", () => {
 		const getPackagesCommand = executeCommand.withArgs("dart.getPackages", sinon.match.any).resolves();
 
 		const sampleProjectFolder = fsPath(vs.workspace.workspaceFolders[0].uri);
-		const expectedString = "Hello web";
-		const mainFile = path.join(sampleProjectFolder, "bin", "main.dart");
+		const expectedString = "import 'package:flutter_web";
+		const mainFile = path.join(sampleProjectFolder, "web", "main.dart");
 
 		// Creating the sample may be a little slow, so allow up to 60 seconds for it.
-		await waitForResult(() => fs.existsSync(mainFile), "bin/main.dart did not exist", 60000);
+		await waitForResult(() => fs.existsSync(mainFile), "web/main.dart did not exist", 60000);
 
 		// Wait for up to 10 seconds for the content to match, as the file may be updated after creation.
 		await waitForResult(() => {
