@@ -16,6 +16,7 @@ export const extensionVersion = getExtensionVersion();
 export const vsCodeVersionConstraint = getVsCodeVersionConstraint();
 export const isDevExtension = checkIsDevExtension();
 export const hasFlutterExtension = checkHasFlutterExtension();
+// TODO: Make these not .dart (and add to activationEvents).
 export const DART_STAGEHAND_PROJECT_TRIGGER_FILE = "dart_code_dart_create.dart";
 export const FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE = "dart_code_flutter_stagehand.dart";
 export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "dart_code_flutter_create.dart";

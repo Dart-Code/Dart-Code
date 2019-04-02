@@ -64,7 +64,7 @@
 			]
 		},
 		{
-			"name": "Launch Tests (Flutter: New Projects)",
+			"name": "Launch Tests (Flutter: New Project)",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
