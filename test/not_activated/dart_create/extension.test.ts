@@ -4,7 +4,7 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { StagehandTemplate } from "../../../src/pub/stagehand";
-import { DART_CREATE_PROJECT_TRIGGER_FILE, fsPath } from "../../../src/utils";
+import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, fsPath } from "../../../src/utils";
 import { ext, getRandomTempFolder, sb } from "../../helpers";
 
 describe("test environment", () => {
@@ -52,7 +52,7 @@ describe("command", () => {
 
 		assert.ok(showQuickPick.calledOnce);
 		assert.ok(openFolder.calledOnce);
-		const triggerFile = path.join(tempFolder, projectName, DART_CREATE_PROJECT_TRIGGER_FILE);
+		const triggerFile = path.join(tempFolder, projectName, DART_STAGEHAND_PROJECT_TRIGGER_FILE);
 		assert.ok(fs.existsSync(triggerFile));
 		const recordedTemplateJson = fs.readFileSync(triggerFile).toString().trim();
 		const recordedTemplate = JSON.parse(recordedTemplateJson) as StagehandTemplate;
