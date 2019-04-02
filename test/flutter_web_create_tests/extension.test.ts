@@ -8,8 +8,8 @@ describe("test environment", () => {
 		const wfs = vs.workspace.workspaceFolders || [];
 		assert.equal(wfs.length, 1);
 		assert.ok(
-			fsPath(wfs[0].uri).endsWith(path.sep + "flutter_web_create_template"),
-			`${fsPath(wfs[0].uri)} doesn't end with ${path.sep}flutter_web_create_template`,
+			fsPath(wfs[0].uri).endsWith(path.sep + "flutter_web_create"),
+			`${fsPath(wfs[0].uri)} doesn't end with ${path.sep}flutter_web_create`,
 		);
 	});
 });
