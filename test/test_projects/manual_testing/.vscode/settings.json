@@ -1,0 +1,5 @@
+{
+	"dart.doNotFormat": [
+		"**/lib/comments.dart"
+	]
+}
