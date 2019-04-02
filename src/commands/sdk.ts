@@ -167,6 +167,9 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.flutter.createSampleProject", (_) => this.createFlutterSampleProject()));
+		// TODO: Move this to Flutter extension, and bounce it through to a hidden command here
+		// (update package.json activation events too!).
+		context.subscriptions.push(vs.commands.registerCommand("flutter.createWebProject", (_) => this.createFlutterWebProject()));
 		context.subscriptions.push(vs.commands.registerCommand("dart.createProject", (_) => this.createDartProject()));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.create", (projectPath: string, templateName: string) => {
 			const args = ["global", "run", "stagehand", templateName];
@@ -371,9 +374,24 @@ export class SdkCommands {
 		});
 	}
 
+	private isFlutterWebTemplate(t: StagehandTemplate) {
+		return t.name.startsWith("flutter-web");
+	}
+
 	private async createDartProject(): Promise<void> {
+		return this.createStagehandProject("dart.createProject", util.DART_STAGEHAND_PROJECT_TRIGGER_FILE, (t) => !this.isFlutterWebTemplate(t));
+	}
+
+	private async createFlutterWebProject(): Promise<void> {
+		// TODO: auto-select if only one
+		// TODO: tests!
+		// TODO: Should it use flutter trigger file??
+		return this.createStagehandProject("flutter.createWebProject", util.FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, (t) => this.isFlutterWebTemplate(t));
+	}
+
+	private async createStagehandProject(command: string, triggerFilename: string, filter: (t: StagehandTemplate) => boolean): Promise<void> {
 		if (!this.sdks || !this.sdks.dart) {
-			showDartActivationFailure("dart.createProject");
+			showDartActivationFailure(command);
 			return;
 		}
 
@@ -392,7 +410,8 @@ export class SdkCommands {
 			return;
 		}
 
-		const sortedTemplates = sortBy(templates, (s) => s.label);
+		const filteredTemplate = templates.filter(filter);
+		const sortedTemplates = sortBy(filteredTemplate, (s) => s.label);
 
 		const selectedTemplate = await vs.window.showQuickPick(
 			sortedTemplates.map((t) => ({
@@ -428,7 +447,7 @@ export class SdkCommands {
 		// Create the empty folder so we can open it.
 		fs.mkdirSync(fsPath(projectFolderUri));
 		// Create a temp dart file to force extension to load when we open this folder.
-		fs.writeFileSync(path.join(fsPath(projectFolderUri), util.DART_STAGEHAND_PROJECT_TRIGGER_FILE), JSON.stringify(selectedTemplate.template));
+		fs.writeFileSync(path.join(fsPath(projectFolderUri), triggerFilename), JSON.stringify(selectedTemplate.template));
 
 		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
 		const openInNewWindow = hasFoldersOpen;

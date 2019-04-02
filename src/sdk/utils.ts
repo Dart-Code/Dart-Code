@@ -5,7 +5,7 @@ import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
 import { flatMap, isWin, platformName } from "../debug/utils";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, getSdkVersion, openExtensionLogFile, openInBrowser, ProjectType, reloadExtension, resolvePaths, showLogAction, WorkspaceContext } from "../utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, getSdkVersion, openExtensionLogFile, openInBrowser, ProjectType, reloadExtension, resolvePaths, showLogAction, WorkspaceContext } from "../utils";
 import { getChildFolders, hasPubspec } from "../utils/fs";
 import { log } from "../utils/log";
 
@@ -37,6 +37,9 @@ export function handleMissingSdks(context: ExtensionContext, analytics: Analytic
 	context.subscriptions.push(commands.registerCommand("flutter.createProject", (_) => {
 		attemptedToUseFlutter = true;
 		commandToReRun = "flutter.createProject";
+	}));
+	context.subscriptions.push(commands.registerCommand("flutter.createWebProject", (_) => {
+		commandToReRun = "dart.createProject";
 	}));
 	context.subscriptions.push(commands.registerCommand("dart.createProject", (_) => {
 		commandToReRun = "dart.createProject";
@@ -181,6 +184,7 @@ export function initWorkspace(): WorkspaceContext {
 			|| (referencesFlutterSdk(folder) ? folder : undefined)
 			|| (referencesFlutterWeb(folder) ? folder : undefined)
 			|| (fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE)) ? folder : undefined)
+			|| (fs.existsSync(path.join(folder, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE)) ? folder : undefined)
 			// Special case to detect the Flutter repo root, so we always consider it a Flutter project and will use the local SDK
 			|| (fs.existsSync(path.join(folder, "bin/flutter")) && fs.existsSync(path.join(folder, "bin/cache/dart-sdk")) ? folder : undefined);
 		hasFuchsiaProjectThatIsNotVanillaFlutter = hasFuchsiaProjectThatIsNotVanillaFlutter || (hasPubspec(folder) && !referencesFlutterSdk(folder));

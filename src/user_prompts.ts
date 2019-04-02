@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { doNotAskAgainAction, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, wantToTryDevToolsPrompt } from "./constants";
 import { Context } from "./context";
 import { StagehandTemplate } from "./pub/stagehand";
-import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, WorkspaceContext } from "./utils";
+import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, WorkspaceContext } from "./utils";
 
 const promptPrefix = "hasPrompted.";
 const installFlutterExtensionPromptKey = "install_flutter_extension";
@@ -94,6 +94,7 @@ function error(err: any) {
 function handleNewProjects(context: Context) {
 	getDartWorkspaceFolders().forEach((wf) => {
 		handleStagehandTrigger(wf, DART_STAGEHAND_PROJECT_TRIGGER_FILE);
+		handleStagehandTrigger(wf, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE);
 		handleFlutterCreateTrigger(wf);
 	});
 }
