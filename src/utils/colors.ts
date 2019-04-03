@@ -1,4 +1,3 @@
-
 const codeReset = 0;
 const codeBlack = 30;
 const codeRed = 31;

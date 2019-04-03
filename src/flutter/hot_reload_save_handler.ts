@@ -4,7 +4,7 @@ import { debugSessions } from "../commands/debug";
 import { config } from "../config";
 import { restartReasonSave } from "../constants";
 import { fsPath, isAnalyzableAndInWorkspace } from "../utils";
-import { DartDebugSessionInformation } from "../utils/debug";
+import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 export function setUpHotReloadOnSave(context: ExtensionContext, diagnostics: DiagnosticCollection) {
 	let hotReloadDelayTimer: NodeJS.Timer | undefined;
