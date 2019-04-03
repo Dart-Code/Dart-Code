@@ -127,7 +127,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	analytics = new Analytics(workspaceContext);
 	if (!sdks.dart || (workspaceContext.hasAnyFlutterMobileProjects && !sdks.flutter)) {
 		// Don't set anything else up; we can't work like this!
-		return handleMissingSdks(context, analytics, sdks);
+		return handleMissingSdks(context, analytics, workspaceContext);
 	}
 
 	if (sdks.flutterVersion)
@@ -327,7 +327,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// Register additional commands.
 	const analyzerCommands = new AnalyzerCommands(context, analyzer);
 	const pubGlobal = new PubGlobal(extContext, sdks);
-	const sdkCommands = new SdkCommands(context, sdks, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
+	const sdkCommands = new SdkCommands(context, workspaceContext, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
 	const debug = new DebugCommands(extContext, workspaceContext, analytics, pubGlobal);
 
 	// Register URI handler.
