@@ -14,8 +14,7 @@
 		// Try to keep synced with Flutter extension!
 		"disallow-fspath": true,
 		"disallow-vscode-in-debuggers": true,
-		// TODO: Fix these violations up and enable this lint!
-		"disallow-vscode-in-utils": false,
+		"disallow-vscode-in-utils": true,
 		"indent": {
 			"options": "tabs"
 		},
