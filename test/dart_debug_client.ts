@@ -3,6 +3,8 @@ import { SpawnOptions } from "child_process";
 import { DebugSessionCustomEvent } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { debugSessions } from "../src/commands/debug";
+import { not } from "../src/utils/array";
+import { isKnownInfrastructureThread } from "../src/utils/debugger";
 import { handleDebugLogEvent, log } from "../src/utils/log";
 import { DartDebugSessionInformation } from "../src/utils/vscode/debug";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../src/views/test_protocol";
@@ -99,8 +101,7 @@ export class DartDebugClient extends DebugClient {
 	public async getMainThread(): Promise<DebugProtocol.Thread> {
 		// HACK: Take the first thread that doesn't look like pub/test.
 		const threads = await this.threadsRequest();
-		const userThreads = threads.body.threads
-			.filter((t) => !t.name.startsWith("pub.dart.snapshot") && !t.name.startsWith("test.dart.snapshot"));
+		const userThreads = threads.body.threads.filter(not(isKnownInfrastructureThread));
 		assert.equal(userThreads.length, 1);
 		return userThreads[0];
 	}

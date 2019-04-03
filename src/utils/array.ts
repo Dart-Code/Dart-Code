@@ -7,3 +7,7 @@ export function sortBy<T>(items: T[], f: (item: T) => any): T[] {
 		return 0;
 	});
 }
+
+export function not(f: (x: any) => boolean): (x: any) => boolean {
+	return (x) => !f(x);
+}
