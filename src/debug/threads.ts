@@ -1,5 +1,6 @@
 import { Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { isKnownInfrastructureThread } from "../utils/debugger";
 import { logError } from "../utils/log";
 import { DartDebugSession, InstanceWithEvaluateName } from "./dart_debug_impl";
 import { DebuggerResult, VMBreakpoint, VMInstanceRef, VMIsolate, VMIsolateRef, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
@@ -198,7 +199,7 @@ export class ThreadInfo {
 	// Whether this thread is infrastructure (eg. not user code), useful for avoiding breaking
 	// on handled exceptions, etc.
 	get isInfrastructure(): boolean {
-		return this.ref && this.ref.name && this.ref.name.startsWith("pub.dart.snapshot");
+		return this.ref && this.ref.name && isKnownInfrastructureThread(this.ref);
 	}
 
 	constructor(
