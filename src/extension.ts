@@ -125,7 +125,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	buildLogHeaders(sdks);
 	util.logTime("findSdks");
 	analytics = new Analytics(workspaceContext);
-	if (!sdks.dart || (workspaceContext.hasAnyFlutterMobileProjects && !sdks.flutter)) {
+	if (!sdks.dart || (workspaceContext.hasAnyFlutterProjects && !sdks.flutter)) {
 		// Don't set anything else up; we can't work like this!
 		return handleMissingSdks(context, analytics, workspaceContext);
 	}
