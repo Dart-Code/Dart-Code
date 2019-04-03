@@ -1,3 +1,4 @@
+import { EventEmitter } from "events";
 import * as fs from "fs";
 import * as path from "path";
 import { DebugProtocol } from "vscode-debugprotocol";
@@ -30,6 +31,18 @@ export enum LogSeverity {
 }
 export class LogMessage {
 	constructor(public readonly message: string, public readonly severity: LogSeverity, public readonly category: LogCategory) { }
+}
+export class LogEmitter extends EventEmitter {
+	public fire(msg: LogMessage): void {
+		this.emit("log", msg);
+	}
+	public onLog(listener: (message: LogMessage) => void): IAmDisposable {
+		this.on("log", listener);
+		const that = this;
+		return {
+			dispose: () => { this.removeListener("log", listener); },
+		};
+	}
 }
 
 export interface IAmDisposable {
