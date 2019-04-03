@@ -4,12 +4,12 @@ import * as vs from "vscode";
 import { doNotAskAgainAction, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, wantToTryDevToolsPrompt } from "./constants";
 import { Context } from "./context";
 import { StagehandTemplate } from "./pub/stagehand";
-import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, ProjectType, Sdks } from "./utils";
+import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, WorkspaceContext } from "./utils";
 
 const promptPrefix = "hasPrompted.";
 const installFlutterExtensionPromptKey = "install_flutter_extension";
 
-export function showUserPrompts(context: Context, sdks: Sdks): void {
+export function showUserPrompts(context: Context, workspaceContext: WorkspaceContext): void {
 	handleNewProjects(context);
 
 	function hasPrompted(key: string): boolean {
@@ -28,7 +28,7 @@ export function showUserPrompts(context: Context, sdks: Sdks): void {
 	const versionLink = extensionVersion.split(".").slice(0, 2).join(".").replace(".", "-");
 	const releaseNotesKeyForThisVersion = `release_notes_${extensionVersion}`;
 
-	if (sdks.projectType === ProjectType.Flutter && !hasFlutterExtension && !hasPrompted(installFlutterExtensionPromptKey))
+	if (workspaceContext.hasAnyFlutterProjects && !hasFlutterExtension && !hasPrompted(installFlutterExtensionPromptKey))
 		return showPrompt(installFlutterExtensionPromptKey, promptToInstallFlutterExtension);
 
 	if (!isDevExtension && !hasPrompted(releaseNotesKeyForThisVersion))

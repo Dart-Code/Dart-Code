@@ -423,7 +423,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	if (workspaceContext.shouldLoadFlutterExtension) {
 		const flutterExtension = vs.extensions.getExtension(flutterExtensionIdentifier);
 		if (flutterExtension) {
-			log(`Activating Flutter extension for ${util.ProjectType[sdks.projectType]} project...`);
+			log(`Activating Flutter extension for ${workspaceContext.workspaceTypeDescription} project...`);
 			flutterExtension.activate();
 		}
 	}
