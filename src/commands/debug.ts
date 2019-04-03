@@ -40,8 +40,10 @@ export class DebugCommands {
 		context.subscriptions.push(this.debugMetrics);
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
 			const session = debugSessions.find((ds) => ds.session.id === e.session.id);
-			if (!session)
+			if (!session) {
+				logWarn(`Did not find session ${e.session.id} in these ${debugSessions.length} sessions:\n${debugSessions.map((ds) => `  ${ds.session.id}`).join("\n")}`);
 				return;
+			}
 			this.flutterExtensions.handleDebugEvent(e);
 			if (e.event === "dart.launching") {
 				vs.window.withProgress(
