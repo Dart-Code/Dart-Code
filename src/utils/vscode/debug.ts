@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { PromiseCompleter } from "../debug/utils";
+import { PromiseCompleter } from "../../debug/utils";
 
 const observatoryPortRegex = /:([0-9]+)\/?$/;
 export function extractObservatoryPort(observatoryUri: string): number | undefined {

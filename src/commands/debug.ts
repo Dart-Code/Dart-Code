@@ -9,8 +9,8 @@ import { PubGlobal } from "../pub/global";
 import { DevTools } from "../sdk/dev_tools";
 import { showDevToolsNotificationIfAppropriate } from "../user_prompts";
 import { fsPath, getDartWorkspaceFolders, openInBrowser, ProjectType, Sdks } from "../utils";
-import { DartDebugSessionInformation } from "../utils/debug";
 import { handleDebugLogEvent, logWarn } from "../utils/log";
+import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
 // export let mostRecentAttachedProbablyReusableObservatoryUri: string;
