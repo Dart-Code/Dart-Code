@@ -28,33 +28,34 @@ export function handleMissingSdks(context: ExtensionContext, analytics: Analytic
 	// This can be reverted and improved if Code adds support for providing activation context:
 	//     https://github.com/Microsoft/vscode/issues/44711
 	let commandToReRun: string;
+	let attemptedToUseFlutter: boolean = false;
 	// Note: This code only runs if we fail to find the Dart SDK, or fail to find the Flutter SDK
 	// and are in a Flutter project. In the case where we fail to find the Flutter SDK but are not
 	// in a Flutter project (eg. we ran Flutter Doctor without the extension activated) then
 	// this code will not be run as the extension will activate normally, and then the command-handling
 	// code for each command will detect the missing Flutter SDK and respond appropriately.
 	context.subscriptions.push(commands.registerCommand("flutter.createProject", (_) => {
-		workspaceContext.attemptedToUseFlutter = true;
+		attemptedToUseFlutter = true;
 		commandToReRun = "flutter.createProject";
 	}));
 	context.subscriptions.push(commands.registerCommand("dart.createProject", (_) => {
 		commandToReRun = "dart.createProject";
 	}));
 	context.subscriptions.push(commands.registerCommand("_dart.flutter.createSampleProject", (_) => {
-		workspaceContext.attemptedToUseFlutter = true;
+		attemptedToUseFlutter = true;
 		commandToReRun = "_dart.flutter.createSampleProject";
 	}));
 	context.subscriptions.push(commands.registerCommand("flutter.doctor", (_) => {
-		workspaceContext.attemptedToUseFlutter = true;
+		attemptedToUseFlutter = true;
 		commandToReRun = "flutter.doctor";
 	}));
 	context.subscriptions.push(commands.registerCommand("flutter.upgrade", (_) => {
-		workspaceContext.attemptedToUseFlutter = true;
+		attemptedToUseFlutter = true;
 		commandToReRun = "flutter.upgrade";
 	}));
 	// Wait a while before showing the error to allow the code above to have run.
 	setTimeout(() => {
-		if (workspaceContext.attemptedToUseFlutter) {
+		if (attemptedToUseFlutter) {
 			if (workspaceContext.sdks.flutter && !workspaceContext.sdks.dart) {
 				showFluttersDartSdkActivationFailure();
 			} else {

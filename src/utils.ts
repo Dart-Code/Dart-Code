@@ -282,16 +282,11 @@ export class WorkspaceContext {
 	// TODO: Move things from Sdks to this class that aren't related to the SDKs.
 	constructor(public readonly sdks: Sdks) { }
 
-	// Whether or not something in the workspace attempted to use Flutter but failed to
-	// find the SDK. Used to provide better messages when commands like flutter.create fail
-	// due to missing SDKs, since they can't check for SDKs prior to appearing in the
-	// command palette since they're visible when the extension is not loaded.
-	public attemptedToUseFlutter: boolean = false;
-
 	get hasOnlyDartProjects() { return this.sdks.projectType === ProjectType.Dart; }
 	get hasAnyFlutterMobileProjects() { return this.sdks.projectType === ProjectType.Flutter; }
 	get hasAnyFlutterProjects() { return this.sdks.projectType !== ProjectType.Dart; }
 	get shouldLoadFlutterExtension() { return this.sdks.projectType === ProjectType.Flutter || this.sdks.projectType === ProjectType.Fuchsia; }
+	// TODO: Remove this flag - it's possible to have multiple projects open, only some of which are in the Fuchsia tree.
 	get isInFuchsiaTree() { return this.sdks.projectType === ProjectType.Fuchsia; }
 
 	/// Used only for display (for ex stats), not behaviour.
