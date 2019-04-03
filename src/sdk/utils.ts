@@ -5,7 +5,7 @@ import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
 import { flatMap, isWin, platformName } from "../debug/utils";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, getSdkVersion, openExtensionLogFile, openInBrowser, ProjectType, reloadExtension, resolvePaths, Sdks, showLogAction, WorkspaceContext } from "../utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, getSdkVersion, openExtensionLogFile, openInBrowser, ProjectType, reloadExtension, resolvePaths, showLogAction, WorkspaceContext } from "../utils";
 import { getChildFolders, hasPubspec } from "../utils/fs";
 import { log } from "../utils/log";
 
@@ -22,35 +22,35 @@ export const androidStudioPath = "bin/" + androidStudioExecutableName;
 export const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
 export const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
 
-export function handleMissingSdks(context: ExtensionContext, analytics: Analytics, sdks: Sdks) {
+export function handleMissingSdks(context: ExtensionContext, analytics: Analytics, workspaceContext: WorkspaceContext) {
 	// HACK: In order to provide a more useful message if the user was trying to fun flutter.createProject
 	// we need to hook the command and force the project type to Flutter to get the correct error message.
 	// This can be reverted and improved if Code adds support for providing activation context:
 	//     https://github.com/Microsoft/vscode/issues/44711
 	let commandToReRun: string;
 	context.subscriptions.push(commands.registerCommand("flutter.createProject", (_) => {
-		sdks.projectType = ProjectType.Flutter;
+		workspaceContext.attemptedToUseFlutter = true;
 		commandToReRun = "flutter.createProject";
 	}));
 	context.subscriptions.push(commands.registerCommand("dart.createProject", (_) => {
 		commandToReRun = "dart.createProject";
 	}));
 	context.subscriptions.push(commands.registerCommand("_dart.flutter.createSampleProject", (_) => {
-		sdks.projectType = ProjectType.Flutter;
+		workspaceContext.attemptedToUseFlutter = true;
 		commandToReRun = "_dart.flutter.createSampleProject";
 	}));
 	context.subscriptions.push(commands.registerCommand("flutter.doctor", (_) => {
-		sdks.projectType = ProjectType.Flutter;
+		workspaceContext.attemptedToUseFlutter = true;
 		commandToReRun = "flutter.doctor";
 	}));
 	context.subscriptions.push(commands.registerCommand("flutter.upgrade", (_) => {
-		sdks.projectType = ProjectType.Flutter;
+		workspaceContext.attemptedToUseFlutter = true;
 		commandToReRun = "flutter.upgrade";
 	}));
 	// Wait a while before showing the error to allow the code above to have run.
 	setTimeout(() => {
-		if (sdks.projectType === ProjectType.Flutter) {
-			if (sdks.flutter && !sdks.dart) {
+		if (workspaceContext.attemptedToUseFlutter) {
+			if (workspaceContext.sdks.flutter && !workspaceContext.sdks.dart) {
 				showFluttersDartSdkActivationFailure();
 			} else {
 				showFlutterActivationFailure(commandToReRun);
@@ -59,7 +59,7 @@ export function handleMissingSdks(context: ExtensionContext, analytics: Analytic
 			showDartActivationFailure();
 		}
 		analytics.logSdkDetectionFailure();
-	}, 250);
+	}, 500);
 	return;
 }
 
