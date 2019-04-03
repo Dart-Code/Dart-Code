@@ -138,7 +138,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		dartCapabilities.version = sdks.dartVersion;
 		analytics.sdkVersion = sdks.dartVersion;
 		checkForStandardDartSdkUpdates(workspaceContext);
-		context.subscriptions.push(new StatusBarVersionTracker(sdks.projectType, sdks.dartVersion, sdks.flutterVersion, sdks.dartSdkIsFromFlutter));
+		context.subscriptions.push(new StatusBarVersionTracker(workspaceContext));
 	}
 
 	// Fire up the analyzer process.
