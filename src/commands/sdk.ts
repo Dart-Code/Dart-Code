@@ -18,7 +18,7 @@ import { createFlutterSampleInTempFolder } from "../sdk/flutter_samples";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
 import { flutterPath, pubPath, showDartActivationFailure, showFlutterActivationFailure } from "../sdk/utils";
 import * as util from "../utils";
-import { fsPath, ProjectType, Sdks } from "../utils";
+import { fsPath } from "../utils";
 import { sortBy } from "../utils/array";
 import { getChildFolders, hasPubspec } from "../utils/fs";
 import { log, logProcess } from "../utils/log";
@@ -30,15 +30,17 @@ let runPubGetDelayTimer: NodeJS.Timer | undefined;
 let lastSaveReason: vs.TextDocumentSaveReason;
 
 export class SdkCommands {
+	private readonly sdks: util.Sdks;
 	private flutterScreenshotPath?: string;
 	// A map of any in-progress commands so we can terminate them if we want to run another.
 	private runningCommands: { [workspaceUriAndCommand: string]: ChainedProcess | undefined; } = {};
 
-	constructor(context: vs.ExtensionContext, private sdks: Sdks, private pubGlobal: PubGlobal, private flutterCapabilities: FlutterCapabilities, private deviceManager: FlutterDeviceManager) {
-		const dartSdkManager = new DartSdkManager(sdks);
+	constructor(context: vs.ExtensionContext, private workspace: util.WorkspaceContext, private pubGlobal: PubGlobal, private flutterCapabilities: FlutterCapabilities, private deviceManager: FlutterDeviceManager) {
+		this.sdks = workspace.sdks;
+		const dartSdkManager = new DartSdkManager(this.sdks);
 		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => dartSdkManager.changeSdk()));
-		if (sdks.projectType === ProjectType.Flutter) {
-			const flutterSdkManager = new FlutterSdkManager(sdks);
+		if (workspace.hasAnyFlutterProjects) {
+			const flutterSdkManager = new FlutterSdkManager(workspace.sdks);
 			context.subscriptions.push(vs.commands.registerCommand("dart.changeFlutterSdk", () => flutterSdkManager.changeSdk()));
 		}
 		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", async (uri: string | Uri) => {
@@ -85,7 +87,7 @@ export class SdkCommands {
 				selection = vs.Uri.file(await this.getFolderToRunCommandIn(`Select the folder to run "flutter packages get" in`, selection));
 
 			// If we're working on the flutter repository, map this on to update-packages.
-			if (selection && fsPath(selection) === sdks.flutter) {
+			if (selection && fsPath(selection) === workspace.sdks.flutter) {
 				return this.runFlutter(["update-packages"], selection);
 			}
 
@@ -138,7 +140,7 @@ export class SdkCommands {
 			return vs.commands.executeCommand("dart.upgradePackages", selection);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", (selection) => {
-			if (!sdks.flutter) {
+			if (!workspace.sdks.flutter) {
 				showFlutterActivationFailure("flutter.doctor");
 				return;
 			}
@@ -148,7 +150,7 @@ export class SdkCommands {
 			return this.runFlutterInFolder(tempDir, ["doctor"], "flutter");
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.upgrade", async (selection) => {
-			if (!sdks.flutter) {
+			if (!workspace.sdks.flutter) {
 				showFlutterActivationFailure("flutter.upgrade");
 				return;
 			}
@@ -210,7 +212,7 @@ export class SdkCommands {
 
 			// If we're in Fuchsia, we don't want to `pub get` by default but we do want to allow
 			// it to be overridden, so only read the setting if it's been declared explicitly.
-			if (sdks.projectType === ProjectType.Fuchsia && !conf.runPubGetOnPubspecChangesIsConfiguredExplicitly)
+			if (workspace.isInFuchsiaTree && !conf.runPubGetOnPubspecChangesIsConfiguredExplicitly)
 				return;
 
 			// Cancel any existing delayed timer.
