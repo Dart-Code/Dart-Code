@@ -1,24 +1,26 @@
 import * as vs from "vscode";
 import { config } from "../config";
-import { isAnalyzable, ProjectType } from "../utils";
+import { isAnalyzable, WorkspaceContext } from "../utils";
 
 export class StatusBarVersionTracker implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
 
-	constructor(projectType: ProjectType, dartSdkVersion: string, flutterSdkVersion: string, isDartSdkFromFlutter: boolean) {
+	constructor(workspaceContext: WorkspaceContext) {
+		const dartIsFromFlutter = workspaceContext.sdks.dartSdkIsFromFlutter;
+
 		// Which switcher we show is based on whether we're in a Flutter project or not.
-		const switchSdkCommand = projectType === ProjectType.Flutter
+		const switchSdkCommand = workspaceContext.hasAnyFlutterProjects
 			? (config.flutterSdkPaths && config.flutterSdkPaths.length > 0 ? "dart.changeFlutterSdk" : null)
 			: (config.sdkPaths && config.sdkPaths.length > 0 ? "dart.changeSdk" : null);
 
 		// Render an approprite label for what we're calling this SDK.
-		const label = projectType === ProjectType.Flutter
+		const label = workspaceContext.hasAnyFlutterProjects
 			? "Flutter"
-			: (isDartSdkFromFlutter ? "Dart from Flutter" : "Dart");
+			: (dartIsFromFlutter ? "Dart from Flutter" : "Dart");
 
-		const versionLabel = (projectType === ProjectType.Flutter || isDartSdkFromFlutter)
-			? flutterSdkVersion
-			: dartSdkVersion;
+		const versionLabel = (workspaceContext.hasAnyFlutterProjects || dartIsFromFlutter)
+			? workspaceContext.sdks.flutterVersion
+			: workspaceContext.sdks.dartVersion;
 
 		if (versionLabel) {
 			this.addStatusBarItem(
