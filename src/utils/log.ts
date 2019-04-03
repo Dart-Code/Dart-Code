@@ -2,11 +2,9 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import * as vs from "vscode";
-import { Event, EventEmitter } from "vscode";
 import { config } from "../config";
-import { LogCategory, LogMessage, LogSeverity, platformEol } from "../debug/utils";
-import { getRandomInt, isDevExtension } from "../utils";
+import { IAmDisposable, LogCategory, LogEmitter, LogMessage, LogSeverity, platformEol } from "../debug/utils";
+import { getRandomInt } from "../utils";
 
 let extensionLogPath: string;
 export function getExtensionLogPath() {
@@ -23,8 +21,8 @@ export const userSelectableLogCategories: { [key: string]: LogCategory } = {
 	"Pub Run Test": LogCategory.PubTest,
 };
 
-const onLogEmitter: EventEmitter<LogMessage> = new EventEmitter<LogMessage>();
-export const onLog: Event<LogMessage> = onLogEmitter.event;
+const onLogEmitter = new LogEmitter();
+export const onLog = onLogEmitter.onLog;
 export function log(message: string, severity = LogSeverity.Info, category = LogCategory.General) {
 	onLogEmitter.fire(new LogMessage((message || "").toString(), severity, category));
 	// Warn/Error always go to General.
@@ -47,14 +45,16 @@ export function logError(error: any, category = LogCategory.General) {
 				error = `${error}`;
 		}
 	}
-	if (isDevExtension)
-		vs.window.showErrorMessage("DEBUG: " + error);
+	// TODO: Find a way to handle this better withotu vs depenency
+	// if (isDevExtension)
+	// 	vs.window.showErrorMessage("DEBUG: " + error);
 	console.error(error);
 	log(error, LogSeverity.Error, category);
 }
 export function logWarn(warning: string, category = LogCategory.General) {
-	if (isDevExtension)
-		vs.window.showWarningMessage("DEBUG: " + warning);
+	// TODO: Find a way to handle this better withotu vs depenency
+	// if (isDevExtension)
+	// 	vs.window.showWarningMessage("DEBUG: " + warning);
 	console.warn(warning);
 	log(`WARN: ${warning}`, LogSeverity.Warn, category);
 }
@@ -93,7 +93,7 @@ export function logTo(file: string, logCategories?: LogCategory[]): ({ dispose: 
 	let logStream: fs.WriteStream | undefined = fs.createWriteStream(file);
 	logStream.write(getLogHeader());
 	logStream.write(`${(new Date()).toDateString()} ${time()}Log file started${platformEol}`);
-	let logger: vs.Disposable | undefined = onLog((e) => {
+	let logger: IAmDisposable | undefined = onLog((e) => {
 		if (logCategories && logCategories.indexOf(e.category) === -1)
 			return;
 		if (!logStream)
