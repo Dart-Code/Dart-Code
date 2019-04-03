@@ -1,8 +1,8 @@
 import { Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { restartReasonManual } from "../constants";
-import { extractObservatoryPort } from "../utils/debug";
 import { logWarn } from "../utils/log";
+import { extractObservatoryPort } from "../utils/vscode/debug";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";

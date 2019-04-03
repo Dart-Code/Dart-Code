@@ -6,9 +6,9 @@ import { config } from "../config";
 import { LogCategory, LogSeverity } from "../debug/utils";
 import { PubGlobal } from "../pub/global";
 import { openInBrowser, Sdks } from "../utils";
-import { DartDebugSessionInformation, extractObservatoryPort } from "../utils/debug";
 import { log, logError, logProcess } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
+import { DartDebugSessionInformation, extractObservatoryPort } from "../utils/vscode/debug";
 import { pubPath } from "./utils";
 
 const devtools = "devtools";
