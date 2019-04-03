@@ -28,6 +28,11 @@ export function handleMissingSdks(context: ExtensionContext, analytics: Analytic
 	// This can be reverted and improved if Code adds support for providing activation context:
 	//     https://github.com/Microsoft/vscode/issues/44711
 	let commandToReRun: string;
+	// Note: This code only runs if we fail to find the Dart SDK, or fail to find the Flutter SDK
+	// and are in a Flutter project. In the case where we fail to find the Flutter SDK but are not
+	// in a Flutter project (eg. we ran Flutter Doctor without the extension activated) then
+	// this code will not be run as the extension will activate normally, and then the command-handling
+	// code for each command will detect the missing Flutter SDK and respond appropriately.
 	context.subscriptions.push(commands.registerCommand("flutter.createProject", (_) => {
 		workspaceContext.attemptedToUseFlutter = true;
 		commandToReRun = "flutter.createProject";
