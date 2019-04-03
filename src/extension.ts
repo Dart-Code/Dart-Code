@@ -122,7 +122,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	util.logTime();
 	const workspaceContext = initWorkspace();
 	const sdks = workspaceContext.sdks;
-	buildLogHeaders(sdks);
+	buildLogHeaders(workspaceContext);
 	util.logTime("findSdks");
 	analytics = new Analytics(workspaceContext);
 	if (!sdks.dart || (workspaceContext.hasAnyFlutterProjects && !sdks.flutter)) {
@@ -399,7 +399,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Prompt user for any special config we might want to set.
 	if (!isRestart)
-		showUserPrompts(extContext, sdks);
+		showUserPrompts(extContext, workspaceContext);
 
 	// Turn on all the commands.
 	setCommandVisiblity(true, workspaceContext);
@@ -459,7 +459,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	};
 }
 
-function buildLogHeaders(sdks: util.Sdks) {
+function buildLogHeaders(workspaceContext: util.WorkspaceContext) {
 	clearLogHeader();
 	addToLogHeader(() => `!! PLEASE REVIEW THIS LOG FOR SENSITIVE INFORMATION BEFORE SHARING !!`);
 	addToLogHeader(() => ``);
@@ -470,8 +470,9 @@ function buildLogHeaders(sdks: util.Sdks) {
 	});
 	addToLogHeader(() => `VS Code: ${vs.version}`);
 	addToLogHeader(() => `Platform: ${platformName}`);
-	addToLogHeader(() => `Workspace type: ${util.ProjectType[sdks.projectType]}`);
+	addToLogHeader(() => `Workspace type: ${workspaceContext.workspaceTypeDescription}`);
 	addToLogHeader(() => `Multi-root?: ${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1}`);
+	const sdks = workspaceContext.sdks;
 	addToLogHeader(() => `Dart SDK:\n    Loc: ${sdks.dart}\n    Ver: ${util.getSdkVersion(sdks.dart)}`);
 	addToLogHeader(() => `Flutter SDK:\n    Loc: ${sdks.flutter}\n    Ver: ${util.getSdkVersion(sdks.flutter)}`);
 	addToLogHeader(() => `HTTP_PROXY: ${process.env.HTTP_PROXY}`);
