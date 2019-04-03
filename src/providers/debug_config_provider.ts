@@ -19,6 +19,8 @@ import { FlutterCapabilities } from "../flutter/capabilities";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { Device } from "../flutter/flutter_types";
 import { locateBestProjectRoot } from "../project";
+import { PubGlobal } from "../pub/global";
+import { WebDev } from "../pub/webdev";
 import { dartVMPath, flutterPath, pubPath, pubSnapshotPath } from "../sdk/utils";
 import { checkProjectSupportsPubRunTest, fsPath, isDartFile, isFlutterProjectFolder, isFlutterWebProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, Sdks } from "../utils";
 import { log, logError, logWarn } from "../utils/log";
@@ -33,7 +35,7 @@ const isCI = !!process.env.CI;
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugServers: { [index: string]: net.Server } = {};
 
-	constructor(private sdks: Sdks, private analytics: Analytics, private deviceManager: FlutterDeviceManager, private flutterCapabilities: FlutterCapabilities) { }
+	constructor(private sdks: Sdks, private analytics: Analytics, private pubGlobal: PubGlobal, private deviceManager: FlutterDeviceManager, private flutterCapabilities: FlutterCapabilities) { }
 
 	public provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
 		const isFlutter = isFlutterWorkspaceFolder(folder);
@@ -213,10 +215,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 		}
 
-		// Ensure we have a device
+		// Ensure we have a device if required.
 		let currentDevice = this.deviceManager && this.deviceManager.currentDevice;
 		if (isStandardFlutter && !isTest && !currentDevice && this.deviceManager && debugConfig.deviceId !== "flutter-tester") {
-			// Fetch a list of emulators
+			// Fetch a list of emulators.
 			if (!await this.deviceManager.promptForAndLaunchEmulator(true)) {
 				logWarn("Unable to launch due to no active device");
 				window.showInformationMessage("Cannot launch without an active device");
@@ -224,6 +226,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 			// Otherwise try to read again.
 			currentDevice = this.deviceManager && this.deviceManager.currentDevice;
+		}
+
+		// Ensure we have any require dependencies.
+		if (!(await this.installDependencies(debugType, this.pubGlobal))) {
+			return undefined;
 		}
 
 		// TODO: This cast feels nasty?
@@ -307,6 +314,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, true);
 
 		return debugConfig;
+	}
+
+	private installDependencies(debugType: DebuggerType, pubGlobal: PubGlobal) {
+		return debugType === DebuggerType.FlutterWeb
+			? new WebDev(pubGlobal).promptToInstallIfRequired()
+			: true;
 	}
 
 	private guessBestEntryPoint(openFile: string | undefined, folder: string | undefined): string | undefined {

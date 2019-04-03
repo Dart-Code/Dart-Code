@@ -279,8 +279,10 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	util.logTime("All other stuff before debugger..");
 
+	const pubGlobal = new PubGlobal(extContext, sdks);
+
 	// Set up debug stuff.
-	const debugProvider = new DebugConfigProvider(sdks, analytics, flutterDaemon && flutterDaemon.deviceManager, flutterCapabilities);
+	const debugProvider = new DebugConfigProvider(sdks, analytics, pubGlobal, flutterDaemon && flutterDaemon.deviceManager, flutterCapabilities);
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
 	context.subscriptions.push(debugProvider);
 
@@ -337,7 +339,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Register additional commands.
 	const analyzerCommands = new AnalyzerCommands(context, analyzer);
-	const pubGlobal = new PubGlobal(extContext, sdks);
 	const sdkCommands = new SdkCommands(context, workspaceContext, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
 	const debugCommands = new DebugCommands(extContext, workspaceContext, analytics, pubGlobal);
 
