@@ -164,7 +164,6 @@ export function initWorkspace(): WorkspaceContext {
 			dart: config.sdkPath,
 			dartSdkIsFromFlutter: false,
 			flutter: undefined,
-			fuchsia: undefined,
 			projectType: ProjectType.Dart,
 		});
 	}
@@ -231,7 +230,6 @@ export function initWorkspace(): WorkspaceContext {
 		dartVersion: getSdkVersion(dartSdkPath),
 		flutter: flutterSdkPath,
 		flutterVersion: getSdkVersion(flutterSdkPath),
-		fuchsia: fuchsiaRoot,
 		projectType: fuchsiaRoot && hasFuchsiaProjectThatIsNotVanillaFlutter
 			? ProjectType.Fuchsia
 			: (flutterProject ? ProjectType.Flutter : ProjectType.Dart),

@@ -314,7 +314,6 @@ export class Sdks {
 	public dartVersion?: string;
 	public flutter?: string;
 	public flutterVersion?: string;
-	public fuchsia?: string;
 	public projectType = ProjectType.Dart;
 	public dartSdkIsFromFlutter: boolean;
 }
