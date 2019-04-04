@@ -200,6 +200,14 @@ export function initWorkspace(): WorkspaceContext {
 
 		const isSomethingFlutter = refsFlutter || refsFlutterWeb || hasFlutterProjectTriggerFile || isFlutterRepo;
 
+		if (isSomethingFlutter) {
+			log(`Found Flutter project at ${folder}:
+			Mobile? ${refsFlutter}
+			Web? ${refsFlutterWeb}
+			Create Trigger? ${hasFlutterProjectTriggerFile}
+			Flutter Repo? ${isFlutterRepo}`);
+		}
+
 		// Track the first Flutter Project so we can try finding the Flutter SDK from its packages file.
 		firstFlutterMobileProject = firstFlutterMobileProject || (isSomethingFlutter ? folder : undefined);
 
@@ -215,8 +223,6 @@ export function initWorkspace(): WorkspaceContext {
 		if (hasFuchsiaProjectThatIsNotVanillaFlutter)
 			log(`Found Fuchsia project that is not vanilla Flutter`);
 	}
-	if (firstFlutterMobileProject)
-		log(`Found Flutter project at ${firstFlutterMobileProject}`);
 
 	const flutterSdkSearchPaths = [
 		config.flutterSdkPath,
