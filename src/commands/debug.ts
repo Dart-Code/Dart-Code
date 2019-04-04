@@ -41,7 +41,7 @@ export class DebugCommands {
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
 			const session = debugSessions.find((ds) => ds.session.id === e.session.id);
 			if (!session) {
-				logWarn(`Did not find session ${e.session.id} in these ${debugSessions.length} sessions:\n${debugSessions.map((ds) => `  ${ds.session.id}`).join("\n")}`);
+				logWarn(`Did not find session ${e.session.id} to handle ${e.event}. There were ${debugSessions.length} sessions:\n${debugSessions.map((ds) => `  ${ds.session.id}`).join("\n")}`);
 				return;
 			}
 			this.flutterExtensions.handleDebugEvent(e);
