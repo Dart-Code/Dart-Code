@@ -57,8 +57,8 @@ import { PubGlobal } from "./pub/global";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
 import { DartCapabilities } from "./sdk/capabilities";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
-import { checkForSdkUpdates } from "./sdk/update_check";
-import { analyzerSnapshotPath, dartVMPath, findSdks, flutterPath, handleMissingSdks } from "./sdk/utils";
+import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
+import { analyzerSnapshotPath, dartVMPath, flutterPath, handleMissingSdks, initWorkspace } from "./sdk/utils";
 import { DartUriHandler } from "./uri_handlers/uri_handler";
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
@@ -71,6 +71,8 @@ const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
 const HTML_MODE: vs.DocumentFilter = { language: "html", scheme: "file" };
 
 const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
+// TODO: Define what this means better. Some commands a general Flutter (eg. Hot
+// Reload) and some are more specific (eg. Attach).
 const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
 export const FLUTTER_SUPPORTS_ATTACH = "dart-code:flutterSupportsAttach";
 const DART_PLATFORM_NAME = "dart-code:platformName";
@@ -118,13 +120,14 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	extensionPath = context.extensionPath;
 	const extensionStartTime = new Date();
 	util.logTime();
-	const sdks = findSdks();
-	buildLogHeaders(sdks);
+	const workspaceContext = initWorkspace();
+	const sdks = workspaceContext.sdks;
+	buildLogHeaders(workspaceContext);
 	util.logTime("findSdks");
-	analytics = new Analytics(sdks);
-	if (!sdks.dart || (sdks.projectType === util.ProjectType.Flutter && !sdks.flutter)) {
+	analytics = new Analytics(workspaceContext);
+	if (!sdks.dart || (workspaceContext.hasAnyFlutterProjects && !sdks.flutter)) {
 		// Don't set anything else up; we can't work like this!
-		return handleMissingSdks(context, analytics, sdks);
+		return handleMissingSdks(context, analytics, workspaceContext);
 	}
 
 	if (sdks.flutterVersion)
@@ -134,8 +137,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	if (sdks.dartVersion) {
 		dartCapabilities.version = sdks.dartVersion;
 		analytics.sdkVersion = sdks.dartVersion;
-		checkForSdkUpdates(sdks, sdks.dartVersion);
-		context.subscriptions.push(new StatusBarVersionTracker(sdks.projectType, sdks.dartVersion, sdks.flutterVersion, sdks.dartSdkIsFromFlutter));
+		checkForStandardDartSdkUpdates(workspaceContext);
+		context.subscriptions.push(new StatusBarVersionTracker(workspaceContext));
 	}
 
 	// Fire up the analyzer process.
@@ -241,7 +244,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => util.isFlutterWorkspaceFolder(vs.workspace.getWorkspaceFolder(uri)))));
 
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE.language, new DartLanguageConfiguration()));
-	const statusReporter = new AnalyzerStatusReporter(analyzer, sdks, analytics);
+	const statusReporter = new AnalyzerStatusReporter(analyzer, workspaceContext, analytics);
 
 	// Set up diagnostics.
 	const diagnostics = vs.languages.createDiagnosticCollection("dart");
@@ -263,7 +266,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(new FileChangeHandler(analyzer));
 
 	// Fire up Flutter daemon if required.
-	if (sdks.projectType === util.ProjectType.Flutter) {
+	if (workspaceContext.hasAnyFlutterMobileProjects) {
 		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, flutterPath), sdks.flutter);
 		context.subscriptions.push(flutterDaemon);
 		setUpDaemonMessageHandler(context, flutterDaemon);
@@ -324,8 +327,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// Register additional commands.
 	const analyzerCommands = new AnalyzerCommands(context, analyzer);
 	const pubGlobal = new PubGlobal(extContext, sdks);
-	const sdkCommands = new SdkCommands(context, sdks, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
-	const debug = new DebugCommands(extContext, sdks, analytics, pubGlobal);
+	const sdkCommands = new SdkCommands(context, workspaceContext, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
+	const debug = new DebugCommands(extContext, workspaceContext, analytics, pubGlobal);
 
 	// Register URI handler.
 	context.subscriptions.push(vs.window.registerUriHandler(new DartUriHandler(flutterCapabilities)));
@@ -367,7 +370,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		}),
 	);
 
-	if (sdks.projectType !== util.ProjectType.Dart && config.previewHotReloadCoverageMarkers) {
+	if (workspaceContext.hasAnyFlutterProjects && config.previewHotReloadCoverageMarkers) {
 		context.subscriptions.push(new HotReloadCoverageDecorations(debug));
 	}
 
@@ -396,16 +399,16 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Prompt user for any special config we might want to set.
 	if (!isRestart)
-		showUserPrompts(extContext, sdks);
+		showUserPrompts(extContext, workspaceContext);
 
 	// Turn on all the commands.
-	setCommandVisiblity(true, sdks.projectType);
+	setCommandVisiblity(true, workspaceContext);
 	vs.commands.executeCommand("setContext", DART_PLATFORM_NAME, platformName);
 
 	// Prompt for pub get if required
 	function checkForPackages() {
 		// Don't prompt for package updates in the Fuchsia tree.
-		if (sdks.projectType === util.ProjectType.Fuchsia)
+		if (workspaceContext.isInFuchsiaTree) // TODO: This should be tested per-project.
 			return;
 		const folders = util.getDartWorkspaceFolders();
 		const foldersRequiringPackageGet = folders.filter((ws: WorkspaceFolder) => config.for(ws.uri).promptToGetPackages).filter(isPubGetProbablyRequired);
@@ -417,10 +420,10 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		checkForPackages();
 
 	// Begin activating dependant packages.
-	if (sdks.projectType === util.ProjectType.Flutter || sdks.projectType === util.ProjectType.Fuchsia) {
+	if (workspaceContext.shouldLoadFlutterExtension) {
 		const flutterExtension = vs.extensions.getExtension(flutterExtensionIdentifier);
 		if (flutterExtension) {
-			log(`Activating Flutter extension for ${util.ProjectType[sdks.projectType]} project...`);
+			log(`Activating Flutter extension for ${workspaceContext.workspaceTypeDescription} project...`);
 			flutterExtension.activate();
 		}
 	}
@@ -450,13 +453,13 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			reanalyze,
 			referenceProvider,
 			renameProvider,
-			sdks,
 			testTreeProvider,
+			workspaceContext,
 		} as InternalExtensionApi,
 	};
 }
 
-function buildLogHeaders(sdks: util.Sdks) {
+function buildLogHeaders(workspaceContext: util.WorkspaceContext) {
 	clearLogHeader();
 	addToLogHeader(() => `!! PLEASE REVIEW THIS LOG FOR SENSITIVE INFORMATION BEFORE SHARING !!`);
 	addToLogHeader(() => ``);
@@ -467,8 +470,9 @@ function buildLogHeaders(sdks: util.Sdks) {
 	});
 	addToLogHeader(() => `VS Code: ${vs.version}`);
 	addToLogHeader(() => `Platform: ${platformName}`);
-	addToLogHeader(() => `Workspace type: ${util.ProjectType[sdks.projectType]}`);
+	addToLogHeader(() => `Workspace type: ${workspaceContext.workspaceTypeDescription}`);
 	addToLogHeader(() => `Multi-root?: ${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1}`);
+	const sdks = workspaceContext.sdks;
 	addToLogHeader(() => `Dart SDK:\n    Loc: ${sdks.dart}\n    Ver: ${util.getSdkVersion(sdks.dart)}`);
 	addToLogHeader(() => `Flutter SDK:\n    Loc: ${sdks.flutter}\n    Ver: ${util.getSdkVersion(sdks.flutter)}`);
 	addToLogHeader(() => `HTTP_PROXY: ${process.env.HTTP_PROXY}`);
@@ -582,9 +586,10 @@ export async function deactivate(isRestart: boolean = false): Promise<void> {
 	}
 }
 
-function setCommandVisiblity(enable: boolean, projectType: util.ProjectType) {
+function setCommandVisiblity(enable: boolean, workspaceContext: util.WorkspaceContext) {
 	vs.commands.executeCommand("setContext", DART_PROJECT_LOADED, enable);
-	vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && projectType === util.ProjectType.Flutter);
+	// TODO: Make this more specific. Maybe the one above?
+	vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && workspaceContext.hasAnyFlutterProjects);
 }
 
 export interface InternalExtensionApi {
@@ -602,6 +607,6 @@ export interface InternalExtensionApi {
 	reanalyze: () => void;
 	referenceProvider: DartReferenceProvider;
 	renameProvider: DartRenameProvider;
-	sdks: util.Sdks;
 	testTreeProvider: TestResultsProvider;
+	workspaceContext: util.WorkspaceContext;
 }

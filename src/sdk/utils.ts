@@ -5,7 +5,7 @@ import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
 import { flatMap, isWin, platformName } from "../debug/utils";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, getSdkVersion, openExtensionLogFile, openInBrowser, ProjectType, reloadExtension, resolvePaths, Sdks, showLogAction } from "../utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, getSdkVersion, openExtensionLogFile, openInBrowser, ProjectType, reloadExtension, resolvePaths, showLogAction, WorkspaceContext } from "../utils";
 import { getChildFolders, hasPubspec } from "../utils/fs";
 import { log } from "../utils/log";
 
@@ -22,35 +22,41 @@ export const androidStudioPath = "bin/" + androidStudioExecutableName;
 export const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
 export const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
 
-export function handleMissingSdks(context: ExtensionContext, analytics: Analytics, sdks: Sdks) {
+export function handleMissingSdks(context: ExtensionContext, analytics: Analytics, workspaceContext: WorkspaceContext) {
 	// HACK: In order to provide a more useful message if the user was trying to fun flutter.createProject
 	// we need to hook the command and force the project type to Flutter to get the correct error message.
 	// This can be reverted and improved if Code adds support for providing activation context:
 	//     https://github.com/Microsoft/vscode/issues/44711
 	let commandToReRun: string;
+	let attemptedToUseFlutter: boolean = false;
+	// Note: This code only runs if we fail to find the Dart SDK, or fail to find the Flutter SDK
+	// and are in a Flutter project. In the case where we fail to find the Flutter SDK but are not
+	// in a Flutter project (eg. we ran Flutter Doctor without the extension activated) then
+	// this code will not be run as the extension will activate normally, and then the command-handling
+	// code for each command will detect the missing Flutter SDK and respond appropriately.
 	context.subscriptions.push(commands.registerCommand("flutter.createProject", (_) => {
-		sdks.projectType = ProjectType.Flutter;
+		attemptedToUseFlutter = true;
 		commandToReRun = "flutter.createProject";
 	}));
 	context.subscriptions.push(commands.registerCommand("dart.createProject", (_) => {
 		commandToReRun = "dart.createProject";
 	}));
 	context.subscriptions.push(commands.registerCommand("_dart.flutter.createSampleProject", (_) => {
-		sdks.projectType = ProjectType.Flutter;
+		attemptedToUseFlutter = true;
 		commandToReRun = "_dart.flutter.createSampleProject";
 	}));
 	context.subscriptions.push(commands.registerCommand("flutter.doctor", (_) => {
-		sdks.projectType = ProjectType.Flutter;
+		attemptedToUseFlutter = true;
 		commandToReRun = "flutter.doctor";
 	}));
 	context.subscriptions.push(commands.registerCommand("flutter.upgrade", (_) => {
-		sdks.projectType = ProjectType.Flutter;
+		attemptedToUseFlutter = true;
 		commandToReRun = "flutter.upgrade";
 	}));
 	// Wait a while before showing the error to allow the code above to have run.
 	setTimeout(() => {
-		if (sdks.projectType === ProjectType.Flutter) {
-			if (sdks.flutter && !sdks.dart) {
+		if (attemptedToUseFlutter) {
+			if (workspaceContext.sdks.flutter && !workspaceContext.sdks.dart) {
 				showFluttersDartSdkActivationFailure();
 			} else {
 				showFlutterActivationFailure(commandToReRun);
@@ -59,7 +65,7 @@ export function handleMissingSdks(context: ExtensionContext, analytics: Analytic
 			showDartActivationFailure();
 		}
 		analytics.logSdkDetectionFailure();
-	}, 250);
+	}, 500);
 	return;
 }
 
@@ -135,7 +141,7 @@ export async function showSdkActivationFailure(
 	}
 }
 
-export function findSdks(): Sdks {
+export function initWorkspace(): WorkspaceContext {
 	log("Searching for SDKs...");
 	const folders = getDartWorkspaceFolders()
 		.map((w) => fsPath(w.uri));
@@ -151,13 +157,13 @@ export function findSdks(): Sdks {
 	// of the other SDKs will work remotely. Also, there is no need to validate the sdk path,
 	// since that file will exist on a remote machine.
 	if (config.analyzerSshHost) {
-		return {
+		return new WorkspaceContext({
 			dart: config.sdkPath,
 			dartSdkIsFromFlutter: false,
 			flutter: null,
 			fuchsia: null,
 			projectType: ProjectType.Dart,
-		};
+		});
 	}
 
 	let fuchsiaRoot: string | undefined;
@@ -214,7 +220,7 @@ export function findSdks(): Sdks {
 
 	const dartSdkPath = findDartSdk(dartSdkSearchPaths);
 
-	return {
+	return new WorkspaceContext({
 		dart: dartSdkPath,
 		dartSdkIsFromFlutter: dartSdkPath && isDartSdkFromFlutter(dartSdkPath),
 		dartVersion: getSdkVersion(dartSdkPath),
@@ -224,7 +230,7 @@ export function findSdks(): Sdks {
 		projectType: fuchsiaRoot && hasFuchsiaProjectThatIsNotVanillaFlutter
 			? ProjectType.Fuchsia
 			: (flutterProject ? ProjectType.Flutter : ProjectType.Dart),
-	};
+	});
 }
 
 export function referencesFlutterSdk(folder?: string): boolean {

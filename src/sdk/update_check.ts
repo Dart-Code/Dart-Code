@@ -1,19 +1,20 @@
 import { window } from "vscode";
 import { config } from "../config";
-import { getLatestSdkVersion, openInBrowser, ProjectType, Sdks, versionIsAtLeast } from "../utils";
+import { getLatestSdkVersion, openInBrowser, versionIsAtLeast, WorkspaceContext } from "../utils";
 import { logError } from "../utils/log";
 import { DART_DOWNLOAD_URL } from "./utils";
 
-export async function checkForSdkUpdates(sdks: Sdks, dartSdkVersion: string): Promise<void> {
-	if (!config.checkForSdkUpdates || sdks.projectType !== ProjectType.Dart)
+export async function checkForStandardDartSdkUpdates(workspaceContext: WorkspaceContext): Promise<void> {
+	if (!config.checkForSdkUpdates || !workspaceContext.hasOnlyDartProjects)
 		return;
 
 	// Someties people use the Dart SDK inside Flutter for non-Flutter projects. Since we'll never want
 	// to do SDK update checks in that situation (esp. as it's VERSION file is bad!) we should skip in
 	// that case.
-	if (sdks.dartSdkIsFromFlutter)
+	if (workspaceContext.sdks.dartSdkIsFromFlutter)
 		return;
 
+	const dartSdkVersion = workspaceContext.sdks.dartVersion;
 	try {
 		const version = await getLatestSdkVersion();
 		if (versionIsAtLeast(dartSdkVersion, version))

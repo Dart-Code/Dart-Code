@@ -24,7 +24,7 @@ describe("extension", () => {
 	it("found the Dart and Flutter SDK", async () => {
 		await activateWithoutAnalysis();
 		assert.ok(extApi);
-		const sdks: Sdks = extApi.sdks;
+		const sdks: Sdks = extApi.workspaceContext.sdks;
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.ok(sdks.flutter);
@@ -34,7 +34,7 @@ describe("extension", () => {
 	it("used Flutter's version of the Dart SDK", async () => {
 		await activateWithoutAnalysis();
 		assert.ok(extApi);
-		const sdks: Sdks = extApi.sdks;
+		const sdks: Sdks = extApi.workspaceContext.sdks;
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.equal(sdks.dartSdkIsFromFlutter, true);
