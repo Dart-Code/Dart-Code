@@ -76,19 +76,7 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.FlutterRun)));
 		this.flutter = this.spawnRunDaemon(isAttach, args, logger);
-		this.flutter.registerForUnhandledMessages((msg) => {
-			if (msg.indexOf(flutterExceptionStartBannerPrefix) !== -1) {
-				// Change before logging.
-				this.outputCategory = "stderr";
-				this.logToUser(msg, this.outputCategory);
-			} else if (msg.indexOf(flutterExceptionEndBannerPrefix) !== -1) {
-				// Log before changing back.
-				this.logToUser(msg, this.outputCategory);
-				this.outputCategory = "stdout";
-			} else {
-				this.logToUser(msg, this.outputCategory);
-			}
-		});
+		this.flutter.registerForUnhandledMessages((msg) => this.handleLogOutput(msg));
 
 		// Set up subscriptions.
 		this.flutter.registerForDaemonConnect((n) => this.additionalPidsToTerminate.push(n.pid));
@@ -110,12 +98,24 @@ export class FlutterDebugSession extends DartDebugSession {
 			const category = msg.level === "error" ? "stderr" : "stdout";
 			this.logToUser(`${msg.message.trimRight()}\n`, category);
 		});
-		this.flutter.registerForAppLogMessage((msg) => {
-			const category = msg.error ? "stderr" : "stdout";
-			this.logToUser(`${msg.log.trimRight()}\n`, category);
-		});
+		this.flutter.registerForAppLogMessage((msg) => this.handleLogOutput(msg.log, msg.error));
 
 		return this.flutter.process;
+	}
+
+	private handleLogOutput(msg: string, forceErrorCategory = false) {
+		msg = `${msg.trimRight()}\n`;
+		if (msg.indexOf(flutterExceptionStartBannerPrefix) !== -1) {
+			// Change before logging.
+			this.outputCategory = "stderr";
+			this.logToUser(msg, this.outputCategory);
+		} else if (msg.indexOf(flutterExceptionEndBannerPrefix) !== -1) {
+			// Log before changing back.
+			this.logToUser(msg, this.outputCategory);
+			this.outputCategory = "stdout";
+		} else {
+			this.logToUser(msg, forceErrorCategory ? "stderr" : this.outputCategory);
+		}
 	}
 
 	protected spawnRunDaemon(isAttach: boolean, args: FlutterLaunchRequestArguments, logger: (message: string, severity: LogSeverity) => void): FlutterRunBase {
