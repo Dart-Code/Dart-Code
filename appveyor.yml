@@ -123,5 +123,6 @@ on_failure:
   - ps: $env:APPVEYOR_RESULT = 1
 
 on_finish:
-  - IF NOT DEFINED APPVEYOR_PULL_REQUEST_NUMBER dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup="true" --local-dir=".dart_code_test_logs" --upload-dir="logs/%APPVEYOR_REPO_BRANCH%/%APPVEYOR_REPO_COMMIT%/win" --acl=public_read --default_text_charset=utf-8
+  - IF NOT EXIST ".test_results" mkdir ".test_results"
   - IF NOT DEFINED APPVEYOR_PULL_REQUEST_NUMBER dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup="true" --local-dir=".test_results" --upload-dir="%APPVEYOR_REPO_BRANCH%/%APPVEYOR_REPO_COMMIT%/win" --acl=public_read --default_text_charset=utf-8
+  - IF NOT DEFINED APPVEYOR_PULL_REQUEST_NUMBER dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup="true" --local-dir=".dart_code_test_logs" --upload-dir="logs/%APPVEYOR_REPO_BRANCH%/%APPVEYOR_REPO_COMMIT%/win" --acl=public_read --default_text_charset=utf-8
