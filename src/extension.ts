@@ -121,9 +121,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const extensionStartTime = new Date();
 	util.logTime();
 	const workspaceContext = initWorkspace();
+	util.logTime("initWorkspace");
 	const sdks = workspaceContext.sdks;
 	buildLogHeaders(workspaceContext);
-	util.logTime("findSdks");
 	analytics = new Analytics(workspaceContext);
 	if (!sdks.dart || (workspaceContext.hasAnyFlutterProjects && !sdks.flutter)) {
 		// Don't set anything else up; we can't work like this!
@@ -420,7 +420,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// Prompt for pub get if required
 	function checkForPackages() {
 		// Don't prompt for package updates in the Fuchsia tree.
-		if (workspaceContext.isInFuchsiaTree) // TODO: This should be tested per-project.
+		if (workspaceContext.hasProjectsInFuchsiaTree) // TODO: This should be tested per-project.
 			return;
 		const folders = util.getDartWorkspaceFolders();
 		const foldersRequiringPackageGet = folders.filter((ws: vs.WorkspaceFolder) => config.for(ws.uri).promptToGetPackages).filter(isPubGetProbablyRequired);

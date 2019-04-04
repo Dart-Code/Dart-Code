@@ -221,7 +221,7 @@ export class SdkCommands {
 			// If we're in Fuchsia, we don't want to `pub get` by default but we do want to allow
 			// it to be overridden, so only read the setting if it's been declared explicitly.
 			// TODO: This should be handled per-project for a multi-root workspace.
-			if (workspace.isInFuchsiaTree && !conf.runPubGetOnPubspecChangesIsConfiguredExplicitly)
+			if (workspace.hasProjectsInFuchsiaTree && !conf.runPubGetOnPubspecChangesIsConfiguredExplicitly)
 				return;
 
 			// Cancel any existing delayed timer.

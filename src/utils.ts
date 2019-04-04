@@ -286,18 +286,20 @@ export function openInBrowser(url: string) {
 
 export class WorkspaceContext {
 	// TODO: Move things from Sdks to this class that aren't related to the SDKs.
-	constructor(public readonly sdks: Sdks) { }
+	constructor(
+		public readonly sdks: Sdks,
+		public readonly hasAnyFlutterMobileProjects: boolean,
+		public readonly hasAnyFlutterWebProjects: boolean,
+		public readonly hasProjectsInFuchsiaTree: boolean,
+	) { }
 
-	get hasOnlyDartProjects() { return this.sdks.projectType === ProjectType.Dart; }
-	get hasAnyFlutterMobileProjects() { return this.sdks.projectType === ProjectType.Flutter; }
-	get hasAnyFlutterProjects() { return this.sdks.projectType !== ProjectType.Dart; }
-	get shouldLoadFlutterExtension() { return this.sdks.projectType === ProjectType.Flutter || this.sdks.projectType === ProjectType.Fuchsia; }
-	// TODO: Remove this flag - it's possible to have multiple projects open, only some of which are in the Fuchsia tree.
-	get isInFuchsiaTree() { return this.sdks.projectType === ProjectType.Fuchsia; }
+	get hasOnlyDartProjects() { return !this.hasAnyFlutterProjects && !this.hasProjectsInFuchsiaTree; }
+	get hasAnyFlutterProjects() { return this.hasAnyFlutterMobileProjects || this.hasAnyFlutterWebProjects; }
+	get shouldLoadFlutterExtension() { return this.hasAnyFlutterProjects; }
 
 	/// Used only for display (for ex stats), not behaviour.
 	get workspaceTypeDescription(): string {
-		if (this.isInFuchsiaTree)
+		if (this.hasProjectsInFuchsiaTree)
 			return "Fuchsia";
 		else if (this.hasAnyFlutterProjects)
 			return "Flutter";
@@ -314,14 +316,7 @@ export class Sdks {
 	public dartVersion?: string;
 	public flutter?: string;
 	public flutterVersion?: string;
-	public projectType = ProjectType.Dart;
 	public dartSdkIsFromFlutter: boolean;
-}
-
-export enum ProjectType {
-	Dart,
-	Flutter,
-	Fuchsia,
 }
 
 export async function reloadExtension(prompt?: string, buttonText?: string, offerLogFile = false) {

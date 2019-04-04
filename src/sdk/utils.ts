@@ -5,7 +5,7 @@ import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
 import { flatMap, isWin, platformName } from "../debug/utils";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, getSdkVersion, openExtensionLogFile, openInBrowser, ProjectType, reloadExtension, resolvePaths, showLogAction, WorkspaceContext } from "../utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, getSdkVersion, openExtensionLogFile, openInBrowser, reloadExtension, resolvePaths, showLogAction, WorkspaceContext } from "../utils";
 import { getChildFolders, hasPubspec } from "../utils/fs";
 import { log } from "../utils/log";
 
@@ -164,29 +164,50 @@ export function initWorkspace(): WorkspaceContext {
 			dart: config.sdkPath,
 			dartSdkIsFromFlutter: false,
 			flutter: undefined,
-			projectType: ProjectType.Dart,
-		});
+		}, false, false, false);
 	}
 
+	// TODO: This has gotten very messy and needs tidying up...
+
 	let fuchsiaRoot: string | undefined;
-	let flutterProject: string | undefined;
+	let firstFlutterMobileProject: string | undefined;
+	let hasAnyFlutterProject: boolean = false;
+	let hasAnyFlutterMobileProject: boolean = false;
+	let hasAnyFlutterWebProject: boolean = false;
+
+	// Search for a Fuchsia root.
 	folders.forEach((folder) => fuchsiaRoot = fuchsiaRoot || findFuchsiaRoot(folder));
+
 	// Keep track of whether we have Fuchsia projects that are not "vanilla Flutter" because
 	// if not we will set project type to Flutter to allow daemon to run (and debugging support).
 	let hasFuchsiaProjectThatIsNotVanillaFlutter = false;
-	// If the folder doesn't directly contain a pubspec.yaml then we'll look at the first-level of
-	// children, as the user may have opened a folder that contains multiple projects (including a
-	// Flutter project) and we want to be sure to detect that.
-	const nestedProjectFolders = flatMap(folders, getChildFolders);
-	folders.concat(nestedProjectFolders).forEach((folder) => {
-		flutterProject = flutterProject
-			|| (referencesFlutterSdk(folder) ? folder : undefined)
-			|| (referencesFlutterWeb(folder) ? folder : undefined)
-			|| (fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE)) ? folder : undefined)
-			|| (fs.existsSync(path.join(folder, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE)) ? folder : undefined)
-			// Special case to detect the Flutter repo root, so we always consider it a Flutter project and will use the local SDK
-			|| (fs.existsSync(path.join(folder, "bin/flutter")) && fs.existsSync(path.join(folder, "bin/cache/dart-sdk")) ? folder : undefined);
-		hasFuchsiaProjectThatIsNotVanillaFlutter = hasFuchsiaProjectThatIsNotVanillaFlutter || (hasPubspec(folder) && !referencesFlutterSdk(folder));
+
+	// Collect a list of all workspace folders and their immediate children, since it's common
+	// to open folders that contain multiple projects.
+	const childFolders = flatMap(folders, getChildFolders);
+	const allPossibleProjectFolders = folders.concat(childFolders);
+
+	// Scan through them all to figure out what type of projects we have.
+	allPossibleProjectFolders.forEach((folder) => {
+		const refsFlutter = referencesFlutterSdk(folder);
+		const refsFlutterWeb = referencesFlutterWeb(folder);
+		const hasFlutterProjectTriggerFile =
+			fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE))
+			|| fs.existsSync(path.join(folder, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE));
+
+		// Special case to detect the Flutter repo root, so we always consider it a Flutter project and will use the local SDK
+		const isFlutterRepo = fs.existsSync(path.join(folder, "bin/flutter")) && fs.existsSync(path.join(folder, "bin/cache/dart-sdk"));
+
+		const isSomethingFlutter = refsFlutter || refsFlutterWeb || hasFlutterProjectTriggerFile || isFlutterRepo;
+
+		// Track the first Flutter Project so we can try finding the Flutter SDK from its packages file.
+		firstFlutterMobileProject = firstFlutterMobileProject || (isSomethingFlutter ? folder : undefined);
+
+		// Set some flags we'll use to construct the workspace, so we know what things we need to light up.
+		hasAnyFlutterProject = hasAnyFlutterProject || isSomethingFlutter;
+		hasAnyFlutterMobileProject = hasAnyFlutterMobileProject || (refsFlutter && !refsFlutterWeb);
+		hasAnyFlutterWebProject = hasAnyFlutterWebProject || refsFlutterWeb;
+		hasFuchsiaProjectThatIsNotVanillaFlutter = hasFuchsiaProjectThatIsNotVanillaFlutter || (hasPubspec(folder) && !refsFlutter && !refsFlutterWeb);
 	});
 
 	if (fuchsiaRoot) {
@@ -194,15 +215,15 @@ export function initWorkspace(): WorkspaceContext {
 		if (hasFuchsiaProjectThatIsNotVanillaFlutter)
 			log(`Found Fuchsia project that is not vanilla Flutter`);
 	}
-	if (flutterProject)
-		log(`Found Flutter project at ${flutterProject}`);
+	if (firstFlutterMobileProject)
+		log(`Found Flutter project at ${firstFlutterMobileProject}`);
 
 	const flutterSdkSearchPaths = [
 		config.flutterSdkPath,
 		fuchsiaRoot && path.join(fuchsiaRoot, "lib/flutter"),
 		fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter"),
-		flutterProject,
-		flutterProject && extractFlutterSdkPathFromPackagesFile(path.join(flutterProject, ".packages")),
+		firstFlutterMobileProject,
+		firstFlutterMobileProject && extractFlutterSdkPathFromPackagesFile(path.join(firstFlutterMobileProject, ".packages")),
 		process.env.FLUTTER_ROOT,
 	].concat(paths);
 
@@ -213,7 +234,7 @@ export function initWorkspace(): WorkspaceContext {
 		fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart/tools/sdks/dart-sdk"),
 		fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart/tools/sdks", platformName, "dart-sdk"),
 		fuchsiaRoot && path.join(fuchsiaRoot, "dart/tools/sdks", platformName, "dart-sdk"),
-		flutterProject && flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk"),
+		firstFlutterMobileProject && flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk"),
 		config.sdkPath,
 	].concat(paths)
 		// The above array only has the Flutter SDK	in the search path if we KNOW it's a flutter
@@ -224,16 +245,18 @@ export function initWorkspace(): WorkspaceContext {
 
 	const dartSdkPath = findDartSdk(dartSdkSearchPaths);
 
-	return new WorkspaceContext({
-		dart: dartSdkPath,
-		dartSdkIsFromFlutter: dartSdkPath && isDartSdkFromFlutter(dartSdkPath),
-		dartVersion: getSdkVersion(dartSdkPath),
-		flutter: flutterSdkPath,
-		flutterVersion: getSdkVersion(flutterSdkPath),
-		projectType: fuchsiaRoot && hasFuchsiaProjectThatIsNotVanillaFlutter
-			? ProjectType.Fuchsia
-			: (flutterProject ? ProjectType.Flutter : ProjectType.Dart),
-	});
+	return new WorkspaceContext(
+		{
+			dart: dartSdkPath,
+			dartSdkIsFromFlutter: dartSdkPath && isDartSdkFromFlutter(dartSdkPath),
+			dartVersion: getSdkVersion(dartSdkPath),
+			flutter: flutterSdkPath,
+			flutterVersion: getSdkVersion(flutterSdkPath),
+		},
+		hasAnyFlutterMobileProject,
+		hasAnyFlutterWebProject,
+		fuchsiaRoot && hasFuchsiaProjectThatIsNotVanillaFlutter,
+	);
 }
 
 export function referencesFlutterSdk(folder?: string): boolean {
