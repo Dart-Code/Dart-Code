@@ -81,8 +81,7 @@ install:
   - IF NOT EXIST "flutter" mkdir "flutter"
   - cd flutter
   - IF NOT EXIST ".git" (
-      git init
-      git remote add origin https://github.com/flutter/flutter.git
+      git init && git remote add origin https://github.com/flutter/flutter.git
     ) else (
       git remote set-url origin https://github.com/flutter/flutter.git
     )
