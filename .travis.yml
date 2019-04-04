@@ -120,6 +120,8 @@ before_install:
   - dart-sdk/bin/pub global activate --no-executables json_annotation 1.2.0
   - dart-sdk/bin/pub global activate --no-executables devtools
   - cd ..
+  - mkdir -p .test_results
+  - mkdir -p .dart_code_test_logs
 
 install:
   - npm install --depth 0
@@ -163,7 +165,6 @@ script:
 
 after_script:
   - if [ $TRAVIS_PULL_REQUEST = "false" ]; then
-      mkdir -p .test_results
       dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".test_results" --upload-dir="$TRAVIS_BRANCH/$TRAVIS_COMMIT/$TRAVIS_OS_NAME" --acl=public_read --default_text_charset=utf-8;
       dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".dart_code_test_logs" --upload-dir="logs/$TRAVIS_BRANCH/$TRAVIS_COMMIT/$TRAVIS_OS_NAME" --acl=public_read --default_text_charset=utf-8;
     fi
