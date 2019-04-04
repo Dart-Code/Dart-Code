@@ -9,11 +9,16 @@ import { PubGlobal } from "../pub/global";
 import { DevTools } from "../sdk/dev_tools";
 import { showDevToolsNotificationIfAppropriate } from "../user_prompts";
 import { fsPath, getDartWorkspaceFolders, openInBrowser, WorkspaceContext } from "../utils";
-import { handleDebugLogEvent, logWarn } from "../utils/log";
+import { handleDebugLogEvent, logInfo, logWarn } from "../utils/log";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
 // export let mostRecentAttachedProbablyReusableObservatoryUri: string;
+
+// As a workaround for https://github.com/Microsoft/vscode/issues/71651 we
+// will keep any events that arrive before their session "started" and then
+// replace them when the start event comes through.
+let pendingCustomEvents: vs.DebugSessionCustomEvent[] = [];
 
 export class LastDebugSession {
 	public static workspaceFolder?: vs.WorkspaceFolder;
@@ -45,6 +50,8 @@ export class DebugCommands {
 			const session = debugSessions.find((ds) => ds.session.id === e.session.id);
 			if (!session) {
 				logWarn(`Did not find session ${e.session.id} to handle ${e.event}. There were ${debugSessions.length} sessions:\n${debugSessions.map((ds) => `  ${ds.session.id}`).join("\n")}`);
+				logWarn(`Event will be queued and processed when the session start event fires`);
+				pendingCustomEvents.push(e);
 				return;
 			}
 			this.handleCustomEventWithSession(session, e);
@@ -57,6 +64,16 @@ export class DebugCommands {
 				if (debugSessions.length === 0)
 					this.flutterExtensions.resetToDefaults();
 				debugSessions.push(session);
+
+				// Process any queued events that came in before the session start
+				// event.
+				const eventsToProcess = pendingCustomEvents.filter((e) => e.session.id === s.id);
+				pendingCustomEvents = pendingCustomEvents.filter((e) => e.session.id !== s.id);
+
+				eventsToProcess.forEach((e) => {
+					logInfo(`Processing delayed event ${e.event} for session ${e.session.id}`);
+					this.handleCustomEventWithSession(session, e);
+				});
 			}
 		}));
 		context.subscriptions.push(vs.debug.onDidTerminateDebugSession((s) => {
