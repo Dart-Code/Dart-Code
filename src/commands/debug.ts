@@ -33,99 +33,21 @@ export class DebugCommands {
 	private readonly flutterExtensions: FlutterVmServiceExtensions;
 	private readonly devTools: DevTools;
 
-	constructor(context: Context, workspaceContext: WorkspaceContext, analytics: Analytics, pubGlobal: PubGlobal) {
+	constructor(private readonly context: Context, private readonly workspaceContext: WorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
 		this.flutterExtensions = new FlutterVmServiceExtensions(this.sendServiceSetting);
 		this.devTools = new DevTools(workspaceContext.sdks, analytics, pubGlobal);
 		context.subscriptions.push(this.devTools);
 		context.subscriptions.push(this.debugMetrics);
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
+			this.flutterExtensions.handleDebugEvent(e);
+			if (this.handleCustomEvent(e))
+				return;
 			const session = debugSessions.find((ds) => ds.session.id === e.session.id);
 			if (!session) {
 				logWarn(`Did not find session ${e.session.id} to handle ${e.event}. There were ${debugSessions.length} sessions:\n${debugSessions.map((ds) => `  ${ds.session.id}`).join("\n")}`);
 				return;
 			}
-			this.flutterExtensions.handleDebugEvent(e);
-			if (e.event === "dart.launching") {
-				vs.window.withProgress(
-					{ location: vs.ProgressLocation.Notification },
-					(progress) => {
-						progress.report({ message: e.body.message });
-						session.launchProgressReporter = progress;
-						return session.launchProgressPromise.promise;
-					},
-				);
-			} else if (e.event === "dart.launched") {
-				this.clearProgressIndicators(session);
-			} else if (e.event === "dart.progress") {
-				if (e.body.message) {
-					if (session.launchProgressReporter) {
-						session.launchProgressReporter.report({ message: e.body.message });
-					} else if (session.progressReporter) {
-						session.progressReporter.report({ message: e.body.message });
-					} else {
-						session.progressID = e.body.progressID;
-						vs.window.withProgress(
-							{ location: vs.ProgressLocation.Notification },
-							(progress) => {
-								progress.report({ message: e.body.message });
-								session.progressReporter = progress;
-								if (!session.progressPromise)
-									session.progressPromise = new PromiseCompleter<void>();
-								return session.progressPromise.promise;
-							},
-						);
-					}
-				}
-				if (e.body.finished) {
-					if (session.launchProgressReporter) {
-						// Ignore "finished" events during launch, as we'll keep the progress indicator
-						// until we get dart.launched.
-					} else if (session.progressID === e.body.progressID) {
-						// Otherwise, signal completion if it matches the thing that started the progress.
-						if (session.progressPromise)
-							session.progressPromise.resolve();
-						session.progressPromise = undefined;
-						session.progressReporter = undefined;
-					}
-				}
-			} else if (e.event === "dart.debuggerUris") {
-				session.observatoryUri = e.body.observatoryUri;
-				session.vmServiceUri = e.body.vmServiceUri;
-				if (workspaceContext.hasAnyFlutterProjects)
-					showDevToolsNotificationIfAppropriate(context);
-				// if (e.body.isProbablyReconnectable) {
-				// 	mostRecentAttachedProbablyReusableObservatoryUri = session.observatoryUri;
-				// } else {
-				// 	mostRecentAttachedProbablyReusableObservatoryUri = undefined;
-				// }
-			} else if (e.event === "dart.log") {
-				handleDebugLogEvent(e.event, e.body);
-			} else if (e.event === "dart.hotRestartRequest") {
-				// This event comes back when the user restarts with the Restart button
-				// (eg. it wasn't intiated from our extension, so we don't get to log it
-				// in the command).
-				analytics.logDebuggerRestart();
-				this.onWillHotRestartEmitter.fire();
-			} else if (e.event === "dart.hotReloadRequest") {
-				// This event comes back when the user restarts with the Restart button
-				// (eg. it wasn't intiated from our extension, so we don't get to log it
-				// in the command).
-				analytics.logDebuggerHotReload();
-				this.onWillHotReloadEmitter.fire();
-			} else if (e.event === "dart.flutter.firstFrame") {
-				this.onFirstFrameEmitter.fire();
-			} else if (e.event === "dart.debugMetrics") {
-				const memory = e.body.memory;
-				const message = `${Math.ceil(memory.current / 1024 / 1024)}MB of ${Math.ceil(memory.total / 1024 / 1024)}MB`;
-				this.debugMetrics.text = message;
-				this.debugMetrics.tooltip = "This is the amount of memory being consumed by your applications heaps (out of what has been allocated).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage.";
-				this.debugMetrics.show();
-			} else if (e.event === "dart.coverage") {
-				this.onReceiveCoverageEmitter.fire(e.body);
-			} else if (e.event === "dart.navigate") {
-				if (e.body.file && e.body.line && e.body.column)
-					vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(e.body.file), e.body.line, e.body.column);
-			}
+			this.handleCustomEventWithSession(session, e);
 		}));
 		context.subscriptions.push(vs.debug.onDidStartDebugSession(async (s) => {
 			if (s.type === "dart") {
@@ -298,6 +220,98 @@ export class DebugCommands {
 				type: "dart",
 			});
 		}));
+	}
+
+	private handleCustomEvent(e: vs.DebugSessionCustomEvent): boolean {
+		if (e.event === "dart.log") {
+			handleDebugLogEvent(e.event, e.body);
+		} else if (e.event === "dart.hotRestartRequest") {
+			// This event comes back when the user restarts with the Restart button
+			// (eg. it wasn't intiated from our extension, so we don't get to log it
+			// in the command).
+			this.analytics.logDebuggerRestart();
+			this.onWillHotRestartEmitter.fire();
+		} else if (e.event === "dart.hotReloadRequest") {
+			// This event comes back when the user restarts with the Restart button
+			// (eg. it wasn't intiated from our extension, so we don't get to log it
+			// in the command).
+			this.analytics.logDebuggerHotReload();
+			this.onWillHotReloadEmitter.fire();
+		} else if (e.event === "dart.flutter.firstFrame") {
+			this.onFirstFrameEmitter.fire();
+		} else if (e.event === "dart.debugMetrics") {
+			const memory = e.body.memory;
+			const message = `${Math.ceil(memory.current / 1024 / 1024)}MB of ${Math.ceil(memory.total / 1024 / 1024)}MB`;
+			this.debugMetrics.text = message;
+			this.debugMetrics.tooltip = "This is the amount of memory being consumed by your applications heaps (out of what has been allocated).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage.";
+			this.debugMetrics.show();
+		} else if (e.event === "dart.coverage") {
+			this.onReceiveCoverageEmitter.fire(e.body);
+		} else if (e.event === "dart.navigate") {
+			if (e.body.file && e.body.line && e.body.column)
+				vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(e.body.file), e.body.line, e.body.column);
+		} else {
+			// Not handled, will fall through in the caller.
+			return false;
+		}
+		return true;
+	}
+
+	private handleCustomEventWithSession(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent) {
+		if (e.event === "dart.launching") {
+			vs.window.withProgress(
+				{ location: vs.ProgressLocation.Notification },
+				(progress) => {
+					progress.report({ message: e.body.message });
+					session.launchProgressReporter = progress;
+					return session.launchProgressPromise.promise;
+				},
+			);
+		} else if (e.event === "dart.launched") {
+			this.clearProgressIndicators(session);
+		} else if (e.event === "dart.progress") {
+			if (e.body.message) {
+				if (session.launchProgressReporter) {
+					session.launchProgressReporter.report({ message: e.body.message });
+				} else if (session.progressReporter) {
+					session.progressReporter.report({ message: e.body.message });
+				} else {
+					session.progressID = e.body.progressID;
+					vs.window.withProgress(
+						{ location: vs.ProgressLocation.Notification },
+						(progress) => {
+							progress.report({ message: e.body.message });
+							session.progressReporter = progress;
+							if (!session.progressPromise)
+								session.progressPromise = new PromiseCompleter<void>();
+							return session.progressPromise.promise;
+						},
+					);
+				}
+			}
+			if (e.body.finished) {
+				if (session.launchProgressReporter) {
+					// Ignore "finished" events during launch, as we'll keep the progress indicator
+					// until we get dart.launched.
+				} else if (session.progressID === e.body.progressID) {
+					// Otherwise, signal completion if it matches the thing that started the progress.
+					if (session.progressPromise)
+						session.progressPromise.resolve();
+					session.progressPromise = undefined;
+					session.progressReporter = undefined;
+				}
+			}
+		} else if (e.event === "dart.debuggerUris") {
+			session.observatoryUri = e.body.observatoryUri;
+			session.vmServiceUri = e.body.vmServiceUri;
+			if (this.workspaceContext.hasAnyFlutterProjects)
+				showDevToolsNotificationIfAppropriate(this.context);
+			// if (e.body.isProbablyReconnectable) {
+			// 	mostRecentAttachedProbablyReusableObservatoryUri = session.observatoryUri;
+			// } else {
+			// 	mostRecentAttachedProbablyReusableObservatoryUri = undefined;
+			// }
+		}
 	}
 
 	private clearProgressIndicators(session: DartDebugSessionInformation): void {
