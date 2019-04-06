@@ -107,9 +107,7 @@ main() {
 		assert.equal(completion.detail, "(int i) → int"); // No auto import message here
 	});
 
-	it("sorts completions by relevance", async () => {
-		throw new Error("NYI");
-	});
+	it.skip("sorts completions by relevance");
 
 	it("inserts full text for overrides", async () => {
 		await setTestContent(`
