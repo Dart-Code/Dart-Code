@@ -9,5 +9,4 @@
 		"lib/excluded"
 	],
 	"dart.showIgnoreQuickFixes": true,
-	"dart.previewAutoImportCompletions": true,
 }

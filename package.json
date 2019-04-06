@@ -1073,9 +1073,9 @@
 					"description": "Whether to call toString() on objects when rendering them in debug views (such as the Variables, Watch and Hovers views). Only applies to views of 15 or fewer values for performance reasons.",
 					"scope": "window"
 				},
-				"dart.previewAutoImportCompletions": {
+				"dart.autoImportCompletions": {
 					"type": "boolean",
-					"default": false,
+					"default": true,
 					"description": "Whether to include symbols that have not been imported in the code completion list and automatically insert the required import when selecting them.",
 					"scope": "window"
 				},
