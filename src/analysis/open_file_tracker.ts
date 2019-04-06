@@ -16,7 +16,13 @@ let lastSubscribedFiles: string[] = [];
 
 export class OpenFileTracker implements IAmDisposable {
 	private disposables: Disposable[] = [];
+
 	constructor(private readonly analyzer: Analyzer) {
+		// Reset these, since they're state from the last analysis server
+		// (when we change SDK and thus change this).
+		lastPriorityFiles = [];
+		lastSubscribedFiles = [];
+
 		this.disposables.push(workspace.onDidOpenTextDocument((td) => {
 			this.updateSubscriptions();
 		}));
