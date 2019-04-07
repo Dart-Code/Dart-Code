@@ -61,7 +61,7 @@ describe("pub global", () => {
 		assert.equal(status, VersionStatus.Valid);
 	});
 
-	it("can prompt to update an below-minimum package", async () => {
+	it("can prompt to update a below-minimum package", async () => {
 		const installPrompt = sb.stub(vs.window, "showWarningMessage").resolves(`Update ${installedButBelowMinimumPackage1}`);
 
 		// Prompt to update it, and ensure it's successful.
