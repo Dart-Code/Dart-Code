@@ -274,6 +274,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, flutterPath), sdks.flutter);
 		context.subscriptions.push(flutterDaemon);
 		setUpDaemonMessageHandler(context, flutterDaemon);
+	}
+	if (workspaceContext.hasAnyFlutterProjects) {
 		setUpHotReloadOnSave(context, diagnostics);
 	}
 
