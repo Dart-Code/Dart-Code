@@ -3,16 +3,17 @@ import * as path from "path";
 import * as vs from "vscode";
 import { doNotAskAgainAction, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, wantToTryDevToolsPrompt } from "./constants";
 import { Context } from "./context";
+import { flutterExtensionIdentifier } from "./debug/utils";
 import { StagehandTemplate } from "./pub/stagehand";
-import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, WorkspaceContext } from "./utils";
+import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, reloadExtension, WorkspaceContext } from "./utils";
 
 const promptPrefix = "hasPrompted.";
-const installFlutterExtensionPromptKey = "install_flutter_extension";
+const installFlutterExtensionPromptKey = "install_flutter_extension_2";
 
 export function showUserPrompts(context: Context, workspaceContext: WorkspaceContext): void {
 	handleNewProjects(context);
 
-	function hasPrompted(key: string): boolean {
+	function shouldSuppress(key: string): boolean {
 		const stateKey = `${promptPrefix}${key}`;
 		return context.get(stateKey) === true;
 	}
@@ -28,10 +29,10 @@ export function showUserPrompts(context: Context, workspaceContext: WorkspaceCon
 	const versionLink = extensionVersion.split(".").slice(0, 2).join(".").replace(".", "-");
 	const releaseNotesKeyForThisVersion = `release_notes_${extensionVersion}`;
 
-	if (workspaceContext.hasAnyFlutterProjects && !hasFlutterExtension && !hasPrompted(installFlutterExtensionPromptKey))
+	if (workspaceContext.hasAnyFlutterProjects && !hasFlutterExtension && !shouldSuppress(installFlutterExtensionPromptKey))
 		return showPrompt(installFlutterExtensionPromptKey, promptToInstallFlutterExtension);
 
-	if (!isDevExtension && !hasPrompted(releaseNotesKeyForThisVersion))
+	if (!isDevExtension && !shouldSuppress(releaseNotesKeyForThisVersion))
 		return showPrompt(releaseNotesKeyForThisVersion, () => promptToShowReleaseNotes(extensionVersion, versionLink));
 }
 
@@ -65,15 +66,18 @@ export async function showDevToolsNotificationIfAppropriate(context: Context): P
 }
 
 async function promptToInstallFlutterExtension(): Promise<boolean> {
+	const installExtension = "Install Flutter Extension";
 	const res = await vs.window.showInformationMessage(
 		"Working on a Flutter project? Install the Flutter extension for additional functionality.",
-		"Show Me",
+		installExtension,
+		doNotAskAgainAction,
 	);
-	if (res) {
-		// TODO: Can we open this in the Extensions side bar?
-		openInBrowser("https://marketplace.visualstudio.com/items?itemName=Dart-Code.flutter");
+	if (res === installExtension) {
+		await vs.commands.executeCommand("workbench.extensions.installExtension", flutterExtensionIdentifier);
+		reloadExtension();
 	}
-	return true; // Always mark this as done; we don't want to re-prompt if the user clicks Close.
+
+	return res === doNotAskAgainAction;
 }
 
 async function promptToShowReleaseNotes(versionDisplay: string, versionLink: string): Promise<boolean> {
