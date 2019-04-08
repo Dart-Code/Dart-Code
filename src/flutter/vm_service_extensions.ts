@@ -26,7 +26,7 @@ const keyValue = "value";
 ///     { enabled: true }
 ///
 /// This map tracks the name of the key for a fivengiven extension.
-const extensionStateKeys: { [key: string]: string } = {
+const toggleExtensionStateKeys: { [key: string]: string } = {
 	[FlutterServiceExtension.PlatformOverride]: keyValue,
 	[FlutterServiceExtension.DebugBanner]: keyEnabled,
 	[FlutterServiceExtension.DebugPaint]: keyEnabled,
@@ -41,7 +41,7 @@ export const timeDilationNormal = 1.0;
 export const timeDilationSlow = 5.0;
 
 /// Default values for each service extension.
-const defaultExtensionState: { [key: string]: any } = {
+const defaultToggleExtensionState: { [key: string]: any } = {
 	[FlutterServiceExtension.PlatformOverride]: null, // We don't know the default here so we need to ask for it when the extension loads.
 	[FlutterServiceExtension.DebugBanner]: true,
 	[FlutterServiceExtension.DebugPaint]: false,
@@ -57,7 +57,7 @@ export interface FlutterServiceExtensionArgs { type: FlutterServiceExtension; pa
 /// Manages state for Flutter VM service extensions.
 export class FlutterVmServiceExtensions {
 	private loadedServiceExtensions: FlutterServiceExtension[] = [];
-	private currentExtensionState = Object.assign({}, defaultExtensionState);
+	private currentExtensionState = Object.assign({}, defaultToggleExtensionState);
 	private sendValueToVM: (extension: FlutterServiceExtension) => void;
 
 	constructor(sendRequest: (extension: FlutterServiceExtension, args: FlutterServiceExtensionArgs) => void) {
@@ -65,9 +65,9 @@ export class FlutterVmServiceExtensions {
 		// keep a reference to it.
 		this.sendValueToVM = (extension: FlutterServiceExtension) => {
 			// Only ever send values for enabled and known extensions.
-			if (this.loadedServiceExtensions.indexOf(extension) !== -1 && extensionStateKeys[extension] !== undefined) {
+			if (this.loadedServiceExtensions.indexOf(extension) !== -1 && toggleExtensionStateKeys[extension] !== undefined) {
 				// Build the args in the required format using the correct key and value.
-				const params = { [extensionStateKeys[extension]]: this.currentExtensionState[extension] };
+				const params = { [toggleExtensionStateKeys[extension]]: this.currentExtensionState[extension] };
 				const args = { type: extension, params };
 
 				sendRequest(extension, args);
@@ -139,7 +139,7 @@ export class FlutterVmServiceExtensions {
 	/// Resets all local state to defaults - used when terminating the last debug session (or
 	// starting the first) to ensure debug toggles don't "persist" across sessions.
 	public resetToDefaults() {
-		this.currentExtensionState = Object.assign({}, defaultExtensionState);
+		this.currentExtensionState = Object.assign({}, defaultToggleExtensionState);
 	}
 
 	/// Tracks loaded service extensions and updates contexts to enable VS Code commands.
