@@ -126,17 +126,7 @@ export class DebugCommands {
 			}
 		}));
 		context.subscriptions.push(vs.debug.onDidStartDebugSession(async (s) => {
-			let type = s.type;
-
-			// The Visual Studio Live Share extension overrides the type to proxy debug sessions so
-			// it won't be "dart". We can request the real info from it with the debugSessionInfo
-			// custom request.
-			if (type === "vslsShare") {
-				const debugSessionInfo = await s.customRequest("debugSessionInfo");
-				type = debugSessionInfo.configurationProperties.type;
-			}
-
-			if (type === "dart") {
+			if (s.type === "dart") {
 				const session = new DartDebugSessionInformation(s);
 				// If we're the first fresh debug session, reset all settings to default.
 				// Subsequent launches will inherit the "current" values.
