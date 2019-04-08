@@ -107,12 +107,7 @@ class ResourceConfig {
 	get enableCompletionCommitCharacters() { return !!this.getConfig<boolean>("enableCompletionCommitCharacters"); }
 	get evaluateGettersInDebugViews() { return !!this.getConfig<boolean>("evaluateGettersInDebugViews"); }
 	get flutterTrackWidgetCreation() { return !!this.getConfig<boolean>("flutterTrackWidgetCreation"); }
-	get flutterTrackWidgetCreationIsConfiguredExplicitly() {
-		const trackWidgetCreation = this.config.inspect("flutterTrackWidgetCreation");
-		// Return whether any of them are explicitly set, in which case we'll then read normally from the settings.
-		return trackWidgetCreation && (trackWidgetCreation.globalValue !== undefined || trackWidgetCreation.workspaceValue !== undefined || trackWidgetCreation.workspaceFolderValue !== undefined);
-	}
-	get insertArgumentPlaceholders() { return this.getConfig<boolean>("insertArgumentPlaceholders"); }
+	get insertArgumentPlaceholders() { return !!this.getConfig<boolean>("insertArgumentPlaceholders"); }
 	get lineLength() { return this.getConfig<number>("lineLength"); }
 	get pubAdditionalArgs() { return this.getConfig<string[]>("pubAdditionalArgs"); }
 	get runPubGetOnPubspecChanges() { return this.getConfig<boolean>("runPubGetOnPubspecChanges"); }
