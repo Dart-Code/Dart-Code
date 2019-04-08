@@ -1,35 +1,27 @@
 import * as assert from "assert";
 import { SpawnOptions } from "child_process";
-import { DebugSessionCustomEvent } from "vscode";
+import { DebugSession, DebugSessionCustomEvent } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DebugCommands, debugSessions } from "../src/commands/debug";
 import { not } from "../src/utils/array";
 import { isKnownInfrastructureThread } from "../src/utils/debugger";
-import { handleDebugLogEvent, log } from "../src/utils/log";
-import { DartDebugSessionInformation } from "../src/utils/vscode/debug";
+import { log } from "../src/utils/log";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../src/views/test_protocol";
 import { TestResultsProvider } from "../src/views/test_view";
 import { DebugClient } from "./debug_client_ms";
 import { delay, watchPromise, withTimeout } from "./helpers";
 
+const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.debuggerUris"];
+
 export class DartDebugClient extends DebugClient {
-	private readonly id: string;
-	constructor(runtime: string, executable: string, debugType: string, spawnOptions: SpawnOptions, debugCommands: DebugCommands, testProvider: TestResultsProvider) {
+	private currentSession: DebugSession;
+	constructor(runtime: string, executable: string, debugType: string, spawnOptions: SpawnOptions, private debugCommands: DebugCommands, testProvider: TestResultsProvider) {
 		super(runtime, executable, debugType, spawnOptions);
-		this.on("dart.log", (e: DebugSessionCustomEvent) => handleDebugLogEvent(e.event, e.body));
-		// TODO: Make it so we don't have to keep copying logic from debug.ts into here...
-		this.on("dart.serviceExtensionAdded", (e: DebugSessionCustomEvent) => {
-			const fakeEvent: DebugSessionCustomEvent = {
-				body: e.body,
-				event: e.event,
-				session: debugSessions[0].session,
-			};
-			debugCommands.flutterExtensions.handleDebugEvent(fakeEvent);
-		});
-		this.on("dart.debuggerUris", (e: DebugSessionCustomEvent) => {
-			debugSessions[0].observatoryUri = e.body.observatoryUri;
-			debugSessions[0].vmServiceUri = e.body.vmServiceUri;
-		});
+
+		// Set up handlers for any custom events our tests may rely on (can't find
+		// a way to just do them all 🤷‍♂️).
+		customEventsToForward.forEach((evt) => this.on(evt, (e) => this.handleCustomEvent(e)));
+
 		// Log important events to make troubleshooting tests easier.
 		this.on("output", (event: DebugProtocol.OutputEvent) => {
 			log(`[${event.body.category}] ${event.body.output}`);
@@ -51,14 +43,21 @@ export class DartDebugClient extends DebugClient {
 			this.on("terminated", (e: DebugSessionCustomEvent) => testProvider.handleDebugSessionEnd(e.session));
 		}
 	}
+
+	private handleCustomEvent(e: DebugSessionCustomEvent) {
+		this.debugCommands.handleDebugSessionCustomEvent({
+			body: e.body,
+			event: e.event,
+			session: this.currentSession,
+		});
+	}
+
 	public async launch(launchArgs: any): Promise<void> {
 		// Tests only run one debug session at a time so clear out any orphaned sessions (these
-		// can happen if a session is forcefully terminated and the TermianteEvent is never received).
+		// can happen if a session is forcefully terminated and the TerminateEvent is never received).
 		debugSessions.length = 0;
-		// Add our session to the list of open sessions. Normally this is done via a VS Code event
-		// but when we spawn the debug client manually, that event does not fire. We must also
-		// remove this when terminating.
-		const session = new DartDebugSessionInformation({
+
+		this.currentSession = {
 			configuration: {
 				name: "Dart & Flutter",
 				request: "launch",
@@ -69,8 +68,8 @@ export class DartDebugClient extends DebugClient {
 			name: "Dart & Flutter",
 			type: "dart",
 			workspaceFolder: undefined,
-		});
-		debugSessions.push(session);
+		};
+		this.debugCommands.handleDebugSessionStart(this.currentSession);
 
 		// We override the base method to swap for attachRequest when required, so that
 		// all the existing methods that provide useful functionality but assume launching

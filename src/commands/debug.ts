@@ -12,6 +12,7 @@ import { fsPath, getDartWorkspaceFolders, openInBrowser, WorkspaceContext } from
 import { handleDebugLogEvent, logInfo, logWarn } from "../utils/log";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
+// TODO: Try to avoid exporting this...
 export const debugSessions: DartDebugSessionInformation[] = [];
 // export let mostRecentAttachedProbablyReusableObservatoryUri: string;
 
@@ -43,58 +44,10 @@ export class DebugCommands {
 		this.devTools = new DevTools(workspaceContext.sdks, analytics, pubGlobal);
 		context.subscriptions.push(this.devTools);
 		context.subscriptions.push(this.debugMetrics);
-		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
-			this.flutterExtensions.handleDebugEvent(e);
-			if (this.handleCustomEvent(e))
-				return;
-			const session = debugSessions.find((ds) => ds.session.id === e.session.id);
-			if (!session) {
-				logWarn(`Did not find session ${e.session.id} to handle ${e.event}. There were ${debugSessions.length} sessions:\n${debugSessions.map((ds) => `  ${ds.session.id}`).join("\n")}`);
-				logWarn(`Event will be queued and processed when the session start event fires`);
-				pendingCustomEvents.push(e);
-				return;
-			}
-			this.handleCustomEventWithSession(session, e);
-		}));
-		context.subscriptions.push(vs.debug.onDidStartDebugSession(async (s) => {
-			if (s.type === "dart") {
-				const session = new DartDebugSessionInformation(s);
-				// If we're the first fresh debug session, reset all settings to default.
-				// Subsequent launches will inherit the "current" values.
-				if (debugSessions.length === 0)
-					this.flutterExtensions.resetToDefaults();
-				debugSessions.push(session);
 
-				// Process any queued events that came in before the session start
-				// event.
-				const eventsToProcess = pendingCustomEvents.filter((e) => e.session.id === s.id);
-				pendingCustomEvents = pendingCustomEvents.filter((e) => e.session.id !== s.id);
-
-				eventsToProcess.forEach((e) => {
-					logInfo(`Processing delayed event ${e.event} for session ${e.session.id}`);
-					this.handleCustomEventWithSession(session, e);
-				});
-			}
-		}));
-		context.subscriptions.push(vs.debug.onDidTerminateDebugSession((s) => {
-			const sessionIndex = debugSessions.findIndex((ds) => ds.session.id === s.id);
-			if (sessionIndex === -1)
-				return;
-
-			// Grab the session and remove it from the list so we don't try to interact with it anymore.
-			const session = debugSessions[sessionIndex];
-			debugSessions.splice(sessionIndex, 1);
-
-			this.clearProgressIndicators(session);
-			this.debugMetrics.hide();
-			const debugSessionEnd = new Date();
-			analytics.logDebugSessionDuration(debugSessionEnd.getTime() - session.sessionStart.getTime());
-			// If this was the last session terminating, then remove all the flags for which service extensions are supported.
-			// Really we should track these per-session, but the changes of them being different given we only support one
-			// SDK at a time are practically zero.
-			if (debugSessions.length === 0)
-				this.flutterExtensions.markAllServiceExtensionsUnloaded();
-		}));
+		context.subscriptions.push(vs.debug.onDidStartDebugSession((s) => this.handleDebugSessionStart(s)));
+		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
+		context.subscriptions.push(vs.debug.onDidTerminateDebugSession((s) => this.handleDebugSessionEnd(s)));
 
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => this.flutterExtensions.toggle(FlutterServiceExtension.PlatformOverride, "iOS", "android")));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.flutterExtensions.toggle(FlutterServiceExtension.DebugPaint)));
@@ -237,6 +190,61 @@ export class DebugCommands {
 				type: "dart",
 			});
 		}));
+	}
+
+	public handleDebugSessionStart(s: vs.DebugSession): void {
+		if (s.type === "dart") {
+			const session = new DartDebugSessionInformation(s);
+			// If we're the first fresh debug session, reset all settings to default.
+			// Subsequent launches will inherit the "current" values.
+			if (debugSessions.length === 0)
+				this.flutterExtensions.resetToDefaults();
+			debugSessions.push(session);
+
+			// Process any queued events that came in before the session start
+			// event.
+			const eventsToProcess = pendingCustomEvents.filter((e) => e.session.id === s.id);
+			pendingCustomEvents = pendingCustomEvents.filter((e) => e.session.id !== s.id);
+
+			eventsToProcess.forEach((e) => {
+				logInfo(`Processing delayed event ${e.event} for session ${e.session.id}`);
+				this.handleCustomEventWithSession(session, e);
+			});
+		}
+	}
+
+	public handleDebugSessionCustomEvent(e: vs.DebugSessionCustomEvent): void {
+		this.flutterExtensions.handleDebugEvent(e);
+		if (this.handleCustomEvent(e))
+			return;
+		const session = debugSessions.find((ds) => ds.session.id === e.session.id);
+		if (!session) {
+			logWarn(`Did not find session ${e.session.id} to handle ${e.event}. There were ${debugSessions.length} sessions:\n${debugSessions.map((ds) => `  ${ds.session.id}`).join("\n")}`);
+			logWarn(`Event will be queued and processed when the session start event fires`);
+			pendingCustomEvents.push(e);
+			return;
+		}
+		this.handleCustomEventWithSession(session, e);
+	}
+
+	public handleDebugSessionEnd(s: vs.DebugSession): void {
+		const sessionIndex = debugSessions.findIndex((ds) => ds.session.id === s.id);
+		if (sessionIndex === -1)
+			return;
+
+		// Grab the session and remove it from the list so we don't try to interact with it anymore.
+		const session = debugSessions[sessionIndex];
+		debugSessions.splice(sessionIndex, 1);
+
+		this.clearProgressIndicators(session);
+		this.debugMetrics.hide();
+		const debugSessionEnd = new Date();
+		this.analytics.logDebugSessionDuration(debugSessionEnd.getTime() - session.sessionStart.getTime());
+		// If this was the last session terminating, then remove all the flags for which service extensions are supported.
+		// Really we should track these per-session, but the changes of them being different given we only support one
+		// SDK at a time are practically zero.
+		if (debugSessions.length === 0)
+			this.flutterExtensions.markAllServiceExtensionsUnloaded();
 	}
 
 	private handleCustomEvent(e: vs.DebugSessionCustomEvent): boolean {
