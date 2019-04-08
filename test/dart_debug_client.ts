@@ -2,7 +2,7 @@ import * as assert from "assert";
 import { SpawnOptions } from "child_process";
 import { DebugSessionCustomEvent } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { debugSessions } from "../src/commands/debug";
+import { DebugCommands, debugSessions } from "../src/commands/debug";
 import { not } from "../src/utils/array";
 import { isKnownInfrastructureThread } from "../src/utils/debugger";
 import { handleDebugLogEvent, log } from "../src/utils/log";
@@ -14,10 +14,18 @@ import { delay, watchPromise, withTimeout } from "./helpers";
 
 export class DartDebugClient extends DebugClient {
 	private readonly id: string;
-	constructor(runtime: string, executable: string, debugType: string, spawnOptions?: SpawnOptions, testProvider?: TestResultsProvider) {
+	constructor(runtime: string, executable: string, debugType: string, spawnOptions: SpawnOptions, debugCommands: DebugCommands, testProvider: TestResultsProvider) {
 		super(runtime, executable, debugType, spawnOptions);
 		this.on("dart.log", (e: DebugSessionCustomEvent) => handleDebugLogEvent(e.event, e.body));
 		// TODO: Make it so we don't have to keep copying logic from debug.ts into here...
+		this.on("dart.serviceExtensionAdded", (e: DebugSessionCustomEvent) => {
+			const fakeEvent: DebugSessionCustomEvent = {
+				body: e.body,
+				event: e.event,
+				session: debugSessions[0].session,
+			};
+			debugCommands.flutterExtensions.handleDebugEvent(fakeEvent);
+		});
 		this.on("dart.debuggerUris", (e: DebugSessionCustomEvent) => {
 			debugSessions[0].observatoryUri = e.body.observatoryUri;
 			debugSessions[0].vmServiceUri = e.body.vmServiceUri;
@@ -56,7 +64,7 @@ export class DartDebugClient extends DebugClient {
 				request: "launch",
 				type: "dart",
 			},
-			customRequest: this.customRequest,
+			customRequest: (e) => this.customRequest(e),
 			id: "INTEGRATION-TEST",
 			name: "Dart & Flutter",
 			type: "dart",

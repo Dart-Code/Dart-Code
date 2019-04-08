@@ -339,7 +339,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const analyzerCommands = new AnalyzerCommands(context, analyzer);
 	const pubGlobal = new PubGlobal(extContext, sdks);
 	const sdkCommands = new SdkCommands(context, workspaceContext, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
-	const debug = new DebugCommands(extContext, workspaceContext, analytics, pubGlobal);
+	const debugCommands = new DebugCommands(extContext, workspaceContext, analytics, pubGlobal);
 
 	// Register URI handler.
 	context.subscriptions.push(vs.window.registerUriHandler(new DartUriHandler(flutterCapabilities)));
@@ -382,7 +382,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	);
 
 	if (workspaceContext.hasAnyFlutterProjects && config.previewHotReloadCoverageMarkers) {
-		context.subscriptions.push(new HotReloadCoverageDecorations(debug));
+		context.subscriptions.push(new HotReloadCoverageDecorations(debugCommands));
 	}
 
 	context.subscriptions.push(vs.commands.registerCommand("dart.package.openFile", (filePath) => {
@@ -457,6 +457,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			currentAnalysis: () => analyzer.currentAnalysis,
 			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
 			dartCapabilities,
+			debugCommands,
 			debugProvider,
 			flutterCapabilities,
 			initialAnalysis,
@@ -612,6 +613,7 @@ export interface InternalExtensionApi {
 	currentAnalysis: () => Promise<void>;
 	daemonCapabilities: DaemonCapabilities;
 	dartCapabilities: DartCapabilities;
+	debugCommands: DebugCommands;
 	debugProvider: DebugConfigProvider;
 	flutterCapabilities: FlutterCapabilities;
 	initialAnalysis: Promise<void>;

@@ -23,6 +23,7 @@ describe("dart test debugger", () => {
 			path.join(ext.extensionPath, "out/src/debug/dart_test_debug_entry.js"),
 			"dart",
 			undefined,
+			extApi.debugCommands,
 			extApi.testTreeProvider,
 		);
 		dc.defaultTimeout = 60000;

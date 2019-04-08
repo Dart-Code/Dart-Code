@@ -35,7 +35,7 @@ export class DebugCommands {
 	public readonly onReceiveCoverage: vs.Event<CoverageData[]> = this.onReceiveCoverageEmitter.event;
 	private onFirstFrameEmitter: vs.EventEmitter<CoverageData[]> = new vs.EventEmitter<CoverageData[]>();
 	public readonly onFirstFrame: vs.Event<CoverageData[]> = this.onFirstFrameEmitter.event;
-	private readonly flutterExtensions: FlutterVmServiceExtensions;
+	public readonly flutterExtensions: FlutterVmServiceExtensions;
 	private readonly devTools: DevTools;
 
 	constructor(private readonly context: Context, private readonly workspaceContext: WorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
