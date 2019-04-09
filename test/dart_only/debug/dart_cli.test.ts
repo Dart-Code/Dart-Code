@@ -795,6 +795,17 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
+	it("does not stop on exception in noDebug mode", async () => {
+		await openFile(helloWorldBrokenFile);
+		const config = await startDebugger(helloWorldBrokenFile);
+		config.noDebug = true;
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		]);
+	});
+
 	it("provides exception details when stopped on exception", async () => {
 		await openFile(helloWorldBrokenFile);
 		const config = await startDebugger(helloWorldBrokenFile);
