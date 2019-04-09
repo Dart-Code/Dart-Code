@@ -437,7 +437,7 @@ export class DebugClient extends ProtocolClient {
 	 * and the event's reason and line number was asserted.
 	 * The promise will be rejected if a timeout occurs, the assertions fail, or if the requests fails.
 	 */
-	public hitBreakpoint(launchArgs: any, location: ILocation, expectedStopLocation?: IPartialLocation, expectedBPLocation?: IPartialLocation): Promise<any> {
+	public hitBreakpoint(launchArgs: any, location: ILocation, expectedStopLocation?: IPartialLocation, expectedBPLocation?: IPartialLocation, skipWaiting = false): Promise<any> {
 
 		// If we're an attach request, we'll automatically pause at startup, so we need to wait for that then resume before asserting
 		// the stop.
@@ -476,7 +476,7 @@ export class DebugClient extends ProtocolClient {
 				return this.configurationDone();
 			}),
 
-			setupBreakpointWait(),
+			skipWaiting ? undefined : setupBreakpointWait(),
 
 			this.launch(launchArgs),
 		]);

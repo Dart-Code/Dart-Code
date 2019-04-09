@@ -480,7 +480,7 @@ export class DartDebugSession extends DebugSession {
 	): void {
 		const filters: string[] = args.filters;
 
-		let mode = "None";
+		let mode: VmExceptionMode = "None";
 		if (filters.indexOf("Unhandled") !== -1)
 			mode = "Unhandled";
 		if (filters.indexOf("All") !== -1)
@@ -1510,3 +1510,5 @@ export interface InstanceWithEvaluateName extends VMInstanceRef {
 	// Otherwise we use the string
 	evaluateName: string | null | undefined;
 }
+
+export type VmExceptionMode = "None" | "Unhandled" | "All";

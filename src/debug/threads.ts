@@ -2,7 +2,7 @@ import { Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { isKnownInfrastructureThread } from "../utils/debugger";
 import { logError } from "../utils/log";
-import { DartDebugSession, InstanceWithEvaluateName } from "./dart_debug_impl";
+import { DartDebugSession, InstanceWithEvaluateName, VmExceptionMode } from "./dart_debug_impl";
 import { DebuggerResult, VMBreakpoint, VMInstanceRef, VMIsolate, VMIsolateRef, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
 import { LogCategory, PromiseCompleter } from "./utils";
 
@@ -12,7 +12,7 @@ export class ThreadManager {
 	public threads: ThreadInfo[] = [];
 	public bps: { [uri: string]: DebugProtocol.SourceBreakpoint[] } = {};
 	private hasConfigurationDone = false;
-	private exceptionMode = "Unhandled";
+	private exceptionMode: VmExceptionMode = "Unhandled";
 
 	constructor(public readonly debugSession: DartDebugSession) { }
 
@@ -71,7 +71,7 @@ export class ThreadManager {
 		return this.threads.map((thread: ThreadInfo) => new Thread(thread.num, thread.ref.name));
 	}
 
-	public setExceptionPauseMode(mode: string) {
+	public setExceptionPauseMode(mode: VmExceptionMode) {
 		this.exceptionMode = mode;
 
 		for (const thread of this.threads) {

@@ -8,7 +8,7 @@ import { isKnownInfrastructureThread } from "../src/utils/debugger";
 import { log } from "../src/utils/log";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../src/views/test_protocol";
 import { TestResultsProvider } from "../src/views/test_view";
-import { DebugClient } from "./debug_client_ms";
+import { DebugClient, ILocation, IPartialLocation } from "./debug_client_ms";
 import { delay, watchPromise, withTimeout } from "./helpers";
 
 const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.debuggerUris"];
@@ -108,6 +108,10 @@ export class DartDebugClient extends DebugClient {
 		} else {
 			await watchPromise("launch()->launchRequest", this.launchRequest(launchArgs));
 		}
+	}
+
+	public setBreakpointWithoutHitting(launchArgs: any, location: ILocation, expectedBPLocation?: IPartialLocation): Promise<any> {
+		return this.hitBreakpoint(launchArgs, location, undefined, expectedBPLocation, true);
 	}
 
 	public async getMainThread(): Promise<DebugProtocol.Thread> {
