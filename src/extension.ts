@@ -74,6 +74,8 @@ const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 // TODO: Define what this means better. Some commands a general Flutter (eg. Hot
 // Reload) and some are more specific (eg. Attach).
 const FLUTTER_PROJECT_LOADED = "dart-code:anyFlutterProjectLoaded";
+const FLUTTER_MOBILE_PROJECT_LOADED = "dart-code:flutterMobileProjectLoaded";
+const FLUTTER_WEB_PROJECT_LOADED = "dart-code:flutterWebProjectLoaded";
 export const FLUTTER_SUPPORTS_ATTACH = "dart-code:flutterSupportsAttach";
 const DART_PLATFORM_NAME = "dart-code:platformName";
 export const SERVICE_EXTENSION_CONTEXT_PREFIX = "dart-code:serviceExtension.";
@@ -607,6 +609,8 @@ function setCommandVisiblity(enable: boolean, workspaceContext?: util.WorkspaceC
 	vs.commands.executeCommand("setContext", DART_PROJECT_LOADED, enable);
 	// TODO: Make this more specific. Maybe the one above?
 	vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && workspaceContext.hasAnyFlutterProjects);
+	vs.commands.executeCommand("setContext", FLUTTER_MOBILE_PROJECT_LOADED, enable && workspaceContext.hasAnyFlutterMobileProjects);
+	vs.commands.executeCommand("setContext", FLUTTER_WEB_PROJECT_LOADED, enable && workspaceContext.hasAnyFlutterWebProjects);
 }
 
 export interface InternalExtensionApi {
