@@ -26,15 +26,12 @@ export class DartTestDebugSession extends DartDebugSession {
 		// deifferent to the isolates being paused). To do that, we need to change
 		// how our "unpause" logic works in the base debug adapter (since it won't
 		// be paused at startup).
-		// if (debug) {
-		// 	appArgs.push("--pause-after-load");
-		// }
+		// appArgs.push("--pause-after-load");
 
 		// Instead, we do it the VM way for now...
-		if (debug) {
-			appArgs.push("--enable-vm-service=0");
-			appArgs.push("--pause_isolates_on_start=true");
-		}
+		appArgs.push("--enable-vm-service=0");
+		appArgs.push("--pause_isolates_on_start=true");
+
 		if (args.vmAdditionalArgs) {
 			appArgs = appArgs.concat(args.vmAdditionalArgs);
 		}

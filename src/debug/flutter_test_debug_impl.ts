@@ -6,12 +6,9 @@ import { FlutterLaunchRequestArguments, LogCategory, LogMessage, LogSeverity } f
 export class FlutterTestDebugSession extends DartTestDebugSession {
 
 	protected spawnProcess(args: FlutterLaunchRequestArguments): any {
-		const debug = !args.noDebug;
 		let appArgs: string[] = [];
 
-		if (debug) {
-			appArgs.push("--start-paused");
-		}
+		appArgs.push("--start-paused");
 
 		if (args.args) {
 			appArgs = appArgs.concat(args.args);

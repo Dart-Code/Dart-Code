@@ -90,6 +90,10 @@ export class DartDebugSession extends DebugSession {
 		this.shouldKillProcessOnTerminate = true;
 		this.cwd = args.cwd;
 		this.noDebug = args.noDebug;
+		// Set default exception mode based on noDebug. This will be sent to threads
+		// prior to VS Code sending (or, in the case of noDebug, due to not sending)
+		// the exception mode.
+		this.threadManager.setExceptionPauseMode(this.noDebug ? "None" : "Unhandled");
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program || args.cwd));
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
@@ -107,7 +111,7 @@ export class DartDebugSession extends DebugSession {
 		process.stdout.setEncoding("utf8");
 		process.stdout.on("data", (data) => {
 			let match: RegExpExecArray | null = null;
-			if (!this.noDebug && this.parseObservatoryUriFromStdOut && !this.observatory) {
+			if (this.parseObservatoryUriFromStdOut && !this.observatory) {
 				match = ObservatoryConnection.bannerRegex.exec(data.toString());
 			}
 			if (match) {
@@ -131,9 +135,6 @@ export class DartDebugSession extends DebugSession {
 				this.logToUser(`Exited (${signal ? `${signal}`.toLowerCase() : code})\n`);
 			this.sendEvent(new TerminatedEvent());
 		});
-
-		if (args.noDebug)
-			this.sendEvent(new InitializedEvent());
 	}
 
 	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DartAttachRequestArguments): Promise<void> {
@@ -177,12 +178,9 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected spawnProcess(args: DartLaunchRequestArguments) {
-		const debug = !args.noDebug;
 		let appArgs = [];
-		if (debug) {
-			appArgs.push("--enable-vm-service=0");
-			appArgs.push("--pause_isolates_on_start=true");
-		}
+		appArgs.push("--enable-vm-service=0");
+		appArgs.push("--pause_isolates_on_start=true");
 		if (args.enableAsserts !== false) { // undefined = on
 			appArgs.push("--enable-asserts");
 		}
@@ -254,9 +252,6 @@ export class DartDebugSession extends DebugSession {
 			observatoryUri: this.supportsObservatory ? browserFriendlyUri.toString() : undefined,
 			vmServiceUri: browserFriendlyUri.toString(),
 		}));
-
-		if (this.noDebug)
-			return;
 
 		return new Promise<void>((resolve, reject) => {
 			this.observatory = new ObservatoryConnection(uri);
@@ -448,6 +443,12 @@ export class DartDebugSession extends DebugSession {
 		response: DebugProtocol.SetBreakpointsResponse,
 		args: DebugProtocol.SetBreakpointsArguments,
 	): Promise<void> {
+		if (this.noDebug) {
+			response.body = { breakpoints: args.breakpoints.map((b) => ({ verified: false })) };
+			this.sendResponse(response);
+			return;
+		}
+
 		const source: DebugProtocol.Source = args.source;
 		let breakpoints: DebugProtocol.SourceBreakpoint[] = args.breakpoints;
 		if (!breakpoints)
@@ -481,10 +482,14 @@ export class DartDebugSession extends DebugSession {
 		const filters: string[] = args.filters;
 
 		let mode: VmExceptionMode = "None";
-		if (filters.indexOf("Unhandled") !== -1)
-			mode = "Unhandled";
-		if (filters.indexOf("All") !== -1)
-			mode = "All";
+
+		// If we're running in noDebug mode, we'll always set None.
+		if (!this.noDebug) {
+			if (filters.indexOf("Unhandled") !== -1)
+				mode = "Unhandled";
+			if (filters.indexOf("All") !== -1)
+				mode = "All";
+		}
 
 		this.threadManager.setExceptionPauseMode(mode);
 
@@ -1020,8 +1025,21 @@ export class DartDebugSession extends DebugSession {
 			case "requestCoverageUpdate":
 				this.requestCoverageUpdate("editor");
 				break;
-
+			// Flutter requests that may be sent during test runs or other places
+			// that we don't currently support. TODO: Fix this by moving all the
+			// service extension stufff out of Flutter to here, and making it not
+			// Flutter-specific. This requires sending all service extensions
+			// directly to the VM and not via Flutter's run daemon.
+			case "checkPlatformOverride":
+			case "checkIsWidgetCreationTracked":
+			case "hotReload":
+			case "hotRestart":
+				// TODO: Get rid of this!
+				this.log(`Ignoring Flutter customRequest ${request} for non-Flutter-run app`, LogSeverity.Warn);
+				this.sendResponse(response);
+				break;
 			default:
+				this.log(`Unknown customRequest ${request}`, LogSeverity.Warn);
 				super.customRequest(request, response, args);
 				break;
 		}

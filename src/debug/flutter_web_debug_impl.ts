@@ -29,9 +29,7 @@ export class FlutterWebDebugSession extends FlutterDebugSession {
 		// 		}
 		// 	}
 
-		// 	if (!args.noDebug) {
-		// 		appArgs.push("--start-paused");
-		// 	}
+		// 	appArgs.push("--start-paused");
 		// }
 
 		if (args.args) {
