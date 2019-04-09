@@ -17,6 +17,7 @@ const maxValuesToCallToString = 15;
 // which we'd prefer not to show to the user.
 const unoptimizedPrefix = "[Unoptimized] ";
 const stackFrameWithUriPattern = new RegExp(`(.*#\\d+)(.*)\\(((?:package|dart|file):.*\\.dart):(\\d+):(\\d+)\\)\\s*$`);
+const webStackFrameWithUriPattern = new RegExp(`((?:package|dart|file):.*\\.dart) (\\d+):(\\d+)\\s*(\\S+)\\s*$`);
 const pleaseReportBug = "Please raise a bug against the Dart extension for VS Code.";
 
 // TODO: supportsSetVariable
@@ -1493,6 +1494,35 @@ export class DartDebugSession extends DebugSession {
 		setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs);
 	}
 
+	private getStackFrameData(message: string): StackFrameData | undefined {
+		const match = message && stackFrameWithUriPattern.exec(message);
+		if (match) {
+			// TODO: Handle dart: uris (using source references)?
+			return {
+				col: parseInt(match[5], 10),
+				functionName: match[2],
+				line: parseInt(match[4], 10),
+				prefix: match[1],
+				sourceUri: match[3],
+			};
+		}
+		return undefined;
+	}
+
+	private getWebStackFrameData(message: string): StackFrameData | undefined {
+		const match = message && webStackFrameWithUriPattern.exec(message);
+		if (match) {
+			// TODO: Handle dart: uris (using source references)?
+			return {
+				col: parseInt(match[3], 10),
+				functionName: match[4],
+				line: parseInt(match[2], 10),
+				sourceUri: match[1],
+			};
+		}
+		return undefined;
+	}
+
 	protected logToUser(message: string, category?: string) {
 		// If we get a multi-line message that looks like it contains an error/stack trace, then process each
 		// line individually, so we can attach location metadata to individual lines.
@@ -1505,35 +1535,30 @@ export class DartDebugSession extends DebugSession {
 
 		// If the output line looks like a stack frame with users code, attempt to link it up to make
 		// it clickable.
-		const match = message && stackFrameWithUriPattern.exec(message);
-		if (match) {
-			// TODO: Handle dart: uris (using source references)?
-			const prefix = match[1];
-			const functionName = match[2];
-			const sourceUri = match[3];
-			const line = parseInt(match[4], 10);
-			const col = parseInt(match[5], 10);
-
-			const sourcePath: string | undefined = this.convertVMUriToSourcePath(sourceUri);
-			const canShowSource = sourcePath && sourcePath !== sourceUri && fs.existsSync(sourcePath);
-			const shortName = this.formatUriForShortDisplay(sourceUri);
+		const frame = this.getStackFrameData(message) || this.getWebStackFrameData(message);
+		if (frame) {
+			const sourcePath: string | undefined = this.convertVMUriToSourcePath(frame.sourceUri);
+			const canShowSource = sourcePath && sourcePath !== frame.sourceUri && fs.existsSync(sourcePath);
+			const shortName = this.formatUriForShortDisplay(frame.sourceUri);
 			const source = canShowSource ? new Source(shortName, sourcePath, undefined, undefined, undefined) : undefined;
 
-			let text = `${functionName}(${sourceUri}:${line}:${col})`;
+			let text = `${frame.functionName}(${frame.sourceUri}:${frame.line}:${frame.col})`;
 			if (source) {
 				output.body.source = source;
-				output.body.line = line;
-				output.body.column = col;
+				output.body.line = frame.line;
+				output.body.column = frame.col;
 				// Replace the output to only the text part to avoid the duplicated uri.
-				text = functionName;
+				text = frame.functionName;
 			}
 
 			// Colour based on whether it's framework code or not.
-			const isFramework = this.isSdkLibrary(sourceUri) || (this.isExternalLibrary(sourceUri) && sourceUri.startsWith("package:flutter/"));
+			const isFramework = this.isSdkLibrary(frame.sourceUri)
+				|| (this.isExternalLibrary(frame.sourceUri) && frame.sourceUri.startsWith("package:flutter/"))
+				|| (this.isExternalLibrary(frame.sourceUri) && frame.sourceUri.startsWith("package:flutter_web/"));
 			// In both dark and light themes, white() is more subtle than default text. VS Code maps black/white
 			// to ensure it's always visible regardless of theme (eg. white-on-white is still visible).
 			const colouredText = isFramework ? white(text) : text;
-			output.body.output = `${prefix}${colouredText}\n`;
+			output.body.output = `${frame.prefix || ""}${colouredText}\n`;
 		}
 
 		this.sendEvent(output);
@@ -1548,3 +1573,11 @@ export interface InstanceWithEvaluateName extends VMInstanceRef {
 }
 
 export type VmExceptionMode = "None" | "Unhandled" | "All";
+
+interface StackFrameData {
+	col: number;
+	functionName: string;
+	line: number;
+	prefix?: string;
+	sourceUri: string;
+}
