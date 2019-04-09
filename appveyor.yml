@@ -105,7 +105,8 @@ install:
   - dart-sdk\bin\pub global activate --no-executables pedantic 1.4.0
   - dart-sdk\bin\pub global activate --no-executables json_annotation 1.2.0
   - dart-sdk\bin\pub global activate --no-executables devtools
-  - dart-sdk\bin\pub global activate --no-executables webdev 2.0.0-alpha.1
+  # TODO: Remove this || true when we fix this version number...
+  - dart-sdk\bin\pub global activate --no-executables webdev 2.0.0-alpha.1 || true
   - cd ..
   - IF NOT EXIST ".test_results" mkdir ".test_results"
   - IF NOT EXIST ".dart_code_test_logs" mkdir ".dart_code_test_logs"
