@@ -358,7 +358,7 @@
 			},
 			{
 				"command": "flutter.hotReload",
-				"when": "dart-code:flutterProjectLoaded && inDebugMode && dart-code:service.reloadSources",
+				"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && dart-code:service.reloadSources",
 				"key": "ctrl+f5"
 			},
 			{
@@ -439,7 +439,7 @@
 				},
 				{
 					"command": "flutter.attach",
-					"when": "dart-code:flutterProjectLoaded && !inDebugMode && dart-code:flutterSupportsAttach"
+					"when": "dart-code:anyFlutterProjectLoaded && !inDebugMode && dart-code:flutterSupportsAttach"
 				},
 				{
 					"command": "dart.sortMembers",
@@ -467,15 +467,15 @@
 				},
 				{
 					"command": "dart.changeFlutterSdk",
-					"when": "dart-code:flutterProjectLoaded"
+					"when": "dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "flutter.packages.get",
-					"when": "dart-code:flutterProjectLoaded"
+					"when": "dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "flutter.packages.upgrade",
-					"when": "dart-code:flutterProjectLoaded"
+					"when": "dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "flutter.doctor"
@@ -521,11 +521,11 @@
 				},
 				{
 					"command": "flutter.hotRestart",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode && dart-code:service.hotRestart"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && dart-code:service.hotRestart"
 				},
 				{
 					"command": "flutter.hotReload",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode && dart-code:service.reloadSources"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && dart-code:service.reloadSources"
 				},
 				{
 					"command": "_flutter.hotReload.touchBar",
@@ -533,7 +533,7 @@
 				},
 				{
 					"command": "flutter.openTimeline",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode"
 				},
 				{
 					"command": "dart.openDevTools",
@@ -545,11 +545,11 @@
 				},
 				{
 					"command": "flutter.selectDevice",
-					"when": "dart-code:flutterProjectLoaded"
+					"when": "dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "flutter.launchEmulator",
-					"when": "dart-code:flutterProjectLoaded"
+					"when": "dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "flutter.openInAndroidStudio",
@@ -561,7 +561,7 @@
 				},
 				{
 					"command": "flutter.screenshot",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode"
 				},
 				{
 					"command": "_flutter.screenshot.touchBar",
@@ -572,13 +572,13 @@
 				{
 					"command": "flutter.hotReload",
 					"group": "navigation@59",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode && debugType == dart && dart-code:service.reloadSources"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:service.reloadSources"
 				}
 			],
 			"touchBar": [
 				{
 					"command": "_flutter.hotReload.touchBar",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode && debugType == dart && dart-code:service.reloadSources",
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:service.reloadSources",
 					"group": "9_debug@4"
 				},
 				{
@@ -588,19 +588,19 @@
 				},
 				{
 					"command": "_flutter.screenshot.touchBar",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode && debugType == dart",
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart",
 					"group": "93_utils"
 				}
 			],
 			"editor/title": [
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
 					"command": "pub.get",
 					"alt": "pub.upgrade",
 					"group": "navigation"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.packages.get",
 					"alt": "flutter.packages.upgrade",
 					"group": "navigation"
@@ -608,37 +608,37 @@
 			],
 			"editor/context": [
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
 					"command": "pub.get"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
 					"command": "pub.upgrade"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.packages.get"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.packages.upgrade"
 				}
 			],
 			"explorer/context": [
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
 					"command": "pub.get"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
 					"command": "pub.upgrade"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.packages.get"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:flutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.packages.upgrade"
 				},
 				{
@@ -653,12 +653,12 @@
 				},
 				{
 					"command": "flutter.openInAndroidStudio",
-					"when": "explorerResourceIsFolder && resourceFilename == android && dart-code:flutterProjectLoaded",
+					"when": "explorerResourceIsFolder && resourceFilename == android && dart-code:anyFlutterProjectLoaded",
 					"group": "1.5_open_ext@1"
 				},
 				{
 					"command": "flutter.openInXcode",
-					"when": "explorerResourceIsFolder && resourceFilename == ios && dart-code:flutterProjectLoaded && dart-code:platformName == mac",
+					"when": "explorerResourceIsFolder && resourceFilename == ios && dart-code:anyFlutterProjectLoaded && dart-code:platformName == mac",
 					"group": "1.5_open_ext@1"
 				}
 			],

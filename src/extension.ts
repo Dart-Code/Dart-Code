@@ -73,7 +73,7 @@ const HTML_MODE: vs.DocumentFilter = { language: "html", scheme: "file" };
 const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 // TODO: Define what this means better. Some commands a general Flutter (eg. Hot
 // Reload) and some are more specific (eg. Attach).
-const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
+const FLUTTER_PROJECT_LOADED = "dart-code:anyFlutterProjectLoaded";
 export const FLUTTER_SUPPORTS_ATTACH = "dart-code:flutterSupportsAttach";
 const DART_PLATFORM_NAME = "dart-code:platformName";
 export const SERVICE_EXTENSION_CONTEXT_PREFIX = "dart-code:serviceExtension.";
