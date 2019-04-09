@@ -358,7 +358,7 @@
 			},
 			{
 				"command": "flutter.hotReload",
-				"when": "dart-code:flutterProjectLoaded && inDebugMode",
+				"when": "dart-code:flutterProjectLoaded && inDebugMode && dart-code:service.reloadSources",
 				"key": "ctrl+f5"
 			},
 			{
@@ -521,11 +521,11 @@
 				},
 				{
 					"command": "flutter.hotRestart",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+					"when": "dart-code:flutterProjectLoaded && inDebugMode && dart-code:service.hotRestart"
 				},
 				{
 					"command": "flutter.hotReload",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode"
+					"when": "dart-code:flutterProjectLoaded && inDebugMode && dart-code:service.reloadSources"
 				},
 				{
 					"command": "_flutter.hotReload.touchBar",
@@ -572,13 +572,13 @@
 				{
 					"command": "flutter.hotReload",
 					"group": "navigation@59",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode && debugType == dart"
+					"when": "dart-code:flutterProjectLoaded && inDebugMode && debugType == dart && dart-code:service.reloadSources"
 				}
 			],
 			"touchBar": [
 				{
 					"command": "_flutter.hotReload.touchBar",
-					"when": "dart-code:flutterProjectLoaded && inDebugMode && debugType == dart",
+					"when": "dart-code:flutterProjectLoaded && inDebugMode && debugType == dart && dart-code:service.reloadSources",
 					"group": "9_debug@4"
 				},
 				{
