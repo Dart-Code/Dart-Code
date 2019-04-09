@@ -8,7 +8,7 @@ import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
 import { activate, defer, delay, ext, extApi, flutterWebBrokenMainFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, getPackages, openFile, positionOf, waitForResult, watchPromise } from "../../helpers";
 
-describe.skip("flutter for web debugger", () => {
+describe("flutter for web debugger", () => {
 	beforeEach("activate flutterWebHelloWorldMainFile", () => activate(flutterWebHelloWorldMainFile));
 	before("get packages (0)", () => getPackages(flutterWebHelloWorldMainFile));
 	before("get packages (1)", () => getPackages(flutterWebBrokenMainFile));
