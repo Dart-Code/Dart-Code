@@ -57,7 +57,6 @@ describe.skip("flutter web debugger", () => {
 	it("expected debugger services are available in debug mode", async () => {
 		const config = await startDebugger(flutterWebHelloWorldMainFile);
 		await Promise.all([
-			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
 			dc.configurationSequence(),
 			dc.launch(config),
 		]);
@@ -78,7 +77,6 @@ describe.skip("flutter web debugger", () => {
 		const config = await startDebugger(flutterWebHelloWorldMainFile);
 		config.noDebug = true;
 		await Promise.all([
-			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
 			dc.configurationSequence(),
 			dc.launch(config),
 		]);
@@ -98,7 +96,6 @@ describe.skip("flutter web debugger", () => {
 	it("expected debugger service extensions are available in debug mode", async () => {
 		const config = await startDebugger(flutterWebHelloWorldMainFile);
 		await Promise.all([
-			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
 			dc.configurationSequence(),
 			dc.launch(config),
 		]);
@@ -119,7 +116,6 @@ describe.skip("flutter web debugger", () => {
 		const config = await startDebugger(flutterWebHelloWorldMainFile);
 		config.noDebug = true;
 		await Promise.all([
-			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
 			dc.configurationSequence(),
 			dc.launch(config),
 		]);
