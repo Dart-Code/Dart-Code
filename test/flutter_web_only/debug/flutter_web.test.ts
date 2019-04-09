@@ -189,7 +189,7 @@ describe.skip("flutter web debugger", () => {
 		]);
 	});
 
-	it("hot reloads successfully", async () => {
+	it.skip("hot reloads successfully", async () => {
 		const config = await startDebugger(flutterWebHelloWorldMainFile);
 		await Promise.all([
 			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
@@ -296,7 +296,6 @@ describe.skip("flutter web debugger", () => {
 
 		const config = await startDebugger(flutterWebHelloWorldMainFile);
 		await Promise.all([
-			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
 			dc.configurationSequence(),
 			dc.launch(config),
 		]);
