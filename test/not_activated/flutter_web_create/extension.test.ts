@@ -27,7 +27,7 @@ describe("extension", () => {
 // Note: We can only really have one "real" test here because it'll activate the extension.
 // Other tests must go in their own folders and be listed in test_all/launch.json individually.
 
-describe("command", () => {
+describe.skip("command", () => {
 	it("Flutter: New Web Project can be invoked and creates trigger file", async () => {
 		const projectName = "my_test_fweb_proj";
 		const templateName = "flutter-web-preview";

@@ -5,7 +5,7 @@ import { fsPath, Sdks } from "../../src/utils";
 import { logInfo } from "../../src/utils/log";
 import { activateWithoutAnalysis, ext, extApi } from "../helpers";
 
-describe("test environment", () => {
+describe.skip("test environment", () => {
 	it("has opened the correct folder", () => {
 		const wfs = vs.workspace.workspaceFolders || [];
 		assert.equal(wfs.length, 1);
