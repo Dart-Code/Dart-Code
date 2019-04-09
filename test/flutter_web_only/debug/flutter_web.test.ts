@@ -233,7 +233,7 @@ describe.skip("flutter web debugger", () => {
 		]);
 	});
 
-	it("runs projects in sub-folders when the open file is in a project sub-folder", async () => {
+	it.skip("runs projects in sub-folders when the open file is in a project sub-folder", async () => {
 		await openFile(flutterWebHelloWorldExampleSubFolderMainFile);
 		const config = await startDebugger();
 		await Promise.all([
@@ -259,7 +259,7 @@ describe.skip("flutter web debugger", () => {
 		]);
 	});
 
-	it("runs projects in sub-folders when cwd is set to a project sub-folder", async () => {
+	it.skip("runs projects in sub-folders when cwd is set to a project sub-folder", async () => {
 		const config = await startDebugger(undefined, "example");
 		await Promise.all([
 			dc.configurationSequence(),
