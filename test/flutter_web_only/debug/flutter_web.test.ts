@@ -174,7 +174,7 @@ describe.skip("flutter web debugger", () => {
 	}).timeout(90000); // The 10 second delay makes this test slower and sometimes hit 60s.
 
 	it("runs a Flutter Web application with a variable in cwd", async () => {
-		const config = await startDebugger(flutterWebHelloWorldMainFile, "${workspaceFolder}/");
+		const config = await startDebugger(flutterWebHelloWorldMainFile, "${workspaceFolder}/hello_world/");
 		config.program = path.relative(fsPath(flutterWebHelloWorldFolder), fsPath(flutterWebHelloWorldMainFile));
 		await Promise.all([
 			dc.configurationSequence(),
