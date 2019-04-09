@@ -201,6 +201,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 		log(`Using ${DebuggerType[debugType]} debug adapter for this session`);
 
+		if (debugType === DebuggerType.FlutterWebTest) {
+			logError("Flutter Web tests are not currently supported");
+			window.showErrorMessage("Flutter Web tests are not currently supported");
+			return undefined; // undefined means silent (don't open launch.json).
+		}
+
 		// If we're attaching to Dart, ensure we get an observatory URI.
 		if (isAttachRequest) {
 			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
