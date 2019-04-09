@@ -237,6 +237,20 @@ describe("dart cli debugger", () => {
 		assert.equal(frames[0].source!.name, path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile)));
 	});
 
+	it("does not stop at a breakpoint in noDebug mode", async () => {
+		await openFile(helloWorldMainFile);
+		const config = await startDebugger(helloWorldMainFile);
+		config.noDebug = true;
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.setBreakpointWithoutHitting(config, {
+				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+				path: fsPath(helloWorldMainFile),
+				verified: false,
+			}),
+		]);
+	});
+
 	it("stops at a breakpoint in a part file", async function () {
 		if (!extApi.dartCapabilities.handlesBreakpointsInPartFiles) {
 			this.skip();
