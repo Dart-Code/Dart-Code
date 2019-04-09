@@ -70,6 +70,7 @@ export class DartDebugClient extends DebugClient {
 			workspaceFolder: undefined,
 		};
 		this.debugCommands.handleDebugSessionStart(this.currentSession);
+		this.on("terminated", (e: DebugProtocol.TerminatedEvent) => this.debugCommands.handleDebugSessionEnd(this.currentSession));
 
 		// We override the base method to swap for attachRequest when required, so that
 		// all the existing methods that provide useful functionality but assume launching

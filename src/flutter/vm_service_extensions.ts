@@ -156,4 +156,8 @@ export class FlutterVmServiceExtensions {
 		this.loadedServiceExtensions.length = 0;
 		vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, false);
 	}
+
+	public serviceExtensionIsLoaded(id: FlutterServiceExtension) {
+		return !!this.loadedServiceExtensions.find((loadedID) => loadedID === id);
+	}
 }
