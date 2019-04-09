@@ -545,7 +545,7 @@ describe.skip("flutter web debugger", () => {
 			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
 			watchPromise(
 				"writes_failure_output->assertOutputContains",
-				dc.assertOutputContains("stderr", "package:broken/main.dart")
+				dc.assertOutputContains("stderr", "methodThatThrows")
 					.then((event) => {
 						assert.equal(event.body.output.indexOf("package:broken/main.dart"), -1);
 						assert.equal(event.body.source!.name, "package:broken/main.dart");
