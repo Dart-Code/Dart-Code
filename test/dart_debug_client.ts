@@ -11,7 +11,7 @@ import { TestResultsProvider } from "../src/views/test_view";
 import { DebugClient, ILocation, IPartialLocation } from "./debug_client_ms";
 import { delay, watchPromise, withTimeout } from "./helpers";
 
-const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.debuggerUris"];
+const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.serviceRegistered", "dart.debuggerUris"];
 
 export class DartDebugClient extends DebugClient {
 	private currentSession: DebugSession;

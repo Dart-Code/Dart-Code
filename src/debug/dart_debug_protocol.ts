@@ -20,6 +20,8 @@ export interface VMEvent {
 	extensionRPC?: string;
 	extensionKind?: string;
 	extensionData?: any;
+	service?: string;
+	method?: string;
 }
 
 export interface VMBreakpoint extends VMObj {

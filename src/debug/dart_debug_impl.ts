@@ -262,6 +262,7 @@ export class DartDebugSession extends DebugSession {
 				this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event));
 				this.observatory.on("Extension", (event: VMEvent) => this.handleExtensionEvent(event));
 				this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event));
+				this.observatory.on("_Service", (event: VMEvent) => this.handleServiceEvent(event));
 				this.observatory.getVM().then(async (result): Promise<void> => {
 					const vm: VM = result.result as VM;
 
@@ -1062,6 +1063,13 @@ export class DartDebugSession extends DebugSession {
 		// Nothing Dart-specific, but Flutter overrides this
 	}
 
+	// _Service
+	public handleServiceEvent(event: VMEvent) {
+		const kind = event.kind;
+		if (kind === "ServiceRegistered")
+			this.handleServiceRegistered(event);
+	}
+
 	// PauseStart, PauseExit, PauseBreakpoint, PauseInterrupted, PauseException, Resume,
 	// BreakpointAdded, BreakpointResolved, BreakpointRemoved, Inspect, None
 	public async handleDebugEvent(event: VMEvent): Promise<void> {
@@ -1225,8 +1233,18 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
+	public handleServiceRegistered(event: VMEvent) {
+		if (event && event.service) {
+			this.notifyServiceRegistered(event.service);
+		}
+	}
+
 	private notifyServiceExtensionAvailable(id: string) {
 		this.sendEvent(new Event("dart.serviceExtensionAdded", { id }));
+	}
+
+	private notifyServiceRegistered(id: string) {
+		this.sendEvent(new Event("dart.serviceRegistered", { id }));
 	}
 
 	private knownOpenFiles: string[] = []; // Keep track of these for internal requests

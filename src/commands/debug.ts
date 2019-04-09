@@ -244,7 +244,7 @@ export class DebugCommands {
 		// Really we should track these per-session, but the changes of them being different given we only support one
 		// SDK at a time are practically zero.
 		if (debugSessions.length === 0)
-			this.flutterExtensions.markAllServiceExtensionsUnloaded();
+			this.flutterExtensions.markAllServicesUnloaded();
 	}
 
 	private handleCustomEvent(e: vs.DebugSessionCustomEvent): boolean {

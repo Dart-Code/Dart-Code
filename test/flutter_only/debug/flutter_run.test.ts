@@ -3,14 +3,14 @@ import * as os from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { FlutterServiceExtension } from "../../../src/flutter/vm_service_extensions";
+import { FlutterService, FlutterServiceExtension } from "../../../src/flutter/vm_service_extensions";
 import { fsPath } from "../../../src/utils";
 import { fetch } from "../../../src/utils/fetch";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
 import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, getPackages, openFile, positionOf, sb, waitForResult, watchPromise } from "../../helpers";
 
-describe("flutter run debugger (launch)", () => {
+describe.only("flutter run debugger (launch)", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
@@ -69,7 +69,48 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	});
 
-	it("expected service extensions are available in debug mode", async () => {
+	it("expected debugger services are available in debug mode", async () => {
+		const config = await startDebugger(flutterHelloWorldMainFile);
+		await Promise.all([
+			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
+			dc.configurationSequence(),
+			dc.launch(config),
+		]);
+
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === true);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === true);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === false);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === false);
+	});
+
+	it("expected debugger services are available in noDebug mode", async () => {
+		const config = await startDebugger(flutterHelloWorldMainFile);
+		config.noDebug = true;
+		await Promise.all([
+			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
+			dc.configurationSequence(),
+			dc.launch(config),
+		]);
+
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === true);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === true);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === false);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === false);
+	});
+
+	it("expected debugger service extensions are available in debug mode", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
 			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
@@ -78,6 +119,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 
 		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === true);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === true);
 
 		await Promise.all([
 			dc.waitForEvent("terminated"),
@@ -85,9 +127,10 @@ describe("flutter run debugger (launch)", () => {
 		]);
 
 		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === false);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === false);
 	});
 
-	it("expected service extensions are available in noDebug mode", async () => {
+	it("expected debugger service extensions are available in noDebug mode", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		config.noDebug = true;
 		await Promise.all([
@@ -97,6 +140,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 
 		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === true);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === true);
 
 		await Promise.all([
 			dc.waitForEvent("terminated"),
@@ -104,6 +148,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 
 		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === false);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === false);
 	});
 
 	it("can quit during a build", async () => {

@@ -77,6 +77,7 @@ const FLUTTER_PROJECT_LOADED = "dart-code:flutterProjectLoaded";
 export const FLUTTER_SUPPORTS_ATTACH = "dart-code:flutterSupportsAttach";
 const DART_PLATFORM_NAME = "dart-code:platformName";
 export const SERVICE_EXTENSION_CONTEXT_PREFIX = "dart-code:serviceExtension.";
+export const SERVICE_CONTEXT_PREFIX = "dart-code:service.";
 export let extensionPath: string | undefined;
 
 let analyzer: Analyzer;
