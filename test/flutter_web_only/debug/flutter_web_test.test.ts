@@ -8,7 +8,7 @@ import { DartDebugClient } from "../../dart_debug_client";
 import { killFlutterTester } from "../../debug_helpers";
 import { activate, defer, delay, ext, extApi, flutterWebHelloWorldFolder, flutterWebTestBrokenFile, flutterWebTestMainFile, flutterWebTestOtherFile, getLaunchConfiguration, openFile, positionOf, withTimeout } from "../../helpers";
 
-describe("flutter for web test debugger", () => {
+describe.skip("flutter for web test debugger", () => {
 	beforeEach("activate flutterWebTestMainFile", async () => {
 		await activate(flutterWebTestMainFile);
 	});
