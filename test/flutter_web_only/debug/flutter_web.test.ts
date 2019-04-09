@@ -2,11 +2,12 @@ import * as assert from "assert";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
+import { FlutterService, FlutterServiceExtension } from "../../../src/flutter/vm_service_extensions";
 import { fsPath } from "../../../src/utils";
 import { fetch } from "../../../src/utils/fetch";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterWebHelloWorldBrokenFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, sb, watchPromise } from "../../helpers";
+import { activate, defer, delay, ext, extApi, flutterWebHelloWorldBrokenFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, sb, waitForResult, watchPromise } from "../../helpers";
 
 describe.skip("flutter web debugger", () => {
 	beforeEach("activate flutterWebHelloWorldMainFile", () => activate(flutterWebHelloWorldMainFile));
@@ -29,6 +30,8 @@ describe.skip("flutter web debugger", () => {
 			cwd,
 			deviceId: "flutter-tester",
 		});
+		if (!config)
+			throw new Error(`Could not get launch configuration (got ${config})`);
 		await watchPromise("startDebugger->start", dc.start(config.debugServer));
 		return config;
 	}
@@ -49,6 +52,88 @@ describe.skip("flutter web debugger", () => {
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		]);
+	});
+
+	it("expected debugger services are available in debug mode", async () => {
+		const config = await startDebugger(flutterWebHelloWorldMainFile);
+		await Promise.all([
+			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
+			dc.configurationSequence(),
+			dc.launch(config),
+		]);
+
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === false); // TODO: Make true when supported!
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === true);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === false);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === false);
+	});
+
+	it("expected debugger services are available in noDebug mode", async () => {
+		const config = await startDebugger(flutterWebHelloWorldMainFile);
+		config.noDebug = true;
+		await Promise.all([
+			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
+			dc.configurationSequence(),
+			dc.launch(config),
+		]);
+
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === false); // TODO: Make true when supported!
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === true);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === false);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === false);
+	});
+
+	it("expected debugger service extensions are available in debug mode", async () => {
+		const config = await startDebugger(flutterWebHelloWorldMainFile);
+		await Promise.all([
+			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
+			dc.configurationSequence(),
+			dc.launch(config),
+		]);
+
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === true);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === true);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === false);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === false);
+	});
+
+	it("expected debugger service extensions are available in noDebug mode", async () => {
+		const config = await startDebugger(flutterWebHelloWorldMainFile);
+		config.noDebug = true;
+		await Promise.all([
+			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
+			dc.configurationSequence(),
+			dc.launch(config),
+		]);
+
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === true);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === true);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === false);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === false);
 	});
 
 	it("can quit during a build", async () => {
@@ -257,8 +342,8 @@ describe.skip("flutter web debugger", () => {
 			const stack = await dc.getStack();
 			const frames = stack.body.stackFrames;
 			assert.equal(frames[0].name, "MyHomePage.build");
-			assert.equal(frames[0].source.path, expectedLocation.path);
-			assert.equal(frames[0].source.name, "package:hello_world/main.dart");
+			assert.equal(frames[0].source!.path, expectedLocation.path);
+			assert.equal(frames[0].source!.name, "package:hello_world/main.dart");
 
 			await watchPromise("stops_at_a_breakpoint->resume", dc.resume());
 
@@ -279,8 +364,8 @@ describe.skip("flutter web debugger", () => {
 							const stack = await watchPromise(`stops_at_a_breakpoint->reload:${i}->getStack`, dc.getStack());
 							const frames = stack.body.stackFrames;
 							assert.equal(frames[0].name, "MyHomePage.build");
-							assert.equal(frames[0].source.path, expectedLocation.path);
-							assert.equal(frames[0].source.name, "package:hello_world/main.dart");
+							assert.equal(frames[0].source!.path, expectedLocation.path);
+							assert.equal(frames[0].source!.name, "package:hello_world/main.dart");
 						})
 						.then((_) => watchPromise(`stops_at_a_breakpoint->reload:${i}->resume`, dc.resume())),
 					watchPromise(`stops_at_a_breakpoint->reload:${i}->hotReload:breakpoint`, dc.hotReload()),
@@ -466,8 +551,8 @@ describe.skip("flutter web debugger", () => {
 				dc.assertOutputContains("stderr", "#0      MyBrokenHomePage.build")
 					.then((event) => {
 						assert.equal(event.body.output.indexOf("package:hello_world/broken.dart"), -1);
-						assert.equal(event.body.source.name, "package:hello_world/broken.dart");
-						assert.equal(event.body.source.path, fsPath(flutterWebHelloWorldBrokenFile));
+						assert.equal(event.body.source!.name, "package:hello_world/broken.dart");
+						assert.equal(event.body.source!.path, fsPath(flutterWebHelloWorldBrokenFile));
 						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
 						assert.equal(event.body.column, 5);
 					}),
