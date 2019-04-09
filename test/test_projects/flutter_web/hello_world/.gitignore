@@ -1,0 +1,9 @@
+.idea/
+.metadata
+*.iml
+android/
+build/
+example/.gitignore
+example/test/widget_test.dart
+ios/
+README.md
