@@ -9,7 +9,7 @@ import { fsPath } from "../../src/utils";
 import { sb, waitForResult } from "../helpers";
 import sinon = require("sinon");
 
-describe.skip("flutter for web", () => {
+describe("flutter for web", () => {
 	it("created a templated project", async () => {
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const getPackagesCommand = executeCommand.withArgs("dart.getPackages", sinon.match.any).resolves();

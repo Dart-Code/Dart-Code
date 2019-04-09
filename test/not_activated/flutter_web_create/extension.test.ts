@@ -7,7 +7,7 @@ import { StagehandTemplate } from "../../../src/pub/stagehand";
 import { FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, fsPath } from "../../../src/utils";
 import { ext, getRandomTempFolder, sb } from "../../helpers";
 
-describe.skip("test environment", () => {
+describe("test environment", () => {
 	it("has opened the correct folder", () => {
 		const wfs = vs.workspace.workspaceFolders || [];
 		assert.equal(wfs.length, 1);
