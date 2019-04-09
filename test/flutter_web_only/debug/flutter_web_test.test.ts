@@ -23,6 +23,7 @@ describe.skip("flutter web test debugger", () => {
 			path.join(ext.extensionPath, "out/src/debug/flutter_web_test_debug_entry.js"),
 			"dart",
 			undefined,
+			extApi.debugCommands,
 			extApi.testTreeProvider,
 		);
 		dc.defaultTimeout = 60000;
