@@ -1,0 +1,21 @@
+name: broken
+description: A broken Flutter Web project.
+
+dependencies:
+  flutter_web: any
+  flutter_web_ui: any
+
+dev_dependencies:
+  build_runner: any
+  build_web_compilers: any
+
+dependency_overrides:
+  # TODO: Change these to real packages when published.
+  flutter_web:
+    git:
+      url: https://github.com/flutter/flutter_web.git
+      path: packages/flutter_web
+  flutter_web_ui:
+    git:
+      url: https://github.com/flutter/flutter_web.git
+      path: packages/flutter_web_ui
