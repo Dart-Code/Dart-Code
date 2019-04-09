@@ -8,10 +8,14 @@ import { activateWithoutAnalysis, ext, extApi } from "../helpers";
 describe.skip("test environment", () => {
 	it("has opened the correct folder", () => {
 		const wfs = vs.workspace.workspaceFolders || [];
-		assert.equal(wfs.length, 1);
+		assert.equal(wfs.length, 2);
 		assert.ok(
-			fsPath(wfs[0].uri).endsWith(path.sep + "flutter_web_hello_world"),
-			`${fsPath(wfs[0].uri)} doesn't end with ${path.sep}flutter_web_hello_world`,
+			fsPath(wfs[0].uri).endsWith(`${path.sep}flutter_web${path.sep}hello_world`),
+			`${fsPath(wfs[0].uri)} doesn't end with ${path.sep}flutter_web${path.sep}hello_world`,
+		);
+		assert.ok(
+			fsPath(wfs[1].uri).endsWith(`${path.sep}flutter_web${path.sep}hello_world`),
+			`${fsPath(wfs[1].uri)} doesn't end with ${path.sep}flutter_web${path.sep}hello_world`,
 		);
 	});
 });

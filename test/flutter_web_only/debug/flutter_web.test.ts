@@ -7,7 +7,7 @@ import { fsPath } from "../../../src/utils";
 import { fetch } from "../../../src/utils/fetch";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterWebHelloWorldBrokenFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, openFile, positionOf, sb, waitForResult, watchPromise } from "../../helpers";
+import { activate, defer, delay, ext, extApi, flutterWebBrokenMainFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, getPackages, openFile, positionOf, sb, waitForResult, watchPromise } from "../../helpers";
 
 describe.skip("flutter web debugger", () => {
 	beforeEach("activate flutterWebHelloWorldMainFile", () => activate(flutterWebHelloWorldMainFile));
@@ -463,13 +463,13 @@ describe.skip("flutter web debugger", () => {
 			return;
 		}
 
-		await openFile(flutterWebHelloWorldBrokenFile);
-		const config = await startDebugger(flutterWebHelloWorldBrokenFile);
+		await openFile(flutterWebBrokenMainFile);
+		const config = await startDebugger(flutterWebBrokenMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^Oops").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(flutterWebHelloWorldBrokenFile),
+				path: fsPath(flutterWebBrokenMainFile),
 			}),
 			dc.launch(config),
 		]);
@@ -482,13 +482,13 @@ describe.skip("flutter web debugger", () => {
 			return;
 		}
 
-		await openFile(flutterWebHelloWorldBrokenFile);
-		const config = await startDebugger(flutterWebHelloWorldBrokenFile);
+		await openFile(flutterWebBrokenMainFile);
+		const config = await startDebugger(flutterWebBrokenMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(flutterWebHelloWorldBrokenFile),
+				path: fsPath(flutterWebBrokenMainFile),
 			}),
 			dc.launch(config),
 		]);
@@ -527,8 +527,8 @@ describe.skip("flutter web debugger", () => {
 	it("writes failure output", async () => {
 		// This test really wants to check stderr, but since the widgets library catches the exception is
 		// just comes via stdout.
-		await openFile(flutterWebHelloWorldBrokenFile);
-		const config = await startDebugger(flutterWebHelloWorldBrokenFile);
+		await openFile(flutterWebBrokenMainFile);
+		const config = await startDebugger(flutterWebBrokenMainFile);
 		await Promise.all([
 			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
 			watchPromise("writes_failure_output->assertOutputContains", dc.assertOutputContains("stderr", "Exception: Oops\n")),
@@ -537,8 +537,8 @@ describe.skip("flutter web debugger", () => {
 	});
 
 	it("moves known files from call stacks to metadata", async () => {
-		await openFile(flutterWebHelloWorldBrokenFile);
-		const config = await startDebugger(flutterWebHelloWorldBrokenFile);
+		await openFile(flutterWebBrokenMainFile);
+		const config = await startDebugger(flutterWebBrokenMainFile);
 		await Promise.all([
 			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
 			watchPromise(

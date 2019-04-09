@@ -165,7 +165,7 @@ async function runAllTests(): Promise<void> {
 		await runTests("flutter_web_create_tests", "flutter_web_create_tests.code-workspace", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("dart_only", "hello_world", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("flutter_only", "flutter_hello_world", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("flutter_web_only", "flutter_web_hello_world", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("flutter_web_only", "flutter_web", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		if (flutterRoot) {
 			await runTests("flutter_repository", flutterRoot, flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		} else {

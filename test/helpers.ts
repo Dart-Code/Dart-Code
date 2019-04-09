@@ -79,11 +79,13 @@ export const flutterTestMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorl
 export const flutterTestOtherFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/other_test.dart"));
 export const flutterTestBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/broken_test.dart"));
 // Flutter Web
-export const flutterWebHelloWorldFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/flutter_web_hello_world"));
+export const flutterWebProjectContainerFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/flutter_web"));
+export const flutterWebHelloWorldFolder = vs.Uri.file(path.join(fsPath(flutterWebProjectContainerFolder), "hello_world"));
 export const flutterWebHelloWorldMainFile = vs.Uri.file(path.join(fsPath(flutterWebHelloWorldFolder), "lib/main.dart"));
 export const flutterWebHelloWorldExampleSubFolder = vs.Uri.file(path.join(fsPath(flutterWebHelloWorldFolder), "example"));
 export const flutterWebHelloWorldExampleSubFolderMainFile = vs.Uri.file(path.join(fsPath(flutterWebHelloWorldExampleSubFolder), "lib/main.dart"));
-export const flutterWebHelloWorldBrokenFile = vs.Uri.file(path.join(fsPath(flutterWebHelloWorldFolder), "lib/broken.dart"));
+export const flutterWebBrokenFolder = vs.Uri.file(path.join(fsPath(flutterWebProjectContainerFolder), "broken"));
+export const flutterWebBrokenMainFile = vs.Uri.file(path.join(fsPath(flutterWebBrokenFolder), "lib/main.dart"));
 // Flutter Web Test
 export const flutterWebTestMainFile = vs.Uri.file(path.join(fsPath(flutterWebHelloWorldFolder), "test/basic_test.dart"));
 export const flutterWebTestBrokenFile = vs.Uri.file(path.join(fsPath(flutterWebHelloWorldFolder), "test/broken_test.dart"));
