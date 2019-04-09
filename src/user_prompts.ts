@@ -73,7 +73,16 @@ async function promptToInstallFlutterExtension(): Promise<boolean> {
 		doNotAskAgainAction,
 	);
 	if (res === installExtension) {
-		await vs.commands.executeCommand("workbench.extensions.installExtension", flutterExtensionIdentifier);
+		await vs.window.withProgress({ location: vs.ProgressLocation.Notification },
+			(progress) => {
+				progress.report({ message: "Installing Flutter extension" });
+
+				return new Promise((resolve) => {
+					vs.extensions.onDidChange((e) => resolve());
+					vs.commands.executeCommand("workbench.extensions.installExtension", flutterExtensionIdentifier);
+				});
+			},
+		);
 		reloadExtension();
 	}
 
