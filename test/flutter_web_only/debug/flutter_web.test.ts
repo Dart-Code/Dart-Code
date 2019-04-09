@@ -545,11 +545,11 @@ describe.skip("flutter web debugger", () => {
 			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
 			watchPromise(
 				"writes_failure_output->assertOutputContains",
-				dc.assertOutputContains("stderr", "#0      MyBrokenHomePage.build")
+				dc.assertOutputContains("stderr", "package:broken/main.dart")
 					.then((event) => {
-						assert.equal(event.body.output.indexOf("package:hello_world/broken.dart"), -1);
-						assert.equal(event.body.source!.name, "package:hello_world/broken.dart");
-						assert.equal(event.body.source!.path, fsPath(flutterWebHelloWorldBrokenFile));
+						assert.equal(event.body.output.indexOf("package:broken/main.dart"), -1);
+						assert.equal(event.body.source!.name, "package:broken/main.dart");
+						assert.equal(event.body.source!.path, fsPath(flutterWebBrokenMainFile));
 						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
 						assert.equal(event.body.column, 5);
 					}),
