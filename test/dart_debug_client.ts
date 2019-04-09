@@ -181,15 +181,19 @@ export class DartDebugClient extends DebugClient {
 				},
 				this.defaultTimeout,
 			);
-			this.once(type, (event: DebugProtocol.Event) => {
+			const handler = (event: DebugProtocol.Event) => {
 				try {
 					const notification = event.body as T;
-					if (filter(notification))
+					if (filter(notification)) {
 						resolve(notification);
+						this.removeListener(type, handler);
+					}
 				} catch (e) {
 					reject(e);
+					this.removeListener(type, handler);
 				}
-			});
+			};
+			this.on(type, handler);
 		});
 	}
 
