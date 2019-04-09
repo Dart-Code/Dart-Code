@@ -11,6 +11,8 @@ import { activate, defer, delay, ext, extApi, flutterWebBrokenMainFile, flutterW
 
 describe.skip("flutter web debugger", () => {
 	beforeEach("activate flutterWebHelloWorldMainFile", () => activate(flutterWebHelloWorldMainFile));
+	before("get packages (0)", () => getPackages(flutterWebHelloWorldMainFile));
+	before("get packages (1)", () => getPackages(flutterWebBrokenMainFile));
 	beforeEach("set timeout", function () {
 		this.timeout(60000); // These tests can be slow due to long builds.
 	});
