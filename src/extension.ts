@@ -278,9 +278,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		context.subscriptions.push(flutterDaemon);
 		setUpDaemonMessageHandler(context, flutterDaemon);
 	}
-	if (workspaceContext.hasAnyFlutterProjects) {
-		setUpHotReloadOnSave(context, diagnostics);
-	}
 
 	util.logTime("All other stuff before debugger..");
 
@@ -346,6 +343,11 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const analyzerCommands = new AnalyzerCommands(context, analyzer);
 	const sdkCommands = new SdkCommands(context, workspaceContext, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
 	const debugCommands = new DebugCommands(extContext, workspaceContext, analytics, pubGlobal);
+
+	// Wire up handling of Hot Reload on Save.
+	if (workspaceContext.hasAnyFlutterProjects) {
+		setUpHotReloadOnSave(context, diagnostics, debugCommands);
+	}
 
 	// Register URI handler.
 	context.subscriptions.push(vs.window.registerUriHandler(new DartUriHandler(flutterCapabilities)));
