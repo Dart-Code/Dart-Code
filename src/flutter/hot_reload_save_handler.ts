@@ -1,5 +1,5 @@
 import * as path from "path";
-import { commands, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, workspace } from "vscode";
+import { commands, debug, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, workspace } from "vscode";
 import { DebugCommands } from "../commands/debug";
 import { config } from "../config";
 import { restartReasonSave } from "../constants";
@@ -9,6 +9,9 @@ import { FlutterService } from "./vm_service_extensions";
 export function setUpHotReloadOnSave(context: ExtensionContext, diagnostics: DiagnosticCollection, debugCommands: DebugCommands) {
 	let hotReloadDelayTimer: NodeJS.Timer | undefined;
 	context.subscriptions.push(workspace.onDidSaveTextDocument((td) => {
+		if (!debug.activeDebugSession)
+			return;
+
 		// Bailed out if we're disabled, in an external file, or not Dart.
 		if (!config.flutterHotReloadOnSave
 			|| !isAnalyzableAndInWorkspace(td)
