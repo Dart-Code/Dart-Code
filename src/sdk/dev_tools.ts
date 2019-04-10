@@ -49,7 +49,7 @@ export class DevTools implements vs.Disposable {
 		}
 		try {
 			const url = await this.devtoolsUrl;
-			const fullUrl = `${url}?hide=debugger&uri=${encodeURIComponent(session.observatoryUri)}${config.useDevToolsDarkTheme ? "&theme=dark" : ""}`;
+			const fullUrl = `${url}?hide=debugger&uri=${encodeURIComponent(session.vmServiceUri)}${config.useDevToolsDarkTheme ? "&theme=dark" : ""}`;
 			this.devToolsStatusBarItem.text = "Dart DevTools";
 			this.devToolsStatusBarItem.tooltip = `Dart DevTools is running at ${url}`;
 			this.devToolsStatusBarItem.command = "dart.openDevTools";
