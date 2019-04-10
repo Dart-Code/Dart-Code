@@ -12,6 +12,10 @@ export function setUpHotReloadOnSave(context: ExtensionContext, diagnostics: Dia
 		if (!debug.activeDebugSession)
 			return;
 
+		// Don't do if there are no debug sessions that support it
+		if (!debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload))
+			return;
+
 		// Bailed out if we're disabled, in an external file, or not Dart.
 		if (!config.flutterHotReloadOnSave
 			|| !isAnalyzableAndInWorkspace(td)
@@ -23,10 +27,6 @@ export function setUpHotReloadOnSave(context: ExtensionContext, diagnostics: Dia
 		const errors = diagnostics.get(td.uri);
 		const hasErrors = errors && !!errors.find((d) => d.severity === DiagnosticSeverity.Error);
 		if (hasErrors)
-			return;
-
-		// Don't do if there are no debug sessions that support it
-		if (!debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload))
 			return;
 
 		// Debounce to avoid reloading multiple times during multi-file-save (Save All).
