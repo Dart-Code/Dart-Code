@@ -816,7 +816,7 @@
 						"dark",
 						"light"
 					],
-					"default": "light",
+					"default": "dark",
 					"description": "The theme to use for Dart DevTools.",
 					"scope": "window"
 				},
