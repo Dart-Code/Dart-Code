@@ -158,8 +158,7 @@ async function createFlutterProject(projectPath: string, sampleID: string): Prom
 
 function handleFlutterWelcome(workspaceFolder: vs.WorkspaceFolder, sampleID: string) {
 	const entryFile = path.join(fsPath(workspaceFolder.uri), "lib/main.dart");
-	if (fs.existsSync(entryFile))
-		vs.commands.executeCommand("vscode.open", vs.Uri.file(entryFile));
+	openFile(entryFile);
 	if (sampleID)
 		vs.window.showInformationMessage(`${sampleID} sample ready! Connect a device and press F5 to run.`);
 	else
@@ -170,7 +169,18 @@ function handleDartWelcome(workspaceFolder: vs.WorkspaceFolder, template: Stageh
 	const workspacePath = fsPath(workspaceFolder.uri);
 	const projectName = path.basename(workspacePath);
 	const entryFile = path.join(workspacePath, template.entrypoint.replace("__projectName__", projectName));
-	if (fs.existsSync(entryFile))
-		vs.commands.executeCommand("vscode.open", vs.Uri.file(entryFile));
+	openFile(entryFile);
 	vs.window.showInformationMessage(`${template.label} project ready!`);
+}
+
+/// Opens a file, but does it in a setTimeout to work around VS Code reveal bug
+/// https://github.com/Microsoft/vscode/issues/71588#event-2252962973
+function openFile(entryFile: string) {
+	if (!fs.existsSync(entryFile))
+		return;
+
+	// TODO: Remove this setTimeout when it's no longer required.
+	setTimeout(() => {
+		vs.commands.executeCommand("vscode.open", vs.Uri.file(entryFile));
+	}, 100);
 }
