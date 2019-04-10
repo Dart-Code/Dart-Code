@@ -137,7 +137,10 @@ export class Analyzer extends AnalyzerGen {
 
 	protected shouldHandleMessage(message: string): boolean {
 		// This will include things like Observatory output and some analyzer logging code.
-		return !message.startsWith("--- ") && !message.startsWith("+++ ");
+		return !message.startsWith("--- ")
+			&& !message.startsWith("+++ ")
+			&& !message.startsWith("Observatory listening on")
+			&& !message.startsWith("Observatory server");
 	}
 
 	private async requestDiagnosticsUpdate() {
