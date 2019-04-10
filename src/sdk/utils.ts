@@ -58,7 +58,7 @@ export function handleMissingSdks(context: ExtensionContext, analytics: Analytic
 	}));
 	// Wait a while before showing the error to allow the code above to have run.
 	setTimeout(() => {
-		if (attemptedToUseFlutter) {
+		if (workspaceContext.hasAnyFlutterProjects || attemptedToUseFlutter) {
 			if (workspaceContext.sdks.flutter && !workspaceContext.sdks.dart) {
 				showFluttersDartSdkActivationFailure();
 			} else {
