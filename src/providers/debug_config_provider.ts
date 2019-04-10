@@ -202,6 +202,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		log(`Using ${DebuggerType[debugType]} debug adapter for this session`);
 
 		if (debugType === DebuggerType.FlutterWebTest) {
+			// TODO: IMPORTANT! When removing this if statement, add FlutterWebTest to
+			// the call to TestResultsProvider.flagSuiteStart below!
 			logError("Flutter Web tests are not currently supported");
 			window.showErrorMessage("Flutter Web tests are not currently supported");
 			return undefined; // undefined means silent (don't open launch.json).
@@ -307,7 +309,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
-		if (debugType === DebuggerType.FlutterTest || debugType === DebuggerType.FlutterWebTest || debugType === DebuggerType.PubTest) {
+		if (debugType === DebuggerType.FlutterTest /*|| debugType === DebuggerType.FlutterWebTest*/ || debugType === DebuggerType.PubTest) {
 			const isRunningTestSubset = debugConfig.args && (debugConfig.args.indexOf("--name") !== -1 || debugConfig.args.indexOf("--pname") !== -1);
 			TestResultsProvider.flagSuiteStart(debugConfig.program, !isRunningTestSubset);
 		}
