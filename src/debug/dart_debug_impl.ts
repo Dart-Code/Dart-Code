@@ -182,7 +182,6 @@ export class DartDebugSession extends DebugSession {
 		let appArgs = [];
 		appArgs.push("--enable-vm-service=0");
 		appArgs.push("--pause_isolates_on_start=true");
-		appArgs.push("-DDART_SERVICE_USE_AUTH=true");
 		if (args.enableAsserts !== false) { // undefined = on
 			appArgs.push("--enable-asserts");
 		}
