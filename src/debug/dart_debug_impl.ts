@@ -36,7 +36,7 @@ export class DartDebugSession extends DebugSession {
 	protected processExited = false;
 	public observatory?: ObservatoryConnection;
 	protected cwd?: string;
-	protected noDebug?: boolean;
+	public noDebug?: boolean;
 	private logFile?: string;
 	private logStream?: fs.WriteStream;
 	public debugSdkLibraries: boolean;

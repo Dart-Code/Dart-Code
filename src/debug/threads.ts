@@ -90,6 +90,9 @@ export class ThreadManager {
 	}
 
 	private async setLibrariesDebuggable(isolateRef: VMIsolateRef): Promise<void> {
+		if (this.debugSession.noDebug)
+			return;
+
 		// Helpers to categories libraries as SDK/ExternalLibrary/not.
 		// Set whether libraries should be debuggable based on user settings.
 		const response = await this.debugSession.observatory.getIsolate(isolateRef.id);
