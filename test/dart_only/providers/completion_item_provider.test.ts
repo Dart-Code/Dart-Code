@@ -187,13 +187,13 @@ main() {
 		`);
 			const completions = await getCompletionsViaProviderAt("ProcessInf^");
 
-			let completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo()", "ProcessInfo");
+			let completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
 			completion = await resolveCompletion(completion);
 
 			assert.ok(completion.additionalTextEdits.length);
 			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
-			assert.equal(completion.detail, "Auto import from 'dart:io';\n\n() → ProcessInfo");
+			assert.equal(completion.detail, "Auto import from 'dart:io'\n\n() → ProcessInfo");
 			assert.equal((completion.documentation as vs.MarkdownString).value, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
 			assert.equal(completion.filterText, "ProcessInfo");
 			assert.equal((completion.insertText as vs.SnippetString).value, "ProcessInfo");
