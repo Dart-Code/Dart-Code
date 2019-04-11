@@ -848,9 +848,9 @@ describe("dart cli debugger", () => {
 		});
 
 		it("when provided only a port in launch.config", async () => {
-			const process = spawnDartProcessPaused(await getLaunchConfiguration(helloWorldMainFile));
+			const process = spawnDartProcessPaused(await getLaunchConfiguration(helloWorldMainFile), "--disable-service-auth-codes");
 			const observatoryUri = await process.observatoryUri;
-			const observatoryPort = /:([0-9]+)\/?$/.exec(observatoryUri)![1];
+			const observatoryPort = /:([0-9]+)\//.exec(observatoryUri)![1];
 
 			// Include whitespace as a test for trimming.
 			const config = await attachDebugger(` ${observatoryPort} `);

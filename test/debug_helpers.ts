@@ -72,7 +72,7 @@ export async function ensureMapEntry(mapEntries: DebugProtocol.Variable[], entry
 	assert.ok(found, `Didn't find map entry for ${entry.key.value}=${entry.value.value}\nGot:\n  ${keyValues.join("\n  ")})`);
 }
 
-export function spawnDartProcessPaused(config: DebugConfiguration | undefined | null): DartProcess {
+export function spawnDartProcessPaused(config: DebugConfiguration | undefined | null, ...vmArgs: string[]): DartProcess {
 	if (!config)
 		throw new Error(`Debug config resolved to ${config}!`);
 	const process = safeSpawn(
@@ -81,6 +81,7 @@ export function spawnDartProcessPaused(config: DebugConfiguration | undefined | 
 		[
 			"--enable-vm-service=0",
 			"--pause_isolates_on_start=true",
+			...vmArgs,
 			config.program,
 		],
 	);
