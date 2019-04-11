@@ -31,7 +31,7 @@ const keyValue = "value";
 ///     { timeDilation: x.x }
 ///     { enabled: true }
 ///
-/// This map tracks the name of the key for a fivengiven extension.
+/// This map tracks the name of the key for a given extension.
 const toggleExtensionStateKeys: { [key: string]: string } = {
 	[FlutterServiceExtension.PlatformOverride]: keyValue,
 	[FlutterServiceExtension.DebugBanner]: keyEnabled,
