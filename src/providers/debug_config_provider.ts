@@ -314,6 +314,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			TestResultsProvider.flagSuiteStart(debugConfig.program, !isRunningTestSubset);
 		}
 
+		debugConfig.debuggerType = debugType;
+
 		log(`Debug session starting...\n    ${JSON.stringify(debugConfig, undefined, 4).replace(/\n/g, "\n    ")}`);
 
 		// Stash the config to support the "rerun last test(s)" command.
@@ -477,7 +479,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 }
 
-enum DebuggerType {
+export enum DebuggerType {
 	Dart,
 	PubTest,
 	Flutter,

@@ -5,6 +5,7 @@ import { Analytics } from "../analytics";
 import { Context } from "../context";
 import { CoverageData, PromiseCompleter } from "../debug/utils";
 import { FlutterServiceExtension, FlutterServiceExtensionArgs, FlutterVmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../flutter/vm_service_extensions";
+import { DebuggerType } from "../providers/debug_config_provider";
 import { PubGlobal } from "../pub/global";
 import { DevTools } from "../sdk/dev_tools";
 import { showDevToolsNotificationIfAppropriate } from "../user_prompts";
@@ -39,7 +40,7 @@ export class DebugCommands {
 	public readonly flutterExtensions: FlutterVmServiceExtensions;
 	private readonly devTools: DevTools;
 
-	constructor(private readonly context: Context, private readonly workspaceContext: WorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
+	constructor(private readonly context: Context, workspaceContext: WorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
 		this.flutterExtensions = new FlutterVmServiceExtensions(this.sendServiceSetting);
 		this.devTools = new DevTools(workspaceContext.sdks, analytics, pubGlobal);
 		context.subscriptions.push(this.devTools);
@@ -329,7 +330,8 @@ export class DebugCommands {
 		} else if (e.event === "dart.debuggerUris") {
 			session.observatoryUri = e.body.observatoryUri;
 			session.vmServiceUri = e.body.vmServiceUri;
-			if (this.workspaceContext.hasAnyFlutterProjects)
+			const debuggerType = session.session.configuration.debuggerType;
+			if (debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.FlutterWeb)
 				showDevToolsNotificationIfAppropriate(this.context);
 			// if (e.body.isProbablyReconnectable) {
 			// 	mostRecentAttachedProbablyReusableObservatoryUri = session.observatoryUri;
