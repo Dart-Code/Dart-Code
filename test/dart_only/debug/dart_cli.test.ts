@@ -848,7 +848,8 @@ describe("dart cli debugger", () => {
 		});
 
 		it("when provided only a port in launch.config", async () => {
-			const process = spawnDartProcessPaused(await getLaunchConfiguration(helloWorldMainFile), "--disable-service-auth-codes");
+			const vmArgs = extApi.dartCapabilities.supportsDisableServiceTokens ? ["--disable-service-auth-codes"] : [];
+			const process = spawnDartProcessPaused(await getLaunchConfiguration(helloWorldMainFile), ...vmArgs);
 			const observatoryUri = await process.observatoryUri;
 			const observatoryPort = /:([0-9]+)\//.exec(observatoryUri)![1];
 
