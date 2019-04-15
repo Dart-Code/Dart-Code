@@ -8,7 +8,7 @@ import { PubGlobal } from "../pub/global";
 import { openInBrowser, Sdks } from "../utils";
 import { log, logError, logProcess } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
-import { DartDebugSessionInformation, extractObservatoryPort } from "../utils/vscode/debug";
+import { DartDebugSessionInformation } from "../utils/vscode/debug";
 import { pubPath } from "./utils";
 
 const devtools = "devtools";
@@ -36,12 +36,10 @@ export class DevTools implements vs.Disposable {
 	public async spawnForSession(session: DartDebugSessionInformation): Promise<{ url: string, dispose: () => void } | undefined> {
 		this.analytics.logDebuggerOpenDevTools();
 
-		const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtools, undefined, "0.0.11", true);
+		const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtools, undefined, "0.0.15", true);
 		if (!isAvailable) {
 			return undefined;
 		}
-
-		const observatoryPort = extractObservatoryPort(session.vmServiceUri);
 
 		if (!this.devtoolsUrl) {
 			this.devtoolsUrl = vs.window.withProgress({
@@ -51,7 +49,7 @@ export class DevTools implements vs.Disposable {
 		}
 		try {
 			const url = await this.devtoolsUrl;
-			const fullUrl = `${url}?hide=debugger&port=${observatoryPort}${config.useDevToolsDarkTheme ? "&theme=dark" : ""}`;
+			const fullUrl = `${url}?hide=debugger&uri=${session.observatoryUri}${config.useDevToolsDarkTheme ? "&theme=dark" : ""}`;
 			this.devToolsStatusBarItem.text = "Dart DevTools";
 			this.devToolsStatusBarItem.tooltip = `Dart DevTools is running at ${url}`;
 			this.devToolsStatusBarItem.command = "dart.openDevTools";
