@@ -76,7 +76,7 @@ main() {
 		assert.equal(constrComp.detail, "() → ProcessInfo");
 	});
 
-	it("full populates a completion", async () => {
+	it("fully populates a completion", async () => {
 		await openFile(everythingFile);
 		const completions = await getCompletionsAt(`^return str`);
 
@@ -97,7 +97,7 @@ main() {
 		assert.equal(cl.textEdit, undefined); // We don't use this (we use insertText and range).
 	});
 
-	it("full does not include auto-import notes on an in-scope completion", async () => {
+	it("does not include auto-import notes on an in-scope completion", async () => {
 		await openFile(everythingFile);
 		const completions = await getCompletionsViaProviderAt(`^return str`);
 
