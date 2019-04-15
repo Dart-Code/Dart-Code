@@ -6,7 +6,7 @@ import { config } from "../config";
 import { LogCategory, LogSeverity } from "../debug/utils";
 import { PubGlobal } from "../pub/global";
 import { openInBrowser, Sdks } from "../utils";
-import { DartDebugSessionInformation, extractObservatoryPort } from "../utils/debug";
+import { DartDebugSessionInformation } from "../utils/debug";
 import { log, logError, logProcess } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 import { pubPath } from "./utils";
@@ -41,8 +41,6 @@ export class DevTools implements vs.Disposable {
 			return;
 		}
 
-		const observatoryPort = extractObservatoryPort(session.observatoryUri);
-
 		if (!this.devtoolsUrl) {
 			this.devtoolsUrl = vs.window.withProgress({
 				location: vs.ProgressLocation.Notification,
@@ -51,7 +49,7 @@ export class DevTools implements vs.Disposable {
 		}
 		try {
 			const url = await this.devtoolsUrl;
-			const fullUrl = `${url}?hide=debugger&port=${observatoryPort}${config.useDevToolsDarkTheme ? "&theme=dark" : ""}`;
+			const fullUrl = `${url}?hide=debugger&uri=${session.observatoryUri}${config.useDevToolsDarkTheme ? "&theme=dark" : ""}`;
 			this.devToolsStatusBarItem.text = "Dart DevTools";
 			this.devToolsStatusBarItem.tooltip = `Dart DevTools is running at ${url}`;
 			this.devToolsStatusBarItem.command = "dart.openDevTools";
