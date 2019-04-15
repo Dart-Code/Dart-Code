@@ -405,7 +405,7 @@ export async function acceptFirstSuggestion(): Promise<void> {
 	// before we accept, so that we don't insert the standard label without the extra
 	// edits which are added in in resolve).
 	await vs.commands.executeCommand("editor.action.triggerSuggest");
-	await delay(500);
+	await delay(1000); // Increased from 500, this is definitely a source of flakes.
 	await waitForEditorChange(() => vs.commands.executeCommand("acceptSelectedSuggestion"));
 }
 
