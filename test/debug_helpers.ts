@@ -4,7 +4,7 @@ import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { ObservatoryConnection } from "../src/debug/dart_debug_protocol";
 import { isWin, LogCategory, LogSeverity } from "../src/debug/utils";
-import { log } from "../src/utils/log";
+import { log, logProcess } from "../src/utils/log";
 import { safeSpawn } from "../src/utils/processes";
 import { DartDebugClient } from "./dart_debug_client";
 import { defer, getLaunchConfiguration } from "./helpers";
@@ -85,6 +85,7 @@ export function spawnDartProcessPaused(config: DebugConfiguration | undefined | 
 			config.program,
 		],
 	);
+	logProcess(LogCategory.CI, process);
 	const dartProcess = new DartProcess(process);
 	defer(() => {
 		if (!dartProcess.hasExited)
