@@ -347,6 +347,11 @@
 				"command": "flutter.openInXcode",
 				"title": "Open in Xcode",
 				"category": "Flutter"
+			},
+			{
+				"command": "dart.openDependency",
+				"title": "Open Package",
+				"category": "Dart"
 			}
 		],
 		"keybindings": [
@@ -560,6 +565,10 @@
 					"when": "false"
 				},
 				{
+					"command": "dart.openDependency",
+					"when": "false"
+				},
+				{
 					"command": "flutter.screenshot",
 					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode"
 				},
@@ -692,6 +701,10 @@
 					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testTestNode",
 					"command": "dart.startWithoutDebuggingTest",
 					"group": "4.5_exec@1"
+				},
+				{
+					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:dependencyPackageNode",
+					"command": "dart.openDependency"
 				}
 			]
 		},

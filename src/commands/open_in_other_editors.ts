@@ -11,7 +11,6 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
 	constructor(private readonly sdks: Sdks) {
-
 		this.disposables.push(
 			vs.commands.registerCommand("flutter.openInAndroidStudio", this.openInAndroidStudio, this),
 			vs.commands.registerCommand("flutter.openInXcode", this.openInXcode, this),
