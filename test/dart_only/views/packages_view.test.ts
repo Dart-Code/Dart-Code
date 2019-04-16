@@ -34,14 +34,18 @@ describe("packages tree", () => {
 		const myPackageLibContents = extApi.packagesTreeProvider.getChildren(myPackage);
 
 		const names = myPackageLibContents.map((f) => f.label);
+		// This isn't quite the same as VS Code explorer, as it does complicated things
+		// like trying to sort file_9 and file_10 as a user would expect, and also
+		// seems to put capitals after lowercase for the same letter.
 		const expectedNamesInOrder = ["z_folder",
-			"MY_FILE_2.txt",
 			"my_file.txt",
-			"ZZZ_2.txt",
+			"MY_FILE_2.txt",
 			"zzz.txt",
+			"ZZZ_2.txt",
 		];
 		const actualNames = names.filter((n) => expectedNamesInOrder.indexOf(n) !== -1);
 
-		assert.equal(actualNames, expectedNamesInOrder);
+		assert.equal(actualNames.length, expectedNamesInOrder.length);
+		actualNames.forEach((name, index) => assert.equal(name, expectedNamesInOrder[index]));
 	});
 });

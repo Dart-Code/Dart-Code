@@ -3,6 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { PackageMap } from "../debug/package_map";
 import { fsPath } from "../utils";
+import { sortBy } from "../utils/array";
 import { hasPackagesFile } from "../utils/fs";
 import { logWarn } from "../utils/log";
 
@@ -75,7 +76,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 	private getPackages(project: PackageDepProject): PackageDep[] {
 		const map = new PackageMap(path.join(fsPath(project.resourceUri), ".packages"));
 		const packages = map.packages;
-		const packageNames = Object.keys(packages).sort();
+		const packageNames = sortBy(Object.keys(packages), (s) => s.toLowerCase());
 
 		return packageNames.filter((name) => name !== map.localPackageName).map((name) => {
 			const path = packages[name];
@@ -84,15 +85,21 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 	}
 
 	private getFilesAndFolders(folder: PackageDepFolder): PackageDep[] {
-		return fs.readdirSync(fsPath(folder.resourceUri)).map((name) => {
+		const childNames = sortBy(fs.readdirSync(fsPath(folder.resourceUri)), (s) => s.toLowerCase());
+		const folders: PackageDepFolder[] = [];
+		const files: PackageDepFile[] = [];
+
+		childNames.forEach((name) => {
 			const filePath = path.join(fsPath(folder.resourceUri), name);
 			const stat = fs.statSync(filePath);
 			if (stat.isFile()) {
-				return new PackageDepFile(name, vs.Uri.file(filePath));
+				files.push(new PackageDepFile(name, vs.Uri.file(filePath)));
 			} else if (stat.isDirectory()) {
-				return new PackageDepFolder(name, vs.Uri.file(filePath));
+				folders.push(new PackageDepFolder(name, vs.Uri.file(filePath)));
 			}
 		});
+
+		return [...folders, ...files];
 	}
 }
 
