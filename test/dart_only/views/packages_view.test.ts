@@ -27,4 +27,21 @@ describe("packages tree", () => {
 		const file = ensurePackageTreeNode(myPackageLibContents, PackageDepFile, "my_thing.dart");
 		assert.equal(fsPath(file.resourceUri), fsPath(myPackageThingFile));
 	});
+
+	it("sorts the same way as VS Code explorer", () => {
+		const topLevel = extApi.packagesTreeProvider.getChildren(undefined);
+		const myPackage = ensurePackageTreeNode(topLevel, PackageDepPackage, "my_package");
+		const myPackageLibContents = extApi.packagesTreeProvider.getChildren(myPackage);
+
+		const names = myPackageLibContents.map((f) => f.label);
+		const expectedNamesInOrder = ["z_folder",
+			"MY_FILE_2.txt",
+			"my_file.txt",
+			"ZZZ_2.txt",
+			"zzz.txt",
+		];
+		const actualNames = names.filter((n) => expectedNamesInOrder.indexOf(n) !== -1);
+
+		assert.equal(actualNames, expectedNamesInOrder);
+	});
 });
