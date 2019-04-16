@@ -2,45 +2,46 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { PackageMap } from "../debug/package_map";
-import { fsPath, notUndefined } from "../utils";
-
-const DART_HIDE_PACKAGE_TREE = "dart-code:hidePackageTree";
+import { fsPath } from "../utils";
+import { hasPackagesFile } from "../utils/fs";
+import { logWarn } from "../utils/log";
 
 export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataProvider<PackageDep> {
-	private watcher?: vs.FileSystemWatcher;
+	private readonly watchers: vs.FileSystemWatcher[] = [];
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this.onDidChangeTreeDataEmitter.event;
-	public workspaceRoot?: string;
+	public readonly workspaceFolders: string[] = [];
 
 	constructor() {
-		super(() => this.disposeWatcher());
+		super(() => this.disposeWatchers());
 	}
 
 	public setWorkspaces(workspaces: vs.WorkspaceFolder[]) {
-		this.disposeWatcher();
-		this.workspaceRoot = workspaces && workspaces.length === 1 ? fsPath(workspaces[0].uri) : undefined;
-		this.createWatcher();
+		this.disposeWatchers();
+		this.workspaceFolders.length = 0;
+		if (workspaces)
+			this.workspaceFolders.push(...workspaces.map((wf) => fsPath(wf.uri)));
+		this.createWatchers();
 		this.refresh();
 	}
 
-	private disposeWatcher() {
-		if (this.watcher) {
-			this.watcher.dispose();
-			this.watcher = undefined;
-		}
+	private disposeWatchers() {
+		this.watchers.forEach((w) => w.dispose());
+		this.watchers.length = 0;
 	}
 
-	private createWatcher() {
-		if (!this.workspaceRoot)
-			return;
-		this.watcher = vs.workspace.createFileSystemWatcher(new vs.RelativePattern(this.workspaceRoot, ".packages"));
-		this.watcher.onDidChange(this.refresh, this);
-		this.watcher.onDidCreate(this.refresh, this);
-		this.watcher.onDidDelete(this.refresh, this);
+	private createWatchers() {
+		this.disposeWatchers();
+		this.watchers.push(...this.workspaceFolders.map((wf) => {
+			const watcher = vs.workspace.createFileSystemWatcher(new vs.RelativePattern(wf, ".packages"));
+			watcher.onDidChange(this.refresh, this);
+			watcher.onDidCreate(this.refresh, this);
+			watcher.onDidDelete(this.refresh, this);
+			return watcher;
+		}));
 	}
 
 	public refresh(): void {
-		DartPackagesProvider.showTree();
 		this.onDidChangeTreeDataEmitter.fire();
 	}
 
@@ -48,75 +49,102 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 		return element;
 	}
 
-	public getChildren(element?: PackageDep): Thenable<PackageDep[]> {
-		return new Promise((resolve) => {
-			if (element) {
-				if (!element.collapsibleState && !element.resourceUri) {
-					return resolve([]);
-				} else {
-					resolve(fs.readdirSync(fsPath(element.resourceUri)).map((name) => {
-						const filePath = path.join(fsPath(element.resourceUri), name);
-						const stat = fs.statSync(filePath);
-						if (stat.isFile()) {
-							return new PackageDep(name, vs.Uri.file(filePath), vs.TreeItemCollapsibleState.None, {
-								arguments: [vs.Uri.file(filePath)],
-								command: "dart.package.openFile",
-								title: "Open File",
-							});
-						} else if (stat.isDirectory()) {
-							return new PackageDep(name, vs.Uri.file(filePath), vs.TreeItemCollapsibleState.Collapsed);
-						}
-					}));
-				}
-			} else if (this.workspaceRoot) {
-				// When we're re-parsing from root, un-hide the tree. It'll be hidden if we find nothing.
-				DartPackagesProvider.showTree();
-				const packagesPath = PackageMap.findPackagesFile(path.join(this.workspaceRoot, ".packages"));
-				if (packagesPath && fs.existsSync(packagesPath)) {
-					resolve(this.getDepsInPackages(new PackageMap(packagesPath)));
-				} else {
-					DartPackagesProvider.hideTree();
-					return resolve([]);
-				}
-			} else {
-				// Hide the tree in the case there's no root.
-				DartPackagesProvider.hideTree();
-				return resolve([]);
-			}
+	public getChildren(element?: PackageDep): PackageDep[] {
+		if (!element) {
+			const foldersWithPackages = this.workspaceFolders.filter(hasPackagesFile);
+			const children = foldersWithPackages.map((wf) => new PackageDepProject(path.basename(wf), vs.Uri.file(wf)));
+			// If there's only one, just skip over to the deps.
+			return children.length === 1
+				? this.getChildren(children[0])
+				: children;
+
+		} else if (element && element instanceof PackageDepProject) {
+			return this.getPackages(element);
+		} else if (element && element instanceof PackageDepPackage) {
+			return this.getFilesAndFolders(element);
+		} else if (element && element instanceof PackageDepFolder) {
+			return this.getFilesAndFolders(element);
+		} else if (element && element instanceof PackageDepFile) {
+			return [];
+		} else {
+			logWarn(`Don't know how to show children of ${element.label}/${element.resourceUri}`);
+			return [];
+		}
+	}
+
+	private getPackages(project: PackageDepProject): PackageDep[] {
+		const map = new PackageMap(path.join(fsPath(project.resourceUri), ".packages"));
+		const packages = map.packages;
+		const packageNames = Object.keys(packages).sort();
+
+		return packageNames.filter((name) => name !== map.localPackageName).map((name) => {
+			const path = packages[name];
+			return new PackageDepPackage(`${name}`, vs.Uri.file(path));
 		});
 	}
 
-	private getDepsInPackages(map: PackageMap): PackageDep[] {
-		const packages = map.packages;
-
-		const packageNames = Object.keys(packages).sort();
-		const deps = packageNames.map((packageName) => {
-			if (packageName !== map.localPackageName) {
-				return new PackageDep(`${packageName}`, vs.Uri.file(packages[packageName]), vs.TreeItemCollapsibleState.Collapsed);
+	private getFilesAndFolders(folder: PackageDepFolder): PackageDep[] {
+		return fs.readdirSync(fsPath(folder.resourceUri)).map((name) => {
+			const filePath = path.join(fsPath(folder.resourceUri), name);
+			const stat = fs.statSync(filePath);
+			if (stat.isFile()) {
+				return new PackageDepFile(name, vs.Uri.file(filePath));
+			} else if (stat.isDirectory()) {
+				return new PackageDepFolder(name, vs.Uri.file(filePath));
 			}
-		}).filter(notUndefined);
-		// Hide the tree if we had no dependencies to show.
-		DartPackagesProvider.setTreeVisible(!!deps && !!deps.length);
-		return deps;
+		});
 	}
-
-	private static setTreeVisible(visible: boolean) {
-		vs.commands.executeCommand("setContext", DART_HIDE_PACKAGE_TREE, !visible);
-	}
-
-	public static showTree() { this.setTreeVisible(true); }
-	public static hideTree() { this.setTreeVisible(false); }
 }
 
-export class PackageDep extends vs.TreeItem {
+abstract class PackageDep extends vs.TreeItem {
 	constructor(
-		public readonly label: string,
-		public readonly resourceUri?: vs.Uri,
-		public readonly collapsibleState?: vs.TreeItemCollapsibleState,
-		public readonly command?: vs.Command,
+		public label: string,
+		public resourceUri?: vs.Uri,
+		public collapsibleState?: vs.TreeItemCollapsibleState,
 	) {
 		super(label, collapsibleState);
+		this.resourceUri = resourceUri;
+		this.contextValue = "dependency";
 	}
+}
 
-	public contextValue = "dependency";
+class PackageDepFile extends PackageDep {
+	constructor(
+		public label: string,
+		public resourceUri: vs.Uri,
+	) {
+		super(label, resourceUri, vs.TreeItemCollapsibleState.None);
+		this.command = {
+			arguments: [resourceUri],
+			command: "dart.package.openFile",
+			title: "Open File",
+		};
+	}
+}
+
+class PackageDepFolder extends PackageDep {
+	constructor(
+		public label: string,
+		public resourceUri: vs.Uri,
+	) {
+		super(label, resourceUri, vs.TreeItemCollapsibleState.Collapsed);
+	}
+}
+
+class PackageDepProject extends PackageDep {
+	constructor(
+		public label: string,
+		public resourceUri: vs.Uri,
+	) {
+		super(label, resourceUri, vs.TreeItemCollapsibleState.Collapsed);
+	}
+}
+
+class PackageDepPackage extends PackageDepFolder {
+	constructor(
+		public label: string,
+		public resourceUri: vs.Uri,
+	) {
+		super(label, resourceUri);
+	}
 }
