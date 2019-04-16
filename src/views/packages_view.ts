@@ -91,9 +91,8 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 
 		const packageNames = Object.keys(packages).sort();
 		const deps = packageNames.map((packageName) => {
-			const path = packages[packageName];
-			if (this.workspaceRoot !== path) {
-				return new PackageDep(`${packageName}`, vs.Uri.file(path), vs.TreeItemCollapsibleState.Collapsed);
+			if (packageName !== map.localPackageName) {
+				return new PackageDep(`${packageName}`, vs.Uri.file(packages[packageName]), vs.TreeItemCollapsibleState.Collapsed);
 			}
 		}).filter(notUndefined);
 		// Hide the tree if we had no dependencies to show.
