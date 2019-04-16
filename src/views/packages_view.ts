@@ -96,7 +96,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 	}
 }
 
-abstract class PackageDep extends vs.TreeItem {
+export abstract class PackageDep extends vs.TreeItem {
 	constructor(
 		public label: string,
 		public resourceUri?: vs.Uri,
@@ -108,7 +108,7 @@ abstract class PackageDep extends vs.TreeItem {
 	}
 }
 
-class PackageDepFile extends PackageDep {
+export class PackageDepFile extends PackageDep {
 	constructor(
 		public label: string,
 		public resourceUri: vs.Uri,
@@ -122,7 +122,7 @@ class PackageDepFile extends PackageDep {
 	}
 }
 
-class PackageDepFolder extends PackageDep {
+export class PackageDepFolder extends PackageDep {
 	constructor(
 		public label: string,
 		public resourceUri: vs.Uri,
@@ -131,7 +131,7 @@ class PackageDepFolder extends PackageDep {
 	}
 }
 
-class PackageDepProject extends PackageDep {
+export class PackageDepProject extends PackageDep {
 	constructor(
 		public label: string,
 		public resourceUri: vs.Uri,
@@ -140,7 +140,7 @@ class PackageDepProject extends PackageDep {
 	}
 }
 
-class PackageDepPackage extends PackageDepFolder {
+export class PackageDepPackage extends PackageDepFolder {
 	constructor(
 		public label: string,
 		public resourceUri: vs.Uri,
