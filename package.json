@@ -730,6 +730,7 @@
 				},
 				"dart.env": {
 					"type": "object",
+					"default": {},
 					"description": "Additional environment variables to be added to all Dart/Flutter processes spawned by the Dart and Flutter extensions.",
 					"scope": "window"
 				},
@@ -747,6 +748,7 @@
 				},
 				"dart.analysisExcludedFolders": {
 					"type": "array",
+					"default": [],
 					"description": "An array of paths to be excluded from Dart analysis. This option should usually be set at the Workspace level.",
 					"items": {
 						"type": "string"
@@ -790,12 +792,14 @@
 					"scope": "resource"
 				},
 				"dart.sdkPath": {
-					"type": "string",
+					"type": ["null", "string"],
+					"default": null,
 					"description": "The location of the Dart SDK to use for analyzing and executing code. If blank, Dart Code will attempt to find it from the PATH environment variable. When editing a Flutter project, the version of Dart included in the Flutter SDK is used in preference.",
 					"scope": "window"
 				},
 				"dart.sdkPaths": {
 					"type": "array",
+					"default": [],
 					"description": "An array of strings that are either Dart SDKs or folders that contains multiple Dart SDKs in sub-folders. When set, the version number in the status bar will be clickable to quickly switch between SDKs.",
 					"items": {
 						"type": "string"
@@ -822,6 +826,7 @@
 				},
 				"dart.doNotFormat": {
 					"type": "array",
+					"default": [],
 					"description": "An array of glob patterns that should be excluded for formatting. The pattern is matched against the absolute path of the file. Use **/test/** to skip formatting for all test folders.",
 					"items": {
 						"type": "string"
@@ -912,17 +917,20 @@
 					"scope": "resource"
 				},
 				"dart.flutterScreenshotPath": {
-					"type": "string",
+					"type": ["null", "string"],
+					"default": null,
 					"description": "The path to a directory to save Flutter screenshots.",
 					"scope": "window"
 				},
 				"dart.flutterSdkPath": {
-					"type": "string",
+					"type": ["null", "string"],
+					"default": null,
 					"description": "The location of the Flutter SDK to use. If blank, Dart Code will attempt to find it from the project folder, FLUTTER_ROOT environment variable and the PATH environment variable.",
 					"scope": "window"
 				},
 				"dart.flutterSdkPaths": {
 					"type": "array",
+					"default": [],
 					"description": "An array of strings that are either Flutter SDKs or folders that contains multiple Flutter SDKs in sub-folders. When set, the version number in the status bar will be clickable to quickly switch between SDKs.",
 					"items": {
 						"type": "string"
@@ -936,7 +944,8 @@
 					"scope": "window"
 				},
 				"dart.flutterCreateOrganization": {
-					"type": "string",
+					"type": ["null", "string"],
+					"default": null,
 					"description": "The organization responsible for your new Flutter project, in reverse domain name notation. This string is used in Java package names and as prefix in the iOS bundle identifier when creating new projects using the 'Flutter: New Project' command.",
 					"scope": "window"
 				},
@@ -945,6 +954,7 @@
 						"objc",
 						"swift"
 					],
+					"default": "objc",
 					"description": "The programming language to use for IOS apps when creating new projects using the 'Flutter: New Project' command.",
 					"scope": "window"
 				},
@@ -953,6 +963,7 @@
 						"java",
 						"kotlin"
 					],
+					"default": "java",
 					"description": "The programming language to use for Android apps when creating new projects using the 'Flutter: New Project' command.",
 					"scope": "window"
 				},
@@ -970,6 +981,7 @@
 				},
 				"dart.analyzerAdditionalArgs": {
 					"type": "array",
+					"default": [],
 					"description": "Additional arguments to pass to the Dart analysis server.",
 					"scope": "window",
 					"items": {
@@ -977,64 +989,74 @@
 					}
 				},
 				"dart.analyzerDiagnosticsPort": {
-					"type": "number",
+					"type": ["null", "number"],
+					"default": null,
 					"description": "The port number to be used for the Dart analysis server diagnostic server.",
 					"scope": "window"
 				},
 				"dart.analyzerInstrumentationLogFile": {
-					"type": "string",
+					"type": ["null", "string"],
+					"default": null,
 					"description": "The path to a log file for very detailed logging in the Dart analysis server that may be useful when trying to diagnose analysis server issues.",
 					"scope": "window"
 				},
 				"dart.analyzerSshHost": {
-					"type": "string",
+					"type": ["null", "string"],
 					"default": null,
 					"description": "An SSH host to run the analysis server.\nThis can be useful when modifying code on a remote machine using SSHFS.",
 					"scope": "window"
 				},
 				"dart.extensionLogFile": {
-					"type": "string",
+					"type": ["null", "string"],
+					"default": null,
 					"description": "The path to a low-traffic log file for basic extension and editor issues.",
 					"scope": "window"
 				},
 				"dart.analyzerLogFile": {
-					"type": "string",
+					"type": ["null", "string"],
+					"default": null,
 					"description": "The path to a log file for communication between Dart Code and the analysis server.",
 					"scope": "window"
 				},
 				"dart.analyzerObservatoryPort": {
-					"type": "number",
+					"type": ["null", "number"],
+					"default": null,
 					"description": "The port number to be used for the Dart analysis server observatory.",
 					"scope": "window"
 				},
 				"dart.analyzerPath": {
-					"type": "string",
+					"type": ["null", "string"],
 					"default": null,
 					"description": "The path to a custom Dart analysis server.",
 					"scope": "window"
 				},
 				"dart.flutterDaemonLogFile": {
-					"type": "string",
+					"type": ["null", "string"],
+					"default": null,
 					"description": "The path to a log file for the 'flutter daemon' communication which is the service that provides information about connected devices used to show in the status bar.",
 					"scope": "window"
 				},
 				"dart.flutterRunLogFile": {
-					"type": "string",
+					"type": ["null", "string"],
+					"default": null,
 					"description": "The path to a log file for 'flutter run' which is used to launch Flutter applications from VS Code. This is useful when trying to diagnose issues with applications launching (or failing to) on simulators and devices.",
 					"scope": "resource"
 				},
 				"dart.flutterTestLogFile": {
-					"type": "string",
+					"type": ["null", "string"],
+					"default": null,
 					"description": "The path to a log file for 'flutter test' which is used to run unit tests from VS Code. This is useful when trying to diagnose issues with unit test executions.",
 					"scope": "resource"
 				},
 				"dart.pubTestLogFile": {
-					"type": "string",
+					"type": ["null", "string"],
+					"default": null,
 					"description": "The path to a log file for 'pub run test' runs. This is useful when trying to diagnose issues with unit test executions.",
 					"scope": "resource"
 				},
 				"dart.observatoryLogFile": {
-					"type": "string",
+					"type": ["null", "string"],
+					"default": null,
 					"description": "The path to a log file for communication between Dart Code and Observatory (the VM debugger). This is useful when trying to diagnose issues with debugging such as missed breakpoints.",
 					"scope": "resource"
 				},
