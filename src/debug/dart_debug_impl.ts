@@ -1525,9 +1525,13 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected logToUser(message: string, category?: string) {
-		// If we get a multi-line message that looks like it contains an error/stack trace, then process each
+		// Extract stack frames from the message so we can do nicer formatting of them.
+		const frame = this.getStackFrameData(message) || this.getWebStackFrameData(message);
+
+		// If we get a multi-line message that contains an error/stack trace, process each
 		// line individually, so we can attach location metadata to individual lines.
-		if (message.trimRight().indexOf("\n") !== -1 && message.indexOf("Unhandled exception") !== -1) {
+		const isMultiLine = message.trimRight().indexOf("\n") !== -1;
+		if (frame && isMultiLine) {
 			message.split("\n").forEach((line) => this.logToUser(`${line}\n`, category));
 			return;
 		}
@@ -1536,7 +1540,6 @@ export class DartDebugSession extends DebugSession {
 
 		// If the output line looks like a stack frame with users code, attempt to link it up to make
 		// it clickable.
-		const frame = this.getStackFrameData(message) || this.getWebStackFrameData(message);
 		if (frame) {
 			const sourcePath: string | undefined = this.convertVMUriToSourcePath(frame.sourceUri);
 			const canShowSource = sourcePath && sourcePath !== frame.sourceUri && fs.existsSync(sourcePath);
