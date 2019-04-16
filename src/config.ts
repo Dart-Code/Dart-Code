@@ -1,5 +1,5 @@
 import { ConfigurationTarget, Uri, version as codeVersion, workspace, WorkspaceConfiguration } from "vscode";
-import { createFolderForFile, resolvePaths } from "./utils";
+import { NullAsUndefined, nullToUndefined } from "./utils/misc";
 import { setupToolEnv } from "./utils/processes";
 
 class Config {
@@ -15,72 +15,68 @@ class Config {
 		setupToolEnv(this.env);
 	}
 
-	private getConfig<T>(key: string): T | undefined {
-		return this.config.get<T>(key);
+	private getConfig<T>(key: string, defaultValue: T): NullAsUndefined<T> {
+		return nullToUndefined(this.config.get<T>(key, defaultValue));
 	}
 
 	private async setConfig<T>(key: string, value: T, target: ConfigurationTarget): Promise<void> {
 		await this.config.update(key, value, target);
 	}
 
-	get allowAnalytics() { return this.getConfig<boolean>("allowAnalytics"); }
-	get analysisServerFolding() { return this.getConfig<boolean>("analysisServerFolding"); }
-	get analyzeAngularTemplates() { return this.getConfig<boolean>("analyzeAngularTemplates"); }
-	get analyzerAdditionalArgs() { return this.getConfig<string[]>("analyzerAdditionalArgs"); }
-	get analyzerDiagnosticsPort() { return this.getConfig<number>("analyzerDiagnosticsPort"); }
-	get analyzerInstrumentationLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("analyzerInstrumentationLogFile"))); }
-	get analyzerLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("analyzerLogFile"))); }
-	get analyzerObservatoryPort() { return this.getConfig<number>("analyzerObservatoryPort"); }
-	get analyzerPath() { return resolvePaths(this.getConfig<string>("analyzerPath")); }
-	get analyzerSshHost() { return this.getConfig<string>("analyzerSshHost"); }
-	get autoImportCompletions() { return this.getConfig<boolean>("autoImportCompletions"); }
-	get buildRunnerAdditionalArgs() { return this.getConfig<string[]>("buildRunnerAdditionalArgs"); }
-	get checkForSdkUpdates() { return this.getConfig<boolean>("checkForSdkUpdates"); }
-	public setCheckForSdkUpdates(value: boolean): Thenable<void> { return this.setConfig("checkForSdkUpdates", value, ConfigurationTarget.Global); }
-	get closingLabels() { return this.getConfig<boolean>("closingLabels"); }
-	get devToolsTheme() { return this.getConfig<string>("devToolsTheme"); }
-	get enableSdkFormatter() { return this.getConfig<boolean>("enableSdkFormatter"); }
-	get env() { return this.getConfig<object>("env"); }
-	get extensionLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("extensionLogFile"))); }
-	get flutterCreateAndroidLanguage() { return this.getConfig<string>("flutterCreateAndroidLanguage"); }
-	get flutterCreateIOSLanguage() { return this.getConfig<string>("flutterCreateIOSLanguage"); }
-	get flutterCreateOrganization() { return this.getConfig<string>("flutterCreateOrganization"); }
-	get flutterDaemonLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("flutterDaemonLogFile"))); }
-	get flutterHotReloadOnSave() { return this.getConfig<boolean>("flutterHotReloadOnSave"); }
-	get flutterScreenshotPath() { return resolvePaths(this.getConfig<string>("flutterScreenshotPath")); }
-	get flutterSdkPath() { return resolvePaths(this.getConfig<string>("flutterSdkPath")); }
-	public setFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Workspace); }
-	get flutterSdkPaths() { return (this.getConfig<string[]>("flutterSdkPaths") || []).map(resolvePaths); }
-	get flutterSelectDeviceWhenConnected() { return this.getConfig<boolean>("flutterSelectDeviceWhenConnected"); }
-	get maxLogLineLength() { return this.getConfig<number>("maxLogLineLength") || 2000; }
-	get normalizeWindowsDriveLetters() { return this.getConfig<boolean>("normalizeWindowsDriveLetters"); }
-	get openTestView() { return this.getConfig<string[]>("openTestView") || []; }
-	get openTestViewOnFailure() { return this.openTestView.indexOf("testFailure") !== -1; }
-	get openTestViewOnStart() { return this.openTestView.indexOf("testRunStart") !== -1; }
-	get promptToRunIfErrors() { return this.getConfig<boolean>("promptToRunIfErrors"); }
-	get reportAnalyzerErrors() { return this.getConfig<boolean>("reportAnalyzerErrors"); }
-	get sdkPath() { return resolvePaths(this.getConfig<string>("sdkPath")) || undefined; }
-	public setSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
-	get sdkPaths() { return (this.getConfig<string[]>("sdkPaths") || []).map(resolvePaths); }
-	get showIgnoreQuickFixes() { return this.getConfig<boolean>("showIgnoreQuickFixes"); }
-	get showTestCodeLens() { return this.getConfig<boolean>("showTestCodeLens"); }
-	get showTodos() { return this.getConfig<boolean>("showTodos"); }
-	get theme() { return this.getConfig<string>("theme"); }
-	get triggerSignatureHelpAutomatically() { return this.getConfig<boolean>("triggerSignatureHelpAutomatically"); }
-	get warnWhenEditingFilesOutsideWorkspace() { return this.getConfig<boolean>("warnWhenEditingFilesOutsideWorkspace"); }
-	public setWarnWhenEditingFilesOutsideWorkspace(value: boolean): Thenable<void> { return this.setConfig("warnWhenEditingFilesOutsideWorkspace", value, ConfigurationTarget.Global); }
-
-	public setGlobalDartSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Global); }
-	public setGlobalFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Global); }
-
-	// Preview features.
-	get previewHotReloadCoverageMarkers() { return this.getConfig<boolean>("previewHotReloadCoverageMarkers"); }
-	get previewBuildRunnerTasks() { return this.getConfig<boolean>("previewBuildRunnerTasks"); }
-	get previewToStringInDebugViews() { return this.getConfig<boolean>("previewToStringInDebugViews"); }
+	get allowAnalytics(): boolean { return this.getConfig<boolean>("allowAnalytics", true); }
+	get analysisServerFolding(): boolean { return this.getConfig<boolean>("analysisServerFolding", true); }
+	get analyzeAngularTemplates(): boolean { return this.getConfig<boolean>("analyzeAngularTemplates", true); }
+	get analyzerAdditionalArgs(): string[] { return this.getConfig<string[]>("analyzerAdditionalArgs", []); }
+	get analyzerDiagnosticsPort(): undefined | number { return this.getConfig<null | number>("analyzerDiagnosticsPort", null); }
+	get analyzerInstrumentationLogFile(): undefined | string { return this.getConfig<null | string>("analyzerInstrumentationLogFile", null); }
+	get analyzerLogFile(): undefined | string { return this.getConfig<null | string>("analyzerLogFile", null); }
+	get analyzerObservatoryPort(): undefined | number { return this.getConfig<null | number>("analyzerObservatoryPort", null); }
+	get analyzerPath(): undefined | string { return this.getConfig<null | string>("analyzerPath", null); }
+	get analyzerSshHost(): undefined | string { return this.getConfig<null | string>("analyzerSshHost", null); }
+	get autoImportCompletions(): boolean { return this.getConfig<boolean>("autoImportCompletions", true); }
+	get buildRunnerAdditionalArgs(): string[] { return this.getConfig<string[]>("buildRunnerAdditionalArgs", []); }
+	get checkForSdkUpdates(): boolean { return this.getConfig<boolean>("checkForSdkUpdates", true); }
+	get closingLabels(): boolean { return this.getConfig<boolean>("closingLabels", true); }
+	get devToolsTheme(): "dark" | "light" { return this.getConfig<"dark" | "light">("devToolsTheme", "dark"); }
+	get enableSdkFormatter(): boolean { return this.getConfig<boolean>("enableSdkFormatter", true); }
+	get env(): object { return this.getConfig<object>("env", {}); }
+	get extensionLogFile(): undefined | string { return this.getConfig<null | string>("extensionLogFile", null); }
+	get flutterCreateAndroidLanguage(): "java" | "kotlin" { return this.getConfig<"java" | "kotlin">("flutterCreateAndroidLanguage", "java"); }
+	get flutterCreateIOSLanguage(): "objc" | "swift" { return this.getConfig<"objc" | "swift">("flutterCreateIOSLanguage", "objc"); }
+	get flutterCreateOrganization(): undefined | string { return this.getConfig<null | string>("flutterCreateOrganization", null); }
+	get flutterDaemonLogFile(): undefined | string { return this.getConfig<null | string>("flutterDaemonLogFile", null); }
+	get flutterHotReloadOnSave(): boolean { return this.getConfig<boolean>("flutterHotReloadOnSave", true); }
+	get flutterScreenshotPath(): undefined | string { return this.getConfig<null | string>("flutterScreenshotPath", null); }
+	get flutterSdkPath(): undefined | string { return this.getConfig<null | string>("flutterSdkPath", null); }
+	get flutterSdkPaths(): string[] { return this.getConfig<string[]>("flutterSdkPaths", []); }
+	get flutterSelectDeviceWhenConnected(): boolean { return this.getConfig<boolean>("flutterSelectDeviceWhenConnected", true); }
+	get maxLogLineLength(): number { return this.getConfig<number>("maxLogLineLength", 2000); }
+	get normalizeWindowsDriveLetters(): boolean { return this.getConfig<boolean>("normalizeWindowsDriveLetters", true); }
+	get openTestView(): Array<"testRunStart" | "testFailure"> { return this.getConfig<Array<"testRunStart" | "testFailure">>("openTestView", ["testRunStart"]); }
+	get previewBuildRunnerTasks(): boolean { return this.getConfig<boolean>("previewBuildRunnerTasks", false); }
+	get previewToStringInDebugViews(): boolean { return this.getConfig<boolean>("previewToStringInDebugViews", false); }
+	get promptToRunIfErrors(): boolean { return this.getConfig<boolean>("promptToRunIfErrors", true); }
+	get reportAnalyzerErrors(): boolean { return this.getConfig<boolean>("reportAnalyzerErrors", true); }
+	get sdkPath(): undefined | string { return this.getConfig<null | string>("sdkPath", null); }
+	get sdkPaths(): string[] { return this.getConfig<string[]>("sdkPaths", []); }
+	get showIgnoreQuickFixes(): boolean { return this.getConfig<boolean>("showIgnoreQuickFixes", false); }
+	get showTestCodeLens(): boolean { return this.getConfig<boolean>("showTestCodeLens", true); }
+	get showTodos(): boolean { return this.getConfig<boolean>("showTodos", true); }
+	get theme(): "dark" | "light" { return this.getConfig<"dark" | "light">("theme", "dark"); }
+	get triggerSignatureHelpAutomatically(): boolean { return this.getConfig<boolean>("triggerSignatureHelpAutomatically", false); }
+	get warnWhenEditingFilesOutsideWorkspace(): boolean { return this.getConfig<boolean>("warnWhenEditingFilesOutsideWorkspace", true); }
 
 	// Helpers
 	get useDarkTheme() { return this.theme !== "light"; }
 	get useDevToolsDarkTheme() { return this.devToolsTheme === "dark"; } // TODO: Change this to !== "light" when we want to flip default
+
+	// Options that can be set programatically.
+	public setCheckForSdkUpdates(value: boolean): Thenable<void> { return this.setConfig("checkForSdkUpdates", value, ConfigurationTarget.Global); }
+	public setFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Workspace); }
+	public setGlobalDartSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Global); }
+	public setGlobalFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Global); }
+	public setSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
+	public setWarnWhenEditingFilesOutsideWorkspace(value: boolean): Thenable<void> { return this.setConfig("warnWhenEditingFilesOutsideWorkspace", value, ConfigurationTarget.Global); }
 
 	public for(uri?: Uri): ResourceConfig {
 		return new ResourceConfig(uri);
@@ -96,32 +92,33 @@ class ResourceConfig {
 		this.config = workspace.getConfiguration("dart", this.uri);
 	}
 
-	private getConfig<T>(key: string): T | undefined {
-		return this.config.get<T>(key);
+	private getConfig<T>(key: string, defaultValue: T): NullAsUndefined<T> {
+		return nullToUndefined(this.config.get<T>(key, defaultValue));
 	}
 
-	get analysisExcludedFolders() { return this.getConfig<string[]>("analysisExcludedFolders"); }
-	get debugSdkLibraries() { return !!this.getConfig<boolean>("debugSdkLibraries"); }
-	get debugExternalLibraries() { return !!this.getConfig<boolean>("debugExternalLibraries"); }
-	get doNotFormat() { return this.getConfig<string[]>("doNotFormat"); }
-	get enableCompletionCommitCharacters() { return !!this.getConfig<boolean>("enableCompletionCommitCharacters"); }
-	get evaluateGettersInDebugViews() { return !!this.getConfig<boolean>("evaluateGettersInDebugViews"); }
-	get flutterTrackWidgetCreation() { return !!this.getConfig<boolean>("flutterTrackWidgetCreation"); }
-	get insertArgumentPlaceholders() { return !!this.getConfig<boolean>("insertArgumentPlaceholders"); }
-	get lineLength() { return this.getConfig<number>("lineLength"); }
-	get pubAdditionalArgs() { return this.getConfig<string[]>("pubAdditionalArgs"); }
-	get runPubGetOnPubspecChanges() { return this.getConfig<boolean>("runPubGetOnPubspecChanges"); }
+	get analysisExcludedFolders(): string[] { return this.getConfig<string[]>("analysisExcludedFolders", []); }
+	get debugExternalLibraries(): boolean { return this.getConfig<boolean>("debugExternalLibraries", false); }
+	get debugSdkLibraries(): boolean { return this.getConfig<boolean>("debugSdkLibraries", false); }
+	get doNotFormat(): string[] { return this.getConfig<string[]>("doNotFormat", []); }
+	get enableCompletionCommitCharacters(): boolean { return this.getConfig<boolean>("enableCompletionCommitCharacters", false); }
+	get evaluateGettersInDebugViews(): boolean { return this.getConfig<boolean>("evaluateGettersInDebugViews", true); }
+	get flutterRunLogFile(): undefined | string { return this.getConfig<null | string>("flutterRunLogFile", null); }
+	get flutterTestLogFile(): undefined | string { return this.getConfig<null | string>("flutterTestLogFile", null); }
+	get flutterTrackWidgetCreation(): boolean { return this.getConfig<boolean>("flutterTrackWidgetCreation", true); }
+	get insertArgumentPlaceholders(): boolean { return this.getConfig<boolean>("insertArgumentPlaceholders", true); }
+	get lineLength(): number { return this.getConfig<number>("lineLength", 80); }
+	get observatoryLogFile(): undefined | string { return this.getConfig<null | string>("observatoryLogFile", null); }
+	get promptToGetPackages(): boolean { return this.getConfig<boolean>("promptToGetPackages", true); }
+	get pubAdditionalArgs(): string[] { return this.getConfig<string[]>("pubAdditionalArgs", []); }
+	get pubTestLogFile(): undefined | string { return this.getConfig<null | string>("pubTestLogFile", null); }
+	get runPubGetOnPubspecChanges(): boolean { return this.getConfig<boolean>("runPubGetOnPubspecChanges", true); }
+	get vmAdditionalArgs(): string[] { return this.getConfig<string[]>("vmAdditionalArgs", []); }
+
 	get runPubGetOnPubspecChangesIsConfiguredExplicitly() {
 		const runPubGet = this.config.inspect("runPubGetOnPubspecChanges");
 		// Return whether any of them are explicitly set, in which case we'll then read normally from the settings.
 		return runPubGet && (runPubGet.globalValue !== undefined || runPubGet.workspaceValue !== undefined || runPubGet.workspaceFolderValue !== undefined);
 	}
-	get flutterRunLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("flutterRunLogFile"))); }
-	get flutterTestLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("flutterTestLogFile"))); }
-	get observatoryLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("observatoryLogFile"))); }
-	get pubTestLogFile() { return createFolderForFile(resolvePaths(this.getConfig<string>("pubTestLogFile"))); }
-	get promptToGetPackages() { return this.getConfig<boolean>("promptToGetPackages"); }
-	get vmAdditionalArgs() { return this.getConfig<string[]>("vmAdditionalArgs"); }
 }
 
 export class CodeCapabilities {
