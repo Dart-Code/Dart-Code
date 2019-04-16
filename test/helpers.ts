@@ -14,6 +14,7 @@ import { fsPath, isAnalyzable, vsCodeVersionConstraint } from "../src/utils";
 import { tryDeleteFile } from "../src/utils/fs";
 import { log, logError, logTo, logWarn } from "../src/utils/log";
 import { waitFor } from "../src/utils/promises";
+import { PackageDep } from "../src/views/packages_view";
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
 export let extApi: InternalExtensionApi;
@@ -61,6 +62,9 @@ export const helloWorldDeferredScriptFile = vs.Uri.file(path.join(fsPath(helloWo
 export const helloWorldPartWrapperFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/part_wrapper.dart"));
 export const helloWorldPartFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/part.dart"));
 export const everythingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/everything.dart"));
+// Package
+export const myPackageFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/my_package"));
+export const myPackageThingFile = vs.Uri.file(path.join(fsPath(myPackageFolder), "lib/my_thing.dart"));
 // Dart Test
 export const helloWorldTestMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/basic_test.dart"));
 export const helloWorldTestTreeFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/tree_test.dart"));
@@ -755,4 +759,17 @@ export function clearAllContext(context: Context): Promise<void> {
 	// HACK Updating context is async, but since we use setters we can't easily wait
 	// and this is only test code...
 	return new Promise((resolve) => setTimeout(resolve, 50));
+}
+
+export function ensurePackageTreeNode<T extends PackageDep>(items: PackageDep[], constructor: new (...args: any[]) => T, label: string): T {
+	const item = items.find((item) =>
+		item.constructor === constructor
+		&& item.label === label,
+	);
+	assert.ok(
+		item,
+		`Couldn't find ${constructor.name} tree node for ${label} in\n`
+		+ items.map((item) => `        ${item.constructor.name}/${item.label}`).join("\n"),
+	);
+	return item as T;
 }

@@ -365,9 +365,12 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Register our view providers.
 	const dartPackagesProvider = new DartPackagesProvider();
+	const packagesTreeView = vs.window.createTreeView("dartPackages", { treeDataProvider: dartPackagesProvider });
 	dartPackagesProvider.setWorkspaces(util.getDartWorkspaceFolders());
-	context.subscriptions.push(dartPackagesProvider);
-	context.subscriptions.push(vs.window.registerTreeDataProvider("dartPackages", dartPackagesProvider));
+	context.subscriptions.push(
+		dartPackagesProvider,
+		packagesTreeView,
+	);
 	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => {
 		dartPackagesProvider.setWorkspaces(util.getDartWorkspaceFolders());
 	}));
@@ -470,6 +473,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			flutterCapabilities,
 			initialAnalysis,
 			nextAnalysis,
+			packagesTreeProvider: dartPackagesProvider,
 			pubGlobal,
 			reanalyze,
 			referenceProvider,
@@ -628,6 +632,7 @@ export interface InternalExtensionApi {
 	flutterCapabilities: FlutterCapabilities;
 	initialAnalysis: Promise<void>;
 	nextAnalysis: () => Promise<void>;
+	packagesTreeProvider: DartPackagesProvider;
 	pubGlobal: PubGlobal;
 	reanalyze: () => void;
 	referenceProvider: DartReferenceProvider;

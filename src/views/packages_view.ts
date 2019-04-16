@@ -109,7 +109,7 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 	public static hideTree() { this.setTreeVisible(false); }
 }
 
-class PackageDep extends vs.TreeItem {
+export class PackageDep extends vs.TreeItem {
 	constructor(
 		public readonly label: string,
 		public readonly resourceUri?: vs.Uri,
