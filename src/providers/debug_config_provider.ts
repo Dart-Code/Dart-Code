@@ -164,9 +164,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			&& !isInsideFolderNamed(debugConfig.program, "bin")
 			&& !isInsideFolderNamed(debugConfig.program, "tool")) {
 			// Check if we're a Flutter or FlutterWeb project.
-			if (isFlutterWebProjectFolder(debugConfig.cwd as string))
+			if (isFlutterWebProjectFolder(debugConfig.cwd as string)) {
 				debugType = DebuggerType.FlutterWeb;
-			else if (isFlutterProjectFolder(debugConfig.cwd as string))
+				if (isFlutterProjectFolder(debugConfig.cwd as string)) {
+					logError("Flutter Web project references sdk:flutter and may fail to launch");
+					window.showWarningMessage("Flutter Web projects may fail to launch if they reference the Flutter SDK in pubspec.yaml");
+				}
+			} else if (isFlutterProjectFolder(debugConfig.cwd as string))
 				debugType = DebuggerType.Flutter;
 			else
 				log(`Non-Dart Project not recognised as Flutter or FlutterWeb, will use Dart debugger`);
