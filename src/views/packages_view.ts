@@ -8,38 +8,37 @@ import { hasPackagesFile } from "../utils/fs";
 import { logWarn } from "../utils/log";
 
 export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataProvider<PackageDep> {
-	private readonly watchers: vs.FileSystemWatcher[] = [];
+	private watcher?: vs.FileSystemWatcher;
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this.onDidChangeTreeDataEmitter.event;
 	public readonly workspaceFolders: string[] = [];
 
 	constructor() {
-		super(() => this.disposeWatchers());
+		super(() => this.disposeWatcher());
 	}
 
 	public setWorkspaces(workspaces: vs.WorkspaceFolder[]) {
-		this.disposeWatchers();
+		this.disposeWatcher();
 		this.workspaceFolders.length = 0;
 		if (workspaces)
 			this.workspaceFolders.push(...workspaces.map((wf) => fsPath(wf.uri)));
-		this.createWatchers();
+		this.createWatcher();
 		this.refresh();
 	}
 
-	private disposeWatchers() {
-		this.watchers.forEach((w) => w.dispose());
-		this.watchers.length = 0;
+	private disposeWatcher() {
+		if (this.watcher) {
+			this.watcher.dispose();
+			this.watcher = undefined;
+		}
 	}
 
-	private createWatchers() {
-		this.disposeWatchers();
-		this.watchers.push(...this.workspaceFolders.map((wf) => {
-			const watcher = vs.workspace.createFileSystemWatcher(new vs.RelativePattern(wf, ".packages"));
-			watcher.onDidChange(this.refresh, this);
-			watcher.onDidCreate(this.refresh, this);
-			watcher.onDidDelete(this.refresh, this);
-			return watcher;
-		}));
+	private createWatcher() {
+		this.disposeWatcher();
+		this.watcher = vs.workspace.createFileSystemWatcher("**/.packages");
+		this.watcher.onDidChange(this.refresh, this);
+		this.watcher.onDidCreate(this.refresh, this);
+		this.watcher.onDidDelete(this.refresh, this);
 	}
 
 	public refresh(): void {
