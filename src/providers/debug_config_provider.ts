@@ -161,6 +161,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		let debugType = DebuggerType.Dart;
 		if (debugConfig.cwd
+			// TODO: This isInsideFolderNamed often fails when we found a better project root above.
 			&& !isInsideFolderNamed(debugConfig.program, "bin")
 			&& !isInsideFolderNamed(debugConfig.program, "tool")) {
 			// Check if we're a Flutter or FlutterWeb project.
@@ -173,7 +174,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			} else if (isFlutterProjectFolder(debugConfig.cwd as string))
 				debugType = DebuggerType.Flutter;
 			else
-				log(`Non-Dart Project not recognised as Flutter or FlutterWeb, will use Dart debugger`);
+				log(`Non-Dart Project (${debugConfig.program}) not recognised as Flutter or FlutterWeb, will use Dart debugger`);
 		}
 		log(`Detected launch project as ${DebuggerType[debugType]}`);
 
