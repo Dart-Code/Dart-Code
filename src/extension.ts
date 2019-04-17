@@ -366,13 +366,12 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// Register our view providers.
 	const dartPackagesProvider = new DartPackagesProvider();
 	const packagesTreeView = vs.window.createTreeView("dartPackages", { treeDataProvider: dartPackagesProvider });
-	dartPackagesProvider.setWorkspaces(util.getDartWorkspaceFolders());
 	context.subscriptions.push(
 		dartPackagesProvider,
 		packagesTreeView,
 	);
 	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => {
-		dartPackagesProvider.setWorkspaces(util.getDartWorkspaceFolders());
+		dartPackagesProvider.refresh();
 	}));
 	const testTreeProvider = new TestResultsProvider();
 	const testTreeView = vs.window.createTreeView("dartTestTree", { treeDataProvider: testTreeProvider });

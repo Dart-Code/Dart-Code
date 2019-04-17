@@ -2,39 +2,16 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { PackageMap } from "../debug/package_map";
-import { fsPath } from "../utils";
+import { fsPath, getDartWorkspaceFolders } from "../utils";
 import { sortBy } from "../utils/array";
-import { hasPackagesFile } from "../utils/fs";
 import { logWarn } from "../utils/log";
 
-export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataProvider<PackageDep> {
-	private watcher?: vs.FileSystemWatcher;
+export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<PackageDep> {
+	private readonly watcher: vs.FileSystemWatcher;
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this.onDidChangeTreeDataEmitter.event;
-	public readonly workspaceFolders: string[] = [];
 
 	constructor() {
-		super(() => this.disposeWatcher());
-	}
-
-	public setWorkspaces(workspaces: vs.WorkspaceFolder[]) {
-		this.disposeWatcher();
-		this.workspaceFolders.length = 0;
-		if (workspaces)
-			this.workspaceFolders.push(...workspaces.map((wf) => fsPath(wf.uri)));
-		this.createWatcher();
-		this.refresh();
-	}
-
-	private disposeWatcher() {
-		if (this.watcher) {
-			this.watcher.dispose();
-			this.watcher = undefined;
-		}
-	}
-
-	private createWatcher() {
-		this.disposeWatcher();
 		this.watcher = vs.workspace.createFileSystemWatcher("**/.packages");
 		this.watcher.onDidChange(this.refresh, this);
 		this.watcher.onDidCreate(this.refresh, this);
@@ -51,8 +28,8 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 
 	public getChildren(element?: PackageDep): PackageDep[] {
 		if (!element) {
-			const foldersWithPackages = this.workspaceFolders.filter(hasPackagesFile);
-			const children = foldersWithPackages.map((wf) => new PackageDepProject(path.basename(wf), vs.Uri.file(wf)));
+			const dartProjects = getDartWorkspaceFolders().map((wf) => wf.uri);
+			const children = dartProjects.map((wf) => new PackageDepProject(path.basename(fsPath(wf)), wf));
 			// If there's only one, just skip over to the deps.
 			return children.length === 1
 				? this.getChildren(children[0])
@@ -99,6 +76,10 @@ export class DartPackagesProvider extends vs.Disposable implements vs.TreeDataPr
 		});
 
 		return [...folders, ...files];
+	}
+
+	public dispose() {
+		this.watcher.dispose();
 	}
 }
 
