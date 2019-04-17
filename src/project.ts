@@ -19,7 +19,7 @@ export function locateBestProjectRoot(folder: string): string | undefined {
 	return undefined;
 }
 
-function getChildProjects(folder: string, levelsToGo: number): string[] {
+export function getChildProjects(folder: string, levelsToGo: number): string[] {
 	const children = fs
 		.readdirSync(folder)
 		.filter((f) => f !== "bin") // Don't look in bin folders
