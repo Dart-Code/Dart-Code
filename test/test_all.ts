@@ -65,7 +65,7 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 		yellow("## ")
 		+ `Running ${runInfo} using ${yellow(testFolder)}`
 		+ ` in workspace ${yellow(workspaceFolder)}`
-		+ ` using version ${yellow(codeVersion)} of Code`);
+		+ ` using version ${yellow(codeVersion || "stable")} of Code`);
 	console.log(`${yellow("##")} Looking for SDKs in:`);
 	sdkPaths
 		.split(path.delimiter)
@@ -89,7 +89,7 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 
 	// Figure out a filename for results...
 	const dartFriendlyName = (process.env.ONLY_RUN_DART_VERSION || "local").toLowerCase();
-	const codeFriendlyName = codeVersion === "*" ? "stable" : "insiders";
+	const codeFriendlyName = codeVersion || "stable";
 
 	// Set some paths that are used inside the test run.
 	const testRunName = testFolder.replace("/", "_");
@@ -142,7 +142,7 @@ async function runAllTests(): Promise<void> {
 		console.log("\n\n");
 	}
 
-	const codeVersion = process.env.ONLY_RUN_CODE_VERSION === "DEV" ? "insiders" : "*";
+	const codeVersion = process.env.ONLY_RUN_CODE_VERSION === "DEV" ? "insiders" : undefined;
 	const dartSdkPath = process.env.DART_PATH_SYMLINK || process.env.DART_PATH || process.env.PATH;
 	const flutterSdkPath = process.env.FLUTTER_PATH_SYMLINK || process.env.FLUTTER_PATH || process.env.PATH;
 
