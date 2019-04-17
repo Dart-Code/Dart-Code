@@ -351,8 +351,9 @@ export function positionOf(searchText: string): vs.Position {
 	const doc = currentDoc();
 	const caretOffset = searchText.indexOf("^");
 	assert.notEqual(caretOffset, -1, `Couldn't find a ^ in search text (${searchText})`);
-	const matchedTextIndex = doc.getText().indexOf(searchText.replace("^", ""));
-	assert.notEqual(matchedTextIndex, -1, `Couldn't find string ${searchText.replace("^", "")} in the document to get position of`);
+	const docText = doc.getText();
+	const matchedTextIndex = docText.indexOf(searchText.replace("^", ""));
+	assert.notEqual(matchedTextIndex, -1, `Couldn't find string ${searchText.replace("^", "")} in the document to get position of. Document contained:\n${docText}`);
 
 	return doc.positionAt(matchedTextIndex + caretOffset);
 }
@@ -366,10 +367,11 @@ export function rangeOf(searchText: string, inside?: vs.Range): vs.Range {
 
 	const startSearchAt = inside ? doc.offsetAt(inside.start) : 0;
 	const endSearchAt = inside ? doc.offsetAt(inside.end) : -1;
-	let matchedTextIndex = doc.getText().indexOf(searchText.replace(/\|/g, "").replace(/\n/g, documentEol), startSearchAt);
+	const docText = doc.getText();
+	let matchedTextIndex = docText.indexOf(searchText.replace(/\|/g, "").replace(/\n/g, documentEol), startSearchAt);
 	if (endSearchAt > -1 && matchedTextIndex > endSearchAt)
 		matchedTextIndex = -1;
-	assert.notEqual(matchedTextIndex, -1, `Couldn't find string ${searchText.replace(/\|/g, "")} in the document to get range of`);
+	assert.notEqual(matchedTextIndex, -1, `Couldn't find string ${searchText.replace(/\|/g, "")} in the document to get range of. Document contained:\n${docText}`);
 
 	return new vs.Range(
 		doc.positionAt(matchedTextIndex + startOffset),
