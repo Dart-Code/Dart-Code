@@ -6,6 +6,7 @@ import { flatMap } from "../debug/utils";
 import { getChildProjects } from "../project";
 import { fsPath, getDartWorkspaceFolders } from "../utils";
 import { sortBy } from "../utils/array";
+import { hasPackagesFile } from "../utils/fs";
 import { logWarn } from "../utils/log";
 
 export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<PackageDep> {
@@ -32,7 +33,7 @@ export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<
 		if (!element) {
 			const topLevelDartProjects = getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
 			const childProjects = flatMap(topLevelDartProjects, (f) => getChildProjects(f, 1));
-			const allProjects = topLevelDartProjects.concat(childProjects);
+			const allProjects = topLevelDartProjects.concat(childProjects).filter(hasPackagesFile);
 			sortBy(allProjects, (p) => path.basename(p).toLowerCase());
 
 			const nodes = allProjects.map((folder) => new PackageDepProject(vs.Uri.file(folder)));
@@ -126,10 +127,12 @@ export class PackageDepProject extends PackageDep {
 	constructor(
 		resourceUri: vs.Uri,
 	) {
-		const wf = vs.workspace.getWorkspaceFolder(resourceUri);
-		const workspaceFolder = fsPath(wf.uri);
 		const projectFolder = fsPath(resourceUri);
 		super(path.basename(projectFolder), resourceUri, vs.TreeItemCollapsibleState.Collapsed);
+
+		// Calculate relative path to the folder for the description.
+		const wf = vs.workspace.getWorkspaceFolder(resourceUri);
+		const workspaceFolder = fsPath(wf.uri);
 		this.description = path.relative(path.dirname(workspaceFolder), path.dirname(projectFolder));
 	}
 }
@@ -139,6 +142,6 @@ export class PackageDepPackage extends PackageDep {
 		label: string,
 		resourceUri: vs.Uri,
 	) {
-		super(label, resourceUri);
+		super(label, resourceUri, vs.TreeItemCollapsibleState.Collapsed);
 	}
 }
