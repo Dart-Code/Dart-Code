@@ -1,11 +1,12 @@
 import * as assert from "assert";
 import { fsPath } from "../../../src/utils";
 import { PackageDepFile, PackageDepPackage, PackageDepProject } from "../../../src/views/packages_view";
-import { ensurePackageTreeNode, extApi, getPackages, myPackageThingFile } from "../../helpers";
+import { ensurePackageTreeNode, extApi, flutterHelloWorldMainFile, getPackages, helloWorldMainFile, myPackageThingFile } from "../../helpers";
 
 describe("packages tree", () => {
-	// We have tests that require external packages.
-	before("get packages", () => getPackages());
+	// These tests require both projects have .packages folders.
+	before("get packages (0)", () => getPackages(helloWorldMainFile));
+	before("get packages (1)", () => getPackages(flutterHelloWorldMainFile));
 
 	it("includes project folders at the top level", () => {
 		const topLevel = extApi.packagesTreeProvider.getChildren(undefined);
