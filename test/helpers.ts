@@ -774,11 +774,13 @@ export function clearAllContext(context: Context): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, 50));
 }
 
-export function ensurePackageTreeNode<T extends PackageDep>(items: PackageDep[], constructor: new (...args: any[]) => T, label: string): T {
+export function ensurePackageTreeNode<T extends PackageDep>(items: PackageDep[], constructor: new (...args: any[]) => T, label: string, description?: string): T {
 	const item = items.find((item) =>
 		item.constructor === constructor
 		&& item.label === label,
 	);
+	if (description)
+		assert.equal(item.description, description);
 	assert.ok(
 		item,
 		`Couldn't find ${constructor.name} tree node for ${label} in\n`
