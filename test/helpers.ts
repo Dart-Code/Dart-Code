@@ -129,7 +129,6 @@ export async function activate(file?: vs.Uri | null | undefined): Promise<void> 
 	if (file === undefined) // undefined means use default, but explicit null will result in no file open.
 		file = getDefaultFile();
 
-	log(`Closing all open files`);
 	await closeAllOpenFiles();
 	if (file) {
 		await openFile(file);
@@ -161,8 +160,20 @@ export async function getPackages(uri?: vs.Uri) {
 	}, 60);
 }
 
+function logOpenEditors() {
+	log(`Current open editors are:`);
+	if (vs.window.visibleTextEditors && vs.window.visibleTextEditors.length) {
+		for (const editor of vs.window.visibleTextEditors) {
+			log(`  - ${editor.document.uri}`);
+		}
+	} else {
+		log(`  - (no open editors)`);
+	}
+}
+
 export async function closeAllOpenFiles(): Promise<void> {
 	log(`Closing all open editors...`);
+	logOpenEditors();
 	try {
 		await withTimeout(
 			vs.commands.executeCommand("workbench.action.closeAllEditors"),
@@ -173,6 +184,8 @@ export async function closeAllOpenFiles(): Promise<void> {
 		logWarn(e);
 	}
 	await delay(100);
+	log(`Done closing editors!`);
+	logOpenEditors();
 }
 
 export async function waitUntilAllTextDocumentsAreClosed(): Promise<void> {
