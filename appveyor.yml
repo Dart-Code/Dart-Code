@@ -104,7 +104,7 @@ install:
   - dart-sdk\bin\pub global activate --no-executables meta 1.1.6
   - dart-sdk\bin\pub global activate --no-executables pedantic 1.4.0
   - dart-sdk\bin\pub global activate --no-executables json_annotation 1.2.0
-  - dart-sdk\bin\pub global activate --no-executables devtools 0.0.15-dev.1
+  - dart-sdk\bin\pub global activate --no-executables devtools
   # TODO: Remove this || true when we fix this version number...
   - dart-sdk\bin\pub global activate --no-executables webdev 2.0.0-alpha.1 || true
   - cd ..
