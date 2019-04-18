@@ -68,7 +68,9 @@ class Config {
 
 	// Helpers
 	get useDarkTheme() { return this.theme !== "light"; }
-	get useDevToolsDarkTheme() { return this.devToolsTheme === "dark"; } // TODO: Change this to !== "light" when we want to flip default
+	get useDevToolsDarkTheme() { return this.devToolsTheme === "dark"; }
+	get openTestViewOnFailure() { return this.openTestView.indexOf("testFailure") !== -1; }
+	get openTestViewOnStart() { return this.openTestView.indexOf("testRunStart") !== -1; }
 
 	// Options that can be set programatically.
 	public setCheckForSdkUpdates(value: boolean): Thenable<void> { return this.setConfig("checkForSdkUpdates", value, ConfigurationTarget.Global); }
