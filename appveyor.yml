@@ -53,7 +53,6 @@ init:
 cache:
   - "%APPDATA%\\Pub\\Cache"
   - "with spaces\\flutter"
-  - node_modules
 
 install:
   - echo Misc setup
@@ -111,7 +110,7 @@ install:
   - IF NOT EXIST ".dart_code_test_logs" mkdir ".dart_code_test_logs"
 
 build_script:
-  - npm install --depth 0
+  - npm ci
 
 
 test_script:

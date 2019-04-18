@@ -34,7 +34,6 @@ cache:
   directories:
     - $HOME/.pub-cache
     - with\ spaces/flutter
-    - node_modules
 
 addons:
   chrome: stable
@@ -126,7 +125,7 @@ before_install:
   - mkdir -p .dart_code_test_logs
 
 install:
-  - npm install --depth 0
+  - npm ci
 
 before_script:
   - if [ $TRAVIS_OS_NAME == "linux" ]; then
