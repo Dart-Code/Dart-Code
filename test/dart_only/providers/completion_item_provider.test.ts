@@ -306,7 +306,7 @@ foo(Theme theme) {
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.EnumMember, "Theme.Dark", "Theme.Dark");
 			// 1100 from boost
 			//    8 from includedSuggestionSet
-			assert.equal(completion.sortText, "998892Theme.Dark"); // TODO: This might be fragile!
+			assert.equal(completion.sortText, "998995Theme.Dark"); // TODO: This might be fragile!
 		});
 
 		it("correctly filters (includes enum constants in methods)", async () => {
