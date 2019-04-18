@@ -1,4 +1,5 @@
 import { ConfigurationTarget, Uri, version as codeVersion, workspace, WorkspaceConfiguration } from "vscode";
+import { createFolderForFile, resolvePaths } from "./utils";
 import { NullAsUndefined, nullToUndefined } from "./utils/misc";
 import { setupToolEnv } from "./utils/processes";
 
@@ -28,10 +29,10 @@ class Config {
 	get analyzeAngularTemplates(): boolean { return this.getConfig<boolean>("analyzeAngularTemplates", true); }
 	get analyzerAdditionalArgs(): string[] { return this.getConfig<string[]>("analyzerAdditionalArgs", []); }
 	get analyzerDiagnosticsPort(): undefined | number { return this.getConfig<null | number>("analyzerDiagnosticsPort", null); }
-	get analyzerInstrumentationLogFile(): undefined | string { return this.getConfig<null | string>("analyzerInstrumentationLogFile", null); }
-	get analyzerLogFile(): undefined | string { return this.getConfig<null | string>("analyzerLogFile", null); }
+	get analyzerInstrumentationLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("analyzerInstrumentationLogFile", null))); }
+	get analyzerLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("analyzerLogFile", null))); }
 	get analyzerObservatoryPort(): undefined | number { return this.getConfig<null | number>("analyzerObservatoryPort", null); }
-	get analyzerPath(): undefined | string { return this.getConfig<null | string>("analyzerPath", null); }
+	get analyzerPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("analyzerPath", null)); }
 	get analyzerSshHost(): undefined | string { return this.getConfig<null | string>("analyzerSshHost", null); }
 	get autoImportCompletions(): boolean { return this.getConfig<boolean>("autoImportCompletions", true); }
 	get buildRunnerAdditionalArgs(): string[] { return this.getConfig<string[]>("buildRunnerAdditionalArgs", []); }
@@ -40,15 +41,15 @@ class Config {
 	get devToolsTheme(): "dark" | "light" { return this.getConfig<"dark" | "light">("devToolsTheme", "dark"); }
 	get enableSdkFormatter(): boolean { return this.getConfig<boolean>("enableSdkFormatter", true); }
 	get env(): object { return this.getConfig<object>("env", {}); }
-	get extensionLogFile(): undefined | string { return this.getConfig<null | string>("extensionLogFile", null); }
+	get extensionLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("extensionLogFile", null))); }
 	get flutterCreateAndroidLanguage(): "java" | "kotlin" { return this.getConfig<"java" | "kotlin">("flutterCreateAndroidLanguage", "java"); }
 	get flutterCreateIOSLanguage(): "objc" | "swift" { return this.getConfig<"objc" | "swift">("flutterCreateIOSLanguage", "objc"); }
 	get flutterCreateOrganization(): undefined | string { return this.getConfig<null | string>("flutterCreateOrganization", null); }
-	get flutterDaemonLogFile(): undefined | string { return this.getConfig<null | string>("flutterDaemonLogFile", null); }
+	get flutterDaemonLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterDaemonLogFile", null))); }
 	get flutterHotReloadOnSave(): boolean { return this.getConfig<boolean>("flutterHotReloadOnSave", true); }
-	get flutterScreenshotPath(): undefined | string { return this.getConfig<null | string>("flutterScreenshotPath", null); }
-	get flutterSdkPath(): undefined | string { return this.getConfig<null | string>("flutterSdkPath", null); }
-	get flutterSdkPaths(): string[] { return this.getConfig<string[]>("flutterSdkPaths", []); }
+	get flutterScreenshotPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("flutterScreenshotPath", null)); }
+	get flutterSdkPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("flutterSdkPath", null)); }
+	get flutterSdkPaths(): string[] { return this.getConfig<string[]>("flutterSdkPaths", []).map(resolvePaths); }
 	get flutterSelectDeviceWhenConnected(): boolean { return this.getConfig<boolean>("flutterSelectDeviceWhenConnected", true); }
 	get maxLogLineLength(): number { return this.getConfig<number>("maxLogLineLength", 2000); }
 	get normalizeWindowsDriveLetters(): boolean { return this.getConfig<boolean>("normalizeWindowsDriveLetters", true); }
@@ -57,8 +58,8 @@ class Config {
 	get previewToStringInDebugViews(): boolean { return this.getConfig<boolean>("previewToStringInDebugViews", false); }
 	get promptToRunIfErrors(): boolean { return this.getConfig<boolean>("promptToRunIfErrors", true); }
 	get reportAnalyzerErrors(): boolean { return this.getConfig<boolean>("reportAnalyzerErrors", true); }
-	get sdkPath(): undefined | string { return this.getConfig<null | string>("sdkPath", null); }
-	get sdkPaths(): string[] { return this.getConfig<string[]>("sdkPaths", []); }
+	get sdkPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("sdkPath", null)); }
+	get sdkPaths(): string[] { return this.getConfig<string[]>("sdkPaths", []).map(resolvePaths); }
 	get showIgnoreQuickFixes(): boolean { return this.getConfig<boolean>("showIgnoreQuickFixes", false); }
 	get showTestCodeLens(): boolean { return this.getConfig<boolean>("showTestCodeLens", true); }
 	get showTodos(): boolean { return this.getConfig<boolean>("showTodos", true); }
@@ -108,15 +109,15 @@ class ResourceConfig {
 	get doNotFormat(): string[] { return this.getConfig<string[]>("doNotFormat", []); }
 	get enableCompletionCommitCharacters(): boolean { return this.getConfig<boolean>("enableCompletionCommitCharacters", false); }
 	get evaluateGettersInDebugViews(): boolean { return this.getConfig<boolean>("evaluateGettersInDebugViews", true); }
-	get flutterRunLogFile(): undefined | string { return this.getConfig<null | string>("flutterRunLogFile", null); }
-	get flutterTestLogFile(): undefined | string { return this.getConfig<null | string>("flutterTestLogFile", null); }
+	get flutterRunLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterRunLogFile", null))); }
+	get flutterTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterTestLogFile", null))); }
 	get flutterTrackWidgetCreation(): boolean { return this.getConfig<boolean>("flutterTrackWidgetCreation", true); }
 	get insertArgumentPlaceholders(): boolean { return this.getConfig<boolean>("insertArgumentPlaceholders", true); }
 	get lineLength(): number { return this.getConfig<number>("lineLength", 80); }
-	get observatoryLogFile(): undefined | string { return this.getConfig<null | string>("observatoryLogFile", null); }
+	get observatoryLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("observatoryLogFile", null))); }
 	get promptToGetPackages(): boolean { return this.getConfig<boolean>("promptToGetPackages", true); }
 	get pubAdditionalArgs(): string[] { return this.getConfig<string[]>("pubAdditionalArgs", []); }
-	get pubTestLogFile(): undefined | string { return this.getConfig<null | string>("pubTestLogFile", null); }
+	get pubTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("pubTestLogFile", null))); }
 	get runPubGetOnPubspecChanges(): boolean { return this.getConfig<boolean>("runPubGetOnPubspecChanges", true); }
 	get vmAdditionalArgs(): string[] { return this.getConfig<string[]>("vmAdditionalArgs", []); }
 
