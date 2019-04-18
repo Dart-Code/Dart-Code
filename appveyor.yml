@@ -52,6 +52,7 @@ init:
 
 cache:
   - "%APPDATA%\\Pub\\Cache"
+  - "%APPDATA%\\npm"
   - "with spaces\\flutter"
 
 install:
