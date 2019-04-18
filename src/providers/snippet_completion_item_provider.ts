@@ -35,8 +35,10 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 		if (!this.shouldAllowCompletion(line, context))
 			return;
 
-		if (this.shouldRender(document.uri))
-			return this.completions;
+		if (!this.shouldRender(document.uri))
+			return;
+
+		return this.completions;
 	}
 
 	private shouldAllowCompletion(line: string, context: CompletionContext): boolean {
