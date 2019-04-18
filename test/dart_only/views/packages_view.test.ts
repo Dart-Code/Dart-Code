@@ -20,7 +20,7 @@ describe("packages tree", () => {
 		assert.equal(self, undefined);
 	});
 
-	it("includes know folders from inside lib/", () => {
+	it("includes known folders from inside lib/", () => {
 		const topLevel = extApi.packagesTreeProvider.getChildren(undefined);
 		const myPackage = ensurePackageTreeNode(topLevel, PackageDepPackage, "my_package");
 		const myPackageLibContents = extApi.packagesTreeProvider.getChildren(myPackage);
