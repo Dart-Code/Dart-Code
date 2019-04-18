@@ -66,6 +66,10 @@ class Config {
 	get triggerSignatureHelpAutomatically(): boolean { return this.getConfig<boolean>("triggerSignatureHelpAutomatically", false); }
 	get warnWhenEditingFilesOutsideWorkspace(): boolean { return this.getConfig<boolean>("warnWhenEditingFilesOutsideWorkspace", true); }
 
+	// Hidden settings
+	// TODO: Remove this?
+	get previewHotReloadCoverageMarkers() { return this.getConfig<boolean>("previewHotReloadCoverageMarkers", false); }
+
 	// Helpers
 	get useDarkTheme() { return this.theme !== "light"; }
 	get useDevToolsDarkTheme() { return this.devToolsTheme === "dark"; }
