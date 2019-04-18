@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import { fsPath } from "../../../src/utils";
 import { PackageDepFile, PackageDepPackage } from "../../../src/views/packages_view";
-import { ensurePackageTreeNode, extApi, getPackages, myPackageThingFile } from "../../helpers";
+import { ensurePackageTreeNode, extApi, getPackages, myPackageThingFile, renderedItemLabel } from "../../helpers";
 
 describe("packages tree", () => {
 	// We have tests that require external packages.
@@ -33,7 +33,7 @@ describe("packages tree", () => {
 		const myPackage = ensurePackageTreeNode(topLevel, PackageDepPackage, "my_package");
 		const myPackageLibContents = extApi.packagesTreeProvider.getChildren(myPackage);
 
-		const names = myPackageLibContents.map((f) => f.label);
+		const names = myPackageLibContents.map((f) => renderedItemLabel(f));
 		// This isn't quite the same as VS Code explorer, as it does complicated things
 		// like trying to sort file_9 and file_10 as a user would expect, and also
 		// seems to put capitals after lowercase for the same letter.

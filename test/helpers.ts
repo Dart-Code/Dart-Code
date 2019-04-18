@@ -791,6 +791,6 @@ export function ensurePackageTreeNode<T extends PackageDep>(items: PackageDep[],
 	return item as T;
 }
 
-function renderedItemLabel(item: PackageDep): string {
+export function renderedItemLabel(item: PackageDep): string {
 	return item.label || path.basename(fsPath(item.resourceUri));
 }
