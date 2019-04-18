@@ -777,14 +777,18 @@ export function clearAllContext(context: Context): Promise<void> {
 export function ensurePackageTreeNode<T extends PackageDep>(items: PackageDep[], constructor: new (...args: any[]) => T, label: string, description?: string): T {
 	const item = items.find((item) =>
 		item.constructor === constructor
-		&& item.label === label,
+		&& renderedItemLabel(item) === label,
 	);
 	if (description)
 		assert.equal(item.description, description);
 	assert.ok(
 		item,
 		`Couldn't find ${constructor.name} tree node for ${label} in\n`
-		+ items.map((item) => `        ${item.constructor.name}/${item.label}`).join("\n"),
+		+ items.map((item) => `        ${item.constructor.name}/${renderedItemLabel(item)}`).join("\n"),
 	);
 	return item as T;
+}
+
+function renderedItemLabel(item: PackageDep): string {
+	return item.label || path.basename(fsPath(item.resourceUri));
 }
