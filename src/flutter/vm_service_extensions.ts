@@ -8,6 +8,7 @@ export const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidge
 export enum FlutterServiceExtension {
 	PlatformOverride = "ext.flutter.platformOverride",
 	DebugBanner = "ext.flutter.debugAllowBanner",
+	CheckElevations = "ext.flutter.debugCheckElevationsEnabled",
 	DebugPaint = "ext.flutter.debugPaint",
 	PaintBaselines = "ext.flutter.debugPaintBaselinesEnabled",
 	InspectorSelectMode = "ext.flutter.inspector.show",
@@ -35,6 +36,7 @@ const keyValue = "value";
 const toggleExtensionStateKeys: { [key: string]: string } = {
 	[FlutterServiceExtension.PlatformOverride]: keyValue,
 	[FlutterServiceExtension.DebugBanner]: keyEnabled,
+	[FlutterServiceExtension.CheckElevations]: keyEnabled,
 	[FlutterServiceExtension.DebugPaint]: keyEnabled,
 	[FlutterServiceExtension.PaintBaselines]: keyEnabled,
 	[FlutterServiceExtension.InspectorSelectMode]: keyEnabled,
@@ -50,6 +52,7 @@ export const timeDilationSlow = 5.0;
 const defaultToggleExtensionState: { [key: string]: any } = {
 	[FlutterServiceExtension.PlatformOverride]: null, // We don't know the default here so we need to ask for it when the extension loads.
 	[FlutterServiceExtension.DebugBanner]: true,
+	[FlutterServiceExtension.CheckElevations]: false,
 	[FlutterServiceExtension.DebugPaint]: false,
 	[FlutterServiceExtension.PaintBaselines]: false,
 	[FlutterServiceExtension.InspectorSelectMode]: false,

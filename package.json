@@ -266,6 +266,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.toggleCheckElevations",
+				"title": "Toggle Check Elevations",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.togglePaintBaselines",
 				"title": "Toggle Baseline Painting",
 				"category": "Flutter"
@@ -506,6 +511,10 @@
 				{
 					"command": "flutter.toggleDebugModeBanner",
 					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.debugAllowBanner"
+				},
+				{
+					"command": "flutter.toggleCheckElevations",
+					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.debugCheckElevationsEnabled"
 				},
 				{
 					"command": "flutter.togglePaintBaselines",

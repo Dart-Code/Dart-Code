@@ -55,6 +55,7 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.flutterExtensions.toggle(FlutterServiceExtension.PerformanceOverlay)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.flutterExtensions.toggle(FlutterServiceExtension.RepaintRainbow)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => this.flutterExtensions.toggle(FlutterServiceExtension.DebugBanner)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleCheckElevations", () => this.flutterExtensions.toggle(FlutterServiceExtension.CheckElevations)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.flutterExtensions.toggle(FlutterServiceExtension.PaintBaselines)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.flutterExtensions.toggle(FlutterServiceExtension.SlowAnimations, timeDilationNormal, timeDilationSlow)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.inspectWidget", () => this.flutterExtensions.toggle(FlutterServiceExtension.InspectorSelectMode, true, true)));
