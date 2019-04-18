@@ -33,6 +33,7 @@ if: tag IS blank AND ((branch = master and type = push) OR (env(ONLY_RUN_DART_VE
 cache:
   directories:
     - $HOME/.pub-cache
+    - $HOME/.npm
     - with\ spaces/flutter
 
 addons:
