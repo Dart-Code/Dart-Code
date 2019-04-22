@@ -1038,7 +1038,7 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	protected customRequest(request: string, response: DebugProtocol.Response, args: any): void {
+	protected async customRequest(request: string, response: DebugProtocol.Response, args: any): Promise<void> {
 		switch (request) {
 			case "coverageFilesUpdate":
 				this.knownOpenFiles = args.scriptUris;
@@ -1046,6 +1046,10 @@ export class DartDebugSession extends DebugSession {
 				break;
 			case "requestCoverageUpdate":
 				this.requestCoverageUpdate("editor");
+				this.sendResponse(response);
+				break;
+			case "service":
+				await this.callService(args.type, args.params);
 				this.sendResponse(response);
 				break;
 			// Flutter requests that may be sent during test runs or other places
@@ -1236,6 +1240,10 @@ export class DartDebugSession extends DebugSession {
 		return false;
 	}
 
+	private callService(type: string, args: any): Promise<any> {
+		return this.observatory.callMethod(type, args);
+	}
+
 	private async evaluateAndSendErrors(thread: ThreadInfo, expression: string): Promise<VMInstanceRef> {
 		try {
 			const result = await this.observatory.evaluateInFrame(thread.ref.id, 0, expression, true);
@@ -1257,7 +1265,7 @@ export class DartDebugSession extends DebugSession {
 
 	public handleServiceRegistered(event: VMEvent) {
 		if (event && event.service) {
-			this.notifyServiceRegistered(event.service);
+			this.notifyServiceRegistered(event.service, event.method);
 		}
 	}
 
@@ -1265,8 +1273,8 @@ export class DartDebugSession extends DebugSession {
 		this.sendEvent(new Event("dart.serviceExtensionAdded", { id, isolateId }));
 	}
 
-	private notifyServiceRegistered(id: string) {
-		this.sendEvent(new Event("dart.serviceRegistered", { id }));
+	private notifyServiceRegistered(service: string, method: string) {
+		this.sendEvent(new Event("dart.serviceRegistered", { service, method }));
 	}
 
 	private knownOpenFiles: string[] = []; // Keep track of these for internal requests

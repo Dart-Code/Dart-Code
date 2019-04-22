@@ -67,7 +67,7 @@ export interface FlutterServiceExtensionArgs { type: FlutterServiceExtension; pa
 
 /// Manages state for Flutter VM service extensions.
 export class FlutterVmServiceExtensions {
-	private registeredServices: FlutterService[] = [];
+	private registeredServices: { [x in FlutterService]?: string } = {};
 	private loadedServiceExtensions: FlutterServiceExtension[] = [];
 	private currentExtensionState = Object.assign({}, defaultToggleExtensionState);
 	private sendValueToVM: (extension: FlutterServiceExtension) => void;
@@ -121,7 +121,7 @@ export class FlutterVmServiceExtensions {
 				}
 			}
 		} else if (e.event === "dart.serviceRegistered") {
-			this.handleServiceRegistered(e.body.id);
+			this.handleServiceRegistered(e.body.service, e.body.method);
 		} else if (e.event === "dart.flutter.firstFrame") {
 			// Send all values back to the VM on the first frame so that they persist across restarts.
 			for (const extension in FlutterServiceExtension)
@@ -182,9 +182,9 @@ export class FlutterVmServiceExtensions {
 	}
 
 	/// Tracks registered services and updates contexts to enable VS Code commands.
-	private handleServiceRegistered(id: FlutterService) {
-		this.registeredServices.push(id);
-		vs.commands.executeCommand("setContext", `${SERVICE_CONTEXT_PREFIX}${id}`, true);
+	private handleServiceRegistered(service: FlutterService, method: string) {
+		this.registeredServices[service] = method;
+		vs.commands.executeCommand("setContext", `${SERVICE_CONTEXT_PREFIX}${service}`, true);
 	}
 
 	/// Tracks loaded service extensions and updates contexts to enable VS Code commands.
@@ -195,10 +195,10 @@ export class FlutterVmServiceExtensions {
 
 	/// Marks all services and service extensions as not-loaded in the context to disable VS Code Commands.
 	public markAllServicesUnloaded() {
-		for (const id of this.registeredServices) {
+		for (const id of Object.keys(this.registeredServices)) {
 			vs.commands.executeCommand("setContext", `${SERVICE_CONTEXT_PREFIX}${id}`, undefined);
 		}
-		this.registeredServices.length = 0;
+		this.registeredServices = {};
 		for (const id of this.loadedServiceExtensions) {
 			vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${id}`, undefined);
 		}
@@ -206,8 +206,9 @@ export class FlutterVmServiceExtensions {
 		vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, false);
 	}
 
-	public serviceIsRegistered(id: FlutterService) {
-		return !!this.registeredServices.find((registeredID) => registeredID === id);
+	// TODO: These services should be per-session!
+	public serviceIsRegistered(service: FlutterService): boolean {
+		return !!this.registeredServices[service];
 	}
 
 	public serviceExtensionIsLoaded(id: FlutterServiceExtension) {
