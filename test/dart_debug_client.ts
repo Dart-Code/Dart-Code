@@ -63,7 +63,7 @@ export class DartDebugClient extends DebugClient {
 				request: "launch",
 				type: "dart",
 			},
-			customRequest: (e) => this.customRequest(e),
+			customRequest: (cmd, args) => this.customRequest(cmd, args),
 			id: "INTEGRATION-TEST",
 			name: "Dart & Flutter",
 			type: "dart",
