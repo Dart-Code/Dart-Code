@@ -1058,6 +1058,15 @@
 					"description": "The path to a low-traffic log file for basic extension and editor issues.",
 					"scope": "window"
 				},
+				"dart.devToolsLogFile": {
+					"type": [
+						"null",
+						"string"
+					],
+					"default": null,
+					"description": "The path to a low-traffic log file for the Dart DevTools service.",
+					"scope": "window"
+				},
 				"dart.analyzerLogFile": {
 					"type": [
 						"null",
