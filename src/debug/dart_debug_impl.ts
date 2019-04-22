@@ -1042,9 +1042,11 @@ export class DartDebugSession extends DebugSession {
 		switch (request) {
 			case "coverageFilesUpdate":
 				this.knownOpenFiles = args.scriptUris;
+				this.sendResponse(response);
 				break;
 			case "requestCoverageUpdate":
 				this.requestCoverageUpdate("editor");
+				this.sendResponse(response);
 				break;
 			// Flutter requests that may be sent during test runs or other places
 			// that we don't currently support. TODO: Fix this by moving all the
