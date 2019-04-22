@@ -29,14 +29,14 @@ export class LastDebugSession {
 
 export class DebugCommands {
 	private debugMetrics = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 0);
-	private onWillHotReloadEmitter: vs.EventEmitter<void> = new vs.EventEmitter<void>();
-	public readonly onWillHotReload: vs.Event<void> = this.onWillHotReloadEmitter.event;
-	private onWillHotRestartEmitter: vs.EventEmitter<void> = new vs.EventEmitter<void>();
-	public readonly onWillHotRestart: vs.Event<void> = this.onWillHotRestartEmitter.event;
-	private onReceiveCoverageEmitter: vs.EventEmitter<CoverageData[]> = new vs.EventEmitter<CoverageData[]>();
-	public readonly onReceiveCoverage: vs.Event<CoverageData[]> = this.onReceiveCoverageEmitter.event;
-	private onFirstFrameEmitter: vs.EventEmitter<CoverageData[]> = new vs.EventEmitter<CoverageData[]>();
-	public readonly onFirstFrame: vs.Event<CoverageData[]> = this.onFirstFrameEmitter.event;
+	private onWillHotReloadEmitter = new vs.EventEmitter<void>();
+	public readonly onWillHotReload = this.onWillHotReloadEmitter.event;
+	private onWillHotRestartEmitter = new vs.EventEmitter<void>();
+	public readonly onWillHotRestart = this.onWillHotRestartEmitter.event;
+	private onReceiveCoverageEmitter = new vs.EventEmitter<CoverageData[]>();
+	public readonly onReceiveCoverage = this.onReceiveCoverageEmitter.event;
+	private onFirstFrameEmitter = new vs.EventEmitter<void>();
+	public readonly onFirstFrame = this.onFirstFrameEmitter.event;
 	public readonly flutterExtensions: FlutterVmServiceExtensions;
 	private readonly devTools: DevToolsManager;
 
