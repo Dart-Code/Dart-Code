@@ -189,6 +189,7 @@ export interface FlutterLaunchRequestArguments extends DartLaunchRequestArgument
 	deviceName?: string;
 	forceFlutterVerboseMode?: boolean;
 	flutterTrackWidgetCreation: boolean;
+	flutterAttachSupportsUris: boolean;
 	flutterPath?: string;
 	flutterMode?: "debug" | "profile" | "release";
 	flutterRunLogFile?: string;

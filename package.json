@@ -1262,7 +1262,7 @@
 							},
 							"observatoryUri": {
 								"type": "string",
-								"description": "URI (or port) of the Observatory instance to attach to."
+								"description": "URI of the Observatory instance to attach to."
 							}
 						}
 					}

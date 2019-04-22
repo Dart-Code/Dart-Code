@@ -131,16 +131,19 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 
 		if (isAttach) {
-			// TODO: We need to handle just port numbers here, and also validation.
-			// https://github.com/Dart-Code/Dart-Code/issues/1190
 			const flutterAttach: FlutterAttachRequestArguments = args as any;
 			if (flutterAttach.observatoryUri) {
-				const observatoryPort = extractObservatoryPort(flutterAttach.observatoryUri);
-				if (observatoryPort) {
-					appArgs.push("--debug-port");
-					appArgs.push(observatoryPort.toString());
+				if (args.flutterAttachSupportsUris) {
+					appArgs.push("--debug-uri");
+					appArgs.push(flutterAttach.observatoryUri);
 				} else {
-					logWarn(`Observatory port was not found: ${flutterAttach.observatoryUri}`);
+					const observatoryPort = extractObservatoryPort(flutterAttach.observatoryUri);
+					if (observatoryPort) {
+						appArgs.push("--debug-port");
+						appArgs.push(observatoryPort.toString());
+					} else {
+						logWarn(`Observatory port was not found: ${flutterAttach.observatoryUri}`);
+					}
 				}
 			}
 		}

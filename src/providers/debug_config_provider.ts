@@ -367,7 +367,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	private async getObservatoryUri(observatoryUri: string, defaultValue?: string): Promise<string> {
 		observatoryUri = observatoryUri || await vs.window.showInputBox({
 			ignoreFocusOut: true, // Don't close the window if the user tabs away to get the uri
-			placeHolder: "Paste an Observatory URI or port",
+			placeHolder: "Paste an Observatory URI",
 			prompt: "Enter Observatory URI",
 			validateInput: (input) => {
 				if (!input)
@@ -382,7 +382,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				// https://github.com/Microsoft/vscode/issues/49818
 
 				if (!input.startsWith("http://") && !input.startsWith("https://"))
-					return "Please enter a valid Observatory URI or port number";
+					return "Please enter a valid Observatory URI";
 			},
 			value: defaultValue,
 		});
@@ -455,6 +455,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		if (isFlutter) {
 			debugConfig.forceFlutterVerboseMode = isLogging || isCI;
+			debugConfig.flutterAttachSupportsUris = this.flutterCapabilities.supportsUrisForFlutterAttach;
 			debugConfig.flutterTrackWidgetCreation =
 				// Use from the launch.json if configured.
 				debugConfig.flutterTrackWidgetCreation !== undefined && debugConfig.flutterTrackWidgetCreation !== null
