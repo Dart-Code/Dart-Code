@@ -26,14 +26,20 @@ export function showUserPrompts(context: Context, workspaceContext: WorkspaceCon
 		prompt().then((res) => context.update(stateKey, res), error);
 	}
 
-	const versionLink = extensionVersion.split(".").slice(0, 2).join(".").replace(".", "-");
-	const releaseNotesKeyForThisVersion = `release_notes_${extensionVersion}`;
-
 	if (workspaceContext.hasAnyFlutterProjects && !hasFlutterExtension && !shouldSuppress(installFlutterExtensionPromptKey))
 		return showPrompt(installFlutterExtensionPromptKey, promptToInstallFlutterExtension);
 
-	if (!isDevExtension && !shouldSuppress(releaseNotesKeyForThisVersion))
-		return showPrompt(releaseNotesKeyForThisVersion, () => promptToShowReleaseNotes(extensionVersion, versionLink));
+	const lastSeenVersionNotification = context.lastSeenVersion;
+	if (!lastSeenVersionNotification) {
+		// If we've not got a stored version, this is the first install, so just
+		// stash the current version and don't show anything.
+		context.lastSeenVersion = extensionVersion;
+	} else if (!isDevExtension && lastSeenVersionNotification !== extensionVersion) {
+		const versionLink = extensionVersion.split(".").slice(0, 2).join(".").replace(".", "-");
+		promptToShowReleaseNotes(extensionVersion, versionLink).then(() =>
+			context.lastSeenVersion = extensionVersion,
+		);
+	}
 }
 
 export async function showDevToolsNotificationIfAppropriate(context: Context): Promise<boolean> {
