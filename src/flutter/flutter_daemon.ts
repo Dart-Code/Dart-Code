@@ -32,12 +32,18 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	constructor(flutterBinPath: string, projectFolder: string) {
 		super(() => config.flutterDaemonLogFile, (message, severity) => log(message, severity, LogCategory.FlutterDaemon), config.maxLogLineLength, true);
 
+		this.registerForDaemonConnected((e) => {
+			this.additionalPidsToTerminate.push(e.pid);
+			this.capabilities.version = e.version;
+			vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, this.capabilities.canFlutterAttach);
+
+			// Enable device polling.
+			this.deviceEnable().then(() => this.deviceManager.updateStatusBar());
+		});
+
 		this.createProcess(projectFolder, flutterBinPath, ["daemon"]);
 
 		this.deviceManager = new FlutterDeviceManager(this);
-
-		// Enable device polling.
-		this.deviceEnable().then(() => this.deviceManager.updateStatusBar());
 	}
 
 	public get isReady() { return this.hasStarted; }
@@ -112,10 +118,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	protected handleNotification(evt: UnknownNotification) {
 		switch (evt.event) {
 			case "daemon.connected":
-				const params = evt.params as f.DaemonConnected;
-				this.additionalPidsToTerminate.push(params.pid);
-				this.capabilities.version = params.version;
-				vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, this.capabilities.canFlutterAttach);
+				this.notify(this.daemonConnectedSubscriptions, evt.params as f.DaemonConnected);
 				break;
 			case "device.added":
 				this.notify(this.deviceAddedSubscriptions, evt.params as f.Device);
@@ -134,6 +137,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 
 	// Subscription lists.
 
+	private daemonConnectedSubscriptions: Array<(notification: f.DaemonConnected) => void> = [];
 	private deviceAddedSubscriptions: Array<(notification: f.Device) => void> = [];
 	private deviceRemovedSubscriptions: Array<(notification: f.Device) => void> = [];
 	private daemonLogMessageSubscriptions: Array<(notification: f.LogMessage) => void> = [];
@@ -158,6 +162,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	}
 
 	// Subscription methods.
+
+	public registerForDaemonConnected(subscriber: (notification: f.DaemonConnected) => void): vs.Disposable {
+		return this.subscribe(this.daemonConnectedSubscriptions, subscriber);
+	}
 
 	public registerForDeviceAdded(subscriber: (notification: f.Device) => void): vs.Disposable {
 		return this.subscribe(this.deviceAddedSubscriptions, subscriber);
