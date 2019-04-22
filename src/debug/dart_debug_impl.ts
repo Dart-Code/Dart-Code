@@ -4,6 +4,7 @@ import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { config } from "../config";
+import { pleaseReportBug } from "../constants";
 import { white } from "../utils/colors";
 import { getLogHeader, logError, logWarn } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
@@ -18,7 +19,6 @@ const maxValuesToCallToString = 15;
 const unoptimizedPrefix = "[Unoptimized] ";
 const stackFrameWithUriPattern = new RegExp(`(.*#\\d+)(.*)\\(((?:package|dart|file):.*\\.dart):(\\d+):(\\d+)\\)\\s*$`);
 const webStackFrameWithUriPattern = new RegExp(`((?:package|dart|file):.*\\.dart) (\\d+):(\\d+)\\s*(\\S+)\\s*$`);
-const pleaseReportBug = "Please raise a bug against the Dart extension for VS Code.";
 
 // TODO: supportsSetVariable
 // TODO: class variables?
