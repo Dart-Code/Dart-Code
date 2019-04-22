@@ -6,7 +6,7 @@ import * as as from "./analysis_server_types";
 import { Analyzer } from "./analyzer";
 
 export class FileChangeHandler implements vs.Disposable {
-	private disposables: vs.Disposable[] = [];
+	private readonly disposables: vs.Disposable[] = [];
 	private readonly filesWarnedAbout = new Set<string>();
 	constructor(private readonly analyzer: Analyzer) {
 		this.disposables.push(
