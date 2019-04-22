@@ -1,13 +1,16 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { Analytics } from "../analytics";
+import { DebugCommands, debugSessions } from "../commands/debug";
 import { config } from "../config";
-import { CHROME_OS_DEVTOOLS_PORT } from "../constants";
+import { CHROME_OS_DEVTOOLS_PORT, pleaseReportBug } from "../constants";
 import { isChromeOS, LogCategory } from "../debug/utils";
+import { FlutterService } from "../flutter/vm_service_extensions";
 import { PubGlobal } from "../pub/global";
 import { StdIOService, UnknownNotification } from "../services/stdio_service";
-import { openInBrowser, Sdks } from "../utils";
+import { Sdks } from "../utils";
 import { log, logError } from "../utils/log";
+import { waitFor } from "../utils/promises";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 import { pubPath } from "./utils";
 
@@ -29,7 +32,7 @@ export class DevToolsManager implements vs.Disposable {
 	/// concurrent launches can wait on the same promise.
 	private devtoolsUrl: Thenable<string> | undefined;
 
-	constructor(private sdks: Sdks, private analytics: Analytics, private pubGlobal: PubGlobal) {
+	constructor(private sdks: Sdks, private debugCommands: DebugCommands, private analytics: Analytics, private pubGlobal: PubGlobal) {
 		this.disposables.push(this.devToolsStatusBarItem);
 	}
 
@@ -51,15 +54,35 @@ export class DevToolsManager implements vs.Disposable {
 		}
 		try {
 			const url = await this.devtoolsUrl;
-			const fullUrl = `${url}?hide=debugger&uri=${encodeURIComponent(session.vmServiceUri)}${config.useDevToolsDarkTheme ? "&theme=dark" : ""}`;
+			const didLaunch = await vs.window.withProgress({
+				location: vs.ProgressLocation.Notification,
+				title: "Opening Dart DevTools...",
+			}, async (_) => {
+				const canLaunchDevToolsThroughService = await waitFor(() => this.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.LaunchDevTools), 500);
+				if (canLaunchDevToolsThroughService) {
+					await session.session.customRequest(
+						"service",
+						{ type: this.debugCommands.flutterExtensions.getServiceMethodName(FlutterService.LaunchDevTools) },
+					);
+					return true;
+				} else {
+					// const fullUrl = `${url}?hide=debugger&uri=${encodeURIComponent(session.vmServiceUri)}${config.useDevToolsDarkTheme ? "&theme=dark" : ""}`;
+					// openInBrowser(fullUrl);
+					logError(`DevTools failed to register launchDevTools service`);
+					vs.window.showErrorMessage(`The DevTools service failed to register. ${pleaseReportBug}`);
+					return false;
+				}
+			});
+			if (!didLaunch)
+				return;
 			this.devToolsStatusBarItem.text = "Dart DevTools";
 			this.devToolsStatusBarItem.tooltip = `Dart DevTools is running at ${url}`;
 			this.devToolsStatusBarItem.command = "dart.openDevTools";
 			this.devToolsStatusBarItem.show();
-			openInBrowser(fullUrl);
-			return { url: fullUrl, dispose: () => this.dispose() };
+			return { url, dispose: () => this.dispose() };
 		} catch (e) {
 			this.devToolsStatusBarItem.hide();
+			logError(e);
 			vs.window.showErrorMessage(`${e}`);
 		}
 	}
@@ -71,6 +94,17 @@ export class DevToolsManager implements vs.Disposable {
 			this.disposables.push(service);
 
 			service.registerForServerStarted((n) => {
+				// When a new debug session starts, we need to wait for its VM
+				// Service, then register it with this server.
+				this.disposables.push(this.debugCommands.onDebugSessionVmServiceAvailable(
+					(session) => service.vmRegister({ uri: session.vmServiceUri }),
+				));
+
+				// And send any existing sessions we have.
+				debugSessions.forEach(
+					(session) => service.vmRegister({ uri: session.vmServiceUri }),
+				);
+
 				portToBind = n.port;
 				resolve(`http://${n.host}:${n.port}`);
 			});
@@ -130,6 +164,10 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 
 	public registerForServerStarted(subscriber: (notification: ServerStartedNotification) => void): vs.Disposable {
 		return this.subscribe(this.serverStartedSubscriptions, subscriber);
+	}
+
+	public vmRegister(request: { uri: string }): Thenable<any> {
+		return this.sendRequest("vm.register", request);
 	}
 }
 
