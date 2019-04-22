@@ -385,7 +385,8 @@
 					"command": "flutter.createProject"
 				},
 				{
-					"command": "flutter.createWebProject"
+					"command": "flutter.createWebProject",
+					"when": "false"
 				},
 				{
 					"command": "dart.createProject"
