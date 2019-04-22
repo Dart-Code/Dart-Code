@@ -1,13 +1,12 @@
 import * as assert from "assert";
 import * as path from "path";
-import * as sinon from "sinon";
 import * as vs from "vscode";
 import { FlutterService, FlutterServiceExtension } from "../../../src/flutter/vm_service_extensions";
 import { fsPath } from "../../../src/utils";
 import { fetch } from "../../../src/utils/fetch";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterWebBrokenMainFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, getPackages, openFile, positionOf, sb, waitForResult, watchPromise } from "../../helpers";
+import { activate, defer, delay, ext, extApi, flutterWebBrokenMainFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, getPackages, openFile, positionOf, waitForResult, watchPromise } from "../../helpers";
 
 describe.skip("flutter web debugger", () => {
 	beforeEach("activate flutterWebHelloWorldMainFile", () => activate(flutterWebHelloWorldMainFile));
@@ -292,10 +291,6 @@ describe.skip("flutter web debugger", () => {
 			return;
 		}
 
-		// Intercept vscode.open so we don't spawn browsers!
-		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const open = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
-
 		const config = await startDebugger(flutterWebHelloWorldMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
@@ -303,7 +298,6 @@ describe.skip("flutter web debugger", () => {
 		]);
 
 		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
-		assert.ok(open.calledOnce);
 		assert.ok(devTools);
 		assert.ok(devTools.url);
 		defer(devTools.dispose);

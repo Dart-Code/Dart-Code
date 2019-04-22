@@ -1,6 +1,5 @@
 import * as assert from "assert";
 import * as path from "path";
-import * as sinon from "sinon";
 import * as vs from "vscode";
 import { config } from "../../../src/config";
 import { platformEol } from "../../../src/debug/utils";
@@ -201,10 +200,6 @@ describe("dart cli debugger", () => {
 			return;
 		}
 
-		// Intercept vscode.open so we don't spawn browsers!
-		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const open = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
-
 		await openFile(helloWorldMainFile);
 		const config = await startDebugger(helloWorldMainFile);
 		// Stop at a breakpoint so the app won't quit while we're verifying DevTools.
@@ -216,7 +211,6 @@ describe("dart cli debugger", () => {
 		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
 		assert.ok(devTools);
 		defer(devTools.dispose);
-		assert.ok(open.calledOnce);
 		assert.ok(devTools.url);
 
 		const serverResponse = await fetch(devTools.url);
