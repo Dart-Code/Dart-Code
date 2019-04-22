@@ -1,14 +1,13 @@
-import * as child_process from "child_process";
 import * as path from "path";
 import * as vs from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { CHROME_OS_DEVTOOLS_PORT } from "../constants";
-import { isChromeOS, LogCategory, LogSeverity } from "../debug/utils";
+import { isChromeOS, LogCategory } from "../debug/utils";
 import { PubGlobal } from "../pub/global";
+import { StdIOService, UnknownNotification } from "../services/stdio_service";
 import { openInBrowser, Sdks } from "../utils";
-import { log, logError, logProcess } from "../utils/log";
-import { safeSpawn } from "../utils/processes";
+import { log, logError } from "../utils/log";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 import { pubPath } from "./utils";
 
@@ -21,15 +20,18 @@ const devtoolsPackageName = "Dart DevTools";
 // still valid.
 let portToBind: number | undefined;
 
-export class DevTools implements vs.Disposable {
-	private devToolsStatusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 100);
-	private proc: child_process.ChildProcess | undefined;
-	private realPid: number | undefined;
+/// Handles launching DevTools in the browser and managing the underlying service.
+export class DevToolsManager implements vs.Disposable {
+	private readonly disposables: vs.Disposable[] = [];
+	private readonly devToolsStatusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 100);
+
 	/// Resolves to the DevTools URL. This is created immediately when a new process is being spawned so that
 	/// concurrent launches can wait on the same promise.
 	private devtoolsUrl: Thenable<string> | undefined;
 
-	constructor(private sdks: Sdks, private analytics: Analytics, private pubGlobal: PubGlobal) { }
+	constructor(private sdks: Sdks, private analytics: Analytics, private pubGlobal: PubGlobal) {
+		this.disposables.push(this.devToolsStatusBarItem);
+	}
 
 	/// Spawns DevTools and returns the full URL to open for that session
 	///   eg. http://localhost:8123/?port=8543
@@ -45,7 +47,7 @@ export class DevTools implements vs.Disposable {
 			this.devtoolsUrl = vs.window.withProgress({
 				location: vs.ProgressLocation.Notification,
 				title: "Starting Dart DevTools...",
-			}, async (_) => this.spawnDevTools());
+			}, async (_) => this.startServer());
 		}
 		try {
 			const url = await this.devtoolsUrl;
@@ -63,70 +65,76 @@ export class DevTools implements vs.Disposable {
 	}
 
 	/// Starts the devtools server and returns the URL of the running app.
-	private spawnDevTools(): Promise<string> {
-		return new Promise((resolve, reject) => {
-			const pubBinPath = path.join(this.sdks.dart, pubPath);
-			portToBind = config.devToolsPort // Always config first
-				|| portToBind                // Then try the last port we bound this session
-				|| (isChromeOS && config.useKnownChromeOSPorts ? CHROME_OS_DEVTOOLS_PORT : 0);
-			const args = ["global", "run", "devtools", "--machine", "--port", portToBind.toString()];
+	private startServer(): Promise<string> {
+		return new Promise<string>((resolve, reject) => {
+			const service = new DevToolsService(this.sdks);
+			this.disposables.push(service);
 
-			const proc = safeSpawn(undefined, pubBinPath, args);
-			this.proc = proc;
-
-			log(`(PROC ${proc.pid}) Spawned ${pubBinPath} ${args.join(" ")}`, LogSeverity.Info, LogCategory.CommandProcesses);
-			logProcess(LogCategory.CommandProcesses, proc);
-
-			const stdout: string[] = [];
-			const stderr: string[] = [];
-			this.proc.stdout.on("data", (data) => {
-				const output = data.toString();
-				stdout.push(output);
-				try {
-					const evt = JSON.parse(output);
-					if (evt.method === "server.started") {
-						portToBind = evt.params.port;
-						this.realPid = evt.params.pid;
-						resolve(`http://${evt.params.host}:${evt.params.port}/`);
-					}
-				} catch {
-					console.warn(`Non-JSON output from DevTools: ${output}`);
-				}
+			service.registerForServerStarted((n) => {
+				portToBind = n.port;
+				resolve(`http://${n.host}:${n.port}`);
 			});
-			this.proc.stderr.on("data", (data) => stderr.push(data.toString()));
-			this.proc.on("close", (code) => {
-				this.proc = undefined;
+
+			service.process.on("close", (code) => {
 				this.devtoolsUrl = undefined;
 				this.devToolsStatusBarItem.hide();
 				if (code && code !== 0) {
 					// Reset the port to 0 on error in case it was from us trying to reuse the previous port.
 					portToBind = 0;
-					const errorMessage = `${devtoolsPackageName} exited with code ${code}: ${stdout.join("")} ${stderr.join("")}`;
+					const errorMessage = `${devtoolsPackageName} exited with code ${code}`;
 					logError(errorMessage);
 					reject(errorMessage);
-				} else {
-					// We must always compelete the promise in case we didn't match the regex above, else the
-					// notification will hang around forever.
-					resolve();
 				}
 			});
 		});
 	}
 
-	public dispose(): void {
-		this.devToolsStatusBarItem.dispose();
-		this.devtoolsUrl = undefined;
-		if (this.proc && !this.proc.killed) {
-			this.proc.kill();
-		}
-		if (this.realPid) {
-			try {
-				process.kill(this.realPid);
-			} catch (e) {
-				// Sometimes this process will have already gone away (eg. the initial kill() worked)
-				// so logging here just results in lots of useless info.
-			}
-			this.realPid = undefined;
+	public dispose(): any {
+		this.disposables.forEach((d) => d.dispose());
+	}
+}
+
+class DevToolsService extends StdIOService<UnknownNotification> {
+	constructor(sdks: Sdks) {
+		super(() => config.devToolsLogFile, (message, severity) => log(message, severity, LogCategory.CommandProcesses), config.maxLogLineLength);
+
+		const pubBinPath = path.join(sdks.dart, pubPath);
+		portToBind = config.devToolsPort // Always config first
+			|| portToBind                // Then try the last port we bound this session
+			|| (isChromeOS && config.useKnownChromeOSPorts ? CHROME_OS_DEVTOOLS_PORT : 0);
+		const args = ["global", "run", "devtools", "--machine", "--port", portToBind.toString()];
+
+		this.registerForServerStarted((n) => this.additionalPidsToTerminate.push(n.pid));
+
+		this.createProcess(undefined, pubBinPath, args);
+	}
+
+	protected shouldHandleMessage(message: string): boolean {
+		return message.startsWith("{") && message.endsWith("}");
+	}
+
+	// TODO: Remove this if we fix the DevTools server (and rev min version) to not use method for
+	// the server.started event.
+	protected isNotification(msg: any): boolean { return msg.event || msg.method === "server.started"; }
+
+	protected handleNotification(evt: UnknownNotification): void {
+		switch ((evt as any).method || evt.event) {
+			case "server.started":
+				this.notify(this.serverStartedSubscriptions, evt.params as ServerStartedNotification);
+				break;
+
 		}
 	}
+
+	private serverStartedSubscriptions: Array<(notification: ServerStartedNotification) => void> = [];
+
+	public registerForServerStarted(subscriber: (notification: ServerStartedNotification) => void): vs.Disposable {
+		return this.subscribe(this.serverStartedSubscriptions, subscriber);
+	}
+}
+
+export interface ServerStartedNotification {
+	host: string;
+	port: number;
+	pid: number;
 }

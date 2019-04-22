@@ -7,7 +7,7 @@ import { CoverageData, PromiseCompleter } from "../debug/utils";
 import { FlutterServiceExtension, FlutterServiceExtensionArgs, FlutterVmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../flutter/vm_service_extensions";
 import { DebuggerType } from "../providers/debug_config_provider";
 import { PubGlobal } from "../pub/global";
-import { DevTools } from "../sdk/dev_tools";
+import { DevToolsManager } from "../sdk/dev_tools";
 import { showDevToolsNotificationIfAppropriate } from "../user_prompts";
 import { fsPath, getDartWorkspaceFolders, openInBrowser, WorkspaceContext } from "../utils";
 import { handleDebugLogEvent, logInfo, logWarn } from "../utils/log";
@@ -38,11 +38,11 @@ export class DebugCommands {
 	private onFirstFrameEmitter: vs.EventEmitter<CoverageData[]> = new vs.EventEmitter<CoverageData[]>();
 	public readonly onFirstFrame: vs.Event<CoverageData[]> = this.onFirstFrameEmitter.event;
 	public readonly flutterExtensions: FlutterVmServiceExtensions;
-	private readonly devTools: DevTools;
+	private readonly devTools: DevToolsManager;
 
 	constructor(private readonly context: Context, workspaceContext: WorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
 		this.flutterExtensions = new FlutterVmServiceExtensions(this.sendServiceSetting);
-		this.devTools = new DevTools(workspaceContext.sdks, analytics, pubGlobal);
+		this.devTools = new DevToolsManager(workspaceContext.sdks, analytics, pubGlobal);
 		context.subscriptions.push(this.devTools);
 		context.subscriptions.push(this.debugMetrics);
 
