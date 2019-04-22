@@ -37,12 +37,14 @@ export class DebugCommands {
 	public readonly onReceiveCoverage = this.onReceiveCoverageEmitter.event;
 	private onFirstFrameEmitter = new vs.EventEmitter<void>();
 	public readonly onFirstFrame = this.onFirstFrameEmitter.event;
+	private onDebugSessionVmServiceAvailableEmitter = new vs.EventEmitter<DartDebugSessionInformation>();
+	public readonly onDebugSessionVmServiceAvailable = this.onDebugSessionVmServiceAvailableEmitter.event;
 	public readonly flutterExtensions: FlutterVmServiceExtensions;
 	private readonly devTools: DevToolsManager;
 
 	constructor(private readonly context: Context, workspaceContext: WorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
 		this.flutterExtensions = new FlutterVmServiceExtensions(this.sendServiceSetting);
-		this.devTools = new DevToolsManager(workspaceContext.sdks, analytics, pubGlobal);
+		this.devTools = new DevToolsManager(workspaceContext.sdks, this, analytics, pubGlobal);
 		context.subscriptions.push(this.devTools);
 		context.subscriptions.push(this.debugMetrics);
 
@@ -334,6 +336,7 @@ export class DebugCommands {
 			const debuggerType: DebuggerType = session.session.configuration.debuggerType;
 			if (debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.FlutterWeb)
 				showDevToolsNotificationIfAppropriate(this.context);
+			this.onDebugSessionVmServiceAvailableEmitter.fire(session);
 			// if (e.body.isProbablyReconnectable) {
 			// 	mostRecentAttachedProbablyReusableObservatoryUri = session.observatoryUri;
 			// } else {
