@@ -34,6 +34,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		// way too early).
 		this.parseObservatoryUriFromStdOut = false;
 		this.requiresProgram = false;
+		this.logCategory = LogCategory.FlutterRun;
 	}
 
 	protected initializeRequest(
@@ -74,7 +75,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		// Unless, of course, we attached in which case we expect to detach by default.
 		this.allowTerminatingObservatoryVmPid = args.deviceId === "flutter-tester" && !isAttach;
 
-		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.FlutterRun)));
+		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, this.logCategory)));
 		this.flutter = this.spawnRunDaemon(isAttach, args, logger);
 		this.flutter.registerForUnhandledMessages((msg) => this.handleLogOutput(msg));
 

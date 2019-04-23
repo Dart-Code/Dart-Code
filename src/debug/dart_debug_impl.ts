@@ -52,6 +52,7 @@ export class DartDebugSession extends DebugSession {
 	protected processExit: Promise<void> = Promise.resolve();
 	protected maxLogLineLength: number;
 	protected shouldKillProcessOnTerminate = true;
+	protected logCategory = LogCategory.General; // This isn't used as General, since both Flutter and FlutterWeb override it.
 	// protected observatoryUriIsProbablyReconnectable = false;
 
 	public constructor() {
