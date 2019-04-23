@@ -62,7 +62,15 @@ export class DevToolsManager implements vs.Disposable {
 				if (canLaunchDevToolsThroughService) {
 					await session.session.customRequest(
 						"service",
-						{ type: this.debugCommands.flutterExtensions.getServiceMethodName(FlutterService.LaunchDevTools) },
+						{
+							params: {
+								queryParams: {
+									hide: "debugger",
+									theme: config.useDevToolsDarkTheme ? "dark" : null,
+								},
+							},
+							type: this.debugCommands.flutterExtensions.getServiceMethodName(FlutterService.LaunchDevTools),
+						},
 					);
 					return true;
 				} else {
