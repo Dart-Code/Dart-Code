@@ -1,7 +1,7 @@
 import { FlutterDebugSession } from "./flutter_debug_impl";
 import { FlutterRunBase, RunMode } from "./flutter_run_base";
 import { FlutterWebRun } from "./flutter_web_run";
-import { FlutterLaunchRequestArguments, LogSeverity } from "./utils";
+import { FlutterLaunchRequestArguments, LogCategory, LogSeverity } from "./utils";
 
 export class FlutterWebDebugSession extends FlutterDebugSession {
 	constructor() {
@@ -10,6 +10,7 @@ export class FlutterWebDebugSession extends FlutterDebugSession {
 		// There is no observatory web app, so we shouldn't send an ObservatoryURI
 		// back to the editor, since that enables "Dart: Open Observatory" and friends.
 		this.supportsObservatory = false;
+		this.logCategory = LogCategory.WebDaemon;
 	}
 
 	protected spawnRunDaemon(isAttach: boolean, args: FlutterLaunchRequestArguments, logger: (message: string, severity: LogSeverity) => void): FlutterRunBase {
@@ -37,6 +38,6 @@ export class FlutterWebDebugSession extends FlutterDebugSession {
 		}
 
 		// TODO: Attach?
-		return new FlutterWebRun(isAttach ? RunMode.Attach : RunMode.Run, args.pubPath, args.cwd, appArgs, args.env, args.flutterRunLogFile, logger, this.maxLogLineLength);
+		return new FlutterWebRun(isAttach ? RunMode.Attach : RunMode.Run, args.pubPath, args.cwd, appArgs, args.env, args.webDaemonLogFile, logger, this.maxLogLineLength);
 	}
 }

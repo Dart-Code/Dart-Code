@@ -1118,6 +1118,15 @@
 					"description": "The path to a log file for communication between Dart Code and Observatory (the VM debugger). This is useful when trying to diagnose issues with debugging such as missed breakpoints.",
 					"scope": "resource"
 				},
+				"dart.webDaemonLogFile": {
+					"type": [
+						"null",
+						"string"
+					],
+					"default": null,
+					"description": "The path to a log file for communication between Dart Code and the webdev daemon. This is useful when trying to diagnose issues with launching web applications.",
+					"scope": "resource"
+				},
 				"dart.vmAdditionalArgs": {
 					"type": "array",
 					"default": [],

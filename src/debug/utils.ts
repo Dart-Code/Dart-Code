@@ -23,6 +23,7 @@ export enum LogCategory {
 	FlutterRun,
 	FlutterTest,
 	Observatory,
+	WebDaemon,
 }
 export enum LogSeverity {
 	Info,
@@ -177,6 +178,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	args: string[];
 	vmAdditionalArgs: string[];
 	observatoryLogFile?: string;
+	webDaemonLogFile?: string;
 	maxLogLineLength: number;
 	pubPath: string;
 	pubSnapshotPath: string;

@@ -19,6 +19,7 @@ export const userSelectableLogCategories: { [key: string]: LogCategory } = {
 	"Flutter Run": LogCategory.FlutterRun,
 	"Flutter Test": LogCategory.FlutterTest,
 	"Pub Run Test": LogCategory.PubTest,
+	"Web Daemon": LogCategory.WebDaemon,
 };
 
 const onLogEmitter = new LogEmitter();

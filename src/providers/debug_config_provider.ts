@@ -442,6 +442,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, dartVMPath);
 		debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || conf.observatoryLogFile;
+		debugConfig.webDaemonLogFile = debugConfig.webDaemonLogFile || conf.webDaemonLogFile;
 		debugConfig.maxLogLineLength = debugConfig.maxLogLineLength || config.maxLogLineLength;
 		debugConfig.pubPath = debugConfig.pubPath || path.join(this.sdks.dart, pubPath);
 		debugConfig.pubSnapshotPath = debugConfig.pubSnapshotPath || path.join(this.sdks.dart, pubSnapshotPath);
