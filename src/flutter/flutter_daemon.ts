@@ -127,7 +127,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 				this.notify(this.deviceRemovedSubscriptions, evt.params as f.Device);
 				break;
 			case "daemon.logMessage":
-				this.notify(this.daemonLogMessageSubscriptions, evt.params as f.LogMessage);
+				this.notify(this.daemonLogMessageSubscriptions, evt.params as f.DaemonLogMessage);
+				break;
+			case "daemon.log":
+				this.notify(this.daemonLogSubscriptions, evt.params as f.DaemonLog);
 				break;
 			case "daemon.showMessage":
 				this.notify(this.daemonShowMessageSubscriptions, evt.params as f.ShowMessage);
@@ -140,7 +143,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	private daemonConnectedSubscriptions: Array<(notification: f.DaemonConnected) => void> = [];
 	private deviceAddedSubscriptions: Array<(notification: f.Device) => void> = [];
 	private deviceRemovedSubscriptions: Array<(notification: f.Device) => void> = [];
-	private daemonLogMessageSubscriptions: Array<(notification: f.LogMessage) => void> = [];
+	private daemonLogMessageSubscriptions: Array<(notification: f.DaemonLogMessage) => void> = [];
+	private daemonLogSubscriptions: Array<(notification: f.DaemonLog) => void> = [];
 	private daemonShowMessageSubscriptions: Array<(notification: f.ShowMessage) => void> = [];
 
 	// Request methods.
@@ -175,8 +179,12 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 		return this.subscribe(this.deviceRemovedSubscriptions, subscriber);
 	}
 
-	public registerForDaemonLogMessage(subscriber: (notification: f.LogMessage) => void): vs.Disposable {
+	public registerForDaemonLogMessage(subscriber: (notification: f.DaemonLogMessage) => void): vs.Disposable {
 		return this.subscribe(this.daemonLogMessageSubscriptions, subscriber);
+	}
+
+	public registerForDaemonLog(subscriber: (notification: f.DaemonLog) => void): vs.Disposable {
+		return this.subscribe(this.daemonLogSubscriptions, subscriber);
 	}
 
 	public registerForDaemonShowMessage(subscriber: (notification: f.ShowMessage) => void): vs.Disposable {

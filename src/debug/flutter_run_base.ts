@@ -54,10 +54,13 @@ export abstract class FlutterRunBase extends StdIOService<UnknownNotification> {
 				this.notify(this.appProgressSubscriptions, evt.params as f.AppProgress);
 				break;
 			case "app.log":
-				this.notify(this.appLogMessageSubscriptions, evt.params as f.AppLogMessage);
+				this.notify(this.appLogSubscriptions, evt.params as f.AppLog);
 				break;
 			case "daemon.logMessage":
-				this.notify(this.daemonLogMessageSubscriptions, evt.params as f.LogMessage);
+				this.notify(this.daemonLogMessageSubscriptions, evt.params as f.DaemonLogMessage);
+				break;
+			case "daemon.log":
+				this.notify(this.daemonLogSubscriptions, evt.params as f.AppLog);
 				break;
 		}
 	}
@@ -70,9 +73,10 @@ export abstract class FlutterRunBase extends StdIOService<UnknownNotification> {
 	private appStartedSubscriptions: Array<(notification: f.AppEvent) => void> = [];
 	private appStopSubscriptions: Array<(notification: f.AppEvent) => void> = [];
 	private appProgressSubscriptions: Array<(notification: f.AppProgress) => void> = [];
-	private appLogMessageSubscriptions: Array<(notification: f.AppLogMessage) => void> = [];
+	private appLogSubscriptions: Array<(notification: f.AppLog) => void> = [];
 	private errorSubscriptions: Array<(notification: string) => void> = [];
-	private daemonLogMessageSubscriptions: Array<(notification: f.LogMessage) => void> = [];
+	private daemonLogMessageSubscriptions: Array<(notification: f.DaemonLogMessage) => void> = [];
+	private daemonLogSubscriptions: Array<(notification: f.AppLog) => void> = [];
 
 	// Request methods.
 
@@ -118,16 +122,20 @@ export abstract class FlutterRunBase extends StdIOService<UnknownNotification> {
 		return this.subscribe(this.appProgressSubscriptions, subscriber);
 	}
 
-	public registerForAppLogMessage(subscriber: (notification: f.AppLogMessage) => void): IAmDisposable {
-		return this.subscribe(this.appLogMessageSubscriptions, subscriber);
+	public registerForAppLog(subscriber: (notification: f.AppLog) => void): IAmDisposable {
+		return this.subscribe(this.appLogSubscriptions, subscriber);
 	}
 
 	public registerForError(subscriber: (error: string) => void): IAmDisposable {
 		return this.subscribe(this.errorSubscriptions, subscriber);
 	}
 
-	public registerForDaemonLogMessage(subscriber: (notification: f.LogMessage) => void): IAmDisposable {
+	public registerForDaemonLogMessage(subscriber: (notification: f.DaemonLogMessage) => void): IAmDisposable {
 		return this.subscribe(this.daemonLogMessageSubscriptions, subscriber);
+	}
+
+	public registerForDaemonLog(subscriber: (notification: f.AppLog) => void): IAmDisposable {
+		return this.subscribe(this.daemonLogSubscriptions, subscriber);
 	}
 }
 

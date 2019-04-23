@@ -32,16 +32,20 @@ export interface AppProgress extends AppEvent {
 	progressId: string;
 }
 
-export interface LogMessage {
+export interface DaemonLogMessage {
 	level: "info" | "warning" | "error";
 	message: string;
 	stackTrace?: string;
 }
 
-export interface AppLogMessage {
+export interface AppLog {
 	error: boolean;
 	log: string;
+}
 
+export interface DaemonLog {
+	error: boolean;
+	log: string;
 }
 
 export interface ShowMessage {

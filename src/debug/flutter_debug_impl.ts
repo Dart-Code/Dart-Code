@@ -94,11 +94,8 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.flutter.registerForAppProgress((e) => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished, progressID: e.progressId || e.id })));
 		// TODO: Should this use logToUser?
 		this.flutter.registerForError((err) => this.sendEvent(new OutputEvent(`${err}\n`, "stderr")));
-		this.flutter.registerForDaemonLogMessage((msg) => {
-			const category = msg.level === "error" ? "stderr" : "stdout";
-			this.logToUser(`${msg.message.trimRight()}\n`, category);
-		});
-		this.flutter.registerForAppLogMessage((msg) => this.handleLogOutput(msg.log, msg.error));
+		this.flutter.registerForDaemonLog((msg) => this.handleLogOutput(msg.log, msg.error));
+		this.flutter.registerForAppLog((msg) => this.handleLogOutput(msg.log, msg.error));
 
 		return this.flutter.process;
 	}
