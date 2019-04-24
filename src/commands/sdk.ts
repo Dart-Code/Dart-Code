@@ -27,7 +27,7 @@ import * as channels from "./channels";
 
 const packageNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
 let runPubGetDelayTimer: NodeJS.Timer | undefined;
-let lastSaveReason: vs.TextDocumentSaveReason;
+let lastPubspecSaveReason: vs.TextDocumentSaveReason;
 
 export class SdkCommands {
 	private readonly sdks: util.Sdks;
@@ -208,41 +208,50 @@ export class SdkCommands {
 		}));
 
 		// Hook saving pubspec to run pub.get.
-		context.subscriptions.push(vs.workspace.onWillSaveTextDocument((e) => lastSaveReason = e.reason));
-		context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
-			const conf = config.for(td.uri);
+		this.setupPubspecWatcher(context);
+	}
 
-			if (path.basename(fsPath(td.uri)).toLowerCase() !== "pubspec.yaml")
-				return;
-
-			if (!conf.runPubGetOnPubspecChanges)
-				return;
-
-			// If we're in Fuchsia, we don't want to `pub get` by default but we do want to allow
-			// it to be overridden, so only read the setting if it's been declared explicitly.
-			// TODO: This should be handled per-project for a multi-root workspace.
-			if (workspace.hasProjectsInFuchsiaTree && !conf.runPubGetOnPubspecChangesIsConfiguredExplicitly)
-				return;
-
-			// Cancel any existing delayed timer.
-			if (runPubGetDelayTimer) {
-				clearTimeout(runPubGetDelayTimer);
-			}
-
-			// If the save was triggered by one of the auto-save options, then debounce.
-			if (lastSaveReason === vs.TextDocumentSaveReason.FocusOut
-				|| lastSaveReason === vs.TextDocumentSaveReason.AfterDelay) {
-
-				runPubGetDelayTimer = setTimeout(() => {
-					runPubGetDelayTimer = undefined;
-					vs.commands.executeCommand("dart.getPackages", td.uri);
-
-				}, 10000); // TODO: Does this need to be configurable?
-			} else {
-				// Otherwise execute immediately.
-				vs.commands.executeCommand("dart.getPackages", td.uri);
-			}
+	private setupPubspecWatcher(context: vs.ExtensionContext) {
+		context.subscriptions.push(vs.workspace.onWillSaveTextDocument((e) => {
+			if (path.basename(fsPath(e.document.uri)).toLowerCase() === "pubspec.yaml")
+				lastPubspecSaveReason = e.reason;
 		}));
+		const watcher = vs.workspace.createFileSystemWatcher("**/pubspec.yaml");
+		context.subscriptions.push(watcher);
+		watcher.onDidChange(this.handlePubspecChange, this);
+		watcher.onDidCreate(this.handlePubspecChange, this);
+	}
+
+	private handlePubspecChange(uri: vs.Uri) {
+		const conf = config.for(uri);
+
+		// Don't do anything if we're disabled.
+		if (!conf.runPubGetOnPubspecChanges)
+			return;
+
+		// If we're in Fuchsia, we don't want to `pub get` by default but we do want to allow
+		// it to be overridden, so only read the setting if it's been declared explicitly.
+		// TODO: This should be handled per-project for a multi-root workspace.
+		if (this.workspace.hasProjectsInFuchsiaTree && !conf.runPubGetOnPubspecChangesIsConfiguredExplicitly)
+			return;
+
+		// Cancel any existing delayed timer.
+		if (runPubGetDelayTimer) {
+			clearTimeout(runPubGetDelayTimer);
+		}
+
+		// If the save was triggered by one of the auto-save options, then debounce.
+		if (lastPubspecSaveReason === vs.TextDocumentSaveReason.FocusOut
+			|| lastPubspecSaveReason === vs.TextDocumentSaveReason.AfterDelay) {
+			runPubGetDelayTimer = setTimeout(() => {
+				runPubGetDelayTimer = undefined;
+				lastPubspecSaveReason = undefined;
+				vs.commands.executeCommand("dart.getPackages", uri);
+			}, 10000); // TODO: Does this need to be configurable?
+		} else {
+			// Otherwise execute immediately.
+			vs.commands.executeCommand("dart.getPackages", uri);
+		}
 	}
 
 	private async runCommandForWorkspace(
