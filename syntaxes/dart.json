@@ -68,7 +68,7 @@
 					}
 				},
 				{
-					"match": "    .*",
+					"match": "^ {4,}(?!\\*).*",
 					"captures": {
 						"0": {
 							"name": "variable.name.source.dart"
