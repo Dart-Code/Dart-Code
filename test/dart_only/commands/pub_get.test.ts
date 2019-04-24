@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { activate, delay, helloWorldPubspec, openFile, sb, setConfigForTest, setTestContent } from "../../helpers";
+import { activate, delay, helloWorldPubspec, openFile, sb, setConfigForTest, setTestContent, waitForResult } from "../../helpers";
 
 describe("pub get", () => {
 
@@ -16,7 +16,9 @@ describe("pub get", () => {
 		await setTestContent(doc.getText() + " ");
 		await doc.save();
 
-		assert.ok(getPackagesCommand.calledOnce);
+		// Allow a short time for the command to be called because this is now a
+		// file system watcher.
+		await waitForResult(() => getPackagesCommand.calledOnce);
 	});
 
 	it("does not run automatically if disabled", async () => {
@@ -30,6 +32,8 @@ describe("pub get", () => {
 		await setTestContent(doc.getText() + " ");
 		await doc.save();
 
+		// Wait for 2s then ensure it still hadn't run.
+		await delay(2000);
 		assert.ok(!getPackagesCommand.calledOnce);
 	});
 
