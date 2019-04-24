@@ -10,7 +10,11 @@ export const flutterExtensionIdentifier = "Dart-Code.flutter";
 export const isWin = /^win/.test(process.platform);
 export const isMac = process.platform === "darwin";
 export const isLinux = !isWin && !isMac;
-export const platformName = isWin ? "win" : isMac ? "mac" : "linux";
+export const isChromeOS = isLinux && fs.existsSync("/dev/.cros_milestone");
+// Used for code checks and in Dart SDK urls so ChromeOS is considered Linux.
+export const dartPlatformName = isWin ? "win" : isMac ? "mac" : "linux";
+// Used for display (logs, analytics) so ChromeOS is its own.
+export const platformDisplayName = isWin ? "win" : isMac ? "mac" : isChromeOS ? "chromeos" : "linux";
 export const platformEol = isWin ? "\r\n" : "\n";
 
 export enum LogCategory {

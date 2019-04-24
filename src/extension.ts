@@ -23,7 +23,7 @@ import { TestCommands } from "./commands/test";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
 import { Context } from "./context";
-import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, isWin, isWithinPath, LogCategory, platformName } from "./debug/utils";
+import { dartPlatformName, flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, isWin, isWithinPath, LogCategory, platformDisplayName } from "./debug/utils";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_decorations";
 import { FlutterCapabilities } from "./flutter/capabilities";
@@ -77,7 +77,7 @@ const FLUTTER_PROJECT_LOADED = "dart-code:anyFlutterProjectLoaded";
 const FLUTTER_MOBILE_PROJECT_LOADED = "dart-code:flutterMobileProjectLoaded";
 const FLUTTER_WEB_PROJECT_LOADED = "dart-code:flutterWebProjectLoaded";
 export const FLUTTER_SUPPORTS_ATTACH = "dart-code:flutterSupportsAttach";
-const DART_PLATFORM_NAME = "dart-code:platformName";
+const DART_PLATFORM_NAME = "dart-code:dartPlatformName";
 export const SERVICE_EXTENSION_CONTEXT_PREFIX = "dart-code:serviceExtension.";
 export const SERVICE_CONTEXT_PREFIX = "dart-code:service.";
 export let extensionPath: string | undefined;
@@ -424,7 +424,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Turn on all the commands.
 	setCommandVisiblity(true, workspaceContext);
-	vs.commands.executeCommand("setContext", DART_PLATFORM_NAME, platformName);
+	vs.commands.executeCommand("setContext", DART_PLATFORM_NAME, dartPlatformName);
 
 	// Prompt for pub get if required
 	function checkForPackages() {
@@ -493,7 +493,7 @@ function buildLogHeaders(workspaceContext: util.WorkspaceContext) {
 		return `Flutter extension: ${ext.packageJSON.version} (${ext.isActive ? "" : "not "}activated)`;
 	});
 	addToLogHeader(() => `VS Code: ${vs.version}`);
-	addToLogHeader(() => `Platform: ${platformName}`);
+	addToLogHeader(() => `Platform: ${platformDisplayName}`);
 	addToLogHeader(() => `Workspace type: ${workspaceContext.workspaceTypeDescription}`);
 	addToLogHeader(() => `Multi-root?: ${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1}`);
 	const sdks = workspaceContext.sdks;

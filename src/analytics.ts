@@ -2,6 +2,7 @@ import * as https from "https";
 import * as querystring from "querystring";
 import { env, Uri, version as codeVersion } from "vscode";
 import { config } from "./config";
+import { isChromeOS } from "./debug/utils";
 import { extensionVersion, hasFlutterExtension, isDevExtension, WorkspaceContext } from "./utils";
 import { logError, logInfo, logWarn } from "./utils/log";
 
@@ -132,7 +133,7 @@ export class Analytics {
 			// cd12: "Removed",
 			cd13: this.flutterSdkVersion,
 			cd14: hasFlutterExtension ? "Installed" : "Not Installed",
-			cd2: process.platform, // TODO: CrOS
+			cd2: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,
 			cd5: codeVersion,
