@@ -132,7 +132,7 @@ export class Analytics {
 			// cd12: "Removed",
 			cd13: this.flutterSdkVersion,
 			cd14: hasFlutterExtension ? "Installed" : "Not Installed",
-			cd2: process.platform,
+			cd2: process.platform, // TODO: CrOS
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,
 			cd5: codeVersion,
@@ -140,6 +140,8 @@ export class Analytics {
 			cd7: this.workspaceContext.workspaceTypeDescription,
 			cd8: config.closingLabels ? "On" : "Off",
 			cd9: this.workspaceContext.hasAnyFlutterProjects ? (config.flutterHotReloadOnSave ? "On" : "Off") : null,
+			// TODO: Auto-save
+			// TODO: Hot-restart-on-save
 			cid: machineId,
 			tid: "UA-2201586-19",
 			ul: env.language,
