@@ -1079,6 +1079,15 @@
 					"description": "The path to a custom Dart analysis server.",
 					"scope": "window"
 				},
+				"dart.devToolsPort": {
+					"type": [
+						"null",
+						"number"
+					],
+					"default": null,
+					"description": "The port number to be used for the Dart DevTools.",
+					"scope": "window"
+				},
 				"dart.flutterDaemonLogFile": {
 					"type": [
 						"null",
