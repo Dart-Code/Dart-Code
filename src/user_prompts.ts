@@ -3,9 +3,10 @@ import * as path from "path";
 import * as vs from "vscode";
 import { doNotAskAgainAction, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, wantToTryDevToolsPrompt } from "./constants";
 import { Context } from "./context";
-import { flutterExtensionIdentifier } from "./debug/utils";
+import { flutterExtensionIdentifier, LogCategory, LogSeverity } from "./debug/utils";
 import { StagehandTemplate } from "./pub/stagehand";
 import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, reloadExtension, WorkspaceContext } from "./utils";
+import { log } from "./utils/log";
 
 const promptPrefix = "hasPrompted.";
 const installFlutterExtensionPromptKey = "install_flutter_extension_2";
@@ -130,10 +131,15 @@ async function handleStagehandTrigger(wf: vs.WorkspaceFolder, triggerFilename: s
 			return;
 		}
 		fs.unlinkSync(triggerFile);
+		log(`Creating Dart project for ${fsPath(wf.uri)}`, LogSeverity.Info, LogCategory.CommandProcesses);
 		const success = await createDartProject(fsPath(wf.uri), template.name);
 		if (success) {
+			log(`Fetching packages for newly-created project`, LogSeverity.Info, LogCategory.CommandProcesses);
 			await vs.commands.executeCommand("dart.getPackages", wf.uri);
 			handleDartWelcome(wf, template);
+			log(`Finished creating new project!`, LogSeverity.Info, LogCategory.CommandProcesses);
+		} else {
+			log(`Failed to create new project`, LogSeverity.Info, LogCategory.CommandProcesses);
 		}
 	}
 }
