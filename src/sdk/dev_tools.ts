@@ -3,7 +3,8 @@ import * as path from "path";
 import * as vs from "vscode";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { LogCategory, LogSeverity } from "../debug/utils";
+import { CHROME_OS_DEVTOOLS_PORT } from "../constants";
+import { isChromeOS, LogCategory, LogSeverity } from "../debug/utils";
 import { PubGlobal } from "../pub/global";
 import { openInBrowser, Sdks } from "../utils";
 import { log, logError, logProcess } from "../utils/log";
@@ -65,7 +66,9 @@ export class DevTools implements vs.Disposable {
 	private spawnDevTools(): Promise<string> {
 		return new Promise((resolve, reject) => {
 			const pubBinPath = path.join(this.sdks.dart, pubPath);
-			portToBind = config.devToolsPort || portToBind || 0;
+			portToBind = config.devToolsPort // Always config first
+				|| portToBind                // Then try the last port we bound this session
+				|| (isChromeOS && config.useKnownChromeOSPorts ? CHROME_OS_DEVTOOLS_PORT : 0);
 			const args = ["global", "run", "devtools", "--machine", "--port", portToBind.toString()];
 
 			const proc = safeSpawn(undefined, pubBinPath, args);

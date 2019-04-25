@@ -1133,6 +1133,12 @@
 					"description": "The path to a log file for communication between Dart Code and Observatory (the VM debugger). This is useful when trying to diagnose issues with debugging such as missed breakpoints.",
 					"scope": "resource"
 				},
+				"dart.useKnownChromeOSPorts": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to use specific ports for Observatory and DevTools when running in ChromeOS. This is required to connect from the native ChromeOS browser but will prevent apps from launching if the ports are already in-use (for example if trying to run a second app).",
+					"scope": "window"
+				},
 				"dart.webDaemonLogFile": {
 					"type": [
 						"null",

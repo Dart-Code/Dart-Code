@@ -181,7 +181,7 @@ export class DartDebugSession extends DebugSession {
 
 	protected spawnProcess(args: DartLaunchRequestArguments) {
 		let appArgs = [];
-		appArgs.push("--enable-vm-service=0");
+		appArgs.push(`--enable-vm-service=${args.vmServicePort}`);
 		appArgs.push("--pause_isolates_on_start=true");
 		if (args.enableAsserts !== false) { // undefined = on
 			appArgs.push("--enable-asserts");

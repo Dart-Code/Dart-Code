@@ -67,6 +67,7 @@ class Config {
 	get showTodos(): boolean { return this.getConfig<boolean>("showTodos", true); }
 	get theme(): "dark" | "light" { return this.getConfig<"dark" | "light">("theme", "dark"); }
 	get triggerSignatureHelpAutomatically(): boolean { return this.getConfig<boolean>("triggerSignatureHelpAutomatically", false); }
+	get useKnownChromeOSPorts(): boolean { return this.getConfig<boolean>("useKnownChromeOSPorts", true); }
 	get warnWhenEditingFilesOutsideWorkspace(): boolean { return this.getConfig<boolean>("warnWhenEditingFilesOutsideWorkspace", true); }
 
 	// Hidden settings

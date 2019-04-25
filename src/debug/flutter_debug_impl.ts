@@ -153,13 +153,16 @@ export class FlutterDebugSession extends DartDebugSession {
 				appArgs.push("--release");
 			} else {
 				// Debug mode
-
 				if (this.flutterTrackWidgetCreation) {
 					appArgs.push("--track-widget-creation");
 				}
 			}
 
 			appArgs.push("--start-paused");
+			if (args.vmServicePort && appArgs.indexOf("--observatory-port") === -1) {
+				appArgs.push("--observatory-port");
+				appArgs.push(args.vmServicePort.toString());
+			}
 		}
 
 		if (args.args) {
