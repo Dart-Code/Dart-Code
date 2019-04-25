@@ -30,7 +30,7 @@ describe("dart", () => {
 
 		// Ensure we fetched packages too.
 		await waitForResult(() => {
-			return getPackagesCommand.calledOnce;
+			return getPackagesCommand.called;
 		}, "Get Packages was not called after creating the project", 10000);
 	});
 });

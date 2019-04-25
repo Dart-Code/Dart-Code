@@ -29,6 +29,6 @@ describe.skip("flutter web", () => {
 			assert.fail(`Did not find "${expectedString}'" in the templated file:\n\n${contents}`);
 
 		// Ensure we fetched packages too.
-		assert.ok(getPackagesCommand.calledOnce);
+		assert.ok(getPackagesCommand.called);
 	});
 });
