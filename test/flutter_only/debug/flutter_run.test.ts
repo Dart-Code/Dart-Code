@@ -321,7 +321,12 @@ describe("flutter run debugger (launch)", () => {
 				? ""
 				: ` after ${numReloads} reload${numReloads === 1 ? "" : "s"}`;
 
-		it("stops at a breakpoint" + reloadDescription, async () => {
+		it("stops at a breakpoint" + reloadDescription, async function () {
+			if (numReloads && !extApi.flutterCapabilities.hasEvictBug) {
+				this.skip();
+				return;
+			}
+
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(flutterHelloWorldMainFile);
 			const expectedLocation = {

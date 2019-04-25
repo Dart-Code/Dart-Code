@@ -14,6 +14,7 @@ export class FlutterCapabilities {
 	get supportsMultipleSamplesPerElement() { return versionIsAtLeast(this.version, "1.2.2"); }
 	get supportsDevTools() { return versionIsAtLeast(this.version, "1.1.0"); }
 	get hasTestGroupFix() { return versionIsAtLeast(this.version, "1.3.4"); }
+	get hasEvictBug() { return !versionIsAtLeast(this.version, "1.2.2"); }
 	get supportsFlutterCreateListSamples() { return versionIsAtLeast(this.version, "1.3.10"); }
 	get supportsUrisForFlutterAttach() { return versionIsAtLeast(this.version, "1.5.4-pre"); }
 	// TODO: Figure this out.
