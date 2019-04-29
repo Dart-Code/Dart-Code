@@ -1,10 +1,11 @@
 import * as vs from "vscode";
+import { isWin } from "../debug/utils";
 import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
 import { TRACK_WIDGET_CREATION_ENABLED } from "../providers/debug_config_provider";
 
 export const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidget";
 
-/// The service extensions we know about and allow toggling via commands.
+/// The service extensions we know about.
 export enum FlutterServiceExtension {
 	PlatformOverride = "ext.flutter.platformOverride",
 	DebugBanner = "ext.flutter.debugAllowBanner",
@@ -12,6 +13,7 @@ export enum FlutterServiceExtension {
 	DebugPaint = "ext.flutter.debugPaint",
 	PaintBaselines = "ext.flutter.debugPaintBaselinesEnabled",
 	InspectorSelectMode = "ext.flutter.inspector.show",
+	InspectorSetPubRootDirectories = "ext.flutter.inspector.setPubRootDirectories",
 	RepaintRainbow = "ext.flutter.repaintRainbow",
 	PerformanceOverlay = "ext.flutter.showPerformanceOverlay",
 	SlowAnimations = "ext.flutter.timeDilation",
@@ -99,6 +101,21 @@ export class FlutterVmServiceExtensions {
 				// If it's the PlatformOverride, send a request to get the current value.
 			} else if (e.body.id === FlutterServiceExtension.PlatformOverride) {
 				e.session.customRequest("checkPlatformOverride");
+			} else if (e.body.id === FlutterServiceExtension.InspectorSetPubRootDirectories) {
+				// TODO: We should send all open workspaces (arg0, arg1, arg2) so that it
+				// works for open packages too
+				e.session.customRequest(
+					"serviceExtension",
+					{
+						params: {
+							arg0: this.formatPathForPubRootDirectories(e.session.configuration.cwd),
+							arg1: e.session.configuration.cwd,
+							// TODO: Is this OK???
+							isolateId: e.body.isolateId,
+						},
+						type: "ext.flutter.inspector.setPubRootDirectories",
+					},
+				);
 			}
 		} else if (e.event === "dart.serviceRegistered") {
 			this.handleServiceRegistered(e.body.id);
@@ -113,6 +130,14 @@ export class FlutterVmServiceExtensions {
 		} else if (e.event === "dart.flutter.serviceExtensionStateChanged") {
 			this.handleRemoteValueUpdate(e.body.extension, e.body.value);
 		}
+	}
+
+	// TODO: Remove this function (and the call to it) once the fix has rolled to Flutter beta.
+	// https://github.com/flutter/flutter-intellij/issues/2217
+	private formatPathForPubRootDirectories(path: string | undefined): string | undefined {
+		return isWin
+			? path && `file:///${path.replace(/\\/g, "/")}`
+			: path;
 	}
 
 	/// Toggles between two values. Always picks the value1 if the current value
