@@ -1,11 +1,12 @@
 import * as vs from "vscode";
 import { ProgressLocation } from "vscode";
 import { config } from "../config";
-import { LogCategory, PromiseCompleter } from "../debug/utils";
+import { isChromeOS, LogCategory, PromiseCompleter } from "../debug/utils";
 import { FLUTTER_SUPPORTS_ATTACH } from "../extension";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
 import { reloadExtension, versionIsAtLeast } from "../utils";
-import { log } from "../utils/log";
+import { log, logProcess } from "../utils/log";
+import { safeSpawn } from "../utils/processes";
 import { FlutterDeviceManager } from "./device_manager";
 import * as f from "./flutter_types";
 
@@ -44,6 +45,13 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 		this.createProcess(projectFolder, flutterBinPath, ["daemon"]);
 
 		this.deviceManager = new FlutterDeviceManager(this);
+
+		if (isChromeOS && config.flutterAdbConnectOnChromeOs) {
+			log("Running ADB Connect on ChromeOS");
+			const adbConnectProc = safeSpawn(undefined, "adb", ["connect", "100.115.92.2:5555"]);
+			logProcess(LogCategory.General, adbConnectProc);
+
+		}
 	}
 
 	public get isReady() { return this.hasStarted; }

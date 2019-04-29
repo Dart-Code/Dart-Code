@@ -789,6 +789,12 @@
 					"description": "Whether to automatically trigger signature help when pressing keys such as , and (.",
 					"scope": "window"
 				},
+				"dart.flutterAdbConnectOnChromeOs": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to automatically run 'adb connect 100.115.92.2:5555' when spawning the Flutter Daemon when running on ChromeOS.",
+					"scope": "window"
+				},
 				"dart.flutterTrackWidgetCreation": {
 					"type": "boolean",
 					"default": true,
