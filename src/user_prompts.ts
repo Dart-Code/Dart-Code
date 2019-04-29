@@ -134,6 +134,8 @@ async function handleStagehandTrigger(wf: vs.WorkspaceFolder, triggerFilename: s
 		log(`Creating Dart project for ${fsPath(wf.uri)}`, LogSeverity.Info, LogCategory.CommandProcesses);
 		const success = await createDartProject(fsPath(wf.uri), template.name);
 		if (success) {
+			log(`Fetching packages for newly-created project`, LogSeverity.Info, LogCategory.CommandProcesses);
+			await vs.commands.executeCommand("dart.getPackages", wf.uri);
 			handleDartWelcome(wf, template);
 			log(`Finished creating new project!`, LogSeverity.Info, LogCategory.CommandProcesses);
 		} else {
