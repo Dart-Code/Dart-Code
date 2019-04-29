@@ -596,7 +596,8 @@ function getSettingsThatRequireRestart() {
 		+ config.showTestCodeLens
 		+ config.previewHotReloadCoverageMarkers
 		+ config.previewBuildRunnerTasks
-		+ config.triggerSignatureHelpAutomatically;
+		+ config.triggerSignatureHelpAutomatically
+		+ config.flutterAdbConnectOnChromeOs;
 }
 
 export async function deactivate(isRestart: boolean = false): Promise<void> {
