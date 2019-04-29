@@ -331,7 +331,7 @@ export class DebugCommands {
 		} else if (e.event === "dart.debuggerUris") {
 			session.observatoryUri = e.body.observatoryUri;
 			session.vmServiceUri = e.body.vmServiceUri;
-			const debuggerType = session.session.configuration.debuggerType;
+			const debuggerType: DebuggerType = session.session.configuration.debuggerType;
 			if (debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.FlutterWeb)
 				showDevToolsNotificationIfAppropriate(this.context);
 			// if (e.body.isProbablyReconnectable) {

@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import { isWin } from "../debug/utils";
 import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
-import { TRACK_WIDGET_CREATION_ENABLED } from "../providers/debug_config_provider";
+import { DebuggerType, TRACK_WIDGET_CREATION_ENABLED } from "../providers/debug_config_provider";
 
 export const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidget";
 
@@ -103,19 +103,22 @@ export class FlutterVmServiceExtensions {
 				e.session.customRequest("checkPlatformOverride");
 			} else if (e.body.id === FlutterServiceExtension.InspectorSetPubRootDirectories) {
 				// TODO: We should send all open workspaces (arg0, arg1, arg2) so that it
-				// works for open packages too
-				e.session.customRequest(
-					"serviceExtension",
-					{
-						params: {
-							arg0: this.formatPathForPubRootDirectories(e.session.configuration.cwd),
-							arg1: e.session.configuration.cwd,
-							// TODO: Is this OK???
-							isolateId: e.body.isolateId,
+				// works for open packages too.
+				const debuggerType: DebuggerType = e.session.configuration.debuggerType;
+				if (debuggerType !== DebuggerType.FlutterWeb) {
+					e.session.customRequest(
+						"serviceExtension",
+						{
+							params: {
+								arg0: this.formatPathForPubRootDirectories(e.session.configuration.cwd),
+								arg1: e.session.configuration.cwd,
+								// TODO: Is this OK???
+								isolateId: e.body.isolateId,
+							},
+							type: "ext.flutter.inspector.setPubRootDirectories",
 						},
-						type: "ext.flutter.inspector.setPubRootDirectories",
-					},
-				);
+					);
+				}
 			}
 		} else if (e.event === "dart.serviceRegistered") {
 			this.handleServiceRegistered(e.body.id);
