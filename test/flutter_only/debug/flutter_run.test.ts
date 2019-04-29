@@ -322,7 +322,7 @@ describe("flutter run debugger (launch)", () => {
 				: ` after ${numReloads} reload${numReloads === 1 ? "" : "s"}`;
 
 		it("stops at a breakpoint" + reloadDescription, async function () {
-			if (numReloads && !extApi.flutterCapabilities.hasEvictBug) {
+			if (numReloads && extApi.flutterCapabilities.hasEvictBug) {
 				this.skip();
 				return;
 			}
