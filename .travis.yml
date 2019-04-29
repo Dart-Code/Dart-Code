@@ -64,7 +64,7 @@ before_install:
       export FLUTTER_BRANCH=stable;
     elif [[ $ONLY_RUN_DART_VERSION == "DEV" ]]; then
       export DART_CHANNEL=dev/release;
-      export FLUTTER_BRANCH=dev;
+      export FLUTTER_BRANCH=beta;
     else
       export DART_CHANNEL=be/raw;
       export FLUTTER_BRANCH=master;

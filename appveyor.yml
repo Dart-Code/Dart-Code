@@ -68,7 +68,7 @@ install:
         $env:FLUTTER_BRANCH="stable"
       } elseif ($env:ONLY_RUN_DART_VERSION -eq "DEV") {
         $env:DART_CHANNEL="dev/release"
-        $env:FLUTTER_BRANCH="dev"
+        $env:FLUTTER_BRANCH="beta"
       } else {
         $env:DART_CHANNEL="be/raw"
         $env:FLUTTER_BRANCH="master"
