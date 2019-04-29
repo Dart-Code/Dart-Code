@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { markProjectCreationEnded, markProjectCreationStarted } from "./commands/sdk";
 import { doNotAskAgainAction, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, wantToTryDevToolsPrompt } from "./constants";
 import { Context } from "./context";
 import { flutterExtensionIdentifier, LogCategory, LogSeverity } from "./debug/utils";
@@ -132,28 +133,38 @@ async function handleStagehandTrigger(wf: vs.WorkspaceFolder, triggerFilename: s
 		}
 		fs.unlinkSync(triggerFile);
 		log(`Creating Dart project for ${fsPath(wf.uri)}`, LogSeverity.Info, LogCategory.CommandProcesses);
-		const success = await createDartProject(fsPath(wf.uri), template.name);
-		if (success) {
-			log(`Fetching packages for newly-created project`, LogSeverity.Info, LogCategory.CommandProcesses);
-			await vs.commands.executeCommand("dart.getPackages", wf.uri);
-			handleDartWelcome(wf, template);
-			log(`Finished creating new project!`, LogSeverity.Info, LogCategory.CommandProcesses);
-		} else {
-			log(`Failed to create new project`, LogSeverity.Info, LogCategory.CommandProcesses);
+		try {
+			markProjectCreationStarted();
+
+			const success = await createDartProject(fsPath(wf.uri), template.name);
+			if (success) {
+				log(`Fetching packages for newly-created project`, LogSeverity.Info, LogCategory.CommandProcesses);
+				await vs.commands.executeCommand("dart.getPackages", wf.uri);
+				handleDartWelcome(wf, template);
+				log(`Finished creating new project!`, LogSeverity.Info, LogCategory.CommandProcesses);
+			} else {
+				log(`Failed to create new project`, LogSeverity.Info, LogCategory.CommandProcesses);
+			}
+		} finally {
+			markProjectCreationEnded();
 		}
 	}
 }
 
-function handleFlutterCreateTrigger(wf: vs.WorkspaceFolder) {
+async function handleFlutterCreateTrigger(wf: vs.WorkspaceFolder): Promise<void> {
 	const flutterTriggerFile = path.join(fsPath(wf.uri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
 	if (fs.existsSync(flutterTriggerFile)) {
 		let sampleID = fs.readFileSync(flutterTriggerFile).toString().trim();
 		sampleID = sampleID ? sampleID : undefined;
 		fs.unlinkSync(flutterTriggerFile);
-		createFlutterProject(fsPath(wf.uri), sampleID).then((success) => {
+		try {
+			markProjectCreationStarted();
+			const success = await createFlutterProject(fsPath(wf.uri), sampleID);
 			if (success)
 				handleFlutterWelcome(wf, sampleID);
-		});
+		} finally {
+			markProjectCreationEnded();
+		}
 	}
 }
 
