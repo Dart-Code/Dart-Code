@@ -12,6 +12,7 @@ import { FlutterDeviceManager } from "../flutter/device_manager";
 import { locateBestProjectRoot } from "../project";
 import { DartHoverProvider } from "../providers/dart_hover_provider";
 import { PubGlobal } from "../pub/global";
+import { isPubGetProbablyRequired, promptToRunPubGet } from "../pub/pub";
 import { Stagehand, StagehandTemplate } from "../pub/stagehand";
 import { FlutterSampleSnippet, getFlutterSnippets } from "../sdk/flutter_docs_snippets";
 import { createFlutterSampleInTempFolder } from "../sdk/flutter_samples";
@@ -240,18 +241,35 @@ export class SdkCommands {
 			clearTimeout(runPubGetDelayTimer);
 		}
 
-		// If the save was triggered by one of the auto-save options, then debounce.
-		if (lastPubspecSaveReason === vs.TextDocumentSaveReason.FocusOut
-			|| lastPubspecSaveReason === vs.TextDocumentSaveReason.AfterDelay) {
-			runPubGetDelayTimer = setTimeout(() => {
-				runPubGetDelayTimer = undefined;
-				lastPubspecSaveReason = undefined;
-				vs.commands.executeCommand("dart.getPackages", uri);
-			}, 10000); // TODO: Does this need to be configurable?
-		} else {
-			// Otherwise execute immediately.
+		// If the save was triggered by one of the auto-save options, then debounce longer.
+		const debounceDuration = lastPubspecSaveReason === vs.TextDocumentSaveReason.FocusOut
+			|| lastPubspecSaveReason === vs.TextDocumentSaveReason.AfterDelay
+			? 10000
+			: 1000;
+
+		runPubGetDelayTimer = setTimeout(() => {
+			runPubGetDelayTimer = undefined;
+			lastPubspecSaveReason = undefined;
+			this.fetchPackagesOrPrompt(uri);
+		}, debounceDuration); // TODO: Does this need to be configurable?
+	}
+
+	private fetchPackagesOrPrompt(uri: vs.Uri): void {
+		// We debounced so we might get here and have multiple projects to fetch for
+		// for ex. when we change Git branch we might change many files at once. So
+		// check how many there are, and if there are:
+		//   0 - then just use Uri
+		//   1 - then just do that one
+		//   more than 1 - prompt to do all
+		const folders = util.getDartWorkspaceFolders();
+		const foldersRequiringPackageGet = folders.filter((ws: vs.WorkspaceFolder) => config.for(ws.uri).promptToGetPackages).filter(isPubGetProbablyRequired);
+		if (foldersRequiringPackageGet.length === 0)
 			vs.commands.executeCommand("dart.getPackages", uri);
-		}
+		else if (foldersRequiringPackageGet.length === 1)
+			vs.commands.executeCommand("dart.getPackages", foldersRequiringPackageGet[0].uri);
+		else
+			promptToRunPubGet(foldersRequiringPackageGet);
+
 	}
 
 	private async runCommandForWorkspace(
