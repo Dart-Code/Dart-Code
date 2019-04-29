@@ -29,6 +29,7 @@ import * as channels from "./channels";
 const packageNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
 let runPubGetDelayTimer: NodeJS.Timer | undefined;
 let lastPubspecSaveReason: vs.TextDocumentSaveReason;
+let numProjectCreationsInProgress = 0;
 
 export class SdkCommands {
 	private readonly sdks: util.Sdks;
@@ -229,6 +230,13 @@ export class SdkCommands {
 		// Don't do anything if we're disabled.
 		if (!conf.runPubGetOnPubspecChanges)
 			return;
+
+		// Don't do anything if we're in the middle of creating projects, as packages
+		// may  be fetched automatically.
+		if (numProjectCreationsInProgress > 0) {
+			log("Skipping package fetch because project creation is in progress");
+			return;
+		}
 
 		// If we're in Fuchsia, we don't want to `pub get` by default but we do want to allow
 		// it to be overridden, so only read the setting if it's been declared explicitly.
@@ -570,6 +578,13 @@ export class SdkCommands {
 		if (bannedNames.indexOf(input) !== -1)
 			return `You may not use ${input} as the name for a flutter project`;
 	}
+}
+
+export function markProjectCreationStarted(): void {
+	numProjectCreationsInProgress++;
+}
+export function markProjectCreationEnded(): void {
+	numProjectCreationsInProgress--;
 }
 
 class ChainedProcess {
