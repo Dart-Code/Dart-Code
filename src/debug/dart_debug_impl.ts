@@ -288,7 +288,7 @@ export class DartDebugSession extends DebugSession {
 					if (rootIsolate && rootIsolate.extensionRPCs) {
 						// If we're attaching, we won't see ServiceExtensionAdded events for extensions already loaded so
 						// we need to enumerate them here.
-						rootIsolate.extensionRPCs.forEach((id) => this.notifyServiceExtensionAvailable(id));
+						rootIsolate.extensionRPCs.forEach((id) => this.notifyServiceExtensionAvailable(id, rootIsolate.id));
 					}
 
 					if (!this.packageMap) {
@@ -1232,7 +1232,7 @@ export class DartDebugSession extends DebugSession {
 
 	public handleServiceExtensionAdded(event: VMEvent) {
 		if (event && event.extensionRPC) {
-			this.notifyServiceExtensionAvailable(event.extensionRPC);
+			this.notifyServiceExtensionAvailable(event.extensionRPC, event.isolate ? event.isolate.id : undefined);
 		}
 	}
 
@@ -1242,8 +1242,8 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	private notifyServiceExtensionAvailable(id: string) {
-		this.sendEvent(new Event("dart.serviceExtensionAdded", { id }));
+	private notifyServiceExtensionAvailable(id: string, isolateId: string) {
+		this.sendEvent(new Event("dart.serviceExtensionAdded", { id, isolateId }));
 	}
 
 	private notifyServiceRegistered(id: string) {
