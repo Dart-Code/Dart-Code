@@ -1054,9 +1054,10 @@ export class DartDebugSession extends DebugSession {
 				break;
 			// Flutter requests that may be sent during test runs or other places
 			// that we don't currently support. TODO: Fix this by moving all the
-			// service extension stufff out of Flutter to here, and making it not
+			// service extension stuff out of Flutter to here, and making it not
 			// Flutter-specific. This requires sending all service extensions
 			// directly to the VM and not via Flutter's run daemon.
+			case "serviceExtension":
 			case "checkPlatformOverride":
 			case "checkIsWidgetCreationTracked":
 			case "hotReload":
