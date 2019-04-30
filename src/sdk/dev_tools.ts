@@ -114,7 +114,7 @@ export class DevToolsManager implements vs.Disposable {
 				);
 
 				portToBind = n.port;
-				resolve(`http://${n.host}:${n.port}`);
+				resolve(`http://${n.host}:${n.port}/`);
 			});
 
 			service.process.on("close", (code) => {
