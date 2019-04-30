@@ -41,7 +41,7 @@ export class DevToolsManager implements vs.Disposable {
 	public async spawnForSession(session: DartDebugSessionInformation): Promise<{ url: string, dispose: () => void } | undefined> {
 		this.analytics.logDebuggerOpenDevTools();
 
-		const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtools, undefined, "0.0.17", true);
+		const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtools, undefined, "0.0.18", true);
 		if (!isAvailable) {
 			return undefined;
 		}
