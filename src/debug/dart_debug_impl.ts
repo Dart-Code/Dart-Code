@@ -656,7 +656,24 @@ export class DartDebugSession extends DebugSession {
 			}).catch((_) => {
 				this.sendResponse(response);
 			});
-		}).catch((error) => this.errorResponse(response, `${error}`));
+		}).catch((_) => {
+			// TODO: VS Code doesn't handle errors or empty lists, so we send
+			// a fake frame for now.
+			// https://github.com/Microsoft/vscode/issues/73090
+			response.body = {
+				stackFrames: args.startFrame === 0 ? [
+					{
+						column: 0,
+						id: -1,
+						line: 0,
+						name: "unavailable",
+					},
+				] : [],
+				totalFrames: 0,
+			};
+			this.sendResponse(response);
+		});
+		// }).catch((error) => this.errorResponse(response, `${error}`));
 	}
 
 	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
