@@ -2,7 +2,9 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { LogCategory, LogSeverity } from "../../src/debug/utils";
+import { dartCodeExtensionIdentifier, LogCategory, LogSeverity } from "../../src/debug/utils";
+import { InternalExtensionApi } from "../../src/extension";
+import { internalApiSymbol } from "../../src/symbols";
 import { fsPath } from "../../src/utils";
 import { log } from "../../src/utils/log";
 import { activate, extApi, waitForResult } from "../helpers";
@@ -56,7 +58,11 @@ describe("flutter", () => {
 			assert.fail(`Did not find "${expectedString}'" in the sample file:\n\n${contents}`);
 	});
 
-	it("triggered Flutter mode", async () => {
-		assert.equal(extApi.workspaceContext.hasAnyFlutterProjects, true);
+	it("triggered Flutter mode", () => {
+		const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
+		assert.ok(ext);
+		assert.ok(ext.isActive);
+		const api: InternalExtensionApi = ext.exports[internalApiSymbol];
+		assert.equal(api.workspaceContext.hasAnyFlutterProjects, true);
 	});
 });

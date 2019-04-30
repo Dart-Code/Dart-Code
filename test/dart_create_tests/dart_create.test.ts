@@ -2,8 +2,11 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { dartCodeExtensionIdentifier } from "../../src/debug/utils";
+import { InternalExtensionApi } from "../../src/extension";
+import { internalApiSymbol } from "../../src/symbols";
 import { fsPath } from "../../src/utils";
-import { extApi, sb, waitForResult } from "../helpers";
+import { sb, waitForResult } from "../helpers";
 import sinon = require("sinon");
 
 describe("dart", () => {
@@ -34,7 +37,11 @@ describe("dart", () => {
 		}, "Get Packages was not called after creating the project", 10000);
 	});
 
-	it("did not trigger Flutter mode", async () => {
-		assert.equal(extApi.workspaceContext.hasAnyFlutterProjects, false);
+	it("did not trigger Flutter mode", () => {
+		const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
+		assert.ok(ext);
+		assert.ok(ext.isActive);
+		const api: InternalExtensionApi = ext.exports[internalApiSymbol];
+		assert.equal(api.workspaceContext.hasAnyFlutterProjects, false);
 	});
 });

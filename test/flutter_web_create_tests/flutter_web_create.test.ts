@@ -2,8 +2,11 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { dartCodeExtensionIdentifier } from "../../src/debug/utils";
+import { InternalExtensionApi } from "../../src/extension";
+import { internalApiSymbol } from "../../src/symbols";
 import { fsPath } from "../../src/utils";
-import { extApi, sb, waitForResult } from "../helpers";
+import { sb, waitForResult } from "../helpers";
 import sinon = require("sinon");
 
 describe.skip("flutter web", () => {
@@ -32,7 +35,11 @@ describe.skip("flutter web", () => {
 		assert.ok(getPackagesCommand.calledOnce);
 	});
 
-	it("triggered Flutter mode", async () => {
-		assert.equal(extApi.workspaceContext.hasAnyFlutterProjects, true);
+	it("triggered Flutter mode", () => {
+		const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
+		assert.ok(ext);
+		assert.ok(ext.isActive);
+		const api: InternalExtensionApi = ext.exports[internalApiSymbol];
+		assert.equal(api.workspaceContext.hasAnyFlutterProjects, true);
 	});
 });
