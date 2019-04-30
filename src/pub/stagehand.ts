@@ -13,7 +13,7 @@ export class Stagehand {
 	constructor(private sdks: Sdks, private pubGlobal: PubGlobal) { }
 
 	public promptToInstallIfRequired() {
-		return this.pubGlobal.promptToInstallIfRequired(packageName, packageID, stagehandInstallationInstructionsUrl, "1.0.0");
+		return this.pubGlobal.promptToInstallIfRequired(packageName, packageID, stagehandInstallationInstructionsUrl, "3.2.0");
 	}
 
 	public async getTemplates(): Promise<StagehandTemplate[]> {
