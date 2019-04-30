@@ -104,7 +104,7 @@ install:
   - dart-sdk\bin\pub global activate --no-executables meta 1.1.6
   - dart-sdk\bin\pub global activate --no-executables pedantic 1.4.0
   - dart-sdk\bin\pub global activate --no-executables json_annotation 1.2.0
-  - dart-sdk\bin\pub global activate --no-executables devtools
+  - dart-sdk\bin\pub global activate --no-executables devtools 0.0.17-dev.2
   - dart-sdk\bin\pub global activate --no-executables webdev
   - cd ..
   - IF NOT EXIST ".test_results" mkdir ".test_results"
