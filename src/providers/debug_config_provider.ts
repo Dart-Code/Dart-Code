@@ -33,6 +33,8 @@ export const showErrorsAction = "Show Errors";
 export const debugAnywayAction = "Debug Anyway";
 const isCI = !!process.env.CI;
 
+let hasShownFlutterWebDebugWarning = false;
+
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugServers: { [index: string]: net.Server } = {};
 
@@ -310,10 +312,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (debugType === DebuggerType.FlutterWeb && !debugConfig.noDebug && !this.flutterCapabilities.webSupportsDebugging) {
 			// TODO: Support this! :)
 			debugConfig.noDebug = true;
-			// TODO: We need to find a way to gate this. In future when debugging works,
-			// how do we know if the current version supports it? If we enable it
-			// when it's not supported, the debugger will sent breakpoints (etc.)
-			// and errors back.
+			if (!hasShownFlutterWebDebugWarning) {
+				window.showInformationMessage("Breakpoints and stepping are not currently supported in VS Code for Flutter Web projects, please use your browser tools if you need to break or step through code.");
+				hasShownFlutterWebDebugWarning = true;
+			}
 		}
 
 		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
