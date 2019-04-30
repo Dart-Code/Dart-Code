@@ -191,20 +191,22 @@ export function initWorkspace(): WorkspaceContext {
 	allPossibleProjectFolders.forEach((folder) => {
 		const refsFlutter = referencesFlutterSdk(folder);
 		const refsFlutterWeb = referencesFlutterWeb(folder);
-		const hasFlutterProjectTriggerFile =
-			fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE))
-			|| fs.existsSync(path.join(folder, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE));
+		const hasFlutterCreateProjectTriggerFile =
+			fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
+		const hasFlutterStagehandProjectTriggerFile =
+			fs.existsSync(path.join(folder, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE));
 
 		// Special case to detect the Flutter repo root, so we always consider it a Flutter project and will use the local SDK
 		const isFlutterRepo = fs.existsSync(path.join(folder, "bin/flutter")) && fs.existsSync(path.join(folder, "bin/cache/dart-sdk"));
 
-		const isSomethingFlutter = refsFlutter || refsFlutterWeb || hasFlutterProjectTriggerFile || isFlutterRepo;
+		const isSomethingFlutter = refsFlutter || refsFlutterWeb || hasFlutterCreateProjectTriggerFile || hasFlutterStagehandProjectTriggerFile || isFlutterRepo;
 
 		if (isSomethingFlutter) {
 			log(`Found Flutter project at ${folder}:
 			Mobile? ${refsFlutter}
 			Web? ${refsFlutterWeb}
-			Create Trigger? ${hasFlutterProjectTriggerFile}
+			Create Trigger? ${hasFlutterCreateProjectTriggerFile}
+			Stagehand Trigger? ${hasFlutterStagehandProjectTriggerFile}
 			Flutter Repo? ${isFlutterRepo}`);
 		}
 
@@ -213,8 +215,8 @@ export function initWorkspace(): WorkspaceContext {
 
 		// Set some flags we'll use to construct the workspace, so we know what things we need to light up.
 		hasAnyFlutterProject = hasAnyFlutterProject || isSomethingFlutter;
-		hasAnyFlutterMobileProject = hasAnyFlutterMobileProject || (refsFlutter && !refsFlutterWeb);
-		hasAnyFlutterWebProject = hasAnyFlutterWebProject || refsFlutterWeb;
+		hasAnyFlutterMobileProject = hasAnyFlutterMobileProject || (refsFlutter && !refsFlutterWeb) || hasFlutterCreateProjectTriggerFile;
+		hasAnyFlutterWebProject = hasAnyFlutterWebProject || refsFlutterWeb || hasFlutterStagehandProjectTriggerFile;
 		hasFuchsiaProjectThatIsNotVanillaFlutter = hasFuchsiaProjectThatIsNotVanillaFlutter || (hasPubspec(folder) && !refsFlutter && !refsFlutterWeb);
 	});
 
