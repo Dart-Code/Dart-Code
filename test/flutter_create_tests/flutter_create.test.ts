@@ -12,6 +12,7 @@ describe("flutter", () => {
 		this.timeout(120000); // These tests can be slooooow.
 	});
 	beforeEach("activate", () => activate());
+
 	it("created a basic default project", async () => {
 		const basicProjectFolder = fsPath(vs.workspace.workspaceFolders![0].uri);
 		const expectedString = "title: 'Flutter Demo'";
@@ -30,6 +31,7 @@ describe("flutter", () => {
 		if (contents.indexOf(expectedString) === -1)
 			assert.fail(`Did not find "${expectedString}'" in the sample file:\n\n${contents}`);
 	});
+
 	it("created a sample project", async function () {
 		if (!extApi.flutterCapabilities.supportsMultipleSamplesPerElement) {
 			this.skip();
@@ -52,5 +54,9 @@ describe("flutter", () => {
 		const contents = fs.readFileSync(mainFile);
 		if (contents.indexOf(expectedString) === -1)
 			assert.fail(`Did not find "${expectedString}'" in the sample file:\n\n${contents}`);
+	});
+
+	it("triggered Flutter mode", async () => {
+		assert.equal(extApi.workspaceContext.hasAnyFlutterProjects, true);
 	});
 });

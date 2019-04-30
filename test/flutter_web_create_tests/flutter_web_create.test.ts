@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../src/utils";
-import { sb, waitForResult } from "../helpers";
+import { extApi, sb, waitForResult } from "../helpers";
 import sinon = require("sinon");
 
 describe.skip("flutter web", () => {
@@ -30,5 +30,9 @@ describe.skip("flutter web", () => {
 
 		// Ensure we fetched packages too.
 		assert.ok(getPackagesCommand.calledOnce);
+	});
+
+	it("triggered Flutter mode", async () => {
+		assert.equal(extApi.workspaceContext.hasAnyFlutterProjects, true);
 	});
 });

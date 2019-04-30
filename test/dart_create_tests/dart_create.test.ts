@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../src/utils";
-import { sb, waitForResult } from "../helpers";
+import { extApi, sb, waitForResult } from "../helpers";
 import sinon = require("sinon");
 
 describe("dart", () => {
@@ -32,5 +32,9 @@ describe("dart", () => {
 		await waitForResult(() => {
 			return getPackagesCommand.calledOnce;
 		}, "Get Packages was not called after creating the project", 10000);
+	});
+
+	it("did not trigger Flutter mode", async () => {
+		assert.equal(extApi.workspaceContext.hasAnyFlutterProjects, false);
 	});
 });
