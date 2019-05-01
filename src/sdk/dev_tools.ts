@@ -1,5 +1,8 @@
+import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
+import { window, workspace } from "vscode";
 import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions } from "../commands/debug";
 import { config } from "../config";
@@ -8,7 +11,7 @@ import { isChromeOS, LogCategory } from "../debug/utils";
 import { FlutterService } from "../flutter/vm_service_extensions";
 import { PubGlobal } from "../pub/global";
 import { StdIOService, UnknownNotification } from "../services/stdio_service";
-import { Sdks } from "../utils";
+import { getRandomInt, Sdks } from "../utils";
 import { log, logError } from "../utils/log";
 import { waitFor } from "../utils/promises";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
@@ -77,7 +80,16 @@ export class DevToolsManager implements vs.Disposable {
 						return true;
 					} catch (e) {
 						logError(`DevTools failed to launch browser ${e.message}`);
-						vs.window.showErrorMessage(`The DevTools service failed to launch the browser. ${pleaseReportBug}`);
+						vs.window.showErrorMessage(`The DevTools service failed to launch the browser. ${pleaseReportBug}`, "Show Full Error").then((res) => {
+							if (res) {
+								const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`;
+								const tempPath = path.join(os.tmpdir(), fileName);
+								fs.writeFileSync(tempPath, e.message);
+								workspace.openTextDocument(tempPath).then((document) => {
+									window.showTextDocument(document);
+								});
+							}
+						});
 						return false;
 					}
 				} else {
