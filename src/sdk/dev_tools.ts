@@ -60,19 +60,26 @@ export class DevToolsManager implements vs.Disposable {
 			}, async (_) => {
 				const canLaunchDevToolsThroughService = await waitFor(() => this.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.LaunchDevTools), 500);
 				if (canLaunchDevToolsThroughService) {
-					await session.session.customRequest(
-						"service",
-						{
-							params: {
-								queryParams: {
-									hide: "debugger",
-									theme: config.useDevToolsDarkTheme ? "dark" : null,
+					try {
+						await session.session.customRequest(
+							"service",
+							{
+								params: {
+									queryParams: {
+										hide: "debugger",
+										theme: config.useDevToolsDarkTheme ? "dark" : null,
+									},
 								},
+								type: this.debugCommands.flutterExtensions.getServiceMethodName(FlutterService.LaunchDevTools),
 							},
-							type: this.debugCommands.flutterExtensions.getServiceMethodName(FlutterService.LaunchDevTools),
-						},
-					);
-					return true;
+						);
+
+						return true;
+					} catch (e) {
+						logError(`DevTools failed to launch browser ${e.message}`);
+						vs.window.showErrorMessage(`The DevTools service failed to launch the browser. ${pleaseReportBug}`);
+						return false;
+					}
 				} else {
 					// const fullUrl = `${url}?hide=debugger&uri=${encodeURIComponent(session.vmServiceUri)}${config.useDevToolsDarkTheme ? "&theme=dark" : ""}`;
 					// openInBrowser(fullUrl);
