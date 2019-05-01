@@ -1049,8 +1049,12 @@ export class DartDebugSession extends DebugSession {
 				this.sendResponse(response);
 				break;
 			case "service":
-				await this.callService(args.type, args.params);
-				this.sendResponse(response);
+				try {
+					await this.callService(args.type, args.params);
+					this.sendResponse(response);
+				} catch (e) {
+					this.errorResponse(response, e && e.message);
+				}
 				break;
 			// Flutter requests that may be sent during test runs or other places
 			// that we don't currently support. TODO: Fix this by moving all the
