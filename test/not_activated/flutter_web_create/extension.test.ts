@@ -50,7 +50,7 @@ describe.skip("command", () => {
 
 		await vs.commands.executeCommand("flutter.createWebProject");
 
-		// TODO: Uncomment this when we have more than one Flutter Web template.
+		// TODO: Uncomment this when we have more than one Flutter web template.
 		// assert.ok(showQuickPick.calledOnce);
 		assert.ok(openFolder.calledOnce);
 		const triggerFile = path.join(tempFolder, projectName, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE);

@@ -174,7 +174,7 @@
 			]
 		},
 		{
-			"name": "Launch Tests (Flutter Web)",
+			"name": "Launch Tests (Flutter for web)",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
@@ -262,7 +262,7 @@
 			]
 		},
 		{
-			"name": "Launch Tests (Not Activated / Flutter Web Create)",
+			"name": "Launch Tests (Not Activated / Flutter for web Create)",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",

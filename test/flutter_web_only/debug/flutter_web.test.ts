@@ -8,7 +8,7 @@ import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
 import { activate, defer, delay, ext, extApi, flutterWebBrokenMainFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, getPackages, openFile, positionOf, waitForResult, watchPromise } from "../../helpers";
 
-describe.skip("flutter web debugger", () => {
+describe.skip("flutter for web debugger", () => {
 	beforeEach("activate flutterWebHelloWorldMainFile", () => activate(flutterWebHelloWorldMainFile));
 	before("get packages (0)", () => getPackages(flutterWebHelloWorldMainFile));
 	before("get packages (1)", () => getPackages(flutterWebBrokenMainFile));
@@ -37,7 +37,7 @@ describe.skip("flutter web debugger", () => {
 		return config;
 	}
 
-	it("runs a Flutter Web application and remains active until told to quit", async () => {
+	it("runs a Flutter web application and remains active until told to quit", async () => {
 		const config = await startDebugger(flutterWebHelloWorldMainFile);
 		await Promise.all([
 			dc.assertOutputContains("stdout", "Serving `web` on http://localhost:"),
@@ -154,7 +154,7 @@ describe.skip("flutter web debugger", () => {
 		]);
 	});
 
-	it("runs a Flutter Web application with a relative path", async () => {
+	it("runs a Flutter web application with a relative path", async () => {
 		const config = await startDebugger(flutterWebHelloWorldMainFile);
 		config.program = path.relative(fsPath(flutterWebHelloWorldFolder), fsPath(flutterWebHelloWorldMainFile));
 		await Promise.all([
@@ -172,7 +172,7 @@ describe.skip("flutter web debugger", () => {
 		]);
 	}).timeout(90000); // The 10 second delay makes this test slower and sometimes hit 60s.
 
-	it("runs a Flutter Web application with a variable in cwd", async () => {
+	it("runs a Flutter web application with a variable in cwd", async () => {
 		const config = await startDebugger(flutterWebHelloWorldMainFile, "${workspaceFolder}/hello_world/");
 		config.program = path.relative(fsPath(flutterWebHelloWorldFolder), fsPath(flutterWebHelloWorldMainFile));
 		await Promise.all([

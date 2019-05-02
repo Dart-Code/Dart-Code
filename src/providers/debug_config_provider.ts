@@ -171,8 +171,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			if (isFlutterWebProjectFolder(debugConfig.cwd as string)) {
 				debugType = DebuggerType.FlutterWeb;
 				if (isFlutterProjectFolder(debugConfig.cwd as string)) {
-					logError("Flutter Web project references sdk:flutter and may fail to launch");
-					window.showWarningMessage("Flutter Web projects may fail to launch if they reference the Flutter SDK in pubspec.yaml");
+					logError("Flutter web project references sdk:flutter and may fail to launch");
+					window.showWarningMessage("Flutter web projects may fail to launch if they reference the Flutter SDK in pubspec.yaml");
 				}
 			} else if (isFlutterProjectFolder(debugConfig.cwd as string))
 				debugType = DebuggerType.Flutter;
@@ -212,8 +212,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (debugType === DebuggerType.FlutterWebTest) {
 			// TODO: IMPORTANT! When removing this if statement, add FlutterWebTest to
 			// the call to TestResultsProvider.flagSuiteStart below!
-			logError("Flutter Web tests are not currently supported");
-			window.showErrorMessage("Flutter Web tests are not currently supported");
+			logError("Tests in Flutter web projects are not currently supported");
+			window.showErrorMessage("Tests in Flutter web projects are not currently supported");
 			return undefined; // undefined means silent (don't open launch.json).
 		}
 
@@ -313,7 +313,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			// TODO: Support this! :)
 			debugConfig.noDebug = true;
 			if (!hasShownFlutterWebDebugWarning) {
-				window.showInformationMessage("Breakpoints and stepping are not currently supported in VS Code for Flutter Web projects, please use your browser tools if you need to break or step through code.");
+				window.showInformationMessage("Breakpoints and stepping are not currently supported in VS Code for Flutter web projects, please use your browser tools if you need to break or step through code.");
 				hasShownFlutterWebDebugWarning = true;
 			}
 		}
