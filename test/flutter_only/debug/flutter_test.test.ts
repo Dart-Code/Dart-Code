@@ -6,7 +6,7 @@ import { fsPath, versionIsAtLeast } from "../../../src/utils";
 import { logInfo } from "../../../src/utils/log";
 import { DartDebugClient } from "../../dart_debug_client";
 import { killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterHelloWorldFolder, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getLaunchConfiguration, getPackages, openFile, positionOf, withTimeout } from "../../helpers";
+import { activate, defer, delay, ext, extApi, flutterHelloWorldFolder, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getExpectedResults, getLaunchConfiguration, getPackages, makeTextTree, openFile, positionOf, withTimeout } from "../../helpers";
 
 describe("flutter test debugger", () => {
 
@@ -151,9 +151,26 @@ describe("flutter test debugger", () => {
 			dc.launch(config),
 		]);
 
+		const testFiles = [
+			flutterTestMainFile,
+			flutterTestOtherFile,
+			flutterTestAnotherFile,
+			flutterTestBrokenFile,
+		];
+
 		const topLevelNodes = extApi.testTreeProvider.getChildren();
 		assert.ok(topLevelNodes);
-		assert.equal(topLevelNodes.length, 4);
+		assert.equal(topLevelNodes.length, testFiles.length);
+
+		for (const file of testFiles) {
+			await openFile(file);
+			const expectedResults = getExpectedResults();
+			const actualResults = makeTextTree(file, extApi.testTreeProvider).join("\n");
+
+			assert.ok(expectedResults);
+			assert.ok(actualResults);
+			assert.equal(actualResults, expectedResults);
+		}
 	});
 
 	it("stops at a breakpoint", async () => {
