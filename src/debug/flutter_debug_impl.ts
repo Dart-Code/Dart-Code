@@ -35,6 +35,10 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.parseObservatoryUriFromStdOut = false;
 		this.requiresProgram = false;
 		this.logCategory = LogCategory.FlutterRun;
+
+		// Enable connecting the VM even for noDebug mode so that service
+		// extensions can be used.
+		this.connectVmEvenForNoDebug = true;
 	}
 
 	protected initializeRequest(
@@ -158,10 +162,13 @@ export class FlutterDebugSession extends DartDebugSession {
 				}
 			}
 
-			appArgs.push("--start-paused");
-			if (args.vmServicePort && appArgs.indexOf("--observatory-port") === -1) {
-				appArgs.push("--observatory-port");
-				appArgs.push(args.vmServicePort.toString());
+			if (this.shouldConnectDebugger) {
+				appArgs.push("--start-paused");
+
+				if (args.vmServicePort && appArgs.indexOf("--observatory-port") === -1) {
+					appArgs.push("--observatory-port");
+					appArgs.push(args.vmServicePort.toString());
+				}
 			}
 		}
 

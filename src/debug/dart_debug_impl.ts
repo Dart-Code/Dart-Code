@@ -33,6 +33,14 @@ export class DartDebugSession extends DebugSession {
 	// We normally track the pid from Observatory to terminate the VM afterwards, but for Flutter Run it's
 	// a remote PID and therefore doesn't make sense to try and terminate.
 	protected allowTerminatingObservatoryVmPid = true;
+	// Normally we don't connect to the VM when running no noDebug mode, but for
+	// Flutter, this means we can't call service extensions (for ex. toggling
+	// debug modes) so we allow it to override this (and then we skip things
+	// like breakpoints). We can't do it always, because some functionality
+	// (such as running multiple test suites) will break by having multiple
+	// potential VM services come and go.
+	// https://github.com/Dart-Code/Dart-Code/issues/1673
+	protected connectVmEvenForNoDebug = false;
 	protected processExited = false;
 	public observatory?: ObservatoryConnection;
 	protected cwd?: string;
@@ -54,6 +62,10 @@ export class DartDebugSession extends DebugSession {
 	protected shouldKillProcessOnTerminate = true;
 	protected logCategory = LogCategory.General; // This isn't used as General, since both Flutter and FlutterWeb override it.
 	// protected observatoryUriIsProbablyReconnectable = false;
+
+	protected get shouldConnectDebugger() {
+		return !this.noDebug || this.connectVmEvenForNoDebug;
+	}
 
 	public constructor() {
 		super();
@@ -113,7 +125,7 @@ export class DartDebugSession extends DebugSession {
 		process.stdout.setEncoding("utf8");
 		process.stdout.on("data", (data) => {
 			let match: RegExpExecArray | null = null;
-			if (this.parseObservatoryUriFromStdOut && !this.observatory) {
+			if (this.shouldConnectDebugger && this.parseObservatoryUriFromStdOut && !this.observatory) {
 				match = ObservatoryConnection.bannerRegex.exec(data.toString());
 			}
 			if (match) {
@@ -137,6 +149,9 @@ export class DartDebugSession extends DebugSession {
 				this.logToUser(`Exited (${signal ? `${signal}`.toLowerCase() : code})\n`);
 			this.sendEvent(new TerminatedEvent());
 		});
+
+		if (!this.shouldConnectDebugger)
+			this.sendEvent(new InitializedEvent());
 	}
 
 	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DartAttachRequestArguments): Promise<void> {
@@ -181,8 +196,10 @@ export class DartDebugSession extends DebugSession {
 
 	protected spawnProcess(args: DartLaunchRequestArguments) {
 		let appArgs = [];
-		appArgs.push(`--enable-vm-service=${args.vmServicePort}`);
-		appArgs.push("--pause_isolates_on_start=true");
+		if (!this.shouldConnectDebugger) {
+			appArgs.push(`--enable-vm-service=${args.vmServicePort}`);
+			appArgs.push("--pause_isolates_on_start=true");
+		}
 		if (args.enableAsserts !== false) { // undefined = on
 			appArgs.push("--enable-asserts");
 		}
@@ -254,6 +271,9 @@ export class DartDebugSession extends DebugSession {
 			observatoryUri: this.supportsObservatory ? browserFriendlyUri.toString() : undefined,
 			vmServiceUri: browserFriendlyUri.toString(),
 		}));
+
+		if (!this.shouldConnectDebugger)
+			return;
 
 		return new Promise<void>((resolve, reject) => {
 			this.log(`Connecting to VM Service at ${uri}`);
