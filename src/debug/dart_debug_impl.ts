@@ -196,7 +196,7 @@ export class DartDebugSession extends DebugSession {
 
 	protected spawnProcess(args: DartLaunchRequestArguments) {
 		let appArgs = [];
-		if (!this.shouldConnectDebugger) {
+		if (this.shouldConnectDebugger) {
 			appArgs.push(`--enable-vm-service=${args.vmServicePort}`);
 			appArgs.push("--pause_isolates_on_start=true");
 		}
