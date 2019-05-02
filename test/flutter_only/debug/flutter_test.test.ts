@@ -153,7 +153,7 @@ describe("flutter test debugger", () => {
 
 		const topLevelNodes = extApi.testTreeProvider.getChildren();
 		assert.ok(topLevelNodes);
-		assert.equal(topLevelNodes.length, 3);
+		assert.equal(topLevelNodes.length, 4);
 	});
 
 	it("stops at a breakpoint", async () => {
