@@ -8,7 +8,9 @@ export class FlutterTestDebugSession extends DartTestDebugSession {
 	protected spawnProcess(args: FlutterLaunchRequestArguments): any {
 		let appArgs: string[] = [];
 
-		appArgs.push("--start-paused");
+		if (this.shouldConnectDebugger) {
+			appArgs.push("--start-paused");
+		}
 
 		if (args.args) {
 			appArgs = appArgs.concat(args.args);

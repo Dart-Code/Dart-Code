@@ -30,7 +30,9 @@ export class FlutterWebDebugSession extends FlutterDebugSession {
 		// 		}
 		// 	}
 
-		// 	appArgs.push("--start-paused");
+		// 	if (this.shouldConnectDebugger) {
+		// 		appArgs.push("--start-paused");
+		// 	}
 		// }
 
 		if (args.args) {
