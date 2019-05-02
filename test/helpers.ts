@@ -15,6 +15,7 @@ import { tryDeleteFile } from "../src/utils/fs";
 import { log, logError, logTo, logWarn } from "../src/utils/log";
 import { waitFor } from "../src/utils/promises";
 import { PackageDep } from "../src/views/packages_view";
+import { SuiteTreeItem, TestResultsProvider, TestStatus } from "../src/views/test_view";
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
 export let extApi: InternalExtensionApi;
@@ -81,6 +82,7 @@ export const flutterHelloWorldBrokenFile = vs.Uri.file(path.join(fsPath(flutterH
 // Flutter tests
 export const flutterTestMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/widget_test.dart"));
 export const flutterTestOtherFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/other_test.dart"));
+export const flutterTestAnotherFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/another_test.dart"));
 export const flutterTestBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/broken_test.dart"));
 // Flutter for Web
 export const flutterWebProjectContainerFolder = vs.Uri.file(path.join(ext.extensionPath, "test/test_projects/flutter_web"));
@@ -796,4 +798,23 @@ export function ensurePackageTreeNode<T extends PackageDep>(items: PackageDep[],
 
 export function renderedItemLabel(item: PackageDep): string {
 	return item.label || path.basename(fsPath(item.resourceUri));
+}
+
+export function makeTextTree(suite: vs.Uri, provider: TestResultsProvider, parent?: vs.TreeItem, buffer: string[] = [], indent = 0) {
+	const items = provider.getChildren(parent)
+		// Filter to only the suite we were given (though includes all children).
+		.filter((item) => (fsPath(item.resourceUri!) === fsPath(suite)) || !!parent);
+	const wsPath = fsPath(vs.workspace.getWorkspaceFolder(suite)!.uri);
+	items.forEach((item) => {
+		// Suites don't have a .label (since the rendering is based on the resourceUri) so just
+		// fabricate one here that can be compared in the test. Note: For simplity we always use
+		// forward slashes in these names, since the comparison is against hard-coded comments
+		// in the file that can only be on way.
+		const expectedLabel = item instanceof SuiteTreeItem
+			? path.relative(wsPath, fsPath(item.resourceUri!)).replace("\\", "/")
+			: item.label;
+		buffer.push(`${" ".repeat(indent * 4)}${expectedLabel} (${TestStatus[item.status]})`);
+		makeTextTree(suite, provider, item, buffer, indent + 1);
+	});
+	return buffer;
 }

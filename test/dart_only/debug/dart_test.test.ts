@@ -7,9 +7,9 @@ import { fsPath } from "../../../src/utils";
 import { log, logInfo } from "../../../src/utils/log";
 import { makeRegexForTest } from "../../../src/utils/test";
 import { TestOutlineVisitor } from "../../../src/utils/vscode/outline";
-import { SuiteTreeItem, TestResultsProvider, TestStatus } from "../../../src/views/test_view";
+import { TestStatus } from "../../../src/views/test_view";
 import { DartDebugClient } from "../../dart_debug_client";
-import { activate, defer, delay, ext, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, openFile, positionOf, withTimeout } from "../../helpers";
+import { activate, defer, delay, ext, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, makeTextTree, openFile, positionOf, withTimeout } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -291,21 +291,3 @@ describe("dart test debugger", () => {
 		]);
 	}
 });
-function makeTextTree(suite: vs.Uri, provider: TestResultsProvider, parent?: vs.TreeItem, buffer: string[] = [], indent = 0) {
-	const items = provider.getChildren(parent)
-		// Filter to only the suite we were given (though includes all children).
-		.filter((item) => (fsPath(item.resourceUri!) === fsPath(suite)) || !!parent);
-	const wsPath = fsPath(vs.workspace.getWorkspaceFolder(suite)!.uri);
-	items.forEach((item) => {
-		// Suites don't have a .label (since the rendering is based on the resourceUri) so just
-		// fabricate one here that can be compared in the test. Note: For simplity we always use
-		// forward slashes in these names, since the comparison is against hard-coded comments
-		// in the file that can only be on way.
-		const expectedLabel = item instanceof SuiteTreeItem
-			? path.relative(wsPath, fsPath(item.resourceUri!)).replace("\\", "/")
-			: item.label;
-		buffer.push(`${" ".repeat(indent * 4)}${expectedLabel} (${TestStatus[item.status]})`);
-		makeTextTree(suite, provider, item, buffer, indent + 1);
-	});
-	return buffer;
-}
