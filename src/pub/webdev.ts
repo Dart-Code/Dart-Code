@@ -7,6 +7,6 @@ export class WebDev {
 	constructor(private pubGlobal: PubGlobal) { }
 
 	public promptToInstallIfRequired() {
-		return this.pubGlobal.promptToInstallIfRequired(packageName, packageID, undefined, "2.0.2");
+		return this.pubGlobal.promptToInstallIfRequired(packageName, packageID, undefined, "2.0.4");
 	}
 }
