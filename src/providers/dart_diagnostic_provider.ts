@@ -1,3 +1,4 @@
+import { log } from "console";
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, DiagnosticTag, Uri } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
@@ -6,6 +7,7 @@ import { toRangeOnLine } from "../utils";
 
 // TODO: This is not a provider?
 export class DartDiagnosticProvider {
+	private lastErrorJson: string | undefined;
 	constructor(private readonly analyzer: Analyzer, private readonly diagnostics: DiagnosticCollection) {
 		this.analyzer.registerForAnalysisErrors((es) => this.handleErrors(es));
 
@@ -14,6 +16,20 @@ export class DartDiagnosticProvider {
 	}
 
 	private handleErrors(notification: as.AnalysisErrorsNotification) {
+		const notificationJson = JSON.stringify(notification);
+
+		// As a workaround for https://github.com/Dart-Code/Dart-Code/issues/1678, if
+		// the errors we got are exactly the same as the previous set, do not give
+		// them to VS Code. This avoids a potential loop of refreshing the error view
+		// which triggers a request for Code Actions, which could result in analysis
+		// of the file (which triggers errors to be sent, which triggers a refresh
+		// of the error view... etc.!).
+		if (this.lastErrorJson === notificationJson) {
+			// TODO: Come up with a better fix than this!
+			log("Skipping error notification as it was the same as the previous one");
+			return;
+		}
+
 		let errors = notification.errors;
 		if (!config.showTodos)
 			errors = errors.filter((error) => error.type !== "TODO");
@@ -21,6 +37,7 @@ export class DartDiagnosticProvider {
 			Uri.file(notification.file),
 			errors.map((e) => DartDiagnosticProvider.createDiagnostic(e)),
 		);
+		this.lastErrorJson = notificationJson;
 	}
 
 	public static createDiagnostic(error: as.AnalysisError): Diagnostic {
@@ -64,6 +81,7 @@ export class DartDiagnosticProvider {
 	}
 
 	private flushResults(notification: as.AnalysisFlushResultsNotification) {
+		this.lastErrorJson = undefined;
 		const entries = notification.files.map<[Uri, Diagnostic[]]>((file) => [Uri.file(file), undefined]);
 		this.diagnostics.set(entries);
 	}
