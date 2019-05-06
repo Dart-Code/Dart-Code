@@ -18,6 +18,10 @@ export class Context {
 	set devToolsNotificationLastShown(value: number | undefined) { this.context.globalState.update("devToolsNotificationLastShown", value); }
 	get devToolsNotificationDoNotShow(): boolean | undefined { return !!this.context.globalState.get("devToolsNotificationDoNotShowAgain"); }
 	set devToolsNotificationDoNotShow(value: boolean | undefined) { this.context.globalState.update("devToolsNotificationDoNotShowAgain", value); }
+	get flutterSurvey2019Q2NotificationLastShown(): number | undefined { return this.context.globalState.get("flutterSurvey2019Q2NotificationLastShown") as number; }
+	set flutterSurvey2019Q2NotificationLastShown(value: number | undefined) { this.context.globalState.update("flutterSurvey2019Q2NotificationLastShown", value); }
+	get flutterSurvey2019Q2NotificationDoNotShow(): boolean | undefined { return !!this.context.globalState.get("flutterSurvey2019Q2NotificationDoNotShowAgain"); }
+	set flutterSurvey2019Q2NotificationDoNotShow(value: boolean | undefined) { this.context.globalState.update("flutterSurvey2019Q2NotificationDoNotShowAgain", value); }
 	get hasWarnedAboutFormatterSyntaxLimitation(): boolean { return !!this.context.globalState.get("hasWarnedAboutFormatterSyntaxLimitation"); }
 	set hasWarnedAboutFormatterSyntaxLimitation(value: boolean) { this.context.globalState.update("hasWarnedAboutFormatterSyntaxLimitation", value); }
 	get lastSeenVersion(): string | undefined { return this.context.globalState.get("lastSeenVersion"); }

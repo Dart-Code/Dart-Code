@@ -2,17 +2,17 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { markProjectCreationEnded, markProjectCreationStarted } from "./commands/sdk";
-import { doNotAskAgainAction, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, wantToTryDevToolsPrompt } from "./constants";
+import { doNotAskAgainAction, flutterSurvey2019Q2PromptWithAnalytics, flutterSurvey2019Q2PromptWithoutAnalytics, fortyHoursInMs, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, takeSurveyAction, wantToTryDevToolsPrompt } from "./constants";
 import { Context } from "./context";
 import { flutterExtensionIdentifier, LogCategory, LogSeverity } from "./debug/utils";
 import { StagehandTemplate } from "./pub/stagehand";
-import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, reloadExtension, WorkspaceContext } from "./utils";
-import { log } from "./utils/log";
+import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, reloadExtension, resolvePaths, WorkspaceContext } from "./utils";
+import { log, logWarn } from "./utils/log";
 
 const promptPrefix = "hasPrompted.";
 const installFlutterExtensionPromptKey = "install_flutter_extension_2";
 
-export function showUserPrompts(context: Context, workspaceContext: WorkspaceContext): void {
+export async function showUserPrompts(context: Context, workspaceContext: WorkspaceContext): Promise<void> {
 	handleNewProjects(context);
 
 	function shouldSuppress(key: string): boolean {
@@ -41,7 +41,73 @@ export function showUserPrompts(context: Context, workspaceContext: WorkspaceCon
 		promptToShowReleaseNotes(extensionVersion, versionLink).then(() =>
 			context.lastSeenVersion = extensionVersion,
 		);
+		return;
 	}
+
+	if (await showFlutter2019Q2SurveyNotificationIfAppropriate(context))
+		return; // Bail if we showed it, so we won't show any other notifications.
+
+	// (though, there are no other notifications right now...)
+}
+
+/// Shows Survey notification if appropriate. Returns whether a notification was shown
+/// (not whether it was clicked/opened).
+export function showFlutter2019Q2SurveyNotificationIfAppropriate(context: Context): boolean {
+	const now = Date.now();
+
+	// TODO: Confirm dates and whether times matter (or if survey will span days
+	// before/after).
+	if (now <= new Date(2019, 5, 13).getTime()
+		|| now >= new Date(2019, 5, 27).getTime()) // This is endDate + 1 to include endDate.
+		return false;
+
+	const lastShown = context.flutterSurvey2019Q2NotificationLastShown;
+	const doNotShow = context.flutterSurvey2019Q2NotificationDoNotShow;
+
+	// Don't show this notification if user previously said not to.
+	if (doNotShow)
+		return false;
+
+	// Don't show this notification if we've shown it in the last 40 hours.
+	if (lastShown && now - lastShown < fortyHoursInMs)
+		return false;
+
+
+	// Work out the URL and prompt to show.
+	let clientID: string | undefined;
+	try {
+		const flutterSettingsPath = resolvePaths("~/.flutter");
+		if (fs.existsSync(flutterSettingsPath)) {
+			const json = fs.readFileSync(flutterSettingsPath).toString();
+			const settings = JSON.parse(json);
+			if (settings.enabled) {
+				clientID = settings.clientId;
+			}
+		}
+	} catch {
+		logWarn("Unable to read Flutter settings for preparing survey link");
+	}
+
+	const prompt = clientID ? flutterSurvey2019Q2PromptWithAnalytics : flutterSurvey2019Q2PromptWithoutAnalytics;
+	const surveyUrl = "https://google.qualtrics.com/jfe/form/SV_3W3aVD2y9CoAe6V?Source=VSCode"
+		+ (clientID ? `&ClientID=${encodeURIComponent(clientID)}` : "");
+
+	// Mark the last time we've shown it (now) so we can avoid showing again for
+	// 40 hours.
+	context.flutterSurvey2019Q2NotificationLastShown = Date.now();
+
+	// Prompt to show and handle response.
+	vs.window.showInformationMessage(prompt, takeSurveyAction, doNotAskAgainAction).then((choice) => {
+		if (choice === doNotAskAgainAction) {
+			context.flutterSurvey2019Q2NotificationDoNotShow = true;
+		} else if (choice === takeSurveyAction) {
+			openInBrowser(surveyUrl);
+		}
+	});
+
+	// Return true because we showed the notification and don't want to cause more
+	// than one notification per activation.
+	return true;
 }
 
 export async function showDevToolsNotificationIfAppropriate(context: Context): Promise<boolean> {
