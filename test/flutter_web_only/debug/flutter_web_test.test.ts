@@ -12,9 +12,6 @@ describe.skip("flutter for web test debugger", () => {
 	beforeEach("activate flutterWebTestMainFile", async () => {
 		await activate(flutterWebTestMainFile);
 	});
-	beforeEach("set timeout", function () {
-		this.timeout(60000); // These tests can be slow due to long builds.
-	});
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
