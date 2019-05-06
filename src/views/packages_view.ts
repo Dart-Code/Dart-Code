@@ -42,13 +42,13 @@ export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<
 				? this.getChildren(nodes[0])
 				: nodes;
 
-		} else if (element && element instanceof PackageDepProject) {
+		} else if (element instanceof PackageDepProject) {
 			return this.getPackages(element);
-		} else if (element && element instanceof PackageDepPackage) {
+		} else if (element instanceof PackageDepPackage) {
 			return this.getFilesAndFolders(element);
-		} else if (element && element instanceof PackageDepFolder) {
+		} else if (element instanceof PackageDepFolder) {
 			return this.getFilesAndFolders(element);
-		} else if (element && element instanceof PackageDepFile) {
+		} else if (element instanceof PackageDepFile) {
 			return [];
 		} else {
 			logWarn(`Don't know how to show children of ${element.label}/${element.resourceUri}`);
