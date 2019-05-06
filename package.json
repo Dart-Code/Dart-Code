@@ -791,7 +791,7 @@
 				"dart.flutterAdbConnectOnChromeOs": {
 					"type": "boolean",
 					"default": false,
-					"description": "Whether to automatically run 'adb connect 100.115.92.2:5555' when spawning the Flutter Daemon when running on ChromeOS.",
+					"description": "Whether to automatically run 'adb connect 100.115.92.2:5555' when spawning the Flutter Daemon when running on Chrome OS.",
 					"scope": "window"
 				},
 				"dart.flutterTrackWidgetCreation": {
@@ -1150,7 +1150,7 @@
 				"dart.useKnownChromeOSPorts": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to use specific ports for Observatory and DevTools when running in ChromeOS. This is required to connect from the native ChromeOS browser but will prevent apps from launching if the ports are already in-use (for example if trying to run a second app).",
+					"description": "Whether to use specific ports for Observatory and DevTools when running in Chrome OS. This is required to connect from the native Chrome OS browser but will prevent apps from launching if the ports are already in-use (for example if trying to run a second app).",
 					"scope": "window"
 				},
 				"dart.webDaemonLogFile": {
