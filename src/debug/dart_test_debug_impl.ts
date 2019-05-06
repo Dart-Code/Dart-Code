@@ -18,7 +18,6 @@ export class DartTestDebugSession extends DartDebugSession {
 	}
 
 	protected spawnProcess(args: DartLaunchRequestArguments): any {
-		const debug = !args.noDebug;
 		let appArgs: string[] = [];
 
 		// To use the test framework in the supported debugging way we should

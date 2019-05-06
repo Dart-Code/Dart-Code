@@ -43,7 +43,6 @@ export class LogEmitter extends EventEmitter {
 	}
 	public onLog(listener: (message: LogMessage) => void): IAmDisposable {
 		this.on("log", listener);
-		const that = this;
 		return {
 			dispose: () => { this.removeListener("log", listener); },
 		};
