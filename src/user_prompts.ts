@@ -101,6 +101,9 @@ export function showFlutter2019Q2SurveyNotificationIfAppropriate(context: Contex
 		if (choice === doNotAskAgainAction) {
 			context.flutterSurvey2019Q2NotificationDoNotShow = true;
 		} else if (choice === takeSurveyAction) {
+			// Mark as do-not-show-again if they answer it, since it seems silly
+			// to show them again if they already completed it.
+			context.flutterSurvey2019Q2NotificationDoNotShow = true;
 			openInBrowser(surveyUrl);
 		}
 	});
