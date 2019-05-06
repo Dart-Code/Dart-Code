@@ -54,11 +54,14 @@ export async function showUserPrompts(context: Context, workspaceContext: Worksp
 /// (not whether it was clicked/opened).
 export function showFlutter2019Q2SurveyNotificationIfAppropriate(context: Context): boolean {
 	const now = Date.now();
+	// Mon May 13 2019 20:00:00 GMT+0100 (BST) = noon PDT on 13th May
+	const surveyStart = Date.UTC(2019, 4 /* Month is 0-based!! */, 13, 19, 0);
+	// Mon May 27 2019 08:00:00 GMT+0100 (BST) = midnight PDT between 26th/27th may.
+	const surveyEnd = Date.UTC(2019, 4 /* Month is 0-based!! */, 27, 7, 0);
 
 	// TODO: Confirm dates and whether times matter (or if survey will span days
 	// before/after).
-	if (now <= new Date(2019, 5, 13).getTime()
-		|| now >= new Date(2019, 5, 27).getTime()) // This is endDate + 1 to include endDate.
+	if (now <= surveyStart || now >= surveyEnd)
 		return false;
 
 	const lastShown = context.flutterSurvey2019Q2NotificationLastShown;
