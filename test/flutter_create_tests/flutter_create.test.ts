@@ -10,9 +10,6 @@ import { log } from "../../src/utils/log";
 import { activate, extApi, waitForResult } from "../helpers";
 
 describe("flutter", () => {
-	beforeEach("set timeout", function () {
-		this.timeout(120000); // These tests can be slooooow.
-	});
 	beforeEach("activate", () => activate());
 
 	it("created a basic default project", async () => {

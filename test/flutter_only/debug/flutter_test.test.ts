@@ -18,9 +18,6 @@ describe("flutter test debugger", () => {
 		if (versionIsAtLeast(extApi.analyzerCapabilities.version, "1.20.3"))
 			testPrefix = "";
 	});
-	beforeEach("set timeout", function () {
-		this.timeout(60000); // These tests can be slow due to flutter package fetches when running.
-	});
 
 	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
 	// `flutter create .`!
