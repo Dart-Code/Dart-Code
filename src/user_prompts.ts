@@ -11,7 +11,7 @@ import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_P
 import { log, logWarn } from "./utils/log";
 
 const promptPrefix = "hasPrompted.";
-const installFlutterExtensionPromptKey = "install_flutter_extension_2";
+const installFlutterExtensionPromptKey = "install_flutter_extension_3";
 
 export function showUserPrompts(context: Context, workspaceContext: WorkspaceContext): void {
 	handleNewProjects(context);
@@ -148,9 +148,8 @@ export async function showDevToolsNotificationIfAppropriate(context: Context): P
 async function promptToInstallFlutterExtension(): Promise<boolean> {
 	const installExtension = "Install Flutter Extension";
 	const res = await vs.window.showInformationMessage(
-		"Working on a Flutter project? Install the Flutter extension for additional functionality.",
+		"The Flutter extension is required to work with Flutter projects.",
 		installExtension,
-		doNotAskAgainAction,
 	);
 	if (res === installExtension) {
 		await vs.window.withProgress({ location: vs.ProgressLocation.Notification },
@@ -166,7 +165,7 @@ async function promptToInstallFlutterExtension(): Promise<boolean> {
 		reloadExtension();
 	}
 
-	return res === doNotAskAgainAction;
+	return false;
 }
 
 async function promptToShowReleaseNotes(versionDisplay: string, versionLink: string): Promise<boolean> {
