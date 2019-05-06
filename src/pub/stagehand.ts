@@ -1,8 +1,10 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { stagehandInstallationInstructionsUrl } from "../constants";
+import { LogCategory } from "../debug/utils";
 import { pubPath } from "../sdk/utils";
 import { Sdks } from "../utils";
+import { logProcess } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 import { PubGlobal } from "./global";
 
@@ -36,6 +38,8 @@ export class Stagehand {
 		return new Promise((resolve, reject) => {
 			const pubBinPath = path.join(this.sdks.dart, pubPath);
 			const proc = safeSpawn(undefined, pubBinPath, args);
+			logProcess(LogCategory.CommandProcesses, proc);
+
 			const stdout: string[] = [];
 			const stderr: string[] = [];
 			proc.stdout.on("data", (data) => stdout.push(data.toString()));
