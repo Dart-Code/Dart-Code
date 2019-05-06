@@ -410,7 +410,7 @@ export class SdkCommands {
 	}
 
 	private isFlutterWebTemplate(t: StagehandTemplate) {
-		return t.name.startsWith("flutter-web");
+		return t.categories != null && t.categories.indexOf("flutter") !== -1 && t.categories.indexOf("web") !== -1;
 	}
 
 	private async createDartProject(): Promise<void> {

@@ -55,5 +55,6 @@ export interface StagehandTemplate {
 	readonly name: string;
 	readonly label: string;
 	readonly description: string;
+	readonly categories: string[];
 	readonly entrypoint: string;
 }
