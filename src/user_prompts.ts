@@ -59,8 +59,6 @@ export function showFlutter2019Q2SurveyNotificationIfAppropriate(context: Contex
 	// Mon May 27 2019 08:00:00 GMT+0100 (BST) = midnight PDT between 26th/27th may.
 	const surveyEnd = Date.UTC(2019, 4 /* Month is 0-based!! */, 27, 7, 0);
 
-	// TODO: Confirm dates and whether times matter (or if survey will span days
-	// before/after).
 	if (now <= surveyStart || now >= surveyEnd)
 		return false;
 
