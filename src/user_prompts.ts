@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { markProjectCreationEnded, markProjectCreationStarted } from "./commands/sdk";
-import { doNotAskAgainAction, flutterSurvey2019Q2PromptWithAnalytics, flutterSurvey2019Q2PromptWithoutAnalytics, fortyHoursInMs, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, takeSurveyAction, wantToTryDevToolsPrompt } from "./constants";
+import { doNotAskAgainAction, flutterSurvey2019Q2PromptWithAnalytics, flutterSurvey2019Q2PromptWithoutAnalytics, longRepeatPromptThreshold, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, takeSurveyAction, wantToTryDevToolsPrompt } from "./constants";
 import { Context } from "./context";
 import { flutterExtensionIdentifier, LogCategory, LogSeverity } from "./debug/utils";
 import { StagehandTemplate } from "./pub/stagehand";
@@ -70,7 +70,7 @@ export function showFlutter2019Q2SurveyNotificationIfAppropriate(context: Contex
 		return false;
 
 	// Don't show this notification if we've shown it in the last 40 hours.
-	if (lastShown && now - lastShown < fortyHoursInMs)
+	if (lastShown && now - lastShown < longRepeatPromptThreshold)
 		return false;
 
 	// Work out the URL and prompt to show.
