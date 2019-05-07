@@ -114,7 +114,7 @@ before_install:
   - node --version
   - npm --version
   - flutter/bin/flutter doctor
-  - dart-sdk/bin/pub global activate --no-executables stagehand
+  - dart-sdk/bin/pub global activate --no-executables --source git https://github.com/dart-lang/stagehand
   - dart-sdk/bin/pub global activate --no-executables args 1.5.0
   - dart-sdk/bin/pub global activate --no-executables meta 1.1.6
   - dart-sdk/bin/pub global activate --no-executables pedantic 1.4.0
