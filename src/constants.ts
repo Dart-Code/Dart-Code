@@ -25,6 +25,7 @@ export const fortyHoursInMs = 1000 * 60 * 60 * 40;
 
 // Duration for not showing a prompt that has been shown before.
 export const noRepeatPromptThreshold = twentyHoursInMs;
+export const longRepeatPromptThreshold = fortyHoursInMs;
 
 export const pleaseReportBug = "Please raise a bug against the Dart extension for VS Code.";
 
