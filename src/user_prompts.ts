@@ -73,7 +73,6 @@ export function showFlutter2019Q2SurveyNotificationIfAppropriate(context: Contex
 	if (lastShown && now - lastShown < fortyHoursInMs)
 		return false;
 
-
 	// Work out the URL and prompt to show.
 	let clientID: string | undefined;
 	try {
