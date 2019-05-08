@@ -1,12 +1,13 @@
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { markProjectCreationEnded, markProjectCreationStarted } from "./commands/sdk";
 import { doNotAskAgainAction, flutterSurvey2019Q2PromptWithAnalytics, flutterSurvey2019Q2PromptWithoutAnalytics, longRepeatPromptThreshold, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, takeSurveyAction, wantToTryDevToolsPrompt } from "./constants";
 import { Context } from "./context";
-import { flutterExtensionIdentifier, LogCategory, LogSeverity } from "./debug/utils";
+import { flutterExtensionIdentifier, isWin, LogCategory, LogSeverity } from "./debug/utils";
 import { StagehandTemplate } from "./pub/stagehand";
-import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, reloadExtension, resolvePaths, WorkspaceContext } from "./utils";
+import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, reloadExtension, WorkspaceContext } from "./utils";
 import { log, logWarn } from "./utils/log";
 
 const promptPrefix = "hasPrompted.";
@@ -75,7 +76,8 @@ export function showFlutter2019Q2SurveyNotificationIfAppropriate(context: Contex
 	// Work out the URL and prompt to show.
 	let clientID: string | undefined;
 	try {
-		const flutterSettingsPath = resolvePaths("~/.flutter");
+		const flutterSettingsFolder = isWin ? process.env.APPDATA : os.homedir();
+		const flutterSettingsPath = path.join(flutterSettingsFolder, ".flutter");
 		if (fs.existsSync(flutterSettingsPath)) {
 			const json = fs.readFileSync(flutterSettingsPath).toString();
 			const settings = JSON.parse(json);
