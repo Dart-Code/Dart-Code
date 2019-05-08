@@ -45,8 +45,10 @@ export function showUserPrompts(context: Context, workspaceContext: WorkspaceCon
 		return;
 	}
 
-	if (showFlutter2019Q2SurveyNotificationIfAppropriate(context, Date.now()))
-		return; // Bail if we showed it, so we won't show any other notifications.
+	if (workspaceContext.hasAnyFlutterProjects) {
+		if (showFlutter2019Q2SurveyNotificationIfAppropriate(context, Date.now()))
+			return; // Bail if we showed it, so we won't show any other notifications.
+	}
 
 	// (though, there are no other notifications right now...)
 }
