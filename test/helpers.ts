@@ -666,7 +666,7 @@ export async function waitForNextAnalysis(action: () => void | Thenable<void>, t
 	await withTimeout(nextAnalysis, "Analysis did not complete within specified timeout", timeoutSeconds);
 }
 
-export async function withTimeout<T>(promise: Thenable<T>, message: string | (() => string), seconds: number = 60): Promise<T> {
+export async function withTimeout<T>(promise: Thenable<T>, message: string | (() => string), seconds: number = 120): Promise<T> {
 	return new Promise<T>((resolve, reject) => {
 		// Set a timeout to reject the promise after the timout period.
 		const timeoutTimer = setTimeout(() => {
