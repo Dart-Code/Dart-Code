@@ -1,9 +1,7 @@
-import 'package:flutter_web_ui/ui.dart' as web_ui;
-import 'package:hello_world/main.dart' as my_app;
-// TODO: Figure out how to have multiple entry points.
-// import 'package:hello_world/broken.dart' as my_app;
+import 'package:flutter_web_ui/ui.dart' as ui;
+import 'package:hello_world/main.dart' as app;
 
 main() async {
-  await web_ui.webOnlyInitializePlatform();
-  my_app.main();
+  await ui.webOnlyInitializePlatform();
+  app.main();
 }

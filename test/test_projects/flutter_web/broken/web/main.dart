@@ -1,7 +1,7 @@
-import 'package:flutter_web_ui/ui.dart' as web_ui;
-import 'package:broken/main.dart' as my_app;
+import 'package:broken/main.dart' as app;
+import 'package:flutter_web_ui/ui.dart' as ui;
 
 main() async {
-  await web_ui.webOnlyInitializePlatform();
-  my_app.main();
+  await ui.webOnlyInitializePlatform();
+  app.main();
 }
