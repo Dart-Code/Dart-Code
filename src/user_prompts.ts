@@ -12,7 +12,7 @@ import { log, logWarn } from "./utils/log";
 const promptPrefix = "hasPrompted.";
 const installFlutterExtensionPromptKey = "install_flutter_extension_2";
 
-export async function showUserPrompts(context: Context, workspaceContext: WorkspaceContext): Promise<void> {
+export function showUserPrompts(context: Context, workspaceContext: WorkspaceContext): void {
 	handleNewProjects(context);
 
 	function shouldSuppress(key: string): boolean {
@@ -44,7 +44,7 @@ export async function showUserPrompts(context: Context, workspaceContext: Worksp
 		return;
 	}
 
-	if (await showFlutter2019Q2SurveyNotificationIfAppropriate(context, Date.now()))
+	if (showFlutter2019Q2SurveyNotificationIfAppropriate(context, Date.now()))
 		return; // Bail if we showed it, so we won't show any other notifications.
 
 	// (though, there are no other notifications right now...)
