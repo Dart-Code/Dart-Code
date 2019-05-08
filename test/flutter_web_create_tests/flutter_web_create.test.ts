@@ -32,7 +32,9 @@ describe("flutter for web", () => {
 			assert.fail(`Did not find "${expectedString}'" in the templated file:\n\n${contents}`);
 
 		// Ensure we fetched packages too.
-		assert.ok(getPackagesCommand.calledOnce);
+		await waitForResult(() => {
+			return getPackagesCommand.calledOnce;
+		}, "Get Packages was not called after creating the project", 10000);
 	});
 
 	it("triggered Flutter mode", () => {
