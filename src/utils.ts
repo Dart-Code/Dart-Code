@@ -290,6 +290,7 @@ export class WorkspaceContext {
 		public readonly sdks: Sdks,
 		public readonly hasAnyFlutterMobileProjects: boolean,
 		public readonly hasAnyFlutterWebProjects: boolean,
+		public readonly hasAnyStandardDartProjects: boolean,
 		public readonly hasProjectsInFuchsiaTree: boolean,
 	) { }
 
@@ -299,12 +300,21 @@ export class WorkspaceContext {
 
 	/// Used only for display (for ex stats), not behaviour.
 	get workspaceTypeDescription(): string {
+		const types: string[] = [];
+		// Don't re-order these, else stats won't easily combine as we could have
+		// Dart, Flutter and also Flutter, Dart.
+		if (this.hasAnyStandardDartProjects)
+			types.push("Dart");
+		if (this.hasAnyFlutterMobileProjects)
+			types.push("Flutter");
+		if (this.hasAnyFlutterWebProjects)
+			types.push("Flutter Web");
 		if (this.hasProjectsInFuchsiaTree)
-			return "Fuchsia";
-		else if (this.hasAnyFlutterProjects)
-			return "Flutter";
-		else
-			return "Dart";
+			types.push("Fuchsia");
+		if (types.length === 0)
+			types.push("Unknown");
+
+		return types.join(", ");
 	}
 
 	// TODO: Since this class is passed around, we may need to make it update itself

@@ -164,7 +164,7 @@ export function initWorkspace(): WorkspaceContext {
 			dart: config.sdkPath,
 			dartSdkIsFromFlutter: false,
 			flutter: undefined,
-		}, false, false, false);
+		}, false, false, false, false);
 	}
 
 	// TODO: This has gotten very messy and needs tidying up...
@@ -174,6 +174,7 @@ export function initWorkspace(): WorkspaceContext {
 	let hasAnyFlutterProject: boolean = false;
 	let hasAnyFlutterMobileProject: boolean = false;
 	let hasAnyFlutterWebProject: boolean = false;
+	let hasAnyStandardDartProject: boolean = false;
 
 	// Search for a Fuchsia root.
 	folders.forEach((folder) => fuchsiaRoot = fuchsiaRoot || findFuchsiaRoot(folder));
@@ -217,6 +218,7 @@ export function initWorkspace(): WorkspaceContext {
 		hasAnyFlutterProject = hasAnyFlutterProject || isSomethingFlutter;
 		hasAnyFlutterMobileProject = hasAnyFlutterMobileProject || (refsFlutter && !refsFlutterWeb) || hasFlutterCreateProjectTriggerFile;
 		hasAnyFlutterWebProject = hasAnyFlutterWebProject || refsFlutterWeb || hasFlutterStagehandProjectTriggerFile;
+		hasAnyStandardDartProject = hasAnyStandardDartProject || !isSomethingFlutter;
 		hasFuchsiaProjectThatIsNotVanillaFlutter = hasFuchsiaProjectThatIsNotVanillaFlutter || (hasPubspec(folder) && !refsFlutter && !refsFlutterWeb);
 	});
 
@@ -263,6 +265,7 @@ export function initWorkspace(): WorkspaceContext {
 		},
 		hasAnyFlutterMobileProject,
 		hasAnyFlutterWebProject,
+		hasAnyStandardDartProject,
 		fuchsiaRoot && hasFuchsiaProjectThatIsNotVanillaFlutter,
 	);
 }
