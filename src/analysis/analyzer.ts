@@ -44,7 +44,7 @@ export class Analyzer extends AnalyzerGen {
 
 		// Optionally start Observatory for the analyzer.
 		if (config.analyzerObservatoryPort)
-			analyzerArgs.push(`--observe=${config.analyzerObservatoryPort}`);
+			analyzerArgs.push(`--enable-vm-service=${config.analyzerObservatoryPort}`);
 
 		analyzerArgs.push(analyzerPath);
 
