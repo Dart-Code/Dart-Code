@@ -55,17 +55,21 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 	public async provideDocumentFormattingEdits(document: TextDocument, options: FormattingOptions, token: CancellationToken): Promise<TextEdit[]> {
 		try {
 			return await this.doFormat(document, true); // await is important for catch to work.
-		} catch (e) {
+		} catch {
 			if (!this.context.hasWarnedAboutFormatterSyntaxLimitation) {
 				this.context.hasWarnedAboutFormatterSyntaxLimitation = true;
 				window.showInformationMessage("The Dart formatter will not run if the file has syntax errors");
 			}
-			throw e;
+			return undefined;
 		}
 	}
 
-	public provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, token: CancellationToken): Thenable<TextEdit[] | undefined> | undefined {
-		return this.doFormat(document, false);
+	public async provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, token: CancellationToken): Promise<TextEdit[] | undefined> | undefined {
+		try {
+			return await this.doFormat(document, false);
+		} catch {
+			return undefined;
+		}
 	}
 
 	private async doFormat(document: TextDocument, doLogError = true): Promise<TextEdit[] | undefined> {
