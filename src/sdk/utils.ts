@@ -179,10 +179,6 @@ export function initWorkspace(): WorkspaceContext {
 	// Search for a Fuchsia root.
 	folders.forEach((folder) => fuchsiaRoot = fuchsiaRoot || findFuchsiaRoot(folder));
 
-	// Keep track of whether we have Fuchsia projects that are not "vanilla Flutter" because
-	// if not we will set project type to Flutter to allow daemon to run (and debugging support).
-	let hasFuchsiaProjectThatIsNotVanillaFlutter = false;
-
 	// Collect a list of all workspace folders and their immediate children, since it's common
 	// to open folders that contain multiple projects.
 	const childFolders = flatMap(folders, getChildFolders);
@@ -190,8 +186,9 @@ export function initWorkspace(): WorkspaceContext {
 
 	// Scan through them all to figure out what type of projects we have.
 	allPossibleProjectFolders.forEach((folder) => {
-		const refsFlutter = referencesFlutterSdk(folder);
-		const refsFlutterWeb = referencesFlutterWeb(folder);
+		const hasPubspecFile = hasPubspec(folder);
+		const refsFlutter = hasPubspecFile && referencesFlutterSdk(folder);
+		const refsFlutterWeb = hasPubspecFile && referencesFlutterWeb(folder);
 		const hasFlutterCreateProjectTriggerFile =
 			fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
 		const hasFlutterStagehandProjectTriggerFile =
@@ -218,13 +215,12 @@ export function initWorkspace(): WorkspaceContext {
 		hasAnyFlutterProject = hasAnyFlutterProject || isSomethingFlutter;
 		hasAnyFlutterMobileProject = hasAnyFlutterMobileProject || (refsFlutter && !refsFlutterWeb) || hasFlutterCreateProjectTriggerFile;
 		hasAnyFlutterWebProject = hasAnyFlutterWebProject || refsFlutterWeb || hasFlutterStagehandProjectTriggerFile;
-		hasAnyStandardDartProject = hasAnyStandardDartProject || (!isSomethingFlutter && hasPubspec(folder));
-		hasFuchsiaProjectThatIsNotVanillaFlutter = hasFuchsiaProjectThatIsNotVanillaFlutter || (hasPubspec(folder) && !refsFlutter && !refsFlutterWeb);
+		hasAnyStandardDartProject = hasAnyStandardDartProject || (!isSomethingFlutter && hasPubspecFile);
 	});
 
 	if (fuchsiaRoot) {
 		log(`Found Fuchsia root at ${fuchsiaRoot}`);
-		if (hasFuchsiaProjectThatIsNotVanillaFlutter)
+		if (hasAnyStandardDartProject)
 			log(`Found Fuchsia project that is not vanilla Flutter`);
 	}
 
@@ -266,7 +262,7 @@ export function initWorkspace(): WorkspaceContext {
 		hasAnyFlutterMobileProject,
 		hasAnyFlutterWebProject,
 		hasAnyStandardDartProject,
-		fuchsiaRoot && hasFuchsiaProjectThatIsNotVanillaFlutter,
+		fuchsiaRoot && hasAnyStandardDartProject,
 	);
 }
 
