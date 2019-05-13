@@ -532,7 +532,8 @@ describe("flutter for web debugger", () => {
 		]);
 	});
 
-	it("moves known files from call stacks to metadata", async () => {
+	// Skipped due to https://github.com/dart-lang/webdev/issues/379
+	it.skip("moves known files from call stacks to metadata", async () => {
 		await openFile(flutterWebBrokenMainFile);
 		const config = await startDebugger(flutterWebBrokenMainFile);
 		await Promise.all([
