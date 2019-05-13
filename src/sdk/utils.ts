@@ -218,7 +218,7 @@ export function initWorkspace(): WorkspaceContext {
 		hasAnyFlutterProject = hasAnyFlutterProject || isSomethingFlutter;
 		hasAnyFlutterMobileProject = hasAnyFlutterMobileProject || (refsFlutter && !refsFlutterWeb) || hasFlutterCreateProjectTriggerFile;
 		hasAnyFlutterWebProject = hasAnyFlutterWebProject || refsFlutterWeb || hasFlutterStagehandProjectTriggerFile;
-		hasAnyStandardDartProject = hasAnyStandardDartProject || !isSomethingFlutter;
+		hasAnyStandardDartProject = hasAnyStandardDartProject || (!isSomethingFlutter && hasPubspec(folder));
 		hasFuchsiaProjectThatIsNotVanillaFlutter = hasFuchsiaProjectThatIsNotVanillaFlutter || (hasPubspec(folder) && !refsFlutter && !refsFlutterWeb);
 	});
 
