@@ -38,8 +38,8 @@ class Config {
 	get buildRunnerAdditionalArgs(): string[] { return this.getConfig<string[]>("buildRunnerAdditionalArgs", []); }
 	get checkForSdkUpdates(): boolean { return this.getConfig<boolean>("checkForSdkUpdates", true); }
 	get closingLabels(): boolean { return this.getConfig<boolean>("closingLabels", true); }
-	get devToolsPort(): undefined | number { return this.getConfig<null | number>("devToolsPort", null); }
 	get devToolsLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("devToolsLogFile", null))); }
+	get devToolsPort(): undefined | number { return this.getConfig<null | number>("devToolsPort", null); }
 	get devToolsTheme(): "dark" | "light" { return this.getConfig<"dark" | "light">("devToolsTheme", "dark"); }
 	get enableSdkFormatter(): boolean { return this.getConfig<boolean>("enableSdkFormatter", true); }
 	get env(): object { return this.getConfig<object>("env", {}); }
@@ -59,6 +59,7 @@ class Config {
 	get normalizeWindowsDriveLetters(): boolean { return this.getConfig<boolean>("normalizeWindowsDriveLetters", true); }
 	get openTestView(): Array<"testRunStart" | "testFailure"> { return this.getConfig<Array<"testRunStart" | "testFailure">>("openTestView", ["testRunStart"]); }
 	get previewBuildRunnerTasks(): boolean { return this.getConfig<boolean>("previewBuildRunnerTasks", false); }
+	get previewFlutterUiGuides(): boolean { return this.getConfig<boolean>("previewFlutterUiGuides", false); }
 	get previewToStringInDebugViews(): boolean { return this.getConfig<boolean>("previewToStringInDebugViews", false); }
 	get promptToRunIfErrors(): boolean { return this.getConfig<boolean>("promptToRunIfErrors", true); }
 	get reportAnalyzerErrors(): boolean { return this.getConfig<boolean>("reportAnalyzerErrors", true); }
