@@ -1,57 +1,55 @@
 import * as vs from "vscode";
+import { FlutterOutline } from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
-import { isAnalyzable } from "../utils";
+import { flatMap } from "../debug/utils";
+import { fsPath } from "../utils";
 
 const nonBreakingSpace = "\xa0";
 
-export class WidgetGuide {
-	constructor(public readonly start: vs.Position, public readonly end: vs.Position) { }
-}
+
 
 export class TestLineDecorations implements vs.Disposable {
-	private subscriptions: vs.Disposable[] = [];
-	private activeEditor?: vs.TextEditor;
+	private disposables: vs.Disposable[] = [];
 
 	private readonly borderDecoration = vs.window.createTextEditorDecorationType({
 		rangeBehavior: vs.DecorationRangeBehavior.ClosedClosed,
 	});
 
 	constructor(private readonly analyzer: Analyzer) {
-		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.setTrackingFile(e)));
-		this.subscriptions.push(vs.workspace.onDidChangeTextDocument(async (e) => this.setTrackingFile(await vs.window.showTextDocument(e.document))));
+		// Update any editor that becomes active.
+		this.disposables.push(vs.window.onDidChangeActiveTextEditor((e) => this.update(e)));
+		// Update the current visible editor when we were registered.
 		if (vs.window.activeTextEditor)
-			this.setTrackingFile(vs.window.activeTextEditor);
-
+			this.update(vs.window.activeTextEditor);
+		// Whenever we get a new Flutter Outline, if it's for the active document,
+		// update that too.
+		this.disposables.push(this.analyzer.registerForFlutterOutline((on) => {
+			const editor = vs.window.activeTextEditor;
+			if (editor && editor.document && fsPath(editor.document.uri) === on.file)
+				this.update(editor, on.outline);
+		}));
 	}
 
-	private indexesOf(searchString: string, input: string, startPosition = 0) {
-		const results = [];
-		let i = startPosition;
-		// tslint:disable-next-line: no-conditional-assignment
-		while ((i = input.indexOf(searchString, i + 1)) >= 0) {
-			results.push(i);
-			i++;
-		}
-		return results;
-	}
+	private update(editor: vs.TextEditor, outline?: FlutterOutline): Promise<void> {
+		if (!editor || !editor.document)
+			return;
 
-	private update() {
-		if (!this.activeEditor)
+		const doc = editor.document;
+
+		// If we don't have an outline for this doc yet, we can't do anything.
+		// If an Outline arrives later, the subscription above will automatically
+		// trigger an update.
+		if (!outline)
+			return;
+
+		// Check that the outline we got looks like it still matches the document.
+		// If the lengths are different, just bail without doing anything since
+		// there have probably been new edits and we'll get a new outline soon.
+		if (doc.getText().length !== outline.length)
 			return;
 
 		const decorations: vs.DecorationOptions[] = [];
-
-		const doc = this.activeEditor.document;
-		const text = doc.getText();
-		const demoStart = text.indexOf("// START-DEMO");
-		const demoEnd = text.indexOf("// END-DEMO");
-		const startIndex = text.indexOf("child: Column(", demoStart);
-
-		const guides = this.indexesOf("KeyRow(<Widget>[", text, demoStart)
-			.filter((i) => i <= demoEnd)
-			.map(
-				(i) => new WidgetGuide(doc.positionAt(startIndex), doc.positionAt(i)),
-			);
+		const guides = this.extractGuides(doc, outline);
 
 		for (const guide of guides) {
 			const startColumn = guide.start.character;
@@ -71,33 +69,60 @@ export class TestLineDecorations implements vs.Disposable {
 					},
 				} as vs.DecorationOptions);
 			}
-			decorations.push({
-				range: new vs.Range(
-					new vs.Position(endLine, startColumn),
-					new vs.Position(endLine, guide.end.character),
-				),
-				renderOptions: {
-					before: {
-						contentText: "┗" + "━".repeat(guide.end.character - startColumn - 1),
-						width: "0",
+			const numLines = guide.end.character - startColumn - 1;
+			if (numLines >= 0) {
+				decorations.push({
+					range: new vs.Range(
+						new vs.Position(endLine, startColumn),
+						new vs.Position(endLine, guide.end.character),
+					),
+					renderOptions: {
+						before: {
+							contentText: "┗" + "━".repeat(numLines),
+							width: "0",
+						},
 					},
-				},
-			} as vs.DecorationOptions);
+				} as vs.DecorationOptions);
+			}
 		}
 
-		this.activeEditor.setDecorations(this.borderDecoration, decorations);
+		editor.setDecorations(this.borderDecoration, decorations);
 	}
 
-	private setTrackingFile(editor: vs.TextEditor) {
-		if (editor && isAnalyzable(editor.document)) {
-			this.activeEditor = editor;
-			this.update();
-		} else
-			this.activeEditor = undefined;
+	private firstNonWhitespace(document: vs.TextDocument, lineNumber: number): vs.Position {
+		return new vs.Position(
+			lineNumber,
+			document.lineAt(lineNumber).firstNonWhitespaceCharacterIndex,
+		);
+	}
+
+	private extractGuides(document: vs.TextDocument, node: FlutterOutline): WidgetGuide[] {
+		let guides: WidgetGuide[] = [];
+		if (node.kind === "NEW_INSTANCE") {
+			const parentLine = document.positionAt(node.offset).line;
+			const childLines = node.children && node.children.map((c) => document.positionAt(c.offset).line).filter((cl) => cl > parentLine);
+			if (childLines) {
+				const parentLineStart = this.firstNonWhitespace(document, parentLine);
+				for (const childLine of childLines) {
+					const childLineStart = this.firstNonWhitespace(document, childLine);
+					guides.push(new WidgetGuide(parentLineStart, childLineStart));
+				}
+			}
+		}
+
+		// Recurse down the tree to include childrens (and they'll include their
+		// childrens, etc.).
+		if (node.children)
+			guides = guides.concat(flatMap(node.children, (c) => this.extractGuides(document, c)));
+
+		return guides;
 	}
 
 	public dispose() {
-		this.activeEditor = undefined;
-		this.subscriptions.forEach((s) => s.dispose());
+		this.disposables.forEach((s) => s.dispose());
 	}
+}
+
+export class WidgetGuide {
+	constructor(public readonly start: vs.Position, public readonly end: vs.Position) { }
 }

@@ -4,10 +4,11 @@ import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
 import { fsPath } from "../utils";
 import { logError } from "../utils/log";
-import { FoldingRegion, Occurrences, Outline } from "./analysis_server_types";
+import { FlutterOutline, FoldingRegion, Occurrences, Outline } from "./analysis_server_types";
 import { Analyzer } from "./analyzer";
 
 const outlines: { [key: string]: Outline } = {};
+const flutterOutlines: { [key: string]: FlutterOutline } = {};
 const occurrences: { [key: string]: Occurrences[] } = {};
 const folding: { [key: string]: FoldingRegion[] } = {};
 const pubRunTestSupport: { [key: string]: boolean } = {};
@@ -29,6 +30,7 @@ export class OpenFileTracker implements IAmDisposable {
 		this.disposables.push(workspace.onDidCloseTextDocument((td) => {
 			const path = fsPath(td.uri);
 			delete outlines[path];
+			delete flutterOutlines[path];
 			delete occurrences[path];
 			delete folding[path];
 			delete pubRunTestSupport[path];
@@ -36,6 +38,7 @@ export class OpenFileTracker implements IAmDisposable {
 		}));
 		this.disposables.push(window.onDidChangeVisibleTextEditors((e) => this.updatePriorityFiles()));
 		this.disposables.push(this.analyzer.registerForAnalysisOutline((o) => outlines[o.file] = o.outline));
+		this.disposables.push(this.analyzer.registerForFlutterOutline((o) => flutterOutlines[o.file] = o.outline));
 		this.disposables.push(this.analyzer.registerForAnalysisOccurrences((o) => occurrences[o.file] = o.occurrences));
 		this.disposables.push(this.analyzer.registerForAnalysisFolding((f) => folding[f.file] = f.regions));
 		// Handle already-open files.
@@ -79,6 +82,12 @@ export class OpenFileTracker implements IAmDisposable {
 					OUTLINE: openFiles,
 				},
 			});
+			// TODO: Only for Flutter? Version check?
+			await this.analyzer.flutterSetSubscriptions({
+				subscriptions: {
+					OUTLINE: openFiles,
+				},
+			});
 		} catch (e) {
 			logError(e);
 		}
@@ -102,6 +111,10 @@ export class OpenFileTracker implements IAmDisposable {
 
 	public static getOutlineFor(file: Uri): Outline | undefined {
 		return outlines[fsPath(file)];
+	}
+
+	public static getFlutterOutlineFor(file: Uri): FlutterOutline | undefined {
+		return flutterOutlines[fsPath(file)];
 	}
 
 	public static getOccurrencesFor(file: Uri): Occurrences[] | undefined {
