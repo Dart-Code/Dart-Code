@@ -51,35 +51,48 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 			return;
 
 		const guides = this.extractGuides(doc, outline);
-		const decorations = this.getDecorations(guides);
+		const guidesByLine: { [key: number]: WidgetGuide[] } = {};
+		for (const guide of guides) {
+			for (let line = guide.start.line; line <= guide.end.line; line++) {
+				guidesByLine[line] = guidesByLine[line] || [];
+				guidesByLine[line].push(guide);
+			}
+		}
+		const decorations = this.getDecorations(guidesByLine);
 
 		editor.setDecorations(this.borderDecoration, decorations);
 	}
 
-	private getDecorations(guides: WidgetGuide[]): vs.DecorationOptions[] {
+	private getDecorations(guidesByLine: { [key: number]: WidgetGuide[] }): vs.DecorationOptions[] {
 		const decorations: vs.DecorationOptions[] = [];
-		for (const guide of guides) {
-			const startColumn = guide.start.character;
-			const endLine = guide.end.line;
-
-			// Add a vertical line for each line except the last one.
-			for (let lineNumber = guide.start.line; lineNumber <= guide.end.line - 1; lineNumber++) {
-				if (startColumn >= 1)
-					decorations.push(this.getDecoration(lineNumber, nonBreakingSpace.repeat(startColumn - 1) + verticalLine));
+		for (const line of Object.keys(guidesByLine).map((k) => parseInt(k, 10))) {
+			const lineMap: { [key: number]: string } = {};
+			const totalChars = Math.max(...guidesByLine[line].map((g) => g.end.character));
+			const decorationString = new Array(totalChars).fill(nonBreakingSpace);
+			for (const guide of guidesByLine[line]) {
+				if (line !== guide.end.line) {
+					decorationString[guide.start.character] = verticalLine;
+				} else {
+					for (let c = guide.start.character; c <= guide.end.character; c++) {
+						if (guide.isLast && c === guide.start.character) {
+							decorationString[c] = bottomCorner;
+						} else if (!guide.isLast && c === guide.start.character) {
+							decorationString[c] = middleCorner;
+						} else if (c === guide.start.character) {
+							decorationString[c] = verticalLine;
+						} else {
+							decorationString[c] = horizontalLine;
+						}
+					}
+				}
 			}
 
-			// Add the horizontal line at the bottom.
-			// character = last line to draw,
-			const numHorizontalLines = guide.end.character - startColumn;
-			const corner = guide.isLast ? bottomCorner : middleCorner;
-			if (numHorizontalLines >= 0) {
-				decorations.push(
-					this.getDecoration(
-						endLine,
-						nonBreakingSpace.repeat(startColumn - 1) + corner + horizontalLine.repeat(numHorizontalLines),
-					),
-				);
-			}
+			decorations.push(
+				this.getDecoration(
+					line,
+					decorationString.join(""),
+				),
+			);
 		}
 		return decorations;
 	}
