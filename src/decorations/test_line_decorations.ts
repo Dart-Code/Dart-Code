@@ -6,8 +6,6 @@ import { fsPath } from "../utils";
 
 const nonBreakingSpace = "\xa0";
 
-
-
 export class TestLineDecorations implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
@@ -48,9 +46,14 @@ export class TestLineDecorations implements vs.Disposable {
 		if (doc.getText().length !== outline.length)
 			return;
 
-		const decorations: vs.DecorationOptions[] = [];
 		const guides = this.extractGuides(doc, outline);
+		const decorations = this.getDecorations(guides);
 
+		editor.setDecorations(this.borderDecoration, decorations);
+	}
+
+	private getDecorations(guides: WidgetGuide[]): vs.DecorationOptions[] {
+		const decorations: vs.DecorationOptions[] = [];
 		for (const guide of guides) {
 			const startColumn = guide.start.character;
 			const endLine = guide.end.line;
@@ -67,10 +70,10 @@ export class TestLineDecorations implements vs.Disposable {
 							width: "0",
 						},
 					},
-				} as vs.DecorationOptions);
+				});
 			}
-			const numLines = guide.end.character - startColumn - 1;
-			if (numLines >= 0) {
+			const additionalEndIndent = guide.end.character - startColumn - 1;
+			if (additionalEndIndent >= 0) {
 				decorations.push({
 					range: new vs.Range(
 						new vs.Position(endLine, startColumn),
@@ -78,15 +81,14 @@ export class TestLineDecorations implements vs.Disposable {
 					),
 					renderOptions: {
 						before: {
-							contentText: "┗" + "━".repeat(numLines),
+							contentText: "┗" + "━".repeat(additionalEndIndent),
 							width: "0",
 						},
 					},
-				} as vs.DecorationOptions);
+				});
 			}
 		}
-
-		editor.setDecorations(this.borderDecoration, decorations);
+		return decorations;
 	}
 
 	private firstNonWhitespace(document: vs.TextDocument, lineNumber: number): vs.Position {
