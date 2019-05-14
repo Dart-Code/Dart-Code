@@ -5,6 +5,10 @@ import { flatMap } from "../debug/utils";
 import { fsPath } from "../utils";
 
 const nonBreakingSpace = "\xa0";
+const verticalLine = "│";
+const horizontalLine = "─";
+const bottomCorner = "└";
+const middleCorner = "├";
 
 export class TestLineDecorations implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
@@ -58,37 +62,45 @@ export class TestLineDecorations implements vs.Disposable {
 			const startColumn = guide.start.character;
 			const endLine = guide.end.line;
 
-			for (let lineNumber = guide.start.line + 1; lineNumber <= guide.end.line - 1; lineNumber++) {
-				decorations.push({
-					range: new vs.Range(
-						new vs.Position(lineNumber, 0),
-						new vs.Position(lineNumber, 0),
-					),
-					renderOptions: {
-						before: {
-							contentText: nonBreakingSpace.repeat(startColumn) + "┃",
-							width: "0",
-						},
-					},
-				});
+			// Add a vertical line for each line except the last one.
+			for (let lineNumber = guide.start.line; lineNumber <= guide.end.line - 1; lineNumber++) {
+				if (startColumn >= 1)
+					decorations.push(this.getDecoration(lineNumber, nonBreakingSpace.repeat(startColumn - 1) + verticalLine));
 			}
-			const additionalEndIndent = guide.end.character - startColumn - 1;
-			if (additionalEndIndent >= 0) {
-				decorations.push({
-					range: new vs.Range(
-						new vs.Position(endLine, startColumn),
-						new vs.Position(endLine, guide.end.character),
+
+			// Add the horizontal line at the bottom.
+			// character = last line to draw,
+			const numHorizontalLines = guide.end.character - startColumn;
+			const corner = guide.isLast ? bottomCorner : middleCorner;
+			if (numHorizontalLines >= 0) {
+				decorations.push(
+					this.getDecoration(
+						endLine,
+						nonBreakingSpace.repeat(startColumn - 1) + corner + horizontalLine.repeat(numHorizontalLines),
 					),
-					renderOptions: {
-						before: {
-							contentText: "┗" + "━".repeat(additionalEndIndent),
-							width: "0",
-						},
-					},
-				});
+				);
 			}
 		}
 		return decorations;
+	}
+
+	private getDecoration(lineNumber: number, contentText: string): vs.DecorationOptions {
+		return {
+			range: this.startOfLine(lineNumber),
+			renderOptions: {
+				before: {
+					contentText,
+					width: "0",
+				},
+			},
+		};
+	}
+
+	private startOfLine(lineNumber: number): vs.Range {
+		return new vs.Range(
+			new vs.Position(lineNumber, 0),
+			new vs.Position(lineNumber, 0),
+		);
 	}
 
 	private firstNonWhitespace(document: vs.TextDocument, lineNumber: number): vs.Position {
@@ -102,13 +114,32 @@ export class TestLineDecorations implements vs.Disposable {
 		let guides: WidgetGuide[] = [];
 		if (node.kind === "NEW_INSTANCE") {
 			const parentLine = document.positionAt(node.offset).line;
-			const childLines = node.children && node.children.map((c) => document.positionAt(c.offset).line).filter((cl) => cl > parentLine);
+			const childLines = node.children && node.children
+				.map((c) => document.positionAt(c.offset).line)
+				.filter((cl) => cl > parentLine);
 			if (childLines) {
-				const parentLineStart = this.firstNonWhitespace(document, parentLine);
-				for (const childLine of childLines) {
-					const childLineStart = this.firstNonWhitespace(document, childLine);
-					guides.push(new WidgetGuide(parentLineStart, childLineStart));
-				}
+				// Get the start of the line, then offset by 1,1 for where the
+				// line will start. We do this here so that the recorded start
+				// position is always where the line starts drawing (not the
+				// character it's pointing at) so that for children we can use
+				// the previous childs end point to avoid overlapping lots
+				// of lines (which is visible, due to stacked aliasing).
+				let startPos = this
+					.firstNonWhitespace(document, parentLine)
+					.translate({ lineDelta: 1, characterDelta: 1 });
+				childLines.forEach((childLine, i) => {
+					const isLast = i === childLines.length - 1;
+					// Same for child, offset to get the character where the line
+					// should end.
+					const firstChar = this.firstNonWhitespace(document, childLine);
+					if (firstChar.character > 1) {
+						const childLineStart = firstChar.translate({ characterDelta: -1 });
+						guides.push(new WidgetGuide(startPos, childLineStart, isLast));
+						// Record the position just udner the "bottom corner" as the
+						// start point for the next child.
+						startPos = new vs.Position(childLine + 1, startPos.character);
+					}
+				});
 			}
 		}
 
@@ -126,5 +157,5 @@ export class TestLineDecorations implements vs.Disposable {
 }
 
 export class WidgetGuide {
-	constructor(public readonly start: vs.Position, public readonly end: vs.Position) { }
+	constructor(public readonly start: vs.Position, public readonly end: vs.Position, public readonly isLast: boolean) { }
 }
