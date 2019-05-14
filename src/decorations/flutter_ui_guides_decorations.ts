@@ -10,7 +10,7 @@ const horizontalLine = "─";
 const bottomCorner = "└";
 const middleCorner = "├";
 
-export class TestLineDecorations implements vs.Disposable {
+export class FlutterUiGuideDecorations implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
 	private readonly borderDecoration = vs.window.createTextEditorDecorationType({

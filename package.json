@@ -1204,6 +1204,12 @@
 					"description": "Whether to register Pub Build Runner tasks with VS Code.",
 					"scope": "window"
 				},
+				"dart.previewFlutterUiGuides": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to enable the Flutter UI Guides preview.",
+					"scope": "window"
+				},
 				"dart.previewToStringInDebugViews": {
 					"type": "boolean",
 					"default": false,

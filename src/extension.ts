@@ -25,8 +25,8 @@ import { config } from "./config";
 import { Context } from "./context";
 import { dartPlatformName, flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, isWin, isWithinPath, LogCategory, platformDisplayName } from "./debug/utils";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
+import { FlutterUiGuideDecorations } from "./decorations/flutter_ui_guides_decorations";
 import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_decorations";
-import { TestLineDecorations } from "./decorations/test_line_decorations";
 import { FlutterCapabilities } from "./flutter/capabilities";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { DaemonCapabilities, FlutterDaemon } from "./flutter/flutter_daemon";
@@ -289,7 +289,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
 	context.subscriptions.push(debugProvider);
 
-	context.subscriptions.push(new TestLineDecorations(analyzer));
+	if (config.previewFlutterUiGuides)
+		context.subscriptions.push(new FlutterUiGuideDecorations(analyzer));
 
 	// Setup that requires server version/capabilities.
 	const connectedSetup = analyzer.registerForServerConnected((sc) => {
