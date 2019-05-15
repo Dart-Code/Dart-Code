@@ -7,7 +7,7 @@ import { hasOverlappingEdits } from "../commands/edit";
 import { config } from "../config";
 import { cleanDartdoc } from "../dartdocs";
 import { flatMap, IAmDisposable } from "../debug/utils";
-import { fsPath } from "../utils";
+import { fsPath, resolvedPromise } from "../utils";
 import { logError, logWarn } from "../utils/log";
 
 // TODO: This code has become messy with the SuggestionSet changes. It could do with some refactoring
@@ -23,7 +23,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 	public async provideCompletionItems(
 		document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext,
-	): Promise<CompletionList> {
+	): Promise<CompletionList | undefined> {
 		const line = document.lineAt(position.line).text.slice(0, position.character);
 		const nextCharacter = document.getText(new Range(position, position.translate({ characterDelta: 200 }))).trim().substr(0, 1);
 		const conf = config.for(document.uri);
@@ -38,8 +38,17 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			offset: document.offsetAt(position),
 		});
 
+		if (token.isCancellationRequested) {
+			return undefined;
+		}
+
 		const includedResults = resp.results.map((r) => this.convertResult(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, resp, r));
-		const cachedResults = this.getCachedResults(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, document.offsetAt(position), resp);
+		const cachedResults = await this.getCachedResults(document, token, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, document.offsetAt(position), resp);
+
+		await resolvedPromise;
+		if (token.isCancellationRequested) {
+			return undefined;
+		}
 
 		const allResults = [...includedResults, ...cachedResults];
 
@@ -166,14 +175,15 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		return completionItem;
 	}
 
-	private getCachedResults(
+	private async getCachedResults(
 		document: TextDocument,
+		token: CancellationToken,
 		nextCharacter: string,
 		enableCommitCharacters: boolean,
 		insertArgumentPlaceholders: boolean,
 		offset: number,
 		resp: as.CompletionResultsNotification,
-	): CompletionItem[] {
+	): Promise<CompletionItem[] | undefined> {
 		if (!resp.includedSuggestionSets || !resp.includedElementKinds)
 			return [];
 
@@ -188,6 +198,14 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		const filePath = fsPath(document.uri);
 		const suggestionSetResults: CompletionItem[][] = [];
 		for (const includedSuggestionSet of resp.includedSuggestionSets) {
+			// Because this work is expensive, we periodically (per suggestion
+			// set) yield and check whether cancellation is pending and if so
+			// stop and bail out to avoid doing redundant work.
+			await resolvedPromise;
+			if (token.isCancellationRequested) {
+				return undefined;
+			}
+
 			const suggestionSet = this.cachedCompletions[includedSuggestionSet.id];
 			if (!suggestionSet) {
 				logWarn(`Suggestion set ${includedSuggestionSet.id} was not available and therefore not included in the completion results`);
