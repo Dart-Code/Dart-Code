@@ -66,10 +66,13 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 	private getDecorations(doc: vs.TextDocument, guidesByLine: { [key: number]: WidgetGuide[] }): vs.DecorationOptions[] {
 		const decorations: vs.DecorationOptions[] = [];
 		for (const line of Object.keys(guidesByLine).map((k) => parseInt(k, 10))) {
-			const isBlankLine = doc.lineAt(line).isEmptyOrWhitespace;
-			const firstChar = isBlankLine ? 1 : Math.min(...guidesByLine[line].map((g) => Math.min(g.start.character, g.end.character)));
-			const lastChar = Math.max(...guidesByLine[line].map((g) => Math.max(g.start.character, g.end.character)));
-			const decorationString = new Array(lastChar).fill(nonBreakingSpace);
+			const lineInfo = doc.lineAt(line);
+			const firstGuideChar = Math.min(...guidesByLine[line].map((g) => Math.min(g.start.character, g.end.character)));
+			const lastGuideChar = Math.max(...guidesByLine[line].map((g) => Math.max(g.start.character, g.end.character)));
+			const lastLineCharacter = lineInfo.range.end.character;
+			const anchorPoint = lastLineCharacter < firstGuideChar ? 1 : firstGuideChar;
+
+			const decorationString = new Array(lastGuideChar).fill(nonBreakingSpace);
 			for (const guide of guidesByLine[line]) {
 				if (line !== guide.end.line) {
 					decorationString[guide.start.character] = verticalLine;
@@ -90,12 +93,12 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 
 			decorations.push({
 				range: new vs.Range(
-					new vs.Position(line, firstChar - 1),
-					new vs.Position(line, firstChar - 1),
+					new vs.Position(line, anchorPoint - 1),
+					new vs.Position(line, anchorPoint - 1),
 				),
 				renderOptions: {
 					before: {
-						contentText: decorationString.join("").substr(firstChar),
+						contentText: decorationString.join("").substring(anchorPoint),
 						margin: "0 3px 0 -3px",
 						width: "0",
 					},
