@@ -93,7 +93,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 
 			// For any characters that have users text in them, we should not
 			// render any guides.
-			decorationString.fill(nonBreakingSpace, lineInfo.firstNonWhitespaceCharacterIndex, lineInfo.range.end.character);
+			decorationString.fill(nonBreakingSpace, lineInfo.firstNonWhitespaceCharacterIndex + 1, lineInfo.range.end.character);
 
 			decorations.push({
 				range: new vs.Range(
@@ -140,11 +140,10 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 					const isLast = i === childLines.length - 1;
 					// Same for child, offset to get the character where the line
 					// should end.
-					const firstChar = this.firstNonWhitespace(document, childLine);
-					if (firstChar.character > 1) {
-						const childLineStart = firstChar.translate({ characterDelta: -1 });
-						guides.push(new WidgetGuide(startPos, childLineStart, isLast));
-						// Record the position just udner the "bottom corner" as the
+					const firstCodeChar = this.firstNonWhitespace(document, childLine);
+					if (firstCodeChar.character > 1) {
+						guides.push(new WidgetGuide(startPos, firstCodeChar, isLast));
+						// Record the position just under the "bottom corner" as the
 						// start point for the next child.
 						startPos = new vs.Position(childLine + 1, startPos.character);
 					}
