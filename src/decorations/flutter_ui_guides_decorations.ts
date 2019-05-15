@@ -91,6 +91,10 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 				}
 			}
 
+			// For any characters that have users text in them, we should not
+			// render any guides.
+			decorationString.fill(nonBreakingSpace, lineInfo.firstNonWhitespaceCharacterIndex, lineInfo.range.end.character);
+
 			decorations.push({
 				range: new vs.Range(
 					new vs.Position(line, anchorPoint - 1),
