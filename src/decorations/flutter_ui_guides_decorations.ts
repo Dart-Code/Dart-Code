@@ -95,6 +95,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 				renderOptions: {
 					before: {
 						contentText: decorationString.join("").substr(firstChar),
+						margin: "0 3px 0 -3px",
 						width: "0",
 					},
 				},
