@@ -14,7 +14,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
 	private readonly borderDecoration = vs.window.createTextEditorDecorationType({
-		rangeBehavior: vs.DecorationRangeBehavior.ClosedClosed,
+		rangeBehavior: vs.DecorationRangeBehavior.OpenOpen,
 	});
 
 	constructor(private readonly analyzer: Analyzer) {
