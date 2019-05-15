@@ -66,8 +66,8 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 	private getDecorations(guidesByLine: { [key: number]: WidgetGuide[] }): vs.DecorationOptions[] {
 		const decorations: vs.DecorationOptions[] = [];
 		for (const line of Object.keys(guidesByLine).map((k) => parseInt(k, 10))) {
-			const firstChar = Math.min(...guidesByLine[line].map((g) => g.start.character));
-			const lastChar = Math.max(...guidesByLine[line].map((g) => g.end.character));
+			const firstChar = Math.min(...guidesByLine[line].map((g) => Math.min(g.start.character, g.end.character)));
+			const lastChar = Math.max(...guidesByLine[line].map((g) => Math.max(g.start.character, g.end.character)));
 			const decorationString = new Array(lastChar).fill(nonBreakingSpace);
 			for (const guide of guidesByLine[line]) {
 				if (line !== guide.end.line) {
