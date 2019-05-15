@@ -321,7 +321,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
 		});
 
-		context.subscriptions.push(new OpenFileTracker(analyzer));
+		context.subscriptions.push(new OpenFileTracker(analyzer, workspaceContext));
 
 		// Set up completions for unimported items.
 		if (analyzer.capabilities.supportsAvailableSuggestions && config.autoImportCompletions) {
