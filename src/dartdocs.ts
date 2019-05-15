@@ -1,8 +1,6 @@
-import { config } from "./config";
 import { escapeRegExp } from "./debug/utils";
 
-const darkIconUrlFormat = "https://storage.googleapis.com/material-icons/external-assets/v4/icons/svg/ic_$1_white_36px.svg";
-const lightIconUrlFormat = "https://storage.googleapis.com/material-icons/external-assets/v4/icons/svg/ic_$1_black_36px.svg";
+const iconUrlFormat = "https://raw.githubusercontent.com/Dart-Code/Icons/master/material/$1%402x.png";
 const iconRegex = new RegExp(
 	`(?:${escapeRegExp("<p>")})?`
 	+ escapeRegExp('<i class="material-icons md-36">')
@@ -34,8 +32,7 @@ export function cleanDartdoc(doc: string | undefined): string {
 	// Remove colons from old-style references like [:foo:].
 	doc = doc.replace(/\[:\S+:\]/g, (match) => `[${match.substring(2, match.length - 2)}]`);
 
-	const iconUrlFormat = config.useDarkTheme ? darkIconUrlFormat : lightIconUrlFormat;
-	doc = doc.replace(iconRegex, `![$1](${iconUrlFormat}|width=100,height=100)`);
+	doc = doc.replace(iconRegex, `![$1](${iconUrlFormat}|width=32,height=32)`);
 
 	// Remove any directives like {@template xxx}
 	doc = doc.replace(dartDocDirectives, "");
