@@ -22,6 +22,9 @@ export class AnalyzerCapabilities {
 	get supportsDiagnostics() { return versionIsAtLeast(this.version, "1.18.1"); }
 	get supportsClosingLabels() { return versionIsAtLeast(this.version, "1.18.4"); }
 	get supportsCustomFolding() { return versionIsAtLeast(this.version, "1.20.3"); }
+	// 1.26.0 is stable Flutter at time of writing. Unclear what version had Outline, but
+	// we don't need to support older.
+	get supportsFlutterOutline() { return versionIsAtLeast(this.version, "1.26.0"); }
 	get supportsGetDeclerations() { return versionIsAtLeast(this.version, "1.18.7"); }
 	get supportsGetDeclerationsForFile() { return versionIsAtLeast(this.version, "1.19.0"); }
 	get supportsGetSignature() { return versionIsAtLeast(this.version, "1.20.5"); }

@@ -18,7 +18,7 @@ let lastSubscribedFiles: string[] = [];
 export class OpenFileTracker implements IAmDisposable {
 	private disposables: Disposable[] = [];
 
-	constructor(private readonly analyzer: Analyzer) {
+	constructor(private readonly analyzer: Analyzer, private readonly wsContext: util.WorkspaceContext) {
 		// Reset these, since they're state from the last analysis server
 		// (when we change SDK and thus change this).
 		lastPriorityFiles = [];
@@ -82,14 +82,20 @@ export class OpenFileTracker implements IAmDisposable {
 					OUTLINE: openFiles,
 				},
 			});
-			// TODO: Only for Flutter? Version check?
-			await this.analyzer.flutterSetSubscriptions({
-				subscriptions: {
-					OUTLINE: openFiles,
-				},
-			});
 		} catch (e) {
 			logError(e);
+		}
+		// Set subscriptions.
+		if (this.wsContext.hasAnyFlutterProjects && this.analyzer.capabilities.supportsFlutterOutline) {
+			try {
+				await this.analyzer.flutterSetSubscriptions({
+					subscriptions: {
+						OUTLINE: openFiles,
+					},
+				});
+			} catch (e) {
+				logError(e);
+			}
 		}
 	}
 
