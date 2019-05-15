@@ -102,6 +102,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 				),
 				renderOptions: {
 					before: {
+						color: "#A3A3A3",
 						contentText: decorationString.join("").substring(anchorPoint),
 						margin: "0 3px 0 -3px",
 						width: "0",
