@@ -66,18 +66,19 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 	private getDecorations(guidesByLine: { [key: number]: WidgetGuide[] }): vs.DecorationOptions[] {
 		const decorations: vs.DecorationOptions[] = [];
 		for (const line of Object.keys(guidesByLine).map((k) => parseInt(k, 10))) {
-			const totalChars = Math.max(...guidesByLine[line].map((g) => g.end.character));
-			const decorationString = new Array(totalChars).fill(nonBreakingSpace);
+			const firstChar = Math.min(...guidesByLine[line].map((g) => g.start.character));
+			const lastChar = Math.max(...guidesByLine[line].map((g) => g.end.character));
+			const decorationString = new Array(lastChar).fill(nonBreakingSpace);
 			for (const guide of guidesByLine[line]) {
 				if (line !== guide.end.line) {
-					decorationString[guide.start.character - 1] = verticalLine;
+					decorationString[guide.start.character] = verticalLine;
 				} else {
-					for (let c = guide.start.character - 1; c < guide.end.character; c++) {
-						if (guide.isLast && c === guide.start.character - 1) {
+					for (let c = guide.start.character; c <= guide.end.character; c++) {
+						if (guide.isLast && c === guide.start.character) {
 							decorationString[c] = bottomCorner;
-						} else if (!guide.isLast && c === guide.start.character - 1) {
+						} else if (!guide.isLast && c === guide.start.character) {
 							decorationString[c] = middleCorner;
-						} else if (c === guide.start.character - 1) {
+						} else if (c === guide.start.character) {
 							decorationString[c] = verticalLine;
 						} else {
 							decorationString[c] = horizontalLine;
@@ -86,33 +87,20 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 				}
 			}
 
-			decorations.push(
-				this.getDecoration(
-					line,
-					decorationString.join(""),
+			decorations.push({
+				range: new vs.Range(
+					new vs.Position(line, firstChar - 1),
+					new vs.Position(line, firstChar - 1),
 				),
-			);
+				renderOptions: {
+					before: {
+						contentText: decorationString.join("").substr(firstChar),
+						width: "0",
+					},
+				},
+			});
 		}
 		return decorations;
-	}
-
-	private getDecoration(lineNumber: number, contentText: string): vs.DecorationOptions {
-		return {
-			range: this.startOfLine(lineNumber),
-			renderOptions: {
-				before: {
-					contentText,
-					width: "0",
-				},
-			},
-		};
-	}
-
-	private startOfLine(lineNumber: number): vs.Range {
-		return new vs.Range(
-			new vs.Position(lineNumber, 0),
-			new vs.Position(lineNumber, 0),
-		);
 	}
 
 	private firstNonWhitespace(document: vs.TextDocument, lineNumber: number): vs.Position {
