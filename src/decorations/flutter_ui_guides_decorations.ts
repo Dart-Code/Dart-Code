@@ -66,19 +66,18 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 	private getDecorations(guidesByLine: { [key: number]: WidgetGuide[] }): vs.DecorationOptions[] {
 		const decorations: vs.DecorationOptions[] = [];
 		for (const line of Object.keys(guidesByLine).map((k) => parseInt(k, 10))) {
-			const lineMap: { [key: number]: string } = {};
 			const totalChars = Math.max(...guidesByLine[line].map((g) => g.end.character));
 			const decorationString = new Array(totalChars).fill(nonBreakingSpace);
 			for (const guide of guidesByLine[line]) {
 				if (line !== guide.end.line) {
-					decorationString[guide.start.character] = verticalLine;
+					decorationString[guide.start.character - 1] = verticalLine;
 				} else {
-					for (let c = guide.start.character; c <= guide.end.character; c++) {
-						if (guide.isLast && c === guide.start.character) {
+					for (let c = guide.start.character - 1; c < guide.end.character; c++) {
+						if (guide.isLast && c === guide.start.character - 1) {
 							decorationString[c] = bottomCorner;
-						} else if (!guide.isLast && c === guide.start.character) {
+						} else if (!guide.isLast && c === guide.start.character - 1) {
 							decorationString[c] = middleCorner;
-						} else if (c === guide.start.character) {
+						} else if (c === guide.start.character - 1) {
 							decorationString[c] = verticalLine;
 						} else {
 							decorationString[c] = horizontalLine;
