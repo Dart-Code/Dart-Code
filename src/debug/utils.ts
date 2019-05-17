@@ -198,6 +198,7 @@ export interface FlutterLaunchRequestArguments extends DartLaunchRequestArgument
 	flutterAttachSupportsUris: boolean;
 	flutterPath?: string;
 	flutterMode?: "debug" | "profile" | "release";
+	flutterPlatform?: "default" | "android-arm" | "android-arm64" | "android-x86" | "android-x64";
 	flutterRunLogFile?: string;
 	flutterTestLogFile?: string;
 }
