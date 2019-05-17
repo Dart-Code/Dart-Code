@@ -19,7 +19,7 @@ export const pubSnapshotPath = "bin/snapshots/pub.dart.snapshot";
 export const analyzerSnapshotPath = "bin/snapshots/analysis_server.dart.snapshot";
 export const flutterPath = "bin/" + flutterExecutableName;
 export const androidStudioPath = "bin/" + androidStudioExecutableName;
-export const DART_DOWNLOAD_URL = "https://www.dartlang.org/install";
+export const DART_DOWNLOAD_URL = "https://dart.dev/get-dart";
 export const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
 
 export function handleMissingSdks(context: ExtensionContext, analytics: Analytics, workspaceContext: WorkspaceContext) {
