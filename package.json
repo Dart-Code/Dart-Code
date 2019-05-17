@@ -1277,6 +1277,17 @@
 								],
 								"default": "debug"
 							},
+							"flutterPlatform": {
+								"description": "Passes the --target-platform option to the flutter run command. Ignored on iOS.",
+								"enum": [
+									"default",
+									"android-arm",
+									"android-arm64",
+									"android-x86",
+									"android-x64"
+								],
+								"default": "default"
+							},
 							"args": {
 								"type": "array",
 								"description": "Command line arguments to the application.",

@@ -468,6 +468,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					// Otherwise use the config.
 					conf.flutterTrackWidgetCreation;
 			debugConfig.flutterMode = debugConfig.flutterMode || "debug";
+			debugConfig.flutterPlatform = debugConfig.flutterPlatform || "default";
 			debugConfig.flutterPath = debugConfig.flutterPath || (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : undefined);
 			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || conf.flutterRunLogFile;
 			debugConfig.flutterTestLogFile = debugConfig.flutterTestLogFile || conf.flutterTestLogFile;

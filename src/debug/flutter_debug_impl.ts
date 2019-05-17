@@ -162,6 +162,10 @@ export class FlutterDebugSession extends DartDebugSession {
 				}
 			}
 
+			if (args.flutterPlatform) {
+				appArgs.push(`--target-platform=${args.flutterPlatform}`)
+			}
+
 			if (this.shouldConnectDebugger) {
 				appArgs.push("--start-paused");
 
