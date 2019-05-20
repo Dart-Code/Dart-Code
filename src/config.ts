@@ -9,6 +9,7 @@ class Config {
 	constructor() {
 		workspace.onDidChangeConfiguration((e) => this.reloadConfig());
 		this.config = workspace.getConfiguration("dart");
+		setupToolEnv(this.env);
 	}
 
 	private reloadConfig() {
