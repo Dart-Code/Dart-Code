@@ -221,7 +221,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (isAttachRequest) {
 			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
 			if (!isStandardFlutter) { // TEMP Condition because there's no point asking yet as the user doesn't know how to get this..
-				debugConfig.observatoryUri = await this.getObservatoryUri(debugConfig.observatoryUri/*, mostRecentAttachedProbablyReusableObservatoryUri*/);
+				debugConfig.observatoryUri = await this.getFullVmServiceUri(debugConfig.observatoryUri/*, mostRecentAttachedProbablyReusableObservatoryUri*/);
 			}
 
 			if (!debugConfig.observatoryUri && !isStandardFlutter) {
@@ -367,28 +367,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 	}
 
-	private async getObservatoryUri(observatoryUri: string, defaultValue?: string): Promise<string> {
-		observatoryUri = observatoryUri || await vs.window.showInputBox({
-			ignoreFocusOut: true, // Don't close the window if the user tabs away to get the uri
-			placeHolder: "Paste an Observatory URI",
-			prompt: "Enter Observatory URI",
-			validateInput: (input) => {
-				if (!input)
-					return;
-
-				input = input.trim();
-
-				if (Number.isInteger(parseFloat(input)))
-					return;
-
-				// Uri.parse doesn't seem to work as expected, so do our own basic validation
-				// https://github.com/Microsoft/vscode/issues/49818
-
-				if (!input.startsWith("http://") && !input.startsWith("https://"))
-					return "Please enter a valid Observatory URI";
-			},
-			value: defaultValue,
-		});
+	private async getFullVmServiceUri(observatoryUri: string, defaultValue?: string): Promise<string> {
+		observatoryUri = observatoryUri || await vs.commands.executeCommand("dart.promptForVmService", defaultValue);
 		observatoryUri = observatoryUri && observatoryUri.trim();
 
 		// If the input is just a number, treat is as a localhost port.

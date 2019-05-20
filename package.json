@@ -119,6 +119,11 @@
 			},
 			{
 				"command": "flutter.attach",
+				"title": "Attach to Flutter on Device",
+				"category": "Debug"
+			},
+			{
+				"command": "flutter.attachProcess",
 				"title": "Attach to Flutter Process",
 				"category": "Debug"
 			},
@@ -449,6 +454,10 @@
 				},
 				{
 					"command": "flutter.attach",
+					"when": "dart-code:anyFlutterProjectLoaded && !inDebugMode && dart-code:flutterSupportsAttach"
+				},
+				{
+					"command": "flutter.attachProcess",
 					"when": "dart-code:anyFlutterProjectLoaded && !inDebugMode && dart-code:flutterSupportsAttach"
 				},
 				{
@@ -1379,10 +1388,10 @@
 						}
 					},
 					{
-						"label": "Flutter: Attach",
-						"description": "Attach to Flutter in an already-running mobile application",
+						"label": "Flutter: Attach to Device",
+						"description": "Attach to Flutter on a device.",
 						"body": {
-							"name": "Flutter: Attach to Process",
+							"name": "Flutter: Attach to Device",
 							"type": "dart",
 							"request": "attach"
 						}
