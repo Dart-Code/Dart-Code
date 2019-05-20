@@ -151,7 +151,7 @@ describe("Survey notification", async () => {
 
 	it("shows and updates context values when already seen", async () => {
 		const context = extApi.context;
-		context.flutterSurvey2019Q2NotificationLastShown = Date.now() - (longRepeatPromptThreshold + twoHoursInMs);
+		context.flutterSurvey2019Q2NotificationLastShown = surveyIsOpenDate - (longRepeatPromptThreshold + twoHoursInMs);
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(takeSurveyAction);
