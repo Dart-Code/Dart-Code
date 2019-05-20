@@ -63,7 +63,6 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.inspectWidget", () => this.flutterExtensions.toggle(FlutterServiceExtension.InspectorSelectMode, true, true)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => this.flutterExtensions.toggle(FlutterServiceExtension.InspectorSelectMode, false, false)));
 
-		// Open Observatory.
 		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", async () => {
 			if (!debugSessions.length)
 				return;
@@ -187,11 +186,43 @@ export class DebugCommands {
 				type: "dart",
 			});
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.attach", () => {
+		context.subscriptions.push(vs.commands.registerCommand("flutter.attachProcess", () => {
 			vs.debug.startDebugging(undefined, {
 				name: "Flutter: Attach to Process",
+				observatoryUri: "${command:dart.promptForVmService}",
 				request: "attach",
 				type: "dart",
+			});
+		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.attach", () => {
+			vs.debug.startDebugging(undefined, {
+				name: "Flutter: Attach to Device",
+				request: "attach",
+				type: "dart",
+			});
+		}));
+		context.subscriptions.push(vs.commands.registerCommand("dart.promptForVmService", async (defaultValueOrConfig: string | vs.DebugConfiguration | undefined): Promise<string | undefined> => {
+			const defaultValue = typeof defaultValueOrConfig === "string" ? defaultValueOrConfig : undefined;
+			return vs.window.showInputBox({
+				ignoreFocusOut: true, // Don't close the window if the user tabs away to get the uri
+				placeHolder: "Paste an Observatory URI",
+				prompt: "Enter Observatory URI",
+				validateInput: (input) => {
+					if (!input)
+						return;
+
+					input = input.trim();
+
+					if (Number.isInteger(parseFloat(input)))
+						return;
+
+					// Uri.parse doesn't seem to work as expected, so do our own basic validation
+					// https://github.com/Microsoft/vscode/issues/49818
+
+					if (!input.startsWith("http://") && !input.startsWith("https://"))
+						return "Please enter a valid Observatory URI";
+				},
+				value: defaultValue,
 			});
 		}));
 	}
