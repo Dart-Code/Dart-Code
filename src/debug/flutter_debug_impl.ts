@@ -162,7 +162,7 @@ export class FlutterDebugSession extends DartDebugSession {
 				}
 			}
 
-			if (args.flutterPlatform) {
+			if (args.flutterPlatform && args.flutterPlatform !== "default") {
 				appArgs.push(`--target-platform=${args.flutterPlatform}`);
 			}
 
