@@ -26,5 +26,8 @@
 		"test/test_projects/dart_create_template",
 		"test/test_projects/flutter_create_basic",
 		"test/test_projects/flutter_create_sample"
+	],
+	"dart.doNotFormat": [
+		"**/lib/comments.dart"
 	]
 }
