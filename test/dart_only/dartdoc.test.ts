@@ -8,8 +8,8 @@ describe("cleanDartDoc", () => {
 		<p><i class="material-icons md-36">360</i> &#x2014; material icon named "360".</p>
 		`;
 		const expected = `
-		![360](https://storage.googleapis.com/material-icons/external-assets/v4/icons/svg/ic_360_white_36px.svg|width=100,height=100)
-		![360](https://storage.googleapis.com/material-icons/external-assets/v4/icons/svg/ic_360_white_36px.svg|width=100,height=100)
+		![360](https://raw.githubusercontent.com/Dart-Code/Icons/master/material/360%402x.png|width=32,height=32)
+		![360](https://raw.githubusercontent.com/Dart-Code/Icons/master/material/360%402x.png|width=32,height=32)
 		`;
 		assert.equal(cleanDartdoc(input), expected);
 	});
