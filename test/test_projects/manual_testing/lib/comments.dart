@@ -1,5 +1,7 @@
-/// Any line that starts with `var` should be coloured.
+/// Any line that starts with `var` or `void` should be coloured.
 /// Every other line should be a comment.
+
+// ignore_for_file: unused_element
 
 /* test /* test */ */
 var a = 1;
@@ -81,6 +83,12 @@ var p = 1;
   */
 var q = 1;
 
+void foo() {
+  /**
+    * Nested function.
+    */
+  bool bar() => true;
+}
 
 class ClassToAddIndenting {
   /* test /* test */ */
@@ -162,4 +170,11 @@ class ClassToAddIndenting {
     * // Test
     */
   var q = 1;
+
+  void foo() {
+    /**
+     * Nested function.
+     */
+    void bar() {}
+  }
 }
