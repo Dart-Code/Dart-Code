@@ -31,6 +31,7 @@ import { FlutterCapabilities } from "./flutter/capabilities";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { DaemonCapabilities, FlutterDaemon } from "./flutter/flutter_daemon";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
+import { getWorkspaceProjectFolders } from "./project";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
@@ -435,8 +436,11 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		// Don't prompt for package updates in the Fuchsia tree.
 		if (workspaceContext.hasProjectsInFuchsiaTree) // TODO: This should be tested per-project.
 			return;
-		const folders = util.getDartWorkspaceFolders();
-		const foldersRequiringPackageGet = folders.filter((ws: vs.WorkspaceFolder) => config.for(ws.uri).promptToGetPackages).filter(isPubGetProbablyRequired);
+		const folders = getWorkspaceProjectFolders();
+		const foldersRequiringPackageGet = folders
+			.map(vs.Uri.file)
+			.filter((uri) => config.for(uri).promptToGetPackages)
+			.filter(isPubGetProbablyRequired);
 		if (foldersRequiringPackageGet.length > 0)
 			promptToRunPubGet(foldersRequiringPackageGet);
 	}
