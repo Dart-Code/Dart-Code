@@ -105,6 +105,16 @@ export class SdkCommands {
 				DartHoverProvider.clearPackageMapCaches();
 			}
 		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.clean", async (selection): Promise<number | undefined> => {
+			if (!selection) {
+				const path = await this.getFolderToRunCommandIn(`Select the folder to run "flutter clean" in`, selection, true);
+				if (!path)
+					return;
+				selection = vs.Uri.file(path);
+			}
+
+			return this.runFlutter(["clean"], selection);
+		}));
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.screenshot.touchBar", (args: any) => vs.commands.executeCommand("flutter.screenshot", args)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", async () => {
 			let shouldNotify = false;
@@ -304,7 +314,7 @@ export class SdkCommands {
 		return handler(folderToRunCommandIn, args, shortPath);
 	}
 
-	private async getFolderToRunCommandIn(placeHolder: string, selection?: vs.Uri): Promise<string | undefined> {
+	private async getFolderToRunCommandIn(placeHolder: string, selection?: vs.Uri, flutterOnly = false): Promise<string | undefined> {
 		// Attempt to find a project based on the supplied folder of active file.
 		let file = selection && fsPath(selection);
 		file = file || (vs.window.activeTextEditor && fsPath(vs.window.activeTextEditor.document.uri));
@@ -316,17 +326,20 @@ export class SdkCommands {
 		// Otherwise look for what projects we have.
 		const rootFolders = util.getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
 		const nestedProjectFolders = flatMap(rootFolders, getChildFolders);
-		const selectableFolders = rootFolders.concat(nestedProjectFolders).filter(hasPubspec);
+		const selectableFolders = rootFolders.concat(nestedProjectFolders)
+			.filter(hasPubspec)
+			.filter(flutterOnly ? util.isFlutterProjectFolder : () => true);
+
+		if (!selectableFolders || !selectableFolders.length) {
+			const projectTypes = flutterOnly ? "Flutter" : "Dart/Flutter";
+			vs.window.showWarningMessage(`No ${projectTypes} projects were found.`);
+			return undefined;
+		}
 
 		return this.showFolderPicker(selectableFolders, placeHolder); // TODO: What if the user didn't pick anything?
 	}
 
 	private async showFolderPicker(folders: string[], placeHolder: string): Promise<string | undefined> {
-		if (!folders || !folders.length) {
-			vs.window.showWarningMessage("No Dart/Flutter projects were found.");
-			return undefined;
-		}
-
 		// No point asking the user if there's only one.
 		if (folders.length === 1) {
 			return folders[0];

@@ -226,6 +226,11 @@
 				}
 			},
 			{
+				"command": "flutter.clean",
+				"title": "Clean Project",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.doctor",
 				"title": "Run Flutter Doctor",
 				"category": "Flutter"
@@ -481,6 +486,10 @@
 				{
 					"command": "flutter.packages.upgrade",
 					"when": "dart-code:anyFlutterProjectLoaded"
+				},
+				{
+					"command": "flutter.clean",
+					"when": "dart-code:flutterMobileProjectLoaded"
 				},
 				{
 					"command": "flutter.doctor"
