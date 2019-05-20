@@ -1,12 +1,14 @@
 import * as fs from "fs";
 import * as path from "path";
-import * as util from "./utils";
+import { flatMap } from "./debug/utils";
+import { fsPath, getDartWorkspaceFolders, isWithinWorkspace } from "./utils";
+import { sortBy } from "./utils/array";
 import { hasPackagesFile, hasPubspec } from "./utils/fs";
 
 export const UPGRADE_TO_WORKSPACE_FOLDERS = "Mark Projects as Workspace Folders";
 
 export function locateBestProjectRoot(folder: string): string | undefined {
-	if (!folder || !util.isWithinWorkspace(folder))
+	if (!folder || !isWithinWorkspace(folder))
 		return undefined;
 
 	let dir = folder;
@@ -37,4 +39,12 @@ export function getChildProjects(folder: string, levelsToGo: number): string[] {
 	}
 
 	return projects;
+}
+
+export function getWorkspaceProjectFolders(): string[] {
+	const topLevelDartProjects = getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
+	const childProjects = flatMap(topLevelDartProjects, (f) => getChildProjects(f, 1));
+	const allProjects = topLevelDartProjects.concat(childProjects).filter(hasPubspec);
+	sortBy(allProjects, (p) => path.basename(p).toLowerCase());
+	return allProjects;
 }

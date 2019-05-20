@@ -1,10 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
-import { WorkspaceFolder, commands, window } from "vscode";
+import { commands, Uri, window } from "vscode";
 import { fsPath } from "../utils";
 
-export function isPubGetProbablyRequired(ws: WorkspaceFolder): boolean {
-	const folder = fsPath(ws.uri);
+export function isPubGetProbablyRequired(folderUri: Uri): boolean {
+	const folder = fsPath(folderUri);
 	const pubspecPath = path.join(folder, "pubspec.yaml");
 	const packagesPath = path.join(folder, ".packages");
 	if (!folder || !fs.existsSync(pubspecPath))
@@ -25,7 +25,7 @@ export function isPubGetProbablyRequired(ws: WorkspaceFolder): boolean {
 	return pubspecModified > packagesModified;
 }
 
-export function promptToRunPubGet(folders: WorkspaceFolder[]) {
+export function promptToRunPubGet(folders: Uri[]) {
 	const label = "Get packages";
 	window.showInformationMessage("Some packages are missing or out of date, would you like to get them now?", label).then((clickedButton) => {
 		if (clickedButton === label)
@@ -33,12 +33,12 @@ export function promptToRunPubGet(folders: WorkspaceFolder[]) {
 	});
 }
 
-function getPackages(folders: WorkspaceFolder[]) {
-	let task = commands.executeCommand("dart.getPackages", folders[0].uri);
+function getPackages(folders: Uri[]) {
+	let task = commands.executeCommand("dart.getPackages", folders[0]);
 	for (let i = 1; i < folders.length; i++) {
 		task = task.then((code) => {
 			if (code === 0) // Continue with next one only if success
-				return commands.executeCommand("dart.getPackages", folders[i].uri);
+				return commands.executeCommand("dart.getPackages", folders[i]);
 		});
 	}
 }

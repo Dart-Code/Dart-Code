@@ -28,6 +28,7 @@ export function findPackageRoots(analyzer: Analyzer, root: string): string[] {
 
 	function getChildren(parent: string, numLevels: number): string[] {
 		let packageRoots: string[] = [];
+		// TODO: change to getChildProjects()?
 		getChildFolders(parent).forEach((folder) => {
 			// If this is a package, add it. Else, recurse (if we still have levels to go).
 			if (hasPubspec(folder)) {

@@ -9,7 +9,7 @@ import { stripMarkdown } from "../dartdocs";
 import { flatMap, LogCategory, LogSeverity, PromiseCompleter } from "../debug/utils";
 import { FlutterCapabilities } from "../flutter/capabilities";
 import { FlutterDeviceManager } from "../flutter/device_manager";
-import { locateBestProjectRoot } from "../project";
+import { getWorkspaceProjectFolders, locateBestProjectRoot } from "../project";
 import { DartHoverProvider } from "../providers/dart_hover_provider";
 import { PubGlobal } from "../pub/global";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "../pub/pub";
@@ -279,12 +279,15 @@ export class SdkCommands {
 		//   0 - then just use Uri
 		//   1 - then just do that one
 		//   more than 1 - prompt to do all
-		const folders = util.getDartWorkspaceFolders();
-		const foldersRequiringPackageGet = folders.filter((ws: vs.WorkspaceFolder) => config.for(ws.uri).promptToGetPackages).filter(isPubGetProbablyRequired);
+		const folders = getWorkspaceProjectFolders();
+		const foldersRequiringPackageGet = folders
+			.map(vs.Uri.file)
+			.filter((uri) => config.for(uri).promptToGetPackages)
+			.filter(isPubGetProbablyRequired);
 		if (foldersRequiringPackageGet.length === 0)
 			vs.commands.executeCommand("dart.getPackages", uri);
 		else if (foldersRequiringPackageGet.length === 1)
-			vs.commands.executeCommand("dart.getPackages", foldersRequiringPackageGet[0].uri);
+			vs.commands.executeCommand("dart.getPackages", foldersRequiringPackageGet[0]);
 		else
 			promptToRunPubGet(foldersRequiringPackageGet);
 
@@ -325,6 +328,7 @@ export class SdkCommands {
 
 		// Otherwise look for what projects we have.
 		const rootFolders = util.getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
+		// TODO: getChildProjects?
 		const nestedProjectFolders = flatMap(rootFolders, getChildFolders);
 		const selectableFolders = rootFolders.concat(nestedProjectFolders)
 			.filter(hasPubspec)
