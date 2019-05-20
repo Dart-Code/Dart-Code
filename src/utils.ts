@@ -34,6 +34,10 @@ export function isFlutterWorkspaceFolder(folder?: WorkspaceFolder): boolean {
 	return !!(folder && isDartWorkspaceFolder(folder) && isFlutterProjectFolder(fsPath(folder.uri)));
 }
 
+export function isFlutterWebWorkspaceFolder(folder?: WorkspaceFolder): boolean {
+	return !!(folder && isDartWorkspaceFolder(folder) && isFlutterWebProjectFolder(fsPath(folder.uri)));
+}
+
 export function isInsideFlutterProject(uri?: Uri): boolean {
 	if (!uri)
 		return false;
@@ -43,6 +47,17 @@ export function isInsideFlutterProject(uri?: Uri): boolean {
 		return isFlutterProjectFolder(projectRoot);
 	else
 		return isFlutterWorkspaceFolder(workspace.getWorkspaceFolder(uri));
+}
+
+export function isInsideFlutterWebProject(uri?: Uri): boolean {
+	if (!uri)
+		return false;
+
+	const projectRoot = locateBestProjectRoot(fsPath(uri));
+	if (projectRoot)
+		return isFlutterWebProjectFolder(projectRoot);
+	else
+		return isFlutterWebWorkspaceFolder(workspace.getWorkspaceFolder(uri));
 }
 
 export function isFlutterProjectFolder(folder?: string): boolean {
