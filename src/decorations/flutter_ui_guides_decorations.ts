@@ -15,6 +15,7 @@ const middleCorner = "├";
 
 export class FlutterUiGuideDecorations implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
+	private tracker: WidgetGuideTracker | undefined;
 
 	private readonly borderDecoration = vs.window.createTextEditorDecorationType({
 		rangeBehavior: vs.DecorationRangeBehavior.OpenOpen,
@@ -23,6 +24,16 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 	constructor(private readonly analyzer: Analyzer) {
 		// Update any editor that becomes active.
 		this.disposables.push(vs.window.onDidChangeActiveTextEditor((e) => this.buildForTextEditor(e)));
+
+		if (config.previewFlutterUiGuidesCustomTracking) {
+			this.tracker = new WidgetGuideTracker();
+			this.disposables.push(this.tracker);
+
+			// Subscribe to updates from the tracker so we can update on keypress without
+			// waiting for new Outlines.
+			this.tracker.onGuidesChanged(([doc, guides]) => this.buildFromUpdatedGuides(doc, guides));
+		}
+
 
 		// Update the current visible editor when we were registered.
 		if (vs.window.activeTextEditor)
@@ -58,6 +69,11 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 		if (this.tracker)
 			this.tracker.trackDoc(editor.document, guides);
 		this.renderGuides(editor, guides, "#A3A3A3");
+	}
+
+	private buildFromUpdatedGuides(doc: vs.TextDocument, guides: WidgetGuide[]) {
+		if (vs.window.activeTextEditor && vs.window.activeTextEditor.document === doc)
+			this.renderGuides(vs.window.activeTextEditor, guides, "#FFA3A3");
 	}
 
 	private renderGuides(editor: vs.TextEditor, guides: WidgetGuide[], color: string) {
@@ -162,4 +178,56 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 
 export class WidgetGuide {
 	constructor(public readonly start: vs.Position, public readonly end: vs.Position, public readonly isLast: boolean) { }
+}
+
+class WidgetGuideTracker implements vs.Disposable {
+	private readonly disposables: vs.Disposable[] = [];
+	private readonly tracker: DocumentPositionTracker = new DocumentPositionTracker();
+	private readonly guideMap: Map<WidgetGuide, [vs.Position, vs.Position, boolean]> = new Map<WidgetGuide, [vs.Position, vs.Position, boolean]>();
+
+	private onGuidesChangedEmitter = new vs.EventEmitter<[vs.TextDocument, WidgetGuide[]]>();
+	public readonly onGuidesChanged = this.onGuidesChangedEmitter.event;
+
+	constructor() {
+		this.disposables.push(this.tracker);
+
+		this.tracker.onPositionsChanged(([doc, positions]) => {
+			// Map all our original positions onto new positions based on their
+			// new offsets.
+			const newGuides: WidgetGuide[] = [];
+			for (const guide of this.guideMap.keys()) {
+				const data = this.guideMap.get(guide);
+				const currentStartPos = data[0];
+				const currentEndPos = data[1];
+				const isLast = data[2];
+
+				const newStartPos = positions.get(currentStartPos);
+				const newEndPos = positions.get(currentEndPos);
+				if (newStartPos && newEndPos)
+					newGuides.push(new WidgetGuide(newStartPos, newEndPos, isLast));
+			}
+
+			this.onGuidesChangedEmitter.fire([doc, newGuides]);
+		});
+	}
+
+	public clear(): void {
+		this.guideMap.clear();
+		this.tracker.clear();
+	}
+
+	public trackDoc(document: vs.TextDocument, guides: WidgetGuide[]): void {
+		// Stash all guides as tuples containing their positions.
+		this.guideMap.clear();
+		for (const guide of guides)
+			this.guideMap.set(guide, [guide.start, guide.end, guide.isLast]);
+
+		// Extract a flat list of positions to track.
+		const positions = flatMap([...this.guideMap.values()], (g) => [g[0], g[1]]);
+		this.tracker.trackDoc(document, positions);
+	}
+
+	public dispose() {
+		this.disposables.forEach((s) => s.dispose());
+	}
 }
