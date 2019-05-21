@@ -1228,6 +1228,12 @@
 					"description": "Whether to enable the Flutter UI Guides preview.",
 					"scope": "window"
 				},
+				"dart.previewFlutterUiGuidesCustomTracking": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to enable custom tracking of Flutter UI guidelines (to hide some latency of waiting for the next Flutter Outline).",
+					"scope": "window"
+				},
 				"dart.previewToStringInDebugViews": {
 					"type": "boolean",
 					"default": false,
