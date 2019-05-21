@@ -8,7 +8,7 @@ import { pleaseReportBug } from "../constants";
 import { white } from "../utils/colors";
 import { getLogHeader, logError, logWarn } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
-import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceLocation, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
+import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { PackageMap } from "./package_map";
 import { ThreadInfo, ThreadManager } from "./threads";
 import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, flatMap, formatPathForVm, LogCategory, LogMessage, LogSeverity, throttle, uniq, uriToFilePath } from "./utils";
@@ -287,6 +287,8 @@ export class DartDebugSession extends DebugSession {
 				this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event));
 				this.observatory.on("_Service", (event: VMEvent) => this.handleServiceEvent(event));
 				this.observatory.getVM().then(async (result): Promise<void> => {
+					if (!this.observatory)
+						return;
 					const vm: VM = result.result as VM;
 
 					// If we own this process (we launched it, didn't attach) and the PID we get from Observatory is different, then
@@ -297,7 +299,7 @@ export class DartDebugSession extends DebugSession {
 						this.additionalPidsToTerminate.push(vm.pid);
 					}
 
-					const isolates = await Promise.all(vm.isolates.map((isolateRef) => this.observatory.getIsolate(isolateRef.id)));
+					const isolates = await Promise.all(vm.isolates.map((isolateRef) => this.observatory!.getIsolate(isolateRef.id)));
 
 					// TODO: Is it valid to assume the first (only?) isolate with a rootLib is the one we care about here?
 					// If it's always the first, could we even just query the first instead of getting them all before we
@@ -609,7 +611,7 @@ export class DartDebugSession extends DebugSession {
 								: frame.code.name
 						)
 						: "<unknown>";
-				const location: VMSourceLocation | undefined = frame.location;
+				const location = frame.location;
 
 				if (!location) {
 					const stackFrame: DebugProtocol.StackFrame = new StackFrame(frameId, frameName);
@@ -619,8 +621,8 @@ export class DartDebugSession extends DebugSession {
 				}
 
 				const uri = location.script.uri;
-				let sourcePath: string | undefined = this.convertVMUriToSourcePath(uri);
-				let canShowSource = fs.existsSync(sourcePath);
+				let sourcePath = this.convertVMUriToSourcePath(uri);
+				let canShowSource = sourcePath && fs.existsSync(sourcePath);
 
 				// Download the source if from a "dart:" uri.
 				let sourceReference: number | undefined;
@@ -1406,7 +1408,7 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	protected convertVMUriToSourcePath(uri: string, returnWindowsPath?: boolean): string {
+	protected convertVMUriToSourcePath(uri: string, returnWindowsPath?: boolean): string | undefined {
 		if (uri.startsWith("file:"))
 			return uriToFilePath(uri, returnWindowsPath);
 

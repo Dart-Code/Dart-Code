@@ -3,8 +3,11 @@ import * as path from "path";
 import { findFile, isWin, isWithinPath, uriToFilePath } from "./utils";
 
 export class PackageMap {
-	public static findPackagesFile(entryPoint: string): string | undefined {
-		return findFile(".packages", entryPoint);
+	public static findPackagesFile<T extends string | undefined>(entryPoint: T): string | (undefined extends T ? undefined : never) {
+		if (typeof entryPoint !== "string")
+			return undefined as (undefined extends T ? undefined : never);
+
+		return findFile(".packages", entryPoint) as string | (undefined extends T ? undefined : never);
 	}
 
 	private map: { [name: string]: string } = {};

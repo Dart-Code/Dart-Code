@@ -17,7 +17,7 @@ export class ThreadManager {
 	constructor(public readonly debugSession: DartDebugSession) { }
 
 	public async registerThread(ref: VMIsolateRef, eventKind: string): Promise<void> {
-		let thread: ThreadInfo = this.getThreadInfoFromRef(ref);
+		let thread = this.getThreadInfoFromRef(ref);
 
 		if (!thread) {
 			thread = new ThreadInfo(this, ref, this.nextThreadId);
@@ -35,12 +35,14 @@ export class ThreadManager {
 		if (eventKind === "IsolateRunnable" && !thread.runnable) {
 			thread.runnable = true;
 
-			await Promise.all([
-				this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, this.exceptionMode),
-				this.setLibrariesDebuggable(thread.ref),
-				this.resetBreakpoints(),
-			]);
-			thread.setInitialBreakpoints();
+			if (this.debugSession.observatory) {
+				await Promise.all([
+					this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, this.exceptionMode),
+					this.setLibrariesDebuggable(thread.ref),
+					this.resetBreakpoints(),
+				]);
+				thread.setInitialBreakpoints();
+			}
 		}
 	}
 
@@ -73,6 +75,8 @@ export class ThreadManager {
 
 	public setExceptionPauseMode(mode: VmExceptionMode) {
 		this.exceptionMode = mode;
+		if (!this.debugSession.observatory)
+			return;
 
 		for (const thread of this.threads) {
 			if (thread.runnable) {
@@ -90,7 +94,7 @@ export class ThreadManager {
 	}
 
 	private async setLibrariesDebuggable(isolateRef: VMIsolateRef): Promise<void> {
-		if (this.debugSession.noDebug)
+		if (this.debugSession.noDebug || !this.debugSession.observatory)
 			return;
 
 		// Helpers to categories libraries as SDK/ExternalLibrary/not.
@@ -98,7 +102,9 @@ export class ThreadManager {
 		const response = await this.debugSession.observatory.getIsolate(isolateRef.id);
 		const isolate: VMIsolate = response.result as VMIsolate;
 		await Promise.all(
-			isolate.libraries.filter((l) => this.debugSession.isValidToDebug(l.uri)).map((library) => {
+			isolate.libraries.filter((l) => this.debugSession.isValidToDebug(l.uri)).map((library): Promise<any> => {
+				if (!this.debugSession.observatory)
+					return Promise.resolve(true);
 				// Note: Condition is negated.
 				const shouldDebug = !(
 					// Inside here is shouldNotDebug!
@@ -170,7 +176,7 @@ export class ThreadManager {
 	}
 
 	public handleIsolateExit(ref: VMIsolateRef) {
-		const threadInfo: ThreadInfo = this.getThreadInfoFromRef(ref);
+		const threadInfo = this.getThreadInfoFromRef(ref);
 		if (threadInfo) {
 			this.debugSession.sendEvent(new ThreadEvent("exited", threadInfo.num));
 			this.threads.splice(this.threads.indexOf(threadInfo), 1);

@@ -26,6 +26,9 @@ export function getFlutterSnippets(sdks: Sdks, capabilities: FlutterCapabilities
 }
 
 async function getFlutterSnippetsFromSdk(sdks: Sdks): Promise<FlutterSampleSnippet[]> {
+	if (!sdks.flutter)
+		throw new Error("Flutter SDK not available");
+
 	const binPath = path.join(sdks.flutter, flutterPath);
 
 	const fileName = `flutter-samples-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`;

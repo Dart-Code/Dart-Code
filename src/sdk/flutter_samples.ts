@@ -6,7 +6,7 @@ import { dartCodeExtensionIdentifier } from "../debug/utils";
 import { FlutterCapabilities } from "../flutter/capabilities";
 import * as util from "../utils";
 
-export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapabilities, sampleID: string): vs.Uri {
+export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapabilities, sampleID: string): vs.Uri | undefined {
 	// Ensure we're on at least Flutter v1 so we know creating samples works.
 	if (!flutterCapabilities.supportsCreatingSamples) {
 		vs.window.showErrorMessage("Opening sample projects requires Flutter v1.0 or later");

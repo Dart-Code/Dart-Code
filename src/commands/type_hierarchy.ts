@@ -3,6 +3,7 @@ import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import * as editors from "../editors";
 import { fsPath, toRangeOnLine } from "../utils";
+import { logWarn } from "../utils/log";
 import { showCode } from "../utils/vscode/editor";
 
 export class TypeHierarchyCommand implements vs.Disposable {
@@ -49,7 +50,7 @@ export class TypeHierarchyCommand implements vs.Disposable {
 		addChildren(items, tree, startItem);
 
 		const result = await vs.window.showQuickPick(tree.map((item) => itemToPick(item, items)), options);
-		if (result) {
+		if (result && result.location) {
 			await this.openLocation(result);
 		} else {
 			// Move the use back to where they were.
@@ -60,6 +61,10 @@ export class TypeHierarchyCommand implements vs.Disposable {
 	}
 
 	private async openLocation(result: vs.QuickPickItem & { location?: as.Location; }, asPreview = false) {
+		if (!result.location) {
+			logWarn(`Unable to open item with no location`);
+			return;
+		}
 		const location: as.Location = result.location;
 		const document = await vs.workspace.openTextDocument(location.file);
 		const editor = await vs.window.showTextDocument(document, {

@@ -17,7 +17,7 @@ export async function checkForStandardDartSdkUpdates(workspaceContext: Workspace
 	const dartSdkVersion = workspaceContext.sdks.dartVersion;
 	try {
 		const version = await getLatestSdkVersion();
-		if (versionIsAtLeast(dartSdkVersion, version))
+		if (!dartSdkVersion || versionIsAtLeast(dartSdkVersion, version))
 			return;
 
 		const goToDownloadsAction = "Go to Dart Downloads";
