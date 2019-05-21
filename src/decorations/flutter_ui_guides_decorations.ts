@@ -34,7 +34,6 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 			this.tracker.onGuidesChanged(([doc, guides]) => this.buildFromUpdatedGuides(doc, guides));
 		}
 
-
 		// Update the current visible editor when we were registered.
 		if (vs.window.activeTextEditor)
 			this.buildForTextEditor(vs.window.activeTextEditor);
