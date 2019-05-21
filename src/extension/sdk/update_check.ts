@@ -2,7 +2,7 @@ import { window } from "vscode";
 import { DART_DOWNLOAD_URL } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { versionIsAtLeast } from "../../shared/utils";
-import { openInBrowser } from "../../shared/vscode/utils";
+import { envUtils } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { getLatestSdkVersion } from "../utils";
@@ -28,7 +28,7 @@ export async function checkForStandardDartSdkUpdates(logger: Logger, workspaceCo
 		const message = `Version ${version} of the Dart SDK is available (you have ${dartSdkVersion}). Some features of Dart Code may not work correctly with an old SDK.`;
 		const action = await window.showWarningMessage(message, goToDownloadsAction, dontShowAgainAction);
 		if (action === goToDownloadsAction)
-			openInBrowser(DART_DOWNLOAD_URL);
+			await envUtils.openInBrowser(DART_DOWNLOAD_URL);
 		else if (action === dontShowAgainAction)
 			config.setCheckForSdkUpdates(false);
 

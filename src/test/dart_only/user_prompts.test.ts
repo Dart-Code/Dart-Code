@@ -4,6 +4,7 @@ import * as vs from "vscode";
 import { doNotAskAgainAction, flutterSurveyPromptWithoutAnalytics, longRepeatPromptThreshold, noRepeatPromptThreshold, openDevToolsAction, takeSurveyAction, twoHoursInMs, wantToTryDevToolsPrompt } from "../../shared/constants";
 import { waitFor } from "../../shared/utils/promises";
 import { showDevToolsNotificationIfAppropriate, showFlutterSurveyNotificationIfAppropriate, surveyEnd, surveyStart } from "../../shared/vscode/user_prompts";
+import { envUtils } from "../../shared/vscode/utils";
 import { activateWithoutAnalysis, clearAllContext, extApi, logger, sb } from "../helpers";
 
 describe("DevTools notification", async () => {
@@ -131,8 +132,7 @@ describe("Survey notification", async () => {
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(takeSurveyAction);
 
-		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const openBrowserCommand = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
+		const openBrowserCommand = sb.stub(envUtils, "openInBrowser").resolves();
 
 		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, surveyIsOpenDate, logger);
 
@@ -156,8 +156,7 @@ describe("Survey notification", async () => {
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(takeSurveyAction);
 
-		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const openBrowserCommand = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
+		const openBrowserCommand = sb.stub(envUtils, "openInBrowser").resolves();
 
 		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, surveyIsOpenDate, logger);
 
@@ -182,8 +181,7 @@ describe("Survey notification", async () => {
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(takeSurveyAction);
 
-		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const openBrowserCommand = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
+		const openBrowserCommand = sb.stub(envUtils, "openInBrowser").resolves();
 
 		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, now, logger);
 
@@ -197,8 +195,7 @@ describe("Survey notification", async () => {
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(doNotAskAgainAction);
 
-		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const openBrowserCommand = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
+		const openBrowserCommand = sb.stub(envUtils, "openInBrowser").resolves();
 
 		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, surveyIsOpenDate, logger);
 
@@ -218,8 +215,7 @@ describe("Survey notification", async () => {
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(doNotAskAgainAction);
 
-		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const openBrowserCommand = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
+		const openBrowserCommand = sb.stub(envUtils, "openInBrowser").resolves();
 
 		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, surveyIsOpenDate, logger);
 

@@ -10,7 +10,7 @@ import { CategoryLogger } from "../../shared/logging";
 import { UnknownNotification } from "../../shared/services/interfaces";
 import { getRandomInt } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
-import { isRunningLocally, openInBrowser } from "../../shared/vscode/utils";
+import { envUtils, isRunningLocally } from "../../shared/vscode/utils";
 import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions } from "../commands/debug";
 import { config } from "../config";
@@ -72,7 +72,7 @@ export class DevToolsManager implements vs.Disposable {
 						.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key])}`)
 						.join("&");
 					const fullUrl = `${url}?${paramsString}&uri=${encodeURIComponent(session.vmServiceUri)}`;
-					openInBrowser(fullUrl);
+					await envUtils.openInBrowser(fullUrl);
 				} else {
 					const canLaunchDevToolsThroughService = await waitFor(() => this.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.LaunchDevTools), 500);
 					if (canLaunchDevToolsThroughService) {

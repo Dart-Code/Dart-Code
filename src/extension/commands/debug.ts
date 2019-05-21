@@ -7,7 +7,7 @@ import { Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
 import { findProjectFolders } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
-import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../../shared/vscode/utils";
+import { envUtils, fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
@@ -73,7 +73,7 @@ export class DebugCommands {
 				? debugSessions[0]
 				: await this.promptForDebugSession();
 			if (session && !session.session.configuration.noDebug && session.observatoryUri) {
-				openInBrowser(session.observatoryUri);
+				await envUtils.openInBrowser(session.observatoryUri);
 				analytics.logDebuggerOpenObservatory();
 			} else if (session) {
 				logger.warn("Cannot start Observatory for session without debug/observatoryUri");
@@ -86,7 +86,7 @@ export class DebugCommands {
 				? debugSessions[0]
 				: await this.promptForDebugSession();
 			if (session && !session.session.configuration.noDebug && session.observatoryUri) {
-				openInBrowser(session.observatoryUri + "/#/timeline-dashboard");
+				await envUtils.openInBrowser(session.observatoryUri + "/#/timeline-dashboard");
 				analytics.logDebuggerOpenTimeline();
 			} else if (session) {
 				logger.warn("Cannot start Observatory for session without debug/observatoryUri");
