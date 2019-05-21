@@ -1,7 +1,10 @@
 import * as vs from "vscode";
 import { FlutterOutline } from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
+import { OpenFileTracker } from "../analysis/open_file_tracker";
+import { config } from "../config";
 import { flatMap } from "../debug/utils";
+import { DocumentPositionTracker } from "../editing/trackers";
 import { fsPath } from "../utils";
 
 const nonBreakingSpace = "\xa0";
@@ -19,51 +22,57 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 
 	constructor(private readonly analyzer: Analyzer) {
 		// Update any editor that becomes active.
-		this.disposables.push(vs.window.onDidChangeActiveTextEditor((e) => this.update(e)));
+		this.disposables.push(vs.window.onDidChangeActiveTextEditor((e) => this.buildForTextEditor(e)));
+
 		// Update the current visible editor when we were registered.
 		if (vs.window.activeTextEditor)
-			this.update(vs.window.activeTextEditor);
+			this.buildForTextEditor(vs.window.activeTextEditor);
+
 		// Whenever we get a new Flutter Outline, if it's for the active document,
 		// update that too.
 		this.disposables.push(this.analyzer.registerForFlutterOutline((on) => {
 			const editor = vs.window.activeTextEditor;
 			if (editor && editor.document && fsPath(editor.document.uri) === on.file)
-				this.update(editor, on.outline);
+				this.buildFromOutline(editor, on.outline);
 		}));
 	}
 
-	private update(editor: vs.TextEditor, outline?: FlutterOutline): Promise<void> {
-		if (!editor || !editor.document)
-			return;
+	private buildForTextEditor(editor: vs.TextEditor): void {
+		if (editor && editor.document)
+			this.buildFromOutline(editor, OpenFileTracker.getFlutterOutlineFor(editor.document.uri));
+	}
 
-		const doc = editor.document;
-
-		// If we don't have an outline for this doc yet, we can't do anything.
-		// If an Outline arrives later, the subscription above will automatically
-		// trigger an update.
-		if (!outline)
+	private buildFromOutline(editor: vs.TextEditor, outline: FlutterOutline | undefined): void {
+		if (this.tracker)
+			this.tracker.clear();
+		if (!editor || !editor.document || !outline)
 			return;
 
 		// Check that the outline we got looks like it still matches the document.
 		// If the lengths are different, just bail without doing anything since
 		// there have probably been new edits and we'll get a new outline soon.
-		if (doc.getText().length !== outline.length)
+		if (editor.document.getText().length !== outline.length)
 			return;
 
-		const guides = this.extractGuides(doc, outline);
-		const guidesByLine: { [key: number]: WidgetGuide[] } = {};
+		const guides = this.extractGuides(editor.document, outline);
+		if (this.tracker)
+			this.tracker.trackDoc(editor.document, guides);
+		this.renderGuides(editor, guides, "#A3A3A3");
+	}
+
+	private renderGuides(editor: vs.TextEditor, guides: WidgetGuide[], color: string) {
+		const guidesByLine: { [key: number]: WidgetGuide[]; } = {};
 		for (const guide of guides) {
 			for (let line = guide.start.line; line <= guide.end.line; line++) {
 				guidesByLine[line] = guidesByLine[line] || [];
 				guidesByLine[line].push(guide);
 			}
 		}
-		const decorations = this.getDecorations(doc, guidesByLine);
-
+		const decorations = this.buildDecorations(editor.document, guidesByLine, color);
 		editor.setDecorations(this.borderDecoration, decorations);
 	}
 
-	private getDecorations(doc: vs.TextDocument, guidesByLine: { [key: number]: WidgetGuide[] }): vs.DecorationOptions[] {
+	private buildDecorations(doc: vs.TextDocument, guidesByLine: { [key: number]: WidgetGuide[] }, color: string): vs.DecorationOptions[] {
 		const decorations: vs.DecorationOptions[] = [];
 		for (const line of Object.keys(guidesByLine).map((k) => parseInt(k, 10))) {
 			const lineInfo = doc.lineAt(line);
@@ -93,17 +102,17 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 
 			// For any characters that have users text in them, we should not
 			// render any guides.
-			decorationString.fill(nonBreakingSpace, lineInfo.firstNonWhitespaceCharacterIndex + 1, lineInfo.range.end.character);
+			decorationString.fill(nonBreakingSpace, lineInfo.firstNonWhitespaceCharacterIndex, lineInfo.range.end.character);
 
 			decorations.push({
 				range: new vs.Range(
-					new vs.Position(line, anchorPoint - 1),
-					new vs.Position(line, anchorPoint - 1),
+					new vs.Position(line, Math.max(anchorPoint, 0)),
+					new vs.Position(line, Math.max(anchorPoint, 0)),
 				),
 				renderOptions: {
 					before: {
-						color: "#A3A3A3",
-						contentText: decorationString.join("").substring(anchorPoint),
+						color,
+						contentText: decorationString.join("").substring(Math.max(anchorPoint, 0)),
 						margin: "0 3px 0 -3px",
 						width: "0",
 					},
@@ -128,26 +137,12 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 				.map((c) => document.positionAt(c.offset).line)
 				.filter((cl) => cl > parentLine);
 			if (childLines) {
-				// Get the start of the line, then offset by 1,1 for where the
-				// line will start. We do this here so that the recorded start
-				// position is always where the line starts drawing (not the
-				// character it's pointing at) so that for children we can use
-				// the previous childs end point to avoid overlapping lots
-				// of lines (which is visible, due to stacked aliasing).
-				let startPos = this
-					.firstNonWhitespace(document, parentLine)
-					.translate({ lineDelta: 1, characterDelta: 1 });
+				const startPos = this
+					.firstNonWhitespace(document, parentLine);
 				childLines.forEach((childLine, i) => {
 					const isLast = i === childLines.length - 1;
-					// Same for child, offset to get the character where the line
-					// should end.
 					const firstCodeChar = this.firstNonWhitespace(document, childLine);
-					if (firstCodeChar.character > 1) {
-						guides.push(new WidgetGuide(startPos, firstCodeChar, isLast));
-						// Record the position just under the "bottom corner" as the
-						// start point for the next child.
-						startPos = new vs.Position(childLine + 1, startPos.character);
-					}
+					guides.push(new WidgetGuide(startPos, firstCodeChar, isLast));
 				});
 			}
 		}
