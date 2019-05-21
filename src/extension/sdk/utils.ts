@@ -6,7 +6,7 @@ import { Logger } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter } from "../../shared/utils";
 import { findProjectFolders, hasPubspec } from "../../shared/utils/fs";
-import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../../shared/vscode/utils";
+import { envUtils, fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
@@ -133,7 +133,7 @@ export class SdkUtils {
 					}
 				}
 			} else if (selectedItem === downloadAction) {
-				openInBrowser(downloadUrl);
+				await envUtils.openInBrowser(downloadUrl);
 				break;
 			} else if (selectedItem === showLogAction) {
 				openExtensionLogFile();

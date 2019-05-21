@@ -4,7 +4,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { doNotAskAgainAction, flutterSurveyPromptWithAnalytics, flutterSurveyPromptWithoutAnalytics, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
 import { Logger } from "../interfaces";
-import { openInBrowser } from "./utils";
+import { envUtils } from "./utils";
 import { Context } from "./workspace";
 
 // Mon Aug 12 2019 17:00:00 GMT+0100 (British Summer Time UTC+1) = Mon Aug 12 09:00 PDT (UTC-7)
@@ -57,14 +57,14 @@ export function showFlutterSurveyNotificationIfAppropriate(context: Context, now
 	context.flutterSurvey2019Q3NotificationLastShown = Date.now();
 
 	// Prompt to show and handle response.
-	vs.window.showInformationMessage(prompt, takeSurveyAction, doNotAskAgainAction).then((choice) => {
+	vs.window.showInformationMessage(prompt, takeSurveyAction, doNotAskAgainAction).then(async (choice) => {
 		if (choice === doNotAskAgainAction) {
 			context.flutterSurvey2019Q3NotificationDoNotShow = true;
 		} else if (choice === takeSurveyAction) {
 			// Mark as do-not-show-again if they answer it, since it seems silly
 			// to show them again if they already completed it.
 			context.flutterSurvey2019Q3NotificationDoNotShow = true;
-			openInBrowser(surveyUrl);
+			await envUtils.openInBrowser(surveyUrl);
 		}
 	});
 

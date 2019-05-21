@@ -6,7 +6,7 @@ import { LogCategory } from "../shared/enums";
 import { Logger, StagehandTemplate } from "../shared/interfaces";
 import { checkHasFlutterExtension, extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { showFlutterSurveyNotificationIfAppropriate } from "../shared/vscode/user_prompts";
-import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../shared/vscode/utils";
+import { envUtils, fsPath, getDartWorkspaceFolders } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { markProjectCreationEnded, markProjectCreationStarted } from "./commands/sdk";
@@ -87,7 +87,7 @@ async function promptToShowReleaseNotes(versionDisplay: string, versionLink: str
 		`Show Release Notes`,
 	);
 	if (res) {
-		openInBrowser(`https://dartcode.org/releases/v${versionLink}/`);
+		envUtils.openInBrowser(`https://dartcode.org/releases/v${versionLink}/`);
 	}
 	return true; // Always mark this as done; we don't want to prompt the user multiple times.
 }

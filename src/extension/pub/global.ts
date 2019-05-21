@@ -6,7 +6,7 @@ import { fetch } from "../../shared/fetch";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { versionIsAtLeast } from "../../shared/utils";
-import { openInBrowser } from "../../shared/vscode/utils";
+import { envUtils } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { safeSpawn } from "../utils/processes";
 
@@ -36,7 +36,7 @@ export class PubGlobal {
 				: await vs.window.showWarningMessage(message, activateForMe, moreInfo);
 
 		if (action === moreInfo) {
-			openInBrowser(moreInfoLink);
+			await envUtils.openInBrowser(moreInfoLink);
 			return false;
 		} else if (action === activateForMe) {
 			const actionName = versionStatus === VersionStatus.NotInstalled ? `Activating ${packageName}` : `Updating ${packageName}`;
@@ -48,7 +48,7 @@ export class PubGlobal {
 			} else {
 				action = await vs.window.showErrorMessage(`${actionName} failed. Please try running 'pub global activate ${packageID}' manually.`, moreInfo);
 				if (action === moreInfo) {
-					openInBrowser(moreInfoLink);
+					await envUtils.openInBrowser(moreInfoLink);
 				}
 				return false;
 			}
