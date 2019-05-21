@@ -1,6 +1,7 @@
 import * as child_process from "child_process";
 import { LogCategory } from "../debug/utils";
 import { logProcess } from "./log";
+import { nullToUndefined } from "./misc";
 
 // Environment used when spawning Dart and Flutter processes.
 export let toolEnv: { [key: string]: string } = {};
@@ -45,11 +46,11 @@ export function runProcess(workingDirectory: string | undefined, binPath: string
 		proc.stdout.on("data", (data: Buffer) => out.push(data.toString()));
 		proc.stderr.on("data", (data: Buffer) => err.push(data.toString()));
 		proc.on("exit", (code) => {
-			resolve(new RunProcessResult(code, out.join(""), err.join("")));
+			resolve(new RunProcessResult(nullToUndefined(code), out.join(""), err.join("")));
 		});
 	});
 }
 
 export class RunProcessResult {
-	constructor(public readonly exitCode: number, public readonly stdout: string, public readonly stderr: string) { }
+	constructor(public readonly exitCode: number | undefined, public readonly stdout: string, public readonly stderr: string) { }
 }

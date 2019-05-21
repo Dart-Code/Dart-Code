@@ -85,8 +85,10 @@ export function isDartWorkspaceFolder(folder?: WorkspaceFolder): boolean {
 	return true;
 }
 
-export function resolvePaths(p?: string) {
-	if (!p) return undefined;
+export function resolvePaths<T extends string | undefined>(p: T): string | (undefined extends T ? undefined : never) {
+	if (typeof p !== "string")
+		return undefined as (undefined extends T ? undefined : never);
+
 	if (p.startsWith("~/"))
 		return path.join(os.homedir(), p.substr(2));
 	if (!path.isAbsolute(p) && workspace.workspaceFolders && workspace.workspaceFolders.length)
@@ -197,7 +199,7 @@ export function isTestFile(file: string): boolean {
 // Similate to isTestFile, but requires that the file is _test.dart because it will be used as
 // an entry point for pub test running.
 export function isPubRunnableTestFile(file: string): boolean {
-	return file && isDartFile(file) && file.toLowerCase().endsWith("_test.dart");
+	return !!file && isDartFile(file) && file.toLowerCase().endsWith("_test.dart");
 }
 
 export function isTestFolder(path: string): boolean {
@@ -336,12 +338,12 @@ export class WorkspaceContext {
 	// (eg. if the last Flutter project is removed from the multi-root workspace)?
 }
 
-export class Sdks {
-	public dart?: string;
-	public dartVersion?: string;
-	public flutter?: string;
-	public flutterVersion?: string;
-	public dartSdkIsFromFlutter: boolean;
+export interface Sdks {
+	dart?: string;
+	dartVersion?: string;
+	flutter?: string;
+	flutterVersion?: string;
+	dartSdkIsFromFlutter: boolean;
 }
 
 export async function reloadExtension(prompt?: string, buttonText?: string, offerLogFile = false) {

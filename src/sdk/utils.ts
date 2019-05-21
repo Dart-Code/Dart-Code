@@ -5,7 +5,7 @@ import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
 import { dartPlatformName, flatMap, isWin } from "../debug/utils";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, getSdkVersion, openExtensionLogFile, openInBrowser, reloadExtension, resolvePaths, showLogAction, WorkspaceContext } from "../utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, getSdkVersion, notUndefined, openExtensionLogFile, openInBrowser, reloadExtension, resolvePaths, showLogAction, WorkspaceContext } from "../utils";
 import { getChildFolders, hasPubspec } from "../utils/fs";
 import { log } from "../utils/log";
 
@@ -100,7 +100,7 @@ export function showDartActivationFailure(commandToReRun?: string) {
 
 export async function showSdkActivationFailure(
 	sdkType: string,
-	search: (path: string[]) => string,
+	search: (path: string[]) => string | undefined,
 	downloadUrl: string,
 	saveSdkPath: (path: string) => Thenable<void>,
 	commandToReRun?: string,
@@ -231,7 +231,7 @@ export function initWorkspace(): WorkspaceContext {
 		firstFlutterMobileProject,
 		firstFlutterMobileProject && extractFlutterSdkPathFromPackagesFile(path.join(firstFlutterMobileProject, ".packages")),
 		process.env.FLUTTER_ROOT,
-	].concat(paths);
+	].concat(paths).filter(notUndefined);
 
 	const flutterSdkPath = findFlutterSdk(flutterSdkSearchPaths);
 
@@ -247,14 +247,15 @@ export function initWorkspace(): WorkspaceContext {
 		// project, however this doesn't cover the activating-to-run-flutter.createProject so
 		// we need to always look in the flutter SDK, but only AFTER the users PATH so that
 		// we don't prioritise it over any real Dart versions.
-		.concat([flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk")]);
+		.concat([flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk")])
+		.filter(notUndefined);
 
 	const dartSdkPath = findDartSdk(dartSdkSearchPaths);
 
 	return new WorkspaceContext(
 		{
 			dart: dartSdkPath,
-			dartSdkIsFromFlutter: dartSdkPath && isDartSdkFromFlutter(dartSdkPath),
+			dartSdkIsFromFlutter: !!dartSdkPath && isDartSdkFromFlutter(dartSdkPath),
 			dartVersion: getSdkVersion(dartSdkPath),
 			flutter: flutterSdkPath,
 			flutterVersion: getSdkVersion(flutterSdkPath),
@@ -262,7 +263,7 @@ export function initWorkspace(): WorkspaceContext {
 		hasAnyFlutterMobileProject,
 		hasAnyFlutterWebProject,
 		hasAnyStandardDartProject,
-		fuchsiaRoot && hasAnyStandardDartProject,
+		!!fuchsiaRoot && hasAnyStandardDartProject,
 	);
 }
 
@@ -368,13 +369,14 @@ function hasExecutable(folder: string, executablePath: string) {
 
 export const hasDartAnalysisServer = (folder: string) => fs.existsSync(path.join(folder, analyzerSnapshotPath));
 
-export function searchPaths(paths: Array<string | undefined>, executableFilename: string, postFilter?: (s: string) => boolean): string {
+export function searchPaths(paths: string[], executableFilename: string, postFilter?: (s: string) => boolean): string | undefined {
 	log(`Searching for ${executableFilename}`);
 
 	let sdkPaths =
 		paths
 			.filter((p) => p)
-			.map(resolvePaths);
+			.map(resolvePaths)
+			.filter(notUndefined);
 
 	// Any that don't end with bin, add it on (as an extra path) since some of our
 	// paths may come from places that don't already include it (for ex. the

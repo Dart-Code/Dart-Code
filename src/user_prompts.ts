@@ -78,7 +78,10 @@ export function showFlutter2019Q2SurveyNotificationIfAppropriate(context: Contex
 	// Work out the URL and prompt to show.
 	let clientID: string | undefined;
 	try {
-		const flutterSettingsFolder = isWin ? process.env.APPDATA : os.homedir();
+		const flutterSettingsFolder =
+			isWin ?
+				process.env.APPDATA || os.homedir()
+				: os.homedir();
 		const flutterSettingsPath = path.join(flutterSettingsFolder, ".flutter");
 		if (fs.existsSync(flutterSettingsPath)) {
 			const json = fs.readFileSync(flutterSettingsPath).toString();
@@ -118,7 +121,7 @@ export function showFlutter2019Q2SurveyNotificationIfAppropriate(context: Contex
 
 export async function showDevToolsNotificationIfAppropriate(context: Context): Promise<boolean> {
 	const lastShown = context.devToolsNotificationLastShown;
-	const timesShown = context.devToolsNotificationsShown;
+	const timesShown = context.devToolsNotificationsShown || 0;
 	const doNotShow = context.devToolsNotificationDoNotShow;
 
 	// Don't show this notification more than 10 times or if user said not to.
@@ -129,7 +132,7 @@ export async function showDevToolsNotificationIfAppropriate(context: Context): P
 	if (lastShown && Date.now() - lastShown < noRepeatPromptThreshold)
 		return false;
 
-	context.devToolsNotificationsShown++;
+	context.devToolsNotificationsShown = timesShown + 1;
 	context.devToolsNotificationLastShown = Date.now();
 
 	const choice = await vs.window.showInformationMessage(wantToTryDevToolsPrompt, openDevToolsAction, noThanksAction, doNotAskAgainAction);
@@ -225,7 +228,7 @@ async function handleStagehandTrigger(wf: vs.WorkspaceFolder, triggerFilename: s
 async function handleFlutterCreateTrigger(wf: vs.WorkspaceFolder): Promise<void> {
 	const flutterTriggerFile = path.join(fsPath(wf.uri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
 	if (fs.existsSync(flutterTriggerFile)) {
-		let sampleID = fs.readFileSync(flutterTriggerFile).toString().trim();
+		let sampleID: string | undefined = fs.readFileSync(flutterTriggerFile).toString().trim();
 		sampleID = sampleID ? sampleID : undefined;
 		fs.unlinkSync(flutterTriggerFile);
 		try {
@@ -244,13 +247,13 @@ async function createDartProject(projectPath: string, templateName: string): Pro
 	return code === 0;
 }
 
-async function createFlutterProject(projectPath: string, sampleID: string): Promise<boolean> {
+async function createFlutterProject(projectPath: string, sampleID: string | undefined): Promise<boolean> {
 	const projectName = sampleID ? "sample" : undefined;
 	const code = await vs.commands.executeCommand("_flutter.create", projectPath, projectName, sampleID) as number;
 	return code === 0;
 }
 
-function handleFlutterWelcome(workspaceFolder: vs.WorkspaceFolder, sampleID: string) {
+function handleFlutterWelcome(workspaceFolder: vs.WorkspaceFolder, sampleID: string | undefined) {
 	const entryFile = path.join(fsPath(workspaceFolder.uri), "lib/main.dart");
 	openFile(entryFile);
 	if (sampleID)

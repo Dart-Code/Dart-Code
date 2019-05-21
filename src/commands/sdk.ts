@@ -28,7 +28,7 @@ import * as channels from "./channels";
 
 const packageNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
 let runPubGetDelayTimer: NodeJS.Timer | undefined;
-let lastPubspecSaveReason: vs.TextDocumentSaveReason;
+let lastPubspecSaveReason: vs.TextDocumentSaveReason | undefined;
 let numProjectCreationsInProgress = 0;
 
 export class SdkCommands {
@@ -294,7 +294,7 @@ export class SdkCommands {
 	}
 
 	private async runCommandForWorkspace(
-		handler: (folder: string, args: string[], shortPath: string) => Thenable<number>,
+		handler: (folder: string, args: string[], shortPath: string) => Thenable<number | undefined>,
 		placeHolder: string,
 		args: string[],
 		selection?: vs.Uri,
@@ -351,13 +351,16 @@ export class SdkCommands {
 
 		const items = folders.map((f) => {
 			const workspaceFolder = vs.workspace.getWorkspaceFolder(Uri.file(f));
+			if (!workspaceFolder)
+				return undefined;
+
 			const workspacePathParent = path.dirname(fsPath(workspaceFolder.uri));
 			return {
 				description: util.homeRelativePath(workspacePathParent),
 				label: path.relative(workspacePathParent, f),
 				path: f,
 			} as vs.QuickPickItem & { path: string };
-		});
+		}).filter(util.notUndefined);
 
 		const selectedFolder = await vs.window.showQuickPick(items, { placeHolder });
 		return selectedFolder && selectedFolder.path;
@@ -368,6 +371,8 @@ export class SdkCommands {
 	}
 
 	private runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined): Thenable<number | undefined> {
+		if (!this.sdks.flutter)
+			throw new Error("Flutter SDK not available");
 		const binPath = path.join(this.sdks.flutter, flutterPath);
 		return this.runCommandInFolder(shortPath, "flutter", folder, binPath, globalFlutterArgs.concat(args));
 	}
@@ -377,6 +382,9 @@ export class SdkCommands {
 	}
 
 	private runPubInFolder(folder: string, args: string[], shortPath: string): Thenable<number | undefined> {
+		if (!this.sdks.dart)
+			throw new Error("Flutter SDK not available");
+
 		const binPath = path.join(this.sdks.dart, pubPath);
 		args = args.concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
 		return this.runCommandInFolder(shortPath, "pub", folder, binPath, args);
@@ -609,7 +617,7 @@ class ChainedProcess {
 	public processNumber = ChainedProcess.processNumber++;
 	private completer: PromiseCompleter<number | undefined> = new PromiseCompleter<number | undefined>();
 	public readonly completed = this.completer.promise;
-	public process: child_process.ChildProcess;
+	public process: child_process.ChildProcess | undefined;
 	private isCancelled = false;
 	public get hasStarted() { return this.process !== undefined; }
 

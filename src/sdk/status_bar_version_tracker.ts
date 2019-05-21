@@ -31,7 +31,7 @@ export class StatusBarVersionTracker implements vs.Disposable {
 		}
 	}
 
-	private addStatusBarItem(text: string, tooltip: string, command: string) {
+	private addStatusBarItem(text: string, tooltip: string, command: string | undefined) {
 		const statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 2);
 		statusBarItem.text = text;
 		statusBarItem.tooltip = tooltip;

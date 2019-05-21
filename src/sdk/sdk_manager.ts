@@ -14,8 +14,8 @@ abstract class SdkManager {
 	}
 
 	protected abstract get sdkPaths(): string[];
-	protected abstract get currentSdk(): string;
-	protected abstract get configuredSdk(): string;
+	protected abstract get currentSdk(): string | undefined;
+	protected abstract get configuredSdk(): string | undefined;
 	protected abstract get configName(): string;
 	protected abstract get executablePath(): string;
 	protected abstract getLabel(version: string): string;
@@ -37,14 +37,14 @@ abstract class SdkManager {
 		});
 
 		// Add in the current path if it's not there.
-		if (allPaths.indexOf(this.currentSdk) === -1)
+		if (this.currentSdk && allPaths.indexOf(this.currentSdk) === -1)
 			allPaths.push(this.currentSdk);
 
 		const sdkFolders = allPaths
 			.filter((f) => fs.statSync(f).isDirectory()) // Only directories.
 			.filter((f) => fs.existsSync(path.join(f, this.executablePath))); // Only those that look like SDKs.
 
-		const sdkItems = sdkFolders.map((f) => {
+		const sdkItems: SdkPickItem[] = sdkFolders.map((f) => {
 			// Resolve synlinks so we look in correct folder for version file.
 			const actualBinary = fs.realpathSync(path.join(f, this.executablePath));
 			// Then we need to take the executable name and /bin back off
@@ -69,17 +69,18 @@ abstract class SdkManager {
 			detail: !this.configuredSdk ? `Found at ${this.currentSdk}` : undefined,
 			folder: undefined,
 			label: "Auto-detect SDK location",
-		}].concat(sdkItems);
+			version: undefined,
+		} as SdkPickItem].concat(sdkItems);
 
 		vs.window.showQuickPick(items, { placeHolder: "Select an SDK to use" })
-			.then((sdk) => { if (sdk) this.setSdk(sdk.folder); });
+			.then((sdk) => { if (sdk && sdk.folder) this.setSdk(sdk.folder); });
 	}
 }
 
 export class DartSdkManager extends SdkManager {
 	protected get sdkPaths(): string[] { return config.sdkPaths; }
-	protected get currentSdk(): string { return this.sdks.dart; }
-	protected get configuredSdk(): string { return config.sdkPath; }
+	protected get currentSdk(): string | undefined { return this.sdks.dart; }
+	protected get configuredSdk(): string | undefined { return config.sdkPath; }
 	protected get configName(): string { return "dart.sdkPaths"; }
 	protected get executablePath() { return dartVMPath; }
 	protected getLabel(version: string) {
@@ -90,12 +91,20 @@ export class DartSdkManager extends SdkManager {
 
 export class FlutterSdkManager extends SdkManager {
 	protected get sdkPaths(): string[] { return config.flutterSdkPaths; }
-	protected get currentSdk(): string { return this.sdks.flutter; }
-	protected get configuredSdk(): string { return config.flutterSdkPath; }
+	protected get currentSdk(): string | undefined { return this.sdks.flutter; }
+	protected get configuredSdk(): string | undefined { return config.flutterSdkPath; }
 	protected get configName(): string { return "dart.flutterSdkPaths"; }
 	protected get executablePath() { return flutterPath; }
 	protected getLabel(version: string) {
 		return `Flutter SDK ${version}`;
 	}
 	protected setSdk(folder: string) { config.setFlutterSdkPath(folder); }
+}
+
+interface SdkPickItem {
+	description: string;
+	detail: string | undefined;
+	folder: string | undefined;
+	label: string;
+	version: string | undefined;
 }

@@ -56,7 +56,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		});
 	}
 
-	protected buildRequest<TReq>(id: number, method: string, params?: TReq): { id: string, method: string, params: TReq } {
+	protected buildRequest<TReq>(id: number, method: string, params?: TReq): { id: string, method: string, params?: TReq } {
 		return {
 			id: id.toString(),
 			method,

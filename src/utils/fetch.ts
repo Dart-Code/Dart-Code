@@ -13,7 +13,7 @@ export function fetch(urlString: string) {
 		throw new Error(`Cannot fetch URL ${urlString}`);
 }
 
-function fetchHttps(hostname: string, port: string, path: string): Promise<string> {
+function fetchHttps(hostname: string | undefined, port: string | undefined, path: string | undefined): Promise<string> {
 	return new Promise<string>((resolve, reject) => {
 		const options: https.RequestOptions = {
 			hostname,
@@ -38,7 +38,7 @@ function fetchHttps(hostname: string, port: string, path: string): Promise<strin
 	});
 }
 
-function fetchHttp(hostname: string, port: string, path: string): Promise<string> {
+function fetchHttp(hostname: string | undefined, port: string | undefined, path: string | undefined): Promise<string> {
 	return new Promise<string>((resolve, reject) => {
 		const options: http.RequestOptions = {
 			hostname,
