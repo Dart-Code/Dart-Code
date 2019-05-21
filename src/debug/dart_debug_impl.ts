@@ -254,7 +254,7 @@ export class DartDebugSession extends DebugSession {
 		// Send the uri back to the editor so it can be used to launch browsers etc.
 		let browserFriendlyUri: string;
 		if (uri.endsWith("/ws")) {
-			browserFriendlyUri = uri.substring(0, uri.length - 3);
+			browserFriendlyUri = uri.substring(0, uri.length - 2);
 			if (browserFriendlyUri.startsWith("ws:"))
 				browserFriendlyUri = "http:" + browserFriendlyUri.substring(3);
 		} else {
