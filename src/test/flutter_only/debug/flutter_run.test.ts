@@ -314,6 +314,8 @@ describe("flutter run debugger (launch)", () => {
 			return;
 		}
 
+		// const openBrowserCommand = sb.stub(envUtils, "openInBrowser").resolves();
+
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
 			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
@@ -322,6 +324,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 
 		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
+		// assert.ok(openBrowserCommand.calledOnce);
 		assert.ok(devTools);
 		defer(devTools.dispose);
 		assert.ok(devTools.url);

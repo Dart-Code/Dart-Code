@@ -233,6 +233,8 @@ describe("dart cli debugger", () => {
 			return;
 		}
 
+		// const openBrowserCommand = sb.stub(envUtils, "openInBrowser").withArgs(sinon.match.any).resolves(true);
+
 		await openFile(helloWorldMainFile);
 		const config = await startDebugger(helloWorldMainFile);
 		// Stop at a breakpoint so the app won't quit while we're verifying DevTools.
@@ -242,6 +244,7 @@ describe("dart cli debugger", () => {
 		});
 
 		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
+		// assert.ok(openBrowserCommand.calledOnce);
 		assert.ok(devTools);
 		defer(devTools.dispose);
 		assert.ok(devTools.url);
