@@ -1,6 +1,5 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { cursorIsInTest } from "../../../extension/commands/test";
 import { activate, extApi, getPackages, helloWorldTestMainFile, openFile, positionOf, waitForResult } from "../../helpers";
 
 describe("run test at cursor", () => {
@@ -16,7 +15,7 @@ describe("run test at cursor", () => {
 		editor.selection = new vs.Selection(positionOf("expect^("), positionOf("^expect("));
 
 		// Allow some time to check, because the flag is flipped in a selection change handler
-		await waitForResult(() => cursorIsInTest);
+		await waitForResult(() => extApi.cursorIsInTest);
 
 		// Also ensure the command exists.
 		const command = (await vs.commands.getCommands(true)).filter((id) => id === "dart.runTestAtCursor");
@@ -28,6 +27,6 @@ describe("run test at cursor", () => {
 		editor.selection = new vs.Selection(positionOf("main^("), positionOf("^main("));
 
 		// Allow some time to check, because the flag is flipped in a selection change handler
-		await waitForResult(() => !cursorIsInTest);
+		await waitForResult(() => !extApi.cursorIsInTest);
 	});
 });
