@@ -33,7 +33,7 @@ export interface InternalExtensionApi {
 	};
 	initialAnalysis: Promise<void>;
 	nextAnalysis: () => Promise<void>;
-	packagesTreeProvider: TreeDataProvider<{}>;
+	packagesTreeProvider: TreeDataProvider<TreeItem>;
 	pubGlobal: {
 		promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink?: string, requiredVersion?: string, autoUpdate?: boolean): Promise<boolean>;
 		getInstalledStatus(packageName: string, packageID: string, requiredVersion?: string): Promise<VersionStatus>;
