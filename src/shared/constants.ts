@@ -1,5 +1,30 @@
+import * as fs from "fs";
+
 export const dartCodeExtensionIdentifier = "Dart-Code.dart-code";
 export const flutterExtensionIdentifier = "Dart-Code.flutter";
+
+export const isWin = /^win/.test(process.platform);
+export const isMac = process.platform === "darwin";
+export const isLinux = !isWin && !isMac;
+export const isChromeOS = isLinux && fs.existsSync("/dev/.cros_milestone");
+// Used for code checks and in Dart SDK urls so Chrome OS is considered Linux.
+export const dartPlatformName = isWin ? "win" : isMac ? "mac" : "linux";
+// Used for display (logs, analytics) so Chrome OS is its own.
+export const platformDisplayName = isWin ? "win" : isMac ? "mac" : isChromeOS ? "chromeos" : "linux";
+export const platformEol = isWin ? "\r\n" : "\n";
+
+export const dartExecutableName = isWin ? "dart.exe" : "dart";
+export const pubExecutableName = isWin ? "pub.bat" : "pub";
+export const flutterExecutableName = isWin ? "flutter.bat" : "flutter";
+export const androidStudioExecutableName = isWin ? "studio64.exe" : "studio.sh";
+export const dartVMPath = "bin/" + dartExecutableName;
+export const pubPath = "bin/" + pubExecutableName;
+export const pubSnapshotPath = "bin/snapshots/pub.dart.snapshot";
+export const analyzerSnapshotPath = "bin/snapshots/analysis_server.dart.snapshot";
+export const flutterPath = "bin/" + flutterExecutableName;
+export const androidStudioPath = "bin/" + androidStudioExecutableName;
+export const DART_DOWNLOAD_URL = "https://dart.dev/get-dart";
+export const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
 
 export const stopLoggingAction = "Stop Logging";
 

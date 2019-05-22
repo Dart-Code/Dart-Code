@@ -5,8 +5,8 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { ObservatoryConnection } from "../extension/debug/dart_debug_protocol";
 import { log, logProcess } from "../extension/utils/log";
 import { safeSpawn } from "../extension/utils/processes";
+import { isWin } from "../shared/constants";
 import { LogCategory, LogSeverity } from "../shared/enums";
-import { isWin } from "../shared/utils";
 import { DartDebugClient } from "./dart_debug_client";
 import { defer, getLaunchConfiguration } from "./helpers";
 

@@ -1,10 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import { flatMap } from "../shared/utils";
+import { sortBy } from "../shared/utils/array";
+import { hasPackagesFile, hasPubspec } from "../shared/utils/fs";
 import { fsPath } from "../shared/vscode/utils";
 import { getDartWorkspaceFolders, isWithinWorkspace } from "./utils";
-import { sortBy } from "./utils/array";
-import { hasPackagesFile, hasPubspec } from "./utils/fs";
 
 export const UPGRADE_TO_WORKSPACE_FOLDERS = "Mark Projects as Workspace Folders";
 

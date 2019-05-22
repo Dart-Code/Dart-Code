@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { getChildFolders, hasPubspec } from "../utils/fs";
+import { getChildFolders, hasPubspec } from "../../shared/utils/fs";
 import { logInfo } from "../utils/log";
 import { Analyzer } from "./analyzer";
 

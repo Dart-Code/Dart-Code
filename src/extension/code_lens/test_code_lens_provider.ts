@@ -1,10 +1,10 @@
 import { CancellationToken, CodeLens, CodeLensProvider, commands, debug, Event, EventEmitter, TextDocument, Uri, workspace } from "vscode";
 import { flatMap } from "../../shared/utils";
+import { getLaunchConfig } from "../../shared/utils/test";
 import { Analyzer } from "../analysis/analyzer";
 import { OpenFileTracker } from "../analysis/open_file_tracker";
 import { IAmDisposable } from "../debug/utils";
 import { toRange } from "../utils";
-import { getLaunchConfig } from "../utils/test";
 import { TestOutlineInfo, TestOutlineVisitor } from "../utils/vscode/outline";
 
 export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {

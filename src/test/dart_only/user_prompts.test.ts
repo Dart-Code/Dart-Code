@@ -1,9 +1,9 @@
 import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { doNotAskAgainAction, flutterSurvey2019Q2PromptWithoutAnalytics, longRepeatPromptThreshold, noRepeatPromptThreshold, openDevToolsAction, takeSurveyAction, twoHoursInMs, wantToTryDevToolsPrompt } from "../../shared/constants";
 import { showDevToolsNotificationIfAppropriate, showFlutter2019Q2SurveyNotificationIfAppropriate, surveyEnd, surveyStart } from "../../extension/user_prompts";
-import { waitFor } from "../../extension/utils/promises";
+import { doNotAskAgainAction, flutterSurvey2019Q2PromptWithoutAnalytics, longRepeatPromptThreshold, noRepeatPromptThreshold, openDevToolsAction, takeSurveyAction, twoHoursInMs, wantToTryDevToolsPrompt } from "../../shared/constants";
+import { waitFor } from "../../shared/utils/promises";
 import { activateWithoutAnalysis, clearAllContext, extApi, sb } from "../helpers";
 
 describe("DevTools notification", async () => {

@@ -1,9 +1,10 @@
 import * as path from "path";
 import * as vs from "vscode";
+import { flutterPath, pubPath } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { config } from "../config";
-import { flutterPath, pubPath, referencesBuildRunner } from "../sdk/utils";
+import { referencesBuildRunner } from "../sdk/utils";
 import * as util from "../utils";
 import { toolEnv } from "../utils/processes";
 

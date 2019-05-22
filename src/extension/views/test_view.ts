@@ -3,11 +3,11 @@ import * as vs from "vscode";
 import { TestStatus } from "../../shared/enums";
 import { ErrorNotification, Group, GroupNotification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../../shared/test_protocol";
 import { flatMap, uniq } from "../../shared/utils";
+import { sortBy } from "../../shared/utils/array";
+import { getLaunchConfig } from "../../shared/utils/test";
 import { fsPath } from "../../shared/vscode/utils";
 import { getChannel } from "../commands/channels";
 import { extensionPath } from "../utils";
-import { sortBy } from "../utils/array";
-import { getLaunchConfig } from "../utils/test";
 
 const DART_TEST_SUITE_NODE = "dart-code:testSuiteNode";
 const DART_TEST_GROUP_NODE = "dart-code:testGroupNode";

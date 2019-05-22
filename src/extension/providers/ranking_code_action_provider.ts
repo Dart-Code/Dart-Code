@@ -1,6 +1,6 @@
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionProvider, CodeActionProviderMetadata, Command, DocumentSelector, languages, Range, TextDocument } from "vscode";
 import { flatMap, uniq } from "../../shared/utils";
-import { sortBy } from "../utils/array";
+import { sortBy } from "../../shared/utils/array";
 
 export class RankingCodeActionProvider implements CodeActionProvider {
 	private codeActionProviders: RankedCodeActionProvider[] = [];
