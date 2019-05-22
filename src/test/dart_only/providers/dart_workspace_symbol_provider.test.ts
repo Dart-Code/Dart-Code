@@ -30,12 +30,12 @@ describe("workspace_symbol_provider", () => {
 	it("includes items from pub packages", async () => {
 		const symbols = await getWorkspaceSymbols("IOClient");
 
-		ensureWorkspaceSymbol(symbols, "IOClient", vs.SymbolKind.Class, "package:http/extension/io_client.dart", { endsWith: `${path.sep}src${path.sep}io_client.dart` });
+		ensureWorkspaceSymbol(symbols, "IOClient", vs.SymbolKind.Class, "package:http/src/io_client.dart", { endsWith: `${path.sep}src${path.sep}io_client.dart` });
 	});
 
 	it("includes items from git dependencies", async () => {
 		const symbols = await getWorkspaceSymbols("ProtobufEnum");
 
-		ensureWorkspaceSymbol(symbols, "ProtobufEnum", vs.SymbolKind.Class, "package:protobuf/extension/protobuf/protobuf_enum.dart", { endsWith: `${path.sep}src${path.sep}protobuf${path.sep}protobuf_enum.dart` });
+		ensureWorkspaceSymbol(symbols, "ProtobufEnum", vs.SymbolKind.Class, "package:protobuf/src/protobuf/protobuf_enum.dart", { endsWith: `${path.sep}src${path.sep}protobuf${path.sep}protobuf_enum.dart` });
 	});
 });
