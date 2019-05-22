@@ -1,4 +1,4 @@
-import { versionIsAtLeast } from "../utils";
+import { versionIsAtLeast } from "../../shared/utils";
 
 export class FlutterCapabilities {
 	public static get empty() { return new FlutterCapabilities("0.0.0"); }

@@ -2,7 +2,6 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { logInfo } from "../../../extension/utils/log";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { killFlutterTester } from "../../debug_helpers";
@@ -30,8 +29,8 @@ describe.skip("flutter for web test debugger", () => {
 		const thisDc = dc;
 		defer(() => withTimeout(
 			Promise.all([
-				thisDc.terminateRequest().catch((e) => logInfo(e)),
-				delay(500).then(() => thisDc.stop()).catch((e) => logInfo(e)),
+				thisDc.terminateRequest().catch((e) => extApi.log(e)),
+				delay(500).then(() => thisDc.stop()).catch((e) => extApi.log(e)),
 			]),
 			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
 			60,
