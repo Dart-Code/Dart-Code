@@ -1,10 +1,9 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { logInfo } from "../../extension/utils/log";
-import { activateWithoutAnalysis, ext, extApi } from "../helpers";
-import { fsPath } from "../../shared/vscode/utils";
 import { Sdks } from "../../shared/interfaces";
+import { fsPath } from "../../shared/vscode/utils";
+import { activateWithoutAnalysis, ext, extApi } from "../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -29,8 +28,8 @@ describe("extension", () => {
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.ok(sdks.flutter);
-		logInfo("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
-		logInfo(`        "analysis_server": ${extApi.analyzerCapabilities.version}`);
+		extApi.log("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
+		extApi.log(`        "analysis_server": ${extApi.analyzerCapabilities.version}`);
 	});
 	it("used Flutter's version of the Dart SDK", async () => {
 		await activateWithoutAnalysis();
