@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as path from "path";
-import { isDartSdkFromFlutter } from "../../extension/sdk/utils";
 import * as util from "../../extension/utils";
+import { isDartSdkFromFlutter } from "../../shared/utils";
 
 describe("util.versionIsAtLeast", () => {
 	it("should not consider build numbers when comparing versions", () => {

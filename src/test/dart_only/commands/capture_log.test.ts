@@ -3,9 +3,9 @@ import * as fs from "fs";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { log } from "../../../extension/utils/log";
-import { stopLoggingAction } from "../../../shared/constants";
+import { platformEol, stopLoggingAction } from "../../../shared/constants";
 import { LogCategory, LogSeverity } from "../../../shared/enums";
-import { platformEol, PromiseCompleter } from "../../../shared/utils";
+import { PromiseCompleter } from "../../../shared/utils";
 import { fsPath } from "../../../shared/vscode/utils";
 import { activate, sb, waitForResult } from "../../helpers";
 

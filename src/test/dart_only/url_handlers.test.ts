@@ -7,8 +7,8 @@ import * as vs from "vscode";
 import { FlutterCapabilities } from "../../extension/flutter/capabilities";
 import { DartUriHandler } from "../../extension/uri_handlers/uri_handler";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../extension/utils";
-import { getChildFolders } from "../../extension/utils/fs";
 import { dartCodeExtensionIdentifier } from "../../shared/constants";
+import { getChildFolders } from "../../shared/utils/fs";
 import { deleteDirectoryRecursive, sb } from "../helpers";
 
 describe("URL handler", async () => {

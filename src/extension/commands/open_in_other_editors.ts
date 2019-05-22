@@ -1,10 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { androidStudioPath, flutterPath, isMac } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
-import { isMac } from "../../shared/utils";
 import { fsPath } from "../../shared/vscode/utils";
-import { androidStudioPath, flutterPath } from "../sdk/utils";
 import { logError } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 

@@ -1,15 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-
-export const isWin = /^win/.test(process.platform);
-export const isMac = process.platform === "darwin";
-export const isLinux = !isWin && !isMac;
-export const isChromeOS = isLinux && fs.existsSync("/dev/.cros_milestone");
-// Used for code checks and in Dart SDK urls so Chrome OS is considered Linux.
-export const dartPlatformName = isWin ? "win" : isMac ? "mac" : "linux";
-// Used for display (logs, analytics) so Chrome OS is its own.
-export const platformDisplayName = isWin ? "win" : isMac ? "mac" : isChromeOS ? "chromeos" : "linux";
-export const platformEol = isWin ? "\r\n" : "\n";
+import { flutterExecutableName, isWin } from "./constants";
 
 export function forceWindowsDriveLetterToUppercase(p: string): string {
 	if (p && isWin && path.isAbsolute(p) && p.charAt(0) === p.charAt(0).toLowerCase())
@@ -102,4 +93,9 @@ export function uriToFilePath(uri: string, returnWindowsPath: boolean = isWin): 
 	}
 
 	return filePath;
+}
+
+export function isDartSdkFromFlutter(dartSdkPath: string) {
+	const possibleFlutterSdkPath = path.join(path.dirname(path.dirname(path.dirname(dartSdkPath))), "bin");
+	return fs.existsSync(path.join(possibleFlutterSdkPath, flutterExecutableName));
 }

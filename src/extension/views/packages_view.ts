@@ -1,10 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { sortBy } from "../../shared/utils/array";
 import { fsPath } from "../../shared/vscode/utils";
 import { PackageMap } from "../debug/package_map";
 import { getWorkspaceProjectFolders } from "../project";
-import { sortBy } from "../utils/array";
 import { logWarn } from "../utils/log";
 
 export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<PackageDep> {
