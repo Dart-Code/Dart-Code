@@ -5,17 +5,15 @@ import * as path from "path";
 import * as semver from "semver";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { DelayedCompletionItem } from "../extension/providers/dart_completion_item_provider";
 import { isAnalyzable, vsCodeVersionConstraint } from "../extension/utils";
 import { log, logError, logTo, logWarn } from "../extension/utils/log";
-import { PackageDep } from "../extension/views/packages_view";
 import { dartCodeExtensionIdentifier, DART_TEST_SUITE_NODE_CONTEXT } from "../shared/constants";
 import { LogCategory, LogSeverity, TestStatus } from "../shared/enums";
 import { internalApiSymbol } from "../shared/symbols";
 import { flatMap } from "../shared/utils";
 import { tryDeleteFile } from "../shared/utils/fs";
 import { waitFor } from "../shared/utils/promises";
-import { InternalExtensionApi, TestItemTreeItem, TestResultsProvider } from "../shared/vscode/interfaces";
+import { DelayedCompletionItem, InternalExtensionApi, TestItemTreeItem, TestResultsProvider } from "../shared/vscode/interfaces";
 import { fsPath } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 
@@ -785,7 +783,7 @@ export function clearAllContext(context: Context): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, 50));
 }
 
-export function ensurePackageTreeNode(items: PackageDep[], nodeContext: string, label: string, description?: string): PackageDep {
+export function ensurePackageTreeNode(items: vs.TreeItem[], nodeContext: string, label: string, description?: string): vs.TreeItem {
 	const item = items.find((item) =>
 		item.contextValue === nodeContext
 		&& renderedItemLabel(item) === label,
@@ -800,7 +798,7 @@ export function ensurePackageTreeNode(items: PackageDep[], nodeContext: string, 
 	return item;
 }
 
-export function renderedItemLabel(item: PackageDep): string {
+export function renderedItemLabel(item: vs.TreeItem): string {
 	return item.label || path.basename(fsPath(item.resourceUri));
 }
 

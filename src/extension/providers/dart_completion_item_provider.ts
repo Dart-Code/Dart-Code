@@ -2,6 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, Disposable, MarkdownString, Position, Range, SnippetString, TextDocument } from "vscode";
 import { flatMap } from "../../shared/utils";
+import { DelayedCompletionItem } from "../../shared/vscode/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
@@ -500,21 +501,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	public dispose(): any {
 		this.disposables.forEach((d) => d.dispose());
 	}
-}
-
-export interface DelayedCompletionItem extends CompletionItem {
-	autoImportUri: string;
-	document: TextDocument;
-	enableCommitCharacters: boolean;
-	filePath: string;
-	insertArgumentPlaceholders: boolean;
-	nextCharacter: string;
-	offset: number;
-	relevance: number;
-	replacementLength: number;
-	replacementOffset: number;
-	suggestion: as.AvailableSuggestion;
-	suggestionSetID: number;
 }
 
 function appendAdditionalEdits(completionItem: vs.CompletionItem, document: vs.TextDocument, change: as.SourceChange | undefined): void {
