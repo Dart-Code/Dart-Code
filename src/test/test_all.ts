@@ -83,9 +83,9 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	if (path.isAbsolute(workspaceFolder)) {
 		env.CODE_TESTS_WORKSPACE = workspaceFolder;
 	} else {
-		env.CODE_TESTS_WORKSPACE = path.join(cwd, "test", "test_projects", workspaceFolder);
+		env.CODE_TESTS_WORKSPACE = path.join(cwd, "src", "test", "test_projects", workspaceFolder);
 	}
-	env.CODE_TESTS_PATH = path.join(cwd, "out", "test", testFolder);
+	env.CODE_TESTS_PATH = path.join(cwd, "out", "src", "test", testFolder);
 
 	// Figure out a filename for results...
 	const dartFriendlyName = (process.env.ONLY_RUN_DART_VERSION || "local").toLowerCase();
