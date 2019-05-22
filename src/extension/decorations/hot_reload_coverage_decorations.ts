@@ -2,8 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DebugCommands } from "../commands/debug";
 import { CoverageData, uniq } from "../debug/utils";
-import { extensionPath } from "../extension";
-import { fsPath } from "../utils";
+import { extensionPath, fsPath } from "../utils";
 import { logError } from "../utils/log";
 
 export class HotReloadCoverageDecorations implements vs.Disposable {

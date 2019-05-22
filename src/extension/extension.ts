@@ -82,7 +82,6 @@ export const FLUTTER_SUPPORTS_ATTACH = "dart-code:flutterSupportsAttach";
 const DART_PLATFORM_NAME = "dart-code:dartPlatformName";
 export const SERVICE_EXTENSION_CONTEXT_PREFIX = "dart-code:serviceExtension.";
 export const SERVICE_CONTEXT_PREFIX = "dart-code:service.";
-export let extensionPath: string | undefined;
 
 let analyzer: Analyzer;
 let flutterDaemon: FlutterDaemon;
@@ -122,7 +121,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	showTodos = config.showTodos;
 	previousSettings = getSettingsThatRequireRestart();
 
-	extensionPath = context.extensionPath;
 	const extensionStartTime = new Date();
 	util.logTime();
 	const workspaceContext = initWorkspace();

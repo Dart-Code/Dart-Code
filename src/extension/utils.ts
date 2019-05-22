@@ -6,12 +6,13 @@ import * as path from "path";
 import * as semver from "semver";
 import { commands, extensions, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { config } from "./config";
-import { flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, isWithinPath } from "./debug/utils";
+import { dartCodeExtensionIdentifier, flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, isWithinPath } from "./debug/utils";
 import { locateBestProjectRoot } from "./project";
 import { referencesFlutterSdk, referencesFlutterWeb } from "./sdk/utils";
 import { hasPackagesFile, hasPubspec } from "./utils/fs";
 import { getExtensionLogPath, logError } from "./utils/log";
 
+export let extensionPath = extensions.getExtension(dartCodeExtensionIdentifier).extensionPath;
 export const extensionVersion = getExtensionVersion();
 export const vsCodeVersionConstraint = getVsCodeVersionConstraint();
 export const isDevExtension = checkIsDevExtension();
@@ -228,13 +229,17 @@ export function isInsideFolderNamed(file: string, folderName: string): boolean {
 	return relPath === folderName || relPath.startsWith(`${folderName}${path.sep}`);
 }
 
+export function readJson(file: string) {
+	return JSON.parse(fs.readFileSync(file).toString());
+}
+
 function getExtensionVersion(): string {
-	const packageJson = require("../../../package.json");
+	const packageJson = readJson(path.join(extensionPath, "package.json"));
 	return packageJson.version;
 }
 
 function getVsCodeVersionConstraint(): string {
-	const packageJson = require("../../../package.json");
+	const packageJson = readJson(path.join(extensionPath, "package.json"));
 	return packageJson.engines.vscode;
 }
 
