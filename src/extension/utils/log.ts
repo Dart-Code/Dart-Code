@@ -26,7 +26,7 @@ export const userSelectableLogCategories: { [key: string]: LogCategory } = {
 
 const onLogEmitter = new LogEmitter();
 export const onLog = (listener: (message: LogMessage) => void) => onLogEmitter.onLog(listener);
-export function log(message: string, severity = LogSeverity.Info, category = LogCategory.General) {
+export function log(message: string, severity = LogSeverity.Info, category = LogCategory.General): void {
 	onLogEmitter.fire(new LogMessage((message || "").toString(), severity, category));
 	// Warn/Error always go to General.
 	if (category !== LogCategory.General && severity !== LogSeverity.Info) {

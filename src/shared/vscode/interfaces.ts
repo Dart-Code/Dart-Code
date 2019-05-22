@@ -1,5 +1,5 @@
 import { CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, DefinitionProvider, ReferenceProvider, RenameProvider, TreeDataProvider, TreeItem } from "vscode";
-import { TestStatus, VersionStatus } from "../enums";
+import { LogCategory, LogSeverity, TestStatus, VersionStatus } from "../enums";
 import { DebugCommandHandler } from "../interfaces";
 import { WorkspaceContext } from "../workspace";
 import { Context } from "./workspace";
@@ -32,6 +32,7 @@ export interface InternalExtensionApi {
 		webSupportsDebugging: boolean;
 	};
 	initialAnalysis: Promise<void>;
+	log: (message: string, severity?: LogSeverity, category?: LogCategory) => void;
 	nextAnalysis: () => Promise<void>;
 	packagesTreeProvider: TreeDataProvider<TreeItem>;
 	pubGlobal: {
