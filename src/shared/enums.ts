@@ -31,3 +31,10 @@ export enum FlutterService {
 	HotRestart = "hotRestart",
 	LaunchDevTools = "launchDevTools",
 }
+
+export enum VersionStatus {
+	NotInstalled,
+	UpdateRequired,
+	UpdateAvailable,
+	Valid,
+}

@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as vs from "vscode";
 import { twoHoursInMs } from "../../../shared/constants";
-import { VersionStatus } from "../../../extension/pub/global";
+import { VersionStatus } from "../../../shared/enums";
 import { activate, defer, extApi, sb } from "../../helpers";
 
 const alreadyInstalledPackage = "devtools";
