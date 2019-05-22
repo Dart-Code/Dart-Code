@@ -2,12 +2,11 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { log } from "../../../extension/utils/log";
 import { platformEol, stopLoggingAction } from "../../../shared/constants";
 import { LogCategory, LogSeverity } from "../../../shared/enums";
 import { PromiseCompleter } from "../../../shared/utils";
 import { fsPath } from "../../../shared/vscode/utils";
-import { activate, sb, waitForResult } from "../../helpers";
+import { activate, extApi, sb, waitForResult } from "../../helpers";
 
 describe("capture logs command", () => {
 	beforeEach("activate", () => activate());
@@ -44,10 +43,10 @@ describe("capture logs command", () => {
 	it("writes to the correct file", async () => {
 		const logger = await configureLog(LogCategory.Analyzer);
 
-		log("This is a test"); // Should be logged
-		log("This is an analyzer event", LogSeverity.Info, LogCategory.Analyzer); // Should be logged
-		log("This is an flutter daemon event", LogSeverity.Info, LogCategory.FlutterDaemon); // Should not be logged
-		log("This is an flutter daemon ERROR event", LogSeverity.Error, LogCategory.FlutterDaemon); // Should be logged because it's an error.
+		extApi.log("This is a test"); // Should be logged
+		extApi.log("This is an analyzer event", LogSeverity.Info, LogCategory.Analyzer); // Should be logged
+		extApi.log("This is an flutter daemon event", LogSeverity.Info, LogCategory.FlutterDaemon); // Should not be logged
+		extApi.log("This is an flutter daemon ERROR event", LogSeverity.Error, LogCategory.FlutterDaemon); // Should be logged because it's an error.
 
 		const logFilename = await logger.stopLogging();
 
@@ -74,9 +73,9 @@ describe("capture logs command", () => {
 	it("only logs the specified categories", async () => {
 		const logger = await configureLog(LogCategory.Analyzer);
 
-		log("This is a test"); // Should be logged
-		log("This is an analyzer event", LogSeverity.Info, LogCategory.Analyzer); // Should be logged
-		log("This is an flutter daemon event", LogSeverity.Info, LogCategory.FlutterDaemon); // Should not be logged
+		extApi.log("This is a test"); // Should be logged
+		extApi.log("This is an analyzer event", LogSeverity.Info, LogCategory.Analyzer); // Should be logged
+		extApi.log("This is an flutter daemon event", LogSeverity.Info, LogCategory.FlutterDaemon); // Should not be logged
 
 		const logFilename = await logger.stopLogging();
 
@@ -89,9 +88,9 @@ describe("capture logs command", () => {
 	it("always logs WARN and ERROR log to General", async () => {
 		const logger = await configureLog(LogCategory.General);
 
-		log("This is a test"); // Should be logged
-		log("This is an flutter daemon event", LogSeverity.Info, LogCategory.FlutterDaemon); // Should not be logged
-		log("This is an flutter daemon ERROR event", LogSeverity.Error, LogCategory.FlutterDaemon); // Should be logged because it's an error.
+		extApi.log("This is a test"); // Should be logged
+		extApi.log("This is an flutter daemon event", LogSeverity.Info, LogCategory.FlutterDaemon); // Should not be logged
+		extApi.log("This is an flutter daemon ERROR event", LogSeverity.Error, LogCategory.FlutterDaemon); // Should be logged because it's an error.
 
 		const logFilename = await logger.stopLogging();
 
