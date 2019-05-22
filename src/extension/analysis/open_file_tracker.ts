@@ -16,7 +16,7 @@ const pubRunTestSupport: { [key: string]: boolean } = {};
 let lastPriorityFiles: string[] = [];
 let lastSubscribedFiles: string[] = [];
 
-export class OpenFileTracker implements IAmDisposable {
+class OpenFileTracker implements IAmDisposable {
 	private disposables: Disposable[] = [];
 
 	constructor(private readonly analyzer: Analyzer, private readonly wsContext: WorkspaceContext) {
@@ -116,19 +116,34 @@ export class OpenFileTracker implements IAmDisposable {
 			.sort((path1, path2) => path1.localeCompare(path2));
 	}
 
-	public static getOutlineFor(file: Uri): Outline | undefined {
+	public dispose(): any {
+		// TODO: This (and others) should probably await, in case thye're promises.
+		// And also not fail on first error.
+		this.disposables.forEach((d) => d.dispose());
+	}
+}
+
+// TODO: How this file works is messy, we should get rid of all the statics and
+// make this available on WorkspaceContext or similar.
+
+export const openFileTracker = {
+	create(analyzer: Analyzer, wsContext: WorkspaceContext): IAmDisposable {
+		return new OpenFileTracker(analyzer, wsContext);
+	},
+
+	getOutlineFor(file: Uri): Outline | undefined {
 		return outlines[fsPath(file)];
-	}
+	},
 
-	public static getFlutterOutlineFor(file: Uri): FlutterOutline | undefined {
+	getFlutterOutlineFor(file: Uri): FlutterOutline | undefined {
 		return flutterOutlines[fsPath(file)];
-	}
+	},
 
-	public static getOccurrencesFor(file: Uri): Occurrences[] | undefined {
+	getOccurrencesFor(file: Uri): Occurrences[] | undefined {
 		return occurrences[fsPath(file)];
-	}
+	},
 
-	public static supportsPubRunTest(file: Uri): boolean | undefined {
+	supportsPubRunTest(file: Uri): boolean | undefined {
 		const path = fsPath(file);
 		if (!util.isPubRunnableTestFile(path))
 			return false;
@@ -137,23 +152,17 @@ export class OpenFileTracker implements IAmDisposable {
 			pubRunTestSupport[path] = !!(projectRoot && util.checkProjectSupportsPubRunTest(projectRoot));
 		}
 		return pubRunTestSupport[fsPath(file)];
-	}
+	},
 
-	public static getFoldingRegionsFor(file: Uri): FoldingRegion[] | undefined {
+	getFoldingRegionsFor(file: Uri): FoldingRegion[] | undefined {
 		return folding[fsPath(file)];
-	}
+	},
 
-	public static getLastPriorityFiles(): string[] {
+	getLastPriorityFiles(): string[] {
 		return lastPriorityFiles.slice();
-	}
+	},
 
-	public static getLastSubscribedFiles(): string[] {
+	getLastSubscribedFiles(): string[] {
 		return lastSubscribedFiles.slice();
-	}
-
-	public dispose(): any {
-		// TODO: This (and others) should probably await, in case thye're promises.
-		// And also not fail on first error.
-		this.disposables.forEach((d) => d.dispose());
-	}
-}
+	},
+};

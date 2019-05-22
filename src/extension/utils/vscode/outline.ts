@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import * as as from "../../analysis/analysis_server_types";
-import { OpenFileTracker } from "../../analysis/open_file_tracker";
+import { openFileTracker } from "../../analysis/open_file_tracker";
 import { logError } from "../log";
 
 function findNode(outlines: as.Outline[] | undefined, offset: number, useReducedRange: boolean, kinds: as.ElementKind[]): as.Outline | undefined {
@@ -25,7 +25,7 @@ function findNode(outlines: as.Outline[] | undefined, offset: number, useReduced
 }
 
 export function findNearestOutlineNode(document: vs.TextDocument, position: vs.Position, useReducedRange = false, kinds: as.ElementKind[] = ["CLASS", "METHOD", "GETTER", "SETTER"]) {
-	const outline = OpenFileTracker.getOutlineFor(document.uri);
+	const outline = openFileTracker.getOutlineFor(document.uri);
 	return outline && findNode([outline], document.offsetAt(position), useReducedRange, kinds);
 }
 

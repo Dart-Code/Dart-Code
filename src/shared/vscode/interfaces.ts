@@ -1,4 +1,5 @@
-import { CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, DefinitionProvider, ReferenceProvider, RenameProvider, TreeDataProvider, TreeItem } from "vscode";
+import { CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, DefinitionProvider, ReferenceProvider, RenameProvider, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { Outline } from "../../extension/analysis/analysis_server_types";
 import { LogCategory, LogSeverity, TestStatus, VersionStatus } from "../enums";
 import { DebugCommandHandler } from "../interfaces";
 import { WorkspaceContext } from "../workspace";
@@ -23,6 +24,11 @@ export interface InternalExtensionApi {
 	};
 	debugCommands: DebugCommandHandler;
 	debugProvider: DebugConfigurationProvider;
+	fileTracker: {
+		getOutlineFor(file: Uri): Outline | undefined;
+		getLastPriorityFiles(): string[];
+		getLastSubscribedFiles(): string[];
+	};
 	flutterCapabilities: {
 		supportsPidFileForMachine: boolean;
 		supportsMultipleSamplesPerElement: boolean;

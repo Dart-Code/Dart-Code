@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { OpenFileTracker } from "../analysis/open_file_tracker";
+import { openFileTracker } from "../analysis/open_file_tracker";
 import { TestOutlineInfo, TestOutlineVisitor } from "../utils/vscode/outline";
 
 export const CURSOR_IS_IN_TEST = "dart-code:cursorIsInTest";
@@ -38,13 +38,13 @@ export class TestCommands implements vs.Disposable {
 
 	private testForCursor(editor: vs.TextEditor): TestOutlineInfo | undefined {
 		const document = editor.document;
-		const outline = OpenFileTracker.getOutlineFor(document.uri);
+		const outline = openFileTracker.getOutlineFor(document.uri);
 		if (!outline || !outline.children || !outline.children.length)
 			return;
 
 		// We should only allow running for projects we know can actually handle `pub run` (for ex. the
 		// SDK codebase cannot, and will therefore run all tests).
-		if (!OpenFileTracker.supportsPubRunTest(document.uri))
+		if (!openFileTracker.supportsPubRunTest(document.uri))
 			return;
 
 		const visitor = new TestOutlineVisitor();

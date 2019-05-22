@@ -1,6 +1,6 @@
 import { CancellationToken, DocumentHighlight, DocumentHighlightProvider, Position, Range, TextDocument } from "vscode";
 import { Analyzer } from "../analysis/analyzer";
-import { OpenFileTracker } from "../analysis/open_file_tracker";
+import { openFileTracker } from "../analysis/open_file_tracker";
 
 export class DartDocumentHighlightProvider implements DocumentHighlightProvider {
 	constructor(private readonly analyzer: Analyzer) { }
@@ -9,7 +9,7 @@ export class DartDocumentHighlightProvider implements DocumentHighlightProvider 
 		document: TextDocument, position: Position, token: CancellationToken,
 	): DocumentHighlight[] {
 		const offset = document.offsetAt(position);
-		const occurrences = OpenFileTracker.getOccurrencesFor(document.uri);
+		const occurrences = openFileTracker.getOccurrencesFor(document.uri);
 		if (!occurrences)
 			return;
 

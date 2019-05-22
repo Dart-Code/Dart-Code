@@ -1,15 +1,14 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { OpenFileTracker } from "../../../extension/analysis/open_file_tracker";
 import { cursorIsInTest } from "../../../extension/commands/test";
-import { activate, flutterTestOtherFile, getPackages, openFile, positionOf, waitForResult } from "../../helpers";
+import { activate, extApi, flutterTestOtherFile, getPackages, openFile, positionOf, waitForResult } from "../../helpers";
 
 describe("run test at cursor", () => {
 
 	before("get packages", () => getPackages());
 	beforeEach("activate and wait for outline", async () => {
 		await activate(flutterTestOtherFile);
-		await waitForResult(() => !!OpenFileTracker.getOutlineFor(flutterTestOtherFile));
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestOtherFile));
 	});
 
 	it("command is available when cursor is inside a test", async () => {
