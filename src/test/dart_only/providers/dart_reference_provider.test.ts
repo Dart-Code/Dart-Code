@@ -11,7 +11,7 @@ describe("dart_reference_provider", () => {
 
 	async function getDefinitionFor(searchText: string): Promise<vs.DefinitionLink[]> {
 		const position = positionOf(searchText);
-		return extApi.referenceProvider.provideDefinition(currentDoc(), position, undefined);
+		return extApi.referenceProvider.provideDefinition(currentDoc(), position, undefined) as vs.DefinitionLink[];
 	}
 
 	async function getReferencesFor(searchText: string): Promise<vs.Location[] | undefined> {

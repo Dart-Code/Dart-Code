@@ -6,7 +6,7 @@ import { window, workspace } from "vscode";
 import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions } from "../commands/debug";
 import { config } from "../config";
-import { CHROME_OS_DEVTOOLS_PORT, pleaseReportBug } from "../constants";
+import { CHROME_OS_DEVTOOLS_PORT, pleaseReportBug } from "../../shared/constants";
 import { isChromeOS, LogCategory } from "../debug/utils";
 import { FlutterService } from "../flutter/vm_service_extensions";
 import { PubGlobal } from "../pub/global";
