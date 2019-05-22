@@ -1,9 +1,10 @@
 .dart_code_test_logs/**
 .gitattributes
+.github/
 .gitignore
 .nyc_output/**
-.travis.yml
 .test_results/**
+.travis.yml
 .vscode-test/**
 .vscode/**
 *.log
@@ -12,7 +13,6 @@ appveyor.yml
 CONTRIBUTING.md
 coverage/**
 lints/**
-tool/**
 logs/**
 media/screenshots/**
 out/test/**
@@ -20,6 +20,7 @@ out/tool/**
 package-lock.json
 src/**
 test/**
+tool/**
 tool/**
 tsconfig.json
 tslint.json
