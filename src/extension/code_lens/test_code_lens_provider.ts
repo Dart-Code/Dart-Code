@@ -2,7 +2,7 @@ import { CancellationToken, CodeLens, CodeLensProvider, commands, debug, Event, 
 import { flatMap } from "../../shared/utils";
 import { getLaunchConfig } from "../../shared/utils/test";
 import { Analyzer } from "../analysis/analyzer";
-import { OpenFileTracker } from "../analysis/open_file_tracker";
+import { openFileTracker } from "../analysis/open_file_tracker";
 import { IAmDisposable } from "../debug/utils";
 import { toRange } from "../utils";
 import { TestOutlineInfo, TestOutlineVisitor } from "../utils/vscode/outline";
@@ -35,13 +35,13 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		// This method has to be FAST because it affects layout of the document (adds extra lines) so
 		// we don't already have an outline, we won't wait for one. A new outline arriving will trigger a
 		// re-request anyway.
-		const outline = OpenFileTracker.getOutlineFor(document.uri);
+		const outline = openFileTracker.getOutlineFor(document.uri);
 		if (!outline || !outline.children || !outline.children.length)
 			return;
 
 		// We should only show the Code Lens for projects we know can actually handle `pub run` (for ex. the
 		// SDK codebase cannot, and will therefore run all tests when you click them).
-		if (!OpenFileTracker.supportsPubRunTest(document.uri))
+		if (!openFileTracker.supportsPubRunTest(document.uri))
 			return;
 
 		const visitor = new TestOutlineVisitor();

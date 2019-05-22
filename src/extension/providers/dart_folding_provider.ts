@@ -1,7 +1,7 @@
 import { CancellationToken, FoldingContext, FoldingRange, FoldingRangeKind, FoldingRangeProvider, TextDocument } from "vscode";
 import { FoldingKind, FoldingRegion } from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
-import { OpenFileTracker } from "../analysis/open_file_tracker";
+import { openFileTracker } from "../analysis/open_file_tracker";
 
 export class DartFoldingProvider implements FoldingRangeProvider {
 	constructor(private readonly analyzer: Analyzer) { }
@@ -16,7 +16,7 @@ export class DartFoldingProvider implements FoldingRangeProvider {
 		// the newly added subscription and send results).
 		let foldingRegions: FoldingRegion[];
 		for (let i = 0; i < 5; i++) {
-			foldingRegions = OpenFileTracker.getFoldingRegionsFor(document.uri);
+			foldingRegions = openFileTracker.getFoldingRegionsFor(document.uri);
 			if (foldingRegions)
 				break;
 			await new Promise((resolve, reject) => setTimeout(resolve, i * 1000));

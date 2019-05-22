@@ -14,7 +14,7 @@ import { WorkspaceContext } from "../shared/workspace";
 import { Analyzer } from "./analysis/analyzer";
 import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
 import { FileChangeHandler } from "./analysis/file_change_handler";
-import { OpenFileTracker } from "./analysis/open_file_tracker";
+import { openFileTracker } from "./analysis/open_file_tracker";
 import { findPackageRoots } from "./analysis/utils";
 import { Analytics } from "./analytics";
 import { DartExtensionApi } from "./api";
@@ -325,7 +325,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
 		});
 
-		context.subscriptions.push(new OpenFileTracker(analyzer, workspaceContext));
+		context.subscriptions.push(openFileTracker.create(analyzer, workspaceContext));
 
 		// Set up completions for unimported items.
 		if (analyzer.capabilities.supportsAvailableSuggestions && config.autoImportCompletions) {
@@ -480,6 +480,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			dartCapabilities,
 			debugCommands,
 			debugProvider,
+			fileTracker: openFileTracker,
 			flutterCapabilities,
 			initialAnalysis,
 			log,
