@@ -115,7 +115,6 @@ build_script:
 
 
 test_script:
-  - npm run vscode:prepublish
   - npm run lint
   - npm test
   - ps: Get-WmiObject Win32_Process -Filter "name = 'dart.exe'" | Select-Object CommandLine

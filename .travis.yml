@@ -138,7 +138,6 @@ before_script:
   - ./cc-test-reporter before-build;
 
 script:
-  - npm run vscode:prepublish
   - npm run lint
   - npm test
   # flutter_tester processes are leaked by tests that terminate early:
