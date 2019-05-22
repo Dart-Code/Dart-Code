@@ -5,8 +5,7 @@ import * as path from "path";
 import * as semver from "semver";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { Context } from "../extension/context";
-import { dartCodeExtensionIdentifier, flatMap, LogCategory, LogSeverity } from "../extension/debug/utils";
+import { flatMap, LogCategory, LogSeverity } from "../extension/debug/utils";
 import { InternalExtensionApi } from "../extension/extension";
 import { DelayedCompletionItem } from "../extension/providers/dart_completion_item_provider";
 import { internalApiSymbol } from "../extension/symbols";
@@ -16,6 +15,8 @@ import { log, logError, logTo, logWarn } from "../extension/utils/log";
 import { waitFor } from "../extension/utils/promises";
 import { PackageDep } from "../extension/views/packages_view";
 import { SuiteTreeItem, TestResultsProvider, TestStatus } from "../extension/views/test_view";
+import { dartCodeExtensionIdentifier } from "../shared/constants";
+import { Context } from "../shared/workspace";
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
 export let extApi: InternalExtensionApi;
@@ -534,7 +535,7 @@ export async function getCompletionsViaProviderAt(searchText: string, triggerCha
 		position,
 		undefined,
 		{ triggerCharacter, triggerKind: triggerCharacter ? vs.CompletionTriggerKind.TriggerCharacter : vs.CompletionTriggerKind.Invoke },
-	);
+	) as vs.CompletionList;
 
 	return results.items;
 }

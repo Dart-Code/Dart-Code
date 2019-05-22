@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { noRepeatPromptThreshold, pubGlobalDocsUrl } from "../constants";
-import { Context } from "../context";
+import { noRepeatPromptThreshold, pubGlobalDocsUrl } from "../../shared/constants";
+import { Context } from "../../shared/workspace";
 import { LogCategory } from "../debug/utils";
 import { pubPath } from "../sdk/utils";
 import { openInBrowser, Sdks, versionIsAtLeast } from "../utils";

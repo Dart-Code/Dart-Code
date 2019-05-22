@@ -8,7 +8,7 @@ import { Analytics } from "../analytics";
 import { LastDebugSession } from "../commands/debug";
 import { isLogging } from "../commands/logging";
 import { config } from "../config";
-import { CHROME_OS_VM_SERVICE_PORT } from "../constants";
+import { CHROME_OS_VM_SERVICE_PORT } from "../../shared/constants";
 import { DartDebugSession } from "../debug/dart_debug_impl";
 import { DartTestDebugSession } from "../debug/dart_test_debug_impl";
 import { FlutterDebugSession } from "../debug/flutter_debug_impl";

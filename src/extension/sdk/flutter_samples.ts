@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { dartCodeExtensionIdentifier } from "../debug/utils";
+import { dartCodeExtensionIdentifier } from "../../shared/constants";
 import { FlutterCapabilities } from "../flutter/capabilities";
 import * as util from "../utils";
 

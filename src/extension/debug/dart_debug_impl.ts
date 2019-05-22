@@ -4,7 +4,7 @@ import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { config } from "../config";
-import { pleaseReportBug } from "../constants";
+import { pleaseReportBug } from "../../shared/constants";
 import { white } from "../utils/colors";
 import { getLogHeader, logError, logWarn } from "../utils/log";
 import { safeSpawn } from "../utils/processes";

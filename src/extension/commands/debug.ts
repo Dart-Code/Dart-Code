@@ -1,8 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { Context } from "../../shared/workspace";
 import { Analytics } from "../analytics";
-import { Context } from "../context";
 import { CoverageData, PromiseCompleter } from "../debug/utils";
 import { FlutterServiceExtension, FlutterServiceExtensionArgs, FlutterVmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../flutter/vm_service_extensions";
 import { DebuggerType } from "../providers/debug_config_provider";

@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { fiveMinutesInMs } from "../../extension/constants";
+import { fiveMinutesInMs } from "../../shared/constants";
 import { activate, flutterHelloWorldMainFile, helloWorldMainFile } from "../helpers";
 
 describe("dart.getPackages", () => {

@@ -5,8 +5,6 @@ import { DebugProtocol } from "vscode-debugprotocol";
 
 // TODO: Move some of this to utils/debugger.ts (things that are used by debugger) and things like logging out to utils/log.ts
 
-export const dartCodeExtensionIdentifier = "Dart-Code.dart-code";
-export const flutterExtensionIdentifier = "Dart-Code.flutter";
 export const isWin = /^win/.test(process.platform);
 export const isMac = process.platform === "darwin";
 export const isLinux = !isWin && !isMac;

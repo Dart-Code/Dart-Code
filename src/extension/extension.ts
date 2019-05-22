@@ -2,7 +2,9 @@ import * as fs from "fs";
 import * as path from "path";
 import { isArray } from "util";
 import * as vs from "vscode";
-import { Analyzer, AnalyzerCapabilities } from "./analysis/analyzer";
+import { flutterExtensionIdentifier } from "../shared/constants";
+import { Context, WorkspaceContext } from "../shared/workspace";
+import { Analyzer } from "./analysis/analyzer";
 import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
 import { FileChangeHandler } from "./analysis/file_change_handler";
 import { OpenFileTracker } from "./analysis/open_file_tracker";
@@ -21,8 +23,7 @@ import { SdkCommands } from "./commands/sdk";
 import { TestCommands } from "./commands/test";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
-import { Context } from "./context";
-import { dartPlatformName, flutterExtensionIdentifier, forceWindowsDriveLetterToUppercase, isWin, isWithinPath, LogCategory, platformDisplayName } from "./debug/utils";
+import { dartPlatformName, forceWindowsDriveLetterToUppercase, isWin, isWithinPath, LogCategory, platformDisplayName } from "./debug/utils";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { FlutterUiGuideDecorations } from "./decorations/flutter_ui_guides_decorations";
 import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_decorations";
@@ -489,7 +490,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	};
 }
 
-function buildLogHeaders(workspaceContext: util.WorkspaceContext) {
+function buildLogHeaders(workspaceContext: WorkspaceContext) {
 	clearLogHeader();
 	addToLogHeader(() => `!! PLEASE REVIEW THIS LOG FOR SENSITIVE INFORMATION BEFORE SHARING !!`);
 	addToLogHeader(() => ``);
@@ -626,23 +627,39 @@ function setCommandVisiblity(enable: boolean, workspaceContext?: util.WorkspaceC
 }
 
 export interface InternalExtensionApi {
-	analyzerCapabilities: AnalyzerCapabilities;
+	analyzerCapabilities: {
+		supportsGetSignature: boolean;
+		isDart2: boolean;
+		supportsAvailableSuggestions: boolean;
+		version: string;
+	};
 	cancelAllAnalysisRequests: () => void;
-	completionItemProvider: DartCompletionItemProvider;
+	completionItemProvider: vs.CompletionItemProvider;
 	context: Context;
 	currentAnalysis: () => Promise<void>;
-	daemonCapabilities: DaemonCapabilities;
-	dartCapabilities: DartCapabilities;
+	dartCapabilities: {
+		supportsDevTools: boolean;
+		includesSourceForSdkLibs: boolean;
+		handlesBreakpointsInPartFiles: boolean;
+		supportsDisableServiceTokens: boolean;
+	};
 	debugCommands: DebugCommands;
 	debugProvider: DebugConfigProvider;
-	flutterCapabilities: FlutterCapabilities;
+	flutterCapabilities: {
+		supportsPidFileForMachine: boolean;
+		supportsMultipleSamplesPerElement: boolean;
+		supportsDevTools: boolean;
+		hasTestGroupFix: boolean;
+		hasEvictBug: boolean;
+		webSupportsDebugging: boolean;
+	};
 	initialAnalysis: Promise<void>;
 	nextAnalysis: () => Promise<void>;
-	packagesTreeProvider: DartPackagesProvider;
+	packagesTreeProvider: vs.TreeDataProvider<{}>;
 	pubGlobal: PubGlobal;
 	reanalyze: () => void;
-	referenceProvider: DartReferenceProvider;
-	renameProvider: DartRenameProvider;
+	referenceProvider: vs.ReferenceProvider & vs.DefinitionProvider;
+	renameProvider: vs.RenameProvider;
 	testTreeProvider: TestResultsProvider;
-	workspaceContext: util.WorkspaceContext;
+	workspaceContext: WorkspaceContext;
 }

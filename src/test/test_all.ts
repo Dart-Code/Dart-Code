@@ -1,7 +1,7 @@
 import * as childProcess from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-import { twentyMinutesInMs } from "../extension/constants";
+import { twentyMinutesInMs } from "../shared/constants";
 
 const args = ["node_modules/vscode/bin/test"];
 let exitCode = 0;
