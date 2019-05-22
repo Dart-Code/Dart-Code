@@ -2,12 +2,12 @@ import * as assert from "assert";
 import { SpawnOptions } from "child_process";
 import { DebugSession, DebugSessionCustomEvent } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { DebugCommands, debugSessions } from "../extension/commands/debug";
+import { debugSessions } from "../extension/commands/debug";
 import { not } from "../extension/utils/array";
 import { isKnownInfrastructureThread } from "../extension/utils/debugger";
 import { log } from "../extension/utils/log";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../extension/views/test_protocol";
-import { ITestResultsProvider } from "../shared/interfaces";
+import { DebugCommandHandler, ITestResultsProvider } from "../shared/interfaces";
 import { DebugClient, ILocation, IPartialLocation } from "./debug_client_ms";
 import { delay, watchPromise, withTimeout } from "./helpers";
 
@@ -15,7 +15,7 @@ const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.s
 
 export class DartDebugClient extends DebugClient {
 	private currentSession: DebugSession;
-	constructor(runtime: string, executable: string, debugType: string, spawnOptions: SpawnOptions, private debugCommands: DebugCommands, testProvider: ITestResultsProvider) {
+	constructor(runtime: string, executable: string, debugType: string, spawnOptions: SpawnOptions, private debugCommands: DebugCommandHandler, testProvider: ITestResultsProvider) {
 		super(runtime, executable, debugType, spawnOptions);
 
 		// Set up handlers for any custom events our tests may rely on (can't find
