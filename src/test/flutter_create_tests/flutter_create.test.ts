@@ -3,11 +3,11 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { LogCategory, LogSeverity } from "../../extension/debug/utils";
-import { InternalExtensionApi } from "../../extension/extension";
 import { internalApiSymbol } from "../../extension/symbols";
 import { fsPath } from "../../extension/utils";
 import { log } from "../../extension/utils/log";
 import { dartCodeExtensionIdentifier } from "../../shared/constants";
+import { InternalExtensionApi } from "../../shared/interfaces";
 import { activate, extApi, waitForResult } from "../helpers";
 
 describe("flutter", () => {

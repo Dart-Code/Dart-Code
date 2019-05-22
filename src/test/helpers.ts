@@ -6,7 +6,6 @@ import * as semver from "semver";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { flatMap, LogCategory, LogSeverity } from "../extension/debug/utils";
-import { InternalExtensionApi } from "../extension/extension";
 import { DelayedCompletionItem } from "../extension/providers/dart_completion_item_provider";
 import { internalApiSymbol } from "../extension/symbols";
 import { fsPath, isAnalyzable, vsCodeVersionConstraint } from "../extension/utils";
@@ -17,7 +16,7 @@ import { PackageDep } from "../extension/views/packages_view";
 import { SuiteTreeItem } from "../extension/views/test_view";
 import { dartCodeExtensionIdentifier } from "../shared/constants";
 import { TestStatus } from "../shared/enums";
-import { ITestItemTreeItem, ITestResultsProvider } from "../shared/interfaces";
+import { InternalExtensionApi, TestItemTreeItem, TestResultsProvider } from "../shared/interfaces";
 import { Context } from "../shared/workspace";
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
@@ -805,7 +804,7 @@ export function renderedItemLabel(item: PackageDep): string {
 	return item.label || path.basename(fsPath(item.resourceUri));
 }
 
-export async function makeTextTree(suite: vs.Uri, provider: ITestResultsProvider, parent?: ITestItemTreeItem, buffer: string[] = [], indent = 0): Promise<string[]> {
+export async function makeTextTree(suite: vs.Uri, provider: TestResultsProvider, parent?: TestItemTreeItem, buffer: string[] = [], indent = 0): Promise<string[]> {
 	const items = (await provider.getChildren(parent))
 		// Filter to only the suite we were given (though includes all children).
 		.filter((item) => (fsPath(item.resourceUri!) === fsPath(suite)) || !!parent);
