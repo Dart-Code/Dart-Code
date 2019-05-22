@@ -27,7 +27,7 @@ import { LoggingCommands } from "./commands/logging";
 import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
 import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
-import { TestCommands } from "./commands/test";
+import { cursorIsInTest, TestCommands } from "./commands/test";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
@@ -476,6 +476,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			completionItemProvider,
 			context: extContext,
 			currentAnalysis: () => analyzer.currentAnalysis,
+			get cursorIsInTest() { return cursorIsInTest; },
 			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
 			dartCapabilities,
 			debugCommands,
