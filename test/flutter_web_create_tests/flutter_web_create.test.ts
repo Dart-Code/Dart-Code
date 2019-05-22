@@ -31,10 +31,11 @@ describe("flutter for web", () => {
 		if (contents.indexOf(expectedString) === -1)
 			assert.fail(`Did not find "${expectedString}'" in the templated file:\n\n${contents}`);
 
-		// Ensure we fetched packages too.
+		// Ensure we fetched packages too. This can be slow because the creation process may
+		// take a long time to download and precompile the executables.
 		await waitForResult(() => {
 			return getPackagesCommand.calledOnce;
-		}, "Get Packages was not called after creating the project", 10000);
+		}, "Get Packages was not called after creating the project", 40000);
 	});
 
 	it("triggered Flutter mode", () => {
