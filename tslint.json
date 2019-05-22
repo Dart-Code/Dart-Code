@@ -13,7 +13,7 @@
 	"rules": {
 		// Try to keep synced with Flutter extension!
 		"disallow-fspath": true,
-		"disallow-extension-code-in-tests": true,
+		// "disallow-extension-code-in-tests": true,
 		"disallow-vscode-in-debuggers": true,
 		"disallow-vscode-in-utils": true,
 		"indent": {
