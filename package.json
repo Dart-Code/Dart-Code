@@ -46,7 +46,7 @@
 		"onCommand:flutter.upgrade",
 		"onUri"
 	],
-	"main": "./out/src/extension",
+	"main": "./out/src/extension/extension",
 	"contributes": {
 		"languages": [
 			{
@@ -1249,7 +1249,7 @@
 			{
 				"type": "dart",
 				"label": "Dart & Flutter",
-				"program": "./out/src/debug/dart_debug_entry.js",
+				"program": "./out/src/extension/debug/dart_debug_entry.js",
 				"runtime": "node",
 				"languages": [
 					"dart"
@@ -1464,10 +1464,10 @@
 		"postinstall": "node ./node_modules/vscode/bin/install",
 		"lint": "tslint 'src/**/*.ts' -t verbose",
 		"test": "npm run compile && npm run write_empty_coverage && npm run remap_empty_coverage && npm run instrument && npm run test-only && npm run report_lcov && npm run report_screen",
-		"instrument": "cd out/src && nyc instrument . . && cd ../..",
-		"write_empty_coverage": "cd out/src && nyc --all --reporter=none --include out/src echo && cd ../..",
-		"remap_empty_coverage": "cd out/src && run-for-every-file --src \"../../.nyc_output/*.json\" --run \"remap-istanbul -i {{src-file}} -o {{src-file}}\" && cd ../..",
-		"test-only": "node ./out/test/test_all.js",
+		"instrument": "cd out/src/extension && nyc instrument . . && cd ../../..",
+		"write_empty_coverage": "cd out/src/extension && nyc --all --reporter=none --include out/src/extension echo && cd ../../..",
+		"remap_empty_coverage": "cd out/src/extension && run-for-every-file --src \"../../../.nyc_output/*.json\" --run \"remap-istanbul -i {{src-file}} -o {{src-file}}\" && cd ../../..",
+		"test-only": "node ./out/src/test/test_all.js",
 		"report_lcov": "nyc report -r lcovonly",
 		"report_screen": "nyc report"
 	},

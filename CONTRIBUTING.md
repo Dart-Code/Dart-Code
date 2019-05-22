@@ -10,17 +10,17 @@ If you're going to work on an issue, please add a comment to the issue so others
 
 ## Project Structure
 
-Dart Code is currently written in TypeScript. There's a lot of configuration for how Code interacts with Dart Code in `package.json` though the main entry point is the `activate` method in `src/extension.ts`. Functionality is split into classes that provide small pieces of functionality via the Code APIs ([which are documented here](https://code.visualstudio.com/docs/extensionAPI/vscode-api)).
+Dart Code is currently written in TypeScript. There's a lot of configuration for how Code interacts with Dart Code in `package.json` though the main entry point is the `activate` method in `src/extension/extension.ts`. Functionality is split into classes that provide small pieces of functionality via the Code APIs ([which are documented here](https://code.visualstudio.com/docs/extensionAPI/vscode-api)).
 
-The `src/analysis` folder contains classes relating to the Dart analysis server (shipped inside the SDK) that is used for most of the langauge services in Dart Code. Some of these files are auto-generated from the [analysis server specification](https://htmlpreview.github.io/?https://github.com/dart-lang/sdk/blob/master/pkg/analysis_server/doc/api.html).
+The `src/extension/analysis` folder contains classes relating to the Dart analysis server (shipped inside the SDK) that is used for most of the langauge services in Dart Code. Some of these files are auto-generated from the [analysis server specification](https://htmlpreview.github.io/?https://github.com/dart-lang/sdk/blob/master/pkg/analysis_server/doc/api.html).
 
-The `src/commands` folder contains commands that Dart Code handles that are not tied to API providers, such as the command executed when a debug session starts and commands added to the command palette like `pub get`.
+The `src/extension/commands` folder contains commands that Dart Code handles that are not tied to API providers, such as the command executed when a debug session starts and commands added to the command palette like `pub get`.
 
-The `src/debug` folder contains debug adapters used for communicating between Code and the Dart debugger. The Code side of this is [documented here](https://code.visualstudio.com/docs/extensionAPI/api-debugging) and the Dart/Obseravtory side is [documented here](https://github.com/dart-lang/sdk/blob/master/runtime/vm/service/service.md).
+The `src/extension/debug` folder contains debug adapters used for communicating between Code and the Dart debugger. The Code side of this is [documented here](https://code.visualstudio.com/docs/extensionAPI/api-debugging) and the Dart/Obseravtory side is [documented here](https://github.com/dart-lang/sdk/blob/master/runtime/vm/service/service.md).
 
-The `src/providers` folder contains the implementation for all of the providers wired up in `src/extension.ts` during activation. These provide functionality like code completion, formatting, reporting errors, etc. Most of these interact with the analysis server from the `src/analysis` folder.
+The `src/extension/providers` folder contains the implementation for all of the providers wired up in `src/extension/extension.ts` during activation. These provide functionality like code completion, formatting, reporting errors, etc. Most of these interact with the analysis server from the `src/extension/analysis` folder.
 
-The `src/services` folder contains some plumbing code for services, such as a base class for various services Dart Code uses that communicate over `STDIN`/`STDOUT` streams.
+The `src/extension/services` folder contains some plumbing code for services, such as a base class for various services Dart Code uses that communicate over `STDIN`/`STDOUT` streams.
 
 ## Cloning and Running Dart Code
 
