@@ -1,4 +1,3 @@
-import { log } from "console";
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, DiagnosticTag, Uri } from "vscode";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
@@ -26,7 +25,7 @@ export class DartDiagnosticProvider {
 		// of the error view... etc.!).
 		if (this.lastErrorJson === notificationJson) {
 			// TODO: Come up with a better fix than this!
-			log("Skipping error notification as it was the same as the previous one");
+			// log("Skipping error notification as it was the same as the previous one");
 			return;
 		}
 
