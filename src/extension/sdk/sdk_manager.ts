@@ -3,9 +3,10 @@ import * as path from "path";
 import * as vs from "vscode";
 import { dartVMPath, flutterPath } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
+import { versionIsAtLeast } from "../../shared/utils";
 import { getChildFolders } from "../../shared/utils/fs";
 import { config } from "../config";
-import { getSdkVersion, versionIsAtLeast } from "../utils";
+import { getSdkVersion } from "../utils";
 
 abstract class SdkManager {
 	protected sdks: Sdks;

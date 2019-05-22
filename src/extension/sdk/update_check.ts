@@ -1,8 +1,9 @@
 import { window } from "vscode";
 import { DART_DOWNLOAD_URL } from "../../shared/constants";
+import { versionIsAtLeast } from "../../shared/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
-import { getLatestSdkVersion, openInBrowser, versionIsAtLeast } from "../utils";
+import { getLatestSdkVersion, openInBrowser } from "../utils";
 import { logError } from "../utils/log";
 
 export async function checkForStandardDartSdkUpdates(workspaceContext: WorkspaceContext): Promise<void> {
