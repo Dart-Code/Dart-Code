@@ -2,7 +2,6 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { log } from "../../extension/utils/log";
 import { dartCodeExtensionIdentifier } from "../../shared/constants";
 import { LogCategory, LogSeverity } from "../../shared/enums";
 import { internalApiSymbol } from "../../shared/symbols";
@@ -18,10 +17,10 @@ describe("flutter", () => {
 		const expectedString = "title: 'Flutter Demo'";
 		const mainFile = path.join(basicProjectFolder, "lib", "main.dart");
 		// Creating the sample may be a little slow, so allow up to 60 seconds for it.
-		log("Waiting for file to exist", LogSeverity.Error, LogCategory.CI);
+		extApi.log("Waiting for file to exist", LogSeverity.Error, LogCategory.CI);
 		await waitForResult(() => fs.existsSync(mainFile), "lib/main.dart did not exist", 100000);
 		// Wait for up to 10 seconds for the content to match, as the file may be updated after creation.
-		log("Waiting for content match", LogSeverity.Error, LogCategory.CI);
+		extApi.log("Waiting for content match", LogSeverity.Error, LogCategory.CI);
 		await waitForResult(() => {
 			const contents = fs.readFileSync(mainFile);
 			return contents.indexOf(expectedString) !== -1;
@@ -42,10 +41,10 @@ describe("flutter", () => {
 		const expectedString = "Flutter code sample for material.IconButton.1";
 		const mainFile = path.join(sampleProjectFolder, "lib", "main.dart");
 		// Creating the sample may be a little slow, so allow up to 60 seconds for it.
-		log("Waiting for file to exist", LogSeverity.Error, LogCategory.CI);
+		extApi.log("Waiting for file to exist", LogSeverity.Error, LogCategory.CI);
 		await waitForResult(() => fs.existsSync(mainFile), "lib/main.dart did not exist", 100000);
 		// Wait for up to 10 seconds for the content to match, as the file may be updated after creation.
-		log("Waiting for content match", LogSeverity.Error, LogCategory.CI);
+		extApi.log("Waiting for content match", LogSeverity.Error, LogCategory.CI);
 		await waitForResult(() => {
 			const contents = fs.readFileSync(mainFile);
 			return contents.indexOf(expectedString) !== -1;
