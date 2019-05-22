@@ -46,7 +46,7 @@
 		"onCommand:flutter.upgrade",
 		"onUri"
 	],
-	"main": "./out/dist/extension/extension",
+	"main": "./out/dist/extension",
 	"contributes": {
 		"languages": [
 			{
