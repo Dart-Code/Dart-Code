@@ -9,8 +9,7 @@ import { DelayedCompletionItem } from "../extension/providers/dart_completion_it
 import { isAnalyzable, vsCodeVersionConstraint } from "../extension/utils";
 import { log, logError, logTo, logWarn } from "../extension/utils/log";
 import { PackageDep } from "../extension/views/packages_view";
-import { SuiteTreeItem } from "../extension/views/test_view";
-import { dartCodeExtensionIdentifier } from "../shared/constants";
+import { dartCodeExtensionIdentifier, DART_TEST_SUITE_NODE_CONTEXT } from "../shared/constants";
 import { LogCategory, LogSeverity, TestStatus } from "../shared/enums";
 import { internalApiSymbol } from "../shared/symbols";
 import { flatMap } from "../shared/utils";
@@ -810,16 +809,16 @@ export async function makeTextTree(suite: vs.Uri, provider: TestResultsProvider,
 		// Filter to only the suite we were given (though includes all children).
 		.filter((item) => (fsPath(item.resourceUri!) === fsPath(suite)) || !!parent);
 	const wsPath = fsPath(vs.workspace.getWorkspaceFolder(suite)!.uri);
-	items.forEach(async (item) => {
+	for (const item of items) {
 		// Suites don't have a .label (since the rendering is based on the resourceUri) so just
 		// fabricate one here that can be compared in the test. Note: For simplity we always use
 		// forward slashes in these names, since the comparison is against hard-coded comments
 		// in the file that can only be on way.
-		const expectedLabel = item instanceof SuiteTreeItem
+		const expectedLabel = item.contextValue === DART_TEST_SUITE_NODE_CONTEXT
 			? path.relative(wsPath, fsPath(item.resourceUri!)).replace("\\", "/")
 			: item.label;
 		buffer.push(`${" ".repeat(indent * 4)}${expectedLabel} (${TestStatus[item.status]})`);
 		await makeTextTree(suite, provider, item, buffer, indent + 1);
-	});
+	}
 	return buffer;
 }
