@@ -4,11 +4,11 @@ import * as os from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { dartCodeExtensionIdentifier } from "../../extension/debug/utils";
 import { FlutterCapabilities } from "../../extension/flutter/capabilities";
 import { DartUriHandler } from "../../extension/uri_handlers/uri_handler";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../extension/utils";
 import { getChildFolders } from "../../extension/utils/fs";
+import { dartCodeExtensionIdentifier } from "../../shared/constants";
 import { deleteDirectoryRecursive, sb } from "../helpers";
 
 describe("URL handler", async () => {

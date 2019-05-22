@@ -2,7 +2,7 @@ import * as path from "path";
 import { commands, debug, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, workspace } from "vscode";
 import { DebugCommands } from "../commands/debug";
 import { config } from "../config";
-import { restartReasonSave } from "../constants";
+import { restartReasonSave } from "../../shared/constants";
 import { fsPath, isAnalyzableAndInWorkspace } from "../utils";
 import { FlutterService } from "./vm_service_extensions";
 

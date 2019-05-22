@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { stagehandInstallationInstructionsUrl } from "../constants";
+import { stagehandInstallationInstructionsUrl } from "../../shared/constants";
 import { LogCategory } from "../debug/utils";
 import { pubPath } from "../sdk/utils";
 import { Sdks } from "../utils";

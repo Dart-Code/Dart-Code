@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { twoHoursInMs } from "../../../extension/constants";
+import { twoHoursInMs } from "../../../shared/constants";
 import { VersionStatus } from "../../../extension/pub/global";
 import { activate, defer, extApi, sb } from "../../helpers";
 
