@@ -1,7 +1,8 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { fsPath, Sdks } from "../../extension/utils";
+import { Sdks } from "../../shared/interfaces";
+import { fsPath } from "../../shared/vscode/utils";
 import { activateWithoutAnalysis, ext, extApi } from "../helpers";
 
 describe("test environment", () => {

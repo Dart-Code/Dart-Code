@@ -1,9 +1,9 @@
 import * as fs from "fs";
 import * as vs from "vscode";
+import { fsPath } from "../../shared/vscode/utils";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import * as editors from "../editors";
-import { fsPath } from "../utils";
 import { logError, logWarn } from "../utils/log";
 import { showCode } from "../utils/vscode/editor";
 

@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { fsPath } from "../../../extension/utils";
+import { fsPath } from "../../../shared/vscode/utils";
 import { activate, currentDoc, ensureLocation, ensureNoLocation, helloWorldFolder, positionOf, rangeOf } from "../../helpers";
 
 const testFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_implementation.dart"));

@@ -1,8 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { Sdks } from "../../shared/interfaces";
 import { config } from "../config";
-import { getSdkVersion, Sdks, versionIsAtLeast } from "../utils";
+import { getSdkVersion, versionIsAtLeast } from "../utils";
 import { getChildFolders } from "../utils/fs";
 import { dartVMPath, flutterPath } from "./utils";
 

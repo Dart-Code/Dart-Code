@@ -1,6 +1,7 @@
 import { window } from "vscode";
+import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
-import { getLatestSdkVersion, openInBrowser, versionIsAtLeast, WorkspaceContext } from "../utils";
+import { getLatestSdkVersion, openInBrowser, versionIsAtLeast } from "../utils";
 import { logError } from "../utils/log";
 import { DART_DOWNLOAD_URL } from "./utils";
 

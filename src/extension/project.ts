@@ -1,7 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
-import { flatMap } from "./debug/utils";
-import { fsPath, getDartWorkspaceFolders, isWithinWorkspace } from "./utils";
+import { flatMap } from "../shared/utils";
+import { fsPath } from "../shared/vscode/utils";
+import { getDartWorkspaceFolders, isWithinWorkspace } from "./utils";
 import { sortBy } from "./utils/array";
 import { hasPackagesFile, hasPubspec } from "./utils/fs";
 

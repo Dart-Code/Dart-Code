@@ -1,12 +1,12 @@
 import * as minimatch from "minimatch";
 import { CancellationToken, DocumentFormattingEditProvider, DocumentSelector, FormattingOptions, languages, OnTypeFormattingEditProvider, Position, Range, TextDocument, TextEdit, window, workspace } from "vscode";
-import { Context } from "../../shared/workspace";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { config } from "../config";
 import { IAmDisposable } from "../debug/utils";
-import { fsPath } from "../utils";
 import { logError } from "../utils/log";
+import { fsPath } from "../../shared/vscode/utils";
+import { Context } from "../../shared/vscode/workspace";
 
 export class DartFormattingEditProvider implements DocumentFormattingEditProvider, OnTypeFormattingEditProvider, IAmDisposable {
 	constructor(private readonly analyzer: Analyzer, private readonly context: Context) {

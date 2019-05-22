@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { FlutterService, FlutterServiceExtension } from "../../shared/enums";
-import { isWin } from "../debug/utils";
+import { isWin } from "../../shared/utils";
 import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
 import { DebuggerType, TRACK_WIDGET_CREATION_ENABLED } from "../providers/debug_config_provider";
 

@@ -1,13 +1,16 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { Context } from "vm";
 import * as vs from "vscode";
 import { doNotAskAgainAction, flutterExtensionIdentifier, flutterSurvey2019Q2PromptWithAnalytics, flutterSurvey2019Q2PromptWithoutAnalytics, longRepeatPromptThreshold, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../shared/constants";
-import { Context } from "../shared/workspace";
+import { isWin } from "../shared/utils";
+import { fsPath } from "../shared/vscode/utils";
+import { WorkspaceContext } from "../shared/workspace";
 import { markProjectCreationEnded, markProjectCreationStarted } from "./commands/sdk";
-import { isWin, LogCategory, LogSeverity } from "./debug/utils";
+import { LogCategory, LogSeverity } from "./debug/utils";
 import { StagehandTemplate } from "./pub/stagehand";
-import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, fsPath, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, reloadExtension, WorkspaceContext } from "./utils";
+import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, extensionVersion, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, reloadExtension } from "./utils";
 import { log, logWarn } from "./utils/log";
 
 const promptPrefix = "hasPrompted.";

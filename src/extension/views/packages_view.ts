@@ -1,9 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { fsPath } from "../../shared/vscode/utils";
 import { PackageMap } from "../debug/package_map";
 import { getWorkspaceProjectFolders } from "../project";
-import { fsPath } from "../utils";
 import { sortBy } from "../utils/array";
 import { logWarn } from "../utils/log";
 

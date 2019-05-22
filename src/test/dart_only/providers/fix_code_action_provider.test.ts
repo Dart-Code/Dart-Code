@@ -1,8 +1,8 @@
 import * as assert from "assert";
 import * as fs from "fs";
 import * as vs from "vscode";
-import { fsPath } from "../../../extension/utils";
 import { activate, currentDoc, defer, emptyFile, helloWorldCreateMethodClassAFile, helloWorldCreateMethodClassBFile, missingFile, openFile, rangeOf, setTestContent, tryDelete, uncommentTestFile, waitForNextAnalysis } from "../../helpers";
+import { fsPath } from "../../../shared/vscode/utils";
 
 describe("fix_code_action_provider", () => {
 	beforeEach("activate", () => activate());

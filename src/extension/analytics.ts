@@ -1,9 +1,10 @@
 import * as https from "https";
 import * as querystring from "querystring";
 import { env, Uri, version as codeVersion } from "vscode";
+import { isChromeOS } from "../shared/utils";
+import { WorkspaceContext } from "../shared/workspace";
 import { config } from "./config";
-import { isChromeOS } from "./debug/utils";
-import { extensionVersion, hasFlutterExtension, isDevExtension, WorkspaceContext } from "./utils";
+import { extensionVersion, hasFlutterExtension, isDevExtension } from "./utils";
 import { logError, logInfo, logWarn } from "./utils/log";
 
 // Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.

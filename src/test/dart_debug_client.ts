@@ -6,8 +6,9 @@ import { debugSessions } from "../extension/commands/debug";
 import { not } from "../extension/utils/array";
 import { isKnownInfrastructureThread } from "../extension/utils/debugger";
 import { log } from "../extension/utils/log";
-import { Notification, Test, TestDoneNotification, TestStartNotification } from "../extension/views/test_protocol";
-import { DebugCommandHandler, TestResultsProvider } from "../shared/interfaces";
+import { DebugCommandHandler } from "../shared/interfaces";
+import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
+import { TestResultsProvider } from "../shared/vscode/interfaces";
 import { DebugClient, ILocation, IPartialLocation } from "./debug_client_ms";
 import { delay, watchPromise, withTimeout } from "./helpers";
 

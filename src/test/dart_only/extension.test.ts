@@ -1,9 +1,10 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { isWin } from "../../extension/debug/utils";
-import { fsPath, Sdks } from "../../extension/utils";
 import { logInfo } from "../../extension/utils/log";
+import { Sdks } from "../../shared/interfaces";
+import { isWin } from "../../shared/utils";
+import { fsPath } from "../../shared/vscode/utils";
 import { activateWithoutAnalysis, ext, extApi } from "../helpers";
 
 const sampleFilePath = (isWin ? "X:\\" : "/tmp/") + "sample.dart";

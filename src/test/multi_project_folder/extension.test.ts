@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { fsPath } from "../../extension/utils";
+import { fsPath } from "../../shared/vscode/utils";
 import { activate, extApi, helloWorldFolder, helloWorldMainFile, setConfigForTest } from "../helpers";
 
 describe("test environment", () => {

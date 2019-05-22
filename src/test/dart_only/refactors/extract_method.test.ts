@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../extension/commands/refactor";
-import { PromiseCompleter } from "../../../extension/debug/utils";
+import { PromiseCompleter } from "../../../shared/utils";
 import { activate, currentDoc, ensureTestContent, positionOf, rangeOf, sb, setTestContent, waitForResult } from "../../helpers";
 
 describe("refactor", () => {

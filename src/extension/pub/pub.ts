@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { commands, Uri, window } from "vscode";
-import { fsPath } from "../utils";
+import { fsPath } from "../../shared/vscode/utils";
 
 export function isPubGetProbablyRequired(folderUri: Uri): boolean {
 	const folder = fsPath(folderUri);
