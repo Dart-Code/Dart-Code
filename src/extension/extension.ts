@@ -3,6 +3,7 @@ import * as path from "path";
 import { isArray } from "util";
 import * as vs from "vscode";
 import { flutterExtensionIdentifier } from "../shared/constants";
+import { ITestResultsProvider } from "../shared/interfaces";
 import { Context, WorkspaceContext } from "../shared/workspace";
 import { Analyzer } from "./analysis/analyzer";
 import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
@@ -68,7 +69,7 @@ import * as util from "./utils";
 import { fsPath } from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, log, logError, logTo } from "./utils/log";
 import { DartPackagesProvider } from "./views/packages_view";
-import { TestResultsProvider } from "./views/test_view";
+import { TestItemTreeItem, TestResultsProvider } from "./views/test_view";
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
 const HTML_MODE: vs.DocumentFilter = { language: "html", scheme: "file" };
@@ -391,7 +392,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 				testTreeView.reveal(node);
 		}),
 		testTreeView.onDidChangeSelection((e) => {
-			testTreeProvider.setSelectedNodes(e.selection && e.selection.length === 1 ? e.selection[0] : undefined);
+			testTreeProvider.setSelectedNodes(e.selection && e.selection.length === 1 ? e.selection[0] as TestItemTreeItem : undefined);
 		}),
 	);
 
@@ -644,7 +645,7 @@ export interface InternalExtensionApi {
 		supportsDisableServiceTokens: boolean;
 	};
 	debugCommands: DebugCommands;
-	debugProvider: DebugConfigProvider;
+	debugProvider: vs.DebugConfigurationProvider;
 	flutterCapabilities: {
 		supportsPidFileForMachine: boolean;
 		supportsMultipleSamplesPerElement: boolean;
@@ -660,6 +661,6 @@ export interface InternalExtensionApi {
 	reanalyze: () => void;
 	referenceProvider: vs.ReferenceProvider & vs.DefinitionProvider;
 	renameProvider: vs.RenameProvider;
-	testTreeProvider: TestResultsProvider;
+	testTreeProvider: ITestResultsProvider;
 	workspaceContext: WorkspaceContext;
 }

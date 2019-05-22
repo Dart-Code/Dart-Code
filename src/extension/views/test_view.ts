@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as vs from "vscode";
+import { TestStatus } from "../../shared/enums";
 import { getChannel } from "../commands/channels";
 import { flatMap, uniq } from "../debug/utils";
 import { extensionPath, fsPath } from "../utils";
@@ -15,15 +16,15 @@ const DART_TEST_TEST_NODE = "dart-code:testTestNode";
 // simpler and disconnected from the view!
 const suites: { [key: string]: SuiteData } = {};
 
-export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<object> {
+export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<TestItemTreeItem> {
 	private disposables: vs.Disposable[] = [];
-	private onDidChangeTreeDataEmitter: vs.EventEmitter<vs.TreeItem | undefined> = new vs.EventEmitter<vs.TreeItem | undefined>();
-	public readonly onDidChangeTreeData: vs.Event<vs.TreeItem | undefined> = this.onDidChangeTreeDataEmitter.event;
-	private onDidStartTestsEmitter: vs.EventEmitter<vs.TreeItem | undefined> = new vs.EventEmitter<vs.TreeItem | undefined>();
-	public readonly onDidStartTests: vs.Event<vs.TreeItem | undefined> = this.onDidStartTestsEmitter.event;
-	private onFirstFailureEmitter: vs.EventEmitter<vs.TreeItem | undefined> = new vs.EventEmitter<vs.TreeItem | undefined>();
-	public readonly onFirstFailure: vs.Event<vs.TreeItem | undefined> = this.onFirstFailureEmitter.event;
-	private currentSelectedNode: vs.TreeItem | undefined;
+	private onDidChangeTreeDataEmitter: vs.EventEmitter<TestItemTreeItem | undefined> = new vs.EventEmitter<TestItemTreeItem | undefined>();
+	public readonly onDidChangeTreeData: vs.Event<TestItemTreeItem | undefined> = this.onDidChangeTreeDataEmitter.event;
+	private onDidStartTestsEmitter: vs.EventEmitter<TestItemTreeItem | undefined> = new vs.EventEmitter<TestItemTreeItem | undefined>();
+	public readonly onDidStartTests: vs.Event<TestItemTreeItem | undefined> = this.onDidStartTestsEmitter.event;
+	private onFirstFailureEmitter: vs.EventEmitter<TestItemTreeItem | undefined> = new vs.EventEmitter<TestItemTreeItem | undefined>();
+	public readonly onFirstFailure: vs.Event<TestItemTreeItem | undefined> = this.onFirstFailureEmitter.event;
+	private currentSelectedNode: TestItemTreeItem | undefined;
 
 	// Set this flag we know when a new run starts so we can show the tree; however
 	// we can't show it until we render a node (we can only call reveal on a node) so
@@ -59,7 +60,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<o
 		});
 	}
 
-	public setSelectedNodes(item: vs.TreeItem | undefined): void {
+	public setSelectedNodes(item: TestItemTreeItem | undefined): void {
 		this.currentSelectedNode = item;
 	}
 
@@ -498,7 +499,7 @@ class SuiteData {
 	}
 }
 
-abstract class TestItemTreeItem extends vs.TreeItem {
+export abstract class TestItemTreeItem extends vs.TreeItem {
 	private _isStale = false; // tslint:disable-line:variable-name
 	private _status: TestStatus = TestStatus.Unknown; // tslint:disable-line:variable-name
 	// To avoid the sort changing on every status change (stale, running, etc.) this
@@ -713,18 +714,6 @@ function getIconPath(status: TestStatus, isStale: boolean): vs.Uri | undefined {
 	return file && extensionPath
 		? vs.Uri.file(path.join(extensionPath, `media/icons/tests/${file}.svg`))
 		: undefined;
-}
-
-export enum TestStatus {
-	// This should be in order such that the highest number is the one to show
-	// when aggregating (eg. from children).
-	Waiting,
-	Passed,
-	Skipped,
-	Unknown,
-	Failed,
-	Errored,
-	Running,
 }
 
 enum TestSortOrder {
