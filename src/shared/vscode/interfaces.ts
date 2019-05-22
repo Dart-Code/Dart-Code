@@ -16,6 +16,7 @@ export interface InternalExtensionApi {
 	completionItemProvider: CompletionItemProvider;
 	context: Context;
 	currentAnalysis: () => Promise<void>;
+	cursorIsInTest: boolean;
 	dartCapabilities: {
 		supportsDevTools: boolean;
 		includesSourceForSdkLibs: boolean;
