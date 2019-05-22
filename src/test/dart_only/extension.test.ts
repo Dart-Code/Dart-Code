@@ -1,7 +1,6 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { logInfo } from "../../extension/utils/log";
 import { isWin } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
@@ -32,8 +31,8 @@ describe("extension", () => {
 		const sdks: Sdks = extApi.workspaceContext.sdks;
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
-		logInfo("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
-		logInfo(`        "analysis_server": ${extApi.analyzerCapabilities.version}`);
+		extApi.log("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
+		extApi.log(`        "analysis_server": ${extApi.analyzerCapabilities.version}`);
 	});
 	it("did not try to use Flutter's version of the Dart SDK", async () => {
 		await activateWithoutAnalysis();
