@@ -6,7 +6,7 @@ const Lint = require("tslint");
 
 class Rule extends Lint.Rules.AbstractRule {
 	apply(sourceFile) {
-		if (sourceFile.fileName.indexOf("src/utils/") !== -1 && sourceFile.fileName.indexOf("src/utils/vscode/") === -1) {
+		if (sourceFile.fileName.indexOf("src/extension/utils/") !== -1 && sourceFile.fileName.indexOf("src/extension/utils/vscode/") === -1) {
 			return this.applyWithWalker(new NoVsCodeInUtils(sourceFile, this.getOptions()));
 		}
 	}
