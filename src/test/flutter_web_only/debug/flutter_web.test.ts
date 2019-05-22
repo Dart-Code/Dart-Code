@@ -1,9 +1,9 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { FlutterService, FlutterServiceExtension } from "../../../extension/flutter/vm_service_extensions";
 import { fsPath } from "../../../extension/utils";
 import { fetch } from "../../../extension/utils/fetch";
+import { FlutterService, FlutterServiceExtension } from "../../../shared/enums";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
 import { activate, defer, delay, ext, extApi, flutterWebBrokenMainFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, getPackages, openFile, positionOf, waitForResult, watchPromise } from "../../helpers";

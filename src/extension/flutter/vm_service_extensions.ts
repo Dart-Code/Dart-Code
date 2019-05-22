@@ -1,30 +1,10 @@
 import * as vs from "vscode";
+import { FlutterService, FlutterServiceExtension } from "../../shared/enums";
 import { isWin } from "../debug/utils";
 import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
 import { DebuggerType, TRACK_WIDGET_CREATION_ENABLED } from "../providers/debug_config_provider";
 
 export const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidget";
-
-/// The service extensions we know about.
-export enum FlutterServiceExtension {
-	PlatformOverride = "ext.flutter.platformOverride",
-	DebugBanner = "ext.flutter.debugAllowBanner",
-	CheckElevations = "ext.flutter.debugCheckElevationsEnabled",
-	DebugPaint = "ext.flutter.debugPaint",
-	PaintBaselines = "ext.flutter.debugPaintBaselinesEnabled",
-	InspectorSelectMode = "ext.flutter.inspector.show",
-	InspectorSetPubRootDirectories = "ext.flutter.inspector.setPubRootDirectories",
-	RepaintRainbow = "ext.flutter.repaintRainbow",
-	PerformanceOverlay = "ext.flutter.showPerformanceOverlay",
-	SlowAnimations = "ext.flutter.timeDilation",
-}
-
-/// The service extensions we know about and allow toggling via commands.
-export enum FlutterService {
-	HotReload = "reloadSources",
-	HotRestart = "hotRestart",
-	LaunchDevTools = "launchDevTools",
-}
 
 const keyTimeDilation = "timeDilation";
 const keyEnabled = "enabled";

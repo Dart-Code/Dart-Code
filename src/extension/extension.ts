@@ -3,7 +3,7 @@ import * as path from "path";
 import { isArray } from "util";
 import * as vs from "vscode";
 import { flutterExtensionIdentifier } from "../shared/constants";
-import { ITestResultsProvider } from "../shared/interfaces";
+import { DebugCommandHandler, ITestResultsProvider } from "../shared/interfaces";
 import { Context, WorkspaceContext } from "../shared/workspace";
 import { Analyzer } from "./analysis/analyzer";
 import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
@@ -644,7 +644,7 @@ export interface InternalExtensionApi {
 		handlesBreakpointsInPartFiles: boolean;
 		supportsDisableServiceTokens: boolean;
 	};
-	debugCommands: DebugCommands;
+	debugCommands: DebugCommandHandler;
 	debugProvider: vs.DebugConfigurationProvider;
 	flutterCapabilities: {
 		supportsPidFileForMachine: boolean;
