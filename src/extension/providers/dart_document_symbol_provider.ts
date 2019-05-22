@@ -2,14 +2,14 @@ import { CancellationToken, DocumentSymbol, DocumentSymbolProvider, TextDocument
 import { waitFor } from "../../shared/utils/promises";
 import { Outline } from "../analysis/analysis_server_types";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
-import { OpenFileTracker } from "../analysis/open_file_tracker";
+import { openFileTracker } from "../analysis/open_file_tracker";
 import { toRange } from "../utils";
 
 export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 	constructor(public readonly analyzer: Analyzer) { }
 
 	public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<DocumentSymbol[]> {
-		const outline = await waitFor(() => OpenFileTracker.getOutlineFor(document.uri), 500, 60000, token);
+		const outline = await waitFor(() => openFileTracker.getOutlineFor(document.uri), 500, 60000, token);
 		if (!outline || !outline.children || !outline.children.length)
 			return;
 		return outline.children.map((r) => this.convertResult(document, r));

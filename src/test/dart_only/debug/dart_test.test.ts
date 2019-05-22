@@ -2,7 +2,6 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { OpenFileTracker } from "../../../extension/analysis/open_file_tracker";
 import { log, logInfo } from "../../../extension/utils/log";
 import { TestOutlineVisitor } from "../../../extension/utils/vscode/outline";
 import { TestStatus } from "../../../shared/enums";
@@ -219,7 +218,7 @@ describe("dart test debugger", () => {
 		let numRuns = 1;
 		await checkResults(`After initial run`);
 		const visitor = new TestOutlineVisitor();
-		const outline = OpenFileTracker.getOutlineFor(helloWorldTestTreeFile);
+		const outline = extApi.fileTracker.getOutlineFor(helloWorldTestTreeFile);
 		if (!outline)
 			throw new Error(`Did not get outline for ${helloWorldTestTreeFile}`);
 		visitor.visit(outline);
@@ -252,7 +251,7 @@ describe("dart test debugger", () => {
 		let numRuns = 1;
 		await checkResults(`After initial run`);
 		const visitor = new TestOutlineVisitor();
-		const outline = OpenFileTracker.getOutlineFor(helloWorldTestDupeNameFile);
+		const outline = extApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
 		if (!outline)
 			throw new Error(`Did not get outline for ${helloWorldTestDupeNameFile}`);
 		visitor.visit(outline);

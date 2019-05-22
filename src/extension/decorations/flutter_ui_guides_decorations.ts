@@ -3,7 +3,7 @@ import { flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/vscode/utils";
 import { FlutterOutline } from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
-import { OpenFileTracker } from "../analysis/open_file_tracker";
+import { openFileTracker } from "../analysis/open_file_tracker";
 import { config } from "../config";
 import { DocumentPositionTracker } from "../editing/trackers";
 
@@ -49,7 +49,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 
 	private buildForTextEditor(editor: vs.TextEditor): void {
 		if (editor && editor.document)
-			this.buildFromOutline(editor, OpenFileTracker.getFlutterOutlineFor(editor.document.uri));
+			this.buildFromOutline(editor, openFileTracker.getFlutterOutlineFor(editor.document.uri));
 	}
 
 	private buildFromOutline(editor: vs.TextEditor, outline: FlutterOutline | undefined): void {
