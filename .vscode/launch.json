@@ -11,9 +11,9 @@
 				"--extensionDevelopmentPath=${workspaceRoot}"
 			],
 			"outFiles": [
-				"${workspaceRoot}/out/src/**/*.js"
+				"${workspaceRoot}/dist/**/*.js"
 			],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: webpack",
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**"
@@ -35,7 +35,7 @@
 			"outFiles": [
 				"${workspaceRoot}/out/src/test/**/*.js"
 			],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: webpack-with-tests",
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**"
@@ -57,7 +57,7 @@
 			"outFiles": [
 				"${workspaceRoot}/out/src/test/**/*.js"
 			],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: webpack-with-tests",
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**"
@@ -79,7 +79,7 @@
 			"outFiles": [
 				"${workspaceRoot}/out/src/test/**/*.js"
 			],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: webpack-with-tests",
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**"
@@ -123,7 +123,7 @@
 			"outFiles": [
 				"${workspaceRoot}/out/src/test/**/*.js"
 			],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: webpack-with-tests",
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**"
@@ -145,7 +145,7 @@
 			"outFiles": [
 				"${workspaceRoot}/out/src/test/**/*.js"
 			],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: webpack-with-tests",
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**"
@@ -167,7 +167,7 @@
 			"outFiles": [
 				"${workspaceRoot}/out/src/test/**/*.js"
 			],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: webpack-with-tests",
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**"
@@ -189,7 +189,7 @@
 			"outFiles": [
 				"${workspaceRoot}/out/src/test/**/*.js"
 			],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: webpack-with-tests",
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**"
@@ -211,7 +211,7 @@
 			"outFiles": [
 				"${workspaceRoot}/out/src/test/**/*.js"
 			],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: webpack-with-tests",
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**"
@@ -255,7 +255,7 @@
 			"outFiles": [
 				"${workspaceRoot}/out/src/test/**/*.js"
 			],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: webpack-with-tests",
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**"

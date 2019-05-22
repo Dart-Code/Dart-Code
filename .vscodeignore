@@ -15,6 +15,7 @@ coverage/**
 lints/**
 logs/**
 media/screenshots/**
+node_modules/**
 out/src/test/**
 out/tool/**
 package-lock.json
