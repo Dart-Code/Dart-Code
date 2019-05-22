@@ -1,9 +1,9 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { stopLoggingAction } from "../../shared/constants";
+import { LogCategory } from "../../shared/enums";
 import { forceWindowsDriveLetterToUppercase } from "../../shared/utils";
 import { fsPath } from "../../shared/vscode/utils";
-import { LogCategory } from "../debug/utils";
 import { createFolderForFile } from "../utils";
 import { logTo, userSelectableLogCategories } from "../utils/log";
 

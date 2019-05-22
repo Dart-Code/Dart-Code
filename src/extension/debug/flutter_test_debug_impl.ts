@@ -1,7 +1,8 @@
 import { Event } from "vscode-debugadapter";
+import { LogCategory, LogSeverity } from "../../shared/enums";
 import { globalFlutterArgs } from "../utils/processes";
 import { DartTestDebugSession } from "./dart_test_debug_impl";
-import { FlutterLaunchRequestArguments, LogCategory, LogMessage, LogSeverity } from "./utils";
+import { FlutterLaunchRequestArguments, LogMessage } from "./utils";
 
 export class FlutterTestDebugSession extends DartTestDebugSession {
 

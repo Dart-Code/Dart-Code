@@ -1,6 +1,7 @@
+import { LogSeverity } from "../../shared/enums";
 import * as f from "../flutter/flutter_types";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
-import { IAmDisposable, LogSeverity } from "./utils";
+import { IAmDisposable } from "./utils";
 
 export abstract class FlutterRunBase extends StdIOService<UnknownNotification> {
 	constructor(
