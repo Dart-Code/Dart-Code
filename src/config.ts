@@ -70,7 +70,6 @@ class Config {
 	get showIgnoreQuickFixes(): boolean { return this.getConfig<boolean>("showIgnoreQuickFixes", false); }
 	get showTestCodeLens(): boolean { return this.getConfig<boolean>("showTestCodeLens", true); }
 	get showTodos(): boolean { return this.getConfig<boolean>("showTodos", true); }
-	get theme(): "dark" | "light" { return this.getConfig<"dark" | "light">("theme", "dark"); }
 	get triggerSignatureHelpAutomatically(): boolean { return this.getConfig<boolean>("triggerSignatureHelpAutomatically", false); }
 	get useKnownChromeOSPorts(): boolean { return this.getConfig<boolean>("useKnownChromeOSPorts", true); }
 	get warnWhenEditingFilesOutsideWorkspace(): boolean { return this.getConfig<boolean>("warnWhenEditingFilesOutsideWorkspace", true); }
@@ -80,7 +79,6 @@ class Config {
 	get previewHotReloadCoverageMarkers() { return this.getConfig<boolean>("previewHotReloadCoverageMarkers", false); }
 
 	// Helpers
-	get useDarkTheme() { return this.theme !== "light"; }
 	get useDevToolsDarkTheme() { return this.devToolsTheme === "dark"; }
 	get openTestViewOnFailure() { return this.openTestView.indexOf("testFailure") !== -1; }
 	get openTestViewOnStart() { return this.openTestView.indexOf("testRunStart") !== -1; }

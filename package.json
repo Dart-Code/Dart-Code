@@ -842,15 +842,6 @@
 					},
 					"scope": "window"
 				},
-				"dart.theme": {
-					"enum": [
-						"dark",
-						"light"
-					],
-					"default": "dark",
-					"description": "The theme to use for Icon previews in Hovers. VS Code does not offer an API to check whether the current theme is Dart or Light so this must be configured manually.",
-					"scope": "window"
-				},
 				"dart.devToolsTheme": {
 					"enum": [
 						"dark",
