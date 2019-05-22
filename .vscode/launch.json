@@ -27,13 +27,13 @@
 			"args": [
 				"${workspaceRoot}/test/test_projects/projects.code-workspace",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/test/multi_root"
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/multi_root"
 			],
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
-				"${workspaceRoot}/out/test/**/*.js"
+				"${workspaceRoot}/out/src/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
 			"smartStep": true,
@@ -49,13 +49,13 @@
 			"args": [
 				"${workspaceRoot}/test/test_projects/dart_create_tests.code-workspace",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/test/dart_create_tests"
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/dart_create_tests"
 			],
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
-				"${workspaceRoot}/out/test/**/*.js"
+				"${workspaceRoot}/out/src/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
 			"smartStep": true,
@@ -71,13 +71,13 @@
 			"args": [
 				"${workspaceRoot}/test/test_projects/flutter_create_tests.code-workspace",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/test/flutter_create_tests"
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/flutter_create_tests"
 			],
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
-				"${workspaceRoot}/out/test/**/*.js"
+				"${workspaceRoot}/out/src/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
 			"smartStep": true,
@@ -93,13 +93,13 @@
 			"args": [
 				"${workspaceRoot}/test/test_projects/flutter_web_create_tests.code-workspace",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/test/flutter_web_create_tests"
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/flutter_web_create_tests"
 			],
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
-				"${workspaceRoot}/out/test/**/*.js"
+				"${workspaceRoot}/out/src/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
 			"smartStep": true,
@@ -115,13 +115,13 @@
 			"args": [
 				"${workspaceRoot}/test/test_projects/",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/test/multi_project_folder"
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/multi_project_folder"
 			],
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
-				"${workspaceRoot}/out/test/**/*.js"
+				"${workspaceRoot}/out/src/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
 			"smartStep": true,
@@ -137,13 +137,13 @@
 			"args": [
 				"${workspaceRoot}/test/test_projects/hello_world",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/test/dart_only"
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/dart_only"
 			],
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
-				"${workspaceRoot}/out/test/**/*.js"
+				"${workspaceRoot}/out/src/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
 			"smartStep": true,
@@ -159,13 +159,13 @@
 			"args": [
 				"${workspaceRoot}/test/test_projects/flutter_hello_world",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/test/flutter_only"
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/flutter_only"
 			],
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
-				"${workspaceRoot}/out/test/**/*.js"
+				"${workspaceRoot}/out/src/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
 			"smartStep": true,
@@ -181,13 +181,13 @@
 			"args": [
 				"${workspaceRoot}/test/test_projects/flutter_web",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/test/flutter_web_only"
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/flutter_web_only"
 			],
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
-				"${workspaceRoot}/out/test/**/*.js"
+				"${workspaceRoot}/out/src/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
 			"smartStep": true,
@@ -203,13 +203,13 @@
 			"args": [
 				"${env:FLUTTER_ROOT}",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/test/flutter_repository"
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/flutter_repository"
 			],
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
-				"${workspaceRoot}/out/test/**/*.js"
+				"${workspaceRoot}/out/src/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
 			"smartStep": true,
@@ -225,13 +225,13 @@
 			"args": [
 				"${workspaceRoot}/test/test_projects/empty",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/test/not_activated/dart_create"
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/not_activated/dart_create"
 			],
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
-				"${workspaceRoot}/out/test/**/*.js"
+				"${workspaceRoot}/out/src/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
 			"smartStep": true,
@@ -247,13 +247,13 @@
 			"args": [
 				"${workspaceRoot}/test/test_projects/empty",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/test/not_activated/flutter_create"
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/not_activated/flutter_create"
 			],
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
-				"${workspaceRoot}/out/test/**/*.js"
+				"${workspaceRoot}/out/src/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
 			"smartStep": true,
@@ -269,13 +269,13 @@
 			"args": [
 				"${workspaceRoot}/test/test_projects/empty",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/test/not_activated/flutter_web_create"
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/not_activated/flutter_web_create"
 			],
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"outFiles": [
-				"${workspaceRoot}/out/test/**/*.js"
+				"${workspaceRoot}/out/src/test/**/*.js"
 			],
 			"preLaunchTask": "npm: watch",
 			"smartStep": true,

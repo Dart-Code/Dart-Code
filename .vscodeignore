@@ -15,11 +15,10 @@ coverage/**
 lints/**
 logs/**
 media/screenshots/**
-out/test/**
+out/src/test/**
 out/tool/**
 package-lock.json
 src/**
-test/**
 tool/**
 tool/**
 tsconfig.json
