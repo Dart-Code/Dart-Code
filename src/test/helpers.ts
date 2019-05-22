@@ -14,8 +14,10 @@ import { tryDeleteFile } from "../extension/utils/fs";
 import { log, logError, logTo, logWarn } from "../extension/utils/log";
 import { waitFor } from "../extension/utils/promises";
 import { PackageDep } from "../extension/views/packages_view";
-import { SuiteTreeItem, TestResultsProvider, TestStatus } from "../extension/views/test_view";
+import { SuiteTreeItem } from "../extension/views/test_view";
 import { dartCodeExtensionIdentifier } from "../shared/constants";
+import { TestStatus } from "../shared/enums";
+import { ITestItemTreeItem, ITestResultsProvider } from "../shared/interfaces";
 import { Context } from "../shared/workspace";
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
@@ -803,12 +805,12 @@ export function renderedItemLabel(item: PackageDep): string {
 	return item.label || path.basename(fsPath(item.resourceUri));
 }
 
-export function makeTextTree(suite: vs.Uri, provider: TestResultsProvider, parent?: vs.TreeItem, buffer: string[] = [], indent = 0) {
-	const items = provider.getChildren(parent)
+export async function makeTextTree(suite: vs.Uri, provider: ITestResultsProvider, parent?: ITestItemTreeItem, buffer: string[] = [], indent = 0): Promise<string[]> {
+	const items = (await provider.getChildren(parent))
 		// Filter to only the suite we were given (though includes all children).
 		.filter((item) => (fsPath(item.resourceUri!) === fsPath(suite)) || !!parent);
 	const wsPath = fsPath(vs.workspace.getWorkspaceFolder(suite)!.uri);
-	items.forEach((item) => {
+	items.forEach(async (item) => {
 		// Suites don't have a .label (since the rendering is based on the resourceUri) so just
 		// fabricate one here that can be compared in the test. Note: For simplity we always use
 		// forward slashes in these names, since the comparison is against hard-coded comments
@@ -817,7 +819,7 @@ export function makeTextTree(suite: vs.Uri, provider: TestResultsProvider, paren
 			? path.relative(wsPath, fsPath(item.resourceUri!)).replace("\\", "/")
 			: item.label;
 		buffer.push(`${" ".repeat(indent * 4)}${expectedLabel} (${TestStatus[item.status]})`);
-		makeTextTree(suite, provider, item, buffer, indent + 1);
+		await makeTextTree(suite, provider, item, buffer, indent + 1);
 	});
 	return buffer;
 }
