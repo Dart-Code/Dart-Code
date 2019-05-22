@@ -4,8 +4,9 @@ import { noRepeatPromptThreshold, pubGlobalDocsUrl, pubPath } from "../../shared
 import { LogCategory, VersionStatus } from "../../shared/enums";
 import { fetch } from "../../shared/fetch";
 import { Sdks } from "../../shared/interfaces";
+import { versionIsAtLeast } from "../../shared/utils";
 import { Context } from "../../shared/vscode/workspace";
-import { openInBrowser, versionIsAtLeast } from "../utils";
+import { openInBrowser } from "../utils";
 import { logWarn } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 

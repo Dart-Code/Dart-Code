@@ -3,7 +3,6 @@ import * as glob from "glob";
 import * as https from "https";
 import * as os from "os";
 import * as path from "path";
-import * as semver from "semver";
 import { commands, extensions, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { dartCodeExtensionIdentifier, flutterExtensionIdentifier } from "../shared/constants";
 import { isWithinPath } from "../shared/utils";
@@ -236,22 +235,12 @@ function getVsCodeVersionConstraint(): string {
 	return packageJson.engines.vscode;
 }
 
-export function versionIsAtLeast(inputVersion: string, requiredVersion: string): boolean {
-	return semver.gte(inputVersion, requiredVersion);
-}
-
 function checkIsDevExtension() {
 	return extensionVersion.endsWith("-dev");
 }
 
 function checkHasFlutterExtension() {
 	return extensions.getExtension(flutterExtensionIdentifier) !== undefined;
-}
-
-export function isStableSdk(sdkVersion?: string): boolean {
-	// We'll consider empty versions as dev; stable versions will likely always
-	// be shipped with valid version files.
-	return !!(sdkVersion && !semver.prerelease(sdkVersion));
 }
 
 export function getLatestSdkVersion(): PromiseLike<string> {

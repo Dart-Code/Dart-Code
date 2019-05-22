@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import * as semver from "semver";
 import { flutterExecutableName, isWin } from "./constants";
 
 export function forceWindowsDriveLetterToUppercase(p: string): string {
@@ -98,4 +99,14 @@ export function uriToFilePath(uri: string, returnWindowsPath: boolean = isWin): 
 export function isDartSdkFromFlutter(dartSdkPath: string) {
 	const possibleFlutterSdkPath = path.join(path.dirname(path.dirname(path.dirname(dartSdkPath))), "bin");
 	return fs.existsSync(path.join(possibleFlutterSdkPath, flutterExecutableName));
+}
+
+export function versionIsAtLeast(inputVersion: string, requiredVersion: string): boolean {
+	return semver.gte(inputVersion, requiredVersion);
+}
+
+export function isStableSdk(sdkVersion?: string): boolean {
+	// We'll consider empty versions as dev; stable versions will likely always
+	// be shipped with valid version files.
+	return !!(sdkVersion && !semver.prerelease(sdkVersion));
 }
