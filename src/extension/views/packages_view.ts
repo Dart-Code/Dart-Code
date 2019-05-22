@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT } from "../../shared/constants";
 import { sortBy } from "../../shared/utils/array";
 import { fsPath } from "../../shared/vscode/utils";
 import { PackageMap } from "../debug/package_map";
@@ -93,7 +94,6 @@ export abstract class PackageDep extends vs.TreeItem {
 	) {
 		super(label, collapsibleState);
 		this.resourceUri = resourceUri;
-		this.contextValue = "dependency";
 	}
 }
 
@@ -102,6 +102,7 @@ export class PackageDepFile extends PackageDep {
 		resourceUri: vs.Uri,
 	) {
 		super(undefined, resourceUri, vs.TreeItemCollapsibleState.None);
+		this.contextValue = DART_DEP_FILE_NODE_CONTEXT;
 		this.command = {
 			arguments: [resourceUri],
 			command: "dart.package.openFile",
@@ -115,6 +116,7 @@ export class PackageDepFolder extends PackageDep {
 		resourceUri: vs.Uri,
 	) {
 		super(undefined, resourceUri, vs.TreeItemCollapsibleState.Collapsed);
+		this.contextValue = DART_DEP_FOLDER_NODE_CONTEXT;
 	}
 }
 
@@ -124,6 +126,7 @@ export class PackageDepProject extends PackageDep {
 	) {
 		const projectFolder = fsPath(resourceUri);
 		super(path.basename(projectFolder), resourceUri, vs.TreeItemCollapsibleState.Collapsed);
+		this.contextValue = DART_DEP_PROJECT_NODE_CONTEXT;
 
 		// Calculate relative path to the folder for the description.
 		const wf = vs.workspace.getWorkspaceFolder(resourceUri);
@@ -138,5 +141,6 @@ export class PackageDepPackage extends PackageDep {
 		resourceUri: vs.Uri,
 	) {
 		super(label, resourceUri, vs.TreeItemCollapsibleState.Collapsed);
+		this.contextValue = DART_DEP_PACKAGE_NODE_CONTEXT;
 	}
 }
