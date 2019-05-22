@@ -7,7 +7,7 @@ import { fsPath } from "../../../extension/utils";
 import { log, logInfo } from "../../../extension/utils/log";
 import { makeRegexForTest } from "../../../extension/utils/test";
 import { TestOutlineVisitor } from "../../../extension/utils/vscode/outline";
-import { TestStatus } from "../../../extension/views/test_view";
+import { TestStatus } from "../../../shared/enums";
 import { DartDebugClient } from "../../dart_debug_client";
 import { activate, defer, delay, ext, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, makeTextTree, openFile, positionOf, withTimeout } from "../../helpers";
 
@@ -151,7 +151,7 @@ describe("dart test debugger", () => {
 		]);
 
 		const expectedResults = getExpectedResults();
-		const actualResults = makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider).join("\n");
+		const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
 
 		assert.ok(expectedResults);
 		assert.ok(actualResults);
@@ -171,7 +171,7 @@ describe("dart test debugger", () => {
 			]);
 		}
 
-		const topLevelNodes = extApi.testTreeProvider.getChildren();
+		const topLevelNodes = await extApi.testTreeProvider.getChildren();
 		assert.ok(topLevelNodes);
 		assert.equal(topLevelNodes.length, 4);
 
@@ -194,7 +194,7 @@ describe("dart test debugger", () => {
 			dc.launch(config),
 		]);
 
-		const topLevelNodes = extApi.testTreeProvider.getChildren();
+		const topLevelNodes = await extApi.testTreeProvider.getChildren();
 		assert.ok(topLevelNodes);
 		assert.equal(topLevelNodes.length, 5);
 	});
@@ -205,10 +205,10 @@ describe("dart test debugger", () => {
 		// To test it, we'll run the whole suite, ensure the results are as expected, and then re-check it
 		// after running each test individually.
 
-		function checkResults(description: string) {
+		async function checkResults(description: string): Promise<void> {
 			log(description);
 			const expectedResults = getExpectedResults();
-			const actualResults = makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider).join("\n");
+			const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
 
 			assert.ok(expectedResults);
 			assert.ok(actualResults);
@@ -217,7 +217,7 @@ describe("dart test debugger", () => {
 
 		await runWithoutDebugging(helloWorldTestTreeFile);
 		let numRuns = 1;
-		checkResults(`After initial run`);
+		await checkResults(`After initial run`);
 		const visitor = new TestOutlineVisitor();
 		const outline = OpenFileTracker.getOutlineFor(helloWorldTestTreeFile);
 		if (!outline)
@@ -226,7 +226,7 @@ describe("dart test debugger", () => {
 		for (const test of visitor.tests.filter((t) => !t.isGroup)) {
 			// Run the test.
 			await runWithoutDebugging(helloWorldTestTreeFile, ["--name", makeRegexForTest(test.fullName, test.isGroup)]);
-			checkResults(`After running ${numRuns++} tests (most recently ${test.fullName})`);
+			await checkResults(`After running ${numRuns++} tests (most recently ${test.fullName})`);
 		}
 	}).timeout(180000); // This test runs lots of tests, and they're quite slow to start up currently.
 
@@ -238,10 +238,10 @@ describe("dart test debugger", () => {
 		// We re-run the groups as well as tests, to ensure consistent results when running
 		// multiple of the duplicated tests.
 
-		function checkResults(description: string) {
+		async function checkResults(description: string): Promise<void> {
 			log(description);
 			const expectedResults = getExpectedResults();
-			const actualResults = makeTextTree(helloWorldTestDupeNameFile, extApi.testTreeProvider).join("\n");
+			const actualResults = (await makeTextTree(helloWorldTestDupeNameFile, extApi.testTreeProvider)).join("\n");
 
 			assert.ok(expectedResults);
 			assert.ok(actualResults);
@@ -250,7 +250,7 @@ describe("dart test debugger", () => {
 
 		await runWithoutDebugging(helloWorldTestDupeNameFile);
 		let numRuns = 1;
-		checkResults(`After initial run`);
+		await checkResults(`After initial run`);
 		const visitor = new TestOutlineVisitor();
 		const outline = OpenFileTracker.getOutlineFor(helloWorldTestDupeNameFile);
 		if (!outline)
@@ -266,12 +266,12 @@ describe("dart test debugger", () => {
 			// Re-run each test.
 			for (const test of visitor.tests.filter((t) => !t.isGroup)) {
 				await runWithoutDebugging(helloWorldTestDupeNameFile, ["--name", makeRegexForTest(test.fullName, test.isGroup)]);
-				checkResults(`After running ${numRuns++} tests (most recently the test: ${test.fullName})`);
+				await checkResults(`After running ${numRuns++} tests (most recently the test: ${test.fullName})`);
 			}
 			// Re-run each group.
 			for (const group of visitor.tests.filter((t) => t.isGroup)) {
 				await runWithoutDebugging(helloWorldTestDupeNameFile, ["--name", makeRegexForTest(group.fullName, group.isGroup)]);
-				checkResults(`After running ${numRuns++} groups (most recently the group: ${group.fullName})`);
+				await checkResults(`After running ${numRuns++} groups (most recently the group: ${group.fullName})`);
 			}
 		}
 	}).timeout(160000); // This test runs lots of tests, and they're quite slow to start up currently.
