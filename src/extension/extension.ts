@@ -482,6 +482,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			debugProvider,
 			flutterCapabilities,
 			initialAnalysis,
+			log,
 			nextAnalysis,
 			packagesTreeProvider: dartPackagesProvider,
 			pubGlobal,
