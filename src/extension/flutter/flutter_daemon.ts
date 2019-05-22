@@ -1,8 +1,8 @@
 import * as vs from "vscode";
 import { ProgressLocation } from "vscode";
+import { LogCategory } from "../../shared/enums";
 import { isChromeOS, PromiseCompleter } from "../../shared/utils";
 import { config } from "../config";
-import { LogCategory } from "../debug/utils";
 import { FLUTTER_SUPPORTS_ATTACH } from "../extension";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
 import { reloadExtension, versionIsAtLeast } from "../utils";

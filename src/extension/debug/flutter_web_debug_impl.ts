@@ -1,7 +1,8 @@
+import { LogCategory, LogSeverity } from "../../shared/enums";
 import { FlutterDebugSession } from "./flutter_debug_impl";
 import { FlutterRunBase, RunMode } from "./flutter_run_base";
 import { FlutterWebRun } from "./flutter_web_run";
-import { FlutterLaunchRequestArguments, LogCategory, LogSeverity } from "./utils";
+import { FlutterLaunchRequestArguments } from "./utils";
 
 export class FlutterWebDebugSession extends FlutterDebugSession {
 	constructor() {

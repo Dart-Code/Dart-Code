@@ -38,3 +38,22 @@ export enum VersionStatus {
 	UpdateAvailable,
 	Valid,
 }
+
+export enum LogCategory {
+	General,
+	CI,
+	CommandProcesses,
+	Analyzer,
+	PubTest,
+	FlutterDaemon,
+	FlutterRun,
+	FlutterTest,
+	Observatory,
+	WebDaemon,
+}
+
+export enum LogSeverity {
+	Info,
+	Warn,
+	Error,
+}

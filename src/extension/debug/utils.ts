@@ -1,25 +1,8 @@
 import { EventEmitter } from "events";
-import * as fs from "fs";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { LogCategory, LogSeverity } from "../../shared/enums";
 import { forceWindowsDriveLetterToUppercase } from "../../shared/utils";
 
-export enum LogCategory {
-	General,
-	CI,
-	CommandProcesses,
-	Analyzer,
-	PubTest,
-	FlutterDaemon,
-	FlutterRun,
-	FlutterTest,
-	Observatory,
-	WebDaemon,
-}
-export enum LogSeverity {
-	Info,
-	Warn,
-	Error,
-}
 export class LogMessage {
 	constructor(public readonly message: string, public readonly severity: LogSeverity, public readonly category: LogCategory) { }
 }

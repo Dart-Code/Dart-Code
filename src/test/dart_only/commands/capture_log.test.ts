@@ -2,12 +2,12 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { LogCategory, LogSeverity } from "../../../extension/debug/utils";
 import { log } from "../../../extension/utils/log";
 import { stopLoggingAction } from "../../../shared/constants";
+import { LogCategory, LogSeverity } from "../../../shared/enums";
 import { platformEol, PromiseCompleter } from "../../../shared/utils";
-import { activate, sb, waitForResult } from "../../helpers";
 import { fsPath } from "../../../shared/vscode/utils";
+import { activate, sb, waitForResult } from "../../helpers";
 
 describe("capture logs command", () => {
 	beforeEach("activate", () => activate());

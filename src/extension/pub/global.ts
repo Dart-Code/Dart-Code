@@ -1,11 +1,10 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { noRepeatPromptThreshold, pubGlobalDocsUrl } from "../../shared/constants";
-import { VersionStatus } from "../../shared/enums";
+import { LogCategory, VersionStatus } from "../../shared/enums";
 import { fetch } from "../../shared/fetch";
 import { Sdks } from "../../shared/interfaces";
 import { Context } from "../../shared/vscode/workspace";
-import { LogCategory } from "../debug/utils";
 import { pubPath } from "../sdk/utils";
 import { openInBrowser, versionIsAtLeast } from "../utils";
 import { logWarn } from "../utils/log";

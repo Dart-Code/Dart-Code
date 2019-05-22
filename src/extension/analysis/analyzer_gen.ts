@@ -4,7 +4,7 @@
 "use strict";
 
 import * as vs from "vscode";
-import { LogCategory } from "../debug/utils";
+import { LogCategory } from "../../shared/enums";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
 import { log } from "../utils/log";
 import * as as from "./analysis_server_types";
