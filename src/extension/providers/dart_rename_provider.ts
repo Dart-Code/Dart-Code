@@ -2,7 +2,8 @@ import { CancellationToken, OutputChannel, Position, Range, RenameProvider, Text
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import * as channels from "../commands/channels";
-import { fsPath, toRange } from "../utils";
+import { toRange } from "../utils";
+import { fsPath } from "../../shared/vscode/utils";
 
 export class DartRenameProvider implements RenameProvider {
 	constructor(private readonly analyzer: Analyzer) { }

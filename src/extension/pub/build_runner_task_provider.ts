@@ -1,13 +1,14 @@
 import * as path from "path";
 import * as vs from "vscode";
+import { Sdks } from "../../shared/interfaces";
+import { fsPath } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { flutterPath, pubPath, referencesBuildRunner } from "../sdk/utils";
 import * as util from "../utils";
-import { fsPath } from "../utils";
 import { toolEnv } from "../utils/processes";
 
 export class PubBuildRunnerTaskProvider implements vs.TaskProvider {
-	constructor(private sdks: util.Sdks) { }
+	constructor(private sdks: Sdks) { }
 
 	public provideTasks(token?: vs.CancellationToken): vs.ProviderResult<vs.Task[]> {
 		const dartProjects = util.getDartWorkspaceFolders();

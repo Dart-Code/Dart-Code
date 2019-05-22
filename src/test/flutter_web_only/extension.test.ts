@@ -1,9 +1,10 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { fsPath, Sdks } from "../../extension/utils";
 import { logInfo } from "../../extension/utils/log";
 import { activateWithoutAnalysis, ext, extApi } from "../helpers";
+import { fsPath } from "../../shared/vscode/utils";
+import { Sdks } from "../../shared/interfaces";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {

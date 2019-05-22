@@ -1,4 +1,4 @@
-import { escapeRegExp } from "../debug/utils";
+import { escapeRegExp } from "../../shared/utils";
 
 export function getLaunchConfig(noDebug: boolean, path: string, testName: string, isGroup: boolean) {
 	return {

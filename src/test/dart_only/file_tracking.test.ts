@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { OpenFileTracker } from "../../extension/analysis/open_file_tracker";
-import { fsPath } from "../../extension/utils";
+import { fsPath } from "../../shared/vscode/utils";
 import { activate, closeAllOpenFiles, closeFile, helloWorldBrokenFile, helloWorldFolder, helloWorldMainFile, openFile, threeMinutesInMilliseconds, waitForResult, waitUntilAllTextDocumentsAreClosed } from "../helpers";
 
 export const outlineTrackingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/outline_tracking/empty.dart"));

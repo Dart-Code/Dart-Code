@@ -1,10 +1,11 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { forceWindowsDriveLetterToUppercase, LogCategory } from "../debug/utils";
-import { createFolderForFile, fsPath } from "../utils";
+import { stopLoggingAction } from "../../shared/constants";
+import { forceWindowsDriveLetterToUppercase } from "../../shared/utils";
+import { fsPath } from "../../shared/vscode/utils";
+import { LogCategory } from "../debug/utils";
+import { createFolderForFile } from "../utils";
 import { logTo, userSelectableLogCategories } from "../utils/log";
-
-export const STOP_LOGGING = "Stop Logging";
 
 export let isLogging = false;
 
@@ -43,8 +44,8 @@ export class LoggingCommands implements vs.Disposable {
 		this.disposables.push(logger);
 
 		await vs.window.showInformationMessage(
-			`Dart and Flutter logs are being captured. Reproduce your issue then click ${STOP_LOGGING}.`,
-			STOP_LOGGING,
+			`Dart and Flutter logs are being captured. Reproduce your issue then click ${stopLoggingAction}.`,
+			stopLoggingAction,
 		);
 
 		isLogging = false;

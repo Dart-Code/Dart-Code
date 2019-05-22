@@ -3,8 +3,11 @@ import * as path from "path";
 import { isArray } from "util";
 import * as vs from "vscode";
 import { flutterExtensionIdentifier } from "../shared/constants";
-import { InternalExtensionApi } from "../shared/interfaces";
-import { Context, WorkspaceContext } from "../shared/workspace";
+import { Sdks } from "../shared/interfaces";
+import { internalApiSymbol } from "../shared/symbols";
+import { InternalExtensionApi } from "../shared/vscode/interfaces";
+import { Context } from "../shared/vscode/workspace";
+import { WorkspaceContext } from "../shared/workspace";
 import { Analyzer } from "./analysis/analyzer";
 import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
 import { FileChangeHandler } from "./analysis/file_change_handler";
@@ -24,7 +27,6 @@ import { SdkCommands } from "./commands/sdk";
 import { TestCommands } from "./commands/test";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
-import { dartPlatformName, forceWindowsDriveLetterToUppercase, isWin, isWithinPath, LogCategory, platformDisplayName } from "./debug/utils";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { FlutterUiGuideDecorations } from "./decorations/flutter_ui_guides_decorations";
 import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_decorations";
@@ -62,14 +64,15 @@ import { DartCapabilities } from "./sdk/capabilities";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
 import { analyzerSnapshotPath, dartVMPath, flutterPath, handleMissingSdks, initWorkspace } from "./sdk/utils";
-import { internalApiSymbol } from "./symbols";
 import { DartUriHandler } from "./uri_handlers/uri_handler";
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
-import { fsPath } from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, log, logError, logTo } from "./utils/log";
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestItemTreeItem, TestResultsProvider } from "./views/test_view";
+import { LogCategory } from "./debug/utils";
+import { fsPath } from "../shared/vscode/utils";
+import { forceWindowsDriveLetterToUppercase, dartPlatformName, platformDisplayName, isWin, isWithinPath } from "../shared/utils";
 
 const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
 const HTML_MODE: vs.DocumentFilter = { language: "html", scheme: "file" };
@@ -559,7 +562,7 @@ function recalculateAnalysisRoots() {
 	});
 }
 
-function handleConfigurationChange(sdks: util.Sdks) {
+function handleConfigurationChange(sdks: Sdks) {
 	// TODOs
 	const newShowTodoSetting = config.showTodos;
 	const todoSettingChanged = showTodos !== newShowTodoSetting;
@@ -619,7 +622,7 @@ export async function deactivate(isRestart: boolean = false): Promise<void> {
 	}
 }
 
-function setCommandVisiblity(enable: boolean, workspaceContext?: util.WorkspaceContext) {
+function setCommandVisiblity(enable: boolean, workspaceContext?: WorkspaceContext) {
 	vs.commands.executeCommand("setContext", DART_PROJECT_LOADED, enable);
 	// TODO: Make this more specific. Maybe the one above?
 	vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && workspaceContext.hasAnyFlutterProjects);

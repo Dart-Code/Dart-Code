@@ -2,11 +2,12 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { STOP_LOGGING } from "../../../extension/commands/logging";
-import { LogCategory, LogSeverity, platformEol, PromiseCompleter } from "../../../extension/debug/utils";
-import { fsPath } from "../../../extension/utils";
+import { LogCategory, LogSeverity } from "../../../extension/debug/utils";
 import { log } from "../../../extension/utils/log";
+import { stopLoggingAction } from "../../../shared/constants";
+import { platformEol, PromiseCompleter } from "../../../shared/utils";
 import { activate, sb, waitForResult } from "../../helpers";
+import { fsPath } from "../../../shared/vscode/utils";
 
 describe("capture logs command", () => {
 	beforeEach("activate", () => activate());
@@ -22,7 +23,7 @@ describe("capture logs command", () => {
 		// would click the Stop Logging button on the notification).
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const stopLogging = new PromiseCompleter();
-		showInformationMessage.withArgs(sinon.match.any, STOP_LOGGING).resolves(stopLogging.promise);
+		showInformationMessage.withArgs(sinon.match.any, stopLoggingAction).resolves(stopLogging.promise);
 		// Start the logging but don't await it (it doesn't complete until we stop the logging!).
 		const loggingCommand = vs.commands.executeCommand("dart.startLogging") as Thenable<string>;
 		// Wait until the command has called for the filename and options (otherwise we'll send our log before
@@ -33,7 +34,7 @@ describe("capture logs command", () => {
 			loggingCommand,
 			stopLogging: async () => {
 				// Resolving the promise will stop the logging.
-				stopLogging.resolve(STOP_LOGGING);
+				stopLogging.resolve(stopLoggingAction);
 				// Wait for the logging command to finish.
 				return loggingCommand;
 			},

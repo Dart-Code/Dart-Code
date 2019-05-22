@@ -1,6 +1,7 @@
 import * as vs from "vscode";
+import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
-import { isAnalyzable, WorkspaceContext } from "../utils";
+import { isAnalyzable } from "../utils";
 
 export class StatusBarVersionTracker implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];

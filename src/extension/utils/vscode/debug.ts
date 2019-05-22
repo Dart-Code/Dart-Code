@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { PromiseCompleter } from "../../debug/utils";
+import { PromiseCompleter } from "../../../shared/utils";
 
 const observatoryPortRegex = /:([0-9]+)\/?$/;
 // TODO: Remove this once --debug-uri support in `flutter attach` (v1.5.4) hits
