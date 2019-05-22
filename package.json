@@ -1459,6 +1459,7 @@
 	},
 	"scripts": {
 		"vscode:prepublish": "webpack --mode production",
+		"watch": "tsc -watch -p ./",
 		"webpack": "webpack --mode development",
 		"webpack-with-tests": "webpack --mode development && tsc -p ./",
 		"postinstall": "node ./node_modules/vscode/bin/install",
