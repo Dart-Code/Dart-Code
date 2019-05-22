@@ -1,9 +1,9 @@
 import { CancellationToken, DocumentSymbol, DocumentSymbolProvider, TextDocument } from "vscode";
+import { waitFor } from "../../shared/utils/promises";
 import { Outline } from "../analysis/analysis_server_types";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { OpenFileTracker } from "../analysis/open_file_tracker";
 import { toRange } from "../utils";
-import { waitFor } from "../utils/promises";
 
 export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 	constructor(public readonly analyzer: Analyzer) { }

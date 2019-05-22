@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { platformEol } from "../../../shared/utils";
+import { platformEol } from "../../../shared/constants";
 import { activate, currentDoc, currentEditor, emptyExcludedFile, emptyFileInExcludedFolder, openFile, positionOf, setConfigForTest, setTestContent } from "../../helpers";
 
 const formattingOptions: vs.FormattingOptions = { tabSize: 2, insertSpaces: true };

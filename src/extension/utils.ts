@@ -7,10 +7,10 @@ import * as semver from "semver";
 import { commands, extensions, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { dartCodeExtensionIdentifier, flutterExtensionIdentifier } from "../shared/constants";
 import { isWithinPath } from "../shared/utils";
+import { hasPackagesFile, hasPubspec } from "../shared/utils/fs";
 import { fsPath } from "../shared/vscode/utils";
 import { locateBestProjectRoot } from "./project";
 import { referencesFlutterSdk, referencesFlutterWeb } from "./sdk/utils";
-import { hasPackagesFile, hasPubspec } from "./utils/fs";
 import { getExtensionLogPath, logError } from "./utils/log";
 
 export let extensionPath = extensions.getExtension(dartCodeExtensionIdentifier).extensionPath;

@@ -2,8 +2,8 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { logInfo } from "../../extension/utils/log";
+import { isWin } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
-import { isWin } from "../../shared/utils";
 import { fsPath } from "../../shared/vscode/utils";
 import { activateWithoutAnalysis, ext, extApi } from "../helpers";
 

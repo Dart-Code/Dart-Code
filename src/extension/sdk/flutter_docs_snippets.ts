@@ -2,12 +2,12 @@ import * as fs from "fs";
 import * as https from "https";
 import * as os from "os";
 import * as path from "path";
+import { flutterPath } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
+import { tryDeleteFile } from "../../shared/utils/fs";
 import { FlutterCapabilities } from "../flutter/capabilities";
 import { getRandomInt } from "../utils";
-import { tryDeleteFile } from "../utils/fs";
 import { runProcess } from "../utils/processes";
-import { flutterPath } from "./utils";
 
 export interface FlutterSampleSnippet {
 	readonly sourcePath: string;

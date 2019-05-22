@@ -1,28 +1,16 @@
 import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, window } from "vscode";
-import { dartPlatformName, flatMap, isWin } from "../../shared/utils";
+import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, FLUTTER_DOWNLOAD_URL, isWin } from "../../shared/constants";
+import { flatMap, isDartSdkFromFlutter } from "../../shared/utils";
+import { getChildFolders, hasPubspec } from "../../shared/utils/fs";
 import { fsPath } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, getDartWorkspaceFolders, getSdkVersion, notUndefined, openExtensionLogFile, openInBrowser, reloadExtension, resolvePaths, showLogAction } from "../utils";
-import { getChildFolders, hasPubspec } from "../utils/fs";
 import { log } from "../utils/log";
-
-const dartExecutableName = isWin ? "dart.exe" : "dart";
-const pubExecutableName = isWin ? "pub.bat" : "pub";
-const flutterExecutableName = isWin ? "flutter.bat" : "flutter";
-const androidStudioExecutableName = isWin ? "studio64.exe" : "studio.sh";
-export const dartVMPath = "bin/" + dartExecutableName;
-export const pubPath = "bin/" + pubExecutableName;
-export const pubSnapshotPath = "bin/snapshots/pub.dart.snapshot";
-export const analyzerSnapshotPath = "bin/snapshots/analysis_server.dart.snapshot";
-export const flutterPath = "bin/" + flutterExecutableName;
-export const androidStudioPath = "bin/" + androidStudioExecutableName;
-export const DART_DOWNLOAD_URL = "https://dart.dev/get-dart";
-export const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
 
 export function handleMissingSdks(context: ExtensionContext, analytics: Analytics, workspaceContext: WorkspaceContext) {
 	// HACK: In order to provide a more useful message if the user was trying to fun flutter.createProject
@@ -428,9 +416,4 @@ export function searchPaths(paths: string[], executableFilename: string, postFil
 	log(`    Returning SDK path ${sdkPath} for ${executableFilename}`);
 
 	return sdkPath;
-}
-
-export function isDartSdkFromFlutter(dartSdkPath: string) {
-	const possibleFlutterSdkPath = path.join(path.dirname(path.dirname(path.dirname(dartSdkPath))), "bin");
-	return fs.existsSync(path.join(possibleFlutterSdkPath, flutterExecutableName));
 }

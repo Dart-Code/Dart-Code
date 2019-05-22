@@ -1,7 +1,7 @@
 import * as https from "https";
 import * as querystring from "querystring";
 import { env, Uri, version as codeVersion } from "vscode";
-import { isChromeOS } from "../shared/utils";
+import { isChromeOS } from "../shared/constants";
 import { WorkspaceContext } from "../shared/workspace";
 import { config } from "./config";
 import { extensionVersion, hasFlutterExtension, isDevExtension } from "./utils";
