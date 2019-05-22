@@ -17,7 +17,7 @@ const path = require("path");
  */
 const config = {
 	devtool: "source-map",
-	entry: "./src/extension.ts",
+	entry: "./src/extension/extension.ts",
 	externals: {
 		vscode: "commonjs vscode",
 		ws: "ws",
