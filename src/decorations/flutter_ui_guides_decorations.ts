@@ -94,7 +94,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 			const firstGuideChar = Math.min(...guidesByLine[line].map((g) => Math.min(g.start.character, g.end.character)));
 			const lastGuideChar = Math.max(...guidesByLine[line].map((g) => Math.max(g.start.character, g.end.character)));
 			const lastLineCharacter = lineInfo.range.end.character;
-			const anchorPoint = lastLineCharacter < firstGuideChar ? 1 : firstGuideChar;
+			const anchorPoint = lastLineCharacter < firstGuideChar ? 0 : firstGuideChar;
 
 			const decorationString = new Array(lastGuideChar).fill(nonBreakingSpace);
 			for (const guide of guidesByLine[line]) {
