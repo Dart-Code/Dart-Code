@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { noRepeatPromptThreshold, pubGlobalDocsUrl } from "../../shared/constants";
+import { VersionStatus } from "../../shared/enums";
 import { Context } from "../../shared/workspace";
 import { LogCategory } from "../debug/utils";
 import { pubPath } from "../sdk/utils";
@@ -118,11 +119,4 @@ export class PubGlobal {
 			});
 		});
 	}
-}
-
-export enum VersionStatus {
-	NotInstalled,
-	UpdateRequired,
-	UpdateAvailable,
-	Valid,
 }

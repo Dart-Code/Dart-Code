@@ -3,7 +3,7 @@ import * as path from "path";
 import { isArray } from "util";
 import * as vs from "vscode";
 import { flutterExtensionIdentifier } from "../shared/constants";
-import { DebugCommandHandler, ITestResultsProvider } from "../shared/interfaces";
+import { InternalExtensionApi } from "../shared/interfaces";
 import { Context, WorkspaceContext } from "../shared/workspace";
 import { Analyzer } from "./analysis/analyzer";
 import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
@@ -625,42 +625,4 @@ function setCommandVisiblity(enable: boolean, workspaceContext?: util.WorkspaceC
 	vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && workspaceContext.hasAnyFlutterProjects);
 	vs.commands.executeCommand("setContext", FLUTTER_MOBILE_PROJECT_LOADED, enable && workspaceContext.hasAnyFlutterMobileProjects);
 	vs.commands.executeCommand("setContext", FLUTTER_WEB_PROJECT_LOADED, enable && workspaceContext.hasAnyFlutterWebProjects);
-}
-
-export interface InternalExtensionApi {
-	analyzerCapabilities: {
-		supportsGetSignature: boolean;
-		isDart2: boolean;
-		supportsAvailableSuggestions: boolean;
-		version: string;
-	};
-	cancelAllAnalysisRequests: () => void;
-	completionItemProvider: vs.CompletionItemProvider;
-	context: Context;
-	currentAnalysis: () => Promise<void>;
-	dartCapabilities: {
-		supportsDevTools: boolean;
-		includesSourceForSdkLibs: boolean;
-		handlesBreakpointsInPartFiles: boolean;
-		supportsDisableServiceTokens: boolean;
-	};
-	debugCommands: DebugCommandHandler;
-	debugProvider: vs.DebugConfigurationProvider;
-	flutterCapabilities: {
-		supportsPidFileForMachine: boolean;
-		supportsMultipleSamplesPerElement: boolean;
-		supportsDevTools: boolean;
-		hasTestGroupFix: boolean;
-		hasEvictBug: boolean;
-		webSupportsDebugging: boolean;
-	};
-	initialAnalysis: Promise<void>;
-	nextAnalysis: () => Promise<void>;
-	packagesTreeProvider: vs.TreeDataProvider<{}>;
-	pubGlobal: PubGlobal;
-	reanalyze: () => void;
-	referenceProvider: vs.ReferenceProvider & vs.DefinitionProvider;
-	renameProvider: vs.RenameProvider;
-	testTreeProvider: ITestResultsProvider;
-	workspaceContext: WorkspaceContext;
 }

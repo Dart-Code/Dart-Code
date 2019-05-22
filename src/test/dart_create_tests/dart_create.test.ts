@@ -2,12 +2,12 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { InternalExtensionApi } from "../../extension/extension";
 import { internalApiSymbol } from "../../extension/symbols";
 import { fsPath } from "../../extension/utils";
+import { dartCodeExtensionIdentifier } from "../../shared/constants";
+import { InternalExtensionApi } from "../../shared/interfaces";
 import { sb, waitForResult } from "../helpers";
 import sinon = require("sinon");
-import { dartCodeExtensionIdentifier } from "../../shared/constants";
 
 describe("dart", () => {
 	it("created a templated project", async () => {
