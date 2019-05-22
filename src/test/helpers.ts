@@ -6,7 +6,7 @@ import * as semver from "semver";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { isAnalyzable, vsCodeVersionConstraint } from "../extension/utils";
-import { log, logError, logTo, logWarn } from "../extension/utils/log";
+import { logError, logTo, logWarn } from "../extension/utils/log";
 import { dartCodeExtensionIdentifier, DART_TEST_SUITE_NODE_CONTEXT } from "../shared/constants";
 import { LogCategory, LogSeverity, TestStatus } from "../shared/enums";
 import { internalApiSymbol } from "../shared/symbols";
@@ -120,7 +120,7 @@ function getDefaultFile(): vs.Uri {
 }
 
 export async function activateWithoutAnalysis(): Promise<void> {
-	log("Activating");
+	extApi.log("Activating");
 	await ext.activate();
 	if (ext.exports)
 		extApi = ext.exports[internalApiSymbol];
@@ -137,23 +137,23 @@ export async function activate(file?: vs.Uri | null | undefined): Promise<void> 
 	if (file) {
 		await openFile(file);
 	} else {
-		log(`Not opening any file`);
+		extApi.log(`Not opening any file`);
 	}
-	log(`Waiting for initial and any in-progress analysis`);
+	extApi.log(`Waiting for initial and any in-progress analysis`);
 	await extApi.initialAnalysis;
 	// Opening a file above may start analysis after a short period so give it time to start
 	// before we continue.
 	await delay(200);
 	await extApi.currentAnalysis();
 
-	log(`Cancelling any in-progress requests`);
+	extApi.log(`Cancelling any in-progress requests`);
 	extApi.cancelAllAnalysisRequests();
 
-	log(`Ready to start test`);
+	extApi.log(`Ready to start test`);
 }
 
 export async function getPackages(uri?: vs.Uri) {
-	log("Restoring packages and waiting for next analysis to complete");
+	extApi.log("Restoring packages and waiting for next analysis to complete");
 	await activateWithoutAnalysis();
 	if (!(uri || (vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length))) {
 		logError("Cannot getPackages because there is no workspace folder and no URI was supplied");
@@ -165,18 +165,18 @@ export async function getPackages(uri?: vs.Uri) {
 }
 
 function logOpenEditors() {
-	log(`Current open editors are:`);
+	extApi.log(`Current open editors are:`);
 	if (vs.window.visibleTextEditors && vs.window.visibleTextEditors.length) {
 		for (const editor of vs.window.visibleTextEditors) {
-			log(`  - ${editor.document.uri}`);
+			extApi.log(`  - ${editor.document.uri}`);
 		}
 	} else {
-		log(`  - (no open editors)`);
+		extApi.log(`  - (no open editors)`);
 	}
 }
 
 export async function closeAllOpenFiles(): Promise<void> {
-	log(`Closing all open editors...`);
+	extApi.log(`Closing all open editors...`);
 	logOpenEditors();
 	try {
 		await withTimeout(
@@ -188,12 +188,12 @@ export async function closeAllOpenFiles(): Promise<void> {
 		logWarn(e);
 	}
 	await delay(100);
-	log(`Done closing editors!`);
+	extApi.log(`Done closing editors!`);
 	logOpenEditors();
 }
 
 export async function waitUntilAllTextDocumentsAreClosed(): Promise<void> {
-	log(`Waiting for VS Code to mark all documents as closed...`);
+	extApi.log(`Waiting for VS Code to mark all documents as closed...`);
 	const getAllOpenDocs = () => vs.workspace.textDocuments.filter(isAnalyzable);
 	await waitForResult(() => getAllOpenDocs().length === 0, "Some TextDocuments did not close", threeMinutesInMilliseconds, false);
 	const openDocs = getAllOpenDocs();
@@ -213,10 +213,10 @@ export async function closeFile(file: vs.Uri): Promise<void> {
 }
 
 export async function openFile(file: vs.Uri): Promise<vs.TextEditor> {
-	log(`Opening ${fsPath(file)}`);
+	extApi.log(`Opening ${fsPath(file)}`);
 	const doc = await vs.workspace.openTextDocument(file);
 	documentEol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
-	log(`Showing ${fsPath(file)}`);
+	extApi.log(`Showing ${fsPath(file)}`);
 	const editor = await vs.window.showTextDocument(doc);
 	await delay(100);
 	return editor;
@@ -660,13 +660,13 @@ export async function waitForEditorChange(action: () => Thenable<void>): Promise
 }
 
 export async function waitForNextAnalysis(action: () => void | Thenable<void>, timeoutSeconds?: number): Promise<void> {
-	log("Waiting for any in-progress analysis to complete");
+	extApi.log("Waiting for any in-progress analysis to complete");
 	await extApi.currentAnalysis;
 	// Get a new completer for the next analysis.
 	const nextAnalysis = extApi.nextAnalysis();
-	log("Running requested action");
+	extApi.log("Running requested action");
 	await action();
-	log(`Waiting for analysis to complete`);
+	extApi.log(`Waiting for analysis to complete`);
 	await withTimeout(nextAnalysis, "Analysis did not complete within specified timeout", timeoutSeconds);
 }
 
@@ -742,12 +742,12 @@ export function watchPromise<T>(name: string, promise: Promise<T>): Promise<T> {
 	promise.then((_) => {
 		didComplete = true;
 		if (logCompletion)
-			log(`Promise ${name} resolved!`, LogSeverity.Info, LogCategory.CI);
+			extApi.log(`Promise ${name} resolved!`, LogSeverity.Info, LogCategory.CI);
 	});
 	promise.catch((_) => {
 		didComplete = true;
 		if (logCompletion)
-			log(`Promise ${name} rejected!`, LogSeverity.Warn, LogCategory.CI);
+			extApi.log(`Promise ${name} rejected!`, LogSeverity.Warn, LogCategory.CI);
 	});
 
 	let checkResult: () => void;
@@ -755,7 +755,7 @@ export function watchPromise<T>(name: string, promise: Promise<T>): Promise<T> {
 		if (didComplete)
 			return;
 		logCompletion = true;
-		log(`Promise ${name} is still unresolved!`, LogSeverity.Info, LogCategory.CI);
+		extApi.log(`Promise ${name} is still unresolved!`, LogSeverity.Info, LogCategory.CI);
 		setTimeout(checkResult, 10000);
 	};
 	setTimeout(checkResult, 3000); // First log is after 3s, rest are 10s.
