@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { PackageDepFile, PackageDepPackage } from "../../../extension/views/packages_view";
+import { DART_DEP_FILE_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT } from "../../../shared/constants";
 import { fsPath } from "../../../shared/vscode/utils";
 import { ensurePackageTreeNode, extApi, getPackages, myPackageThingFile, renderedItemLabel } from "../../helpers";
 
@@ -9,9 +9,9 @@ describe("packages tree", () => {
 
 	it("includes known packages at the top level", async () => {
 		const topLevel = await extApi.packagesTreeProvider.getChildren(undefined);
-		ensurePackageTreeNode(topLevel, PackageDepPackage, "my_package");
-		ensurePackageTreeNode(topLevel, PackageDepPackage, "meta");
-		ensurePackageTreeNode(topLevel, PackageDepPackage, "test");
+		ensurePackageTreeNode(topLevel, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
+		ensurePackageTreeNode(topLevel, DART_DEP_PACKAGE_NODE_CONTEXT, "meta");
+		ensurePackageTreeNode(topLevel, DART_DEP_PACKAGE_NODE_CONTEXT, "test");
 	});
 
 	it("does not include own package", async () => {
@@ -22,15 +22,15 @@ describe("packages tree", () => {
 
 	it("includes known folders from inside lib/", async () => {
 		const topLevel = await extApi.packagesTreeProvider.getChildren(undefined);
-		const myPackage = ensurePackageTreeNode(topLevel, PackageDepPackage, "my_package");
+		const myPackage = ensurePackageTreeNode(topLevel, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
 		const myPackageLibContents = await extApi.packagesTreeProvider.getChildren(myPackage);
-		const file = ensurePackageTreeNode(myPackageLibContents, PackageDepFile, "my_thing.dart");
+		const file = ensurePackageTreeNode(myPackageLibContents, DART_DEP_FILE_NODE_CONTEXT, "my_thing.dart");
 		assert.equal(fsPath(file.resourceUri), fsPath(myPackageThingFile));
 	});
 
 	it("sorts the same way as VS Code explorer", async () => {
 		const topLevel = await extApi.packagesTreeProvider.getChildren(undefined);
-		const myPackage = ensurePackageTreeNode(topLevel, PackageDepPackage, "my_package");
+		const myPackage = ensurePackageTreeNode(topLevel, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
 		const myPackageLibContents = await extApi.packagesTreeProvider.getChildren(myPackage);
 
 		const names = myPackageLibContents.map((f) => renderedItemLabel(f));

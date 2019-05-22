@@ -30,6 +30,11 @@ export const DART_TEST_SUITE_NODE_CONTEXT = "dart-code:testSuiteNode";
 export const DART_TEST_GROUP_NODE_CONTEXT = "dart-code:testGroupNode";
 export const DART_TEST_TEST_NODE_CONTEXT = "dart-code:testTestNode";
 
+export const DART_DEP_PROJECT_NODE_CONTEXT = "dart-code:depProjectNode";
+export const DART_DEP_PACKAGE_NODE_CONTEXT = "dart-code:depPackageNode";
+export const DART_DEP_FOLDER_NODE_CONTEXT = "dart-code:depFolderNode";
+export const DART_DEP_FILE_NODE_CONTEXT = "dart-code:depFileNode";
+
 export const stopLoggingAction = "Stop Logging";
 
 export const restartReasonManual = "manual";
