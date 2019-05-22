@@ -120,7 +120,6 @@ function getDefaultFile(): vs.Uri {
 }
 
 export async function activateWithoutAnalysis(): Promise<void> {
-	extApi.log("Activating");
 	await ext.activate();
 	if (ext.exports)
 		extApi = ext.exports[internalApiSymbol];
