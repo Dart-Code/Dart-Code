@@ -1,7 +1,7 @@
 import * as vs from "vscode";
+import { LogCategory } from "../../shared/enums";
 import { PromiseCompleter } from "../../shared/utils";
 import { config } from "../config";
-import { LogCategory } from "../debug/utils";
 import { escapeShell, extensionVersion, reloadExtension, versionIsAtLeast } from "../utils";
 import { logError } from "../utils/log";
 import * as as from "./analysis_server_types";

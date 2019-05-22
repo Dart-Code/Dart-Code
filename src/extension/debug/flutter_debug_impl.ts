@@ -1,13 +1,14 @@
 import { Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { restartReasonManual } from "../../shared/constants";
+import { LogCategory, LogSeverity } from "../../shared/enums";
 import { logWarn } from "../utils/log";
 import { extractObservatoryPort } from "../utils/vscode/debug";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
 import { FlutterRunBase, RunMode } from "./flutter_run_base";
-import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments, LogCategory, LogMessage, LogSeverity } from "./utils";
+import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments, LogMessage } from "./utils";
 
 const objectGroupName = "my-group";
 const flutterExceptionStartBannerPrefix = "══╡ EXCEPTION CAUGHT BY";

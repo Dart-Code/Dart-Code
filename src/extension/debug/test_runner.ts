@@ -1,5 +1,6 @@
+import { LogSeverity } from "../../shared/enums";
 import { StdIOService } from "../services/stdio_service";
-import { IAmDisposable, LogSeverity } from "./utils";
+import { IAmDisposable } from "./utils";
 
 export class TestRunner extends StdIOService<{ type: string }> {
 	constructor(executable: string, projectFolder: string | undefined, args: string[], envOverrides: any, logFile: string, logger: (message: string, severity: LogSeverity) => void, maxLogLineLength: number) {

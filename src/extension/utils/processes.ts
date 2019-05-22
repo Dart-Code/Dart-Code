@@ -1,5 +1,5 @@
 import * as child_process from "child_process";
-import { LogCategory } from "../debug/utils";
+import { LogCategory } from "../../shared/enums";
 import { logProcess } from "./log";
 import { nullToUndefined } from "./misc";
 

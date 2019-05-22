@@ -1,10 +1,11 @@
 import * as path from "path";
 import { Event, OutputEvent } from "vscode-debugadapter";
+import { LogCategory, LogSeverity } from "../../shared/enums";
 import { ErrorNotification, GroupNotification, PrintNotification, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../../shared/test_protocol";
 import { DartDebugSession } from "./dart_debug_impl";
 import { ObservatoryConnection } from "./dart_debug_protocol";
 import { TestRunner } from "./test_runner";
-import { DartLaunchRequestArguments, LogCategory, LogMessage, LogSeverity } from "./utils";
+import { DartLaunchRequestArguments, LogMessage } from "./utils";
 
 const tick = "✓";
 const cross = "✖";

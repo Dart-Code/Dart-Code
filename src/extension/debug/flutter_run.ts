@@ -1,6 +1,6 @@
+import { LogSeverity } from "../../shared/enums";
 import { globalFlutterArgs } from "../utils/processes";
 import { FlutterRunBase, RunMode } from "./flutter_run_base";
-import { LogSeverity } from "./utils";
 
 export class FlutterRun extends FlutterRunBase {
 	constructor(mode: RunMode, flutterBinPath: string, projectFolder: string, args: string[], envOverrides: any, logFile: string, logger: (message: string, severity: LogSeverity) => void, maxLogLineLength: number) {

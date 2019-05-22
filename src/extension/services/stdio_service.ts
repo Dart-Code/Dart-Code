@@ -1,6 +1,7 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
-import { IAmDisposable, LogSeverity } from "../debug/utils";
+import { LogSeverity } from "../../shared/enums";
+import { IAmDisposable } from "../debug/utils";
 import { getLogHeader, logError, logInfo } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 
