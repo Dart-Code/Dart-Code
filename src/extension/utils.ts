@@ -24,8 +24,6 @@ export const FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE = "flutter.sh.create";
 export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "flutter.create";
 export const showLogAction = "Show Log";
 
-
-
 export function isFlutterWorkspaceFolder(folder?: WorkspaceFolder): boolean {
 	return !!(folder && isDartWorkspaceFolder(folder) && isFlutterProjectFolder(fsPath(folder.uri)));
 }
