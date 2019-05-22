@@ -4,8 +4,8 @@
 	],
 	"linterOptions": {
 		"exclude": [
-			"src/analysis/analysis_server_types.ts",
-			"src/analysis/analyzer_gen.ts",
+			"src/extension/analysis/analysis_server_types.ts",
+			"src/extension/analysis/analyzer_gen.ts",
 			"node_modules/**"
 		]
 	},
