@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as vs from "vscode";
+import { DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
 import { TestStatus } from "../../shared/enums";
 import { ErrorNotification, Group, GroupNotification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../../shared/test_protocol";
 import { flatMap, uniq } from "../../shared/utils";
@@ -8,10 +9,6 @@ import { getLaunchConfig } from "../../shared/utils/test";
 import { fsPath } from "../../shared/vscode/utils";
 import { getChannel } from "../commands/channels";
 import { extensionPath } from "../utils";
-
-const DART_TEST_SUITE_NODE = "dart-code:testSuiteNode";
-const DART_TEST_GROUP_NODE = "dart-code:testGroupNode";
-const DART_TEST_TEST_NODE = "dart-code:testTestNode";
 
 // TODO: Refactor all of this crazy logic out of test_view into its own class, so that consuming the test results is much
 // simpler and disconnected from the view!
@@ -550,7 +547,7 @@ export class SuiteTreeItem extends TestItemTreeItem {
 	constructor(suite: Suite) {
 		super(vs.Uri.file(suite.path), vs.TreeItemCollapsibleState.Collapsed);
 		this.suite = suite;
-		this.contextValue = DART_TEST_SUITE_NODE;
+		this.contextValue = DART_TEST_SUITE_NODE_CONTEXT;
 		this.resourceUri = vs.Uri.file(suite.path);
 		this.description = true;
 		this.id = `suite_${this.suite.path}_${this.suiteRunNumber}_${this.suite.id}`;
@@ -587,7 +584,7 @@ class GroupTreeItem extends TestItemTreeItem {
 		super(group.name, vs.TreeItemCollapsibleState.Collapsed);
 		this.suiteRunNumber = suite.currentRunNumber;
 		this.group = group;
-		this.contextValue = DART_TEST_GROUP_NODE;
+		this.contextValue = DART_TEST_GROUP_NODE_CONTEXT;
 		this.resourceUri = vs.Uri.file(suite.path);
 		this.id = `suite_${this.suite.path}_${this.suiteRunNumber}_group_${this.group.id}`;
 		this.status = TestStatus.Unknown;
@@ -647,7 +644,7 @@ class TestTreeItem extends TestItemTreeItem {
 		super(test.name, vs.TreeItemCollapsibleState.None);
 		this.suiteRunNumber = suite.currentRunNumber;
 		this.test = test;
-		this.contextValue = DART_TEST_TEST_NODE;
+		this.contextValue = DART_TEST_TEST_NODE_CONTEXT;
 		this.resourceUri = vs.Uri.file(suite.path);
 		this.id = `suite_${this.suite.path}_${this.suiteRunNumber}_test_${this.test.id}`;
 		this.status = TestStatus.Unknown;
