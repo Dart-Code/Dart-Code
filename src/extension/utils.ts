@@ -6,8 +6,8 @@ import * as path from "path";
 import * as semver from "semver";
 import { commands, extensions, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { dartCodeExtensionIdentifier, flutterExtensionIdentifier } from "../shared/constants";
-import { config } from "./config";
-import { forceWindowsDriveLetterToUppercase, isWithinPath } from "./debug/utils";
+import { isWithinPath } from "../shared/utils";
+import { fsPath } from "../shared/vscode/utils";
 import { locateBestProjectRoot } from "./project";
 import { referencesFlutterSdk, referencesFlutterWeb } from "./sdk/utils";
 import { hasPackagesFile, hasPubspec } from "./utils/fs";
@@ -24,13 +24,7 @@ export const FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE = "flutter.sh.create";
 export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "flutter.create";
 export const showLogAction = "Show Log";
 
-export function fsPath(uri: Uri | string) {
-	if (!config.normalizeWindowsDriveLetters)
-		return uri instanceof Uri ? uri.fsPath : uri; // tslint:disable-line:disallow-fspath
 
-	// tslint:disable-next-line:disallow-fspath
-	return forceWindowsDriveLetterToUppercase(uri instanceof Uri ? uri.fsPath : uri);
-}
 
 export function isFlutterWorkspaceFolder(folder?: WorkspaceFolder): boolean {
 	return !!(folder && isDartWorkspaceFolder(folder) && isFlutterProjectFolder(fsPath(folder.uri)));
@@ -305,51 +299,6 @@ export function openInBrowser(url: string) {
 	// https://github.com/Microsoft/vscode/issues/69608
 	// is fixed, as it complicates testing.
 	commands.executeCommand("vscode.open", Uri.parse(url));
-}
-
-export class WorkspaceContext {
-	// TODO: Move things from Sdks to this class that aren't related to the SDKs.
-	constructor(
-		public readonly sdks: Sdks,
-		public readonly hasAnyFlutterMobileProjects: boolean,
-		public readonly hasAnyFlutterWebProjects: boolean,
-		public readonly hasAnyStandardDartProjects: boolean,
-		public readonly hasProjectsInFuchsiaTree: boolean,
-	) { }
-
-	get hasOnlyDartProjects() { return !this.hasAnyFlutterProjects && !this.hasProjectsInFuchsiaTree; }
-	get hasAnyFlutterProjects() { return this.hasAnyFlutterMobileProjects || this.hasAnyFlutterWebProjects; }
-	get shouldLoadFlutterExtension() { return this.hasAnyFlutterProjects; }
-
-	/// Used only for display (for ex stats), not behaviour.
-	get workspaceTypeDescription(): string {
-		const types: string[] = [];
-		// Don't re-order these, else stats won't easily combine as we could have
-		// Dart, Flutter and also Flutter, Dart.
-		if (this.hasAnyStandardDartProjects)
-			types.push("Dart");
-		if (this.hasAnyFlutterMobileProjects)
-			types.push("Flutter");
-		if (this.hasAnyFlutterWebProjects)
-			types.push("Flutter Web");
-		if (this.hasProjectsInFuchsiaTree)
-			types.push("Fuchsia");
-		if (types.length === 0)
-			types.push("Unknown");
-
-		return types.join(", ");
-	}
-
-	// TODO: Since this class is passed around, we may need to make it update itself
-	// (eg. if the last Flutter project is removed from the multi-root workspace)?
-}
-
-export interface Sdks {
-	dart?: string;
-	dartVersion?: string;
-	flutter?: string;
-	flutterVersion?: string;
-	dartSdkIsFromFlutter: boolean;
 }
 
 export async function reloadExtension(prompt?: string, buttonText?: string, offerLogFile = false) {

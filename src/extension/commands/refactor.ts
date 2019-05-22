@@ -1,7 +1,8 @@
 import * as vs from "vscode";
+import { fsPath } from "../../shared/vscode/utils";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
-import { fsPath, unique } from "../utils";
+import { unique } from "../utils";
 import { logError, logInfo } from "../utils/log";
 
 export const REFACTOR_FAILED_DOC_MODIFIED = "This refactor cannot be applied because the document has changed.";

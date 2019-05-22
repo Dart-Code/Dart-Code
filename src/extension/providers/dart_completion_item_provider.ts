@@ -1,13 +1,14 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, Disposable, MarkdownString, Position, Range, SnippetString, TextDocument } from "vscode";
+import { flatMap } from "../../shared/utils";
+import { fsPath } from "../../shared/vscode/utils";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { hasOverlappingEdits } from "../commands/edit";
 import { config } from "../config";
 import { cleanDartdoc } from "../dartdocs";
-import { flatMap, IAmDisposable } from "../debug/utils";
-import { fsPath } from "../utils";
+import { IAmDisposable } from "../debug/utils";
 import { logError, logWarn } from "../utils/log";
 
 // TODO: This code has become messy with the SuggestionSet changes. It could do with some refactoring

@@ -1,8 +1,9 @@
 import { Disposable, TextDocument, Uri, window, workspace } from "vscode";
+import { fsPath } from "../../shared/vscode/utils";
+import { WorkspaceContext } from "../../shared/workspace";
 import { IAmDisposable } from "../debug/utils";
 import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
-import { fsPath } from "../utils";
 import { logError } from "../utils/log";
 import { FlutterOutline, FoldingRegion, Occurrences, Outline } from "./analysis_server_types";
 import { Analyzer } from "./analyzer";
@@ -18,7 +19,7 @@ let lastSubscribedFiles: string[] = [];
 export class OpenFileTracker implements IAmDisposable {
 	private disposables: Disposable[] = [];
 
-	constructor(private readonly analyzer: Analyzer, private readonly wsContext: util.WorkspaceContext) {
+	constructor(private readonly analyzer: Analyzer, private readonly wsContext: WorkspaceContext) {
 		// Reset these, since they're state from the last analysis server
 		// (when we change SDK and thus change this).
 		lastPriorityFiles = [];

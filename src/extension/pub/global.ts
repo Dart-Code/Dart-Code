@@ -2,11 +2,12 @@ import * as path from "path";
 import * as vs from "vscode";
 import { noRepeatPromptThreshold, pubGlobalDocsUrl } from "../../shared/constants";
 import { VersionStatus } from "../../shared/enums";
-import { Context } from "../../shared/workspace";
+import { fetch } from "../../shared/fetch";
+import { Sdks } from "../../shared/interfaces";
+import { Context } from "../../shared/vscode/workspace";
 import { LogCategory } from "../debug/utils";
 import { pubPath } from "../sdk/utils";
-import { openInBrowser, Sdks, versionIsAtLeast } from "../utils";
-import { fetch } from "../utils/fetch";
+import { openInBrowser, versionIsAtLeast } from "../utils";
 import { logWarn } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 

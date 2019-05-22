@@ -2,8 +2,9 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { platformEol } from "../../shared/utils";
 import { config } from "../config";
-import { IAmDisposable, LogCategory, LogEmitter, LogMessage, LogSeverity, platformEol } from "../debug/utils";
+import { IAmDisposable, LogCategory, LogEmitter, LogMessage, LogSeverity } from "../debug/utils";
 import { getRandomInt } from "../utils";
 
 let extensionLogPath: string;

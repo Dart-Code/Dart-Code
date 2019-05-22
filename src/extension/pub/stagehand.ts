@@ -1,9 +1,9 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { stagehandInstallationInstructionsUrl } from "../../shared/constants";
+import { Sdks } from "../../shared/interfaces";
 import { LogCategory } from "../debug/utils";
 import { pubPath } from "../sdk/utils";
-import { Sdks } from "../utils";
 import { logProcess } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 import { PubGlobal } from "./global";

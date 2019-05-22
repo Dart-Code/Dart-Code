@@ -3,9 +3,10 @@ import { ChildProcess } from "child_process";
 import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { ObservatoryConnection } from "../extension/debug/dart_debug_protocol";
-import { isWin, LogCategory, LogSeverity } from "../extension/debug/utils";
+import { LogCategory, LogSeverity } from "../extension/debug/utils";
 import { log, logProcess } from "../extension/utils/log";
 import { safeSpawn } from "../extension/utils/processes";
+import { isWin } from "../shared/utils";
 import { DartDebugClient } from "./dart_debug_client";
 import { defer, getLaunchConfiguration } from "./helpers";
 

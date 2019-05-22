@@ -1,7 +1,8 @@
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, DocumentSelector, Range, TextDocument } from "vscode";
+import { fsPath } from "../../shared/vscode/utils";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
-import { fsPath, isAnalyzableAndInWorkspace } from "../utils";
+import { isAnalyzableAndInWorkspace } from "../utils";
 import { logError } from "../utils/log";
 import { RankedCodeActionProvider } from "./ranking_code_action_provider";
 

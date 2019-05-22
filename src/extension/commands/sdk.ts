@@ -4,9 +4,13 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { ProgressLocation, Uri, window } from "vscode";
+import { Sdks } from "../../shared/interfaces";
+import { flatMap, PromiseCompleter } from "../../shared/utils";
+import { fsPath } from "../../shared/vscode/utils";
+import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { stripMarkdown } from "../dartdocs";
-import { flatMap, LogCategory, LogSeverity, PromiseCompleter } from "../debug/utils";
+import { LogCategory, LogSeverity } from "../debug/utils";
 import { FlutterCapabilities } from "../flutter/capabilities";
 import { FlutterDeviceManager } from "../flutter/device_manager";
 import { getWorkspaceProjectFolders, locateBestProjectRoot } from "../project";
@@ -19,7 +23,6 @@ import { createFlutterSampleInTempFolder } from "../sdk/flutter_samples";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
 import { flutterPath, pubPath, showDartActivationFailure, showFlutterActivationFailure } from "../sdk/utils";
 import * as util from "../utils";
-import { fsPath } from "../utils";
 import { sortBy } from "../utils/array";
 import { getChildFolders, hasPubspec } from "../utils/fs";
 import { log, logError, logProcess } from "../utils/log";
@@ -32,12 +35,12 @@ let lastPubspecSaveReason: vs.TextDocumentSaveReason | undefined;
 let numProjectCreationsInProgress = 0;
 
 export class SdkCommands {
-	private readonly sdks: util.Sdks;
+	private readonly sdks: Sdks;
 	private flutterScreenshotPath?: string;
 	// A map of any in-progress commands so we can terminate them if we want to run another.
 	private runningCommands: { [workspaceUriAndCommand: string]: ChainedProcess | undefined; } = {};
 
-	constructor(context: vs.ExtensionContext, private workspace: util.WorkspaceContext, private pubGlobal: PubGlobal, private flutterCapabilities: FlutterCapabilities, private deviceManager: FlutterDeviceManager) {
+	constructor(context: vs.ExtensionContext, private workspace: WorkspaceContext, private pubGlobal: PubGlobal, private flutterCapabilities: FlutterCapabilities, private deviceManager: FlutterDeviceManager) {
 		this.sdks = workspace.sdks;
 		const dartSdkManager = new DartSdkManager(this.sdks);
 		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => dartSdkManager.changeSdk()));

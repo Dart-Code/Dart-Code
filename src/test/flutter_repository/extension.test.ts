@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { tenMinutesInMs } from "../../shared/constants";
-import { fsPath } from "../../extension/utils";
+import { fsPath } from "../../shared/vscode/utils";
 import { activate, activateWithoutAnalysis, ext } from "../helpers";
 
 beforeEach("set timeout", function () {

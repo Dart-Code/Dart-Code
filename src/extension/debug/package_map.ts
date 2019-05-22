@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { findFile, isWin, isWithinPath, uriToFilePath } from "./utils";
+import { findFile, isWin, isWithinPath, uriToFilePath } from "../../shared/utils";
 
 export class PackageMap {
 	public static findPackagesFile<T extends string | undefined>(entryPoint: T): string | (undefined extends T ? undefined : never) {

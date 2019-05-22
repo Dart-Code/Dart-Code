@@ -3,8 +3,8 @@ import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { cleanDartdoc } from "../dartdocs";
 import { PackageMap } from "../debug/package_map";
-import { fsPath } from "../utils";
 import { logError } from "../utils/log";
+import { fsPath } from "../../shared/vscode/utils";
 
 export class DartHoverProvider implements HoverProvider {
 	constructor(private readonly analyzer: Analyzer) { }

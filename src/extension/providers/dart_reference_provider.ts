@@ -1,8 +1,8 @@
 import { CancellationToken, DefinitionLink, DefinitionProvider, Location, Position, ReferenceContext, ReferenceProvider, TextDocument, Uri } from "vscode";
+import { flatMap } from "../../shared/utils";
+import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
-import { flatMap } from "../debug/utils";
 import * as util from "../utils";
-import { fsPath } from "../utils";
 
 export class DartReferenceProvider implements ReferenceProvider, DefinitionProvider {
 	constructor(private readonly analyzer: Analyzer) { }
