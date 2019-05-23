@@ -2,6 +2,21 @@
 
 "use strict";
 
+// Webpack will output the following warnings when building:
+//
+// WARNING in ./node_modules/ws/lib/buffer-util.js
+// Module not found: Error: Can't resolve 'bufferutil' in '/Users/dantup/Dev/Dart-Code/node_modules/ws/lib'
+//
+// WARNING in ./node_modules/ws/lib/validation.js
+// Module not found: Error: Can't resolve 'utf-8-validate' in '/Users/dantup/Dev/Dart-Code/node_modules/ws/lib'
+//
+// These are caused by ws require()ing those two modules and they're not listed
+// in our dependencies. Info on the reason for this is here:
+// https://github.com/websockets/ws/blob/5d751fbd4c0ab3478a6de4194d4d06908bc8ac00/README.md#opt-in-for-performance-and-spec-compliance
+//
+// It appears to be safe to ignore these as they're being loaded in a try{} block
+// and are optional.
+
 const path = require("path");
 
 /**
