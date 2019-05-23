@@ -152,7 +152,6 @@ export async function activate(file?: vs.Uri | null | undefined): Promise<void> 
 }
 
 export async function getPackages(uri?: vs.Uri) {
-	extApi.log("Restoring packages and waiting for next analysis to complete");
 	await activateWithoutAnalysis();
 	if (!(uri || (vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length))) {
 		logError("Cannot getPackages because there is no workspace folder and no URI was supplied");
