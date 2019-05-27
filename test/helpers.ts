@@ -530,7 +530,7 @@ export async function getCompletionsViaProviderAt(searchText: string, triggerCha
 	const results = await extApi.completionItemProvider.provideCompletionItems(
 		currentDoc(),
 		position,
-		undefined,
+		fakeCancellationToken,
 		{ triggerCharacter, triggerKind: triggerCharacter ? vs.CompletionTriggerKind.TriggerCharacter : vs.CompletionTriggerKind.Invoke },
 	);
 
@@ -561,7 +561,7 @@ export function ensureCompletion(items: vs.CompletionItem[], kind: vs.Completion
 }
 
 export async function resolveCompletion(completion: vs.CompletionItem): Promise<vs.CompletionItem> {
-	const resolved = await extApi.completionItemProvider.resolveCompletionItem(completion as DelayedCompletionItem, undefined);
+	const resolved = await extApi.completionItemProvider.resolveCompletionItem(completion as DelayedCompletionItem, fakeCancellationToken);
 	return resolved || completion;
 }
 
