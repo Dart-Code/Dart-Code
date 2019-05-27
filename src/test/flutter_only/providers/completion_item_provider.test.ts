@@ -28,16 +28,22 @@ main() {
 }
 		`);
 			const count = 50;
-			const start = Date.now();
+			const startMemory = process.memoryUsage();
+			const startTime = Date.now();
+
 			for (let i = 0; i < count; i++) {
-				const startInner = Date.now();
+				const startMemoryInner = process.memoryUsage();
+				const startTimeInner = Date.now();
+
 				const completions = await getCompletionsAt("ProcessInf^");
 				ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
-				const endInner = Date.now();
-				console.log(`Iteration #${i} took ${endInner - startInner}ms to return ${completions.length} results`);
+
+				const heapChangeMbs = (process.memoryUsage().heapUsed - startMemoryInner.heapUsed) / 1024 / 1024;
+				console.log(`Iteration #${i} took ${Date.now() - startTimeInner}ms to return ${completions.length} results, heap change was ${Math.round(heapChangeMbs)}MB`);
 			}
-			const end = Date.now();
-			console.log(`Took ${end - start}ms to do ${count} completion requests`);
+
+			const heapChangeMbs = (process.memoryUsage().heapUsed - startMemory.heapUsed) / 1024 / 1024;
+			console.log(`Total run took ${Date.now() - startTime}ms heap change was ${Math.round(heapChangeMbs)}MB`);
 		});
 	});
 });
