@@ -1233,7 +1233,7 @@
 				},
 				"dart.autoImportCompletions": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "Whether to include symbols that have not been imported in the code completion list and automatically insert the required import when selecting them.",
 					"scope": "window"
 				},
