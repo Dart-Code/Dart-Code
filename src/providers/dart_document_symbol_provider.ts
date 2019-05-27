@@ -17,7 +17,7 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 
 	private convertResult(document: TextDocument, outline: Outline): DocumentSymbol {
 		const symbol = new DocumentSymbol(
-			outline.element.name, outline.element.parameters,
+			outline.element.name || "<unnamed>", outline.element.parameters,
 			getSymbolKindForElementKind(outline.element.kind),
 			this.getCodeOffset(document, outline),
 			toRange(document, outline.element.location.offset, outline.element.location.length),
