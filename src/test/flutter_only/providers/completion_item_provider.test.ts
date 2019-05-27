@@ -39,11 +39,11 @@ main() {
 				ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
 
 				const heapChangeMbs = (process.memoryUsage().heapUsed - startMemoryInner.heapUsed) / 1024 / 1024;
-				console.log(`Iteration #${i} took ${Date.now() - startTimeInner}ms to return ${completions.length} results, heap change was ${Math.round(heapChangeMbs)}MB`);
+				console.log(`Iteration #${i < 10 ? " " : ""}${i} took ${Date.now() - startTimeInner} ms to return ${completions.length} results, heap change was ${Math.round(heapChangeMbs)} MB`);
 			}
 
 			const heapChangeMbs = (process.memoryUsage().heapUsed - startMemory.heapUsed) / 1024 / 1024;
-			console.log(`Total run took ${Date.now() - startTime}ms heap change was ${Math.round(heapChangeMbs)}MB`);
+			console.log(`Total run took ${Date.now() - startTime} ms heap change was ${Math.round(heapChangeMbs)} MB`);
 		});
 	});
 });
