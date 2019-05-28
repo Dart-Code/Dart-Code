@@ -111,7 +111,9 @@ export class AnalyzerStatusReporter {
 
 	private reportError(error: ServerErrorNotification, method?: string) {
 		const sdkVersion = getSdkVersion(this.workspaceContext.sdks.dart);
-		const flutterSdkVersion = getSdkVersion(this.workspaceContext.sdks.flutter);
+		const flutterSdkVersion = this.workspaceContext.sdks.dartSdkIsFromFlutter
+			? getSdkVersion(this.workspaceContext.sdks.flutter)
+			: undefined;
 
 		// Attempt to get the last diagnostics
 		const diagnostics = this.analyzer.getLastDiagnostics();
