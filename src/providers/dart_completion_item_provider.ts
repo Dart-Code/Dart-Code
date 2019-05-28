@@ -107,7 +107,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		}
 	}
 
-	public async resolveCompletionItem?(item: DelayedCompletionItem, token: CancellationToken): Promise<CompletionItem> {
+	public async resolveCompletionItem(item: DelayedCompletionItem, token: CancellationToken): Promise<CompletionItem | undefined> {
 		if (!item.suggestion)
 			return;
 
@@ -117,6 +117,10 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			label: item.suggestion.label,
 			offset: item.offset,
 		});
+
+		if (token.isCancellationRequested) {
+			return;
+		}
 
 		// Rebuild the completion using the additional resolved info.
 		return this.createCompletionItemFromSuggestion(
