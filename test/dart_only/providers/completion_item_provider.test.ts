@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
+import { config } from "../../../extension/config";
 import { acceptFirstSuggestion, activate, currentDoc, emptyFile, ensureCompletion, ensureNoCompletion, ensureTestContent, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, getCompletionsViaProviderAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, resolveCompletion, select, setTestContent } from "../../helpers";
 
 describe("completion_item_provider", () => {
@@ -136,8 +137,8 @@ class Student extends Person {
 	});
 
 	describe("with SuggestionSet support", () => {
-		beforeEach("ensure SuggestionSets are supported", function () {
-			if (!extApi.analyzerCapabilities.supportsAvailableSuggestions)
+		beforeEach("ensure SuggestionSets are supported", async function () {
+			if (!extApi.analyzerCapabilities.supportsAvailableSuggestions || !config.autoImportCompletions)
 				this.skip();
 		});
 
