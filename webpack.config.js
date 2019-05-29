@@ -39,7 +39,7 @@ const config = {
 		}],
 	},
 	output: {
-		devtoolModuleFilenameTemplate: "../[resource-path]",
+		devtoolModuleFilenameTemplate: "../../[resource-path]",
 		filename: "extension.js",
 		libraryTarget: "commonjs2",
 		path: path.resolve(__dirname, "out/dist"),
