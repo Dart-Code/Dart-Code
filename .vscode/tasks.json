@@ -4,7 +4,10 @@
 		{
 			"type": "npm",
 			"script": "watch",
-			"problemMatcher": "$tsc-watch",
+			"problemMatcher": [
+				"$ts-webpack-watch",
+				"$tslint-webpack-watch"
+			],
 			"isBackground": true,
 			"presentation": {
 				"reveal": "never"
@@ -13,6 +16,21 @@
 				"kind": "build",
 				"isDefault": true
 			},
+			"runOptions": {
+				"runOn": "folderOpen",
+			}
+		},
+		{
+			"type": "npm",
+			"script": "watch-tests",
+			"problemMatcher": [
+				"$tsc-watch"
+			],
+			"isBackground": true,
+			"presentation": {
+				"reveal": "never"
+			},
+			"group": "build",
 			"runOptions": {
 				"runOn": "folderOpen",
 			}
