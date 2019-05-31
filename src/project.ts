@@ -27,7 +27,7 @@ export function getChildProjects(folder: string, levelsToGo: number): string[] {
 		.filter((f) => f !== "bin") // Don't look in bin folders
 		.filter((f) => f !== "cache") // Don't look in cache folders
 		.map((f) => path.join(folder, f))
-		.filter((d) => fs.statSync(d).isDirectory());
+		.filter((d) => fs.existsSync(d) && fs.statSync(d).isDirectory());
 
 	let projects: string[] = [];
 	for (const dir of children) {
