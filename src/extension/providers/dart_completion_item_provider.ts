@@ -224,9 +224,9 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 				.map((suggestion): DelayedCompletionItem => {
 
 					// Calculate the relevance for this item.
-					let relevance = includedSuggestionSet.relevance;
+					let relevanceBoost = 0;
 					if (suggestion.relevanceTags)
-						suggestion.relevanceTags.forEach((t) => relevance += (tagBoosts[t] || 0));
+						suggestion.relevanceTags.forEach((t) => relevanceBoost = Math.max(relevanceBoost, tagBoosts[t] || 0));
 
 					const completionItem = this.createCompletionItemFromSuggestion(
 						document,
@@ -236,7 +236,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 						resp.replacementOffset,
 						resp.replacementLength,
 						undefined,
-						relevance,
+						includedSuggestionSet.relevance + relevanceBoost,
 						suggestion,
 						undefined,
 					);
