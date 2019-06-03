@@ -313,7 +313,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			// TODO: Support this! :)
 			debugConfig.noDebug = true;
 			if (!hasShownFlutterWebDebugWarning) {
-				window.showInformationMessage("Breakpoints and stepping are not currently supported in VS Code for Flutter web projects, please use your browser tools if you need to break or step through code.");
+				window.showInformationMessage("Breakpoints and stepping are not currently supported in VS Code for Flutter web projects, please use your browsers developer tools if you need to break or step through code.");
 				hasShownFlutterWebDebugWarning = true;
 			}
 		}
