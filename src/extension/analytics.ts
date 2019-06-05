@@ -134,6 +134,9 @@ export class Analytics {
 			// cd12: "Removed",
 			cd13: this.flutterSdkVersion,
 			cd14: hasFlutterExtension ? "Installed" : "Not Installed",
+			cd17: this.workspaceContext.hasAnyFlutterProjects
+				? (config.previewFlutterUiGuides ? (config.previewFlutterUiGuidesCustomTracking ? "On + Custom Tracking" : "On") : "Off")
+				: null,
 			cd2: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,
