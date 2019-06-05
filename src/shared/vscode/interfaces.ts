@@ -9,6 +9,8 @@ export interface InternalExtensionApi {
 	analyzerCapabilities: {
 		supportsGetSignature: boolean;
 		isDart2: boolean;
+		hasNewSignatureFormat: boolean;
+		hasNewHoverLibraryFormat: boolean;
 		supportsAvailableSuggestions: boolean;
 		version: string;
 	};

@@ -1,10 +1,10 @@
 import { CancellationToken, Hover, HoverProvider, Position, Range, TextDocument, Uri } from "vscode";
+import { fsPath } from "../../shared/vscode/utils";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { cleanDartdoc } from "../dartdocs";
 import { PackageMap } from "../debug/package_map";
 import { logError } from "../utils/log";
-import { fsPath } from "../../shared/vscode/utils";
 
 export class DartHoverProvider implements HoverProvider {
 	constructor(private readonly analyzer: Analyzer) { }
@@ -47,22 +47,36 @@ export class DartHoverProvider implements HoverProvider {
 		const elementDescription = hover.elementDescription;
 		const dartdoc: string | undefined = hover.dartdoc;
 		const propagatedType = hover.propagatedType;
-		const containingLibraryName = hover.containingLibraryName;
-		const containingLibraryPath = hover.containingLibraryPath;
 
 		let displayString: string = "";
 		if (elementDescription) displayString += (hover.isDeprecated ? "(deprecated) " : "") + `${elementDescription}\n`;
 		if (propagatedType) displayString += `propogated type: ${propagatedType.trim()}`;
 
 		let documentation = cleanDartdoc(dartdoc);
-		if (containingLibraryName) {
-			documentation = `*${containingLibraryName}*\n\n` + documentation;
-		} else if (containingLibraryPath) {
+		if (this.analyzer.capabilities.hasNewHoverLibraryFormat) {
+			const containingLibrary = hover.containingLibraryName;
 			const packageMap = DartHoverProvider.getPackageMapFor(documentUri);
-			const packagePath = packageMap && packageMap.convertFileToPackageUri(containingLibraryPath, false);
-			const packageName = packagePath && packagePath.split("/")[0];
-			if (packageName)
-				documentation = `*${packageName}*\n\n` + documentation;
+			if (containingLibrary && packageMap) {
+				// Only add the library in if it's not inside out current package
+				// either by path or name.
+				if (!containingLibrary.startsWith(packageMap.localPackageRoot)
+					&& !containingLibrary.startsWith(`package:${packageMap.localPackageName}/`)) {
+					documentation = `*${containingLibrary}*\n\n` + documentation;
+				}
+			}
+
+		} else {
+			const containingLibraryName = hover.containingLibraryName;
+			const containingLibraryPath = hover.containingLibraryPath;
+			if (containingLibraryName) {
+				documentation = `*${containingLibraryName}*\n\n` + documentation;
+			} else if (containingLibraryPath) {
+				const packageMap = DartHoverProvider.getPackageMapFor(documentUri);
+				const packagePath = packageMap && packageMap.convertFileToPackageUri(containingLibraryPath, false);
+				const packageName = packagePath && packagePath.split("/")[0];
+				if (packageName)
+					documentation = `*${packageName}*\n\n` + documentation;
+			}
 		}
 
 		return {
