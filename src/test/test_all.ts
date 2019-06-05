@@ -1,9 +1,9 @@
 import * as childProcess from "child_process";
 import * as fs from "fs";
 import * as path from "path";
+import * as vstest from "vscode-test";
 import { twentyMinutesInMs } from "../shared/constants";
 
-const args = ["node_modules/vscode/bin/test"];
 let exitCode = 0;
 
 function red(message: string): string { return color(91, message); }
@@ -80,12 +80,6 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	env.CODE_VERSION = codeVersion;
 	env.DART_CODE_IS_TEST_RUN = true;
 	env.MOCHA_FORBID_ONLY = true;
-	if (path.isAbsolute(workspaceFolder)) {
-		env.CODE_TESTS_WORKSPACE = workspaceFolder;
-	} else {
-		env.CODE_TESTS_WORKSPACE = path.join(cwd, "src", "test", "test_projects", workspaceFolder);
-	}
-	env.CODE_TESTS_PATH = path.join(cwd, "out", "src", "test", testFolder);
 
 	// Figure out a filename for results...
 	const dartFriendlyName = (process.env.ONLY_RUN_DART_VERSION || "local").toLowerCase();
@@ -107,7 +101,15 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	if (!fs.existsSync(env.DC_TEST_LOGS))
 		fs.mkdirSync(env.DC_TEST_LOGS);
 
-	let res = await runNode(cwd, args, env, true);
+	let res = await vstest.runTests({
+		extensionPath: cwd,
+		testRunnerEnv: env,
+		testRunnerPath: path.join(cwd, "out", "src", "test", testFolder),
+		testWorkspace: path.isAbsolute(workspaceFolder)
+			? workspaceFolder
+			: path.join(cwd, "src", "test", "test_projects", workspaceFolder),
+		version: codeVersion,
+	});
 	exitCode = exitCode || res;
 
 	// Remap coverage output.
