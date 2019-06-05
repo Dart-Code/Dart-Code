@@ -1489,7 +1489,7 @@
 		"@types/semver": "^6.0.0",
 		"@types/sinon": "^5.0.5",
 		"@types/ws": "^6.0.1",
-		"mocha": "^6.1.4",
+		"mocha": "^5.2.0",
 		"nyc": "^13.1.0",
 		"remap-istanbul": "^0.13.0",
 		"run-for-every-file": "^1.1.0",
