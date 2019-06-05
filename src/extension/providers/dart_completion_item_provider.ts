@@ -250,7 +250,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 						insertArgumentPlaceholders,
 						nextCharacter,
 						offset,
-						relevance,
+						relevance: includedSuggestionSet.relevance + relevanceBoost,
 						replacementLength: resp.replacementLength,
 						replacementOffset: resp.replacementOffset,
 						suggestion,
