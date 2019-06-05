@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import { ITest, reporters } from "mocha";
-import testRunner = require("vscode/lib/testrunner");
 
 export class SummaryReporter extends reporters.Base {
 	private passed = 0;
