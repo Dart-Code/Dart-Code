@@ -217,7 +217,7 @@
 					"name": "constant.numeric.dart"
 				},
 				{
-					"match": "(?<![a-zA-Z0-9_$])[_$]*[A-Z][a-zA-Z0-9_$]*",
+					"match": "(?<![a-zA-Z0-9_$])([_$]*[A-Z][a-zA-Z0-9_$]*|bool|num|int|double|dynamic)",
 					"name": "support.class.dart"
 				},
 				{
@@ -309,7 +309,7 @@
 					"name": "storage.modifier.dart"
 				},
 				{
-					"match": "(?<!\\$)\\b(?:void|bool|num|int|double|dynamic|var)\\b(?!\\$)",
+					"match": "(?<!\\$)\\b(?:void|var)\\b(?!\\$)",
 					"name": "storage.type.primitive.dart"
 				}
 			]
