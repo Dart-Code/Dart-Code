@@ -155,7 +155,7 @@
 			"patterns": [
 				{
 					"begin": "///",
-					"while": "^///",
+					"while": "^\\s*///",
 					"patterns": [
 						{
 							"include": "#dartdoc"

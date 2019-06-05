@@ -83,6 +83,13 @@ var p = 1;
   */
 var q = 1;
 
+/// This is a long comment with some nested code.
+///
+/// ```dart
+/// test
+/// ```
+var r = 1;
+
 void foo() {
   /**
     * Nested function.
@@ -170,6 +177,13 @@ class ClassToAddIndenting {
     * // Test
     */
   var q = 1;
+
+  /// This is a long comment with some nested code.
+  ///
+  /// ```dart
+  /// test
+  /// ```
+  var r = 1;
 
   void foo() {
     /**
