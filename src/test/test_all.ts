@@ -5,6 +5,8 @@ import * as vstest from "vscode-test";
 import { twentyMinutesInMs } from "../shared/constants";
 
 let exitCode = 0;
+const cwd = process.cwd();
+const testEnv = Object.create(process.env);
 
 function red(message: string): string { return color(91, message); }
 function yellow(message: string): string { return color(93, message); }
@@ -72,14 +74,11 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 		.filter((p) => p && p.toLowerCase().indexOf("dart") !== -1 || p.toLowerCase().indexOf("flutter") !== -1)
 		.forEach((p) => console.log(`${yellow("##")}    ${p}`));
 	console.log(yellow("############################################################"));
-	const cwd = process.cwd();
-	const env = Object.create(process.env);
+
 	// For some reason, updating PATH here doesn't get through to Code
 	// even though other env vars do! 😢
-	env.DART_PATH_OVERRIDE = sdkPaths;
-	env.CODE_VERSION = codeVersion;
-	env.DART_CODE_IS_TEST_RUN = true;
-	env.MOCHA_FORBID_ONLY = true;
+	testEnv.DART_PATH_OVERRIDE = sdkPaths;
+	testEnv.CODE_VERSION = codeVersion;
 
 	// Figure out a filename for results...
 	const dartFriendlyName = (process.env.ONLY_RUN_DART_VERSION || "local").toLowerCase();
@@ -87,23 +86,18 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 
 	// Set some paths that are used inside the test run.
 	const testRunName = testFolder.replace("/", "_");
-	env.TEST_RUN_NAME = testRunName;
-	env.DC_TEST_LOGS = path.join(cwd, ".dart_code_test_logs", `${testRunName}_${dartFriendlyName}_${codeFriendlyName}`);
-	env.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testRunName}_${dartFriendlyName}_${codeFriendlyName}.json`);
-	env.TEST_XML_OUTPUT = path.join(cwd, ".test_results", `${testRunName}_${dartFriendlyName}_${codeFriendlyName}.xml`);
-	env.TEST_CSV_SUMMARY = path.join(cwd, ".test_results", `${dartFriendlyName}_${codeFriendlyName}_summary.csv`);
+	testEnv.TEST_RUN_NAME = testRunName;
+	testEnv.DC_TEST_LOGS = path.join(cwd, ".dart_code_test_logs", `${testRunName}_${dartFriendlyName}_${codeFriendlyName}`);
+	testEnv.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testRunName}_${dartFriendlyName}_${codeFriendlyName}.json`);
+	testEnv.TEST_XML_OUTPUT = path.join(cwd, ".test_results", `${testRunName}_${dartFriendlyName}_${codeFriendlyName}.xml`);
+	testEnv.TEST_CSV_SUMMARY = path.join(cwd, ".test_results", `${dartFriendlyName}_${codeFriendlyName}_summary.csv`);
 
-	// Ensure any necessary folders exist.
-	if (!fs.existsSync(".nyc_output"))
-		fs.mkdirSync(".nyc_output");
-	if (!fs.existsSync(".dart_code_test_logs"))
-		fs.mkdirSync(".dart_code_test_logs");
-	if (!fs.existsSync(env.DC_TEST_LOGS))
-		fs.mkdirSync(env.DC_TEST_LOGS);
+	if (!fs.existsSync(testEnv.DC_TEST_LOGS))
+		fs.mkdirSync(testEnv.DC_TEST_LOGS);
 
 	let res = await vstest.runTests({
 		extensionPath: cwd,
-		testRunnerEnv: env,
+		testRunnerEnv: testEnv,
 		testRunnerPath: path.join(cwd, "out", "src", "test", testFolder),
 		testWorkspace: path.isAbsolute(workspaceFolder)
 			? workspaceFolder
@@ -113,18 +107,18 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	exitCode = exitCode || res;
 
 	// Remap coverage output.
-	if (fs.existsSync(env.COVERAGE_OUTPUT)) {
+	if (fs.existsSync(testEnv.COVERAGE_OUTPUT)) {
 		// Note: Path wonkiness - only seems to work from out/src/extension even if supplying -b!
 		res = await runNode(
 			path.join(cwd, "out", "src", "extension"),
 			[
 				"../../../node_modules/remap-istanbul/bin/remap-istanbul",
 				"-i",
-				env.COVERAGE_OUTPUT,
+				testEnv.COVERAGE_OUTPUT,
 				"-o",
-				env.COVERAGE_OUTPUT,
+				testEnv.COVERAGE_OUTPUT,
 			],
-			env,
+			testEnv,
 		);
 		exitCode = exitCode || res;
 	}
@@ -152,6 +146,15 @@ async function runAllTests(): Promise<void> {
 		throw new Error("Could not find Dart SDK");
 	if (!flutterSdkPath)
 		throw new Error("Could not find Flutter SDK");
+
+	testEnv.DART_CODE_IS_TEST_RUN = true;
+	testEnv.MOCHA_FORBID_ONLY = true;
+
+	// Ensure any necessary folders exist.
+	if (!fs.existsSync(".nyc_output"))
+		fs.mkdirSync(".nyc_output");
+	if (!fs.existsSync(".dart_code_test_logs"))
+		fs.mkdirSync(".dart_code_test_logs");
 
 	const flutterRoot = process.env.FLUTTER_ROOT || process.env.FLUTTER_PATH;
 	const totalRuns = 12;
