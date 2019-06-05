@@ -13,10 +13,12 @@ export class PackageMap {
 
 	private map: { [name: string]: string } = {};
 	public readonly localPackageName: string | undefined;
+	public readonly localPackageRoot: string | undefined;
 	public get packages(): { [name: string]: string } { return Object.assign({}, this.map); }
 
 	constructor(file?: string) {
 		if (!file) return;
+		this.localPackageRoot = path.dirname(file);
 
 		const lines: string[] = fs.readFileSync(file, { encoding: "utf8" }).split("\n");
 		for (let line of lines) {
@@ -33,7 +35,7 @@ export class PackageMap {
 				if (rest.startsWith("file:"))
 					this.map[name] = uriToFilePath(rest);
 				else {
-					this.map[name] = path.join(path.dirname(file), rest);
+					this.map[name] = path.join(this.localPackageRoot, rest);
 					if (rest === "lib" || rest === "lib\\" || rest === "lib/")
 						this.localPackageName = name;
 				}
