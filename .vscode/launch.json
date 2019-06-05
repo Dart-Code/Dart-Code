@@ -16,7 +16,8 @@
 			"preLaunchTask": "npm: watch",
 			"smartStep": true,
 			"skipFiles": [
-				"<node_internals>/**"
+				"<node_internals>/**",
+				"**/app/out/vs/**"
 			]
 		},
 		{
@@ -38,7 +39,8 @@
 			"preLaunchTask": "npm: watch-tests",
 			"smartStep": true,
 			"skipFiles": [
-				"<node_internals>/**"
+				"<node_internals>/**",
+				"**/app/out/vs/**"
 			]
 		},
 		{
@@ -60,7 +62,8 @@
 			"preLaunchTask": "npm: watch-tests",
 			"smartStep": true,
 			"skipFiles": [
-				"<node_internals>/**"
+				"<node_internals>/**",
+				"**/app/out/vs/**"
 			]
 		},
 		{
@@ -82,7 +85,8 @@
 			"preLaunchTask": "npm: watch-tests",
 			"smartStep": true,
 			"skipFiles": [
-				"<node_internals>/**"
+				"<node_internals>/**",
+				"**/app/out/vs/**"
 			]
 		},
 		{
@@ -104,7 +108,8 @@
 			"preLaunchTask": "npm: watch",
 			"smartStep": true,
 			"skipFiles": [
-				"<node_internals>/**"
+				"<node_internals>/**",
+				"**/app/out/vs/**"
 			]
 		},
 		{
@@ -126,7 +131,8 @@
 			"preLaunchTask": "npm: watch-tests",
 			"smartStep": true,
 			"skipFiles": [
-				"<node_internals>/**"
+				"<node_internals>/**",
+				"**/app/out/vs/**"
 			]
 		},
 		{
@@ -148,7 +154,8 @@
 			"preLaunchTask": "npm: watch-tests",
 			"smartStep": true,
 			"skipFiles": [
-				"<node_internals>/**"
+				"<node_internals>/**",
+				"**/app/out/vs/**"
 			]
 		},
 		{
@@ -170,7 +177,8 @@
 			"preLaunchTask": "npm: watch-tests",
 			"smartStep": true,
 			"skipFiles": [
-				"<node_internals>/**"
+				"<node_internals>/**",
+				"**/app/out/vs/**"
 			]
 		},
 		{
@@ -192,7 +200,8 @@
 			"preLaunchTask": "npm: watch-tests",
 			"smartStep": true,
 			"skipFiles": [
-				"<node_internals>/**"
+				"<node_internals>/**",
+				"**/app/out/vs/**"
 			]
 		},
 		{
@@ -214,7 +223,8 @@
 			"preLaunchTask": "npm: watch-tests",
 			"smartStep": true,
 			"skipFiles": [
-				"<node_internals>/**"
+				"<node_internals>/**",
+				"**/app/out/vs/**"
 			]
 		},
 		{
@@ -236,7 +246,8 @@
 			"preLaunchTask": "npm: watch",
 			"smartStep": true,
 			"skipFiles": [
-				"<node_internals>/**"
+				"<node_internals>/**",
+				"**/app/out/vs/**"
 			]
 		},
 		{
@@ -258,7 +269,8 @@
 			"preLaunchTask": "npm: watch-tests",
 			"smartStep": true,
 			"skipFiles": [
-				"<node_internals>/**"
+				"<node_internals>/**",
+				"**/app/out/vs/**"
 			]
 		},
 		{
@@ -280,7 +292,8 @@
 			"preLaunchTask": "npm: watch",
 			"smartStep": true,
 			"skipFiles": [
-				"<node_internals>/**"
+				"<node_internals>/**",
+				"**/app/out/vs/**"
 			]
 		}
 	]
