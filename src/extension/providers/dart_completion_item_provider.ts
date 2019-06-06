@@ -297,7 +297,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			replacementLength: notification.replacementLength,
 			replacementOffset: notification.replacementOffset,
 			requiredParameterCount: suggestion.requiredParameterCount,
-			returnType: suggestion.returnType,
+			returnType: suggestion.returnType || (suggestion.element ? suggestion.element.returnType : undefined),
 			selectionLength: suggestion.selectionLength,
 			selectionOffset: suggestion.selectionOffset,
 		});
