@@ -18,7 +18,7 @@ import { getElementKind, getSuggestionKind } from "../utils/vscode/mapping";
 
 export class DartCompletionItemProvider implements CompletionItemProvider, IAmDisposable {
 	private disposables: Disposable[] = [];
-	private cachedSuggestions: { [key: number]: as.AvailableSuggestionSet } = {};
+	private cachedSuggestions: { [key: number]: CachedSuggestionSet } = {};
 
 	constructor(private readonly analyzer: Analyzer) {
 		this.disposables.push(analyzer.registerForCompletionAvailableSuggestions((n) => this.storeCompletionSuggestions(n)));
@@ -39,9 +39,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			offset: document.offsetAt(position),
 		});
 
-		if (token.isCancellationRequested) {
+		if (token.isCancellationRequested)
 			return undefined;
-		}
 
 		const replacementRange = new vs.Range(
 			document.positionAt(resp.replacementOffset),
@@ -52,9 +51,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		const cachedResults = await this.getCachedResults(document, token, enableCommitCharacters, document.offsetAt(position), replacementRange, resp);
 
 		await resolvedPromise;
-		if (token.isCancellationRequested) {
+		if (token.isCancellationRequested)
 			return undefined;
-		}
 
 		const allResults = [...includedResults, ...cachedResults];
 
@@ -87,7 +85,13 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	private storeCompletionSuggestions(notification: as.CompletionAvailableSuggestionsNotification) {
 		if (notification.changedLibraries) {
 			for (const completionSet of notification.changedLibraries) {
-				this.cachedSuggestions[completionSet.id] = completionSet;
+				const items: SuggestSetsByElementKind = {};
+				completionSet.items.forEach((item) => {
+					if (!items[item.element.kind])
+						items[item.element.kind] = [];
+					items[item.element.kind].push(item);
+				});
+				this.cachedSuggestions[completionSet.id] = new CachedSuggestionSet(completionSet.id, completionSet.uri, items);
 			}
 		}
 		if (notification.removedLibraries) {
@@ -182,7 +186,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		resp.includedSuggestionRelevanceTags.forEach((r) => tagBoosts[r.tag] = r.relevanceBoost);
 
 		const filePath = fsPath(document.uri);
-		const suggestionSetResults: CompletionItem[][] = [];
+		const results: CompletionItem[][] = [];
 		for (const includedSuggestionSet of resp.includedSuggestionSets) {
 			// Because this work is expensive, we periodically (per suggestion
 			// set) yield and check whether cancellation is pending and if so
@@ -198,9 +202,9 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 				return [];
 			}
 
-			const unresolvedItems = suggestionSet.items
-				.filter((r) => elementKinds[r.element.kind])
-				.map((suggestion): DelayedCompletionItem => {
+			for (const kind of resp.includedElementKinds) {
+				const suggestions = suggestionSet.itemsByKind[kind] || [];
+				const setResults = suggestions.map((suggestion, i) => {
 
 					// Calculate the relevance for this item.
 					let relevanceBoost = 0;
@@ -233,10 +237,11 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 					return delayedCompletionItem;
 				});
-			suggestionSetResults.push(unresolvedItems);
+				results.push(setResults);
+			}
 		}
 
-		return [].concat(...suggestionSetResults);
+		return [].concat(...results);
 	}
 
 	private convertResult(
@@ -440,3 +445,13 @@ function appendAdditionalEdits(completionItem: vs.CompletionItem, document: vs.T
 		};
 	}
 }
+
+class CachedSuggestionSet {
+	constructor(
+		public readonly id: number,
+		public readonly uri: string,
+		public readonly itemsByKind: SuggestSetsByElementKind,
+	) { }
+}
+
+type SuggestSetsByElementKind = { [key in as.ElementKind]?: as.AvailableSuggestion[] };
