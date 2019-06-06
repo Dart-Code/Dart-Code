@@ -1,7 +1,6 @@
 import * as vs from "vscode";
-import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, Disposable, MarkdownString, Position, Range, SnippetString, TextDocument } from "vscode";
+import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, Disposable, MarkdownString, Position, SnippetString, TextDocument } from "vscode";
 import { flatMap } from "../../shared/utils";
-import { DelayedCompletionItem } from "../../shared/vscode/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
@@ -13,15 +12,12 @@ import { resolvedPromise } from "../utils";
 import { logError, logWarn } from "../utils/log";
 import { getElementKind, getSuggestionKind } from "../utils/vscode/mapping";
 
-// TODO: This code has become messy with the SuggestionSet changes. It could do with some refactoring
-// (such as creating a mapping from CompletionSuggestion -> x and SuggestionSet -> x, and then x -> CompletionItem).
-
 export class DartCompletionItemProvider implements CompletionItemProvider, IAmDisposable {
 	private disposables: Disposable[] = [];
 	private cachedSuggestions: { [key: number]: CachedSuggestionSet } = {};
 
 	constructor(private readonly analyzer: Analyzer) {
-		this.disposables.push(analyzer.registerForCompletionAvailableSuggestions((n) => this.storeCompletionSuggestions(n)));
+		this.disposables.push(analyzer.registerForCompletionAvailableSuggestions((n) => this.updateAvailableSuggestionSets(n)));
 	}
 
 	public async provideCompletionItems(
@@ -47,8 +43,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			document.positionAt(resp.replacementOffset + resp.replacementLength),
 		);
 
-		const includedResults = resp.results.map((r) => this.convertResult(document, enableCommitCharacters, replacementRange, resp, r));
-		const cachedResults = await this.getCachedResults(document, token, enableCommitCharacters, document.offsetAt(position), replacementRange, resp);
+		const includedResults = resp.results.map((r) => this.convertSimpleResult(enableCommitCharacters, replacementRange, r));
+		const cachedResults = await this.getSuggestionSetResults(document, token, enableCommitCharacters, document.offsetAt(position), replacementRange, resp);
 
 		await resolvedPromise;
 		if (token.isCancellationRequested)
@@ -82,7 +78,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		return true;
 	}
 
-	private storeCompletionSuggestions(notification: as.CompletionAvailableSuggestionsNotification) {
+	private updateAvailableSuggestionSets(notification: as.CompletionAvailableSuggestionsNotification) {
 		if (notification.changedLibraries) {
 			for (const completionSet of notification.changedLibraries) {
 				const items: SuggestSetsByElementKind = {};
@@ -108,93 +104,58 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		const res = await this.analyzer.completionGetSuggestionDetails({
 			file: item.filePath,
 			id: item.suggestionSetID,
-			label: item.suggestion.label,
+			label: item.label,
 			offset: item.offset,
 		});
 
-		if (token.isCancellationRequested) {
-			return;
-		}
+		if (token.isCancellationRequested)
+			return item;
+
+		const selectionOffset = res.change && res.change.selection ? res.change.selection.offset : undefined;
+		const selectionLength = res.change && res.change.selection ? 0 : undefined;
 
 		// Rebuild the completion using the additional resolved info.
-		return this.createCompletionItemFromSuggestion(
-			item.document,
-			item.enableCommitCharacters,
-			item.replacementRange,
-			item.autoImportUri,
-			item.relevance,
-			item.suggestion,
-			res,
-		);
-	}
+		let label = res.completion;
 
-	private createCompletionItemFromSuggestion(
-		document: TextDocument,
-		enableCommitCharacters: boolean,
-		replacementRange: Range,
-		displayUri: string | undefined,
-		relevance: number,
-		suggestion: as.AvailableSuggestion,
-		resolvedResult: as.CompletionGetSuggestionDetailsResponse | undefined,
-	) {
-		const completionItem = this.makeCompletion(document, enableCommitCharacters, {
-			autoImportUri: displayUri,
-			completionText: (resolvedResult && resolvedResult.completion) || suggestion.label,
-			displayText: undefined,
-			docSummary: suggestion.docSummary,
-			elementKind: suggestion.element ? suggestion.element.kind : undefined,
-			isDeprecated: false,
-			kind: undefined, // This is only used when there's no element (eg. keyword completions) that won't happen here.
-			parameterNames: suggestion.parameterNames,
-			parameterType: undefined, // Unimported completions can't be parameters.
-			parameters: suggestion.element ? suggestion.element.parameters : undefined,
-			relevance,
-			replacementRange,
-			requiredParameterCount: suggestion.requiredParameterCount,
-			returnType: suggestion.element ? suggestion.element.returnType : undefined,
-			selectionLength: resolvedResult && resolvedResult.change && resolvedResult.change.selection ? 0 : undefined,
-			selectionOffset: resolvedResult && resolvedResult.change && resolvedResult.change.selection ? resolvedResult.change.selection.offset : undefined,
-		});
+		// If we have trailing commas (flutter) they look weird in the list, so trim the off (for display label only).
+		if (label.endsWith(","))
+			label = label.substr(0, label.length - 1).trim();
+
+		item.label = label;
+		item.insertText = this.makeCompletionTextSnippet(label, selectionOffset, selectionLength);
 
 		// Additional edits for the imports.
-		if (resolvedResult && resolvedResult.change && resolvedResult.change.edits && resolvedResult.change.edits.length) {
-			appendAdditionalEdits(completionItem, document, resolvedResult.change);
-			if (displayUri)
-				completionItem.detail = `Auto import from '${displayUri}'` + (completionItem.detail ? `\n\n${completionItem.detail}` : "");
+		if (res && res.change && res.change.edits && res.change.edits.length) {
+			appendAdditionalEdits(item, item.document, res.change);
 		}
 
-		return completionItem;
+		return item;
 	}
 
-	private async getCachedResults(
+	private async getSuggestionSetResults(
 		document: TextDocument,
 		token: CancellationToken,
 		enableCommitCharacters: boolean,
 		offset: number,
-		replacementRange: Range,
+		replacementRange: vs.Range,
 		resp: as.CompletionResultsNotification,
 	): Promise<CompletionItem[] | undefined> {
 		if (!resp.includedSuggestionSets || !resp.includedElementKinds)
 			return [];
-
-		// Create a fast lookup for which kinds to include.
-		const elementKinds: { [key: string]: boolean } = {};
-		resp.includedElementKinds.forEach((k) => elementKinds[k] = true);
 
 		// Create a fast lookup for relevance boosts based on tag string.
 		const tagBoosts: { [key: string]: number } = {};
 		resp.includedSuggestionRelevanceTags.forEach((r) => tagBoosts[r.tag] = r.relevanceBoost);
 
 		const filePath = fsPath(document.uri);
-		const results: DelayedCompletionItem[][] = [];
+		const results: DelayedCompletionItem[] = [];
 		for (const includedSuggestionSet of resp.includedSuggestionSets) {
 			// Because this work is expensive, we periodically (per suggestion
 			// set) yield and check whether cancellation is pending and if so
 			// stop and bail out to avoid doing redundant work.
 			await resolvedPromise;
-			if (token.isCancellationRequested) {
+			if (token.isCancellationRequested)
 				return undefined;
-			}
 
 			const suggestionSet = this.cachedSuggestions[includedSuggestionSet.id];
 			if (!suggestionSet) {
@@ -205,141 +166,127 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			for (const kind of resp.includedElementKinds) {
 				const suggestions = suggestionSet.itemsByKind[kind] || [];
 				const setResults = suggestions.map((suggestion, i) => {
+					// If this item has not already been cached, convert it into a
+					// cached suggestion and put it back into the list. This will
+					// avoid us doing this work in future requests that request
+					// the same item.
+					if (!(suggestion instanceof CachedSuggestion)) {
+						suggestion = new CachedSuggestion(
+							this.makePartialCompletionItem(
+								enableCommitCharacters,
+								suggestion.label,
+								suggestion.docSummary,
+								suggestion.element ? suggestion.element.kind : undefined,
+								false,
+								undefined,
+								suggestion.element ? suggestion.element.parameters : undefined,
+								undefined,
+								suggestion.element ? suggestion.element.returnType : undefined,
+							),
+							suggestion.relevanceTags,
+						);
+						// Stash this one back in the cache for next time we need it.
+						suggestions[i] = suggestion;
+					}
 
 					// Calculate the relevance for this item.
 					let relevanceBoost = 0;
 					if (suggestion.relevanceTags)
 						suggestion.relevanceTags.forEach((t) => relevanceBoost = Math.max(relevanceBoost, tagBoosts[t] || 0));
 
-					const completionItem = this.createCompletionItemFromSuggestion(
-						document,
-						enableCommitCharacters,
-						replacementRange,
-						undefined,
+					// TODO: includedSuggestionSet.displayUri || suggestionSet.uri ??
+					const completionItem = this.fullyPopulatePartialCompletionItem(
+						suggestion.partialCompletionItem,
+						undefined, // This is only used when there's no element (eg. keyword completions) that won't happen here.
 						includedSuggestionSet.relevance + relevanceBoost,
-						suggestion,
-						undefined,
+						replacementRange,
+						0,
+						0,
 					);
 
-					// Attach additional info that resolve will need.
-					const delayedCompletionItem: DelayedCompletionItem = {
-						autoImportUri: includedSuggestionSet.displayUri || suggestionSet.uri,
+					// Add additional info that resolve will need.
+					return {
+						...completionItem,
 						document,
-						enableCommitCharacters,
 						filePath,
 						offset,
-						relevance: includedSuggestionSet.relevance + relevanceBoost,
-						replacementRange,
 						suggestion,
 						suggestionSetID: includedSuggestionSet.id,
-						...completionItem,
 					};
-
-					return delayedCompletionItem;
 				});
-				results.push(setResults);
+
+				results.push(...setResults);
 			}
 		}
 
-		return [].concat(...results);
+		return results;
 	}
 
-	private convertResult(
-		document: TextDocument,
+	private convertSimpleResult(
 		enableCommitCharacters: boolean,
-		replacementRange: Range,
-		notification: as.CompletionResultsNotification,
+		replacementRange: vs.Range,
 		suggestion: as.CompletionSuggestion,
 	): CompletionItem {
-		return this.makeCompletion(document, enableCommitCharacters, {
-			completionText: suggestion.completion,
-			displayText: suggestion.displayText,
-			docSummary: suggestion.docSummary,
-			elementKind: suggestion.element ? suggestion.element.kind : undefined,
-			isDeprecated: suggestion.isDeprecated,
-			kind: suggestion.kind,
-			parameterNames: suggestion.parameterNames,
-			parameterType: suggestion.parameterType,
-			parameters: suggestion.element ? suggestion.element.parameters : undefined,
-			relevance: suggestion.relevance,
+		const completion = this.makePartialCompletionItem(
+			enableCommitCharacters,
+			suggestion.displayText || suggestion.completion,
+			suggestion.docSummary,
+			suggestion.element ? suggestion.element.kind : undefined,
+			suggestion.isDeprecated,
+			suggestion.kind,
+			suggestion.element ? suggestion.element.parameters : undefined,
+			suggestion.parameterType,
+			suggestion.returnType,
+		);
+		return this.fullyPopulatePartialCompletionItem(
+			completion,
+			suggestion.kind,
+			suggestion.relevance,
 			replacementRange,
-			requiredParameterCount: suggestion.requiredParameterCount,
-			returnType: suggestion.returnType,
-			selectionLength: suggestion.selectionLength,
-			selectionOffset: suggestion.selectionOffset,
-		});
+			suggestion.selectionLength,
+			suggestion.selectionOffset,
+		);
 	}
 
-	private makeCompletion(
-		document: TextDocument, enableCommitCharacters: boolean, suggestion: {
-			autoImportUri?: string,
-			completionText: string,
-			displayText: string | undefined,
-			docSummary: string | undefined,
-			elementKind: as.ElementKind | undefined,
-			isDeprecated: boolean,
-			kind: as.CompletionSuggestionKind | undefined,
-			parameterNames: string[] | undefined,
-			parameters: string | undefined,
-			parameterType: string | undefined,
-			relevance: number,
-			replacementRange: Range,
-			requiredParameterCount: number | undefined,
-			returnType: string | undefined,
-			selectionLength: number,
-			selectionOffset: number,
-		},
+	private makePartialCompletionItem(
+		enableCommitCharacters: boolean,
+		label: string,
+		docSummary: string | undefined,
+		elementKind: as.ElementKind | undefined,
+		isDeprecated: boolean,
+		kind: as.CompletionSuggestionKind | undefined,
+		parameters: string | undefined,
+		parameterType: string | undefined,
+		returnType: string | undefined,
 	): CompletionItem {
-		const completionItemKind = suggestion.elementKind ? getElementKind(suggestion.elementKind) : undefined;
-		let label = suggestion.displayText || suggestion.completionText;
+		const completionItemKind = elementKind ? getElementKind(elementKind) : undefined;
 		let detail = "";
-		const completionText = new SnippetString();
 		let triggerCompletion = false;
 
-		// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its parameters.
-		if (suggestion.parameters && completionItemKind !== CompletionItemKind.Property && suggestion.kind !== "OVERRIDE"
+		if (parameters && completionItemKind !== CompletionItemKind.Property && kind !== "OVERRIDE"
 			// Don't ever show if there is already a paren! (#969).
 			&& label.indexOf("(") === -1
 		) {
-			label += suggestion.parameters.length === 2 ? "()" : "(…)";
-			detail = suggestion.parameters;
-			completionText.appendText(suggestion.completionText);
-		} else if (suggestion.selectionOffset > 0) {
-			const before = suggestion.completionText.slice(0, suggestion.selectionOffset);
-			const selection = suggestion.completionText.slice(suggestion.selectionOffset, suggestion.selectionOffset + suggestion.selectionLength);
-			// If we have a selection offset (eg. a place to put the cursor) but not any text to pre-select then
-			// pop open the completion to help the user type the value.
-			// Only do this if it ends with a space (argument completion), see #730.
-			if (!selection && suggestion.completionText.slice(suggestion.selectionOffset - 1, suggestion.selectionOffset) === " ")
-				triggerCompletion = true;
-			const after = suggestion.completionText.slice(suggestion.selectionOffset + suggestion.selectionLength);
-
-			completionText.appendText(before);
-			if (selection)
-				completionText.appendPlaceholder(selection);
-			else
-				completionText.appendTabstop(0);
-			completionText.appendText(after);
-		} else {
-			completionText.appendText(suggestion.completionText);
+			label += parameters.length === 2 ? "()" : "(…)";
+			detail = parameters;
 		}
 
 		// If we're a property, work out the type.
 		if (completionItemKind === CompletionItemKind.Property) {
 			// Setters appear as methods with one arg (and cause getters to not appear),
 			// so treat them both the same and just display with the properties type.
-			detail = suggestion.elementKind === "GETTER"
-				? suggestion.returnType
+			detail = elementKind === "GETTER"
+				? returnType
 				// See https://github.com/dart-lang/sdk/issues/27747
-				: suggestion.parameters ? suggestion.parameters.substring(1, suggestion.parameters.lastIndexOf(" ")) : "";
+				: parameters ? parameters.substring(1, parameters.lastIndexOf(" ")) : "";
 			// Otherwise, get return type from method.
-		} else if (suggestion.returnType) {
+		} else if (returnType) {
 			detail =
 				detail === ""
-					? suggestion.returnType
-					: detail + " → " + suggestion.returnType;
-		} else if (suggestion.parameterType) {
-			detail = suggestion.parameterType;
+					? returnType
+					: detail + " → " + returnType;
+		} else if (parameterType) {
+			detail = parameterType;
 		}
 
 		// If we have trailing commas (flutter) they look weird in the list, so trim the off (for display label only).
@@ -348,26 +295,23 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 		// If we didnt have a CompletionItemKind from our element, base it on the CompletionSuggestionKind.
 		// This covers things like Keywords that don't have elements.
-		const kind = completionItemKind || (suggestion.kind ? getSuggestionKind(suggestion.kind, label) : undefined);
+		const completionKind = completionItemKind || (kind ? getSuggestionKind(kind, label) : undefined);
 
-		const completion = new CompletionItem(label, kind);
-		completion.label = label;
+		const completion = new CompletionItem(label, completionKind);
 		completion.filterText = label.split("(")[0]; // Don't ever include anything after a ( in filtering.
-		completion.kind = kind;
-		completion.detail = (suggestion.isDeprecated ? "(deprecated) " : "") + detail;
-		completion.documentation = new MarkdownString(cleanDartdoc(suggestion.docSummary));
-		completion.insertText = completionText;
+		completion.detail = (isDeprecated ? "(deprecated) " : "") + detail;
+		completion.documentation = new MarkdownString(cleanDartdoc(docSummary));
+		completion.insertText = label;
 		completion.keepWhitespace = true;
-		completion.range = suggestion.replacementRange;
 		if (enableCommitCharacters)
-			completion.commitCharacters = getCommitCharacters(suggestion.kind);
+			completion.commitCharacters = getCommitCharacters(kind);
 
 		const triggerCompletionsFor = ["import '';"];
 		if (triggerCompletionsFor.indexOf(label) !== -1)
 			triggerCompletion = true;
 
 		// Handle folders in imports better.
-		if (suggestion.kind === "IMPORT" && label.endsWith("/"))
+		if (kind === "IMPORT" && label.endsWith("/"))
 			triggerCompletion = true;
 
 		if (triggerCompletion) {
@@ -377,13 +321,63 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			};
 		}
 
+		return completion;
+	}
+
+	private fullyPopulatePartialCompletionItem(
+		completion: CompletionItem,
+		kind: as.CompletionSuggestionKind | undefined,
+		relevance: number,
+		replacementRange: vs.Range,
+		selectionLength: number,
+		selectionOffset: number,
+	): CompletionItem {
+		completion.insertText = this.makeCompletionTextSnippet(completion.label, selectionOffset, selectionLength);
+		completion.range = replacementRange;
+
+		let triggerCompletion = false;
+		const triggerCompletionsFor = ["import '';"];
+		if (triggerCompletionsFor.indexOf(completion.label) !== -1)
+			triggerCompletion = true;
+		// Handle folders in imports better.
+		if (kind === "IMPORT" && completion.label.endsWith("/"))
+			triggerCompletion = true;
+
+		if (triggerCompletion) {
+			completion.command = {
+				command: "editor.action.triggerSuggest",
+				title: "Suggest",
+			};
+		} else {
+			// Null this out in case it was set on the previous use of this completion item.
+			completion.command = undefined;
+		}
+
 		// Relevance is a number, highest being best. Code sorts by text, so subtract from a large number so that
 		// a text sort will result in the correct order.
 		// 555 -> 999455
 		//  10 -> 999990
 		//   1 -> 999999
-		completion.sortText = (1000000 - suggestion.relevance).toString() + label.trim();
+		completion.sortText = (1000000 - relevance).toString() + completion.label;
 		return completion;
+	}
+
+	private makeCompletionTextSnippet(text: string, selectionOffset: number, selectionLength: number) {
+		const completionText = new SnippetString();
+		if (selectionOffset > 0) {
+			const before = text.slice(0, selectionOffset);
+			const selection = text.slice(selectionOffset, selectionOffset + selectionLength);
+			const after = text.slice(selectionOffset + selectionLength);
+			completionText.appendText(before);
+			if (selection)
+				completionText.appendPlaceholder(selection);
+			else
+				completionText.appendTabstop(0);
+			completionText.appendText(after);
+		} else {
+			completionText.appendText(text);
+		}
+		return completionText;
 	}
 
 	public dispose(): any {
@@ -397,6 +391,14 @@ function getCommitCharacters(kind: as.CompletionSuggestionKind): string[] {
 		case "INVOCATION":
 			return [".", ",", "(", "["];
 	}
+}
+
+export interface DelayedCompletionItem extends CompletionItem {
+	document: TextDocument;
+	filePath: string;
+	offset: number;
+	suggestion: CachedSuggestion;
+	suggestionSetID: number;
 }
 
 function appendAdditionalEdits(completionItem: vs.CompletionItem, document: vs.TextDocument, change: as.SourceChange | undefined): void {
@@ -454,4 +456,12 @@ class CachedSuggestionSet {
 	) { }
 }
 
-type SuggestSetsByElementKind = { [key in as.ElementKind]?: as.AvailableSuggestion[] };
+type AvailableOrCachedSuggestion = as.AvailableSuggestion | CachedSuggestion;
+type SuggestSetsByElementKind = { [key in as.ElementKind]?: AvailableOrCachedSuggestion[] };
+
+class CachedSuggestion {
+	constructor(
+		public readonly partialCompletionItem: CompletionItem,
+		public readonly relevanceTags: string[] | undefined,
+	) { }
+}

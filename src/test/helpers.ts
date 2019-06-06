@@ -13,7 +13,7 @@ import { internalApiSymbol } from "../shared/symbols";
 import { flatMap } from "../shared/utils";
 import { tryDeleteFile } from "../shared/utils/fs";
 import { waitFor } from "../shared/utils/promises";
-import { DelayedCompletionItem, InternalExtensionApi, TestItemTreeItem, TestResultsProvider } from "../shared/vscode/interfaces";
+import { InternalExtensionApi, TestItemTreeItem, TestResultsProvider } from "../shared/vscode/interfaces";
 import { fsPath } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 
@@ -561,7 +561,7 @@ export function ensureCompletion(items: vs.CompletionItem[], kind: vs.Completion
 }
 
 export async function resolveCompletion(completion: vs.CompletionItem): Promise<vs.CompletionItem> {
-	const resolved = await extApi.completionItemProvider.resolveCompletionItem(completion as DelayedCompletionItem, fakeCancellationToken);
+	const resolved = await extApi.completionItemProvider.resolveCompletionItem(completion, fakeCancellationToken);
 	return resolved || completion;
 }
 

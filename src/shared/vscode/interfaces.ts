@@ -1,5 +1,5 @@
-import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, DefinitionProvider, Range, ReferenceProvider, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
-import { AvailableSuggestion, Outline } from "../../extension/analysis/analysis_server_types";
+import { CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, DefinitionProvider, ReferenceProvider, RenameProvider, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { Outline } from "../../extension/analysis/analysis_server_types";
 import { LogCategory, LogSeverity, TestStatus, VersionStatus } from "../enums";
 import { DebugCommandHandler } from "../interfaces";
 import { WorkspaceContext } from "../workspace";
@@ -63,16 +63,4 @@ export interface TestResultsProvider extends TreeDataProvider<TestItemTreeItem> 
 
 export interface TestItemTreeItem extends TreeItem {
 	status: TestStatus;
-}
-
-export interface DelayedCompletionItem extends CompletionItem {
-	autoImportUri: string;
-	document: TextDocument;
-	enableCommitCharacters: boolean;
-	filePath: string;
-	offset: number;
-	relevance: number;
-	replacementRange: Range;
-	suggestion: AvailableSuggestion;
-	suggestionSetID: number;
 }
