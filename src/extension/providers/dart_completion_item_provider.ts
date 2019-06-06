@@ -186,7 +186,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		resp.includedSuggestionRelevanceTags.forEach((r) => tagBoosts[r.tag] = r.relevanceBoost);
 
 		const filePath = fsPath(document.uri);
-		const results: CompletionItem[][] = [];
+		const results: DelayedCompletionItem[][] = [];
 		for (const includedSuggestionSet of resp.includedSuggestionSets) {
 			// Because this work is expensive, we periodically (per suggestion
 			// set) yield and check whether cancellation is pending and if so
