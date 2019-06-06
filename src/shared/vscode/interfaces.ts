@@ -1,4 +1,4 @@
-import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, DefinitionProvider, ReferenceProvider, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, DefinitionProvider, MarkdownString, ReferenceProvider, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
 import { AvailableSuggestion, Outline } from "../../extension/analysis/analysis_server_types";
 import { LogCategory, LogSeverity, TestStatus, VersionStatus } from "../enums";
 import { DebugCommandHandler } from "../interfaces";
@@ -65,7 +65,7 @@ export interface TestItemTreeItem extends TreeItem {
 	status: TestStatus;
 }
 
-export interface DelayedCompletionItem extends CompletionItem {
+export interface DelayedCompletionItem extends LazyCompletionItem {
 	autoImportUri: string;
 	document: TextDocument;
 	enableCommitCharacters: boolean;
@@ -78,4 +78,12 @@ export interface DelayedCompletionItem extends CompletionItem {
 	replacementOffset: number;
 	suggestion: AvailableSuggestion;
 	suggestionSetID: number;
+}
+
+// To avoid sending back huge docs for every completion item, we stash some data
+// in our own fields (which won't serialise) and then restore them in resolve()
+// on an individual completion basis.
+export interface LazyCompletionItem extends CompletionItem {
+	// tslint:disable-next-line: variable-name
+	_documentation?: string | MarkdownString;
 }

@@ -2,7 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, Disposable, MarkdownString, Position, Range, SnippetString, TextDocument } from "vscode";
 import { flatMap } from "../../shared/utils";
-import { DelayedCompletionItem } from "../../shared/vscode/interfaces";
+import { DelayedCompletionItem, LazyCompletionItem } from "../../shared/vscode/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
@@ -111,8 +111,12 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	}
 
 	public async resolveCompletionItem(item: DelayedCompletionItem, token: CancellationToken): Promise<CompletionItem | undefined> {
+		if (!item.documentation && item._documentation) {
+			item.documentation = item._documentation;
+		}
+
 		if (!item.suggestion)
-			return;
+			return item;
 
 		const res = await this.analyzer.completionGetSuggestionDetails({
 			file: item.filePath,
@@ -402,12 +406,12 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		// This covers things like Keywords that don't have elements.
 		const kind = completionItemKind || (suggestion.kind ? this.getSuggestionKind(suggestion.kind, label) : undefined);
 
-		const completion = new CompletionItem(label, kind);
+		const completion: LazyCompletionItem = new CompletionItem(label, kind);
 		completion.label = label;
 		completion.filterText = label.split("(")[0]; // Don't ever include anything after a ( in filtering.
 		completion.kind = kind;
 		completion.detail = (suggestion.isDeprecated ? "(deprecated) " : "") + detail;
-		completion.documentation = new MarkdownString(cleanDartdoc(suggestion.docSummary));
+		completion._documentation = new MarkdownString(cleanDartdoc(suggestion.docSummary));
 		completion.insertText = completionText;
 		completion.keepWhitespace = true;
 		completion.range = new Range(
@@ -571,5 +575,4 @@ function appendAdditionalEdits(completionItem: vs.CompletionItem, document: vs.T
 			title: "Automatically add imports",
 		};
 	}
-
 }
