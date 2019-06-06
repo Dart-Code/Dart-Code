@@ -1,4 +1,3 @@
-import * as path from "path";
 import * as vs from "vscode";
 import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, Disposable, MarkdownString, Position, Range, SnippetString, TextDocument } from "vscode";
 import { flatMap } from "../../shared/utils";
@@ -12,6 +11,7 @@ import { cleanDartdoc } from "../dartdocs";
 import { IAmDisposable } from "../debug/utils";
 import { resolvedPromise } from "../utils";
 import { logError, logWarn } from "../utils/log";
+import { getElementKind, getSuggestionKind } from "../utils/vscode/mapping";
 
 // TODO: This code has become messy with the SuggestionSet changes. It could do with some refactoring
 // (such as creating a mapping from CompletionSuggestion -> x and SuggestionSet -> x, and then x -> CompletionItem).
@@ -285,7 +285,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			selectionOffset: number,
 		},
 	): CompletionItem {
-		const completionItemKind = suggestion.elementKind ? this.getElementKind(suggestion.elementKind) : undefined;
+		const completionItemKind = suggestion.elementKind ? getElementKind(suggestion.elementKind) : undefined;
 		let label = suggestion.displayText || suggestion.completionText;
 		let detail = "";
 		const completionText = new SnippetString();
@@ -343,7 +343,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 		// If we didnt have a CompletionItemKind from our element, base it on the CompletionSuggestionKind.
 		// This covers things like Keywords that don't have elements.
-		const kind = completionItemKind || (suggestion.kind ? this.getSuggestionKind(suggestion.kind, label) : undefined);
+		const kind = completionItemKind || (suggestion.kind ? getSuggestionKind(suggestion.kind, label) : undefined);
 
 		const completion = new CompletionItem(label, kind);
 		completion.label = label;
@@ -382,78 +382,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		//   1 -> 999999
 		completion.sortText = (1000000 - suggestion.relevance).toString() + label.trim();
 		return completion;
-	}
-
-	private getSuggestionKind(kind: as.CompletionSuggestionKind, label: string): CompletionItemKind {
-		switch (kind) {
-			case "ARGUMENT_LIST":
-				return CompletionItemKind.Variable;
-			case "IMPORT":
-				return label.startsWith("dart:")
-					? CompletionItemKind.Module
-					: path.extname(label.toLowerCase()) === ".dart"
-						? CompletionItemKind.File
-						: CompletionItemKind.Folder;
-			case "IDENTIFIER":
-				return CompletionItemKind.Variable;
-			case "INVOCATION":
-				return CompletionItemKind.Method;
-			case "KEYWORD":
-				return CompletionItemKind.Keyword;
-			case "NAMED_ARGUMENT":
-				return CompletionItemKind.Variable;
-			case "OPTIONAL_ARGUMENT":
-				return CompletionItemKind.Variable;
-			case "PARAMETER":
-				return CompletionItemKind.Value;
-		}
-	}
-
-	private getElementKind(kind: as.ElementKind): CompletionItemKind {
-		switch (kind) {
-			case "CLASS":
-			case "CLASS_TYPE_ALIAS":
-				return CompletionItemKind.Class;
-			case "COMPILATION_UNIT":
-				return CompletionItemKind.Module;
-			case "CONSTRUCTOR":
-			case "CONSTRUCTOR_INVOCATION":
-				return CompletionItemKind.Constructor;
-			case "ENUM":
-				return CompletionItemKind.Enum;
-			case "ENUM_CONSTANT":
-				return CompletionItemKind.EnumMember;
-			case "FIELD":
-				return CompletionItemKind.Field;
-			case "FILE":
-				return CompletionItemKind.File;
-			case "FUNCTION":
-			case "FUNCTION_TYPE_ALIAS":
-				return CompletionItemKind.Function;
-			case "GETTER":
-				return CompletionItemKind.Property;
-			case "LABEL":
-			case "LIBRARY":
-				return CompletionItemKind.Module;
-			case "LOCAL_VARIABLE":
-				return CompletionItemKind.Variable;
-			case "METHOD":
-				return CompletionItemKind.Method;
-			case "PARAMETER":
-			case "PREFIX":
-				return CompletionItemKind.Variable;
-			case "SETTER":
-				return CompletionItemKind.Property;
-			case "TOP_LEVEL_VARIABLE":
-			case "TYPE_PARAMETER":
-				return CompletionItemKind.Variable;
-			case "UNIT_TEST_GROUP":
-				return CompletionItemKind.Module;
-			case "UNIT_TEST_TEST":
-				return CompletionItemKind.Method;
-			case "UNKNOWN":
-				return CompletionItemKind.Value;
-		}
 	}
 
 	private getCommitCharacters(kind: as.CompletionSuggestionKind): string[] {
@@ -514,5 +442,4 @@ function appendAdditionalEdits(completionItem: vs.CompletionItem, document: vs.T
 			title: "Automatically add imports",
 		};
 	}
-
 }
