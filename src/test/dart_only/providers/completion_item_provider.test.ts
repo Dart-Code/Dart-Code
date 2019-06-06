@@ -73,12 +73,12 @@ main() {
 		assert.equal(classComp.documentation, undefined);
 		assert.equal((classComp._documentation as vs.MarkdownString).value, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
 		assert.equal(((await resolveCompletion(classComp)).documentation as vs.MarkdownString).value, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
-		assert.equal(classComp.detail, "");
+		assert.equal(classComp.detail, undefined);
 
 		const constrComp: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
 		assert.equal(constrComp.documentation, undefined);
-		assert.equal((constrComp._documentation as vs.MarkdownString).value, "");
-		assert.equal(((await resolveCompletion(constrComp)).documentation as vs.MarkdownString).value, "");
+		assert.equal(constrComp._documentation, undefined);
+		assert.equal((await resolveCompletion(constrComp)).documentation, undefined);
 		assert.equal(constrComp.detail, "() → ProcessInfo");
 	});
 
@@ -202,7 +202,7 @@ main() {
 			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:io'\n\n() → ProcessInfo");
-			assert.equal((completion.documentation as vs.MarkdownString).value, ""); // This is a default constructor that doesn't have any docs.
+			assert.equal(completion.documentation, undefined); // This is a default constructor that doesn't have any docs.
 			assert.equal(completion.filterText, "ProcessInfo");
 			assert.equal((completion.insertText as vs.SnippetString).value, "ProcessInfo()");
 			assert.equal(completion.keepWhitespace, true);

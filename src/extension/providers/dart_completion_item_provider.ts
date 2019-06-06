@@ -410,11 +410,14 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		// If we didnt have a CompletionItemKind from our element, base it on the CompletionSuggestionKind.
 		// This covers things like Keywords that don't have elements.
 		const kind = completionItemKind || (suggestion.kind ? this.getSuggestionKind(suggestion.kind, label) : undefined);
+		const docs = cleanDartdoc(suggestion.docSummary);
 
 		const completion: LazyCompletionItem = new CompletionItem(label, kind);
 		completion.filterText = label.split("(")[0]; // Don't ever include anything after a ( in filtering.
-		completion.detail = (suggestion.isDeprecated ? "(deprecated) " : "") + detail;
-		completion._documentation = new MarkdownString(cleanDartdoc(suggestion.docSummary));
+		completion.detail = suggestion.isDeprecated || detail
+			? (suggestion.isDeprecated ? "(deprecated) " : "") + (detail || "")
+			: undefined;
+		completion._documentation = docs ? new MarkdownString(docs) : undefined;
 		completion.insertText = completionText;
 		completion.keepWhitespace = true;
 		completion.range = new Range(
