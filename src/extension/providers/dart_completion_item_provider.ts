@@ -358,7 +358,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			document.positionAt(suggestion.replacementOffset + suggestion.replacementLength),
 		);
 		if (enableCommitCharacters)
-			completion.commitCharacters = this.getCommitCharacters(suggestion.kind);
+			completion.commitCharacters = getCommitCharacters(suggestion.kind);
 
 		const triggerCompletionsFor = ["import '';"];
 		if (triggerCompletionsFor.indexOf(label) !== -1)
@@ -384,16 +384,17 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		return completion;
 	}
 
-	private getCommitCharacters(kind: as.CompletionSuggestionKind): string[] {
-		switch (kind) {
-			case "IDENTIFIER":
-			case "INVOCATION":
-				return [".", ",", "(", "["];
-		}
-	}
-
 	public dispose(): any {
 		this.disposables.forEach((d) => d.dispose());
+	}
+}
+
+
+function getCommitCharacters(kind: as.CompletionSuggestionKind): string[] {
+	switch (kind) {
+		case "IDENTIFIER":
+		case "INVOCATION":
+			return [".", ",", "(", "["];
 	}
 }
 
