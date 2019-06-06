@@ -111,12 +111,12 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	}
 
 	public async resolveCompletionItem(item: DelayedCompletionItem, token: CancellationToken): Promise<CompletionItem | undefined> {
-		if (!item.documentation && item._documentation) {
-			item.documentation = item._documentation;
-		}
-
-		if (!item.suggestion)
+		if (!item.suggestion) {
+			if (!item.documentation && item._documentation) {
+				item.documentation = item._documentation;
+			}
 			return item;
+		}
 
 		const res = await this.analyzer.completionGetSuggestionDetails({
 			file: item.filePath,
@@ -181,6 +181,11 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			appendAdditionalEdits(completionItem, document, resolvedResult.change);
 			if (displayUri)
 				completionItem.detail = `Auto import from '${displayUri}'` + (completionItem.detail ? `\n\n${completionItem.detail}` : "");
+		}
+
+		// Copy the lazy docs over.
+		if (resolvedResult && !completionItem.documentation && completionItem._documentation) {
+			completionItem.documentation = completionItem._documentation;
 		}
 
 		return completionItem;
@@ -318,7 +323,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			selectionLength: number,
 			selectionOffset: number,
 		},
-	): CompletionItem {
+	): LazyCompletionItem {
 		const completionItemKind = suggestion.elementKind ? this.getElementKind(suggestion.elementKind) : undefined;
 		let label = suggestion.displayText || suggestion.completionText;
 		let detail = "";

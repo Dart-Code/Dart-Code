@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import * as vs from "vscode";
 import { config } from "../../../extension/config";
+import { LazyCompletionItem } from "../../../shared/vscode/interfaces";
 import { acceptFirstSuggestion, activate, currentDoc, emptyFile, ensureCompletion, ensureNoCompletion, ensureTestContent, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, getCompletionsViaProviderAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, resolveCompletion, select, setTestContent } from "../../helpers";
 
 describe("completion_item_provider", () => {
@@ -66,27 +67,33 @@ main() {
   ProcessInf
 }
 		`);
-		const completions = await getCompletionsAt(`ProcessInf^`);
+		const completions = await getCompletionsViaProviderAt(`ProcessInf^`);
 
-		const classComp = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
-		assert.equal((classComp.documentation as vs.MarkdownString).value, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
+		const classComp: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
+		assert.equal(classComp.documentation, undefined);
+		assert.equal((classComp._documentation as vs.MarkdownString).value, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
+		assert.equal(((await resolveCompletion(classComp)).documentation as vs.MarkdownString).value, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
 		assert.equal(classComp.detail, "");
 
-		const constrComp = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
-		assert.equal((constrComp.documentation as vs.MarkdownString).value, "");
+		const constrComp: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
+		assert.equal(constrComp.documentation, undefined);
+		assert.equal((constrComp._documentation as vs.MarkdownString).value, "");
+		assert.equal(((await resolveCompletion(constrComp)).documentation as vs.MarkdownString).value, "");
 		assert.equal(constrComp.detail, "() → ProcessInfo");
 	});
 
 	it("fully populates a completion", async () => {
 		await openFile(everythingFile);
-		const completions = await getCompletionsAt(`^return str`);
+		const completions = await getCompletionsViaProviderAt(`^return str`);
 
-		const cl = ensureCompletion(completions, vs.CompletionItemKind.Method, "methodWithArgsAndReturnValue(…)", "methodWithArgsAndReturnValue");
+		const cl: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Method, "methodWithArgsAndReturnValue(…)", "methodWithArgsAndReturnValue");
 		assert.equal(cl.additionalTextEdits, undefined); // Tested in the unimported imports test.
 		assert.equal(cl.command, undefined); // Tested in the unimported imports in part-file test.
 		assert.equal(cl.commitCharacters, undefined); // TODO: ??
 		assert.equal(cl.detail, "(int i) → int"); // No auto import message here
-		assert.equal((cl.documentation as vs.MarkdownString).value, "This is my method taking arguments and returning a value.");
+		assert.equal(cl.documentation, undefined);
+		assert.equal((cl._documentation as vs.MarkdownString).value, "This is my method taking arguments and returning a value.");
+		assert.equal(((await resolveCompletion(cl)).documentation as vs.MarkdownString).value, "This is my method taking arguments and returning a value.");
 		assert.equal(cl.filterText, "methodWithArgsAndReturnValue");
 		assert.equal((cl.insertText as vs.SnippetString).value, "methodWithArgsAndReturnValue(${1:i})");
 		assert.equal(cl.keepWhitespace, true);
