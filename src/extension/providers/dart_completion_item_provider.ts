@@ -79,22 +79,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		return true;
 	}
 
-	private shouldAllowArgPlaceholders(line: string): boolean {
-		line = line.trim();
-
-		// Disallow args on imports/exports since they're likely show/hide and
-		// we only want the function name. This doesn't catch all cases (for ex.
-		// where a show/hide is split across multiple lines) but it's better than
-		// nothing. We'd need more semantic info to handle this better, and probably
-		// this will go away if commit characters is fixed properly.
-		if (line.startsWith("import \"") || line.startsWith("export \"")
-			|| line.startsWith("import '") || line.startsWith("export '")) {
-			return false;
-		}
-
-		return true;
-	}
-
 	private storeCompletionSuggestions(notification: as.CompletionAvailableSuggestionsNotification) {
 		if (notification.changedLibraries) {
 			for (const completionSet of notification.changedLibraries) {
