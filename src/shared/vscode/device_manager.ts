@@ -12,7 +12,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly autoSelectNewlyConnectedDevices: boolean) {
 		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
 		this.statusBarItem.tooltip = "Flutter";
-		this.statusBarItem.show();
+		this.statusBarItem.command = "flutter.selectDevice";
 		this.updateStatusBar();
 
 		this.subscriptions.push(this.statusBarItem);
@@ -45,18 +45,45 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	public async showDevicePicker(): Promise<void> {
-		const devices = this.devices
+		const devices: PickableDevice[] = this.devices
 			.sort(this.deviceSortComparer.bind(this))
 			.map((d) => ({
 				description: d.platform,
-				detail: d === this.currentDevice ? "Current Device" : (d.emulator ? "Emulator" : "Physical Device"),
 				device: d,
 				label: d.name,
+				picked: d === this.currentDevice ? true : undefined,
 			}));
-		const d = await vs.window.showQuickPick(devices, { placeHolder: "Select a device to use" });
-		if (d) {
-			this.currentDevice = d.device;
-			this.updateStatusBar();
+
+		const quickPick = vs.window.createQuickPick<PickableDevice>();
+		quickPick.busy = true;
+		quickPick.items = devices;
+		quickPick.placeholder = "Select a device to use";
+
+		// Also kick of async work to add emulators to the list.
+		this.getEmulatorItems(true).then((emulators) => {
+			quickPick.busy = false;
+			quickPick.items = [...devices, ...emulators];
+		});
+
+		const selection = await new Promise<PickableDevice>((resolve) => {
+			quickPick.onDidAccept(() => resolve(quickPick.selectedItems && quickPick.selectedItems[0]));
+			quickPick.onDidHide(() => resolve(undefined));
+			quickPick.show();
+		});
+		quickPick.dispose();
+		if (selection && selection.device) {
+			switch (selection.device.type) {
+				case "emulator-creator":
+					await this.createEmulator();
+					break;
+				case "emulator":
+					await this.launchEmulator(selection.device);
+					break;
+				case "device":
+					this.currentDevice = selection.device;
+					this.updateStatusBar();
+					break;
+			}
 		}
 	}
 
@@ -76,13 +103,10 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 		if (this.devices.length > 1) {
 			this.statusBarItem.tooltip = `${this.devices.length} Devices Connected`;
-			this.statusBarItem.command = "flutter.selectDevice";
 		} else if (this.devices.length === 1) {
-			this.statusBarItem.tooltip = undefined;
-			this.statusBarItem.command = undefined;
+			this.statusBarItem.tooltip = `1 Device Connected`;
 		} else {
 			this.statusBarItem.tooltip = undefined;
-			this.statusBarItem.command = "flutter.launchEmulator";
 		}
 	}
 
@@ -103,30 +127,12 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	public async promptForAndLaunchEmulator(allowAutomaticSelection = false): Promise<boolean> {
-		const emulators = (await this.getEmulators())
-			.map((e) => ({
-				alwaysShow: false,
-				description: e.id,
-				emulator: e,
-				isCreateEntry: false,
-				label: e.name,
-			}));
+		const emulators = await this.getEmulatorItems(false);
 
 		// Because the above call is async, it's possible a device was connected while we were calling. If so,
 		// just use that instead of showing the prompt.
 		if (allowAutomaticSelection && this.currentDevice)
 			return true;
-
-		// Add an option to create a new emulator if the daemon supports it.
-		if (this.daemon.capabilities.canCreateEmulators && isRunningLocally) {
-			emulators.push({
-				alwaysShow: true,
-				description: "Creates and launches a new Android emulator",
-				emulator: undefined,
-				isCreateEntry: true,
-				label: "Create New",
-			});
-		}
 
 		if (emulators.length === 0) {
 			return false;
@@ -147,34 +153,64 @@ export class FlutterDeviceManager implements vs.Disposable {
 				cancellationTokenSource.token);
 		waitingForRealDeviceSubscription.dispose();
 
-		if (selectedEmulator && selectedEmulator.isCreateEntry) {
-			// TODO: Allow user to create names when we let them customise the emulator type.
-			// const name = await vs.window.showInputBox({
-			// 	prompt: "Enter a name for your new Android Emulator",
-			// 	validateInput: this.validateEmulatorName,
-			// });
-			// if (!name) bail() // Pressing ENTER doesn't work, but escape does, so if
-			// no name, user probably wanted to cancel
-			const name: string = undefined;
-			const create = this.daemon.createEmulator(name);
-			vs.window.withProgress({
-				location: vs.ProgressLocation.Notification,
-				title: `${`Creating emulator ${name ? name : ""}`.trim()}...`,
-			}, (progress) => create);
-			const res = await create;
-			if (res.success) {
-				return this.launchEmulator({
-					id: res.emulatorName,
-					name: res.emulatorName,
-				});
-			} else {
-				vs.window.showErrorMessage(res.error);
-			}
-		} else if (selectedEmulator) {
-			return this.launchEmulator(selectedEmulator.emulator);
+		if (selectedEmulator && selectedEmulator.device && selectedEmulator.device.type === "emulator-creator") {
+			return this.createEmulator();
+		} else if (selectedEmulator && selectedEmulator.device && selectedEmulator.device.type === "emulator") {
+			return this.launchEmulator(selectedEmulator.device);
 		} else {
 			return !!this.currentDevice;
 		}
+	}
+
+	private async createEmulator(): Promise<boolean> {
+		// TODO: Allow user to create names when we let them customise the emulator type.
+		// const name = await vs.window.showInputBox({
+		// 	prompt: "Enter a name for your new Android Emulator",
+		// 	validateInput: this.validateEmulatorName,
+		// });
+		// if (!name) bail() // Pressing ENTER doesn't work, but escape does, so if
+		// no name, user probably wanted to cancel
+		const name: string = undefined;
+		const create = this.daemon.createEmulator(name);
+		vs.window.withProgress({
+			location: vs.ProgressLocation.Notification,
+			title: `${`Creating emulator ${name ? name : ""}`.trim()}...`,
+		}, () => create);
+		const res = await create;
+		if (res.success) {
+			return this.launchEmulator({
+				id: res.emulatorName,
+				name: res.emulatorName,
+			});
+		} else {
+			vs.window.showErrorMessage(res.error);
+			return false;
+		}
+	}
+
+	private async getEmulatorItems(showOfflineStatus: boolean): Promise<PickableDevice[]> {
+		const emulators: PickableDevice[] = (await this.getEmulators())
+			.map((e) => ({
+				alwaysShow: false,
+				description: showOfflineStatus ? "Emulator (offline)" : e.id,
+				device: {
+					category: e.category,
+					id: e.id,
+					name: e.name,
+					platformType: e.platformType,
+					type: "emulator",
+				},
+				label: e.name,
+			}));
+		// Add an option to create a new emulator if the daemon supports it.
+		if (this.daemon.capabilities.canCreateEmulators && isRunningLocally) {
+			emulators.push({
+				alwaysShow: true,
+				device: { type: "emulator-creator" },
+				label: "Create Android Emulator",
+			});
+		}
+		return emulators;
 	}
 
 	private async launchEmulator(emulator: { id: string, name: string }): Promise<boolean> {
@@ -202,3 +238,5 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return true;
 	}
 }
+
+type PickableDevice = vs.QuickPickItem & { device: f.Device | f.Emulator | f.EmulatorCreator };
