@@ -412,9 +412,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		const kind = completionItemKind || (suggestion.kind ? this.getSuggestionKind(suggestion.kind, label) : undefined);
 
 		const completion: LazyCompletionItem = new CompletionItem(label, kind);
-		completion.label = label;
 		completion.filterText = label.split("(")[0]; // Don't ever include anything after a ( in filtering.
-		completion.kind = kind;
 		completion.detail = (suggestion.isDeprecated ? "(deprecated) " : "") + detail;
 		completion._documentation = new MarkdownString(cleanDartdoc(suggestion.docSummary));
 		completion.insertText = completionText;
