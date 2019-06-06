@@ -1,9 +1,9 @@
 import { CancellationToken, OutputChannel, Position, Range, RenameProvider, TextDocument, Uri, workspace, WorkspaceEdit } from "vscode";
+import { fsPath } from "../../shared/vscode/utils";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import * as channels from "../commands/channels";
 import { toRange } from "../utils";
-import { fsPath } from "../../shared/vscode/utils";
 
 export class DartRenameProvider implements RenameProvider {
 	constructor(private readonly analyzer: Analyzer) { }
@@ -94,6 +94,9 @@ export class DartRenameProvider implements RenameProvider {
 			offset: document.offsetAt(position),
 			validateOnly: true,
 		});
+
+		if (!resp.feedback)
+			throw new Error("You cannot rename this element.");
 
 		const feedback = (resp.feedback as as.RenameFeedback);
 
