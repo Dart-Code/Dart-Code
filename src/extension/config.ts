@@ -118,7 +118,6 @@ class ResourceConfig {
 	get flutterRunLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterRunLogFile", null))); }
 	get flutterTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterTestLogFile", null))); }
 	get flutterTrackWidgetCreation(): boolean { return this.getConfig<boolean>("flutterTrackWidgetCreation", true); }
-	get insertArgumentPlaceholders(): boolean { return this.getConfig<boolean>("insertArgumentPlaceholders", true); }
 	get lineLength(): number { return this.getConfig<number>("lineLength", 80); }
 	get observatoryLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("observatoryLogFile", null))); }
 	get promptToGetPackages(): boolean { return this.getConfig<boolean>("promptToGetPackages", true); }

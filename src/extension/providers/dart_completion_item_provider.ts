@@ -28,10 +28,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext,
 	): Promise<CompletionList | undefined> {
 		const line = document.lineAt(position.line).text.slice(0, position.character);
-		const nextCharacter = document.getText(new Range(position, position.translate({ characterDelta: 200 }))).trim().substr(0, 1);
 		const conf = config.for(document.uri);
 		const enableCommitCharacters = conf.enableCompletionCommitCharacters;
-		const insertArgumentPlaceholders = !enableCommitCharacters && conf.insertArgumentPlaceholders && this.shouldAllowArgPlaceholders(line);
 
 		if (!this.shouldAllowCompletion(line, context))
 			return;
@@ -45,8 +43,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			return undefined;
 		}
 
-		const includedResults = resp.results.map((r) => this.convertResult(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, resp, r));
-		const cachedResults = await this.getCachedResults(document, token, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, document.offsetAt(position), resp);
+		const includedResults = resp.results.map((r) => this.convertResult(document, enableCommitCharacters, resp, r));
+		const cachedResults = await this.getCachedResults(document, token, enableCommitCharacters, document.offsetAt(position), resp);
 
 		await resolvedPromise;
 		if (token.isCancellationRequested) {
@@ -128,9 +126,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		// Rebuild the completion using the additional resolved info.
 		return this.createCompletionItemFromSuggestion(
 			item.document,
-			item.nextCharacter,
 			item.enableCommitCharacters,
-			item.insertArgumentPlaceholders,
 			item.replacementOffset,
 			item.replacementLength,
 			item.autoImportUri,
@@ -142,9 +138,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 	private createCompletionItemFromSuggestion(
 		document: TextDocument,
-		nextCharacter: string,
 		enableCommitCharacters: boolean,
-		insertArgumentPlaceholders: boolean,
 		replacementOffset: number,
 		replacementLength: number,
 		displayUri: string | undefined,
@@ -152,7 +146,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		suggestion: as.AvailableSuggestion,
 		resolvedResult: as.CompletionGetSuggestionDetailsResponse | undefined,
 	) {
-		const completionItem = this.makeCompletion(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, {
+		const completionItem = this.makeCompletion(document, enableCommitCharacters, {
 			autoImportUri: displayUri,
 			completionText: (resolvedResult && resolvedResult.completion) || suggestion.label,
 			displayText: undefined,
@@ -185,9 +179,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	private async getCachedResults(
 		document: TextDocument,
 		token: CancellationToken,
-		nextCharacter: string,
 		enableCommitCharacters: boolean,
-		insertArgumentPlaceholders: boolean,
 		offset: number,
 		resp: as.CompletionResultsNotification,
 	): Promise<CompletionItem[] | undefined> {
@@ -230,9 +222,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 					const completionItem = this.createCompletionItemFromSuggestion(
 						document,
-						nextCharacter,
 						enableCommitCharacters,
-						insertArgumentPlaceholders,
 						resp.replacementOffset,
 						resp.replacementLength,
 						undefined,
@@ -247,8 +237,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 						document,
 						enableCommitCharacters,
 						filePath,
-						insertArgumentPlaceholders,
-						nextCharacter,
 						offset,
 						relevance: includedSuggestionSet.relevance + relevanceBoost,
 						replacementLength: resp.replacementLength,
@@ -268,13 +256,11 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 	private convertResult(
 		document: TextDocument,
-		nextCharacter: string,
 		enableCommitCharacters: boolean,
-		insertArgumentPlaceholders: boolean,
 		notification: as.CompletionResultsNotification,
 		suggestion: as.CompletionSuggestion,
 	): CompletionItem {
-		return this.makeCompletion(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, {
+		return this.makeCompletion(document, enableCommitCharacters, {
 			completionText: suggestion.completion,
 			displayText: suggestion.displayText,
 			docSummary: suggestion.docSummary,
@@ -295,7 +281,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	}
 
 	private makeCompletion(
-		document: TextDocument, nextCharacter: string, enableCommitCharacters: boolean, insertArgumentPlaceholders: boolean, suggestion: {
+		document: TextDocument, enableCommitCharacters: boolean, suggestion: {
 			autoImportUri?: string,
 			completionText: string,
 			displayText: string | undefined,
@@ -321,8 +307,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		const completionText = new SnippetString();
 		let triggerCompletion = false;
 
-		const nextCharacterIsOpenParen = nextCharacter === "(";
-
 		// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its parameters.
 		if (suggestion.parameters && completionItemKind !== CompletionItemKind.Property && suggestion.kind !== "OVERRIDE"
 			// Don't ever show if there is already a paren! (#969).
@@ -330,32 +314,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		) {
 			label += suggestion.parameters.length === 2 ? "()" : "(…)";
 			detail = suggestion.parameters;
-
-			const hasParams = suggestion.parameterNames && suggestion.parameterNames.length > 0;
-
-			// Add placeholders for params to the completion.
-			if (insertArgumentPlaceholders && hasParams && !nextCharacterIsOpenParen) {
-				completionText.appendText(suggestion.completionText);
-				const args = suggestion.parameterNames.slice(0, suggestion.requiredParameterCount);
-				completionText.appendText("(");
-				if (args.length) {
-					completionText.appendPlaceholder(args[0]);
-					for (const arg of args.slice(1)) {
-						completionText.appendText(", ");
-						completionText.appendPlaceholder(arg);
-					}
-				} else
-					completionText.appendTabstop(0); // Put a tap stop between parens since there are optional args.
-				completionText.appendText(")");
-			} else if (insertArgumentPlaceholders && !nextCharacterIsOpenParen) {
-				completionText.appendText(suggestion.completionText);
-				completionText.appendText("(");
-				if (hasParams)
-					completionText.appendTabstop(0);
-				completionText.appendText(")");
-			} else {
-				completionText.appendText(suggestion.completionText);
-			}
+			completionText.appendText(suggestion.completionText);
 		} else if (suggestion.selectionOffset > 0) {
 			const before = suggestion.completionText.slice(0, suggestion.selectionOffset);
 			const selection = suggestion.completionText.slice(suggestion.selectionOffset, suggestion.selectionOffset + suggestion.selectionLength);

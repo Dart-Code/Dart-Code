@@ -70,8 +70,6 @@ export interface DelayedCompletionItem extends CompletionItem {
 	document: TextDocument;
 	enableCommitCharacters: boolean;
 	filePath: string;
-	insertArgumentPlaceholders: boolean;
-	nextCharacter: string;
 	offset: number;
 	relevance: number;
 	replacementLength: number;
