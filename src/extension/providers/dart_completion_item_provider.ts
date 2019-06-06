@@ -451,7 +451,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		return completion;
 	}
 
-	private getSuggestionKind(kind: as.CompletionSuggestionKind, label: string): CompletionItemKind {
+	private getSuggestionKind(kind: as.CompletionSuggestionKind, label: string): CompletionItemKind | undefined {
 		switch (kind) {
 			case "ARGUMENT_LIST":
 				return CompletionItemKind.Variable;
@@ -474,9 +474,10 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			case "PARAMETER":
 				return CompletionItemKind.Value;
 		}
+		return undefined;
 	}
 
-	private getElementKind(kind: as.ElementKind): CompletionItemKind {
+	private getElementKind(kind: as.ElementKind): CompletionItemKind | undefined {
 		switch (kind) {
 			case "CLASS":
 			case "CLASS_TYPE_ALIAS":
@@ -521,14 +522,16 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			case "UNKNOWN":
 				return CompletionItemKind.Value;
 		}
+		return undefined;
 	}
 
-	private getCommitCharacters(kind: as.CompletionSuggestionKind): string[] {
+	private getCommitCharacters(kind: as.CompletionSuggestionKind): string[] | undefined {
 		switch (kind) {
 			case "IDENTIFIER":
 			case "INVOCATION":
 				return [".", ",", "(", "["];
 		}
+		return undefined;
 	}
 
 	public dispose(): any {
