@@ -18,7 +18,7 @@ import { getElementKind, getSuggestionKind } from "../utils/vscode/mapping";
 
 export class DartCompletionItemProvider implements CompletionItemProvider, IAmDisposable {
 	private disposables: Disposable[] = [];
-	private cachedCompletions: { [key: number]: as.AvailableSuggestionSet } = {};
+	private cachedSuggestions: { [key: number]: as.AvailableSuggestionSet } = {};
 
 	constructor(private readonly analyzer: Analyzer) {
 		this.disposables.push(analyzer.registerForCompletionAvailableSuggestions((n) => this.storeCompletionSuggestions(n)));
@@ -43,8 +43,13 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			return undefined;
 		}
 
-		const includedResults = resp.results.map((r) => this.convertResult(document, enableCommitCharacters, resp, r));
-		const cachedResults = await this.getCachedResults(document, token, enableCommitCharacters, document.offsetAt(position), resp);
+		const replacementRange = new vs.Range(
+			document.positionAt(resp.replacementOffset),
+			document.positionAt(resp.replacementOffset + resp.replacementLength),
+		);
+
+		const includedResults = resp.results.map((r) => this.convertResult(document, enableCommitCharacters, replacementRange, resp, r));
+		const cachedResults = await this.getCachedResults(document, token, enableCommitCharacters, document.offsetAt(position), replacementRange, resp);
 
 		await resolvedPromise;
 		if (token.isCancellationRequested) {
@@ -82,12 +87,12 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	private storeCompletionSuggestions(notification: as.CompletionAvailableSuggestionsNotification) {
 		if (notification.changedLibraries) {
 			for (const completionSet of notification.changedLibraries) {
-				this.cachedCompletions[completionSet.id] = completionSet;
+				this.cachedSuggestions[completionSet.id] = completionSet;
 			}
 		}
 		if (notification.removedLibraries) {
 			for (const completionSetID of notification.removedLibraries) {
-				delete this.cachedCompletions[completionSetID];
+				delete this.cachedSuggestions[completionSetID];
 			}
 		}
 	}
@@ -111,8 +116,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		return this.createCompletionItemFromSuggestion(
 			item.document,
 			item.enableCommitCharacters,
-			item.replacementOffset,
-			item.replacementLength,
+			item.replacementRange,
 			item.autoImportUri,
 			item.relevance,
 			item.suggestion,
@@ -123,8 +127,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	private createCompletionItemFromSuggestion(
 		document: TextDocument,
 		enableCommitCharacters: boolean,
-		replacementOffset: number,
-		replacementLength: number,
+		replacementRange: Range,
 		displayUri: string | undefined,
 		relevance: number,
 		suggestion: as.AvailableSuggestion,
@@ -142,8 +145,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			parameterType: undefined, // Unimported completions can't be parameters.
 			parameters: suggestion.element ? suggestion.element.parameters : undefined,
 			relevance,
-			replacementLength,
-			replacementOffset,
+			replacementRange,
 			requiredParameterCount: suggestion.requiredParameterCount,
 			returnType: suggestion.element ? suggestion.element.returnType : undefined,
 			selectionLength: resolvedResult && resolvedResult.change && resolvedResult.change.selection ? 0 : undefined,
@@ -165,6 +167,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		token: CancellationToken,
 		enableCommitCharacters: boolean,
 		offset: number,
+		replacementRange: Range,
 		resp: as.CompletionResultsNotification,
 	): Promise<CompletionItem[] | undefined> {
 		if (!resp.includedSuggestionSets || !resp.includedElementKinds)
@@ -189,7 +192,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 				return undefined;
 			}
 
-			const suggestionSet = this.cachedCompletions[includedSuggestionSet.id];
+			const suggestionSet = this.cachedSuggestions[includedSuggestionSet.id];
 			if (!suggestionSet) {
 				logWarn(`Suggestion set ${includedSuggestionSet.id} was not available and therefore not included in the completion results`);
 				return [];
@@ -207,8 +210,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 					const completionItem = this.createCompletionItemFromSuggestion(
 						document,
 						enableCommitCharacters,
-						resp.replacementOffset,
-						resp.replacementLength,
+						replacementRange,
 						undefined,
 						includedSuggestionSet.relevance + relevanceBoost,
 						suggestion,
@@ -223,8 +225,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 						filePath,
 						offset,
 						relevance: includedSuggestionSet.relevance + relevanceBoost,
-						replacementLength: resp.replacementLength,
-						replacementOffset: resp.replacementOffset,
+						replacementRange,
 						suggestion,
 						suggestionSetID: includedSuggestionSet.id,
 						...completionItem,
@@ -241,6 +242,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	private convertResult(
 		document: TextDocument,
 		enableCommitCharacters: boolean,
+		replacementRange: Range,
 		notification: as.CompletionResultsNotification,
 		suggestion: as.CompletionSuggestion,
 	): CompletionItem {
@@ -255,8 +257,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			parameterType: suggestion.parameterType,
 			parameters: suggestion.element ? suggestion.element.parameters : undefined,
 			relevance: suggestion.relevance,
-			replacementLength: notification.replacementLength,
-			replacementOffset: notification.replacementOffset,
+			replacementRange,
 			requiredParameterCount: suggestion.requiredParameterCount,
 			returnType: suggestion.returnType,
 			selectionLength: suggestion.selectionLength,
@@ -277,8 +278,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			parameters: string | undefined,
 			parameterType: string | undefined,
 			relevance: number,
-			replacementLength: number,
-			replacementOffset: number,
+			replacementRange: Range,
 			requiredParameterCount: number | undefined,
 			returnType: string | undefined,
 			selectionLength: number,
@@ -353,10 +353,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		completion.documentation = new MarkdownString(cleanDartdoc(suggestion.docSummary));
 		completion.insertText = completionText;
 		completion.keepWhitespace = true;
-		completion.range = new Range(
-			document.positionAt(suggestion.replacementOffset),
-			document.positionAt(suggestion.replacementOffset + suggestion.replacementLength),
-		);
+		completion.range = suggestion.replacementRange;
 		if (enableCommitCharacters)
 			completion.commitCharacters = getCommitCharacters(suggestion.kind);
 
@@ -388,7 +385,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		this.disposables.forEach((d) => d.dispose());
 	}
 }
-
 
 function getCommitCharacters(kind: as.CompletionSuggestionKind): string[] {
 	switch (kind) {

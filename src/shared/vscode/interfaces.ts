@@ -1,4 +1,4 @@
-import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, DefinitionProvider, ReferenceProvider, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, DefinitionProvider, Range, ReferenceProvider, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
 import { AvailableSuggestion, Outline } from "../../extension/analysis/analysis_server_types";
 import { LogCategory, LogSeverity, TestStatus, VersionStatus } from "../enums";
 import { DebugCommandHandler } from "../interfaces";
@@ -72,8 +72,7 @@ export interface DelayedCompletionItem extends CompletionItem {
 	filePath: string;
 	offset: number;
 	relevance: number;
-	replacementLength: number;
-	replacementOffset: number;
+	replacementRange: Range;
 	suggestion: AvailableSuggestion;
 	suggestionSetID: number;
 }
