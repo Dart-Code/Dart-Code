@@ -11,6 +11,10 @@ export class SourceCodeActionProvider implements CodeActionProvider {
 	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): CodeAction[] | undefined {
 		if (!isAnalyzableAndInWorkspace(document))
 			return undefined;
+		// If we were only asked for specific action types and that doesn't include
+		// source (which is all we supply), bail out.
+		if (context && context.only && !context.only.contains(CodeActionKind.Source))
+			return undefined;
 		return [{
 			command: {
 				arguments: [document],
