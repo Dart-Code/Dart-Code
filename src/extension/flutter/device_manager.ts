@@ -201,7 +201,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 					if (this.currentDevice)
 						return;
 				}
-				throw new Error("Emulator didn't connected within 60 seconds");
+				throw new Error("Emulator didn't connect within 60 seconds");
 			});
 		} catch (e) {
 			vs.window.showErrorMessage(`Failed to launch emulator: ${e}`);
