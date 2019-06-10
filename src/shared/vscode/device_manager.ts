@@ -25,6 +25,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 		this.subscriptions.forEach((s) => s.dispose());
 	}
 
+	public isSupported(types: f.PlatformType[], device: { platformType: f.PlatformType }) {
+		// If we don't get any types to filter, assume everything is valid.
+		return device && (!types || !types.length || types.indexOf(device.platformType) !== -1);
+	}
+
 	public deviceAdded(dev: f.Device) {
 		dev = { ...dev, type: "device" };
 		this.devices.push(dev);
@@ -44,9 +49,10 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 	}
 
-	public async showDevicePicker(): Promise<void> {
+	public async showDevicePicker(supportedTypes?: f.PlatformType[]): Promise<f.Device> {
 		const devices: PickableDevice[] = this.devices
 			.sort(this.deviceSortComparer.bind(this))
+			.filter((d) => this.isSupported(supportedTypes, d))
 			.map((d) => ({
 				description: d.platform,
 				device: d,
@@ -55,12 +61,12 @@ export class FlutterDeviceManager implements vs.Disposable {
 			}));
 
 		const quickPick = vs.window.createQuickPick<PickableDevice>();
-		quickPick.busy = true;
 		quickPick.items = devices;
 		quickPick.placeholder = "Select a device to use";
+		quickPick.busy = true;
 
-		// Also kick of async work to add emulators to the list.
-		this.getEmulatorItems(true).then((emulators) => {
+		// Also kick of async work to add emulators to the list (if they're valid).
+		this.getEmulatorItems(true, supportedTypes).then((emulators) => {
 			quickPick.busy = false;
 			quickPick.items = [...devices, ...emulators];
 		});
@@ -93,6 +99,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 					break;
 			}
 		}
+
+		return this.currentDevice;
 	}
 
 	public deviceSortComparer(d1: f.Device, d2: f.Device): number {
@@ -134,6 +142,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 	}
 
+	private isMobile(device: f.Device) {
+		// Treat missing platformType as mobile, since we don't know better.
+		return !device.platformType || device.platformType === "ios" || device.platformType === "android";
+	}
+
 	public async promptForAndLaunchEmulator(allowAutomaticSelection = false): Promise<boolean> {
 		const emulators = await this.getEmulatorItems(false);
 
@@ -166,7 +179,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		} else if (selectedEmulator && selectedEmulator.device && selectedEmulator.device.type === "emulator") {
 			return this.launchEmulator(selectedEmulator.device);
 		} else {
-			return !!this.currentDevice;
+			return !!(this.currentDevice);
 		}
 	}
 
@@ -196,26 +209,25 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 	}
 
-	private async getEmulatorItems(showLaunchPrefix: boolean): Promise<PickableDevice[]> {
+	private async getEmulatorItems(showLaunchPrefix: boolean, supportedTypes?: f.PlatformType[]): Promise<PickableDevice[]> {
 		const emulators: PickableDevice[] = (await this.getEmulators())
+			.filter((e) => this.isSupported(supportedTypes, e))
 			.map((e) => ({
 				alwaysShow: false,
 				description: e.id,
 				device: {
-					category: e.category,
-					id: e.id,
-					name: e.name,
-					platformType: e.platformType,
+					...e,
 					type: "emulator",
 				},
 				label: showLaunchPrefix ? `Launch ${e.name}` : e.name,
 			}));
+
 		// Add an option to create a new emulator if the daemon supports it.
-		if (this.daemon.capabilities.canCreateEmulators && isRunningLocally) {
+		if (this.daemon.capabilities.canCreateEmulators && isRunningLocally && this.isSupported(supportedTypes, { platformType: "android" })) {
 			emulators.push({
 				alwaysShow: true,
 				device: { type: "emulator-creator" },
-				label: "Create Android Emulator",
+				label: "Create Android emulator",
 			});
 		}
 		return emulators;
