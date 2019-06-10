@@ -38,6 +38,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	private analysisOverridesSubscriptions: ((notification: as.AnalysisOverridesNotification) => void)[] = [];
 	private completionResultsSubscriptions: ((notification: as.CompletionResultsNotification) => void)[] = [];
 	private completionAvailableSuggestionsSubscriptions: ((notification: as.CompletionAvailableSuggestionsNotification) => void)[] = [];
+	private completionExistingImportsSubscriptions: ((notification: as.CompletionExistingImportsNotification) => void)[] = [];
 	private searchResultsSubscriptions: ((notification: as.SearchResultsNotification) => void)[] = [];
 	private executionLaunchDataSubscriptions: ((notification: as.ExecutionLaunchDataNotification) => void)[] = [];
 	private flutterOutlineSubscriptions: ((notification: as.FlutterOutlineNotification) => void)[] = [];
@@ -94,6 +95,9 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 				break;
 			case "completion.availableSuggestions":
 				this.notify(this.completionAvailableSuggestionsSubscriptions, <as.CompletionAvailableSuggestionsNotification>evt.params);
+				break;
+			case "completion.existingImports":
+				this.notify(this.completionExistingImportsSubscriptions, <as.CompletionExistingImportsNotification>evt.params);
 				break;
 			case "search.results":
 				this.notify(this.searchResultsSubscriptions, <as.SearchResultsNotification>evt.params);
@@ -794,8 +798,8 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	such as the list of known fixes that can be specified
 	in an edit.dartfix request.
 	*/
-	editGetDartfixInfo(): Thenable<as.EditGetDartfixInfoResponse> {
-		return this.sendRequest("edit.getDartfixInfo");
+	editGetDartfixInfo(request: as.EditGetDartfixInfoRequest): Thenable<as.EditGetDartfixInfoResponse> {
+		return this.sendRequest("edit.getDartfixInfo", request);
 	}
 
 	/**
