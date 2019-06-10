@@ -213,7 +213,16 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 		const filePath = fsPath(document.uri);
 		const suggestionSetResults: CompletionItem[][] = [];
+		// Keep track of suggestion sets we've seen to avoid included them twice.
+		// See https://github.com/dart-lang/sdk/issues/37211.
+		const usedSuggestionSets: { [key: number]: boolean } = {};
 		for (const includedSuggestionSet of resp.includedSuggestionSets) {
+			if (usedSuggestionSets[includedSuggestionSet.id])
+				continue;
+
+			// Mark that we've done this one so we don't do it again.
+			usedSuggestionSets[includedSuggestionSet.id] = true;
+
 			// Because this work is expensive, we periodically (per suggestion
 			// set) yield and check whether cancellation is pending and if so
 			// stop and bail out to avoid doing redundant work.
