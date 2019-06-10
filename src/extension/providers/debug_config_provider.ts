@@ -20,7 +20,7 @@ import { FlutterTestDebugSession } from "../debug/flutter_test_debug_impl";
 import { FlutterWebDebugSession } from "../debug/flutter_web_debug_impl";
 import { FlutterWebTestDebugSession } from "../debug/flutter_web_test_debug_impl";
 import { FlutterLaunchRequestArguments } from "../debug/utils";
-import { FlutterDeviceManager } from "../flutter/device_manager";
+import { FlutterDaemon } from "../flutter/flutter_daemon";
 import { Device } from "../flutter/flutter_types";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
@@ -35,7 +35,7 @@ let hasShownFlutterWebDebugWarning = false;
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugServers: { [index: string]: net.Server } = {};
 
-	constructor(private logger: Logger, private sdks: Sdks, private analytics: Analytics, private pubGlobal: PubGlobal, private deviceManager: FlutterDeviceManager, private flutterCapabilities: FlutterCapabilities) { }
+	constructor(private logger: Logger, private sdks: Sdks, private analytics: Analytics, private pubGlobal: PubGlobal, private daemon: FlutterDaemon, private flutterCapabilities: FlutterCapabilities) { }
 
 	public provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
 		const isFlutter = isFlutterWorkspaceFolder(folder);
@@ -233,16 +233,22 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return;
 
 		// Ensure we have a device if required.
-		let currentDevice = this.deviceManager && this.deviceManager.currentDevice;
-		if (isStandardFlutter && !isTest && !currentDevice && this.deviceManager && debugConfig.deviceId !== "flutter-tester") {
-			// Fetch a list of emulators.
-			if (!await this.deviceManager.promptForAndLaunchEmulator(true)) {
+		const deviceManager = this.daemon && this.daemon.deviceManager;
+		if (isStandardFlutter && !isTest && deviceManager && debugConfig.deviceId !== "flutter-tester") {
+			const supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
+				? (await this.daemon.getSupportedPlatforms(debugConfig.cwd)).platforms
+				: [];
+
+			// If the current device is not valid, prompt the user.
+			if (!deviceManager.isSupported(supportedPlatforms, deviceManager.currentDevice))
+				await deviceManager.showDevicePicker(supportedPlatforms);
+
+			// If we still don't have a valid device, show an error.
+			if (!deviceManager.isSupported(supportedPlatforms, deviceManager.currentDevice)) {
 				logger.warn("Unable to launch due to no active device");
 				window.showInformationMessage("Cannot launch without an active device");
 				return undefined; // undefined means silent (don't open launch.json).
 			}
-			// Otherwise try to read again.
-			currentDevice = this.deviceManager && this.deviceManager.currentDevice;
 		}
 
 		if (token && token.isCancellationRequested)
@@ -257,7 +263,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return;
 
 		// TODO: This cast feels nasty?
-		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isAnyFlutter, currentDevice);
+		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isAnyFlutter, deviceManager && deviceManager.currentDevice);
 
 		// Debugger always uses uppercase drive letters to ensure our paths have them regardless of where they came from.
 		debugConfig.program = forceWindowsDriveLetterToUppercase(debugConfig.program);
