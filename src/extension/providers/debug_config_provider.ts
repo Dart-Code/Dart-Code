@@ -7,7 +7,7 @@ import { DebugSession } from "vscode-debugadapter";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { CHROME_OS_VM_SERVICE_PORT, dartVMPath, debugAnywayAction, flutterPath, HAS_LAST_DEBUG_CONFIG, isChromeOS, pubPath, pubSnapshotPath, showErrorsAction } from "../../shared/constants";
 import { Device } from "../../shared/flutter/daemon_interfaces";
-import { Logger, Sdks } from "../../shared/interfaces";
+import { IFlutterDaemon, Logger, Sdks } from "../../shared/interfaces";
 import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../../shared/utils";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { fsPath } from "../../shared/vscode/utils";
@@ -35,7 +35,7 @@ let hasShownFlutterWebDebugWarning = false;
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugServers: { [index: string]: net.Server } = {};
 
-	constructor(private logger: Logger, private sdks: Sdks, private analytics: Analytics, private pubGlobal: PubGlobal, private deviceManager: FlutterDeviceManager, private flutterCapabilities: FlutterCapabilities) { }
+	constructor(private readonly logger: Logger, private readonly sdks: Sdks, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly daemon: IFlutterDaemon, private readonly deviceManager: FlutterDeviceManager, private readonly flutterCapabilities: FlutterCapabilities) { }
 
 	public provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
 		const isFlutter = isFlutterWorkspaceFolder(folder);
@@ -233,16 +233,21 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return;
 
 		// Ensure we have a device if required.
-		let currentDevice = this.deviceManager && this.deviceManager.currentDevice;
-		if (isStandardFlutter && !isTest && !currentDevice && this.deviceManager && debugConfig.deviceId !== "flutter-tester") {
-			// Fetch a list of emulators.
-			if (!await this.deviceManager.promptForAndLaunchEmulator(true)) {
+		if (isStandardFlutter && !isTest && this.deviceManager && this.daemon && debugConfig.deviceId !== "flutter-tester") {
+			const supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
+				? (await this.daemon.getSupportedPlatforms(debugConfig.cwd)).platforms
+				: [];
+
+			// If the current device is not valid, prompt the user.
+			if (!this.deviceManager.isSupported(supportedPlatforms, this.deviceManager.currentDevice))
+				await this.deviceManager.showDevicePicker(supportedPlatforms);
+
+			// If we still don't have a valid device, show an error.
+			if (!this.deviceManager.isSupported(supportedPlatforms, this.deviceManager.currentDevice)) {
 				logger.warn("Unable to launch due to no active device");
 				window.showInformationMessage("Cannot launch without an active device");
 				return undefined; // undefined means silent (don't open launch.json).
 			}
-			// Otherwise try to read again.
-			currentDevice = this.deviceManager && this.deviceManager.currentDevice;
 		}
 
 		if (token && token.isCancellationRequested)
@@ -257,7 +262,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return;
 
 		// TODO: This cast feels nasty?
-		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isAnyFlutter, currentDevice);
+		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isAnyFlutter, this.deviceManager && this.deviceManager.currentDevice);
 
 		// Debugger always uses uppercase drive letters to ensure our paths have them regardless of where they came from.
 		debugConfig.program = forceWindowsDriveLetterToUppercase(debugConfig.program);
