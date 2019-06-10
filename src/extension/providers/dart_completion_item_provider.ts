@@ -19,9 +19,11 @@ import { logError, logWarn } from "../utils/log";
 export class DartCompletionItemProvider implements CompletionItemProvider, IAmDisposable {
 	private disposables: Disposable[] = [];
 	private cachedCompletions: { [key: number]: as.AvailableSuggestionSet } = {};
+	private existingImports: { [key: string]: as.ExistingImports } = {};
 
 	constructor(private readonly analyzer: Analyzer) {
 		this.disposables.push(analyzer.registerForCompletionAvailableSuggestions((n) => this.storeCompletionSuggestions(n)));
+		this.disposables.push(analyzer.registerForCompletionExistingImports((n) => this.storeExistingImports(n)));
 	}
 
 	public async provideCompletionItems(
@@ -108,6 +110,10 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 				delete this.cachedCompletions[completionSetID];
 			}
 		}
+	}
+
+	private storeExistingImports(notification: as.CompletionExistingImportsNotification) {
+		this.existingImports[notification.file] = notification.imports;
 	}
 
 	public async resolveCompletionItem(item: DelayedCompletionItem, token: CancellationToken): Promise<CompletionItem | undefined> {
@@ -203,6 +209,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		if (!resp.includedSuggestionSets || !resp.includedElementKinds)
 			return [];
 
+		const existingImports = resp.libraryFile ? this.existingImports[resp.libraryFile] : undefined;
+
 		// Create a fast lookup for which kinds to include.
 		const elementKinds: { [key: string]: boolean } = {};
 		resp.includedElementKinds.forEach((k) => elementKinds[k] = true);
@@ -240,6 +248,20 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			const unresolvedItems = suggestionSet.items
 				.filter((r) => elementKinds[r.element.kind])
 				.map((suggestion): DelayedCompletionItem => {
+
+					// Figure out if we should include this item. We should skip
+					// it if a library that's already imported (that is not this
+					// one) defines a symbol with this name.
+					const stringIndex = existingImports.elements.strings.indexOf(suggestion.label);
+
+					for (const imp of existingImports.imports) {
+						for (const elm of imp.elements) {
+							if (existingImports.elements.strings[existingImports.elements.names[elm]] === suggestion.label) {
+								console.log(`Item ${suggestion.label} is imported by ${imp.uri}`);
+							}
+						}
+					}
+
 
 					// Calculate the relevance for this item.
 					let relevanceBoost = 0;

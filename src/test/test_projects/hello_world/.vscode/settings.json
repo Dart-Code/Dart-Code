@@ -9,5 +9,5 @@
 		"lib/excluded"
 	],
 	"dart.showIgnoreQuickFixes": true,
-	"dart.autoImportCompletions": true,
+	"dart.sdkPath": "/Users/dantup/Dev/dart-sdk/nightly-2019-06-10",
 }
