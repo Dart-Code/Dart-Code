@@ -1495,6 +1495,7 @@
 		"run-for-every-file": "^1.1.0",
 		"signal-exit": "^3.0.2",
 		"sinon": "^7.1.1",
+		"source-map-support": "^0.5.12",
 		"ts-loader": "^6.0.2",
 		"tslint": "^5.17.0",
 		"typescript": "^3.5.1",

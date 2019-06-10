@@ -40,6 +40,9 @@ module.exports = {
 		// Use any mocha API
 		mocha.useColors(true);
 
+		// Set up source map support.
+		require("source-map-support").install();
+
 		glob("**/**.test.js", { cwd: testsRoot }, (err, files) => {
 			if (err) {
 				return cb(err);
