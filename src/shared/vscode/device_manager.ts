@@ -74,9 +74,17 @@ export class FlutterDeviceManager implements vs.Disposable {
 		if (selection && selection.device) {
 			switch (selection.device.type) {
 				case "emulator-creator":
+					// Clear the current device so we can wait for the new one
+					// to connect.
+					this.currentDevice = undefined;
+					this.statusBarItem.text = "Creating emulator...";
 					await this.createEmulator();
 					break;
 				case "emulator":
+					// Clear the current device so we can wait for the new one
+					// to connect.
+					this.currentDevice = undefined;
+					this.statusBarItem.text = "Launching emulator...";
 					await this.launchEmulator(selection.device);
 					break;
 				case "device":
