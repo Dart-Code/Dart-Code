@@ -1221,6 +1221,15 @@ export interface EditDartfixResponse {
 	 * A list of source edits to apply the recommended changes.
 	 */
 	edits: SourceFileEdit[];
+
+	/**
+	 * Messages that should be displayed to the user that describe details of
+	 * the fix generation. This could be details that users might want to
+	 * explore before committing the changes to descriptions of exceptions
+	 * that were thrown but that did not stop the fixes from being produced.
+	 * The list will be omitted if it is empty.
+	 */
+	details?: string[];
 }
 
 /**
@@ -1500,6 +1509,14 @@ export interface EditImportElementsRequest {
 	 * The elements to be made accessible in the specified file.
 	 */
 	elements: ImportedElements[];
+
+	/**
+	 * The offset at which the specified elements need to be made accessible.
+	 * If provided, this is used to guard against adding imports for text
+	 * that would be inserted into a comment, string literal, or other
+	 * location where the imports would not be necessary.
+	 */
+	offset?: number;
 }
 
 /**
@@ -1514,10 +1531,12 @@ export interface EditImportElementsRequest {
  */
 export interface EditImportElementsResponse {
 	/**
-	 * The edits to be applied in order to make the specified elements accessible. The file to be edited will be the
-	 * defining compilation unit of the library containing the file specified in the request, which can be different
-	 * than the file specified in the request if the specified file is a part file. This field will be omitted if
-	 * there are no edits that need to be applied.
+	 * The edits to be applied in order to make the specified elements
+	 * accessible. The file to be edited will be the defining compilation
+	 * unit of the library containing the file specified in the request,
+	 * which can be different than the file specified in the request if the
+	 * specified file is a part file. This field will be omitted if there are
+	 * no edits that need to be applied.
 	 */
 	edit?: SourceFileEdit;
 }
@@ -2498,6 +2517,16 @@ export interface CompletionResultsNotification {
 	isLast: boolean;
 
 	/**
+	 * The library file that contains the file where completion was
+	 * requested. The client might use it for example together with the
+	 * existingImports notification to filter out available
+	 * suggestions. If there were changes to existing imports in the library,
+	 * the corresponding existingImports notification will be sent
+	 * before the completion notification.
+	 */
+	libraryFile?: FilePath;
+
+	/**
 	 * References to AvailableSuggestionSet objects previously sent
 	 * to the client. The client can include applicable names from the
 	 * referenced library in code completion suggestions.
@@ -2546,6 +2575,23 @@ export interface CompletionAvailableSuggestionsNotification {
 	 * A list of library ids that no longer apply.
 	 */
 	removedLibraries?: number[];
+}
+
+/**
+ * Reports existing imports in a library. This notification may be sent
+ * multiple times for a library. When a notification is processed, clients
+ * should replace any previous information for the library.
+ */
+export interface CompletionExistingImportsNotification {
+	/**
+	 * The defining file of the library.
+	 */
+	file: FilePath;
+
+	/**
+	 * The existing imports in the library.
+	 */
+	imports: ExistingImports;
 }
 
 /**
@@ -2911,6 +2957,13 @@ export interface AvailableSuggestion {
 	label: string;
 
 	/**
+	 * The URI of the library that declares the element being suggested,
+	 * not the URI of the library associated with the enclosing
+	 * AvailableSuggestionSet.
+	 */
+	declaringLibraryUri: string;
+
+	/**
 	 * Information about the element reference being suggested.
 	 */
 	element: Element;
@@ -2994,6 +3047,63 @@ export interface AvailableSuggestionSet {
 	 * 
 	 */
 	items: AvailableSuggestion[];
+}
+
+/**
+ * Information about an existing import, with elements that it provides.
+ */
+export interface ExistingImport {
+	/**
+	 * The URI of the imported library.
+	 * It is an index in the strings field, in the enclosing
+	 * ExistingImports and its ImportedElementSet object.
+	 */
+	uri: number;
+
+	/**
+	 * The list of indexes of elements, in the enclosing
+	 * ExistingImports object.
+	 */
+	elements: number[];
+}
+
+/**
+ * Information about all existing imports in a library.
+ */
+export interface ExistingImports {
+	/**
+	 * The set of all unique imported elements for all imports.
+	 */
+	elements: ImportedElementSet;
+
+	/**
+	 * The list of imports in the library.
+	 */
+	imports: ExistingImport[];
+}
+
+/**
+ * The set of top-level elements encoded as pairs of the defining library
+ * URI and the name, and stored in the parallel lists elementUris
+ * and elementNames.
+ */
+export interface ImportedElementSet {
+	/**
+	 * The list of unique strings in this object.
+	 */
+	strings: string[];
+
+	/**
+	 * The library URI part of the element.
+	 * It is an index in the strings field.
+	 */
+	uris: number[];
+
+	/**
+	 * The name part of a the element.
+	 * It is an index in the strings field.
+	 */
+	names: number[];
 }
 
 /**
@@ -3175,19 +3285,23 @@ export type RuntimeCompletionExpressionTypeKind =
  */
 export interface TokenDetails {
 	/**
-	 * The raw token text.
+	 * The token's lexeme.
 	 */
 	lexeme: string;
 
 	/**
-	 * The type of this token.
+	 * A unique id for the type of the identifier.
+	 * Omitted if the token is not an identifier in a reference position.
 	 */
-	type: string;
+	type?: string;
 
 	/**
-	 * The kinds of elements which could validly replace this token.
+	 * An indication of whether this token is in a declaration or reference
+	 * position. (If no other purpose is found for this field then it should
+	 * be renamed and converted to a boolean value.)
+	 * Omitted if the token is not an identifier.
 	 */
-	validElementKinds: ElementKind[];
+	validElementKinds?: string[];
 }
 
 /**
@@ -3411,10 +3525,10 @@ export interface HoverInformation {
 	containingLibraryPath?: string;
 
 	/**
-	 * The name of the library in which the referenced element is
-	 * declared. This data is omitted if there is no referenced
-	 * element, or if the element is declared inside an HTML
-	 * file.
+	 * The URI of the containing library, examples here include
+	 * "dart:core", "package:.." and file uris represented by the
+	 * path on disk, "/..". The data is omitted if the element is
+	 * declared inside an HTML file.
 	 */
 	containingLibraryName?: string;
 
@@ -4063,11 +4177,16 @@ export interface AnalysisError {
 	 */
 	code: string;
 
-
 	/**
 	 * The URL of a page containing documentation associated with this error.
 	 */
 	url?: string;
+
+	/**
+	 * Additional messages associated with this diagnostic that provide
+	 * context to help the user understand the diagnostic.
+	 */
+	contextMessages?: DiagnosticMessage[];
 
 	/**
 	 * A hint to indicate to interested clients that this error has an
@@ -4288,6 +4407,26 @@ export type CompletionSuggestionKind =
 	| "OPTIONAL_ARGUMENT"
 	| "OVERRIDE"
 	| "PARAMETER";
+
+/**
+ * A message associated with a diagnostic.
+ * 
+ * For example, if the diagnostic is reporting that a variable has been
+ * referenced before it was declared, it might have a diagnostic message that
+ * indicates where the variable is declared.
+ */
+export interface DiagnosticMessage {
+	/**
+	 * The message to be displayed to the user.
+	 */
+	message: string;
+
+	/**
+	 * The location associated with or referenced by the message. Clients
+	 * should provide the ability to navigate to the location.
+	 */
+	location: Location;
+}
 
 /**
  * Information about an element (something that can be declared in code).
@@ -5026,4 +5165,3 @@ export interface SourceFileEdit {
 	 */
 	edits: SourceEdit[];
 }
-
