@@ -247,22 +247,40 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 			const unresolvedItems = suggestionSet.items
 				.filter((r) => elementKinds[r.element.kind])
-				.map((suggestion): DelayedCompletionItem => {
+				.filter((suggestion) => {
+					// TODO: Make this faster with cached lookups
 
-					// Figure out if we should include this item. We should skip
-					// it if a library that's already imported (that is not this
-					// one) defines a symbol with this name.
-					const stringIndex = existingImports.elements.strings.indexOf(suggestion.label);
+					// Check existing imports to ensure we don't already import
+					// this element (note: this exact element from its declaring
+					// library, not just something with the same name). If we do
+					// we'll want to skip it.
+					for (const existingImport of existingImports.imports) {
+						for (const importedElement of existingImport.elements) {
+							// This is the symbol name and declaring library. That is, the
+							// library that declares the symbol, not the one that was imported.
+							// This wil be the same for an element that is re-exported by other
+							// libraries, so we can avoid showing the exact duplicate.
+							const elementName = existingImports.elements.strings[existingImports.elements.names[importedElement]];
+							const elementDeclaringLibraryUri = existingImports.elements.strings[existingImports.elements.uris[importedElement]];
 
-					for (const imp of existingImports.imports) {
-						for (const elm of imp.elements) {
-							if (existingImports.elements.strings[existingImports.elements.names[elm]] === suggestion.label) {
-								console.log(`Item ${suggestion.label} is imported by ${imp.uri}`);
+							// If we match name and library, this suggestion is for this element.
+							const isAlreadyImported = elementName === suggestion.label && elementDeclaringLibraryUri === suggestion.declaringLibraryUri;
+							// If the suggestion is for this libraries version of the element, we'll still want to keep it.
+							const importedIsThisLibrary = existingImports.elements.strings[existingImport.uri] === suggestionSet.uri;
+
+							if (isAlreadyImported && !importedIsThisLibrary) {
+								console.log(`Item ${suggestion.label}`
+									+ ` from ${elementDeclaringLibraryUri} is already imported`
+									+ ` by ${existingImports.elements.strings[existingImport.uri]} so filtering out the`
+									+ ` suggestion for ${suggestionSet.uri}`);
+								return false;
 							}
 						}
 					}
 
-
+					return true;
+				})
+				.map((suggestion): DelayedCompletionItem => {
 					// Calculate the relevance for this item.
 					let relevanceBoost = 0;
 					if (suggestion.relevanceTags)
