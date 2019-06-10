@@ -54,17 +54,8 @@ export class DartHoverProvider implements HoverProvider {
 
 		let documentation = cleanDartdoc(dartdoc);
 		if (this.analyzer.capabilities.hasNewHoverLibraryFormat) {
-			const containingLibrary = hover.containingLibraryName;
-			const packageMap = DartHoverProvider.getPackageMapFor(documentUri);
-			if (containingLibrary && packageMap) {
-				// Only add the library in if it's not inside out current package
-				// either by path or name.
-				if (!containingLibrary.startsWith(packageMap.localPackageRoot)
-					&& !containingLibrary.startsWith(`package:${packageMap.localPackageName}/`)) {
-					documentation = `*${containingLibrary}*\n\n` + documentation;
-				}
-			}
-
+			if (hover.containingLibraryName)
+				documentation = `*${hover.containingLibraryName}*\n\n` + documentation;
 		} else {
 			const containingLibraryName = hover.containingLibraryName;
 			const containingLibraryPath = hover.containingLibraryPath;
@@ -81,7 +72,7 @@ export class DartHoverProvider implements HoverProvider {
 
 		return {
 			displayString: displayString.trim(),
-			documentation,
+			documentation: documentation.trim(),
 		};
 	}
 
