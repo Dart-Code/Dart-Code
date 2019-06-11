@@ -269,10 +269,10 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 							const importedIsThisLibrary = existingImports.elements.strings[existingImport.uri] === suggestionSet.uri;
 
 							if (isAlreadyImported && !importedIsThisLibrary) {
-								console.log(`Item ${suggestion.label}`
-									+ ` from ${elementDeclaringLibraryUri} is already imported`
-									+ ` by ${existingImports.elements.strings[existingImport.uri]} so filtering out the`
-									+ ` suggestion for ${suggestionSet.uri}`);
+								// console.log(`Item ${suggestion.label}`
+								// 	+ ` from ${elementDeclaringLibraryUri} is already imported`
+								// 	+ ` by ${existingImports.elements.strings[existingImport.uri]} so filtering out the`
+								// 	+ ` suggestion for ${suggestionSet.uri}`);
 								return false;
 							}
 						}
