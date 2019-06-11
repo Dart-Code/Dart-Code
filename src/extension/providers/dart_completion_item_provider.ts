@@ -276,7 +276,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 					// library, not just something with the same name). If we do
 					// we'll want to skip it.
 					const key = `${suggestion.label}/${suggestion.declaringLibraryUri}`;
-					const importingUris = existingImports[key];
+					const importingUris = existingImports && existingImports[key];
 
 					// Keep it only if there are either:
 					// - no URIs importing it
