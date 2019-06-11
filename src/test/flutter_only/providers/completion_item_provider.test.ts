@@ -34,7 +34,12 @@ main() {
 			assert.equal(edgeInsetsCompletions.length >= 5, true);
 		});
 
-		it("does not include overlapping unimported symbols from multiple files if one is already imported", async () => {
+		it("does not include overlapping unimported symbols from multiple files if one is already imported", async function () {
+			if (!extApi.analyzerCapabilities.supportsIncludedImports) {
+				this.skip();
+				return;
+			}
+
 			await setTestContent(`
 import 'package:flutter/rendering.dart';
 

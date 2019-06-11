@@ -12,6 +12,7 @@ export interface InternalExtensionApi {
 		hasNewSignatureFormat: boolean;
 		hasNewHoverLibraryFormat: boolean;
 		supportsAvailableSuggestions: boolean;
+		supportsIncludedImports: boolean;
 		version: string;
 	};
 	cancelAllAnalysisRequests: () => void;

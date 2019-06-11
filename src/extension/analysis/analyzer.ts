@@ -33,6 +33,7 @@ export class AnalyzerCapabilities {
 	get hasNewSignatureFormat() { return versionIsAtLeast(this.version, "1.27.1"); }
 	get hasNewHoverLibraryFormat() { return versionIsAtLeast(this.version, "1.27.1"); }
 	get supportsAvailableSuggestions() { return versionIsAtLeast(this.version, "1.26.0"); }
+	get supportsIncludedImports() { return versionIsAtLeast(this.version, "1.27.1"); }
 }
 
 export class Analyzer extends AnalyzerGen {
