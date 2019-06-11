@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as vs from "vscode";
 import { activate, ensureCompletion, extApi, flutterHelloWorldMainFile, getCompletionsAt, getPackages, setTestContent } from "../../helpers";
 
-describe.only("completion_item_provider", () => {
+describe("completion_item_provider", () => {
 
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
