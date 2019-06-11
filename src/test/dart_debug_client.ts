@@ -71,7 +71,7 @@ export class DartDebugClient extends DebugClient {
 			workspaceFolder: undefined,
 		};
 		this.debugCommands.handleDebugSessionStart(this.currentSession);
-		this.on("terminated", (e: DebugProtocol.TerminatedEvent) => this.debugCommands.handleDebugSessionEnd(this.currentSession));
+		this.waitForEvent("terminated").then((_) => this.debugCommands.handleDebugSessionEnd(this.currentSession));
 
 		// We override the base method to swap for attachRequest when required, so that
 		// all the existing methods that provide useful functionality but assume launching
@@ -166,16 +166,23 @@ export class DartDebugClient extends DebugClient {
 
 	public assertOutputContains(category: string, text: string): Promise<DebugProtocol.OutputEvent> {
 		let output = "";
+		const emitter = this;
+		let cleanup = () => { }; // tslint:disable-line: no-empty
 		return withTimeout(
-			new Promise((resolve, reject) => this.on("output", (event: DebugProtocol.OutputEvent) => {
-				if (event.body.category === category) {
-					output += event.body.output;
-					if (output.indexOf(text) !== -1)
-						resolve(event);
+			new Promise<DebugProtocol.OutputEvent>((resolve) => {
+				function handleOutput(event: DebugProtocol.OutputEvent) {
+					if (event.body.category === category) {
+						output += event.body.output;
+						if (output.indexOf(text) !== -1) {
+							resolve(event);
+						}
+					}
 				}
-			})),
+				cleanup = () => this.removeListener("output", handleOutput);
+				this.on("output", handleOutput);
+			}),
 			() => `Didn't find text "${text}" in ${category}\nGot: ${output}`,
-		);
+		).finally(() => cleanup());
 	}
 
 	public waitForCustomEvent<T>(type: string, filter: (notification: T) => boolean): Promise<T> {
@@ -190,15 +197,16 @@ export class DartDebugClient extends DebugClient {
 				try {
 					const notification = event.body as T;
 					if (filter(notification)) {
-						resolve(notification);
 						this.removeListener(type, handler);
+						resolve(notification);
 					}
 				} catch (e) {
-					reject(e);
 					this.removeListener(type, handler);
+					reject(e);
 				}
 			};
 			this.on(type, handler);
+			this.on("terminated", () => this.removeListener(type, handler));
 		});
 	}
 
