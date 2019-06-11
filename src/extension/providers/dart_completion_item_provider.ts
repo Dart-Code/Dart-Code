@@ -19,7 +19,7 @@ import { logError, logWarn } from "../utils/log";
 export class DartCompletionItemProvider implements CompletionItemProvider, IAmDisposable {
 	private disposables: Disposable[] = [];
 	private cachedCompletions: { [key: number]: as.AvailableSuggestionSet } = {};
-	private existingImports: { [key: string]: as.ExistingImports } = {};
+	private existingImports: { [key: string]: { [key: string]: { [key: string]: boolean } } } = {};
 
 	constructor(private readonly analyzer: Analyzer) {
 		this.disposables.push(analyzer.registerForCompletionAvailableSuggestions((n) => this.storeCompletionSuggestions(n)));
@@ -113,7 +113,30 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	}
 
 	private storeExistingImports(notification: as.CompletionExistingImportsNotification) {
-		this.existingImports[notification.file] = notification.imports;
+		const existingImports = notification.imports;
+
+		// Map with key "elementName/elementDeclaringLibraryUri"
+		// Value is a set of imported URIs that import that element.
+		const alreadyImportedSymbols: { [key: string]: { [key: string]: boolean } } = {};
+		for (const existingImport of existingImports.imports) {
+			for (const importedElement of existingImport.elements) {
+				// This is the symbol name and declaring library. That is, the
+				// library that declares the symbol, not the one that was imported.
+				// This wil be the same for an element that is re-exported by other
+				// libraries, so we can avoid showing the exact duplicate.
+				const elementName = existingImports.elements.strings[existingImports.elements.names[importedElement]];
+				const elementDeclaringLibraryUri = existingImports.elements.strings[existingImports.elements.uris[importedElement]];
+
+				const importedUri = existingImports.elements.strings[existingImport.uri];
+
+				const key = `${elementName}/${elementDeclaringLibraryUri}`;
+				if (!alreadyImportedSymbols[key])
+					alreadyImportedSymbols[key] = {};
+				alreadyImportedSymbols[key][importedUri] = true;
+			}
+		}
+
+		this.existingImports[notification.file] = alreadyImportedSymbols;
 	}
 
 	public async resolveCompletionItem(item: DelayedCompletionItem, token: CancellationToken): Promise<CompletionItem | undefined> {
@@ -248,33 +271,12 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			const unresolvedItems = suggestionSet.items
 				.filter((r) => elementKinds[r.element.kind])
 				.filter((suggestion) => {
-					// Map with key "elementName/elementDeclaringLibraryUri"
-					// Value is a set of imported URIs that import that element.
-					const alreadyImportedSymbols: { [key: string]: { [key: string]: boolean } } = {};
-					for (const existingImport of existingImports.imports) {
-						for (const importedElement of existingImport.elements) {
-							// This is the symbol name and declaring library. That is, the
-							// library that declares the symbol, not the one that was imported.
-							// This wil be the same for an element that is re-exported by other
-							// libraries, so we can avoid showing the exact duplicate.
-							const elementName = existingImports.elements.strings[existingImports.elements.names[importedElement]];
-							const elementDeclaringLibraryUri = existingImports.elements.strings[existingImports.elements.uris[importedElement]];
-
-							const importedUri = existingImports.elements.strings[existingImport.uri];
-
-							const key = `${elementName}/${elementDeclaringLibraryUri}`;
-							if (!alreadyImportedSymbols[key])
-								alreadyImportedSymbols[key] = {};
-							alreadyImportedSymbols[key][importedUri] = true;
-						}
-					}
-
 					// Check existing imports to ensure we don't already import
 					// this element (note: this exact element from its declaring
 					// library, not just something with the same name). If we do
 					// we'll want to skip it.
 					const key = `${suggestion.label}/${suggestion.declaringLibraryUri}`;
-					const importingUris = alreadyImportedSymbols[key];
+					const importingUris = existingImports[key];
 
 					// Keep it only if there are either:
 					// - no URIs importing it
