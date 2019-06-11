@@ -159,7 +159,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		const completionItem = this.makeCompletion(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, {
 			autoImportUri: displayUri,
 			completionText: (resolvedResult && resolvedResult.completion) || suggestion.label,
-			displayText: undefined,
+			displayText: suggestion.label, // Keep the label for display, so we don't update to show "prefix0" as the user moves to it.
 			docSummary: suggestion.docSummary,
 			elementKind: suggestion.element ? suggestion.element.kind : undefined,
 			isDeprecated: false,
