@@ -21,19 +21,22 @@ export class RefactorCodeActionProvider implements RankedCodeActionProvider {
 		providedCodeActionKinds: [CodeActionKind.Refactor],
 	};
 
-	public async provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Promise<CodeAction[]> | undefined {
+	public async provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Promise<CodeAction[] | undefined> {
 		if (!isAnalyzableAndInWorkspace(document))
 			return undefined;
 		// If we were only asked for specific action types and that doesn't include
 		// refactor (which is all we supply), bail out.
 		if (context && context.only && !context.only.contains(CodeActionKind.Refactor))
 			return undefined;
+
 		try {
 			const result = await this.analyzer.editGetAvailableRefactorings({
 				file: fsPath(document.uri),
 				length: document.offsetAt(range.end) - document.offsetAt(range.start),
 				offset: document.offsetAt(range.start),
 			});
+			if (token && token.isCancellationRequested)
+				return;
 			return result.kinds.map((k) => this.getRefactorForKind(document, range, k)).filter((r) => r);
 		} catch (e) {
 			// TODO: Swap this back to logError/throw when https://github.com/dart-lang/sdk/issues/33471 is fixed.

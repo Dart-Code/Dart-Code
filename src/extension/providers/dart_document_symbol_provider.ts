@@ -10,7 +10,7 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 
 	public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<DocumentSymbol[]> {
 		const outline = await waitFor(() => openFileTracker.getOutlineFor(document.uri), 500, 60000, token);
-		if (!outline || !outline.children || !outline.children.length)
+		if (token.isCancellationRequested || !outline || !outline.children || !outline.children.length)
 			return;
 		return outline.children.map((r) => this.convertResult(document, r));
 	}

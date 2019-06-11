@@ -6,10 +6,13 @@ import { openFileTracker } from "../analysis/open_file_tracker";
 export class DartFoldingProvider implements FoldingRangeProvider {
 	constructor(private readonly analyzer: Analyzer) { }
 
-	public async provideFoldingRanges(document: TextDocument, context: FoldingContext, token: CancellationToken): Promise<FoldingRange[]> {
+	public async provideFoldingRanges(document: TextDocument, context: FoldingContext, token: CancellationToken): Promise<FoldingRange[] | undefined> {
 		// Wait for any current analysis to complete (eg. if we've just opened a project it
 		// may take a while to get the results).
 		await this.analyzer.currentAnalysis;
+
+		if (token && token.isCancellationRequested)
+			return;
 
 		// Wait up to another few seconds after analysis completed (it might be that we opened a new
 		// file and there was no analysis, in which case we're just waiting for the server to process
@@ -19,10 +22,12 @@ export class DartFoldingProvider implements FoldingRangeProvider {
 			foldingRegions = openFileTracker.getFoldingRegionsFor(document.uri);
 			if (foldingRegions)
 				break;
-			await new Promise((resolve, reject) => setTimeout(resolve, i * 1000));
+			await new Promise((resolve) => setTimeout(resolve, i * 1000));
+			if (token && token.isCancellationRequested)
+				return;
 		}
 
-		if (!foldingRegions)
+		if (token.isCancellationRequested || !foldingRegions)
 			return;
 
 		return foldingRegions.map((f) => new FoldingRange(

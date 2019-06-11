@@ -233,6 +233,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 		}
 
+		if (token && token.isCancellationRequested)
+			return;
+
 		// Ensure we have a device if required.
 		let currentDevice = this.deviceManager && this.deviceManager.currentDevice;
 		if (isStandardFlutter && !isTest && !currentDevice && this.deviceManager && debugConfig.deviceId !== "flutter-tester") {
@@ -246,10 +249,16 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			currentDevice = this.deviceManager && this.deviceManager.currentDevice;
 		}
 
+		if (token && token.isCancellationRequested)
+			return;
+
 		// Ensure we have any require dependencies.
 		if (!(await this.installDependencies(debugType, this.pubGlobal))) {
 			return undefined;
 		}
+
+		if (token && token.isCancellationRequested)
+			return;
 
 		// TODO: This cast feels nasty?
 		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isAnyFlutter, currentDevice);
@@ -293,6 +302,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				}
 			}
 		}
+
+		if (token && token.isCancellationRequested)
+			return;
 
 		// Start port listener on launch of first debug session.
 		const debugServer = this.getDebugServer(debugType, debugConfig.debugServer);

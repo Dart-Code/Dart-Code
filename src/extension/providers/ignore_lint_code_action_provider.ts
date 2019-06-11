@@ -13,20 +13,20 @@ export class IgnoreLintCodeActionProvider implements RankedCodeActionProvider {
 		providedCodeActionKinds: [CodeActionKind.QuickFix],
 	};
 
-	public async provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Promise<CodeAction[]> | undefined {
+	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): CodeAction[] | undefined {
 		if (!isAnalyzableAndInWorkspace(document))
-			return undefined;
+			return;
 		// If we were only asked for specific action types and that doesn't include
 		// quickfix (which is all we supply), bail out.
 		if (context && context.only && !context.only.contains(CodeActionKind.QuickFix))
-			return undefined;
+			return;
 
 		if (!config.showIgnoreQuickFixes || !context || !context.diagnostics || !context.diagnostics.length)
-			return undefined;
+			return;
 
 		const lintErrors = context.diagnostics.filter((d) => d instanceof DartDiagnostic && (d.type === "LINT" || d.type === "HINT"));
 		if (!lintErrors.length)
-			return undefined;
+			return;
 
 		return lintErrors.map((diagnostic) => this.convertResult(document, diagnostic as DartDiagnostic));
 	}

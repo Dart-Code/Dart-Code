@@ -18,6 +18,9 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		const pattern = ".*" + query.replace(this.badChars, "").split("").map((c) => `[${c.toUpperCase()}${c.toLowerCase()}]`).join(".*") + ".*";
 		const results = await this.analyzer.searchGetElementDeclarations({ pattern, maxResults: 500 });
 
+		if (token && token.isCancellationRequested)
+			return;
+
 		return results.declarations.map((d) => this.convertWorkspaceResult(d, results.files[d.fileIndex]));
 	}
 

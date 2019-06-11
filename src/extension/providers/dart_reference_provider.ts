@@ -19,6 +19,9 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 			offset: document.offsetAt(position),
 		});
 
+		if (token && token.isCancellationRequested)
+			return;
+
 		const locations = resp.results.map((result) => {
 			return new Location(
 				Uri.file(result.location.file),
@@ -31,12 +34,15 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 			: locations;
 	}
 
-	public async provideDefinition(document: TextDocument, position: Position, token: CancellationToken | undefined): Promise<DefinitionLink[]> {
+	public async provideDefinition(document: TextDocument, position: Position, token: CancellationToken): Promise<DefinitionLink[]> {
 		const resp = await this.analyzer.analysisGetNavigation({
 			file: fsPath(document.uri),
 			length: 0,
 			offset: document.offsetAt(position),
 		});
+
+		if (token && token.isCancellationRequested)
+			return;
 
 		return flatMap(resp.regions, (region) => {
 			return region.targets.map((targetIndex) => {

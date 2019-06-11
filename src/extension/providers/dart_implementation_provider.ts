@@ -25,7 +25,7 @@ export class DartImplementationProvider implements vs.ImplementationProvider {
 			offset,
 		});
 
-		if (!hierarchy || !hierarchy.hierarchyItems || !hierarchy.hierarchyItems.length || hierarchy.hierarchyItems.length === 1)
+		if (token.isCancellationRequested || !hierarchy || !hierarchy.hierarchyItems || !hierarchy.hierarchyItems.length || hierarchy.hierarchyItems.length === 1)
 			return;
 
 		// Find the element we started with, since we only want implementations (not super classes).

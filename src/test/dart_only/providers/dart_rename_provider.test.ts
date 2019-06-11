@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, ensureTestContent, extApi, positionOf, setTestContent } from "../../helpers";
+import { activate, currentDoc, ensureTestContent, extApi, fakeCancellationToken, positionOf, setTestContent } from "../../helpers";
 
 describe("rename_provider", () => {
 
@@ -38,9 +38,9 @@ describe("rename_provider", () => {
 			import "dart:async" as async;
 		`);
 
-		const renamePrep = await extApi.renameProvider.prepareRename(doc, positionOf("i^mport"), undefined) as { range: vs.Range, placeholder: string };
+		const renamePrep = await extApi.renameProvider.prepareRename(doc, positionOf("i^mport"), fakeCancellationToken) as { range: vs.Range, placeholder: string };
 		assert.equal(renamePrep.placeholder, "async");
-		const renameResult = await extApi.renameProvider.provideRenameEdits(doc, renamePrep.range.start, "async2", undefined);
+		const renameResult = await extApi.renameProvider.provideRenameEdits(doc, renamePrep.range.start, "async2", fakeCancellationToken);
 		await vs.workspace.applyEdit(renameResult);
 		await ensureTestContent(`
 			import "dart:async" as async2;
@@ -53,9 +53,9 @@ describe("rename_provider", () => {
 			class Danny {}
 		`);
 
-		const renamePrep = await extApi.renameProvider.prepareRename(doc, positionOf("D^anny"), undefined) as { range: vs.Range, placeholder: string };
+		const renamePrep = await extApi.renameProvider.prepareRename(doc, positionOf("D^anny"), fakeCancellationToken) as { range: vs.Range, placeholder: string };
 		assert.equal(renamePrep.placeholder, "Danny");
-		const renameResult = await extApi.renameProvider.provideRenameEdits(doc, renamePrep.range.start, "Danny2", undefined);
+		const renameResult = await extApi.renameProvider.provideRenameEdits(doc, renamePrep.range.start, "Danny2", fakeCancellationToken);
 		await vs.workspace.applyEdit(renameResult);
 		await ensureTestContent(`
 			class Danny2 {}

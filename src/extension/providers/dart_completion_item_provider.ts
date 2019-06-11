@@ -41,7 +41,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			offset: document.offsetAt(position),
 		});
 
-		if (token.isCancellationRequested) {
+		if (token && token.isCancellationRequested) {
 			return undefined;
 		}
 
@@ -49,7 +49,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		const cachedResults = await this.getCachedResults(document, token, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, document.offsetAt(position), resp);
 
 		await resolvedPromise;
-		if (token.isCancellationRequested) {
+		if (token && token.isCancellationRequested) {
 			return undefined;
 		}
 
@@ -125,7 +125,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			offset: item.offset,
 		});
 
-		if (token.isCancellationRequested) {
+		if (token && token.isCancellationRequested) {
 			return;
 		}
 
@@ -227,7 +227,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			// set) yield and check whether cancellation is pending and if so
 			// stop and bail out to avoid doing redundant work.
 			await resolvedPromise;
-			if (token.isCancellationRequested) {
+			if (token && token.isCancellationRequested) {
 				return undefined;
 			}
 

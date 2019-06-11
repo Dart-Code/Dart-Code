@@ -8,17 +8,16 @@ import { isWithinWorkspace, toRangeOnLine } from "../utils";
 export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	constructor(private readonly analyzer: Analyzer) { }
 
-	public provideWorkspaceSymbols(query: string, token: CancellationToken): Thenable<SymbolInformation[]> | undefined {
+	public async provideWorkspaceSymbols(query: string, token: CancellationToken): Promise<SymbolInformation[] | undefined> {
 		if (query.length === 0)
 			return undefined;
 		query = this.sanitizeUserQuery(query);
 		const pattern = this.makeCaseInsensitiveFuzzyRegex(query);
-		return new Promise<SymbolInformation[]>((resolve, reject) => {
-			Promise.all([
-				this.analyzer.searchFindTopLevelDeclarationsResults({ pattern }),
-				this.analyzer.searchFindMemberDeclarationsResults({ name: pattern }),
-			]).then((results) => resolve(this.combineResults(results)), () => reject());
-		});
+		const results = await Promise.all([
+			this.analyzer.searchFindTopLevelDeclarationsResults({ pattern }),
+			this.analyzer.searchFindMemberDeclarationsResults({ name: pattern }),
+		]);
+		return this.combineResults(results);
 	}
 
 	private combineResults(results: as.SearchResultsNotification[]): SymbolInformation[] {
@@ -27,17 +26,16 @@ export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvide
 			.map((r) => this.convertResult(r));
 	}
 
-	private searchTopLevelSymbols(query: string): PromiseLike<as.SearchResult[]> {
+	private async searchTopLevelSymbols(query: string): Promise<as.SearchResult[]> {
 		const pattern = this.makeCaseInsensitiveFuzzyRegex(query);
-
-		return this.analyzer.searchFindTopLevelDeclarationsResults({ pattern })
-			.then((resp) => resp.results);
+		const resp = await this.analyzer.searchFindTopLevelDeclarationsResults({ pattern });
+		return resp.results;
 	}
 
-	private searchMemberDeclarations(query: string): PromiseLike<as.SearchResult[]> {
+	private async searchMemberDeclarations(query: string): Promise<as.SearchResult[]> {
 		const pattern = this.makeCaseInsensitiveFuzzyRegex(query);
-		return this.analyzer.searchFindMemberDeclarationsResults({ name: pattern })
-			.then((resp) => resp.results);
+		const resp = await this.analyzer.searchFindMemberDeclarationsResults({ name: pattern });
+		return resp.results;
 	}
 
 	private sanitizeUserQuery(query: string): string {

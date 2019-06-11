@@ -8,15 +8,15 @@ import { toRange } from "../utils";
 export class DartRenameProvider implements RenameProvider {
 	constructor(private readonly analyzer: Analyzer) { }
 
-	public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken | undefined): Thenable<WorkspaceEdit> {
+	public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): Thenable<WorkspaceEdit> {
 		return this.doRename(document, position, newName, token);
 	}
 
-	public prepareRename(document: TextDocument, position: Position, token: CancellationToken | undefined): Thenable<{ range: Range, placeholder: string }> {
-		return this.getLocation(document, position);
+	public prepareRename(document: TextDocument, position: Position, token: CancellationToken): Thenable<{ range: Range, placeholder: string }> {
+		return this.getLocation(document, position, token);
 	}
 
-	private async doRename(document: TextDocument, position: Position, newName: string, token: CancellationToken | undefined): Promise<WorkspaceEdit> {
+	private async doRename(document: TextDocument, position: Position, newName: string, token: CancellationToken): Promise<WorkspaceEdit | undefined> {
 		const outputChannel = channels.getChannel("Refactorings");
 		outputChannel.appendLine("");
 
@@ -30,6 +30,12 @@ export class DartRenameProvider implements RenameProvider {
 			},
 			validateOnly: false,
 		});
+
+		if (token && token.isCancellationRequested) {
+			outputChannel.appendLine("[INFO] Rename cancelled.");
+			return;
+		}
+
 		const workspaceEdit = new WorkspaceEdit();
 
 		if (resp.change && resp.change.message)
@@ -68,6 +74,12 @@ export class DartRenameProvider implements RenameProvider {
 
 		// Wait all openTextDocument to finish
 		await Promise.all(promises);
+
+		if (token && token.isCancellationRequested) {
+			outputChannel.appendLine("[INFO] Rename cancelled.");
+			return;
+		}
+
 		outputChannel.appendLine("[INFO] Rename successful.");
 		return workspaceEdit;
 	}
@@ -86,7 +98,7 @@ export class DartRenameProvider implements RenameProvider {
 		}
 	}
 
-	private async getLocation(document: TextDocument, position: Position): Promise<{ range: Range, placeholder: string }> {
+	private async getLocation(document: TextDocument, position: Position, token: CancellationToken): Promise<{ range: Range, placeholder: string } | undefined> {
 		const resp = await this.analyzer.editGetRefactoring({
 			file: fsPath(document.uri),
 			kind: "RENAME",
@@ -94,6 +106,9 @@ export class DartRenameProvider implements RenameProvider {
 			offset: document.offsetAt(position),
 			validateOnly: true,
 		});
+
+		if (token && token.isCancellationRequested)
+			return;
 
 		if (!resp.feedback)
 			throw new Error("You cannot rename this element.");

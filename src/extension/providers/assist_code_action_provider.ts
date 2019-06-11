@@ -15,23 +15,24 @@ export class AssistCodeActionProvider implements RankedCodeActionProvider {
 		providedCodeActionKinds: [CodeActionKind.Refactor],
 	};
 
-	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Promise<CodeAction[]> | undefined {
+	public async provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Promise<CodeAction[]> | undefined {
 		if (!isAnalyzableAndInWorkspace(document))
 			return undefined;
 		// If we were only asked for specific action types and that doesn't include
 		// refactor (which is all we supply), bail out.
 		if (context && context.only && !context.only.contains(CodeActionKind.Refactor))
 			return undefined;
-		return new Promise<CodeAction[]>((resolve, reject) => {
-			this.analyzer.editGetAssists({
+
+		try {
+			const assists = await this.analyzer.editGetAssists({
 				file: fsPath(document.uri),
 				length: range.end.character - range.start.character,
 				offset: document.offsetAt(range.start),
-			}).then((assists) => {
-				const actions = assists.assists.map((assist) => this.convertResult(document, assist));
-				resolve(actions);
-			}, (e) => { logError(e); reject(); });
-		});
+			});
+			return assists.assists.map((assist) => this.convertResult(document, assist));
+		} catch (e) {
+			logError(e);
+		}
 	}
 
 	private convertResult(document: TextDocument, change: as.SourceChange): CodeAction {

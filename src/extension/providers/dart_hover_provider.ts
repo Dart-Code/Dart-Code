@@ -9,32 +9,33 @@ import { logError } from "../utils/log";
 export class DartHoverProvider implements HoverProvider {
 	constructor(private readonly analyzer: Analyzer) { }
 
-	public provideHover(document: TextDocument, position: Position, token: CancellationToken): Thenable<Hover | undefined> {
-		return new Promise<Hover | undefined>((resolve, reject) => {
-			this.analyzer.analysisGetHover({
+	public async provideHover(document: TextDocument, position: Position, token: CancellationToken): Promise<Hover | undefined> {
+		try {
+			const resp = await this.analyzer.analysisGetHover({
 				file: fsPath(document.uri),
 				offset: document.offsetAt(position),
-			}).then((resp) => {
-				if (resp.hovers.length === 0) {
-					resolve(undefined);
-				} else {
-					const hover = resp.hovers[0];
-					const data = this.getHoverData(document.uri, hover);
-					if (data) {
-						const range = new Range(
-							document.positionAt(hover.offset),
-							document.positionAt(hover.offset + hover.length),
-						);
-						resolve(new Hover(
-							[{ language: "dart", value: data.displayString }, data.documentation || undefined],
-							range.isSingleLine ? range : undefined, // Workaround for https://github.com/dart-lang/sdk/issues/35386
-						));
-					} else {
-						resolve(undefined);
-					}
-				}
-			}, (e) => { logError(e); reject(); });
-		});
+			});
+
+			if (token.isCancellationRequested || resp.hovers.length === 0)
+				return;
+
+			const hover = resp.hovers[0];
+			const data = this.getHoverData(document.uri, hover);
+
+			if (!data)
+				return;
+
+			const range = new Range(
+				document.positionAt(hover.offset),
+				document.positionAt(hover.offset + hover.length),
+			);
+			return new Hover(
+				[{ language: "dart", value: data.displayString }, data.documentation || undefined],
+				range.isSingleLine ? range : undefined, // Workaround for https://github.com/dart-lang/sdk/issues/35386
+			);
+		} catch (e) {
+			logError(e);
+		}
 	}
 
 	private getHoverData(documentUri: Uri, hover: as.HoverInformation): any {

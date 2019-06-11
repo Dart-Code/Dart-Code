@@ -14,6 +14,9 @@ export class DartSignatureHelpProvider implements vs.SignatureHelpProvider {
 				offset: document.offsetAt(position),
 			});
 
+			if (token && token.isCancellationRequested)
+				return;
+
 			const sig = new vs.SignatureInformation(this.getSignatureLabel(resp), new vs.MarkdownString(cleanDartdoc(resp.dartdoc)));
 			sig.parameters = resp.parameters.map((p) => new vs.ParameterInformation(this.getLabel(p)));
 

@@ -16,7 +16,7 @@ export class FixCodeActionProvider implements RankedCodeActionProvider {
 		providedCodeActionKinds: [CodeActionKind.QuickFix],
 	};
 
-	public async provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Promise<CodeAction[]> | undefined {
+	public async provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Promise<CodeAction[] | undefined> {
 		if (!isAnalyzableAndInWorkspace(document))
 			return undefined;
 		// If we were only asked for specific action types and that doesn't include
@@ -28,6 +28,9 @@ export class FixCodeActionProvider implements RankedCodeActionProvider {
 				file: fsPath(document.uri),
 				offset: document.offsetAt(range.start),
 			});
+			if (token && token.isCancellationRequested)
+				return;
+
 			// Because fixes may be the same for multiple errors, we'll de-dupe them based on their edit.
 			const allActions: { [key: string]: CodeAction } = {};
 
