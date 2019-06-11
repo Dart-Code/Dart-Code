@@ -69,6 +69,7 @@ export class DevToolsManager implements vs.Disposable {
 								params: {
 									queryParams: {
 										hide: "debugger",
+										ide: "VSCode",
 										theme: config.useDevToolsDarkTheme ? "dark" : null,
 									},
 								},
