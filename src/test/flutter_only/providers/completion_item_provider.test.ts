@@ -30,21 +30,10 @@ main() {
 		`);
 			const completions = await getCompletionsAt("EdgeInsetsDirecti^");
 			const edgeInsetsCompletions = completions.filter((c) => c.label === "EdgeInsetsDirectional");
-			// We should get more than one because it's in rendering, painting, cupertino.
-			assert.equal(edgeInsetsCompletions.length > 1, true);
-		});
-
-		it("includes overlapping unimported symbols from multiple files", async () => {
-			await setTestContent(`
-main() {
-	EdgeInsetsDirecti
-}
-		`);
-			const completions = await getCompletionsAt("EdgeInsetsDirecti^");
-			const edgeInsetsCompletions = completions.filter((c) => c.label === "EdgeInsetsDirectional");
 			// We should get at least 5 because it's in rendering, painting, widgets, material, cupertino.
 			assert.equal(edgeInsetsCompletions.length >= 5, true);
 		});
+
 		it("does not include overlapping unimported symbols from multiple files if one is already imported", async () => {
 			await setTestContent(`
 import 'package:flutter/rendering.dart';
