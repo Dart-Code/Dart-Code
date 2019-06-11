@@ -61,6 +61,8 @@ main() {
 
 		it.skip("log performance of completions", async () => {
 			await setTestContent(`
+import 'package:flutter/rendering.dart';
+
 main() {
   ProcessInf
 }
