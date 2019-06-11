@@ -248,12 +248,9 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			const unresolvedItems = suggestionSet.items
 				.filter((r) => elementKinds[r.element.kind])
 				.filter((suggestion) => {
-					// TODO: Make this faster with cached lookups
-
-					// Check existing imports to ensure we don't already import
-					// this element (note: this exact element from its declaring
-					// library, not just something with the same name). If we do
-					// we'll want to skip it.
+					// Map with key "elementName/elementDeclaringLibraryUri"
+					// Value is a set of imported URIs that import that element.
+					const alreadyImportedSymbols: { [key: string]: { [key: string]: boolean } } = {};
 					for (const existingImport of existingImports.imports) {
 						for (const importedElement of existingImport.elements) {
 							// This is the symbol name and declaring library. That is, the
@@ -263,22 +260,26 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 							const elementName = existingImports.elements.strings[existingImports.elements.names[importedElement]];
 							const elementDeclaringLibraryUri = existingImports.elements.strings[existingImports.elements.uris[importedElement]];
 
-							// If we match name and library, this suggestion is for this element.
-							const isAlreadyImported = elementName === suggestion.label && elementDeclaringLibraryUri === suggestion.declaringLibraryUri;
-							// If the suggestion is for this libraries version of the element, we'll still want to keep it.
-							const importedIsThisLibrary = existingImports.elements.strings[existingImport.uri] === suggestionSet.uri;
+							const importedUri = existingImports.elements.strings[existingImport.uri];
 
-							if (isAlreadyImported && !importedIsThisLibrary) {
-								// console.log(`Item ${suggestion.label}`
-								// 	+ ` from ${elementDeclaringLibraryUri} is already imported`
-								// 	+ ` by ${existingImports.elements.strings[existingImport.uri]} so filtering out the`
-								// 	+ ` suggestion for ${suggestionSet.uri}`);
-								return false;
-							}
+							const key = `${elementName}/${elementDeclaringLibraryUri}`;
+							if (!alreadyImportedSymbols[key])
+								alreadyImportedSymbols[key] = {};
+							alreadyImportedSymbols[key][importedUri] = true;
 						}
 					}
 
-					return true;
+					// Check existing imports to ensure we don't already import
+					// this element (note: this exact element from its declaring
+					// library, not just something with the same name). If we do
+					// we'll want to skip it.
+					const key = `${suggestion.label}/${suggestion.declaringLibraryUri}`;
+					const importingUris = alreadyImportedSymbols[key];
+
+					// Keep it only if there are either:
+					// - no URIs importing it
+					// - the URIs importing it include this one
+					return !importingUris || importingUris[suggestionSet.uri];
 				})
 				.map((suggestion): DelayedCompletionItem => {
 					// Calculate the relevance for this item.
