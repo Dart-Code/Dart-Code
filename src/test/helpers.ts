@@ -6,7 +6,6 @@ import * as semver from "semver";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { isAnalyzable, vsCodeVersionConstraint } from "../extension/utils";
-import { logError, logTo, logWarn } from "../extension/utils/log";
 import { dartCodeExtensionIdentifier, DART_TEST_SUITE_NODE_CONTEXT } from "../shared/constants";
 import { LogCategory, LogSeverity, TestStatus } from "../shared/enums";
 import { internalApiSymbol } from "../shared/symbols";
@@ -27,12 +26,12 @@ export const fakeCancellationToken: vs.CancellationToken = {
 
 if (!ext) {
 	if (semver.satisfies(vs.version, vsCodeVersionConstraint)) {
-		logError("Quitting with error because extension failed to load.");
+		extApi.logError("Quitting with error because extension failed to load.");
 		process.exit(1);
 	} else {
-		logError("Skipping because extension failed to load due to requiring newer VS Code version.");
-		logError(`    Required: ${vsCodeVersionConstraint}`);
-		logError(`    Current: ${vs.version}`);
+		extApi.logError("Skipping because extension failed to load due to requiring newer VS Code version.");
+		extApi.logError(`    Required: ${vsCodeVersionConstraint}`);
+		extApi.logError(`    Current: ${vs.version}`);
 		process.exit(0);
 	}
 }
@@ -121,8 +120,29 @@ function getDefaultFile(): vs.Uri {
 
 export async function activateWithoutAnalysis(): Promise<void> {
 	await ext.activate();
-	if (ext.exports)
+	if (ext.exports) {
 		extApi = ext.exports[internalApiSymbol];
+
+		if (fileSafeCurrentTestName) {
+			const logFolder = process.env.DC_TEST_LOGS || path.join(ext.extensionPath, ".dart_code_test_logs");
+			if (!fs.existsSync(logFolder))
+				fs.mkdirSync(logFolder);
+			const logFile = fileSafeCurrentTestName + ".txt";
+			const logPath = path.join(logFolder, logFile);
+
+			const logger = extApi.logTo(logPath);
+
+			deferUntilLast(async (testResult?: "passed" | "failed") => {
+				await logger.dispose();
+				// On CI, we delete logs for passing tests to save money on S3 :-)
+				if (process.env.CI && testResult === "passed") {
+					try {
+						fs.unlinkSync(logPath);
+					} catch { }
+				}
+			});
+		}
+	}
 	else
 		console.warn("Extension has no exports, it probably has not activated correctly! Check the extension startup logs.");
 }
@@ -154,7 +174,7 @@ export async function activate(file?: vs.Uri | null | undefined): Promise<void> 
 export async function getPackages(uri?: vs.Uri) {
 	await activateWithoutAnalysis();
 	if (!(uri || (vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length))) {
-		logError("Cannot getPackages because there is no workspace folder and no URI was supplied");
+		extApi.logError("Cannot getPackages because there is no workspace folder and no URI was supplied");
 		return;
 	}
 	await waitForNextAnalysis(async () => {
@@ -183,7 +203,7 @@ export async function closeAllOpenFiles(): Promise<void> {
 			10,
 		);
 	} catch (e) {
-		logWarn(e);
+		extApi.logWarn(e);
 	}
 	await delay(100);
 	extApi.log(`Done closing editors!`);
@@ -228,7 +248,7 @@ export function deleteDirectoryRecursive(folder: string) {
 	if (!fs.existsSync(folder))
 		return;
 	if (!fs.statSync(folder).isDirectory()) {
-		logError(`deleteDirectoryRecursive was passed a file: ${folder}`);
+		extApi.logError(`deleteDirectoryRecursive was passed a file: ${folder}`);
 	}
 	fs.readdirSync(folder)
 		.map((item) => path.join(folder, item))
@@ -246,28 +266,6 @@ export let fileSafeCurrentTestName: string = "unknown";
 beforeEach("stash current test name", async function () {
 	currentTestName = this.currentTest ? this.currentTest.fullTitle() : "unknown";
 	fileSafeCurrentTestName = filenameSafe(currentTestName);
-});
-
-beforeEach("set logger", async function () {
-	if (!this.currentTest)
-		return;
-	const logFolder = process.env.DC_TEST_LOGS || path.join(ext.extensionPath, ".dart_code_test_logs");
-	if (!fs.existsSync(logFolder))
-		fs.mkdirSync(logFolder);
-	const logFile = filenameSafe(this.currentTest.fullTitle()) + ".txt";
-	const logPath = path.join(logFolder, logFile);
-
-	const logger = logTo(logPath);
-
-	deferUntilLast(async (testResult?: "passed" | "failed") => {
-		await logger.dispose();
-		// On CI, we delete logs for passing tests to save money on S3 :-)
-		if (process.env.CI && testResult === "passed") {
-			try {
-				fs.unlinkSync(logPath);
-			} catch { }
-		}
-	});
 });
 
 export let sb: sinon.SinonSandbox;
@@ -288,9 +286,9 @@ afterEach("run deferred functions", async function () {
 		try {
 			await watchPromise(`afterEach->deferred->${d.toString()}`, d(this.currentTest ? this.currentTest.state : undefined));
 		} catch (e) {
-			logError(`Error running deferred function: ${e}`);
+			extApi.logError(`Error running deferred function: ${e}`);
 			// TODO: Add named for deferred functions instead...
-			logWarn(d.toString());
+			extApi.logWarn(d.toString());
 			firstError = firstError || e;
 		}
 	}

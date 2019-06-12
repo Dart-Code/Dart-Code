@@ -16,9 +16,6 @@ export const extensionVersion = getExtensionVersion();
 export const vsCodeVersionConstraint = getVsCodeVersionConstraint();
 export const isDevExtension = checkIsDevExtension();
 export const hasFlutterExtension = checkHasFlutterExtension();
-export const DART_STAGEHAND_PROJECT_TRIGGER_FILE = "dart.sh.create";
-export const FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE = "flutter.sh.create";
-export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "flutter.create";
 export const showLogAction = "Show Log";
 
 export const resolvedPromise = Promise.resolve(true);

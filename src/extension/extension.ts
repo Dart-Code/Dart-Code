@@ -71,7 +71,7 @@ import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
 import { handleMissingSdks, initWorkspace } from "./sdk/utils";
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
-import { addToLogHeader, clearLogHeader, getExtensionLogPath, log, logError, logTo } from "./utils/log";
+import { addToLogHeader, clearLogHeader, getExtensionLogPath, log, logError, logInfo, logProcess, logTo, logWarn } from "./utils/log";
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestItemTreeItem, TestResultsProvider } from "./views/test_view";
 
@@ -488,6 +488,11 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			flutterCapabilities,
 			initialAnalysis,
 			log,
+			logError,
+			logInfo,
+			logProcess,
+			logTo,
+			logWarn,
 			nextAnalysis,
 			packagesTreeProvider: dartPackagesProvider,
 			pubGlobal,
