@@ -1,8 +1,8 @@
 import { CancellationToken, Hover, HoverProvider, Position, Range, TextDocument, Uri } from "vscode";
+import { cleanDartdoc } from "../../shared/utils/dartdocs";
 import { fsPath } from "../../shared/vscode/utils";
 import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
-import { cleanDartdoc } from "../dartdocs";
 import { PackageMap } from "../debug/package_map";
 import { logError } from "../utils/log";
 

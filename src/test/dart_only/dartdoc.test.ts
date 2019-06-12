@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { cleanDartdoc, stripMarkdown } from "../../extension/dartdocs";
+import { cleanDartdoc, stripMarkdown } from "../../shared/utils/dartdocs";
 
 describe("cleanDartDoc", () => {
 	it("replaces Flutter's image tags with external Material image tags", () => {

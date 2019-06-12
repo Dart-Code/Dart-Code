@@ -1,4 +1,4 @@
-import { escapeRegExp } from "../shared/utils";
+import { escapeRegExp } from "../utils";
 
 const iconUrlFormat = "https://raw.githubusercontent.com/Dart-Code/Icons/master/material/$1%402x.png";
 const iconRegex = new RegExp(
