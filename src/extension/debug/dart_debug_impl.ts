@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { pleaseReportBug } from "../../shared/constants";
+import { observatoryListeningBannerPattern, pleaseReportBug } from "../../shared/constants";
 import { LogCategory, LogSeverity } from "../../shared/enums";
 import { flatMap, throttle, uniq, uriToFilePath } from "../../shared/utils";
 import { white } from "../../shared/utils/colors";
@@ -128,7 +128,7 @@ export class DartDebugSession extends DebugSession {
 		process.stdout.on("data", (data) => {
 			let match: RegExpExecArray | null = null;
 			if (this.shouldConnectDebugger && this.parseObservatoryUriFromStdOut && !this.observatory) {
-				match = ObservatoryConnection.bannerRegex.exec(data.toString());
+				match = observatoryListeningBannerPattern.exec(data.toString());
 			}
 			if (match) {
 				this.initDebugger(this.websocketUriForObservatoryUri(match[1]));

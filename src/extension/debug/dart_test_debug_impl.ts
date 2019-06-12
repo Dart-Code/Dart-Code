@@ -1,9 +1,9 @@
 import * as path from "path";
 import { Event, OutputEvent } from "vscode-debugadapter";
+import { observatoryHttpLinkPattern } from "../../shared/constants";
 import { LogCategory, LogSeverity } from "../../shared/enums";
 import { ErrorNotification, GroupNotification, PrintNotification, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../../shared/test_protocol";
 import { DartDebugSession } from "./dart_debug_impl";
-import { ObservatoryConnection } from "./dart_debug_protocol";
 import { TestRunner } from "./test_runner";
 import { DartLaunchRequestArguments, LogMessage } from "./utils";
 
@@ -104,7 +104,7 @@ export class DartTestDebugSession extends DartDebugSession {
 			case "debug":
 				const observatoryUri = notification.observatory;
 				if (observatoryUri) {
-					const match = ObservatoryConnection.httpLinkRegex.exec(observatoryUri);
+					const match = observatoryHttpLinkPattern.exec(observatoryUri);
 					if (match) {
 						this.initDebugger(this.websocketUriForObservatoryUri(match[1]));
 					}

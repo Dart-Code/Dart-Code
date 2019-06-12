@@ -344,9 +344,6 @@ export class RPCError {
 }
 
 export class ObservatoryConnection {
-	public static bannerRegex: RegExp = new RegExp("Observatory (?:listening on|.* is available at:) (http:.+)");
-	public static httpLinkRegex: RegExp = new RegExp("(http://[\\d\\.:]+/)");
-
 	public socket: WebSocket;
 	private completers: { [key: string]: PromiseCompleter<DebuggerResult> } = {};
 	private logging?: (message: string) => void;
