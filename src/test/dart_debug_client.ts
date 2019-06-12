@@ -2,7 +2,6 @@ import * as assert from "assert";
 import { SpawnOptions } from "child_process";
 import { DebugSession, DebugSessionCustomEvent } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { debugSessions } from "../extension/commands/debug";
 import { DebugCommandHandler } from "../shared/interfaces";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
 import { not } from "../shared/utils/array";
@@ -53,10 +52,6 @@ export class DartDebugClient extends DebugClient {
 	}
 
 	public async launch(launchArgs: any): Promise<void> {
-		// Tests only run one debug session at a time so clear out any orphaned sessions (these
-		// can happen if a session is forcefully terminated and the TerminateEvent is never received).
-		debugSessions.length = 0;
-
 		this.currentSession = {
 			configuration: {
 				name: "Dart & Flutter",
