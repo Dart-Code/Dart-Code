@@ -2,10 +2,10 @@ import * as fs from "fs";
 import * as https from "https";
 import * as os from "os";
 import * as path from "path";
+import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { flutterPath } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
 import { tryDeleteFile } from "../../shared/utils/fs";
-import { FlutterCapabilities } from "../flutter/capabilities";
 import { getRandomInt } from "../utils";
 import { runProcess } from "../utils/processes";
 

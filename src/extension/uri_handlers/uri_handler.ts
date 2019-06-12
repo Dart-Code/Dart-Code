@@ -1,6 +1,6 @@
 
 import * as vs from "vscode";
-import { FlutterCapabilities } from "../flutter/capabilities";
+import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { FlutterSampleUriHandler } from "./flutter_sample_handler";
 
 export class DartUriHandler implements vs.UriHandler {
