@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import { Position, Range } from "vscode";
-import { DocumentOffsetTracker, DocumentPositionTracker } from "../../../extension/editing/trackers";
+import { DocumentOffsetTracker, DocumentPositionTracker } from "../../../shared/vscode/trackers";
 import { activate, currentDoc, currentEditor, positionOf, setTestContent } from "../../helpers";
 
 describe("offset tracker", () => {

@@ -1,11 +1,11 @@
 import * as vs from "vscode";
 import { flatMap } from "../../shared/utils";
+import { DocumentPositionTracker } from "../../shared/vscode/trackers";
 import { fsPath } from "../../shared/vscode/utils";
 import { FlutterOutline } from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { openFileTracker } from "../analysis/open_file_tracker";
 import { config } from "../config";
-import { DocumentPositionTracker } from "../editing/trackers";
 
 const nonBreakingSpace = "\xa0";
 const verticalLine = "│";
