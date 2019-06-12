@@ -91,21 +91,24 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 		const decorations: vs.DecorationOptions[] = [];
 		for (const line of Object.keys(guidesByLine).map((k) => parseInt(k, 10))) {
 			const lineInfo = doc.lineAt(line);
+
 			const firstGuideChar = Math.min(...guidesByLine[line].map((g) => Math.min(g.start.character, g.end.character)));
 			const lastGuideChar = Math.max(...guidesByLine[line].map((g) => Math.max(g.start.character, g.end.character)));
 			const lastLineCharacter = lineInfo.range.end.character;
-			const anchorPoint = lastLineCharacter < firstGuideChar ? 0 : firstGuideChar;
+			const anchorPoint = Math.max(lastLineCharacter < firstGuideChar ? 0 : firstGuideChar, 0);
 
-			const decorationString = new Array(lastGuideChar).fill(nonBreakingSpace);
+			const decorationString: string[] = new Array(lastGuideChar).fill(nonBreakingSpace);
 			for (const guide of guidesByLine[line]) {
 				if (line !== guide.end.line) {
-					decorationString[guide.start.character] = verticalLine;
+					// Only put a vertical line in if we haven't already o
+					if (decorationString[guide.start.character] === nonBreakingSpace)
+						decorationString[guide.start.character] = verticalLine;
+					else if (decorationString[guide.start.character] === bottomCorner)
+						decorationString[guide.start.character] = middleCorner;
 				} else {
 					for (let c = guide.start.character; c <= guide.end.character; c++) {
-						if (guide.isLast && c === guide.start.character) {
+						if (c === guide.start.character) {
 							decorationString[c] = bottomCorner;
-						} else if (!guide.isLast && c === guide.start.character) {
-							decorationString[c] = middleCorner;
 						} else if (c === guide.start.character) {
 							decorationString[c] = verticalLine;
 						} else {
@@ -119,15 +122,17 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 			// render any guides.
 			decorationString.fill(nonBreakingSpace, lineInfo.firstNonWhitespaceCharacterIndex, lineInfo.range.end.character);
 
+			decorationString.splice(0, anchorPoint);
+
 			decorations.push({
 				range: new vs.Range(
-					new vs.Position(line, Math.max(anchorPoint, 0)),
-					new vs.Position(line, Math.max(anchorPoint, 0)),
+					new vs.Position(line, anchorPoint),
+					new vs.Position(line, anchorPoint),
 				),
 				renderOptions: {
 					before: {
 						color,
-						contentText: decorationString.join("").substring(Math.max(anchorPoint, 0)),
+						contentText: decorationString.join(""),
 						margin: "0 3px 0 -3px",
 						width: "0",
 					},
@@ -155,9 +160,8 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 				const startPos = this
 					.firstNonWhitespace(document, parentLine);
 				childLines.forEach((childLine, i) => {
-					const isLast = i === childLines.length - 1;
 					const firstCodeChar = this.firstNonWhitespace(document, childLine);
-					guides.push(new WidgetGuide(startPos, firstCodeChar, isLast));
+					guides.push(new WidgetGuide(startPos, firstCodeChar));
 				});
 			}
 		}
@@ -176,13 +180,13 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 }
 
 export class WidgetGuide {
-	constructor(public readonly start: vs.Position, public readonly end: vs.Position, public readonly isLast: boolean) { }
+	constructor(public readonly start: vs.Position, public readonly end: vs.Position) { }
 }
 
 class WidgetGuideTracker implements vs.Disposable {
 	private readonly disposables: vs.Disposable[] = [];
 	private readonly tracker: DocumentPositionTracker = new DocumentPositionTracker();
-	private readonly guideMap: Map<WidgetGuide, [vs.Position, vs.Position, boolean]> = new Map<WidgetGuide, [vs.Position, vs.Position, boolean]>();
+	private readonly guideMap: Map<WidgetGuide, [vs.Position, vs.Position]> = new Map<WidgetGuide, [vs.Position, vs.Position]>();
 
 	private onGuidesChangedEmitter = new vs.EventEmitter<[vs.TextDocument, WidgetGuide[]]>();
 	public readonly onGuidesChanged = this.onGuidesChangedEmitter.event;
@@ -198,12 +202,11 @@ class WidgetGuideTracker implements vs.Disposable {
 				const data = this.guideMap.get(guide);
 				const currentStartPos = data[0];
 				const currentEndPos = data[1];
-				const isLast = data[2];
 
 				const newStartPos = positions.get(currentStartPos);
 				const newEndPos = positions.get(currentEndPos);
 				if (newStartPos && newEndPos)
-					newGuides.push(new WidgetGuide(newStartPos, newEndPos, isLast));
+					newGuides.push(new WidgetGuide(newStartPos, newEndPos));
 			}
 
 			this.onGuidesChangedEmitter.fire([doc, newGuides]);
@@ -219,7 +222,7 @@ class WidgetGuideTracker implements vs.Disposable {
 		// Stash all guides as tuples containing their positions.
 		this.guideMap.clear();
 		for (const guide of guides)
-			this.guideMap.set(guide, [guide.start, guide.end, guide.isLast]);
+			this.guideMap.set(guide, [guide.start, guide.end]);
 
 		// Extract a flat list of positions to track.
 		const positions = flatMap([...this.guideMap.values()], (g) => [g[0], g[1]]);
