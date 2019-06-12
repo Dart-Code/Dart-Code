@@ -1,10 +1,9 @@
 import * as assert from "assert";
+import { log } from "console";
 import * as path from "path";
 import * as vs from "vscode";
 import { config } from "../../../extension/config";
-import { debugAnywayAction, showErrorsAction } from "../../../extension/providers/debug_config_provider";
-import { log } from "../../../extension/utils/log";
-import { platformEol } from "../../../shared/constants";
+import { debugAnywayAction, platformEol, showErrorsAction } from "../../../shared/constants";
 import { fetch } from "../../../shared/fetch";
 import { getRandomInt } from "../../../shared/utils/fs";
 import { fsPath } from "../../../shared/vscode/utils";
@@ -73,7 +72,7 @@ describe("dart cli debugger", () => {
 			assert(showErrorMessage.calledOnce);
 		});
 		it("and launches if they click Debug Anyway", async () => {
-			log(`Creating!`);
+			extApi.log(`Creating!`);
 			await writeBrokenDartCodeIntoFileForTest(getTempProjectFile());
 
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");

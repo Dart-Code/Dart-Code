@@ -2,7 +2,6 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { log, logInfo } from "../../../extension/utils/log";
 import { TestStatus } from "../../../shared/enums";
 import { TestOutlineVisitor } from "../../../shared/utils/outline";
 import { makeRegexForTest } from "../../../shared/utils/test";
@@ -32,8 +31,8 @@ describe("dart test debugger", () => {
 		const thisDc = dc;
 		defer(() => withTimeout(
 			Promise.all([
-				thisDc.terminateRequest().catch((e) => logInfo(e)),
-				delay(500).then(() => thisDc.stop()).catch((e) => logInfo(e)),
+				thisDc.terminateRequest().catch((e) => extApi.logInfo(e)),
+				delay(500).then(() => thisDc.stop()).catch((e) => extApi.logInfo(e)),
 			]),
 			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
 			60,
@@ -205,7 +204,7 @@ describe("dart test debugger", () => {
 		// after running each test individually.
 
 		async function checkResults(description: string): Promise<void> {
-			log(description);
+			extApi.log(description);
 			const expectedResults = getExpectedResults();
 			const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
 
@@ -238,7 +237,7 @@ describe("dart test debugger", () => {
 		// multiple of the duplicated tests.
 
 		async function checkResults(description: string): Promise<void> {
-			log(description);
+			extApi.log(description);
 			const expectedResults = getExpectedResults();
 			const actualResults = (await makeTextTree(helloWorldTestDupeNameFile, extApi.testTreeProvider)).join("\n");
 

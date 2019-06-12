@@ -3,7 +3,6 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { logError } from "../../../extension/utils/log";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { killFlutterTester, spawnFlutterProcess } from "../../debug_helpers";
@@ -45,7 +44,7 @@ describe("flutter run debugger (attach)", () => {
 		// Make sure any stdErr is logged to console + log file for debugging.
 		dc.on("output", (event: DebugProtocol.OutputEvent) => {
 			if (event.body.category === "stderr")
-				logError(event.body.output);
+				extApi.logError(event.body.output);
 		});
 		return config;
 	}

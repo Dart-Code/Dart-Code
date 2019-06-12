@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { DebugSession } from "vscode-debugadapter";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { CHROME_OS_VM_SERVICE_PORT, dartVMPath, flutterPath, isChromeOS, pubPath, pubSnapshotPath } from "../../shared/constants";
+import { CHROME_OS_VM_SERVICE_PORT, dartVMPath, debugAnywayAction, flutterPath, HAS_LAST_DEBUG_CONFIG, isChromeOS, pubPath, pubSnapshotPath, showErrorsAction } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
 import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../../shared/utils";
 import { fsPath } from "../../shared/vscode/utils";
@@ -29,10 +29,6 @@ import { checkProjectSupportsPubRunTest, isDartFile, isFlutterProjectFolder, isF
 import { log, logError, logWarn } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
-export const TRACK_WIDGET_CREATION_ENABLED = "dart-code:trackWidgetCreationEnabled";
-export const HAS_LAST_DEBUG_CONFIG = "dart-code:hasLastDebugConfig";
-export const showErrorsAction = "Show Errors";
-export const debugAnywayAction = "Debug Anyway";
 const isCI = !!process.env.CI;
 
 let hasShownFlutterWebDebugWarning = false;
