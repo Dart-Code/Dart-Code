@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { TestOutlineVisitor } from "../../../extension/utils/vscode/outline";
+import { TestOutlineVisitor } from "../../../shared/utils/outline";
 import { activate, extApi, getPackages, helloWorldTestMainFile, waitForResult } from "../../helpers";
 
 describe("test_outline_visitor", () => {
