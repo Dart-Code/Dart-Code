@@ -71,3 +71,7 @@ export const pleaseReportBug = "Please raise a bug against the Dart extension fo
 // Chrome OS exposed ports: 8000, 8008, 8080, 8085, 8888, 9005, 3000, 4200, 5000
 export const CHROME_OS_DEVTOOLS_PORT = 8080;
 export const CHROME_OS_VM_SERVICE_PORT = 8085;
+
+export const DART_STAGEHAND_PROJECT_TRIGGER_FILE = "dart.sh.create";
+export const FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE = "flutter.sh.create";
+export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "flutter.create";

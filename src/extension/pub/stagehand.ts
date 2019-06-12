@@ -2,7 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { pubPath, stagehandInstallationInstructionsUrl } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
-import { Sdks } from "../../shared/interfaces";
+import { Sdks, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 import { PubGlobal } from "./global";
@@ -52,12 +52,4 @@ export class Stagehand {
 			});
 		});
 	}
-}
-
-export interface StagehandTemplate {
-	readonly name: string;
-	readonly label: string;
-	readonly description: string;
-	readonly categories: string[];
-	readonly entrypoint: string;
 }

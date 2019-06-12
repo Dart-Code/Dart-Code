@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../../extension/utils";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../../shared/constants";
 import { FlutterSampleSnippet } from "../../../shared/vscode/interfaces";
 import { fsPath } from "../../../shared/vscode/utils";
 import { ext, getRandomTempFolder, sb } from "../../helpers";

@@ -5,9 +5,9 @@ import * as path from "path";
 import * as vs from "vscode";
 import { ProgressLocation, Uri, window } from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { flutterPath, pubPath } from "../../shared/constants";
+import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, pubPath } from "../../shared/constants";
 import { LogCategory, LogSeverity } from "../../shared/enums";
-import { Sdks } from "../../shared/interfaces";
+import { Sdks, StagehandTemplate } from "../../shared/interfaces";
 import { flatMap, PromiseCompleter } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
@@ -21,7 +21,7 @@ import { getWorkspaceProjectFolders, locateBestProjectRoot } from "../project";
 import { DartHoverProvider } from "../providers/dart_hover_provider";
 import { PubGlobal } from "../pub/global";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "../pub/pub";
-import { Stagehand, StagehandTemplate } from "../pub/stagehand";
+import { Stagehand } from "../pub/stagehand";
 import { getFlutterSnippets } from "../sdk/flutter_docs_snippets";
 import { createFlutterSampleInTempFolder } from "../sdk/flutter_samples";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
@@ -444,14 +444,14 @@ export class SdkCommands {
 	}
 
 	private async createDartProject(): Promise<void> {
-		return this.createStagehandProject("dart.createProject", util.DART_STAGEHAND_PROJECT_TRIGGER_FILE, false, (t) => !this.isFlutterWebTemplate(t));
+		return this.createStagehandProject("dart.createProject", DART_STAGEHAND_PROJECT_TRIGGER_FILE, false, (t) => !this.isFlutterWebTemplate(t));
 	}
 
 	private async createFlutterWebProject(): Promise<void> {
 		// TODO: auto-select if only one
 		// TODO: tests!
 		// TODO: Should it use flutter trigger file??
-		return this.createStagehandProject("flutter.createWebProject", util.FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, true, (t) => this.isFlutterWebTemplate(t));
+		return this.createStagehandProject("flutter.createWebProject", FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, true, (t) => this.isFlutterWebTemplate(t));
 	}
 
 	private async createStagehandProject(command: string, triggerFilename: string, autoPickIfSingleItem: boolean, filter: (t: StagehandTemplate) => boolean): Promise<void> {
@@ -551,7 +551,7 @@ export class SdkCommands {
 		// Create the empty folder so we can open it.
 		fs.mkdirSync(fsPath(projectFolderUri));
 		// Create a temp dart file to force extension to load when we open this folder.
-		fs.writeFileSync(path.join(fsPath(projectFolderUri), util.FLUTTER_CREATE_PROJECT_TRIGGER_FILE), "");
+		fs.writeFileSync(path.join(fsPath(projectFolderUri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE), "");
 
 		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
 		const openInNewWindow = hasFoldersOpen;
