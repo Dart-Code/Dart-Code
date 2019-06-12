@@ -6,19 +6,9 @@ import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { flutterPath } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
 import { tryDeleteFile } from "../../shared/utils/fs";
+import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
 import { getRandomInt } from "../utils";
 import { runProcess } from "../utils/processes";
-
-export interface FlutterSampleSnippet {
-	readonly sourcePath: string;
-	readonly sourceLine: number;
-	readonly package: string;
-	readonly library: string;
-	readonly element: string;
-	readonly id: string;
-	readonly file: string;
-	readonly description: string;
-}
 
 export function getFlutterSnippets(sdks: Sdks, capabilities: FlutterCapabilities): Promise<FlutterSampleSnippet[]> {
 	if (capabilities.supportsFlutterCreateListSamples)
