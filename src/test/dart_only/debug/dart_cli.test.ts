@@ -2,14 +2,13 @@ import * as assert from "assert";
 import { log } from "console";
 import * as path from "path";
 import * as vs from "vscode";
-import { config } from "../../../extension/config";
 import { debugAnywayAction, platformEol, showErrorsAction } from "../../../shared/constants";
 import { fetch } from "../../../shared/fetch";
 import { getRandomInt } from "../../../shared/utils/fs";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldPathFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, openFile, positionOf, sb, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldPathFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, openFile, positionOf, sb, setConfigForTest, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -613,6 +612,7 @@ describe("dart cli debugger", () => {
 	});
 
 	it("provides local variables when stopped at a breakpoint", async () => {
+		await setConfigForTest("dart", "previewToStringInDebugViews", true);
 		await openFile(helloWorldMainFile);
 		const debugConfig = await startDebugger(helloWorldMainFile);
 		await dc.hitBreakpoint(debugConfig, {
@@ -640,7 +640,7 @@ describe("dart cli debugger", () => {
 		});
 
 		const shortdateListVariables = await dc.getVariables(variables.find((v) => v.name === "tenDates")!.variablesReference);
-		ensureVariable(shortdateListVariables, "tenDates[0]", "[0]", config.previewToStringInDebugViews ? "DateTime (2005-01-01 00:00:00.000)" : "DateTime");
+		ensureVariable(shortdateListVariables, "tenDates[0]", "[0]", "DateTime (2005-01-01 00:00:00.000)");
 
 		const longdateListVariables = await dc.getVariables(variables.find((v) => v.name === "hundredDates")!.variablesReference);
 		ensureVariable(longdateListVariables, "hundredDates[0]", "[0]", "DateTime"); // This doesn't call toString() because it's a long list'.
@@ -670,11 +670,11 @@ describe("dart cli debugger", () => {
 			value: { evaluateName: `m["s"]`, name: "value", value: `"Hello!"` },
 		}, dc);
 		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: config.previewToStringInDebugViews ? `DateTime (2000-02-14 00:00:00.000)` : `DateTime` },
+			key: { evaluateName: undefined, name: "key", value: `DateTime (2000-02-14 00:00:00.000)` },
 			value: { evaluateName: undefined, name: "value", value: `"valentines-2000"` },
 		}, dc);
 		await ensureMapEntry(mapVariables, {
-			key: { evaluateName: undefined, name: "key", value: config.previewToStringInDebugViews ? `DateTime (2005-01-01 00:00:00.000)` : `DateTime` },
+			key: { evaluateName: undefined, name: "key", value: `DateTime (2005-01-01 00:00:00.000)` },
 			value: { evaluateName: undefined, name: "value", value: `"new-year-2005"` },
 		}, dc);
 		await ensureMapEntry(mapVariables, {
