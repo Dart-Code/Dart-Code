@@ -39,7 +39,7 @@ export class LoggingReporter extends reporters.Base {
 				}
 			});
 
-			runner.once("end", () => { });
+			// runner.once("end", () => { });
 		});
 	}
 }
