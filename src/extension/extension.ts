@@ -72,6 +72,7 @@ import { handleMissingSdks, initWorkspace } from "./sdk/utils";
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, log, logError, logInfo, logProcess, logTo, logWarn } from "./utils/log";
+import { safeSpawn } from "./utils/processes";
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestItemTreeItem, TestResultsProvider } from "./views/test_view";
 
@@ -499,6 +500,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			reanalyze,
 			referenceProvider,
 			renameProvider,
+			safeSpawn,
 			testTreeProvider,
 			workspaceContext,
 		} as InternalExtensionApi,

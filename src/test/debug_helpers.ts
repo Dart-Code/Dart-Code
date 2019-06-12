@@ -2,7 +2,6 @@ import * as assert from "assert";
 import { ChildProcess } from "child_process";
 import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { safeSpawn } from "../extension/utils/processes";
 import { isWin, observatoryListeningBannerPattern } from "../shared/constants";
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { DartDebugClient } from "./dart_debug_client";
@@ -74,7 +73,7 @@ export async function ensureMapEntry(mapEntries: DebugProtocol.Variable[], entry
 export function spawnDartProcessPaused(config: DebugConfiguration | undefined | null, ...vmArgs: string[]): DartProcess {
 	if (!config)
 		throw new Error(`Debug config resolved to ${config}!`);
-	const process = safeSpawn(
+	const process = extApi.safeSpawn(
 		config.cwd,
 		config.dartPath,
 		[
@@ -97,7 +96,7 @@ export async function spawnFlutterProcess(script: string | Uri): Promise<DartPro
 	const config = await getLaunchConfiguration(script, { deviceId: "flutter-tester" });
 	if (!config)
 		throw new Error(`Could not get launch configuration (got ${config})`);
-	const process = safeSpawn(
+	const process = extApi.safeSpawn(
 		config.cwd,
 		config.flutterPath,
 		[
@@ -140,8 +139,8 @@ export class DartProcess {
 export function killFlutterTester(): Promise<void> {
 	return new Promise((resolve) => {
 		const proc = isWin
-			? safeSpawn(undefined, "taskkill", ["/IM", "flutter_tester.exe", "/F"])
-			: safeSpawn(undefined, "pkill", ["flutter_tester"]);
+			? extApi.safeSpawn(undefined, "taskkill", ["/IM", "flutter_tester.exe", "/F"])
+			: extApi.safeSpawn(undefined, "pkill", ["flutter_tester"]);
 		proc.on("exit", (code: number) => {
 			if (!isWin ? code !== 128 : code === 0) {
 				extApi.log("flutter_tester process(s) remained after test. These have been terminated to avoid affecting future tests, " +

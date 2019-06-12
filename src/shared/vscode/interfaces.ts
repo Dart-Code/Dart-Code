@@ -59,6 +59,7 @@ export interface InternalExtensionApi {
 	reanalyze: () => void;
 	referenceProvider: ReferenceProvider & DefinitionProvider;
 	renameProvider: RenameProvider;
+	safeSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any) => child_process.ChildProcess;
 	testTreeProvider: TestResultsProvider;
 	workspaceContext: WorkspaceContext;
 }
