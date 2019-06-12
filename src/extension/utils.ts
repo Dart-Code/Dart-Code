@@ -278,13 +278,6 @@ export function escapeShell(args: string[]) {
 	return ret.join(" ");
 }
 
-export function openInBrowser(url: string) {
-	// Don't use vs.env.openExternal unless
-	// https://github.com/Microsoft/vscode/issues/69608
-	// is fixed, as it complicates testing.
-	commands.executeCommand("vscode.open", Uri.parse(url));
-}
-
 export async function reloadExtension(prompt?: string, buttonText?: string, offerLogFile = false) {
 	const restartAction = buttonText || "Restart";
 	const actions = offerLogFile ? [restartAction, showLogAction] : [restartAction];

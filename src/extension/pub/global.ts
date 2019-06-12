@@ -5,8 +5,8 @@ import { LogCategory, VersionStatus } from "../../shared/enums";
 import { fetch } from "../../shared/fetch";
 import { Sdks } from "../../shared/interfaces";
 import { versionIsAtLeast } from "../../shared/utils";
+import { openInBrowser } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
-import { openInBrowser } from "../utils";
 import { logWarn } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 

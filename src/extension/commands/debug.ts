@@ -3,7 +3,8 @@ import * as path from "path";
 import * as vs from "vscode";
 import { FlutterServiceExtension } from "../../shared/enums";
 import { PromiseCompleter } from "../../shared/utils";
-import { fsPath } from "../../shared/vscode/utils";
+import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
+import { fsPath, openInBrowser } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
@@ -12,8 +13,7 @@ import { FlutterServiceExtensionArgs, FlutterVmServiceExtensions, timeDilationNo
 import { DebuggerType } from "../providers/debug_config_provider";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools";
-import { showDevToolsNotificationIfAppropriate } from "../user_prompts";
-import { getDartWorkspaceFolders, openInBrowser } from "../utils";
+import { getDartWorkspaceFolders } from "../utils";
 import { handleDebugLogEvent, logInfo, logWarn } from "../utils/log";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
