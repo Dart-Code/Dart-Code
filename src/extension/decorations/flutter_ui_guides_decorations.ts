@@ -83,11 +83,11 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 				guidesByLine[line].push(guide);
 			}
 		}
-		const decorations = this.buildDecorations(editor.document, guidesByLine, color);
+		const decorations = this.buildDecorations(editor.document, editor.options.tabSize as number, guidesByLine, color);
 		editor.setDecorations(this.borderDecoration, decorations);
 	}
 
-	private buildDecorations(doc: vs.TextDocument, guidesByLine: { [key: number]: WidgetGuide[] }, color: string): vs.DecorationOptions[] {
+	private buildDecorations(doc: vs.TextDocument, tabSize: number, guidesByLine: { [key: number]: WidgetGuide[] }, color: string): vs.DecorationOptions[] {
 		const decorations: vs.DecorationOptions[] = [];
 		for (const line of Object.keys(guidesByLine).map((k) => parseInt(k, 10))) {
 			const lineInfo = doc.lineAt(line);
@@ -124,6 +124,22 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 
 			decorationString.splice(0, anchorPoint);
 
+			// For any tabs in the document string, we need to multiply up the characters
+			// by the tab width, since everything up to this point is based on the text line
+			// character indexes, but rendering needs to obey tab size.
+			const tabAdjustedDecorationString: string[] = [];
+			for (let i = 0; i < decorationString.length; i++) {
+				tabAdjustedDecorationString.push(decorationString[i]);
+				if (lineInfo.text[anchorPoint + i] === "\t") {
+					const padCharacter =
+						decorationString[i] === horizontalLine || decorationString[i] === bottomCorner || decorationString[i] === middleCorner
+							? horizontalLine
+							: nonBreakingSpace;
+					for (let c = 0; c < tabSize - 1; c++)
+						tabAdjustedDecorationString.push(padCharacter);
+				}
+			}
+
 			decorations.push({
 				range: new vs.Range(
 					new vs.Position(line, anchorPoint),
@@ -132,7 +148,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 				renderOptions: {
 					before: {
 						color,
-						contentText: decorationString.join(""),
+						contentText: tabAdjustedDecorationString.join(""),
 						margin: "0 3px 0 -3px",
 						width: "0",
 					},
