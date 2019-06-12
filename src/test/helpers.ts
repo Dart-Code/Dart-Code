@@ -2,10 +2,8 @@ import * as assert from "assert";
 import * as fs from "fs";
 import { tmpdir } from "os";
 import * as path from "path";
-import * as semver from "semver";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { isAnalyzable, vsCodeVersionConstraint } from "../extension/utils";
 import { dartCodeExtensionIdentifier, DART_TEST_SUITE_NODE_CONTEXT } from "../shared/constants";
 import { LogCategory, LogSeverity, TestStatus } from "../shared/enums";
 import { internalApiSymbol } from "../shared/symbols";
@@ -25,15 +23,8 @@ export const fakeCancellationToken: vs.CancellationToken = {
 };
 
 if (!ext) {
-	if (semver.satisfies(vs.version, vsCodeVersionConstraint)) {
-		extApi.logError("Quitting with error because extension failed to load.");
-		process.exit(1);
-	} else {
-		extApi.logError("Skipping because extension failed to load due to requiring newer VS Code version.");
-		extApi.logError(`    Required: ${vsCodeVersionConstraint}`);
-		extApi.logError(`    Current: ${vs.version}`);
-		process.exit(0);
-	}
+	extApi.logError("Quitting with error because extension failed to load.");
+	process.exit(1);
 }
 
 const testFolder = path.join(ext.extensionPath, "src/test");
@@ -142,8 +133,7 @@ export async function activateWithoutAnalysis(): Promise<void> {
 				}
 			});
 		}
-	}
-	else
+	} else
 		console.warn("Extension has no exports, it probably has not activated correctly! Check the extension startup logs.");
 }
 
@@ -212,7 +202,7 @@ export async function closeAllOpenFiles(): Promise<void> {
 
 export async function waitUntilAllTextDocumentsAreClosed(): Promise<void> {
 	extApi.log(`Waiting for VS Code to mark all documents as closed...`);
-	const getAllOpenDocs = () => vs.workspace.textDocuments.filter(isAnalyzable);
+	const getAllOpenDocs = () => vs.workspace.textDocuments.filter((td) => !td.isUntitled && td.uri.scheme === "file");
 	await waitForResult(() => getAllOpenDocs().length === 0, "Some TextDocuments did not close", threeMinutesInMilliseconds, false);
 	const openDocs = getAllOpenDocs();
 	if (openDocs.length) {
