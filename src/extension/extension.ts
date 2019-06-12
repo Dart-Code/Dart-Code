@@ -138,8 +138,10 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		return handleMissingSdks(context, analytics, workspaceContext);
 	}
 
-	if (sdks.flutterVersion)
+	if (sdks.flutterVersion) {
 		flutterCapabilities.version = sdks.flutterVersion;
+		analytics.flutterSdkVersion = sdks.flutterVersion;
+	}
 
 	// Show the SDK version in the status bar.
 	if (sdks.dartVersion) {
