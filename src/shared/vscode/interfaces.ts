@@ -88,3 +88,14 @@ export interface LazyCompletionItem extends CompletionItem {
 	// tslint:disable-next-line: variable-name
 	_documentation?: string | MarkdownString;
 }
+
+export interface FlutterSampleSnippet {
+	readonly sourcePath: string;
+	readonly sourceLine: number;
+	readonly package: string;
+	readonly library: string;
+	readonly element: string;
+	readonly id: string;
+	readonly file: string;
+	readonly description: string;
+}
