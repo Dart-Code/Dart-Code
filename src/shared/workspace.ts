@@ -1,6 +1,7 @@
 import { Sdks } from "./interfaces";
 
 export class WorkspaceContext {
+	public readonly workspaceTypeDescription: string;
 	// TODO: Move things from Sdks to this class that aren't related to the SDKs.
 	constructor(
 		public readonly sdks: Sdks,
@@ -8,14 +9,16 @@ export class WorkspaceContext {
 		public readonly hasAnyFlutterWebProjects: boolean,
 		public readonly hasAnyStandardDartProjects: boolean,
 		public readonly hasProjectsInFuchsiaTree: boolean,
-	) { }
+	) {
+		this.workspaceTypeDescription = this.buildWorkspaceTypeDescription();
+	}
 
 	get hasOnlyDartProjects() { return !this.hasAnyFlutterProjects && !this.hasProjectsInFuchsiaTree; }
 	get hasAnyFlutterProjects() { return this.hasAnyFlutterMobileProjects || this.hasAnyFlutterWebProjects; }
 	get shouldLoadFlutterExtension() { return this.hasAnyFlutterProjects; }
 
 	/// Used only for display (for ex stats), not behaviour.
-	get workspaceTypeDescription(): string {
+	private buildWorkspaceTypeDescription(): string {
 		const types: string[] = [];
 		// Don't re-order these, else stats won't easily combine as we could have
 		// Dart, Flutter and also Flutter, Dart.
