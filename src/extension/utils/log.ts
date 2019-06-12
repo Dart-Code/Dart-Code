@@ -4,9 +4,9 @@ import * as os from "os";
 import * as path from "path";
 import { platformEol } from "../../shared/constants";
 import { LogCategory, LogSeverity } from "../../shared/enums";
+import { getRandomInt } from "../../shared/utils/fs";
 import { config } from "../config";
 import { IAmDisposable, LogEmitter, LogMessage } from "../debug/utils";
-import { getRandomInt } from "../utils";
 
 let extensionLogPath: string;
 export function getExtensionLogPath() {

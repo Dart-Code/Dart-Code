@@ -4,6 +4,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { dartCodeExtensionIdentifier } from "../../shared/constants";
+import { getRandomInt } from "../../shared/utils/fs";
 import * as util from "../utils";
 
 export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapabilities, sampleID: string): vs.Uri | undefined {
@@ -14,7 +15,7 @@ export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapa
 	}
 
 	// Create a temp folder for the sample.
-	const tempSamplePath = path.join(os.tmpdir(), dartCodeExtensionIdentifier, "flutter", "sample", sampleID, util.getRandomInt(0x1000, 0x10000).toString(16));
+	const tempSamplePath = path.join(os.tmpdir(), dartCodeExtensionIdentifier, "flutter", "sample", sampleID, getRandomInt(0x1000, 0x10000).toString(16));
 
 	// Create the empty folder so we can open it.
 	util.mkDirRecursive(tempSamplePath);
