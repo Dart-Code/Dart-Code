@@ -3,14 +3,13 @@ import { SpawnOptions } from "child_process";
 import { DebugSession, DebugSessionCustomEvent } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { debugSessions } from "../extension/commands/debug";
-import { log } from "../extension/utils/log";
 import { DebugCommandHandler } from "../shared/interfaces";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
 import { not } from "../shared/utils/array";
 import { isKnownInfrastructureThread } from "../shared/utils/debugger";
 import { TestResultsProvider } from "../shared/vscode/interfaces";
 import { DebugClient, ILocation, IPartialLocation } from "./debug_client_ms";
-import { delay, watchPromise, withTimeout } from "./helpers";
+import { delay, extApi, watchPromise, withTimeout } from "./helpers";
 
 const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.serviceRegistered", "dart.debuggerUris"];
 
@@ -25,16 +24,16 @@ export class DartDebugClient extends DebugClient {
 
 		// Log important events to make troubleshooting tests easier.
 		this.on("output", (event: DebugProtocol.OutputEvent) => {
-			log(`[${event.body.category}] ${event.body.output}`);
+			extApi.log(`[${event.body.category}] ${event.body.output}`);
 		});
 		this.on("terminated", (event: DebugProtocol.TerminatedEvent) => {
-			log(`[terminated]`);
+			extApi.log(`[terminated]`);
 		});
 		this.on("stopped", (event: DebugProtocol.StoppedEvent) => {
-			log(`[stopped] ${event.body.reason}`);
+			extApi.log(`[stopped] ${event.body.reason}`);
 		});
 		this.on("initialized", (event: DebugProtocol.InitializedEvent) => {
-			log(`[initialized]`);
+			extApi.log(`[initialized]`);
 		});
 		// If we were given a test provider, forward the test notifications on to
 		// it as it won't receive the events normally because this is not a Code-spawned
@@ -87,9 +86,9 @@ export class DartDebugClient extends DebugClient {
 		// path for Flutter tests, but we should probably come back and resolve these to work the
 		// same and just push the unpause logic up into a test helper.
 		if (launchArgs.request === "attach" && launchArgs.deviceId !== "flutter-tester") {
-			log("Attaching to process...");
+			extApi.log("Attaching to process...");
 			await watchPromise("launch->attach->attachRequest", this.attachRequest(launchArgs));
-			log("Waiting for stopped (step) event...");
+			extApi.log("Waiting for stopped (step) event...");
 			const event = await watchPromise("launch->attach->waitForEvent:stopped", this.waitForEvent("stopped"));
 			assert.equal(event.body.reason, "step");
 			// HACK: Put a fake delay in after attachRequest to ensure isolates become runnable and breakpoints are transmitted
@@ -98,7 +97,7 @@ export class DartDebugClient extends DebugClient {
 			await new Promise((resolve) => setTimeout(resolve, 1000));
 			// It's possible the resume will never return because the process will terminate as soon as it starts resuming
 			// so we will assume that if we get a terminate the resume worked.
-			log("Resuming and waiting for success or terminate...");
+			extApi.log("Resuming and waiting for success or terminate...");
 			await watchPromise(
 				"launch()->attach->terminate/resume",
 				Promise.race([

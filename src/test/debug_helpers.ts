@@ -3,12 +3,11 @@ import { ChildProcess } from "child_process";
 import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { ObservatoryConnection } from "../extension/debug/dart_debug_protocol";
-import { log, logProcess } from "../extension/utils/log";
 import { safeSpawn } from "../extension/utils/processes";
 import { isWin } from "../shared/constants";
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { DartDebugClient } from "./dart_debug_client";
-import { defer, getLaunchConfiguration } from "./helpers";
+import { defer, extApi, getLaunchConfiguration } from "./helpers";
 
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {
 	assert.ok(variables && variables.length, "No variables given to search");
@@ -86,7 +85,7 @@ export function spawnDartProcessPaused(config: DebugConfiguration | undefined | 
 			config.program,
 		],
 	);
-	logProcess(LogCategory.CI, process);
+	extApi.logProcess(LogCategory.CI, process);
 	const dartProcess = new DartProcess(process);
 	defer(() => {
 		if (!dartProcess.hasExited)
@@ -108,9 +107,9 @@ export async function spawnFlutterProcess(script: string | Uri): Promise<DartPro
 			config.deviceId,
 		],
 	);
-	process.stdout.on("data", (data) => log(`SPROC: ${data}`, LogSeverity.Info, LogCategory.CI));
-	process.stderr.on("data", (data) => log(`SPROC: ${data}`, LogSeverity.Info, LogCategory.CI));
-	process.on("exit", (code) => log(`SPROC: Exited (${code})`, LogSeverity.Info, LogCategory.CI));
+	process.stdout.on("data", (data) => extApi.log(`SPROC: ${data}`, LogSeverity.Info, LogCategory.CI));
+	process.stderr.on("data", (data) => extApi.log(`SPROC: ${data}`, LogSeverity.Info, LogCategory.CI));
+	process.on("exit", (code) => extApi.log(`SPROC: Exited (${code})`, LogSeverity.Info, LogCategory.CI));
 	const flutterProcess = new DartProcess(process);
 	defer(() => {
 		if (!flutterProcess.hasExited)
@@ -146,7 +145,7 @@ export function killFlutterTester(): Promise<void> {
 			: safeSpawn(undefined, "pkill", ["flutter_tester"]);
 		proc.on("exit", (code: number) => {
 			if (!isWin ? code !== 128 : code === 0) {
-				log("flutter_tester process(s) remained after test. These have been terminated to avoid affecting future tests, " +
+				extApi.log("flutter_tester process(s) remained after test. These have been terminated to avoid affecting future tests, " +
 					"but may indicate something is not cleaning up correctly", LogSeverity.Warn, LogCategory.CI);
 			}
 			resolve();
