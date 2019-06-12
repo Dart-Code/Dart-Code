@@ -1,6 +1,6 @@
 import * as vs from "vscode";
+import { openInBrowser } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
-import { openInBrowser } from "../utils";
 
 export class AnalyzerCommands {
 

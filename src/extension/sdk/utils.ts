@@ -4,12 +4,12 @@ import { commands, ExtensionContext, window } from "vscode";
 import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, isWin } from "../../shared/constants";
 import { flatMap, isDartSdkFromFlutter } from "../../shared/utils";
 import { getChildFolders, hasPubspec } from "../../shared/utils/fs";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath, openInBrowser } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
-import { getDartWorkspaceFolders, getSdkVersion, notUndefined, openExtensionLogFile, openInBrowser, reloadExtension, resolvePaths, showLogAction } from "../utils";
+import { getDartWorkspaceFolders, getSdkVersion, notUndefined, openExtensionLogFile, reloadExtension, resolvePaths, showLogAction } from "../utils";
 import { log, logError } from "../utils/log";
 
 export function handleMissingSdks(context: ExtensionContext, analytics: Analytics, workspaceContext: WorkspaceContext) {
