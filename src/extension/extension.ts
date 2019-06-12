@@ -8,6 +8,7 @@ import { LogCategory } from "../shared/enums";
 import { Sdks } from "../shared/interfaces";
 import { internalApiSymbol } from "../shared/symbols";
 import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../shared/utils";
+import { trueCasePathSync } from "../shared/utils/fs";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
 import { fsPath } from "../shared/vscode/utils";
@@ -417,7 +418,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	if (vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length) {
 		for (const wf of vs.workspace.workspaceFolders) {
 			const userPath = forceWindowsDriveLetterToUppercase(fsPath(wf.uri));
-			const realPath = forceWindowsDriveLetterToUppercase(util.trueCasePathSync(userPath));
+			const realPath = forceWindowsDriveLetterToUppercase(trueCasePathSync(userPath));
 			if (userPath && realPath && userPath !== realPath) {
 				vs.window.showWarningMessage(
 					`The casing of the open workspace folder does not match the casing on the underlying disk; please re-open the folder using the File Open dialog. `

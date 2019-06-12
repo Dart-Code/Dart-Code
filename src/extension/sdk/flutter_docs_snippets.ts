@@ -5,9 +5,8 @@ import * as path from "path";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { flutterPath } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
-import { tryDeleteFile } from "../../shared/utils/fs";
+import { getRandomInt, tryDeleteFile } from "../../shared/utils/fs";
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
-import { getRandomInt } from "../utils";
 import { runProcess } from "../utils/processes";
 
 export function getFlutterSnippets(sdks: Sdks, capabilities: FlutterCapabilities): Promise<FlutterSampleSnippet[]> {
