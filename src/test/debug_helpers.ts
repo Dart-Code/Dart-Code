@@ -2,9 +2,8 @@ import * as assert from "assert";
 import { ChildProcess } from "child_process";
 import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { ObservatoryConnection } from "../extension/debug/dart_debug_protocol";
 import { safeSpawn } from "../extension/utils/processes";
-import { isWin } from "../shared/constants";
+import { isWin, observatoryListeningBannerPattern } from "../shared/constants";
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { DartDebugClient } from "./dart_debug_client";
 import { defer, extApi, getLaunchConfiguration } from "./helpers";
@@ -127,7 +126,7 @@ export class DartProcess {
 	constructor(public readonly process: ChildProcess) {
 		this.observatoryUri = new Promise((resolve, reject) => {
 			process.stdout.on("data", (data) => {
-				const match = ObservatoryConnection.bannerRegex.exec(data.toString());
+				const match = observatoryListeningBannerPattern.exec(data.toString());
 				if (match)
 					resolve(match[1]);
 			});

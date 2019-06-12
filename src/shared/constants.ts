@@ -86,3 +86,6 @@ export const debugAnywayAction = "Debug Anyway";
 
 export const userPromptContextPrefix = "hasPrompted.";
 export const installFlutterExtensionPromptKey = "install_flutter_extension_3";
+
+export const observatoryListeningBannerPattern: RegExp = new RegExp("Observatory (?:listening on|.* is available at:) (http:.+)");
+export const observatoryHttpLinkPattern: RegExp = new RegExp("(http://[\\d\\.:]+/)");
