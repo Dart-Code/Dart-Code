@@ -5,9 +5,9 @@ import * as vs from "vscode";
 import { dartCodeExtensionIdentifier } from "../../shared/constants";
 import { internalApiSymbol } from "../../shared/symbols";
 import { InternalExtensionApi } from "../../shared/vscode/interfaces";
+import { fsPath } from "../../shared/vscode/utils";
 import { sb, waitForResult } from "../helpers";
 import sinon = require("sinon");
-import { fsPath } from "../../shared/vscode/utils";
 
 describe("dart", () => {
 	it("created a templated project", async () => {
@@ -34,7 +34,7 @@ describe("dart", () => {
 		// Ensure we fetched packages too.
 		await waitForResult(() => {
 			return getPackagesCommand.calledOnce;
-		}, "Get Packages was not called after creating the project", 10000);
+		}, "Get Packages was not called after creating the project", 40000);
 	});
 
 	it("did not trigger Flutter mode", () => {
