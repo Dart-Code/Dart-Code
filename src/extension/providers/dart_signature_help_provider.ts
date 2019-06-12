@@ -1,8 +1,8 @@
 import * as vs from "vscode";
+import { cleanDartdoc } from "../../shared/utils/dartdocs";
 import { fsPath } from "../../shared/vscode/utils";
 import { AnalysisGetSignatureResponse, ParameterInfo } from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
-import { cleanDartdoc } from "../dartdocs";
 
 export class DartSignatureHelpProvider implements vs.SignatureHelpProvider {
 	constructor(private readonly analyzer: Analyzer) {
