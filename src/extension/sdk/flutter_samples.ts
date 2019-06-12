@@ -2,8 +2,8 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
+import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { dartCodeExtensionIdentifier } from "../../shared/constants";
-import { FlutterCapabilities } from "../flutter/capabilities";
 import * as util from "../utils";
 
 export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapabilities, sampleID: string): vs.Uri | undefined {
