@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import { Context } from "vm";
 import * as vs from "vscode";
-import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, doNotAskAgainAction, flutterExtensionIdentifier, flutterSurvey2019Q2PromptWithAnalytics, flutterSurvey2019Q2PromptWithoutAnalytics, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../shared/constants";
+import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, doNotAskAgainAction, flutterExtensionIdentifier, flutterSurvey2019Q2PromptWithAnalytics, flutterSurvey2019Q2PromptWithoutAnalytics, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, takeSurveyAction, userPromptContextPrefix, wantToTryDevToolsPrompt } from "../shared/constants";
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { StagehandTemplate } from "../shared/interfaces";
 import { fsPath } from "../shared/vscode/utils";
@@ -12,14 +12,11 @@ import { markProjectCreationEnded, markProjectCreationStarted } from "./commands
 import { extensionVersion, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, openInBrowser, reloadExtension } from "./utils";
 import { log, logWarn } from "./utils/log";
 
-const promptPrefix = "hasPrompted.";
-const installFlutterExtensionPromptKey = "install_flutter_extension_3";
-
 export function showUserPrompts(context: Context, workspaceContext: WorkspaceContext): void {
 	handleNewProjects(context);
 
 	function shouldSuppress(key: string): boolean {
-		const stateKey = `${promptPrefix}${key}`;
+		const stateKey = `${userPromptContextPrefix}${key}`;
 		return context.get(stateKey) === true;
 	}
 
@@ -27,7 +24,7 @@ export function showUserPrompts(context: Context, workspaceContext: WorkspaceCon
 	/// this extension as seen-forever and it won't be shown again. Returning anything
 	/// else will allow the prompt to appear again next time.
 	function showPrompt(key: string, prompt: () => Thenable<boolean>): void {
-		const stateKey = `${promptPrefix}${key}`;
+		const stateKey = `${userPromptContextPrefix}${key}`;
 		prompt().then((res) => context.update(stateKey, res), error);
 	}
 

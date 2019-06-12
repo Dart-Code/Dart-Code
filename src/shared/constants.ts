@@ -83,3 +83,6 @@ export const TRACK_WIDGET_CREATION_ENABLED = "dart-code:trackWidgetCreationEnabl
 export const HAS_LAST_DEBUG_CONFIG = "dart-code:hasLastDebugConfig";
 export const showErrorsAction = "Show Errors";
 export const debugAnywayAction = "Debug Anyway";
+
+export const userPromptContextPrefix = "hasPrompted.";
+export const installFlutterExtensionPromptKey = "install_flutter_extension_3";
