@@ -3,8 +3,8 @@ import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { StagehandTemplate } from "../../../extension/pub/stagehand";
-import { DART_STAGEHAND_PROJECT_TRIGGER_FILE } from "../../../extension/utils";
+import { DART_STAGEHAND_PROJECT_TRIGGER_FILE } from "../../../shared/constants";
+import { StagehandTemplate } from "../../../shared/interfaces";
 import { fsPath } from "../../../shared/vscode/utils";
 import { ext, getRandomTempFolder, sb } from "../../helpers";
 
