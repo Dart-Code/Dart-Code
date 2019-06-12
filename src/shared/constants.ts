@@ -75,3 +75,6 @@ export const CHROME_OS_VM_SERVICE_PORT = 8085;
 export const DART_STAGEHAND_PROJECT_TRIGGER_FILE = "dart.sh.create";
 export const FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE = "flutter.sh.create";
 export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "flutter.create";
+
+export const REFACTOR_FAILED_DOC_MODIFIED = "This refactor cannot be applied because the document has changed.";
+export const REFACTOR_ANYWAY = "Refactor Anyway";
