@@ -17,7 +17,6 @@ import { getDartWorkspaceFolders, openInBrowser } from "../utils";
 import { handleDebugLogEvent, logInfo, logWarn } from "../utils/log";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
-// TODO: Try to avoid exporting this...
 export const debugSessions: DartDebugSessionInformation[] = [];
 // export let mostRecentAttachedProbablyReusableObservatoryUri: string;
 
