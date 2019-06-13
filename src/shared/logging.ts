@@ -75,7 +75,8 @@ export function captureLogs(logger: EmittingLogger, file: string, header: string
 		throw new Error("Path passed to logTo must be an absolute path");
 	const time = () => `[${(new Date()).toTimeString()}] `;
 	let logStream: fs.WriteStream | undefined = fs.createWriteStream(file);
-	logStream.write(header);
+	if (header)
+		logStream.write(header);
 	logStream.write(`${(new Date()).toDateString()} ${time()}Log file started${os.EOL}`);
 	let fileLogger: IAmDisposable | undefined = logger.onLog((e) => {
 		if (logCategories && logCategories.indexOf(e.category) === -1)
