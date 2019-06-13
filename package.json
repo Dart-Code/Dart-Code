@@ -361,6 +361,41 @@
 				"command": "flutter.openInXcode",
 				"title": "Open in Xcode",
 				"category": "Flutter"
+			},
+			{
+				"command": "_flutter.outline.refactor.flutter.wrap.center",
+				"title": "Wrap with Center",
+				"category": "Flutter"
+			},
+			{
+				"command": "_flutter.outline.refactor.flutter.wrap.padding",
+				"title": "Wrap with Padding",
+				"category": "Flutter"
+			},
+			{
+				"command": "_flutter.outline.refactor.flutter.wrap.column",
+				"title": "Wrap with Column",
+				"category": "Flutter"
+			},
+			{
+				"command": "_flutter.outline.refactor.flutter.wrap.row",
+				"title": "Wrap with Row",
+				"category": "Flutter"
+			},
+			{
+				"command": "_flutter.outline.refactor.flutter.move.up",
+				"title": "Move widget Up",
+				"category": "Flutter"
+			},
+			{
+				"command": "_flutter.outline.refactor.flutter.move.down",
+				"title": "Move widget Down",
+				"category": "Flutter"
+			},
+			{
+				"command": "_flutter.outline.refactor.flutter.removeWidget",
+				"title": "Remove widget",
+				"category": "Flutter"
 			}
 		],
 		"keybindings": [
@@ -578,6 +613,34 @@
 					"when": "dart-code:anyFlutterProjectLoaded"
 				},
 				{
+					"when": "false",
+					"command": "_flutter.outline.refactor.flutter.wrap.center"
+				},
+				{
+					"when": "false",
+					"command": "_flutter.outline.refactor.flutter.wrap.padding"
+				},
+				{
+					"when": "false",
+					"command": "_flutter.outline.refactor.flutter.wrap.column"
+				},
+				{
+					"when": "false",
+					"command": "_flutter.outline.refactor.flutter.wrap.row"
+				},
+				{
+					"when": "false",
+					"command": "_flutter.outline.refactor.flutter.move.up"
+				},
+				{
+					"when": "false",
+					"command": "_flutter.outline.refactor.flutter.move.down"
+				},
+				{
+					"when": "false",
+					"command": "_flutter.outline.refactor.flutter.removeWidget"
+				},
+				{
 					"command": "flutter.openInAndroidStudio",
 					"when": "false"
 				},
@@ -718,6 +781,54 @@
 					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testTestNode",
 					"command": "dart.startWithoutDebuggingTest",
 					"group": "4.5_exec@1"
+				}
+			],
+			// This doesn't work
+			// https://github.com/microsoft/vscode/issues/67935
+			"outline/context": [
+				{
+					"when": "view == outline && viewItem =~ /dart-code:isWidget:.*--refactor\\.flutter\\.wrap\\.center--.*/",
+					"command": "_flutter.outline.refactor.flutter.wrap.center",
+					"group": "Refactor@1"
+				},
+				{
+					"when": "view == outline && viewItem =~ /dart-code:isWidget:.*--refactor\\.flutter\\.wrap\\.padding--.*/",
+					"command": "_flutter.outline.refactor.flutter.wrap.padding",
+					"group": "Refactor@2"
+				},
+				{
+					"when": "view == outline && viewItem =~ /dart-code:isWidget:.*--refactor\\.flutter\\.wrap\\.column--.*/",
+					"command": "_flutter.outline.refactor.flutter.wrap.column",
+					"group": "Refactor@3"
+				},
+				{
+					"when": "view == outline && viewItem =~ /dart-code:isWidget:.*--refactor\\.flutter\\.wrap\\.row--.*/",
+					"command": "_flutter.outline.refactor.flutter.wrap.row",
+					"group": "Refactor@4"
+				},
+				{
+					"when": "view == outline && viewItem =~ /dart-code:isWidget:.*--refactor\\.flutter\\.move\\.up--.*/",
+					"command": "_flutter.outline.refactor.flutter.move.up",
+					"group": "Refactor@5"
+				},
+				{
+					"when": "view == outline && viewItem =~ /dart-code:isWidget:.*--refactor\\.flutter\\.move\\.down--.*/",
+					"command": "_flutter.outline.refactor.flutter.move.down",
+					"group": "Refactor@6"
+				},
+				{
+					"when": "view == outline && viewItem =~ /dart-code:isWidget:.*--refactor\\.flutter\\.removeWidget--.*/",
+					"command": "_flutter.outline.refactor.flutter.removeWidget",
+					"group": "Refactor@7"
+				}
+			]
+		},
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "flutter",
+					"title": "Flutter",
+					"icon": "media/icons/flutter_activity_bar.svg"
 				}
 			]
 		},

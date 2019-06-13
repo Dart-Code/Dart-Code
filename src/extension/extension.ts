@@ -22,6 +22,7 @@ import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
 import { AnalyzerCommands } from "./commands/analyzer";
 import { DebugCommands } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
+import { FlutterOutlineCommands } from "./commands/flutter_outline";
 import { GoToSuperCommand } from "./commands/go_to_super";
 import { LoggingCommands } from "./commands/logging";
 import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
@@ -353,6 +354,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const analyzerCommands = new AnalyzerCommands(context, analyzer);
 	const sdkCommands = new SdkCommands(context, workspaceContext, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
 	const debugCommands = new DebugCommands(extContext, workspaceContext, analytics, pubGlobal);
+	const flutterOutlineCommands = new FlutterOutlineCommands(context);
 
 	// Wire up handling of Hot Reload on Save.
 	if (workspaceContext.hasAnyFlutterProjects) {
