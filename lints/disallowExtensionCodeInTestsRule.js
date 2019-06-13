@@ -11,7 +11,7 @@ class Rule extends Lint.Rules.AbstractRule {
 		}
 	}
 }
-Rule.FAILURE_STRING = "Do not import extension code into test files because the extension packing will mean duplicate definitions and state.";
+Rule.FAILURE_STRING = "Do not import extension code into test/shared files because the extension packing will mean duplicate definitions and state.";
 
 class NoExtensionCodeInTests extends Lint.RuleWalker {
 	visitImportDeclaration(node) {

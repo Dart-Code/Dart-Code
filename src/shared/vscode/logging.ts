@@ -3,7 +3,6 @@ import { LogCategory } from "../enums";
 import { Logger } from "../interfaces";
 import { errorString } from "../utils";
 
-
 export class DevTimeLogger implements Logger {
 	constructor(private base: Logger) { }
 
