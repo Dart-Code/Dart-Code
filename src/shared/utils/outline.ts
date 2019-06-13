@@ -1,5 +1,5 @@
-import * as as from "../../extension/analysis/analysis_server_types";
 import { logError } from "../../extension/utils/log";
+import * as as from "../analysis_server_types";
 
 export abstract class OutlineVisitor {
 	public visit(outline: as.Outline) {

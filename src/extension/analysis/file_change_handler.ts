@@ -1,9 +1,9 @@
 import * as vs from "vscode";
+import * as as from "../../shared/analysis_server_types";
+import { fsPath } from "../../shared/vscode/utils";
 import { config } from "../config";
 import * as util from "../utils";
-import * as as from "./analysis_server_types";
 import { Analyzer } from "./analyzer";
-import { fsPath } from "../../shared/vscode/utils";
 
 export class FileChangeHandler implements vs.Disposable {
 	private readonly disposables: vs.Disposable[] = [];

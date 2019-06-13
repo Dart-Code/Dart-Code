@@ -1,6 +1,6 @@
 import { CancellationToken, DocumentSymbol, DocumentSymbolProvider, TextDocument } from "vscode";
+import { Outline } from "../../shared/analysis_server_types";
 import { waitFor } from "../../shared/utils/promises";
-import { Outline } from "../analysis/analysis_server_types";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { openFileTracker } from "../analysis/open_file_tracker";
 import { toRange } from "../utils";

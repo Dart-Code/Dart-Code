@@ -1,5 +1,5 @@
 import { CancellationToken, FoldingContext, FoldingRange, FoldingRangeKind, FoldingRangeProvider, TextDocument } from "vscode";
-import { FoldingKind, FoldingRegion } from "../analysis/analysis_server_types";
+import { FoldingKind, FoldingRegion } from "../../shared/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { openFileTracker } from "../analysis/open_file_tracker";
 

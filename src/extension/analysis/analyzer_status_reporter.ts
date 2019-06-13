@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { env, ProgressLocation, version as codeVersion, window, workspace } from "vscode";
+import { RequestError, ServerErrorNotification, ServerStatusNotification } from "../../shared/analysis_server_types";
 import { LogCategory } from "../../shared/enums";
 import { isStableSdk, PromiseCompleter } from "../../shared/utils";
 import { getRandomInt } from "../../shared/utils/fs";
@@ -10,7 +11,6 @@ import { Analytics } from "../analytics";
 import { config } from "../config";
 import { extensionVersion, getSdkVersion } from "../utils";
 import { logError } from "../utils/log";
-import { RequestError, ServerErrorNotification, ServerStatusNotification } from "./analysis_server_types";
 import { Analyzer } from "./analyzer";
 
 const maxErrorReportCount = 3;

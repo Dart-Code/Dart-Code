@@ -1,6 +1,6 @@
 import { CancellationToken, OutputChannel, Position, Range, RenameProvider, TextDocument, Uri, workspace, WorkspaceEdit } from "vscode";
+import * as as from "../../shared/analysis_server_types";
 import { fsPath } from "../../shared/vscode/utils";
-import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import * as channels from "../commands/channels";
 import { toRange } from "../utils";
