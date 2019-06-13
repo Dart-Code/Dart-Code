@@ -11,7 +11,7 @@ describe("test_outline_visitor", () => {
 	});
 
 	it("reads the correct groups and tests", () => {
-		const visitor = new TestOutlineVisitor();
+		const visitor = new TestOutlineVisitor(extApi.log);
 		const outline = extApi.fileTracker.getOutlineFor(helloWorldTestMainFile);
 		if (!outline)
 			throw new Error(`Did not get outline for ${helloWorldTestMainFile}`);

@@ -6,6 +6,7 @@ import { Analyzer } from "../analysis/analyzer";
 import { openFileTracker } from "../analysis/open_file_tracker";
 import { IAmDisposable } from "../debug/utils";
 import { toRange } from "../utils";
+import { logError } from "../utils/log";
 
 export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	private disposables: IAmDisposable[] = [];
@@ -44,7 +45,7 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		if (!openFileTracker.supportsPubRunTest(document.uri))
 			return;
 
-		const visitor = new TestOutlineVisitor();
+		const visitor = new TestOutlineVisitor(logError);
 		visitor.visit(outline);
 		return flatMap(
 			visitor.tests
