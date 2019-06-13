@@ -1,6 +1,7 @@
 import * as vs from "vscode";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
 import { openFileTracker } from "../analysis/open_file_tracker";
+import { logError } from "../utils/log";
 
 export const CURSOR_IS_IN_TEST = "dart-code:cursorIsInTest";
 export let cursorIsInTest = false; // HACK: Used for testing since we can't read contexts?
@@ -47,7 +48,7 @@ export class TestCommands implements vs.Disposable {
 		if (!openFileTracker.supportsPubRunTest(document.uri))
 			return;
 
-		const visitor = new TestOutlineVisitor();
+		const visitor = new TestOutlineVisitor(logError);
 		visitor.visit(outline);
 		return visitor.tests.reverse().find((t) => {
 			const start = document.positionAt(t.offset);

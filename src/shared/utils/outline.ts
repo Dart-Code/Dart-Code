@@ -1,7 +1,8 @@
-import { logError } from "../../extension/utils/log";
 import * as as from "../analysis_server_types";
 
 export abstract class OutlineVisitor {
+	constructor(private logError: (error: any) => void) { }
+
 	public visit(outline: as.Outline) {
 		this.visitNode(outline);
 	}
@@ -92,7 +93,7 @@ export abstract class OutlineVisitor {
 				this.visitUnknown(outline);
 				break;
 			default:
-				logError(`Unknown Outline item! ${outline && outline.element && outline.element.kind}`);
+				this.logError(`Unknown Outline item! ${outline && outline.element && outline.element.kind}`);
 		}
 	}
 
