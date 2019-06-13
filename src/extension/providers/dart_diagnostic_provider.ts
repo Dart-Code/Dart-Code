@@ -1,5 +1,5 @@
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, DiagnosticTag, Uri } from "vscode";
-import * as as from "../analysis/analysis_server_types";
+import * as as from "../../shared/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { config } from "../config";
 import { toRangeOnLine } from "../utils";

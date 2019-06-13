@@ -1,7 +1,7 @@
 import * as vs from "vscode";
+import { AnalysisGetSignatureResponse, ParameterInfo } from "../../shared/analysis_server_types";
 import { cleanDartdoc } from "../../shared/utils/dartdocs";
 import { fsPath } from "../../shared/vscode/utils";
-import { AnalysisGetSignatureResponse, ParameterInfo } from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 
 export class DartSignatureHelpProvider implements vs.SignatureHelpProvider {

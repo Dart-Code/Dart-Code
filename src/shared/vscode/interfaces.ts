@@ -1,6 +1,6 @@
 import * as child_process from "child_process";
 import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, DefinitionProvider, MarkdownString, ReferenceProvider, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
-import { AvailableSuggestion, Outline } from "../../extension/analysis/analysis_server_types";
+import { AvailableSuggestion, Outline } from "../analysis_server_types";
 import { LogCategory, LogSeverity, TestStatus, VersionStatus } from "../enums";
 import { DebugCommandHandler } from "../interfaces";
 import { WorkspaceContext } from "../workspace";

@@ -1,10 +1,10 @@
 import * as vs from "vscode";
+import * as as from "../../shared/analysis_server_types";
 import { LogCategory } from "../../shared/enums";
 import { PromiseCompleter, versionIsAtLeast } from "../../shared/utils";
 import { config } from "../config";
 import { escapeShell, extensionVersion, reloadExtension } from "../utils";
 import { logError } from "../utils/log";
-import * as as from "./analysis_server_types";
 import { AnalyzerGen } from "./analyzer_gen";
 
 export class AnalyzerCapabilities {

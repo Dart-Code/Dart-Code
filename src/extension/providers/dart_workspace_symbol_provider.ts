@@ -1,8 +1,8 @@
 import * as path from "path";
 import { CancellationToken, Location, SymbolInformation, Uri, workspace, WorkspaceSymbolProvider } from "vscode";
+import * as as from "../../shared/analysis_server_types";
 import { escapeRegExp } from "../../shared/utils";
 import { fsPath } from "../../shared/vscode/utils";
-import * as as from "../analysis/analysis_server_types";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { toRange } from "../utils";
 

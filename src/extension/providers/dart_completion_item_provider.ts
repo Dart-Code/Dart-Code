@@ -1,11 +1,11 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, Disposable, MarkdownString, Position, Range, SnippetString, TextDocument } from "vscode";
+import * as as from "../../shared/analysis_server_types";
 import { flatMap } from "../../shared/utils";
 import { cleanDartdoc } from "../../shared/utils/dartdocs";
 import { DelayedCompletionItem, LazyCompletionItem } from "../../shared/vscode/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
-import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { hasOverlappingEdits } from "../commands/edit";
 import { config } from "../config";

@@ -1,11 +1,11 @@
 import * as vs from "vscode";
-import * as as from "../analysis/analysis_server_types";
+import * as as from "../../shared/analysis_server_types";
+import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
 import * as editors from "../editors";
 import { toRangeOnLine } from "../utils";
 import { logWarn } from "../utils/log";
 import { showCode } from "../utils/vscode/editor";
-import { fsPath } from "../../shared/vscode/utils";
 
 export class TypeHierarchyCommand implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];

@@ -1,11 +1,11 @@
 import { Disposable, TextDocument, Uri, window, workspace } from "vscode";
+import { FlutterOutline, FoldingRegion, Occurrences, Outline } from "../../shared/analysis_server_types";
 import { fsPath } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { IAmDisposable } from "../debug/utils";
 import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
 import { logError } from "../utils/log";
-import { FlutterOutline, FoldingRegion, Occurrences, Outline } from "./analysis_server_types";
 import { Analyzer } from "./analyzer";
 
 const outlines: { [key: string]: Outline } = {};

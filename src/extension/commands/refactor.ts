@@ -1,7 +1,7 @@
 import * as vs from "vscode";
+import * as as from "../../shared/analysis_server_types";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../shared/constants";
 import { fsPath } from "../../shared/vscode/utils";
-import * as as from "../analysis/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { unique } from "../utils";
 import { logError, logInfo } from "../utils/log";

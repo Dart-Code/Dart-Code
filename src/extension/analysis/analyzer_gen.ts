@@ -4,10 +4,10 @@
 "use strict";
 
 import * as vs from "vscode";
+import * as as from "../../shared/analysis_server_types";
 import { LogCategory } from "../../shared/enums";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
 import { log } from "../utils/log";
-import * as as from "./analysis_server_types";
 
 export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	constructor(getLogFile: () => string | undefined, maxLogLineLength: number | undefined) {
