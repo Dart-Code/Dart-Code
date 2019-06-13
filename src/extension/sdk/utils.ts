@@ -10,56 +10,62 @@ import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, getDartWorkspaceFolders, getSdkVersion, notUndefined, openExtensionLogFile, openInBrowser, reloadExtension, resolvePaths, showLogAction } from "../utils";
-import { log } from "../utils/log";
+import { log, logError } from "../utils/log";
 
 export function handleMissingSdks(context: ExtensionContext, analytics: Analytics, workspaceContext: WorkspaceContext) {
-	// HACK: In order to provide a more useful message if the user was trying to fun flutter.createProject
-	// we need to hook the command and force the project type to Flutter to get the correct error message.
-	// This can be reverted and improved if Code adds support for providing activation context:
-	//     https://github.com/Microsoft/vscode/issues/44711
-	let commandToReRun: string;
-	let attemptedToUseFlutter: boolean = false;
 	// Note: This code only runs if we fail to find the Dart SDK, or fail to find the Flutter SDK
 	// and are in a Flutter project. In the case where we fail to find the Flutter SDK but are not
 	// in a Flutter project (eg. we ran Flutter Doctor without the extension activated) then
 	// this code will not be run as the extension will activate normally, and then the command-handling
 	// code for each command will detect the missing Flutter SDK and respond appropriately.
 	context.subscriptions.push(commands.registerCommand("flutter.createProject", (_) => {
-		attemptedToUseFlutter = true;
-		commandToReRun = "flutter.createProject";
+		showRelevantActivationFailureMessage(analytics, workspaceContext, true, "flutter.createProject");
 	}));
 	context.subscriptions.push(commands.registerCommand("flutter.createWebProject", (_) => {
-		commandToReRun = "dart.createProject";
+		showRelevantActivationFailureMessage(analytics, workspaceContext, true, "flutter.createWebProject");
 	}));
 	context.subscriptions.push(commands.registerCommand("dart.createProject", (_) => {
-		commandToReRun = "dart.createProject";
+		showRelevantActivationFailureMessage(analytics, workspaceContext, false, "dart.createProject");
 	}));
 	context.subscriptions.push(commands.registerCommand("_dart.flutter.createSampleProject", (_) => {
-		attemptedToUseFlutter = true;
-		commandToReRun = "_dart.flutter.createSampleProject";
+		showRelevantActivationFailureMessage(analytics, workspaceContext, true, "_dart.flutter.createSampleProject");
 	}));
 	context.subscriptions.push(commands.registerCommand("flutter.doctor", (_) => {
-		attemptedToUseFlutter = true;
-		commandToReRun = "flutter.doctor";
+		showRelevantActivationFailureMessage(analytics, workspaceContext, true, "flutter.doctor");
 	}));
 	context.subscriptions.push(commands.registerCommand("flutter.upgrade", (_) => {
-		attemptedToUseFlutter = true;
-		commandToReRun = "flutter.upgrade";
+		showRelevantActivationFailureMessage(analytics, workspaceContext, true, "flutter.upgrade");
 	}));
-	// Wait a while before showing the error to allow the code above to have run.
+	// Wait a while before showing the error to allow the code above to have run if it will.
 	setTimeout(() => {
-		if (workspaceContext.hasAnyFlutterProjects || attemptedToUseFlutter) {
-			if (workspaceContext.sdks.flutter && !workspaceContext.sdks.dart) {
-				showFluttersDartSdkActivationFailure();
+		// Only show the "startup" message if we didn't already show another message as
+		// a result of one of the above commands beinv invoked.
+		if (!hasShownActivationFailure) {
+			if (workspaceContext.hasAnyFlutterProjects) {
+				showRelevantActivationFailureMessage(analytics, workspaceContext, true);
+			} else if (workspaceContext.hasAnyStandardDartProjects) {
+				showRelevantActivationFailureMessage(analytics, workspaceContext, false);
 			} else {
-				showFlutterActivationFailure(commandToReRun);
+				logError("No Dart or Flutter SDK was found. Suppressing prompt because it doesn't appear that a Dart/Flutter project is open.");
 			}
-		} else {
-			showDartActivationFailure();
 		}
-		analytics.logSdkDetectionFailure();
 	}, 500);
 	return;
+}
+
+let hasShownActivationFailure = false;
+function showRelevantActivationFailureMessage(analytics: Analytics, workspaceContext: WorkspaceContext, isFlutter: boolean, commandToReRun?: string) {
+	if (isFlutter && workspaceContext.sdks.flutter && !workspaceContext.sdks.dart) {
+		showFluttersDartSdkActivationFailure();
+	} else if (isFlutter) {
+		showFlutterActivationFailure(commandToReRun);
+	} else {
+		showDartActivationFailure(commandToReRun);
+	}
+	if (!hasShownActivationFailure) {
+		analytics.logSdkDetectionFailure();
+		hasShownActivationFailure = true;
+	}
 }
 
 export function showFluttersDartSdkActivationFailure() {
