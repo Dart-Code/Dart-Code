@@ -6,7 +6,7 @@ const Lint = require("tslint");
 
 class Rule extends Lint.Rules.AbstractRule {
 	apply(sourceFile) {
-		if (sourceFile.fileName.indexOf("src/test/") !== -1) {
+		if (sourceFile.fileName.indexOf("src/test/") !== -1 || sourceFile.fileName.indexOf("src/shared/") !== -1) {
 			return this.applyWithWalker(new NoExtensionCodeInTests(sourceFile, this.getOptions()));
 		}
 	}
