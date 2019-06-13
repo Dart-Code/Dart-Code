@@ -841,7 +841,7 @@
 				{
 					"id": "dartFlutterOutline",
 					"name": "Outline",
-					"when": "dart-code:flutterProjectLoaded && dart-code:showFlutterOutline"
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:showFlutterOutline"
 				}
 			],
 			"test": [
