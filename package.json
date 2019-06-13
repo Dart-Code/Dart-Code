@@ -32,7 +32,6 @@
 	"icon": "media/dart.png",
 	"activationEvents": [
 		"onLanguage:dart",
-		"onView:dartPackages",
 		"workspaceContains:**/pubspec.yaml",
 		"workspaceContains:**/*.dart",
 		"workspaceContains:dart.sh.create",
@@ -1019,6 +1018,12 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Whether to always force Windows drive letters to uppercase when interacting with other tools. This should reduce spurious errors from tools that are accidentally case-sensitive with Windows paths.",
+					"scope": "window"
+				},
+				"dart.showFlutterWidgetCreationInOutlineView": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to show Flutter widgets in the VS Code Outline view.",
 					"scope": "window"
 				},
 				"dart.analyzerAdditionalArgs": {
