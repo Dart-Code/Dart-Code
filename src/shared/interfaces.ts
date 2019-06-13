@@ -1,5 +1,5 @@
 import { DebugSession, DebugSessionCustomEvent } from "vscode";
-import { FlutterService, FlutterServiceExtension } from "./enums";
+import { FlutterService, FlutterServiceExtension, LogCategory, LogSeverity } from "./enums";
 
 export interface DebugCommandHandler {
 	flutterExtensions: {
@@ -12,11 +12,11 @@ export interface DebugCommandHandler {
 }
 
 export interface Sdks {
-	dart?: string;
-	dartVersion?: string;
-	flutter?: string;
-	flutterVersion?: string;
-	dartSdkIsFromFlutter: boolean;
+	readonly dart?: string;
+	readonly dartVersion?: string;
+	readonly flutter?: string;
+	readonly flutterVersion?: string;
+	readonly dartSdkIsFromFlutter: boolean;
 }
 
 export interface StagehandTemplate {
@@ -25,4 +25,22 @@ export interface StagehandTemplate {
 	readonly description: string;
 	readonly categories: string[];
 	readonly entrypoint: string;
+}
+
+export interface Logger {
+	logInfo(message: string, category?: LogCategory): void;
+	logWarn(message: string, category?: LogCategory): void;
+	logError(error: SomeError, category?: LogCategory): void;
+}
+
+export type SomeError = string | Error | undefined | { message: string };
+
+export interface LogMessage {
+	readonly message: string;
+	readonly severity: LogSeverity;
+	readonly category: LogCategory;
+}
+
+export interface IAmDisposable {
+	dispose(): void | Promise<void>;
 }

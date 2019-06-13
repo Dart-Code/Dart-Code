@@ -17,7 +17,7 @@ describe("test_outline_visitor", () => {
 
 		const outline = extApi.fileTracker.getOutlineFor(flutterTestOtherFile);
 
-		const visitor = new TestOutlineVisitor(extApi.logError);
+		const visitor = new TestOutlineVisitor(extApi.logger);
 		visitor.visit(outline);
 
 		assert.equal(visitor.tests.length, 2);

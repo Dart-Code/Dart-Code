@@ -1,14 +1,14 @@
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, DocumentSelector, Range, TextDocument } from "vscode";
 import * as as from "../../shared/analysis_server_types";
+import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
 import { isAnalyzableAndInWorkspace } from "../utils";
-import { logError } from "../utils/log";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
 import { RankedCodeActionProvider } from "./ranking_code_action_provider";
 
 export class FixCodeActionProvider implements RankedCodeActionProvider {
-	constructor(public readonly selector: DocumentSelector, private readonly analyzer: Analyzer) { }
+	constructor(private readonly logger: Logger, public readonly selector: DocumentSelector, private readonly analyzer: Analyzer) { }
 
 	public readonly rank = 1;
 
@@ -42,7 +42,7 @@ export class FixCodeActionProvider implements RankedCodeActionProvider {
 
 			return Object.keys(allActions).map((a) => allActions[a]);
 		} catch (e) {
-			logError(e);
+			this.logger.logError(e);
 			throw e;
 		}
 	}

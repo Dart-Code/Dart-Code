@@ -3,17 +3,16 @@ import * as path from "path";
 import { Context } from "vm";
 import * as vs from "vscode";
 import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, userPromptContextPrefix } from "../shared/constants";
-import { LogCategory, LogSeverity } from "../shared/enums";
-import { StagehandTemplate } from "../shared/interfaces";
+import { LogCategory } from "../shared/enums";
+import { Logger, StagehandTemplate } from "../shared/interfaces";
 import { showFlutter2019Q2SurveyNotificationIfAppropriate } from "../shared/vscode/user_prompts";
 import { fsPath, openInBrowser } from "../shared/vscode/utils";
 import { WorkspaceContext } from "../shared/workspace";
 import { markProjectCreationEnded, markProjectCreationStarted } from "./commands/sdk";
 import { extensionVersion, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, reloadExtension } from "./utils";
-import { log, logWarn } from "./utils/log";
 
-export function showUserPrompts(context: Context, workspaceContext: WorkspaceContext): void {
-	handleNewProjects(context);
+export function showUserPrompts(logger: Logger, context: Context, workspaceContext: WorkspaceContext): void {
+	handleNewProjects(logger, context);
 
 	function shouldSuppress(key: string): boolean {
 		const stateKey = `${userPromptContextPrefix}${key}`;
@@ -45,7 +44,7 @@ export function showUserPrompts(context: Context, workspaceContext: WorkspaceCon
 	}
 
 	if (workspaceContext.hasAnyFlutterProjects) {
-		if (showFlutter2019Q2SurveyNotificationIfAppropriate(context, Date.now(), logWarn))
+		if (showFlutter2019Q2SurveyNotificationIfAppropriate(context, Date.now(), logger))
 			return; // Bail if we showed it, so we won't show any other notifications.
 	}
 
@@ -90,15 +89,15 @@ function error(err: any) {
 	vs.window.showErrorMessage(err.message);
 }
 
-function handleNewProjects(context: Context) {
+function handleNewProjects(logger: Logger, context: Context) {
 	getDartWorkspaceFolders().forEach((wf) => {
-		handleStagehandTrigger(wf, DART_STAGEHAND_PROJECT_TRIGGER_FILE);
-		handleStagehandTrigger(wf, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE);
+		handleStagehandTrigger(logger, wf, DART_STAGEHAND_PROJECT_TRIGGER_FILE);
+		handleStagehandTrigger(logger, wf, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE);
 		handleFlutterCreateTrigger(wf);
 	});
 }
 
-async function handleStagehandTrigger(wf: vs.WorkspaceFolder, triggerFilename: string): Promise<void> {
+async function handleStagehandTrigger(logger: Logger, wf: vs.WorkspaceFolder, triggerFilename: string): Promise<void> {
 	const triggerFile = path.join(fsPath(wf.uri), triggerFilename);
 	if (fs.existsSync(triggerFile)) {
 		const templateJson = fs.readFileSync(triggerFile).toString().trim();
@@ -110,18 +109,18 @@ async function handleStagehandTrigger(wf: vs.WorkspaceFolder, triggerFilename: s
 			return;
 		}
 		fs.unlinkSync(triggerFile);
-		log(`Creating Dart project for ${fsPath(wf.uri)}`, LogSeverity.Info, LogCategory.CommandProcesses);
+		logger.logInfo(`Creating Dart project for ${fsPath(wf.uri)}`, LogCategory.CommandProcesses);
 		try {
 			markProjectCreationStarted();
 
 			const success = await createDartProject(fsPath(wf.uri), template.name);
 			if (success) {
-				log(`Fetching packages for newly-created project`, LogSeverity.Info, LogCategory.CommandProcesses);
+				logger.logInfo(`Fetching packages for newly-created project`, LogCategory.CommandProcesses);
 				await vs.commands.executeCommand("dart.getPackages", wf.uri);
 				handleDartWelcome(wf, template);
-				log(`Finished creating new project!`, LogSeverity.Info, LogCategory.CommandProcesses);
+				logger.logInfo(`Finished creating new project!`, LogCategory.CommandProcesses);
 			} else {
-				log(`Failed to create new project`, LogSeverity.Info, LogCategory.CommandProcesses);
+				logger.logInfo(`Failed to create new project`, LogCategory.CommandProcesses);
 			}
 		} finally {
 			markProjectCreationEnded();

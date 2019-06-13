@@ -31,8 +31,8 @@ describe("dart test debugger", () => {
 		const thisDc = dc;
 		defer(() => withTimeout(
 			Promise.all([
-				thisDc.terminateRequest().catch((e) => extApi.logInfo(e)),
-				delay(500).then(() => thisDc.stop()).catch((e) => extApi.logInfo(e)),
+				thisDc.terminateRequest().catch((e) => extApi.logger.logInfo(e)),
+				delay(500).then(() => thisDc.stop()).catch((e) => extApi.logger.logInfo(e)),
 			]),
 			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
 			60,
@@ -204,7 +204,7 @@ describe("dart test debugger", () => {
 		// after running each test individually.
 
 		async function checkResults(description: string): Promise<void> {
-			extApi.log(description);
+			extApi.logger.logInfo(description);
 			const expectedResults = getExpectedResults();
 			const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
 
@@ -216,7 +216,7 @@ describe("dart test debugger", () => {
 		await runWithoutDebugging(helloWorldTestTreeFile);
 		let numRuns = 1;
 		await checkResults(`After initial run`);
-		const visitor = new TestOutlineVisitor(extApi.logError);
+		const visitor = new TestOutlineVisitor(extApi.logger);
 		const outline = extApi.fileTracker.getOutlineFor(helloWorldTestTreeFile);
 		if (!outline)
 			throw new Error(`Did not get outline for ${helloWorldTestTreeFile}`);
@@ -237,7 +237,7 @@ describe("dart test debugger", () => {
 		// multiple of the duplicated tests.
 
 		async function checkResults(description: string): Promise<void> {
-			extApi.log(description);
+			extApi.logger.logInfo(description);
 			const expectedResults = getExpectedResults();
 			const actualResults = (await makeTextTree(helloWorldTestDupeNameFile, extApi.testTreeProvider)).join("\n");
 
@@ -249,7 +249,7 @@ describe("dart test debugger", () => {
 		await runWithoutDebugging(helloWorldTestDupeNameFile);
 		let numRuns = 1;
 		await checkResults(`After initial run`);
-		const visitor = new TestOutlineVisitor(extApi.logError);
+		const visitor = new TestOutlineVisitor(extApi.logger);
 		const outline = extApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
 		if (!outline)
 			throw new Error(`Did not get outline for ${helloWorldTestDupeNameFile}`);

@@ -1,11 +1,11 @@
 import * as path from "path";
 import * as vs from "vscode";
+import { Logger } from "../../shared/interfaces";
 import { uniq } from "../../shared/utils";
 import { fsPath } from "../../shared/vscode/utils";
 import { DebugCommands } from "../commands/debug";
 import { CoverageData } from "../debug/utils";
 import { extensionPath } from "../utils";
-import { logError } from "../utils/log";
 
 export class HotReloadCoverageDecorations implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
@@ -28,7 +28,7 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 		rangeBehavior: vs.DecorationRangeBehavior.OpenOpen,
 	});
 
-	constructor(debug: DebugCommands) {
+	constructor(private readonly logger: Logger, debug: DebugCommands) {
 		this.subscriptions.push(vs.workspace.onDidChangeTextDocument((e) => this.onDidChangeTextDocument(e)));
 		this.subscriptions.push(debug.onFirstFrame(() => this.onFirstFrame()));
 		this.subscriptions.push(vs.window.onDidChangeVisibleTextEditors((e) => this.onDidChangeVisibleTextEditors(e)));
@@ -119,7 +119,7 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 				return true;
 			} catch (e) {
-				logError(e);
+				this.logger.logError(e);
 				return false;
 			}
 		});

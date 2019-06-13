@@ -1,10 +1,10 @@
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { LogCategory } from "../../shared/enums";
+import { Logger } from "../../shared/interfaces";
 import { PromiseCompleter, versionIsAtLeast } from "../../shared/utils";
 import { config } from "../config";
 import { escapeShell, extensionVersion, reloadExtension } from "../utils";
-import { logError } from "../utils/log";
 import { AnalyzerGen } from "./analyzer_gen";
 
 export class AnalyzerCapabilities {
@@ -44,8 +44,8 @@ export class Analyzer extends AnalyzerGen {
 	private currentAnalysisCompleter?: PromiseCompleter<void>;
 	public capabilities: AnalyzerCapabilities = AnalyzerCapabilities.empty;
 
-	constructor(dartVMPath: string, analyzerPath: string) {
-		super(() => config.analyzerLogFile, config.maxLogLineLength);
+	constructor(logger: Logger, dartVMPath: string, analyzerPath: string) {
+		super(logger, () => config.analyzerLogFile, config.maxLogLineLength);
 
 		let analyzerArgs = [];
 
@@ -257,7 +257,7 @@ export class Analyzer extends AnalyzerGen {
 	}
 }
 
-export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind {
+export function getSymbolKindForElementKind(logger: Logger, kind: as.ElementKind): vs.SymbolKind {
 	switch (kind) {
 		case "CLASS":
 		case "CLASS_TYPE_ALIAS":
@@ -305,7 +305,7 @@ export function getSymbolKindForElementKind(kind: as.ElementKind): vs.SymbolKind
 		case "UNKNOWN":
 			return vs.SymbolKind.Object;
 		default:
-			logError(`Unknown kind: ${kind}`, LogCategory.Analyzer);
+			logger.logError(`Unknown kind: ${kind}`, LogCategory.Analyzer);
 			return vs.SymbolKind.Object;
 	}
 }

@@ -1,16 +1,16 @@
 import * as fs from "fs";
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
+import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
 import * as editors from "../editors";
-import { logError, logWarn } from "../utils/log";
 import { showCode } from "../utils/vscode/editor";
 
 export class EditCommands implements vs.Disposable {
 	private commands: vs.Disposable[] = [];
 
-	constructor(private readonly context: vs.ExtensionContext, private readonly analyzer: Analyzer) {
+	constructor(private readonly logger: Logger, private readonly context: vs.ExtensionContext, private readonly analyzer: Analyzer) {
 		this.commands.push(
 			vs.commands.registerCommand("_dart.organizeImports", this.organizeImports, this),
 			vs.commands.registerCommand("dart.sortMembers", this.sortMembers, this),
@@ -120,7 +120,7 @@ export class EditCommands implements vs.Disposable {
 		const hasProblematicEdits = hasOverlappingEdits(change);
 
 		if (hasProblematicEdits) {
-			logWarn("Falling back to sequential edits due to overlapping edits in server.");
+			this.logger.logWarn("Falling back to sequential edits due to overlapping edits in server.");
 		}
 		const applyEditsSequentially = hasProblematicEdits;
 
@@ -132,7 +132,7 @@ export class EditCommands implements vs.Disposable {
 			// We can only create files with edits that are at 0/0 because we can't open the document if it doesn't exist.
 			// If we create the file ourselves, it won't go into the single undo buffer.
 			if (!fs.existsSync(edit.file) && edit.edits.find((e) => e.offset !== 0 || e.length !== 0)) {
-				logError(`Unable to edit file ${edit.file} because it does not exist and had an edit that was not the start of the file`);
+				this.logger.logError(`Unable to edit file ${edit.file} because it does not exist and had an edit that was not the start of the file`);
 				vs.window.showErrorMessage(`Unable to edit file ${edit.file} because it does not exist and had an edit that was not the start of the file`);
 				continue;
 			}

@@ -1,8 +1,7 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
-import { LogSeverity } from "../../shared/enums";
-import { IAmDisposable } from "../debug/utils";
-import { getLogHeader, logError, logInfo } from "../utils/log";
+import { IAmDisposable, Logger } from "../../shared/interfaces";
+import { getLogHeader } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
@@ -21,7 +20,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 	constructor(
 		public readonly getLogFile: () => string | undefined,
-		public readonly logger: (message: string, severity: LogSeverity) => void,
+		private readonly logger: Logger,
 		public readonly maxLogLineLength: number | undefined,
 		public messagesWrappedInBrackets: boolean = false,
 		public readonly treatHandlingErrorsAsUnhandledMessages: boolean = false) {
@@ -50,7 +49,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 				this.processMessageBuffer();
 		});
 		this.process.stderr.on("data", (data: Buffer) => {
-			this.logTraffic(`${data.toString()}`, LogSeverity.Error);
+			this.logTraffic(`${data.toString()}`, true);
 		});
 		this.process.on("exit", (data: Buffer) => {
 			this.processExited = true;
@@ -129,7 +128,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 				msg = msg[0];
 		} catch (e) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
-				logError(`Unexpected non-JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
+				this.logger.logError(`Unexpected non-JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
 				this.processUnhandledMessage(message);
 				return;
 			} else {
@@ -143,12 +142,12 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			else if (msg && this.isResponse(msg))
 				this.handleResponse(msg as UnknownResponse);
 			else {
-				logError(`Unexpected JSON message, assuming normal stdout : ${message}`);
+				this.logger.logError(`Unexpected JSON message, assuming normal stdout : ${message}`);
 				this.processUnhandledMessage(message);
 			}
 		} catch (e) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
-				logError(`Failed to handle JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
+				this.logger.logError(`Failed to handle JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
 				this.processUnhandledMessage(message);
 			} else {
 				throw e;
@@ -165,10 +164,10 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		delete this.activeRequests[evt.id];
 
 		if (handler === "CANCELLED") {
-			logInfo(`Ignoring response to ${evt.id} because it was cancelled:\n\n${JSON.stringify(evt, undefined, 4)}`);
+			this.logger.logInfo(`Ignoring response to ${evt.id} because it was cancelled:\n\n${JSON.stringify(evt, undefined, 4)}`);
 			return;
 		} else if (!handler) {
-			logError(`Unable to handle response with ID ${evt.id} because its handler is not available`);
+			this.logger.logError(`Unable to handle response with ID ${evt.id} because its handler is not available`);
 			return;
 		}
 		const method: string = handler[2];
@@ -217,8 +216,11 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		return this.subscribe(this.requestErrorSubscriptions, subscriber);
 	}
 
-	protected logTraffic(message: string, severity = LogSeverity.Info): void {
-		this.logger(message, severity);
+	protected logTraffic(message: string, isError = false): void {
+		if (isError)
+			this.logger.logError(message);
+		else
+			this.logger.logInfo(message);
 
 		const newLogFile = this.getLogFile();
 		if (newLogFile !== this.currentLogFile && this.logStream) {
@@ -253,7 +255,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 				process.kill(pid);
 			} catch (e) {
 				// TODO: Logger knows the category!
-				logError({ message: e.toString() });
+				this.logger.logError({ message: e.toString() });
 			}
 		}
 		this.additionalPidsToTerminate.length = 0;

@@ -1,15 +1,14 @@
 import * as minimatch from "minimatch";
 import { CancellationToken, DocumentFormattingEditProvider, DocumentSelector, FormattingOptions, languages, OnTypeFormattingEditProvider, Position, Range, TextDocument, TextEdit, window, workspace } from "vscode";
 import * as as from "../../shared/analysis_server_types";
+import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { Analyzer } from "../analysis/analyzer";
 import { config } from "../config";
-import { IAmDisposable } from "../debug/utils";
-import { logError } from "../utils/log";
 
 export class DartFormattingEditProvider implements DocumentFormattingEditProvider, OnTypeFormattingEditProvider, IAmDisposable {
-	constructor(private readonly analyzer: Analyzer, private readonly context: Context) {
+	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer, private readonly context: Context) {
 		workspace.onDidChangeConfiguration((e) => {
 			if (e.affectsConfiguration("dart.enableSdkFormatter")) {
 				if (config.enableSdkFormatter)
@@ -88,7 +87,7 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 				return resp.edits.map((e) => this.convertData(document, e));
 		} catch (e) {
 			if (doLogError)
-				logError(e);
+				this.logger.logError(e);
 			throw e;
 		}
 	}

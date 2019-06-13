@@ -6,7 +6,7 @@ import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, Prov
 import { DebugSession } from "vscode-debugadapter";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { CHROME_OS_VM_SERVICE_PORT, dartVMPath, debugAnywayAction, flutterPath, HAS_LAST_DEBUG_CONFIG, isChromeOS, pubPath, pubSnapshotPath, showErrorsAction } from "../../shared/constants";
-import { Sdks } from "../../shared/interfaces";
+import { Logger, Sdks } from "../../shared/interfaces";
 import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../../shared/utils";
 import { fsPath } from "../../shared/vscode/utils";
 import { Analytics } from "../analytics";
@@ -26,7 +26,6 @@ import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
 import { checkProjectSupportsPubRunTest, isDartFile, isFlutterProjectFolder, isFlutterWebProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder } from "../utils";
-import { log, logError, logWarn } from "../utils/log";
 import { TestResultsProvider } from "../views/test_view";
 
 const isCI = !!process.env.CI;
@@ -36,7 +35,7 @@ let hasShownFlutterWebDebugWarning = false;
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugServers: { [index: string]: net.Server } = {};
 
-	constructor(private sdks: Sdks, private analytics: Analytics, private pubGlobal: PubGlobal, private deviceManager: FlutterDeviceManager, private flutterCapabilities: FlutterCapabilities) { }
+	constructor(private logger: Logger, private sdks: Sdks, private analytics: Analytics, private pubGlobal: PubGlobal, private deviceManager: FlutterDeviceManager, private flutterCapabilities: FlutterCapabilities) { }
 
 	public provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
 		const isFlutter = isFlutterWorkspaceFolder(folder);
@@ -49,6 +48,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration | undefined | null> {
+		const logger = this.logger;
 		const openFile = window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri.scheme === "file"
 			? fsPath(window.activeTextEditor.document.uri)
 			: undefined;
@@ -75,20 +75,20 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			const v = getUnresolvedVariable(input);
 
 			if (v) {
-				logError(`Launch config property '${property}' has unresolvable variable ${v}`);
+				logger.logError(`Launch config property '${property}' has unresolvable variable ${v}`);
 				window.showErrorMessage(`Launch config property '${property}' has unresolvable variable ${v}`);
 				return true;
 			}
 			return false;
 		}
 
-		log(`Starting debug session...`);
+		logger.logInfo(`Starting debug session...`);
 		if (folder)
-			log(`    workspace: ${fsPath(folder.uri)}`);
+			logger.logInfo(`    workspace: ${fsPath(folder.uri)}`);
 		if (debugConfig.program)
-			log(`    program  : ${debugConfig.program}`);
+			logger.logInfo(`    program  : ${debugConfig.program}`);
 		if (debugConfig.cwd)
-			log(`    cwd      : ${debugConfig.cwd}`);
+			logger.logInfo(`    cwd      : ${debugConfig.cwd}`);
 
 		debugConfig.program = resolveVariables(debugConfig.program);
 		debugConfig.cwd = resolveVariables(debugConfig.cwd);
@@ -101,21 +101,21 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (openFile && !folder) {
 			folder = workspace.getWorkspaceFolder(Uri.file(openFile));
 			if (folder)
-				log(`Setting workspace based on open file: ${fsPath(folder.uri)}`);
+				logger.logInfo(`Setting workspace based on open file: ${fsPath(folder.uri)}`);
 		} else if (!folder && vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length === 1) {
 			folder = vs.workspace.workspaceFolders[0];
 			if (folder)
-				log(`Setting workspace based on single open workspace: ${fsPath(folder.uri)}`);
+				logger.logInfo(`Setting workspace based on single open workspace: ${fsPath(folder.uri)}`);
 		}
 
 		// Convert to an absolute paths (if possible).
 		if (debugConfig.cwd && !path.isAbsolute(debugConfig.cwd) && folder) {
 			debugConfig.cwd = path.join(fsPath(folder.uri), debugConfig.cwd);
-			log(`Converted cwd to absolute path: ${debugConfig.cwd}`);
+			logger.logInfo(`Converted cwd to absolute path: ${debugConfig.cwd}`);
 		}
 		if (debugConfig.program && !path.isAbsolute(debugConfig.program) && (debugConfig.cwd || folder)) {
 			debugConfig.program = path.join(debugConfig.cwd || fsPath(folder.uri), debugConfig.program);
-			log(`Converted program to absolute path: ${debugConfig.program}`);
+			logger.logInfo(`Converted program to absolute path: ${debugConfig.program}`);
 		}
 
 		const isAttachRequest = debugConfig.request === "attach";
@@ -135,7 +135,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 			// If we still don't have an entry point, the user will have to provide it.
 			if (!debugConfig.program) {
-				logWarn("No program was set in launch config");
+				logger.logWarn("No program was set in launch config");
 				window.showInformationMessage("Set the 'program' value in your launch config (eg 'bin/main.dart') then launch again");
 				return null; // null means open launch.json.
 			}
@@ -144,14 +144,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// If we don't have a cwd then find the best one from the project root.
 		if (!debugConfig.cwd && folder) {
 			debugConfig.cwd = fsPath(folder.uri);
-			log(`Using workspace as cwd: ${debugConfig.cwd}`);
+			logger.logInfo(`Using workspace as cwd: ${debugConfig.cwd}`);
 
 			// If we have an entry point, see if we can make this more specific by finding a .packages file
 			if (debugConfig.program) {
 				const bestProjectRoot = locateBestProjectRoot(debugConfig.program);
 				if (bestProjectRoot && isWithinPath(bestProjectRoot, fsPath(folder.uri))) {
 					debugConfig.cwd = bestProjectRoot;
-					log(`Found better project root to use as cwd: ${debugConfig.cwd}`);
+					logger.logInfo(`Found better project root to use as cwd: ${debugConfig.cwd}`);
 				}
 			}
 		}
@@ -169,15 +169,15 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			if (isFlutterWebProjectFolder(debugConfig.cwd as string)) {
 				debugType = DebuggerType.FlutterWeb;
 				if (isFlutterProjectFolder(debugConfig.cwd as string)) {
-					logError("Flutter web project references sdk:flutter and may fail to launch");
+					logger.logError("Flutter web project references sdk:flutter and may fail to launch");
 					window.showWarningMessage("Flutter web projects may fail to launch if they reference the Flutter SDK in pubspec.yaml");
 				}
 			} else if (isFlutterProjectFolder(debugConfig.cwd as string))
 				debugType = DebuggerType.Flutter;
 			else
-				log(`Non-Dart Project (${debugConfig.program}) not recognised as Flutter or FlutterWeb, will use Dart debugger`);
+				logger.logInfo(`Non-Dart Project (${debugConfig.program}) not recognised as Flutter or FlutterWeb, will use Dart debugger`);
 		}
-		log(`Detected launch project as ${DebuggerType[debugType]}`);
+		logger.logInfo(`Detected launch project as ${DebuggerType[debugType]}`);
 
 		// Some helpers for conditions below.
 		const isAnyFlutter = debugType === DebuggerType.Flutter || debugType === DebuggerType.FlutterWeb;
@@ -185,10 +185,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		const isTest = debugConfig.program && isTestFileOrFolder(debugConfig.program as string);
 		if (isTest)
-			log(`Detected launch project as a Test project`);
+			logger.logInfo(`Detected launch project as a Test project`);
 		const canPubRunTest = isTest && debugConfig.cwd && checkProjectSupportsPubRunTest(debugConfig.cwd as string);
 		if (isTest && !canPubRunTest)
-			log(`Project does not appear to support 'pub run test', will use VM directly`);
+			logger.logInfo(`Project does not appear to support 'pub run test', will use VM directly`);
 		if (isTest) {
 			switch (debugType) {
 				case DebuggerType.Dart:
@@ -202,15 +202,15 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					debugType = DebuggerType.FlutterWebTest;
 					break;
 				default:
-					log("Unknown debugType, unable to switch to test debugger");
+					logger.logInfo("Unknown debugType, unable to switch to test debugger");
 			}
 		}
-		log(`Using ${DebuggerType[debugType]} debug adapter for this session`);
+		logger.logInfo(`Using ${DebuggerType[debugType]} debug adapter for this session`);
 
 		if (debugType === DebuggerType.FlutterWebTest) {
 			// TODO: IMPORTANT! When removing this if statement, add FlutterWebTest to
 			// the call to TestResultsProvider.flagSuiteStart below!
-			logError("Tests in Flutter web projects are not currently supported");
+			logger.logError("Tests in Flutter web projects are not currently supported");
 			window.showErrorMessage("Tests in Flutter web projects are not currently supported");
 			return undefined; // undefined means silent (don't open launch.json).
 		}
@@ -223,7 +223,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 
 			if (!debugConfig.observatoryUri && !isStandardFlutter) {
-				logWarn("No Observatory URI/port was provided");
+				logger.logWarn("No Observatory URI/port was provided");
 				window.showInformationMessage("You must provide an Observatory URI/port to attach a debugger");
 				return undefined; // undefined means silent (don't open launch.json).
 			}
@@ -237,7 +237,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (isStandardFlutter && !isTest && !currentDevice && this.deviceManager && debugConfig.deviceId !== "flutter-tester") {
 			// Fetch a list of emulators.
 			if (!await this.deviceManager.promptForAndLaunchEmulator(true)) {
-				logWarn("Unable to launch due to no active device");
+				logger.logWarn("Unable to launch due to no active device");
 				window.showInformationMessage("Cannot launch without an active device");
 				return undefined; // undefined means silent (don't open launch.json).
 			}
@@ -265,7 +265,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// If we're launching (not attaching) then check there are no errors before we launch.
 		if (!isAttachRequest && debugConfig.cwd && config.promptToRunIfErrors) {
-			log("Checking for errors before launching");
+			logger.logInfo("Checking for errors before launching");
 			const isDartError = (d: vs.Diagnostic) => d.source === "dart" && d.severity === vs.DiagnosticSeverity.Error;
 			const dartErrors = vs.languages
 				.getDiagnostics()
@@ -278,9 +278,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					&& (!isTestFile(file) || file === debugConfig.program);
 			});
 			if (firstRelevantError) {
-				logWarn("Project has errors, prompting user");
-				logWarn(`    ${fsPath(firstRelevantError[0])}`);
-				logWarn(`    ${firstRelevantError[1][0].range}: ${firstRelevantError[1][0].message}`);
+				logger.logWarn("Project has errors, prompting user");
+				logger.logWarn(`    ${fsPath(firstRelevantError[0])}`);
+				logger.logWarn(`    ${firstRelevantError[1][0].range}: ${firstRelevantError[1][0].message}`);
 				const action = await window.showErrorMessage(
 					"Build errors exist in your project.",
 					{ modal: true },
@@ -288,10 +288,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					showErrorsAction,
 				);
 				if (action === debugAnywayAction) {
-					log("Debugging anyway!");
+					logger.logInfo("Debugging anyway!");
 					// Do nothing, we'll just carry on.
 				} else {
-					log("Aborting!");
+					logger.logInfo("Aborting!");
 					if (action === showErrorsAction)
 						vs.commands.executeCommand("workbench.action.showErrorsWarnings");
 					return undefined; // undefined means silent (don't open launch.json).
@@ -309,7 +309,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Updated node bindings say address can be a string (used for pipes) but
 		// this should never be the case here. This check is to keep the types happy.
 		if (typeof serverAddress === "string") {
-			log("Debug server does not have a valid address");
+			logger.logInfo("Debug server does not have a valid address");
 			window.showErrorMessage("Debug server does not have a valid address");
 			return undefined;
 		}
@@ -336,7 +336,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		debugConfig.debuggerType = debugType;
 
-		log(`Debug session starting...\n    ${JSON.stringify(debugConfig, undefined, 4).replace(/\n/g, "\n    ")}`);
+		logger.logInfo(`Debug session starting...\n    ${JSON.stringify(debugConfig, undefined, 4).replace(/\n/g, "\n    ")}`);
 
 		// Stash the config to support the "rerun last test(s)" command.
 		LastDebugSession.workspaceFolder = folder;
@@ -356,7 +356,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// For certain open files, assume the user wants to run them.
 		if (isDartFile(openFile) &&
 			(isTestFile(openFile) || (isInsideFolderNamed(openFile, "bin") || isInsideFolderNamed(openFile, "tool")))) {
-			log(`Using open file as entry point: ${openFile}`);
+			this.logger.logInfo(`Using open file as entry point: ${openFile}`);
 			return openFile;
 		}
 
@@ -371,7 +371,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		];
 		for (const launchPath of commonLaunchPaths) {
 			if (fs.existsSync(launchPath)) {
-				log(`Using found common entry point: ${launchPath}`);
+				this.logger.logInfo(`Using found common entry point: ${launchPath}`);
 				return launchPath;
 			}
 		}
@@ -411,7 +411,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	private spawnOrGetServer(type: string, port: number = 0, create: () => DebugSession): net.Server {
 		// Start port listener on launch of first debug session.
 		if (!this.debugServers[type]) {
-			log(`Spawning a new ${type} debugger`);
+			this.logger.logInfo(`Spawning a new ${type} debugger`);
 			// Start listening on a random port.
 			this.debugServers[type] = net.createServer((socket) => {
 				const session = create();

@@ -4,6 +4,7 @@ import * as path from "path";
 import { Context } from "vm";
 import * as vs from "vscode";
 import { doNotAskAgainAction, flutterSurvey2019Q2PromptWithAnalytics, flutterSurvey2019Q2PromptWithoutAnalytics, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
+import { Logger } from "../interfaces";
 import { openInBrowser } from "./utils";
 
 // Mon May 13 2019 20:00:00 GMT+0100 (BST) = noon PDT on 13th May
@@ -13,7 +14,7 @@ export const surveyEnd = Date.UTC(2019, 4 /* Month is 0-based!! */, 27, 7, 0);
 
 /// Shows Survey notification if appropriate. Returns whether a notification was shown
 /// (not whether it was clicked/opened).
-export function showFlutter2019Q2SurveyNotificationIfAppropriate(context: Context, now: number, logWarn: (warning: string) => void): boolean {
+export function showFlutter2019Q2SurveyNotificationIfAppropriate(context: Context, now: number, logger: Logger): boolean {
 	if (now <= surveyStart || now >= surveyEnd)
 		return false;
 
@@ -44,7 +45,7 @@ export function showFlutter2019Q2SurveyNotificationIfAppropriate(context: Contex
 			}
 		}
 	} catch {
-		logWarn("Unable to read Flutter settings for preparing survey link");
+		logger.logWarn("Unable to read Flutter settings for preparing survey link");
 	}
 
 	const prompt = clientID ? flutterSurvey2019Q2PromptWithAnalytics : flutterSurvey2019Q2PromptWithoutAnalytics;

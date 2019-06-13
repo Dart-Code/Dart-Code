@@ -3,7 +3,8 @@ import { ChildProcess } from "child_process";
 import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { isWin, observatoryListeningBannerPattern } from "../shared/constants";
-import { LogCategory, LogSeverity } from "../shared/enums";
+import { LogCategory } from "../shared/enums";
+import { logProcess } from "../shared/logging";
 import { DartDebugClient } from "./dart_debug_client";
 import { defer, extApi, getLaunchConfiguration } from "./helpers";
 
@@ -83,7 +84,7 @@ export function spawnDartProcessPaused(config: DebugConfiguration | undefined | 
 			config.program,
 		],
 	);
-	extApi.logProcess(LogCategory.CI, process);
+	logProcess(extApi.logger, LogCategory.CI, process);
 	const dartProcess = new DartProcess(process);
 	defer(() => {
 		if (!dartProcess.hasExited)
@@ -105,9 +106,10 @@ export async function spawnFlutterProcess(script: string | Uri): Promise<DartPro
 			config.deviceId,
 		],
 	);
-	process.stdout.on("data", (data) => extApi.log(`SPROC: ${data}`, LogSeverity.Info, LogCategory.CI));
-	process.stderr.on("data", (data) => extApi.log(`SPROC: ${data}`, LogSeverity.Info, LogCategory.CI));
-	process.on("exit", (code) => extApi.log(`SPROC: Exited (${code})`, LogSeverity.Info, LogCategory.CI));
+	// TODO: Use logProcess?
+	process.stdout.on("data", (data) => extApi.logger.logInfo(`SPROC: ${data}`, LogCategory.CI));
+	process.stderr.on("data", (data) => extApi.logger.logInfo(`SPROC: ${data}`, LogCategory.CI));
+	process.on("exit", (code) => extApi.logger.logInfo(`SPROC: Exited (${code})`, LogCategory.CI));
 	const flutterProcess = new DartProcess(process);
 	defer(() => {
 		if (!flutterProcess.hasExited)
@@ -143,8 +145,8 @@ export function killFlutterTester(): Promise<void> {
 			: extApi.safeSpawn(undefined, "pkill", ["flutter_tester"]);
 		proc.on("exit", (code: number) => {
 			if (!isWin ? code !== 128 : code === 0) {
-				extApi.log("flutter_tester process(s) remained after test. These have been terminated to avoid affecting future tests, " +
-					"but may indicate something is not cleaning up correctly", LogSeverity.Warn, LogCategory.CI);
+				extApi.logger.logWarn("flutter_tester process(s) remained after test. These have been terminated to avoid affecting future tests, " +
+					"but may indicate something is not cleaning up correctly", LogCategory.CI);
 			}
 			resolve();
 		});

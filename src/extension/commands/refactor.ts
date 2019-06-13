@@ -1,10 +1,10 @@
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../shared/constants";
+import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
 import { unique } from "../utils";
-import { logError, logInfo } from "../utils/log";
 
 const refactorOptions: { [key: string]: (feedback?: as.RefactoringFeedback) => as.RefactoringOptions } = {
 	EXTRACT_LOCAL_VARIABLE: getExtractLocalVariableArgs,
@@ -15,7 +15,7 @@ const refactorOptions: { [key: string]: (feedback?: as.RefactoringFeedback) => a
 export class RefactorCommands implements vs.Disposable {
 	private commands: vs.Disposable[] = [];
 
-	constructor(private readonly context: vs.ExtensionContext, private readonly analyzer: Analyzer) {
+	constructor(private readonly logger: Logger, private readonly context: vs.ExtensionContext, private readonly analyzer: Analyzer) {
 		this.commands.push(
 			vs.commands.registerCommand("_dart.performRefactor", this.performRefactor, this),
 		);
@@ -71,11 +71,11 @@ export class RefactorCommands implements vs.Disposable {
 					validateOnly,
 				});
 			} catch (e) {
-				logError(e);
+				this.logger.logError(e);
 				if (remainingTries <= 0 || e.code !== "REFACTORING_REQUEST_CANCELLED")
 					throw e;
 				else
-					logInfo(`getRefactor failed, will try ${remainingTries} more times...`);
+					this.logger.logInfo(`getRefactor failed, will try ${remainingTries} more times...`);
 			}
 		}
 	}

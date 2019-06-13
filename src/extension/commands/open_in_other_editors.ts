@@ -2,15 +2,14 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { androidStudioPath, flutterPath, isMac } from "../../shared/constants";
-import { Sdks } from "../../shared/interfaces";
+import { Logger, Sdks } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
-import { logError } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 
 export class OpenInOtherEditorCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor(private readonly sdks: Sdks) {
+	constructor(private readonly logger: Logger, private readonly sdks: Sdks) {
 
 		this.disposables.push(
 			vs.commands.registerCommand("flutter.openInAndroidStudio", this.openInAndroidStudio, this),
@@ -73,7 +72,7 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 						return;
 					}
 				} catch (e) {
-					logError(e);
+					this.logger.logError(e);
 				}
 				reject();
 			});

@@ -2,18 +2,18 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT } from "../../shared/constants";
+import { Logger } from "../../shared/interfaces";
 import { sortBy } from "../../shared/utils/array";
 import { fsPath } from "../../shared/vscode/utils";
 import { PackageMap } from "../debug/package_map";
 import { getWorkspaceProjectFolders } from "../project";
-import { logWarn } from "../utils/log";
 
 export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<PackageDep> {
 	private readonly watcher: vs.FileSystemWatcher;
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this.onDidChangeTreeDataEmitter.event;
 
-	constructor() {
+	constructor(private readonly logger: Logger) {
 		this.watcher = vs.workspace.createFileSystemWatcher("**/.packages");
 		this.watcher.onDidChange(this.refresh, this);
 		this.watcher.onDidCreate(this.refresh, this);
@@ -47,7 +47,7 @@ export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<
 		} else if (element instanceof PackageDepFile) {
 			return [];
 		} else {
-			logWarn(`Don't know how to show children of ${element.label}/${element.resourceUri}`);
+			this.logger.logWarn(`Don't know how to show children of ${element.label}/${element.resourceUri}`);
 			return [];
 		}
 	}

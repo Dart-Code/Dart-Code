@@ -2,12 +2,13 @@ import * as vs from "vscode";
 import { ProgressLocation } from "vscode";
 import { isChromeOS } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
+import { Logger } from "../../shared/interfaces";
+import { CategoryLogger, logProcess } from "../../shared/logging";
 import { PromiseCompleter, versionIsAtLeast } from "../../shared/utils";
 import { config } from "../config";
 import { FLUTTER_SUPPORTS_ATTACH } from "../extension";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
 import { reloadExtension } from "../utils";
-import { log, logProcess } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 import { FlutterDeviceManager } from "./device_manager";
 import * as f from "./flutter_types";
@@ -32,8 +33,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	private daemonStartedCompleter = new PromiseCompleter();
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
-	constructor(flutterBinPath: string, projectFolder: string) {
-		super(() => config.flutterDaemonLogFile, (message, severity) => log(message, severity, LogCategory.FlutterDaemon), config.maxLogLineLength, true);
+	constructor(logger: Logger, flutterBinPath: string, projectFolder: string) {
+		super(() => config.flutterDaemonLogFile, new CategoryLogger(logger, LogCategory.FlutterDaemon), config.maxLogLineLength, true);
 
 		this.registerForDaemonConnected((e) => {
 			this.additionalPidsToTerminate.push(e.pid);
@@ -46,12 +47,12 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 
 		this.createProcess(projectFolder, flutterBinPath, ["daemon"]);
 
-		this.deviceManager = new FlutterDeviceManager(this);
+		this.deviceManager = new FlutterDeviceManager(logger, this);
 
 		if (isChromeOS && config.flutterAdbConnectOnChromeOs) {
-			log("Running ADB Connect on Chrome OS");
+			logger.logInfo("Running ADB Connect on Chrome OS");
 			const adbConnectProc = safeSpawn(undefined, "adb", ["connect", "100.115.92.2:5555"]);
-			logProcess(LogCategory.General, adbConnectProc);
+			logProcess(logger, LogCategory.General, adbConnectProc);
 
 		}
 	}

@@ -1,7 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { FlutterServiceExtension } from "../../shared/enums";
+import { FlutterServiceExtension, LogSeverity } from "../../shared/enums";
+import { Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { fsPath, openInBrowser } from "../../shared/vscode/utils";
@@ -14,7 +15,6 @@ import { DebuggerType } from "../providers/debug_config_provider";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools";
 import { getDartWorkspaceFolders } from "../utils";
-import { handleDebugLogEvent, logInfo, logWarn } from "../utils/log";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
@@ -45,9 +45,9 @@ export class DebugCommands {
 	public readonly flutterExtensions: FlutterVmServiceExtensions;
 	private readonly devTools: DevToolsManager;
 
-	constructor(private readonly context: Context, workspaceContext: WorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
+	constructor(private readonly logger: Logger, private readonly context: Context, workspaceContext: WorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
 		this.flutterExtensions = new FlutterVmServiceExtensions(this.sendServiceSetting);
-		this.devTools = new DevToolsManager(workspaceContext.sdks, this, analytics, pubGlobal);
+		this.devTools = new DevToolsManager(logger, workspaceContext.sdks, this, analytics, pubGlobal);
 		context.subscriptions.push(this.devTools);
 		context.subscriptions.push(this.debugMetrics);
 
@@ -76,7 +76,7 @@ export class DebugCommands {
 				openInBrowser(session.observatoryUri);
 				analytics.logDebuggerOpenObservatory();
 			} else if (session) {
-				logWarn("Cannot start Observatory for session without debug/observatoryUri");
+				logger.logWarn("Cannot start Observatory for session without debug/observatoryUri");
 			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.openTimeline", async () => {
@@ -89,7 +89,7 @@ export class DebugCommands {
 				openInBrowser(session.observatoryUri + "/#/timeline-dashboard");
 				analytics.logDebuggerOpenTimeline();
 			} else if (session) {
-				logWarn("Cannot start Observatory for session without debug/observatoryUri");
+				logger.logWarn("Cannot start Observatory for session without debug/observatoryUri");
 			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", (args: any) => vs.commands.executeCommand("dart.openDevTools", args)));
@@ -245,7 +245,7 @@ export class DebugCommands {
 			pendingCustomEvents = pendingCustomEvents.filter((e) => e.session.id !== s.id);
 
 			eventsToProcess.forEach((e) => {
-				logInfo(`Processing delayed event ${e.event} for session ${e.session.id}`);
+				this.logger.logInfo(`Processing delayed event ${e.event} for session ${e.session.id}`);
 				this.handleCustomEventWithSession(session, e);
 			});
 		}
@@ -257,8 +257,8 @@ export class DebugCommands {
 			return;
 		const session = debugSessions.find((ds) => ds.session.id === e.session.id);
 		if (!session) {
-			logWarn(`Did not find session ${e.session.id} to handle ${e.event}. There were ${debugSessions.length} sessions:\n${debugSessions.map((ds) => `  ${ds.session.id}`).join("\n")}`);
-			logWarn(`Event will be queued and processed when the session start event fires`);
+			this.logger.logWarn(`Did not find session ${e.session.id} to handle ${e.event}. There were ${debugSessions.length} sessions:\n${debugSessions.map((ds) => `  ${ds.session.id}`).join("\n")}`);
+			this.logger.logWarn(`Event will be queued and processed when the session start event fires`);
 			pendingCustomEvents.push(e);
 			return;
 		}
@@ -287,7 +287,21 @@ export class DebugCommands {
 
 	private handleCustomEvent(e: vs.DebugSessionCustomEvent): boolean {
 		if (e.event === "dart.log") {
-			handleDebugLogEvent(e.event, e.body);
+			const message: LogMessage = e.body;
+			// TODO: Can we get rid of this switch?
+			switch (message.severity) {
+				case LogSeverity.Info:
+					this.logger.logInfo(message.message, message.category);
+					break;
+				case LogSeverity.Warn:
+					this.logger.logWarn(message.message, message.category);
+					break;
+				case LogSeverity.Error:
+					this.logger.logError(message.message, message.category);
+					break;
+				default:
+					this.logger.logWarn(`Failed to handle log event ${JSON.stringify(message)}`);
+			}
 		} else if (e.event === "dart.hotRestartRequest") {
 			// This event comes back when the user restarts with the Restart button
 			// (eg. it wasn't intiated from our extension, so we don't get to log it

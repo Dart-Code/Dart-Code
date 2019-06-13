@@ -2,17 +2,19 @@ import * as path from "path";
 import * as vs from "vscode";
 import { stopLoggingAction } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
+import { captureLogs, EmittingLogger } from "../../shared/logging";
 import { forceWindowsDriveLetterToUppercase } from "../../shared/utils";
 import { fsPath } from "../../shared/vscode/utils";
+import { config } from "../config";
 import { createFolderForFile } from "../utils";
-import { logTo, userSelectableLogCategories } from "../utils/log";
+import { getLogHeader, userSelectableLogCategories } from "../utils/log";
 
 export let isLogging = false;
 
 export class LoggingCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor(private extensionLogPath: string) {
+	constructor(private readonly logger: EmittingLogger, private extensionLogPath: string) {
 		this.disposables.push(
 			vs.commands.registerCommand("dart.startLogging", this.startLogging, this),
 		);
@@ -39,7 +41,7 @@ export class LoggingCommands implements vs.Disposable {
 
 		const allLoggedCategories = [LogCategory.General].concat(selectedLogCategories.map((s) => s.logCategory));
 
-		const logger = logTo(fsPath(logUri), allLoggedCategories);
+		const logger = captureLogs(this.logger, fsPath(logUri), getLogHeader(), config.maxLogLineLength, allLoggedCategories);
 		isLogging = true;
 		this.disposables.push(logger);
 

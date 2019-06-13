@@ -4,18 +4,18 @@ import * as os from "os";
 import * as path from "path";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { flutterPath } from "../../shared/constants";
-import { Sdks } from "../../shared/interfaces";
+import { Logger, Sdks } from "../../shared/interfaces";
 import { getRandomInt, tryDeleteFile } from "../../shared/utils/fs";
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
 import { runProcess } from "../utils/processes";
 
-export function getFlutterSnippets(sdks: Sdks, capabilities: FlutterCapabilities): Promise<FlutterSampleSnippet[]> {
+export function getFlutterSnippets(logger: Logger, sdks: Sdks, capabilities: FlutterCapabilities): Promise<FlutterSampleSnippet[]> {
 	if (capabilities.supportsFlutterCreateListSamples)
-		return getFlutterSnippetsFromSdk(sdks);
+		return getFlutterSnippetsFromSdk(logger, sdks);
 	return getFlutterSnippetsFromWeb();
 }
 
-async function getFlutterSnippetsFromSdk(sdks: Sdks): Promise<FlutterSampleSnippet[]> {
+async function getFlutterSnippetsFromSdk(logger: Logger, sdks: Sdks): Promise<FlutterSampleSnippet[]> {
 	if (!sdks.flutter)
 		throw new Error("Flutter SDK not available");
 
@@ -25,7 +25,7 @@ async function getFlutterSnippetsFromSdk(sdks: Sdks): Promise<FlutterSampleSnipp
 	const tempPath = path.join(os.tmpdir(), fileName);
 
 	try {
-		const res = await runProcess(undefined, binPath, ["create", "--list-samples", tempPath]);
+		const res = await runProcess(logger, undefined, binPath, ["create", "--list-samples", tempPath]);
 		if (res.exitCode !== 0)
 			throw new Error(`Failed to get Flutter samples from SDK (${res.exitCode})\n\n${res.stderr}\n\n${res.stdout}`);
 

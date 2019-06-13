@@ -4,13 +4,13 @@ import * as path from "path";
 import { env, ProgressLocation, version as codeVersion, window, workspace } from "vscode";
 import { RequestError, ServerErrorNotification, ServerStatusNotification } from "../../shared/analysis_server_types";
 import { LogCategory } from "../../shared/enums";
+import { Logger } from "../../shared/interfaces";
 import { isStableSdk, PromiseCompleter } from "../../shared/utils";
 import { getRandomInt } from "../../shared/utils/fs";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { extensionVersion, getSdkVersion } from "../utils";
-import { logError } from "../utils/log";
 import { Analyzer } from "./analyzer";
 
 const maxErrorReportCount = 3;
@@ -22,7 +22,7 @@ export class AnalyzerStatusReporter {
 	private analysisInProgress = false;
 	private analyzingPromise?: PromiseCompleter<void>;
 
-	constructor(private readonly analyzer: Analyzer, private readonly workspaceContext: WorkspaceContext, private readonly analytics: Analytics) {
+	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer, private readonly workspaceContext: WorkspaceContext, private readonly analytics: Analytics) {
 		// TODO: Should these go in disposables?
 		// If so, do we need to worry about server cleaning them up if it disposes first?
 		analyzer.registerForServerStatus((n) => this.handleServerStatus(n));
@@ -84,9 +84,9 @@ export class AnalyzerStatusReporter {
 
 	private handleServerError(error: ServerErrorNotification, method?: string) {
 		// Always log to the console.
-		logError(error.message, LogCategory.Analyzer);
+		this.logger.logError(error.message, LogCategory.Analyzer);
 		if (error.stackTrace)
-			logError(error.stackTrace, LogCategory.Analyzer);
+			this.logger.logError(error.stackTrace, LogCategory.Analyzer);
 
 		this.analytics.logAnalyzerError((method ? `(${method}) ` : "") + error.message, error.isFatal);
 
@@ -105,15 +105,15 @@ export class AnalyzerStatusReporter {
 	private shouldReportErrors(): boolean {
 		const sdks = this.workspaceContext.sdks;
 		if (this.workspaceContext.hasAnyFlutterProjects && sdks.flutter)
-			return !isStableSdk(getSdkVersion(sdks.flutter));
+			return !isStableSdk(getSdkVersion(this.logger, sdks.flutter));
 		else
-			return !isStableSdk(getSdkVersion(sdks.dart));
+			return !isStableSdk(getSdkVersion(this.logger, sdks.dart));
 	}
 
 	private reportError(error: ServerErrorNotification, method?: string) {
-		const sdkVersion = getSdkVersion(this.workspaceContext.sdks.dart);
+		const sdkVersion = getSdkVersion(this.logger, this.workspaceContext.sdks.dart);
 		const flutterSdkVersion = this.workspaceContext.sdks.dartSdkIsFromFlutter
-			? getSdkVersion(this.workspaceContext.sdks.flutter)
+			? getSdkVersion(this.logger, this.workspaceContext.sdks.flutter)
 			: undefined;
 
 		// Attempt to get the last diagnostics

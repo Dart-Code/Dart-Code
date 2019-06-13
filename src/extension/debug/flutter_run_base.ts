@@ -1,13 +1,12 @@
-import { LogSeverity } from "../../shared/enums";
+import { IAmDisposable, Logger } from "../../shared/interfaces";
 import * as f from "../flutter/flutter_types";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
-import { IAmDisposable } from "./utils";
 
 export abstract class FlutterRunBase extends StdIOService<UnknownNotification> {
 	constructor(
 		public readonly mode: RunMode,
 		getLogFile: () => string,
-		logger: (message: string, severity: LogSeverity) => void,
+		logger: Logger,
 		maxLogLineLength: number,
 		messagesWrappedInBrackets: boolean = false,
 		treatHandlingErrorsAsUnhandledMessages: boolean = false) {

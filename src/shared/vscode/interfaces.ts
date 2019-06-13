@@ -1,8 +1,9 @@
 import * as child_process from "child_process";
 import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, DefinitionProvider, MarkdownString, ReferenceProvider, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
 import { AvailableSuggestion, Outline } from "../analysis_server_types";
-import { LogCategory, LogSeverity, TestStatus, VersionStatus } from "../enums";
+import { TestStatus, VersionStatus } from "../enums";
 import { DebugCommandHandler } from "../interfaces";
+import { EmittingLogger } from "../logging";
 import { WorkspaceContext } from "../workspace";
 import { Context } from "./workspace";
 
@@ -42,13 +43,9 @@ export interface InternalExtensionApi {
 		hasEvictBug: boolean;
 		webSupportsDebugging: boolean;
 	};
+	getLogHeader: () => string;
 	initialAnalysis: Promise<void>;
-	log: (message: string, severity?: LogSeverity, category?: LogCategory) => void;
-	logError: (error: any, category?: LogCategory) => void;
-	logWarn: (warning: string, category?: LogCategory) => void;
-	logInfo: (info: string, category?: LogCategory) => void;
-	logProcess: (category: LogCategory, process: child_process.ChildProcess) => void;
-	logTo: (file: string, logCategories?: LogCategory[]) => ({ dispose: () => Promise<void> | void });
+	logger: EmittingLogger;
 	nextAnalysis: () => Promise<void>;
 	packagesTreeProvider: TreeDataProvider<TreeItem>;
 	pubGlobal: {

@@ -2,18 +2,14 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { dartVMPath, flutterPath } from "../../shared/constants";
-import { Sdks } from "../../shared/interfaces";
+import { Logger, Sdks } from "../../shared/interfaces";
 import { versionIsAtLeast } from "../../shared/utils";
 import { getChildFolders } from "../../shared/utils/fs";
 import { config } from "../config";
 import { getSdkVersion } from "../utils";
 
 abstract class SdkManager {
-	protected sdks: Sdks;
-
-	constructor(sdks: Sdks) {
-		this.sdks = sdks;
-	}
+	constructor(private readonly logger: Logger, protected readonly sdks: Sdks) { }
 
 	protected abstract get sdkPaths(): string[];
 	protected abstract get currentSdk(): string | undefined;
@@ -52,7 +48,7 @@ abstract class SdkManager {
 			// Then we need to take the executable name and /bin back off
 			const actualFolder = path.dirname(path.dirname(actualBinary));
 
-			const version = getSdkVersion(actualFolder);
+			const version = getSdkVersion(this.logger, actualFolder);
 			return {
 				description: f === this.currentSdk && this.configuredSdk ? "Current setting" : "",
 				detail: f,

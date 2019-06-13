@@ -1,12 +1,13 @@
 import * as path from "path";
 import { CancellationToken, Location, SymbolInformation, Uri, workspace, WorkspaceSymbolProvider } from "vscode";
 import * as as from "../../shared/analysis_server_types";
+import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { isWithinWorkspace, toRangeOnLine } from "../utils";
 
 export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
-	constructor(private readonly analyzer: Analyzer) { }
+	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer) { }
 
 	public async provideWorkspaceSymbols(query: string, token: CancellationToken): Promise<SymbolInformation[] | undefined> {
 		if (query.length === 0)
@@ -92,7 +93,7 @@ export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvide
 
 		return new SymbolInformation(
 			elementPathDescription + parameters,
-			getSymbolKindForElementKind(result.path[0].kind),
+			getSymbolKindForElementKind(this.logger, result.path[0].kind),
 			containerName,
 			new Location(
 				Uri.file(result.location.file),

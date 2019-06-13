@@ -1,13 +1,13 @@
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, DocumentSelector, Range, TextDocument } from "vscode";
 import * as as from "../../shared/analysis_server_types";
+import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
 import { isAnalyzableAndInWorkspace } from "../utils";
-import { logError } from "../utils/log";
 import { RankedCodeActionProvider } from "./ranking_code_action_provider";
 
 export class AssistCodeActionProvider implements RankedCodeActionProvider {
-	constructor(public readonly selector: DocumentSelector, private readonly analyzer: Analyzer) { }
+	constructor(private readonly logger: Logger, public readonly selector: DocumentSelector, private readonly analyzer: Analyzer) { }
 
 	public readonly rank = 10;
 
@@ -31,7 +31,7 @@ export class AssistCodeActionProvider implements RankedCodeActionProvider {
 			});
 			return assists.assists.map((assist) => this.convertResult(document, assist));
 		} catch (e) {
-			logError(e);
+			this.logger.logError(e);
 		}
 	}
 

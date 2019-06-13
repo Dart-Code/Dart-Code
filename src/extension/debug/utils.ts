@@ -1,26 +1,7 @@
-import { EventEmitter } from "events";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { LogCategory, LogSeverity } from "../../shared/enums";
 import { forceWindowsDriveLetterToUppercase } from "../../shared/utils";
 
-export class LogMessage {
-	constructor(public readonly message: string, public readonly severity: LogSeverity, public readonly category: LogCategory) { }
-}
-export class LogEmitter extends EventEmitter {
-	public fire(msg: LogMessage): void {
-		this.emit("log", msg);
-	}
-	public onLog(listener: (message: LogMessage) => void): IAmDisposable {
-		this.on("log", listener);
-		return {
-			dispose: () => { this.removeListener("log", listener); },
-		};
-	}
-}
 
-export interface IAmDisposable {
-	dispose(): void | Promise<void>;
-}
 
 export function formatPathForVm(file: string): string {
 	// Handle drive letter inconsistencies.

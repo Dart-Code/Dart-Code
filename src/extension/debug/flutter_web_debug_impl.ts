@@ -1,4 +1,5 @@
-import { LogCategory, LogSeverity } from "../../shared/enums";
+import { LogCategory } from "../../shared/enums";
+import { Logger } from "../../shared/interfaces";
 import { FlutterDebugSession } from "./flutter_debug_impl";
 import { FlutterRunBase, RunMode } from "./flutter_run_base";
 import { FlutterWebRun } from "./flutter_web_run";
@@ -14,7 +15,7 @@ export class FlutterWebDebugSession extends FlutterDebugSession {
 		this.logCategory = LogCategory.WebDaemon;
 	}
 
-	protected spawnRunDaemon(isAttach: boolean, args: FlutterLaunchRequestArguments, logger: (message: string, severity: LogSeverity) => void): FlutterRunBase {
+	protected spawnRunDaemon(isAttach: boolean, args: FlutterLaunchRequestArguments, logger: Logger): FlutterRunBase {
 		let appArgs: string[] = [];
 
 		// TODO: Is any of this relevant?
