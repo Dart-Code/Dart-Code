@@ -5,15 +5,17 @@ import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, Stac
 import { DebugProtocol } from "vscode-debugprotocol";
 import { observatoryListeningBannerPattern, pleaseReportBug } from "../../shared/constants";
 import { LogCategory, LogSeverity } from "../../shared/enums";
+import { LogMessage } from "../../shared/interfaces";
 import { flatMap, throttle, uniq, uriToFilePath } from "../../shared/utils";
 import { white } from "../../shared/utils/colors";
 import { config } from "../config";
-import { getLogHeader, logError, logWarn } from "../utils/log";
+import { getLogHeader } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
+import { DebugAdapterLogger } from "./logging";
 import { PackageMap } from "./package_map";
 import { ThreadInfo, ThreadManager } from "./threads";
-import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm, LogMessage } from "./utils";
+import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm } from "./utils";
 
 const maxValuesToCallToString = 15;
 // Prefix that appears at the start of stack frame names that are unoptimized
@@ -64,6 +66,7 @@ export class DartDebugSession extends DebugSession {
 	protected shouldKillProcessOnTerminate = true;
 	protected logCategory = LogCategory.General; // This isn't used as General, since both Flutter and FlutterWeb override it.
 	// protected observatoryUriIsProbablyReconnectable = false;
+	private readonly logger = new DebugAdapterLogger(this, LogCategory.Observatory);
 
 	protected get shouldConnectDebugger() {
 		return !this.noDebug || this.connectVmEvenForNoDebug;
@@ -72,7 +75,7 @@ export class DartDebugSession extends DebugSession {
 	public constructor() {
 		super();
 
-		this.threadManager = new ThreadManager(this);
+		this.threadManager = new ThreadManager(this.logger, this);
 	}
 
 	protected initializeRequest(
@@ -249,7 +252,7 @@ export class DartDebugSession extends DebugSession {
 				this.logStream.write(message.trim() + "\r\n");
 		}
 
-		this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.Observatory)));
+		this.sendEvent(new Event("dart.log", { message, severity, category: LogCategory.Observatory } as LogMessage));
 	}
 
 	protected initDebugger(uri: string): Promise<void> {
@@ -908,7 +911,7 @@ export class DartDebugSession extends DebugSession {
 				return this.valueAsString(evalResult, undefined, true);
 			}
 		} catch (e) {
-			logError(e, LogCategory.Observatory);
+			this.logger.logError(e, LogCategory.Observatory);
 			return undefined;
 		}
 	}
@@ -1120,7 +1123,7 @@ export class DartDebugSession extends DebugSession {
 				await this.handleInspectEvent(event);
 			}
 		} catch (e) {
-			logError(e, LogCategory.Observatory);
+			this.logger.logError(e, LogCategory.Observatory);
 		}
 	}
 
@@ -1129,12 +1132,12 @@ export class DartDebugSession extends DebugSession {
 		const thread = event.isolate ? this.threadManager.getThreadInfoFromRef(event.isolate) : undefined;
 
 		if (!event.isolate || !thread) {
-			logWarn("No thread for pause event");
+			this.logger.logWarn("No thread for pause event");
 			return;
 		}
 
 		if (!this.observatory) {
-			logWarn("No observatory connection");
+			this.logger.logWarn("No observatory connection");
 			return;
 		}
 
@@ -1143,7 +1146,7 @@ export class DartDebugSession extends DebugSession {
 			try {
 				await this.threadManager.resetBreakpoints();
 			} catch (e) {
-				logError(e, LogCategory.Observatory);
+				this.logger.logError(e, LogCategory.Observatory);
 			}
 			try {
 				await this.observatory.resume(event.isolate.id);
@@ -1362,7 +1365,7 @@ export class DartDebugSession extends DebugSession {
 						});
 					}
 				} catch (e) {
-					logError(e, LogCategory.Observatory);
+					this.logger.logError(e, LogCategory.Observatory);
 				}
 			}
 		}

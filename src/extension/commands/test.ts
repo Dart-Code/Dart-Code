@@ -1,7 +1,7 @@
 import * as vs from "vscode";
+import { Logger } from "../../shared/interfaces";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
 import { openFileTracker } from "../analysis/open_file_tracker";
-import { logError } from "../utils/log";
 
 export const CURSOR_IS_IN_TEST = "dart-code:cursorIsInTest";
 export let cursorIsInTest = false; // HACK: Used for testing since we can't read contexts?
@@ -9,7 +9,7 @@ export let cursorIsInTest = false; // HACK: Used for testing since we can't read
 export class TestCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor() {
+	constructor(private readonly logger: Logger) {
 		this.disposables.push(
 			vs.commands.registerCommand("dart.runTestAtCursor", () => this.runTestAtCursor(false), this),
 			vs.commands.registerCommand("dart.debugTestAtCursor", () => this.runTestAtCursor(true), this),
@@ -48,7 +48,7 @@ export class TestCommands implements vs.Disposable {
 		if (!openFileTracker.supportsPubRunTest(document.uri))
 			return;
 
-		const visitor = new TestOutlineVisitor(logError);
+		const visitor = new TestOutlineVisitor(this.logger);
 		visitor.visit(outline);
 		return visitor.tests.reverse().find((t) => {
 			const start = document.positionAt(t.offset);

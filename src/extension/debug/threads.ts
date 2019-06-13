@@ -1,9 +1,9 @@
 import { Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { LogCategory } from "../../shared/enums";
+import { Logger } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
 import { isKnownInfrastructureThread } from "../../shared/utils/debugger";
-import { logError } from "../utils/log";
 import { DartDebugSession, InstanceWithEvaluateName, VmExceptionMode } from "./dart_debug_impl";
 import { DebuggerResult, VMBreakpoint, VMInstanceRef, VMIsolate, VMIsolateRef, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
 
@@ -15,7 +15,7 @@ export class ThreadManager {
 	private hasConfigurationDone = false;
 	private exceptionMode: VmExceptionMode = "Unhandled";
 
-	constructor(public readonly debugSession: DartDebugSession) { }
+	constructor(private readonly logger: Logger, public readonly debugSession: DartDebugSession) { }
 
 	public async registerThread(ref: VMIsolateRef, eventKind: string): Promise<void> {
 		let thread = this.getThreadInfoFromRef(ref);
@@ -135,7 +135,7 @@ export class ThreadManager {
 
 		for (const thread of this.threads) {
 			if (thread.runnable) {
-				const result = thread.setBreakpoints(uri, breakpoints);
+				const result = thread.setBreakpoints(this.logger, uri, breakpoints);
 				if (!promise)
 					promise = result;
 			}
@@ -240,7 +240,7 @@ export class ThreadInfo {
 		});
 	}
 
-	public async setBreakpoints(uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<VMBreakpoint[]> {
+	public async setBreakpoints(logger: Logger, uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<VMBreakpoint[]> {
 		// Remove all current bps.
 		await this.removeBreakpointsAtUri(uri);
 		this.vmBps[uri] = [];
@@ -254,7 +254,7 @@ export class ThreadInfo {
 					this.breakpoints[vmBp.id] = bp;
 					return vmBp;
 				} catch (e) {
-					logError(e, LogCategory.Observatory);
+					logger.logError(e, LogCategory.Observatory);
 					return undefined;
 				}
 			}),

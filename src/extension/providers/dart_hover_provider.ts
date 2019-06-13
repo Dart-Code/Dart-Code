@@ -1,13 +1,13 @@
 import { CancellationToken, Hover, HoverProvider, Position, Range, TextDocument, Uri } from "vscode";
 import * as as from "../../shared/analysis_server_types";
+import { Logger } from "../../shared/interfaces";
 import { cleanDartdoc } from "../../shared/utils/dartdocs";
 import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
 import { PackageMap } from "../debug/package_map";
-import { logError } from "../utils/log";
 
 export class DartHoverProvider implements HoverProvider {
-	constructor(private readonly analyzer: Analyzer) { }
+	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer) { }
 
 	public async provideHover(document: TextDocument, position: Position, token: CancellationToken): Promise<Hover | undefined> {
 		try {
@@ -34,7 +34,7 @@ export class DartHoverProvider implements HoverProvider {
 				range.isSingleLine ? range : undefined, // Workaround for https://github.com/dart-lang/sdk/issues/35386
 			);
 		} catch (e) {
-			logError(e);
+			this.logger.logError(e);
 		}
 	}
 

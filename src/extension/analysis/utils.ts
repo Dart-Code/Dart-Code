@@ -1,10 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
+import { Logger } from "../../shared/interfaces";
 import { getChildFolders, hasPubspec } from "../../shared/utils/fs";
-import { logInfo } from "../utils/log";
 import { Analyzer } from "./analyzer";
 
-export function findPackageRoots(analyzer: Analyzer, root: string): string[] {
+export function findPackageRoots(logger: Logger, analyzer: Analyzer, root: string): string[] {
 	// For repos with code inside a "packages" folder, the analyzer doesn't resolve package paths
 	// correctly. Until this is fixed in the analyzer, detect this and perform a workaround.
 	// This introduces other issues, so don't do it unless we know we need to (eg. flutter repo).
@@ -17,7 +17,7 @@ export function findPackageRoots(analyzer: Analyzer, root: string): string[] {
 	if (!analyzer.capabilities.mayRequiresPackageFolderWorkaround || !isPackageRootWorkaroundRequired(root))
 		return [root];
 
-	logInfo("Workspace root appears to need package root workaround...");
+	logger.logInfo("Workspace root appears to need package root workaround...");
 
 	const roots = getChildren(root, 3);
 

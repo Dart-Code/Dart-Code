@@ -1,12 +1,13 @@
 import { CancellationToken, DocumentSymbol, DocumentSymbolProvider, TextDocument } from "vscode";
 import { Outline } from "../../shared/analysis_server_types";
+import { Logger } from "../../shared/interfaces";
 import { waitFor } from "../../shared/utils/promises";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { openFileTracker } from "../analysis/open_file_tracker";
 import { toRange } from "../utils";
 
 export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
-	constructor(public readonly analyzer: Analyzer) { }
+	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer) { }
 
 	public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<DocumentSymbol[]> {
 		const outline = await waitFor(() => openFileTracker.getOutlineFor(document.uri), 500, 60000, token);
@@ -18,7 +19,7 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 	private convertResult(document: TextDocument, outline: Outline): DocumentSymbol {
 		const symbol = new DocumentSymbol(
 			outline.element.name || "<unnamed>", outline.element.parameters,
-			getSymbolKindForElementKind(outline.element.kind),
+			getSymbolKindForElementKind(this.logger, outline.element.kind),
 			this.getCodeOffset(document, outline),
 			toRange(document, outline.element.location.offset, outline.element.location.length),
 		);

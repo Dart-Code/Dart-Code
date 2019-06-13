@@ -1,19 +1,18 @@
 import { CancellationToken, CodeLens, CodeLensProvider, commands, debug, Event, EventEmitter, TextDocument, Uri, workspace } from "vscode";
+import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { flatMap } from "../../shared/utils";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
 import { getLaunchConfig } from "../../shared/utils/test";
 import { Analyzer } from "../analysis/analyzer";
 import { openFileTracker } from "../analysis/open_file_tracker";
-import { IAmDisposable } from "../debug/utils";
 import { toRange } from "../utils";
-import { logError } from "../utils/log";
 
 export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 	private onDidChangeCodeLensesEmitter: EventEmitter<void> = new EventEmitter<void>();
 	public readonly onDidChangeCodeLenses: Event<void> = this.onDidChangeCodeLensesEmitter.event;
 
-	constructor(public readonly analyzer: Analyzer) {
+	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer) {
 		this.disposables.push(this.analyzer.registerForAnalysisOutline((n) => {
 			this.onDidChangeCodeLensesEmitter.fire();
 		}));
@@ -45,7 +44,7 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		if (!openFileTracker.supportsPubRunTest(document.uri))
 			return;
 
-		const visitor = new TestOutlineVisitor(logError);
+		const visitor = new TestOutlineVisitor(this.logger);
 		visitor.visit(outline);
 		return flatMap(
 			visitor.tests

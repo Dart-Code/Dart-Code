@@ -1,16 +1,16 @@
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
+import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
 import * as editors from "../editors";
 import { toRangeOnLine } from "../utils";
-import { logWarn } from "../utils/log";
 import { showCode } from "../utils/vscode/editor";
 
 export class TypeHierarchyCommand implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor(private readonly analyzer: Analyzer) {
+	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer) {
 		this.disposables.push(
 			vs.commands.registerCommand("dart.showTypeHierarchy", this.showTypeHierarchy, this),
 		);
@@ -63,7 +63,7 @@ export class TypeHierarchyCommand implements vs.Disposable {
 
 	private async openLocation(result: vs.QuickPickItem & { location?: as.Location; }, asPreview = false) {
 		if (!result.location) {
-			logWarn(`Unable to open item with no location`);
+			this.logger.logWarn(`Unable to open item with no location`);
 			return;
 		}
 		const location: as.Location = result.location;

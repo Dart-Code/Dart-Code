@@ -1,9 +1,8 @@
-import { LogSeverity } from "../../shared/enums";
+import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { StdIOService } from "../services/stdio_service";
-import { IAmDisposable } from "./utils";
 
 export class TestRunner extends StdIOService<{ type: string }> {
-	constructor(executable: string, projectFolder: string | undefined, args: string[], envOverrides: any, logFile: string, logger: (message: string, severity: LogSeverity) => void, maxLogLineLength: number) {
+	constructor(executable: string, projectFolder: string | undefined, args: string[], envOverrides: any, logFile: string, logger: Logger, maxLogLineLength: number) {
 		super(() => logFile, logger, maxLogLineLength, true, true);
 
 		this.createProcess(projectFolder, executable, args, envOverrides);

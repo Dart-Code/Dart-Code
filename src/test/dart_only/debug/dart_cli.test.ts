@@ -71,7 +71,7 @@ describe("dart cli debugger", () => {
 			assert(showErrorMessage.calledOnce);
 		});
 		it("and launches if they click Debug Anyway", async () => {
-			extApi.log(`Creating!`);
+			extApi.logger.logInfo(`Creating!`);
 			await writeBrokenDartCodeIntoFileForTest(getTempProjectFile());
 
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");

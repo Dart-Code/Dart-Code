@@ -6,8 +6,9 @@ import * as vs from "vscode";
 import { ProgressLocation, Uri, window } from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, pubPath } from "../../shared/constants";
-import { LogCategory, LogSeverity } from "../../shared/enums";
-import { Sdks, StagehandTemplate } from "../../shared/interfaces";
+import { LogCategory } from "../../shared/enums";
+import { Logger, Sdks, StagehandTemplate } from "../../shared/interfaces";
+import { logProcess } from "../../shared/logging";
 import { flatMap, PromiseCompleter } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
@@ -25,9 +26,8 @@ import { Stagehand } from "../pub/stagehand";
 import { getFlutterSnippets } from "../sdk/flutter_docs_snippets";
 import { createFlutterSampleInTempFolder } from "../sdk/flutter_samples";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
-import { showDartActivationFailure, showFlutterActivationFailure } from "../sdk/utils";
+import { SdkUtils } from "../sdk/utils";
 import * as util from "../utils";
-import { log, logError, logProcess } from "../utils/log";
 import { globalFlutterArgs, safeSpawn } from "../utils/processes";
 import * as channels from "./channels";
 
@@ -42,12 +42,12 @@ export class SdkCommands {
 	// A map of any in-progress commands so we can terminate them if we want to run another.
 	private runningCommands: { [workspaceUriAndCommand: string]: ChainedProcess | undefined; } = {};
 
-	constructor(context: vs.ExtensionContext, private workspace: WorkspaceContext, private pubGlobal: PubGlobal, private flutterCapabilities: FlutterCapabilities, private deviceManager: FlutterDeviceManager) {
+	constructor(private readonly logger: Logger, readonly context: vs.ExtensionContext, private readonly workspace: WorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities, private readonly deviceManager: FlutterDeviceManager) {
 		this.sdks = workspace.sdks;
-		const dartSdkManager = new DartSdkManager(this.sdks);
+		const dartSdkManager = new DartSdkManager(this.logger, this.sdks);
 		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => dartSdkManager.changeSdk()));
 		if (workspace.hasAnyFlutterProjects) {
-			const flutterSdkManager = new FlutterSdkManager(workspace.sdks);
+			const flutterSdkManager = new FlutterSdkManager(this.logger, workspace.sdks);
 			context.subscriptions.push(vs.commands.registerCommand("dart.changeFlutterSdk", () => flutterSdkManager.changeSdk()));
 		}
 		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", async (uri: string | Uri | undefined) => {
@@ -163,7 +163,7 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", (selection) => {
 			if (!workspace.sdks.flutter) {
-				showFlutterActivationFailure("flutter.doctor");
+				this.sdkUtils.showFlutterActivationFailure("flutter.doctor");
 				return;
 			}
 			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
@@ -173,7 +173,7 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.upgrade", async (selection) => {
 			if (!workspace.sdks.flutter) {
-				showFlutterActivationFailure("flutter.upgrade");
+				this.sdkUtils.showFlutterActivationFailure("flutter.upgrade");
 				return;
 			}
 			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
@@ -249,7 +249,7 @@ export class SdkCommands {
 		// Don't do anything if we're in the middle of creating projects, as packages
 		// may  be fetched automatically.
 		if (numProjectCreationsInProgress > 0) {
-			log("Skipping package fetch because project creation is in progress");
+			this.logger.logInfo("Skipping package fetch because project creation is in progress");
 			return;
 		}
 
@@ -310,7 +310,8 @@ export class SdkCommands {
 			return;
 		const containingWorkspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(folderToRunCommandIn));
 		if (!containingWorkspace) {
-			throw new Error(logError(`Failed to get workspace folder for ${folderToRunCommandIn}`));
+			this.logger.logError(`Failed to get workspace folder for ${folderToRunCommandIn}`);
+			throw new Error(`Failed to get workspace folder for ${folderToRunCommandIn}`);
 		}
 		const containingWorkspacePath = fsPath(containingWorkspace.uri);
 
@@ -428,8 +429,8 @@ export class SdkCommands {
 				progress.report({ message: "running..." });
 				const proc = safeSpawn(folder, binPath, args);
 				channels.runProcessInChannel(proc, channel);
-				log(`(PROC ${proc.pid}) Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogSeverity.Info, LogCategory.CommandProcesses);
-				logProcess(LogCategory.CommandProcesses, proc);
+				this.logger.logInfo(`(PROC ${proc.pid}) Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogCategory.CommandProcesses);
+				logProcess(this.logger, LogCategory.CommandProcesses, proc);
 				return proc;
 			}, existingProcess);
 			this.runningCommands[commandId] = process;
@@ -456,13 +457,13 @@ export class SdkCommands {
 
 	private async createStagehandProject(command: string, triggerFilename: string, autoPickIfSingleItem: boolean, filter: (t: StagehandTemplate) => boolean): Promise<void> {
 		if (!this.sdks || !this.sdks.dart) {
-			showDartActivationFailure(command);
+			this.sdkUtils.showDartActivationFailure(command);
 			return;
 		}
 
 		// Get the JSON for the available templates by calling stagehand.
 
-		const stagehand = new Stagehand(this.sdks, this.pubGlobal);
+		const stagehand = new Stagehand(this.logger, this.sdks, this.pubGlobal);
 		const isAvailable = await stagehand.promptToInstallIfRequired();
 		if (!isAvailable) {
 			return;
@@ -528,7 +529,7 @@ export class SdkCommands {
 
 	private async createFlutterProject(): Promise<void> {
 		if (!this.sdks || !this.sdks.flutter) {
-			showFlutterActivationFailure("flutter.createProject");
+			this.sdkUtils.showFlutterActivationFailure("flutter.createProject");
 			return;
 		}
 
@@ -560,14 +561,14 @@ export class SdkCommands {
 
 	private async createFlutterSampleProject(): Promise<vs.Uri | undefined> {
 		if (!this.sdks || !this.sdks.flutter) {
-			showFlutterActivationFailure("_dart.flutter.createSampleProject");
+			this.sdkUtils.showFlutterActivationFailure("_dart.flutter.createSampleProject");
 			return;
 		}
 
 		// Fetch the JSON for the available samples.
 		let snippets: FlutterSampleSnippet[];
 		try {
-			snippets = await getFlutterSnippets(this.sdks, this.flutterCapabilities);
+			snippets = await getFlutterSnippets(this.logger, this.sdks, this.flutterCapabilities);
 		} catch {
 			vs.window.showErrorMessage("Unable to retrieve Flutter documentation snippets");
 			return;

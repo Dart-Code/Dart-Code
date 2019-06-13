@@ -6,12 +6,13 @@
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { LogCategory } from "../../shared/enums";
+import { Logger } from "../../shared/interfaces";
+import { CategoryLogger } from "../../shared/logging";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
-import { log } from "../utils/log";
 
 export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
-	constructor(getLogFile: () => string | undefined, maxLogLineLength: number | undefined) {
-		super(getLogFile, (message, severity) => log(message, severity, LogCategory.Analyzer), maxLogLineLength);
+	constructor(logger: Logger, getLogFile: () => string | undefined, maxLogLineLength: number | undefined) {
+		super(getLogFile, new CategoryLogger(logger, LogCategory.Analyzer), maxLogLineLength);
 	}
 
 	protected buildRequest<TReq>(id: number, method: string, params?: TReq): { id: string, method: string, params?: TReq } {

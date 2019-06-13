@@ -1,6 +1,6 @@
 import * as vs from "vscode";
+import { Logger } from "../../shared/interfaces";
 import { config } from "../config";
-import { logError } from "../utils/log";
 import { FlutterDaemon } from "./flutter_daemon";
 import * as f from "./flutter_types";
 
@@ -12,7 +12,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	private devices: f.Device[] = [];
 	public currentDevice?: f.Device;
 
-	constructor(private daemon: FlutterDaemon) {
+	constructor(private readonly logger: Logger, private daemon: FlutterDaemon) {
 		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
 		this.statusBarItem.tooltip = "Flutter";
 		this.statusBarItem.show();
@@ -102,7 +102,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				name: e.name || e.id,
 			}));
 		} catch (e) {
-			logError({ message: e });
+			this.logger.logError({ message: e });
 			return [];
 		}
 	}

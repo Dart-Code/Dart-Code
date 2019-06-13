@@ -1,11 +1,13 @@
 import * as path from "path";
 import { Event, OutputEvent } from "vscode-debugadapter";
 import { observatoryHttpLinkPattern } from "../../shared/constants";
-import { LogCategory, LogSeverity } from "../../shared/enums";
+import { LogCategory } from "../../shared/enums";
+import { Logger } from "../../shared/interfaces";
 import { ErrorNotification, GroupNotification, PrintNotification, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../../shared/test_protocol";
 import { DartDebugSession } from "./dart_debug_impl";
+import { DebugAdapterLogger } from "./logging";
 import { TestRunner } from "./test_runner";
-import { DartLaunchRequestArguments, LogMessage } from "./utils";
+import { DartLaunchRequestArguments } from "./utils";
 
 const tick = "✓";
 const cross = "✖";
@@ -51,11 +53,11 @@ export class DartTestDebugSession extends DartDebugSession {
 			appArgs = appArgs.concat(args.args);
 		}
 
-		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, LogCategory.PubTest)));
+		const logger = new DebugAdapterLogger(this, LogCategory.PubTest);
 		return this.createRunner(args.dartPath, args.cwd, args.program, appArgs, args.env, args.pubTestLogFile, logger, args.maxLogLineLength);
 	}
 
-	protected createRunner(executable: string, projectFolder: string, program: string, args: string[], envOverrides: any, logFile: string, logger: (message: string, severity: LogSeverity) => void, maxLogLineLength: number) {
+	protected createRunner(executable: string, projectFolder: string, program: string, args: string[], envOverrides: any, logFile: string, logger: Logger, maxLogLineLength: number) {
 		const runner = new TestRunner(executable, projectFolder, args, envOverrides, logFile, logger, maxLogLineLength);
 
 		// Set up subscriptions.

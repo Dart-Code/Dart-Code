@@ -2,6 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, Disposable, MarkdownString, Position, Range, SnippetString, TextDocument } from "vscode";
 import * as as from "../../shared/analysis_server_types";
+import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { flatMap } from "../../shared/utils";
 import { cleanDartdoc } from "../../shared/utils/dartdocs";
 import { DelayedCompletionItem, LazyCompletionItem } from "../../shared/vscode/interfaces";
@@ -9,9 +10,7 @@ import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
 import { hasOverlappingEdits } from "../commands/edit";
 import { config } from "../config";
-import { IAmDisposable } from "../debug/utils";
 import { resolvedPromise } from "../utils";
-import { logError, logWarn } from "../utils/log";
 
 // TODO: This code has become messy with the SuggestionSet changes. It could do with some refactoring
 // (such as creating a mapping from CompletionSuggestion -> x and SuggestionSet -> x, and then x -> CompletionItem).
@@ -21,7 +20,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	private cachedCompletions: { [key: number]: as.AvailableSuggestionSet } = {};
 	private existingImports: { [key: string]: { [key: string]: { [key: string]: boolean } } } = {};
 
-	constructor(private readonly analyzer: Analyzer) {
+	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer) {
 		this.disposables.push(analyzer.registerForCompletionAvailableSuggestions((n) => this.storeCompletionSuggestions(n)));
 		this.disposables.push(analyzer.registerForCompletionExistingImports((n) => this.storeExistingImports(n)));
 	}
@@ -207,7 +206,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 		// Additional edits for the imports.
 		if (resolvedResult && resolvedResult.change && resolvedResult.change.edits && resolvedResult.change.edits.length) {
-			appendAdditionalEdits(completionItem, document, resolvedResult.change);
+			this.appendAdditionalEdits(completionItem, document, resolvedResult.change);
 			if (displayUri)
 				completionItem.detail = `Auto import from '${displayUri}'` + (completionItem.detail ? `\n\n${completionItem.detail}` : "");
 		}
@@ -264,7 +263,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 			const suggestionSet = this.cachedCompletions[includedSuggestionSet.id];
 			if (!suggestionSet) {
-				logWarn(`Suggestion set ${includedSuggestionSet.id} was not available and therefore not included in the completion results`);
+				this.logger.logWarn(`Suggestion set ${includedSuggestionSet.id} was not available and therefore not included in the completion results`);
 				return [];
 			}
 
@@ -586,54 +585,54 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		return undefined;
 	}
 
+	private appendAdditionalEdits(completionItem: vs.CompletionItem, document: vs.TextDocument, change: as.SourceChange | undefined): void {
+		if (!change)
+			return undefined;
+
+		// VS Code expects offsets to be based on the original document, but the analysis server provides
+		// them assuming all previous edits have already been made. This means if the server provides us a
+		// set of edits where any edits offset is *equal to or greater than* a previous edit, it will do the wrong thing.
+		// If this happens; we will fall back to sequential edits and write a warning.
+		const hasProblematicEdits = hasOverlappingEdits(change);
+
+		if (hasProblematicEdits) {
+			this.logger.logError("Unable to insert imports because of overlapping edits from the server.");
+			vs.window.showErrorMessage(`Unable to insert imports because of overlapping edits from the server`);
+			return undefined;
+		}
+
+		const filePath = fsPath(document.uri);
+		const thisFilesEdits = change.edits.filter((e) => e.file === filePath);
+		const otherFilesEdits = change.edits.filter((e) => e.file !== filePath);
+
+		if (thisFilesEdits.length) {
+			completionItem.additionalTextEdits = flatMap(thisFilesEdits, (edit) => {
+				return edit.edits.map((edit) => {
+					const range = new vs.Range(
+						document.positionAt(edit.offset),
+						document.positionAt(edit.offset + edit.length),
+					);
+					return new vs.TextEdit(range, edit.replacement);
+				});
+			});
+		}
+		if (otherFilesEdits.length) {
+			const filteredSourceChange: as.SourceChange = {
+				edits: otherFilesEdits,
+				id: change.id,
+				linkedEditGroups: undefined,
+				message: change.message,
+				selection: change.selection,
+			};
+			completionItem.command = {
+				arguments: [document, filteredSourceChange],
+				command: "_dart.applySourceChange",
+				title: "Automatically add imports",
+			};
+		}
+	}
+
 	public dispose(): any {
 		this.disposables.forEach((d) => d.dispose());
-	}
-}
-
-function appendAdditionalEdits(completionItem: vs.CompletionItem, document: vs.TextDocument, change: as.SourceChange | undefined): void {
-	if (!change)
-		return undefined;
-
-	// VS Code expects offsets to be based on the original document, but the analysis server provides
-	// them assuming all previous edits have already been made. This means if the server provides us a
-	// set of edits where any edits offset is *equal to or greater than* a previous edit, it will do the wrong thing.
-	// If this happens; we will fall back to sequential edits and write a warning.
-	const hasProblematicEdits = hasOverlappingEdits(change);
-
-	if (hasProblematicEdits) {
-		logError("Unable to insert imports because of overlapping edits from the server.");
-		vs.window.showErrorMessage(`Unable to insert imports because of overlapping edits from the server`);
-		return undefined;
-	}
-
-	const filePath = fsPath(document.uri);
-	const thisFilesEdits = change.edits.filter((e) => e.file === filePath);
-	const otherFilesEdits = change.edits.filter((e) => e.file !== filePath);
-
-	if (thisFilesEdits.length) {
-		completionItem.additionalTextEdits = flatMap(thisFilesEdits, (edit) => {
-			return edit.edits.map((edit) => {
-				const range = new vs.Range(
-					document.positionAt(edit.offset),
-					document.positionAt(edit.offset + edit.length),
-				);
-				return new vs.TextEdit(range, edit.replacement);
-			});
-		});
-	}
-	if (otherFilesEdits.length) {
-		const filteredSourceChange: as.SourceChange = {
-			edits: otherFilesEdits,
-			id: change.id,
-			linkedEditGroups: undefined,
-			message: change.message,
-			selection: change.selection,
-		};
-		completionItem.command = {
-			arguments: [document, filteredSourceChange],
-			command: "_dart.applySourceChange",
-			title: "Automatically add imports",
-		};
 	}
 }

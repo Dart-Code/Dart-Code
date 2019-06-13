@@ -1,14 +1,15 @@
 import { Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { restartReasonManual } from "../../shared/constants";
-import { LogCategory, LogSeverity } from "../../shared/enums";
-import { logWarn } from "../utils/log";
+import { LogCategory } from "../../shared/enums";
+import { Logger } from "../../shared/interfaces";
 import { extractObservatoryPort } from "../utils/vscode/debug";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
 import { FlutterRunBase, RunMode } from "./flutter_run_base";
-import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments, LogMessage } from "./utils";
+import { DebugAdapterLogger } from "./logging";
+import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments } from "./utils";
 
 const objectGroupName = "my-group";
 const flutterExceptionStartBannerPrefix = "══╡ EXCEPTION CAUGHT BY";
@@ -80,7 +81,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		// Unless, of course, we attached in which case we expect to detach by default.
 		this.allowTerminatingObservatoryVmPid = args.deviceId === "flutter-tester" && !isAttach;
 
-		const logger = (message: string, severity: LogSeverity) => this.sendEvent(new Event("dart.log", new LogMessage(message, severity, this.logCategory)));
+		const logger = new DebugAdapterLogger(this, this.logCategory);
 		this.flutter = this.spawnRunDaemon(isAttach, args, logger);
 		this.flutter.registerForUnhandledMessages((msg) => this.handleLogOutput(msg));
 
@@ -121,7 +122,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 	}
 
-	protected spawnRunDaemon(isAttach: boolean, args: FlutterLaunchRequestArguments, logger: (message: string, severity: LogSeverity) => void): FlutterRunBase {
+	protected spawnRunDaemon(isAttach: boolean, args: FlutterLaunchRequestArguments, logger: Logger): FlutterRunBase {
 		let appArgs = [];
 		if (!isAttach) {
 			appArgs.push("-t");
@@ -145,7 +146,7 @@ export class FlutterDebugSession extends DartDebugSession {
 						appArgs.push("--debug-port");
 						appArgs.push(observatoryPort.toString());
 					} else {
-						logWarn(`Observatory port was not found: ${flutterAttach.observatoryUri}`);
+						logger.logWarn(`Observatory port was not found: ${flutterAttach.observatoryUri}`);
 					}
 				}
 			}

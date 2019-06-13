@@ -6,6 +6,7 @@ import { FlutterCapabilities } from "../shared/capabilities/flutter";
 import { analyzerSnapshotPath, dartPlatformName, dartVMPath, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, isWin, platformDisplayName } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { Sdks } from "../shared/interfaces";
+import { captureLogs, EmittingLogger } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
 import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../shared/utils";
 import { trueCasePathSync } from "../shared/utils/fs";
@@ -68,10 +69,10 @@ import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
 import { DartCapabilities } from "./sdk/capabilities";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
-import { handleMissingSdks, initWorkspace } from "./sdk/utils";
+import { SdkUtils } from "./sdk/utils";
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
-import { addToLogHeader, clearLogHeader, getExtensionLogPath, log, logError, logInfo, logProcess, logTo, logWarn } from "./utils/log";
+import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
 import { safeSpawn } from "./utils/processes";
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestItemTreeItem, TestResultsProvider } from "./views/test_view";
@@ -101,16 +102,20 @@ let showTodos: boolean | undefined;
 let previousSettings: string;
 let extensionLogger: { dispose: () => Promise<void> | void };
 
+// TODO: If dev mode, subscribe to logs for errors/warnings and surface to UI
+// (with dispose calls)
+const logger = new EmittingLogger();
+
 export function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
 	if (!extensionLogger)
-		extensionLogger = logTo(getExtensionLogPath(), [LogCategory.General]);
+		extensionLogger = captureLogs(logger, getExtensionLogPath(), undefined, 4000, [LogCategory.General]);
 
 	const extContext = Context.for(context);
 
 	util.logTime("Code called activate");
 	// Wire up a reload command that will re-initialise everything.
 	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", (_) => {
-		log("Performing silent extension reload...");
+		logger.logInfo("Performing silent extension reload...");
 		deactivate(true);
 		const toDispose = context.subscriptions.slice();
 		context.subscriptions.length = 0;
@@ -118,11 +123,11 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			try {
 				sub.dispose();
 			} catch (e) {
-				logError(e);
+				logger.logError(e);
 			}
 		}
 		activate(context, true);
-		log("Done!");
+		logger.logInfo("Done!");
 	}));
 
 	showTodos = config.showTodos;
@@ -130,14 +135,15 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	const extensionStartTime = new Date();
 	util.logTime();
-	const workspaceContext = initWorkspace();
+	const sdkUtils = new SdkUtils(logger);
+	const workspaceContext = sdkUtils.initWorkspace();
 	util.logTime("initWorkspace");
 	const sdks = workspaceContext.sdks;
 	buildLogHeaders(workspaceContext);
-	analytics = new Analytics(workspaceContext);
+	analytics = new Analytics(logger, workspaceContext);
 	if (!sdks.dart || (workspaceContext.hasAnyFlutterProjects && !sdks.flutter)) {
 		// Don't set anything else up; we can't work like this!
-		return handleMissingSdks(context, analytics, workspaceContext);
+		return sdkUtils.handleMissingSdks(context, analytics, workspaceContext);
 	}
 
 	if (sdks.flutterVersion) {
@@ -149,7 +155,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	if (sdks.dartVersion) {
 		dartCapabilities.version = sdks.dartVersion;
 		analytics.sdkVersion = sdks.dartVersion;
-		checkForStandardDartSdkUpdates(workspaceContext);
+		checkForStandardDartSdkUpdates(logger, workspaceContext);
 		context.subscriptions.push(new StatusBarVersionTracker(workspaceContext));
 	}
 
@@ -163,7 +169,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		return;
 	}
 
-	analyzer = new Analyzer(path.join(sdks.dart, dartVMPath), analyzerPath);
+	analyzer = new Analyzer(logger, path.join(sdks.dart, dartVMPath), analyzerPath);
 	context.subscriptions.push(analyzer);
 
 	// Log analysis server startup time when we get the welcome message/version.
@@ -202,10 +208,10 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Set up providers.
 	// TODO: Do we need to push all these to subscriptions?!
-	const hoverProvider = new DartHoverProvider(analyzer);
-	const formattingEditProvider = new DartFormattingEditProvider(analyzer, extContext);
+	const hoverProvider = new DartHoverProvider(logger, analyzer);
+	const formattingEditProvider = new DartFormattingEditProvider(logger, analyzer, extContext);
 	context.subscriptions.push(formattingEditProvider);
-	const completionItemProvider = new DartCompletionItemProvider(analyzer);
+	const completionItemProvider = new DartCompletionItemProvider(logger, analyzer);
 	const referenceProvider = new DartReferenceProvider(analyzer);
 	const documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
 	const sourceCodeActionProvider = new SourceCodeActionProvider();
@@ -230,8 +236,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(vs.languages.registerDefinitionProvider(activeFileFilters, referenceProvider));
 	context.subscriptions.push(vs.languages.registerReferenceProvider(activeFileFilters, referenceProvider));
 	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(activeFileFilters, documentHighlightProvider));
-	rankingCodeActionProvider.registerProvider(new AssistCodeActionProvider(activeFileFilters, analyzer));
-	rankingCodeActionProvider.registerProvider(new FixCodeActionProvider(activeFileFilters, analyzer));
+	rankingCodeActionProvider.registerProvider(new AssistCodeActionProvider(logger, activeFileFilters, analyzer));
+	rankingCodeActionProvider.registerProvider(new FixCodeActionProvider(logger, activeFileFilters, analyzer));
 	rankingCodeActionProvider.registerProvider(new RefactorCodeActionProvider(activeFileFilters, analyzer));
 	context.subscriptions.push(vs.languages.registerRenameProvider(activeFileFilters, renameProvider));
 
@@ -242,7 +248,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	rankingCodeActionProvider.registerProvider(new IgnoreLintCodeActionProvider(activeFileFilters));
 	context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, implementationProvider));
 	if (config.showTestCodeLens) {
-		const codeLensProvider = new TestCodeLensProvider(analyzer);
+		const codeLensProvider = new TestCodeLensProvider(logger, analyzer);
 		context.subscriptions.push(codeLensProvider);
 		context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
 	}
@@ -260,7 +266,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => util.isInsideFlutterProject(uri) || util.isInsideFlutterWebProject(uri))));
 
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE.language, new DartLanguageConfiguration()));
-	const statusReporter = new AnalyzerStatusReporter(analyzer, workspaceContext, analytics);
+	const statusReporter = new AnalyzerStatusReporter(logger, analyzer, workspaceContext, analytics);
 
 	// Set up diagnostics.
 	const diagnostics = vs.languages.createDiagnosticCollection("dart");
@@ -283,17 +289,17 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Fire up Flutter daemon if required.
 	if (workspaceContext.hasAnyFlutterMobileProjects) {
-		flutterDaemon = new FlutterDaemon(path.join(sdks.flutter, flutterPath), sdks.flutter);
+		flutterDaemon = new FlutterDaemon(logger, path.join(sdks.flutter, flutterPath), sdks.flutter);
 		context.subscriptions.push(flutterDaemon);
-		setUpDaemonMessageHandler(context, flutterDaemon);
+		setUpDaemonMessageHandler(logger, context, flutterDaemon);
 	}
 
 	util.logTime("All other stuff before debugger..");
 
-	const pubGlobal = new PubGlobal(extContext, sdks);
+	const pubGlobal = new PubGlobal(logger, extContext, sdks);
 
 	// Set up debug stuff.
-	const debugProvider = new DebugConfigProvider(sdks, analytics, pubGlobal, flutterDaemon && flutterDaemon.deviceManager, flutterCapabilities);
+	const debugProvider = new DebugConfigProvider(logger, sdks, analytics, pubGlobal, flutterDaemon && flutterDaemon.deviceManager, flutterCapabilities);
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
 	context.subscriptions.push(debugProvider);
 
@@ -309,9 +315,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		}
 
 		if (analyzer.capabilities.supportsGetDeclerations) {
-			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(analyzer)));
+			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(logger, analyzer)));
 		} else {
-			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(analyzer)));
+			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(logger, analyzer)));
 		}
 
 		if (analyzer.capabilities.supportsCustomFolding && config.analysisServerFolding)
@@ -324,12 +330,12 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 				...(config.triggerSignatureHelpAutomatically ? ["(", ","] : []),
 			));
 
-		const documentSymbolProvider = new DartDocumentSymbolProvider(analyzer);
+		const documentSymbolProvider = new DartDocumentSymbolProvider(logger, analyzer);
 		activeFileFilters.forEach((filter) => {
 			context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
 		});
 
-		context.subscriptions.push(openFileTracker.create(analyzer, workspaceContext));
+		context.subscriptions.push(openFileTracker.create(logger, analyzer, workspaceContext));
 
 		// Set up completions for unimported items.
 		if (analyzer.capabilities.supportsAvailableSuggestions && config.autoImportCompletions) {
@@ -353,8 +359,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Register additional commands.
 	const analyzerCommands = new AnalyzerCommands(context, analyzer);
-	const sdkCommands = new SdkCommands(context, workspaceContext, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
-	const debugCommands = new DebugCommands(extContext, workspaceContext, analytics, pubGlobal);
+	const sdkCommands = new SdkCommands(logger, context, workspaceContext, sdkUtils, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
+	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, analytics, pubGlobal);
 
 	// Wire up handling of Hot Reload on Save.
 	if (workspaceContext.hasAnyFlutterProjects) {
@@ -365,18 +371,18 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(vs.window.registerUriHandler(new DartUriHandler(flutterCapabilities)));
 
 	// Set up commands for Dart editors.
-	context.subscriptions.push(new EditCommands(context, analyzer));
-	context.subscriptions.push(new RefactorCommands(context, analyzer));
+	context.subscriptions.push(new EditCommands(logger, context, analyzer));
+	context.subscriptions.push(new RefactorCommands(logger, context, analyzer));
 
 	// Register misc commands.
-	context.subscriptions.push(new TypeHierarchyCommand(analyzer));
+	context.subscriptions.push(new TypeHierarchyCommand(logger, analyzer));
 	context.subscriptions.push(new GoToSuperCommand(analyzer));
-	context.subscriptions.push(new LoggingCommands(context.logPath));
-	context.subscriptions.push(new OpenInOtherEditorCommands(sdks));
-	context.subscriptions.push(new TestCommands());
+	context.subscriptions.push(new LoggingCommands(logger, context.logPath));
+	context.subscriptions.push(new OpenInOtherEditorCommands(logger, sdks));
+	context.subscriptions.push(new TestCommands(logger));
 
 	// Register our view providers.
-	const dartPackagesProvider = new DartPackagesProvider();
+	const dartPackagesProvider = new DartPackagesProvider(logger);
 	const packagesTreeView = vs.window.createTreeView("dartPackages", { treeDataProvider: dartPackagesProvider });
 	context.subscriptions.push(
 		dartPackagesProvider,
@@ -404,7 +410,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	);
 
 	if (workspaceContext.hasAnyFlutterProjects && config.previewHotReloadCoverageMarkers) {
-		context.subscriptions.push(new HotReloadCoverageDecorations(debugCommands));
+		context.subscriptions.push(new HotReloadCoverageDecorations(logger, debugCommands));
 	}
 
 	context.subscriptions.push(vs.commands.registerCommand("dart.package.openFile", (filePath) => {
@@ -412,7 +418,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 		vs.workspace.openTextDocument(filePath).then((document) => {
 			vs.window.showTextDocument(document, { preview: true });
-		}, (error) => logError(error));
+		}, (error) => logger.logError(error));
 	}));
 
 	// Warn the user if they've opened a folder with mismatched casing.
@@ -432,7 +438,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Prompt user for any special config we might want to set.
 	if (!isRestart)
-		showUserPrompts(extContext, workspaceContext);
+		showUserPrompts(logger, extContext, workspaceContext);
 
 	// Turn on all the commands.
 	setCommandVisiblity(true, workspaceContext);
@@ -459,7 +465,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	if (workspaceContext.shouldLoadFlutterExtension) {
 		const flutterExtension = vs.extensions.getExtension(flutterExtensionIdentifier);
 		if (flutterExtension) {
-			log(`Activating Flutter extension for ${workspaceContext.workspaceTypeDescription} project...`);
+			logger.logInfo(`Activating Flutter extension for ${workspaceContext.workspaceTypeDescription} project...`);
 			flutterExtension.activate();
 		}
 	}
@@ -487,13 +493,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			debugProvider,
 			fileTracker: openFileTracker,
 			flutterCapabilities,
+			getLogHeader,
 			initialAnalysis,
-			log,
-			logError,
-			logInfo,
-			logProcess,
-			logTo,
-			logWarn,
+			logger,
 			nextAnalysis,
 			packagesTreeProvider: dartPackagesProvider,
 			pubGlobal,
@@ -521,8 +523,8 @@ function buildLogHeaders(workspaceContext: WorkspaceContext) {
 	addToLogHeader(() => `Workspace type: ${workspaceContext.workspaceTypeDescription}`);
 	addToLogHeader(() => `Multi-root?: ${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1}`);
 	const sdks = workspaceContext.sdks;
-	addToLogHeader(() => `Dart SDK:\n    Loc: ${sdks.dart}\n    Ver: ${util.getSdkVersion(sdks.dart)}`);
-	addToLogHeader(() => `Flutter SDK:\n    Loc: ${sdks.flutter}\n    Ver: ${util.getSdkVersion(sdks.flutter)}`);
+	addToLogHeader(() => `Dart SDK:\n    Loc: ${sdks.dart}\n    Ver: ${util.getSdkVersion(logger, sdks.dart)}`);
+	addToLogHeader(() => `Flutter SDK:\n    Loc: ${sdks.flutter}\n    Ver: ${util.getSdkVersion(logger, sdks.flutter)}`);
 	addToLogHeader(() => `HTTP_PROXY: ${process.env.HTTP_PROXY}`);
 	addToLogHeader(() => `NO_PROXY: ${process.env.NO_PROXY}`);
 }
@@ -530,7 +532,7 @@ function buildLogHeaders(workspaceContext: WorkspaceContext) {
 function recalculateAnalysisRoots() {
 	let newRoots: string[] = [];
 	util.getDartWorkspaceFolders().forEach((f) => {
-		newRoots = newRoots.concat(findPackageRoots(analyzer, fsPath(f.uri)));
+		newRoots = newRoots.concat(findPackageRoots(logger, analyzer, fsPath(f.uri)));
 	});
 	analysisRoots = newRoots;
 
@@ -545,7 +547,7 @@ function recalculateAnalysisRoots() {
 				return;
 			const containingRoot = analysisRoots.find((root: string) => isWithinPath(folder, root));
 			if (containingRoot) {
-				log(`Excluding folder ${folder} from analysis roots as it is a child of analysis root ${containingRoot} and may cause performance issues.`);
+				logger.logInfo(`Excluding folder ${folder} from analysis roots as it is a child of analysis root ${containingRoot} and may cause performance issues.`);
 				excludeFolders.push(folder);
 			}
 		};

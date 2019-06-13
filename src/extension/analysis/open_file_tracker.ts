@@ -1,11 +1,10 @@
 import { Disposable, TextDocument, Uri, window, workspace } from "vscode";
 import { FlutterOutline, FoldingRegion, Occurrences, Outline } from "../../shared/analysis_server_types";
+import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
-import { IAmDisposable } from "../debug/utils";
 import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
-import { logError } from "../utils/log";
 import { Analyzer } from "./analyzer";
 
 const outlines: { [key: string]: Outline } = {};
@@ -19,7 +18,7 @@ let lastSubscribedFiles: string[] = [];
 class OpenFileTracker implements IAmDisposable {
 	private disposables: Disposable[] = [];
 
-	constructor(private readonly analyzer: Analyzer, private readonly wsContext: WorkspaceContext) {
+	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer, private readonly wsContext: WorkspaceContext) {
 		// Reset these, since they're state from the last analysis server
 		// (when we change SDK and thus change this).
 		lastPriorityFiles = [];
@@ -60,7 +59,7 @@ class OpenFileTracker implements IAmDisposable {
 		try {
 			await this.analyzer.analysisSetPriorityFiles({ files: visibleFiles });
 		} catch (e) {
-			logError(e);
+			this.logger.logError(e);
 		}
 	}
 
@@ -84,7 +83,7 @@ class OpenFileTracker implements IAmDisposable {
 				},
 			});
 		} catch (e) {
-			logError(e);
+			this.logger.logError(e);
 		}
 		// Set subscriptions.
 		if (this.wsContext.hasAnyFlutterProjects && this.analyzer.capabilities.supportsFlutterOutline) {
@@ -95,7 +94,7 @@ class OpenFileTracker implements IAmDisposable {
 					},
 				});
 			} catch (e) {
-				logError(e);
+				this.logger.logError(e);
 			}
 		}
 	}
@@ -127,8 +126,8 @@ class OpenFileTracker implements IAmDisposable {
 // make this available on WorkspaceContext or similar.
 
 export const openFileTracker = {
-	create(analyzer: Analyzer, wsContext: WorkspaceContext): IAmDisposable {
-		return new OpenFileTracker(analyzer, wsContext);
+	create(logger: Logger, analyzer: Analyzer, wsContext: WorkspaceContext): IAmDisposable {
+		return new OpenFileTracker(logger, analyzer, wsContext);
 	},
 
 	getOutlineFor(file: Uri): Outline | undefined {

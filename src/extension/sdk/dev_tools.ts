@@ -5,7 +5,8 @@ import * as vs from "vscode";
 import { window, workspace } from "vscode";
 import { CHROME_OS_DEVTOOLS_PORT, isChromeOS, pleaseReportBug, pubPath } from "../../shared/constants";
 import { FlutterService, LogCategory } from "../../shared/enums";
-import { Sdks } from "../../shared/interfaces";
+import { Logger, Sdks } from "../../shared/interfaces";
+import { CategoryLogger } from "../../shared/logging";
 import { getRandomInt } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
 import { Analytics } from "../analytics";
@@ -13,7 +14,6 @@ import { DebugCommands, debugSessions } from "../commands/debug";
 import { config } from "../config";
 import { PubGlobal } from "../pub/global";
 import { StdIOService, UnknownNotification } from "../services/stdio_service";
-import { log, logError } from "../utils/log";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 const devtools = "devtools";
@@ -34,7 +34,7 @@ export class DevToolsManager implements vs.Disposable {
 	/// concurrent launches can wait on the same promise.
 	private devtoolsUrl: Thenable<string> | undefined;
 
-	constructor(private sdks: Sdks, private debugCommands: DebugCommands, private analytics: Analytics, private pubGlobal: PubGlobal) {
+	constructor(private logger: Logger, private sdks: Sdks, private debugCommands: DebugCommands, private analytics: Analytics, private pubGlobal: PubGlobal) {
 		this.disposables.push(this.devToolsStatusBarItem);
 	}
 
@@ -79,7 +79,7 @@ export class DevToolsManager implements vs.Disposable {
 
 						return true;
 					} catch (e) {
-						logError(`DevTools failed to launch browser ${e.message}`);
+						this.logger.logError(`DevTools failed to launch browser ${e.message}`);
 						vs.window.showErrorMessage(`The DevTools service failed to launch the browser. ${pleaseReportBug}`, "Show Full Error").then((res) => {
 							if (res) {
 								const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`;
@@ -95,7 +95,7 @@ export class DevToolsManager implements vs.Disposable {
 				} else {
 					// const fullUrl = `${url}?hide=debugger&uri=${encodeURIComponent(session.vmServiceUri)}${config.useDevToolsDarkTheme ? "&theme=dark" : ""}`;
 					// openInBrowser(fullUrl);
-					logError(`DevTools failed to register launchDevTools service`);
+					this.logger.logError(`DevTools failed to register launchDevTools service`);
 					vs.window.showErrorMessage(`The DevTools service failed to register. ${pleaseReportBug}`);
 					return false;
 				}
@@ -109,7 +109,7 @@ export class DevToolsManager implements vs.Disposable {
 			return { url, dispose: () => this.dispose() };
 		} catch (e) {
 			this.devToolsStatusBarItem.hide();
-			logError(e);
+			this.logger.logError(e);
 			vs.window.showErrorMessage(`${e}`);
 		}
 	}
@@ -117,7 +117,7 @@ export class DevToolsManager implements vs.Disposable {
 	/// Starts the devtools server and returns the URL of the running app.
 	private startServer(): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
-			const service = new DevToolsService(this.sdks);
+			const service = new DevToolsService(this.logger, this.sdks);
 			this.disposables.push(service);
 
 			service.registerForServerStarted((n) => {
@@ -143,7 +143,7 @@ export class DevToolsManager implements vs.Disposable {
 					// Reset the port to 0 on error in case it was from us trying to reuse the previous port.
 					portToBind = 0;
 					const errorMessage = `${devtoolsPackageName} exited with code ${code}`;
-					logError(errorMessage);
+					this.logger.logError(errorMessage);
 					reject(errorMessage);
 				}
 			});
@@ -156,8 +156,8 @@ export class DevToolsManager implements vs.Disposable {
 }
 
 class DevToolsService extends StdIOService<UnknownNotification> {
-	constructor(sdks: Sdks) {
-		super(() => config.devToolsLogFile, (message, severity) => log(message, severity, LogCategory.CommandProcesses), config.maxLogLineLength);
+	constructor(logger: Logger, sdks: Sdks) {
+		super(() => config.devToolsLogFile, new CategoryLogger(logger, LogCategory.CommandProcesses), config.maxLogLineLength);
 
 		const pubBinPath = path.join(sdks.dart, pubPath);
 		portToBind = config.devToolsPort // Always config first

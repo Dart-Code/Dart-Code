@@ -1,13 +1,13 @@
 import { window } from "vscode";
 import { DART_DOWNLOAD_URL } from "../../shared/constants";
+import { Logger } from "../../shared/interfaces";
 import { versionIsAtLeast } from "../../shared/utils";
 import { openInBrowser } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { getLatestSdkVersion } from "../utils";
-import { logError } from "../utils/log";
 
-export async function checkForStandardDartSdkUpdates(workspaceContext: WorkspaceContext): Promise<void> {
+export async function checkForStandardDartSdkUpdates(logger: Logger, workspaceContext: WorkspaceContext): Promise<void> {
 	if (!config.checkForSdkUpdates || !workspaceContext.hasOnlyDartProjects)
 		return;
 
@@ -33,6 +33,6 @@ export async function checkForStandardDartSdkUpdates(workspaceContext: Workspace
 			config.setCheckForSdkUpdates(false);
 
 	} catch (e) {
-		logError(e);
+		logger.logError(e);
 	}
 }

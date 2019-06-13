@@ -1,6 +1,7 @@
 import * as path from "path";
 import { CancellationToken, Location, SymbolInformation, Uri, workspace, WorkspaceSymbolProvider } from "vscode";
 import * as as from "../../shared/analysis_server_types";
+import { Logger } from "../../shared/interfaces";
 import { escapeRegExp } from "../../shared/utils";
 import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
@@ -8,7 +9,7 @@ import { toRange } from "../utils";
 
 export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	private badChars: RegExp = new RegExp("[^0-9a-z\-]", "gi");
-	constructor(public readonly analyzer: Analyzer) { }
+	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer) { }
 
 	public async provideWorkspaceSymbols(query: string, token: CancellationToken): Promise<SymbolInformation[] | undefined> {
 		if (query.length === 0)
@@ -42,7 +43,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 
 		const symbol: any = new PartialSymbolInformation(
 			names.name,
-			getSymbolKindForElementKind(result.kind),
+			getSymbolKindForElementKind(this.logger, result.kind),
 			names.containerName,
 			new Location(Uri.file(file), undefined),
 		);

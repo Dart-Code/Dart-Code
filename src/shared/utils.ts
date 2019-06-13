@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as semver from "semver";
 import { flutterExecutableName, isWin } from "./constants";
+import { SomeError } from "./interfaces";
 
 export function forceWindowsDriveLetterToUppercase(p: string): string {
 	if (p && isWin && path.isAbsolute(p) && p.charAt(0) === p.charAt(0).toLowerCase())
@@ -109,4 +110,15 @@ export function isStableSdk(sdkVersion?: string): boolean {
 	// We'll consider empty versions as dev; stable versions will likely always
 	// be shipped with valid version files.
 	return !!(sdkVersion && !semver.prerelease(sdkVersion));
+}
+
+export function errorString(error: SomeError): string {
+	if (!error)
+		return "<empty error>";
+	else if (error instanceof Error)
+		return error.message + (error.stack ? `\n${error.stack}` : "");
+	else if (typeof error === "string")
+		return error;
+	else
+		return error.message || "<empty error message>";
 }

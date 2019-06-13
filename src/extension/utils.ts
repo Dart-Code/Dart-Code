@@ -4,12 +4,13 @@ import * as os from "os";
 import * as path from "path";
 import { commands, extensions, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { dartCodeExtensionIdentifier, flutterExtensionIdentifier } from "../shared/constants";
+import { Logger } from "../shared/interfaces";
 import { isWithinPath } from "../shared/utils";
 import { hasPackagesFile, hasPubspec } from "../shared/utils/fs";
 import { fsPath } from "../shared/vscode/utils";
 import { locateBestProjectRoot } from "./project";
 import { referencesFlutterSdk, referencesFlutterWeb } from "./sdk/utils";
-import { getExtensionLogPath, logError } from "./utils/log";
+import { getExtensionLogPath } from "./utils/log";
 
 export let extensionPath = extensions.getExtension(dartCodeExtensionIdentifier).extensionPath;
 export const extensionVersion = getExtensionVersion();
@@ -135,7 +136,7 @@ export function toRangeOnLine(location: Location): Range {
 	return new Range(startPos, startPos.translate(0, location.length));
 }
 
-export function getSdkVersion(sdkRoot?: string): string | undefined {
+export function getSdkVersion(logger: Logger, sdkRoot?: string): string | undefined {
 	if (!sdkRoot)
 		return undefined;
 	const versionFile = path.join(sdkRoot, "version");
@@ -151,7 +152,7 @@ export function getSdkVersion(sdkRoot?: string): string | undefined {
 			.join("\n")
 			.trim();
 	} catch (e) {
-		logError(e);
+		logger.logError(e);
 		return undefined;
 	}
 }

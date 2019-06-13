@@ -3,15 +3,14 @@ import * as vs from "vscode";
 import { noRepeatPromptThreshold, pubGlobalDocsUrl, pubPath } from "../../shared/constants";
 import { LogCategory, VersionStatus } from "../../shared/enums";
 import { fetch } from "../../shared/fetch";
-import { Sdks } from "../../shared/interfaces";
+import { Logger, Sdks } from "../../shared/interfaces";
 import { versionIsAtLeast } from "../../shared/utils";
 import { openInBrowser } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
-import { logWarn } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
 
 export class PubGlobal {
-	constructor(private context: Context, private sdks: Sdks) { }
+	constructor(private readonly logger: Logger, private context: Context, private sdks: Sdks) { }
 
 	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion?: string, autoUpdate: boolean = false): Promise<boolean> {
 		const versionStatus = await this.getInstalledStatus(packageName, packageID, requiredVersion);
@@ -86,7 +85,7 @@ export class PubGlobal {
 			} catch (e) {
 				// If we fail to call the API to check for a new version, then we can run
 				// with what we have.
-				logWarn(`Failed to check for new version of ${packageID}: ${e}`, LogCategory.CommandProcesses);
+				this.logger.logWarn(`Failed to check for new version of ${packageID}: ${e}`, LogCategory.CommandProcesses);
 				return VersionStatus.Valid;
 			}
 		}

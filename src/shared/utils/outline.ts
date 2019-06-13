@@ -1,7 +1,8 @@
 import * as as from "../analysis_server_types";
+import { Logger } from "../interfaces";
 
 export abstract class OutlineVisitor {
-	constructor(private logError: (error: any) => void) { }
+	constructor(private logger: Logger) { }
 
 	public visit(outline: as.Outline) {
 		this.visitNode(outline);
@@ -93,7 +94,7 @@ export abstract class OutlineVisitor {
 				this.visitUnknown(outline);
 				break;
 			default:
-				this.logError(`Unknown Outline item! ${outline && outline.element && outline.element.kind}`);
+				this.logger.logError(`Unknown Outline item! ${outline && outline.element && outline.element.kind}`);
 		}
 	}
 
