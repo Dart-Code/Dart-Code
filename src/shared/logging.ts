@@ -79,9 +79,18 @@ export function captureLogs(logger: EmittingLogger, file: string, header: string
 		logStream.write(header);
 	logStream.write(`${(new Date()).toDateString()} ${time()}Log file started${os.EOL}`);
 	let fileLogger: IAmDisposable | undefined = logger.onLog((e) => {
-		if (logCategories && logCategories.indexOf(e.category) === -1)
-			return;
 		if (!logStream)
+			return;
+
+		// We should log this event if:
+		// - We don't have a category filter; or
+		// - The category filter includes this category; or
+		// - The log is WARN/ERROR (they get logged everywhere).
+		const shouldLog = !logCategories
+			|| logCategories.indexOf(e.category) !== -1
+			|| e.severity === LogSeverity.Warn
+			|| e.severity === LogSeverity.Error;
+		if (!shouldLog)
 			return;
 
 		const message = e.message.trimRight();

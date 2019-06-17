@@ -89,15 +89,15 @@ describe("capture logs command", () => {
 		const logger = await configureLog(LogCategory.General);
 
 		extApi.logger.logInfo("This is a test"); // Should be logged
-		extApi.logger.logInfo("This is an flutter daemon event", LogCategory.FlutterDaemon); // Should not be logged
-		extApi.logger.logInfo("This is an flutter daemon ERROR event", LogCategory.FlutterDaemon); // Should be logged because it's an error.
+		extApi.logger.logInfo("This is a flutter daemon event", LogCategory.FlutterDaemon); // Should not be logged
+		extApi.logger.logError("This is a flutter daemon ERROR event", LogCategory.FlutterDaemon); // Should be logged because it's an error.
 
 		const logFilename = await logger.stopLogging();
 
 		assert.ok(fs.existsSync(logFilename));
 		const lines = fs.readFileSync(logFilename).toString().trim().split("\n").map((l) => l.trim());
 		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
-		assert.ok(lines.find((l) => l.indexOf("This is an flutter daemon event") === -1), "Unexpectedly found 'This is an flutter daemon event' in the log");
-		assert.ok(lines.find((l) => l.indexOf("This is an flutter daemon ERROR event") !== -1), `Did not find 'This is an flutter daemon ERROR event' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.indexOf("This is a flutter daemon event") === -1), "Unexpectedly found 'This is a flutter daemon event' in the log");
+		assert.ok(lines.find((l) => l.indexOf("This is a flutter daemon ERROR event") !== -1), `Did not find 'This is a flutter daemon ERROR event' in ${platformEol}${lines.join(platformEol)}`);
 	});
 });
