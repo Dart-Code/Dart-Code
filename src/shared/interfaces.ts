@@ -29,7 +29,7 @@ export interface StagehandTemplate {
 
 export interface Logger {
 	logInfo(message: string, category?: LogCategory): void;
-	logWarn(message: string, category?: LogCategory): void;
+	logWarn(message: SomeError, category?: LogCategory): void;
 	logError(error: SomeError, category?: LogCategory): void;
 }
 

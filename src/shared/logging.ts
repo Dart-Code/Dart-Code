@@ -35,11 +35,11 @@ export class EmittingLogger implements Logger, IAmDisposable {
 	public logInfo(message: string, category?: LogCategory): void {
 		this.log(message, LogSeverity.Info, category);
 	}
-	public logWarn(message: string, category?: LogCategory): void {
-		this.log(message, LogSeverity.Warn, category);
+	public logWarn(errorOrMessage: SomeError, category?: LogCategory): void {
+		this.log(errorString(errorOrMessage), LogSeverity.Warn, category);
 	}
-	public logError(error: SomeError, category?: LogCategory): void {
-		this.log(errorString(error), LogSeverity.Error, category);
+	public logError(errorOrMessage: SomeError, category?: LogCategory): void {
+		this.log(errorString(errorOrMessage), LogSeverity.Error, category);
 	}
 
 	public dispose(): void {
@@ -53,12 +53,11 @@ export class CategoryLogger implements Logger {
 	public logInfo(message: string, category: LogCategory = this.defaultCategory): void {
 		this.base.logInfo(message, category);
 	}
-	public logWarn(message: string, category: LogCategory = this.defaultCategory): void {
-
-		this.base.logWarn(message, category);
+	public logWarn(errorOrMessage: SomeError, category: LogCategory = this.defaultCategory): void {
+		this.base.logWarn(errorOrMessage, category);
 	}
-	public logError(error: SomeError, category: LogCategory = this.defaultCategory): void {
-		this.base.logError(error, category);
+	public logError(errorOrMessage: SomeError, category: LogCategory = this.defaultCategory): void {
+		this.base.logError(errorOrMessage, category);
 	}
 }
 
@@ -93,7 +92,7 @@ export function captureLogs(logger: EmittingLogger, file: string, header: string
 		if (!shouldLog)
 			return;
 
-		const message = e.message.trimRight();
+		const message = e.message ? e.message.trimRight() : "<empty message>";
 		const logMessage = maxLogLineLength && message.length > maxLogLineLength
 			? message.substring(0, maxLogLineLength) + "…"
 			: message;
