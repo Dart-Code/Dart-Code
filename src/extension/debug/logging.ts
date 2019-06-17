@@ -15,10 +15,10 @@ export class DebugAdapterLogger implements Logger {
 	public logInfo(message: string, category?: LogCategory): void {
 		this.log(message, LogSeverity.Info, category);
 	}
-	public logWarn(message: string, category?: LogCategory): void {
-		this.log(message, LogSeverity.Warn, category);
+	public logWarn(errorOrMessage: SomeError, category?: LogCategory): void {
+		this.log(errorString(errorOrMessage), LogSeverity.Warn, category);
 	}
-	public logError(error: SomeError, category?: LogCategory): void {
-		this.log(errorString(error), LogSeverity.Error, category);
+	public logError(errorOrMessage: SomeError, category?: LogCategory): void {
+		this.log(errorString(errorOrMessage), LogSeverity.Error, category);
 	}
 }
