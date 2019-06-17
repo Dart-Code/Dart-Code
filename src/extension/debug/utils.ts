@@ -1,8 +1,6 @@
 import { DebugProtocol } from "vscode-debugprotocol";
 import { forceWindowsDriveLetterToUppercase } from "../../shared/utils";
 
-
-
 export function formatPathForVm(file: string): string {
 	// Handle drive letter inconsistencies.
 	file = forceWindowsDriveLetterToUppercase(file);
