@@ -1,6 +1,6 @@
 import * as vs from "vscode";
-import { FlutterCapabilities } from "../../capabilities/flutter";
-import { createFlutterSampleInTempFolder } from "../flutter_samples";
+import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
+import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 
 export class FlutterSampleUriHandler {
 	constructor(private flutterCapabilities: FlutterCapabilities) { }

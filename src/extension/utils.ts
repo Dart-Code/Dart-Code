@@ -6,7 +6,7 @@ import { commands, extensions, Position, Range, TextDocument, Uri, window, works
 import { dartCodeExtensionIdentifier, flutterExtensionIdentifier } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
 import { isWithinPath } from "../shared/utils";
-import { hasPackagesFile, hasPubspec } from "../shared/utils/fs";
+import { hasPackagesFile, hasPubspec, mkDirRecursive } from "../shared/utils/fs";
 import { fsPath } from "../shared/vscode/utils";
 import { locateBestProjectRoot } from "./project";
 import { referencesFlutterSdk, referencesFlutterWeb } from "./sdk/utils";
@@ -94,14 +94,6 @@ export function homeRelativePath(p?: string) {
 	if (isWithinPath(p, homedir))
 		return path.join("~", path.relative(homedir, p));
 	return p;
-}
-
-export function mkDirRecursive(folder: string) {
-	const parent = path.dirname(folder);
-	if (!fs.existsSync(parent))
-		mkDirRecursive(parent);
-	if (!fs.existsSync(folder))
-		fs.mkdirSync(folder);
 }
 
 export function createFolderForFile(file?: string) {

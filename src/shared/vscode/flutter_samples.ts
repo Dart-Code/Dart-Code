@@ -2,10 +2,9 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { dartCodeExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../shared/constants";
-import { getRandomInt } from "../../shared/utils/fs";
-import * as util from "../utils";
+import { FlutterCapabilities } from "../capabilities/flutter";
+import { dartCodeExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../constants";
+import { getRandomInt, mkDirRecursive } from "../utils/fs";
 
 export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapabilities, sampleID: string): vs.Uri | undefined {
 	// Ensure we're on at least Flutter v1 so we know creating samples works.
@@ -18,7 +17,7 @@ export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapa
 	const tempSamplePath = path.join(os.tmpdir(), dartCodeExtensionIdentifier, "flutter", "sample", sampleID, getRandomInt(0x1000, 0x10000).toString(16));
 
 	// Create the empty folder so we can open it.
-	util.mkDirRecursive(tempSamplePath);
+	mkDirRecursive(tempSamplePath);
 
 	// Create a temp dart file to force extension to load when we open this folder.
 	fs.writeFileSync(path.join(tempSamplePath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE), sampleID);

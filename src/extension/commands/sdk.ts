@@ -12,7 +12,8 @@ import { logProcess } from "../../shared/logging";
 import { flatMap, PromiseCompleter } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
-import { getChildFolders, hasPubspec } from "../../shared/utils/fs";
+import { getChildFolders, hasPubspec, mkDirRecursive } from "../../shared/utils/fs";
+import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
@@ -24,7 +25,6 @@ import { PubGlobal } from "../pub/global";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "../pub/pub";
 import { Stagehand } from "../pub/stagehand";
 import { getFlutterSnippets } from "../sdk/flutter_docs_snippets";
-import { createFlutterSampleInTempFolder } from "../sdk/flutter_samples";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
 import { SdkUtils } from "../sdk/utils";
 import * as util from "../utils";
@@ -146,7 +146,7 @@ export class SdkCommands {
 			}
 
 			// Ensure folder exists.
-			util.mkDirRecursive(this.flutterScreenshotPath);
+			mkDirRecursive(this.flutterScreenshotPath);
 
 			const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : undefined;
 			const args = deviceId ? ["screenshot", "-d", deviceId] : ["screenshot"];
