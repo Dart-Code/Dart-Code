@@ -617,7 +617,6 @@ function getSettingsThatRequireRestart() {
 		+ config.flutterSdkPath
 		+ config.closingLabels
 		+ config.analyzeAngularTemplates
-		+ config.normalizeWindowsDriveLetters
 		+ config.analysisServerFolding
 		+ config.showTestCodeLens
 		+ config.previewHotReloadCoverageMarkers
