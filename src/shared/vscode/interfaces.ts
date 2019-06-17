@@ -1,5 +1,5 @@
 import * as child_process from "child_process";
-import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, DefinitionProvider, MarkdownString, ReferenceProvider, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
 import { AvailableSuggestion, Outline } from "../analysis_server_types";
 import { TestStatus, VersionStatus } from "../enums";
 import { DebugCommandHandler } from "../interfaces";
@@ -54,7 +54,6 @@ export interface InternalExtensionApi {
 		uninstall(packageID: string): Promise<void>;
 	};
 	reanalyze: () => void;
-	referenceProvider: ReferenceProvider & DefinitionProvider;
 	renameProvider: RenameProvider;
 	safeSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any) => child_process.ChildProcess;
 	testTreeProvider: TestResultsProvider;

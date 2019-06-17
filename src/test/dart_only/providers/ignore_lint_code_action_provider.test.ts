@@ -14,7 +14,10 @@ describe("ignore_lint_code_action_provider", () => {
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
 
-		const ignoreLintAction = fixResults.find((r) => r.title.indexOf("Ignore hint 'unused_local_variable' for this line") !== -1);
+		const ignoreLintAction = fixResults.find((r) => {
+			return r.title.indexOf("Ignore hint 'unused_local_variable' for this line") !== -1
+				|| r.title.indexOf("Ignore 'unused_local_variable' for this line") !== -1;
+		});
 		assert.ok(ignoreLintAction);
 	});
 
@@ -29,7 +32,10 @@ describe("ignore_lint_code_action_provider", () => {
 
 		const filteredResults = fixResults.filter((f) => !vs.CodeActionKind.Source.contains(f.kind));
 
-		const index = filteredResults.findIndex((r) => r.title.indexOf("Ignore hint 'unused_local_variable' for this line") !== -1);
+		const index = filteredResults.findIndex((r) => {
+			return r.title.indexOf("Ignore hint 'unused_local_variable' for this line") !== -1
+				|| r.title.indexOf("Ignore 'unused_local_variable' for this line") !== -1;
+		});
 		assert.equal(index, filteredResults.length - 1);
 	});
 
@@ -39,7 +45,10 @@ describe("ignore_lint_code_action_provider", () => {
   var a = 1;
 }`);
 		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("|a| = 1")) as Thenable<vs.CodeAction[]>);
-		const ignoreLintAction = fixResults.find((r) => r.title.indexOf("Ignore hint 'unused_local_variable' for this line") !== -1);
+		const ignoreLintAction = fixResults.find((r) => {
+			return r.title.indexOf("Ignore hint 'unused_local_variable' for this line") !== -1
+				|| r.title.indexOf("Ignore 'unused_local_variable' for this line") !== -1;
+		});
 
 		await vs.workspace.applyEdit(ignoreLintAction!.edit);
 

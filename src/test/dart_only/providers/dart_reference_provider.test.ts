@@ -1,7 +1,7 @@
 
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, ensureLocation, everythingFile, extApi, fakeCancellationToken, getPackages, positionOf, rangeOf } from "../../helpers";
+import { activate, currentDoc, ensureLocation, everythingFile, getPackages, positionOf, rangeOf } from "../../helpers";
 
 describe("dart_reference_provider", () => {
 
@@ -9,14 +9,14 @@ describe("dart_reference_provider", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate everythingFile", () => activate(everythingFile));
 
-	async function getDefinitionFor(searchText: string): Promise<vs.DefinitionLink[]> {
+	async function getDefinitionFor(searchText: string): Promise<vs.Location[]> {
 		const position = positionOf(searchText);
-		return extApi.referenceProvider.provideDefinition(currentDoc(), position, fakeCancellationToken) as vs.DefinitionLink[];
+		return (await vs.commands.executeCommand("vscode.executeDefinitionProvider", currentDoc().uri, position)) as vs.Location[];
 	}
 
 	async function getReferencesFor(searchText: string): Promise<vs.Location[] | undefined> {
 		const position = positionOf(searchText);
-		return extApi.referenceProvider.provideReferences(currentDoc(), position, { includeDeclaration: true }, fakeCancellationToken);
+		return (await vs.commands.executeCommand("vscode.executeReferenceProvider", currentDoc().uri, position)) as vs.Location[];
 	}
 
 	it("returns expected location for definition of field reference", async () => {
@@ -24,9 +24,11 @@ describe("dart_reference_provider", () => {
 		assert.ok(definitions);
 		assert.equal(definitions.length, 1);
 		const definition = definitions[0];
-		assert.deepStrictEqual(definition.targetUri.toString(), currentDoc().uri.toString());
-		assert.deepStrictEqual(definition.targetRange, rangeOf("num |myNumField|;"));
-		assert.deepStrictEqual(definition.originSelectionRange, rangeOf("a.|myNumField|"));
+		assert.deepStrictEqual(definition.uri.toString(), currentDoc().uri.toString());
+		assert.deepStrictEqual(definition.range, rangeOf("num |myNumField|;"));
+		// assert.deepStrictEqual(definition.targetUri.toString(), currentDoc().uri.toString());
+		// assert.deepStrictEqual(definition.targetRange, rangeOf("num |myNumField|;"));
+		// assert.deepStrictEqual(definition.originSelectionRange, rangeOf("a.|myNumField|"));
 	});
 
 	it("returns expected location for references of field reference", async () => {

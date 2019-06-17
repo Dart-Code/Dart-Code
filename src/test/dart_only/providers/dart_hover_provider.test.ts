@@ -22,9 +22,13 @@ describe("dart_hover_provider", () => {
 			// TODO: Once VS Code updates (and we require that version), we may be able to simplify this.
 			// For the existing VS Code impl we get an array here, but for LSP we return '---' as a separator since
 			// we only get a single item. To treat them the same, join with `---` then split on `---`.
-			const sections = h.contents.map((c) => ((c as any).value as string).trim()).join("\n---\n").split("\n---\n");
+			const sections = h.contents.map((c) => ((c as any).value as string).trim())
+				.join("\n---\n")
+				.replace("\n```\n", "\n```\n---\n")
+				.replace("\n---\n---\n", "\n---\n") // Hacks just to make both LSP and non-LSP end up formatted the same.
+				.split("\n---\n");
 			const displayText = sections[0];
-			const docs = sections[1];
+			const docs = sections.slice(1).join("\n");
 			assert.equal(displayText.substr(0, 7), "```dart");
 			assert.equal(displayText.substr(-3), "```");
 			return {
@@ -49,7 +53,7 @@ describe("dart_hover_provider", () => {
 	}
 
 	function getExpectedDoc(packagePath: string, doc: string): string {
-		return extApi.analyzerCapabilities.hasNewHoverLibraryFormat && packagePath
+		return (extApi.analyzerCapabilities.hasNewHoverLibraryFormat) && packagePath
 			? `*${packagePath}*\n\n${doc}`
 			: doc;
 	}

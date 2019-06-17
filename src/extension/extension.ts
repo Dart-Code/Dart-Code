@@ -500,7 +500,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			packagesTreeProvider: dartPackagesProvider,
 			pubGlobal,
 			reanalyze,
-			referenceProvider,
 			renameProvider,
 			safeSpawn,
 			testTreeProvider,
