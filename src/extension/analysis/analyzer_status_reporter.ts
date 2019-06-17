@@ -84,9 +84,9 @@ export class AnalyzerStatusReporter {
 
 	private handleServerError(error: ServerErrorNotification, method?: string) {
 		// Always log to the console.
-		this.logger.logError(error.message, LogCategory.Analyzer);
+		this.logger.error(error.message, LogCategory.Analyzer);
 		if (error.stackTrace)
-			this.logger.logError(error.stackTrace, LogCategory.Analyzer);
+			this.logger.error(error.stackTrace, LogCategory.Analyzer);
 
 		this.analytics.logAnalyzerError((method ? `(${method}) ` : "") + error.message, error.isFatal);
 

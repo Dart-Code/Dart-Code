@@ -44,7 +44,7 @@ describe("flutter run debugger (attach)", () => {
 		// Make sure any stdErr is logged to console + log file for debugging.
 		dc.on("output", (event: DebugProtocol.OutputEvent) => {
 			if (event.body.category === "stderr")
-				extApi.logger.logError(event.body.output);
+				extApi.logger.error(event.body.output);
 		});
 		return config;
 	}

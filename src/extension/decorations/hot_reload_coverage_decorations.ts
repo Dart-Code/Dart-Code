@@ -119,7 +119,7 @@ export class HotReloadCoverageDecorations implements vs.Disposable {
 
 				return true;
 			} catch (e) {
-				this.logger.logError(e);
+				this.logger.error(e);
 				return false;
 			}
 		});

@@ -12,29 +12,29 @@ export class LoggingReporter extends reporters.Base {
 			runner.on("test", (test: ITest) => {
 				const extApi: InternalExtensionApi = require("./helpers").extApi;
 				if (extApi)
-					extApi.logger.logInfo(`Starting test ${test.fullTitle()}...`, LogCategory.CI);
+					extApi.logger.info(`Starting test ${test.fullTitle()}...`, LogCategory.CI);
 			});
 
 			runner.on("pending", (test: ITest) => {
 				const extApi: InternalExtensionApi = require("./helpers").extApi;
 				if (extApi)
-					extApi.logger.logInfo(`Test ${test.fullTitle()} pending/skipped`, LogCategory.CI);
+					extApi.logger.info(`Test ${test.fullTitle()} pending/skipped`, LogCategory.CI);
 			});
 
 			runner.on("pass", (test: ITest) => {
 				const extApi: InternalExtensionApi = require("./helpers").extApi;
 				if (extApi)
-					extApi.logger.logInfo(`Test ${test.fullTitle()} passed after ${test.duration}ms`, LogCategory.CI);
+					extApi.logger.info(`Test ${test.fullTitle()} passed after ${test.duration}ms`, LogCategory.CI);
 			});
 
 			runner.on("fail", (test: ITest) => {
 				const extApi: InternalExtensionApi = require("./helpers").extApi;
 				if (extApi) {
-					extApi.logger.logError(`Test ${test.fullTitle()} failed after ${test.duration}ms`, LogCategory.CI);
+					extApi.logger.error(`Test ${test.fullTitle()} failed after ${test.duration}ms`, LogCategory.CI);
 					const err = (test as any).err;
 					if (err) {
-						extApi.logger.logError(err.message, LogCategory.CI);
-						extApi.logger.logError(err.stack, LogCategory.CI);
+						extApi.logger.error(err.message, LogCategory.CI);
+						extApi.logger.error(err.stack, LogCategory.CI);
 					}
 				}
 			});

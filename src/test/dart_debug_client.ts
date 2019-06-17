@@ -23,16 +23,16 @@ export class DartDebugClient extends DebugClient {
 
 		// Log important events to make troubleshooting tests easier.
 		this.on("output", (event: DebugProtocol.OutputEvent) => {
-			extApi.logger.logInfo(`[${event.body.category}] ${event.body.output}`);
+			extApi.logger.info(`[${event.body.category}] ${event.body.output}`);
 		});
 		this.on("terminated", (event: DebugProtocol.TerminatedEvent) => {
-			extApi.logger.logInfo(`[terminated]`);
+			extApi.logger.info(`[terminated]`);
 		});
 		this.on("stopped", (event: DebugProtocol.StoppedEvent) => {
-			extApi.logger.logInfo(`[stopped] ${event.body.reason}`);
+			extApi.logger.info(`[stopped] ${event.body.reason}`);
 		});
 		this.on("initialized", (event: DebugProtocol.InitializedEvent) => {
-			extApi.logger.logInfo(`[initialized]`);
+			extApi.logger.info(`[initialized]`);
 		});
 		// If we were given a test provider, forward the test notifications on to
 		// it as it won't receive the events normally because this is not a Code-spawned
@@ -81,9 +81,9 @@ export class DartDebugClient extends DebugClient {
 		// path for Flutter tests, but we should probably come back and resolve these to work the
 		// same and just push the unpause logic up into a test helper.
 		if (launchArgs.request === "attach" && launchArgs.deviceId !== "flutter-tester") {
-			extApi.logger.logInfo("Attaching to process...");
+			extApi.logger.info("Attaching to process...");
 			await watchPromise("launch->attach->attachRequest", this.attachRequest(launchArgs));
-			extApi.logger.logInfo("Waiting for stopped (step) event...");
+			extApi.logger.info("Waiting for stopped (step) event...");
 			const event = await watchPromise("launch->attach->waitForEvent:stopped", this.waitForEvent("stopped"));
 			assert.equal(event.body.reason, "step");
 			// HACK: Put a fake delay in after attachRequest to ensure isolates become runnable and breakpoints are transmitted
@@ -92,7 +92,7 @@ export class DartDebugClient extends DebugClient {
 			await new Promise((resolve) => setTimeout(resolve, 1000));
 			// It's possible the resume will never return because the process will terminate as soon as it starts resuming
 			// so we will assume that if we get a terminate the resume worked.
-			extApi.logger.logInfo("Resuming and waiting for success or terminate...");
+			extApi.logger.info("Resuming and waiting for success or terminate...");
 			await watchPromise(
 				"launch()->attach->terminate/resume",
 				Promise.race([

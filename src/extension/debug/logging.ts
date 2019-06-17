@@ -12,13 +12,13 @@ export class DebugAdapterLogger implements Logger {
 		this.debugClient.sendEvent(new Event("dart.log", { message, severity, category } as LogMessage));
 	}
 
-	public logInfo(message: string, category?: LogCategory): void {
+	public info(message: string, category?: LogCategory): void {
 		this.log(message, LogSeverity.Info, category);
 	}
-	public logWarn(errorOrMessage: SomeError, category?: LogCategory): void {
+	public warn(errorOrMessage: SomeError, category?: LogCategory): void {
 		this.log(errorString(errorOrMessage), LogSeverity.Warn, category);
 	}
-	public logError(errorOrMessage: SomeError, category?: LogCategory): void {
+	public error(errorOrMessage: SomeError, category?: LogCategory): void {
 		this.log(errorString(errorOrMessage), LogSeverity.Error, category);
 	}
 }

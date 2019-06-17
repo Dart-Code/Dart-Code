@@ -28,8 +28,8 @@ describe("extension", () => {
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.ok(sdks.flutter);
-		extApi.logger.logInfo("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
-		extApi.logger.logInfo(`        "analysis_server": ${extApi.analyzerCapabilities.version}`);
+		extApi.logger.info("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
+		extApi.logger.info(`        "analysis_server": ${extApi.analyzerCapabilities.version}`);
 	});
 	it("used Flutter's version of the Dart SDK", async () => {
 		await activateWithoutAnalysis();

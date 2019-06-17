@@ -254,7 +254,7 @@ export class ThreadInfo {
 					this.breakpoints[vmBp.id] = bp;
 					return vmBp;
 				} catch (e) {
-					logger.logError(e, LogCategory.Observatory);
+					logger.error(e, LogCategory.Observatory);
 					return undefined;
 				}
 			}),

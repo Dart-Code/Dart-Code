@@ -43,10 +43,10 @@ describe("capture logs command", () => {
 	it("writes to the correct file", async () => {
 		const logger = await configureLog(LogCategory.Analyzer);
 
-		extApi.logger.logInfo("This is a test"); // Should be logged
-		extApi.logger.logInfo("This is an analyzer event", LogCategory.Analyzer); // Should be logged
-		extApi.logger.logInfo("This is an flutter daemon event", LogCategory.FlutterDaemon); // Should not be logged
-		extApi.logger.logInfo("This is an flutter daemon ERROR event", LogCategory.FlutterDaemon); // Should be logged because it's an error.
+		extApi.logger.info("This is a test"); // Should be logged
+		extApi.logger.info("This is an analyzer event", LogCategory.Analyzer); // Should be logged
+		extApi.logger.info("This is an flutter daemon event", LogCategory.FlutterDaemon); // Should not be logged
+		extApi.logger.info("This is an flutter daemon ERROR event", LogCategory.FlutterDaemon); // Should be logged because it's an error.
 
 		const logFilename = await logger.stopLogging();
 
@@ -73,9 +73,9 @@ describe("capture logs command", () => {
 	it("only logs the specified categories", async () => {
 		const logger = await configureLog(LogCategory.Analyzer);
 
-		extApi.logger.logInfo("This is a test"); // Should be logged
-		extApi.logger.logInfo("This is an analyzer event", LogCategory.Analyzer); // Should be logged
-		extApi.logger.logInfo("This is an flutter daemon event", LogCategory.FlutterDaemon); // Should not be logged
+		extApi.logger.info("This is a test"); // Should be logged
+		extApi.logger.info("This is an analyzer event", LogCategory.Analyzer); // Should be logged
+		extApi.logger.info("This is an flutter daemon event", LogCategory.FlutterDaemon); // Should not be logged
 
 		const logFilename = await logger.stopLogging();
 
@@ -88,9 +88,9 @@ describe("capture logs command", () => {
 	it("always logs WARN and ERROR log to General", async () => {
 		const logger = await configureLog(LogCategory.General);
 
-		extApi.logger.logInfo("This is a test"); // Should be logged
-		extApi.logger.logInfo("This is a flutter daemon event", LogCategory.FlutterDaemon); // Should not be logged
-		extApi.logger.logError("This is a flutter daemon ERROR event", LogCategory.FlutterDaemon); // Should be logged because it's an error.
+		extApi.logger.info("This is a test"); // Should be logged
+		extApi.logger.info("This is a flutter daemon event", LogCategory.FlutterDaemon); // Should not be logged
+		extApi.logger.error("This is a flutter daemon ERROR event", LogCategory.FlutterDaemon); // Should be logged because it's an error.
 
 		const logFilename = await logger.stopLogging();
 

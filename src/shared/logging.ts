@@ -32,13 +32,13 @@ export class EmittingLogger implements Logger, IAmDisposable {
 		// }
 	}
 
-	public logInfo(message: string, category?: LogCategory): void {
+	public info(message: string, category?: LogCategory): void {
 		this.log(message, LogSeverity.Info, category);
 	}
-	public logWarn(errorOrMessage: SomeError, category?: LogCategory): void {
+	public warn(errorOrMessage: SomeError, category?: LogCategory): void {
 		this.log(errorString(errorOrMessage), LogSeverity.Warn, category);
 	}
-	public logError(errorOrMessage: SomeError, category?: LogCategory): void {
+	public error(errorOrMessage: SomeError, category?: LogCategory): void {
 		this.log(errorString(errorOrMessage), LogSeverity.Error, category);
 	}
 
@@ -50,23 +50,23 @@ export class EmittingLogger implements Logger, IAmDisposable {
 export class CategoryLogger implements Logger {
 	constructor(private base: Logger, private defaultCategory: LogCategory) { }
 
-	public logInfo(message: string, category: LogCategory = this.defaultCategory): void {
-		this.base.logInfo(message, category);
+	public info(message: string, category: LogCategory = this.defaultCategory): void {
+		this.base.info(message, category);
 	}
-	public logWarn(errorOrMessage: SomeError, category: LogCategory = this.defaultCategory): void {
-		this.base.logWarn(errorOrMessage, category);
+	public warn(errorOrMessage: SomeError, category: LogCategory = this.defaultCategory): void {
+		this.base.warn(errorOrMessage, category);
 	}
-	public logError(errorOrMessage: SomeError, category: LogCategory = this.defaultCategory): void {
-		this.base.logError(errorOrMessage, category);
+	public error(errorOrMessage: SomeError, category: LogCategory = this.defaultCategory): void {
+		this.base.error(errorOrMessage, category);
 	}
 }
 
 export function logProcess(logger: Logger, category: LogCategory, process: child_process.ChildProcess): void {
 	const prefix = `(PROC ${process.pid})`;
-	process.stdout.on("data", (data) => logger.logInfo(`${prefix} ${data}`, category));
-	process.stderr.on("data", (data) => logger.logInfo(`${prefix} ${data}`, category));
-	process.on("close", (code) => logger.logInfo(`${prefix} closed (${code})`, category));
-	process.on("exit", (code) => logger.logInfo(`${prefix} exited (${code})`, category));
+	process.stdout.on("data", (data) => logger.info(`${prefix} ${data}`, category));
+	process.stderr.on("data", (data) => logger.info(`${prefix} ${data}`, category));
+	process.on("close", (code) => logger.info(`${prefix} closed (${code})`, category));
+	process.on("exit", (code) => logger.info(`${prefix} exited (${code})`, category));
 }
 
 export function captureLogs(logger: EmittingLogger, file: string, header: string, maxLogLineLength: number, logCategories?: LogCategory[]): ({ dispose: () => Promise<void> | void }) {

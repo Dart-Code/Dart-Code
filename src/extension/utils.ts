@@ -144,7 +144,7 @@ export function getSdkVersion(logger: Logger, sdkRoot?: string): string | undefi
 			.join("\n")
 			.trim();
 	} catch (e) {
-		logger.logError(e);
+		logger.error(e);
 		return undefined;
 	}
 }

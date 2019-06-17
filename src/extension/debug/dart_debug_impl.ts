@@ -911,7 +911,7 @@ export class DartDebugSession extends DebugSession {
 				return this.valueAsString(evalResult, undefined, true);
 			}
 		} catch (e) {
-			this.logger.logError(e, LogCategory.Observatory);
+			this.logger.error(e, LogCategory.Observatory);
 			return undefined;
 		}
 	}
@@ -1123,7 +1123,7 @@ export class DartDebugSession extends DebugSession {
 				await this.handleInspectEvent(event);
 			}
 		} catch (e) {
-			this.logger.logError(e, LogCategory.Observatory);
+			this.logger.error(e, LogCategory.Observatory);
 		}
 	}
 
@@ -1132,12 +1132,12 @@ export class DartDebugSession extends DebugSession {
 		const thread = event.isolate ? this.threadManager.getThreadInfoFromRef(event.isolate) : undefined;
 
 		if (!event.isolate || !thread) {
-			this.logger.logWarn("No thread for pause event");
+			this.logger.warn("No thread for pause event");
 			return;
 		}
 
 		if (!this.observatory) {
-			this.logger.logWarn("No observatory connection");
+			this.logger.warn("No observatory connection");
 			return;
 		}
 
@@ -1146,7 +1146,7 @@ export class DartDebugSession extends DebugSession {
 			try {
 				await this.threadManager.resetBreakpoints();
 			} catch (e) {
-				this.logger.logError(e, LogCategory.Observatory);
+				this.logger.error(e, LogCategory.Observatory);
 			}
 			try {
 				await this.observatory.resume(event.isolate.id);
@@ -1365,7 +1365,7 @@ export class DartDebugSession extends DebugSession {
 						});
 					}
 				} catch (e) {
-					this.logger.logError(e, LogCategory.Observatory);
+					this.logger.error(e, LogCategory.Observatory);
 				}
 			}
 		}

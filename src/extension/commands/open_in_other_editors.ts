@@ -72,7 +72,7 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 						return;
 					}
 				} catch (e) {
-					this.logger.logError(e);
+					this.logger.error(e);
 				}
 				reject();
 			});

@@ -87,7 +87,7 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 				return resp.edits.map((e) => this.convertData(document, e));
 		} catch (e) {
 			if (doLogError)
-				this.logger.logError(e);
+				this.logger.error(e);
 			throw e;
 		}
 	}
