@@ -1,4 +1,4 @@
-import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, DocumentSelector, Range, TextDocument, WorkspaceEdit } from "vscode";
+import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, Diagnostic, DiagnosticSeverity, DocumentSelector, Range, TextDocument, WorkspaceEdit } from "vscode";
 import { config } from "../config";
 import { isAnalyzableAndInWorkspace } from "../utils";
 import { DartDiagnostic } from "./dart_diagnostic_provider";
@@ -24,14 +24,19 @@ export class IgnoreLintCodeActionProvider implements RankedCodeActionProvider {
 		if (!config.showIgnoreQuickFixes || !context || !context.diagnostics || !context.diagnostics.length)
 			return;
 
-		const lintErrors = context.diagnostics.filter((d) => d instanceof DartDiagnostic && (d.type === "LINT" || d.type === "HINT"));
+		const lintErrors = context.diagnostics.filter((d) => {
+			// Non-LSP:
+			return (d instanceof DartDiagnostic && (d.type === "LINT" || d.type === "HINT")
+				// LSP:
+				|| (d.source === "dart" && d.severity === DiagnosticSeverity.Information));
+		});
 		if (!lintErrors.length)
 			return;
 
-		return lintErrors.map((diagnostic) => this.convertResult(document, diagnostic as DartDiagnostic));
+		return lintErrors.map((diagnostic) => this.convertResult(document, diagnostic));
 	}
 
-	private convertResult(document: TextDocument, diagnostic: DartDiagnostic): CodeAction {
+	private convertResult(document: TextDocument, diagnostic: Diagnostic): CodeAction {
 		const edit = new WorkspaceEdit();
 		const line = document.lineAt(diagnostic.range.start.line);
 		edit.insert(
@@ -40,7 +45,8 @@ export class IgnoreLintCodeActionProvider implements RankedCodeActionProvider {
 			`${" ".repeat(line.firstNonWhitespaceCharacterIndex)}// ignore: ${diagnostic.code}\n`,
 		);
 
-		const title = `Ignore ${diagnostic.type.toLowerCase()} '${diagnostic.code}' for this line`;
+		const type = diagnostic instanceof DartDiagnostic ? `${diagnostic.type.toLowerCase()} ` : "";
+		const title = `Ignore ${type}'${diagnostic.code}' for this line`;
 		const action = new CodeAction(title, CodeActionKind.QuickFix);
 		action.edit = edit;
 		return action;
