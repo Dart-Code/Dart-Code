@@ -107,9 +107,9 @@ export async function spawnFlutterProcess(script: string | Uri): Promise<DartPro
 		],
 	);
 	// TODO: Use logProcess?
-	process.stdout.on("data", (data) => extApi.logger.logInfo(`SPROC: ${data}`, LogCategory.CI));
-	process.stderr.on("data", (data) => extApi.logger.logInfo(`SPROC: ${data}`, LogCategory.CI));
-	process.on("exit", (code) => extApi.logger.logInfo(`SPROC: Exited (${code})`, LogCategory.CI));
+	process.stdout.on("data", (data) => extApi.logger.info(`SPROC: ${data}`, LogCategory.CI));
+	process.stderr.on("data", (data) => extApi.logger.info(`SPROC: ${data}`, LogCategory.CI));
+	process.on("exit", (code) => extApi.logger.info(`SPROC: Exited (${code})`, LogCategory.CI));
 	const flutterProcess = new DartProcess(process);
 	defer(() => {
 		if (!flutterProcess.hasExited)
@@ -145,7 +145,7 @@ export function killFlutterTester(): Promise<void> {
 			: extApi.safeSpawn(undefined, "pkill", ["flutter_tester"]);
 		proc.on("exit", (code: number) => {
 			if (!isWin ? code !== 128 : code === 0) {
-				extApi.logger.logWarn("flutter_tester process(s) remained after test. These have been terminated to avoid affecting future tests, " +
+				extApi.logger.warn("flutter_tester process(s) remained after test. These have been terminated to avoid affecting future tests, " +
 					"but may indicate something is not cleaning up correctly", LogCategory.CI);
 			}
 			resolve();

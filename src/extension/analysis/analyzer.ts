@@ -305,7 +305,7 @@ export function getSymbolKindForElementKind(logger: Logger, kind: as.ElementKind
 		case "UNKNOWN":
 			return vs.SymbolKind.Object;
 		default:
-			logger.logError(`Unknown kind: ${kind}`, LogCategory.Analyzer);
+			logger.error(`Unknown kind: ${kind}`, LogCategory.Analyzer);
 			return vs.SymbolKind.Object;
 	}
 }

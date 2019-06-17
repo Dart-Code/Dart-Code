@@ -249,7 +249,7 @@ export class SdkCommands {
 		// Don't do anything if we're in the middle of creating projects, as packages
 		// may  be fetched automatically.
 		if (numProjectCreationsInProgress > 0) {
-			this.logger.logInfo("Skipping package fetch because project creation is in progress");
+			this.logger.info("Skipping package fetch because project creation is in progress");
 			return;
 		}
 
@@ -310,7 +310,7 @@ export class SdkCommands {
 			return;
 		const containingWorkspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(folderToRunCommandIn));
 		if (!containingWorkspace) {
-			this.logger.logError(`Failed to get workspace folder for ${folderToRunCommandIn}`);
+			this.logger.error(`Failed to get workspace folder for ${folderToRunCommandIn}`);
 			throw new Error(`Failed to get workspace folder for ${folderToRunCommandIn}`);
 		}
 		const containingWorkspacePath = fsPath(containingWorkspace.uri);
@@ -429,7 +429,7 @@ export class SdkCommands {
 				progress.report({ message: "running..." });
 				const proc = safeSpawn(folder, binPath, args);
 				channels.runProcessInChannel(proc, channel);
-				this.logger.logInfo(`(PROC ${proc.pid}) Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogCategory.CommandProcesses);
+				this.logger.info(`(PROC ${proc.pid}) Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogCategory.CommandProcesses);
 				logProcess(this.logger, LogCategory.CommandProcesses, proc);
 				return proc;
 			}, existingProcess);

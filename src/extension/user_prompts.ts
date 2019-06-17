@@ -109,18 +109,18 @@ async function handleStagehandTrigger(logger: Logger, wf: vs.WorkspaceFolder, tr
 			return;
 		}
 		fs.unlinkSync(triggerFile);
-		logger.logInfo(`Creating Dart project for ${fsPath(wf.uri)}`, LogCategory.CommandProcesses);
+		logger.info(`Creating Dart project for ${fsPath(wf.uri)}`, LogCategory.CommandProcesses);
 		try {
 			markProjectCreationStarted();
 
 			const success = await createDartProject(fsPath(wf.uri), template.name);
 			if (success) {
-				logger.logInfo(`Fetching packages for newly-created project`, LogCategory.CommandProcesses);
+				logger.info(`Fetching packages for newly-created project`, LogCategory.CommandProcesses);
 				await vs.commands.executeCommand("dart.getPackages", wf.uri);
 				handleDartWelcome(wf, template);
-				logger.logInfo(`Finished creating new project!`, LogCategory.CommandProcesses);
+				logger.info(`Finished creating new project!`, LogCategory.CommandProcesses);
 			} else {
-				logger.logInfo(`Failed to create new project`, LogCategory.CommandProcesses);
+				logger.info(`Failed to create new project`, LogCategory.CommandProcesses);
 			}
 		} finally {
 			markProjectCreationEnded();

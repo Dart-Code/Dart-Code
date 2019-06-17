@@ -59,7 +59,7 @@ class OpenFileTracker implements IAmDisposable {
 		try {
 			await this.analyzer.analysisSetPriorityFiles({ files: visibleFiles });
 		} catch (e) {
-			this.logger.logError(e);
+			this.logger.error(e);
 		}
 	}
 
@@ -83,7 +83,7 @@ class OpenFileTracker implements IAmDisposable {
 				},
 			});
 		} catch (e) {
-			this.logger.logError(e);
+			this.logger.error(e);
 		}
 		// Set subscriptions.
 		if (this.wsContext.hasAnyFlutterProjects && this.analyzer.capabilities.supportsFlutterOutline) {
@@ -94,7 +94,7 @@ class OpenFileTracker implements IAmDisposable {
 					},
 				});
 			} catch (e) {
-				this.logger.logError(e);
+				this.logger.error(e);
 			}
 		}
 	}

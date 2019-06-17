@@ -28,9 +28,9 @@ export interface StagehandTemplate {
 }
 
 export interface Logger {
-	logInfo(message: string, category?: LogCategory): void;
-	logWarn(message: SomeError, category?: LogCategory): void;
-	logError(error: SomeError, category?: LogCategory): void;
+	info(message: string, category?: LogCategory): void;
+	warn(message: SomeError, category?: LogCategory): void;
+	error(error: SomeError, category?: LogCategory): void;
 }
 
 export type SomeError = string | Error | undefined | { message: string };

@@ -33,6 +33,6 @@ export async function checkForStandardDartSdkUpdates(logger: Logger, workspaceCo
 			config.setCheckForSdkUpdates(false);
 
 	} catch (e) {
-		logger.logError(e);
+		logger.error(e);
 	}
 }

@@ -45,7 +45,7 @@ export function showFlutter2019Q2SurveyNotificationIfAppropriate(context: Contex
 			}
 		}
 	} catch {
-		logger.logWarn("Unable to read Flutter settings for preparing survey link");
+		logger.warn("Unable to read Flutter settings for preparing survey link");
 	}
 
 	const prompt = clientID ? flutterSurvey2019Q2PromptWithAnalytics : flutterSurvey2019Q2PromptWithoutAnalytics;

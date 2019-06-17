@@ -128,7 +128,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 				msg = msg[0];
 		} catch (e) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
-				this.logger.logError(`Unexpected non-JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
+				this.logger.error(`Unexpected non-JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
 				this.processUnhandledMessage(message);
 				return;
 			} else {
@@ -142,12 +142,12 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			else if (msg && this.isResponse(msg))
 				this.handleResponse(msg as UnknownResponse);
 			else {
-				this.logger.logError(`Unexpected JSON message, assuming normal stdout : ${message}`);
+				this.logger.error(`Unexpected JSON message, assuming normal stdout : ${message}`);
 				this.processUnhandledMessage(message);
 			}
 		} catch (e) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
-				this.logger.logError(`Failed to handle JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
+				this.logger.error(`Failed to handle JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
 				this.processUnhandledMessage(message);
 			} else {
 				throw e;
@@ -164,10 +164,10 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		delete this.activeRequests[evt.id];
 
 		if (handler === "CANCELLED") {
-			this.logger.logInfo(`Ignoring response to ${evt.id} because it was cancelled:\n\n${JSON.stringify(evt, undefined, 4)}`);
+			this.logger.info(`Ignoring response to ${evt.id} because it was cancelled:\n\n${JSON.stringify(evt, undefined, 4)}`);
 			return;
 		} else if (!handler) {
-			this.logger.logError(`Unable to handle response with ID ${evt.id} because its handler is not available`);
+			this.logger.error(`Unable to handle response with ID ${evt.id} because its handler is not available`);
 			return;
 		}
 		const method: string = handler[2];
@@ -218,9 +218,9 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 	protected logTraffic(message: string, isError = false): void {
 		if (isError)
-			this.logger.logError(message);
+			this.logger.error(message);
 		else
-			this.logger.logInfo(message);
+			this.logger.info(message);
 
 		const newLogFile = this.getLogFile();
 		if (newLogFile !== this.currentLogFile && this.logStream) {
@@ -255,7 +255,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 				process.kill(pid);
 			} catch (e) {
 				// TODO: Logger knows the category!
-				this.logger.logError({ message: e.toString() });
+				this.logger.error({ message: e.toString() });
 			}
 		}
 		this.additionalPidsToTerminate.length = 0;

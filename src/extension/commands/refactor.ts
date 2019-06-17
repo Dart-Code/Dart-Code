@@ -71,11 +71,11 @@ export class RefactorCommands implements vs.Disposable {
 					validateOnly,
 				});
 			} catch (e) {
-				this.logger.logError(e);
+				this.logger.error(e);
 				if (remainingTries <= 0 || e.code !== "REFACTORING_REQUEST_CANCELLED")
 					throw e;
 				else
-					this.logger.logInfo(`getRefactor failed, will try ${remainingTries} more times...`);
+					this.logger.info(`getRefactor failed, will try ${remainingTries} more times...`);
 			}
 		}
 	}

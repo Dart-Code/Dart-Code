@@ -102,7 +102,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				name: e.name || e.id,
 			}));
 		} catch (e) {
-			this.logger.logError({ message: e });
+			this.logger.error({ message: e });
 			return [];
 		}
 	}

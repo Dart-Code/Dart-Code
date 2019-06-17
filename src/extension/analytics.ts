@@ -157,7 +157,7 @@ export class Analytics {
 		Object.assign(data, customData);
 
 		if (debug)
-			this.logger.logInfo("Sending analytic: " + JSON.stringify(data));
+			this.logger.info("Sending analytic: " + JSON.stringify(data));
 
 		const options: https.RequestOptions = {
 			headers: {
@@ -177,25 +177,25 @@ export class Analytics {
 							try {
 								const gaDebugResp = JSON.parse(c.toString());
 								if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
-									this.logger.logInfo("Sent OK!");
+									this.logger.info("Sent OK!");
 								else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
-									this.logger.logWarn(c.toString());
+									this.logger.warn(c.toString());
 								else
-									this.logger.logWarn("Unexpected GA debug response: " + c.toString());
+									this.logger.warn("Unexpected GA debug response: " + c.toString());
 							} catch (e) {
-								this.logger.logWarn("Error in GA debug response: " + c.toString());
+								this.logger.warn("Error in GA debug response: " + c.toString());
 							}
 						});
 
 					if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
-						this.logger.logInfo(`Failed to send analytics ${resp && resp.statusCode}: ${resp && resp.statusMessage}`);
+						this.logger.info(`Failed to send analytics ${resp && resp.statusCode}: ${resp && resp.statusMessage}`);
 					}
 					resolve();
 				});
 				req.write(querystring.stringify(data));
 				req.end();
 			} catch (e) {
-				this.logger.logError(`Failed to send analytics: ${e}`);
+				this.logger.error(`Failed to send analytics: ${e}`);
 				resolve();
 			}
 		});

@@ -31,7 +31,7 @@ export class AssistCodeActionProvider implements RankedCodeActionProvider {
 			});
 			return assists.assists.map((assist) => this.convertResult(document, assist));
 		} catch (e) {
-			this.logger.logError(e);
+			this.logger.error(e);
 		}
 	}
 

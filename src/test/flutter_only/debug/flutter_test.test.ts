@@ -41,8 +41,8 @@ describe("flutter test debugger", () => {
 		const thisDc = dc;
 		defer(() => withTimeout(
 			Promise.all([
-				thisDc.terminateRequest().catch((e) => extApi.logger.logError(e)),
-				delay(500).then(() => thisDc.stop()).catch((e) => extApi.logger.logError(e)),
+				thisDc.terminateRequest().catch((e) => extApi.logger.error(e)),
+				delay(500).then(() => thisDc.stop()).catch((e) => extApi.logger.error(e)),
 			]),
 			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
 			60,

@@ -146,7 +146,7 @@ export class FlutterDebugSession extends DartDebugSession {
 						appArgs.push("--debug-port");
 						appArgs.push(observatoryPort.toString());
 					} else {
-						logger.logWarn(`Observatory port was not found: ${flutterAttach.observatoryUri}`);
+						logger.warn(`Observatory port was not found: ${flutterAttach.observatoryUri}`);
 					}
 				}
 			}

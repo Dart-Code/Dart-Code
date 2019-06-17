@@ -115,7 +115,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	util.logTime("Code called activate");
 	// Wire up a reload command that will re-initialise everything.
 	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", (_) => {
-		logger.logInfo("Performing silent extension reload...");
+		logger.info("Performing silent extension reload...");
 		deactivate(true);
 		const toDispose = context.subscriptions.slice();
 		context.subscriptions.length = 0;
@@ -123,11 +123,11 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			try {
 				sub.dispose();
 			} catch (e) {
-				logger.logError(e);
+				logger.error(e);
 			}
 		}
 		activate(context, true);
-		logger.logInfo("Done!");
+		logger.info("Done!");
 	}));
 
 	showTodos = config.showTodos;
@@ -418,7 +418,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 		vs.workspace.openTextDocument(filePath).then((document) => {
 			vs.window.showTextDocument(document, { preview: true });
-		}, (error) => logger.logError(error));
+		}, (error) => logger.error(error));
 	}));
 
 	// Warn the user if they've opened a folder with mismatched casing.
@@ -465,7 +465,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	if (workspaceContext.shouldLoadFlutterExtension) {
 		const flutterExtension = vs.extensions.getExtension(flutterExtensionIdentifier);
 		if (flutterExtension) {
-			logger.logInfo(`Activating Flutter extension for ${workspaceContext.workspaceTypeDescription} project...`);
+			logger.info(`Activating Flutter extension for ${workspaceContext.workspaceTypeDescription} project...`);
 			flutterExtension.activate();
 		}
 	}
@@ -547,7 +547,7 @@ function recalculateAnalysisRoots() {
 				return;
 			const containingRoot = analysisRoots.find((root: string) => isWithinPath(folder, root));
 			if (containingRoot) {
-				logger.logInfo(`Excluding folder ${folder} from analysis roots as it is a child of analysis root ${containingRoot} and may cause performance issues.`);
+				logger.info(`Excluding folder ${folder} from analysis roots as it is a child of analysis root ${containingRoot} and may cause performance issues.`);
 				excludeFolders.push(folder);
 			}
 		};

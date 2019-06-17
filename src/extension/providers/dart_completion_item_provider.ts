@@ -263,7 +263,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 			const suggestionSet = this.cachedCompletions[includedSuggestionSet.id];
 			if (!suggestionSet) {
-				this.logger.logWarn(`Suggestion set ${includedSuggestionSet.id} was not available and therefore not included in the completion results`);
+				this.logger.warn(`Suggestion set ${includedSuggestionSet.id} was not available and therefore not included in the completion results`);
 				return [];
 			}
 
@@ -596,7 +596,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		const hasProblematicEdits = hasOverlappingEdits(change);
 
 		if (hasProblematicEdits) {
-			this.logger.logError("Unable to insert imports because of overlapping edits from the server.");
+			this.logger.error("Unable to insert imports because of overlapping edits from the server.");
 			vs.window.showErrorMessage(`Unable to insert imports because of overlapping edits from the server`);
 			return undefined;
 		}

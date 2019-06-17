@@ -34,7 +34,7 @@ export class DartHoverProvider implements HoverProvider {
 				range.isSingleLine ? range : undefined, // Workaround for https://github.com/dart-lang/sdk/issues/35386
 			);
 		} catch (e) {
-			this.logger.logError(e);
+			this.logger.error(e);
 		}
 	}
 

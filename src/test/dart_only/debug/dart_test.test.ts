@@ -31,8 +31,8 @@ describe("dart test debugger", () => {
 		const thisDc = dc;
 		defer(() => withTimeout(
 			Promise.all([
-				thisDc.terminateRequest().catch((e) => extApi.logger.logInfo(e)),
-				delay(500).then(() => thisDc.stop()).catch((e) => extApi.logger.logInfo(e)),
+				thisDc.terminateRequest().catch((e) => extApi.logger.info(e)),
+				delay(500).then(() => thisDc.stop()).catch((e) => extApi.logger.info(e)),
 			]),
 			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
 			60,
@@ -204,7 +204,7 @@ describe("dart test debugger", () => {
 		// after running each test individually.
 
 		async function checkResults(description: string): Promise<void> {
-			extApi.logger.logInfo(description);
+			extApi.logger.info(description);
 			const expectedResults = getExpectedResults();
 			const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
 
@@ -237,7 +237,7 @@ describe("dart test debugger", () => {
 		// multiple of the duplicated tests.
 
 		async function checkResults(description: string): Promise<void> {
-			extApi.logger.logInfo(description);
+			extApi.logger.info(description);
 			const expectedResults = getExpectedResults();
 			const actualResults = (await makeTextTree(helloWorldTestDupeNameFile, extApi.testTreeProvider)).join("\n");
 

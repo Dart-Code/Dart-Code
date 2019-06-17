@@ -63,7 +63,7 @@ export class TypeHierarchyCommand implements vs.Disposable {
 
 	private async openLocation(result: vs.QuickPickItem & { location?: as.Location; }, asPreview = false) {
 		if (!result.location) {
-			this.logger.logWarn(`Unable to open item with no location`);
+			this.logger.warn(`Unable to open item with no location`);
 			return;
 		}
 		const location: as.Location = result.location;

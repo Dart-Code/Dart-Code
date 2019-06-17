@@ -79,7 +79,7 @@ export class DevToolsManager implements vs.Disposable {
 
 						return true;
 					} catch (e) {
-						this.logger.logError(`DevTools failed to launch browser ${e.message}`);
+						this.logger.error(`DevTools failed to launch browser ${e.message}`);
 						vs.window.showErrorMessage(`The DevTools service failed to launch the browser. ${pleaseReportBug}`, "Show Full Error").then((res) => {
 							if (res) {
 								const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`;
@@ -95,7 +95,7 @@ export class DevToolsManager implements vs.Disposable {
 				} else {
 					// const fullUrl = `${url}?hide=debugger&uri=${encodeURIComponent(session.vmServiceUri)}${config.useDevToolsDarkTheme ? "&theme=dark" : ""}`;
 					// openInBrowser(fullUrl);
-					this.logger.logError(`DevTools failed to register launchDevTools service`);
+					this.logger.error(`DevTools failed to register launchDevTools service`);
 					vs.window.showErrorMessage(`The DevTools service failed to register. ${pleaseReportBug}`);
 					return false;
 				}
@@ -109,7 +109,7 @@ export class DevToolsManager implements vs.Disposable {
 			return { url, dispose: () => this.dispose() };
 		} catch (e) {
 			this.devToolsStatusBarItem.hide();
-			this.logger.logError(e);
+			this.logger.error(e);
 			vs.window.showErrorMessage(`${e}`);
 		}
 	}
@@ -143,7 +143,7 @@ export class DevToolsManager implements vs.Disposable {
 					// Reset the port to 0 on error in case it was from us trying to reuse the previous port.
 					portToBind = 0;
 					const errorMessage = `${devtoolsPackageName} exited with code ${code}`;
-					this.logger.logError(errorMessage);
+					this.logger.error(errorMessage);
 					reject(errorMessage);
 				}
 			});

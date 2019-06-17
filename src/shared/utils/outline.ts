@@ -94,7 +94,7 @@ export abstract class OutlineVisitor {
 				this.visitUnknown(outline);
 				break;
 			default:
-				this.logger.logError(`Unknown Outline item! ${outline && outline.element && outline.element.kind}`);
+				this.logger.error(`Unknown Outline item! ${outline && outline.element && outline.element.kind}`);
 		}
 	}
 

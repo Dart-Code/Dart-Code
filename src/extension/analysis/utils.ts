@@ -17,7 +17,7 @@ export function findPackageRoots(logger: Logger, analyzer: Analyzer, root: strin
 	if (!analyzer.capabilities.mayRequiresPackageFolderWorkaround || !isPackageRootWorkaroundRequired(root))
 		return [root];
 
-	logger.logInfo("Workspace root appears to need package root workaround...");
+	logger.info("Workspace root appears to need package root workaround...");
 
 	const roots = getChildren(root, 3);
 

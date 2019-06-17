@@ -76,7 +76,7 @@ export class DebugCommands {
 				openInBrowser(session.observatoryUri);
 				analytics.logDebuggerOpenObservatory();
 			} else if (session) {
-				logger.logWarn("Cannot start Observatory for session without debug/observatoryUri");
+				logger.warn("Cannot start Observatory for session without debug/observatoryUri");
 			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.openTimeline", async () => {
@@ -89,7 +89,7 @@ export class DebugCommands {
 				openInBrowser(session.observatoryUri + "/#/timeline-dashboard");
 				analytics.logDebuggerOpenTimeline();
 			} else if (session) {
-				logger.logWarn("Cannot start Observatory for session without debug/observatoryUri");
+				logger.warn("Cannot start Observatory for session without debug/observatoryUri");
 			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", (args: any) => vs.commands.executeCommand("dart.openDevTools", args)));
@@ -245,7 +245,7 @@ export class DebugCommands {
 			pendingCustomEvents = pendingCustomEvents.filter((e) => e.session.id !== s.id);
 
 			eventsToProcess.forEach((e) => {
-				this.logger.logInfo(`Processing delayed event ${e.event} for session ${e.session.id}`);
+				this.logger.info(`Processing delayed event ${e.event} for session ${e.session.id}`);
 				this.handleCustomEventWithSession(session, e);
 			});
 		}
@@ -257,8 +257,8 @@ export class DebugCommands {
 			return;
 		const session = debugSessions.find((ds) => ds.session.id === e.session.id);
 		if (!session) {
-			this.logger.logWarn(`Did not find session ${e.session.id} to handle ${e.event}. There were ${debugSessions.length} sessions:\n${debugSessions.map((ds) => `  ${ds.session.id}`).join("\n")}`);
-			this.logger.logWarn(`Event will be queued and processed when the session start event fires`);
+			this.logger.warn(`Did not find session ${e.session.id} to handle ${e.event}. There were ${debugSessions.length} sessions:\n${debugSessions.map((ds) => `  ${ds.session.id}`).join("\n")}`);
+			this.logger.warn(`Event will be queued and processed when the session start event fires`);
 			pendingCustomEvents.push(e);
 			return;
 		}
@@ -291,16 +291,16 @@ export class DebugCommands {
 			// TODO: Can we get rid of this switch?
 			switch (message.severity) {
 				case LogSeverity.Info:
-					this.logger.logInfo(message.message, message.category);
+					this.logger.info(message.message, message.category);
 					break;
 				case LogSeverity.Warn:
-					this.logger.logWarn(message.message, message.category);
+					this.logger.warn(message.message, message.category);
 					break;
 				case LogSeverity.Error:
-					this.logger.logError(message.message, message.category);
+					this.logger.error(message.message, message.category);
 					break;
 				default:
-					this.logger.logWarn(`Failed to handle log event ${JSON.stringify(message)}`);
+					this.logger.warn(`Failed to handle log event ${JSON.stringify(message)}`);
 			}
 		} else if (e.event === "dart.hotRestartRequest") {
 			// This event comes back when the user restarts with the Restart button

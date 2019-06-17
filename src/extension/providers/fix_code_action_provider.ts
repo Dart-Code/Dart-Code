@@ -42,7 +42,7 @@ export class FixCodeActionProvider implements RankedCodeActionProvider {
 
 			return Object.keys(allActions).map((a) => allActions[a]);
 		} catch (e) {
-			this.logger.logError(e);
+			this.logger.error(e);
 			throw e;
 		}
 	}

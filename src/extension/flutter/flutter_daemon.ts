@@ -50,7 +50,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 		this.deviceManager = new FlutterDeviceManager(logger, this);
 
 		if (isChromeOS && config.flutterAdbConnectOnChromeOs) {
-			logger.logInfo("Running ADB Connect on Chrome OS");
+			logger.info("Running ADB Connect on Chrome OS");
 			const adbConnectProc = safeSpawn(undefined, "adb", ["connect", "100.115.92.2:5555"]);
 			logProcess(logger, LogCategory.General, adbConnectProc);
 

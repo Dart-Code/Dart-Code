@@ -50,7 +50,7 @@ export class SdkUtils {
 				} else if (workspaceContext.hasAnyStandardDartProjects) {
 					this.showRelevantActivationFailureMessage(analytics, workspaceContext, false);
 				} else {
-					this.logger.logError("No Dart or Flutter SDK was found. Suppressing prompt because it doesn't appear that a Dart/Flutter project is open.");
+					this.logger.error("No Dart or Flutter SDK was found. Suppressing prompt because it doesn't appear that a Dart/Flutter project is open.");
 				}
 			}
 		}, 500);
@@ -145,16 +145,16 @@ export class SdkUtils {
 	}
 
 	public initWorkspace(): WorkspaceContext {
-		this.logger.logInfo("Searching for SDKs...");
+		this.logger.info("Searching for SDKs...");
 		const folders = getDartWorkspaceFolders()
 			.map((w) => fsPath(w.uri));
 		const pathOverride = (process.env.DART_PATH_OVERRIDE as string) || "";
 		const normalPath = (process.env.PATH as string) || "";
 		const paths = (pathOverride + path.delimiter + normalPath).split(path.delimiter).filter((p) => p);
 
-		this.logger.logInfo("Environment PATH:");
+		this.logger.info("Environment PATH:");
 		for (const p of paths)
-			this.logger.logInfo(`    ${p}`);
+			this.logger.info(`    ${p}`);
 
 		// If we are running the analyzer remotely over SSH, we only support an analyzer, since none
 		// of the other SDKs will work remotely. Also, there is no need to validate the sdk path,
@@ -200,7 +200,7 @@ export class SdkUtils {
 			const isSomethingFlutter = refsFlutter || refsFlutterWeb || hasFlutterCreateProjectTriggerFile || hasFlutterStagehandProjectTriggerFile || isFlutterRepo;
 
 			if (isSomethingFlutter) {
-				this.logger.logInfo(`Found Flutter project at ${folder}:
+				this.logger.info(`Found Flutter project at ${folder}:
 			Mobile? ${refsFlutter}
 			Web? ${refsFlutterWeb}
 			Create Trigger? ${hasFlutterCreateProjectTriggerFile}
@@ -219,9 +219,9 @@ export class SdkUtils {
 		});
 
 		if (fuchsiaRoot) {
-			this.logger.logInfo(`Found Fuchsia root at ${fuchsiaRoot}`);
+			this.logger.info(`Found Fuchsia root at ${fuchsiaRoot}`);
 			if (hasAnyStandardDartProject)
-				this.logger.logInfo(`Found Fuchsia project that is not vanilla Flutter`);
+				this.logger.info(`Found Fuchsia project that is not vanilla Flutter`);
 		}
 
 		const flutterSdkSearchPaths = [
@@ -281,7 +281,7 @@ export class SdkUtils {
 	}
 
 	public searchPaths(paths: string[], executableFilename: string, postFilter?: (s: string) => boolean): string | undefined {
-		this.logger.logInfo(`Searching for ${executableFilename}`);
+		this.logger.info(`Searching for ${executableFilename}`);
 
 		let sdkPaths =
 			paths
@@ -300,16 +300,16 @@ export class SdkUtils {
 		// TODO: Make the list unique, but preserve the order of the first occurrences. We currently
 		// have uniq() and unique(), so also consolidate them.
 
-		this.logger.logInfo(`    Looking for ${executableFilename} in:`);
+		this.logger.info(`    Looking for ${executableFilename} in:`);
 		for (const p of sdkPaths)
-			this.logger.logInfo(`        ${p}`);
+			this.logger.info(`        ${p}`);
 
 		// Restrict only to the paths that have the executable.
 		sdkPaths = sdkPaths.filter((p) => fs.existsSync(path.join(p, executableFilename)));
 
-		this.logger.logInfo(`    Found at:`);
+		this.logger.info(`    Found at:`);
 		for (const p of sdkPaths)
-			this.logger.logInfo(`        ${p}`);
+			this.logger.info(`        ${p}`);
 
 		// Convert all the paths to their resolved locations.
 		sdkPaths = sdkPaths.map((p) => {
@@ -319,22 +319,22 @@ export class SdkUtils {
 			const realExecutableLocation = p && fs.realpathSync(fullPath);
 
 			if (realExecutableLocation.toLowerCase() !== fullPath.toLowerCase())
-				this.logger.logInfo(`Following symlink: ${fullPath} ==> ${realExecutableLocation}`);
+				this.logger.info(`Following symlink: ${fullPath} ==> ${realExecutableLocation}`);
 
 			// Then we need to take the executable name and /bin back off
 			return path.dirname(path.dirname(realExecutableLocation));
 		});
 
 		// Now apply any post-filters.
-		this.logger.logInfo("    Candidate paths to be post-filtered:");
+		this.logger.info("    Candidate paths to be post-filtered:");
 		for (const p of sdkPaths)
-			this.logger.logInfo(`        ${p}`);
+			this.logger.info(`        ${p}`);
 		const sdkPath = sdkPaths.find(postFilter || ((_) => true));
 
 		if (sdkPath)
-			this.logger.logInfo(`    Found at ${sdkPath}`);
+			this.logger.info(`    Found at ${sdkPath}`);
 
-		this.logger.logInfo(`    Returning SDK path ${sdkPath} for ${executableFilename}`);
+		this.logger.info(`    Returning SDK path ${sdkPath} for ${executableFilename}`);
 
 		return sdkPath;
 	}
