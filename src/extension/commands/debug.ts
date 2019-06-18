@@ -4,6 +4,7 @@ import * as vs from "vscode";
 import { FlutterServiceExtension, LogSeverity } from "../../shared/enums";
 import { Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
+import { findProjectFolders } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { fsPath, openInBrowser } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
@@ -153,8 +154,9 @@ export class DebugCommands {
 			});
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", () => {
-			const testFolders = getDartWorkspaceFolders()
-				.map((project) => path.join(fsPath(project.uri), "test"))
+			const topLevelFolders = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
+			const testFolders = findProjectFolders(topLevelFolders, { requirePubspec: true })
+				.map((project) => path.join(project, "test"))
 				.filter((testFolder) => fs.existsSync(testFolder));
 			if (testFolders.length === 0) {
 				vs.window.showErrorMessage("Unable to find any test folders");

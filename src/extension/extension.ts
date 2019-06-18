@@ -19,7 +19,6 @@ import { Analyzer } from "./analysis/analyzer";
 import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
 import { FileChangeHandler } from "./analysis/file_change_handler";
 import { openFileTracker } from "./analysis/open_file_tracker";
-import { findPackageRoots } from "./analysis/utils";
 import { Analytics } from "./analytics";
 import { DartExtensionApi } from "./api";
 import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
@@ -40,7 +39,6 @@ import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { DaemonCapabilities, FlutterDaemon } from "./flutter/flutter_daemon";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
-import { getWorkspaceProjectFolders } from "./project";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
@@ -65,7 +63,6 @@ import { SnippetCompletionItemProvider } from "./providers/snippet_completion_it
 import { SourceCodeActionProvider } from "./providers/source_code_action_provider";
 import { PubBuildRunnerTaskProvider } from "./pub/build_runner_task_provider";
 import { PubGlobal } from "./pub/global";
-import { isPubGetProbablyRequired, promptToRunPubGet } from "./pub/pub";
 import { DartCapabilities } from "./sdk/capabilities";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
@@ -449,13 +446,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		// Don't prompt for package updates in the Fuchsia tree.
 		if (workspaceContext.hasProjectsInFuchsiaTree) // TODO: This should be tested per-project.
 			return;
-		const folders = getWorkspaceProjectFolders();
-		const foldersRequiringPackageGet = folders
-			.map(vs.Uri.file)
-			.filter((uri) => config.for(uri).promptToGetPackages)
-			.filter(isPubGetProbablyRequired);
-		if (foldersRequiringPackageGet.length > 0)
-			promptToRunPubGet(foldersRequiringPackageGet);
+		sdkCommands.fetchPackagesOrPrompt(undefined, { alwaysPrompt: true });
 	}
 	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => checkForPackages()));
 	if (!isRestart)
@@ -529,11 +520,7 @@ function buildLogHeaders(workspaceContext: WorkspaceContext) {
 }
 
 function recalculateAnalysisRoots() {
-	let newRoots: string[] = [];
-	util.getDartWorkspaceFolders().forEach((f) => {
-		newRoots = newRoots.concat(findPackageRoots(logger, analyzer, fsPath(f.uri)));
-	});
-	analysisRoots = newRoots;
+	analysisRoots = util.getDartWorkspaceFolders().map((w) => fsPath(w.uri));
 
 	// Sometimes people open their home directories as the workspace root and
 	// have all sorts of performance issues because of PubCache and AppData folders

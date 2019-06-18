@@ -4,9 +4,10 @@ import * as vs from "vscode";
 import { DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { sortBy } from "../../shared/utils/array";
+import { findProjectFolders } from "../../shared/utils/fs";
 import { fsPath } from "../../shared/vscode/utils";
 import { PackageMap } from "../debug/package_map";
-import { getWorkspaceProjectFolders } from "../project";
+import { getDartWorkspaceFolders } from "../utils";
 
 export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<PackageDep> {
 	private readonly watcher: vs.FileSystemWatcher;
@@ -30,7 +31,8 @@ export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<
 
 	public getChildren(element?: PackageDep): PackageDep[] {
 		if (!element) {
-			const allProjects = getWorkspaceProjectFolders();
+			const topLevelFolders = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
+			const allProjects = findProjectFolders(topLevelFolders, { requirePubspec: true });
 
 			const nodes = allProjects.map((folder) => new PackageDepProject(vs.Uri.file(folder)));
 			// If there's only one, just skip over to the deps.

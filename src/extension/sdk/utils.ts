@@ -4,7 +4,7 @@ import { commands, ExtensionContext, window } from "vscode";
 import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, isWin } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter } from "../../shared/utils";
-import { getChildFolders, hasPubspec } from "../../shared/utils/fs";
+import { findProjectFolders, hasPubspec } from "../../shared/utils/fs";
 import { fsPath, openInBrowser } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
@@ -146,8 +146,7 @@ export class SdkUtils {
 
 	public initWorkspace(): WorkspaceContext {
 		this.logger.info("Searching for SDKs...");
-		const folders = getDartWorkspaceFolders()
-			.map((w) => fsPath(w.uri));
+		const topLevelFolders = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
 		const pathOverride = (process.env.DART_PATH_OVERRIDE as string) || "";
 		const normalPath = (process.env.PATH as string) || "";
 		const paths = (pathOverride + path.delimiter + normalPath).split(path.delimiter).filter((p) => p);
@@ -167,22 +166,19 @@ export class SdkUtils {
 			}, false, false, false, false);
 		}
 
+		// Search for a Fuchsia root.
+		let fuchsiaRoot: string | undefined;
+		topLevelFolders.forEach((folder) => fuchsiaRoot = fuchsiaRoot || findFuchsiaRoot(folder));
+
 		// TODO: This has gotten very messy and needs tidying up...
 
-		let fuchsiaRoot: string | undefined;
 		let firstFlutterMobileProject: string | undefined;
 		let hasAnyFlutterProject: boolean = false;
 		let hasAnyFlutterMobileProject: boolean = false;
 		let hasAnyFlutterWebProject: boolean = false;
 		let hasAnyStandardDartProject: boolean = false;
 
-		// Search for a Fuchsia root.
-		folders.forEach((folder) => fuchsiaRoot = fuchsiaRoot || findFuchsiaRoot(folder));
-
-		// Collect a list of all workspace folders and their immediate children, since it's common
-		// to open folders that contain multiple projects.
-		const childFolders = flatMap(folders, getChildFolders);
-		const allPossibleProjectFolders = folders.concat(childFolders);
+		const allPossibleProjectFolders = findProjectFolders(topLevelFolders);
 
 		// Scan through them all to figure out what type of projects we have.
 		allPossibleProjectFolders.forEach((folder) => {

@@ -9,17 +9,17 @@ import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, FLUTTER_CREATE_PROJEC
 import { LogCategory } from "../../shared/enums";
 import { Logger, Sdks, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
-import { flatMap, PromiseCompleter } from "../../shared/utils";
+import { PromiseCompleter } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
-import { getChildFolders, hasPubspec, mkDirRecursive } from "../../shared/utils/fs";
+import { findProjectFolders, mkDirRecursive } from "../../shared/utils/fs";
 import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { FlutterDeviceManager } from "../flutter/device_manager";
-import { getWorkspaceProjectFolders, locateBestProjectRoot } from "../project";
+import { locateBestProjectRoot } from "../project";
 import { DartHoverProvider } from "../providers/dart_hover_provider";
 import { PubGlobal } from "../pub/global";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "../pub/pub";
@@ -277,25 +277,26 @@ export class SdkCommands {
 		}, debounceDuration); // TODO: Does this need to be configurable?
 	}
 
-	private fetchPackagesOrPrompt(uri: vs.Uri): void {
+	public fetchPackagesOrPrompt(uri: vs.Uri, options?: { alwaysPrompt?: boolean }): void {
+		const forcePrompt = options && options.alwaysPrompt;
 		// We debounced so we might get here and have multiple projects to fetch for
 		// for ex. when we change Git branch we might change many files at once. So
 		// check how many there are, and if there are:
 		//   0 - then just use Uri
 		//   1 - then just do that one
 		//   more than 1 - prompt to do all
-		const folders = getWorkspaceProjectFolders();
+		const topLevelFolders = util.getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
+		const folders = findProjectFolders(topLevelFolders, { requirePubspec: true });
 		const foldersRequiringPackageGet = folders
 			.map(vs.Uri.file)
 			.filter((uri) => config.for(uri).promptToGetPackages)
 			.filter(isPubGetProbablyRequired);
-		if (foldersRequiringPackageGet.length === 0)
+		if (!forcePrompt && foldersRequiringPackageGet.length === 0)
 			vs.commands.executeCommand("dart.getPackages", uri);
-		else if (foldersRequiringPackageGet.length === 1)
+		else if (!forcePrompt && foldersRequiringPackageGet.length === 1)
 			vs.commands.executeCommand("dart.getPackages", foldersRequiringPackageGet[0]);
-		else
+		else if (foldersRequiringPackageGet.length)
 			promptToRunPubGet(foldersRequiringPackageGet);
-
 	}
 
 	private async runCommandForWorkspace(
@@ -333,11 +334,8 @@ export class SdkCommands {
 			return folder;
 
 		// Otherwise look for what projects we have.
-		const rootFolders = util.getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
-		// TODO: getChildProjects?
-		const nestedProjectFolders = flatMap(rootFolders, getChildFolders);
-		const selectableFolders = rootFolders.concat(nestedProjectFolders)
-			.filter(hasPubspec)
+		const topLevelFolders = util.getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
+		const selectableFolders = findProjectFolders(topLevelFolders, { sort: true })
 			.filter(flutterOnly ? util.isFlutterProjectFolder : () => true);
 
 		if (!selectableFolders || !selectableFolders.length) {
