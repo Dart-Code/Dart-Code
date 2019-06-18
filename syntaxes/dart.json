@@ -217,7 +217,7 @@
 					"name": "constant.numeric.dart"
 				},
 				{
-					"match": "(?<![a-zA-Z0-9_$])([_$]*[A-Z][a-zA-Z0-9_$]*|bool|num|int|double|dynamic)",
+					"match": "(?<![a-zA-Z0-9_$])([_$]*[A-Z][a-zA-Z0-9_$]*|bool\\b|num\\b|int\\b|double\\b|dynamic\\b)",
 					"name": "support.class.dart"
 				},
 				{
