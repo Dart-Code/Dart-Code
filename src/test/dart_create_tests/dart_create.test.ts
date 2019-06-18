@@ -6,10 +6,12 @@ import { dartCodeExtensionIdentifier } from "../../shared/constants";
 import { internalApiSymbol } from "../../shared/symbols";
 import { InternalExtensionApi } from "../../shared/vscode/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
-import { sb, waitForResult } from "../helpers";
+import { activate, sb, waitForResult } from "../helpers";
 import sinon = require("sinon");
 
 describe("dart", () => {
+	beforeEach("activate", () => activate());
+
 	it("created a templated project", async () => {
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const getPackagesCommand = executeCommand.withArgs("dart.getPackages", sinon.match.any).resolves();

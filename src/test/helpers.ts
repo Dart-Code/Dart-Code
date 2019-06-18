@@ -111,6 +111,7 @@ function getDefaultFile(): vs.Uri {
 }
 
 export async function activateWithoutAnalysis(): Promise<void> {
+	// TODO: Should we do this, or should we just check that it has been activated?
 	await ext.activate();
 	if (ext.exports) {
 		extApi = ext.exports[internalApiSymbol];
