@@ -229,7 +229,7 @@ function checkIsDevExtension() {
 	return extensionVersion.endsWith("-dev");
 }
 
-function checkHasFlutterExtension() {
+export function checkHasFlutterExtension() {
 	return extensions.getExtension(flutterExtensionIdentifier) !== undefined;
 }
 

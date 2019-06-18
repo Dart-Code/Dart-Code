@@ -9,9 +9,9 @@ import { showFlutter2019Q2SurveyNotificationIfAppropriate } from "../shared/vsco
 import { fsPath, openInBrowser } from "../shared/vscode/utils";
 import { WorkspaceContext } from "../shared/workspace";
 import { markProjectCreationEnded, markProjectCreationStarted } from "./commands/sdk";
-import { extensionVersion, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, reloadExtension } from "./utils";
+import { checkHasFlutterExtension, extensionVersion, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, reloadExtension } from "./utils";
 
-export function showUserPrompts(logger: Logger, context: Context, workspaceContext: WorkspaceContext): void {
+export async function showUserPrompts(logger: Logger, context: Context, workspaceContext: WorkspaceContext): Promise<void> {
 	handleNewProjects(logger, context);
 
 	function shouldSuppress(key: string): boolean {
@@ -27,8 +27,14 @@ export function showUserPrompts(logger: Logger, context: Context, workspaceConte
 		prompt().then((res) => context.update(stateKey, res), error);
 	}
 
-	if (workspaceContext.hasAnyFlutterProjects && !hasFlutterExtension && !shouldSuppress(installFlutterExtensionPromptKey))
-		return showPrompt(installFlutterExtensionPromptKey, promptToInstallFlutterExtension);
+	if (workspaceContext.hasAnyFlutterProjects && !hasFlutterExtension && !shouldSuppress(installFlutterExtensionPromptKey)) {
+		// It's possible that we got here when the user installed the Flutter extension, because it causes Dart to install
+		// first and activate. So, before showing this prompt we'll wait 30 seconds and then check if we still don't
+		// have the Flutter extension, and then show the prompt.
+		await new Promise((resolve) => setTimeout(resolve, 20000));
+		if (!checkHasFlutterExtension())
+			return showPrompt(installFlutterExtensionPromptKey, promptToInstallFlutterExtension);
+	}
 
 	const lastSeenVersionNotification = context.lastSeenVersion;
 	if (!lastSeenVersionNotification) {
