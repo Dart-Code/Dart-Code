@@ -1,7 +1,7 @@
 import * as https from "https";
 import * as querystring from "querystring";
-import { env, Uri, version as codeVersion } from "vscode";
-import { isChromeOS } from "../shared/constants";
+import { env, Uri, version as codeVersion, workspace } from "vscode";
+import { dartCodeExtensionIdentifier, isChromeOS } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
 import { WorkspaceContext } from "../shared/workspace";
 import { config } from "./config";
@@ -48,8 +48,42 @@ export class Analytics {
 	public sdkVersion?: string;
 	public flutterSdkVersion?: string;
 	public analysisServerVersion?: string;
+	private readonly formatter: string;
+	private readonly dummyDartFile = Uri.parse("untitled:foo.dart");
+	private readonly dartConfig = workspace.getConfiguration("", this.dummyDartFile).get("[dart]") as any;
 
-	constructor(private readonly logger: Logger, public workspaceContext: WorkspaceContext) { }
+	constructor(private readonly logger: Logger, public workspaceContext: WorkspaceContext) {
+		this.formatter = this.getFormatterSetting();
+	}
+
+	private getFormatterSetting(): string {
+		try {
+			// If there are multiple formatters for Dart, the user can select one, so check
+			// that first so we don't record their formatter being enabled as ours.
+			const otherDefaultFormatter = this.getAppliedConfig("editor", "defaultFormatter", false);
+			if (otherDefaultFormatter && otherDefaultFormatter !== dartCodeExtensionIdentifier)
+				return otherDefaultFormatter;
+
+			// If the user has explicitly disabled ours (without having another selected
+			// then record that).
+			if (!config.enableSdkFormatter)
+				return "Disabled";
+
+			// Otherwise record as enabled (and whether on-save).
+			return this.getAppliedConfig("editor", "formatOnSave")
+				? "Enabled on Save"
+				: "Enabled";
+		} catch {
+			return "Unknown";
+		}
+	}
+
+	private getAppliedConfig(section: string, key: string, isResourceScoped = true) {
+		const dartValue = this.dartConfig ? this.dartConfig[`${section}.${key}`] : undefined;
+		return dartValue !== undefined && dartValue !== null
+			? dartValue
+			: workspace.getConfiguration(section, isResourceScoped ? this.dummyDartFile : undefined).get(key);
+	}
 
 	public logExtensionStartup(timeInMS: number) {
 		this.event(Category.Extension, EventAction.Activated);
@@ -131,7 +165,7 @@ export class Analytics {
 			cd1: isDevExtension,
 			cd10: config.showTodos ? "On" : "Off",
 			// cd11: config.showLintNames ? "On" : "Off",
-			// cd12: "Removed",
+			cd12: this.formatter,
 			cd13: this.flutterSdkVersion,
 			cd14: hasFlutterExtension ? "Installed" : "Not Installed",
 			cd17: this.workspaceContext.hasAnyFlutterProjects
