@@ -6,7 +6,7 @@ import { Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
 import { findProjectFolders } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
-import { fsPath, openInBrowser } from "../../shared/vscode/utils";
+import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
@@ -15,7 +15,6 @@ import { FlutterServiceExtensionArgs, FlutterVmServiceExtensions, timeDilationNo
 import { DebuggerType } from "../providers/debug_config_provider";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools";
-import { getDartWorkspaceFolders } from "../utils";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 export const debugSessions: DartDebugSessionInformation[] = [];

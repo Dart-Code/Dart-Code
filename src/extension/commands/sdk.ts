@@ -16,7 +16,7 @@ import { findProjectFolders, mkDirRecursive } from "../../shared/utils/fs";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { locateBestProjectRoot } from "../project";
@@ -285,7 +285,7 @@ export class SdkCommands {
 		//   0 - then just use Uri
 		//   1 - then just do that one
 		//   more than 1 - prompt to do all
-		const topLevelFolders = util.getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
+		const topLevelFolders = getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
 		const folders = findProjectFolders(topLevelFolders, { requirePubspec: true });
 		const foldersRequiringPackageGet = folders
 			.map(vs.Uri.file)
@@ -334,7 +334,7 @@ export class SdkCommands {
 			return folder;
 
 		// Otherwise look for what projects we have.
-		const topLevelFolders = util.getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
+		const topLevelFolders = getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
 		const selectableFolders = findProjectFolders(topLevelFolders, { sort: true })
 			.filter(flutterOnly ? util.isFlutterProjectFolder : () => true);
 
