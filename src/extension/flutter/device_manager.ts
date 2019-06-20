@@ -31,6 +31,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	public deviceAdded(dev: f.Device) {
+		dev = { ...dev, type: "device" };
 		this.devices.push(dev);
 		// undefined is treated as true for backwards compatibility.
 		const canAutoSelectDevice = dev.ephemeral !== false;
@@ -97,12 +98,15 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 	}
 
-	private async getEmulators(): Promise<Array<{ id: string, name: string }>> {
+	private async getEmulators(): Promise<f.Emulator[]> {
 		try {
 			const emus = await this.daemon.getEmulators();
 			return emus.map((e) => ({
+				category: e.category,
 				id: e.id,
 				name: e.name || e.id,
+				platformType: e.platformType,
+				type: "emulator",
 			}));
 		} catch (e) {
 			this.logger.error({ message: e });
