@@ -102,7 +102,7 @@ let analytics: Analytics;
 
 let showTodos: boolean | undefined;
 let previousSettings: string;
-let extensionLogger: { dispose: () => Promise<void> | void };
+const loggers: Array<{ dispose: () => Promise<void> | void }> = [];
 
 // TODO: If dev mode, subscribe to logs for errors/warnings and surface to UI
 // (with dispose calls)
@@ -113,17 +113,17 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		logToConsole(logger);
 
 	vs.commands.executeCommand("setContext", IS_RUNNING_LOCALLY_CONTEXT, isRunningLocally);
-	if (!extensionLogger)
-		extensionLogger = captureLogs(logger, getExtensionLogPath(), undefined, 4000, [LogCategory.General]);
+	buildLogHeaders();
+	setupLog(getExtensionLogPath(), LogCategory.General);
 
 	const extContext = Context.for(context);
 
 	util.logTime("Code called activate");
 
 	// Wire up a reload command that will re-initialise everything.
-	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", (_) => {
+	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", async (_) => {
 		logger.info("Performing silent extension reload...");
-		deactivate(true);
+		await deactivate(true);
 		const toDispose = context.subscriptions.slice();
 		context.subscriptions.length = 0;
 		for (const sub of toDispose) {
@@ -146,7 +146,13 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const workspaceContext = sdkUtils.scanWorkspace();
 	util.logTime("initWorkspace");
 	const sdks = workspaceContext.sdks;
+
+	// Create log headers and set up all other log files.
 	buildLogHeaders(workspaceContext);
+	setupLog(config.analyzerLogFile, LogCategory.Analyzer);
+	setupLog(config.flutterDaemonLogFile, LogCategory.FlutterDaemon);
+	setupLog(config.devToolsLogFile, LogCategory.DevTools);
+
 	analytics = new Analytics(logger, workspaceContext);
 	if (!sdks.dart || (workspaceContext.hasAnyFlutterProjects && !sdks.flutter)) {
 		// Don't set anything else up; we can't work like this!
@@ -547,7 +553,12 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	};
 }
 
-function buildLogHeaders(workspaceContext: WorkspaceContext) {
+function setupLog(logFile: string | undefined, category: LogCategory) {
+	if (logFile)
+		loggers.push(captureLogs(logger, logFile, getLogHeader(), config.maxLogLineLength, [category]));
+}
+
+function buildLogHeaders(workspaceContext?: WorkspaceContext) {
 	clearLogHeader();
 	addToLogHeader(() => `!! PLEASE REVIEW THIS LOG FOR SENSITIVE INFORMATION BEFORE SHARING !!`);
 	addToLogHeader(() => ``);
@@ -558,11 +569,13 @@ function buildLogHeaders(workspaceContext: WorkspaceContext) {
 	});
 	addToLogHeader(() => `VS Code: ${vs.version}`);
 	addToLogHeader(() => `Platform: ${platformDisplayName}`);
-	addToLogHeader(() => `Workspace type: ${workspaceContext.workspaceTypeDescription}`);
-	addToLogHeader(() => `Multi-root?: ${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1}`);
-	const sdks = workspaceContext.sdks;
-	addToLogHeader(() => `Dart SDK:\n    Loc: ${sdks.dart}\n    Ver: ${util.getSdkVersion(logger, sdks.dart)}`);
-	addToLogHeader(() => `Flutter SDK:\n    Loc: ${sdks.flutter}\n    Ver: ${util.getSdkVersion(logger, sdks.flutter)}`);
+	if (workspaceContext) {
+		addToLogHeader(() => `Workspace type: ${workspaceContext.workspaceTypeDescription}`);
+		addToLogHeader(() => `Multi-root?: ${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1}`);
+		const sdks = workspaceContext.sdks;
+		addToLogHeader(() => `Dart SDK:\n    Loc: ${sdks.dart}\n    Ver: ${util.getSdkVersion(logger, sdks.dart)}`);
+		addToLogHeader(() => `Flutter SDK:\n    Loc: ${sdks.flutter}\n    Ver: ${util.getSdkVersion(logger, sdks.flutter)}`);
+	}
 	addToLogHeader(() => `HTTP_PROXY: ${process.env.HTTP_PROXY}`);
 	addToLogHeader(() => `NO_PROXY: ${process.env.NO_PROXY}`);
 }
@@ -667,10 +680,10 @@ export async function deactivate(isRestart: boolean = false): Promise<void> {
 	if (!isRestart) {
 		vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, false);
 		await analytics.logExtensionShutdown();
-		if (extensionLogger)
-			await extensionLogger.dispose();
-		if (logger)
-			await logger.dispose();
+		if (loggers) {
+			await Promise.all(loggers.map((logger) => logger.dispose()));
+			loggers.length = 0;
+		}
 	}
 }
 

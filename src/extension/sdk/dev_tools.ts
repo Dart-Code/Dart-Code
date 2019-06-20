@@ -159,7 +159,7 @@ export class DevToolsManager implements vs.Disposable {
 
 class DevToolsService extends StdIOService<UnknownNotification> {
 	constructor(logger: Logger, sdks: Sdks) {
-		super(() => config.devToolsLogFile, new CategoryLogger(logger, LogCategory.CommandProcesses), config.maxLogLineLength);
+		super(new CategoryLogger(logger, LogCategory.DevTools), config.maxLogLineLength);
 
 		const pubBinPath = path.join(sdks.dart, pubPath);
 		portToBind = config.devToolsPort // Always config first

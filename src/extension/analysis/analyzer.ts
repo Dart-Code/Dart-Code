@@ -45,7 +45,7 @@ export class Analyzer extends AnalyzerGen {
 	public capabilities: AnalyzerCapabilities = AnalyzerCapabilities.empty;
 
 	constructor(logger: Logger, dartVMPath: string, analyzerPath: string) {
-		super(logger, () => config.analyzerLogFile, config.maxLogLineLength);
+		super(logger, config.maxLogLineLength);
 
 		let analyzerArgs = [];
 
