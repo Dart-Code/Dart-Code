@@ -34,14 +34,19 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return device && (!types || !types.length || types.indexOf(device.platformType) !== -1);
 	}
 
-	public deviceAdded(dev: f.Device) {
+	public async deviceAdded(dev: f.Device): Promise<void> {
 		dev = { ...dev, type: "device" };
 		this.devices.push(dev);
 		// undefined is treated as true for backwards compatibility.
 		const canAutoSelectDevice = dev.ephemeral !== false;
 		if (!this.currentDevice || (this.autoSelectNewlyConnectedDevices && canAutoSelectDevice)) {
-			this.currentDevice = dev;
-			this.updateStatusBar();
+			// Finally, check if it's valid for the workspace. We don't want to
+			// auto-select to a mobile if you have a web-only project open.
+			const supportedPlatforms = await this.getSupportedPlatformsForWorkspace();
+			if (this.isSupported(supportedPlatforms, dev)) {
+				this.currentDevice = dev;
+				this.updateStatusBar();
+			}
 		}
 	}
 
