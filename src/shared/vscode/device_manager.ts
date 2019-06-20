@@ -57,7 +57,6 @@ export class FlutterDeviceManager implements vs.Disposable {
 				description: d.category || d.platform,
 				device: d,
 				label: d.name,
-				picked: d === this.currentDevice ? true : undefined,
 			}));
 
 		const quickPick = vs.window.createQuickPick<PickableDevice>();
