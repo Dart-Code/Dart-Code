@@ -24,6 +24,7 @@ export class DaemonCapabilities {
 
 	get canCreateEmulators() { return versionIsAtLeast(this.version, "0.4.0"); }
 	get canFlutterAttach() { return versionIsAtLeast(this.version, "0.4.1"); }
+	get providesPlatformTypes() { return versionIsAtLeast(this.version, "0.5.2"); }
 }
 
 export class FlutterDaemon extends StdIOService<UnknownNotification> {
@@ -164,7 +165,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 		return this.sendRequest("device.enable");
 	}
 
-	public getEmulators(): Thenable<Array<{ id: string, name: string }>> {
+	public getEmulators(): Thenable<f.Emulator[]> {
 		return this.sendRequest("emulator.getEmulators");
 	}
 
@@ -174,6 +175,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 
 	public createEmulator(name?: string): Thenable<{ success: boolean, emulatorName: string, error: string }> {
 		return this.sendRequest("emulator.create", { name });
+	}
+
+	public getSupportedPlatforms(projectRoot: string): Thenable<f.SupportedPlatformsResponse> {
+		return this.sendRequest("daemon.getSupportedPlatforms", { projectRoot });
 	}
 
 	// Subscription methods.
