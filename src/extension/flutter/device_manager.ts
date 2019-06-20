@@ -32,17 +32,20 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	public deviceAdded(dev: f.Device) {
 		this.devices.push(dev);
-		if (!this.currentDevice || config.flutterSelectDeviceWhenConnected) {
+		// undefined is treated as true for backwards compatibility.
+		const canAutoSelectDevice = dev.ephemeral !== false;
+		if (!this.currentDevice || (config.flutterSelectDeviceWhenConnected && canAutoSelectDevice)) {
 			this.currentDevice = dev;
+			this.updateStatusBar();
 		}
-		this.updateStatusBar();
 	}
 
 	public deviceRemoved(dev: f.Device) {
 		this.devices = this.devices.filter((d) => d.id !== dev.id);
-		if (this.currentDevice && this.currentDevice.id === dev.id)
+		if (this.currentDevice && this.currentDevice.id === dev.id) {
 			this.currentDevice = this.devices.length === 0 ? undefined : this.devices[this.devices.length - 1];
-		this.updateStatusBar();
+			this.updateStatusBar();
+		}
 	}
 
 	public async showDevicePicker(): Promise<void> {
