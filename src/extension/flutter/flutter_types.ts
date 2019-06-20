@@ -21,6 +21,7 @@ export interface Emulator {
 }
 
 export interface EmulatorCreator {
+	platformType: PlatformType | null | undefined;
 	type: "emulator-creator";
 }
 
