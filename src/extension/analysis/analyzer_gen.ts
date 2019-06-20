@@ -12,8 +12,8 @@ import { UnknownNotification, UnknownResponse } from "../../shared/services/inte
 import { StdIOService } from "../services/stdio_service";
 
 export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
-	constructor(logger: Logger, getLogFile: () => string | undefined, maxLogLineLength: number | undefined) {
-		super(getLogFile, new CategoryLogger(logger, LogCategory.Analyzer), maxLogLineLength);
+	constructor(logger: Logger, maxLogLineLength: number | undefined) {
+		super(new CategoryLogger(logger, LogCategory.Analyzer), maxLogLineLength);
 	}
 
 	protected buildRequest<TReq>(id: number, method: string, params?: TReq): { id: string, method: string, params?: TReq } {

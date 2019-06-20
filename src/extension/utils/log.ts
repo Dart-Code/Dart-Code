@@ -14,6 +14,7 @@ export const userSelectableLogCategories: { [key: string]: LogCategory } = {
 	"Analysis Server": LogCategory.Analyzer,
 	"Command Processes": LogCategory.CommandProcesses,
 	"Debugger (Observatory)": LogCategory.Observatory,
+	"DevTools": LogCategory.DevTools,
 	"Flutter Device Daemon": LogCategory.FlutterDaemon,
 	"Flutter Run": LogCategory.FlutterRun,
 	"Flutter Test": LogCategory.FlutterTest,

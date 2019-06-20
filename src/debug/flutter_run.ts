@@ -5,8 +5,8 @@ import { CategoryLogger } from "../shared/logging";
 import { FlutterRunBase, RunMode } from "./flutter_run_base";
 
 export class FlutterRun extends FlutterRunBase {
-	constructor(mode: RunMode, flutterBinPath: string, projectFolder: string, args: string[], envOverrides: any, logFile: string, logger: Logger, maxLogLineLength: number) {
-		super(mode, () => logFile, new CategoryLogger(logger, LogCategory.FlutterRun), maxLogLineLength, true, true);
+	constructor(mode: RunMode, flutterBinPath: string, projectFolder: string, args: string[], envOverrides: any, logFile: string | undefined, logger: Logger, maxLogLineLength: number) {
+		super(mode, logFile, new CategoryLogger(logger, LogCategory.FlutterRun), maxLogLineLength, true, true);
 
 		const command = mode === RunMode.Attach ? "attach" : "run";
 

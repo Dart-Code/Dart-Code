@@ -44,6 +44,7 @@ export enum LogCategory {
 	General,
 	CI,
 	CommandProcesses,
+	DevTools,
 	Analyzer,
 	PubTest,
 	FlutterDaemon,

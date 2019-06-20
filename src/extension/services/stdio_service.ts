@@ -14,18 +14,17 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	private nextRequestID = 1;
 	private readonly activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] | "CANCELLED" } = {};
 	private messageBuffer: string[] = [];
-	private currentLogFile: string | undefined;
+	private openLogFile: string | undefined;
 	private logStream?: fs.WriteStream;
 	private readonly requestErrorSubscriptions: Array<(notification: any) => void> = [];
 	private processExited = false;
 
 	constructor(
-		public readonly getLogFile: () => string | undefined,
 		protected readonly logger: Logger,
 		public readonly maxLogLineLength: number | undefined,
 		public messagesWrappedInBrackets: boolean = false,
-		public readonly treatHandlingErrorsAsUnhandledMessages: boolean = false) {
-		this.currentLogFile = getLogFile();
+		public readonly treatHandlingErrorsAsUnhandledMessages: boolean = false,
+		private readonly logFile?: string) {
 	}
 
 	protected createProcess(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any) {
@@ -227,20 +226,19 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		else
 			this.logger.info(message);
 
-		const newLogFile = this.getLogFile();
-		if (newLogFile !== this.currentLogFile && this.logStream) {
+		if (this.openLogFile !== this.logFile && this.logStream) {
 			this.logStream.end();
 			this.logStream = undefined;
+			this.openLogFile = undefined;
 		}
 
-		if (!newLogFile)
+		if (!this.logFile)
 			return;
 
-		this.currentLogFile = newLogFile;
-
 		if (!this.logStream) {
-			this.logStream = fs.createWriteStream(this.currentLogFile);
+			this.logStream = fs.createWriteStream(this.logFile);
 			this.logStream.write(getLogHeader());
+			this.openLogFile = this.logFile;
 		}
 		this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
 		if (this.maxLogLineLength && message.length > this.maxLogLineLength)
@@ -253,6 +251,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		if (this.logStream) {
 			this.logStream.end();
 			this.logStream = undefined;
+			this.openLogFile = undefined;
 		}
 
 		for (const pid of this.additionalPidsToTerminate) {
