@@ -6,10 +6,10 @@ import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTE
 import { LogCategory } from "../shared/enums";
 import { Logger, StagehandTemplate } from "../shared/interfaces";
 import { showFlutter2019Q2SurveyNotificationIfAppropriate } from "../shared/vscode/user_prompts";
-import { fsPath, openInBrowser } from "../shared/vscode/utils";
+import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../shared/vscode/utils";
 import { WorkspaceContext } from "../shared/workspace";
 import { markProjectCreationEnded, markProjectCreationStarted } from "./commands/sdk";
-import { checkHasFlutterExtension, extensionVersion, getDartWorkspaceFolders, hasFlutterExtension, isDevExtension, reloadExtension } from "./utils";
+import { checkHasFlutterExtension, extensionVersion, hasFlutterExtension, isDevExtension, reloadExtension } from "./utils";
 
 export async function showUserPrompts(logger: Logger, context: Context, workspaceContext: WorkspaceContext): Promise<void> {
 	handleNewProjects(logger, context);

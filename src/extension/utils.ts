@@ -7,7 +7,7 @@ import { dartCodeExtensionIdentifier, flutterExtensionIdentifier } from "../shar
 import { Logger } from "../shared/interfaces";
 import { isWithinPath } from "../shared/utils";
 import { hasPackagesFile, hasPubspec, mkDirRecursive } from "../shared/utils/fs";
-import { fsPath } from "../shared/vscode/utils";
+import { fsPath, isDartWorkspaceFolder } from "../shared/vscode/utils";
 import { locateBestProjectRoot } from "./project";
 import { referencesFlutterSdk, referencesFlutterWeb } from "./sdk/utils";
 import { getExtensionLogPath } from "./utils/log";
@@ -57,23 +57,6 @@ export function isFlutterProjectFolder(folder?: string): boolean {
 
 export function isFlutterWebProjectFolder(folder?: string): boolean {
 	return referencesFlutterWeb(folder);
-}
-
-export function getDartWorkspaceFolders(): WorkspaceFolder[] {
-	if (!workspace.workspaceFolders)
-		return [];
-	return workspace.workspaceFolders.filter(isDartWorkspaceFolder);
-}
-
-export function isDartWorkspaceFolder(folder?: WorkspaceFolder): boolean {
-	if (!folder || folder.uri.scheme !== "file")
-		return false;
-
-	// Currently we don't have good logic to know what's a Dart folder.
-	// We could require a pubspec, but it's valid to just write scripts without them.
-	// For now, nothing calls this that will do bad things if the folder isn't a Dart
-	// project so we can review amend this in future if required.
-	return true;
 }
 
 export function resolvePaths<T extends string | undefined>(p: T): string | (undefined extends T ? undefined : never) {
@@ -280,10 +263,6 @@ export async function reloadExtension(prompt?: string, buttonText?: string, offe
 	} else if (!prompt || chosenAction === restartAction) {
 		commands.executeCommand("_dart.reloadExtension");
 	}
-}
-
-export function unique<T>(items: T[]): T[] {
-	return Array.from(new Set(items));
 }
 
 const shouldLogTimings = false;

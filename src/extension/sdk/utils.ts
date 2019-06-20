@@ -5,12 +5,12 @@ import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath,
 import { Logger } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter } from "../../shared/utils";
 import { findProjectFolders, hasPubspec } from "../../shared/utils/fs";
-import { fsPath, openInBrowser } from "../../shared/vscode/utils";
+import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PackageMap } from "../debug/package_map";
-import { getDartWorkspaceFolders, getSdkVersion, notUndefined, openExtensionLogFile, reloadExtension, resolvePaths, showLogAction } from "../utils";
+import { getSdkVersion, notUndefined, openExtensionLogFile, reloadExtension, resolvePaths, showLogAction } from "../utils";
 
 // TODO: Tidy this class up (it exists mainly to share logger).
 export class SdkUtils {

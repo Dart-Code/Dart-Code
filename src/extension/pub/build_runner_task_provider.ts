@@ -2,7 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { flutterPath, pubPath } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { referencesBuildRunner } from "../sdk/utils";
 import * as util from "../utils";
@@ -12,7 +12,7 @@ export class PubBuildRunnerTaskProvider implements vs.TaskProvider {
 	constructor(private sdks: Sdks) { }
 
 	public provideTasks(token?: vs.CancellationToken): vs.ProviderResult<vs.Task[]> {
-		const dartProjects = util.getDartWorkspaceFolders();
+		const dartProjects = getDartWorkspaceFolders();
 
 		const tasks: vs.Task[] = [];
 		dartProjects.forEach((folder) => {

@@ -1,6 +1,10 @@
 import * as vs from "vscode";
+import { flatMap } from "../../shared/utils";
+import { findProjectFolders } from "../../shared/utils/fs";
+import { fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import * as f from "../flutter/daemon_interfaces";
 import { IFlutterDaemon, Logger } from "../interfaces";
+import { unique } from "../utils/array";
 import { isRunningLocally } from "./utils";
 
 export class FlutterDeviceManager implements vs.Disposable {
@@ -50,6 +54,12 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	public async showDevicePicker(supportedTypes?: f.PlatformType[]): Promise<f.Device> {
+		// If we weren't passed any supported types, we should try to get them for
+		// the whole workspace.
+		if (!supportedTypes && this.daemon.capabilities.providesPlatformTypes) {
+			supportedTypes = await this.getSupportedPlatformsForWorkspace();
+		}
+
 		const devices: PickableDevice[] = this.devices
 			.sort(this.deviceSortComparer.bind(this))
 			.filter((d) => this.isSupported(supportedTypes, d))
@@ -101,6 +111,23 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 
 		return this.currentDevice;
+	}
+
+	private async getSupportedPlatformsForWorkspace(): Promise<f.PlatformType[] | undefined> {
+		const topLevelFolders = getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
+		const projectFolders = findProjectFolders(topLevelFolders, { requirePubspec: true });
+		this.logger.info(`Checking ${projectFolders.length} projects for supported platforms`);
+
+		const getPlatformPromises = projectFolders.map((folder) => this.daemon.getSupportedPlatforms(folder));
+		const resps = await Promise.all(getPlatformPromises).catch((e): f.SupportedPlatformsResponse[] => {
+			this.logger.error(e);
+			return [];
+		});
+
+		const supportedTypes = unique(flatMap(resps, (r) => r.platforms));
+		this.logger.info(`Supported platforms for the workspace are ${supportedTypes.join(", ")}`);
+
+		return supportedTypes;
 	}
 
 	public deviceSortComparer(d1: f.Device, d2: f.Device): number {

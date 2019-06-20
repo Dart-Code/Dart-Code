@@ -13,7 +13,7 @@ import { trueCasePathSync } from "../shared/utils/fs";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
-import { fsPath, isRunningLocally } from "../shared/vscode/utils";
+import { fsPath, getDartWorkspaceFolders, isRunningLocally } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { Analyzer } from "./analysis/analyzer";
@@ -531,7 +531,7 @@ function buildLogHeaders(workspaceContext: WorkspaceContext) {
 }
 
 function recalculateAnalysisRoots() {
-	analysisRoots = util.getDartWorkspaceFolders().map((w) => fsPath(w.uri));
+	analysisRoots = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
 
 	// Sometimes people open their home directories as the workspace root and
 	// have all sorts of performance issues because of PubCache and AppData folders
@@ -555,7 +555,7 @@ function recalculateAnalysisRoots() {
 	}
 
 	// For each workspace, handle excluded folders.
-	util.getDartWorkspaceFolders().forEach((f) => {
+	getDartWorkspaceFolders().forEach((f) => {
 		const excludedForWorkspace = config.for(f.uri).analysisExcludedFolders;
 		const workspacePath = fsPath(f.uri);
 		if (excludedForWorkspace && isArray(excludedForWorkspace)) {
