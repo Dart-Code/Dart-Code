@@ -1,8 +1,27 @@
+export type PlatformType = "android" | "ios" | "linux" | "macos" | "fuchsia" | "windows" | "web" | string;
+export type Category = "mobile" | "web" | "desktop" | string;
+
 export interface Device {
+	category: Category | undefined | null;
+	emulator: boolean;
+	ephemeral: boolean | undefined;
 	id: string;
 	name: string;
 	platform: string;
-	emulator: boolean;
+	platformType: PlatformType | undefined | null;
+	type: "device";
+}
+
+export interface Emulator {
+	id: string;
+	name: string;
+	category: Category | undefined | null;
+	platformType: PlatformType | undefined | null;
+	type: "emulator";
+}
+
+export interface EmulatorCreator {
+	type: "emulator-creator";
 }
 
 export interface DaemonConnected {
@@ -52,4 +71,8 @@ export interface ShowMessage {
 	level: "info" | "warning" | "error";
 	title: string;
 	message: string;
+}
+
+export interface SupportedPlatformsResponse {
+	platforms: PlatformType[];
 }
