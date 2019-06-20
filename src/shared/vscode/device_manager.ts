@@ -54,7 +54,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			.sort(this.deviceSortComparer.bind(this))
 			.filter((d) => this.isSupported(supportedTypes, d))
 			.map((d) => ({
-				description: d.platform,
+				description: d.category || d.platform,
 				device: d,
 				label: d.name,
 				picked: d === this.currentDevice ? true : undefined,
@@ -78,19 +78,20 @@ export class FlutterDeviceManager implements vs.Disposable {
 		});
 		quickPick.dispose();
 		if (selection && selection.device) {
+			const emulatorTypeLabel = this.emulatorLabel(selection.device.platformType);
 			switch (selection.device.type) {
 				case "emulator-creator":
 					// Clear the current device so we can wait for the new one
 					// to connect.
 					this.currentDevice = undefined;
-					this.statusBarItem.text = "Creating emulator...";
+					this.statusBarItem.text = `Creating ${emulatorTypeLabel}...`;
 					await this.createEmulator();
 					break;
 				case "emulator":
 					// Clear the current device so we can wait for the new one
 					// to connect.
 					this.currentDevice = undefined;
-					this.statusBarItem.text = "Launching emulator...";
+					this.statusBarItem.text = `Launching ${emulatorTypeLabel}...`;
 					await this.launchEmulator(selection.device);
 					break;
 				case "device":
@@ -113,7 +114,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	public updateStatusBar(): void {
 		if (this.currentDevice)
-			this.statusBarItem.text = `${this.currentDevice.name} (${this.currentDevice.platform}${this.currentDevice.emulator ? " Emulator" : ""})`;
+			this.statusBarItem.text = `${this.currentDevice.name} (${this.currentDevice.platform} ${this.currentDevice.emulator ? this.emulatorLabel(this.currentDevice.platformType) : ""})`.trim();
 		else
 			this.statusBarItem.text = "No Devices";
 
@@ -209,24 +210,30 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 	}
 
-	private async getEmulatorItems(showLaunchPrefix: boolean, supportedTypes?: f.PlatformType[]): Promise<PickableDevice[]> {
+	private emulatorLabel(platformType: f.PlatformType | undefined | null) {
+		return platformType && (platformType === "ios" || platformType === "macos")
+			? "simulator"
+			: "emulator";
+	}
+
+	private async getEmulatorItems(showAsEmulators: boolean, supportedTypes?: f.PlatformType[]): Promise<PickableDevice[]> {
 		const emulators: PickableDevice[] = (await this.getEmulators())
 			.filter((e) => this.isSupported(supportedTypes, e))
 			.map((e) => ({
 				alwaysShow: false,
-				description: e.id,
+				description: showAsEmulators ? `${e.category || "mobile"} ${this.emulatorLabel(e.platformType)}` : e.platformType,
 				device: {
 					...e,
 					type: "emulator",
 				},
-				label: showLaunchPrefix ? `Launch ${e.name}` : e.name,
+				label: showAsEmulators ? `Start ${e.name}` : e.name,
 			}));
 
 		// Add an option to create a new emulator if the daemon supports it.
 		if (this.daemon.capabilities.canCreateEmulators && isRunningLocally && this.isSupported(supportedTypes, { platformType: "android" })) {
 			emulators.push({
 				alwaysShow: true,
-				device: { type: "emulator-creator" },
+				device: { type: "emulator-creator", platformType: "android" },
 				label: "Create Android emulator",
 			});
 		}
@@ -250,7 +257,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				throw new Error("Emulator didn't connect within 60 seconds");
 			});
 		} catch (e) {
-			vs.window.showErrorMessage(`Failed to launch emulator: ${e}`);
+			vs.window.showErrorMessage(`Failed to launch ${emulator.name}: ${e}`);
 			return false;
 		}
 		// Wait an additional second to try and void some possible races.
