@@ -4,8 +4,6 @@ import { config } from "../config";
 import { FlutterDaemon } from "./flutter_daemon";
 import * as f from "./flutter_types";
 
-const emulatorNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
-
 export class FlutterDeviceManager implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
 	private statusBarItem: vs.StatusBarItem;
@@ -187,11 +185,6 @@ export class FlutterDeviceManager implements vs.Disposable {
 		} else {
 			return !!this.currentDevice;
 		}
-	}
-
-	private validateEmulatorName(input: string) {
-		if (!emulatorNameRegex.test(input))
-			return "Emulator names should contain only letters, numbers, dots, underscores and dashes";
 	}
 
 	private async launchEmulator(emulator: { id: string, name: string }): Promise<boolean> {
