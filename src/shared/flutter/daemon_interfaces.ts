@@ -4,6 +4,7 @@ export type Category = "mobile" | "web" | "desktop" | string;
 export interface Device {
 	category: Category | undefined | null;
 	emulator: boolean;
+	emulatorId: string | undefined | null;
 	ephemeral: boolean | undefined;
 	id: string;
 	name: string;
@@ -23,6 +24,7 @@ export interface Emulator {
 export interface EmulatorCreator {
 	platformType: PlatformType | null | undefined;
 	type: "emulator-creator";
+	id?: undefined;
 }
 
 export interface DaemonConnected {
