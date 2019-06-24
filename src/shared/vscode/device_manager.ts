@@ -42,11 +42,15 @@ export class FlutterDeviceManager implements vs.Disposable {
 		if (!this.currentDevice || (this.autoSelectNewlyConnectedDevices && canAutoSelectDevice)) {
 			// Finally, check if it's valid for the workspace. We don't want to
 			// auto-select to a mobile if you have a web-only project open.
-			const supportedPlatforms = await this.getSupportedPlatformsForWorkspace();
-			if (this.isSupported(supportedPlatforms, dev)) {
-				this.currentDevice = dev;
-				this.updateStatusBar();
-			}
+			// TODO: Because of the await, this results in overlapping calls during startup
+			// and you may end up with Web selected even for a mobile+web project
+			// and a device connected, because at the time web is added, there's no
+			// other current device.
+			// const supportedPlatforms = await this.getSupportedPlatformsForWorkspace();
+			// if (this.isSupported(supportedPlatforms, dev)) {
+			this.currentDevice = dev;
+			this.updateStatusBar();
+			// }
 		}
 	}
 
