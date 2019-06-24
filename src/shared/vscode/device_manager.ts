@@ -86,6 +86,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 		// Also kick of async work to add emulators to the list (if they're valid).
 		this.getEmulatorItems(true, supportedTypes).then((emulators) => {
 			quickPick.busy = false;
+
+			// Fliter out any emulators we know are running.
+			const emulatorIdsAlreadyRunning = this.devices.map((d) => d.emulatorId).filter((id) => id);
+			emulators = emulators.filter((e) => emulatorIdsAlreadyRunning.indexOf(e.device.id) === -1);
+
 			quickPick.items = [...devices, ...emulators];
 		});
 
