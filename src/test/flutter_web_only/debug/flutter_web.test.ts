@@ -290,10 +290,11 @@ describe("flutter for web debugger", () => {
 
 		const config = await startDebugger(flutterWebHelloWorldMainFile);
 		await Promise.all([
-			dc.configurationSequence(),
-			dc.launch(config),
+			watchPromise("launchDevTools->start->configurationSequence", dc.configurationSequence()),
+			watchPromise("launchDevTools->start->launch", dc.launch(config)),
 		]);
 
+		extApi.logger.info("Executing dart.openDevTools");
 		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
 		assert.ok(devTools);
 		assert.ok(devTools.url);
