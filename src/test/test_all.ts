@@ -95,7 +95,7 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	if (!fs.existsSync(testEnv.DC_TEST_LOGS))
 		fs.mkdirSync(testEnv.DC_TEST_LOGS);
 
-	let res = await vstest.runTests({
+	const res = await vstest.runTests({
 		extensionPath: cwd,
 		testRunnerEnv: testEnv,
 		testRunnerPath: path.join(cwd, "out", "src", "test", testFolder),
@@ -105,23 +105,6 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 		version: codeVersion,
 	});
 	exitCode = exitCode || res;
-
-	// Remap coverage output.
-	if (fs.existsSync(testEnv.COVERAGE_OUTPUT)) {
-		// Note: Path wonkiness - only seems to work from out/src/extension even if supplying -b!
-		res = await runNode(
-			path.join(cwd, "out", "src", "extension"),
-			[
-				"../../../node_modules/remap-istanbul/bin/remap-istanbul",
-				"-i",
-				testEnv.COVERAGE_OUTPUT,
-				"-o",
-				testEnv.COVERAGE_OUTPUT,
-			],
-			testEnv,
-		);
-		exitCode = exitCode || res;
-	}
 
 	console.log(yellow("############################################################"));
 	console.log("\n\n");
