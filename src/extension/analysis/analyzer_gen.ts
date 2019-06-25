@@ -8,7 +8,8 @@ import * as as from "../../shared/analysis_server_types";
 import { LogCategory } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
-import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
+import { UnknownNotification, UnknownResponse } from "../../shared/services/interfaces";
+import { StdIOService } from "../services/stdio_service";
 
 export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	constructor(logger: Logger, getLogFile: () => string | undefined, maxLogLineLength: number | undefined) {
