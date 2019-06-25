@@ -10,6 +10,7 @@ import { captureLogs, EmittingLogger } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
 import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../shared/utils";
 import { trueCasePathSync } from "../shared/utils/fs";
+import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
 import { fsPath } from "../shared/vscode/utils";
@@ -37,7 +38,6 @@ import { ClosingLabelsDecorations } from "./decorations/closing_labels_decoratio
 import { FlutterUiGuideDecorations } from "./decorations/flutter_ui_guides_decorations";
 import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_decorations";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
-import { FlutterDeviceManager } from "./flutter/device_manager";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
@@ -289,7 +289,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// Fire up Flutter daemon if required.
 	if (workspaceContext.hasAnyFlutterMobileProjects) {
 		flutterDaemon = new FlutterDaemon(logger, path.join(sdks.flutter, flutterPath), sdks.flutter);
-		deviceManager = new FlutterDeviceManager(logger, flutterDaemon);
+		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config.flutterSelectDeviceWhenConnected);
 		flutterDaemon.deviceEnable();
 
 		context.subscriptions.push(deviceManager);
@@ -607,6 +607,7 @@ function getSettingsThatRequireRestart() {
 		+ config.extensionLogFile
 		+ config.analyzerAdditionalArgs
 		+ config.flutterSdkPath
+		+ config.flutterSelectDeviceWhenConnected
 		+ config.closingLabels
 		+ config.analyzeAngularTemplates
 		+ config.analysisServerFolding

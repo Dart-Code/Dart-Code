@@ -1,7 +1,6 @@
 import * as vs from "vscode";
-import * as f from "../../shared/flutter/daemon_interfaces";
-import { IFlutterDaemon, Logger } from "../../shared/interfaces";
-import { config } from "../config";
+import * as f from "../flutter/daemon_interfaces";
+import { IFlutterDaemon, Logger } from "../interfaces";
 
 export class FlutterDeviceManager implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
@@ -9,7 +8,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	private devices: f.Device[] = [];
 	public currentDevice?: f.Device;
 
-	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon) {
+	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly autoSelectNewlyConnectedDevices: boolean) {
 		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
 		this.statusBarItem.tooltip = "Flutter";
 		this.statusBarItem.show();
@@ -32,7 +31,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		this.devices.push(dev);
 		// undefined is treated as true for backwards compatibility.
 		const canAutoSelectDevice = dev.ephemeral !== false;
-		if (!this.currentDevice || (config.flutterSelectDeviceWhenConnected && canAutoSelectDevice)) {
+		if (!this.currentDevice || (this.autoSelectNewlyConnectedDevices && canAutoSelectDevice)) {
 			this.currentDevice = dev;
 			this.updateStatusBar();
 		}
