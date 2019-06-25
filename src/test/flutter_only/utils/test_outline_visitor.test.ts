@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import { TestOutlineVisitor } from "../../../shared/utils/outline";
-import { activate, extApi, flutterTestOtherFile, getPackages, waitForResult } from "../../helpers";
+import { activate, extApi, flutterTestOtherFile, getPackages, logger, waitForResult } from "../../helpers";
 
 describe("test_outline_visitor", () => {
 	before("get packages", () => getPackages());
@@ -17,7 +17,7 @@ describe("test_outline_visitor", () => {
 
 		const outline = extApi.fileTracker.getOutlineFor(flutterTestOtherFile);
 
-		const visitor = new TestOutlineVisitor(extApi.logger);
+		const visitor = new TestOutlineVisitor(logger);
 		visitor.visit(outline);
 
 		assert.equal(visitor.tests.length, 2);

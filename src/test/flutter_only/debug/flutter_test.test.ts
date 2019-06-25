@@ -6,7 +6,7 @@ import { versionIsAtLeast } from "../../../shared/utils";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterHelloWorldFolder, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getExpectedResults, getLaunchConfiguration, getPackages, makeTextTree, openFile, positionOf, withTimeout } from "../../helpers";
+import { activate, defer, delay, ext, extApi, flutterHelloWorldFolder, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getExpectedResults, getLaunchConfiguration, getPackages, logger, makeTextTree, openFile, positionOf, withTimeout } from "../../helpers";
 
 describe("flutter test debugger", () => {
 
@@ -41,8 +41,8 @@ describe("flutter test debugger", () => {
 		const thisDc = dc;
 		defer(() => withTimeout(
 			Promise.all([
-				thisDc.terminateRequest().catch((e) => extApi.logger.error(e)),
-				delay(500).then(() => thisDc.stop()).catch((e) => extApi.logger.error(e)),
+				thisDc.terminateRequest().catch((e) => logger.error(e)),
+				delay(500).then(() => thisDc.stop()).catch((e) => logger.error(e)),
 			]),
 			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
 			60,

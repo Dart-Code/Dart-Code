@@ -6,7 +6,7 @@ import { isWin, observatoryListeningBannerPattern } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { logProcess } from "../shared/logging";
 import { DartDebugClient } from "./dart_debug_client";
-import { defer, extApi, getLaunchConfiguration } from "./helpers";
+import { defer, extApi, getLaunchConfiguration, logger } from "./helpers";
 
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {
 	assert.ok(variables && variables.length, "No variables given to search");
@@ -84,7 +84,7 @@ export function spawnDartProcessPaused(config: DebugConfiguration | undefined | 
 			config.program,
 		],
 	);
-	logProcess(extApi.logger, LogCategory.CI, process);
+	logProcess(logger, LogCategory.CI, process);
 	const dartProcess = new DartProcess(process);
 	defer(() => {
 		if (!dartProcess.hasExited)
@@ -107,9 +107,9 @@ export async function spawnFlutterProcess(script: string | Uri): Promise<DartPro
 		],
 	);
 	// TODO: Use logProcess?
-	process.stdout.on("data", (data) => extApi.logger.info(`SPROC: ${data}`, LogCategory.CI));
-	process.stderr.on("data", (data) => extApi.logger.info(`SPROC: ${data}`, LogCategory.CI));
-	process.on("exit", (code) => extApi.logger.info(`SPROC: Exited (${code})`, LogCategory.CI));
+	process.stdout.on("data", (data) => logger.info(`SPROC: ${data}`, LogCategory.CI));
+	process.stderr.on("data", (data) => logger.info(`SPROC: ${data}`, LogCategory.CI));
+	process.on("exit", (code) => logger.info(`SPROC: Exited (${code})`, LogCategory.CI));
 	const flutterProcess = new DartProcess(process);
 	defer(() => {
 		if (!flutterProcess.hasExited)
@@ -145,7 +145,7 @@ export function killFlutterTester(): Promise<void> {
 			: extApi.safeSpawn(undefined, "pkill", ["flutter_tester"]);
 		proc.on("exit", (code: number) => {
 			if (!isWin ? code !== 128 : code === 0) {
-				extApi.logger.warn("flutter_tester process(s) remained after test. These have been terminated to avoid affecting future tests, " +
+				logger.warn("flutter_tester process(s) remained after test. These have been terminated to avoid affecting future tests, " +
 					"but may indicate something is not cleaning up correctly", LogCategory.CI);
 			}
 			resolve();
