@@ -10,7 +10,6 @@ import { FLUTTER_SUPPORTS_ATTACH } from "../extension";
 import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
 import { reloadExtension } from "../utils";
 import { safeSpawn } from "../utils/processes";
-import { FlutterDeviceManager } from "./device_manager";
 import * as f from "./flutter_types";
 
 export class DaemonCapabilities {
@@ -28,7 +27,6 @@ export class DaemonCapabilities {
 }
 
 export class FlutterDaemon extends StdIOService<UnknownNotification> {
-	public deviceManager: FlutterDeviceManager;
 	private hasStarted = false;
 	private startupReporter: vs.Progress<{ message?: string; increment?: number }>;
 	private daemonStartedCompleter = new PromiseCompleter();
@@ -41,14 +39,9 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 			this.additionalPidsToTerminate.push(e.pid);
 			this.capabilities.version = e.version;
 			vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, this.capabilities.canFlutterAttach);
-
-			// Enable device polling.
-			this.deviceEnable().then(() => this.deviceManager.updateStatusBar());
 		});
 
 		this.createProcess(projectFolder, flutterBinPath, ["daemon"]);
-
-		this.deviceManager = new FlutterDeviceManager(logger, this);
 
 		if (isChromeOS && config.flutterAdbConnectOnChromeOs) {
 			logger.info("Running ADB Connect on Chrome OS");
@@ -61,7 +54,6 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 	public get isReady() { return this.hasStarted; }
 
 	public dispose() {
-		this.deviceManager.dispose();
 		super.dispose();
 	}
 
