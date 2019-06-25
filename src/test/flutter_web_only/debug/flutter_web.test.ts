@@ -6,7 +6,7 @@ import { fetch } from "../../../shared/fetch";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterWebBrokenMainFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, getPackages, openFile, positionOf, waitForResult, watchPromise } from "../../helpers";
+import { activate, defer, delay, ext, extApi, flutterWebBrokenMainFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, getPackages, logger, openFile, positionOf, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter for web debugger", () => {
 	beforeEach("activate flutterWebHelloWorldMainFile", () => activate(flutterWebHelloWorldMainFile));
@@ -294,7 +294,7 @@ describe("flutter for web debugger", () => {
 			watchPromise("launchDevTools->start->launch", dc.launch(config)),
 		]);
 
-		extApi.logger.info("Executing dart.openDevTools");
+		logger.info("Executing dart.openDevTools");
 		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
 		assert.ok(devTools);
 		assert.ok(devTools.url);
