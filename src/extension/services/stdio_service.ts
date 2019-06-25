@@ -51,8 +51,12 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		this.process.stderr.on("data", (data: Buffer) => {
 			this.logTraffic(`${data.toString()}`, true);
 		});
-		this.process.on("exit", (data: Buffer) => {
+		this.process.on("exit", (code, signal) => {
+			this.logTraffic(`Process terminated! ${code}, ${signal}`);
 			this.processExited = true;
+		});
+		this.process.on("error", (error) => {
+			this.logTraffic(`Process errored! ${error}`);
 		});
 	}
 
