@@ -37,6 +37,7 @@ import { ClosingLabelsDecorations } from "./decorations/closing_labels_decoratio
 import { FlutterUiGuideDecorations } from "./decorations/flutter_ui_guides_decorations";
 import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_decorations";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
+import { FlutterDeviceManager } from "./flutter/device_manager";
 import { DaemonCapabilities, FlutterDaemon } from "./flutter/flutter_daemon";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
@@ -90,6 +91,7 @@ export const SERVICE_CONTEXT_PREFIX = "dart-code:service.";
 
 let analyzer: Analyzer;
 let flutterDaemon: FlutterDaemon;
+let deviceManager: FlutterDeviceManager;
 const dartCapabilities = DartCapabilities.empty;
 const flutterCapabilities = FlutterCapabilities.empty;
 let analysisRoots: string[] = [];
@@ -287,6 +289,10 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	// Fire up Flutter daemon if required.
 	if (workspaceContext.hasAnyFlutterMobileProjects) {
 		flutterDaemon = new FlutterDaemon(logger, path.join(sdks.flutter, flutterPath), sdks.flutter);
+		deviceManager = new FlutterDeviceManager(logger, flutterDaemon);
+		flutterDaemon.deviceEnable();
+
+		context.subscriptions.push(deviceManager);
 		context.subscriptions.push(flutterDaemon);
 		setUpDaemonMessageHandler(logger, context, flutterDaemon);
 	}
@@ -296,7 +302,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const pubGlobal = new PubGlobal(logger, extContext, sdks);
 
 	// Set up debug stuff.
-	const debugProvider = new DebugConfigProvider(logger, sdks, analytics, pubGlobal, flutterDaemon && flutterDaemon.deviceManager, flutterCapabilities);
+	const debugProvider = new DebugConfigProvider(logger, sdks, analytics, pubGlobal, deviceManager, flutterCapabilities);
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
 	context.subscriptions.push(debugProvider);
 
@@ -356,7 +362,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Register additional commands.
 	const analyzerCommands = new AnalyzerCommands(context, analyzer);
-	const sdkCommands = new SdkCommands(logger, context, workspaceContext, sdkUtils, pubGlobal, flutterCapabilities, flutterDaemon && flutterDaemon.deviceManager);
+	const sdkCommands = new SdkCommands(logger, context, workspaceContext, sdkUtils, pubGlobal, flutterCapabilities, deviceManager);
 	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, analytics, pubGlobal);
 
 	// Wire up handling of Hot Reload on Save.
