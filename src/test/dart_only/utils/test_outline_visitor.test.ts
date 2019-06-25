@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import { TestOutlineVisitor } from "../../../shared/utils/outline";
-import { activate, extApi, getPackages, helloWorldTestMainFile, waitForResult } from "../../helpers";
+import { activate, extApi, getPackages, helloWorldTestMainFile, logger, waitForResult } from "../../helpers";
 
 describe("test_outline_visitor", () => {
 
@@ -11,7 +11,7 @@ describe("test_outline_visitor", () => {
 	});
 
 	it("reads the correct groups and tests", () => {
-		const visitor = new TestOutlineVisitor(extApi.logger);
+		const visitor = new TestOutlineVisitor(logger);
 		const outline = extApi.fileTracker.getOutlineFor(helloWorldTestMainFile);
 		if (!outline)
 			throw new Error(`Did not get outline for ${helloWorldTestMainFile}`);

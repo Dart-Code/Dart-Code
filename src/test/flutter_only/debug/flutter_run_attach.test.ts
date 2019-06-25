@@ -6,7 +6,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { killFlutterTester, spawnFlutterProcess } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldExampleSubFolder, flutterHelloWorldFolder, flutterHelloWorldMainFile, getAttachConfiguration, getPackages, watchPromise } from "../../helpers";
+import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldExampleSubFolder, flutterHelloWorldFolder, flutterHelloWorldMainFile, getAttachConfiguration, getPackages, logger, watchPromise } from "../../helpers";
 
 describe("flutter run debugger (attach)", () => {
 	// We have tests that require external packages.
@@ -44,7 +44,7 @@ describe("flutter run debugger (attach)", () => {
 		// Make sure any stdErr is logged to console + log file for debugging.
 		dc.on("output", (event: DebugProtocol.OutputEvent) => {
 			if (event.body.category === "stderr")
-				extApi.logger.error(event.body.output);
+				logger.error(event.body.output);
 		});
 		return config;
 	}

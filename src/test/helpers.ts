@@ -6,7 +6,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { dartCodeExtensionIdentifier, DART_TEST_SUITE_NODE_CONTEXT } from "../shared/constants";
 import { LogCategory, TestStatus } from "../shared/enums";
-import { captureLogs } from "../shared/logging";
+import { captureLogs, EmittingLogger } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
 import { flatMap } from "../shared/utils";
 import { tryDeleteFile } from "../shared/utils/fs";
@@ -17,6 +17,7 @@ import { Context } from "../shared/vscode/workspace";
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
 export let extApi: InternalExtensionApi;
+export let logger: EmittingLogger;
 export const threeMinutesInMilliseconds = 1000 * 60 * 3;
 export const fakeCancellationToken: vs.CancellationToken = {
 	isCancellationRequested: false,
@@ -24,7 +25,7 @@ export const fakeCancellationToken: vs.CancellationToken = {
 };
 
 if (!ext) {
-	extApi.logger.error("Quitting with error because extension failed to load.");
+	logger.error("Quitting with error because extension failed to load.");
 	process.exit(1);
 }
 
@@ -115,6 +116,7 @@ export async function activateWithoutAnalysis(): Promise<void> {
 	await ext.activate();
 	if (ext.exports) {
 		extApi = ext.exports[internalApiSymbol];
+		logger = extApi.logger;
 
 		if (fileSafeCurrentTestName) {
 			const logFolder = process.env.DC_TEST_LOGS || path.join(ext.extensionPath, ".dart_code_test_logs");
@@ -123,10 +125,10 @@ export async function activateWithoutAnalysis(): Promise<void> {
 			const logFile = fileSafeCurrentTestName + ".txt";
 			const logPath = path.join(logFolder, logFile);
 
-			const logger = captureLogs(extApi.logger, logPath, extApi.getLogHeader(), 20000);
+			const testLogger = captureLogs(logger, logPath, extApi.getLogHeader(), 20000);
 
 			deferUntilLast(async (testResult?: "passed" | "failed") => {
-				await logger.dispose();
+				await testLogger.dispose();
 				// On CI, we delete logs for passing tests to save money on S3 :-)
 				if (process.env.CI && testResult === "passed") {
 					try {
@@ -148,25 +150,25 @@ export async function activate(file?: vs.Uri | null | undefined): Promise<void> 
 	if (file) {
 		await openFile(file);
 	} else {
-		extApi.logger.info(`Not opening any file`);
+		logger.info(`Not opening any file`);
 	}
-	extApi.logger.info(`Waiting for initial and any in-progress analysis`);
+	logger.info(`Waiting for initial and any in-progress analysis`);
 	await extApi.initialAnalysis;
 	// Opening a file above may start analysis after a short period so give it time to start
 	// before we continue.
 	await delay(200);
 	await extApi.currentAnalysis();
 
-	extApi.logger.info(`Cancelling any in-progress requests`);
+	logger.info(`Cancelling any in-progress requests`);
 	extApi.cancelAllAnalysisRequests();
 
-	extApi.logger.info(`Ready to start test`);
+	logger.info(`Ready to start test`);
 }
 
 export async function getPackages(uri?: vs.Uri) {
 	await activateWithoutAnalysis();
 	if (!(uri || (vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length))) {
-		extApi.logger.error("Cannot getPackages because there is no workspace folder and no URI was supplied");
+		logger.error("Cannot getPackages because there is no workspace folder and no URI was supplied");
 		return;
 	}
 	await waitForNextAnalysis(async () => {
@@ -175,18 +177,18 @@ export async function getPackages(uri?: vs.Uri) {
 }
 
 function logOpenEditors() {
-	extApi.logger.info(`Current open editors are:`);
+	logger.info(`Current open editors are:`);
 	if (vs.window.visibleTextEditors && vs.window.visibleTextEditors.length) {
 		for (const editor of vs.window.visibleTextEditors) {
-			extApi.logger.info(`  - ${editor.document.uri}`);
+			logger.info(`  - ${editor.document.uri}`);
 		}
 	} else {
-		extApi.logger.info(`  - (no open editors)`);
+		logger.info(`  - (no open editors)`);
 	}
 }
 
 export async function closeAllOpenFiles(): Promise<void> {
-	extApi.logger.info(`Closing all open editors...`);
+	logger.info(`Closing all open editors...`);
 	logOpenEditors();
 	try {
 		await withTimeout(
@@ -195,15 +197,15 @@ export async function closeAllOpenFiles(): Promise<void> {
 			10,
 		);
 	} catch (e) {
-		extApi.logger.warn(e);
+		logger.warn(e);
 	}
 	await delay(100);
-	extApi.logger.info(`Done closing editors!`);
+	logger.info(`Done closing editors!`);
 	logOpenEditors();
 }
 
 export async function waitUntilAllTextDocumentsAreClosed(): Promise<void> {
-	extApi.logger.info(`Waiting for VS Code to mark all documents as closed...`);
+	logger.info(`Waiting for VS Code to mark all documents as closed...`);
 	const getAllOpenDocs = () => vs.workspace.textDocuments.filter((td) => !td.isUntitled && td.uri.scheme === "file");
 	await waitForResult(() => getAllOpenDocs().length === 0, "Some TextDocuments did not close", threeMinutesInMilliseconds, false);
 	const openDocs = getAllOpenDocs();
@@ -223,10 +225,10 @@ export async function closeFile(file: vs.Uri): Promise<void> {
 }
 
 export async function openFile(file: vs.Uri): Promise<vs.TextEditor> {
-	extApi.logger.info(`Opening ${fsPath(file)}`);
+	logger.info(`Opening ${fsPath(file)}`);
 	const doc = await vs.workspace.openTextDocument(file);
 	documentEol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
-	extApi.logger.info(`Showing ${fsPath(file)}`);
+	logger.info(`Showing ${fsPath(file)}`);
 	const editor = await vs.window.showTextDocument(doc);
 	await delay(100);
 	return editor;
@@ -240,7 +242,7 @@ export function deleteDirectoryRecursive(folder: string) {
 	if (!fs.existsSync(folder))
 		return;
 	if (!fs.statSync(folder).isDirectory()) {
-		extApi.logger.error(`deleteDirectoryRecursive was passed a file: ${folder}`);
+		logger.error(`deleteDirectoryRecursive was passed a file: ${folder}`);
 	}
 	fs.readdirSync(folder)
 		.map((item) => path.join(folder, item))
@@ -278,9 +280,9 @@ afterEach("run deferred functions", async function () {
 		try {
 			await watchPromise(`afterEach->deferred->${d.toString()}`, d(this.currentTest ? this.currentTest.state : undefined));
 		} catch (e) {
-			extApi.logger.error(`Error running deferred function: ${e}`);
+			logger.error(`Error running deferred function: ${e}`);
 			// TODO: Add named for deferred functions instead...
-			extApi.logger.warn(d.toString());
+			logger.warn(d.toString());
 			firstError = firstError || e;
 		}
 	}
@@ -648,13 +650,13 @@ export async function waitForEditorChange(action: () => Thenable<void>): Promise
 }
 
 export async function waitForNextAnalysis(action: () => void | Thenable<void>, timeoutSeconds?: number): Promise<void> {
-	extApi.logger.info("Waiting for any in-progress analysis to complete");
+	logger.info("Waiting for any in-progress analysis to complete");
 	await extApi.currentAnalysis;
 	// Get a new completer for the next analysis.
 	const nextAnalysis = extApi.nextAnalysis();
-	extApi.logger.info("Running requested action");
+	logger.info("Running requested action");
 	await action();
-	extApi.logger.info(`Waiting for analysis to complete`);
+	logger.info(`Waiting for analysis to complete`);
 	await withTimeout(nextAnalysis, "Analysis did not complete within specified timeout", timeoutSeconds);
 }
 
@@ -730,12 +732,12 @@ export function watchPromise<T>(name: string, promise: Promise<T>): Promise<T> {
 	promise.then((_) => {
 		didComplete = true;
 		if (logCompletion)
-			extApi.logger.info(`Promise ${name} resolved!`, LogCategory.CI);
+			logger.info(`Promise ${name} resolved!`, LogCategory.CI);
 	});
 	promise.catch((_) => {
 		didComplete = true;
 		if (logCompletion)
-			extApi.logger.warn(`Promise ${name} rejected!`, LogCategory.CI);
+			logger.warn(`Promise ${name} rejected!`, LogCategory.CI);
 	});
 
 	let checkResult: () => void;
@@ -743,7 +745,7 @@ export function watchPromise<T>(name: string, promise: Promise<T>): Promise<T> {
 		if (didComplete)
 			return;
 		logCompletion = true;
-		extApi.logger.info(`Promise ${name} is still unresolved!`, LogCategory.CI);
+		logger.info(`Promise ${name} is still unresolved!`, LogCategory.CI);
 		setTimeout(checkResult, 10000);
 	};
 	setTimeout(checkResult, 3000); // First log is after 3s, rest are 10s.
