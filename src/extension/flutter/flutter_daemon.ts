@@ -1,32 +1,20 @@
 import * as vs from "vscode";
 import { ProgressLocation } from "vscode";
+import { DaemonCapabilities } from "../../shared/capabilities/flutter";
 import { isChromeOS } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
-import { Logger } from "../../shared/interfaces";
+import * as f from "../../shared/flutter/daemon_interfaces";
+import { IFlutterDaemon, Logger } from "../../shared/interfaces";
 import { CategoryLogger, logProcess } from "../../shared/logging";
-import { PromiseCompleter, versionIsAtLeast } from "../../shared/utils";
+import { UnknownNotification, UnknownResponse } from "../../shared/services/interfaces";
+import { PromiseCompleter } from "../../shared/utils";
 import { config } from "../config";
 import { FLUTTER_SUPPORTS_ATTACH } from "../extension";
-import { StdIOService, UnknownNotification, UnknownResponse } from "../services/stdio_service";
+import { StdIOService } from "../services/stdio_service";
 import { reloadExtension } from "../utils";
 import { safeSpawn } from "../utils/processes";
-import * as f from "./flutter_types";
 
-export class DaemonCapabilities {
-	public static get empty() { return new DaemonCapabilities("0.0.0"); }
-
-	public version: string;
-
-	constructor(daemonProtocolVersion: string) {
-		this.version = daemonProtocolVersion;
-	}
-
-	get canCreateEmulators() { return versionIsAtLeast(this.version, "0.4.0"); }
-	get canFlutterAttach() { return versionIsAtLeast(this.version, "0.4.1"); }
-	get providesPlatformTypes() { return versionIsAtLeast(this.version, "0.5.2"); }
-}
-
-export class FlutterDaemon extends StdIOService<UnknownNotification> {
+export class FlutterDaemon extends StdIOService<UnknownNotification> implements IFlutterDaemon {
 	private hasStarted = false;
 	private startupReporter: vs.Progress<{ message?: string; increment?: number }>;
 	private daemonStartedCompleter = new PromiseCompleter();
@@ -50,8 +38,6 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> {
 
 		}
 	}
-
-	public get isReady() { return this.hasStarted; }
 
 	public dispose() {
 		super.dispose();

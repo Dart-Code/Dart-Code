@@ -6,6 +6,7 @@ import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, Prov
 import { DebugSession } from "vscode-debugadapter";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { CHROME_OS_VM_SERVICE_PORT, dartVMPath, debugAnywayAction, flutterPath, HAS_LAST_DEBUG_CONFIG, isChromeOS, pubPath, pubSnapshotPath, showErrorsAction } from "../../shared/constants";
+import { Device } from "../../shared/flutter/daemon_interfaces";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../../shared/utils";
 import { fsPath } from "../../shared/vscode/utils";
@@ -21,7 +22,6 @@ import { FlutterWebDebugSession } from "../debug/flutter_web_debug_impl";
 import { FlutterWebTestDebugSession } from "../debug/flutter_web_test_debug_impl";
 import { FlutterLaunchRequestArguments } from "../debug/utils";
 import { FlutterDeviceManager } from "../flutter/device_manager";
-import { Device } from "../flutter/flutter_types";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";

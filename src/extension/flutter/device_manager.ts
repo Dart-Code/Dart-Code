@@ -1,8 +1,7 @@
 import * as vs from "vscode";
-import { Logger } from "../../shared/interfaces";
+import * as f from "../../shared/flutter/daemon_interfaces";
+import { IFlutterDaemon, Logger } from "../../shared/interfaces";
 import { config } from "../config";
-import { FlutterDaemon } from "./flutter_daemon";
-import * as f from "./flutter_types";
 
 export class FlutterDeviceManager implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
@@ -10,7 +9,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	private devices: f.Device[] = [];
 	public currentDevice?: f.Device;
 
-	constructor(private readonly logger: Logger, private daemon: FlutterDaemon) {
+	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon) {
 		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
 		this.statusBarItem.tooltip = "Flutter";
 		this.statusBarItem.show();
@@ -76,13 +75,6 @@ export class FlutterDeviceManager implements vs.Disposable {
 			this.statusBarItem.text = `${this.currentDevice.name} (${this.currentDevice.platform}${this.currentDevice.emulator ? " Emulator" : ""})`;
 		else
 			this.statusBarItem.text = "No Devices";
-
-		// Don't show the progress bar until we're ready (eg. we may have kicked off a Dart download).
-		if (!this.daemon.isReady) {
-			this.statusBarItem.hide();
-		} else {
-			this.statusBarItem.show();
-		}
 
 		if (this.devices.length > 1) {
 			this.statusBarItem.tooltip = `${this.devices.length} Devices Connected`;

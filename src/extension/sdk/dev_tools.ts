@@ -7,13 +7,14 @@ import { CHROME_OS_DEVTOOLS_PORT, isChromeOS, pleaseReportBug, pubPath } from ".
 import { FlutterService, LogCategory } from "../../shared/enums";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
+import { UnknownNotification } from "../../shared/services/interfaces";
 import { getRandomInt } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
 import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions } from "../commands/debug";
 import { config } from "../config";
 import { PubGlobal } from "../pub/global";
-import { StdIOService, UnknownNotification } from "../services/stdio_service";
+import { StdIOService } from "../services/stdio_service";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 const devtools = "devtools";

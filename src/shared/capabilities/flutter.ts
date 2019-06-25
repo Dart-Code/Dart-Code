@@ -20,3 +20,17 @@ export class FlutterCapabilities {
 	// TODO: Figure this out.
 	get webSupportsDebugging() { return false; }
 }
+
+export class DaemonCapabilities {
+	public static get empty() { return new DaemonCapabilities("0.0.0"); }
+
+	public version: string;
+
+	constructor(daemonProtocolVersion: string) {
+		this.version = daemonProtocolVersion;
+	}
+
+	get canCreateEmulators() { return versionIsAtLeast(this.version, "0.4.0"); }
+	get canFlutterAttach() { return versionIsAtLeast(this.version, "0.4.1"); }
+	get providesPlatformTypes() { return versionIsAtLeast(this.version, "0.5.2"); }
+}
