@@ -290,11 +290,15 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	if (workspaceContext.hasAnyFlutterMobileProjects) {
 		flutterDaemon = new FlutterDaemon(logger, path.join(sdks.flutter, flutterPath), sdks.flutter);
 		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config.flutterSelectDeviceWhenConnected);
-		flutterDaemon.deviceEnable();
 
 		context.subscriptions.push(deviceManager);
 		context.subscriptions.push(flutterDaemon);
+
+		flutterDaemon.deviceEnable();
 		setUpDaemonMessageHandler(logger, context, flutterDaemon);
+
+		context.subscriptions.push(vs.commands.registerCommand("flutter.selectDevice", deviceManager.showDevicePicker, deviceManager));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.launchEmulator", deviceManager.promptForAndLaunchEmulator, deviceManager));
 	}
 
 	util.logTime("All other stuff before debugger..");
