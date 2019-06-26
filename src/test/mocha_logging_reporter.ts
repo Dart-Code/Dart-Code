@@ -13,8 +13,6 @@ export class LoggingReporter extends reporters.Base {
 		super(runner);
 		runner.on("start", () => {
 
-			// TODO: Make this less hacky.
-
 			runner.on("test", (test: ITest) => {
 				const logger = getLogger();
 				if (logger)
