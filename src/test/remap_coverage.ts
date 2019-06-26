@@ -1,3 +1,4 @@
+// tslint:disable: no-var-requires
 import * as fs from "fs";
 import * as path from "path";
 const loadCoverage = require("remap-istanbul/lib/loadCoverage");
