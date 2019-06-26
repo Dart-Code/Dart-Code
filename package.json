@@ -1459,7 +1459,9 @@
 		"build-tests": "tsc -p ./",
 		"watch-tests": "tsc -p ./ --watch",
 		"lint": "tslint 'src/**/*.ts' -t verbose",
-		"test": "npm run build-with-instrumentation && npm run build-tests && npm run test-only && npm run report_lcov && npm run report_screen",
+		"test": "npm run build && npm run build-tests && npm run instrument && npm run test-only && npm run remap_coverage && npm run report_lcov && npm run report_screen",
+		"instrument": "cd out/src && nyc instrument --compact false . . && cd ../..",
+		"remap_coverage": "cd out/src && node ../../out/src/test/remap_coverage.js && cd ../..",
 		"test-only": "node ./out/src/test/test_all.js",
 		"report_lcov": "nyc report -r lcovonly",
 		"report_screen": "nyc report"
@@ -1484,6 +1486,7 @@
 		"istanbul-instrumenter-loader": "^3.0.1",
 		"mocha": "^5.2.0",
 		"nyc": "^13.1.0",
+		"remap-istanbul": "^0.13.0",
 		"signal-exit": "^3.0.2",
 		"sinon": "^7.1.1",
 		"source-map-support": "^0.5.12",
