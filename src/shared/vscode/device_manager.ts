@@ -15,8 +15,6 @@ export class FlutterDeviceManager implements vs.Disposable {
 		this.updateStatusBar();
 
 		this.subscriptions.push(this.statusBarItem);
-		this.subscriptions.push(vs.commands.registerCommand("flutter.selectDevice", this.showDevicePicker, this));
-		this.subscriptions.push(vs.commands.registerCommand("flutter.launchEmulator", this.promptForAndLaunchEmulator, this));
 
 		daemon.registerForDeviceAdded(this.deviceAdded.bind(this));
 		daemon.registerForDeviceRemoved(this.deviceRemoved.bind(this));
