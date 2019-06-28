@@ -17,6 +17,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
 		this.statusBarItem.tooltip = "Flutter";
 		this.statusBarItem.command = "flutter.selectDevice";
+		this.statusBarItem.show();
 		this.updateStatusBar();
 
 		this.subscriptions.push(this.statusBarItem);
