@@ -127,6 +127,7 @@ class FakeFlutterDaemon extends FakeStdIOService implements IFlutterDaemon {
 const desktop: f.Device = {
 	category: "desktop",
 	emulator: false,
+	emulatorId: undefined,
 	ephemeral: false,
 	id: "my-mac",
 	name: "My MacBook",
@@ -138,6 +139,7 @@ const desktop: f.Device = {
 const physicalMobile: f.Device = {
 	category: "mobile",
 	emulator: false,
+	emulatorId: undefined,
 	ephemeral: true,
 	id: "my-iphone",
 	name: "My iPhone",
@@ -149,6 +151,7 @@ const physicalMobile: f.Device = {
 const emulatedMobile: f.Device = {
 	category: "mobile",
 	emulator: true,
+	emulatorId: undefined,
 	ephemeral: true,
 	id: "ios-simulator",
 	name: "iOS Simulator",
