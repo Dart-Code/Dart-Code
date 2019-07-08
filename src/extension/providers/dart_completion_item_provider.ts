@@ -274,7 +274,9 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 					// this element (note: this exact element from its declaring
 					// library, not just something with the same name). If we do
 					// we'll want to skip it.
-					const key = `${suggestion.label}/${suggestion.declaringLibraryUri}`;
+					// Trim back to the . to handle enum values
+					// https://github.com/Dart-Code/Dart-Code/issues/1835
+					const key = `${suggestion.label.split(".")[0]}/${suggestion.declaringLibraryUri}`;
 					const importingUris = existingImports && existingImports[key];
 
 					// Keep it only if there are either:

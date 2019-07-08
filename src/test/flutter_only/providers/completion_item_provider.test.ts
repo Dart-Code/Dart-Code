@@ -53,6 +53,25 @@ main() {
 			assert.equal(edgeInsetsCompletions.length, 1);
 		});
 
+		it("does not include duplicate enum values from multiple files if one is already imported", async function () {
+			if (!extApi.analyzerCapabilities.supportsIncludedImports) {
+				this.skip();
+				return;
+			}
+
+			await setTestContent(`
+import 'package:flutter/material.dart';
+
+main() {
+	var a = TextOverflo
+}
+		`);
+			const completions = await getCompletionsAt("TextOverflo^");
+			const clipCompletion = completions.filter((c) => c.label === "TextOverflow.clip");
+			// We should only get one from the already imported file.
+			assert.equal(clipCompletion.length, 1);
+		});
+
 		it.skip("log performance of completions", async () => {
 			await setTestContent(`
 import 'package:flutter/rendering.dart';
