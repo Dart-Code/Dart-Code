@@ -447,9 +447,6 @@ export class SdkCommands {
 	}
 
 	private async createFlutterWebProject(): Promise<void> {
-		// TODO: auto-select if only one
-		// TODO: tests!
-		// TODO: Should it use flutter trigger file??
 		return this.createStagehandProject("flutter.createWebProject", FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, true, (t) => this.isFlutterWebTemplate(t));
 	}
 
