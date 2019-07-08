@@ -81,7 +81,7 @@ export class DevToolsManager implements vs.Disposable {
 						return true;
 					} catch (e) {
 						this.logger.error(`DevTools failed to launch browser ${e.message}`);
-						vs.window.showErrorMessage(`The DevTools service failed to launch the browser. ${pleaseReportBug}`, "Show Full Error").then((res) => {
+						vs.window.showErrorMessage(`Dart DevTools was unable to launch Chrome.`, "Show Full Error").then((res) => {
 							if (res) {
 								const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`;
 								const tempPath = path.join(os.tmpdir(), fileName);
