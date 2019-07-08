@@ -149,7 +149,7 @@ async function runAllTests(): Promise<void> {
 		await runTests("multi_project_folder", "", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("not_activated/dart_create", "empty", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("not_activated/flutter_create", "empty", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("not_activated/flutter_web_create", "empty", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
+		await runTests("not_activated/flutter_web_create", "empty", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("dart_create_tests", "dart_create_tests.code-workspace", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("flutter_create_tests", "flutter_create_tests.code-workspace", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
 		await runTests("flutter_web_create_tests", "flutter_web_create_tests.code-workspace", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
