@@ -1239,6 +1239,11 @@
 				}
 			}
 		},
+		"breakpoints": [
+			{
+				"language": "dart"
+			}
+		],
 		"debuggers": [
 			{
 				"type": "dart",
@@ -1248,11 +1253,6 @@
 				"languages": [
 					"dart"
 				],
-				"enableBreakpointsFor": {
-					"languageIds": [
-						"dart"
-					]
-				},
 				"configurationAttributes": {
 					"launch": {
 						"properties": {
