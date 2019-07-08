@@ -9,7 +9,6 @@ import { IFlutterDaemon, Sdks } from "../shared/interfaces";
 import { captureLogs, EmittingLogger } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
 import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../shared/utils";
-import { trueCasePathSync } from "../shared/utils/fs";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
@@ -433,8 +432,10 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	if (vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length) {
 		for (const wf of vs.workspace.workspaceFolders) {
 			const userPath = forceWindowsDriveLetterToUppercase(fsPath(wf.uri));
-			const realPath = forceWindowsDriveLetterToUppercase(trueCasePathSync(userPath));
-			if (userPath && realPath && userPath !== realPath) {
+			const realPath = forceWindowsDriveLetterToUppercase(fs.realpathSync.native(userPath));
+			// Since realpathSync.native will resolve symlinks, we'll only show these warnings
+			// when there was no symlink (eg. the lowercase version of both paths match).
+			if (userPath && realPath && userPath.toLowerCase() === realPath.toLowerCase() && userPath !== realPath) {
 				vs.window.showWarningMessage(
 					`The casing of the open workspace folder does not match the casing on the underlying disk; please re-open the folder using the File Open dialog. `
 					+ `Expected ${realPath} but got ${userPath}`,
