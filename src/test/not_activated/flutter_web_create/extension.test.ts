@@ -47,7 +47,7 @@ describe("command", () => {
 
 		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves();
+		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any, sinon.match.any).resolves();
 
 		await vs.commands.executeCommand("flutter.createWebProject");
 
