@@ -96,12 +96,14 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 		fs.mkdirSync(testEnv.DC_TEST_LOGS);
 
 	const res = await vstest.runTests({
-		extensionPath: cwd,
-		testRunnerEnv: testEnv,
-		testRunnerPath: path.join(cwd, "out", "src", "test", testFolder),
-		testWorkspace: path.isAbsolute(workspaceFolder)
-			? workspaceFolder
-			: path.join(cwd, "src", "test", "test_projects", workspaceFolder),
+		extensionDevelopmentPath: cwd,
+		extensionTestsEnv: testEnv,
+		extensionTestsPath: path.join(cwd, "out", "src", "test", testFolder),
+		launchArgs: [
+			path.isAbsolute(workspaceFolder)
+				? workspaceFolder
+				: path.join(cwd, "src", "test", "test_projects", workspaceFolder),
+		],
 		version: codeVersion,
 	});
 	exitCode = exitCode || res;
