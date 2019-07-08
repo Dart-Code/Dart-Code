@@ -10,7 +10,7 @@ import { sb, waitForResult } from "../helpers";
 import sinon = require("sinon");
 
 describe("flutter for web", () => {
-	it.skip("created a templated project", async () => {
+	it("created a templated project", async () => {
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const getPackagesCommand = executeCommand.withArgs("dart.getPackages", sinon.match.any).resolves();
 
