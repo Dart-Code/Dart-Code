@@ -681,12 +681,12 @@
 				},
 				{
 					"command": "flutter.openInAndroidStudio",
-					"when": "explorerResourceIsFolder && resourceFilename == android && dart-code:anyFlutterProjectLoaded",
+					"when": "explorerResourceIsFolder && resourceFilename == android && dart-code:anyFlutterProjectLoaded && dart-code:isRunningLocally",
 					"group": "1.5_open_ext@1"
 				},
 				{
 					"command": "flutter.openInXcode",
-					"when": "explorerResourceIsFolder && resourceFilename == ios && dart-code:anyFlutterProjectLoaded && dart-code:dartPlatformName == mac",
+					"when": "explorerResourceIsFolder && resourceFilename == ios && dart-code:anyFlutterProjectLoaded && dart-code:dartPlatformName == mac && dart-code:isRunningLocally",
 					"group": "1.5_open_ext@1"
 				}
 			],

@@ -35,6 +35,8 @@ export const DART_DEP_PACKAGE_NODE_CONTEXT = "dart-code:depPackageNode";
 export const DART_DEP_FOLDER_NODE_CONTEXT = "dart-code:depFolderNode";
 export const DART_DEP_FILE_NODE_CONTEXT = "dart-code:depFileNode";
 
+export const IS_RUNNING_LOCALLY_CONTEXT = "dart-code:isRunningLocally";
+
 export const stopLoggingAction = "Stop Logging";
 
 export const restartReasonManual = "manual";

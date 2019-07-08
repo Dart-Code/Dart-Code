@@ -3,7 +3,7 @@ import * as path from "path";
 import { isArray } from "util";
 import * as vs from "vscode";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
-import { analyzerSnapshotPath, dartPlatformName, dartVMPath, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, isWin, platformDisplayName } from "../shared/constants";
+import { analyzerSnapshotPath, dartPlatformName, dartVMPath, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, isWin, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { IFlutterDaemon, Sdks } from "../shared/interfaces";
 import { captureLogs, EmittingLogger } from "../shared/logging";
@@ -13,7 +13,7 @@ import { trueCasePathSync } from "../shared/utils/fs";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
-import { fsPath } from "../shared/vscode/utils";
+import { fsPath, isRunningLocally } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { Analyzer } from "./analysis/analyzer";
@@ -106,6 +106,7 @@ let extensionLogger: { dispose: () => Promise<void> | void };
 const logger = new EmittingLogger();
 
 export function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
+	vs.commands.executeCommand("setContext", IS_RUNNING_LOCALLY_CONTEXT, isRunningLocally);
 	if (!extensionLogger)
 		extensionLogger = captureLogs(logger, getExtensionLogPath(), undefined, 4000, [LogCategory.General]);
 
