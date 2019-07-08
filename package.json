@@ -1468,7 +1468,6 @@
 		"report_screen": "nyc report"
 	},
 	"dependencies": {
-		"glob": "^7.1.4",
 		"minimatch": "^3.0.4",
 		"semver": "^6.2.0",
 		"vscode-debugadapter": "^1.35.0",
@@ -1484,6 +1483,7 @@
 		"@types/sinon": "5.0.5",
 		"@types/vscode": "^1.36.0",
 		"@types/ws": "^6.0.1",
+		"glob": "^7.1.4",
 		"istanbul-instrumenter-loader": "^3.0.1",
 		"mocha": "^5.2.0",
 		"nyc": "^13.3.0",
