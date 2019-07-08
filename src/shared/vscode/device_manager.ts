@@ -1,6 +1,7 @@
 import * as vs from "vscode";
 import * as f from "../flutter/daemon_interfaces";
 import { IFlutterDaemon, Logger } from "../interfaces";
+import { isRunningLocally } from "./utils";
 
 export class FlutterDeviceManager implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
@@ -117,7 +118,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			return true;
 
 		// Add an option to create a new emulator if the daemon supports it.
-		if (this.daemon.capabilities.canCreateEmulators) {
+		if (this.daemon.capabilities.canCreateEmulators && isRunningLocally) {
 			emulators.push({
 				alwaysShow: true,
 				description: "Creates and launches a new Android emulator",
