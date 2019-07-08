@@ -6,9 +6,10 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { dartCodeExtensionIdentifier, DART_TEST_SUITE_NODE_CONTEXT } from "../shared/constants";
 import { LogCategory, TestStatus } from "../shared/enums";
-import { captureLogs, EmittingLogger } from "../shared/logging";
+import { Logger } from "../shared/interfaces";
+import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
-import { flatMap } from "../shared/utils";
+import { BufferedLogger, flatMap } from "../shared/utils";
 import { tryDeleteFile } from "../shared/utils/fs";
 import { waitFor } from "../shared/utils/promises";
 import { DelayedCompletionItem, InternalExtensionApi, TestItemTreeItem, TestResultsProvider } from "../shared/vscode/interfaces";
@@ -17,7 +18,7 @@ import { Context } from "../shared/vscode/workspace";
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
 export let extApi: InternalExtensionApi;
-export let logger: EmittingLogger;
+export let logger: Logger = new BufferedLogger();
 export const threeMinutesInMilliseconds = 1000 * 60 * 3;
 export const fakeCancellationToken: vs.CancellationToken = {
 	isCancellationRequested: false,
@@ -116,29 +117,66 @@ export async function activateWithoutAnalysis(): Promise<void> {
 	await ext.activate();
 	if (ext.exports) {
 		extApi = ext.exports[internalApiSymbol];
-		logger = extApi.logger;
-
-		if (fileSafeCurrentTestName) {
-			const logFolder = process.env.DC_TEST_LOGS || path.join(ext.extensionPath, ".dart_code_test_logs");
-			if (!fs.existsSync(logFolder))
-				fs.mkdirSync(logFolder);
-			const logFile = fileSafeCurrentTestName + ".txt";
-			const logPath = path.join(logFolder, logFile);
-
-			const testLogger = captureLogs(logger, logPath, extApi.getLogHeader(), 20000);
-
-			deferUntilLast(async (testResult?: "passed" | "failed") => {
-				await testLogger.dispose();
-				// On CI, we delete logs for passing tests to save money on S3 :-)
-				if (process.env.CI && testResult === "passed") {
-					try {
-						fs.unlinkSync(logPath);
-					} catch { }
-				}
-			});
-		}
+		setupTestLogging();
 	} else
 		console.warn("Extension has no exports, it probably has not activated correctly! Check the extension startup logs.");
+}
+
+export async function attachLoggingWhenExtensionAvailable(attempt = 1) {
+	if (logger && !(logger instanceof BufferedLogger)) {
+		console.warn("Logging was already set up!");
+		return;
+	}
+
+	if (setupTestLogging()) {
+		console.log("Logging was configured!");
+		return;
+	}
+
+	if (attempt < 50) {
+		setTimeout(() => attachLoggingWhenExtensionAvailable(attempt + 1), 100);
+	} else {
+		console.warn(`Failed to set up logging after ${attempt} attempts`);
+	}
+}
+
+function setupTestLogging(): boolean {
+	const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
+	if (!ext.isActive || !ext.exports)
+		return false;
+
+	extApi = ext.exports[internalApiSymbol];
+	const emittingLogger = extApi.logger;
+
+	if (fileSafeCurrentTestName) {
+		const logFolder = process.env.DC_TEST_LOGS || path.join(ext.extensionPath, ".dart_code_test_logs");
+		if (!fs.existsSync(logFolder))
+			fs.mkdirSync(logFolder);
+		const logFile = fileSafeCurrentTestName + ".txt";
+		const logPath = path.join(logFolder, logFile);
+
+		const testLogger = captureLogs(emittingLogger, logPath, extApi.getLogHeader(), 20000);
+
+		deferUntilLast(async (testResult?: "passed" | "failed") => {
+			// Put a new buffered logger back to capture any logging output happening
+			// after we closed our log file to be included in the next.
+			logger = new BufferedLogger();
+
+			await testLogger.dispose();
+			// On CI, we delete logs for passing tests to save money on S3 :-)
+			if (process.env.CI && testResult === "passed") {
+				try {
+					fs.unlinkSync(logPath);
+				} catch { }
+			}
+		});
+	}
+
+	if (logger && logger instanceof BufferedLogger)
+		logger.flushTo(emittingLogger);
+	logger = emittingLogger;
+
+	return true;
 }
 
 export async function activate(file?: vs.Uri | null | undefined): Promise<void> {

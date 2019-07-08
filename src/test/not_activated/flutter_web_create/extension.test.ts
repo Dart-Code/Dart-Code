@@ -6,7 +6,7 @@ import * as vs from "vscode";
 import { FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE } from "../../../shared/constants";
 import { StagehandTemplate } from "../../../shared/interfaces";
 import { fsPath } from "../../../shared/vscode/utils";
-import { ext, getRandomTempFolder, sb } from "../../helpers";
+import { attachLoggingWhenExtensionAvailable, ext, getRandomTempFolder, logger, sb } from "../../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -30,6 +30,7 @@ describe("extension", () => {
 
 describe("command", () => {
 	it("Flutter: New Web Project can be invoked and creates trigger file", async () => {
+		attachLoggingWhenExtensionAvailable();
 		const projectName = "my_test_fweb_proj";
 		const templateName = "flutter-web-preview";
 		const templateEntrypoint = "web/index.html";
@@ -49,7 +50,9 @@ describe("command", () => {
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any, sinon.match.any).resolves();
 
+		logger.info("Executing createWebProject command");
 		await vs.commands.executeCommand("flutter.createWebProject");
+		logger.info("Finished executing createWebProject command");
 
 		// TODO: Uncomment this when we have more than one Flutter web template.
 		// assert.ok(showQuickPick.calledOnce);

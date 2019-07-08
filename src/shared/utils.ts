@@ -2,7 +2,8 @@ import * as fs from "fs";
 import * as path from "path";
 import * as semver from "semver";
 import { flutterExecutableName, isWin } from "./constants";
-import { SomeError } from "./interfaces";
+import { LogCategory } from "./enums";
+import { Logger, SomeError } from "./interfaces";
 
 export function forceWindowsDriveLetterToUppercase(p: string): string {
 	if (p && isWin && path.isAbsolute(p) && p.charAt(0) === p.charAt(0).toLowerCase())
@@ -121,4 +122,44 @@ export function errorString(error: SomeError): string {
 		return error;
 	else
 		return error.message || "<empty error message>";
+}
+
+type BufferedLogMessage =
+	{ type: "info", message: string, category?: LogCategory }
+	| { type: "warn", message: SomeError, category?: LogCategory }
+	| { type: "error", message: SomeError, category?: LogCategory };
+
+export class BufferedLogger implements Logger {
+	private buffer: BufferedLogMessage[] = [];
+
+	public info(message: string, category?: LogCategory): void {
+		this.buffer.push({ type: "info", message, category });
+	}
+	public warn(message: SomeError, category?: LogCategory): void {
+		this.buffer.push({ type: "warn", message, category });
+	}
+	public error(error: SomeError, category?: LogCategory): void {
+		this.buffer.push({ type: "error", message: error, category });
+	}
+
+	public flushTo(logger: Logger) {
+		if (!this.buffer.length)
+			return;
+
+		logger.info("Flushing log messages...");
+		for (const log of this.buffer) {
+			switch (log.type) {
+				case "info":
+					logger.info(log.message, log.category);
+					break;
+				case "warn":
+					logger.warn(log.message, log.category);
+					break;
+				case "error":
+					logger.error(log.message, log.category);
+					break;
+			}
+		}
+		logger.info("Done flushing log messages...");
+	}
 }
