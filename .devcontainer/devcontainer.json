@@ -1,0 +1,8 @@
+{
+	"name": "Node.js 8 & TypeScript",
+	"dockerFile": "Dockerfile",
+	"extensions": [
+		"ms-vscode.vscode-typescript-tslint-plugin",
+		"eamodio.tsl-problem-matcher"
+	]
+}

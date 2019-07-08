@@ -8,7 +8,8 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceRoot}"
+				"--extensionDevelopmentPath=${workspaceRoot}",
+				"${workspaceRoot}/src/test/test_projects/flutter_hello_world"
 			],
 			"outFiles": [
 				"${workspaceRoot}/out/**/*.js"
