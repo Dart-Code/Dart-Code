@@ -6,7 +6,7 @@ import * as vs from "vscode";
 import { DART_STAGEHAND_PROJECT_TRIGGER_FILE } from "../../../shared/constants";
 import { StagehandTemplate } from "../../../shared/interfaces";
 import { fsPath } from "../../../shared/vscode/utils";
-import { ext, getRandomTempFolder, sb } from "../../helpers";
+import { attachLoggingWhenExtensionAvailable, ext, getRandomTempFolder, sb } from "../../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -30,6 +30,8 @@ describe("extension", () => {
 
 describe("command", () => {
 	it("Dart: New Project can be invoked and creates trigger file", async () => {
+		attachLoggingWhenExtensionAvailable();
+
 		const projectName = "my_test_dart_proj";
 		const templateName = "console-full";
 		const templateEntrypoint = "bin/main.dart";

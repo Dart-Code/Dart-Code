@@ -6,7 +6,7 @@ import * as vs from "vscode";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../../shared/constants";
 import { FlutterSampleSnippet } from "../../../shared/vscode/interfaces";
 import { fsPath } from "../../../shared/vscode/utils";
-import { ext, getRandomTempFolder, sb } from "../../helpers";
+import { attachLoggingWhenExtensionAvailable, ext, getRandomTempFolder, sb } from "../../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -30,6 +30,8 @@ describe("extension", () => {
 
 describe("command", () => {
 	it("Flutter: New Project can be invoked and creates trigger file", async () => {
+		attachLoggingWhenExtensionAvailable();
+
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("my_test_flutter_proj");
 
