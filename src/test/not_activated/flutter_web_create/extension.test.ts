@@ -29,7 +29,7 @@ describe("extension", () => {
 // Other tests must go in their own folders and be listed in test_all/launch.json individually.
 
 describe("command", () => {
-	it.skip("Flutter: New Web Project can be invoked and creates trigger file", async () => {
+	it("Flutter: New Web Project can be invoked and creates trigger file", async () => {
 		attachLoggingWhenExtensionAvailable();
 		const projectName = "my_test_fweb_proj";
 		const templateName = "flutter-web-preview";
