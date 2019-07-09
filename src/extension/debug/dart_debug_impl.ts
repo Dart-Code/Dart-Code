@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { VmServiceCapabilities } from "../../shared/capabilities/vm_service";
 import { observatoryListeningBannerPattern, pleaseReportBug } from "../../shared/constants";
 import { LogCategory, LogSeverity } from "../../shared/enums";
 import { LogMessage } from "../../shared/interfaces";
@@ -11,7 +12,7 @@ import { white } from "../../shared/utils/colors";
 import { config } from "../config";
 import { getLogHeader } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
-import { DebuggerResult, ObservatoryConnection, SourceReportKind, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
+import { DebuggerResult, ObservatoryConnection, SourceReportKind, Version, VM, VMClass, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
 import { PackageMap } from "./package_map";
 import { ThreadInfo, ThreadManager } from "./threads";
@@ -67,6 +68,8 @@ export class DartDebugSession extends DebugSession {
 	protected logCategory = LogCategory.General; // This isn't used as General, since both Flutter and FlutterWeb override it.
 	// protected observatoryUriIsProbablyReconnectable = false;
 	private readonly logger = new DebugAdapterLogger(this, LogCategory.Observatory);
+
+	protected readonly capabilities = VmServiceCapabilities.empty;
 
 	protected get shouldConnectDebugger() {
 		return !this.noDebug || this.connectVmEvenForNoDebug;
@@ -284,65 +287,76 @@ export class DartDebugSession extends DebugSession {
 			this.log(`Connecting to VM Service at ${uri}`);
 			this.observatory = new ObservatoryConnection(uri);
 			this.observatory.onLogging((message) => this.log(message));
+			// TODO: Extract some code here and change to async/await. This is
+			// super confusing, for ex. it's not clear the resolve() inside onOpen
+			// fires immediately opon opening, not when all the code in the getVM
+			// callback fires (so it may as well have come first - unless it's
+			// a bug/race and it was supposed to be after all the setup!).
 			this.observatory.onOpen(() => {
 				if (!this.observatory)
 					return;
-				this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event));
-				this.observatory.on("Extension", (event: VMEvent) => this.handleExtensionEvent(event));
-				this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event));
-				this.observatory.on("_Service", (event: VMEvent) => this.handleServiceEvent(event));
-				this.observatory.getVM().then(async (result): Promise<void> => {
-					if (!this.observatory)
-						return;
-					const vm: VM = result.result as VM;
 
-					// If we own this process (we launched it, didn't attach) and the PID we get from Observatory is different, then
-					// we should keep a ref to this process to terminate when we quit. This avoids issues where our process is a shell
-					// (we use shell execute to fix issues on Windows) and the kill signal isn't passed on correctly.
-					// See: https://github.com/Dart-Code/Dart-Code/issues/907
-					if (this.allowTerminatingObservatoryVmPid && this.childProcess && this.childProcess.pid !== vm.pid) {
-						this.additionalPidsToTerminate.push(vm.pid);
-					}
+				// Read the version to update capabilities before doing anything else.
+				this.observatory.getVersion().then((versionResult) => {
+					const version: Version = versionResult.result as Version;
+					this.capabilities.version = `${version.major}.${version.minor}.0`;
 
-					const isolates = await Promise.all(vm.isolates.map((isolateRef) => this.observatory!.getIsolate(isolateRef.id)));
+					this.observatory.getVM().then(async (vmResult): Promise<void> => {
+						if (!this.observatory)
+							return;
+						const vm: VM = vmResult.result as VM;
 
-					// TODO: Is it valid to assume the first (only?) isolate with a rootLib is the one we care about here?
-					// If it's always the first, could we even just query the first instead of getting them all before we
-					// start the other processing?
-					const rootIsolateResult = isolates.find((isolate) => !!(isolate.result as VMIsolate).rootLib);
-					const rootIsolate = rootIsolateResult && rootIsolateResult.result as VMIsolate;
+						this.subscribeToStreams();
 
-					if (rootIsolate && rootIsolate.extensionRPCs) {
-						// If we're attaching, we won't see ServiceExtensionAdded events for extensions already loaded so
-						// we need to enumerate them here.
-						rootIsolate.extensionRPCs.forEach((id) => this.notifyServiceExtensionAvailable(id, rootIsolate.id));
-					}
-
-					if (!this.packageMap) {
-						// TODO: There's a race here if the isolate is not yet runnable, it might not have rootLib yet. We don't
-						// currently fill this in later.
-						if (rootIsolate)
-							this.packageMap = new PackageMap(PackageMap.findPackagesFile(this.convertVMUriToSourcePath(rootIsolate.rootLib.uri)));
-					}
-
-					await Promise.all(isolates.map(async (response) => {
-						const isolate: VMIsolate = response.result as VMIsolate;
-						this.threadManager.registerThread(
-							isolate,
-							isolate.runnable ? "IsolateRunnable" : "IsolateStart",
-						);
-
-						if (isolate.pauseEvent.kind.startsWith("Pause")) {
-							await this.handlePauseEvent(isolate.pauseEvent);
+						// If we own this process (we launched it, didn't attach) and the PID we get from Observatory is different, then
+						// we should keep a ref to this process to terminate when we quit. This avoids issues where our process is a shell
+						// (we use shell execute to fix issues on Windows) and the kill signal isn't passed on correctly.
+						// See: https://github.com/Dart-Code/Dart-Code/issues/907
+						if (this.allowTerminatingObservatoryVmPid && this.childProcess && this.childProcess.pid !== vm.pid) {
+							this.additionalPidsToTerminate.push(vm.pid);
 						}
-					}));
 
-					// Set a timer for memory updates.
-					if (this.pollforMemoryMs)
-						setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs);
+						const isolates = await Promise.all(vm.isolates.map((isolateRef) => this.observatory!.getIsolate(isolateRef.id)));
 
-					this.sendEvent(new InitializedEvent());
+						// TODO: Is it valid to assume the first (only?) isolate with a rootLib is the one we care about here?
+						// If it's always the first, could we even just query the first instead of getting them all before we
+						// start the other processing?
+						const rootIsolateResult = isolates.find((isolate) => !!(isolate.result as VMIsolate).rootLib);
+						const rootIsolate = rootIsolateResult && rootIsolateResult.result as VMIsolate;
+
+						if (rootIsolate && rootIsolate.extensionRPCs) {
+							// If we're attaching, we won't see ServiceExtensionAdded events for extensions already loaded so
+							// we need to enumerate them here.
+							rootIsolate.extensionRPCs.forEach((id) => this.notifyServiceExtensionAvailable(id, rootIsolate.id));
+						}
+
+						if (!this.packageMap) {
+							// TODO: There's a race here if the isolate is not yet runnable, it might not have rootLib yet. We don't
+							// currently fill this in later.
+							if (rootIsolate)
+								this.packageMap = new PackageMap(PackageMap.findPackagesFile(this.convertVMUriToSourcePath(rootIsolate.rootLib.uri)));
+						}
+
+						await Promise.all(isolates.map(async (response) => {
+							const isolate: VMIsolate = response.result as VMIsolate;
+							this.threadManager.registerThread(
+								isolate,
+								isolate.runnable ? "IsolateRunnable" : "IsolateStart",
+							);
+
+							if (isolate.pauseEvent.kind.startsWith("Pause")) {
+								await this.handlePauseEvent(isolate.pauseEvent);
+							}
+						}));
+
+						// Set a timer for memory updates.
+						if (this.pollforMemoryMs)
+							setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs);
+
+						this.sendEvent(new InitializedEvent());
+					});
 				});
+
 				resolve();
 			});
 
@@ -376,6 +390,15 @@ export class DartDebugSession extends DebugSession {
 				reject(error);
 			});
 		});
+	}
+
+	private subscribeToStreams() {
+		this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event));
+		this.observatory.on("Extension", (event: VMEvent) => this.handleExtensionEvent(event));
+		this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event));
+
+		const serviceStreamName = this.capabilities.serviceStreamIsPublic ? "Service" : "_Service";
+		this.observatory.on(serviceStreamName, (event: VMEvent) => this.handleServiceEvent(event));
 	}
 
 	protected async terminate(force: boolean): Promise<void> {
@@ -1104,7 +1127,7 @@ export class DartDebugSession extends DebugSession {
 		// Nothing Dart-specific, but Flutter overrides this
 	}
 
-	// _Service
+	// Service
 	public handleServiceEvent(event: VMEvent) {
 		const kind = event.kind;
 		if (kind === "ServiceRegistered")
