@@ -168,10 +168,13 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	public updateStatusBar(): void {
-		if (this.currentDevice)
-			this.statusBarItem.text = `${this.currentDevice.name} (${this.currentDevice.platform} ${this.currentDevice.emulator ? this.emulatorLabel(this.currentDevice.platformType) : ""})`.trim();
-		else
-			this.statusBarItem.text = "No Devices";
+		if (this.currentDevice) {
+			const emulatorLabel = this.currentDevice.emulator ? this.emulatorLabel(this.currentDevice.platformType) : "";
+			const platformLabel = `${this.currentDevice.platform} ${emulatorLabel}`.trim();
+			this.statusBarItem.text = `${this.currentDevice.name} (${platformLabel})`.trim();
+		} else {
+			this.statusBarItem.text = "No Device";
+		}
 
 		if (this.devices.length > 1) {
 			this.statusBarItem.tooltip = `${this.devices.length} Devices Connected`;
