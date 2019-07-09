@@ -220,6 +220,16 @@ export interface VM extends VMResponse {
 	libraries: VMLibraryRef[];
 }
 
+export interface Version extends VMResponse {
+	// The major version number is incremented when the protocol is changed
+	// in a potentially incompatible way.
+	major: number;
+
+	// The minor version number is incremented when the protocol is changed
+	// in a backwards compatible way.
+	minor: number;
+}
+
 export interface VMMapEntry extends VMResponse {
 	keyId: string;
 	mapEvaluateName: string;
