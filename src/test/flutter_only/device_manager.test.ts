@@ -21,53 +21,93 @@ describe("device_manager", () => {
 		daemon.dispose();
 	});
 
-	it("auto-selects devices", () => {
+	it("auto-selects valid devices", async () => {
 		assert.equal(dm.currentDevice, undefined);
 
 		// connect a device and ensure it's selected.
-		daemon.connect(physicalMobile);
+		await daemon.connect(physicalMobile, true);
 		assert.deepStrictEqual(dm.currentDevice, physicalMobile);
 
 		// Connect another and ensure it's changed.
-		daemon.connect(emulatedMobile);
+		await daemon.connect(emulatedMobile, true);
 		assert.deepStrictEqual(dm.currentDevice, emulatedMobile);
 	});
 
-	it("un-selects disconnected devices", () => {
+	it("auto-selects devices if supported platforms are not known", async () => {
 		assert.equal(dm.currentDevice, undefined);
-		daemon.connect(emulatedMobile);
-		daemon.connect(physicalMobile);
+
+		// connect a device without setting it as valid, but still expect
+		// it to be selected because without any explicitly marked valid platforms
+		// we assume everything is valid.
+		await daemon.connect(physicalMobile, false);
+		assert.deepStrictEqual(dm.currentDevice, physicalMobile);
+	});
+
+	it("does not auto-select invalid devices", async () => {
+		// We treat an empty list of platforms as "everything is supported" so we
+		// need to have at least one thing in this list for other devices to be
+		// considered invalid.
+		daemon.supportedPlatforms = ["invalid"];
+		assert.equal(dm.currentDevice, undefined);
+
+		// connect a device and ensure it's not selected.
+		await daemon.connect(physicalMobile, false);
+		assert.deepStrictEqual(dm.currentDevice, undefined);
+	});
+
+	it("un-selects disconnected devices", async () => {
+		assert.equal(dm.currentDevice, undefined);
+		await daemon.connect(emulatedMobile, true);
+		await daemon.connect(physicalMobile, true);
 
 		assert.deepStrictEqual(dm.currentDevice, physicalMobile);
-		daemon.disconnect(physicalMobile);
+		await daemon.disconnect(physicalMobile);
 		assert.deepStrictEqual(dm.currentDevice, emulatedMobile);
-		daemon.disconnect(emulatedMobile);
+		await daemon.disconnect(emulatedMobile);
 		assert.deepStrictEqual(dm.currentDevice, undefined);
 	});
 
-	it("will auto-select a non-ephemeral device if there is no other device", () => {
+	it("will auto-select a valid non-ephemeral device if there is no other device", async () => {
 		assert.deepStrictEqual(dm.currentDevice, undefined);
-		daemon.connect(desktop);
+
+		await daemon.connect(desktop, true);
 		assert.deepStrictEqual(dm.currentDevice, desktop);
 	});
 
-	it("will not auto-select a non-ephemeral device if there another device", () => {
-		daemon.connect(physicalMobile);
+	it("will not auto-select an invalid non-ephemeral device even if there is no other device", async () => {
+		// We treat an empty list of platforms as "everything is supported" so we
+		// need to have at least one thing in this list for other devices to be
+		// considered invalid.
+		daemon.supportedPlatforms = ["invalid"];
+		assert.deepStrictEqual(dm.currentDevice, undefined);
+
+		await daemon.connect(desktop, false);
+		assert.deepStrictEqual(dm.currentDevice, undefined);
+	});
+
+	it("will not auto-select a non-ephemeral device if there another device", async () => {
+		await daemon.connect(physicalMobile, true);
 		assert.deepStrictEqual(dm.currentDevice, physicalMobile);
-		daemon.connect(desktop);
+
+		// Connecting desktop does not change the selected device.
+		await daemon.connect(desktop, true);
 		assert.deepStrictEqual(dm.currentDevice, physicalMobile);
 	});
 });
 
 class FakeFlutterDaemon extends FakeStdIOService implements IFlutterDaemon {
 	public capabilities: DaemonCapabilities;
+	public supportedPlatforms: f.PlatformType[] = [];
 
-	public connect(d: f.Device) {
-		this.notify(this.deviceAddedSubscriptions, d);
+	public async connect(d: f.Device, markTypeAsValid: boolean): Promise<void> {
+		if (markTypeAsValid)
+			this.supportedPlatforms.push(d.platformType);
+
+		await this.notify(this.deviceAddedSubscriptions, d);
 	}
 
-	public disconnect(d: f.Device) {
-		this.notify(this.deviceRemovedSubscriptions, d);
+	public async disconnect(d: f.Device): Promise<void> {
+		await this.notify(this.deviceRemovedSubscriptions, d);
 	}
 
 	// Subscription lists.
@@ -93,8 +133,11 @@ class FakeFlutterDaemon extends FakeStdIOService implements IFlutterDaemon {
 	public createEmulator(name?: string): Thenable<{ success: boolean; emulatorName: string; error: string; }> {
 		throw new Error("Method not implemented.");
 	}
-	public getSupportedPlatforms(projectRoot: string): Thenable<f.SupportedPlatformsResponse> {
-		throw new Error("Method not implemented.");
+	public async getSupportedPlatforms(projectRoot: string): Promise<f.SupportedPlatformsResponse> {
+		if (!projectRoot)
+			throw new Error("projectRoot must be specified!");
+
+		return { platforms: this.supportedPlatforms };
 	}
 
 	// Subscription methods.

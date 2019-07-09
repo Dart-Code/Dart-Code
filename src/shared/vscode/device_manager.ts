@@ -40,18 +40,18 @@ export class FlutterDeviceManager implements vs.Disposable {
 		this.devices.push(dev);
 		// undefined is treated as true for backwards compatibility.
 		const canAutoSelectDevice = dev.ephemeral !== false;
-		if (!this.currentDevice || (this.autoSelectNewlyConnectedDevices && canAutoSelectDevice)) {
+		const maySelectThisDevice = () => !this.currentDevice || (this.autoSelectNewlyConnectedDevices && canAutoSelectDevice);
+		if (maySelectThisDevice()) {
 			// Finally, check if it's valid for the workspace. We don't want to
 			// auto-select to a mobile if you have a web-only project open.
-			// TODO: Because of the await, this results in overlapping calls during startup
-			// and you may end up with Web selected even for a mobile+web project
-			// and a device connected, because at the time web is added, there's no
-			// other current device.
-			// const supportedPlatforms = await this.getSupportedPlatformsForWorkspace();
-			// if (this.isSupported(supportedPlatforms, dev)) {
-			this.currentDevice = dev;
-			this.updateStatusBar();
-			// }
+			const supportedPlatforms = await this.getSupportedPlatformsForWorkspace();
+			// We need to re-check maySelectThisDevice() as the answer may have changed if
+			// another device was selected while we were awaiting (which would prevent us
+			// selecting a non-ephemeral device here).
+			if (maySelectThisDevice() && this.isSupported(supportedPlatforms, dev)) {
+				this.currentDevice = dev;
+				this.updateStatusBar();
+			}
 		}
 	}
 
@@ -128,21 +128,35 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return this.currentDevice;
 	}
 
+	private shortCacheForSupportedPlatforms: Promise<f.PlatformType[] | undefined>;
 	private async getSupportedPlatformsForWorkspace(): Promise<f.PlatformType[] | undefined> {
-		const topLevelFolders = getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
-		const projectFolders = findProjectFolders(topLevelFolders, { requirePubspec: true });
-		this.logger.info(`Checking ${projectFolders.length} projects for supported platforms`);
+		// To avoid triggering this lots of times at startup when lots of devices "connect" at
+		// the same time, we cache the results for 10 seconds. Every time we set the cache, we
+		// set a timer to expire it in 10 seconds.
+		if (this.shortCacheForSupportedPlatforms) {
+			this.logger.info(`Returning cached promise for getSupportedPlatforms()`);
+			return this.shortCacheForSupportedPlatforms;
+		}
 
-		const getPlatformPromises = projectFolders.map((folder) => this.daemon.getSupportedPlatforms(folder));
-		const resps = await Promise.all(getPlatformPromises).catch((e): f.SupportedPlatformsResponse[] => {
-			this.logger.error(e);
-			return [];
+		this.shortCacheForSupportedPlatforms = new Promise(async (resolve) => {
+			const topLevelFolders = getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
+			const projectFolders = findProjectFolders(topLevelFolders, { requirePubspec: true });
+			this.logger.info(`Checking ${projectFolders.length} projects for supported platforms`);
+
+			const getPlatformPromises = projectFolders.map((folder) => this.daemon.getSupportedPlatforms(folder));
+			const resps = await Promise.all(getPlatformPromises).catch((e): f.SupportedPlatformsResponse[] => {
+				this.logger.error(e);
+				return [];
+			});
+
+			const supportedTypes = unique(flatMap(resps, (r) => r.platforms));
+			this.logger.info(`Supported platforms for the workspace are ${supportedTypes.join(", ")}`);
+
+			resolve(supportedTypes);
+			setTimeout(() => this.shortCacheForSupportedPlatforms = undefined, 10000);
 		});
 
-		const supportedTypes = unique(flatMap(resps, (r) => r.platforms));
-		this.logger.info(`Supported platforms for the workspace are ${supportedTypes.join(", ")}`);
-
-		return supportedTypes;
+		return this.shortCacheForSupportedPlatforms;
 	}
 
 	public deviceSortComparer(d1: f.Device, d2: f.Device): number {
