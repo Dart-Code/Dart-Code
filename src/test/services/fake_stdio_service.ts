@@ -3,8 +3,8 @@ import { IAmDisposable } from "../../shared/interfaces";
 export class FakeStdIOService implements IAmDisposable {
 	private readonly disposables: IAmDisposable[] = [];
 
-	protected notify<T>(subscriptions: Array<(notification: T) => void>, notification: T) {
-		subscriptions.slice().forEach((sub) => sub(notification));
+	protected async notify<T>(subscriptions: Array<(notification: T) => void>, notification: T): Promise<void> {
+		await Promise.all(subscriptions.slice().map((sub) => sub(notification)));
 	}
 
 	protected subscribe<T>(subscriptions: Array<(notification: T) => void>, subscriber: (notification: T) => void): IAmDisposable {
