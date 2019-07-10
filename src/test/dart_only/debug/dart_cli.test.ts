@@ -131,6 +131,7 @@ describe("dart cli debugger", () => {
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", "Hello, world!"),
+			dc.assertOutput("console", "Logging from dart:developer!"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
