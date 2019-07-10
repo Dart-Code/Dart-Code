@@ -407,24 +407,29 @@ export class DartDebugSession extends DebugSession {
 	protected async terminate(force: boolean): Promise<void> {
 		const signal = force ? "SIGKILL" : "SIGINT";
 		const request = force ? "DISC" : "TERM";
-		this.log(`${request}: Going to terminate with ${signal}...`);
+		this.log(`${request}: Requested to terminate with ${signal}...`);
 		if (this.shouldKillProcessOnTerminate && this.childProcess && !this.processExited) {
+			this.log(`${request}: Terminating processes...`);
 			for (const pid of this.additionalPidsToTerminate) {
 				try {
 					this.log(`${request}: Terminating related process ${pid} with ${signal}...`);
 					process.kill(pid, signal);
+					// Don't remove these PIDs from the list as we don't know that they actually quit yet.
 				} catch (e) {
 					// Sometimes this process will have already gone away (eg. the app finished/terminated)
 					// so logging here just results in lots of useless info.
 				}
 			}
-			// Don't remove these PIDs from the list as we don't know that they actually quit yet.
-			try {
-				this.log(`${request}: Terminating main process with ${signal}...`);
-				this.childProcess.kill(signal);
-			} catch (e) {
-				// This tends to throw a lot because the shell process quit when we terminated the related
-				// VM process above, so just swallow the error.
+			if (!this.processExited) {
+				try {
+					this.log(`${request}: Terminating main process with ${signal}...`);
+					this.childProcess.kill(signal);
+				} catch (e) {
+					// This tends to throw a lot because the shell process quit when we terminated the related
+					// VM process above, so just swallow the error.
+				}
+			} else {
+				this.log(`${request}: Main process had already quit.`);
 			}
 			// Don't do this - because the process might ignore our kill (eg. test framework lets the current
 			// test finish) so we may need to send again it we get another disconnectRequest.
@@ -453,6 +458,8 @@ export class DartDebugSession extends DebugSession {
 			} catch { } finally {
 				this.observatory = undefined;
 			}
+		} else {
+			this.log(`${request}: Did not need to terminate processes`);
 		}
 
 		this.log(`${request}: Removing all stored data...`);
