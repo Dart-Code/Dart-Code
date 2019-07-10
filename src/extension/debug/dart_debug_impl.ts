@@ -379,10 +379,13 @@ export class DartDebugSession extends DebugSession {
 					// so this is a fallback to termiante the session after a short period. Without this, we have
 					// issues like https://github.com/Dart-Code/Dart-Code/issues/1268 even though when testing from
 					// the terminal the app does terminate as expected.
+					// 2019-07-10: Increased delay because when we tell Flutter to stop Observatory quits quickly and
+					// this code results in a TerminatedEvent() even though the process hasn't quit. The TerminatedEvent()
+					// results in VS Code sending disconnectRequest() and we then try to more forefully kill.
 					setTimeout(() => {
 						if (!this.processExited)
 							this.sendEvent(new TerminatedEvent());
-					}, 500);
+					}, 3000);
 				}
 			});
 
