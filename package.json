@@ -577,7 +577,7 @@
 				},
 				{
 					"command": "flutter.launchEmulator",
-					"when": "dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:isRunningLocally"
 				},
 				{
 					"command": "flutter.openInAndroidStudio",

@@ -275,6 +275,9 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	private async getEmulatorItems(showAsEmulators: boolean, supportedTypes?: f.PlatformType[]): Promise<PickableDevice[]> {
+		if (!isRunningLocally)
+			return [];
+
 		const emulators: PickableDevice[] = (await this.getEmulators())
 			.filter((e) => this.isSupported(supportedTypes, e))
 			.map((e) => ({
@@ -288,7 +291,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			}));
 
 		// Add an option to create a new emulator if the daemon supports it.
-		if (this.daemon.capabilities.canCreateEmulators && isRunningLocally && this.isSupported(supportedTypes, { platformType: "android" })) {
+		if (this.daemon.capabilities.canCreateEmulators && this.isSupported(supportedTypes, { platformType: "android" })) {
 			emulators.push({
 				alwaysShow: true,
 				device: { type: "emulator-creator", platformType: "android" },
