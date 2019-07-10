@@ -1,8 +1,8 @@
 import * as assert from "assert";
 import * as fs from "fs";
 import * as vs from "vscode";
-import { activate, currentDoc, defer, emptyFile, helloWorldCreateMethodClassAFile, helloWorldCreateMethodClassBFile, missingFile, openFile, rangeOf, setTestContent, tryDelete, uncommentTestFile, waitForNextAnalysis } from "../../helpers";
 import { fsPath } from "../../../shared/vscode/utils";
+import { activate, currentDoc, defer, emptyFile, helloWorldCreateMethodClassAFile, helloWorldCreateMethodClassBFile, missingFile, openFile, rangeOf, setTestContent, tryDelete, uncommentTestFile, waitForNextAnalysis } from "../../helpers";
 
 describe("fix_code_action_provider", () => {
 	beforeEach("activate", () => activate());
@@ -35,7 +35,10 @@ describe("fix_code_action_provider", () => {
 		assert.ok(fixResults.length);
 
 		const createFileFix = fixResults.find((r) => r.title.indexOf("Create file 'missing.dart'") !== -1);
-		assert.ok(createFileFix);
+		assert.ok(createFileFix, "Fix was not found");
+		const debugJson = JSON.stringify(createFileFix);
+		assert.ok(createFileFix!.command, `Fix did not have a command: ${debugJson}`);
+		assert.ok(createFileFix!.command!.command, `Fix command (object) did not have a command (string): ${debugJson}`);
 
 		await (vs.commands.executeCommand(createFileFix!.command!.command, ...createFileFix!.command!.arguments || []));
 
