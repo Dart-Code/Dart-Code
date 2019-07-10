@@ -40,7 +40,10 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		// since we don't have the necessary information to know the test was renamed.
 		if (isRunningWholeSuite && suitePath && path.isAbsolute(suitePath)) {
 			const suite = suites[fsPath(suitePath)];
-			if (suite) {
+			// If we didn't find the suite, we may be running the whole lot, so
+			// we should mark everything from all suites as potentially deleted.
+			const suitesBeingRun = suite ? [suite] : Object.values(suites);
+			for (const suite of suitesBeingRun) {
 				suite.getAllGroups().forEach((g) => g.isPotentiallyDeleted = true);
 				suite.getAllTests().forEach((t) => t.isPotentiallyDeleted = true);
 			}
