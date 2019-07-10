@@ -12,7 +12,7 @@ import { white } from "../../shared/utils/colors";
 import { config } from "../config";
 import { getLogHeader } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
-import { DebuggerResult, ObservatoryConnection, SourceReportKind, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
+import { DebuggerResult, ObservatoryConnection, SourceReportKind, Version, VM, VMClass, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
 import { PackageMap } from "./package_map";
 import { ThreadInfo, ThreadManager } from "./threads";
@@ -385,7 +385,7 @@ export class DartDebugSession extends DebugSession {
 					setTimeout(() => {
 						if (!this.processExited)
 							this.sendEvent(new TerminatedEvent());
-					}, 3000);
+					}, 5000);
 				}
 			});
 

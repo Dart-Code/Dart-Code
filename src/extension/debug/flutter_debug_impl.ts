@@ -200,14 +200,17 @@ export class FlutterDebugSession extends DartDebugSession {
 			this.appHasBeenToldToStopOrDetach = true;
 			try {
 				if (this.currentRunningAppId && this.appHasStarted && !this.processExited) {
-					const quitMethod = this.flutter.mode === RunMode.Run
-						? this.flutter.stop
-						: this.flutter.detach;
-					// Wait up to 1000ms for app to quit since we often don't get a
-					// response here because the processes terminate immediately.
+					// Request to quit/detach, but don't await it since we sometimes
+					// don't get responses before the process quits.
+					if (this.flutter.mode === RunMode.Run)
+						this.flutter.stop(this.currentRunningAppId);
+					else
+						this.flutter.detach(this.currentRunningAppId);
+
+					// Now wait for the process to terminate up to 3s.
 					await Promise.race([
-						quitMethod(this.currentRunningAppId),
-						new Promise((resolve) => setTimeout(resolve, 1000)),
+						this.processExit,
+						new Promise((resolve) => setTimeout(resolve, 3000)),
 					]);
 				}
 			} catch {
