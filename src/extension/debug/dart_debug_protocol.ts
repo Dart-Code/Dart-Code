@@ -22,6 +22,7 @@ export interface VMEvent {
 	extensionData?: any;
 	service?: string;
 	method?: string;
+	logRecord?: VMLogRecord;
 }
 
 export interface VMBreakpoint extends VMObj {
@@ -271,6 +272,35 @@ export interface VMFunctionRef extends VMObjectRef {
 	_kind: string;
 	static: boolean;
 	const: boolean;
+}
+
+export interface VMLogRecord extends VMResponse {
+	// The log message.
+	message: VMInstanceRef;
+
+	// The timestamp.
+	time: number;
+
+	// The severity level (a value between 0 and 2000).
+	//
+	// See the package:logging `Level` class for an overview of the possible
+	// values.
+	level: number;
+
+	// A monotonically increasing sequence number.
+	sequenceNumber: number;
+
+	// The name of the source of the log message.
+	loggerName: VMInstanceRef;
+
+	// The zone where the log was emitted.
+	zone: VMInstanceRef;
+
+	// An error object associated with this log event.
+	error: VMInstanceRef;
+
+	// A stack trace associated with this log event.
+	stackTrace: VMInstanceRef;
 }
 
 export interface VMSourceReport extends VMResponse {

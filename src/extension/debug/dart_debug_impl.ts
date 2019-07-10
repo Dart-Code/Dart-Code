@@ -402,6 +402,9 @@ export class DartDebugSession extends DebugSession {
 
 		const serviceStreamName = this.capabilities.serviceStreamIsPublic ? "Service" : "_Service";
 		this.observatory.on(serviceStreamName, (event: VMEvent) => this.handleServiceEvent(event));
+
+		if (this.capabilities.hasLoggingStream)
+			this.observatory.on("Logging", (event: VMEvent) => this.handleLoggingEvent(event));
 	}
 
 	protected async terminate(force: boolean): Promise<void> {
@@ -1144,6 +1147,21 @@ export class DartDebugSession extends DebugSession {
 			this.handleServiceRegistered(event);
 	}
 
+	// Logging
+	public handleLoggingEvent(event: VMEvent) {
+		const kind = event.kind;
+		if (kind === "Logging" && event.logRecord) {
+			const record = event.logRecord;
+
+			if (record && record.message && record.message.valueAsString) {
+				this.logToUser(event.logRecord.message.valueAsString);
+				if (record.message.valueAsStringIsTruncated)
+				this.logToUser("…");
+				this.logToUser("\n");
+			}
+		}
+	}
+
 	// PauseStart, PauseExit, PauseBreakpoint, PauseInterrupted, PauseException, Resume,
 	// BreakpointAdded, BreakpointResolved, BreakpointRemoved, Inspect, None
 	public async handleDebugEvent(event: VMEvent): Promise<void> {
@@ -1600,6 +1618,8 @@ export class DartDebugSession extends DebugSession {
 		return undefined;
 	}
 
+	// Logs a message back to the editor. Does not add its own newlines, you must
+	// provide them!
 	protected logToUser(message: string, category?: string) {
 		// Extract stack frames from the message so we can do nicer formatting of them.
 		const frame = this.getStackFrameData(message) || this.getWebStackFrameData(message);
