@@ -20,6 +20,7 @@ export class FlutterDebugSession extends DartDebugSession {
 	public flutterTrackWidgetCreation: boolean;
 	private currentRunningAppId?: string;
 	private appHasStarted = false;
+	private appHasBeenToldToStopOrDetach = false;
 	private observatoryUri?: string;
 	private isReloadInProgress = false;
 
@@ -195,20 +196,23 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	protected async terminate(force: boolean): Promise<void> {
-		try {
-			if (this.currentRunningAppId && this.appHasStarted && !this.processExited) {
-				const quitMethod = this.flutter.mode === RunMode.Run
-					? () => this.flutter.stop(this.currentRunningAppId)
-					: () => this.flutter.detach(this.currentRunningAppId);
-				// Wait up to 1000ms for app to quit since we often don't get a
-				// response here because the processes terminate immediately.
-				await Promise.race([
-					quitMethod(),
-					new Promise((resolve) => setTimeout(resolve, 1000)),
-				]);
+		if (!this.appHasBeenToldToStopOrDetach) {
+			this.appHasBeenToldToStopOrDetach = true;
+			try {
+				if (this.currentRunningAppId && this.appHasStarted && !this.processExited) {
+					const quitMethod = this.flutter.mode === RunMode.Run
+						? this.flutter.stop
+						: this.flutter.detach;
+					// Wait up to 1000ms for app to quit since we often don't get a
+					// response here because the processes terminate immediately.
+					await Promise.race([
+						quitMethod(this.currentRunningAppId),
+						new Promise((resolve) => setTimeout(resolve, 1000)),
+					]);
+				}
+			} catch {
+				// Ignore failures here (we're shutting down and will send kill signals).
 			}
-		} catch {
-			// Ignore failures here (we're shutting down and will send kill signals).
 		}
 		super.terminate(force);
 	}
