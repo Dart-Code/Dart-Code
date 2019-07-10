@@ -10,6 +10,7 @@ import { CategoryLogger } from "../../shared/logging";
 import { UnknownNotification } from "../../shared/services/interfaces";
 import { getRandomInt } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
+import { isRunningLocally, openInBrowser } from "../../shared/vscode/utils";
 import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions } from "../commands/debug";
 import { config } from "../config";
@@ -61,44 +62,49 @@ export class DevToolsManager implements vs.Disposable {
 				location: vs.ProgressLocation.Notification,
 				title: "Opening Dart DevTools...",
 			}, async (_) => {
-				const canLaunchDevToolsThroughService = await waitFor(() => this.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.LaunchDevTools), 500);
-				if (canLaunchDevToolsThroughService) {
-					try {
-						await session.session.customRequest(
-							"service",
-							{
-								params: {
-									queryParams: {
-										hide: "debugger",
-										ide: "VSCode",
-										theme: config.useDevToolsDarkTheme ? "dark" : null,
-									},
+				const queryParams: { [key: string]: string } = {
+					hide: "debugger",
+					ide: "VSCode",
+					theme: config.useDevToolsDarkTheme ? "dark" : null,
+				};
+				if (!isRunningLocally) {
+					const paramsString = Object.keys(queryParams)
+						.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key])}`)
+						.join("&");
+					const fullUrl = `${url}?${paramsString}&uri=${encodeURIComponent(session.vmServiceUri)}`;
+					openInBrowser(fullUrl);
+				} else {
+					const canLaunchDevToolsThroughService = await waitFor(() => this.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.LaunchDevTools), 500);
+					if (canLaunchDevToolsThroughService) {
+						try {
+							await session.session.customRequest(
+								"service",
+								{
+									params: { queryParams },
+									type: this.debugCommands.flutterExtensions.getServiceMethodName(FlutterService.LaunchDevTools),
 								},
-								type: this.debugCommands.flutterExtensions.getServiceMethodName(FlutterService.LaunchDevTools),
-							},
-						);
+							);
 
-						return true;
-					} catch (e) {
-						this.logger.error(`DevTools failed to launch browser ${e.message}`);
-						vs.window.showErrorMessage(`Dart DevTools was unable to launch Chrome.`, "Show Full Error").then((res) => {
-							if (res) {
-								const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`;
-								const tempPath = path.join(os.tmpdir(), fileName);
-								fs.writeFileSync(tempPath, e.message);
-								workspace.openTextDocument(tempPath).then((document) => {
-									window.showTextDocument(document);
-								});
-							}
-						});
+							return true;
+						} catch (e) {
+							this.logger.error(`DevTools failed to launch browser ${e.message}`);
+							vs.window.showErrorMessage(`Dart DevTools was unable to launch Chrome.`, "Show Full Error").then((res) => {
+								if (res) {
+									const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`;
+									const tempPath = path.join(os.tmpdir(), fileName);
+									fs.writeFileSync(tempPath, e.message);
+									workspace.openTextDocument(tempPath).then((document) => {
+										window.showTextDocument(document);
+									});
+								}
+							});
+							return false;
+						}
+					} else {
+						this.logger.error(`DevTools failed to register launchDevTools service`);
+						vs.window.showErrorMessage(`The DevTools service failed to register. ${pleaseReportBug}`);
 						return false;
 					}
-				} else {
-					// const fullUrl = `${url}?hide=debugger&uri=${encodeURIComponent(session.vmServiceUri)}${config.useDevToolsDarkTheme ? "&theme=dark" : ""}`;
-					// openInBrowser(fullUrl);
-					this.logger.error(`DevTools failed to register launchDevTools service`);
-					vs.window.showErrorMessage(`The DevTools service failed to register. ${pleaseReportBug}`);
-					return false;
 				}
 			});
 			if (!didLaunch)
