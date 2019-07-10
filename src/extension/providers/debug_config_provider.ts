@@ -10,7 +10,7 @@ import { Device } from "../../shared/flutter/daemon_interfaces";
 import { IFlutterDaemon, Logger, Sdks } from "../../shared/interfaces";
 import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../../shared/utils";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath, isRunningLocally } from "../../shared/vscode/utils";
 import { Analytics } from "../analytics";
 import { LastDebugSession } from "../commands/debug";
 import { isLogging } from "../commands/logging";
@@ -212,6 +212,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			// the call to TestResultsProvider.flagSuiteStart below!
 			logger.error("Tests in Flutter web projects are not currently supported");
 			window.showErrorMessage("Tests in Flutter web projects are not currently supported");
+			return undefined; // undefined means silent (don't open launch.json).
+		}
+
+		if (!isRunningLocally && debugType === DebuggerType.FlutterWeb) {
+			logger.error("Flutter web projects cannot currently run in remote workspaces");
+			window.showErrorMessage("Flutter web projects cannot currently run in remote workspaces");
 			return undefined; // undefined means silent (don't open launch.json).
 		}
 
