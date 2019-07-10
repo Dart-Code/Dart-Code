@@ -130,7 +130,9 @@ describe("flutter for web debugger", () => {
 		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === false);
 	});
 
-	it("can quit during a build", async () => {
+	// Skipped because this is super-flaky. If we quit to early, the processes are not
+	// cleaned up properly. This should be fixed when we move to the un-forked version.
+	it.skip("can quit during a build", async () => {
 		const config = await startDebugger(flutterWebHelloWorldMainFile);
 		// Kick off a build, but do not await it...
 		Promise.all([
