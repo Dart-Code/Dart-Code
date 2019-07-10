@@ -7,11 +7,11 @@ import { sortBy } from "./array";
 export function getChildFolders(parent: string, options?: { allowBin?: boolean, allowCache?: boolean }): string[] {
 	if (!fs.existsSync(parent))
 		return [];
-	return fs.readdirSync(parent)
-		.filter((f) => f !== "bin" || (options && options.allowBin)) // Don't look in bin folders
-		.filter((f) => f !== "cache" || (options && options.allowCache)) // Don't look in cache folders
-		.map((item) => path.join(parent, item))
-		.filter((item) => fs.existsSync(item) && fs.statSync(item).isDirectory());
+	return fs.readdirSync(parent, { withFileTypes: true })
+		.filter((f) => f.isDirectory())
+		.filter((f) => f.name !== "bin" || (options && options.allowBin)) // Don't look in bin folders
+		.filter((f) => f.name !== "cache" || (options && options.allowCache)) // Don't look in cache folders
+		.map((item) => path.join(parent, item.name));
 }
 
 export function hasPackagesFile(folder: string): boolean {

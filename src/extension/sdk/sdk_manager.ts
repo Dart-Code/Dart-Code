@@ -39,7 +39,9 @@ abstract class SdkManager {
 			allPaths.push(this.currentSdk);
 
 		const sdkFolders = allPaths
-			.filter((f) => fs.statSync(f).isDirectory()) // Only directories.
+			// We don't need to check isDirectory, since existsSync() will just return false
+			// if we join a filename on the end of another.
+			// .filter((f) => fs.statSync(f).isDirectory()) // Only directories.
 			.filter((f) => fs.existsSync(path.join(f, this.executablePath))); // Only those that look like SDKs.
 
 		const sdkItems: SdkPickItem[] = sdkFolders.map((f) => {

@@ -65,16 +65,15 @@ export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<
 	}
 
 	private getFilesAndFolders(folder: PackageDepFolder): PackageDep[] {
-		const childNames = sortBy(fs.readdirSync(fsPath(folder.resourceUri)), (s) => s.toLowerCase());
+		const children = sortBy(fs.readdirSync(fsPath(folder.resourceUri), { withFileTypes: true }), (s) => s.name.toLowerCase());
 		const folders: PackageDepFolder[] = [];
 		const files: PackageDepFile[] = [];
 
-		childNames.forEach((name) => {
-			const filePath = path.join(fsPath(folder.resourceUri), name);
-			const stat = fs.statSync(filePath);
-			if (stat.isFile()) {
+		children.forEach((child) => {
+			const filePath = path.join(fsPath(folder.resourceUri), child.name);
+			if (child.isFile()) {
 				files.push(new PackageDepFile(vs.Uri.file(filePath)));
-			} else if (stat.isDirectory()) {
+			} else if (child.isDirectory()) {
 				folders.push(new PackageDepFolder(vs.Uri.file(filePath)));
 			}
 		});

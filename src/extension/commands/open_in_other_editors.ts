@@ -37,17 +37,17 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 	private async openInXcode(resource: vs.Uri): Promise<void> {
 		const folder = fsPath(resource);
 		const files = fs
-			.readdirSync(folder)
-			.filter((item) => fs.statSync(path.join(folder, item)).isDirectory())
-			.filter((item) => item.endsWith(".xcworkspace") || item.endsWith(".xcodeproj"))
-			.sort((f1, f2) => f1.endsWith(".xcworkspace") ? 0 : 1);
+			.readdirSync(folder, { withFileTypes: true })
+			.filter((item) => item.isDirectory())
+			.filter((item) => item.name.endsWith(".xcworkspace") || item.name.endsWith(".xcodeproj"))
+			.sort((f1, f2) => f1.name.endsWith(".xcworkspace") ? 0 : 1);
 
 		if (!files || !files.length) {
 			vs.window.showErrorMessage(`Unable to find an Xcode project in your 'ios' folder`);
 			return;
 		}
 
-		const file = path.join(folder, files[0]);
+		const file = path.join(folder, files[0].name);
 		safeSpawn(folder, "open", ["-a", "Xcode", file]);
 	}
 
