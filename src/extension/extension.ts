@@ -5,7 +5,6 @@ import * as vs from "vscode";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
 import { analyzerSnapshotPath, dartPlatformName, dartVMPath, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, isWin, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
-import { FlutterOutlineProvider } from "../shared/flutter_outline_view";
 import { IFlutterDaemon, Sdks } from "../shared/interfaces";
 import { captureLogs, EmittingLogger, logToConsole } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
@@ -41,6 +40,7 @@ import { FlutterUiGuideDecorations } from "./decorations/flutter_ui_guides_decor
 import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_decorations";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
+import { FlutterOutlineProvider } from "./flutter/flutter_outline_view";
 import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";

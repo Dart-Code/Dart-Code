@@ -1,7 +1,7 @@
 "use strict";
 
 import * as vs from "vscode";
-import { FlutterWidgetItem } from "../../shared/flutter_outline_view";
+import { FlutterWidgetItem } from "../flutter/flutter_outline_view";
 
 export const flutterOutlineCommands = [
 	"refactor.flutter.wrap.center",
