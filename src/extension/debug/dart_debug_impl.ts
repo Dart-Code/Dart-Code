@@ -8,7 +8,7 @@ import { observatoryListeningBannerPattern, pleaseReportBug } from "../../shared
 import { LogCategory, LogSeverity } from "../../shared/enums";
 import { LogMessage } from "../../shared/interfaces";
 import { flatMap, throttle, uniq, uriToFilePath } from "../../shared/utils";
-import { white } from "../../shared/utils/colors";
+import * as col from "../../shared/utils/colors";
 import { config } from "../config";
 import { getLogHeader } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
@@ -1635,9 +1635,8 @@ export class DartDebugSession extends DebugSession {
 			const isFramework = this.isSdkLibrary(frame.sourceUri)
 				|| (this.isExternalLibrary(frame.sourceUri) && frame.sourceUri.startsWith("package:flutter/"))
 				|| (this.isExternalLibrary(frame.sourceUri) && frame.sourceUri.startsWith("package:flutter_web/"));
-			// In both dark and light themes, white() is more subtle than default text. VS Code maps black/white
-			// to ensure it's always visible regardless of theme (eg. white-on-white is still visible).
-			const colouredText = isFramework ? white(text) : text;
+
+			const colouredText = isFramework ? col.grey(text) : text;
 			output.body.output = `${frame.prefix || ""}${colouredText}\n`;
 		}
 
