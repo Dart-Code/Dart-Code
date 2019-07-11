@@ -752,8 +752,66 @@
 					"group": "1.5_open_ext@1"
 				}
 			],
+			"view/title": [
+				{
+					"when": "view == dartFlutterOutline && dart-code:widgetSupports:refactor.flutter.wrap.center",
+					"command": "_flutter.outline.refactor.flutter.wrap.center"
+				},
+				{
+					"when": "view == dartFlutterOutline && dart-code:widgetSupports:refactor.flutter.wrap.padding",
+					"command": "_flutter.outline.refactor.flutter.wrap.padding"
+				},
+				{
+					"when": "view == dartFlutterOutline && dart-code:widgetSupports:refactor.flutter.wrap.column",
+					"command": "_flutter.outline.refactor.flutter.wrap.column"
+				},
+				{
+					"when": "view == dartFlutterOutline && dart-code:widgetSupports:refactor.flutter.wrap.row",
+					"command": "_flutter.outline.refactor.flutter.wrap.row"
+				},
+				{
+					"when": "view == dartFlutterOutline && dart-code:widgetSupports:refactor.flutter.move.up",
+					"command": "_flutter.outline.refactor.flutter.move.up"
+				},
+				{
+					"when": "view == dartFlutterOutline && dart-code:widgetSupports:refactor.flutter.move.down",
+					"command": "_flutter.outline.refactor.flutter.move.down"
+				},
+				{
+					"when": "view == dartFlutterOutline && dart-code:widgetSupports:refactor.flutter.removeWidget",
+					"command": "_flutter.outline.refactor.flutter.removeWidget"
+				}
+			],
 			"view/item/context": [
 				{
+					"when": "view == dartFlutterOutline && viewItem == dart-code:isSelectedWidget && dart-code:widgetSupports:refactor.flutter.wrap.center",
+					"command": "_flutter.outline.refactor.flutter.wrap.center"
+				},
+				{
+					"when": "view == dartFlutterOutline && viewItem == dart-code:isSelectedWidget && dart-code:widgetSupports:refactor.flutter.wrap.padding",
+					"command": "_flutter.outline.refactor.flutter.wrap.padding"
+				},
+				{
+					"when": "view == dartFlutterOutline && viewItem == dart-code:isSelectedWidget && dart-code:widgetSupports:refactor.flutter.wrap.column",
+					"command": "_flutter.outline.refactor.flutter.wrap.column"
+				},
+				{
+					"when": "view == dartFlutterOutline && viewItem == dart-code:isSelectedWidget && dart-code:widgetSupports:refactor.flutter.wrap.row",
+					"command": "_flutter.outline.refactor.flutter.wrap.row"
+				},
+				{
+					"when": "view == dartFlutterOutline && viewItem == dart-code:isSelectedWidget && dart-code:widgetSupports:refactor.flutter.move.up",
+					"command": "_flutter.outline.refactor.flutter.move.up"
+				},
+				{
+					"when": "view == dartFlutterOutline && viewItem == dart-code:isSelectedWidget && dart-code:widgetSupports:refactor.flutter.move.down",
+					"command": "_flutter.outline.refactor.flutter.move.down"
+				},
+				{
+					"when": "view == dartFlutterOutline && viewItem == dart-code:isSelectedWidget && dart-code:widgetSupports:refactor.flutter.removeWidget",
+					"command": "_flutter.outline.refactor.flutter.removeWidget"
+				},
+				{
 					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testSuiteNode",
 					"command": "dart.startDebuggingTest",
 					"group": "4.5_exec@1"
@@ -782,41 +840,6 @@
 					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testTestNode",
 					"command": "dart.startWithoutDebuggingTest",
 					"group": "4.5_exec@1"
-				},
-				{
-					"when": "view == dartFlutterOutline && viewItem =~ /dart-code:isWidget:.*--refactor\\.flutter\\.wrap\\.center--.*/",
-					"command": "_flutter.outline.refactor.flutter.wrap.center",
-					"group": "Refactor@1"
-				},
-				{
-					"when": "view == dartFlutterOutline && viewItem =~ /dart-code:isWidget:.*--refactor\\.flutter\\.wrap\\.padding--.*/",
-					"command": "_flutter.outline.refactor.flutter.wrap.padding",
-					"group": "Refactor@2"
-				},
-				{
-					"when": "view == dartFlutterOutline && viewItem =~ /dart-code:isWidget:.*--refactor\\.flutter\\.wrap\\.column--.*/",
-					"command": "_flutter.outline.refactor.flutter.wrap.column",
-					"group": "Refactor@3"
-				},
-				{
-					"when": "view == dartFlutterOutline && viewItem =~ /dart-code:isWidget:.*--refactor\\.flutter\\.wrap\\.row--.*/",
-					"command": "_flutter.outline.refactor.flutter.wrap.row",
-					"group": "Refactor@4"
-				},
-				{
-					"when": "view == dartFlutterOutline && viewItem =~ /dart-code:isWidget:.*--refactor\\.flutter\\.move\\.up--.*/",
-					"command": "_flutter.outline.refactor.flutter.move.up",
-					"group": "Refactor@5"
-				},
-				{
-					"when": "view == dartFlutterOutline && viewItem =~ /dart-code:isWidget:.*--refactor\\.flutter\\.move\\.down--.*/",
-					"command": "_flutter.outline.refactor.flutter.move.down",
-					"group": "Refactor@6"
-				},
-				{
-					"when": "view == dartFlutterOutline && viewItem =~ /dart-code:isWidget:.*--refactor\\.flutter\\.removeWidget--.*/",
-					"command": "_flutter.outline.refactor.flutter.removeWidget",
-					"group": "Refactor@7"
 				}
 			]
 		},

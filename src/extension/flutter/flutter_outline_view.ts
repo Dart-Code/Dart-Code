@@ -11,7 +11,8 @@ import { flutterOutlineCommands } from "../commands/flutter_outline";
 import { extensionPath, isAnalyzable } from "../utils";
 
 const DART_SHOW_FLUTTER_OUTLINE = "dart-code:showFlutterOutline";
-const DART_IS_WIDGET = "dart-code:isWidget";
+const WIDGET_SELECTED_CONTEXT = "dart-code:isSelectedWidget";
+const WIDGET_SUPPORTS_CONTEXT_PREFIX = "dart-code:widgetSupports:";
 
 export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidgetItem>, vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
@@ -22,6 +23,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 	private updateTimeout: NodeJS.Timer;
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<FlutterWidgetItem | undefined> = new vs.EventEmitter<FlutterWidgetItem | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<FlutterWidgetItem | undefined> = this.onDidChangeTreeDataEmitter.event;
+	private lastSelectedWidget: FlutterWidgetItem | undefined;
 
 	constructor(private readonly analyzer: Analyzer) {
 		this.analyzer = analyzer;
@@ -50,21 +52,9 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 	}
 
 	private async createTreeNode(parent: FlutterWidgetItem, element: as.FlutterOutline, editor: vs.TextEditor): Promise<FlutterWidgetItem> {
-		// TODO: We can't use fixes for context menu unless we have a more performant
-		// way of getting them.
-		// https://github.com/dart-lang/sdk/issues/32462
-		const canHaveFixes = false; // isWidget(c);
-		const fixes = canHaveFixes
-			? await getFixes(editor, element)
-			: [];
 		// Ensure we're still active editor before trying to use.
 		if (editor && editor.document && !editor.document.isClosed && this.activeEditor === editor) {
-			const codeActionFixes =
-				fixes
-					.filter((f): f is vs.CodeAction => f instanceof vs.CodeAction)
-					.filter((ca) => ca.kind && ca.kind.value);
-
-			const node = new FlutterWidgetItem(parent, element, codeActionFixes, editor);
+			const node = new FlutterWidgetItem(parent, element, editor);
 
 			// Add this node to a lookup by line so we can quickly find it as the user moves around the doc.
 			const startLine = editor.document.positionAt(element.offset).line;
@@ -108,6 +98,40 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 		}
 	}
 
+	public async setContexts(selection: FlutterWidgetItem[]) {
+		// Unmark the old node as being selected.
+		if (this.lastSelectedWidget) {
+			this.lastSelectedWidget.contextValue = undefined;
+			this.refresh(this.lastSelectedWidget);
+		}
+
+		// Clear all contexts that enabled refactors.
+		for (const refactor of flutterOutlineCommands) {
+			vs.commands.executeCommand("setContext", WIDGET_SUPPORTS_CONTEXT_PREFIX + refactor, false);
+		}
+
+		// Set up the new contexts for our node and mark is as current.
+		if (selection && selection.length === 1 && isWidget(selection[0].outline)) {
+			const fixes = (await getFixes(this.activeEditor, selection[0].outline))
+				.filter((f): f is vs.CodeAction => f instanceof vs.CodeAction)
+				.filter((ca) => ca.kind && ca.kind.value && flutterOutlineCommands.indexOf(ca.kind.value) !== -1);
+
+			// Stash the fixes, as we may need to call them later.
+			selection[0].fixes = fixes;
+
+			for (const fix of fixes)
+				vs.commands.executeCommand("setContext", WIDGET_SUPPORTS_CONTEXT_PREFIX + fix.kind.value, true);
+
+			// Used so we can show context menu if you right-click the selected one.
+			// We can't support arbitrary context menus, because we can't get the fixes up-front (see
+			// https://github.com/dart-lang/sdk/issues/32462) so we fetch when you select an item
+			// and then just support it if it's selected.
+			selection[0].contextValue = WIDGET_SELECTED_CONTEXT;
+			this.lastSelectedWidget = selection[0];
+			this.refresh(selection[0]);
+		}
+	}
+
 	public getNodeAt(uri: vs.Uri, pos: vs.Position) {
 		if (this.flutterOutline.file !== fsPath(uri) || !this.treeNodesByLine[pos.line])
 			return;
@@ -129,8 +153,8 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 		return currentBest;
 	}
 
-	public refresh(): void {
-		this.onDidChangeTreeDataEmitter.fire();
+	public refresh(item?: FlutterWidgetItem | undefined): void {
+		this.onDidChangeTreeDataEmitter.fire(item);
 	}
 
 	public getTreeItem(element: FlutterWidgetItem): vs.TreeItem {
@@ -176,10 +200,10 @@ function getFixes(editor: vs.TextEditor, outline: as.FlutterOutline): Thenable<A
 
 export class FlutterWidgetItem extends vs.TreeItem {
 	public children: FlutterWidgetItem[];
+	public fixes: vs.CodeAction[];
 	constructor(
 		public readonly parent: FlutterWidgetItem,
 		public readonly outline: as.FlutterOutline,
-		public readonly fixes: vs.CodeAction[],
 		editor: vs.TextEditor,
 	) {
 		super(
@@ -221,17 +245,6 @@ export class FlutterWidgetItem extends vs.TreeItem {
 			command: "_dart.showCode",
 			title: "",
 		};
-
-		// Create a context value that is each item with a pipe at each side.
-		const refactorData = this
-			.fixes
-			.map((ca) => ca.kind.value)
-			.filter((c) => flutterOutlineCommands.indexOf(c) !== -1)
-			.join("--");
-		if (refactorData) {
-			// So we can search by --ID--
-			this.contextValue = DART_IS_WIDGET + ":--" + refactorData + "--";
-		}
 
 		this.tooltip = this.label;
 		if (outline.attributes) {

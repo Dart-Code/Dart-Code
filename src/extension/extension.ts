@@ -357,8 +357,13 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		}
 
 		if (config.previewFlutterOutline && analyzer.capabilities.supportsFlutterOutline) {
+			// TODO: Extract this out - it's become messy since TreeView was added in.
 			const treeDataProvider = new FlutterOutlineProvider(analyzer);
-			const tree = vs.window.createTreeView("dartFlutterOutline", { treeDataProvider });
+			const tree = vs.window.createTreeView("dartFlutterOutline", { treeDataProvider, showCollapseAll: true });
+			tree.onDidChangeSelection((e) => {
+				// TODO: This should be in a tree, not the data provider.
+				treeDataProvider.setContexts(e.selection);
+			});
 
 			context.subscriptions.push(vs.window.onDidChangeTextEditorSelection((e) => {
 				if (e.selections && e.selections.length) {
@@ -369,6 +374,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			}));
 			context.subscriptions.push(tree);
 			context.subscriptions.push(treeDataProvider);
+			const flutterOutlineCommands = new FlutterOutlineCommands(tree, context);
 		}
 	});
 
@@ -379,7 +385,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const analyzerCommands = new AnalyzerCommands(context, analyzer);
 	const sdkCommands = new SdkCommands(logger, context, workspaceContext, sdkUtils, pubGlobal, flutterCapabilities, deviceManager);
 	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, analytics, pubGlobal);
-	const flutterOutlineCommands = new FlutterOutlineCommands(context);
 
 	// Wire up handling of Hot Reload on Save.
 	if (workspaceContext.hasAnyFlutterProjects) {

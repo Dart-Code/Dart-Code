@@ -13,20 +13,26 @@ export const flutterOutlineCommands = [
 ];
 
 export class FlutterOutlineCommands {
-	constructor(context: vs.ExtensionContext) {
+	constructor(private readonly tree: vs.TreeView<FlutterWidgetItem>, context: vs.ExtensionContext) {
 		for (const id of flutterOutlineCommands) {
 			context.subscriptions.push(
-				vs.commands.registerCommand("_flutter.outline." + id, (treeItem) => this.applyRefactoring(treeItem, id)),
+				vs.commands.registerCommand("_flutter.outline." + id, () => this.applyRefactoring(id)),
 			);
 		}
 	}
 
-	private applyRefactoring(widget: FlutterWidgetItem, refactorType: string): void {
+	private applyRefactoring(refactorType: string): void {
+		if (!this.tree.selection || this.tree.selection.length !== 1) {
+			console.error(`Invalid selection when running Flutter Outline refactor: ${refactorType}`);
+			return;
+		}
+
+		const widget = this.tree.selection[0];
 		const fix = widget.fixes.filter((f) => f.command).find((f) => f.kind.value.endsWith(refactorType));
 		if (fix) {
 			vs.commands.executeCommand(fix.command.command, ...fix.command.arguments);
 		} else {
-			console.error(`Unable to find command for Flutter Outline: ` + refactorType);
+			console.error(`Unable to find command for Flutter Outline: ${refactorType}`);
 		}
 	}
 }
