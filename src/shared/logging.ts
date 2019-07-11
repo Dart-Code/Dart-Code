@@ -61,6 +61,17 @@ export class CategoryLogger implements Logger {
 	}
 }
 
+class NullLogger implements Logger {
+	// tslint:disable-next-line: no-empty
+	public info(message: string, category?: LogCategory): void { }
+	// tslint:disable-next-line: no-empty
+	public warn(message: SomeError, category?: LogCategory): void { }
+	// tslint:disable-next-line: no-empty
+	public error(error: SomeError, category?: LogCategory): void { }
+}
+
+export const nullLogger = new NullLogger();
+
 export function logProcess(logger: Logger, category: LogCategory, process: child_process.ChildProcess): void {
 	const prefix = `(PROC ${process.pid})`;
 	process.stdout.on("data", (data) => logger.info(`${prefix} ${data}`, category));
