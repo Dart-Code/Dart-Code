@@ -2,11 +2,11 @@
 
 import * as path from "path";
 import * as vs from "vscode";
-import * as as from "../extension/analysis/analysis_server_types";
-import { Analyzer } from "../extension/analysis/analyzer";
-import { flutterOutlineCommands } from "../extension/commands/flutter_outline";
-import { extensionPath, isAnalyzable } from "../extension/utils";
-import { fsPath } from "./vscode/utils";
+import * as as from "../../shared/analysis_server_types";
+import { fsPath } from "../../shared/vscode/utils";
+import { Analyzer } from "../analysis/analyzer";
+import { flutterOutlineCommands } from "../commands/flutter_outline";
+import { extensionPath, isAnalyzable } from "../utils";
 
 const DART_SHOW_FLUTTER_OUTLINE = "dart-code:showFlutterOutline";
 const DART_IS_WIDGET = "dart-code:isWidget";
