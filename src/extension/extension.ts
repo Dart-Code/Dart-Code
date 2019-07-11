@@ -363,8 +363,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			context.subscriptions.push(vs.window.onDidChangeTextEditorSelection((e) => {
 				if (e.selections && e.selections.length) {
 					const node = treeDataProvider.getNodeAt(e.textEditor.document.uri, e.selections[0].start);
-					if (node)
-						tree.reveal(node);
+					if (node && tree.visible)
+						tree.reveal(node, { select: true, focus: false, expand: true });
 				}
 			}));
 			context.subscriptions.push(tree);
