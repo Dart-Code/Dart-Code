@@ -3,8 +3,10 @@
 import * as path from "path";
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
+import { nullLogger } from "../../shared/logging";
+import { getIconForSymbolKind } from "../../shared/vscode/mappings";
 import { fsPath } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
+import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { flutterOutlineCommands } from "../commands/flutter_outline";
 import { extensionPath, isAnalyzable } from "../utils";
 
@@ -13,7 +15,6 @@ const DART_IS_WIDGET = "dart-code:isWidget";
 
 export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidgetItem>, vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
-	private analyzer: Analyzer;
 	private activeEditor: vs.TextEditor;
 	private flutterOutline: as.FlutterOutlineNotification;
 	private rootNode: FlutterWidgetItem;
@@ -22,7 +23,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<FlutterWidgetItem | undefined> = new vs.EventEmitter<FlutterWidgetItem | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<FlutterWidgetItem | undefined> = this.onDidChangeTreeDataEmitter.event;
 
-	constructor(analyzer: Analyzer) {
+	constructor(private readonly analyzer: Analyzer) {
 		this.analyzer = analyzer;
 		this.analyzer.registerForFlutterOutline((n) => {
 			if (this.activeEditor && n.file === fsPath(this.activeEditor.document.uri)) {
@@ -190,6 +191,12 @@ export class FlutterWidgetItem extends vs.TreeItem {
 
 		if (isWidget(outline)) {
 			this.iconPath = path.join(extensionPath, "media/icons/flutter.svg");
+		} else if (outline.dartElement) {
+			const icon = getIconForSymbolKind(getSymbolKindForElementKind(nullLogger, outline.dartElement.kind));
+			this.iconPath = {
+				dark: path.join(extensionPath, `media/icons/vscode_symbols/${icon}-dark.svg`),
+				light: path.join(extensionPath, `media/icons/vscode_symbols/${icon}-light.svg`),
+			};
 		}
 
 		this.command = {
