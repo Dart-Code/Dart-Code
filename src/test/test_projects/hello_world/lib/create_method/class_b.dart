@@ -5,7 +5,7 @@
 
 // class ClassB {
 //   ClassB() {
-//     var classA = new ClassA();
+//     var classA = ClassA();
 //     classA.createNonExistentMethod();
 //   }
 // }

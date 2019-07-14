@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(new MyBrokenApp());
+void main() => runApp(MyBrokenApp());
 
 class MyBrokenApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return new MaterialApp(
+    return MaterialApp(
       title: 'Flutter Demo',
-      theme: new ThemeData(primarySwatch: Colors.blue),
-      home: new MyBrokenHomePage(),
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: MyBrokenHomePage(),
     );
   }
 }
@@ -18,6 +18,6 @@ class MyBrokenHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    throw new Exception("Oops");
+    throw Exception("Oops");
   }
 }

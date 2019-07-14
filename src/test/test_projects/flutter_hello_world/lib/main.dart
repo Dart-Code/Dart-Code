@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(new MyApp());
+void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return new MaterialApp(
+    return MaterialApp(
       title: 'Flutter Demo',
-      theme: new ThemeData(primarySwatch: Colors.blue),
-      home: new MyHomePage(),
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: MyHomePage(),
     );
   }
 }
@@ -19,7 +19,7 @@ class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     myTopLevelFunction();
-    return new Text(
+    return Text(
       // BREAKPOINT1^
       'Hello, world!',
       textDirection: TextDirection.ltr,

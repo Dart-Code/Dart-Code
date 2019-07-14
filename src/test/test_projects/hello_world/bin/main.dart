@@ -4,16 +4,16 @@ main() {
   final longStrings = <String>[
     "This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string!!!"
   ];
-  final tenDates = new List.generate(10, (i) => new DateTime(2005, 1, 1));
-  final hundredDates = new List.generate(100, (i) => new DateTime(2005, 1, 1));
+  final tenDates = List.generate(10, (i) => DateTime(2005, 1, 1));
+  final hundredDates = List.generate(100, (i) => DateTime(2005, 1, 1));
   final m = {
     "l": l,
     "longStrings": longStrings,
     "tenDates": tenDates,
     "hundredDates": hundredDates,
     "s": s,
-    new DateTime(2000, 2, 14): "valentines-2000",
-    new DateTime(2005, 1, 1): "new-year-2005",
+    DateTime(2000, 2, 14): "valentines-2000",
+    DateTime(2005, 1, 1): "new-year-2005",
     true: true,
     1: "one",
     1.1: "one-point-one",
