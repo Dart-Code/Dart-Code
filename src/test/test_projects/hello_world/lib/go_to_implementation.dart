@@ -30,7 +30,7 @@ class F extends E {
 
 class X {
   fromCallSite() {
-    A e = new E();
+    A e = E();
     e.b();
   }
 }

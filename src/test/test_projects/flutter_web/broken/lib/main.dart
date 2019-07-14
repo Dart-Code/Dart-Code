@@ -27,6 +27,6 @@ class MyBrokenHomePage extends StatelessWidget {
   }
 
   Widget methodThatThrows() {
-    throw new Exception("Oops");
+    throw Exception("Oops");
   }
 }

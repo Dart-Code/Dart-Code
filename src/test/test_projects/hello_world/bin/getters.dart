@@ -8,6 +8,6 @@ class Danny extends Person {
 }
 
 main() {
-  var danny = new Danny();
+  var danny = Danny();
   print(danny.name); // BREAKPOINT1
 }

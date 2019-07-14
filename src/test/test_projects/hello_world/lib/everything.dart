@@ -56,12 +56,12 @@ class MyClass {
 
 @deprecated
 void doSomeStuff() {
-  var a = new MyClass();
-  var b = new MyClass.myNamed();
+  var a = MyClass();
+  var b = MyClass.myNamed();
   // Force some references to things used in tests to ensure the analyzer
   // scans them.
-  var c = new IOClient();
-  var d = new ProtobufEnum(1, '');
+  var c = IOClient();
+  var d = ProtobufEnum(1, '');
   print(c);
   print(d);
   print(a.myNumField);

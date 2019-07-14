@@ -1,3 +1,3 @@
 main() {
-  throw new Exception("Oops");
+  throw Exception("Oops");
 }
