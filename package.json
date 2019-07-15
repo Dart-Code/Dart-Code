@@ -1468,8 +1468,10 @@
 		"report_screen": "nyc report"
 	},
 	"dependencies": {
+		"bufferutil": "^4.0.1",
 		"minimatch": "^3.0.4",
 		"semver": "^6.2.0",
+		"utf-8-validate": "^5.0.2",
 		"vscode-debugadapter": "^1.35.0",
 		"vscode-debugprotocol": "^1.35.0",
 		"ws": "^7.0.1"
