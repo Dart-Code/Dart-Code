@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { isArray } from "util";
 import * as vs from "vscode";
+import { SourceChange } from "../shared/analysis_server_types";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
 import { analyzerSnapshotPath, dartPlatformName, dartVMPath, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, isWin, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
@@ -254,6 +255,50 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Register the ranking provider from VS Code now that it has all of its delegates.
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, rankingCodeActionProvider, rankingCodeActionProvider.metadata));
+	context.subscriptions.push(vs.languages.registerCodeActionsProvider(
+		activeFileFilters,
+		{
+			async provideCodeActions(document: vs.TextDocument, range: vs.Range, context: vs.CodeActionContext, token: vs.CancellationToken): Promise<vs.CodeAction[] | undefined> {
+				const title = "Insert AAAAA at the start of document";
+				const action = new vs.CodeAction(title, vs.CodeActionKind.QuickFix);
+				const change: SourceChange = {
+					edits: [
+						{
+							edits: [
+								{
+									length: 0,
+									offset: 0,
+									replacement: "AAAAA\n",
+								},
+							],
+							file: fsPath(document.uri),
+							fileStamp: 0,
+						},
+					],
+					linkedEditGroups: [],
+					message: title,
+				};
+				action.command = {
+					arguments: [document, change],
+					command: "_dart.applySourceChange",
+					title,
+				};
+				// action.diagnostics = DartDiagnosticProvider.createDiagnostic(error);
+
+				const title2 = "Jump to line 1";
+				const action2 = new vs.CodeAction(title2, vs.CodeActionKind.QuickFix);
+				action2.command = {
+					arguments: [{ lineNumber: 0, at: "top" }],
+					command: "revealLine",
+					title: title2,
+				};
+
+				return [action, action2];
+			},
+		}, {
+			providedCodeActionKinds: [vs.CodeActionKind.QuickFix],
+		},
+	));
 
 	// Task handlers.
 	if (config.previewBuildRunnerTasks) {
