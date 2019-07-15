@@ -109,6 +109,8 @@ export class EditCommands implements vs.Disposable {
 	}
 
 	private async applyEdits(initiatingDocument: vs.TextDocument, change: as.SourceChange): Promise<void> {
+		this.logger.info(`Applying edits to ${fsPath(initiatingDocument.uri)}`);
+
 		// We can only apply with snippets if there's a single change.
 		if (change.edits.length === 1 && change.linkedEditGroups && change.linkedEditGroups.length !== 0)
 			return this.applyEditsWithSnippets(initiatingDocument, change);
@@ -128,6 +130,7 @@ export class EditCommands implements vs.Disposable {
 		let changes = applyEditsSequentially ? undefined : new vs.WorkspaceEdit();
 
 		for (const edit of change.edits) {
+			this.logger.info(`Applying edit...`);
 			const uri = vs.Uri.file(edit.file);
 			// We can only create files with edits that are at 0/0 because we can't open the document if it doesn't exist.
 			// If we create the file ourselves, it won't go into the single undo buffer.
@@ -163,8 +166,10 @@ export class EditCommands implements vs.Disposable {
 		}
 
 		// If we weren't applying sequentially
-		if (changes)
+		if (changes) {
+			this.logger.info(`Applying non-sequential edit...`);
 			await vs.workspace.applyEdit(changes);
+		}
 
 		// Set the cursor position.
 		if (change.selection) {
@@ -178,6 +183,8 @@ export class EditCommands implements vs.Disposable {
 	}
 
 	private async applyEditsWithSnippets(initiatingDocument: vs.TextDocument, change: as.SourceChange): Promise<void> {
+		this.logger.info(`Applying edits to ${fsPath(initiatingDocument.uri)} using snippets`);
+
 		const edit = change.edits[0];
 		const document = await vs.workspace.openTextDocument(edit.file);
 		const editor = await vs.window.showTextDocument(document);
@@ -230,7 +237,10 @@ export class EditCommands implements vs.Disposable {
 		});
 
 		// Replace the document.
+		this.logger.info(`Inserting the snippet`);
 		await editor.insertSnippet(snippet, new vs.Range(document.positionAt(startPos), document.positionAt(endPos)));
+
+		this.logger.info(`Done inserting snippets, showing ${fsPath(initiatingDocument.uri)}`);
 
 		// Ensure original document is the active one.
 		await vs.window.showTextDocument(initiatingDocument);
