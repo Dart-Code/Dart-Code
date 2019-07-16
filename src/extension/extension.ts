@@ -299,7 +299,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(new FileChangeHandler(analyzer));
 
 	// Fire up Flutter daemon if required.
-	if (workspaceContext.hasAnyFlutterMobileProjects) {
+	if (workspaceContext.hasAnyFlutterMobileProjects && sdks.flutter) {
 		flutterDaemon = new FlutterDaemon(logger, path.join(sdks.flutter, flutterPath), sdks.flutter);
 		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config.flutterSelectDeviceWhenConnected);
 

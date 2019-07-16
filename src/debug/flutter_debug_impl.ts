@@ -190,7 +190,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		if (!this.appHasBeenToldToStopOrDetach) {
 			this.appHasBeenToldToStopOrDetach = true;
 			try {
-				if (this.currentRunningAppId && this.appHasStarted && !this.processExited) {
+				if (this.currentRunningAppId && this.appHasStarted && !this.processExited && this.flutter) {
 					// Request to quit/detach, but don't await it since we sometimes
 					// don't get responses before the process quits.
 					if (this.flutter.mode === RunMode.Run)
@@ -221,7 +221,7 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	private async performReload(hotRestart: boolean, reason: string): Promise<any> {
-		if (!this.appHasStarted)
+		if (!this.appHasStarted || !this.currentRunningAppId || !this.flutter)
 			return;
 
 		if (this.isReloadInProgress) {
@@ -244,13 +244,13 @@ export class FlutterDebugSession extends DartDebugSession {
 		try {
 			switch (request) {
 				case "serviceExtension":
-					if (this.currentRunningAppId)
+					if (this.currentRunningAppId && this.flutter)
 						await this.flutter.callServiceExtension(this.currentRunningAppId, args.type, args.params);
 					this.sendResponse(response);
 					break;
 
 				case "checkPlatformOverride":
-					if (this.currentRunningAppId) {
+					if (this.currentRunningAppId && this.flutter) {
 						const result = await this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", undefined);
 						this.sendEvent(new Event("dart.flutter.updatePlatformOverride", { platform: result.value }));
 					}
@@ -258,7 +258,7 @@ export class FlutterDebugSession extends DartDebugSession {
 					break;
 
 				case "checkIsWidgetCreationTracked":
-					if (this.currentRunningAppId) {
+					if (this.currentRunningAppId && this.flutter) {
 						const result = await this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.inspector.isWidgetCreationTracked", undefined);
 						this.sendEvent(new Event("dart.flutter.updateIsWidgetCreationTracked", { isWidgetCreationTracked: result.result }));
 					}

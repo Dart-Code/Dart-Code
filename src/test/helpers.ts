@@ -151,7 +151,7 @@ export async function attachLoggingWhenExtensionAvailable(attempt = 1) {
 }
 
 function setupTestLogging(): boolean {
-	const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
+	const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
 	if (!ext.isActive || !ext.exports)
 		return false;
 
@@ -607,7 +607,7 @@ export function ensureCompletion(items: vs.CompletionItem[], kind: vs.Completion
 }
 
 export async function resolveCompletion(completion: vs.CompletionItem): Promise<vs.CompletionItem> {
-	const resolved = await extApi.completionItemProvider.resolveCompletionItem(completion as DelayedCompletionItem, fakeCancellationToken);
+	const resolved = await extApi.completionItemProvider.resolveCompletionItem!(completion as DelayedCompletionItem, fakeCancellationToken);
 	return resolved || completion;
 }
 
