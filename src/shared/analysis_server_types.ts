@@ -2,8 +2,6 @@
 // and should not be hand-edited!
 // https://github.com/Dart-Code/analysis-server-typescript-generator
 
-"use strict";
-
 /**
  * Return the version number of the analysis server.
  */
@@ -17,7 +15,7 @@ export interface ServerGetVersionResponse {
 /**
  * Subscribe for services. All previous subscriptions are
  * replaced by the given set of services.
- * 
+ *
  * It is an error if any of the elements in the list are not
  * valid services. If there is an error, then the current
  * subscriptions will remain unchanged.
@@ -41,13 +39,13 @@ export interface ServerSetSubscriptionsRequest {
  * could not be computed. If the content of the file changes after this
  * request was received but before a response could be sent, then an
  * error of type CONTENT_MODIFIED will be generated.
- * 
+ *
  * This request is intended to be used by clients that cannot
  * asynchronously apply updated error information. Clients that
  * can apply error information as it becomes available
  * should use the information provided by the 'analysis.errors'
  * notification.
- * 
+ *
  * If a request is made for a file which does not exist, or
  * which is not currently subject to analysis (e.g. because it
  * is not associated with any analysis root specified to
@@ -73,13 +71,13 @@ export interface AnalysisGetErrorsRequest {
  * could not be computed. If the content of the file changes after this
  * request was received but before a response could be sent, then an
  * error of type CONTENT_MODIFIED will be generated.
- * 
+ *
  * This request is intended to be used by clients that cannot
  * asynchronously apply updated error information. Clients that
  * can apply error information as it becomes available
  * should use the information provided by the 'analysis.errors'
  * notification.
- * 
+ *
  * If a request is made for a file which does not exist, or
  * which is not currently subject to analysis (e.g. because it
  * is not associated with any analysis root specified to
@@ -132,7 +130,7 @@ export interface AnalysisGetHoverResponse {
 /**
  * Return a description of all of the elements referenced in a given region
  * of a given file that come from imported libraries.
- * 
+ *
  * If a request is made for a file that does not exist, or that is not
  * currently subject to analysis (e.g. because it is not associated with any
  * analysis root specified via analysis.setAnalysisRoots), an error of type
@@ -160,7 +158,7 @@ export interface AnalysisGetImportedElementsRequest {
 /**
  * Return a description of all of the elements referenced in a given region
  * of a given file that come from imported libraries.
- * 
+ *
  * If a request is made for a file that does not exist, or that is not
  * currently subject to analysis (e.g. because it is not associated with any
  * analysis root specified via analysis.setAnalysisRoots), an error of type
@@ -178,7 +176,7 @@ export interface AnalysisGetImportedElementsResponse {
 /**
  * Return library dependency information for use in client-side indexing
  * and package URI resolution.
- * 
+ *
  * Clients that are only using the libraries field should consider using the
  * analyzedFiles notification instead.
  */
@@ -206,14 +204,14 @@ export interface AnalysisGetLibraryDependenciesResponse {
  * content of the file changes after this request was received but before
  * a response could be sent, then an error of type
  * CONTENT_MODIFIED will be generated.
- * 
+ *
  * If a navigation region overlaps (but extends either before or after)
  * the given region of the file it will be included in the result. This
  * means that it is theoretically possible to get the same navigation
  * region in response to multiple requests. Clients can avoid this by
  * always choosing a region that starts at the beginning of a line and
  * ends at the end of a (possibly different) line in the file.
- * 
+ *
  * If a request is made for a file which does not exist, or
  * which is not currently subject to analysis (e.g. because it
  * is not associated with any analysis root specified to
@@ -248,14 +246,14 @@ export interface AnalysisGetNavigationRequest {
  * content of the file changes after this request was received but before
  * a response could be sent, then an error of type
  * CONTENT_MODIFIED will be generated.
- * 
+ *
  * If a navigation region overlaps (but extends either before or after)
  * the given region of the file it will be included in the result. This
  * means that it is theoretically possible to get the same navigation
  * region in response to multiple requests. Clients can avoid this by
  * always choosing a region that starts at the beginning of a line and
  * ends at the end of a (possibly different) line in the file.
- * 
+ *
  * If a request is made for a file which does not exist, or
  * which is not currently subject to analysis (e.g. because it
  * is not associated with any analysis root specified to
@@ -284,7 +282,7 @@ export interface AnalysisGetNavigationResponse {
 
 /**
  * Return the transitive closure of reachable sources for a given file.
- * 
+ *
  * If a request is made for a file which does not exist, or
  * which is not currently subject to analysis (e.g. because it
  * is not associated with any analysis root specified to
@@ -300,7 +298,7 @@ export interface AnalysisGetReachableSourcesRequest {
 
 /**
  * Return the transitive closure of reachable sources for a given file.
- * 
+ *
  * If a request is made for a file which does not exist, or
  * which is not currently subject to analysis (e.g. because it
  * is not associated with any analysis root specified to
@@ -331,13 +329,13 @@ export interface AnalysisGetReachableSourcesResponse {
  * recently computed signature information for the given file
  * is out of date, then the response for this request will be
  * delayed until it has been computed.
- * 
+ *
  * If a request is made for a file which does not exist, or
  * which is not currently subject to analysis (e.g. because it
  * is not associated with any analysis root specified to
  * analysis.setAnalysisRoots), an error of type
  * GET_SIGNATURE_INVALID_FILE will be generated.
- * 
+ *
  * If the location given is not inside the argument list for a
  * function (including method and constructor) invocation, then
  * an error of type GET_SIGNATURE_INVALID_OFFSET will
@@ -366,13 +364,13 @@ export interface AnalysisGetSignatureRequest {
  * recently computed signature information for the given file
  * is out of date, then the response for this request will be
  * delayed until it has been computed.
- * 
+ *
  * If a request is made for a file which does not exist, or
  * which is not currently subject to analysis (e.g. because it
  * is not associated with any analysis root specified to
  * analysis.setAnalysisRoots), an error of type
  * GET_SIGNATURE_INVALID_FILE will be generated.
- * 
+ *
  * If the location given is not inside the argument list for a
  * function (including method and constructor) invocation, then
  * an error of type GET_SIGNATURE_INVALID_OFFSET will
@@ -411,7 +409,7 @@ export interface AnalysisGetSignatureResponse {
  * implicitly excluded if it is in a subdirectory of one of the root
  * paths where the name of the subdirectory starts with a period (that
  * is, a hidden directory).
- * 
+ *
  * Note that this request determines the set of requested
  * analysis roots. The actual set of analysis roots at any
  * given time is the intersection of this set with the set of
@@ -425,7 +423,7 @@ export interface AnalysisGetSignatureResponse {
  * analyzing it. Similarly, server will stop analyzing files
  * that are removed from the file system but they will remain
  * in the set of requested roots.
- * 
+ *
  * If an included path represents a file, then server will look
  * in the directory containing the file for a pubspec.yaml
  * file. If none is found, then the parents of the directory
@@ -450,7 +448,7 @@ export interface AnalysisSetAnalysisRootsRequest {
 	 * A mapping from source directories to package roots
 	 * that should override the normal package: URI resolution
 	 * mechanism.
-	 * 
+	 *
 	 * If a package root is a directory, then
 	 * the analyzer will behave as though the associated
 	 * source directory in the map contains a special
@@ -459,13 +457,13 @@ export interface AnalysisSetAnalysisRootsRequest {
 	 * effect is the same as specifying the package root directory as
 	 * a "--package_root" parameter to the Dart VM when
 	 * executing any Dart file inside the source directory.
-	 * 
+	 *
 	 * If a package root is a file, then the analyzer
 	 * will behave as though that file is a ".packages" file in the
 	 * source directory. The effect is the same as specifying the file
 	 * as a "--packages" parameter to the Dart VM when
 	 * executing any Dart file inside the source directory.
-	 * 
+	 *
 	 * Files in any directories that are not overridden by this
 	 * mapping have their package: URI's resolved using the
 	 * normal pubspec.yaml mechanism. If this field is absent,
@@ -479,7 +477,7 @@ export interface AnalysisSetAnalysisRootsRequest {
  * Subscribe for general services (that is, services that are not
  * specific to individual files). All previous subscriptions are replaced
  * by the given set of services.
- * 
+ *
  * It is an error if any of the elements in the list are not valid
  * services. If there is an error, then the current subscriptions will
  * remain unchanged.
@@ -501,14 +499,14 @@ export interface AnalysisSetGeneralSubscriptionsRequest {
  * the list is significant: the first file will be given higher
  * priority than the second, the second higher priority than
  * the third, and so on.
- * 
+ *
  * Note that this request determines the set of requested
  * priority files. The actual set of priority files is the
  * intersection of the requested set of priority files with the
  * set of files currently subject to analysis. (See
  * analysis.setSubscriptions for a description of files that
  * are subject to analysis.)
- * 
+ *
  * If a requested priority file is a directory it is ignored,
  * but remains in the set of requested priority files so that
  * if it later becomes a file it can be included in the set of
@@ -528,7 +526,7 @@ export interface AnalysisSetPriorityFilesRequest {
  * then no files will be subscribed to the service, exactly as if the
  * service had been included in the map with an explicit empty list of
  * files.
- * 
+ *
  * Note that this request determines the set of requested
  * subscriptions. The actual set of subscriptions at any given
  * time is the intersection of this set with the set of files
@@ -541,12 +539,12 @@ export interface AnalysisSetPriorityFilesRequest {
  * determined.) When the actual analysis roots change, the
  * actual set of subscriptions is automatically updated, but
  * the set of requested subscriptions is unchanged.
- * 
+ *
  * If a requested subscription is a directory it is ignored,
  * but remains in the set of requested subscriptions so that if
  * it later becomes a file it can be included in the set of
  * actual subscriptions.
- * 
+ *
  * It is an error if any of the keys in the map are not valid
  * services. If there is an error, then the existing
  * subscriptions will remain unchanged.
@@ -580,7 +578,7 @@ export interface AnalysisUpdateContentRequest {
 /**
  * Deprecated: all of the options can be set by users in
  * an analysis options file.
- * 
+ *
  * Update the options controlling analysis based on the given
  * set of options. Any options that are not included in the
  * analysis options will not be changed. If there are options
@@ -627,7 +625,7 @@ export interface CompletionGetSuggestionsResponse {
 /**
  * Subscribe for completion services. All previous subscriptions are
  * replaced by the given set of services.
- * 
+ *
  * It is an error if any of the elements in the list are not valid
  * services. If there is an error, then the current subscriptions will
  * remain unchanged.
@@ -739,7 +737,7 @@ export interface CompletionListTokenDetailsResponse {
 /**
  * Perform a search for references to the element defined or
  * referenced at the given offset in the given file.
- * 
+ *
  * An identifier is returned immediately, and individual
  * results will be returned via the search.results notification
  * as they become available.
@@ -767,7 +765,7 @@ export interface SearchFindElementReferencesRequest {
 /**
  * Perform a search for references to the element defined or
  * referenced at the given offset in the given file.
- * 
+ *
  * An identifier is returned immediately, and individual
  * results will be returned via the search.results notification
  * as they become available.
@@ -776,7 +774,7 @@ export interface SearchFindElementReferencesResponse {
 	/**
 	 * The identifier used to associate results with this
 	 * search request.
-	 * 
+	 *
 	 * If no element was found at the given location, this
 	 * field will be absent, and no results will be reported
 	 * via the search.results notification.
@@ -787,7 +785,7 @@ export interface SearchFindElementReferencesResponse {
 	 * The element referenced or defined at the given offset
 	 * and whose references will be returned in the search
 	 * results.
-	 * 
+	 *
 	 * If no element was found at the given location, this
 	 * field will be absent.
 	 */
@@ -797,7 +795,7 @@ export interface SearchFindElementReferencesResponse {
 /**
  * Perform a search for declarations of members whose name is
  * equal to the given name.
- * 
+ *
  * An identifier is returned immediately, and individual
  * results will be returned via the search.results notification
  * as they become available.
@@ -812,7 +810,7 @@ export interface SearchFindMemberDeclarationsRequest {
 /**
  * Perform a search for declarations of members whose name is
  * equal to the given name.
- * 
+ *
  * An identifier is returned immediately, and individual
  * results will be returned via the search.results notification
  * as they become available.
@@ -830,7 +828,7 @@ export interface SearchFindMemberDeclarationsResponse {
  * equal to the given name. This search does not check to see
  * that there is a member defined with the given name, so it is
  * able to find references to undefined members as well.
- * 
+ *
  * An identifier is returned immediately, and individual
  * results will be returned via the search.results notification
  * as they become available.
@@ -847,7 +845,7 @@ export interface SearchFindMemberReferencesRequest {
  * equal to the given name. This search does not check to see
  * that there is a member defined with the given name, so it is
  * able to find references to undefined members as well.
- * 
+ *
  * An identifier is returned immediately, and individual
  * results will be returned via the search.results notification
  * as they become available.
@@ -864,7 +862,7 @@ export interface SearchFindMemberReferencesResponse {
  * Perform a search for declarations of top-level elements
  * (classes, typedefs, getters, setters, functions and fields)
  * whose name matches the given pattern.
- * 
+ *
  * An identifier is returned immediately, and individual
  * results will be returned via the search.results notification
  * as they become available.
@@ -881,7 +879,7 @@ export interface SearchFindTopLevelDeclarationsRequest {
  * Perform a search for declarations of top-level elements
  * (classes, typedefs, getters, setters, functions and fields)
  * whose name matches the given pattern.
- * 
+ *
  * An identifier is returned immediately, and individual
  * results will be returned via the search.results notification
  * as they become available.
@@ -967,7 +965,7 @@ export interface SearchGetTypeHierarchyResponse {
 	 * other elements of the list is unspecified, but
 	 * correspond to the integers used to reference supertype
 	 * and subtype items within the items.
-	 * 
+	 *
 	 * This field will be absent if the code at the given file
 	 * and offset does not represent a type, or if the file has
 	 * not been sufficiently analyzed to allow a type hierarchy
@@ -984,7 +982,7 @@ export interface SearchGetTypeHierarchyResponse {
  * end of the selected region will be ignored. If preserving selection
  * information is not required, zero (0) can be specified for both the
  * selection offset and selection length.
- * 
+ *
  * If a request is made for a file which does not exist, or which is not
  * currently subject to analysis (e.g. because it is not associated with
  * any analysis root specified to analysis.setAnalysisRoots), an error of
@@ -1022,7 +1020,7 @@ export interface EditFormatRequest {
  * end of the selected region will be ignored. If preserving selection
  * information is not required, zero (0) can be specified for both the
  * selection offset and selection length.
- * 
+ *
  * If a request is made for a file which does not exist, or which is not
  * currently subject to analysis (e.g. because it is not associated with
  * any analysis root specified to analysis.setAnalysisRoots), an error of
@@ -1142,7 +1140,7 @@ export interface EditGetDartfixInfoResponse {
  * and return a set of suggested edits for those sources.
  * These edits may include changes to sources outside the set
  * of specified sources if a change in a specified source requires it.
- * 
+ *
  * If includedFixes is specified, then those fixes will be applied.
  * If includeRequiredFixes is specified, then "required" fixes will be applied
  * in addition to whatever fixes are specified in includedFixes if any.
@@ -1154,7 +1152,7 @@ export interface EditGetDartfixInfoResponse {
 export interface EditDartfixRequest {
 	/**
 	 * A list of the files and directories for which edits should be suggested.
-	 * 
+	 *
 	 * If a request is made with a path that is invalid, e.g. is not absolute and normalized,
 	 * an error of type INVALID_FILE_PATH_FORMAT will be generated.
 	 * If a request is made for a file which does not exist, or which is not currently subject to analysis
@@ -1165,7 +1163,7 @@ export interface EditDartfixRequest {
 
 	/**
 	 * A list of names indicating which fixes should be applied.
-	 * 
+	 *
 	 * If a name is specified that does not match the name of a known fix,
 	 * an error of type UNKNOWN_FIX will be generated.
 	 */
@@ -1178,7 +1176,7 @@ export interface EditDartfixRequest {
 
 	/**
 	 * A list of names indicating which fixes should not be applied.
-	 * 
+	 *
 	 * If a name is specified that does not match the name of a known fix,
 	 * an error of type UNKNOWN_FIX will be generated.
 	 */
@@ -1190,7 +1188,7 @@ export interface EditDartfixRequest {
  * and return a set of suggested edits for those sources.
  * These edits may include changes to sources outside the set
  * of specified sources if a change in a specified source requires it.
- * 
+ *
  * If includedFixes is specified, then those fixes will be applied.
  * If includeRequiredFixes is specified, then "required" fixes will be applied
  * in addition to whatever fixes are specified in includedFixes if any.
@@ -1296,7 +1294,7 @@ export interface EditGetPostfixCompletionResponse {
 
 /**
  * Get the changes required to perform a refactoring.
- * 
+ *
  * If another refactoring request is received during the processing
  * of this one, an error of type REFACTORING_REQUEST_CANCELLED
  * will be generated.
@@ -1343,7 +1341,7 @@ export interface EditGetRefactoringRequest {
 
 /**
  * Get the changes required to perform a refactoring.
- * 
+ *
  * If another refactoring request is received during the processing
  * of this one, an error of type REFACTORING_REQUEST_CANCELLED
  * will be generated.
@@ -1493,7 +1491,7 @@ export interface EditListPostfixCompletionTemplatesResponse {
  * Return a list of edits that would need to be applied in order to ensure
  * that all of the elements in the specified list of imported elements are
  * accessible within the library.
- * 
+ *
  * If a request is made for a file that does not exist, or that is not
  * currently subject to analysis (e.g. because it is not associated with any
  * analysis root specified via analysis.setAnalysisRoots), an error of type
@@ -1523,7 +1521,7 @@ export interface EditImportElementsRequest {
  * Return a list of edits that would need to be applied in order to ensure
  * that all of the elements in the specified list of imported elements are
  * accessible within the library.
- * 
+ *
  * If a request is made for a file that does not exist, or that is not
  * currently subject to analysis (e.g. because it is not associated with any
  * analysis root specified via analysis.setAnalysisRoots), an error of type
@@ -1544,11 +1542,11 @@ export interface EditImportElementsResponse {
 /**
  * Sort all of the directives, unit and class members
  * of the given Dart file.
- * 
+ *
  * If a request is made for a file that does not exist, does not belong
  * to an analysis root or is not a Dart file,
  * SORT_MEMBERS_INVALID_FILE will be generated.
- * 
+ *
  * If the Dart file has scan or parse errors,
  * SORT_MEMBERS_PARSE_ERRORS will be generated.
  */
@@ -1562,11 +1560,11 @@ export interface EditSortMembersRequest {
 /**
  * Sort all of the directives, unit and class members
  * of the given Dart file.
- * 
+ *
  * If a request is made for a file that does not exist, does not belong
  * to an analysis root or is not a Dart file,
  * SORT_MEMBERS_INVALID_FILE will be generated.
- * 
+ *
  * If the Dart file has scan or parse errors,
  * SORT_MEMBERS_PARSE_ERRORS will be generated.
  */
@@ -1583,11 +1581,11 @@ export interface EditSortMembersResponse {
  * directives of the given Dart file according to the
  * Dart Style
  * Guide.
- * 
+ *
  * If a request is made for a file that does not exist, does not belong
  * to an analysis root or is not a Dart file,
  * FILE_NOT_ANALYZED will be generated.
- * 
+ *
  * If directives of the Dart file cannot be organized, for example
  * because it has scan or parse errors, or by other reasons,
  * ORGANIZE_DIRECTIVES_ERROR will be generated. The message
@@ -1605,11 +1603,11 @@ export interface EditOrganizeDirectivesRequest {
  * directives of the given Dart file according to the
  * Dart Style
  * Guide.
- * 
+ *
  * If a request is made for a file that does not exist, does not belong
  * to an analysis root or is not a Dart file,
  * FILE_NOT_ANALYZED will be generated.
- * 
+ *
  * If directives of the Dart file cannot be organized, for example
  * because it has scan or parse errors, or by other reasons,
  * ORGANIZE_DIRECTIVES_ERROR will be generated. The message
@@ -1665,7 +1663,7 @@ export interface ExecutionDeleteContextRequest {
 
 /**
  * Request completion suggestions for the given runtime context.
- * 
+ *
  * It might take one or two requests of this type to get completion
  * suggestions. The first request should have only "code", "offset",
  * and "variables", but not "expressions". If there are sub-expressions that
@@ -1715,7 +1713,7 @@ export interface ExecutionGetSuggestionsRequest {
 	 * to provide runtime types. It does not have to be the full list of
 	 * expressions requested by the server, for missing expressions their
 	 * static types will be used.
-	 * 
+	 *
 	 * When this field is omitted, the server will return completion
 	 * suggestions only when there are no interesting sub-expressions in the
 	 * given code. The client may provide an empty list, in this case the
@@ -1726,7 +1724,7 @@ export interface ExecutionGetSuggestionsRequest {
 
 /**
  * Request completion suggestions for the given runtime context.
- * 
+ *
  * It might take one or two requests of this type to get completion
  * suggestions. The first request should have only "code", "offset",
  * and "variables", but not "expressions". If there are sub-expressions that
@@ -1744,7 +1742,7 @@ export interface ExecutionGetSuggestionsResponse {
 	/**
 	 * The completion suggestions. In contrast to usual completion request,
 	 * suggestions for private elements also will be provided.
-	 * 
+	 *
 	 * If there are sub-expressions that can have different runtime types,
 	 * and are considered to be safe to evaluate at runtime (e.g. getters),
 	 * so using their actual runtime types can improve completion results,
@@ -1756,7 +1754,7 @@ export interface ExecutionGetSuggestionsResponse {
 	/**
 	 * The list of sub-expressions in the code for which the server would
 	 * like to know runtime types to provide better completion suggestions.
-	 * 
+	 *
 	 * This field is omitted the field "suggestions" is returned.
 	 */
 	expressions?: RuntimeCompletionExpression[];
@@ -1766,22 +1764,22 @@ export interface ExecutionGetSuggestionsResponse {
  * Map a URI from the execution context to the file that it corresponds
  * to, or map a file to the URI that it corresponds to in the execution
  * context.
- * 
+ *
  * Exactly one of the file and uri fields must be provided. If both
  * fields are provided, then an error of type INVALID_PARAMETER
  * will be generated. Similarly, if neither field is provided, then an
  * error of type INVALID_PARAMETER will be generated.
- * 
+ *
  * If the file field is provided and the value is not the path of a file
  * (either the file does not exist or the path references something other
  * than a file), then an error of type INVALID_PARAMETER will
  * be generated.
- * 
+ *
  * If the uri field is provided and the value is not a valid URI or if
  * the URI references something that is not a file (either a file that
  * does not exist or something other than a file), then an error of type
  * INVALID_PARAMETER will be generated.
- * 
+ *
  * If the contextRoot used to create the execution context does not
  * exist, then an error of type INVALID_EXECUTION_CONTEXT will
  * be generated.
@@ -1808,22 +1806,22 @@ export interface ExecutionMapUriRequest {
  * Map a URI from the execution context to the file that it corresponds
  * to, or map a file to the URI that it corresponds to in the execution
  * context.
- * 
+ *
  * Exactly one of the file and uri fields must be provided. If both
  * fields are provided, then an error of type INVALID_PARAMETER
  * will be generated. Similarly, if neither field is provided, then an
  * error of type INVALID_PARAMETER will be generated.
- * 
+ *
  * If the file field is provided and the value is not the path of a file
  * (either the file does not exist or the path references something other
  * than a file), then an error of type INVALID_PARAMETER will
  * be generated.
- * 
+ *
  * If the uri field is provided and the value is not a valid URI or if
  * the URI references something that is not a file (either a file that
  * does not exist or something other than a file), then an error of type
  * INVALID_PARAMETER will be generated.
- * 
+ *
  * If the contextRoot used to create the execution context does not
  * exist, then an error of type INVALID_EXECUTION_CONTEXT will
  * be generated.
@@ -1845,10 +1843,10 @@ export interface ExecutionMapUriResponse {
 /**
  * Deprecated: the analysis server no longer fires
  * LAUNCH_DATA events.
- * 
+ *
  * Subscribe for services. All previous subscriptions are replaced by the
  * given set of services.
- * 
+ *
  * It is an error if any of the elements in the list are not valid
  * services. If there is an error, then the current subscriptions will
  * remain unchanged.
@@ -1885,12 +1883,12 @@ export interface DiagnosticGetServerPortResponse {
 
 /**
  * Query whether analytics is enabled.
- * 
+ *
  * This flag controls whether the analysis server sends any analytics data to
  * the cloud. If disabled, the analysis server does not send any analytics
  * data, and any data sent to it by clients (from sendEvent and
  * sendTiming) will be ignored.
- * 
+ *
  * The value of this flag can be changed by other tools outside of the
  * analysis server's process. When you query the flag, you get the value of
  * the flag at a given moment. Clients should not use the value returned to
@@ -1923,13 +1921,13 @@ export interface AnalyticsEnableRequest {
 
 /**
  * Send information about client events.
- * 
+ *
  * Ask the analysis server to include the fact that an action was performed
  * in the client as part of the analytics data being sent. The data will only
  * be included if the sending of analytics data is enabled at the time the
  * request is processed. The action that was performed is indicated by the
  * value of the action field.
- * 
+ *
  * The value of the action field should not include the identity of the
  * client. The analytics data sent by server will include the client id
  * passed in using the --client-id command-line argument. The
@@ -1945,12 +1943,12 @@ export interface AnalyticsSendEventRequest {
 
 /**
  * Send timing information for client events (e.g. code completions).
- * 
+ *
  * Ask the analysis server to include the fact that a timed event occurred as
  * part of the analytics data being sent. The data will only be included if
  * the sending of analytics data is enabled at the time the request is
  * processed.
- * 
+ *
  * The value of the event field should not include the identity of the
  * client. The analytics data sent by server will include the client id
  * passed in using the --client-id command-line argument. The
@@ -1972,7 +1970,7 @@ export interface AnalyticsSendTimingRequest {
 /**
  * Return the list of KytheEntry objects for some file, given the
  * current state of the file system populated by "analysis.updateContent".
- * 
+ *
  * If a request is made for a file that does not exist, or that is not
  * currently subject to analysis (e.g. because it is not associated with any
  * analysis root specified to analysis.setAnalysisRoots), an error of type
@@ -1989,7 +1987,7 @@ export interface KytheGetKytheEntriesRequest {
 /**
  * Return the list of KytheEntry objects for some file, given the
  * current state of the file system populated by "analysis.updateContent".
- * 
+ *
  * If a request is made for a file that does not exist, or that is not
  * currently subject to analysis (e.g. because it is not associated with any
  * analysis root specified to analysis.setAnalysisRoots), an error of type
@@ -2045,7 +2043,7 @@ export interface FlutterGetChangeAddForDesignTimeConstructorResponse {
  * then no files will be subscribed to the service, exactly as if the
  * service had been included in the map with an explicit empty list of
  * files.
- * 
+ *
  * Note that this request determines the set of requested
  * subscriptions. The actual set of subscriptions at any given
  * time is the intersection of this set with the set of files
@@ -2058,12 +2056,12 @@ export interface FlutterGetChangeAddForDesignTimeConstructorResponse {
  * determined.) When the actual analysis roots change, the
  * actual set of subscriptions is automatically updated, but
  * the set of requested subscriptions is unchanged.
- * 
+ *
  * If a requested subscription is a directory it is ignored,
  * but remains in the set of requested subscriptions so that if
  * it later becomes a file it can be included in the set of
  * actual subscriptions.
- * 
+ *
  * It is an error if any of the keys in the map are not valid
  * services. If there is an error, then the existing
  * subscriptions will remain unchanged.
@@ -2081,7 +2079,7 @@ export interface FlutterSetSubscriptionsRequest {
  * issued once after the server has started running but before
  * any requests are processed to let the client know that it
  * started correctly.
- * 
+ *
  * It is not possible to subscribe to or unsubscribe from this
  * notification.
  */
@@ -2109,7 +2107,7 @@ export interface ServerConnectedNotification {
  * of the response) but is used for exceptions that occur while
  * performing other tasks, such as analysis or preparing
  * notifications.
- * 
+ *
  * It is not possible to subscribe to or unsubscribe from this
  * notification.
  */
@@ -2138,7 +2136,7 @@ export interface ServerErrorNotification {
  * Reports the current status of the server. Parameters are
  * omitted if there has been no change in the status
  * represented by that parameter.
- * 
+ *
  * This notification is not subscribed to by default. Clients
  * can subscribe by including the value "STATUS" in
  * the list of services passed in a server.setSubscriptions
@@ -2155,7 +2153,7 @@ export interface ServerStatusNotification {
 	/**
 	 * The current status of pub execution, indicating whether we are
 	 * currently running pub.
-	 * 
+	 *
 	 * Note: this status type is deprecated, and is no longer sent by
 	 * the server.
 	 */
@@ -2164,7 +2162,7 @@ export interface ServerStatusNotification {
 
 /**
  * Reports the paths of the files that are being analyzed.
- * 
+ *
  * This notification is not subscribed to by default. Clients can
  * subscribe by including the value "ANALYZED_FILES" in the list
  * of services passed in an analysis.setGeneralSubscriptions request.
@@ -2178,7 +2176,7 @@ export interface AnalysisAnalyzedFilesNotification {
 
 /**
  * Reports closing labels relevant to a given file.
- * 
+ *
  * This notification is not subscribed to by default. Clients
  * can subscribe by including the value "CLOSING_LABELS"
  * in the list of services passed in an
@@ -2227,12 +2225,12 @@ export interface AnalysisErrorsNotification {
  * invalid because those files are no longer being analyzed,
  * either because the analysis root that contained it is no
  * longer being analyzed or because the file no longer exists.
- * 
+ *
  * If a file is included in this notification and at some later
  * time a notification with results for the file is received,
  * clients should assume that the file is once again being
  * analyzed and the information should be processed.
- * 
+ *
  * It is not possible to subscribe to or unsubscribe from this
  * notification.
  */
@@ -2249,7 +2247,7 @@ export interface AnalysisFlushResultsNotification {
  * overlapping. Nesting occurs when a foldable element, such as
  * a method, is nested inside another foldable element such as
  * a class.
- * 
+ *
  * This notification is not subscribed to by default. Clients
  * can subscribe by including the value "FOLDING" in
  * the list of services passed in an analysis.setSubscriptions
@@ -2269,7 +2267,7 @@ export interface AnalysisFoldingNotification {
 
 /**
  * Reports the highlight regions associated with a given file.
- * 
+ *
  * This notification is not subscribed to by default. Clients
  * can subscribe by including the value "HIGHLIGHTS"
  * in the list of services passed in an
@@ -2295,7 +2293,7 @@ export interface AnalysisHighlightsNotification {
 /**
  * Reports the classes that are implemented or extended and
  * class members that are implemented or overridden in a file.
- * 
+ *
  * This notification is not subscribed to by default. Clients
  * can subscribe by including the value "IMPLEMENTED" in
  * the list of services passed in an analysis.setSubscriptions
@@ -2321,7 +2319,7 @@ export interface AnalysisImplementedNotification {
 /**
  * Reports that the navigation information associated with a region of a
  * single file has become invalid and should be re-requested.
- * 
+ *
  * This notification is not subscribed to by default. Clients can
  * subscribe by including the value "INVALIDATE" in the list of
  * services passed in an analysis.setSubscriptions request.
@@ -2352,7 +2350,7 @@ export interface AnalysisInvalidateNotification {
 
 /**
  * Reports the navigation targets associated with a given file.
- * 
+ *
  * This notification is not subscribed to by default. Clients
  * can subscribe by including the value "NAVIGATION"
  * in the list of services passed in an
@@ -2396,7 +2394,7 @@ export interface AnalysisNavigationNotification {
 /**
  * Reports the occurrences of references to elements within a
  * single file.
- * 
+ *
  * This notification is not subscribed to by default. Clients
  * can subscribe by including the value "OCCURRENCES"
  * in the list of services passed in an
@@ -2417,7 +2415,7 @@ export interface AnalysisOccurrencesNotification {
 
 /**
  * Reports the outline associated with a single file.
- * 
+ *
  * This notification is not subscribed to by default. Clients
  * can subscribe by including the value "OUTLINE" in
  * the list of services passed in an analysis.setSubscriptions
@@ -2452,7 +2450,7 @@ export interface AnalysisOutlineNotification {
 
 /**
  * Reports the overriding members in a file.
- * 
+ *
  * This notification is not subscribed to by default. Clients
  * can subscribe by including the value "OVERRIDES" in
  * the list of services passed in an analysis.setSubscriptions
@@ -2547,7 +2545,7 @@ export interface CompletionResultsNotification {
 	 * the IncludedSuggestionSet that contains it. This might be
 	 * used for example to give higher relevance to suggestions of matching
 	 * types.
-	 * 
+	 *
 	 * If an AvailableSuggestion has relevance tags that match more
 	 * than one IncludedSuggestionRelevanceTag, the maximum
 	 * relevance boost is used.
@@ -2621,7 +2619,7 @@ export interface SearchResultsNotification {
 
 /**
  * Reports information needed to allow a single file to be launched.
- * 
+ *
  * This notification is not subscribed to by default. Clients can
  * subscribe by including the value "LAUNCH_DATA" in the list of services
  * passed in an execution.setSubscriptions request.
@@ -2648,7 +2646,7 @@ export interface ExecutionLaunchDataNotification {
 
 /**
  * Reports the Flutter outline associated with a single file.
- * 
+ *
  * This notification is not subscribed to by default. Clients
  * can subscribe by including the value "OUTLINE" in
  * the list of services passed in an flutter.setSubscriptions
@@ -2692,7 +2690,7 @@ export interface AnalysisErrorFixes {
 /**
  * Deprecated: the only reference to this type has been
  * deprecated.
- * 
+ *
  * A set of options controlling what kind of analysis is to be
  * performed. If the value of a field is omitted the value of the
  * option will not be changed.
@@ -2700,7 +2698,7 @@ export interface AnalysisErrorFixes {
 export interface AnalysisOptions {
 	/**
 	 * Deprecated: this feature is always enabled.
-	 * 
+	 *
 	 * True if the client wants to enable support for the
 	 * proposed async feature.
 	 */
@@ -2708,7 +2706,7 @@ export interface AnalysisOptions {
 
 	/**
 	 * Deprecated: this feature is always enabled.
-	 * 
+	 *
 	 * True if the client wants to enable support for the
 	 * proposed deferred loading feature.
 	 */
@@ -2716,7 +2714,7 @@ export interface AnalysisOptions {
 
 	/**
 	 * Deprecated: this feature is always enabled.
-	 * 
+	 *
 	 * True if the client wants to enable support for the
 	 * proposed enum feature.
 	 */
@@ -2724,7 +2722,7 @@ export interface AnalysisOptions {
 
 	/**
 	 * Deprecated: this feature is always enabled.
-	 * 
+	 *
 	 * True if the client wants to enable support for the
 	 * proposed "null aware operators" feature.
 	 */
@@ -2909,7 +2907,7 @@ export interface ElementDeclaration {
 	 * function this field will not be defined. If the element doesn't have
 	 * parameters (e.g. getter), this field will not be defined. If the
 	 * element has zero parameters, this field will have a value of "()".
-	 * 
+	 *
 	 * The value should not be treated as exact presentation of parameters,
 	 * it is just approximation of parameters to give the user general idea.
 	 */
@@ -3019,7 +3017,7 @@ export interface AvailableSuggestion {
 	relevanceTags?: AvailableSuggestionRelevanceTag[];
 
 	/**
-	 * 
+	 *
 	 */
 	requiredParameterCount?: number;
 }
@@ -3030,7 +3028,7 @@ export interface AvailableSuggestion {
 export type AvailableSuggestionRelevanceTag = string;
 
 /**
- * 
+ *
  */
 export interface AvailableSuggestionSet {
 	/**
@@ -3044,7 +3042,7 @@ export interface AvailableSuggestionSet {
 	uri: string;
 
 	/**
-	 * 
+	 *
 	 */
 	items: AvailableSuggestion[];
 }
@@ -3127,7 +3125,7 @@ export interface IncludedSuggestionSet {
 	/**
 	 * The optional string that should be displayed instead of the
 	 * uri of the referenced AvailableSuggestionSet.
-	 * 
+	 *
 	 * For example libraries in the "test" directory of a package have only
 	 * "file://" URIs, so are usually long, and don't look nice, but actual
 	 * import directives will use relative URIs, which are short, so we
@@ -3940,7 +3938,7 @@ export interface TypeHierarchyItem {
 /**
  * Create a local variable initialized by the expression that covers
  * the specified selection.
- * 
+ *
  * It is an error if the selection range is not covered by a
  * complete expression.
  */
@@ -3982,7 +3980,7 @@ export interface ExtractLocalVariableFeedback extends RefactoringFeedback {
  * Create a method whose body is the specified expression or
  * list of statements, possibly augmented with a return
  * statement.
- * 
+ *
  * It is an error if the range contains anything other than a
  * complete expression (no partial expressions are allowed) or
  * a complete sequence of statements.
@@ -4042,7 +4040,7 @@ export interface ExtractMethodFeedback extends RefactoringFeedback {
 /**
  * Inline the initializer expression of a local variable in
  * place of any references to that variable.
- * 
+ *
  * It is an error if the range contains anything other than all
  * or part of the name of a single local variable.
  */
@@ -4061,7 +4059,7 @@ export interface InlineLocalVariableFeedback extends RefactoringFeedback {
 /**
  * Inline a method in place of one or all references to that
  * method.
- * 
+ *
  * It is an error if the range contains anything other than all
  * or part of the name of a single method.
  */
@@ -4087,7 +4085,7 @@ export interface InlineMethodFeedback extends RefactoringFeedback {
 /**
  * Rename a given element and all of the references to that
  * element.
- * 
+ *
  * It is an error if the range contains anything other than all
  * or part of the name of a single function (including methods,
  * getters and setters), variable (including fields, parameters
@@ -4122,13 +4120,13 @@ export interface RenameFeedback extends RefactoringFeedback {
  * A directive to begin overlaying the contents of a file. The supplied
  * content will be used for analysis in place of the file contents in the
  * filesystem.
- * 
+ *
  * If this directive is used on a file that already has a file content
  * overlay, the old overlay is discarded and replaced with the new one.
  */
 export interface AddContentOverlay {
 	/**
-	 * 
+	 *
 	 */
 	type: "add";
 
@@ -4227,21 +4225,21 @@ export type AnalysisErrorType =
  * A directive to modify an existing file content overlay. One or more ranges
  * of text are deleted from the old file content overlay and replaced with
  * new text.
- * 
+ *
  * The edits are applied in the order in which they occur in the list. This
  * means that the offset of each edit must be correct under the assumption
  * that all previous edits have been applied.
- * 
+ *
  * It is an error to use this overlay on a file that does not yet have a file
  * content overlay or that has had its overlay removed via
  * RemoveContentOverlay.
- * 
+ *
  * If any of the edits cannot be applied due to its offset or length being
  * out of range, an INVALID_OVERLAY_CHANGE error will be reported.
  */
 export interface ChangeContentOverlay {
 	/**
-	 * 
+	 *
 	 */
 	type: "change";
 
@@ -4410,7 +4408,7 @@ export type CompletionSuggestionKind =
 
 /**
  * A message associated with a diagnostic.
- * 
+ *
  * For example, if the diagnostic is reporting that a variable has been
  * referenced before it was declared, it might have a diagnostic message that
  * indicates where the variable is declared.
@@ -4508,7 +4506,7 @@ export type ElementKind =
 
 /**
  * The absolute, normalized path of a file.
- * 
+ *
  * If the format of a file path in a request is not valid, e.g. the path is
  * not absolute or is not normalized, then an error of type
  * INVALID_FILE_PATH_FORMAT will be generated.
@@ -5066,13 +5064,13 @@ export type RefactoringProblemSeverity =
  * A directive to remove an existing file content overlay. After processing
  * this directive, the file contents will once again be read from the file
  * system.
- * 
+ *
  * If this directive is used on a file that doesn't currently have a content
  * overlay, it has no effect.
  */
 export interface RemoveContentOverlay {
 	/**
-	 * 
+	 *
 	 */
 	type: "remove";
 }
@@ -5133,7 +5131,7 @@ export interface SourceEdit {
 	 * An identifier that uniquely identifies this source edit from other
 	 * edits in the same response. This field is omitted unless a containing
 	 * structure needs to be able to identify the edit for some reason.
-	 * 
+	 *
 	 * For example, some refactoring operations can produce edits that might
 	 * not be appropriate (referred to as potential edits). Such edits will
 	 * have an id so that they can be referenced. Edits in the same response
