@@ -795,6 +795,12 @@
 					"description": "Whether to mark external pub package libraries as debuggable, enabling stepping into them while debugging.",
 					"scope": "resource"
 				},
+				"dart.showDartDeveloperLogs": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to show logs from dart:developer's log() function in the debug console.",
+					"scope": "resource"
+				},
 				"dart.enableCompletionCommitCharacters": {
 					"type": "boolean",
 					"default": false,

@@ -54,6 +54,7 @@ export class DartDebugSession extends DebugSession {
 	private logStream?: fs.WriteStream;
 	public debugSdkLibraries: boolean;
 	public debugExternalLibraries: boolean;
+	public showDartDeveloperLogs: boolean;
 	public evaluateGettersInDebugViews: boolean;
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
@@ -119,6 +120,7 @@ export class DartDebugSession extends DebugSession {
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program || args.cwd));
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
+		this.showDartDeveloperLogs = args.showDartDeveloperLogs;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
 		this.logFile = args.observatoryLogFile;
 		this.maxLogLineLength = args.maxLogLineLength;
@@ -403,7 +405,7 @@ export class DartDebugSession extends DebugSession {
 		const serviceStreamName = this.capabilities.serviceStreamIsPublic ? "Service" : "_Service";
 		this.observatory.on(serviceStreamName, (event: VMEvent) => this.handleServiceEvent(event));
 
-		if (this.capabilities.hasLoggingStream)
+		if (this.capabilities.hasLoggingStream && this.showDartDeveloperLogs)
 			this.observatory.on("Logging", (event: VMEvent) => this.handleLoggingEvent(event));
 	}
 
@@ -1156,7 +1158,7 @@ export class DartDebugSession extends DebugSession {
 			if (record && record.message && record.message.valueAsString) {
 				this.logToUser(event.logRecord.message.valueAsString);
 				if (record.message.valueAsStringIsTruncated)
-				this.logToUser("…");
+					this.logToUser("…");
 				this.logToUser("\n");
 			}
 		}
