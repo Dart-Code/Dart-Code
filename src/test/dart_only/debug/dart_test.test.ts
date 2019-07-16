@@ -171,16 +171,16 @@ describe("dart test debugger", () => {
 
 		const topLevelNodes = await extApi.testTreeProvider.getChildren();
 		assert.ok(topLevelNodes);
-		assert.equal(topLevelNodes.length, 4);
+		assert.equal(topLevelNodes!.length, 4);
 
-		assert.equal(topLevelNodes[0].resourceUri!.toString(), helloWorldTestBrokenFile.toString());
-		assert.equal(topLevelNodes[0].status, TestStatus.Failed);
-		assert.equal(topLevelNodes[1].resourceUri!.toString(), helloWorldTestTreeFile.toString());
-		assert.equal(topLevelNodes[1].status, TestStatus.Failed);
-		assert.equal(topLevelNodes[2].resourceUri!.toString(), helloWorldTestMainFile.toString());
-		assert.equal(topLevelNodes[2].status, TestStatus.Passed);
-		assert.equal(topLevelNodes[3].resourceUri!.toString(), helloWorldTestSkipFile.toString());
-		assert.equal(topLevelNodes[3].status, TestStatus.Skipped);
+		assert.equal(topLevelNodes![0].resourceUri!.toString(), helloWorldTestBrokenFile.toString());
+		assert.equal(topLevelNodes![0].status, TestStatus.Failed);
+		assert.equal(topLevelNodes![1].resourceUri!.toString(), helloWorldTestTreeFile.toString());
+		assert.equal(topLevelNodes![1].status, TestStatus.Failed);
+		assert.equal(topLevelNodes![2].resourceUri!.toString(), helloWorldTestMainFile.toString());
+		assert.equal(topLevelNodes![2].status, TestStatus.Passed);
+		assert.equal(topLevelNodes![3].resourceUri!.toString(), helloWorldTestSkipFile.toString());
+		assert.equal(topLevelNodes![3].status, TestStatus.Skipped);
 	});
 
 	it("runs all tests if given a folder", async () => {
@@ -194,7 +194,7 @@ describe("dart test debugger", () => {
 
 		const topLevelNodes = await extApi.testTreeProvider.getChildren();
 		assert.ok(topLevelNodes);
-		assert.equal(topLevelNodes.length, 5);
+		assert.equal(topLevelNodes!.length, 5);
 	});
 
 	it("does not overwrite unrelated test nodes due to overlapping IDs", async () => {

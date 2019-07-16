@@ -25,8 +25,8 @@ describe("dart cli debugger", () => {
 		defer(() => thisDc.stop());
 	});
 
-	async function startDebugger(script?: vs.Uri, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {
-		const config = await getLaunchConfiguration(script, extraConfiguration);
+	async function startDebugger(script?: vs.Uri, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
+		const config = (await getLaunchConfiguration(script, extraConfiguration))!;
 		if (config) {
 			await dc.start(config.debugServer);
 		}
@@ -790,9 +790,9 @@ describe("dart cli debugger", () => {
 		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
-		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l").variablesReference);
-		const listLongstringVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings").variablesReference);
-		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m").variablesReference);
+		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l")!.variablesReference);
+		const listLongstringVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference);
+		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m")!.variablesReference);
 		const allVariables = listVariables.concat(listLongstringVariables).concat(mapVariables);
 
 		for (const variable of allVariables) {

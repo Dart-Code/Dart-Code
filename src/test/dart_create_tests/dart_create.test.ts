@@ -40,8 +40,8 @@ describe("dart", () => {
 	it("did not trigger Flutter mode", () => {
 		const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
 		assert.ok(ext);
-		assert.ok(ext.isActive);
-		const api: InternalExtensionApi = ext.exports[internalApiSymbol];
+		assert.ok(ext!.isActive);
+		const api: InternalExtensionApi = ext!.exports[internalApiSymbol];
 		assert.equal(api.workspaceContext.hasAnyFlutterProjects, false);
 	});
 });

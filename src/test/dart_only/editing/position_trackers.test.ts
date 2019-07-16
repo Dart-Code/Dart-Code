@@ -22,7 +22,7 @@ describe("offset tracker", () => {
 		await editor.edit((eb) => eb.insert(new Position(0, 0), "_"));
 
 		assert.ok(updatedValues);
-		assert.equal(updatedValues.get(originalOffset), 6);
+		assert.equal(updatedValues!.get(originalOffset), 6);
 	});
 
 	it("handles deletes before tracked position", async () => {
@@ -40,7 +40,7 @@ describe("offset tracker", () => {
 		await editor.edit((eb) => eb.delete(new Range(new Position(0, 0), new Position(0, 1))));
 
 		assert.ok(updatedValues);
-		assert.equal(updatedValues.get(originalOffset), 4);
+		assert.equal(updatedValues!.get(originalOffset), 4);
 	});
 
 	it("handles same-length edits before tracked position", async () => {
@@ -58,7 +58,7 @@ describe("offset tracker", () => {
 		await editor.edit((eb) => eb.replace(new Range(new Position(0, 0), new Position(0, 1)), "_"));
 
 		assert.ok(updatedValues);
-		assert.equal(updatedValues.get(originalOffset), originalOffset);
+		assert.equal(updatedValues!.get(originalOffset), originalOffset);
 	});
 
 	it("ignores edits after tracked position", async () => {
@@ -76,7 +76,7 @@ describe("offset tracker", () => {
 		await editor.edit((eb) => eb.insert(new Position(0, 7), "NEW TEXT"));
 
 		assert.ok(updatedValues);
-		assert.equal(updatedValues.get(originalOffset), originalOffset);
+		assert.equal(updatedValues!.get(originalOffset), originalOffset);
 	});
 
 	it("returns undefined if position was swallowed by an edit", async () => {
@@ -94,7 +94,7 @@ describe("offset tracker", () => {
 		await editor.edit((eb) => eb.replace(new Range(new Position(0, 2), new Position(0, 8)), "THIS IS NEW TEXT"));
 
 		assert.ok(updatedValues);
-		assert.equal(updatedValues.get(originalOffset), undefined);
+		assert.equal(updatedValues!.get(originalOffset), undefined);
 	});
 
 	it("handles multiple edits", async () => {
@@ -117,7 +117,7 @@ describe("offset tracker", () => {
 		await editor.edit((eb) => eb.insert(new Position(0, 0), "_"));
 
 		assert.ok(updatedValues);
-		assert.equal(updatedValues.get(originalOffset), 10);
+		assert.equal(updatedValues!.get(originalOffset), 10);
 	});
 });
 
@@ -141,7 +141,7 @@ describe("position tracker", () => {
 		await editor.edit((eb) => eb.insert(new Position(0, 0), "_"));
 
 		assert.ok(updatedValues);
-		assert.ok(updatedValues.get(originalPosition).isEqual(positionOf("4^5")));
+		assert.ok(updatedValues!.get(originalPosition)!.isEqual(positionOf("4^5")));
 	});
 
 	it("handles deletes before tracked position", async () => {
@@ -159,7 +159,7 @@ describe("position tracker", () => {
 		await editor.edit((eb) => eb.delete(new Range(new Position(0, 0), new Position(0, 1))));
 
 		assert.ok(updatedValues);
-		assert.ok(updatedValues.get(originalPosition).isEqual(positionOf("4^5")));
+		assert.ok(updatedValues!.get(originalPosition)!.isEqual(positionOf("4^5")));
 	});
 
 	it("handles same-length edits before tracked position", async () => {
@@ -177,7 +177,7 @@ describe("position tracker", () => {
 		await editor.edit((eb) => eb.replace(new Range(new Position(0, 0), new Position(0, 1)), "_"));
 
 		assert.ok(updatedValues);
-		assert.ok(updatedValues.get(originalPosition).isEqual(positionOf("4^5")));
+		assert.ok(updatedValues!.get(originalPosition)!.isEqual(positionOf("4^5")));
 	});
 
 	it("ignores edits after tracked position", async () => {
@@ -195,7 +195,7 @@ describe("position tracker", () => {
 		await editor.edit((eb) => eb.insert(new Position(0, 7), "NEW TEXT"));
 
 		assert.ok(updatedValues);
-		assert.ok(updatedValues.get(originalPosition).isEqual(positionOf("4^5")));
+		assert.ok(updatedValues!.get(originalPosition)!.isEqual(positionOf("4^5")));
 	});
 
 	it("returns undefined if position was swallowed by an edit", async () => {
@@ -213,7 +213,7 @@ describe("position tracker", () => {
 		await editor.edit((eb) => eb.replace(new Range(new Position(0, 2), new Position(0, 8)), "THIS IS NEW TEXT"));
 
 		assert.ok(updatedValues);
-		assert.equal(updatedValues.get(originalPosition), undefined);
+		assert.equal(updatedValues!.get(originalPosition), undefined);
 	});
 
 	it("handles multiple edits", async () => {
@@ -236,6 +236,6 @@ describe("position tracker", () => {
 		await editor.edit((eb) => eb.insert(new Position(0, 0), "_"));
 
 		assert.ok(updatedValues);
-		assert.ok(updatedValues.get(originalPosition).isEqual(positionOf("4^5")));
+		assert.ok(updatedValues!.get(originalPosition)!.isEqual(positionOf("4^5")));
 	});
 });

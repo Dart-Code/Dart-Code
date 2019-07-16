@@ -25,7 +25,7 @@ describe("packages tree", () => {
 		const topLevel = await extApi.packagesTreeProvider.getChildren(undefined);
 		const myPackage = ensurePackageTreeNode(topLevel, DART_DEP_PROJECT_NODE_CONTEXT, "flutter_hello_world");
 		const packages = await extApi.packagesTreeProvider.getChildren(myPackage);
-		const self = packages.find((node) => node.label === "hello_world");
+		const self = packages!.find((node) => node.label === "hello_world");
 		assert.equal(self, undefined);
 	});
 

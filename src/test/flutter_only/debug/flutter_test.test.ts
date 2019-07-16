@@ -157,7 +157,7 @@ describe("flutter test debugger", () => {
 
 		const topLevelNodes = await extApi.testTreeProvider.getChildren();
 		assert.ok(topLevelNodes);
-		assert.equal(topLevelNodes.length, testFiles.length);
+		assert.equal(topLevelNodes!.length, testFiles.length);
 
 		for (const file of testFiles) {
 			await openFile(file);

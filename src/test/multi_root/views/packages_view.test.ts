@@ -18,7 +18,7 @@ describe("packages tree", () => {
 		const topLevel = await extApi.packagesTreeProvider.getChildren(undefined);
 		const helloWorld = ensurePackageTreeNode(topLevel, DART_DEP_PROJECT_NODE_CONTEXT, "hello_world");
 		const packages = await extApi.packagesTreeProvider.getChildren(helloWorld);
-		const self = packages.find((node) => node.label === "hello_world");
+		const self = packages!.find((node) => node.label === "hello_world");
 		assert.equal(self, undefined);
 	});
 
@@ -29,6 +29,6 @@ describe("packages tree", () => {
 		const myPackage = ensurePackageTreeNode(packages, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
 		const myPackageLibContents = await extApi.packagesTreeProvider.getChildren(myPackage);
 		const file = ensurePackageTreeNode(myPackageLibContents, DART_DEP_FILE_NODE_CONTEXT, "my_thing.dart");
-		assert.equal(fsPath(file.resourceUri), fsPath(myPackageThingFile));
+		assert.equal(fsPath(file.resourceUri!), fsPath(myPackageThingFile));
 	});
 });

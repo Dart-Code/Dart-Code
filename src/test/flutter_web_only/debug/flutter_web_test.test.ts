@@ -40,7 +40,7 @@ describe.skip("flutter for web test debugger", () => {
 	afterEach(killFlutterTester);
 
 	async function startDebugger(script?: vs.Uri | string): Promise<vs.DebugConfiguration> {
-		const config = await getLaunchConfiguration(script);
+		const config = (await getLaunchConfiguration(script))!;
 		await dc.start(config.debugServer);
 		return config;
 	}
@@ -136,7 +136,7 @@ describe.skip("flutter for web test debugger", () => {
 
 		const topLevelNodes = await extApi.testTreeProvider.getChildren();
 		assert.ok(topLevelNodes);
-		assert.equal(topLevelNodes.length, 3);
+		assert.equal(topLevelNodes!.length, 3);
 	});
 
 	it("stops at a breakpoint", async () => {

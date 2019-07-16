@@ -14,7 +14,7 @@ describe("flutter for web", () => {
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const getPackagesCommand = executeCommand.withArgs("dart.getPackages", sinon.match.any).resolves();
 
-		const sampleProjectFolder = fsPath(vs.workspace.workspaceFolders[0].uri);
+		const sampleProjectFolder = fsPath(vs.workspace.workspaceFolders![0].uri);
 		const expectedString = "import 'package:flutter_web";
 		const mainFile = path.join(sampleProjectFolder, "web", "main.dart");
 
@@ -41,8 +41,8 @@ describe("flutter for web", () => {
 	it("triggered Flutter mode", () => {
 		const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
 		assert.ok(ext);
-		assert.ok(ext.isActive);
-		const api: InternalExtensionApi = ext.exports[internalApiSymbol];
+		assert.ok(ext!.isActive);
+		const api: InternalExtensionApi = ext!.exports[internalApiSymbol];
 		assert.equal(api.workspaceContext.hasAnyFlutterProjects, true);
 	});
 });
