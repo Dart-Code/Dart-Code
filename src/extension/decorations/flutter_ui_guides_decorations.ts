@@ -109,8 +109,6 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 					for (let c = guide.start.character; c <= guide.end.character; c++) {
 						if (c === guide.start.character) {
 							decorationString[c] = bottomCorner;
-						} else if (c === guide.start.character) {
-							decorationString[c] = verticalLine;
 						} else {
 							decorationString[c] = horizontalLine;
 						}
