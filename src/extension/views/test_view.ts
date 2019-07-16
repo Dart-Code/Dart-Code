@@ -71,23 +71,33 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
+			const testName = treeNode instanceof TestTreeItem ? treeNode.test.name : treeNode instanceof GroupTreeItem ? treeNode.group.name : undefined;
+			if (!testName) {
+				vs.window.showErrorMessage("Unable to start test for node with no test or group name");
+				return;
+			}
 			vs.debug.startDebugging(
-				vs.workspace.getWorkspaceFolder(treeNode.resourceUri),
+				vs.workspace.getWorkspaceFolder(treeNode.resourceUri!),
 				getLaunchConfig(
 					false,
-					fsPath(treeNode.resourceUri),
-					treeNode instanceof TestTreeItem ? treeNode.test.name : treeNode instanceof GroupTreeItem ? treeNode.group.name : undefined,
+					fsPath(treeNode.resourceUri!),
+					testName,
 					treeNode instanceof GroupTreeItem,
 				),
 			);
 		}));
 		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
+			const testName = treeNode instanceof TestTreeItem ? treeNode.test.name : treeNode instanceof GroupTreeItem ? treeNode.group.name : undefined;
+			if (!testName) {
+				vs.window.showErrorMessage("Unable to start test for node with no test or group name");
+				return;
+			}
 			vs.debug.startDebugging(
-				vs.workspace.getWorkspaceFolder(treeNode.resourceUri),
+				vs.workspace.getWorkspaceFolder(treeNode.resourceUri!),
 				getLaunchConfig(
 					true,
-					fsPath(treeNode.resourceUri),
-					treeNode instanceof TestTreeItem ? treeNode.test.name : treeNode instanceof GroupTreeItem ? treeNode.group.name : undefined,
+					fsPath(treeNode.resourceUri!),
+					testName,
 					treeNode instanceof GroupTreeItem,
 				),
 			);
@@ -97,18 +107,23 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			return vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(treeNode.suite.path));
 		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.displayGroup", (treeNode: GroupTreeItem) => {
+			if (!treeNode.group.url && !treeNode.group.root_url)
+				return;
 			return vs.commands.executeCommand(
 				"_dart.jumpToLineColInUri",
-				vs.Uri.parse(treeNode.group.url || treeNode.group.root_url),
+				// TODO: These are the opposite way to tests, this seems likely a bug?
+				vs.Uri.parse((treeNode.group.url || treeNode.group.root_url)!),
 				treeNode.group.root_line || treeNode.group.line,
 				treeNode.group.root_column || treeNode.group.column,
 			);
 		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.displayTest", (treeNode: TestTreeItem) => {
 			this.writeTestOutput(treeNode, true);
+			if (!treeNode.test.url && !treeNode.test.root_url)
+				return;
 			return vs.commands.executeCommand(
 				"_dart.jumpToLineColInUri",
-				vs.Uri.parse(treeNode.test.root_url || treeNode.test.url),
+				vs.Uri.parse((treeNode.test.root_url || treeNode.test.url)!),
 				treeNode.test.root_line || treeNode.test.line,
 				treeNode.test.root_column || treeNode.test.column,
 			);

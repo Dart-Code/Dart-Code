@@ -54,7 +54,7 @@ export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<
 	}
 
 	private getPackages(project: PackageDepProject): PackageDep[] {
-		const map = new PackageMap(path.join(fsPath(project.resourceUri), ".packages"));
+		const map = new PackageMap(path.join(fsPath(project.resourceUri!), ".packages"));
 		const packages = map.packages;
 		const packageNames = sortBy(Object.keys(packages), (s) => s.toLowerCase());
 
@@ -65,7 +65,7 @@ export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<
 	}
 
 	private getFilesAndFolders(folder: PackageDepFolder): PackageDep[] {
-		const children = sortBy(fs.readdirSync(fsPath(folder.resourceUri), { withFileTypes: true }), (s) => s.name.toLowerCase());
+		const children = sortBy(fs.readdirSync(fsPath(folder.resourceUri!), { withFileTypes: true }), (s) => s.name.toLowerCase());
 		const folders: PackageDepFolder[] = [];
 		const files: PackageDepFile[] = [];
 
@@ -88,12 +88,16 @@ export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<
 
 export abstract class PackageDep extends vs.TreeItem {
 	constructor(
-		label: string,
-		resourceUri?: vs.Uri,
-		collapsibleState?: vs.TreeItemCollapsibleState,
+		label: string | undefined,
+		resourceUri: vs.Uri,
+		collapsibleState: vs.TreeItemCollapsibleState | undefined,
 	) {
-		super(label, collapsibleState);
-		this.resourceUri = resourceUri;
+		if (label) {
+			super(label, collapsibleState);
+			this.resourceUri = resourceUri;
+		} else {
+			super(resourceUri, collapsibleState);
+		}
 	}
 }
 

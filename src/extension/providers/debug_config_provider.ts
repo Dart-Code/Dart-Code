@@ -55,8 +55,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			: undefined;
 
 		function resolveVariables(input?: string): string | undefined {
-			if (!input) return input;
-			input = input.replace(/\${file}/gi, openFile);
+			if (!input)
+				return input;
+			if (openFile)
+				input = input.replace(/\${file}/gi, openFile);
 			if (folder) {
 				const folderPath = fsPath(folder.uri);
 				input = input.replace(/\${(workspaceFolder|workspaceRoot)}/gi, folderPath);
@@ -369,14 +371,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	private guessBestEntryPoint(openFile: string | undefined, folder: string | undefined): string | undefined {
 		// For certain open files, assume the user wants to run them.
-		if (isDartFile(openFile) &&
+		if (openFile && isDartFile(openFile) &&
 			(isTestFile(openFile) || (isInsideFolderNamed(openFile, "bin") || isInsideFolderNamed(openFile, "tool")))) {
 			this.logger.info(`Using open file as entry point: ${openFile}`);
 			return openFile;
 		}
 
 		// Use the open file as a clue to find the best project root, then search from there.
-		const projectRoot = locateBestProjectRoot(openFile) || folder;
+		const projectRoot = (openFile && locateBestProjectRoot(openFile)) || folder;
 		if (!projectRoot)
 			return;
 
@@ -449,12 +451,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
 		debugConfig.vmServicePort = debugConfig.vmServicePort || (isChromeOS && config.useKnownChromeOSPorts ? CHROME_OS_VM_SERVICE_PORT : 0);
-		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart, dartVMPath);
+		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart!, dartVMPath);
 		debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || conf.observatoryLogFile;
 		debugConfig.webDaemonLogFile = debugConfig.webDaemonLogFile || conf.webDaemonLogFile;
 		debugConfig.maxLogLineLength = debugConfig.maxLogLineLength || config.maxLogLineLength;
-		debugConfig.pubPath = debugConfig.pubPath || path.join(this.sdks.dart, pubPath);
-		debugConfig.pubSnapshotPath = debugConfig.pubSnapshotPath || path.join(this.sdks.dart, pubSnapshotPath);
+		debugConfig.pubPath = debugConfig.pubPath || path.join(this.sdks.dart!, pubPath);
+		debugConfig.pubSnapshotPath = debugConfig.pubSnapshotPath || path.join(this.sdks.dart!, pubSnapshotPath);
 		debugConfig.pubTestLogFile = debugConfig.pubTestLogFile || conf.pubTestLogFile;
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries !== undefined && debugConfig.debugSdkLibraries !== null
 			? debugConfig.debugSdkLibraries

@@ -30,7 +30,7 @@ export class PubBuildRunnerTaskProvider implements vs.TaskProvider {
 	private createBuildRunnerCommandBackgroundTask(folder: vs.WorkspaceFolder, subCommand: string, group: vs.TaskGroup) {
 		const isFlutter = util.isFlutterWorkspaceFolder(folder) && this.sdks.flutter;
 		const type = isFlutter ? "flutter" : "pub";
-		const program = isFlutter ? path.join(this.sdks.flutter, flutterPath) : path.join(this.sdks.dart, pubPath);
+		const program = isFlutter ? path.join(this.sdks.flutter!, flutterPath) : path.join(this.sdks.dart!, pubPath);
 		const args = isFlutter ? ["packages", "pub", "run", "build_runner", subCommand] : ["run", "build_runner", subCommand];
 		if (config.buildRunnerAdditionalArgs) {
 			args.push(...config.buildRunnerAdditionalArgs);

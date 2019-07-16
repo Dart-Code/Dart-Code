@@ -68,7 +68,7 @@ export class PackageMap {
 			return undefined;
 	}
 
-	public convertFileToPackageUri(file: string, allowSelf = true): string | undefined {
+	public convertFileToPackageUri(file: string | undefined, allowSelf = true): string | undefined {
 		if (!file)
 			return;
 		for (const name of Object.keys(this.map)) {
