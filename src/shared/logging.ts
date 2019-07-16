@@ -69,6 +69,15 @@ export function logProcess(logger: Logger, category: LogCategory, process: child
 	process.on("exit", (code) => logger.info(`${prefix} exited (${code})`, category));
 }
 
+export function logToConsole(logger: EmittingLogger): void {
+	logger.onLog((m) => {
+		if (m.severity === LogSeverity.Error)
+			console.error(`[${LogCategory[m.category]}] ${m.message}`);
+		else if (m.severity === LogSeverity.Warn)
+			console.warn(`[${LogCategory[m.category]}] ${m.message}`);
+	});
+}
+
 export function captureLogs(logger: EmittingLogger, file: string, header: string, maxLogLineLength: number, logCategories?: LogCategory[]): ({ dispose: () => Promise<void> | void }) {
 	if (!file || !path.isAbsolute(file))
 		throw new Error("Path passed to logTo must be an absolute path");

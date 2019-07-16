@@ -6,11 +6,11 @@ import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/
 import { analyzerSnapshotPath, dartPlatformName, dartVMPath, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, isWin, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { IFlutterDaemon, Sdks } from "../shared/interfaces";
-import { captureLogs, EmittingLogger } from "../shared/logging";
+import { captureLogs, EmittingLogger, logToConsole } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
 import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../shared/utils";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
-import { extensionVersion } from "../shared/vscode/extension_utils";
+import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
 import { fsPath, getDartWorkspaceFolders, isRunningLocally } from "../shared/vscode/utils";
@@ -106,6 +106,9 @@ let extensionLogger: { dispose: () => Promise<void> | void };
 const logger = new EmittingLogger();
 
 export function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
+	if (isDevExtension)
+		logToConsole(logger);
+
 	vs.commands.executeCommand("setContext", IS_RUNNING_LOCALLY_CONTEXT, isRunningLocally);
 	if (!extensionLogger)
 		extensionLogger = captureLogs(logger, getExtensionLogPath(), undefined, 4000, [LogCategory.General]);
@@ -113,6 +116,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const extContext = Context.for(context);
 
 	util.logTime("Code called activate");
+
 	// Wire up a reload command that will re-initialise everything.
 	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", (_) => {
 		logger.info("Performing silent extension reload...");
@@ -638,6 +642,8 @@ export async function deactivate(isRestart: boolean = false): Promise<void> {
 		await analytics.logExtensionShutdown();
 		if (extensionLogger)
 			await extensionLogger.dispose();
+		if (logger)
+			await logger.dispose();
 	}
 }
 
