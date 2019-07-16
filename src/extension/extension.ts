@@ -135,7 +135,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const extensionStartTime = new Date();
 	util.logTime();
 	const sdkUtils = new SdkUtils(logger);
-	const workspaceContext = sdkUtils.initWorkspace();
+	const workspaceContext = sdkUtils.scanWorkspace();
 	util.logTime("initWorkspace");
 	const sdks = workspaceContext.sdks;
 	buildLogHeaders(workspaceContext);
@@ -272,8 +272,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(diagnostics);
 	const diagnosticsProvider = new DartDiagnosticProvider(analyzer, diagnostics);
 
-	// Set the roots, handling project changes that might affect SDKs.
-	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => recalculateAnalysisRoots()));
 	// TODO: Currently calculating analysis roots requires the version to check if
 	// we need the package workaround. In future if we stop supporting server < 1.20.1 we
 	// can unwrap this call so that it'll start sooner.
@@ -354,15 +352,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Handle config changes so we can reanalyze if necessary.
 	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(() => handleConfigurationChange(sdks)));
-	context.subscriptions.push(vs.workspace.onDidSaveTextDocument((td) => {
-		if (path.basename(fsPath(td.uri)).toLowerCase() === "pubspec.yaml")
-			handleConfigurationChange(sdks);
-	}));
-
-	// Handle project changes that might affect SDKs.
-	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => {
-		handleConfigurationChange(sdks);
-	}));
 
 	// Register additional commands.
 	const analyzerCommands = new AnalyzerCommands(context, analyzer);
@@ -395,9 +384,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		dartPackagesProvider,
 		packagesTreeView,
 	);
-	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => {
-		dartPackagesProvider.refresh();
-	}));
 	const testTreeProvider = new TestResultsProvider();
 	const testTreeView = vs.window.createTreeView("dartTestTree", { treeDataProvider: testTreeProvider });
 	context.subscriptions.push(
@@ -460,7 +446,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			return;
 		sdkCommands.fetchPackagesOrPrompt(undefined, { alwaysPrompt: true });
 	}
-	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => checkForPackages()));
 	if (!isRestart)
 		checkForPackages();
 
@@ -480,6 +465,26 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	} else {
 		analytics.logExtensionStartup(extensionEndTime.getTime() - extensionStartTime.getTime());
 	}
+
+	// Handle changes to the workspace.
+	// Set the roots, handling project changes that might affect SDKs.
+	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => {
+		// First check if something changed that will affect our SDK, in which case
+		// we'll perform a silent restart so that we do new SDK searches.
+		const newWorkspaceContext = sdkUtils.scanWorkspace();
+		if (
+			newWorkspaceContext.hasOnlyDartProjects !== workspaceContext.hasOnlyDartProjects
+			|| newWorkspaceContext.hasAnyFlutterProjects !== workspaceContext.hasAnyFlutterProjects
+			|| newWorkspaceContext.hasProjectsInFuchsiaTree !== workspaceContext.hasProjectsInFuchsiaTree
+		) {
+			util.reloadExtension();
+			return;
+		}
+
+		dartPackagesProvider.refresh();
+		recalculateAnalysisRoots();
+		checkForPackages();
+	}));
 
 	return {
 		...new DartExtensionApi(),

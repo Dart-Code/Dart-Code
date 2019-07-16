@@ -144,7 +144,7 @@ export class SdkUtils {
 		}
 	}
 
-	public initWorkspace(): WorkspaceContext {
+	public scanWorkspace(): WorkspaceContext {
 		this.logger.info("Searching for SDKs...");
 		const topLevelFolders = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
 		const pathOverride = (process.env.DART_PATH_OVERRIDE as string) || "";
