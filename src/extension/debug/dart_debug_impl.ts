@@ -8,6 +8,7 @@ import { observatoryListeningBannerPattern, pleaseReportBug } from "../../shared
 import { LogCategory, LogSeverity } from "../../shared/enums";
 import { LogMessage } from "../../shared/interfaces";
 import { flatMap, throttle, uniq, uriToFilePath } from "../../shared/utils";
+import { sortBy } from "../../shared/utils/array";
 import * as col from "../../shared/utils/colors";
 import { config } from "../config";
 import { getLogHeader } from "../utils/log";
@@ -757,14 +758,13 @@ export class DartDebugSession extends DebugSession {
 
 		if (data.data.type === "Frame") {
 			const frame: VMFrame = data.data as VMFrame;
-			const variables: DebugProtocol.Variable[] = [];
+			let variables: DebugProtocol.Variable[] = [];
 			if (frame.vars) {
-				for (const variable of frame.vars) {
-					// Skip variables that don't evaluate nicely.
-					if (variable.value && variable.value.type === "@TypeArguments")
-						continue;
-					variables.push(await this.instanceRefToVariable(thread, true, variable.name, variable.name, variable.value, frame.vars.length <= maxValuesToCallToString));
-				}
+				const framePromises = frame.vars
+					.filter((variable) => !variable.value || variable.value.type !== "@TypeArguments")
+					.map((variable, i) => this.instanceRefToVariable(thread, true, variable.name, variable.name, variable.value, i <= maxValuesToCallToString));
+				const frameVariables = await Promise.all(framePromises);
+				variables = variables.concat(frameVariables);
 			}
 			response.body = { variables };
 			this.sendResponse(response);
@@ -800,7 +800,7 @@ export class DartDebugSession extends DebugSession {
 
 			try {
 				const result = await this.observatory.getObject(thread.ref.id, instanceRef.id, start, count);
-				const variables: DebugProtocol.Variable[] = [];
+				let variables: DebugProtocol.Variable[] = [];
 				// If we're the top-level exception, or our parent has an evaluateName of undefined (its children)
 				// we cannot evaluate (this will disable "Add to Watch" etc).
 				const canEvaluate = instanceRef.evaluateName !== undefined;
@@ -824,10 +824,10 @@ export class DartDebugSession extends DebugSession {
 							const len = instance.elements.length;
 							if (!start)
 								start = 0;
-							for (let i = 0; i < len; i++) {
-								const element = instance.elements[i];
-								variables.push(await this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + start}]`, `[${i + start}]`, element, len <= maxValuesToCallToString));
-							}
+							const elementPromises = instance.elements.map(async (element, i) => this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + start}]`, `[${i + start}]`, element, len <= maxValuesToCallToString));
+							// Add them in order.
+							const elementVariables = await Promise.all(elementPromises);
+							variables = variables.concat(elementVariables);
 						} else if (instance.associations) {
 							const len = instance.associations.length;
 							if (!start)
@@ -859,37 +859,43 @@ export class DartDebugSession extends DebugSession {
 								});
 							}
 						} else if (instance.fields) {
-							let len = instance.fields.length;
+
+							let fieldAndGetterPromises: Array<Promise<DebugProtocol.Variable>> = [];
+
+							const fields = sortBy(instance.fields, (f) => f.decl.name);
+							const fieldPromises = fields.map(async (field, i) => this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value, i <= maxValuesToCallToString));
+							fieldAndGetterPromises = fieldAndGetterPromises.concat(fieldPromises);
+
 							// Add getters
 							if (this.evaluateGettersInDebugViews && instance.class) {
 								let getterNames = await this.getGetterNamesForHierarchy(thread.ref, instance.class);
 								getterNames = getterNames.sort();
-								len += getterNames.length;
 
 								// Call each getter, adding the result as a variable.
-								for (const getterName of getterNames) {
-									const getterDisplayName = getterName; // `get ${getterName}`;
+								const getterPromises = getterNames.map(async (getterName, i) => {
 									const getterResult = await this.observatory.evaluate(thread.ref.id, instanceRef.id, getterName, true);
 									if (getterResult.result.type === "@Error") {
-										variables.push({ name: getterDisplayName, value: (getterResult.result as VMErrorRef).message, variablesReference: 0 });
+										return { name: getterName, value: (getterResult.result as VMErrorRef).message, variablesReference: 0 };
 									} else if (getterResult.result.type === "Sentinel") {
-										variables.push({ name: getterDisplayName, value: (getterResult.result as VMSentinel).valueAsString, variablesReference: 0 });
+										return { name: getterName, value: (getterResult.result as VMSentinel).valueAsString, variablesReference: 0 };
 									} else {
 										const getterResultInstanceRef = getterResult.result as VMInstanceRef;
-										variables.push(await this.instanceRefToVariable(
+										return this.instanceRefToVariable(
 											thread, canEvaluate,
 											`${instanceRef.evaluateName}.${getterName}`,
-											getterDisplayName,
+											getterName,
 											getterResultInstanceRef,
-											len <= maxValuesToCallToString,
-										));
+											instance.fields.length + i <= maxValuesToCallToString,
+										);
 									}
-								}
+								});
+								fieldAndGetterPromises = fieldAndGetterPromises.concat(getterPromises);
+
+								const fieldAndGetterVariables = await Promise.all(fieldAndGetterPromises);
+								variables = variables.concat(fieldAndGetterVariables);
 							}
 
-							// Add all of the fields.
-							for (const field of instance.fields)
-								variables.push(await this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value, len <= maxValuesToCallToString));
+							await Promise.all(fieldAndGetterPromises);
 						} else {
 							this.logToUser(`Unknown instance kind: ${instance.kind}. ${pleaseReportBug}\n`);
 						}
