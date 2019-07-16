@@ -238,7 +238,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (token && token.isCancellationRequested)
 			return;
 
-		let deviceToLaunchOn = this.deviceManager.currentDevice;
+		let deviceToLaunchOn = this.deviceManager && this.deviceManager.currentDevice;
 
 		// Ensure we have a device if required.
 		if (isStandardFlutter && !isTest && this.deviceManager && this.daemon && debugConfig.deviceId !== "flutter-tester") {
