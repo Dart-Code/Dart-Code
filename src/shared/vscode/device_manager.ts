@@ -154,9 +154,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 					this.updateStatusBar();
 					break;
 			}
+
+			return this.currentDevice;
 		}
 
-		return this.currentDevice;
+		return undefined;
 	}
 
 	private shortCacheForSupportedPlatforms: Promise<f.PlatformType[] | undefined>;

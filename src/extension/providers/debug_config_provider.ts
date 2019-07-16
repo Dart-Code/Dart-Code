@@ -238,6 +238,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (token && token.isCancellationRequested)
 			return;
 
+		let deviceToLaunchOn = this.deviceManager.currentDevice;
+
 		// Ensure we have a device if required.
 		if (isStandardFlutter && !isTest && this.deviceManager && this.daemon && debugConfig.deviceId !== "flutter-tester") {
 			const supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
@@ -245,11 +247,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				: [];
 
 			// If the current device is not valid, prompt the user.
-			if (!this.deviceManager.isSupported(supportedPlatforms, this.deviceManager.currentDevice))
-				await this.deviceManager.showDevicePicker(supportedPlatforms);
+			if (!this.deviceManager.isSupported(supportedPlatforms, deviceToLaunchOn))
+				deviceToLaunchOn = await this.deviceManager.showDevicePicker(supportedPlatforms);
 
 			// If we still don't have a valid device, show an error.
-			if (!this.deviceManager.isSupported(supportedPlatforms, this.deviceManager.currentDevice)) {
+			if (!this.deviceManager.isSupported(supportedPlatforms, deviceToLaunchOn)) {
 				logger.warn("Unable to launch due to no active device");
 				window.showInformationMessage("Cannot launch without an active device");
 				return undefined; // undefined means silent (don't open launch.json).
@@ -268,7 +270,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return;
 
 		// TODO: This cast feels nasty?
-		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isAnyFlutter, this.deviceManager && this.deviceManager.currentDevice);
+		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isAnyFlutter, deviceToLaunchOn);
 
 		// Debugger always uses uppercase drive letters to ensure our paths have them regardless of where they came from.
 		debugConfig.program = forceWindowsDriveLetterToUppercase(debugConfig.program);
