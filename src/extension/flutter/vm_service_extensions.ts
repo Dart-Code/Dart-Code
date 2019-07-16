@@ -78,6 +78,8 @@ export class FlutterVmServiceExtensions {
 			// If the isWidgetCreationTracked extension loads, send a command to the debug adapter
 			// asking it to query whether it's enabled (it'll send us an event back with the answer).
 			if (e.body.id === "ext.flutter.inspector.isWidgetCreationTracked") {
+				// TODO: Why do we send these events to the editor for it to send one back? Why don't we just
+				// do the second request in the debug adapter directly and only transmit the result?
 				e.session.customRequest("checkIsWidgetCreationTracked");
 				// If it's the PlatformOverride, send a request to get the current value.
 			} else if (e.body.id === FlutterServiceExtension.PlatformOverride) {
