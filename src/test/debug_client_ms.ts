@@ -468,15 +468,15 @@ export class DebugClient extends ProtocolClient {
 
 				const actualLocation: ILocation = {
 					column: bp.column,
-					line: bp.line,
-					path: bp.source && bp.source.path
+					line: bp.line || -1,
+					path: (bp.source && bp.source.path) || "<unknown>"
 				};
 				this.assertPartialLocationsEqual(actualLocation, expectedBPLocation || location);
 
 				return this.configurationDone();
 			}),
 
-			skipWaiting ? undefined : setupBreakpointWait(),
+			skipWaiting ? Promise.resolve(undefined) : setupBreakpointWait(),
 
 			this.launch(launchArgs),
 		]);

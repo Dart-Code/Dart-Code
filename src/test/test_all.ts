@@ -60,7 +60,7 @@ function runNode(cwd: string, args: string[], env: any, printTimes = false): Pro
 	});
 }
 
-async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string, codeVersion: string, runInfo: string): Promise<void> {
+async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string, codeVersion: string | undefined, runInfo: string): Promise<void> {
 	console.log("\n\n");
 	console.log(yellow("############################################################"));
 	console.log(

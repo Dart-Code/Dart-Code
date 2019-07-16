@@ -19,7 +19,7 @@ describe("extension", () => {
 	it("resolves the correct debug config for a nested project", async () => {
 		await activate();
 		await setConfigForTest("dart", "promptToRunIfErrors", false);
-		const resolvedConfig = await extApi.debugProvider.resolveDebugConfiguration(
+		const resolvedConfig = await extApi.debugProvider.resolveDebugConfiguration!(
 			vs.workspace.workspaceFolders![0],
 			{
 				name: "Dart",
