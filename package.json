@@ -801,6 +801,12 @@
 					"description": "Whether to show logs from dart:developer's log() function in the debug console.",
 					"scope": "resource"
 				},
+				"dart.previewFlutterStructuredErrors": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to enable Flutter's structured error support for improve error display.",
+					"scope": "resource"
+				},
 				"dart.enableCompletionCommitCharacters": {
 					"type": "boolean",
 					"default": false,

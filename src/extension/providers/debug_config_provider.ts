@@ -462,6 +462,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			? debugConfig.debugExternalLibraries
 			: conf.debugExternalLibraries;
 		debugConfig.showDartDeveloperLogs = conf.showDartDeveloperLogs;
+		debugConfig.useFlutterStructuredErrors = conf.previewFlutterStructuredErrors;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		if (isFlutter) {
 			debugConfig.forceFlutterVerboseMode = isLogging || isCI;
