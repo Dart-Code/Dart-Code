@@ -129,7 +129,7 @@ export async function attachLoggingWhenExtensionAvailable(attempt = 1) {
 	}
 
 	if (setupTestLogging()) {
-		console.log("Logging was configured!");
+		// console.log("Logging was configured!");
 		return;
 	}
 
