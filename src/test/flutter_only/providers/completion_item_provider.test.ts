@@ -9,7 +9,7 @@ describe("completion_item_provider", () => {
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 
 	it("includes expected completions", async () => {
-		const completions = await getCompletionsAt("new ^Text");
+		const completions = await getCompletionsAt("return ^Text");
 
 		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "Text(…)", "Text");
 		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "Text.rich(…)", "Text.rich");
