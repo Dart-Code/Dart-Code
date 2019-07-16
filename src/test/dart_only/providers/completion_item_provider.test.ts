@@ -99,7 +99,7 @@ main() {
 		assert.equal(cl.kind, vs.CompletionItemKind.Method);
 		assert.equal(cl.label, "methodWithArgsAndReturnValue(…)");
 		assert.notEqual(cl.preselect, true);
-		assert.equal(cl.range.isEqual(rangeOf("|return| str")), true);
+		assert.equal(cl.range!.isEqual(rangeOf("|return| str")), true);
 		assert.equal(cl.sortText, "998943methodWithArgsAndReturnValue(…)"); // TODO: This may be fragile...
 		assert.equal(cl.textEdit, undefined); // We don't use this (we use insertText and range).
 	});
@@ -170,7 +170,7 @@ main() {
 			let completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
 			completion = await resolveCompletion(completion);
 
-			assert.ok(completion.additionalTextEdits.length);
+			assert.ok(completion.additionalTextEdits!.length);
 			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:io'");
@@ -181,7 +181,7 @@ main() {
 			assert.equal(completion.kind, vs.CompletionItemKind.Class);
 			assert.equal(completion.label, "ProcessInfo");
 			assert.notEqual(completion.preselect, true);
-			assert.equal(completion.range.isEqual(rangeOf("|ProcessInf|")), true);
+			assert.equal(completion.range!.isEqual(rangeOf("|ProcessInf|")), true);
 			assert.equal(completion.sortText, "999997ProcessInfo"); // TODO: This may be fragile...
 			assert.equal(completion.textEdit, undefined); // We don't use this (we use insertText and range).
 		});
@@ -197,7 +197,7 @@ main() {
 			let completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
 			completion = await resolveCompletion(completion);
 
-			assert.ok(completion.additionalTextEdits.length);
+			assert.ok(completion.additionalTextEdits!.length);
 			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:io'\n\n() → ProcessInfo");
@@ -208,7 +208,7 @@ main() {
 			assert.equal(completion.kind, vs.CompletionItemKind.Constructor);
 			assert.equal(completion.label, "ProcessInfo()");
 			assert.notEqual(completion.preselect, true);
-			assert.equal(completion.range.isEqual(rangeOf("|ProcessInf|")), true);
+			assert.equal(completion.range!.isEqual(rangeOf("|ProcessInf|")), true);
 			assert.equal(completion.sortText, "999997ProcessInfo()"); // TODO: This may be fragile...
 			assert.equal(completion.textEdit, undefined); // We don't use this (we use insertText and range).
 		});
@@ -224,7 +224,7 @@ main() {
 			let completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "HashMap(…)", "HashMap");
 			completion = await resolveCompletion(completion);
 
-			assert.ok(completion.additionalTextEdits.length);
+			assert.ok(completion.additionalTextEdits!.length);
 			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:collection'\n\n({bool equals(K key1, K key2), int hashCode(K key), bool isValidKey(potentialKey)}) → HashMap");
@@ -235,7 +235,7 @@ main() {
 			assert.equal(completion.kind, vs.CompletionItemKind.Constructor);
 			assert.equal(completion.label, "HashMap(…)");
 			assert.notEqual(completion.preselect, true);
-			assert.equal(completion.range.isEqual(rangeOf("|HashMa|")), true);
+			assert.equal(completion.range!.isEqual(rangeOf("|HashMa|")), true);
 			assert.equal(completion.sortText, "999997HashMap(…)"); // TODO: This may be fragile...
 			assert.equal(completion.textEdit, undefined); // We don't use this (we use insertText and range).
 		});
@@ -250,7 +250,7 @@ main() {
 
 			let completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
 			completion = await resolveCompletion(completion);
-			assert.equal(completion.detail.startsWith("Auto import from 'dart:io'"), true);
+			assert.equal(completion.detail!.startsWith("Auto import from 'dart:io'"), true);
 		});
 
 		it("insert imports automatically when completing unimported symbols", async () => {

@@ -30,7 +30,7 @@ describe("DevTools notification", async () => {
 		assert.equal(context.devToolsNotificationDoNotShow, false);
 		assert.equal(context.devToolsNotificationsShown, 1);
 		// Marked as shown within the last 10 seconds.
-		assert.equal(context.devToolsNotificationLastShown > Date.now() - 10000 && context.devToolsNotificationLastShown <= Date.now(), true);
+		assert.equal(context.devToolsNotificationLastShown && context.devToolsNotificationLastShown > Date.now() - 10000 && context.devToolsNotificationLastShown <= Date.now(), true);
 	});
 
 	it("shows and updates context values when already set", async () => {

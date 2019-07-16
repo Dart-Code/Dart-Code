@@ -30,7 +30,7 @@ describe("ignore_lint_code_action_provider", () => {
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
 
-		const filteredResults = fixResults.filter((f) => !vs.CodeActionKind.Source.contains(f.kind));
+		const filteredResults = fixResults.filter((f) => !vs.CodeActionKind.Source.contains(f.kind!));
 
 		const index = filteredResults.findIndex((r) => {
 			return r.title.indexOf("Ignore hint 'unused_local_variable' for this line") !== -1
@@ -50,7 +50,7 @@ describe("ignore_lint_code_action_provider", () => {
 				|| r.title.indexOf("Ignore 'unused_local_variable' for this line") !== -1;
 		});
 
-		await vs.workspace.applyEdit(ignoreLintAction!.edit);
+		await vs.workspace.applyEdit(ignoreLintAction!.edit!);
 
 		await ensureTestContent(`main() {
   // ignore: unused_local_variable

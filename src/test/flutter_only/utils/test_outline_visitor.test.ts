@@ -18,7 +18,7 @@ describe("test_outline_visitor", () => {
 		const outline = extApi.fileTracker.getOutlineFor(flutterTestOtherFile);
 
 		const visitor = new TestOutlineVisitor(logger);
-		visitor.visit(outline);
+		visitor.visit(outline!);
 
 		assert.equal(visitor.tests.length, 2);
 		assert.equal(visitor.tests[0].isGroup, true);

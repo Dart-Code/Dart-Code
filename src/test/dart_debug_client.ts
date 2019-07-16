@@ -12,8 +12,8 @@ import { delay, logger, watchPromise, withTimeout } from "./helpers";
 const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.serviceRegistered", "dart.debuggerUris"];
 
 export class DartDebugClient extends DebugClient {
-	private currentSession: DebugSession;
-	constructor(runtime: string, executable: string, debugType: string, spawnOptions: SpawnOptions, private debugCommands: DebugCommandHandler, testProvider: TestResultsProvider) {
+	private currentSession?: DebugSession;
+	constructor(runtime: string, executable: string, debugType: string, spawnOptions: SpawnOptions | undefined, private debugCommands: DebugCommandHandler, testProvider: TestResultsProvider | undefined) {
 		super(runtime, executable, debugType, spawnOptions);
 
 		// Set up handlers for any custom events our tests may rely on (can't find
@@ -38,7 +38,7 @@ export class DartDebugClient extends DebugClient {
 		// debug session.
 		if (testProvider) {
 			this.on("dart.testRunNotification", (e: DebugSessionCustomEvent) => testProvider.handleDebugSessionCustomEvent(e));
-			this.on("terminated", (e: DebugProtocol.TerminatedEvent) => testProvider.handleDebugSessionEnd(this.currentSession));
+			this.on("terminated", (e: DebugProtocol.TerminatedEvent) => testProvider.handleDebugSessionEnd(this.currentSession!));
 		}
 	}
 
@@ -46,7 +46,7 @@ export class DartDebugClient extends DebugClient {
 		this.debugCommands.handleDebugSessionCustomEvent({
 			body: e.body,
 			event: e.event,
-			session: this.currentSession,
+			session: this.currentSession!,
 		});
 	}
 

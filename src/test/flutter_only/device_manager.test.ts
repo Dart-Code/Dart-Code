@@ -96,11 +96,11 @@ describe("device_manager", () => {
 });
 
 class FakeFlutterDaemon extends FakeStdIOService implements IFlutterDaemon {
-	public capabilities: DaemonCapabilities;
+	public capabilities = DaemonCapabilities.empty;
 	public supportedPlatforms: f.PlatformType[] = [];
 
 	public async connect(d: f.Device, markTypeAsValid: boolean): Promise<void> {
-		if (markTypeAsValid)
+		if (markTypeAsValid && d.platformType)
 			this.supportedPlatforms.push(d.platformType);
 
 		await this.notify(this.deviceAddedSubscriptions, d);
