@@ -69,38 +69,60 @@ export class FlutterDeviceManager implements vs.Disposable {
 		if (!supportedTypes && this.daemon.capabilities.providesPlatformTypes) {
 			supportedTypes = await this.getSupportedPlatformsForWorkspace();
 		}
-
-		const devices: PickableDevice[] = this.devices
-			.sort(this.deviceSortComparer.bind(this))
-			.filter((d) => this.isSupported(supportedTypes, d))
-			.map((d) => ({
-				description: d.category || d.platform,
-				device: d,
-				label: d.name,
-			}));
-
 		const quickPick = vs.window.createQuickPick<PickableDevice>();
-		quickPick.items = devices;
 		quickPick.placeholder = "Select a device to use";
 		quickPick.busy = true;
 
-		// Also kick of async work to add emulators to the list (if they're valid).
-		this.getEmulatorItems(true, supportedTypes).then((emulators) => {
-			quickPick.busy = false;
+		let quickPickIsValid = true;
+		let emulatorDevices: PickableDevice[];
+		const updatePickableDeviceList = () => {
+			if (!quickPickIsValid)
+				return;
 
-			// Fliter out any emulators we know are running.
-			const emulatorIdsAlreadyRunning = this.devices.map((d) => d.emulatorId).filter((id) => id);
-			emulators = emulators.filter((e) => emulatorIdsAlreadyRunning.indexOf(e.device.id) === -1);
+			const pickableItems: PickableDevice[] = this.devices
+				.sort(this.deviceSortComparer.bind(this))
+				.filter((d) => this.isSupported(supportedTypes, d))
+				.map((d) => ({
+					description: d.category || d.platform,
+					device: d,
+					label: d.name,
+				}));
 
-			quickPick.items = [...devices, ...emulators];
-		});
+			// If we've got emulators, add them to the list.
+			if (emulatorDevices) {
+				// Fliter out any emulators we know are running.
+				const emulatorIdsAlreadyRunning = this.devices.map((d) => d.emulatorId).filter((id) => id);
+
+				emulatorDevices
+					.filter((e) => emulatorIdsAlreadyRunning.indexOf(e.device.id) === -1)
+					.forEach((e) => pickableItems.push(e));
+			}
+
+			quickPick.items = pickableItems;
+		};
+
+		// Kick off a request to get emulators only once.
+		this.getEmulatorItems(true, supportedTypes)
+			.then((emulators) => emulatorDevices = emulators)
+			.then(() => quickPick.busy = false)
+			.then(() => updatePickableDeviceList());
+
+		// If new devices are attached while the list is open, add them to the end.
+		const deviceAddedSubscription = this.daemon.registerForDeviceAdded((d) => updatePickableDeviceList());
+		const deviceRemovedSubscription = this.daemon.registerForDeviceRemoved((d) => updatePickableDeviceList());
+
+		// Build the initial list.
+		updatePickableDeviceList();
 
 		const selection = await new Promise<PickableDevice>((resolve) => {
 			quickPick.onDidAccept(() => resolve(quickPick.selectedItems && quickPick.selectedItems[0]));
 			quickPick.onDidHide(() => resolve(undefined));
 			quickPick.show();
 		});
+		quickPickIsValid = false;
 		quickPick.dispose();
+		deviceAddedSubscription.dispose();
+		deviceRemovedSubscription.dispose();
 		if (selection && selection.device) {
 			const emulatorTypeLabel = this.emulatorLabel(selection.device.platformType);
 			switch (selection.device.type) {
