@@ -53,10 +53,10 @@ export class DartDebugSession extends DebugSession {
 	public noDebug?: boolean;
 	private logFile?: string;
 	private logStream?: fs.WriteStream;
-	public debugSdkLibraries: boolean;
-	public debugExternalLibraries: boolean;
-	public showDartDeveloperLogs: boolean;
-	public evaluateGettersInDebugViews: boolean;
+	public debugSdkLibraries = false;
+	public debugExternalLibraries = false;
+	public showDartDeveloperLogs = false;
+	public evaluateGettersInDebugViews = false;
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
 	protected sendStdOutToConsole: boolean = true;
@@ -175,6 +175,8 @@ export class DartDebugSession extends DebugSession {
 		this.cwd = args.cwd;
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
+		this.showDartDeveloperLogs = args.showDartDeveloperLogs;
+		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
 		this.logFile = args.observatoryLogFile;
 
 		this.log(`Attaching to process via ${args.observatoryUri}`);
