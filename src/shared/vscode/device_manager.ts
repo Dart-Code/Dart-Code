@@ -55,10 +55,19 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 	}
 
-	public deviceRemoved(dev: f.Device) {
+	public async deviceRemoved(dev: f.Device) {
 		this.devices = this.devices.filter((d) => d.id !== dev.id);
 		if (this.currentDevice && this.currentDevice.id === dev.id) {
-			this.currentDevice = this.devices.length === 0 ? undefined : this.devices[this.devices.length - 1];
+			this.currentDevice = undefined;
+
+			// Try to select the next-best device
+			if (this.devices.length) {
+				const supportedPlatforms = await this.getSupportedPlatformsForWorkspace();
+				const supportedDevices = this.devices.filter((d) => this.isSupported(supportedPlatforms, d));
+				if (supportedDevices && supportedDevices.length)
+					this.currentDevice = supportedDevices[0];
+			}
+
 			this.updateStatusBar();
 		}
 	}
