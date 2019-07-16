@@ -1,8 +1,10 @@
 import { Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { restartReasonManual } from "../../shared/constants";
-import { LogCategory } from "../../shared/enums";
+import { FlutterServiceExtension, LogCategory } from "../../shared/enums";
+import { DiagnosticsNode, DiagnosticsNodeType, FlutterErrorData } from "../../shared/flutter/structured_errors";
 import { Logger } from "../../shared/interfaces";
+import { grey, yellow } from "../../shared/utils/colors";
 import { extractObservatoryPort } from "../utils/vscode/debug";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
@@ -320,16 +322,77 @@ export class FlutterDebugSession extends DartDebugSession {
 		// const inspectee = (event as any).inspectee;
 	}
 
+	private handleFlutterErrorEvent(event: VMEvent) {
+		const error = event.extensionData as FlutterErrorData;
+		this.logFlutterErrorToUser(error);
+	}
+
+	private logFlutterErrorToUser(error: FlutterErrorData) {
+		const assumedTerminalSize = 120;
+		const stripeChar = "◢◤";
+		const charactersForStripes = Math.max((assumedTerminalSize - error.description.length), 8);
+		const header = yellow(stripeChar.repeat(charactersForStripes / stripeChar.length / 2)); //
+		this.logToUser(`${header} ${error.description.toUpperCase()} ${header}\n`, "stderr");
+		this.logDiagnosticNodeDescendents(error);
+		this.logToUser(`${yellow(stripeChar.repeat(assumedTerminalSize / stripeChar.length))}\n`, "stderr");
+	}
+
+	private logDiagnosticNodeToUser(node: DiagnosticsNode, level = 0) {
+		let line = " ".repeat(level * 4);
+		if (node.name && node.showName !== false) {
+			line += node.name;
+			if (node.showSeparator !== false && node.description)
+				line += ": ";
+		}
+		if (node.description)
+			line += node.description;
+		line = line.trimRight();
+
+		let colorText = (s: string) => s;
+		switch (node.type) {
+			case DiagnosticsNodeType.ErrorDescription:
+				break;
+			default:
+				colorText = grey;
+		}
+
+		this.logToUser(colorText(`${line}\n`), "stderr");
+
+		this.logDiagnosticNodeDescendents(node, level + 1);
+	}
+
+	private logDiagnosticNodeDescendents(node: DiagnosticsNode, level: number = 0) {
+		// TODO: How many levels should we render?
+		if (level > 1)
+			return;
+
+		if (node.children)
+			node.children.forEach((node) => this.logDiagnosticNodeToUser(node, level));
+		// TODO: Put blank line between non-hint/hints
+		if (node.properties)
+			node.properties.forEach((node) => this.logDiagnosticNodeToUser(node, level));
+	}
+
 	// Extension
 	public handleExtensionEvent(event: VMEvent) {
 		if (event.kind === "Extension" && event.extensionKind === "Flutter.FirstFrame") {
 			this.sendEvent(new Event("dart.flutter.firstFrame", {}));
 		} else if (event.kind === "Extension" && event.extensionKind === "Flutter.Frame") {
 			this.requestCoverageUpdate("frame");
+		} else if (event.kind === "Extension" && event.extensionKind === "Flutter.Error") {
+			this.handleFlutterErrorEvent(event);
 		} else if (event.kind === "Extension" && event.extensionKind === "Flutter.ServiceExtensionStateChanged") {
 			this.sendEvent(new Event("dart.flutter.serviceExtensionStateChanged", event.extensionData));
 		} else {
 			super.handleExtensionEvent(event);
+		}
+	}
+
+	public handleServiceExtensionAdded(event: VMEvent) {
+		super.handleServiceExtensionAdded(event);
+
+		if (event.extensionRPC === FlutterServiceExtension.InspectorStructuredErrors && this.useFlutterStructuredErrors) {
+			this.flutter.callServiceExtension(this.currentRunningAppId, event.extensionRPC, { enabled: true });
 		}
 	}
 }
