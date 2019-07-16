@@ -141,6 +141,10 @@ export class Analytics {
 			utv: TimingVariable[timingVariable],
 		};
 
+		this.logger.info(`${data.utc}:${data.utv} timing: ${Math.round(timeInMS)}ms`);
+		if (isDevExtension)
+			console.log(`${data.utc}:${data.utv} timing: ${Math.round(timeInMS)}ms`);
+
 		this.send(data);
 	}
 
