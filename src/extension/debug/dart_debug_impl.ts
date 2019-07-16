@@ -56,6 +56,7 @@ export class DartDebugSession extends DebugSession {
 	public debugSdkLibraries = false;
 	public debugExternalLibraries = false;
 	public showDartDeveloperLogs = true;
+	public useFlutterStructuredErrors = false;
 	public evaluateGettersInDebugViews = false;
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
@@ -122,6 +123,7 @@ export class DartDebugSession extends DebugSession {
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.showDartDeveloperLogs = args.showDartDeveloperLogs;
+		this.useFlutterStructuredErrors = args.useFlutterStructuredErrors;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
 		this.logFile = args.observatoryLogFile;
 		this.maxLogLineLength = args.maxLogLineLength;
