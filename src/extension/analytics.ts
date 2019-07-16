@@ -3,9 +3,9 @@ import * as querystring from "querystring";
 import { env, Uri, version as codeVersion, workspace } from "vscode";
 import { dartCodeExtensionIdentifier, isChromeOS } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
+import { extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../shared/workspace";
 import { config } from "./config";
-import { extensionVersion, hasFlutterExtension, isDevExtension } from "./utils";
 
 // Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.
 // This is only required for debugging analytics and needn't be sent for standard Dart Code development (dev hits are already filtered with isDevelopment).

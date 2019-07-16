@@ -3,8 +3,9 @@ import * as as from "../../shared/analysis_server_types";
 import { LogCategory } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { PromiseCompleter, versionIsAtLeast } from "../../shared/utils";
+import { extensionVersion } from "../../shared/vscode/extension_utils";
 import { config } from "../config";
-import { escapeShell, extensionVersion, reloadExtension } from "../utils";
+import { escapeShell, reloadExtension } from "../utils";
 import { AnalyzerGen } from "./analyzer_gen";
 
 export class AnalyzerCapabilities {

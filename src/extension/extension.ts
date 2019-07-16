@@ -10,6 +10,7 @@ import { captureLogs, EmittingLogger } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
 import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../shared/utils";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
+import { extensionVersion } from "../shared/vscode/extension_utils";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
 import { fsPath, getDartWorkspaceFolders, isRunningLocally } from "../shared/vscode/utils";
@@ -520,7 +521,7 @@ function buildLogHeaders(workspaceContext: WorkspaceContext) {
 	clearLogHeader();
 	addToLogHeader(() => `!! PLEASE REVIEW THIS LOG FOR SENSITIVE INFORMATION BEFORE SHARING !!`);
 	addToLogHeader(() => ``);
-	addToLogHeader(() => `Dart Code extension: ${util.extensionVersion}`);
+	addToLogHeader(() => `Dart Code extension: ${extensionVersion}`);
 	addToLogHeader(() => {
 		const ext = vs.extensions.getExtension(flutterExtensionIdentifier);
 		return `Flutter extension: ${ext.packageJSON.version} (${ext.isActive ? "" : "not "}activated)`;

@@ -2,8 +2,8 @@ import * as fs from "fs";
 import * as https from "https";
 import * as os from "os";
 import * as path from "path";
-import { commands, extensions, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
-import { dartCodeExtensionIdentifier, flutterExtensionIdentifier } from "../shared/constants";
+import { commands, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
+import { showLogAction } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
 import { isWithinPath } from "../shared/utils";
 import { hasPackagesFile, hasPubspec, mkDirRecursive } from "../shared/utils/fs";
@@ -11,13 +11,6 @@ import { fsPath, isDartWorkspaceFolder } from "../shared/vscode/utils";
 import { locateBestProjectRoot } from "./project";
 import { referencesFlutterSdk, referencesFlutterWeb } from "./sdk/utils";
 import { getExtensionLogPath } from "./utils/log";
-
-export let extensionPath = extensions.getExtension(dartCodeExtensionIdentifier).extensionPath;
-export const extensionVersion = getExtensionVersion();
-export const vsCodeVersionConstraint = getVsCodeVersionConstraint();
-export const isDevExtension = checkIsDevExtension();
-export const hasFlutterExtension = checkHasFlutterExtension();
-export const showLogAction = "Show Log";
 
 export const resolvedPromise = Promise.resolve(true);
 
@@ -192,28 +185,6 @@ export function isInsideFolderNamed(file: string, folderName: string): boolean {
 	const relPath = path.relative(fsPath(ws.uri), file).toLowerCase();
 
 	return relPath === folderName || relPath.startsWith(`${folderName}${path.sep}`);
-}
-
-export function readJson(file: string) {
-	return JSON.parse(fs.readFileSync(file).toString());
-}
-
-function getExtensionVersion(): string {
-	const packageJson = readJson(path.join(extensionPath, "package.json"));
-	return packageJson.version;
-}
-
-function getVsCodeVersionConstraint(): string {
-	const packageJson = readJson(path.join(extensionPath, "package.json"));
-	return packageJson.engines.vscode;
-}
-
-function checkIsDevExtension() {
-	return extensionVersion.endsWith("-dev");
-}
-
-export function checkHasFlutterExtension() {
-	return extensions.getExtension(flutterExtensionIdentifier) !== undefined;
 }
 
 export function getLatestSdkVersion(): PromiseLike<string> {

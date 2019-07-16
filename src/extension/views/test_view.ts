@@ -6,9 +6,9 @@ import { ErrorNotification, Group, GroupNotification, PrintNotification, Suite, 
 import { flatMap, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { getLaunchConfig } from "../../shared/utils/test";
+import { extensionPath } from "../../shared/vscode/extension_utils";
 import { fsPath } from "../../shared/vscode/utils";
 import { getChannel } from "../commands/channels";
-import { extensionPath } from "../utils";
 
 // TODO: Refactor all of this crazy logic out of test_view into its own class, so that consuming the test results is much
 // simpler and disconnected from the view!

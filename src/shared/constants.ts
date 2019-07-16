@@ -38,6 +38,7 @@ export const DART_DEP_FILE_NODE_CONTEXT = "dart-code:depFileNode";
 export const IS_RUNNING_LOCALLY_CONTEXT = "dart-code:isRunningLocally";
 
 export const stopLoggingAction = "Stop Logging";
+export const showLogAction = "Show Log";
 
 export const restartReasonManual = "manual";
 export const restartReasonSave = "save";

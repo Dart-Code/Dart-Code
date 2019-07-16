@@ -7,10 +7,11 @@ import { LogCategory } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { isStableSdk, PromiseCompleter } from "../../shared/utils";
 import { getRandomInt } from "../../shared/utils/fs";
+import { extensionVersion } from "../../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { extensionVersion, getSdkVersion } from "../utils";
+import { getSdkVersion } from "../utils";
 import { Analyzer } from "./analyzer";
 
 const maxErrorReportCount = 3;
