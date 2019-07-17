@@ -2,7 +2,7 @@ import { Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { restartReasonManual } from "../../shared/constants";
 import { FlutterServiceExtension, LogCategory } from "../../shared/enums";
-import { DiagnosticsNode, DiagnosticsNodeType, FlutterErrorData } from "../../shared/flutter/structured_errors";
+import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../../shared/flutter/structured_errors";
 import { Logger } from "../../shared/interfaces";
 import { grey, yellow } from "../../shared/utils/colors";
 import { extractObservatoryPort } from "../utils/vscode/debug";
@@ -331,13 +331,20 @@ export class FlutterDebugSession extends DartDebugSession {
 		const assumedTerminalSize = 120;
 		const stripeChar = "◢◤";
 		const charactersForStripes = Math.max((assumedTerminalSize - error.description.length), 8);
-		const header = yellow(stripeChar.repeat(charactersForStripes / stripeChar.length / 2)); //
-		this.logToUser(`${header} ${error.description.toUpperCase()} ${header}\n`, "stderr");
+		const header = stripeChar.repeat(charactersForStripes / stripeChar.length / 2); //
+		this.logToUser(yellow(`${header} ${error.description} ${header}\n`), "stderr");
 		this.logDiagnosticNodeDescendents(error);
 		this.logToUser(`${yellow(stripeChar.repeat(assumedTerminalSize / stripeChar.length))}\n`, "stderr");
 	}
 
-	private logDiagnosticNodeToUser(node: DiagnosticsNode, level = 0) {
+	private logDiagnosticNodeToUser(node: DiagnosticsNode, { parent, level = 0 }: { parent: DiagnosticsNode; level?: number; }) {
+		if (node.description && node.description.startsWith("◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤"))
+			return;
+
+		// TODO: Where should we show up to? Currently only doing top.
+		if (level > 0)
+			return;
+
 		let line = " ".repeat(level * 4);
 		if (node.name && node.showName !== false) {
 			line += node.name;
@@ -348,17 +355,23 @@ export class FlutterDebugSession extends DartDebugSession {
 			line += node.description;
 		line = line.trimRight();
 
-		let colorText = (s: string) => s;
-		switch (node.type) {
-			case DiagnosticsNodeType.ErrorDescription:
-				break;
-			default:
-				colorText = grey;
-		}
+		// For text that is not part of a stack trace and is not an Error or Summary we
+		// want to override the default red text for the stderr category to grey.
+		const isErrorMessage = node.level === DiagnosticsNodeLevel.Error
+			|| node.level === DiagnosticsNodeLevel.Summary;
+		const isTruncationText = node.description = "...";
+		const isStackFrame = parent.type === DiagnosticsNodeType.DiagnosticsStackTrace && !isTruncationText;
+		const colorText = isStackFrame || isErrorMessage
+			? (s: string) => s
+			: grey;
 
-		this.logToUser(colorText(`${line}\n`), "stderr");
+		this.logToUser(`${colorText(line)}\n`, "stderr");
 
-		this.logDiagnosticNodeDescendents(node, level + 1);
+		const childLevel = node.style === DiagnosticsNodeStyle.Flat
+			? level
+			: level + 1;
+
+		this.logDiagnosticNodeDescendents(node, childLevel);
 	}
 
 	private logDiagnosticNodeDescendents(node: DiagnosticsNode, level: number = 0) {
@@ -367,10 +380,10 @@ export class FlutterDebugSession extends DartDebugSession {
 			return;
 
 		if (node.children)
-			node.children.forEach((node) => this.logDiagnosticNodeToUser(node, level));
+			node.children.forEach((child) => this.logDiagnosticNodeToUser(child, { parent: node, level }));
 		// TODO: Put blank line between non-hint/hints
 		if (node.properties)
-			node.properties.forEach((node) => this.logDiagnosticNodeToUser(node, level));
+			node.properties.forEach((child) => this.logDiagnosticNodeToUser(child, { parent: node, level }));
 	}
 
 	// Extension
