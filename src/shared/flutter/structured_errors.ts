@@ -31,4 +31,5 @@ export enum DiagnosticsNodeLevel {
 
 export enum DiagnosticsNodeStyle {
 	Flat = "flat",
+	Shallow = "shallow",
 }
