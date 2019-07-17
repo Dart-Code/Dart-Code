@@ -151,13 +151,19 @@ export class DartDebugSession extends DebugSession {
 		process.on("error", (error) => {
 			this.logToUser(`${error}\n`, "stderr");
 		});
-		process.on("exit", (code, signal) => {
+		process.on("exit", async (code, signal) => {
 			this.processExited = true;
 			this.log(`Process exited (${signal ? `${signal}`.toLowerCase() : code})`);
 			if (!code && !signal)
 				this.logToUser("Exited\n");
 			else
 				this.logToUser(`Exited (${signal ? `${signal}`.toLowerCase() : code})\n`);
+			// To reduce the chances of losing async logs, wait a short period
+			// before terminating.
+			await Promise.race([
+				this.lastLoggingEvent,
+				new Promise((resolve) => setTimeout(resolve, 500)),
+			]);
 			this.sendEvent(new TerminatedEvent());
 		});
 
@@ -1158,16 +1164,46 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	// Logging
-	public handleLoggingEvent(event: VMEvent) {
+	private lastLoggingEvent = Promise.resolve();
+	public async handleLoggingEvent(event: VMEvent): Promise<void> {
+		// Logging may involve async operations (for ex. fetching exception text
+		// and calls tacks) so we must ensure each log is not processed until
+		// the previous one has been processed.
+		this.lastLoggingEvent = this.lastLoggingEvent.then(() => this.processLoggingEvent(event));
+	}
+
+	// Logging
+	public async processLoggingEvent(event: VMEvent): Promise<void> {
 		const kind = event.kind;
 		if (kind === "Logging" && event.logRecord) {
 			const record = event.logRecord;
 
-			if (record && record.message && record.message.valueAsString) {
-				this.logToUser(event.logRecord.message.valueAsString);
-				if (record.message.valueAsStringIsTruncated)
-					this.logToUser("…");
-				this.logToUser("\n");
+			if (record) {
+				const name = record.loggerName ? this.valueAsString(record.loggerName, false, true) : undefined;
+				const logPrefix = `[${name || "log"}] `;
+				let indent = " ".repeat(logPrefix.length);
+
+				if (record.message) {
+					const message = (record.message.valueAsString || "<empty message>")
+						+ (record.message.valueAsStringIsTruncated ? "…" : "");
+					const indentedMessage = `${col.grey(logPrefix)}${message.split("\n").join(`\n${indent}`)}`;
+					this.logToUser(`${indentedMessage.trimRight()}\n`);
+				}
+				indent += "  ";
+				if (record.error && record.error.kind !== "Null") {
+					const message = await this.fullValueAsString(event.isolate, record.error);
+					if (message) {
+						const indentedMessage = `${indent}${message.split("\n").join(`\n${indent}`)}`;
+						this.logToUser(`${indentedMessage.trimRight()}\n`, "stderr");
+					}
+				}
+				if (record.stackTrace && record.stackTrace.kind !== "Null") {
+					const message = await this.fullValueAsString(event.isolate, record.stackTrace);
+					if (message) {
+						const indentedMessage = `${indent}${message.split("\n").join(`\n${indent}`)}`;
+						this.logToUser(`${indentedMessage.trimRight()}\n`, "stderr");
+					}
+				}
 			}
 		}
 	}
