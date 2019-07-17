@@ -379,9 +379,9 @@ export class FlutterDebugSession extends DartDebugSession {
 		if (level > 1)
 			return;
 
-		if (node.children)
+		if (node.style !== DiagnosticsNodeStyle.Shallow && node.children)
 			node.children.forEach((child) => this.logDiagnosticNodeToUser(child, { parent: node, level }));
-		// TODO: Put blank line between non-hint/hints
+		// TODO: Put blank line between non-hint/hints?
 		if (node.properties)
 			node.properties.forEach((child) => this.logDiagnosticNodeToUser(child, { parent: node, level }));
 	}
