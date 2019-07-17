@@ -144,7 +144,7 @@ export function killFlutterTester(): Promise<void> {
 			? extApi.safeSpawn(undefined, "taskkill", ["/IM", "flutter_tester.exe", "/F"])
 			: extApi.safeSpawn(undefined, "pkill", ["flutter_tester"]);
 		proc.on("exit", (code: number) => {
-			if (!isWin ? code !== 128 : code === 0) {
+			if (isWin ? code !== 128 : code === 0) {
 				logger.warn("flutter_tester process(s) remained after test. These have been terminated to avoid affecting future tests, " +
 					"but may indicate something is not cleaning up correctly", LogCategory.CI);
 			}
