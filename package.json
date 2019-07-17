@@ -797,7 +797,7 @@
 				},
 				"dart.showDartDeveloperLogs": {
 					"type": "boolean",
-					"default": false,
+					"default": true,
 					"description": "Whether to show logs from dart:developer's log() function in the debug console.",
 					"scope": "resource"
 				},

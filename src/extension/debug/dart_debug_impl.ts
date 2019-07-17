@@ -55,7 +55,7 @@ export class DartDebugSession extends DebugSession {
 	private logStream?: fs.WriteStream;
 	public debugSdkLibraries = false;
 	public debugExternalLibraries = false;
-	public showDartDeveloperLogs = false;
+	public showDartDeveloperLogs = true;
 	public evaluateGettersInDebugViews = false;
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
