@@ -292,8 +292,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			});
 			if (firstRelevantError) {
 				logger.warn("Project has errors, prompting user");
-				logger.warn(`    ${fsPath(firstRelevantError[0])}`);
-				logger.warn(`    ${firstRelevantError[1][0].range}: ${firstRelevantError[1][0].message}`);
+				const range = firstRelevantError[1][0].range;
+				logger.warn(`    ${fsPath(firstRelevantError[0])}:${range.start.line}:${range.start.character}`);
+				logger.warn(`    ${firstRelevantError[1][0].message.split("\n")[0].trim()}`);
 				const action = await window.showErrorMessage(
 					"Build errors exist in your project.",
 					{ modal: true },
