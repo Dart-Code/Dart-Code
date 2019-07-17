@@ -1158,16 +1158,26 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	// Logging
-	public handleLoggingEvent(event: VMEvent) {
+	public async handleLoggingEvent(event: VMEvent): Promise<void> {
 		const kind = event.kind;
 		if (kind === "Logging" && event.logRecord) {
 			const record = event.logRecord;
 
-			if (record && record.message && record.message.valueAsString) {
-				this.logToUser(event.logRecord.message.valueAsString);
-				if (record.message.valueAsStringIsTruncated)
-					this.logToUser("…");
-				this.logToUser("\n");
+			if (record) {
+				if (record.message && record.message.valueAsString) {
+					this.logToUser(event.logRecord.message.valueAsString);
+					if (record.message.valueAsStringIsTruncated)
+						this.logToUser("…");
+					this.logToUser("\n");
+				}
+				if (record.error) {
+					const exceptionText = await this.fullValueAsString(event.isolate, record.error);
+					this.logToUser(`${exceptionText}\n`);
+				}
+				if (record.stackTrace) {
+					const stacktraceText = await this.fullValueAsString(event.isolate, record.stackTrace);
+					this.logToUser(`${stacktraceText}\n`);
+				}
 			}
 		}
 	}
@@ -1294,7 +1304,7 @@ export class DartDebugSession extends DebugSession {
 		if (instanceRef.kind === "PlainInstance" && instanceRef.class && instanceRef.class.name) {
 			if (text === `Instance of '${instanceRef.class.name}'`)
 				text = instanceRef.class.name;
-			else
+			else if (!text.startsWith(instanceRef.class.name))
 				text = `${instanceRef.class.name} (${text})`;
 		}
 		return text;
