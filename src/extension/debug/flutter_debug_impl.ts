@@ -341,6 +341,9 @@ export class FlutterDebugSession extends DartDebugSession {
 		if (node.description && node.description.startsWith("◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤"))
 			return;
 
+		if (node.type === DiagnosticsNodeType.ErrorSpacer)
+			return;
+
 		// TODO: Where should we show up to? Currently only doing top.
 		if (level > 0)
 			return;
