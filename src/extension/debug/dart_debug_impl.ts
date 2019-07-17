@@ -23,8 +23,8 @@ const maxValuesToCallToString = 15;
 // Prefix that appears at the start of stack frame names that are unoptimized
 // which we'd prefer not to show to the user.
 const unoptimizedPrefix = "[Unoptimized] ";
-const stackFrameWithUriPattern = new RegExp(`(.*#\\d+)(.*)\\(((?:package|dart|file):.*\\.dart):(\\d+):(\\d+)\\)\\s*$`);
-const webStackFrameWithUriPattern = new RegExp(`((?:package|dart|file):.*\\.dart) (\\d+):(\\d+)\\s*(\\S+)\\s*$`);
+const stackFrameWithUriPattern = new RegExp(`(.*#\\d+)(.*)\\(((?:package|dart|file):.*\\.dart):(\\d+):(\\d+)\\)\\s*$`, "m");
+const webStackFrameWithUriPattern = new RegExp(`((?:package|dart|file):.*\\.dart) (\\d+):(\\d+)\\s*(\\S+)\\s*$`, "m");
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -1704,8 +1704,9 @@ export class DartDebugSession extends DebugSession {
 				|| (this.isExternalLibrary(frame.sourceUri) && frame.sourceUri.startsWith("package:flutter/"))
 				|| (this.isExternalLibrary(frame.sourceUri) && frame.sourceUri.startsWith("package:flutter_web/"));
 
+			text = `${frame.prefix || ""}${text}`;
 			const colouredText = isFramework ? col.grey(text) : text;
-			output.body.output = `${frame.prefix || ""}${colouredText}\n`;
+			output.body.output = `${colouredText}\n`;
 		}
 
 		this.sendEvent(output);
