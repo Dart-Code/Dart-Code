@@ -359,7 +359,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		// want to override the default red text for the stderr category to grey.
 		const isErrorMessage = node.level === DiagnosticsNodeLevel.Error
 			|| node.level === DiagnosticsNodeLevel.Summary;
-		const isTruncationText = node.description = "...";
+		const isTruncationText = node.description === "...";
 		const isStackFrame = parent.type === DiagnosticsNodeType.DiagnosticsStackTrace && !isTruncationText;
 		const colorText = isStackFrame || isErrorMessage
 			? (s: string) => s
