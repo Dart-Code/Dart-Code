@@ -1,4 +1,4 @@
-import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, DiagnosticTag, Uri } from "vscode";
+import { Diagnostic, DiagnosticCollection, DiagnosticRelatedInformation, DiagnosticSeverity, DiagnosticTag, Location, Uri } from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { Analyzer } from "../analysis/analyzer";
 import { config } from "../config";
@@ -51,7 +51,19 @@ export class DartDiagnosticProvider {
 		diag.type = error.type;
 		if (error.correction)
 			diag.message += `\n${error.correction}`;
+		if (error.contextMessages && error.contextMessages.length)
+			diag.relatedInformation = error.contextMessages.map(DartDiagnosticProvider.createRelatedInformation);
 		return diag;
+	}
+
+	public static createRelatedInformation(related: as.DiagnosticMessage) {
+		return new DiagnosticRelatedInformation(
+			new Location(
+				Uri.file(related.location.file),
+				toRangeOnLine(related.location),
+			),
+			related.message,
+		);
 	}
 
 	public static getSeverity(severity: as.AnalysisErrorSeverity, type: as.AnalysisErrorType): DiagnosticSeverity {
