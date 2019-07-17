@@ -468,7 +468,7 @@ export class DebugClient extends ProtocolClient {
 
 				const actualLocation: ILocation = {
 					column: bp.column,
-					line: bp.line || -1,
+					line: bp.line,
 					path: bp.source && bp.source.path
 				};
 				this.assertPartialLocationsEqual(actualLocation, expectedBPLocation || location);
