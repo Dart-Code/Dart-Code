@@ -366,6 +366,8 @@ export class FlutterDebugSession extends DartDebugSession {
 			: grey;
 
 		this.logToUser(`${colorText(line)}\n`, "stderr");
+		if (node.level === DiagnosticsNodeLevel.Summary)
+			this.logToUser("\n");
 
 		const childLevel = node.style === DiagnosticsNodeStyle.Flat
 			? level
