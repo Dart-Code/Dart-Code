@@ -6,8 +6,8 @@ import '../lib/main.dart' as hello_world;
 // built from the tree provider in the test. It must be maintained to match
 // the results from teh tests below.
 // == EXPECTED RESULTS ==
-// test/widget_test.dart (Passed)
-//     Hello world test (Passed)
+// test/widget_test.dart (pass.svg)
+//     Hello world test (pass.svg)
 // == /EXPECTED RESULTS ==
 
 void main() {

@@ -5,14 +5,14 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { dartCodeExtensionIdentifier, DART_TEST_SUITE_NODE_CONTEXT } from "../shared/constants";
-import { LogCategory, TestStatus } from "../shared/enums";
+import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
 import { BufferedLogger, flatMap } from "../shared/utils";
 import { tryDeleteFile } from "../shared/utils/fs";
 import { waitFor } from "../shared/utils/promises";
-import { DelayedCompletionItem, InternalExtensionApi, TestItemTreeItem, TestResultsProvider } from "../shared/vscode/interfaces";
+import { DelayedCompletionItem, InternalExtensionApi } from "../shared/vscode/interfaces";
 import { fsPath } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 
@@ -830,21 +830,32 @@ export function renderedItemLabel(item: vs.TreeItem): string {
 	return item.label || path.basename(fsPath(item.resourceUri));
 }
 
-export async function makeTextTree(suite: vs.Uri, provider: TestResultsProvider, parent?: TestItemTreeItem, buffer: string[] = [], indent = 0): Promise<string[]> {
-	const items = (await provider.getChildren(parent))
+export async function makeTextTree(parent: vs.TreeItem | vs.Uri | undefined, provider: vs.TreeDataProvider<vs.TreeItem>, buffer: string[] = [], indent = 0): Promise<string[]> {
+	const parentNode = parent instanceof vs.TreeItem ? parent : undefined;
+	const parentResourceUri = parent instanceof vs.Uri ? parent : undefined;
+
+	const items = (await provider.getChildren(parentNode))
 		// Filter to only the suite we were given (though includes all children).
-		.filter((item) => (fsPath(item.resourceUri!) === fsPath(suite)) || !!parent);
-	const wsPath = fsPath(vs.workspace.getWorkspaceFolder(suite)!.uri);
+		.filter((item) => !parentResourceUri || fsPath(item.resourceUri!) === fsPath(parentResourceUri));
 	for (const item of items) {
 		// Suites don't have a .label (since the rendering is based on the resourceUri) so just
 		// fabricate one here that can be compared in the test. Note: For simplity we always use
 		// forward slashes in these names, since the comparison is against hard-coded comments
 		// in the file that can only be on way.
 		const expectedLabel = item.contextValue === DART_TEST_SUITE_NODE_CONTEXT
-			? path.relative(wsPath, fsPath(item.resourceUri!)).replace("\\", "/")
+			? path.relative(
+				fsPath(vs.workspace.getWorkspaceFolder(item.resourceUri)!.uri),
+				fsPath(item.resourceUri!),
+			).replace("\\", "/")
 			: item.label;
-		buffer.push(`${" ".repeat(indent * 4)}${expectedLabel} (${TestStatus[item.status]})`);
-		await makeTextTree(suite, provider, item, buffer, indent + 1);
+		const iconUri = item.iconPath instanceof vs.Uri
+			? item.iconPath
+			: "dark" in (item.iconPath as any)
+				? (item.iconPath as any).dark
+				: undefined;
+		const iconFile = iconUri instanceof vs.Uri ? path.basename(fsPath(iconUri)).replace("_stale", "") : "<unknown icon>";
+		buffer.push(`${" ".repeat(indent * 4)}${expectedLabel} (${iconFile})`);
+		await makeTextTree(item, provider, buffer, indent + 1);
 	}
 	return buffer;
 }
