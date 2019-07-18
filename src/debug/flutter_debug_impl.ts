@@ -1,6 +1,5 @@
 import { Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { extractObservatoryPort } from "../extension/utils/vscode/debug";
 import { restartReasonManual } from "../shared/constants";
 import { FlutterServiceExtension, LogCategory } from "../shared/enums";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
@@ -140,18 +139,8 @@ export class FlutterDebugSession extends DartDebugSession {
 		if (isAttach) {
 			const flutterAttach: FlutterAttachRequestArguments = args as any;
 			if (flutterAttach.observatoryUri) {
-				if (args.flutterAttachSupportsUris) {
-					appArgs.push("--debug-uri");
-					appArgs.push(flutterAttach.observatoryUri);
-				} else {
-					const observatoryPort = extractObservatoryPort(flutterAttach.observatoryUri);
-					if (observatoryPort) {
-						appArgs.push("--debug-port");
-						appArgs.push(observatoryPort.toString());
-					} else {
-						logger.warn(`Observatory port was not found: ${flutterAttach.observatoryUri}`);
-					}
-				}
+				appArgs.push("--debug-uri");
+				appArgs.push(flutterAttach.observatoryUri);
 			}
 		}
 
