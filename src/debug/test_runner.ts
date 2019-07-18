@@ -1,5 +1,5 @@
-import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { StdIOService } from "../services/stdio_service";
+import { StdIOService } from "../extension/services/stdio_service";
+import { IAmDisposable, Logger } from "../shared/interfaces";
 
 export class TestRunner extends StdIOService<{ type: string }> {
 	constructor(executable: string, projectFolder: string | undefined, args: string[], envOverrides: any, logFile: string, logger: Logger, maxLogLineLength: number) {

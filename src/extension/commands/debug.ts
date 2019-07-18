@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { CoverageData } from "../../debug/utils";
 import { FlutterServiceExtension, LogSeverity } from "../../shared/enums";
 import { Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
@@ -10,7 +11,6 @@ import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../../shared/vsc
 import { Context } from "../../shared/vscode/workspace";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
-import { CoverageData } from "../debug/utils";
 import { FlutterServiceExtensionArgs, FlutterVmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../flutter/vm_service_extensions";
 import { DebuggerType } from "../providers/debug_config_provider";
 import { PubGlobal } from "../pub/global";

@@ -1,9 +1,9 @@
 import { Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { LogCategory } from "../../shared/enums";
-import { Logger } from "../../shared/interfaces";
-import { PromiseCompleter } from "../../shared/utils";
-import { isKnownInfrastructureThread } from "../../shared/utils/debugger";
+import { LogCategory } from "../shared/enums";
+import { Logger } from "../shared/interfaces";
+import { PromiseCompleter } from "../shared/utils";
+import { isKnownInfrastructureThread } from "../shared/utils/debugger";
 import { DartDebugSession, InstanceWithEvaluateName, VmExceptionMode } from "./dart_debug_impl";
 import { DebuggerResult, VMBreakpoint, VMInstanceRef, VMIsolate, VMIsolateRef, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
 

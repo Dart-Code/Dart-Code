@@ -1,5 +1,5 @@
-import { LogCategory } from "../../shared/enums";
-import { globalFlutterArgs } from "../utils/processes";
+import { globalFlutterArgs } from "../extension/utils/processes";
+import { LogCategory } from "../shared/enums";
 import { DartTestDebugSession } from "./dart_test_debug_impl";
 import { DebugAdapterLogger } from "./logging";
 import { FlutterLaunchRequestArguments } from "./utils";
