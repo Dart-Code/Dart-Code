@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, window } from "vscode";
+import { PackageMap } from "../../debug/package_map";
 import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, isWin, showLogAction } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter } from "../../shared/utils";
@@ -9,7 +10,6 @@ import { fsPath, getDartWorkspaceFolders, openInBrowser } from "../../shared/vsc
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { PackageMap } from "../debug/package_map";
 import { getSdkVersion, notUndefined, openExtensionLogFile, reloadExtension, resolvePaths } from "../utils";
 
 // TODO: Tidy this class up (it exists mainly to share logger).

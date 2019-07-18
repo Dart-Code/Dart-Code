@@ -1,9 +1,9 @@
 import * as path from "path";
 import { Event, OutputEvent } from "vscode-debugadapter";
-import { observatoryHttpLinkPattern } from "../../shared/constants";
-import { LogCategory } from "../../shared/enums";
-import { Logger } from "../../shared/interfaces";
-import { ErrorNotification, GroupNotification, PrintNotification, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../../shared/test_protocol";
+import { observatoryHttpLinkPattern } from "../shared/constants";
+import { LogCategory } from "../shared/enums";
+import { Logger } from "../shared/interfaces";
+import { ErrorNotification, GroupNotification, PrintNotification, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
 import { DartDebugSession } from "./dart_debug_impl";
 import { DebugAdapterLogger } from "./logging";
 import { TestRunner } from "./test_runner";

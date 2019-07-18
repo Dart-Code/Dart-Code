@@ -1,12 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { PackageMap } from "../../debug/package_map";
 import { DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { sortBy } from "../../shared/utils/array";
 import { findProjectFolders } from "../../shared/utils/fs";
 import { fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
-import { PackageMap } from "../debug/package_map";
 
 export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<PackageDep> {
 	private readonly watcher: vs.FileSystemWatcher;

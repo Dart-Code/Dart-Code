@@ -1,7 +1,7 @@
-import { LogCategory } from "../../shared/enums";
-import { Logger } from "../../shared/interfaces";
-import { CategoryLogger } from "../../shared/logging";
-import { globalFlutterArgs } from "../utils/processes";
+import { globalFlutterArgs } from "../extension/utils/processes";
+import { LogCategory } from "../shared/enums";
+import { Logger } from "../shared/interfaces";
+import { CategoryLogger } from "../shared/logging";
 import { FlutterRunBase, RunMode } from "./flutter_run_base";
 
 export class FlutterRun extends FlutterRunBase {

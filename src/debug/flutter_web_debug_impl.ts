@@ -1,5 +1,5 @@
-import { LogCategory } from "../../shared/enums";
-import { Logger } from "../../shared/interfaces";
+import { LogCategory } from "../shared/enums";
+import { Logger } from "../shared/interfaces";
 import { FlutterDebugSession } from "./flutter_debug_impl";
 import { FlutterRunBase, RunMode } from "./flutter_run_base";
 import { FlutterWebRun } from "./flutter_web_run";

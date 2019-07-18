@@ -1,11 +1,11 @@
 import * as path from "path";
 import * as vs from "vscode";
+import { CoverageData } from "../../debug/utils";
 import { Logger } from "../../shared/interfaces";
 import { uniq } from "../../shared/utils";
 import { extensionPath } from "../../shared/vscode/extension_utils";
 import { fsPath } from "../../shared/vscode/utils";
 import { DebugCommands } from "../commands/debug";
-import { CoverageData } from "../debug/utils";
 
 export class HotReloadCoverageDecorations implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];

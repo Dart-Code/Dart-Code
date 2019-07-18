@@ -1,10 +1,10 @@
 import { CancellationToken, Hover, HoverProvider, Position, Range, TextDocument, Uri } from "vscode";
+import { PackageMap } from "../../debug/package_map";
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { cleanDartdoc } from "../../shared/utils/dartdocs";
 import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
-import { PackageMap } from "../debug/package_map";
 
 export class DartHoverProvider implements HoverProvider {
 	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer) { }

@@ -1,11 +1,11 @@
 import { Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { restartReasonManual } from "../../shared/constants";
-import { FlutterServiceExtension, LogCategory } from "../../shared/enums";
-import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../../shared/flutter/structured_errors";
-import { Logger } from "../../shared/interfaces";
-import { grey, yellow } from "../../shared/utils/colors";
-import { extractObservatoryPort } from "../utils/vscode/debug";
+import { extractObservatoryPort } from "../extension/utils/vscode/debug";
+import { restartReasonManual } from "../shared/constants";
+import { FlutterServiceExtension, LogCategory } from "../shared/enums";
+import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
+import { Logger } from "../shared/interfaces";
+import { grey, yellow } from "../shared/utils/colors";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
