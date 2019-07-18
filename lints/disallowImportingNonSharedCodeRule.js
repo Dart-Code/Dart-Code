@@ -6,9 +6,10 @@ const Lint = require("tslint");
 
 class Rule extends Lint.Rules.AbstractRule {
 	apply(sourceFile) {
-		// if (sourceFile.fileName.indexOf("src/test/") !== -1) {
-		return this.applyWithWalker(new NoNonSharedCode(sourceFile, this.getOptions()));
-		// }
+		// Remove this if statement when the below is uncommented too.
+		if (sourceFile.fileName.indexOf("src/debug/") === -1) {
+			return this.applyWithWalker(new NoNonSharedCode(sourceFile, this.getOptions()));
+		}
 	}
 }
 Rule.DEBUG_FAILURE_STRING = "Do not import debugger code because it is expected to run in another process.";
@@ -21,6 +22,7 @@ class NoNonSharedCode extends Lint.RuleWalker {
 		// if (node.moduleSpecifier.text.indexOf("../debug/") !== -1) {
 		// 	this.addFailure(this.createFailure(node.getStart(), node.getWidth(), Rule.DEBUG_FAILURE_STRING));
 		// }
+
 		if (node.moduleSpecifier.text.indexOf("../extension/") !== -1) {
 			this.addFailure(this.createFailure(node.getStart(), node.getWidth(), Rule.EXTENSION_FAILURE_STRING));
 		}
