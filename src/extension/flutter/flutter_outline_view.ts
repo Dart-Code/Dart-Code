@@ -17,38 +17,49 @@ const WIDGET_SUPPORTS_CONTEXT_PREFIX = "dart-code:widgetSupports:";
 
 export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidgetItem>, vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
-	private activeEditor: vs.TextEditor;
-	private flutterOutline: as.FlutterOutlineNotification;
-	private rootNode: FlutterWidgetItem;
+	private activeEditor: vs.TextEditor | undefined;
+	private flutterOutline: as.FlutterOutlineNotification | undefined;
+	private rootNode: FlutterWidgetItem | undefined;
 	private treeNodesByLine: { [key: number]: FlutterWidgetItem[]; } = [];
-	private updateTimeout: NodeJS.Timer;
+	private updateTimeout: NodeJS.Timer | undefined;
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<FlutterWidgetItem | undefined> = new vs.EventEmitter<FlutterWidgetItem | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<FlutterWidgetItem | undefined> = this.onDidChangeTreeDataEmitter.event;
 	private lastSelectedWidget: FlutterWidgetItem | undefined;
 
 	constructor(private readonly analyzer: Analyzer) {
 		this.analyzer = analyzer;
-		this.analyzer.registerForFlutterOutline((n) => {
-			if (this.activeEditor && n.file === fsPath(this.activeEditor.document.uri)) {
-				this.flutterOutline = n;
-				this.treeNodesByLine = [];
-				// Delay this so if we're getting lots of updates we don't flicker.
-				clearTimeout(this.updateTimeout);
-				this.updateTimeout = setTimeout(() => this.update(), 200);
+		this.analyzer.registerForServerConnected((c) => {
+			if (analyzer.capabilities.supportsFlutterOutline) {
+				this.analyzer.registerForFlutterOutline((n) => {
+					if (this.activeEditor && n.file === fsPath(this.activeEditor.document.uri)) {
+						this.flutterOutline = n;
+						this.treeNodesByLine = [];
+						// Delay this so if we're getting lots of updates we don't flicker.
+						clearTimeout(this.updateTimeout);
+						if (!this.rootNode)
+							this.update();
+						else
+							this.updateTimeout = setTimeout(() => this.update(), 200);
+					}
+				});
+
+				this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.setTrackingFile(e)));
+				if (vs.window.activeTextEditor) {
+					this.setTrackingFile(vs.window.activeTextEditor);
+				}
 			}
 		});
-
-		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.setTrackingFile(e)));
-		if (vs.window.activeTextEditor) {
-			this.setTrackingFile(vs.window.activeTextEditor);
-		}
 	}
 
 	private async update() {
 		// Build the tree from our outline
-		this.rootNode = await this.createTreeNode(null, this.flutterOutline.outline, this.activeEditor);
-
-		FlutterOutlineProvider.showTree();
+		if (this.flutterOutline) {
+			this.rootNode = await this.createTreeNode(null, this.flutterOutline.outline, this.activeEditor);
+			FlutterOutlineProvider.showTree();
+		} else {
+			this.rootNode = undefined;
+			FlutterOutlineProvider.hideTree();
+		}
 		this.refresh();
 	}
 
@@ -77,6 +88,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 		if (editor && isAnalyzable(editor.document)) {
 			this.activeEditor = editor;
 			this.flutterOutline = null;
+			this.rootNode = null;
 			this.refresh(); // Force update (to nothing) while requests are in-flight.
 			this.analyzer.forceNotificationsFor(fsPath(editor.document.uri));
 		} else if (editor && editor.document.uri.scheme === "file") {
@@ -133,8 +145,8 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 		}
 	}
 
-	public getNodeAt(uri: vs.Uri, pos: vs.Position) {
-		if (this.flutterOutline.file !== fsPath(uri) || !this.treeNodesByLine[pos.line])
+	public getNodeAt(uri: vs.Uri, pos: vs.Position): FlutterWidgetItem | undefined {
+		if (!this.flutterOutline || this.flutterOutline.file !== fsPath(uri) || !this.treeNodesByLine[pos.line])
 			return;
 
 		const offset = this.activeEditor.document.offsetAt(pos);
@@ -163,9 +175,11 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 	}
 
 	public getChildren(element?: FlutterWidgetItem): FlutterWidgetItem[] {
-		return element
-			? element.children
-			: this.rootNode.children;
+		if (element)
+			return element.children || [];
+		if (this.rootNode)
+			return this.rootNode.children || [];
+		return [];
 	}
 
 	public getParent(element: FlutterWidgetItem): FlutterWidgetItem {

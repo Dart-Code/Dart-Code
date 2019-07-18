@@ -71,6 +71,7 @@ export const helloWorldTestSkipFile = vs.Uri.file(path.join(fsPath(helloWorldFol
 export const flutterHelloWorldFolder = vs.Uri.file(path.join(testFolder, "test_projects/flutter_hello_world"));
 export const flutterEmptyFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/empty.dart"));
 export const flutterHelloWorldMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/main.dart"));
+export const flutterHelloWorldOutlineFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/outline.dart"));
 export const flutterHelloWorldExampleSubFolder = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "example"));
 export const flutterHelloWorldExampleSubFolderMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldExampleSubFolder), "lib/main.dart"));
 export const flutterHelloWorldBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/broken.dart"));
@@ -853,7 +854,7 @@ export async function makeTextTree(parent: vs.TreeItem | vs.Uri | undefined, pro
 			: "dark" in (item.iconPath as any)
 				? (item.iconPath as any).dark
 				: undefined;
-		const iconFile = iconUri instanceof vs.Uri ? path.basename(fsPath(iconUri)).replace("_stale", "") : "<unknown icon>";
+		const iconFile = iconUri instanceof vs.Uri ? path.basename(fsPath(iconUri)).replace("_stale", "").replace("-dark", "") : "<unknown icon>";
 		buffer.push(`${" ".repeat(indent * 4)}${expectedLabel} (${iconFile})`);
 		await makeTextTree(item, provider, buffer, indent + 1);
 	}
