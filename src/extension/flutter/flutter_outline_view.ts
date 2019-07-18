@@ -4,11 +4,12 @@ import * as path from "path";
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { nullLogger } from "../../shared/logging";
+import { extensionPath } from "../../shared/vscode/extension_utils";
 import { getIconForSymbolKind } from "../../shared/vscode/mappings";
 import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
 import { flutterOutlineCommands } from "../commands/flutter_outline";
-import { extensionPath, isAnalyzable } from "../utils";
+import { isAnalyzable } from "../utils";
 
 const DART_SHOW_FLUTTER_OUTLINE = "dart-code:showFlutterOutline";
 const WIDGET_SELECTED_CONTEXT = "dart-code:isSelectedWidget";
