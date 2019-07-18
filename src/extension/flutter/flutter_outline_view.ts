@@ -215,12 +215,12 @@ export class FlutterWidgetItem extends vs.TreeItem {
 		);
 
 		if (isWidget(outline)) {
-			this.iconPath = path.join(extensionPath, "media/icons/flutter.svg");
+			this.iconPath = vs.Uri.file(path.join(extensionPath, "media/icons/flutter_widget.svg"));
 		} else if (outline.dartElement) {
 			const icon = getIconForSymbolKind(getSymbolKindForElementKind(nullLogger, outline.dartElement.kind));
 			this.iconPath = {
-				dark: path.join(extensionPath, `media/icons/vscode_symbols/${icon}-dark.svg`),
-				light: path.join(extensionPath, `media/icons/vscode_symbols/${icon}-light.svg`),
+				dark: vs.Uri.file(path.join(extensionPath, `media/icons/vscode_symbols/${icon}-dark.svg`)),
+				light: vs.Uri.file(path.join(extensionPath, `media/icons/vscode_symbols/${icon}-light.svg`)),
 			};
 		}
 
