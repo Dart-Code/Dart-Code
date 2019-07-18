@@ -4,6 +4,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { debugAnywayAction, platformEol, showErrorsAction } from "../../../shared/constants";
 import { fetch } from "../../../shared/fetch";
+import { grey } from "../../../shared/utils/colors";
 import { getRandomInt } from "../../../shared/utils/fs";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
@@ -131,7 +132,7 @@ describe("dart cli debugger", () => {
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", "Hello, world!"),
-			dc.assertOutput("console", "Logging from dart:developer!"),
+			dc.assertOutput("console", `${grey("[log] ")}Logging from dart:developer!`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
