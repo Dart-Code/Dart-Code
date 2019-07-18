@@ -10,12 +10,12 @@ import { VmServiceCapabilities } from "../shared/capabilities/vm_service";
 import { observatoryListeningBannerPattern, pleaseReportBug } from "../shared/constants";
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { LogMessage } from "../shared/interfaces";
+import { PackageMap } from "../shared/pub/package_map";
 import { flatMap, throttle, uniq, uriToFilePath } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
 import * as col from "../shared/utils/colors";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
-import { PackageMap } from "./package_map";
 import { ThreadInfo, ThreadManager } from "./threads";
 import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm } from "./utils";
 
