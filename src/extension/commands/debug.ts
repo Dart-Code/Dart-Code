@@ -233,7 +233,7 @@ export class DebugCommands {
 
 	public handleDebugSessionStart(s: vs.DebugSession): void {
 		if (s.type === "dart") {
-			const session = new DartDebugSessionInformation(s);
+			const session = new DartDebugSessionInformation(s, s.configuration ? DebuggerType[s.configuration.debuggerType] : "<unknown>");
 			// If we're the first fresh debug session, reset all settings to default.
 			// Subsequent launches will inherit the "current" values.
 			if (debugSessions.length === 0)
@@ -278,7 +278,7 @@ export class DebugCommands {
 		this.clearProgressIndicators(session);
 		this.debugMetrics.hide();
 		const debugSessionEnd = new Date();
-		this.analytics.logDebugSessionDuration(debugSessionEnd.getTime() - session.sessionStart.getTime());
+		this.analytics.logDebugSessionDuration(session.debuggerType, debugSessionEnd.getTime() - session.sessionStart.getTime());
 		// If this was the last session terminating, then remove all the flags for which service extensions are supported.
 		// Really we should track these per-session, but the changes of them being different given we only support one
 		// SDK at a time are practically zero.

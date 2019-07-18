@@ -97,7 +97,7 @@ export class Analytics {
 	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
 	public logAnalyzerError(description: string, fatal: boolean) { this.error("AS: " + description, fatal); }
 	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
-	public logDebugSessionDuration(timeInMS: number) { this.time(Category.Debugger, TimingVariable.SessionDuration, timeInMS); }
+	public logDebugSessionDuration(debuggerType: string, timeInMS: number) { this.time(Category.Debugger, TimingVariable.SessionDuration, timeInMS, debuggerType); }
 	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS); }
 	public logDebuggerStart(resourceUri: Uri, debuggerType: string, runType: string) {
 		const customData = {
@@ -133,17 +133,18 @@ export class Analytics {
 		return this.send(data, resourceUri);
 	}
 
-	private time(category: Category, timingVariable: TimingVariable, timeInMS: number) {
+	private time(category: Category, timingVariable: TimingVariable, timeInMS: number, label?: string) {
 		const data: any = {
 			t: "timing",
 			utc: Category[category],
+			utl: label,
 			utt: Math.round(timeInMS),
 			utv: TimingVariable[timingVariable],
 		};
 
-		this.logger.info(`${data.utc}:${data.utv} timing: ${Math.round(timeInMS)}ms`);
+		this.logger.info(`${data.utc}:${data.utv} timing: ${Math.round(timeInMS)}ms ${label ? `(${label})` : ""}`);
 		if (isDevExtension)
-			console.log(`${data.utc}:${data.utv} timing: ${Math.round(timeInMS)}ms`);
+			console.log(`${data.utc}:${data.utv} timing: ${Math.round(timeInMS)}ms ${label ? `(${label})` : ""}`);
 
 		this.send(data);
 	}
