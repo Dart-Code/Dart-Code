@@ -2,11 +2,10 @@ import * as assert from "assert";
 import { SpawnOptions } from "child_process";
 import { DebugSession, DebugSessionCustomEvent } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { DebugCommandHandler } from "../shared/interfaces";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
 import { not } from "../shared/utils/array";
 import { isKnownInfrastructureThread } from "../shared/utils/debugger";
-import { TestResultsProvider } from "../shared/vscode/interfaces";
+import { DebugCommandHandler, TestResultsProvider } from "../shared/vscode/interfaces";
 import { DebugClient, ILocation, IPartialLocation } from "./debug_client_ms";
 import { delay, logger, watchPromise, withTimeout } from "./helpers";
 

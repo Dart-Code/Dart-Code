@@ -1,18 +1,7 @@
-import { DebugSession, DebugSessionCustomEvent } from "vscode";
 import { DaemonCapabilities } from "./capabilities/flutter";
-import { FlutterService, FlutterServiceExtension, LogCategory, LogSeverity } from "./enums";
+import { LogCategory, LogSeverity } from "./enums";
 import * as f from "./flutter/daemon_interfaces";
 import { UnknownResponse } from "./services/interfaces";
-
-export interface DebugCommandHandler {
-	flutterExtensions: {
-		serviceIsRegistered(service: FlutterService): boolean;
-		serviceExtensionIsLoaded(extension: FlutterServiceExtension): boolean;
-	};
-	handleDebugSessionStart(session: DebugSession): void;
-	handleDebugSessionEnd(session: DebugSession): void;
-	handleDebugSessionCustomEvent(e: DebugSessionCustomEvent): void;
-}
 
 export interface Sdks {
 	readonly dart?: string;
