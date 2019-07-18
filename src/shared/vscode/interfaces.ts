@@ -1,6 +1,6 @@
 import * as child_process from "child_process";
 import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
-import { AvailableSuggestion, Outline } from "../analysis_server_types";
+import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server_types";
 import { TestStatus, VersionStatus } from "../enums";
 import { DebugCommandHandler } from "../interfaces";
 import { EmittingLogger } from "../logging";
@@ -32,6 +32,7 @@ export interface InternalExtensionApi {
 	debugProvider: DebugConfigurationProvider;
 	fileTracker: {
 		getOutlineFor(file: Uri): Outline | undefined;
+		getFlutterOutlineFor(file: Uri): FlutterOutline | undefined;
 		getLastPriorityFiles(): string[];
 		getLastSubscribedFiles(): string[];
 	};
@@ -43,6 +44,7 @@ export interface InternalExtensionApi {
 		hasEvictBug: boolean;
 		webSupportsDebugging: boolean;
 	};
+	flutterOutlineTreeProvider: TreeDataProvider<TreeItem> | undefined;
 	getLogHeader: () => string;
 	initialAnalysis: Promise<void>;
 	logger: EmittingLogger;

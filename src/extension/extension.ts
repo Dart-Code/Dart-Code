@@ -355,27 +355,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 				subscriptions: ["AVAILABLE_SUGGESTION_SETS"],
 			});
 		}
-
-		if (config.previewFlutterOutline && analyzer.capabilities.supportsFlutterOutline) {
-			// TODO: Extract this out - it's become messy since TreeView was added in.
-			const treeDataProvider = new FlutterOutlineProvider(analyzer);
-			const tree = vs.window.createTreeView("dartFlutterOutline", { treeDataProvider, showCollapseAll: true });
-			tree.onDidChangeSelection((e) => {
-				// TODO: This should be in a tree, not the data provider.
-				treeDataProvider.setContexts(e.selection);
-			});
-
-			context.subscriptions.push(vs.window.onDidChangeTextEditorSelection((e) => {
-				if (e.selections && e.selections.length) {
-					const node = treeDataProvider.getNodeAt(e.textEditor.document.uri, e.selections[0].start);
-					if (node && tree.visible)
-						tree.reveal(node, { select: true, focus: false, expand: true });
-				}
-			}));
-			context.subscriptions.push(tree);
-			context.subscriptions.push(treeDataProvider);
-			const flutterOutlineCommands = new FlutterOutlineCommands(tree, context);
-		}
 	});
 
 	// Handle config changes so we can reanalyze if necessary.
@@ -429,6 +408,27 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			testTreeProvider.setSelectedNodes(e.selection && e.selection.length === 1 ? e.selection[0] as TestItemTreeItem : undefined);
 		}),
 	);
+	let flutterOutlineTreeProvider: FlutterOutlineProvider | undefined;
+	if (config.previewFlutterOutline) {
+		// TODO: Extract this out - it's become messy since TreeView was added in.
+		flutterOutlineTreeProvider = new FlutterOutlineProvider(analyzer);
+		const tree = vs.window.createTreeView("dartFlutterOutline", { treeDataProvider: flutterOutlineTreeProvider, showCollapseAll: true });
+		tree.onDidChangeSelection((e) => {
+			// TODO: This should be in a tree, not the data provider.
+			flutterOutlineTreeProvider.setContexts(e.selection);
+		});
+
+		context.subscriptions.push(vs.window.onDidChangeTextEditorSelection((e) => {
+			if (e.selections && e.selections.length) {
+				const node = flutterOutlineTreeProvider.getNodeAt(e.textEditor.document.uri, e.selections[0].start);
+				if (node && tree.visible)
+					tree.reveal(node, { select: true, focus: false, expand: true });
+			}
+		}));
+		context.subscriptions.push(tree);
+		context.subscriptions.push(flutterOutlineTreeProvider);
+		const flutterOutlineCommands = new FlutterOutlineCommands(tree, context);
+	}
 
 	if (workspaceContext.hasAnyFlutterProjects && config.previewHotReloadCoverageMarkers) {
 		context.subscriptions.push(new HotReloadCoverageDecorations(logger, debugCommands));
@@ -529,6 +529,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			debugProvider,
 			fileTracker: openFileTracker,
 			flutterCapabilities,
+			flutterOutlineTreeProvider,
 			getLogHeader,
 			initialAnalysis,
 			logger,
