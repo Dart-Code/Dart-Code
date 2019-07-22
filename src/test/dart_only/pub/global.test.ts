@@ -12,7 +12,7 @@ const installedButBelowMinimumPackage2NewVersion = "1.1.7";
 const installedButOutOfDatePackage1 = "pedantic";
 const installedButOutOfDatePackage2 = "json_annotation";
 const definitelyNotInstalledPackage1 = "path";
-const definitelyNotInstalledPackage2 = "tiler";
+const definitelyNotInstalledPackage2 = "usage";
 
 describe("pub global", () => {
 	beforeEach("activate", () => activate(null));
