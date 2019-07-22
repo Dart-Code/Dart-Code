@@ -1,9 +1,9 @@
 import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { doNotAskAgainAction, flutterSurvey2019Q2PromptWithoutAnalytics, longRepeatPromptThreshold, noRepeatPromptThreshold, openDevToolsAction, takeSurveyAction, twoHoursInMs, wantToTryDevToolsPrompt } from "../../shared/constants";
+import { doNotAskAgainAction, flutterSurveyPromptWithoutAnalytics, longRepeatPromptThreshold, noRepeatPromptThreshold, openDevToolsAction, takeSurveyAction, twoHoursInMs, wantToTryDevToolsPrompt } from "../../shared/constants";
 import { waitFor } from "../../shared/utils/promises";
-import { showDevToolsNotificationIfAppropriate, showFlutter2019Q2SurveyNotificationIfAppropriate, surveyEnd, surveyStart } from "../../shared/vscode/user_prompts";
+import { showDevToolsNotificationIfAppropriate, showFlutterSurveyNotificationIfAppropriate, surveyEnd, surveyStart } from "../../shared/vscode/user_prompts";
 import { activateWithoutAnalysis, clearAllContext, extApi, logger, sb } from "../helpers";
 
 describe("DevTools notification", async () => {
@@ -125,7 +125,7 @@ describe("Survey notification", async () => {
 	const immediatelyBeforeSurveyClosesDate = surveyEnd - 100;
 	const immediatelyAfterSurveyClosesDate = surveyEnd + 100;
 
-	const matchPrompt = sinon.match((v) => v.indexOf(flutterSurvey2019Q2PromptWithoutAnalytics) === 0);
+	const matchPrompt = sinon.match((v) => v.indexOf(flutterSurveyPromptWithoutAnalytics) === 0);
 
 	it("is shown from a blank slate and updates context values", async () => {
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
@@ -134,7 +134,7 @@ describe("Survey notification", async () => {
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const openBrowserCommand = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
 
-		const res = showFlutter2019Q2SurveyNotificationIfAppropriate(extApi.context, surveyIsOpenDate, logger);
+		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, surveyIsOpenDate, logger);
 
 		// Was asked, and launched..
 		assert.equal(openSurveyPrompt.calledOnce, true);
@@ -144,14 +144,14 @@ describe("Survey notification", async () => {
 
 		// Flags were updated.
 		const context = extApi.context;
-		assert.equal(context.flutterSurvey2019Q2NotificationDoNotShow, true);
+		assert.equal(context.flutterSurvey2019Q3NotificationDoNotShow, true);
 		// Marked as shown within the last 10 seconds.
-		assert.equal(context.flutterSurvey2019Q2NotificationLastShown > Date.now() - 10000 && context.flutterSurvey2019Q2NotificationLastShown <= Date.now(), true);
+		assert.equal(context.flutterSurvey2019Q3NotificationLastShown > Date.now() - 10000 && context.flutterSurvey2019Q3NotificationLastShown <= Date.now(), true);
 	});
 
 	it("shows and updates context values when already seen", async () => {
 		const context = extApi.context;
-		context.flutterSurvey2019Q2NotificationLastShown = surveyIsOpenDate - (longRepeatPromptThreshold + twoHoursInMs);
+		context.flutterSurvey2019Q3NotificationLastShown = surveyIsOpenDate - (longRepeatPromptThreshold + twoHoursInMs);
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(takeSurveyAction);
@@ -159,7 +159,7 @@ describe("Survey notification", async () => {
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const openBrowserCommand = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
 
-		const res = showFlutter2019Q2SurveyNotificationIfAppropriate(extApi.context, surveyIsOpenDate, logger);
+		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, surveyIsOpenDate, logger);
 
 		// Was asked, and launched..
 		assert.equal(openSurveyPrompt.calledOnce, true);
@@ -168,16 +168,16 @@ describe("Survey notification", async () => {
 		assert.equal(res, true);
 
 		// Flags were updated.
-		assert.equal(context.flutterSurvey2019Q2NotificationDoNotShow, true);
+		assert.equal(context.flutterSurvey2019Q3NotificationDoNotShow, true);
 		// Marked as shown within the last 10 seconds.
-		assert.equal(context.flutterSurvey2019Q2NotificationLastShown > Date.now() - 10000 && context.flutterSurvey2019Q2NotificationLastShown <= Date.now(), true);
+		assert.equal(context.flutterSurvey2019Q3NotificationLastShown > Date.now() - 10000 && context.flutterSurvey2019Q3NotificationLastShown <= Date.now(), true);
 	});
 
 	it("does not show if shown in the last 40 hours", async () => {
 		const context = extApi.context;
 		const now = surveyIsOpenDate;
 		const fiveHoursInMs = 1000 * 60 * 60 * 5;
-		context.flutterSurvey2019Q2NotificationLastShown = now - fiveHoursInMs;
+		context.flutterSurvey2019Q3NotificationLastShown = now - fiveHoursInMs;
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(takeSurveyAction);
@@ -185,7 +185,7 @@ describe("Survey notification", async () => {
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const openBrowserCommand = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
 
-		const res = showFlutter2019Q2SurveyNotificationIfAppropriate(extApi.context, now, logger);
+		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, now, logger);
 
 		// Was not asked, or launched.
 		assert.equal(openSurveyPrompt.called, false);
@@ -200,7 +200,7 @@ describe("Survey notification", async () => {
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const openBrowserCommand = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
 
-		const res = showFlutter2019Q2SurveyNotificationIfAppropriate(extApi.context, surveyIsOpenDate, logger);
+		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, surveyIsOpenDate, logger);
 
 		// Was asked, but not launched.
 		assert.equal(openSurveyPrompt.called, true);
@@ -208,12 +208,12 @@ describe("Survey notification", async () => {
 		assert.equal(res, true);
 
 		// Flag was written.
-		await waitFor(() => extApi.context.flutterSurvey2019Q2NotificationDoNotShow);
-		assert.equal(extApi.context.flutterSurvey2019Q2NotificationDoNotShow, true);
+		await waitFor(() => extApi.context.flutterSurvey2019Q3NotificationDoNotShow);
+		assert.equal(extApi.context.flutterSurvey2019Q3NotificationDoNotShow, true);
 	});
 
 	it("does not prompt if told not to ask again", async () => {
-		extApi.context.flutterSurvey2019Q2NotificationDoNotShow = true;
+		extApi.context.flutterSurvey2019Q3NotificationDoNotShow = true;
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(doNotAskAgainAction);
@@ -221,7 +221,7 @@ describe("Survey notification", async () => {
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const openBrowserCommand = executeCommand.withArgs("vscode.open", sinon.match.any).resolves();
 
-		const res = showFlutter2019Q2SurveyNotificationIfAppropriate(extApi.context, surveyIsOpenDate, logger);
+		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, surveyIsOpenDate, logger);
 
 		// Was not asked, or launched.
 		assert.equal(openSurveyPrompt.called, false);
@@ -230,15 +230,15 @@ describe("Survey notification", async () => {
 	});
 
 	it("does not show before survey opens", async () => {
-		assert.equal(showFlutter2019Q2SurveyNotificationIfAppropriate(extApi.context, immediatelyBeforeSurveyOpensDate, logger), false);
+		assert.equal(showFlutterSurveyNotificationIfAppropriate(extApi.context, immediatelyBeforeSurveyOpensDate, logger), false);
 	});
 	it("shows after survey opens", async () => {
-		assert.equal(showFlutter2019Q2SurveyNotificationIfAppropriate(extApi.context, immediatelyAfterSurveyOpensDate, logger), true);
+		assert.equal(showFlutterSurveyNotificationIfAppropriate(extApi.context, immediatelyAfterSurveyOpensDate, logger), true);
 	});
 	it("shows before survey closes", async () => {
-		assert.equal(showFlutter2019Q2SurveyNotificationIfAppropriate(extApi.context, immediatelyBeforeSurveyClosesDate, logger), true);
+		assert.equal(showFlutterSurveyNotificationIfAppropriate(extApi.context, immediatelyBeforeSurveyClosesDate, logger), true);
 	});
 	it("does not show after survey closes", async () => {
-		assert.equal(showFlutter2019Q2SurveyNotificationIfAppropriate(extApi.context, immediatelyAfterSurveyClosesDate, logger), false);
+		assert.equal(showFlutterSurveyNotificationIfAppropriate(extApi.context, immediatelyAfterSurveyClosesDate, logger), false);
 	});
 });

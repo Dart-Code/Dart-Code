@@ -51,9 +51,9 @@ export const openDevToolsAction = "Open DevTools";
 export const noThanksAction = "No Thanks";
 export const doNotAskAgainAction = "Don't Ask Again";
 
-export const flutterSurvey2019Q2PromptWithAnalytics = "Help improve Flutter! Take our Q2 survey. By clicking on this link you agree to share feature usage along with the survey responses.";
-export const flutterSurvey2019Q2PromptWithoutAnalytics = "Help improve Flutter! Take our Q2 survey.";
-export const takeSurveyAction = "Take Flutter Q2 Survey";
+export const flutterSurveyPromptWithAnalytics = "Help improve Flutter! Take our Q3 survey. By clicking on this link you agree to share feature usage along with the survey responses.";
+export const flutterSurveyPromptWithoutAnalytics = "Help improve Flutter! Take our Q3 survey.";
+export const takeSurveyAction = "Take Flutter Q3 Survey";
 
 // Minutes.
 export const fiveMinutesInMs = 1000 * 60 * 5;

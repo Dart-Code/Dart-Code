@@ -804,8 +804,8 @@ export function clearAllContext(context: Context): Promise<void> {
 	context.devToolsNotificationsShown = undefined;
 	context.devToolsNotificationLastShown = undefined;
 	context.devToolsNotificationDoNotShow = undefined;
-	context.flutterSurvey2019Q2NotificationLastShown = undefined;
-	context.flutterSurvey2019Q2NotificationDoNotShow = undefined;
+	context.flutterSurvey2019Q3NotificationLastShown = undefined;
+	context.flutterSurvey2019Q3NotificationDoNotShow = undefined;
 
 	// HACK Updating context is async, but since we use setters we can't easily wait
 	// and this is only test code...
