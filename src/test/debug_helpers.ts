@@ -106,10 +106,7 @@ export async function spawnFlutterProcess(script: string | Uri): Promise<DartPro
 			config.deviceId,
 		],
 	);
-	// TODO: Use logProcess?
-	process.stdout.on("data", (data) => logger.info(`SPROC: ${data}`, LogCategory.CI));
-	process.stderr.on("data", (data) => logger.info(`SPROC: ${data}`, LogCategory.CI));
-	process.on("exit", (code) => logger.info(`SPROC: Exited (${code})`, LogCategory.CI));
+	logProcess(logger, LogCategory.CI, process);
 	const flutterProcess = new DartProcess(process);
 	defer(() => {
 		if (!flutterProcess.hasExited)

@@ -4,6 +4,7 @@ import { noRepeatPromptThreshold, pubGlobalDocsUrl, pubPath } from "../../shared
 import { LogCategory, VersionStatus } from "../../shared/enums";
 import { fetch } from "../../shared/fetch";
 import { Logger, Sdks } from "../../shared/interfaces";
+import { logProcess } from "../../shared/logging";
 import { versionIsAtLeast } from "../../shared/utils";
 import { openInBrowser } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
@@ -105,6 +106,8 @@ export class PubGlobal {
 		return new Promise((resolve, reject) => {
 			const pubBinPath = path.join(this.sdks.dart, pubPath);
 			const proc = safeSpawn(undefined, pubBinPath, args);
+			logProcess(this.logger, LogCategory.CommandProcesses, proc);
+
 			const stdout: string[] = [];
 			const stderr: string[] = [];
 			proc.stdout.on("data", (data) => stdout.push(data.toString()));

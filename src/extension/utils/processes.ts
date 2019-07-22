@@ -42,6 +42,7 @@ export function runProcess(logger: Logger, workingDirectory: string | undefined,
 	return new Promise((resolve) => {
 		const proc = safeSpawn(workingDirectory, binPath, args, envOverrides);
 		logProcess(logger, LogCategory.CommandProcesses, proc);
+
 		const out: string[] = [];
 		const err: string[] = [];
 		proc.stdout.on("data", (data: Buffer) => out.push(data.toString()));

@@ -2,7 +2,9 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { androidStudioPath, flutterPath, isMac } from "../../shared/constants";
+import { LogCategory } from "../../shared/enums";
 import { Logger, Sdks } from "../../shared/interfaces";
+import { logProcess } from "../../shared/logging";
 import { fsPath } from "../../shared/vscode/utils";
 import { safeSpawn } from "../utils/processes";
 
@@ -60,6 +62,7 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 			}
 			const binPath = path.join(this.sdks.flutter, flutterPath);
 			const proc = safeSpawn(folder, binPath, ["config", "--machine"]);
+			logProcess(this.logger, LogCategory.CommandProcesses, proc);
 			const output: string[] = [];
 			proc.stdout.on("data", (data: Buffer) => {
 				output.push(data.toString());
