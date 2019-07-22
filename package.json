@@ -1478,6 +1478,10 @@
 								"type": "string",
 								"description": "Workspace root."
 							},
+							"program": {
+								"type": "string",
+								"description": "Path to the entry script (eg. lib/main.dart). This is required when attaching to Flutter apps if the entry point is not lib/main.dart."
+							},
 							"deviceId": {
 								"type": "string",
 								"description": "The ID of the device to attach to. If not supplied, will use the selected device shown in the status bar."

@@ -64,6 +64,7 @@ export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestA
 	type: string;
 	request: string;
 	cwd: string;
+	program: string;
 	debugSdkLibraries: boolean;
 	debugExternalLibraries: boolean;
 	showDartDeveloperLogs: boolean;

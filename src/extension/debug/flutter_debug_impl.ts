@@ -127,8 +127,8 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	protected spawnRunDaemon(isAttach: boolean, args: FlutterLaunchRequestArguments, logger: Logger): FlutterRunBase {
 		let appArgs = [];
-		if (!isAttach) {
-			appArgs.push("-t");
+		if (!isAttach || args.program) {
+			appArgs.push("--target");
 			appArgs.push(this.sourceFileForArgs(args));
 		}
 
