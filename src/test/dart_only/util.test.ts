@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import * as path from "path";
 import { isDartSdkFromFlutter, isStableSdk, versionIsAtLeast } from "../../shared/utils";
+import { applyColor, red } from "../../shared/utils/colors";
 
 describe("versionIsAtLeast", () => {
 	it("should not consider build numbers when comparing versions", () => {
@@ -73,5 +74,22 @@ describe("util.isDartSdkFromFlutter", () => {
 		}
 
 		assert.equal(isDartSdkFromFlutter(path.join(process.env.FLUTTER_PATH, "bin", "cache", "dart-sdk")), true);
+	});
+});
+
+describe("applyColor", () => {
+	const redPrefix = "\u001b[38;5;1m";
+	const reset = "\u001b[39;49m";
+	it("should work with strings with no whitespace", () => {
+		assert.equal(applyColor("This is a test", red), `${redPrefix}This is a test${reset}`);
+	});
+	it("should work with leading whitespace", () => {
+		assert.equal(applyColor("\n\n  This is a test", red), `\n\n  ${redPrefix}This is a test${reset}`);
+	});
+	it("should work with trailing whitespace", () => {
+		assert.equal(applyColor("This is a test  \n\n", red), `${redPrefix}This is a test${reset}  \n\n`);
+	});
+	it("should work with leading and trailing whitespace", () => {
+		assert.equal(applyColor("\n \n This is a test \n \n", red), `\n \n ${redPrefix}This is a test${reset} \n \n`);
 	});
 });

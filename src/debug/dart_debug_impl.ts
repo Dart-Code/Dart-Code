@@ -13,7 +13,7 @@ import { LogMessage } from "../shared/interfaces";
 import { PackageMap } from "../shared/pub/package_map";
 import { flatMap, throttle, uniq, uriToFilePath } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
-import * as col from "../shared/utils/colors";
+import { applyColor, grey } from "../shared/utils/colors";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
 import { ThreadInfo, ThreadManager } from "./threads";
@@ -23,8 +23,9 @@ const maxValuesToCallToString = 15;
 // Prefix that appears at the start of stack frame names that are unoptimized
 // which we'd prefer not to show to the user.
 const unoptimizedPrefix = "[Unoptimized] ";
-const stackFrameWithUriPattern = new RegExp(`(.*#\\d+)(.*)\\(((?:package|dart|file):.*\\.dart):(\\d+):(\\d+)\\)\\s*$`, "m");
+const stackFrameWithUriPattern = new RegExp(`(.*#\\d+.*)\\(((?:package|dart|file):.*\\.dart):(\\d+):(\\d+)\\)\\s*$`, "m");
 const webStackFrameWithUriPattern = new RegExp(`((?:package|dart|file):.*\\.dart) (\\d+):(\\d+)\\s*(\\S+)\\s*$`, "m");
+const messageWithUriPattern = new RegExp(`(.*?)((?:package|dart|file):.*\\.dart):(\\d+):(\\d+)\\s*$`, "m");
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -1188,7 +1189,7 @@ export class DartDebugSession extends DebugSession {
 				if (record.message) {
 					const message = (record.message.valueAsString || "<empty message>")
 						+ (record.message.valueAsStringIsTruncated ? "…" : "");
-					const indentedMessage = `${col.grey(logPrefix)}${message.split("\n").join(`\n${indent}`)}`;
+					const indentedMessage = `${grey(logPrefix)}${message.split("\n").join(`\n${indent}`)}`;
 					this.logToUser(`${indentedMessage.trimRight()}\n`);
 				}
 				indent += "  ";
@@ -1637,30 +1638,42 @@ export class DartDebugSession extends DebugSession {
 		setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs);
 	}
 
-	private getStackFrameData(message: string): StackFrameData | undefined {
+	private getStackFrameData(message: string): MessageWithUriData | undefined {
 		const match = message && stackFrameWithUriPattern.exec(message);
 		if (match) {
 			// TODO: Handle dart: uris (using source references)?
 			return {
-				col: parseInt(match[5], 10),
-				functionName: match[2],
-				line: parseInt(match[4], 10),
+				col: parseInt(match[4], 10),
+				line: parseInt(match[3], 10),
 				prefix: match[1],
-				sourceUri: match[3],
+				sourceUri: match[2],
 			};
 		}
 		return undefined;
 	}
 
-	private getWebStackFrameData(message: string): StackFrameData | undefined {
+	private getWebStackFrameData(message: string): MessageWithUriData | undefined {
 		const match = message && webStackFrameWithUriPattern.exec(message);
 		if (match) {
 			// TODO: Handle dart: uris (using source references)?
 			return {
 				col: parseInt(match[3], 10),
-				functionName: match[4],
 				line: parseInt(match[2], 10),
+				prefix: match[4],
 				sourceUri: match[1],
+			};
+		}
+		return undefined;
+	}
+
+	private getMessageWithUriData(message: string): MessageWithUriData | undefined {
+		const match = message && messageWithUriPattern.exec(message);
+		if (match) {
+			return {
+				col: parseInt(match[4], 10),
+				line: parseInt(match[3], 10),
+				prefix: match[1],
+				sourceUri: match[2],
 			};
 		}
 		return undefined;
@@ -1668,9 +1681,9 @@ export class DartDebugSession extends DebugSession {
 
 	// Logs a message back to the editor. Does not add its own newlines, you must
 	// provide them!
-	protected logToUser(message: string, category?: string) {
+	protected logToUser(message: string, category?: string, colorText = (s: string) => s) {
 		// Extract stack frames from the message so we can do nicer formatting of them.
-		const frame = this.getStackFrameData(message) || this.getWebStackFrameData(message);
+		const frame = this.getStackFrameData(message) || this.getWebStackFrameData(message) || this.getMessageWithUriData(message);
 
 		// If we get a multi-line message that contains an error/stack trace, process each
 		// line individually, so we can attach location metadata to individual lines.
@@ -1680,7 +1693,7 @@ export class DartDebugSession extends DebugSession {
 			return;
 		}
 
-		const output = new OutputEvent(`${message}`, category) as OutputEvent & DebugProtocol.OutputEvent;
+		const output = new OutputEvent(`${applyColor(message, colorText)}`, category) as OutputEvent & DebugProtocol.OutputEvent;
 
 		// If the output line looks like a stack frame with users code, attempt to link it up to make
 		// it clickable.
@@ -1690,13 +1703,13 @@ export class DartDebugSession extends DebugSession {
 			const shortName = this.formatUriForShortDisplay(frame.sourceUri);
 			const source = canShowSource ? new Source(shortName, sourcePath, undefined, undefined, undefined) : undefined;
 
-			let text = `${frame.functionName} (${frame.sourceUri}:${frame.line}:${frame.col})`;
+			let text = `${frame.prefix} (${frame.sourceUri}:${frame.line}:${frame.col})`;
 			if (source) {
 				output.body.source = source;
 				output.body.line = frame.line;
 				output.body.column = frame.col;
 				// Replace the output to only the text part to avoid the duplicated uri.
-				text = frame.functionName;
+				text = frame.prefix;
 			}
 
 			// Colour based on whether it's framework code or not.
@@ -1704,8 +1717,7 @@ export class DartDebugSession extends DebugSession {
 				|| (this.isExternalLibrary(frame.sourceUri) && frame.sourceUri.startsWith("package:flutter/"))
 				|| (this.isExternalLibrary(frame.sourceUri) && frame.sourceUri.startsWith("package:flutter_web/"));
 
-			text = `${frame.prefix || ""}${text}`;
-			const colouredText = isFramework ? col.grey(text) : text;
+			const colouredText = isFramework ? applyColor(text, grey) : applyColor(text, colorText);
 			output.body.output = `${colouredText}\n`;
 		}
 
@@ -1722,10 +1734,9 @@ export interface InstanceWithEvaluateName extends VMInstanceRef {
 
 export type VmExceptionMode = "None" | "Unhandled" | "All";
 
-interface StackFrameData {
+interface MessageWithUriData {
 	col: number;
-	functionName: string;
 	line: number;
-	prefix?: string;
+	prefix: string;
 	sourceUri: string;
 }

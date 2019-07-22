@@ -4,7 +4,7 @@ import { restartReasonManual } from "../shared/constants";
 import { FlutterServiceExtension, LogCategory } from "../shared/enums";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
 import { Logger } from "../shared/interfaces";
-import { grey, yellow } from "../shared/utils/colors";
+import { grey } from "../shared/utils/colors";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
@@ -318,12 +318,12 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	private logFlutterErrorToUser(error: FlutterErrorData) {
 		const assumedTerminalSize = 120;
-		const stripeChar = "◢◤";
+		const stripeChar = "=";
 		const charactersForStripes = Math.max((assumedTerminalSize - error.description.length), 8);
 		const header = stripeChar.repeat(charactersForStripes / stripeChar.length / 2); //
-		this.logToUser(yellow(`${header} ${error.description} ${header}\n`), "stderr");
+		this.logToUser(`╠═${header} ${error.description} ${header}═╣\n`, "stderr", grey);
 		this.logDiagnosticNodeDescendents(error);
-		this.logToUser(`${yellow(stripeChar.repeat(assumedTerminalSize / stripeChar.length))}\n`, "stderr");
+		this.logToUser(`${stripeChar.repeat(assumedTerminalSize / stripeChar.length)}\n`, "stderr", grey);
 	}
 
 	private logDiagnosticNodeToUser(node: DiagnosticsNode, { parent, level = 0 }: { parent: DiagnosticsNode; level?: number; }) {
@@ -331,10 +331,6 @@ export class FlutterDebugSession extends DartDebugSession {
 			return;
 
 		if (node.type === DiagnosticsNodeType.ErrorSpacer)
-			return;
-
-		// TODO: Where should we show up to? Currently only doing top.
-		if (level > 0)
 			return;
 
 		let line = " ".repeat(level * 4);
@@ -357,7 +353,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			? (s: string) => s
 			: grey;
 
-		this.logToUser(`${colorText(line)}\n`, "stderr");
+		this.logToUser(`${line}\n`, "stderr", colorText);
 		if (node.level === DiagnosticsNodeLevel.Summary)
 			this.logToUser("\n");
 
@@ -369,10 +365,6 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	private logDiagnosticNodeDescendents(node: DiagnosticsNode, level: number = 0) {
-		// TODO: How many levels should we render?
-		if (level > 1)
-			return;
-
 		if (node.style !== DiagnosticsNodeStyle.Shallow && node.children)
 			node.children.forEach((child) => this.logDiagnosticNodeToUser(child, { parent: node, level }));
 		// TODO: Put blank line between non-hint/hints?

@@ -46,3 +46,17 @@ export const brightBlueBackground = (msg: string) => `${esc(codeBg, codeBlue + b
 export const brightMagentaBackground = (msg: string) => `${esc(codeBg, codeMagenta + brightOffset)}${msg}${esc(codeReset)}`;
 export const brightCyanBackground = (msg: string) => `${esc(codeBg, codeCyan + brightOffset)}${msg}${esc(codeReset)}`;
 export const brightWhiteBackground = (msg: string) => `${esc(codeBg, codeWhite + brightOffset)}${msg}${esc(codeReset)}`;
+
+const whitespacePattern = new RegExp(`^(\\s*)(\\S.*\\S)(\\s*)$`);
+
+/// Applies a color function to a string, but leaves leading/trailing whitespace outside
+/// of the color codes. This is mainly used because if trailing newlines fall inside the message
+/// when sending OutputEvents() to VS Code, it won't allow source locations to be attached (since
+/// they can only be attached to single-line messages).
+export function applyColor(text: string, color: (text: string) => string) {
+	const match = text && whitespacePattern.exec(text);
+	if (!match)
+		return color(text);
+
+	return `${match[1]}${color(match[2])}${match[3]}`;
+}
