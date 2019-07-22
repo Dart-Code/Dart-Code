@@ -1167,7 +1167,7 @@
 				"dart.previewFlutterOutline": {
 					"type": "boolean",
 					"default": false,
-					"description": "EXPERIMENTAL: Whether to enable the Flutter Outline tree.",
+					"description": "Whether to enable the Flutter Outline tree in the side bar.",
 					"scope": "window"
 				},
 				"dart.analyzerAdditionalArgs": {
