@@ -119,7 +119,7 @@ describe("Survey notification", async () => {
 	beforeEach("clearExtensionContext", () => clearAllContext(extApi.context));
 	afterEach("clearExtensionContext", () => clearAllContext(extApi.context));
 
-	const surveyIsOpenDate = Date.UTC(2019, 4 /* Month is 0-based!! */, 18);
+	const surveyIsOpenDate = Date.UTC(2019, 7 /* Month is 0-based!! */, 14);
 	const immediatelyBeforeSurveyOpensDate = surveyStart - 100;
 	const immediatelyAfterSurveyOpensDate = surveyStart + 100;
 	const immediatelyBeforeSurveyClosesDate = surveyEnd - 100;
