@@ -11,13 +11,14 @@ const installedButBelowMinimumPackage2 = "meta";
 const installedButBelowMinimumPackage2NewVersion = "1.1.7";
 const installedButOutOfDatePackage1 = "pedantic";
 const installedButOutOfDatePackage2 = "json_annotation";
-const definitelyNotInstalledPackage = "path";
+const definitelyNotInstalledPackage1 = "path";
+const definitelyNotInstalledPackage2 = "tiler";
 
 describe("pub global", () => {
 	beforeEach("activate", () => activate(null));
 
 	it("reports not-installed for a package that's not installed", async () => {
-		const status = await extApi.pubGlobal.getInstalledStatus(definitelyNotInstalledPackage, definitelyNotInstalledPackage);
+		const status = await extApi.pubGlobal.getInstalledStatus(definitelyNotInstalledPackage1, definitelyNotInstalledPackage1);
 		assert.equal(status, VersionStatus.NotInstalled);
 	});
 
@@ -48,16 +49,16 @@ describe("pub global", () => {
 	});
 
 	it("can install a package that's not installed", async () => {
-		const installPrompt = sb.stub(vs.window, "showWarningMessage").resolves(`Activate ${definitelyNotInstalledPackage}`);
+		const installPrompt = sb.stub(vs.window, "showWarningMessage").resolves(`Activate ${definitelyNotInstalledPackage2}`);
 
 		// Prompt to install it, and ensure it's successful.
-		const installed = await extApi.pubGlobal.promptToInstallIfRequired(definitelyNotInstalledPackage, definitelyNotInstalledPackage);
+		const installed = await extApi.pubGlobal.promptToInstallIfRequired(definitelyNotInstalledPackage2, definitelyNotInstalledPackage2);
 		assert.equal(installed, true);
 		assert.equal(installPrompt.calledOnce, true);
 
 		// Ensure new status checks includes it.
-		defer(() => extApi.pubGlobal.uninstall(definitelyNotInstalledPackage));
-		const status = await extApi.pubGlobal.getInstalledStatus(definitelyNotInstalledPackage, definitelyNotInstalledPackage);
+		defer(() => extApi.pubGlobal.uninstall(definitelyNotInstalledPackage2));
+		const status = await extApi.pubGlobal.getInstalledStatus(definitelyNotInstalledPackage2, definitelyNotInstalledPackage2);
 		assert.equal(status, VersionStatus.Valid);
 	});
 
