@@ -1,8 +1,11 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
+import 'package:my_package/my_thing.dart';
 
-void main() => runApp(MyApp());
+main() {
+  throwAnError();
+
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
@@ -20,17 +23,9 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    log("Logging from dart:developer!");
-    myTopLevelFunction();
     return Text(
-      // BREAKPOINT1^
       'Hello, world!',
       textDirection: TextDirection.ltr,
     );
   }
-}
-
-myTopLevelFunction() {
-  const _ = 1;
-  // BREAKPOINT2^
 }

@@ -1,8 +1,12 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
-void main() => runApp(MyApp());
+void main() async {
+  final resp = await http.read("https://www.google.co.uk");
+  print(resp);
+
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
@@ -20,17 +24,9 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    log("Logging from dart:developer!");
-    myTopLevelFunction();
     return Text(
-      // BREAKPOINT1^
       'Hello, world!',
       textDirection: TextDirection.ltr,
     );
   }
-}
-
-myTopLevelFunction() {
-  const _ = 1;
-  // BREAKPOINT2^
 }
