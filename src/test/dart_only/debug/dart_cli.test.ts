@@ -9,7 +9,7 @@ import { getRandomInt } from "../../../shared/utils/fs";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldPathFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, logger, openFile, positionOf, sb, setConfigForTest, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldPathFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, logger, openFile, positionOf, sb, setConfigForTest, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -162,6 +162,17 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
+	it("runs a Dart script with a variable in cwd", async () => {
+		const config = await startDebugger(helloWorldMainFile, { cwd: "${workspaceFolder}/" });
+		config.program = path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile));
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.assertOutput("stdout", "Hello, world!"),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		]);
+	});
+
 	it("runs bin/main.dart if no file is open/provided", async () => {
 		await closeAllOpenFiles();
 		const config = await startDebugger();
@@ -190,6 +201,27 @@ describe("dart cli debugger", () => {
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", "Goodbye!"),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		]);
+	});
+
+	it("runs projects in sub-folders when the open file is in a project sub-folder", async () => {
+		await openFile(helloWorldExampleSubFolderMainFile);
+		const config = await startDebugger();
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.assertOutputContains("stdout", "This output is from an example sub-folder!"),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		]);
+	});
+
+	it("runs projects in sub-folders when cwd is set to a project sub-folder", async () => {
+		const config = await startDebugger(undefined, { cwd: "example" });
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.assertOutputContains("stdout", "This output is from an example sub-folder!"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -778,6 +810,73 @@ describe("dart cli debugger", () => {
 		}
 	});
 
+	describe("can evaluate at breakpoint", () => {
+		it("simple expressions", async () => {
+			await openFile(helloWorldMainFile);
+			const config = await startDebugger(helloWorldMainFile);
+			await Promise.all([
+				dc.hitBreakpoint(config, {
+					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
+					path: fsPath(helloWorldMainFile),
+				}),
+			]);
+
+			const evaluateResult = await dc.evaluate(`"test"`);
+			assert.ok(evaluateResult);
+			assert.equal(evaluateResult.result, `"test"`);
+			assert.equal(evaluateResult.variablesReference, 0);
+		});
+
+		it("complex expression expressions", async () => {
+			await openFile(helloWorldMainFile);
+			const config = await startDebugger(helloWorldMainFile);
+			await Promise.all([
+				dc.hitBreakpoint(config, {
+					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
+					path: fsPath(helloWorldMainFile),
+				}),
+			]);
+
+			const evaluateResult = await dc.evaluate(`(new DateTime.now()).year`);
+			assert.ok(evaluateResult);
+			assert.equal(evaluateResult.result, (new Date()).getFullYear());
+			assert.equal(evaluateResult.variablesReference, 0);
+		});
+
+		it("an expression that returns a variable", async () => {
+			await openFile(helloWorldMainFile);
+			const config = await startDebugger(helloWorldMainFile);
+			await Promise.all([
+				dc.hitBreakpoint(config, {
+					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
+					path: fsPath(helloWorldMainFile),
+				}),
+			]);
+
+			const evaluateResult = await dc.evaluate(`new DateTime.now()`);
+			const thisYear = new Date().getFullYear().toString();
+			assert.ok(evaluateResult);
+			assert.ok(evaluateResult.result.startsWith("DateTime (" + thisYear), `Result '${evaluateResult.result}' did not start with ${thisYear}`);
+			assert.ok(evaluateResult.variablesReference);
+		});
+
+		it("complex expression expressions when in a top level function", async () => {
+			await openFile(helloWorldMainFile);
+			const config = await startDebugger(helloWorldMainFile);
+			await Promise.all([
+				dc.hitBreakpoint(config, {
+					line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
+					path: fsPath(helloWorldMainFile),
+				}),
+			]);
+
+			const evaluateResult = await dc.evaluate(`(new DateTime.now()).year`);
+			assert.ok(evaluateResult);
+			assert.equal(evaluateResult.result, (new Date()).getFullYear());
+			assert.equal(evaluateResult.variablesReference, 0);
+		});
+	});
+
 	it("stops on exception", async () => {
 		await openFile(helloWorldBrokenFile);
 		const config = await startDebugger(helloWorldBrokenFile);
@@ -818,6 +917,28 @@ describe("dart cli debugger", () => {
 		ensureVariable(variables, "$e.message", "message", `"Oops"`);
 	});
 
+	it("logs expected text (and does not stop) at a logpoint", async () => {
+		await openFile(helloWorldMainFile);
+		const config = await watchPromise("logs_expected_text->startDebugger", startDebugger(helloWorldMainFile));
+		await Promise.all([
+			watchPromise("logs_expected_text->waitForEvent:initialized", dc.waitForEvent("initialized"))
+				.then((event) => {
+					return watchPromise("logs_expected_text->setBreakpointsRequest", dc.setBreakpointsRequest({
+						// positionOf is 0-based, but seems to want 1-based
+						breakpoints: [{
+							line: positionOf("^// BREAKPOINT1").line,
+							// VS Code says to use {} for expressions, but we want to support Dart's native too, so
+							// we have examples of both (as well as "escaped" brackets).
+							logMessage: "The \\{year} is {(new DateTime.now()).year}",
+						}],
+						source: { path: fsPath(helloWorldMainFile) },
+					}));
+				}).then((response) => watchPromise("logs_expected_text->configurationDoneRequest", dc.configurationDoneRequest())),
+			watchPromise("logs_expected_text->assertOutputContainsYear", dc.assertOutputContains("stdout", `The {year} is ${(new Date()).getFullYear()}\n`)),
+			watchPromise("logs_expected_text->launch", dc.launch(config)),
+		]);
+	});
+
 	it("writes exception to stderr", async () => {
 		await openFile(helloWorldBrokenFile);
 		const config = await startDebugger(helloWorldBrokenFile);
@@ -827,6 +948,29 @@ describe("dart cli debugger", () => {
 			dc.assertOutput("stderr", "Unhandled exception:"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
+		]);
+	});
+
+	it("moves known files from call stacks to metadata", async () => {
+		await openFile(helloWorldBrokenFile);
+		const config = await startDebugger(helloWorldBrokenFile);
+		await Promise.all([
+			dc.configurationSequence()
+				// Disable breaking on exceptions because Dart doesn't write the
+				// stderr while paused and this test isn't to check pausing works.
+				.then(() => dc.setExceptionBreakpointsRequest({ filters: [] })),
+			watchPromise(
+				"writes_failure_output->assertOutputContains",
+				dc.assertOutputContains("stderr", "#0      main")
+					.then((event) => {
+						assert.equal(event.body.output.indexOf("bin/broken.dart"), -1);
+						assert.equal(event.body.source!.name, "bin/broken.dart");
+						assert.equal(event.body.source!.path, fsPath(helloWorldBrokenFile));
+						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
+						assert.equal(event.body.column, 3);
+					}),
+			),
+			watchPromise("writes_failure_output->launch", dc.launch(config)),
 		]);
 	});
 
