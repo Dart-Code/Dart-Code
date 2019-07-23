@@ -268,9 +268,15 @@ export async function openFile(file: vs.Uri): Promise<vs.TextEditor> {
 	const doc = await vs.workspace.openTextDocument(file);
 	documentEol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
 	logger.info(`Showing ${fsPath(file)}`);
-	const editor = await vs.window.showTextDocument(doc);
-	await delay(100);
-	return editor;
+	try {
+		return await vs.window.showTextDocument(doc);
+	} catch (e) {
+		logger.warn(`Failed to show ${fsPath(file)} on first attempt, trying again...`, LogCategory.CI);
+		logger.warn(e, LogCategory.CI);
+		return await vs.window.showTextDocument(doc);
+	} finally {
+		await delay(100);
+	}
 }
 
 export function tryDelete(file: vs.Uri) {
