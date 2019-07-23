@@ -106,6 +106,9 @@ install:
   - dart-sdk\bin\pub global activate --no-executables json_annotation 1.2.0
   - dart-sdk\bin\pub global activate --no-executables devtools
   - dart-sdk\bin\pub global activate --no-executables webdev
+  # These shouldn't be activated, but might be in the pub cache that CI restored
+  - dart-sdk\bin\pub global deactivate path || true
+  - dart-sdk\bin\pub global deactivate usage || true
   - cd ..
   - IF NOT EXIST ".test_results" mkdir ".test_results"
   - IF NOT EXIST ".dart_code_test_logs" mkdir ".dart_code_test_logs"
