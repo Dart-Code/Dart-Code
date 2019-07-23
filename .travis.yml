@@ -121,7 +121,7 @@ before_install:
   - dart-sdk/bin/pub global activate --no-executables json_annotation 1.2.0
   - dart-sdk/bin/pub global activate --no-executables devtools
   - dart-sdk/bin/pub global activate --no-executables webdev
-  # This shouldn't be activated, but might be in the pub cache that CI restored
+  # These shouldn't be activated, but might be in the pub cache that CI restored
   - dart-sdk/bin/pub global deactivate path || true
   - dart-sdk/bin/pub global deactivate usage || true
   - cd ..
