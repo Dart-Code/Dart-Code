@@ -3,13 +3,14 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { platformEol } from "../../../shared/constants";
 import { FlutterService, FlutterServiceExtension } from "../../../shared/enums";
 import { fetch } from "../../../shared/fetch";
 import { grey, grey2 } from "../../../shared/utils/colors";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
-import { ensureVariable, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, getPackages, openFile, positionOf, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester } from "../../debug_helpers";
+import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldPathFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getPackages, openFile, positionOf, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter run debugger (launch)", () => {
 	// We have tests that require external packages.
@@ -32,17 +33,21 @@ describe("flutter run debugger (launch)", () => {
 
 	afterEach(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 
-	async function startDebugger(script?: vs.Uri | string, cwd?: string): Promise<vs.DebugConfiguration> {
-		const config = await getLaunchConfiguration(script, {
-			// Use pid-file as a convenient way of getting the test name into the command line args
-			// for easier debugging of processes that hang around on CI (we dump the process command
-			// line at the end of the test run).
-			args: extApi.flutterCapabilities.supportsPidFileForMachine
-				? ["--pid-file", path.join(os.tmpdir(), fileSafeCurrentTestName)]
-				: [],
-			cwd,
-			deviceId: "flutter-tester",
-		});
+	async function startDebugger(script?: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
+		extraConfiguration = Object.assign(
+			{},
+			{
+				// Use pid-file as a convenient way of getting the test name into the command line args
+				// for easier debugging of processes that hang around on CI (we dump the process command
+				// line at the end of the test run).
+				args: extApi.flutterCapabilities.supportsPidFileForMachine
+					? ["--pid-file", path.join(os.tmpdir(), fileSafeCurrentTestName)]
+					: [],
+				deviceId: "flutter-tester",
+			},
+			extraConfiguration,
+		);
+		const config = await getLaunchConfiguration(script, extraConfiguration);
 		if (!config)
 			throw new Error(`Could not get launch configuration (got ${config})`);
 		await watchPromise("startDebugger->start", dc.start(config.debugServer));
@@ -166,6 +171,21 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	});
 
+	it("receives the expected output from a Flutter application", async () => {
+		const config = await startDebugger(flutterHelloWorldMainFile);
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.assertOutputContains("stdout", "Hello, world!"),
+			dc.assertOutputContains("console", "Logging from dart:developer!"),
+			dc.launch(config),
+		]);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
 	it("runs a Flutter application with a relative path", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldMainFile));
@@ -185,7 +205,7 @@ describe("flutter run debugger (launch)", () => {
 	}).timeout(90000); // The 10 second delay makes this test slower and sometimes hit 60s.
 
 	it("runs a Flutter application with a variable in cwd", async () => {
-		const config = await startDebugger(flutterHelloWorldMainFile, "${workspaceFolder}/");
+		const config = await startDebugger(flutterHelloWorldMainFile, { cwd: "${workspaceFolder}/" });
 		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldMainFile));
 		await Promise.all([
 			dc.configurationSequence(),
@@ -261,7 +281,7 @@ describe("flutter run debugger (launch)", () => {
 	});
 
 	it("runs projects in sub-folders when cwd is set to a project sub-folder", async () => {
-		const config = await startDebugger(undefined, "example");
+		const config = await startDebugger(undefined, { cwd: "example" });
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -365,6 +385,561 @@ describe("flutter run debugger (launch)", () => {
 				dc.terminateRequest(),
 			]);
 		});
+
+		it("does not stop at a breakpoint in noDebug mode", async () => {
+			await openFile(flutterHelloWorldMainFile);
+			const config = await startDebugger(flutterHelloWorldMainFile);
+			config.noDebug = true;
+
+			let didStop = false;
+			dc.waitForEvent("stopped").then(() => didStop = true);
+			await Promise.all([
+				dc.waitForEvent("terminated"),
+				dc.setBreakpointWithoutHitting(config, {
+					line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+					path: fsPath(flutterHelloWorldMainFile),
+					verified: false,
+				}),
+				delay(5000).then(() => dc.terminateRequest()),
+			]);
+
+			assert.equal(didStop, false);
+		});
+	});
+
+	it("steps into the SDK if debugSdkLibraries is true", async () => {
+		await openFile(flutterHelloWorldMainFile);
+		// Get location for `print`
+		const printCall = positionOf("pri^nt(");
+		const config = await startDebugger(flutterHelloWorldMainFile, { debugSdkLibraries: true });
+		await dc.hitBreakpoint(config, {
+			line: printCall.line + 1,
+			path: fsPath(flutterHelloWorldMainFile),
+		});
+		await Promise.all([
+			dc.assertStoppedLocation("step", {
+				// SDK source will have no filename, because we download it
+				path: undefined,
+			}).then((response) => {
+				// Ensure the top stack frame matches
+				const frame = response.body.stackFrames[0];
+				assert.equal(frame.name, "print");
+				// We don't get a source path, because the source is downloaded from the VM
+				assert.equal(frame.source!.path, undefined);
+				assert.equal(frame.source!.name, "dart:core/print.dart");
+			}),
+			dc.stepIn(),
+		]);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
+	it("does not step into the SDK if debugSdkLibraries is false", async () => {
+		await openFile(flutterHelloWorldMainFile);
+		// Get location for `print`
+		const printCall = positionOf("pri^nt(");
+		const config = await startDebugger(flutterHelloWorldMainFile, { debugSdkLibraries: false });
+		await dc.hitBreakpoint(config, {
+			line: printCall.line + 1,
+			path: fsPath(flutterHelloWorldMainFile),
+		});
+		await Promise.all([
+			dc.assertStoppedLocation("step", {
+				// Ensure we stayed in the current file
+				path: fsPath(flutterHelloWorldMainFile),
+			}),
+			dc.stepIn(),
+		]);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
+	it("steps into an external library if debugExternalLibraries is true", async () => {
+		await openFile(flutterHelloWorldHttpFile);
+		// Get location for `http.read(`
+		const httpReadCall = positionOf("http.re^ad(");
+		const httpReadDef = await getDefinition(httpReadCall);
+		const config = await startDebugger(flutterHelloWorldHttpFile, { debugExternalLibraries: true });
+		await dc.hitBreakpoint(config, {
+			line: httpReadCall.line + 1,
+			path: fsPath(flutterHelloWorldHttpFile),
+		});
+		await Promise.all([
+			dc.assertStoppedLocation("step", {
+				// Ensure we stepped into the external file
+				path: fsPath(httpReadDef.uri),
+			}).then((response) => {
+				// Ensure the top stack frame matches
+				const frame = response.body.stackFrames[0];
+				assert.equal(frame.name, "read");
+				assert.equal(frame.source!.path, fsPath(httpReadDef.uri));
+				assert.equal(frame.source!.name, "package:http/http.dart");
+			}),
+			dc.stepIn(),
+		]);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
+	it("does not step into an external library if debugExternalLibraries is false", async () => {
+		await openFile(flutterHelloWorldHttpFile);
+		// Get location for `http.read(`
+		const httpReadCall = positionOf("http.re^ad(");
+		const config = await startDebugger(flutterHelloWorldHttpFile, { debugExternalLibraries: false });
+		await dc.hitBreakpoint(config, {
+			line: httpReadCall.line + 1,
+			path: fsPath(flutterHelloWorldHttpFile),
+		});
+		await Promise.all([
+			dc.assertStoppedLocation("step", {
+				// Ensure we stayed in the current file
+				path: fsPath(flutterHelloWorldHttpFile),
+			}),
+			dc.stepIn(),
+		]);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
+	it("steps into a local library even if debugExternalLibraries is false", async () => {
+		await openFile(flutterHelloWorldLocalPackageFile);
+		// Get location for `printMyThing()`
+		const printMyThingCall = positionOf("printMy^Thing(");
+		const printMyThingDef = await getDefinition(printMyThingCall);
+		const config = await startDebugger(flutterHelloWorldLocalPackageFile, { debugExternalLibraries: false });
+		await dc.hitBreakpoint(config, {
+			line: printMyThingCall.line + 1,
+			path: fsPath(flutterHelloWorldLocalPackageFile),
+		});
+		await Promise.all([
+			dc.assertStoppedLocation("step", {
+				// Ensure we stepped into the external file
+				path: fsPath(printMyThingDef.uri),
+			}).then((response) => {
+				// Ensure the top stack frame matches
+				const frame = response.body.stackFrames[0];
+				assert.equal(frame.name, "printMyThing");
+				assert.equal(frame.source!.path, fsPath(printMyThingDef.uri));
+				assert.equal(frame.source!.name, "package:my_package/my_thing.dart");
+			}),
+			dc.stepIn(),
+		]);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
+	it("correctly marks non-debuggable SDK frames when debugSdkLibraries is false", async () => {
+		await openFile(flutterHelloWorldThrowInSdkFile);
+		const config = await startDebugger(flutterHelloWorldThrowInSdkFile, { debugSdkLibraries: false });
+		await Promise.all([
+			dc.waitForEvent("initialized")
+				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
+				.then(() => dc.configurationDoneRequest()),
+			dc.waitForEvent("stopped"),
+			dc.launch(config),
+		]);
+		const stack = await dc.getStack();
+		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), "deemphasize", "from the Dart SDK");
+		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
+	it("correctly marks debuggable SDK frames when debugSdkLibraries is true", async () => {
+		await openFile(flutterHelloWorldThrowInSdkFile);
+		const config = await startDebugger(flutterHelloWorldThrowInSdkFile, { debugSdkLibraries: true });
+		await Promise.all([
+			dc.waitForEvent("initialized")
+				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
+				.then(() => dc.configurationDoneRequest()),
+			dc.waitForEvent("stopped"),
+			dc.launch(config),
+		]);
+		const stack = await dc.getStack();
+		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), undefined, undefined);
+		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
+	it("correctly marks non-debuggable external library frames when debugExternalLibraries is false", async () => {
+		await openFile(flutterHelloWorldThrowInExternalPackageFile);
+		const config = await startDebugger(flutterHelloWorldThrowInExternalPackageFile, { debugExternalLibraries: false });
+		await Promise.all([
+			dc.waitForEvent("initialized")
+				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
+				.then(() => dc.configurationDoneRequest()),
+			dc.waitForEvent("stopped"),
+			dc.launch(config),
+		]);
+		const stack = await dc.getStack();
+		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), "deemphasize", "from Pub packages");
+		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
+	it("correctly marks debuggable top frames even if not debuggable, if breakpoint/stepping", async () => {
+		// There is an exception(!) to the deemphasiezed rule. If the reason we stopped was not an exception, the top
+		// frame should never be deemphasized, as the user has explicitly decided to break (or step) there.
+		await openFile(flutterHelloWorldPathFile);
+		// For testing, we use `path.current` and `path.Style.platform`. The first calls the second, so by putting a breakpoint
+		// inside path.Style.platform we can ensure multiple stack frames are in the path package.
+		const pathStyleCall = positionOf("path.Style.pl^atform");
+		const pathStyleDef = await getDefinition(pathStyleCall);
+		const config = await startDebugger(flutterHelloWorldPathFile, { debugExternalLibraries: false });
+
+		// Put a breakpoint inside the library, even though it's marked as not-debuggable.
+		await dc.hitBreakpoint(config, {
+			line: pathStyleDef.range.start.line + 1,
+			path: fsPath(pathStyleDef.uri),
+		});
+		const stack = await dc.getStack();
+
+		// Top frame is not deemphasized.
+		assert.equal(isExternalPackage(stack.body.stackFrames[0]), true);
+		ensureFrameCategories([stack.body.stackFrames[0]], undefined, undefined);
+
+		// Step in further.
+		await dc.stepIn();
+
+		// Top frame is not deemphasized.
+		assert.equal(isExternalPackage(stack.body.stackFrames[0]), true);
+		ensureFrameCategories([stack.body.stackFrames[0]], undefined, undefined);
+		// Rest are.
+		ensureFrameCategories(stack.body.stackFrames.slice(1).filter(isExternalPackage), "deemphasize", "from Pub packages");
+		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
+	it("correctly marks debuggable external library frames when debugExternalLibraries is true", async () => {
+		await openFile(flutterHelloWorldThrowInExternalPackageFile);
+		const config = await startDebugger(flutterHelloWorldThrowInExternalPackageFile, { debugExternalLibraries: true });
+		await Promise.all([
+			dc.waitForEvent("initialized")
+				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
+				.then(() => dc.configurationDoneRequest()),
+			dc.waitForEvent("stopped"),
+			dc.launch(config),
+		]);
+		const stack = await dc.getStack();
+		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), undefined, undefined);
+		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
+	it("correctly marks debuggable local library frames even when debugExternalLibraries is false", async () => {
+		await openFile(flutterHelloWorldThrowInLocalPackageFile);
+		const config = await startDebugger(flutterHelloWorldThrowInLocalPackageFile, { debugExternalLibraries: false });
+		await Promise.all([
+			dc.waitForEvent("initialized")
+				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
+				.then(() => dc.configurationDoneRequest()),
+			dc.waitForEvent("stopped"),
+			dc.launch(config),
+		]);
+		const stack = await dc.getStack();
+		ensureFrameCategories(stack.body.stackFrames.filter(isLocalPackage), undefined, undefined);
+		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
+	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
+		return async () => {
+			await openFile(flutterHelloWorldMainFile);
+			const config = await startDebugger(flutterHelloWorldMainFile);
+
+			let didStop = false;
+			dc.waitForEvent("stopped").then(() => didStop = true);
+
+			const errorOutputEvent: Promise<any> =
+				expectedError
+					? dc.assertOutput("console", expectedError)
+					: Promise.resolve();
+			await Promise.all([
+				dc.waitForEvent("initialized").then((event) => {
+					return dc.setBreakpointsRequest({
+						// positionOf is 0-based, but seems to want 1-based
+						breakpoints: [{
+							condition,
+							line: positionOf("^// BREAKPOINT1").line + 1,
+						}],
+						source: { path: fsPath(flutterHelloWorldMainFile) },
+					});
+				}).then(() => dc.configurationDoneRequest()),
+				errorOutputEvent,
+				dc.launch(config),
+			]);
+
+			await shouldStop
+				// Either wait for breakpoint.
+				? dc.assertStoppedLocation("breakpoint", {})
+				// Or wait 5 seconds to ensure we didn't stop.
+				: delay(5000);
+
+			await Promise.all([
+				dc.waitForEvent("terminated"),
+				dc.terminateRequest(),
+			]);
+
+			assert.equal(didStop, shouldStop);
+		};
+	}
+
+	it("stops at a breakpoint with a condition returning true", testBreakpointCondition("1 == 1", true));
+	it("stops at a breakpoint with a condition returning 1", testBreakpointCondition("3 - 2", true));
+	it("doesn't stop at a breakpoint with a condition returning a string", testBreakpointCondition("'test'", false));
+	it("doesn't stop at a breakpoint with a condition returning false", testBreakpointCondition("1 == 0", false));
+	it("doesn't stop at a breakpoint with a condition returning 0", testBreakpointCondition("3 - 3", false));
+	it("doesn't stop at a breakpoint with a condition returning null", testBreakpointCondition("print('test');", false));
+	it("reports errors evaluating breakpoint conditions", testBreakpointCondition("1 + '1'", false, "Debugger failed to evaluate expression `1 + '1'`"));
+
+	it("logs expected text (and does not stop) at a logpoint", async () => {
+		await openFile(flutterHelloWorldMainFile);
+		const config = await startDebugger(flutterHelloWorldMainFile);
+		await Promise.all([
+			dc.waitForEvent("initialized").then((event) => {
+				return dc.setBreakpointsRequest({
+					// positionOf is 0-based, but seems to want 1-based
+					breakpoints: [{
+						line: positionOf("^// BREAKPOINT1").line + 1,
+						// VS Code says to use {} for expressions, but we want to support Dart's native too, so
+						// we have examples of both (as well as "escaped" brackets).
+						logMessage: '${s} The \\{year} is """{(new DateTime.now()).year}"""',
+					}],
+					source: { path: fsPath(flutterHelloWorldMainFile) },
+				});
+			}).then((response) => dc.configurationDoneRequest()),
+			dc.waitForEvent("terminated"),
+			dc.assertOutputContains("stdout", `Hello! The {year} is """${(new Date()).getFullYear()}"""${platformEol}`),
+			dc.launch(config),
+		]);
+	});
+
+	it("provides local variables when stopped at a breakpoint", async () => {
+		await setConfigForTest("dart", "previewToStringInDebugViews", true);
+		await openFile(flutterHelloWorldMainFile);
+		const debugConfig = await startDebugger(flutterHelloWorldMainFile);
+		await dc.hitBreakpoint(debugConfig, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(flutterHelloWorldMainFile),
+		});
+
+		const variables = await dc.getTopFrameVariables("Locals");
+		ensureVariable(variables, "l", "l", `List (12 items)`);
+		ensureVariable(variables, "longStrings", "longStrings", `List (1 item)`);
+		ensureVariable(variables, "tenDates", "tenDates", `List (10 items)`);
+		ensureVariable(variables, "hundredDates", "hundredDates", `List (100 items)`);
+		ensureVariable(variables, "s", "s", `"Hello!"`);
+		ensureVariable(variables, "m", "m", `Map (10 items)`);
+
+		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l")!.variablesReference);
+		for (let i = 0; i <= 1; i++) {
+			ensureVariableWithIndex(listVariables, i, `l[${i}]`, `[${i}]`, `${i}`);
+		}
+
+		const longStringListVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference);
+		ensureVariable(longStringListVariables, "longStrings[0]", "[0]", {
+			ends: "…\"", // String is truncated here.
+			starts: "\"This is a long string that is 300 characters!",
+		});
+
+		const shortdateListVariables = await dc.getVariables(variables.find((v) => v.name === "tenDates")!.variablesReference);
+		ensureVariable(shortdateListVariables, "tenDates[0]", "[0]", "DateTime (2005-01-01 00:00:00.000)");
+
+		const longdateListVariables = await dc.getVariables(variables.find((v) => v.name === "hundredDates")!.variablesReference);
+		ensureVariable(longdateListVariables, "hundredDates[0]", "[0]", "DateTime"); // This doesn't call toString() because it's a long list'.
+
+		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m")!.variablesReference);
+		ensureVariable(mapVariables, undefined, "0", `"l" -> List (12 items)`);
+		ensureVariable(mapVariables, undefined, "1", `"longStrings" -> List (1 item)`);
+		ensureVariable(mapVariables, undefined, "2", `"tenDates" -> List (10 items)`);
+		ensureVariable(mapVariables, undefined, "3", `"hundredDates" -> List (100 items)`);
+		ensureVariable(mapVariables, undefined, "4", `"s" -> "Hello!"`);
+		ensureVariable(mapVariables, undefined, "5", `DateTime -> "valentines-2000"`);
+		ensureVariable(mapVariables, undefined, "6", `DateTime -> "new-year-2005"`);
+		ensureVariable(mapVariables, undefined, "7", `true -> true`);
+		ensureVariable(mapVariables, undefined, "8", `1 -> "one"`);
+		ensureVariable(mapVariables, undefined, "9", `1.1 -> "one-point-one"`);
+
+		await ensureMapEntry(mapVariables, {
+			key: { evaluateName: undefined, name: "key", value: `"l"` },
+			value: { evaluateName: `m["l"]`, name: "value", value: "List (12 items)" },
+		}, dc);
+		await ensureMapEntry(mapVariables, {
+			key: { evaluateName: undefined, name: "key", value: `"longStrings"` },
+			value: { evaluateName: `m["longStrings"]`, name: "value", value: "List (1 item)" },
+		}, dc);
+		await ensureMapEntry(mapVariables, {
+			key: { evaluateName: undefined, name: "key", value: `"s"` },
+			value: { evaluateName: `m["s"]`, name: "value", value: `"Hello!"` },
+		}, dc);
+		await ensureMapEntry(mapVariables, {
+			key: { evaluateName: undefined, name: "key", value: `DateTime (2000-02-14 00:00:00.000)` },
+			value: { evaluateName: undefined, name: "value", value: `"valentines-2000"` },
+		}, dc);
+		await ensureMapEntry(mapVariables, {
+			key: { evaluateName: undefined, name: "key", value: `DateTime (2005-01-01 00:00:00.000)` },
+			value: { evaluateName: undefined, name: "value", value: `"new-year-2005"` },
+		}, dc);
+		await ensureMapEntry(mapVariables, {
+			key: { evaluateName: undefined, name: "key", value: "true" },
+			value: { evaluateName: `m[true]`, name: "value", value: "true" },
+		}, dc);
+		await ensureMapEntry(mapVariables, {
+			key: { evaluateName: undefined, name: "key", value: "1" },
+			value: { evaluateName: `m[1]`, name: "value", value: `"one"` },
+		}, dc);
+		await ensureMapEntry(mapVariables, {
+			key: { evaluateName: undefined, name: "key", value: "1.1" },
+			value: { evaluateName: `m[1.1]`, name: "value", value: `"one-point-one"` },
+		}, dc);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
+	it("excludes type args from local variables when stopped at a breakpoint in a generic method", async () => {
+		await openFile(flutterHelloWorldMainFile);
+		const debugConfig = await startDebugger(flutterHelloWorldMainFile);
+		await dc.hitBreakpoint(debugConfig, {
+			line: positionOf("^// BREAKPOINT2").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(flutterHelloWorldMainFile),
+		});
+
+		const variables = await dc.getTopFrameVariables("Locals");
+		ensureVariable(variables, "a", "a", `1`);
+		// Ensure there were no others.
+		assert.equal(variables.length, 1);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
+	it("includes getters in variables when stopped at a breakpoint", async () => {
+		await openFile(flutterHelloWorldGettersFile);
+		const config = await startDebugger(flutterHelloWorldGettersFile);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(flutterHelloWorldGettersFile),
+		});
+
+		const variables = await dc.getTopFrameVariables("Locals");
+		ensureVariable(variables, "danny", "danny", `Danny`);
+
+		const classInstance = await dc.getVariables(variables.find((v) => v.name === "danny")!.variablesReference);
+		ensureVariable(classInstance, "danny.kind", "kind", `"Person"`);
+		ensureVariable(classInstance, "danny.name", "name", `"Danny"`);
+		ensureVariable(classInstance, undefined, "throws", { starts: "Unhandled exception:\nOops!" });
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
+	it("watch expressions provide same info as locals", async () => {
+		await openFile(flutterHelloWorldMainFile);
+		const config = await startDebugger(flutterHelloWorldMainFile);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(flutterHelloWorldMainFile),
+		});
+
+		const variables = await dc.getTopFrameVariables("Locals");
+
+		for (const variable of variables) {
+			const evaluateName = (variable as any).evaluateName;
+			if (!evaluateName)
+				continue;
+			const evaluateResult = await dc.evaluate(evaluateName);
+			assert.ok(evaluateResult);
+			assert.equal(evaluateResult.result, variable.value);
+			assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);
+		}
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
+	it("evaluateName evaluates to the expected value", async () => {
+		await openFile(flutterHelloWorldMainFile);
+		const config = await startDebugger(flutterHelloWorldMainFile);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(flutterHelloWorldMainFile),
+		});
+
+		const variables = await dc.getTopFrameVariables("Locals");
+		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l").variablesReference);
+		const listLongstringVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings").variablesReference);
+		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m").variablesReference);
+		const allVariables = listVariables.concat(listLongstringVariables).concat(mapVariables);
+
+		for (const variable of allVariables) {
+			const evaluateName = (variable as any).evaluateName;
+			if (!evaluateName)
+				continue;
+			const evaluateResult = await dc.evaluate(evaluateName);
+			assert.ok(evaluateResult);
+			if (variable.value.endsWith("…\"")) {
+				// If the value was truncated, the evaluate responses should be longer
+				const prefix = variable.value.slice(1, -2);
+				assert.ok(evaluateResult.result.length > prefix.length);
+				assert.equal(evaluateResult.result.slice(0, prefix.length), prefix);
+			} else {
+				// Otherwise it should be the same.
+				assert.equal(evaluateResult.result, variable.value);
+			}
+			assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);
+		}
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
 	});
 
 	describe("can evaluate at breakpoint", () => {
@@ -471,6 +1046,23 @@ describe("flutter run debugger (launch)", () => {
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		]);
+	});
+
+	it("does not stop on exception in noDebug mode", async () => {
+		await openFile(flutterHelloWorldBrokenFile);
+		const config = await startDebugger(flutterHelloWorldBrokenFile);
+		config.noDebug = true;
+
+		let didStop = false;
+		dc.waitForEvent("stopped").then(() => didStop = true);
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+			delay(5000).then(() => dc.terminateRequest()),
+		]);
+
+		assert.equal(didStop, false);
 	});
 
 	// Skipped due to https://github.com/flutter/flutter/issues/17007.
