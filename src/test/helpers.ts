@@ -77,6 +77,13 @@ export const flutterHelloWorldOutlineFile = vs.Uri.file(path.join(fsPath(flutter
 export const flutterHelloWorldExampleSubFolder = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "example"));
 export const flutterHelloWorldExampleSubFolderMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldExampleSubFolder), "lib/main.dart"));
 export const flutterHelloWorldBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/broken.dart"));
+export const flutterHelloWorldHttpFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/http.dart"));
+export const flutterHelloWorldGettersFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/getters.dart"));
+export const flutterHelloWorldPathFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/path.dart"));
+export const flutterHelloWorldLocalPackageFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/local_package.dart"));
+export const flutterHelloWorldThrowInSdkFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/throw_in_sdk_code.dart"));
+export const flutterHelloWorldThrowInExternalPackageFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/throw_in_external_package.dart"));
+export const flutterHelloWorldThrowInLocalPackageFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/throw_in_local_package.dart"));
 // Flutter tests
 export const flutterTestMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/widget_test.dart"));
 export const flutterTestOtherFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/other_test.dart"));
