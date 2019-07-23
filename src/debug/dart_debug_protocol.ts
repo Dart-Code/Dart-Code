@@ -415,13 +415,13 @@ export class ObservatoryConnection {
 		return this.callMethod("getIsolate", { isolateId });
 	}
 
-	public on(streamId: string, callback: (event: VMEvent) => void) {
-		this.streamListen(streamId);
+	public on(streamId: string, callback: (event: VMEvent) => void): Promise<DebuggerResult> {
 		this.eventListeners[streamId] = callback;
+		return this.streamListen(streamId);
 	}
 
-	public streamListen(streamId: string) {
-		this.callMethod("streamListen", { streamId });
+	public streamListen(streamId: string): Promise<DebuggerResult> {
+		return this.callMethod("streamListen", { streamId });
 	}
 
 	public addBreakpointWithScriptUri(isolateId: string, scriptUri: string, line: number, column?: number): Promise<DebuggerResult> {
