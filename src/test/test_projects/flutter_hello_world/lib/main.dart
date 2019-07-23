@@ -20,6 +20,7 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print("Hello, world!");
     log("Logging from dart:developer!");
     myTopLevelFunction();
     return Text(

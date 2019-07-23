@@ -167,7 +167,10 @@ export function isLocalPackage(frame: DebugProtocol.StackFrame) {
 }
 
 export function isUserCode(frame: DebugProtocol.StackFrame) {
-	return frame.source && frame.source.name && !frame.source.name.startsWith("dart:") && !frame.source!.name.startsWith("package:");
+	return frame.source
+		&& frame.source.name
+		&& !frame.source.name.startsWith("dart:")
+		&& (!frame.source!.name.startsWith("package:") || frame.source!.name.startsWith("package:hello_world"));
 }
 
 export function ensureFrameCategories(frames: DebugProtocol.StackFrame[], presentationHint: string | undefined, origin: string | undefined) {
