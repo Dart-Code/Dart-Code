@@ -417,8 +417,14 @@ export class DartDebugSession extends DebugSession {
 		const serviceStreamName = this.capabilities.serviceStreamIsPublic ? "Service" : "_Service";
 		this.observatory.on(serviceStreamName, (event: VMEvent) => this.handleServiceEvent(event));
 
-		if (this.capabilities.hasLoggingStream && this.showDartDeveloperLogs)
-			this.observatory.on("Logging", (event: VMEvent) => this.handleLoggingEvent(event));
+		if (this.capabilities.hasLoggingStream && this.showDartDeveloperLogs) {
+			try {
+				this.observatory.on("Logging", (event: VMEvent) => this.handleLoggingEvent(event));
+			} catch (e) {
+				// For web, the protocol version says this is supported, but it throws.
+				// TODO: Remove this catch blog if/when the stable release does not throw.
+			}
+		}
 	}
 
 	protected async terminate(force: boolean): Promise<void> {
