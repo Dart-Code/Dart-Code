@@ -2,7 +2,7 @@ import { Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
-import { PromiseCompleter } from "../shared/utils";
+import { errorString, PromiseCompleter } from "../shared/utils";
 import { isKnownInfrastructureThread } from "../shared/utils/debugger";
 import { DartDebugSession, InstanceWithEvaluateName, VmExceptionMode } from "./dart_debug_impl";
 import { DebuggerResult, VMBreakpoint, VMInstanceRef, VMIsolate, VMIsolateRef, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
@@ -112,7 +112,11 @@ export class ThreadManager {
 					(this.debugSession.isSdkLibrary(library.uri) && !this.debugSession.debugSdkLibraries)
 					|| (this.debugSession.isExternalLibrary(library.uri) && !this.debugSession.debugExternalLibraries));
 				return this.debugSession.observatory.setLibraryDebuggable(isolate.id, library.id, shouldDebug);
-			}));
+			})).catch((e) => {
+				this.logger.info(errorString(e));
+				// For web, the protocol version says this is supported, but it throws.
+				// TODO: Remove this catch blog if/when the stable release does not throw.
+			});
 	}
 
 	// Just resends existing breakpoints

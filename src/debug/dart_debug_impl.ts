@@ -11,7 +11,7 @@ import { observatoryListeningBannerPattern, pleaseReportBug } from "../shared/co
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { LogMessage } from "../shared/interfaces";
 import { PackageMap } from "../shared/pub/package_map";
-import { flatMap, throttle, uniq, uriToFilePath } from "../shared/utils";
+import { errorString, flatMap, throttle, uniq, uriToFilePath } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
 import { applyColor, grey } from "../shared/utils/colors";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
@@ -419,6 +419,7 @@ export class DartDebugSession extends DebugSession {
 
 		if (this.capabilities.hasLoggingStream && this.showDartDeveloperLogs) {
 			this.observatory.on("Logging", (event: VMEvent) => this.handleLoggingEvent(event)).catch((e) => {
+				this.logger.info(errorString(e));
 				// For web, the protocol version says this is supported, but it throws.
 				// TODO: Remove this catch blog if/when the stable release does not throw.
 			});
