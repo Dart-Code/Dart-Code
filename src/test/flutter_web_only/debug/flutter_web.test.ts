@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
+import { isWin } from "../../../shared/constants";
 import { FlutterService, FlutterServiceExtension } from "../../../shared/enums";
 import { fetch } from "../../../shared/fetch";
 import { fsPath } from "../../../shared/vscode/utils";
@@ -9,6 +10,12 @@ import { ensureVariable, killFlutterTester } from "../../debug_helpers";
 import { activate, defer, delay, ext, extApi, flutterWebBrokenMainFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, getPackages, logger, openFile, positionOf, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter for web debugger", () => {
+	beforeEach("skip for Windows", function () {
+		// Skip on Windows temporarily until we figure out this is:
+		// https://github.com/dart-lang/webdev/issues/514
+		if (isWin)
+			this.skip();
+	});
 	beforeEach("activate flutterWebHelloWorldMainFile", () => activate(flutterWebHelloWorldMainFile));
 	before("get packages (0)", () => getPackages(flutterWebHelloWorldMainFile));
 	before("get packages (1)", () => getPackages(flutterWebBrokenMainFile));
