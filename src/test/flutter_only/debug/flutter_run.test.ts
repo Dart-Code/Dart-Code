@@ -151,8 +151,8 @@ describe("flutter run debugger (launch)", () => {
 			dc.launch(config),
 		]);
 
-		// Wait 3 seconds to ensure the build is in progress...
-		await delay(3000);
+		// Wait 5 seconds to ensure the build is in progress...
+		await delay(5000);
 
 		// Send a disconnect request and ensure it happens within 5 seconds.
 		await Promise.race([
