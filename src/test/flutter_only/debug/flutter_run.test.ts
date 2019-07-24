@@ -357,6 +357,11 @@ describe("flutter run debugger (launch)", () => {
 					watchPromise(`stops_at_a_breakpoint->reload:${i}->hotReload:breakpoint`, dc.hotReload()),
 				]);
 			}
+
+			await Promise.all([
+				dc.waitForEvent("terminated"),
+				dc.terminateRequest(),
+			]);
 		});
 	});
 
@@ -375,6 +380,11 @@ describe("flutter run debugger (launch)", () => {
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, `"test"`);
 			assert.equal(evaluateResult.variablesReference, 0);
+
+			await Promise.all([
+				dc.waitForEvent("terminated"),
+				dc.terminateRequest(),
+			]);
 		});
 
 		it("complex expression expressions", async () => {
@@ -391,6 +401,11 @@ describe("flutter run debugger (launch)", () => {
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, (new Date()).getFullYear());
 			assert.equal(evaluateResult.variablesReference, 0);
+
+			await Promise.all([
+				dc.waitForEvent("terminated"),
+				dc.terminateRequest(),
+			]);
 		});
 
 		it("an expression that returns a variable", async () => {
@@ -408,6 +423,11 @@ describe("flutter run debugger (launch)", () => {
 			assert.ok(evaluateResult);
 			assert.ok(evaluateResult.result.startsWith("DateTime (" + thisYear), `Result '${evaluateResult.result}' did not start with ${thisYear}`);
 			assert.ok(evaluateResult.variablesReference);
+
+			await Promise.all([
+				dc.waitForEvent("terminated"),
+				dc.terminateRequest(),
+			]);
 		});
 
 		it("complex expression expressions when in a top level function", async () => {
@@ -424,6 +444,11 @@ describe("flutter run debugger (launch)", () => {
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, (new Date()).getFullYear());
 			assert.equal(evaluateResult.variablesReference, 0);
+
+			await Promise.all([
+				dc.waitForEvent("terminated"),
+				dc.terminateRequest(),
+			]);
 		});
 	});
 
@@ -438,6 +463,11 @@ describe("flutter run debugger (launch)", () => {
 				path: fsPath(flutterHelloWorldBrokenFile),
 			}),
 			dc.launch(config),
+		]);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
 		]);
 	});
 
@@ -456,6 +486,11 @@ describe("flutter run debugger (launch)", () => {
 
 		const variables = await dc.getTopFrameVariables("Exception");
 		ensureVariable(variables, "$e.message", "message", `"(TODO WHEN UNSKIPPING)"`);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
 	});
 
 	it("logs expected text (and does not stop) at a logpoint", async () => {
@@ -478,6 +513,11 @@ describe("flutter run debugger (launch)", () => {
 			watchPromise("logs_expected_text->assertOutputContainsYear", dc.assertOutputContains("stdout", `The {year} is ${(new Date()).getFullYear()}\n`)),
 			watchPromise("logs_expected_text->launch", dc.launch(config)),
 		]);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
 	});
 
 	it("writes failure output", async () => {
@@ -489,6 +529,11 @@ describe("flutter run debugger (launch)", () => {
 			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
 			watchPromise("writes_failure_output->assertOutputContains", dc.assertOutputContains("stderr", "Exception: Oops\n")),
 			watchPromise("writes_failure_output->launch", dc.launch(config)),
+		]);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
 		]);
 	});
 
