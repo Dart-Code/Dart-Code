@@ -13,7 +13,7 @@ import { LogMessage } from "../shared/interfaces";
 import { PackageMap } from "../shared/pub/package_map";
 import { errorString, flatMap, throttle, uniq, uriToFilePath } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
-import { applyColor, grey } from "../shared/utils/colors";
+import { applyColor, grey, grey2 } from "../shared/utils/colors";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
 import { ThreadInfo, ThreadManager } from "./threads";
@@ -1722,7 +1722,7 @@ export class DartDebugSession extends DebugSession {
 				|| (this.isExternalLibrary(frame.sourceUri) && frame.sourceUri.startsWith("package:flutter/"))
 				|| (this.isExternalLibrary(frame.sourceUri) && frame.sourceUri.startsWith("package:flutter_web/"));
 
-			const colouredText = isFramework ? applyColor(text, grey) : applyColor(text, colorText);
+			const colouredText = isFramework ? applyColor(text, grey) : applyColor(text, grey2);
 			output.body.output = `${colouredText}\n`;
 		}
 
