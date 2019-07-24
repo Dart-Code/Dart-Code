@@ -4,7 +4,7 @@ import { restartReasonManual } from "../shared/constants";
 import { FlutterServiceExtension, LogCategory } from "../shared/enums";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
 import { Logger } from "../shared/interfaces";
-import { grey } from "../shared/utils/colors";
+import { grey, grey2 } from "../shared/utils/colors";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
@@ -319,15 +319,15 @@ export class FlutterDebugSession extends DartDebugSession {
 	private logFlutterErrorToUser(error: FlutterErrorData) {
 		const assumedTerminalSize = 120;
 		const barChar = "═";
-		const charactersForStripes = Math.max((assumedTerminalSize - error.description.length - 2 - 2), 8);
-		const headerBars = barChar.repeat(charactersForStripes / barChar.length / 2); //
-		const header = `${headerBars} ${error.description} ${headerBars}`;
-		this.logToUser(`\n${header}\n`, "stderr", grey);
+		const headerPrefix = barChar.repeat(8);
+		const headerSuffix = barChar.repeat(Math.max((assumedTerminalSize - error.description.length - 2 - headerPrefix.length), 0));
+		const header = `${headerPrefix} ${error.description} ${headerSuffix}`;
+		this.logToUser(`\n${header}\n`, "stderr", grey2);
 		if (error.errorsSinceReload)
 			this.logFlutterErrorSummary(error);
 		else
 			this.logDiagnosticNodeDescendents(error);
-		this.logToUser(`${barChar.repeat(header.length / barChar.length)}\n`, "stderr", grey);
+		this.logToUser(`${barChar.repeat(header.length)}\n`, "stderr", grey2);
 	}
 
 	private logDiagnosticNodeToUser(node: DiagnosticsNode, { parent, level = 0, blankLineAfterSummary = true }: { parent: DiagnosticsNode; level?: number; blankLineAfterSummary?: boolean }) {
