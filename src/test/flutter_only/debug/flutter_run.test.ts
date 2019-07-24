@@ -521,8 +521,6 @@ describe("flutter run debugger (launch)", () => {
 	});
 
 	it("writes failure output", async () => {
-		// This test really wants to check stderr, but since the widgets library catches the exception is
-		// just comes via stdout.
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
 		await Promise.all([
