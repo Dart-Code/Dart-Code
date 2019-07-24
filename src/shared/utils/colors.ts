@@ -11,6 +11,7 @@ const codeMagenta = 5;
 const codeCyan = 6;
 const codeWhite = 7;
 const codeGrey = 244;
+const codeGrey2 = 248;
 
 const esc = (...code: Array<number | string>) => `\u001B[${code.join(";")}m`;
 export const black = (msg: string) => `${esc(codeFg, codeBlack)}${msg}${esc(codeReset)}`;
@@ -22,6 +23,7 @@ export const magenta = (msg: string) => `${esc(codeFg, codeMagenta)}${msg}${esc(
 export const cyan = (msg: string) => `${esc(codeFg, codeCyan)}${msg}${esc(codeReset)}`;
 export const white = (msg: string) => `${esc(codeFg, codeWhite)}${msg}${esc(codeReset)}`;
 export const grey = (msg: string) => `${esc(codeFg, codeGrey)}${msg}${esc(codeReset)}`;
+export const grey2 = (msg: string) => `${esc(codeFg, codeGrey2)}${msg}${esc(codeReset)}`;
 export const brightBlack = (msg: string) => `${esc(codeFg, codeBlack + brightOffset)}${msg}${esc(codeReset)}`;
 export const brightRed = (msg: string) => `${esc(codeFg, codeRed + brightOffset)}${msg}${esc(codeReset)}`;
 export const brightGreen = (msg: string) => `${esc(codeFg, codeGreen + brightOffset)}${msg}${esc(codeReset)}`;
