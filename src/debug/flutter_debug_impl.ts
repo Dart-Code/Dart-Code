@@ -318,12 +318,13 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	private logFlutterErrorToUser(error: FlutterErrorData) {
 		const assumedTerminalSize = 120;
-		const stripeChar = "=";
-		const charactersForStripes = Math.max((assumedTerminalSize - error.description.length), 8);
-		const header = stripeChar.repeat(charactersForStripes / stripeChar.length / 2); //
-		this.logToUser(`╠═${header} ${error.description} ${header}═╣\n`, "stderr", grey);
+		const barChar = "=";
+		const charactersForStripes = Math.max((assumedTerminalSize - error.description.length - 2 - 2), 8);
+		const headerBars = barChar.repeat(charactersForStripes / barChar.length / 2); //
+		const header = `╠═${headerBars} ${error.description} ${headerBars}═╣`;
+		this.logToUser(`\n${header}\n`, "stderr", grey);
 		this.logDiagnosticNodeDescendents(error);
-		this.logToUser(`${stripeChar.repeat(assumedTerminalSize / stripeChar.length)}\n`, "stderr", grey);
+		this.logToUser(`${barChar.repeat(header.length / barChar.length)}\n`, "stderr", grey);
 	}
 
 	private logDiagnosticNodeToUser(node: DiagnosticsNode, { parent, level = 0 }: { parent: DiagnosticsNode; level?: number; }) {
