@@ -169,12 +169,17 @@ export class Analytics {
 			av: extensionVersion,
 			cd1: isDevExtension,
 			cd10: config.showTodos ? "On" : "Off",
-			// cd11: config.showLintNames ? "On" : "Off",
+			cd11: this.workspaceContext.hasAnyFlutterProjects
+				? config.previewFlutterOutline ? "On" : "Off"
+				: null,
 			cd12: this.formatter,
 			cd13: this.flutterSdkVersion,
 			cd14: hasFlutterExtension ? "Installed" : "Not Installed",
 			cd17: this.workspaceContext.hasAnyFlutterProjects
 				? (config.previewFlutterUiGuides ? (config.previewFlutterUiGuidesCustomTracking ? "On + Custom Tracking" : "On") : "Off")
+				: null,
+			cd18: this.workspaceContext.hasAnyFlutterProjects && resourceUri
+				? config.for(resourceUri).previewFlutterStructuredErrors ? "On" : "Off"
 				: null,
 			cd2: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
 			cd3: this.sdkVersion,
