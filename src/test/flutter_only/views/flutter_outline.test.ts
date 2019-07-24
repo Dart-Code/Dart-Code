@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { activate, extApi, flutterHelloWorldOutlineFile, getExpectedResults, getPackages, makeTextTree, openFile, waitForResult } from "../../helpers";
+import { activate, delay, extApi, flutterHelloWorldOutlineFile, getExpectedResults, getPackages, makeTextTree, openFile, waitForResult } from "../../helpers";
 
 describe("flutter_outline", () => {
 	// We have tests that require external packages.
@@ -11,6 +11,9 @@ describe("flutter_outline", () => {
 
 		await openFile(flutterHelloWorldOutlineFile);
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterHelloWorldOutlineFile));
+
+		// HACK: We may need to wait for an extra round trip when forceNotificationsFor is called?
+		await delay(100);
 
 		const expectedResults = getExpectedResults();
 		const actualResults = (await makeTextTree(undefined, extApi.flutterOutlineTreeProvider)).join("\n");
