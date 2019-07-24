@@ -917,28 +917,6 @@ describe("dart cli debugger", () => {
 		ensureVariable(variables, "$e.message", "message", `"Oops"`);
 	});
 
-	it("logs expected text (and does not stop) at a logpoint", async () => {
-		await openFile(helloWorldMainFile);
-		const config = await watchPromise("logs_expected_text->startDebugger", startDebugger(helloWorldMainFile));
-		await Promise.all([
-			watchPromise("logs_expected_text->waitForEvent:initialized", dc.waitForEvent("initialized"))
-				.then((event) => {
-					return watchPromise("logs_expected_text->setBreakpointsRequest", dc.setBreakpointsRequest({
-						// positionOf is 0-based, but seems to want 1-based
-						breakpoints: [{
-							line: positionOf("^// BREAKPOINT1").line,
-							// VS Code says to use {} for expressions, but we want to support Dart's native too, so
-							// we have examples of both (as well as "escaped" brackets).
-							logMessage: "The \\{year} is {(new DateTime.now()).year}",
-						}],
-						source: { path: fsPath(helloWorldMainFile) },
-					}));
-				}).then((response) => watchPromise("logs_expected_text->configurationDoneRequest", dc.configurationDoneRequest())),
-			watchPromise("logs_expected_text->assertOutputContainsYear", dc.assertOutputContains("stdout", `The {year} is ${(new Date()).getFullYear()}\n`)),
-			watchPromise("logs_expected_text->launch", dc.launch(config)),
-		]);
-	});
-
 	it("writes exception to stderr", async () => {
 		await openFile(helloWorldBrokenFile);
 		const config = await startDebugger(helloWorldBrokenFile);
