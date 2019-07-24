@@ -2,12 +2,14 @@ import * as assert from "assert";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
+import { DebugProtocol } from "vscode-debugprotocol";
 import { FlutterService, FlutterServiceExtension } from "../../../shared/enums";
 import { fetch } from "../../../shared/fetch";
+import { grey, grey2 } from "../../../shared/utils/colors";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, getPackages, openFile, positionOf, waitForResult, watchPromise } from "../../helpers";
+import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, getLaunchConfiguration, getPackages, openFile, positionOf, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter run debugger (launch)", () => {
 	// We have tests that require external packages.
@@ -553,5 +555,79 @@ describe("flutter run debugger (launch)", () => {
 			),
 			watchPromise("writes_failure_output->launch", dc.launch(config)),
 		]);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+	});
+
+	it("renders correct output for structured errors", async function () {
+		await setConfigForTest("dart", "previewFlutterStructuredErrors", true);
+		await openFile(flutterHelloWorldBrokenFile);
+		const config = await startDebugger(flutterHelloWorldBrokenFile);
+
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.launch(config),
+		]);
+
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.InspectorStructuredErrors) === true);
+
+		// Collect all output to stderr.
+		let stderrOutput = "";
+		const handleOutput = (event: DebugProtocol.OutputEvent) => {
+			if (event.body.category === "stderr") {
+				stderrOutput += event.body.output;
+			}
+		};
+		dc.on("output", handleOutput);
+
+		try {
+			dc.hotReload();
+			await waitForResult(
+				() => stderrOutput.indexOf("════════ Exception caught by widgets library") !== -1
+					&& stderrOutput.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1,
+				"Waiting for error output",
+				5000,
+			);
+		} finally {
+			dc.removeListener("output", handleOutput);
+		}
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+
+		// Grab online the lines that form our error.
+		let stdErrLines = stderrOutput.split("\n").map((l) => l.trim());
+		// Trim off stuff before our error.
+		const firstErrorLine = stdErrLines.findIndex((l) => l.indexOf("════════ Exception caught by widgets library") !== -1);
+		stdErrLines = stdErrLines.slice(firstErrorLine);
+		// Trim off stuff after our error.
+		const lastErrorLine = stdErrLines.findIndex((l) => l.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1);
+		stdErrLines = stdErrLines.slice(0, lastErrorLine + 1);
+
+		const expectedErrorLines = [
+			grey2(`════════ Exception caught by widgets library ═══════════════════════════════════`),
+			grey(`The following _Exception was thrown building MyBrokenHomePage(dirty):`),
+			`Exception: Oops`,
+			// TODO: Figure out why this doesn't come through in tests... suspect it's related to
+			// setPubRootDirectories, though that does seem to be firing. Running the same test project
+			// outside of the tests works fine.
+			// grey(`User-created ancestor of the error-causing widget was`),
+			// grey2(`MaterialApp`),
+			grey(`When the exception was thrown, this was the stack`),
+			grey2(`#0      MyBrokenHomePage.build`),
+			grey(`#1      StatelessElement.build`),
+			grey(`#2      ComponentElement.performRebuild`),
+			grey(`#3      Element.rebuild`),
+			grey(`#4      StatelessElement.update`),
+			grey(`...`),
+			grey2(`════════════════════════════════════════════════════════════════════════════════`),
+		];
+
+		assert.deepStrictEqual(stdErrLines, expectedErrorLines);
 	});
 });
