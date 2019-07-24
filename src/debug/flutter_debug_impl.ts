@@ -318,10 +318,10 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	private logFlutterErrorToUser(error: FlutterErrorData) {
 		const assumedTerminalSize = 120;
-		const barChar = "=";
+		const barChar = "═";
 		const charactersForStripes = Math.max((assumedTerminalSize - error.description.length - 2 - 2), 8);
 		const headerBars = barChar.repeat(charactersForStripes / barChar.length / 2); //
-		const header = `╠═${headerBars} ${error.description} ${headerBars}═╣`;
+		const header = `${headerBars} ${error.description} ${headerBars}`;
 		this.logToUser(`\n${header}\n`, "stderr", grey);
 		if (error.errorsSinceReload)
 			this.logFlutterErrorSummary(error);
