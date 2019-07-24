@@ -317,7 +317,7 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	private logFlutterErrorToUser(error: FlutterErrorData) {
-		const assumedTerminalSize = 120;
+		const assumedTerminalSize = 80;
 		const barChar = "═";
 		const headerPrefix = barChar.repeat(8);
 		const headerSuffix = barChar.repeat(Math.max((assumedTerminalSize - error.description.length - 2 - headerPrefix.length), 0));
