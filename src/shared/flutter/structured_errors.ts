@@ -1,4 +1,6 @@
-export type FlutterErrorData = DiagnosticsNode;
+export interface FlutterErrorData extends DiagnosticsNode {
+	errorsSinceReload: number | undefined;
+}
 
 export interface DiagnosticsNode {
 	type: DiagnosticsNodeType;
