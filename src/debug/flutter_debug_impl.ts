@@ -350,7 +350,10 @@ export class FlutterDebugSession extends DartDebugSession {
 		// For text that is not part of a stack trace and is not an Error or Summary we
 		// want to override the default red text for the stderr category to grey.
 		const isErrorMessage = node.level === DiagnosticsNodeLevel.Error
-			|| node.level === DiagnosticsNodeLevel.Summary;
+			|| node.level === DiagnosticsNodeLevel.Summary
+			// TODO: Remove this when Flutter is marking user-thrown exceptions with
+			// ErrorSummary.
+			|| node.description && node.description.startsWith("Exception: ");
 		const colorText = isErrorMessage
 			? (s: string) => s
 			: grey;
