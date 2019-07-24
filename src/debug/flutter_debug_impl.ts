@@ -323,11 +323,14 @@ export class FlutterDebugSession extends DartDebugSession {
 		const headerBars = barChar.repeat(charactersForStripes / barChar.length / 2); //
 		const header = `╠═${headerBars} ${error.description} ${headerBars}═╣`;
 		this.logToUser(`\n${header}\n`, "stderr", grey);
-		this.logDiagnosticNodeDescendents(error);
+		if (error.errorsSinceReload)
+			this.logFlutterErrorSummary(error);
+		else
+			this.logDiagnosticNodeDescendents(error);
 		this.logToUser(`${barChar.repeat(header.length / barChar.length)}\n`, "stderr", grey);
 	}
 
-	private logDiagnosticNodeToUser(node: DiagnosticsNode, { parent, level = 0 }: { parent: DiagnosticsNode; level?: number; }) {
+	private logDiagnosticNodeToUser(node: DiagnosticsNode, { parent, level = 0, blankLineAfterSummary = true }: { parent: DiagnosticsNode; level?: number; blankLineAfterSummary?: boolean }) {
 		if (node.description && node.description.startsWith("◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤"))
 			return;
 
@@ -355,7 +358,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			: grey;
 
 		this.logToUser(`${line}\n`, "stderr", colorText);
-		if (node.level === DiagnosticsNodeLevel.Summary)
+		if (blankLineAfterSummary && node.level === DiagnosticsNodeLevel.Summary)
 			this.logToUser("\n");
 
 		const childLevel = node.style === DiagnosticsNodeStyle.Flat
@@ -363,6 +366,12 @@ export class FlutterDebugSession extends DartDebugSession {
 			: level + 1;
 
 		this.logDiagnosticNodeDescendents(node, childLevel);
+	}
+
+	private logFlutterErrorSummary(error: FlutterErrorData) {
+		error.properties
+			.filter((p) => p.level === DiagnosticsNodeLevel.Summary)
+			.forEach((child) => this.logDiagnosticNodeToUser(child, { parent: error, blankLineAfterSummary: false }));
 	}
 
 	private logDiagnosticNodeDescendents(node: DiagnosticsNode, level: number = 0) {
