@@ -53,7 +53,7 @@ export const doNotAskAgainAction = "Don't Ask Again";
 
 export const flutterSurveyPromptWithAnalytics = "Help improve Flutter! Take our Q3 survey. By clicking on this link you agree to share feature usage along with the survey responses.";
 export const flutterSurveyPromptWithoutAnalytics = "Help improve Flutter! Take our Q3 survey.";
-export const takeSurveyAction = "Take Flutter Q3 Survey";
+export const takeSurveyAction = "Take Survey";
 
 // Minutes.
 export const fiveMinutesInMs = 1000 * 60 * 5;
