@@ -372,8 +372,8 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	private logFlutterErrorSummary(error: FlutterErrorData) {
 		for (const p of error.properties) {
-			const hasLeafChildren = p.children && p.children.length && !p.children.find((c) => c.children && c.children.length);
-			if (p.level === DiagnosticsNodeLevel.Summary || hasLeafChildren)
+			const allChildrenAreLeaf = p.children && p.children.length && !p.children.find((c) => c.children && c.children.length);
+			if (p.level === DiagnosticsNodeLevel.Summary || allChildrenAreLeaf)
 				this.logDiagnosticNodeToUser(p, { parent: error, blankLineAfterSummary: false });
 		}
 	}
