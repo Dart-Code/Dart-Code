@@ -378,8 +378,15 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	private logDiagnosticNodeDescendents(node: DiagnosticsNode, level: number = 0) {
-		if (node.properties)
-			node.properties.forEach((child) => this.logDiagnosticNodeToUser(child, { parent: node, level }));
+		if (node.properties) {
+			let lastLevel: DiagnosticsNodeLevel | undefined;
+			for (const child of node.properties) {
+				if (lastLevel !== child.level && (lastLevel === DiagnosticsNodeLevel.Hint || child.level === DiagnosticsNodeLevel.Hint))
+					this.logToUser("\n");
+				this.logDiagnosticNodeToUser(child, { parent: node, level });
+				lastLevel = child.level;
+			}
+		}
 		if (node.style !== DiagnosticsNodeStyle.Shallow && node.children)
 			node.children.forEach((child) => this.logDiagnosticNodeToUser(child, { parent: node, level }));
 	}
