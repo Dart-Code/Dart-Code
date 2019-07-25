@@ -52,11 +52,14 @@ export class DartDebugClient extends DebugClient {
 
 	public async launch(launchArgs: any): Promise<void> {
 		this.currentSession = {
-			configuration: {
-				name: "Dart & Flutter",
-				request: "launch",
-				type: "dart",
-			},
+			configuration: Object.assign(
+				{
+					name: "Dart & Flutter",
+					request: "launch",
+					type: "dart",
+				},
+				launchArgs,
+			),
 			customRequest: (cmd, args) => this.customRequest(cmd, args),
 			id: "INTEGRATION-TEST",
 			name: "Dart & Flutter",
