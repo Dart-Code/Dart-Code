@@ -941,8 +941,8 @@ describe("dart cli debugger", () => {
 				"writes_failure_output->assertOutputContains",
 				dc.assertOutputContains("stderr", "#0      main")
 					.then((event) => {
-						assert.equal(event.body.output.indexOf("bin/broken.dart"), -1);
-						assert.equal(event.body.source!.name, "bin/broken.dart");
+						assert.equal(event.body.output.indexOf("broken.dart"), -1);
+						assert.equal(event.body.source!.name, path.join("bin", "broken.dart"));
 						assert.equal(event.body.source!.path, fsPath(helloWorldBrokenFile));
 						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
 						assert.equal(event.body.column, 3);
