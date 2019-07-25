@@ -40,7 +40,7 @@ describe("dart cli debugger", () => {
 		return config;
 	}
 
-	it("runs a Dart script to completion", async () => {
+	it("runs to completion", async () => {
 		const config = await startDebugger(helloWorldMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
@@ -127,7 +127,7 @@ describe("dart cli debugger", () => {
 		});
 	});
 
-	it("receives the expected output from a Dart script", async () => {
+	it("receives the expected output", async () => {
 		const config = await startDebugger(helloWorldMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
@@ -151,7 +151,7 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it("successfully runs a Dart script with a relative path", async () => {
+	it("can run with a relative path in launch config", async () => {
 		const config = await startDebugger(helloWorldMainFile);
 		config!.program = path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile));
 		await Promise.all([
@@ -162,7 +162,7 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it("runs a Dart script with a variable in cwd", async () => {
+	it("can run with a variable in cwd", async () => {
 		const config = await startDebugger(helloWorldMainFile, { cwd: "${workspaceFolder}/" });
 		config.program = path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile));
 		await Promise.all([
@@ -206,7 +206,7 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it("runs projects in sub-folders when the open file is in a project sub-folder", async () => {
+	it("can run projects in sub-folders when the open file is in a project sub-folder", async () => {
 		await openFile(helloWorldExampleSubFolderMainFile);
 		const config = await startDebugger();
 		await Promise.all([
@@ -217,7 +217,7 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it("runs projects in sub-folders when cwd is set to a project sub-folder", async () => {
+	it("can run projects in sub-folders when cwd is set to a project sub-folder", async () => {
 		const config = await startDebugger(undefined, { cwd: "example" });
 		await Promise.all([
 			dc.configurationSequence(),

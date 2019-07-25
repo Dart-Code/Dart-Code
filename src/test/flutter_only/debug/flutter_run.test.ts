@@ -54,7 +54,7 @@ describe("flutter run debugger (launch)", () => {
 		return config;
 	}
 
-	it("runs a Flutter application and remains active until told to quit", async () => {
+	it("runs and remains active until told to quit", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
 			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
@@ -70,6 +70,13 @@ describe("flutter run debugger (launch)", () => {
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		]);
+	});
+
+	describe("prompts the user if trying to run with errors", () => {
+		it("and cancels launch if they click Show Errors");
+		it("and launches if they click Debug Anyway");
+		it("unless the errors are in test scripts");
+		it("in the test script being run");
 	});
 
 	it("expected debugger services are available in debug mode", async () => {
@@ -171,7 +178,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	});
 
-	it("receives the expected output from a Flutter application", async () => {
+	it("receives the expected output", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
@@ -186,7 +193,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	});
 
-	it("runs a Flutter application with a relative path", async () => {
+	it("can run with a relative path in launch config", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldMainFile));
 		await Promise.all([
@@ -204,7 +211,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	}).timeout(90000); // The 10 second delay makes this test slower and sometimes hit 60s.
 
-	it("runs a Flutter application with a variable in cwd", async () => {
+	it("can run with a variable in cwd", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile, { cwd: "${workspaceFolder}/" });
 		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldMainFile));
 		await Promise.all([
@@ -222,7 +229,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	});
 
-	it("hot reloads successfully", async () => {
+	it("can hot reload", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
 			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
@@ -237,7 +244,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	});
 
-	it("hot restarts successfully", async () => {
+	it("can hot restart", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
@@ -258,7 +265,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	});
 
-	it("runs projects in sub-folders when the open file is in a project sub-folder", async () => {
+	it("can run projects in sub-folders when the open file is in a project sub-folder", async () => {
 		await openFile(flutterHelloWorldExampleSubFolderMainFile);
 		const config = await startDebugger();
 		await Promise.all([
@@ -280,7 +287,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	});
 
-	it("runs projects in sub-folders when cwd is set to a project sub-folder", async () => {
+	it("can run projects in sub-folders when cwd is set to a project sub-folder", async () => {
 		const config = await startDebugger(undefined, { cwd: "example" });
 		await Promise.all([
 			dc.configurationSequence(),
@@ -316,8 +323,8 @@ describe("flutter run debugger (launch)", () => {
 
 		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
 		assert.ok(devTools);
-		assert.ok(devTools.url);
 		defer(devTools.dispose);
+		assert.ok(devTools.url);
 
 		const serverResponse = await fetch(devTools.url);
 		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1);
@@ -406,6 +413,15 @@ describe("flutter run debugger (launch)", () => {
 			assert.equal(didStop, false);
 		});
 	});
+
+	it("stops at a breakpoint in a part file");
+
+	it("stops at a breakpoint in a deferred file");
+
+	// Known not to work; https://github.com/Dart-Code/Dart-Code/issues/821
+	it.skip("stops at a breakpoint in the SDK");
+
+	it("stops at a breakpoint in an external package");
 
 	it("steps into the SDK if debugSdkLibraries is true", async () => {
 		await openFile(flutterHelloWorldMainFile);
@@ -542,6 +558,8 @@ describe("flutter run debugger (launch)", () => {
 			dc.terminateRequest(),
 		]);
 	});
+
+	it("downloads SDK source code from the VM");
 
 	it("correctly marks non-debuggable SDK frames when debugSdkLibraries is false", async () => {
 		await openFile(flutterHelloWorldThrowInSdkFile);
@@ -1087,34 +1105,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	});
 
-	it("logs expected text (and does not stop) at a logpoint", async () => {
-		await openFile(flutterHelloWorldMainFile);
-		const config = await watchPromise("logs_expected_text->startDebugger", startDebugger(flutterHelloWorldMainFile));
-		await Promise.all([
-			watchPromise("logs_expected_text->waitForEvent:initialized", dc.waitForEvent("initialized"))
-				.then((event) => {
-					return watchPromise("logs_expected_text->setBreakpointsRequest", dc.setBreakpointsRequest({
-						// positionOf is 0-based, but seems to want 1-based
-						breakpoints: [{
-							line: positionOf("^// BREAKPOINT1").line,
-							// VS Code says to use {} for expressions, but we want to support Dart's native too, so
-							// we have examples of both (as well as "escaped" brackets).
-							logMessage: "The \\{year} is {(new DateTime.now()).year}",
-						}],
-						source: { path: fsPath(flutterHelloWorldMainFile) },
-					}));
-				}).then((response) => watchPromise("logs_expected_text->configurationDoneRequest", dc.configurationDoneRequest())),
-			watchPromise("logs_expected_text->assertOutputContainsYear", dc.assertOutputContains("stdout", `The {year} is ${(new Date()).getFullYear()}\n`)),
-			watchPromise("logs_expected_text->launch", dc.launch(config)),
-		]);
-
-		await Promise.all([
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		]);
-	});
-
-	it("writes failure output", async () => {
+	it("writes exception to stderr", async () => {
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
 		await Promise.all([
