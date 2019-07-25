@@ -354,9 +354,10 @@ export class FlutterDebugSession extends DartDebugSession {
 			// TODO: Remove this when Flutter is marking user-thrown exceptions with
 			// ErrorSummary.
 			|| node.description && node.description.startsWith("Exception: ");
+		const isHint = node.level === DiagnosticsNodeLevel.Hint;
 		const colorText = isErrorMessage
-			? (s: string) => s
-			: grey;
+			? (s: string) => s // Leave as default (red stderr)
+			: isHint ? grey2 : grey;
 
 		this.logToUser(`${line}\n`, "stderr", colorText);
 		if (blankLineAfterSummary && node.level === DiagnosticsNodeLevel.Summary)
