@@ -20,7 +20,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private daemonStartedCompleter = new PromiseCompleter();
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
-	constructor(private readonly logger: Logger, flutterBinPath: string, projectFolder: string) {
+	constructor(logger: Logger, flutterBinPath: string, projectFolder: string) {
 		super(() => config.flutterDaemonLogFile, new CategoryLogger(logger, LogCategory.FlutterDaemon), config.maxLogLineLength, true);
 
 		this.registerForDaemonConnected((e) => {
