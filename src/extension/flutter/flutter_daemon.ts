@@ -20,7 +20,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private daemonStartedCompleter = new PromiseCompleter();
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
-	constructor(logger: Logger, flutterBinPath: string, projectFolder: string) {
+	constructor(private readonly logger: Logger, flutterBinPath: string, projectFolder: string) {
 		super(() => config.flutterDaemonLogFile, new CategoryLogger(logger, LogCategory.FlutterDaemon), config.maxLogLineLength, true);
 
 		this.registerForDaemonConnected((e) => {
@@ -67,6 +67,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	private static readonly outOfDateWarning = new RegExp("WARNING: .* Flutter is (\\d+) days old");
 	private static readonly newVersionMessage = "A new version of Flutter is available";
+	private hasShownStartupError = false;
 	protected async processUnhandledMessage(message: string): Promise<void> {
 		let upgradeMessage: string | undefined;
 		const matches = FlutterDaemon.outOfDateWarning.exec(message);
@@ -81,9 +82,16 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			return;
 		}
 
+		if (!this.hasShownStartupError && message.startsWith("Flutter requires")) {
+			this.logger.error(message, LogCategory.FlutterDaemon);
+			vs.window.showErrorMessage(message);
+			this.hasShownStartupError = true;
+			return;
+		}
+
 		// Show as progress message, this is likely "Building flutter tool" or "downloading Dart SDK" messages.
 		if (
-			(message.startsWith("Building ") || message.startsWith("Downloading ") || message.startsWith("Starting "))
+			(message.startsWith("Building ") || message.startsWith("Downloading ") || message.startsWith("Starting ") || message.startsWith("Running "))
 			&& !message.startsWith("Starting device daemon") // Don't show this one as it happens for normal startups too.
 		) {
 			if (!this.hasStarted) {
