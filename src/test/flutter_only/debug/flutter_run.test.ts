@@ -562,7 +562,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 	});
 
-	it("renders correct output for structured errors", async function () {
+	it("renders correct output for structured errors", async () => {
 		await setConfigForTest("dart", "previewFlutterStructuredErrors", true);
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
@@ -613,11 +613,8 @@ describe("flutter run debugger (launch)", () => {
 			grey2(`════════ Exception caught by widgets library ═══════════════════════════════════`),
 			grey(`The following _Exception was thrown building MyBrokenHomePage(dirty):`),
 			`Exception: Oops`,
-			// TODO: Figure out why this doesn't come through in tests... suspect it's related to
-			// setPubRootDirectories, though that does seem to be firing. Running the same test project
-			// outside of the tests works fine.
-			// grey(`User-created ancestor of the error-causing widget was`),
-			// grey2(`MaterialApp`),
+			grey(`User-created ancestor of the error-causing widget was`),
+			grey2(`MaterialApp`),
 			grey(`When the exception was thrown, this was the stack`),
 			grey2(`#0      MyBrokenHomePage.build`),
 			grey(`#1      StatelessElement.build`),
