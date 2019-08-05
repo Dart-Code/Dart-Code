@@ -234,11 +234,6 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 	}
 
-	private isMobile(device: f.Device) {
-		// Treat missing platformType as mobile, since we don't know better.
-		return !device.platformType || device.platformType === "ios" || device.platformType === "android";
-	}
-
 	public async promptForAndLaunchEmulator(allowAutomaticSelection = false): Promise<boolean> {
 		const emulators = await this.getEmulatorItems(false);
 
