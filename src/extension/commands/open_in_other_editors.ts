@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { androidStudioPath, flutterPath, isMac } from "../../shared/constants";
+import { androidStudioPaths, flutterPath, isMac } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
@@ -25,15 +25,24 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 		let androidStudioDir = await this.getAndroidStudioDir(folder);
 
 		if (!androidStudioDir) {
-			vs.window.showErrorMessage(`Unable to find Android Studio`);
+			vs.window.showErrorMessage("Unable to find Android Studio");
 			return;
 		}
+
 		if (isMac && androidStudioDir.endsWith("/Contents")) {
 			androidStudioDir = androidStudioDir.substr(0, androidStudioDir.length - "/Contents".length);
 			safeSpawn(folder, "open", ["-a", androidStudioDir, folder]);
+			return;
 		} else {
-			safeSpawn(folder, path.join(androidStudioDir, androidStudioPath), [folder]);
+			for (const androidStudioPath of androidStudioPaths) {
+				const fullPath = path.join(androidStudioDir, androidStudioPath);
+				if (fs.existsSync(fullPath)) {
+					safeSpawn(folder, fullPath, [folder]);
+					return;
+				}
+			}
 		}
+		vs.window.showErrorMessage("Unable to locate Android Studio executable");
 	}
 
 	private async openInXcode(resource: vs.Uri): Promise<void> {
