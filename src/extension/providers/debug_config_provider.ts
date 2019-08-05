@@ -467,6 +467,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.debuggerHandlesPathsEverywhereForBreakpoints = debugConfig.debuggerHandlesPathsEverywhereForBreakpoints !== undefined && debugConfig.debuggerHandlesPathsEverywhereForBreakpoints !== null
 			? debugConfig.debuggerHandlesPathsEverywhereForBreakpoints
 			: this.dartCapabilities.handlesPathsEverywhereForBreakpoints;
+		this.logger.warn(`Debugger supports paths everywhere? ${debugConfig.debuggerHandlesPathsEverywhereForBreakpoints}`);
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		if (isFlutter) {
 			debugConfig.args = debugConfig.args.concat(conf.flutterAdditionalArgs);
