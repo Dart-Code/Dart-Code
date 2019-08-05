@@ -1074,7 +1074,7 @@
 				"dart.pubAdditionalArgs": {
 					"type": "array",
 					"default": [],
-					"description": "Additional args to pass to pub get and pub upgrade commands (eg. --packages-dir).",
+					"description": "Additional args to pass to all pub commands.",
 					"scope": "resource",
 					"items": {
 						"type": "string"
