@@ -465,6 +465,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.useFlutterStructuredErrors = conf.previewFlutterStructuredErrors;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		if (isFlutter) {
+			debugConfig.args = debugConfig.args.concat(conf.flutterAdditionalArgs);
 			debugConfig.forceFlutterVerboseMode = isLogging || isCI;
 			debugConfig.flutterTrackWidgetCreation =
 				// Use from the launch.json if configured.
