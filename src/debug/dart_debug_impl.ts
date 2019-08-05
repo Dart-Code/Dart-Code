@@ -421,7 +421,7 @@ export class DartDebugSession extends DebugSession {
 			this.observatory.on("Logging", (event: VMEvent) => this.handleLoggingEvent(event)).catch((e) => {
 				this.logger.info(errorString(e));
 				// For web, the protocol version says this is supported, but it throws.
-				// TODO: Remove this catch blog if/when the stable release does not throw.
+				// TODO: Remove this catch block if/when the stable release does not throw.
 			});
 		}
 	}
