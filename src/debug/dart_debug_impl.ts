@@ -547,10 +547,10 @@ export class DartDebugSession extends DebugSession {
 		// work everywhere.
 		// TODO: The `|| source.name` stops a crash (#1566) but doesn't actually make
 		// the breakpoints work. This needs more work.
-		const usePaths = this.debuggerHandlesPathsEverywhereForBreakpoints || !this.packageMap;
-		const uri = usePaths
-			? formatPathForVm(source.path || source.name)
-			: (this.packageMap.convertFileToPackageUri(source.path) || formatPathForVm(source.path || source.name));
+		const mapToPackagePath = this.packageMap && !this.debuggerHandlesPathsEverywhereForBreakpoints;
+		const uri = mapToPackagePath
+			? (this.packageMap.convertFileToPackageUri(source.path) || formatPathForVm(source.path || source.name))
+			: formatPathForVm(source.path || source.name);
 
 		try {
 			const result = await this.threadManager.setBreakpoints(uri, breakpoints);
