@@ -82,7 +82,7 @@ export class SdkUtils {
 	public showFlutterActivationFailure(commandToReRun?: string) {
 		this.showSdkActivationFailure(
 			"Flutter",
-			this.findFlutterSdk,
+			(p) => this.findFlutterSdk(p),
 			FLUTTER_DOWNLOAD_URL,
 			(p) => config.setGlobalFlutterSdkPath(p),
 			commandToReRun,
@@ -91,7 +91,7 @@ export class SdkUtils {
 	public showDartActivationFailure(commandToReRun?: string) {
 		this.showSdkActivationFailure(
 			"Dart",
-			this.findDartSdk,
+			(p) => this.findDartSdk(p),
 			DART_DOWNLOAD_URL,
 			(p) => config.setGlobalDartSdkPath(p),
 			commandToReRun,
