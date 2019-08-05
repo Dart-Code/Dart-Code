@@ -19,7 +19,7 @@ describe("workspace_symbol_provider", () => {
 		// TODO: Remove this when we figure out what's up 🤷‍♂️
 		const symbols2 = await getWorkspaceSymbols("my");
 		const symbols3 = await getWorkspaceSymbols("my");
-		if (symbols.length !== symbols2.length || symbols2.length != symbols3.length) {
+		if (symbols.length !== symbols2.length || symbols2.length !== symbols3.length) {
 			throw new Error(`workspace symbols gave different results! ${symbols.length} vs ${symbols2.length} vs ${symbols3.length}`);
 		}
 
