@@ -1,6 +1,6 @@
 import { escapeRegExp } from "../../shared/utils";
 
-export function getLaunchConfig(noDebug: boolean, path: string, testName: string, isGroup: boolean, template: any | undefined) {
+export function getLaunchConfig(noDebug: boolean, path: string, testName: string, isGroup: boolean, template?: any | undefined) {
 	return Object.assign(
 		{},
 		template,
