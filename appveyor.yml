@@ -87,7 +87,7 @@ install:
     )
   - git fetch
   - git reset --hard origin/%FLUTTER_BRANCH%
-  - git checkout %FLUTTER_BRANCH%
+  - git checkout %FLUTTER_BRANCH% --
   - cd ..
   - echo Configuring Dart and Flutter...
   - flutter\bin\flutter config --no-analytics
