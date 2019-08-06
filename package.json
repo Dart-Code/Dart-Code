@@ -1461,6 +1461,13 @@
 								],
 								"default": "default"
 							},
+							"template": {
+								"description": "Uses this launch configuration as a template for launching tests.",
+								"enum": [
+									"run-test",
+									"debug-test"
+								]
+							},
 							"args": {
 								"type": "array",
 								"description": "Command line arguments to the application.",
