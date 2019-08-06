@@ -14,3 +14,11 @@ export function showCode(editor: vs.TextEditor, displayRange: vs.Range, highligh
 	// TODO: Implement highlighting
 	// See https://github.com/Microsoft/vscode/issues/45059
 }
+
+class EnvUtils {
+	public async openInBrowser(url: string): Promise<boolean> {
+		return vs.env.openExternal(vs.Uri.parse(url));
+	}
+}
+
+export const envUtils = new EnvUtils();

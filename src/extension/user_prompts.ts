@@ -6,11 +6,12 @@ import { LogCategory } from "../shared/enums";
 import { Logger, StagehandTemplate } from "../shared/interfaces";
 import { checkHasFlutterExtension, extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { showFlutterSurveyNotificationIfAppropriate } from "../shared/vscode/user_prompts";
-import { envUtils, fsPath, getDartWorkspaceFolders } from "../shared/vscode/utils";
+import { fsPath, getDartWorkspaceFolders } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { markProjectCreationEnded, markProjectCreationStarted } from "./commands/sdk";
 import { reloadExtension } from "./utils";
+import { envUtils } from "./utils/vscode/editor";
 
 export async function showUserPrompts(logger: Logger, context: Context, workspaceContext: WorkspaceContext): Promise<void> {
 	handleNewProjects(logger, context);
@@ -51,7 +52,7 @@ export async function showUserPrompts(logger: Logger, context: Context, workspac
 	}
 
 	if (workspaceContext.hasAnyFlutterProjects) {
-		if (showFlutterSurveyNotificationIfAppropriate(context, Date.now(), logger))
+		if (showFlutterSurveyNotificationIfAppropriate(context, envUtils.openInBrowser, Date.now(), logger))
 			return; // Bail if we showed it, so we won't show any other notifications.
 	}
 

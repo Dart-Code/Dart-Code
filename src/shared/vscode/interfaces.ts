@@ -39,6 +39,9 @@ export interface InternalExtensionApi {
 	};
 	debugCommands: DebugCommandHandler;
 	debugProvider: DebugConfigurationProvider;
+	envUtils: {
+		openInBrowser(url: string): Promise<boolean>;
+	};
 	fileTracker: {
 		getOutlineFor(file: Uri): Outline | undefined;
 		getFlutterOutlineFor(file: Uri): FlutterOutline | undefined;

@@ -1,4 +1,4 @@
-import { env as vsCodeEnv, ExtensionKind, extensions, Uri, workspace, WorkspaceFolder } from "vscode";
+import { ExtensionKind, extensions, Uri, workspace, WorkspaceFolder } from "vscode";
 import { dartCodeExtensionIdentifier } from "../constants";
 import { forceWindowsDriveLetterToUppercase } from "../utils";
 
@@ -11,14 +11,6 @@ export function fsPath(uri: Uri | string) {
 	// tslint:disable-next-line:disallow-fspath
 	return forceWindowsDriveLetterToUppercase(uri instanceof Uri ? uri.fsPath : uri);
 }
-
-class EnvUtils {
-	public async openInBrowser(url: string): Promise<boolean> {
-		return vsCodeEnv.openExternal(Uri.parse(url));
-	}
-}
-
-export const envUtils = new EnvUtils();
 
 export function getDartWorkspaceFolders(): WorkspaceFolder[] {
 	if (!workspace.workspaceFolders)

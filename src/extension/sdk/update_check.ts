@@ -2,10 +2,10 @@ import { window } from "vscode";
 import { DART_DOWNLOAD_URL } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { versionIsAtLeast } from "../../shared/utils";
-import { envUtils } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { getLatestSdkVersion } from "../utils";
+import { envUtils } from "../utils/vscode/editor";
 
 export async function checkForStandardDartSdkUpdates(logger: Logger, workspaceContext: WorkspaceContext): Promise<void> {
 	if (!config.checkForSdkUpdates || !workspaceContext.hasOnlyDartProjects)

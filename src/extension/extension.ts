@@ -74,6 +74,7 @@ import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
 import { safeSpawn } from "./utils/processes";
+import { envUtils } from "./utils/vscode/editor";
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestItemTreeItem, TestResultsProvider } from "./views/test_view";
 
@@ -527,6 +528,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			dartCapabilities,
 			debugCommands,
 			debugProvider,
+			envUtils,
 			fileTracker: openFileTracker,
 			flutterCapabilities,
 			flutterOutlineTreeProvider,

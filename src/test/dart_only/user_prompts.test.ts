@@ -4,7 +4,6 @@ import * as vs from "vscode";
 import { doNotAskAgainAction, flutterSurveyPromptWithoutAnalytics, longRepeatPromptThreshold, noRepeatPromptThreshold, openDevToolsAction, takeSurveyAction, twoHoursInMs, wantToTryDevToolsPrompt } from "../../shared/constants";
 import { waitFor } from "../../shared/utils/promises";
 import { showDevToolsNotificationIfAppropriate, showFlutterSurveyNotificationIfAppropriate, surveyEnd, surveyStart } from "../../shared/vscode/user_prompts";
-import { envUtils } from "../../shared/vscode/utils";
 import { activateWithoutAnalysis, clearAllContext, extApi, logger, sb } from "../helpers";
 
 describe("DevTools notification", async () => {
@@ -132,9 +131,9 @@ describe("Survey notification", async () => {
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(takeSurveyAction);
 
-		const openBrowserCommand = sb.stub(envUtils, "openInBrowser").resolves();
+		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
 
-		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, surveyIsOpenDate, logger);
+		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, extApi.envUtils.openInBrowser, surveyIsOpenDate, logger);
 
 		// Was asked, and launched..
 		assert.equal(openSurveyPrompt.calledOnce, true);
@@ -156,9 +155,9 @@ describe("Survey notification", async () => {
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(takeSurveyAction);
 
-		const openBrowserCommand = sb.stub(envUtils, "openInBrowser").resolves();
+		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
 
-		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, surveyIsOpenDate, logger);
+		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, extApi.envUtils.openInBrowser, surveyIsOpenDate, logger);
 
 		// Was asked, and launched..
 		assert.equal(openSurveyPrompt.calledOnce, true);
@@ -181,9 +180,9 @@ describe("Survey notification", async () => {
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(takeSurveyAction);
 
-		const openBrowserCommand = sb.stub(envUtils, "openInBrowser").resolves();
+		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
 
-		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, now, logger);
+		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, extApi.envUtils.openInBrowser, now, logger);
 
 		// Was not asked, or launched.
 		assert.equal(openSurveyPrompt.called, false);
@@ -195,9 +194,9 @@ describe("Survey notification", async () => {
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(doNotAskAgainAction);
 
-		const openBrowserCommand = sb.stub(envUtils, "openInBrowser").resolves();
+		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
 
-		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, surveyIsOpenDate, logger);
+		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, extApi.envUtils.openInBrowser, surveyIsOpenDate, logger);
 
 		// Was asked, but not launched.
 		assert.equal(openSurveyPrompt.called, true);
@@ -215,9 +214,9 @@ describe("Survey notification", async () => {
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(doNotAskAgainAction);
 
-		const openBrowserCommand = sb.stub(envUtils, "openInBrowser").resolves();
+		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
 
-		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, surveyIsOpenDate, logger);
+		const res = showFlutterSurveyNotificationIfAppropriate(extApi.context, extApi.envUtils.openInBrowser, surveyIsOpenDate, logger);
 
 		// Was not asked, or launched.
 		assert.equal(openSurveyPrompt.called, false);
@@ -226,15 +225,15 @@ describe("Survey notification", async () => {
 	});
 
 	it("does not show before survey opens", async () => {
-		assert.equal(showFlutterSurveyNotificationIfAppropriate(extApi.context, immediatelyBeforeSurveyOpensDate, logger), false);
+		assert.equal(showFlutterSurveyNotificationIfAppropriate(extApi.context, extApi.envUtils.openInBrowser, immediatelyBeforeSurveyOpensDate, logger), false);
 	});
 	it("shows after survey opens", async () => {
-		assert.equal(showFlutterSurveyNotificationIfAppropriate(extApi.context, immediatelyAfterSurveyOpensDate, logger), true);
+		assert.equal(showFlutterSurveyNotificationIfAppropriate(extApi.context, extApi.envUtils.openInBrowser, immediatelyAfterSurveyOpensDate, logger), true);
 	});
 	it("shows before survey closes", async () => {
-		assert.equal(showFlutterSurveyNotificationIfAppropriate(extApi.context, immediatelyBeforeSurveyClosesDate, logger), true);
+		assert.equal(showFlutterSurveyNotificationIfAppropriate(extApi.context, extApi.envUtils.openInBrowser, immediatelyBeforeSurveyClosesDate, logger), true);
 	});
 	it("does not show after survey closes", async () => {
-		assert.equal(showFlutterSurveyNotificationIfAppropriate(extApi.context, immediatelyAfterSurveyClosesDate, logger), false);
+		assert.equal(showFlutterSurveyNotificationIfAppropriate(extApi.context, extApi.envUtils.openInBrowser, immediatelyAfterSurveyClosesDate, logger), false);
 	});
 });

@@ -10,7 +10,7 @@ import { grey, grey2 } from "../../../shared/utils/colors";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldPathFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getPackages, openFile, positionOf, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldPathFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getPackages, openFile, positionOf, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter run debugger (launch)", () => {
 	// We have tests that require external packages.
@@ -314,7 +314,7 @@ describe("flutter run debugger (launch)", () => {
 			return;
 		}
 
-		// const openBrowserCommand = sb.stub(envUtils, "openInBrowser").resolves();
+		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
 
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
@@ -324,7 +324,7 @@ describe("flutter run debugger (launch)", () => {
 		]);
 
 		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
-		// assert.ok(openBrowserCommand.calledOnce);
+		assert.ok(openBrowserCommand.calledOnce);
 		assert.ok(devTools);
 		defer(devTools.dispose);
 		assert.ok(devTools.url);
