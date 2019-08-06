@@ -29,7 +29,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, this.capabilities.canFlutterAttach);
 		});
 
-		this.createProcess(projectFolder, flutterBinPath, ["daemon"]);
+		const flutterAdditionalArgs = config.for(vs.Uri.file(projectFolder)).flutterAdditionalArgs;
+		this.createProcess(projectFolder, flutterBinPath, ["daemon"].concat(flutterAdditionalArgs));
 
 		if (isChromeOS && config.flutterAdbConnectOnChromeOs) {
 			logger.info("Running ADB Connect on Chrome OS");
