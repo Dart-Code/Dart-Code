@@ -7,7 +7,7 @@ import { fetch } from "../../../shared/fetch";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterWebBrokenMainFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, getPackages, logger, openFile, positionOf, waitForResult, watchPromise } from "../../helpers";
+import { activate, defer, delay, ext, extApi, flutterWebBrokenMainFile, flutterWebHelloWorldExampleSubFolderMainFile, flutterWebHelloWorldFolder, flutterWebHelloWorldMainFile, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter for web debugger", () => {
 	beforeEach("skip for Windows", function () {
@@ -297,7 +297,7 @@ describe("flutter for web debugger", () => {
 			return;
 		}
 
-		// const openBrowserCommand = sb.stub(envUtils, "openInBrowser").resolves();
+		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
 
 		const config = await startDebugger(flutterWebHelloWorldMainFile);
 		await Promise.all([
@@ -307,7 +307,7 @@ describe("flutter for web debugger", () => {
 
 		logger.info("Executing dart.openDevTools");
 		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
-		// assert.ok(openBrowserCommand.calledOnce);
+		assert.ok(openBrowserCommand.calledOnce);
 		assert.ok(devTools);
 		assert.ok(devTools.url);
 		defer(devTools.dispose);

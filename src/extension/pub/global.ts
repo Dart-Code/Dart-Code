@@ -6,9 +6,9 @@ import { fetch } from "../../shared/fetch";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { versionIsAtLeast } from "../../shared/utils";
-import { envUtils } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { safeSpawn } from "../utils/processes";
+import { envUtils } from "../utils/vscode/editor";
 
 export class PubGlobal {
 	constructor(private readonly logger: Logger, private context: Context, private sdks: Sdks) { }

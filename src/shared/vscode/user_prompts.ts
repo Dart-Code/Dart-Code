@@ -4,7 +4,6 @@ import * as path from "path";
 import * as vs from "vscode";
 import { doNotAskAgainAction, flutterSurveyPromptWithAnalytics, flutterSurveyPromptWithoutAnalytics, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
 import { Logger } from "../interfaces";
-import { envUtils } from "./utils";
 import { Context } from "./workspace";
 
 // Mon Aug 12 2019 17:00:00 GMT+0100 (British Summer Time UTC+1) = Mon Aug 12 09:00 PDT (UTC-7)
@@ -14,7 +13,7 @@ export const surveyEnd = Date.UTC(2019, 7 /* Month is 0-based!! */, 25, 1, 0);
 
 /// Shows Survey notification if appropriate. Returns whether a notification was shown
 /// (not whether it was clicked/opened).
-export function showFlutterSurveyNotificationIfAppropriate(context: Context, now: number, logger: Logger): boolean {
+export function showFlutterSurveyNotificationIfAppropriate(context: Context, openInBrowser: (url: string) => Promise<boolean>, now: number, logger: Logger): boolean {
 	if (now <= surveyStart || now >= surveyEnd)
 		return false;
 
@@ -64,7 +63,7 @@ export function showFlutterSurveyNotificationIfAppropriate(context: Context, now
 			// Mark as do-not-show-again if they answer it, since it seems silly
 			// to show them again if they already completed it.
 			context.flutterSurvey2019Q3NotificationDoNotShow = true;
-			await envUtils.openInBrowser(surveyUrl);
+			await openInBrowser(surveyUrl);
 		}
 	});
 

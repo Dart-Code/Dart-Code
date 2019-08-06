@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import { log } from "console";
 import * as path from "path";
+import * as sinon from "sinon";
 import * as vs from "vscode";
 import { debugAnywayAction, platformEol, showErrorsAction } from "../../../shared/constants";
 import { fetch } from "../../../shared/fetch";
@@ -233,7 +234,7 @@ describe("dart cli debugger", () => {
 			return;
 		}
 
-		// const openBrowserCommand = sb.stub(envUtils, "openInBrowser").withArgs(sinon.match.any).resolves(true);
+		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").withArgs(sinon.match.any).resolves(true);
 
 		await openFile(helloWorldMainFile);
 		const config = await startDebugger(helloWorldMainFile);
@@ -244,7 +245,7 @@ describe("dart cli debugger", () => {
 		});
 
 		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
-		// assert.ok(openBrowserCommand.calledOnce);
+		assert.ok(openBrowserCommand.calledOnce);
 		assert.ok(devTools);
 		defer(devTools.dispose);
 		assert.ok(devTools.url);
