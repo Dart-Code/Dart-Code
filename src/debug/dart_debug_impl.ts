@@ -114,7 +114,7 @@ export class DartDebugSession extends DebugSession {
 		// Force relative paths to absolute.
 		if (args.program && !path.isAbsolute(args.program)) {
 			if (!args.cwd) {
-				this.logToUser("Unable to start debugging. program was specificied as a relative path without cwd.\n");
+				this.logToUser("Unable to start debugging. program was specified as a relative path without cwd.\n");
 				this.sendEvent(new TerminatedEvent());
 				return;
 			}
