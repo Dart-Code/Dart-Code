@@ -17,16 +17,16 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 			this.onDidChangeCodeLensesEmitter.fire();
 		}));
 
-		this.disposables.push(commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo) => {
+		this.disposables.push(commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => {
 			debug.startDebugging(
 				workspace.getWorkspaceFolder(Uri.file(test.file)),
-				getLaunchConfig(false, test.file, test.fullName, test.isGroup),
+				getLaunchConfig(false, test.file, test.fullName, test.isGroup, launchTemplate),
 			);
 		}));
-		this.disposables.push(commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo) => {
+		this.disposables.push(commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => {
 			debug.startDebugging(
 				workspace.getWorkspaceFolder(Uri.file(test.file)),
-				getLaunchConfig(true, test.file, test.fullName, test.isGroup),
+				getLaunchConfig(true, test.file, test.fullName, test.isGroup, launchTemplate),
 			);
 		}));
 	}
@@ -43,6 +43,8 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		// SDK codebase cannot, and will therefore run all tests when you click them).
 		if (!openFileTracker.supportsPubRunTest(document.uri))
 			return;
+
+		const runTestTemplates = workspace.getConfiguration("launch").get<any[]>("configurations").filter((c) => c && c.type === "dart" && c.template && (c.template === "run-test" || c.template === "debug-test"));
 
 		const visitor = new TestOutlineVisitor(this.logger);
 		visitor.visit(outline);
@@ -67,7 +69,14 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 								title: "Debug",
 							},
 						),
-					];
+					].concat(runTestTemplates.map((t) => new CodeLens(
+						toRange(document, test.offset, test.length),
+						{
+							arguments: [test, t],
+							command: t.template === "run-test" ? "_dart.startWithoutDebuggingTestFromOutline" : "_dart.startDebuggingTestFromOutline",
+							title: t.name,
+						},
+					)));
 				}),
 			(x) => x,
 		);
