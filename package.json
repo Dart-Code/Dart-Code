@@ -1653,7 +1653,7 @@
 		"tslint": "^5.18.0",
 		"typescript": "^3.5.2",
 		"vscode-debugadapter-testsupport": "^1.35.0",
-		"vscode-test": "^1.0.0",
+		"vscode-test": "^1.1.0",
 		"webpack": "^4.35.2",
 		"webpack-cli": "^3.3.5"
 	}
