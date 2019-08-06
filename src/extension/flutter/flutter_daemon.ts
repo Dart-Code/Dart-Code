@@ -12,7 +12,7 @@ import { config } from "../config";
 import { FLUTTER_SUPPORTS_ATTACH } from "../extension";
 import { StdIOService } from "../services/stdio_service";
 import { reloadExtension } from "../utils";
-import { safeSpawn } from "../utils/processes";
+import { globalFlutterArgs, safeSpawn } from "../utils/processes";
 
 export class FlutterDaemon extends StdIOService<UnknownNotification> implements IFlutterDaemon {
 	private hasStarted = false;
@@ -30,7 +30,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		});
 
 		const flutterAdditionalArgs = config.for(vs.Uri.file(projectFolder)).flutterAdditionalArgs;
-		this.createProcess(projectFolder, flutterBinPath, ["daemon"].concat(flutterAdditionalArgs));
+		this.createProcess(projectFolder, flutterBinPath, globalFlutterArgs.concat(["daemon"]).concat(flutterAdditionalArgs));
 
 		if (isChromeOS && config.flutterAdbConnectOnChromeOs) {
 			logger.info("Running ADB Connect on Chrome OS");
