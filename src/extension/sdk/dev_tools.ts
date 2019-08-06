@@ -3,20 +3,21 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { window, workspace } from "vscode";
-import { CHROME_OS_DEVTOOLS_PORT, isChromeOS, pleaseReportBug, pubPath } from "../../shared/constants";
+import { CHROME_OS_DEVTOOLS_PORT, isChromeOS, pubPath } from "../../shared/constants";
 import { FlutterService, LogCategory } from "../../shared/enums";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { UnknownNotification } from "../../shared/services/interfaces";
 import { getRandomInt } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
-import { envUtils, isRunningLocally } from "../../shared/vscode/utils";
+import { isRunningLocally } from "../../shared/vscode/utils";
 import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions } from "../commands/debug";
 import { config } from "../config";
 import { PubGlobal } from "../pub/global";
 import { StdIOService } from "../services/stdio_service";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
+import { envUtils } from "../utils/vscode/editor";
 
 const devtools = "devtools";
 const devtoolsPackageName = "Dart DevTools";
@@ -58,7 +59,7 @@ export class DevToolsManager implements vs.Disposable {
 		}
 		try {
 			const url = await this.devtoolsUrl;
-			const didLaunch = await vs.window.withProgress({
+			await vs.window.withProgress({
 				location: vs.ProgressLocation.Notification,
 				title: "Opening Dart DevTools...",
 			}, async (_) => {
@@ -67,48 +68,42 @@ export class DevToolsManager implements vs.Disposable {
 					ide: "VSCode",
 					theme: config.useDevToolsDarkTheme ? "dark" : null,
 				};
-				if (!isRunningLocally) {
-					const paramsString = Object.keys(queryParams)
-						.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key])}`)
-						.join("&");
-					const fullUrl = `${url}?${paramsString}&uri=${encodeURIComponent(session.vmServiceUri)}`;
-					await envUtils.openInBrowser(fullUrl);
-				} else {
-					const canLaunchDevToolsThroughService = await waitFor(() => this.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.LaunchDevTools), 500);
-					if (canLaunchDevToolsThroughService) {
-						try {
-							await session.session.customRequest(
-								"service",
-								{
-									params: { queryParams },
-									type: this.debugCommands.flutterExtensions.getServiceMethodName(FlutterService.LaunchDevTools),
-								},
-							);
+				const canLaunchDevToolsThroughService = isRunningLocally
+					&& !process.env.DART_CODE_IS_TEST_RUN
+					&& await waitFor(() => this.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.LaunchDevTools), 500);
+				if (canLaunchDevToolsThroughService) {
+					try {
+						await session.session.customRequest(
+							"service",
+							{
+								params: { queryParams },
+								type: this.debugCommands.flutterExtensions.getServiceMethodName(FlutterService.LaunchDevTools),
+							},
+						);
 
-							return true;
-						} catch (e) {
-							this.logger.error(`DevTools failed to launch browser ${e.message}`);
-							vs.window.showErrorMessage(`Dart DevTools was unable to launch Chrome.`, "Show Full Error").then((res) => {
-								if (res) {
-									const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`;
-									const tempPath = path.join(os.tmpdir(), fileName);
-									fs.writeFileSync(tempPath, e.message);
-									workspace.openTextDocument(tempPath).then((document) => {
-										window.showTextDocument(document);
-									});
-								}
-							});
-							return false;
-						}
-					} else {
-						this.logger.error(`DevTools failed to register launchDevTools service`);
-						vs.window.showErrorMessage(`The DevTools service failed to register. ${pleaseReportBug}`);
-						return false;
+						return true;
+					} catch (e) {
+						this.logger.error(`DevTools failed to launch Chrome, will launch default browser locally instead: ${e.message}`);
+						vs.window.showWarningMessage(`Dart DevTools was unable to launch Chrome so your default browser was launched instead.`, "Show Full Error").then((res) => {
+							if (res) {
+								const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`;
+								const tempPath = path.join(os.tmpdir(), fileName);
+								fs.writeFileSync(tempPath, e.message || e);
+								workspace.openTextDocument(tempPath).then((document) => {
+									window.showTextDocument(document);
+								});
+							}
+						});
 					}
 				}
+
+				const paramsString = Object.keys(queryParams)
+					.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key])}`)
+					.join("&");
+				const fullUrl = `${url}?${paramsString}&uri=${encodeURIComponent(session.vmServiceUri)}`;
+				await envUtils.openInBrowser(fullUrl);
 			});
-			if (!didLaunch)
-				return;
+
 			this.devToolsStatusBarItem.text = "Dart DevTools";
 			this.devToolsStatusBarItem.tooltip = `Dart DevTools is running at ${url}`;
 			this.devToolsStatusBarItem.command = "dart.openDevTools";
