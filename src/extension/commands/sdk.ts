@@ -396,6 +396,7 @@ export class SdkCommands {
 	}
 
 	private runCommandInFolder(shortPath: string | undefined, commandName: string, folder: string, binPath: string, args: string[], isStartingBecauseOfTermination: boolean = false): Thenable<number | undefined> {
+		shortPath = shortPath || path.basename(folder);
 
 		const channelName = commandName.substr(0, 1).toUpperCase() + commandName.substr(1);
 		const channel = channels.createChannel(channelName);
