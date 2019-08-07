@@ -378,8 +378,10 @@ export class SdkCommands {
 		if (!this.sdks.flutter)
 			throw new Error("Flutter SDK not available");
 		const binPath = path.join(this.sdks.flutter, flutterPath);
-		args = args.concat(...config.for(vs.Uri.file(folder)).flutterAdditionalArgs);
-		return this.runCommandInFolder(shortPath, "flutter", folder, binPath, globalFlutterArgs.concat(args));
+		args = globalFlutterArgs
+			.concat(config.for(vs.Uri.file(folder)).flutterAdditionalArgs)
+			.concat(args);
+		return this.runCommandInFolder(shortPath, "flutter", folder, binPath, args);
 	}
 
 	private runPub(args: string[], selection?: vs.Uri): Thenable<number | undefined> {

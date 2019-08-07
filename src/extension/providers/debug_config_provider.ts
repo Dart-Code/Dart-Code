@@ -471,7 +471,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			: this.dartCapabilities.handlesPathsEverywhereForBreakpoints;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		if (isFlutter) {
-			debugConfig.args = debugConfig.args.concat(conf.flutterAdditionalArgs);
+			debugConfig.args = conf.flutterAdditionalArgs.concat(debugConfig.args);
 			debugConfig.forceFlutterVerboseMode = isLogging || isCI;
 			debugConfig.flutterTrackWidgetCreation =
 				// Use from the launch.json if configured.
