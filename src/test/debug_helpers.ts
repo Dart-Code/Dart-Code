@@ -109,6 +109,8 @@ export async function spawnFlutterProcess(script: string | Uri): Promise<DartPro
 	logProcess(logger, LogCategory.CI, process);
 	const flutterProcess = new DartProcess(process);
 	defer(() => {
+		// TODO: This may not be terminating correctly, as it may terminate the
+		// shell process and not the child processes.
 		if (!flutterProcess.hasExited)
 			flutterProcess.process.kill();
 	});
