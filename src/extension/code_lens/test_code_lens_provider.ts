@@ -44,7 +44,7 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		if (!openFileTracker.supportsPubRunTest(document.uri))
 			return;
 
-		const runTestTemplates = workspace.getConfiguration("launch").get<any[]>("configurations").filter((c) => c && c.type === "dart" && c.template && (c.template === "run-test" || c.template === "debug-test"));
+		const runTestTemplates = workspace.getConfiguration("launch", document.uri).get<any[]>("configurations").filter((c) => c && c.type === "dart" && c.template && (c.template === "run-test" || c.template === "debug-test"));
 
 		const visitor = new TestOutlineVisitor(this.logger);
 		visitor.visit(outline);
