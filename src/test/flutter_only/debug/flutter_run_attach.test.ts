@@ -18,7 +18,9 @@ describe("flutter run debugger (attach)", () => {
 	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldFolder)));
 	before("run 'flutter create' for example", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldExampleSubFolder)));
 
-	afterEach(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
+	beforeEach(() => {
+		defer(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
+	});
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
