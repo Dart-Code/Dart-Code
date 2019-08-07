@@ -6,7 +6,7 @@ import { isWin, observatoryListeningBannerPattern } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { logProcess } from "../shared/logging";
 import { DartDebugClient } from "./dart_debug_client";
-import { defer, extApi, getLaunchConfiguration, logger } from "./helpers";
+import { currentTestName, defer, extApi, getLaunchConfiguration, logger } from "./helpers";
 
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {
 	assert.ok(variables && variables.length, "No variables given to search");
@@ -142,8 +142,8 @@ export function killFlutterTester(): Promise<void> {
 			: extApi.safeSpawn(undefined, "pkill", ["flutter_tester"]);
 		proc.on("exit", (code: number) => {
 			if (isWin ? code !== 128 : code === 0) {
-				logger.warn("flutter_tester process(s) remained after test. These have been terminated to avoid affecting future tests, " +
-					"but may indicate something is not cleaning up correctly", LogCategory.CI);
+				logger.warn(`flutter_tester process(s) remained after test (${currentTestName}). These have been terminated to avoid affecting future tests, ` +
+					`but may indicate something is not cleaning up correctly`, LogCategory.CI);
 			}
 			resolve();
 		});
