@@ -1,4 +1,5 @@
 .dart_code_test_logs/**
+.dart_code_test_data_dir/**
 .gitattributes
 .github/
 .gitignore

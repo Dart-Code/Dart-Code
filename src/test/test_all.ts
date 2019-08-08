@@ -103,6 +103,8 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 			path.isAbsolute(workspaceFolder)
 				? workspaceFolder
 				: path.join(cwd, "src", "test", "test_projects", workspaceFolder),
+			"--user-data-dir",
+			path.join(cwd, ".dart_code_test_data_dir"),
 		],
 		version: codeVersion,
 	});
