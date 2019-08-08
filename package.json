@@ -1636,20 +1636,20 @@
 	},
 	"dependencies": {
 		"minimatch": "^3.0.4",
-		"semver": "^6.2.0",
+		"semver": "^6.3.0",
 		"vscode-debugadapter": "^1.35.0",
 		"vscode-debugprotocol": "^1.35.0",
-		"ws": "^7.0.1"
+		"ws": "^7.1.1"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
 		"@types/minimatch": "^3.0.3",
 		"@types/mocha": "^5.2.7",
-		"@types/node": "^10.14.12",
+		"@types/node": "^10.14.15",
 		"@types/semver": "^6.0.1",
 		"@types/sinon": "5.0.5",
 		"@types/vscode": "^1.36.0",
-		"@types/ws": "^6.0.1",
+		"@types/ws": "^6.0.2",
 		"glob": "^7.1.4",
 		"istanbul-instrumenter-loader": "^3.0.1",
 		"mocha": "^5.2.0",
@@ -1657,13 +1657,13 @@
 		"remap-istanbul": "^0.13.0",
 		"signal-exit": "^3.0.2",
 		"sinon": "^7.3.2",
-		"source-map-support": "^0.5.12",
+		"source-map-support": "^0.5.13",
 		"ts-loader": "^6.0.4",
 		"tslint": "^5.18.0",
 		"typescript": "^3.5.2",
 		"vscode-debugadapter-testsupport": "^1.35.0",
-		"vscode-test": "^1.1.0",
-		"webpack": "^4.35.2",
+		"vscode-test": "^1.2.0",
+		"webpack": "^4.39.1",
 		"webpack-cli": "^3.3.5"
 	}
 }
