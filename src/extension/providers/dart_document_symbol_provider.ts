@@ -2,7 +2,8 @@ import { CancellationToken, DocumentSymbol, DocumentSymbolProvider, TextDocument
 import { Outline } from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { waitFor } from "../../shared/utils/promises";
-import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
+import { Analyzer } from "../analysis/analyzer";
+import { getSymbolKindForElementKind } from "../analysis/analyzer_das";
 import { openFileTracker } from "../analysis/open_file_tracker";
 import { toRange } from "../utils";
 

@@ -3,7 +3,8 @@ import { CancellationToken, Location, SymbolInformation, Uri, workspace, Workspa
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
-import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
+import { Analyzer } from "../analysis/analyzer";
+import { getSymbolKindForElementKind } from "../analysis/analyzer_das";
 import { isWithinWorkspace, toRangeOnLine } from "../utils";
 
 export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {

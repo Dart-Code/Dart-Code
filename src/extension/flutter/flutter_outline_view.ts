@@ -7,7 +7,8 @@ import { nullLogger } from "../../shared/logging";
 import { extensionPath } from "../../shared/vscode/extension_utils";
 import { getIconForSymbolKind } from "../../shared/vscode/mappings";
 import { fsPath } from "../../shared/vscode/utils";
-import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
+import { Analyzer } from "../analysis/analyzer";
+import { getSymbolKindForElementKind } from "../analysis/analyzer_das";
 import { flutterOutlineCommands } from "../commands/flutter_outline";
 import { isAnalyzable } from "../utils";
 

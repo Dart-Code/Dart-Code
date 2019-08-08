@@ -4,7 +4,8 @@ import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { escapeRegExp } from "../../shared/utils";
 import { fsPath } from "../../shared/vscode/utils";
-import { Analyzer, getSymbolKindForElementKind } from "../analysis/analyzer";
+import { Analyzer } from "../analysis/analyzer";
+import { getSymbolKindForElementKind } from "../analysis/analyzer_das";
 import { toRange } from "../utils";
 
 export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {

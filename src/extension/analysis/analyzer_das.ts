@@ -36,7 +36,7 @@ export class AnalyzerCapabilities {
 	get supportsIncludedImports() { return versionIsAtLeast(this.version, "1.27.1"); }
 }
 
-export class Analyzer extends AnalyzerGen {
+export class DasAnalyzer extends AnalyzerGen {
 	private lastDiagnostics?: as.ContextData[];
 	private launchArgs: string[];
 	private version?: string;
