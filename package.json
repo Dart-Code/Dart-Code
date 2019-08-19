@@ -1154,7 +1154,7 @@
 						"objc",
 						"swift"
 					],
-					"default": "objc",
+					"default": "swift",
 					"description": "The programming language to use for IOS apps when creating new projects using the 'Flutter: New Project' command.",
 					"scope": "window"
 				},
@@ -1163,7 +1163,7 @@
 						"java",
 						"kotlin"
 					],
-					"default": "java",
+					"default": "kotlin",
 					"description": "The programming language to use for Android apps when creating new projects using the 'Flutter: New Project' command.",
 					"scope": "window"
 				},
