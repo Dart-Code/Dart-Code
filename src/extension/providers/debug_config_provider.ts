@@ -392,6 +392,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				return launchPath;
 			}
 		}
+
+		// If we don't have a bin folder, or a lib/main.dart, or a web folder, then
+		// see if we have an example and try that.
+		if (!fs.existsSync(path.join(projectRoot, "bin"))
+			&& !fs.existsSync(path.join(projectRoot, "web"))
+			&& fs.existsSync(path.join(projectRoot, "example")))
+			return this.guessBestEntryPoint(undefined, path.join(projectRoot, "example"));
 	}
 
 	private async getFullVmServiceUri(observatoryUri: string, defaultValue?: string): Promise<string> {
