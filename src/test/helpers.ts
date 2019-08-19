@@ -815,6 +815,14 @@ export async function setConfigForTest(section: string, key: string, value: any)
 	defer(() => conf.update(key, oldValue, vs.ConfigurationTarget.Global));
 }
 
+export async function addLaunchConfigsForTest(workspaceUri: vs.Uri, configs: any[]) {
+	const launchConfig = vs.workspace.getConfiguration("launch", workspaceUri);
+	const originalConfigs = launchConfig.get<any[]>("configurations");
+	const newConfigs = (originalConfigs || []).slice().concat(configs);
+	await launchConfig.update("configurations", newConfigs);
+	defer(() => launchConfig.update("configurations", originalConfigs.length ? originalConfigs : undefined));
+}
+
 export function clearAllContext(context: Context): Promise<void> {
 	context.devToolsNotificationsShown = undefined;
 	context.devToolsNotificationLastShown = undefined;
