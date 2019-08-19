@@ -169,7 +169,7 @@ export class SdkCommands {
 			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
 			if (!fs.existsSync(tempDir))
 				fs.mkdirSync(tempDir);
-			return this.runFlutterInFolder(tempDir, ["doctor"], "flutter");
+			return this.runFlutterInFolder(tempDir, ["doctor", "-v"], "flutter");
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.upgrade", async (selection) => {
 			if (!workspace.sdks.flutter) {
