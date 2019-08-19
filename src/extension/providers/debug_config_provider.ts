@@ -472,7 +472,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			? debugConfig.debugExternalLibraries
 			: conf.debugExternalLibraries;
 		debugConfig.showDartDeveloperLogs = conf.showDartDeveloperLogs;
-		debugConfig.useFlutterStructuredErrors = conf.previewFlutterStructuredErrors;
+		debugConfig.useFlutterStructuredErrors = conf.flutterStructuredErrors;
 		debugConfig.debuggerHandlesPathsEverywhereForBreakpoints = debugConfig.debuggerHandlesPathsEverywhereForBreakpoints !== undefined && debugConfig.debuggerHandlesPathsEverywhereForBreakpoints !== null
 			? debugConfig.debuggerHandlesPathsEverywhereForBreakpoints
 			: this.dartCapabilities.handlesPathsEverywhereForBreakpoints;

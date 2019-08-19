@@ -1,5 +1,4 @@
 {
 	"files.insertFinalNewline": true,
-	"dart.maxLogLineLength": 20000,
-	"dart.previewFlutterOutline": true
+	"dart.maxLogLineLength": 20000
 }

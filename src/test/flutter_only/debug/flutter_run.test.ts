@@ -1149,7 +1149,6 @@ describe("flutter run debugger (launch)", () => {
 	});
 
 	it("renders correct output for structured errors", async () => {
-		await setConfigForTest("dart", "previewFlutterStructuredErrors", true);
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
 

@@ -416,7 +416,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		}),
 	);
 	let flutterOutlineTreeProvider: FlutterOutlineProvider | undefined;
-	if (config.previewFlutterOutline) {
+	if (config.flutterOutline) {
 		// TODO: Extract this out - it's become messy since TreeView was added in.
 		flutterOutlineTreeProvider = new FlutterOutlineProvider(analyzer);
 		const tree = vs.window.createTreeView("dartFlutterOutline", { treeDataProvider: flutterOutlineTreeProvider, showCollapseAll: true });
@@ -669,7 +669,7 @@ function getSettingsThatRequireRestart() {
 		+ config.showTestCodeLens
 		+ config.previewHotReloadCoverageMarkers
 		+ config.previewBuildRunnerTasks
-		+ config.previewFlutterOutline
+		+ config.flutterOutline
 		+ config.triggerSignatureHelpAutomatically
 		+ config.flutterAdbConnectOnChromeOs;
 }

@@ -937,10 +937,10 @@
 					"description": "Whether to show logs from dart:developer's log() function in the debug console.",
 					"scope": "resource"
 				},
-				"dart.previewFlutterStructuredErrors": {
+				"dart.flutterStructuredErrors": {
 					"type": "boolean",
-					"default": false,
-					"description": "Whether to enable Flutter's structured error support for improve error display.",
+					"default": true,
+					"description": "Whether to use Flutter's structured error support for improve error display.",
 					"scope": "resource"
 				},
 				"dart.enableCompletionCommitCharacters": {
@@ -1173,10 +1173,10 @@
 					"description": "Whether to enable analysis for AngularDart templates (requires the angular_analyzer_plugin).",
 					"scope": "window"
 				},
-				"dart.previewFlutterOutline": {
+				"dart.flutterOutline": {
 					"type": "boolean",
-					"default": false,
-					"description": "Whether to enable the Flutter Outline tree in the side bar.",
+					"default": true,
+					"description": "Whether to show the Flutter Outline tree in the side bar.",
 					"scope": "window"
 				},
 				"dart.analyzerAdditionalArgs": {
