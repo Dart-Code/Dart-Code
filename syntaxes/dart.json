@@ -257,7 +257,7 @@
 					"name": "keyword.control.new.dart"
 				},
 				{
-					"match": "(?<!\\$)\\b(abstract|class|enum|extends|external|factory|implements|get|mixin|native|operator|set|typedef|with|covariant)\\b(?!\\$)",
+					"match": "(?<!\\$)\\b(abstract|class|enum|extends|extension|external|factory|implements|get|mixin|native|operator|set|typedef|with|covariant)\\b(?!\\$)",
 					"name": "keyword.declaration.dart"
 				},
 				{
