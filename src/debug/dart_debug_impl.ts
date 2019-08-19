@@ -1755,6 +1755,8 @@ export class DartDebugSession extends DebugSession {
 
 			const colouredText = isFramework ? applyColor(text, grey) : applyColor(text, grey2);
 			output.body.output = `${colouredText}\n`;
+		} else if (category === "stderr" && output.body.output.trim().startsWith("<async") && output.body.output.trim().endsWith(">")) {
+			output.body.output = `${applyColor(output.body.output.trimRight(), grey)}\n`;
 		}
 
 		this.sendEvent(output);
