@@ -2,7 +2,16 @@ import * as assert from "assert";
 import * as vs from "vscode";
 import { activate, addLaunchConfigsForTest, extApi, helloWorldTestMainFile, openFile, positionOf, waitForResult } from "../../helpers";
 
-describe("test_code_lens", () => {
+function debugCheck(cls: vs.CodeLens[]) {
+	// TEMP DEBUG
+	for (const cl of cls) {
+		if (!cl.command) {
+			throw new Error(`Got code lens without a command! ${JSON.stringify(cl)}`);
+		}
+	}
+}
+
+describe.only("test_code_lens", () => {
 	beforeEach("activate", () => activate());
 
 	it("includes run/debug actions for tests", async () => {
@@ -14,6 +23,8 @@ describe("test_code_lens", () => {
 
 		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
 		assert.equal(codeLensForTest.length, 2);
+
+		debugCheck(codeLensForTest);
 
 		const runAction = codeLensForTest.find((cl) => cl.command.title === "Run");
 		assert.equal(runAction.command.command, "_dart.startWithoutDebuggingTestFromOutline");
@@ -35,6 +46,8 @@ describe("test_code_lens", () => {
 
 		const codeLensForGroup = fileCodeLens.filter((cl) => cl.range.contains(groupPos));
 		assert.equal(codeLensForGroup.length, 2);
+
+		debugCheck(codeLensForGroup);
 
 		const runAction = codeLensForGroup.find((cl) => cl.command.title === "Run");
 		assert.equal(runAction.command.command, "_dart.startWithoutDebuggingTestFromOutline");
@@ -76,6 +89,8 @@ describe("test_code_lens", () => {
 
 		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
 		assert.equal(codeLensForTest.length, 4);
+
+		debugCheck(codeLensForTest);
 
 		const runAction = codeLensForTest.find((cl) => cl.command.title === "Run in Browser");
 		assert.equal(runAction.command.command, "_dart.startWithoutDebuggingTestFromOutline");
@@ -119,6 +134,8 @@ describe("test_code_lens", () => {
 
 		const codeLensForGroup = fileCodeLens.filter((cl) => cl.range.contains(groupPos));
 		assert.equal(codeLensForGroup.length, 4);
+
+		debugCheck(codeLensForGroup);
 
 		const runAction = codeLensForGroup.find((cl) => cl.command.title === "Run in Browser");
 		assert.equal(runAction.command.command, "_dart.startWithoutDebuggingTestFromOutline");
