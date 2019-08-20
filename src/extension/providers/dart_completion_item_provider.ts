@@ -8,7 +8,7 @@ import { cleanDartdoc } from "../../shared/utils/dartdocs";
 import { DelayedCompletionItem, LazyCompletionItem } from "../../shared/vscode/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
-import { hasOverlappingEdits } from "../commands/edit";
+import { hasOverlappingEdits } from "../commands/edit_das";
 import { config } from "../config";
 import { resolvedPromise } from "../utils";
 

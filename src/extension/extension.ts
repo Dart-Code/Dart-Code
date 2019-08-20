@@ -26,6 +26,7 @@ import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
 import { AnalyzerCommands } from "./commands/analyzer";
 import { DebugCommands } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
+import { DasEditCommands } from "./commands/edit_das";
 import { FlutterOutlineCommands } from "./commands/flutter_outline";
 import { GoToSuperCommand } from "./commands/go_to_super";
 import { LoggingCommands } from "./commands/logging";
@@ -381,7 +382,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(vs.window.registerUriHandler(new DartUriHandler(flutterCapabilities)));
 
 	// Set up commands for Dart editors.
-	context.subscriptions.push(new EditCommands(logger, context, analyzer));
+	context.subscriptions.push(new EditCommands());
+	context.subscriptions.push(new DasEditCommands(logger, context, analyzer));
 	context.subscriptions.push(new RefactorCommands(logger, context, analyzer));
 
 	// Register misc commands.
