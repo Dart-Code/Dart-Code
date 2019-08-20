@@ -5,12 +5,12 @@ import * as as from "../../shared/analysis_server_types";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { flatMap } from "../../shared/utils";
 import { cleanDartdoc } from "../../shared/utils/dartdocs";
+import { resolvedPromise } from "../../shared/utils/promises";
 import { DelayedCompletionItem, LazyCompletionItem } from "../../shared/vscode/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
 import { hasOverlappingEdits } from "../commands/edit_das";
 import { config } from "../config";
-import { resolvedPromise } from "../utils";
 
 // TODO: This code has become messy with the SuggestionSet changes. It could do with some refactoring
 // (such as creating a mapping from CompletionSuggestion -> x and SuggestionSet -> x, and then x -> CompletionItem).
