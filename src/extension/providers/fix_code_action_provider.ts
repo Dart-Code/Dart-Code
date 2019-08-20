@@ -19,10 +19,12 @@ export class FixCodeActionProvider implements RankedCodeActionProvider {
 	public async provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Promise<CodeAction[] | undefined> {
 		if (!isAnalyzableAndInWorkspace(document))
 			return undefined;
+
 		// If we were only asked for specific action types and that doesn't include
 		// quickfix (which is all we supply), bail out.
-		if (context && context.only && !context.only.contains(CodeActionKind.QuickFix))
+		if (context && context.only && !CodeActionKind.QuickFix.contains(context.only))
 			return undefined;
+
 		try {
 			const result = await this.analyzer.editGetFixes({
 				file: fsPath(document.uri),

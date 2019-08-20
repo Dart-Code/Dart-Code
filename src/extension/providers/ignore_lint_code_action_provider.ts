@@ -16,9 +16,10 @@ export class IgnoreLintCodeActionProvider implements RankedCodeActionProvider {
 	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): CodeAction[] | undefined {
 		if (!isAnalyzableAndInWorkspace(document))
 			return;
+
 		// If we were only asked for specific action types and that doesn't include
 		// quickfix (which is all we supply), bail out.
-		if (context && context.only && !context.only.contains(CodeActionKind.QuickFix))
+		if (context && context.only && !CodeActionKind.QuickFix.contains(context.only))
 			return;
 
 		if (!config.showIgnoreQuickFixes || !context || !context.diagnostics || !context.diagnostics.length)
