@@ -339,7 +339,7 @@
 				"category": "Dart",
 				"icon": {
 					"dark": "media/commands/devtools.svg",
-					"light": "media/commands/devtools.svg"
+					"light": "media/commands/devtools-light.svg"
 				}
 			},
 			{
