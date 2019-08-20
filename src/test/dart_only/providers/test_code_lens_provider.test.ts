@@ -11,7 +11,7 @@ function debugCheck(cls: vs.CodeLens[]) {
 	}
 }
 
-describe.only("test_code_lens", () => {
+describe("test_code_lens", () => {
 	beforeEach("activate", () => activate());
 
 	it("includes run/debug actions for tests", async () => {
