@@ -546,7 +546,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			nextAnalysis,
 			packagesTreeProvider: dartPackagesProvider,
 			pubGlobal,
-			reanalyze,
 			renameProvider,
 			safeSpawn,
 			testTreeProvider,
@@ -638,16 +637,12 @@ function handleConfigurationChange(sdks: Sdks) {
 	previousSettings = newSettings;
 
 	if (todoSettingChanged) {
-		reanalyze();
+		analyzer.analysisReanalyze();
 	}
 
 	if (settingsChanged) {
 		util.reloadExtension();
 	}
-}
-
-function reanalyze() {
-	analyzer.analysisReanalyze();
 }
 
 function getSettingsThatRequireRestart() {
