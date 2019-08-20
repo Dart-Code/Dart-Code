@@ -68,7 +68,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		};
 	}
 
-	protected sendRequest<TReq, TResp>(method: string, params?: TReq): Thenable<TResp> {
+	protected sendRequest<TReq, TResp>(method: string, params?: TReq): Promise<TResp> {
 		// Generate an ID for this request so we can match up the response.
 		const id = this.nextRequestID++;
 

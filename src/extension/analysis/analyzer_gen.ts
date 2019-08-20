@@ -358,7 +358,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	/**
 	Return the version number of the analysis server.
 	*/
-	serverGetVersion(): Thenable<as.ServerGetVersionResponse> {
+	serverGetVersion(): Promise<as.ServerGetVersionResponse> {
 		return this.sendRequest("server.getVersion");
 	}
 
@@ -370,7 +370,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	further responses or notifications will be sent after the
 	response to this request has been sent.
 	*/
-	serverShutdown(): Thenable<UnknownResponse> {
+	serverShutdown(): Promise<UnknownResponse> {
 		return this.sendRequest("server.shutdown");
 	}
 
@@ -381,7 +381,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	valid services. If there is an error, then the current
 	subscriptions will remain unchanged.
 	*/
-	serverSetSubscriptions(request: as.ServerSetSubscriptionsRequest): Thenable<UnknownResponse> {
+	serverSetSubscriptions(request: as.ServerSetSubscriptionsRequest): Promise<UnknownResponse> {
 		return this.sendRequest("server.setSubscriptions", request);
 	}
 
@@ -408,7 +408,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	analysis.setAnalysisRoots), an error of type
 	GET_ERRORS_INVALID_FILE will be generated.
 	*/
-	analysisGetErrors(request: as.AnalysisGetErrorsRequest): Thenable<as.AnalysisGetErrorsResponse> {
+	analysisGetErrors(request: as.AnalysisGetErrorsRequest): Promise<as.AnalysisGetErrorsResponse> {
 		return this.sendRequest("analysis.getErrors", request);
 	}
 
@@ -418,7 +418,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	available at the time this request is processed the
 	information will be omitted from the response.
 	*/
-	analysisGetHover(request: as.AnalysisGetHoverRequest): Thenable<as.AnalysisGetHoverResponse> {
+	analysisGetHover(request: as.AnalysisGetHoverRequest): Promise<as.AnalysisGetHoverResponse> {
 		return this.sendRequest("analysis.getHover", request);
 	}
 
@@ -430,7 +430,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	analysis root specified via analysis.setAnalysisRoots), an error of type
 	GET_IMPORTED_ELEMENTS_INVALID_FILE will be generated.
 	*/
-	analysisGetImportedElements(request: as.AnalysisGetImportedElementsRequest): Thenable<as.AnalysisGetImportedElementsResponse> {
+	analysisGetImportedElements(request: as.AnalysisGetImportedElementsRequest): Promise<as.AnalysisGetImportedElementsResponse> {
 		return this.sendRequest("analysis.getImportedElements", request);
 	}
 
@@ -440,7 +440,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	Clients that are only using the libraries field should consider using the
 	analyzedFiles notification instead.
 	*/
-	analysisGetLibraryDependencies(): Thenable<as.AnalysisGetLibraryDependenciesResponse> {
+	analysisGetLibraryDependencies(): Promise<as.AnalysisGetLibraryDependenciesResponse> {
 		return this.sendRequest("analysis.getLibraryDependencies");
 	}
 
@@ -465,7 +465,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	analysis.setAnalysisRoots), an error of type
 	GET_NAVIGATION_INVALID_FILE will be generated.
 	*/
-	analysisGetNavigation(request: as.AnalysisGetNavigationRequest): Thenable<as.AnalysisGetNavigationResponse> {
+	analysisGetNavigation(request: as.AnalysisGetNavigationRequest): Promise<as.AnalysisGetNavigationResponse> {
 		return this.sendRequest("analysis.getNavigation", request);
 	}
 
@@ -477,7 +477,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	analysis.setAnalysisRoots), an error of type
 	GET_REACHABLE_SOURCES_INVALID_FILE will be generated.
 	*/
-	analysisGetReachableSources(request: as.AnalysisGetReachableSourcesRequest): Thenable<as.AnalysisGetReachableSourcesResponse> {
+	analysisGetReachableSources(request: as.AnalysisGetReachableSourcesRequest): Promise<as.AnalysisGetReachableSourcesResponse> {
 		return this.sendRequest("analysis.getReachableSources", request);
 	}
 
@@ -502,7 +502,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	then an error of type GET_SIGNATURE_UNKNOWN_FUNCTION
 	will be generated.
 	*/
-	analysisGetSignature(request: as.AnalysisGetSignatureRequest): Thenable<as.AnalysisGetSignatureResponse> {
+	analysisGetSignature(request: as.AnalysisGetSignatureRequest): Promise<as.AnalysisGetSignatureResponse> {
 		return this.sendRequest("analysis.getSignature", request);
 	}
 
@@ -511,7 +511,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	referenced URIs, and corresponding re-analysis of everything affected in
 	the current analysis roots.
 	*/
-	analysisReanalyze(): Thenable<UnknownResponse> {
+	analysisReanalyze(): Promise<UnknownResponse> {
 		return this.sendRequest("analysis.reanalyze");
 	}
 
@@ -543,7 +543,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	the file system is reached. If such a file is found, it will
 	be used to resolve package: URI’s within the file.
 	*/
-	analysisSetAnalysisRoots(request: as.AnalysisSetAnalysisRootsRequest): Thenable<UnknownResponse> {
+	analysisSetAnalysisRoots(request: as.AnalysisSetAnalysisRootsRequest): Promise<UnknownResponse> {
 		return this.sendRequest("analysis.setAnalysisRoots", request);
 	}
 
@@ -555,7 +555,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	services. If there is an error, then the current subscriptions will
 	remain unchanged.
 	*/
-	analysisSetGeneralSubscriptions(request: as.AnalysisSetGeneralSubscriptionsRequest): Thenable<UnknownResponse> {
+	analysisSetGeneralSubscriptions(request: as.AnalysisSetGeneralSubscriptionsRequest): Promise<UnknownResponse> {
 		return this.sendRequest("analysis.setGeneralSubscriptions", request);
 	}
 
@@ -580,7 +580,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	if it later becomes a file it can be included in the set of
 	actual priority files.
 	*/
-	analysisSetPriorityFiles(request: as.AnalysisSetPriorityFilesRequest): Thenable<UnknownResponse> {
+	analysisSetPriorityFiles(request: as.AnalysisSetPriorityFilesRequest): Promise<UnknownResponse> {
 		return this.sendRequest("analysis.setPriorityFiles", request);
 	}
 
@@ -611,7 +611,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	services. If there is an error, then the existing
 	subscriptions will remain unchanged.
 	*/
-	analysisSetSubscriptions(request: as.AnalysisSetSubscriptionsRequest): Thenable<UnknownResponse> {
+	analysisSetSubscriptions(request: as.AnalysisSetSubscriptionsRequest): Promise<UnknownResponse> {
 		return this.sendRequest("analysis.setSubscriptions", request);
 	}
 
@@ -625,7 +625,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	if the file path represents the path to a directory on the
 	filesystem.
 	*/
-	analysisUpdateContent(request: as.AnalysisUpdateContentRequest): Thenable<UnknownResponse> {
+	analysisUpdateContent(request: as.AnalysisUpdateContentRequest): Promise<UnknownResponse> {
 		return this.sendRequest("analysis.updateContent", request);
 	}
 
@@ -638,7 +638,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	in the analysis options that are not valid, they will be
 	silently ignored.
 	*/
-	analysisUpdateOptions(request: as.AnalysisUpdateOptionsRequest): Thenable<UnknownResponse> {
+	analysisUpdateOptions(request: as.AnalysisUpdateOptionsRequest): Promise<UnknownResponse> {
 		return this.sendRequest("analysis.updateOptions", request);
 	}
 
@@ -646,7 +646,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	Request that completion suggestions for the given offset in
 	the given file be returned.
 	*/
-	completionGetSuggestions(request: as.CompletionGetSuggestionsRequest): Thenable<as.CompletionGetSuggestionsResponse> {
+	completionGetSuggestions(request: as.CompletionGetSuggestionsRequest): Promise<as.CompletionGetSuggestionsResponse> {
 		return this.sendRequest("completion.getSuggestions", request);
 	}
 
@@ -657,7 +657,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	services. If there is an error, then the current subscriptions will
 	remain unchanged.
 	*/
-	completionSetSubscriptions(request: as.CompletionSetSubscriptionsRequest): Thenable<UnknownResponse> {
+	completionSetSubscriptions(request: as.CompletionSetSubscriptionsRequest): Promise<UnknownResponse> {
 		return this.sendRequest("completion.setSubscriptions", request);
 	}
 
@@ -669,7 +669,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	service, then an error of type NOT_SUBSCRIBED_TO_AVAILABLE_SUGGESTION_SETS
 	will be generated. All previous paths are replaced by the given set of paths.
 	*/
-	completionRegisterLibraryPaths(request: as.CompletionRegisterLibraryPathsRequest): Thenable<UnknownResponse> {
+	completionRegisterLibraryPaths(request: as.CompletionRegisterLibraryPathsRequest): Promise<UnknownResponse> {
 		return this.sendRequest("completion.registerLibraryPaths", request);
 	}
 
@@ -681,7 +681,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	if the id is no longer valid, for instance if the library has been removed after
 	the completion suggestion is accepted.
 	*/
-	completionGetSuggestionDetails(request: as.CompletionGetSuggestionDetailsRequest): Thenable<as.CompletionGetSuggestionDetailsResponse> {
+	completionGetSuggestionDetails(request: as.CompletionGetSuggestionDetailsRequest): Promise<as.CompletionGetSuggestionDetailsResponse> {
 		return this.sendRequest("completion.getSuggestionDetails", request);
 	}
 
@@ -690,7 +690,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	their lexeme, type, and what element kinds would have been appropriate for
 	the token's program location.
 	*/
-	completionListTokenDetails(request: as.CompletionListTokenDetailsRequest): Thenable<as.CompletionListTokenDetailsResponse> {
+	completionListTokenDetails(request: as.CompletionListTokenDetailsRequest): Promise<as.CompletionListTokenDetailsResponse> {
 		return this.sendRequest("completion.listTokenDetails", request);
 	}
 
@@ -701,7 +701,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	results will be returned via the search.results notification
 	as they become available.
 	*/
-	searchFindElementReferences(request: as.SearchFindElementReferencesRequest): Thenable<as.SearchFindElementReferencesResponse> {
+	searchFindElementReferences(request: as.SearchFindElementReferencesRequest): Promise<as.SearchFindElementReferencesResponse> {
 		return this.sendRequest("search.findElementReferences", request);
 	}
 
@@ -712,7 +712,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	results will be returned via the search.results notification
 	as they become available.
 	*/
-	searchFindMemberDeclarations(request: as.SearchFindMemberDeclarationsRequest): Thenable<as.SearchFindMemberDeclarationsResponse> {
+	searchFindMemberDeclarations(request: as.SearchFindMemberDeclarationsRequest): Promise<as.SearchFindMemberDeclarationsResponse> {
 		return this.sendRequest("search.findMemberDeclarations", request);
 	}
 
@@ -725,7 +725,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	results will be returned via the search.results notification
 	as they become available.
 	*/
-	searchFindMemberReferences(request: as.SearchFindMemberReferencesRequest): Thenable<as.SearchFindMemberReferencesResponse> {
+	searchFindMemberReferences(request: as.SearchFindMemberReferencesRequest): Promise<as.SearchFindMemberReferencesResponse> {
 		return this.sendRequest("search.findMemberReferences", request);
 	}
 
@@ -737,14 +737,14 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	results will be returned via the search.results notification
 	as they become available.
 	*/
-	searchFindTopLevelDeclarations(request: as.SearchFindTopLevelDeclarationsRequest): Thenable<as.SearchFindTopLevelDeclarationsResponse> {
+	searchFindTopLevelDeclarations(request: as.SearchFindTopLevelDeclarationsRequest): Promise<as.SearchFindTopLevelDeclarationsResponse> {
 		return this.sendRequest("search.findTopLevelDeclarations", request);
 	}
 
 	/**
 	Return top-level and class member declarations.
 	*/
-	searchGetElementDeclarations(request: as.SearchGetElementDeclarationsRequest): Thenable<as.SearchGetElementDeclarationsResponse> {
+	searchGetElementDeclarations(request: as.SearchGetElementDeclarationsRequest): Promise<as.SearchGetElementDeclarationsResponse> {
 		return this.sendRequest("search.getElementDeclarations", request);
 	}
 
@@ -752,7 +752,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	Return the type hierarchy of the class declared or
 	referenced at the given location.
 	*/
-	searchGetTypeHierarchy(request: as.SearchGetTypeHierarchyRequest): Thenable<as.SearchGetTypeHierarchyResponse> {
+	searchGetTypeHierarchy(request: as.SearchGetTypeHierarchyRequest): Promise<as.SearchGetTypeHierarchyResponse> {
 		return this.sendRequest("search.getTypeHierarchy", request);
 	}
 
@@ -771,7 +771,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	contains syntax errors, an error of type FORMAT_WITH_ERRORS
 	will be generated.
 	*/
-	editFormat(request: as.EditFormatRequest): Thenable<as.EditFormatResponse> {
+	editFormat(request: as.EditFormatRequest): Promise<as.EditFormatResponse> {
 		return this.sendRequest("edit.format", request);
 	}
 
@@ -781,7 +781,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	primarily by the fact that it affects a single file and does
 	not require user input in order to be performed.
 	*/
-	editGetAssists(request: as.EditGetAssistsRequest): Thenable<as.EditGetAssistsResponse> {
+	editGetAssists(request: as.EditGetAssistsRequest): Promise<as.EditGetAssistsResponse> {
 		return this.sendRequest("edit.getAssists", request);
 	}
 
@@ -789,7 +789,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	Get a list of the kinds of refactorings that are valid for
 	the given selection in the given file.
 	*/
-	editGetAvailableRefactorings(request: as.EditGetAvailableRefactoringsRequest): Thenable<as.EditGetAvailableRefactoringsResponse> {
+	editGetAvailableRefactorings(request: as.EditGetAvailableRefactoringsRequest): Promise<as.EditGetAvailableRefactoringsResponse> {
 		return this.sendRequest("edit.getAvailableRefactorings", request);
 	}
 
@@ -798,7 +798,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	such as the list of known fixes that can be specified
 	in an edit.dartfix request.
 	*/
-	editGetDartfixInfo(): Thenable<as.EditGetDartfixInfoResponse> {
+	editGetDartfixInfo(): Promise<as.EditGetDartfixInfoResponse> {
 		return this.sendRequest("edit.getDartfixInfo");
 	}
 
@@ -815,7 +815,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	If excludedFixes is specified, then those fixes will not be applied
 	regardless of whether they are "required" or specified in includedFixes.
 	*/
-	editDartfix(request: as.EditDartfixRequest): Thenable<as.EditDartfixResponse> {
+	editDartfix(request: as.EditDartfixRequest): Promise<as.EditDartfixResponse> {
 		return this.sendRequest("edit.dartfix", request);
 	}
 
@@ -823,7 +823,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	Return the set of fixes that are available for the errors at
 	a given offset in a given file.
 	*/
-	editGetFixes(request: as.EditGetFixesRequest): Thenable<as.EditGetFixesResponse> {
+	editGetFixes(request: as.EditGetFixesRequest): Promise<as.EditGetFixesResponse> {
 		return this.sendRequest("edit.getFixes", request);
 	}
 
@@ -831,7 +831,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	Get the changes required to convert the postfix template at the given
 	location into the template's expanded form.
 	*/
-	editGetPostfixCompletion(request: as.EditGetPostfixCompletionRequest): Thenable<as.EditGetPostfixCompletionResponse> {
+	editGetPostfixCompletion(request: as.EditGetPostfixCompletionRequest): Promise<as.EditGetPostfixCompletionResponse> {
 		return this.sendRequest("edit.getPostfixCompletion", request);
 	}
 
@@ -841,7 +841,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	of this one, an error of type REFACTORING_REQUEST_CANCELLED
 	will be generated.
 	*/
-	editGetRefactoring(request: as.EditGetRefactoringRequest): Thenable<as.EditGetRefactoringResponse> {
+	editGetRefactoring(request: as.EditGetRefactoringRequest): Promise<as.EditGetRefactoringResponse> {
 		return this.sendRequest("edit.getRefactoring", request);
 	}
 
@@ -854,7 +854,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	because it has not yet been implemented) the statement will be considered
 	already valid and the appropriate change returned.
 	*/
-	editGetStatementCompletion(request: as.EditGetStatementCompletionRequest): Thenable<as.EditGetStatementCompletionResponse> {
+	editGetStatementCompletion(request: as.EditGetStatementCompletionRequest): Promise<as.EditGetStatementCompletionResponse> {
 		return this.sendRequest("edit.getStatementCompletion", request);
 	}
 
@@ -862,14 +862,14 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	Determine if the request postfix completion template is applicable at
 	the given location in the given file.
 	*/
-	editIsPostfixCompletionApplicable(request: as.EditIsPostfixCompletionApplicableRequest): Thenable<as.EditIsPostfixCompletionApplicableResponse> {
+	editIsPostfixCompletionApplicable(request: as.EditIsPostfixCompletionApplicableRequest): Promise<as.EditIsPostfixCompletionApplicableResponse> {
 		return this.sendRequest("edit.isPostfixCompletionApplicable", request);
 	}
 
 	/**
 	Return a list of all postfix templates currently available.
 	*/
-	editListPostfixCompletionTemplates(): Thenable<as.EditListPostfixCompletionTemplatesResponse> {
+	editListPostfixCompletionTemplates(): Promise<as.EditListPostfixCompletionTemplatesResponse> {
 		return this.sendRequest("edit.listPostfixCompletionTemplates");
 	}
 
@@ -882,7 +882,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	analysis root specified via analysis.setAnalysisRoots), an error of type
 	IMPORT_ELEMENTS_INVALID_FILE will be generated.
 	*/
-	editImportElements(request: as.EditImportElementsRequest): Thenable<as.EditImportElementsResponse> {
+	editImportElements(request: as.EditImportElementsRequest): Promise<as.EditImportElementsResponse> {
 		return this.sendRequest("edit.importElements", request);
 	}
 
@@ -895,7 +895,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	If the Dart file has scan or parse errors,
 	SORT_MEMBERS_PARSE_ERRORS will be generated.
 	*/
-	editSortMembers(request: as.EditSortMembersRequest): Thenable<as.EditSortMembersResponse> {
+	editSortMembers(request: as.EditSortMembersRequest): Promise<as.EditSortMembersResponse> {
 		return this.sendRequest("edit.sortMembers", request);
 	}
 
@@ -912,7 +912,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	ORGANIZE_DIRECTIVES_ERROR will be generated. The message
 	will provide details about the reason.
 	*/
-	editOrganizeDirectives(request: as.EditOrganizeDirectivesRequest): Thenable<as.EditOrganizeDirectivesResponse> {
+	editOrganizeDirectives(request: as.EditOrganizeDirectivesRequest): Promise<as.EditOrganizeDirectivesResponse> {
 		return this.sendRequest("edit.organizeDirectives", request);
 	}
 
@@ -922,7 +922,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	execution.deleteContext is used to delete it. Clients, therefore, are
 	responsible for managing the lifetime of execution contexts.
 	*/
-	executionCreateContext(request: as.ExecutionCreateContextRequest): Thenable<as.ExecutionCreateContextResponse> {
+	executionCreateContext(request: as.ExecutionCreateContextRequest): Promise<as.ExecutionCreateContextResponse> {
 		return this.sendRequest("execution.createContext", request);
 	}
 
@@ -931,7 +931,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	is no longer valid after this command. The server is allowed to re-use
 	ids when they are no longer valid.
 	*/
-	executionDeleteContext(request: as.ExecutionDeleteContextRequest): Thenable<UnknownResponse> {
+	executionDeleteContext(request: as.ExecutionDeleteContextRequest): Promise<UnknownResponse> {
 		return this.sendRequest("execution.deleteContext", request);
 	}
 
@@ -950,7 +950,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	runtime types for, or when the "expressions" field is provided by the
 	client, the server will return "suggestions" in the response.
 	*/
-	executionGetSuggestions(request: as.ExecutionGetSuggestionsRequest): Thenable<as.ExecutionGetSuggestionsResponse> {
+	executionGetSuggestions(request: as.ExecutionGetSuggestionsRequest): Promise<as.ExecutionGetSuggestionsResponse> {
 		return this.sendRequest("execution.getSuggestions", request);
 	}
 
@@ -974,7 +974,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	exist, then an error of type INVALID_EXECUTION_CONTEXT will
 	be generated.
 	*/
-	executionMapUri(request: as.ExecutionMapUriRequest): Thenable<as.ExecutionMapUriResponse> {
+	executionMapUri(request: as.ExecutionMapUriRequest): Promise<as.ExecutionMapUriResponse> {
 		return this.sendRequest("execution.mapUri", request);
 	}
 
@@ -987,14 +987,14 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	services. If there is an error, then the current subscriptions will
 	remain unchanged.
 	*/
-	executionSetSubscriptions(request: as.ExecutionSetSubscriptionsRequest): Thenable<UnknownResponse> {
+	executionSetSubscriptions(request: as.ExecutionSetSubscriptionsRequest): Promise<UnknownResponse> {
 		return this.sendRequest("execution.setSubscriptions", request);
 	}
 
 	/**
 	Return server diagnostics.
 	*/
-	diagnosticGetDiagnostics(): Thenable<as.DiagnosticGetDiagnosticsResponse> {
+	diagnosticGetDiagnostics(): Promise<as.DiagnosticGetDiagnosticsResponse> {
 		return this.sendRequest("diagnostic.getDiagnostics");
 	}
 
@@ -1004,7 +1004,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	server,
 	this call will return an error of DEBUG_PORT_COULD_NOT_BE_OPENED.
 	*/
-	diagnosticGetServerPort(): Thenable<as.DiagnosticGetServerPortResponse> {
+	diagnosticGetServerPort(): Promise<as.DiagnosticGetServerPortResponse> {
 		return this.sendRequest("diagnostic.getServerPort");
 	}
 
@@ -1023,7 +1023,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	to forward the information to the cloud at the time each request is
 	received.
 	*/
-	analyticsIsEnabled(): Thenable<as.AnalyticsIsEnabledResponse> {
+	analyticsIsEnabled(): Promise<as.AnalyticsIsEnabledResponse> {
 		return this.sendRequest("analytics.isEnabled");
 	}
 
@@ -1034,7 +1034,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	guarantee that the result returned by the isEnabled request will
 	match the last value set via this request.
 	*/
-	analyticsEnable(request: as.AnalyticsEnableRequest): Thenable<UnknownResponse> {
+	analyticsEnable(request: as.AnalyticsEnableRequest): Promise<UnknownResponse> {
 		return this.sendRequest("analytics.enable", request);
 	}
 
@@ -1051,7 +1051,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	request will be ignored if the client id was not provided when server was
 	started.
 	*/
-	analyticsSendEvent(request: as.AnalyticsSendEventRequest): Thenable<UnknownResponse> {
+	analyticsSendEvent(request: as.AnalyticsSendEventRequest): Promise<UnknownResponse> {
 		return this.sendRequest("analytics.sendEvent", request);
 	}
 
@@ -1067,7 +1067,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	request will be ignored if the client id was not provided when server was
 	started.
 	*/
-	analyticsSendTiming(request: as.AnalyticsSendTimingRequest): Thenable<UnknownResponse> {
+	analyticsSendTiming(request: as.AnalyticsSendTimingRequest): Promise<UnknownResponse> {
 		return this.sendRequest("analytics.sendTiming", request);
 	}
 
@@ -1079,7 +1079,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	analysis root specified to analysis.setAnalysisRoots), an error of type
 	GET_KYTHE_ENTRIES_INVALID_FILE will be generated.
 	*/
-	kytheGetKytheEntries(request: as.KytheGetKytheEntriesRequest): Thenable<as.KytheGetKytheEntriesResponse> {
+	kytheGetKytheEntries(request: as.KytheGetKytheEntriesRequest): Promise<as.KytheGetKytheEntriesResponse> {
 		return this.sendRequest("kythe.getKytheEntries", request);
 	}
 
@@ -1087,7 +1087,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	Return the change that adds the forDesignTime() constructor for the
 	widget class at the given offset.
 	*/
-	flutterGetChangeAddForDesignTimeConstructor(request: as.FlutterGetChangeAddForDesignTimeConstructorRequest): Thenable<as.FlutterGetChangeAddForDesignTimeConstructorResponse> {
+	flutterGetChangeAddForDesignTimeConstructor(request: as.FlutterGetChangeAddForDesignTimeConstructorRequest): Promise<as.FlutterGetChangeAddForDesignTimeConstructorResponse> {
 		return this.sendRequest("flutter.getChangeAddForDesignTimeConstructor", request);
 	}
 
@@ -1118,7 +1118,7 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	services. If there is an error, then the existing
 	subscriptions will remain unchanged.
 	*/
-	flutterSetSubscriptions(request: as.FlutterSetSubscriptionsRequest): Thenable<UnknownResponse> {
+	flutterSetSubscriptions(request: as.FlutterSetSubscriptionsRequest): Promise<UnknownResponse> {
 		return this.sendRequest("flutter.setSubscriptions", request);
 	}
 }
