@@ -128,7 +128,7 @@ export function isAnalyzable(document: TextDocument): boolean {
 		return false;
 
 	const analyzableLanguages = ["dart", "html"];
-	const analyzableFilenames = [".analysis_options", "analysis_options.yaml"];
+	const analyzableFilenames = [".analysis_options", "analysis_options.yaml", "pubspec.yaml"];
 
 	return analyzableLanguages.indexOf(document.languageId) >= 0
 		|| analyzableFilenames.indexOf(path.basename(fsPath(document.uri))) >= 0;

@@ -227,7 +227,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	context.subscriptions.push(formattingEditProvider);
 	const completionItemProvider = new DartCompletionItemProvider(logger, analyzer);
 	const referenceProvider = new DartReferenceProvider(analyzer);
-	const documentHighlightProvider = new DartDocumentHighlightProvider(analyzer);
+	const documentHighlightProvider = new DartDocumentHighlightProvider();
 	const sourceCodeActionProvider = new SourceCodeActionProvider();
 
 	const renameProvider = new DartRenameProvider(analyzer);
@@ -350,7 +350,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 				...(config.triggerSignatureHelpAutomatically ? ["(", ","] : []),
 			));
 
-		const documentSymbolProvider = new DartDocumentSymbolProvider(logger, analyzer);
+		const documentSymbolProvider = new DartDocumentSymbolProvider(logger);
 		activeFileFilters.forEach((filter) => {
 			context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
 		});
@@ -375,7 +375,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Wire up handling of Hot Reload on Save.
 	if (workspaceContext.hasAnyFlutterProjects) {
-		setUpHotReloadOnSave(context, diagnostics, debugCommands);
+		setUpHotReloadOnSave(context, debugCommands);
 	}
 
 	// Register URI handler.
