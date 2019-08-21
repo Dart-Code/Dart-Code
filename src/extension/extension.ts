@@ -300,7 +300,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		const handleOpenFile = (d: vs.TextDocument) => {
 			if (d.languageId === "dart" && analysisRoots.length === 0 && !hasWarnedAboutLooseDartFiles) {
 				hasWarnedAboutLooseDartFiles = true;
-				vs.window.showWarningMessage("For full Dart language support, please open a folder containing your Dart files instead of individual lose files");
+				vs.window.showWarningMessage("For full Dart language support, please open a folder containing your Dart files instead of individual loose files");
 			}
 		};
 		context.subscriptions.push(vs.workspace.onDidOpenTextDocument((d) => handleOpenFile(d)));
