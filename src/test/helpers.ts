@@ -445,6 +445,11 @@ export async function getDefinitions(position: vs.Position): Promise<vs.Location
 	return definitionResult || [];
 }
 
+export async function getCodeLens(document: vs.TextDocument): Promise<vs.CodeLens[]> {
+	const fileCodeLens = await (vs.commands.executeCommand("vscode.executeCodeLensProvider", document.uri, 50) as Thenable<vs.CodeLens[]>);
+	return fileCodeLens || [];
+}
+
 export async function getDefinition(position: vs.Position): Promise<vs.Location> {
 	const defs = await getDefinitions(position);
 	assert.ok(defs && defs.length);

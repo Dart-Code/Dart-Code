@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, addLaunchConfigsForTest, extApi, helloWorldTestMainFile, openFile, positionOf, waitForResult } from "../../helpers";
+import { activate, addLaunchConfigsForTest, extApi, getCodeLens, helloWorldTestMainFile, openFile, positionOf, waitForResult } from "../../helpers";
 
 function debugCheck(cls: vs.CodeLens[]) {
 	// TEMP DEBUG
@@ -18,7 +18,7 @@ describe("test_code_lens", () => {
 		const editor = await openFile(helloWorldTestMainFile);
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
-		const fileCodeLens = (await vs.commands.executeCommand("vscode.executeCodeLensProvider", editor.document.uri)) as vs.CodeLens[];
+		const fileCodeLens = await getCodeLens(editor.document);
 		const testPos = positionOf(`test^(".split() splits`);
 
 		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
@@ -41,7 +41,7 @@ describe("test_code_lens", () => {
 		const editor = await openFile(helloWorldTestMainFile);
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
-		const fileCodeLens = (await vs.commands.executeCommand("vscode.executeCodeLensProvider", editor.document.uri)) as vs.CodeLens[];
+		const fileCodeLens = await getCodeLens(editor.document);
 		const groupPos = positionOf("group^(");
 
 		const codeLensForGroup = fileCodeLens.filter((cl) => cl.range.contains(groupPos));
@@ -84,7 +84,7 @@ describe("test_code_lens", () => {
 		const editor = await openFile(helloWorldTestMainFile);
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
-		const fileCodeLens = (await vs.commands.executeCommand("vscode.executeCodeLensProvider", editor.document.uri)) as vs.CodeLens[];
+		const fileCodeLens = await getCodeLens(editor.document);
 		const testPos = positionOf(`test^(".split() splits`);
 
 		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
@@ -129,7 +129,7 @@ describe("test_code_lens", () => {
 		const editor = await openFile(helloWorldTestMainFile);
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
-		const fileCodeLens = (await vs.commands.executeCommand("vscode.executeCodeLensProvider", editor.document.uri)) as vs.CodeLens[];
+		const fileCodeLens = await getCodeLens(editor.document);
 		const groupPos = positionOf("group^(");
 
 		const codeLensForGroup = fileCodeLens.filter((cl) => cl.range.contains(groupPos));
