@@ -54,6 +54,7 @@ export interface InternalExtensionApi {
 		supportsDevTools: boolean;
 		hasTestGroupFix: boolean;
 		hasEvictBug: boolean;
+		supportsWebProjects: boolean;
 		webSupportsDebugging: boolean;
 	};
 	flutterOutlineTreeProvider: TreeDataProvider<TreeItem> | undefined;

@@ -12,10 +12,17 @@ import { DartDebugClient } from "../../dart_debug_client";
 import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester } from "../../debug_helpers";
 import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldPathFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getPackages, openFile, positionOf, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
-describe("flutter run debugger (launch)", () => {
+["flutter-tester", "chrome"].forEach((deviceId) => {
+describe(`flutter run debugger (launch on ${deviceId})`, () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
+
+	beforeEach("Skip if no device is not supported", function () {
+		// TODO: Remove branch check when Flutter removes it.
+		if (!extApi.flutterCapabilities.supportsWebProjects || process.env.ONLY_RUN_DART_VERSION !== "DEV")
+			this.skip();
+	});
 
 	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
 	// `flutter create .`!
@@ -43,7 +50,7 @@ describe("flutter run debugger (launch)", () => {
 				args: extApi.flutterCapabilities.supportsPidFileForMachine
 					? ["--pid-file", path.join(os.tmpdir(), fileSafeCurrentTestName)]
 					: [],
-				deviceId: "flutter-tester",
+				deviceId,
 			},
 			extraConfiguration,
 		);
@@ -86,16 +93,16 @@ describe("flutter run debugger (launch)", () => {
 			dc.launch(config),
 		]);
 
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === true);
 		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === true);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === (deviceId !== "chrome"));
 
 		await Promise.all([
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		]);
 
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === false);
 		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === false);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === false);
 	});
 
 	it("expected debugger services are available in noDebug mode", async () => {
@@ -106,16 +113,16 @@ describe("flutter run debugger (launch)", () => {
 			dc.launch(config),
 		]);
 
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === true);
 		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === true);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === (deviceId !== "chrome"));
 
 		await Promise.all([
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		]);
 
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === false);
 		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === false);
+		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === false);
 	});
 
 	it("expected debugger service extensions are available in debug mode", async () => {
@@ -1213,4 +1220,5 @@ describe("flutter run debugger (launch)", () => {
 
 		assert.deepStrictEqual(stdErrLines, expectedErrorLines);
 	});
+});
 });
