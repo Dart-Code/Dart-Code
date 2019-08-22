@@ -337,12 +337,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// TODO: Why do we need this cast? The node-mock-debug does not?
 		(debugConfig as any).debugServer = serverAddress.port;
 
-		// We don't currently support debug for FlutterWeb
-		if (debugType === DebuggerType.FlutterWeb && !debugConfig.noDebug && !this.flutterCapabilities.webSupportsDebugging) {
+		// We don't support debug for (unforked) FlutterWeb
+		if (debugType === DebuggerType.FlutterWeb && !debugConfig.noDebug) {
 			// TODO: Support this! :)
 			debugConfig.noDebug = true;
 			if (!hasShownFlutterWebDebugWarning) {
-				window.showInformationMessage("Breakpoints and stepping are not currently supported in VS Code for Flutter web projects, please use your browsers developer tools if you need to break or step through code.");
+				window.showInformationMessage("Breakpoints and stepping are not supported in VS Code for Flutter web projects, please use your browsers developer tools if you need to break or step through code.");
 				hasShownFlutterWebDebugWarning = true;
 			}
 		}

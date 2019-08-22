@@ -16,8 +16,6 @@ export class FlutterCapabilities {
 	get hasTestGroupFix() { return versionIsAtLeast(this.version, "1.3.4"); }
 	get hasEvictBug() { return !versionIsAtLeast(this.version, "1.2.2"); }
 	get hasUpdatedStructuredErrorsFormat() { return versionIsAtLeast(this.version, "1.8.0"); }
-	// TODO: Confirm.
-	get supportsWebProjects() { return false; }
 	get supportsFlutterCreateListSamples() { return versionIsAtLeast(this.version, "1.3.10"); }
 	// TODO: Figure this out.
 	get webSupportsDebugging() { return false; }

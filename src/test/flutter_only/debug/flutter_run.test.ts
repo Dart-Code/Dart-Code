@@ -18,9 +18,9 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 		before("get packages", () => getPackages());
 		beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 
-		beforeEach("Skip if no device is not supported", function () {
+		beforeEach("Skip if web device is not supported", function () {
 			// TODO: Remove branch check when Flutter removes it.
-			if (deviceId === "chrome" && (!extApi.flutterCapabilities.supportsWebProjects || process.env.ONLY_RUN_DART_VERSION !== "DEV"))
+			if (deviceId === "chrome" && process.env.ONLY_RUN_DART_VERSION === "STABLE")
 				this.skip();
 		});
 
