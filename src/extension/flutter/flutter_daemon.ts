@@ -27,6 +27,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			this.additionalPidsToTerminate.push(e.pid);
 			this.capabilities.version = e.version;
 			vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, this.capabilities.canFlutterAttach);
+
+			this.deviceEnable();
 		});
 
 		const flutterAdditionalArgs = config.for(vs.Uri.file(projectFolder)).flutterAdditionalArgs;

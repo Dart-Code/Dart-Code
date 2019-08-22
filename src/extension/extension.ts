@@ -319,7 +319,6 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		context.subscriptions.push(deviceManager);
 		context.subscriptions.push(flutterDaemon);
 
-		flutterDaemon.deviceEnable();
 		setUpDaemonMessageHandler(logger, context, flutterDaemon);
 
 		context.subscriptions.push(vs.commands.registerCommand("flutter.selectDevice", deviceManager.showDevicePicker, deviceManager));
