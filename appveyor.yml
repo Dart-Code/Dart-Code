@@ -92,6 +92,10 @@ install:
   - echo Configuring Dart and Flutter...
   - flutter\bin\flutter config --no-analytics
   - flutter\bin\flutter update-packages
+  - ps: >-
+      if ($env:ONLY_RUN_DART_VERSION -ne "STABLE") {
+        flutter\bin\flutter config --enable-web
+      }
   - ps: $env:FLUTTER_PATH = "$pwd\flutter"
   - ps: $env:DART_PATH = "$pwd\dart-sdk"
   - dart-sdk\bin\dart --version
