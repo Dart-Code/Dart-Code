@@ -395,26 +395,27 @@ describe("flutter run debugger (launch)", () => {
 				dc.terminateRequest(),
 			]);
 		});
+	});
 
-		it("does not stop at a breakpoint in noDebug mode", async () => {
-			await openFile(flutterHelloWorldMainFile);
-			const config = await startDebugger(flutterHelloWorldMainFile);
-			config.noDebug = true;
+	it("does not stop at a breakpoint in noDebug mode", async () => {
+		await openFile(flutterHelloWorldMainFile);
+		const config = await startDebugger(flutterHelloWorldMainFile);
+		config.noDebug = true;
 
-			let didStop = false;
-			dc.waitForEvent("stopped").then(() => didStop = true);
-			await Promise.all([
-				dc.waitForEvent("terminated"),
-				dc.setBreakpointWithoutHitting(config, {
-					line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-					path: fsPath(flutterHelloWorldMainFile),
-					verified: false,
-				}),
-				delay(5000).then(() => dc.terminateRequest()),
-			]);
+		let didStop = false;
+		dc.waitForEvent("stopped").then(() => didStop = true);
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.setBreakpointWithoutHitting(config, {
+				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+				path: fsPath(flutterHelloWorldMainFile),
+				verified: false,
+			}),
 
-			assert.equal(didStop, false);
-		});
+			delay(5000).then(() => dc.terminateRequest()),
+		]);
+
+		assert.equal(didStop, false);
 	});
 
 	it("stops at a breakpoint in a part file");
