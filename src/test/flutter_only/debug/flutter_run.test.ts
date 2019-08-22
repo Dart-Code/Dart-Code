@@ -13,7 +13,7 @@ import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWi
 import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldPathFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getPackages, openFile, positionOf, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 ["flutter-tester", "chrome"].forEach((deviceId) => {
-	describe(`flutter run debugger (launched on ${deviceId})`, () => {
+	describe(`flutter run debugger (${deviceId})`, () => {
 		// We have tests that require external packages.
 		before("get packages", () => getPackages());
 		beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
