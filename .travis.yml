@@ -89,7 +89,7 @@ before_install:
   - flutter/bin/flutter config --no-analytics
   - flutter/bin/flutter update-packages
   - if [[ $ONLY_RUN_DART_VERSION != "STABLE" ]]; then
-      flutter/bin/flutter config --enable-web
+      flutter/bin/flutter config --enable-web;
     fi
   - export FLUTTER_PATH=`pwd`/flutter
   - export DART_PATH=`pwd`/dart-sdk
