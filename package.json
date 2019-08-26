@@ -346,11 +346,7 @@
 			{
 				"command": "dart.openDevTools",
 				"title": "Open DevTools",
-				"category": "Dart",
-				"icon": {
-					"dark": "media/commands/devtools.svg",
-					"light": "media/commands/devtools-light.svg"
-				}
+				"category": "Dart"
 			},
 			{
 				"command": "_dart.openDevTools.touchBar",
@@ -681,11 +677,6 @@
 					"command": "flutter.hotReload",
 					"group": "navigation@59",
 					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:flutterMobileProjectLoaded"
-				},
-				{
-					"command": "dart.openDevTools",
-					"group": "navigation@90",
-					"when": "inDebugMode && debugType == dart"
 				}
 			],
 			"touchBar": [
