@@ -502,6 +502,9 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 		const flutterExtension = vs.extensions.getExtension(flutterExtensionIdentifier);
 		if (flutterExtension) {
 			logger.info(`Activating Flutter extension for ${workspaceContext.workspaceTypeDescription} project...`);
+			// Do NOT await this.. the Flutter extension needs to wait for the Dart extension to finish activating
+			// so that it can call its exported API, therefore we'll deadlock if we wait for the Flutter extension
+			// to finish activating.
 			flutterExtension.activate();
 		}
 	}
