@@ -1,9 +1,9 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { stopLoggingAction } from "../../shared/constants";
+import { DART_IS_CAPTURING_LOGS_CONTEXT } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { captureLogs, EmittingLogger } from "../../shared/logging";
-import { forceWindowsDriveLetterToUppercase } from "../../shared/utils";
+import { forceWindowsDriveLetterToUppercase, PromiseCompleter } from "../../shared/utils";
 import { fsPath } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { createFolderForFile } from "../utils";
@@ -13,10 +13,12 @@ export let isLogging = false;
 
 export class LoggingCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
+	private currentLogCompleter: PromiseCompleter<void> | undefined;
 
 	constructor(private readonly logger: EmittingLogger, private extensionLogPath: string) {
 		this.disposables.push(
 			vs.commands.registerCommand("dart.startLogging", this.startLogging, this),
+			vs.commands.registerCommand("dart.stopLogging", this.stopLogging, this),
 		);
 	}
 
@@ -44,10 +46,19 @@ export class LoggingCommands implements vs.Disposable {
 		const logger = captureLogs(this.logger, fsPath(logUri), getLogHeader(), config.maxLogLineLength, allLoggedCategories);
 		isLogging = true;
 		this.disposables.push(logger);
+		vs.commands.executeCommand("setContext", DART_IS_CAPTURING_LOGS_CONTEXT, true);
+		this.currentLogCompleter = new PromiseCompleter<void>();
 
-		await vs.window.showInformationMessage(
-			`Dart and Flutter logs are being captured. Reproduce your issue then click ${stopLoggingAction}.`,
-			stopLoggingAction,
+		await vs.window.withProgress(
+			{
+				cancellable: true,
+				location: vs.ProgressLocation.Notification,
+				title: `Dart and Flutter logs are being captured. Reproduce your issue then click Cancel.`,
+			},
+			(_, token) => {
+				token.onCancellationRequested(() => this.currentLogCompleter.resolve());
+				return this.currentLogCompleter.promise;
+			},
 		);
 
 		isLogging = false;
@@ -57,6 +68,10 @@ export class LoggingCommands implements vs.Disposable {
 		await vs.window.showTextDocument(doc);
 
 		return logFilename;
+	}
+
+	private async stopLogging(): Promise<void> {
+		this.currentLogCompleter.resolve();
 	}
 
 	private generateFilename(): string {

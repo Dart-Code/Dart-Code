@@ -188,6 +188,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.stopLogging",
+				"title": "Stop Capturing Logs",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.completeStatement",
 				"title": "Complete Statement",
 				"category": "Dart"
@@ -447,6 +452,10 @@
 				{
 					"command": "dart.startLogging",
 					"when": "dart-code:dartProjectLoaded"
+				},
+				{
+					"command": "dart.stopLogging",
+					"when": "dart-code:dartProjectLoaded && dart-code:isCapturingLogs"
 				},
 				{
 					"command": "pub.get",
