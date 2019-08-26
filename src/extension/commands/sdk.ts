@@ -210,6 +210,9 @@ export class SdkCommands {
 				args.push("--android-language");
 				args.push(config.flutterCreateAndroidLanguage);
 			}
+			if (config.flutterAndroidX) {
+				args.push("--androidx");
+			}
 			if (sampleID) {
 				args.push("--sample");
 				args.push(sampleID);

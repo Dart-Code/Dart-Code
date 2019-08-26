@@ -961,6 +961,12 @@
 					"description": "Whether to use Flutter's structured error support for improve error display.",
 					"scope": "resource"
 				},
+				"dart.flutterAndroidX": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to pass the --androidx flag when running the 'Flutter: New Project' command.",
+					"scope": "window"
+				},
 				"dart.enableCompletionCommitCharacters": {
 					"type": "boolean",
 					"default": false,
