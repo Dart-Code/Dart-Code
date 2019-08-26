@@ -8,6 +8,7 @@ import { Logger } from "../shared/interfaces";
 import { isWithinPath } from "../shared/utils";
 import { hasPackagesFile, hasPubspec, mkDirRecursive } from "../shared/utils/fs";
 import { fsPath, isDartWorkspaceFolder } from "../shared/vscode/utils";
+import { config } from "./config";
 import { locateBestProjectRoot } from "./project";
 import { referencesFlutterSdk, referencesFlutterWeb } from "./sdk/utils";
 import { getExtensionLogPath } from "./utils/log";
@@ -130,8 +131,12 @@ export function isAnalyzable(document: TextDocument): boolean {
 	const analyzableLanguages = ["dart", "html"];
 	const analyzableFilenames = [".analysis_options", "analysis_options.yaml", "pubspec.yaml"];
 
+	const extName = path.extname(fsPath(document.uri));
+	const extension = extName ? extName.substr(1) : undefined;
+
 	return analyzableLanguages.indexOf(document.languageId) >= 0
-		|| analyzableFilenames.indexOf(path.basename(fsPath(document.uri))) >= 0;
+		|| analyzableFilenames.indexOf(path.basename(fsPath(document.uri))) >= 0
+		|| (extension && config.additionalAnalyzerFileExtensions.includes(extension));
 }
 
 export function isAnalyzableAndInWorkspace(document: TextDocument): boolean {

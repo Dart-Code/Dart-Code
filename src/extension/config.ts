@@ -25,6 +25,7 @@ class Config {
 		await this.config.update(key, value, target);
 	}
 
+	get additionalAnalyzerFileExtensions(): string[] { return this.getConfig<string[]>("additionalAnalyzerFileExtensions", []); }
 	get allowAnalytics(): boolean { return this.getConfig<boolean>("allowAnalytics", true); }
 	get analysisServerFolding(): boolean { return this.getConfig<boolean>("analysisServerFolding", true); }
 	get analyzeAngularTemplates(): boolean { return this.getConfig<boolean>("analyzeAngularTemplates", true); }

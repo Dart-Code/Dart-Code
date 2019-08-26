@@ -895,6 +895,15 @@
 			"type": "object",
 			"title": "Dart & Flutter",
 			"properties": {
+				"dart.additionalAnalyzerFileExtensions": {
+					"type": "array",
+					"default": [],
+					"description": "Additional file extensions that should be analyzed (usually used in combination with analyzer plugins).",
+					"items": {
+						"type": "string"
+					},
+					"scope": "window"
+				},
 				"dart.enableSdkFormatter": {
 					"type": "boolean",
 					"default": true,
