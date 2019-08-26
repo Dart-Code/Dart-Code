@@ -1,10 +1,8 @@
 import * as assert from "assert";
 import * as fs from "fs";
-import * as sinon from "sinon";
 import * as vs from "vscode";
-import { platformEol, stopLoggingAction } from "../../../shared/constants";
+import { platformEol } from "../../../shared/constants";
 import { LogCategory } from "../../../shared/enums";
-import { PromiseCompleter } from "../../../shared/utils";
 import { fsPath } from "../../../shared/vscode/utils";
 import { activate, logger, sb, waitForResult } from "../../helpers";
 
@@ -18,13 +16,10 @@ describe("capture logs command", () => {
 			showQuickPick.resolves(logCategories.map((c) => ({ logCategory: c })));
 		else
 			showQuickPick.resolves(undefined);
-		// Use a completer so the test can signal when to end logging (normally a user
-		// would click the Stop Logging button on the notification).
-		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
-		const stopLogging = new PromiseCompleter();
-		showInformationMessage.withArgs(sinon.match.any, stopLoggingAction).resolves(stopLogging.promise);
+
 		// Start the logging but don't await it (it doesn't complete until we stop the logging!).
 		const loggingCommand = vs.commands.executeCommand("dart.startLogging") as Thenable<string>;
+
 		// Wait until the command has called for the filename and options (otherwise we'll send our log before
 		// the logger is set up because the above call is async).
 		await waitForResult(() => showQuickPick.called);
@@ -32,8 +27,7 @@ describe("capture logs command", () => {
 		return {
 			loggingCommand,
 			stopLogging: async () => {
-				// Resolving the promise will stop the logging.
-				stopLogging.resolve(stopLoggingAction);
+				await vs.commands.executeCommand("dart.stopLogging");
 				// Wait for the logging command to finish.
 				return loggingCommand;
 			},
