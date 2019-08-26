@@ -167,7 +167,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (debugConfig.cwd
 			// TODO: This isInsideFolderNamed often fails when we found a better project root above.
 			&& !isInsideFolderNamed(debugConfig.program, "bin")
-			&& !isInsideFolderNamed(debugConfig.program, "tool")) {
+			&& !isInsideFolderNamed(debugConfig.program, "tool")
+			&& !isInsideFolderNamed(debugConfig.program, ".dart_tool")) {
 			// Check if we're a Flutter or FlutterWeb project.
 			if (isFlutterWebProjectFolder(debugConfig.cwd as string)) {
 				debugType = DebuggerType.FlutterWeb;
