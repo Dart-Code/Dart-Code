@@ -1,4 +1,8 @@
-[![Gitter Chat](https://img.shields.io/badge/chat-online-blue.svg)](https://gitter.im/dart-code/Dart-Code) [![Follow on Twitter](https://img.shields.io/badge/twitter-dartcode-blue.svg)](https://twitter.com/DartCode) [![Contribute to Dart Code](https://img.shields.io/badge/help-contribute-551A8B.svg)](https://github.com/Dart-Code/Dart-Code/blob/master/CONTRIBUTING.md) [![Linux & Mac build status](https://img.shields.io/travis/Dart-Code/Dart-Code/master.svg?label=mac+%26+linux)](https://travis-ci.org/Dart-Code/Dart-Code) [![Windows build status](https://img.shields.io/appveyor/ci/DanTup/Dart-Code/master.svg?label=windows&logoWidth=-1)](https://ci.appveyor.com/project/DanTup/dart-code)
+[![Discord Chat](https://img.shields.io/badge/chat-discord-blue.svg)](https://discord.gg/xSTPEqm)
+[![Gitter Chat](https://img.shields.io/badge/chat-gitter-blue.svg)](https://gitter.im/dart-code/Dart-Code)
+[![Follow on Twitter](https://img.shields.io/badge/twitter-dartcode-blue.svg)](https://twitter.com/DartCode)
+[![Linux & Mac build status](https://img.shields.io/travis/Dart-Code/Dart-Code/master.svg?label=mac+%26+linux)](https://travis-ci.org/Dart-Code/Dart-Code)
+[![Windows build status](https://img.shields.io/appveyor/ci/DanTup/Dart-Code/master.svg?label=windows&logoWidth=-1)](https://ci.appveyor.com/project/DanTup/dart-code)
 
 # Raising Issues in Dart Code
 
@@ -115,5 +119,5 @@ To release Dart Code you will need access to the Publisher account on the VS mar
   - This may take a few minutes due to caching (and stuff)
 - Do some basic testing of the published release
   - If significant issues are found, they either need fixing or a new version of the extension to be re-published from the previous releases tag
-- Announce the new release in [Gitter](https://gitter.im/dart-code/Dart-Code)/Twitter/etc.!
+- Announce the new release in [Discord](https://discord.gg/xSTPEqm)/[Gitter](https://gitter.im/dart-code/Dart-Code)/Twitter/etc.!
 - Increase the version number in `packages.json` including adding a `-dev` suffix back and commit/push
