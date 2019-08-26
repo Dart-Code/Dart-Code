@@ -6,7 +6,7 @@ function debugCheck(cls: vs.CodeLens[]) {
 	// TEMP DEBUG
 	for (const cl of cls) {
 		if (!cl.command) {
-			throw new Error(`Got code lens without a command! ${JSON.stringify(cl)}`);
+			throw new Error(`Got code lens without a command! ${JSON.stringify(cl, undefined, 4)}\n\n\nFull response (${cls.length} items) was:${JSON.stringify(cls, undefined, 4)}`);
 		}
 	}
 }
@@ -20,12 +20,11 @@ describe("test_code_lens", () => {
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
+		debugCheck(fileCodeLens);
 		const testPos = positionOf(`test^(".split() splits`);
 
 		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
 		assert.equal(codeLensForTest.length, 2);
-
-		debugCheck(codeLensForTest);
 
 		const runAction = codeLensForTest.find((cl) => cl.command.title === "Run");
 		assert.equal(runAction.command.command, "_dart.startWithoutDebuggingTestFromOutline");
@@ -43,12 +42,11 @@ describe("test_code_lens", () => {
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
+		debugCheck(fileCodeLens);
 		const groupPos = positionOf("group^(");
 
 		const codeLensForGroup = fileCodeLens.filter((cl) => cl.range.contains(groupPos));
 		assert.equal(codeLensForGroup.length, 2);
-
-		debugCheck(codeLensForGroup);
 
 		const runAction = codeLensForGroup.find((cl) => cl.command.title === "Run");
 		assert.equal(runAction.command.command, "_dart.startWithoutDebuggingTestFromOutline");
@@ -86,12 +84,11 @@ describe("test_code_lens", () => {
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
+		debugCheck(fileCodeLens);
 		const testPos = positionOf(`test^(".split() splits`);
 
 		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
 		assert.equal(codeLensForTest.length, 4);
-
-		debugCheck(codeLensForTest);
 
 		const runAction = codeLensForTest.find((cl) => cl.command.title === "Run in Browser");
 		assert.equal(runAction.command.command, "_dart.startWithoutDebuggingTestFromOutline");
@@ -131,12 +128,11 @@ describe("test_code_lens", () => {
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
+		debugCheck(fileCodeLens);
 		const groupPos = positionOf("group^(");
 
 		const codeLensForGroup = fileCodeLens.filter((cl) => cl.range.contains(groupPos));
 		assert.equal(codeLensForGroup.length, 4);
-
-		debugCheck(codeLensForGroup);
 
 		const runAction = codeLensForGroup.find((cl) => cl.command.title === "Run in Browser");
 		assert.equal(runAction.command.command, "_dart.startWithoutDebuggingTestFromOutline");
