@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, addLaunchConfigsForTest, extApi, getCodeLens, helloWorldTestMainFile, openFile, positionOf, waitForResult } from "../../helpers";
+import { activate, addLaunchConfigsForTest, extApi, getCodeLens, getPackages, helloWorldTestMainFile, openFile, positionOf, waitForResult } from "../../helpers";
 
 function debugCheck(cls: vs.CodeLens[]) {
 	// TEMP DEBUG
@@ -12,6 +12,7 @@ function debugCheck(cls: vs.CodeLens[]) {
 }
 
 describe("test_code_lens", () => {
+	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate());
 
 	it("includes run/debug actions for tests", async () => {
