@@ -446,7 +446,7 @@ export async function getDefinitions(position: vs.Position): Promise<vs.Location
 }
 
 export async function getCodeLens(document: vs.TextDocument): Promise<vs.CodeLens[]> {
-	const fileCodeLens = await (vs.commands.executeCommand("vscode.executeCodeLensProvider", document.uri, 50) as Thenable<vs.CodeLens[]>);
+	const fileCodeLens = await (vs.commands.executeCommand("vscode.executeCodeLensProvider", document.uri, 500) as Thenable<vs.CodeLens[]>);
 	return fileCodeLens || [];
 }
 
