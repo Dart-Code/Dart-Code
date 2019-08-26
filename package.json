@@ -95,6 +95,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.writeRecommendedSettings",
+				"title": "Use Recommended Settings",
+				"category": "Dart"
+			},
+			{
 				"command": "pub.get",
 				"title": "Get Packages",
 				"category": "Pub",

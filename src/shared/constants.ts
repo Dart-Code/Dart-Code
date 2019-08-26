@@ -89,6 +89,55 @@ export const debugAnywayAction = "Debug Anyway";
 
 export const userPromptContextPrefix = "hasPrompted.";
 export const installFlutterExtensionPromptKey = "install_flutter_extension_3";
+export const useRecommendedSettingsPromptKey = "use_recommended_settings";
+export const yesAction = "Yes";
+export const noAction = "No";
+export const showRecommendedSettingsAction = "Show Recommended Settings";
+export const recommendedSettingsUrl = "https://dartcode.org/docs/recommended-settings/";
+export const openSettingsAction = "Open Settings File";
 
 export const observatoryListeningBannerPattern: RegExp = new RegExp("Observatory (?:listening on|.* is available at:) (http:.+)");
 export const observatoryHttpLinkPattern: RegExp = new RegExp("(http://[\\d\\.:]+/)");
+
+export const dartRecommendedConfig = {
+	// Automatically format code on save and during typing of certain characters
+	// (like `;` and `}`).
+	"editor.formatOnSave": true,
+	"editor.formatOnType": true,
+
+	// Draw a guide line at 80 characters, where Dart's formatting will wrap code.
+	"editor.rulers": [80],
+
+	// Disables built-in highlighting of words that match your selection. Without
+	// this, all instances of the selected text will be highlighted, interfering
+	// with Dart's ability to highlight only exact references to the selected variable.
+	"editor.selectionHighlight": false,
+
+	// By default, VS Code prevents code completion from popping open when in
+	// "snippet mode" (editing placeholders in inserted code). Setting this option
+	// to `false` stops that and allows completion to open as normal, as if you
+	// weren't in a snippet placeholder.
+	"editor.suggest.snippetsPreventQuickSuggestions": false,
+
+	// By default, VS Code will pre-select the most recently used item from code
+	// completion. This is usually not the most relevant item.
+	//
+	// "first" will always select top item
+	// "recentlyUsedByPrefix" will filter the recently used items based on the
+	//     text immediately preceeding where completion was invoked.
+	"editor.suggestSelection": "first",
+
+	// Allows pressing <TAB> to complete snippets such as `for` even when the
+	// completion list is not visible.
+	"editor.tabCompletion": "onlySnippets",
+
+	// By default, VS Code will popualte code completion with words found in the
+	// current file when a language service does not provide its own completions.
+	// This results in code completion suggesting words when editing comments and
+	// strings. This setting will prevent that.
+	"editor.wordBasedSuggestions": false,
+
+	// Force all files to have a trailing newline for consistency and reduced diffs
+	// when adding new lines at the bottom of the file.
+	"files.insertFinalNewline": true,
+};

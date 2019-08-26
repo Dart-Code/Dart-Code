@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, userPromptContextPrefix } from "../shared/constants";
+import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, userPromptContextPrefix, yesAction } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { Logger, StagehandTemplate } from "../shared/interfaces";
 import { checkHasFlutterExtension, extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
@@ -56,7 +56,28 @@ export async function showUserPrompts(logger: Logger, context: Context, workspac
 			return; // Bail if we showed it, so we won't show any other notifications.
 	}
 
+	// TODO: Once we're happy with settings.
+	// if (!shouldSuppress(useRecommendedSettingsPromptKey)) {
+	// 	showPrompt(useRecommendedSettingsPromptKey, promptToUseRecommendedSettings);
+	// 	return;
+	// }
+
 	// (though, there are no other notifications right now...)
+}
+
+async function promptToUseRecommendedSettings(): Promise<boolean> {
+	const action = await vs.window.showInformationMessage(
+		"Use recommended VS Code settings for Dart & Flutter?",
+		yesAction,
+		noAction,
+		showRecommendedSettingsAction,
+	);
+	if (action === yesAction) {
+		await vs.commands.executeCommand("dart.writeRecommendedSettings");
+	} else if (action === showRecommendedSettingsAction) {
+		envUtils.openInBrowser(recommendedSettingsUrl);
+	}
+	return true;
 }
 
 async function promptToInstallFlutterExtension(): Promise<boolean> {

@@ -1,4 +1,5 @@
 import * as vs from "vscode";
+import { dartRecommendedConfig, openSettingsAction } from "../../shared/constants";
 import { showCode } from "../utils/vscode/editor";
 
 export class EditCommands implements vs.Disposable {
@@ -8,6 +9,7 @@ export class EditCommands implements vs.Disposable {
 		this.commands.push(
 			vs.commands.registerCommand("_dart.jumpToLineColInUri", this.jumpToLineColInUri, this),
 			vs.commands.registerCommand("_dart.showCode", showCode, this),
+			vs.commands.registerCommand("dart.writeRecommendedSettings", this.writeRecommendedSettings, this),
 		);
 	}
 
@@ -22,6 +24,21 @@ export class EditCommands implements vs.Disposable {
 			const firstChar = line.range.start.translate({ characterDelta: line.firstNonWhitespaceCharacterIndex });
 			showCode(editor, line.range, line.range, new vs.Range(firstChar, firstChar));
 		}
+	}
+
+	private async writeRecommendedSettings() {
+		const topLevelConfig = vs.workspace.getConfiguration("", null);
+		const existingConfig = topLevelConfig.inspect("[dart]").globalValue;
+		const newValues = Object.assign({}, dartRecommendedConfig, existingConfig);
+		await topLevelConfig.update("[dart]", newValues, vs.ConfigurationTarget.Global);
+
+		const action = await vs.window.showInformationMessage(
+			"Recommended settings were written to the [dart] section of your global settings file",
+			openSettingsAction,
+		);
+
+		if (action === openSettingsAction)
+			await vs.commands.executeCommand("workbench.action.openSettingsJson");
 	}
 
 	public dispose(): any {
