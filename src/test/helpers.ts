@@ -446,8 +446,22 @@ export async function getDefinitions(position: vs.Position): Promise<vs.Location
 }
 
 export async function getCodeLens(document: vs.TextDocument): Promise<vs.CodeLens[]> {
-	const fileCodeLens = await (vs.commands.executeCommand("vscode.executeCodeLensProvider", document.uri, 500) as Thenable<vs.CodeLens[]>);
-	return fileCodeLens || [];
+	// Workaround for https://github.com/microsoft/vscode/issues/79805. Fetch
+	// multiple times until we get them with the command. Remove this once
+	// the issue above is tracked down.
+	let attemptsRemaining = 10;
+	let fileCodeLens: vs.CodeLens[] | undefined;
+	while (attemptsRemaining > 0 && (!fileCodeLens || (fileCodeLens.length && !fileCodeLens[0].command))) {
+		fileCodeLens = await (vs.commands.executeCommand("vscode.executeCodeLensProvider", document.uri, 500) as Thenable<vs.CodeLens[]>);
+		attemptsRemaining--;
+	}
+
+	if (attemptsRemaining < 9) {
+		console.warn(`CodeLens requested multiple times because of missing commands.
+		See https://github.com/microsoft/vscode/issues/79805`);
+	}
+
+	return fileCodeLens;
 }
 
 export async function getDefinition(position: vs.Position): Promise<vs.Location> {
