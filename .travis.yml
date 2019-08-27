@@ -1,5 +1,8 @@
 sudo: false
 
+notifications:
+  email: false
+
 os:
   - osx
   - linux
@@ -169,10 +172,14 @@ script:
   #   fi
 
 after_script:
-  - if [ $TRAVIS_PULL_REQUEST = "false" ]; then
+  - if [ $TRAVIS_PULL_REQUEST == "false" ]; then
       dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".test_results" --upload-dir="$TRAVIS_BRANCH/$TRAVIS_COMMIT/$TRAVIS_OS_NAME" --acl=public_read --default_text_charset=utf-8;
       dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".dart_code_test_logs" --upload-dir="logs/$TRAVIS_BRANCH/$TRAVIS_COMMIT/$TRAVIS_OS_NAME" --acl=public_read --default_text_charset=utf-8;
     fi
   - if [ $ONLY_RUN_CODE_VERSION == "STABLE" ] && [ $ONLY_RUN_DART_VERSION == "STABLE" ]; then
       ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT;
+    fi
+  - |
+    if [ $TRAVIS_TEST_RESULT != "0" ] && [ $TRAVIS_PULL_REQUEST == "false" ] && [ $TRAVIS_BRANCH == "master" ] && [ $ONLY_RUN_CODE_VERSION == "STABLE" ] && [ $ONLY_RUN_DART_VERSION == "STABLE" ]; then
+      curl -H "Content-Type: application/json" -X POST -d "{\"content\":\"Build failed on $TRAVIS_BRANCH ($TRAVIS_OS_NAME): $TRAVIS_BUILD_WEB_URL\"}" $DISCORD_WEBHOOK;
     fi
