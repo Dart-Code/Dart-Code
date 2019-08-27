@@ -400,7 +400,7 @@ export class DebugClient extends ProtocolClient {
 					if (output.indexOf(expected) === 0) {
 						resolve(event);
 					} else if (expected.indexOf(output) !== 0) {
-						const sanitize = (s: string) => s.toString().replace(/\r/mg, '\\r').replace(/\n/mg, '\\n').replace(`\u001B`, '');
+						const sanitize = (s: string) => s.toString().replace(/\r/mg, "\\r").replace(/\n/mg, "\\n").replace(/\u001B/g, "").replace(/&/g, "&amp;");
 						reject(new Error(`received data '${sanitize(output)}' is not a prefix of the expected data '${sanitize(expected)}'`));
 					}
 				}
