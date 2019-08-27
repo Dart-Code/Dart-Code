@@ -3,6 +3,8 @@ environment:
     secure: 2IDNrdK4BiM3+9TnW/K3nazF9S2pG7tyVQx249JDiY4=
   AWS_SECRET_ACCESS_KEY:
     secure: s6QyIIIqf3VPkCrGG9E0kqa6AXxyrygL+KDwdMSAj0yNE7RjN0nWCNob48syHA+a
+  DISCORD_WEBHOOK:
+    secure: Xlh0md1CsX9kZ65Ij5wCIqUy4i4SOjp1hLBV/6xeD6/YdHmTGsDre1FgqQ8tkvw6VTqjActbZVDT0URU9Z+pr8KTA8K11SQUUJQeiy/9fcCgRI0oBfBr0Wq/QdxZ/SGDFugpASuhnFwGbVM8Miadp3aO0gocO55T5nkDRM0CXrA=
   # https://github.com/flutter/flutter/issues/17768
   FLUTTER_TEST: true
   matrix:
@@ -129,6 +131,10 @@ test_script:
 
 on_failure:
   - ps: $env:APPVEYOR_RESULT = 1
+  - ps: |
+      if ($env:APPVEYOR_REPO_BRANCH -eq "master" -and !$env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:ONLY_RUN_CODE_VERSION -eq "STABLE" -and $env:ONLY_RUN_DART_VERSION -eq "STABLE") {
+        Invoke-RestMethod -Uri $env:DISCORD_WEBHOOK -Method POST -Headers @{ "Content-Type" = "application/json" } -Body "{`"content`":`"Build failed on ${env:APPVEYOR_REPO_BRANCH} (Windows): https://ci.appveyor.com/project/DanTup/dart-code/history`"}"
+      }
 
 on_finish:
   - IF NOT DEFINED APPVEYOR_PULL_REQUEST_NUMBER dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup="true" --local-dir=".test_results" --upload-dir="%APPVEYOR_REPO_BRANCH%/%APPVEYOR_REPO_COMMIT%/win" --acl=public_read --default_text_charset=utf-8
