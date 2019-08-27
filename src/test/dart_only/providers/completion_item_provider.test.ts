@@ -33,14 +33,14 @@ describe("completion_item_provider", () => {
 		const completions = await getCompletionsAt(`^return str`);
 
 		// From the class
-		ensureCompletion(completions, vs.CompletionItemKind.Class, "MyClass", "MyClass");
-		ensureCompletion(completions, vs.CompletionItemKind.Field, "myNumField", "myNumField");
-		ensureCompletion(completions, vs.CompletionItemKind.Property, "myNumGetter", "myNumGetter");
-		ensureCompletion(completions, vs.CompletionItemKind.Property, "myNumSetter", "myNumSetter");
-		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "MyClass()", "MyClass");
-		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "MyClass.myNamed()", "MyClass.myNamed");
-		ensureCompletion(completions, vs.CompletionItemKind.Method, "myVoidReturningMethod()", "myVoidReturningMethod");
-		ensureCompletion(completions, vs.CompletionItemKind.Method, "myStringReturningMethod()", "myStringReturningMethod");
+		ensureCompletion(completions, vs.CompletionItemKind.Class, "MyTestClass", "MyTestClass");
+		ensureCompletion(completions, vs.CompletionItemKind.Field, "myTestNumField", "myTestNumField");
+		ensureCompletion(completions, vs.CompletionItemKind.Property, "myTestNumGetter", "myTestNumGetter");
+		ensureCompletion(completions, vs.CompletionItemKind.Property, "myTestNumSetter", "myTestNumSetter");
+		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "MyTestClass()", "MyTestClass");
+		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "MyTestClass.myNamed()", "MyTestClass.myNamed");
+		ensureCompletion(completions, vs.CompletionItemKind.Method, "myTestVoidReturningMethod()", "myTestVoidReturningMethod");
+		ensureCompletion(completions, vs.CompletionItemKind.Method, "myTestStringReturningMethod()", "myTestStringReturningMethod");
 		ensureCompletion(completions, vs.CompletionItemKind.Method, "methodTakingString(…)", "methodTakingString");
 		ensureCompletion(completions, vs.CompletionItemKind.Method, "methodTakingFunction(…)", "methodTakingFunction");
 		ensureCompletion(completions, vs.CompletionItemKind.Variable, "str", "str");

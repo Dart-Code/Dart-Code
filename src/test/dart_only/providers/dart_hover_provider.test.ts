@@ -64,10 +64,10 @@ describe("dart_hover_provider", () => {
 	});
 
 	it("returns expected information for a class", async () => {
-		const hover = await getHoverAt("class My^Class");
-		assert.equal(hover.displayText, "class MyClass");
+		const hover = await getHoverAt("class My^TestClass");
+		assert.equal(hover.displayText, "class MyTestClass");
 		assert.equal(hover.documentation, getExpectedDoc("package:hello_world/everything.dart", "This is my class."));
-		assert.deepStrictEqual(hover.range, rangeOf("class |MyClass|"));
+		assert.deepStrictEqual(hover.range, rangeOf("class |MyTestClass|"));
 	});
 
 	it("returns expected information for a field", async () => {
@@ -99,23 +99,23 @@ describe("dart_hover_provider", () => {
 
 	it("returns expected information for a constructor", async () => {
 		const hover = await getHoverAt("My^Class()");
-		assert.equal(hover.displayText, getExpectedSignature("MyClass()", "MyClass"));
+		assert.equal(hover.displayText, getExpectedSignature("MyTestClass()", "MyTestClass"));
 		assert.equal(hover.documentation, getExpectedDoc("package:hello_world/everything.dart", "This is my class constructor."));
-		assert.deepStrictEqual(hover.range, rangeOf("|MyClass|()"));
+		assert.deepStrictEqual(hover.range, rangeOf("|MyTestClass|()"));
 	});
 
 	it("returns expected information for a named constructor", async () => {
 		// Note: Server seeems to return two different ranges for
-		// MyClass and named.
+		// MyTestClass and named.
 		let hover = await getHoverAt("My^Class.myNamed()");
-		assert.equal(hover.displayText, getExpectedSignature("MyClass.myNamed()", "MyClass"));
+		assert.equal(hover.displayText, getExpectedSignature("MyTestClass.myNamed()", "MyTestClass"));
 		assert.equal(hover.documentation, getExpectedDoc("package:hello_world/everything.dart", "This is my class named constructor."));
-		assert.deepStrictEqual(hover.range, rangeOf("|MyClass|.myNamed()"));
+		assert.deepStrictEqual(hover.range, rangeOf("|MyTestClass|.myNamed()"));
 		// Check second part... ideally this would be rolled into above.
-		hover = await getHoverAt("MyClass.myN^amed()");
-		assert.equal(hover.displayText, getExpectedSignature("MyClass.myNamed()", "MyClass"));
+		hover = await getHoverAt("MyTestClass.myN^amed()");
+		assert.equal(hover.displayText, getExpectedSignature("MyTestClass.myNamed()", "MyTestClass"));
 		assert.equal(hover.documentation, getExpectedDoc("package:hello_world/everything.dart", "This is my class named constructor."));
-		assert.deepStrictEqual(hover.range, rangeOf("MyClass.|myNamed|()"));
+		assert.deepStrictEqual(hover.range, rangeOf("MyTestClass.|myNamed|()"));
 	});
 
 	it("returns expected information for a void returning method", async () => {

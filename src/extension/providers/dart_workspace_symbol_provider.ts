@@ -61,8 +61,8 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	private getNames(result: as.ElementDeclaration, includeFilename: boolean, file: string) {
 		let name = result.name;
 		// Constructors don't come prefixed with class name, so add them for a nice display:
-		//    () => MyClass()
-		//    named() => MyClass.named()
+		//    () => MyTestClass()
+		//    named() => MyTestClass.named()
 		let nameIsPrefixedWithClass = false;
 		if (result.kind === "CONSTRUCTOR" && result.className) {
 			if (name) {

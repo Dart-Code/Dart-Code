@@ -11,33 +11,33 @@ import 'package:protobuf/protobuf.dart';
 const foo = "foo";
 
 /// This is my class.
-class MyClass {
+class MyTestClass {
   /// This is my num field.
-  num myNumField;
+  num myTestNumField;
 
   /// This is my num getter.
-  num get myNumGetter => 1;
+  num get myTestNumGetter => 1;
 
   /// This is my num setter.
-  set myNumSetter(num value) {}
+  set myTestNumSetter(num value) {}
 
   /// This is my HTTP Client from another package.
-  http.Client myHttpClient;
+  http.Client myTestHttpClient;
 
   /// This is a future string from an SDK library.
-  Future<String> myFutureString;
+  Future<String> myTestFutureString;
 
   /// This is my class constructor.
-  MyClass();
+  MyTestClass();
 
   /// This is my class named constructor.
-  MyClass.myNamed();
+  MyTestClass.myTestNamed();
 
   /// This is my void returning method.
-  void myVoidReturningMethod() {}
+  void myTestVoidReturningMethod() {}
 
   /// This is my string returning method.
-  String myStringReturningMethod() {
+  String myTestStringReturningMethod() {
     final str = "str";
     return str;
   }
@@ -56,19 +56,19 @@ class MyClass {
 
 @deprecated
 void doSomeStuff() {
-  var a = MyClass();
-  var b = MyClass.myNamed();
+  var a = MyTestClass();
+  var b = MyTestClass.myTestNamed();
   // Force some references to things used in tests to ensure the analyzer
   // scans them.
   var c = IOClient();
   var d = ProtobufEnum(1, '');
   print(c);
   print(d);
-  print(a.myNumField);
-  print(a.myNumGetter);
-  a.myNumSetter = 1;
-  print(b.myStringReturningMethod());
-  b.myVoidReturningMethod();
+  print(a.myTestNumField);
+  print(a.myTestNumGetter);
+  a.myTestNumSetter = 1;
+  print(b.myTestStringReturningMethod());
+  b.myTestVoidReturningMethod();
   b.methodTakingString("Hello");
   b.methodTakingString("World!");
   b.methodTakingFunction((s) => print(s));
