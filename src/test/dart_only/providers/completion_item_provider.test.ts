@@ -38,7 +38,7 @@ describe("completion_item_provider", () => {
 		ensureCompletion(completions, vs.CompletionItemKind.Property, "myTestNumGetter", "myTestNumGetter");
 		ensureCompletion(completions, vs.CompletionItemKind.Property, "myTestNumSetter", "myTestNumSetter");
 		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "MyTestClass()", "MyTestClass");
-		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "MyTestClass.myNamed()", "MyTestClass.myNamed");
+		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "MyTestClass.myTestNamed()", "MyTestClass.myTestNamed");
 		ensureCompletion(completions, vs.CompletionItemKind.Method, "myTestVoidReturningMethod()", "myTestVoidReturningMethod");
 		ensureCompletion(completions, vs.CompletionItemKind.Method, "myTestStringReturningMethod()", "myTestStringReturningMethod");
 		ensureCompletion(completions, vs.CompletionItemKind.Method, "methodTakingString(…)", "methodTakingString");

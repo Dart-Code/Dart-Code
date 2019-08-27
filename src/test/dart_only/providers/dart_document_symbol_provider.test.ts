@@ -16,7 +16,7 @@ describe("document_symbol_provider", () => {
 		ensureDocumentSymbol(symbols, "myTestFutureString", vs.SymbolKind.Field, "MyTestClass");
 		ensureDocumentSymbol(symbols, "myTestHttpClient", vs.SymbolKind.Field, "MyTestClass");
 		ensureDocumentSymbol(symbols, "MyTestClass", vs.SymbolKind.Constructor, "MyTestClass");
-		ensureDocumentSymbol(symbols, "MyTestClass.myNamed", vs.SymbolKind.Constructor, "MyTestClass");
+		ensureDocumentSymbol(symbols, "MyTestClass.myTestNamed", vs.SymbolKind.Constructor, "MyTestClass");
 		ensureDocumentSymbol(symbols, "myTestVoidReturningMethod", vs.SymbolKind.Method, "MyTestClass");
 		ensureDocumentSymbol(symbols, "myTestStringReturningMethod", vs.SymbolKind.Method, "MyTestClass");
 		ensureDocumentSymbol(symbols, "methodTakingString", vs.SymbolKind.Method, "MyTestClass");
