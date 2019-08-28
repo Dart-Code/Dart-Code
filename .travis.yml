@@ -126,7 +126,7 @@ before_install:
   - if [[ $RUN_TESTS == "flutter" ]]; then
       flutter/bin/flutter --version;
       fluttersymlinkbins/flutter --version;
-      flutter/bin/flutter doctor
+      flutter/bin/flutter doctor;
     fi;
   - dart-sdk/bin/pub global activate --no-executables stagehand
   - dart-sdk/bin/pub global activate --no-executables args 1.5.0
