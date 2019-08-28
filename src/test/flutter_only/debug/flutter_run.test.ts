@@ -713,6 +713,7 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 			return async () => {
 				await openFile(flutterHelloWorldMainFile);
 				const config = await startDebugger(flutterHelloWorldMainFile);
+
 				const completionEvent: Promise<any> =
 					shouldStop
 						? dc.assertStoppedLocation("breakpoint", {})
@@ -722,17 +723,16 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 					expectedError
 						? dc.assertOutputContains("console", expectedError)
 						: Promise.resolve();
+
 				await Promise.all([
-					dc.waitForEvent("initialized").then((event) => {
-						return dc.setBreakpointsRequest({
-							// positionOf is 0-based, but seems to want 1-based
-							breakpoints: [{
-								condition,
-								line: positionOf("^// BREAKPOINT1").line,
-							}],
-							source: { path: fsPath(flutterHelloWorldMainFile) },
-						});
-					})
+					dc.waitForEvent("initialized").then((_) => dc.setBreakpointsRequest({
+						// positionOf is 0-based, but seems to want 1-based
+						breakpoints: [{
+							condition,
+							line: positionOf("^// BREAKPOINT1").line,
+						}],
+						source: { path: fsPath(flutterHelloWorldMainFile) },
+					}))
 						.then(() => dc.configurationDoneRequest())
 						.then(() => delay(2000))
 						.then(() => dc.terminateRequest()),
@@ -754,19 +754,21 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 		it("logs expected text (and does not stop) at a logpoint", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(flutterHelloWorldMainFile);
+
 			await Promise.all([
-				dc.waitForEvent("initialized").then((event) => {
-					return dc.setBreakpointsRequest({
-						// positionOf is 0-based, but seems to want 1-based
-						breakpoints: [{
-							line: positionOf("^// BREAKPOINT1").line + 1,
-							// VS Code says to use {} for expressions, but we want to support Dart's native too, so
-							// we have examples of both (as well as "escaped" brackets).
-							logMessage: '${s} The \\{year} is """{(new DateTime.now()).year}"""',
-						}],
-						source: { path: fsPath(flutterHelloWorldMainFile) },
-					});
-				}).then((response) => dc.configurationDoneRequest()),
+				dc.waitForEvent("initialized").then((_) => dc.setBreakpointsRequest({
+					// positionOf is 0-based, but seems to want 1-based
+					breakpoints: [{
+						line: positionOf("^// BREAKPOINT1").line,
+						// VS Code says to use {} for expressions, but we want to support Dart's native too, so
+						// we have examples of both (as well as "escaped" brackets).
+						logMessage: 'The \\{year} is """{(new DateTime.now()).year}"""',
+					}],
+					source: { path: fsPath(flutterHelloWorldMainFile) },
+				}))
+					.then(() => dc.configurationDoneRequest())
+					.then(() => delay(5000))
+					.then(() => dc.terminateRequest()),
 				dc.waitForEvent("terminated"),
 				dc.assertOutputContains("stdout", `Hello! The {year} is """${(new Date()).getFullYear()}"""${platformEol}`),
 				dc.launch(config),
