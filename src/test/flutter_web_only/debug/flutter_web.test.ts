@@ -49,8 +49,8 @@ describe("flutter for web debugger", () => {
 			dc.launch(config),
 		]);
 
-		// Ensure we're still responsive after 10 seconds.
-		await delay(10000);
+		// Ensure we're still responsive after 3 seconds.
+		await delay(3000);
 		await dc.threadsRequest();
 
 		await Promise.all([
@@ -168,8 +168,8 @@ describe("flutter for web debugger", () => {
 			dc.launch(config),
 		]);
 
-		// Ensure we're still responsive after 10 seconds.
-		await delay(10000);
+		// Ensure we're still responsive after 3 seconds.
+		await delay(3000);
 		await dc.threadsRequest();
 
 		await Promise.all([
@@ -186,8 +186,8 @@ describe("flutter for web debugger", () => {
 			dc.launch(config),
 		]);
 
-		// Ensure we're still responsive after 10 seconds.
-		await delay(10000);
+		// Ensure we're still responsive after 3 seconds.
+		await delay(3000);
 		await dc.threadsRequest();
 
 		await Promise.all([

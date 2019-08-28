@@ -69,8 +69,8 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 				dc.launch(config),
 			]);
 
-			// Ensure we're still responsive after 10 seconds.
-			await delay(10000);
+			// Ensure we're still responsive after 3 seconds.
+			await delay(3000);
 			await dc.threadsRequest();
 
 			await Promise.all([
@@ -208,8 +208,8 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 				dc.launch(config),
 			]);
 
-			// Ensure we're still responsive after 10 seconds.
-			await delay(10000);
+			// Ensure we're still responsive after 3 seconds.
+			await delay(3000);
 			await dc.threadsRequest();
 
 			await Promise.all([
@@ -226,8 +226,8 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 				dc.launch(config),
 			]);
 
-			// Ensure we're still responsive after 10 seconds.
-			await delay(10000);
+			// Ensure we're still responsive after 3 seconds.
+			await delay(3000);
 			await dc.threadsRequest();
 
 			await Promise.all([
@@ -417,9 +417,9 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 					line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 					path: fsPath(flutterHelloWorldMainFile),
 					verified: false,
-				}),
-
-				delay(5000).then(() => dc.terminateRequest()),
+				})
+					.then(() => delay(2000))
+					.then(() => dc.terminateRequest()),
 			]);
 
 			assert.equal(didStop, false);
@@ -1086,8 +1086,9 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 			await Promise.all([
 				dc.configurationSequence(),
 				dc.waitForEvent("terminated"),
-				dc.launch(config),
-				delay(5000).then(() => dc.terminateRequest()),
+				dc.launch(config)
+					.then(() => delay(2000))
+					.then(() => dc.terminateRequest()),
 			]);
 
 			assert.equal(didStop, false);

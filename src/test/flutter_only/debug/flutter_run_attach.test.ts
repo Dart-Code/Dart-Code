@@ -61,8 +61,8 @@ describe("flutter run debugger (attach)", () => {
 			watchPromise("attaches_and_waits->launch", dc.launch(config)),
 		]);
 
-		// Ensure we're still responsive after 10 seconds.
-		await delay(10000);
+		// Ensure we're still responsive after 3 seconds.
+		await delay(3000);
 		await watchPromise("attaches_and_waits->threadsRequest", dc.threadsRequest());
 
 		await Promise.all([
