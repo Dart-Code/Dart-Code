@@ -58,7 +58,7 @@ describe.skip("flutter for web test debugger", () => {
 		const config = await startDebugger(flutterWebTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ Hello world test`),
+			dc.assertOutputContains("stdout", `✓ Hello world test`),
 			dc.waitForEvent("terminated"),
 			dc.assertPassingTest(`Hello world test`),
 			dc.launch(config),
@@ -70,7 +70,7 @@ describe.skip("flutter for web test debugger", () => {
 		const config = await startDebugger(`\${workspaceFolder}/${relativePath}`);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ Hello world test`),
+			dc.assertOutputContains("stdout", `✓ Hello world test`),
 			dc.assertPassingTest(`Hello world test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
@@ -82,7 +82,7 @@ describe.skip("flutter for web test debugger", () => {
 		config.program = path.relative(fsPath(flutterWebHelloWorldFolder), fsPath(flutterWebTestMainFile));
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ Hello world test`),
+			dc.assertOutputContains("stdout", `✓ Hello world test`),
 			dc.assertPassingTest(`Hello world test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
@@ -94,7 +94,7 @@ describe.skip("flutter for web test debugger", () => {
 		const config = await startDebugger(flutterWebTestOtherFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ Other tests group Other test\n`),
+			dc.assertOutputContains("stdout", `✓ Other tests group Other test\n`),
 			dc.assertPassingTest(`Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
@@ -106,7 +106,7 @@ describe.skip("flutter for web test debugger", () => {
 		const config = await startDebugger(undefined);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ Other tests group Other test\n`),
+			dc.assertOutputContains("stdout", `✓ Other tests group Other test\n`),
 			dc.assertPassingTest(`Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
@@ -118,7 +118,7 @@ describe.skip("flutter for web test debugger", () => {
 		const config = await startDebugger("${file}");
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ Other tests group Other test\n`),
+			dc.assertOutputContains("stdout", `✓ Other tests group Other test\n`),
 			dc.assertPassingTest(`Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
