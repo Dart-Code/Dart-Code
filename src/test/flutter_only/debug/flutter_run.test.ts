@@ -1150,7 +1150,12 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 			]);
 		});
 
-		it("renders correct output for structured errors", async () => {
+		it("renders correct output for structured errors", async function () {
+			if (!extApi.flutterCapabilities.hasUpdatedStructuredErrorsFormat) {
+				this.skip();
+				return;
+			}
+
 			await openFile(flutterHelloWorldBrokenFile);
 			const config = await startDebugger(flutterHelloWorldBrokenFile);
 
