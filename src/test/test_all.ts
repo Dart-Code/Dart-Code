@@ -148,13 +148,13 @@ async function runAllTests(): Promise<void> {
 	const runFlutterTests = !process.env.RUN_TESTS || process.env.RUN_TESTS === "flutter";
 	try {
 		if (runDartTests) {
-			await runTests("multi_root", "projects.code-workspace", flutterSdkPath, codeVersion);
-			await runTests("multi_project_folder", "", flutterSdkPath, codeVersion);
 			await runTests("not_activated/dart_create", "empty", dartSdkPath, codeVersion);
 			await runTests("dart_create_tests", "dart_create_tests.code-workspace", dartSdkPath, codeVersion);
 			await runTests("dart_only", "hello_world", dartSdkPath, codeVersion);
 		}
 		if (runFlutterTests) {
+			await runTests("multi_root", "projects.code-workspace", flutterSdkPath, codeVersion);
+			await runTests("multi_project_folder", "", flutterSdkPath, codeVersion);
 			await runTests("not_activated/flutter_create", "empty", flutterSdkPath, codeVersion);
 			await runTests("not_activated/flutter_web_create", "empty", flutterSdkPath, codeVersion);
 			await runTests("flutter_create_tests", "flutter_create_tests.code-workspace", flutterSdkPath, codeVersion);
