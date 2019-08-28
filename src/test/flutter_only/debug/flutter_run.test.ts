@@ -709,14 +709,15 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 			]);
 		});
 
-		function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string): () => Promise<void> {
+		function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
 			return async () => {
 				await openFile(flutterHelloWorldMainFile);
 				const config = await startDebugger(flutterHelloWorldMainFile);
-
-				let didStop = false;
-				dc.waitForEvent("stopped").then(() => didStop = true);
-
+				const completionEvent: Promise<any> =
+					shouldStop
+						? dc.assertStoppedLocation("breakpoint", {})
+							.then(() => dc.waitForEvent("terminated"))
+						: dc.waitForEvent("terminated");
 				const errorOutputEvent: Promise<any> =
 					expectedError
 						? dc.assertOutputContains("console", expectedError)
@@ -724,29 +725,21 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 				await Promise.all([
 					dc.waitForEvent("initialized").then((event) => {
 						return dc.setBreakpointsRequest({
+							// positionOf is 0-based, but seems to want 1-based
 							breakpoints: [{
 								condition,
 								line: positionOf("^// BREAKPOINT1").line,
 							}],
 							source: { path: fsPath(flutterHelloWorldMainFile) },
 						});
-					}).then(() => dc.configurationDoneRequest()),
+					})
+						.then(() => dc.configurationDoneRequest())
+						.then(() => delay(2000))
+						.then(() => dc.terminateRequest()),
+					completionEvent,
 					errorOutputEvent,
 					dc.launch(config),
 				]);
-
-				await shouldStop
-					// Either wait for breakpoint.
-					? dc.assertStoppedLocation("breakpoint", {})
-					// Or wait 5 seconds to ensure we didn't stop.
-					: delay(5000);
-
-				await Promise.all([
-					dc.waitForEvent("terminated"),
-					dc.terminateRequest(),
-				]);
-
-				assert.equal(didStop, shouldStop);
 			};
 		}
 
