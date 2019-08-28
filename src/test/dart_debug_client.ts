@@ -162,7 +162,6 @@ export class DartDebugClient extends DebugClient {
 
 	public assertOutputContains(category: string, text: string): Promise<DebugProtocol.OutputEvent> {
 		let output = "";
-		const emitter = this;
 		let cleanup = () => { }; // tslint:disable-line: no-empty
 		return withTimeout(
 			new Promise<DebugProtocol.OutputEvent>((resolve) => {

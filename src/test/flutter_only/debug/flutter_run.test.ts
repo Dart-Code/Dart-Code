@@ -709,7 +709,7 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 			]);
 		});
 
-		function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
+		function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string): () => Promise<void> {
 			return async () => {
 				await openFile(flutterHelloWorldMainFile);
 				const config = await startDebugger(flutterHelloWorldMainFile);
@@ -719,15 +719,14 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 
 				const errorOutputEvent: Promise<any> =
 					expectedError
-						? dc.assertOutput("console", expectedError)
+						? dc.assertOutputContains("console", expectedError)
 						: Promise.resolve();
 				await Promise.all([
 					dc.waitForEvent("initialized").then((event) => {
 						return dc.setBreakpointsRequest({
-							// positionOf is 0-based, but seems to want 1-based
 							breakpoints: [{
 								condition,
-								line: positionOf("^// BREAKPOINT1").line + 1,
+								line: positionOf("^// BREAKPOINT1").line,
 							}],
 							source: { path: fsPath(flutterHelloWorldMainFile) },
 						});
