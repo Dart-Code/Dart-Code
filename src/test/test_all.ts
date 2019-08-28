@@ -116,8 +116,8 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 
 async function runAllTests(): Promise<void> {
 	if (process.env.CI) {
-		const branchName = process.env.APPVEYOR_REPO_BRANCH || process.env.TRAVIS_BRANCH;
-		const commit = process.env.APPVEYOR_REPO_COMMIT || process.env.TRAVIS_COMMIT;
+		const branchName = process.env.APPVEYOR_REPO_BRANCH || process.env.TRAVIS_BRANCH || process.env.GITHUB_REF;
+		const commit = process.env.APPVEYOR_REPO_COMMIT || process.env.TRAVIS_COMMIT || process.env.GITHUB_SHA;
 
 		console.log("\n\n");
 		console.log(yellow("A combined test summary will be available at:"));
