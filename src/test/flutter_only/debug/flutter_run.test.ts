@@ -757,12 +757,11 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 
 			await Promise.all([
 				dc.waitForEvent("initialized").then((_) => dc.setBreakpointsRequest({
-					// positionOf is 0-based, but seems to want 1-based
 					breakpoints: [{
 						line: positionOf("^// BREAKPOINT1").line,
 						// VS Code says to use {} for expressions, but we want to support Dart's native too, so
 						// we have examples of both (as well as "escaped" brackets).
-						logMessage: 'The \\{year} is """{(new DateTime.now()).year}"""',
+						logMessage: '${s} The \\{year} is """{(new DateTime.now()).year}"""',
 					}],
 					source: { path: fsPath(flutterHelloWorldMainFile) },
 				}))
@@ -780,7 +779,7 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 			await openFile(flutterHelloWorldMainFile);
 			const debugConfig = await startDebugger(flutterHelloWorldMainFile);
 			await dc.hitBreakpoint(debugConfig, {
-				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+				line: positionOf("^// BREAKPOINT1").line,
 				path: fsPath(flutterHelloWorldMainFile),
 			});
 
