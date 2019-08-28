@@ -60,12 +60,12 @@ function runNode(cwd: string, args: string[], env: any, printTimes = false): Pro
 	});
 }
 
-async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string, codeVersion: string | undefined, runInfo: string): Promise<void> {
+async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: string, codeVersion: string | undefined): Promise<void> {
 	console.log("\n\n");
 	console.log(yellow("############################################################"));
 	console.log(
 		yellow("## ")
-		+ `Running ${runInfo} using ${yellow(testFolder)}`
+		+ `Running using ${yellow(testFolder)}`
 		+ ` in workspace ${yellow(workspaceFolder)}`
 		+ ` using version ${yellow(codeVersion || "stable")} of Code`);
 	console.log(`${yellow("##")} Looking for SDKs in:`);
@@ -144,25 +144,29 @@ async function runAllTests(): Promise<void> {
 		fs.mkdirSync(".dart_code_test_logs");
 
 	const flutterRoot = process.env.FLUTTER_ROOT || process.env.FLUTTER_PATH;
-	const totalRuns = 12;
-	let runNumber = 1;
+	const runDartTests = !process.env.RUN_TESTS || process.env.RUN_TESTS === "dart";
+	const runFlutterTests = !process.env.RUN_TESTS || process.env.RUN_TESTS === "flutter";
 	try {
-		await runTests("multi_root", "projects.code-workspace", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("multi_project_folder", "", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("not_activated/dart_create", "empty", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("not_activated/flutter_create", "empty", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("not_activated/flutter_web_create", "empty", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("dart_create_tests", "dart_create_tests.code-workspace", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("flutter_create_tests", "flutter_create_tests.code-workspace", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("flutter_web_create_tests", "flutter_web_create_tests.code-workspace", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("dart_only", "hello_world", dartSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("flutter_only", "flutter_hello_world", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		await runTests("flutter_web_only", "flutter_web", flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		if (flutterRoot) {
-			await runTests("flutter_repository", flutterRoot, flutterSdkPath, codeVersion, `${runNumber++} of ${totalRuns}`);
-		} else {
-			console.error("FLUTTER_ROOT/FLUTTER_PATH NOT SET, SKIPPING FLUTTER REPO TESTS");
-			exitCode = 1;
+		if (runDartTests) {
+			await runTests("multi_root", "projects.code-workspace", flutterSdkPath, codeVersion);
+			await runTests("multi_project_folder", "", flutterSdkPath, codeVersion);
+			await runTests("not_activated/dart_create", "empty", dartSdkPath, codeVersion);
+			await runTests("dart_create_tests", "dart_create_tests.code-workspace", dartSdkPath, codeVersion);
+			await runTests("dart_only", "hello_world", dartSdkPath, codeVersion);
+		}
+		if (runFlutterTests) {
+			await runTests("not_activated/flutter_create", "empty", flutterSdkPath, codeVersion);
+			await runTests("not_activated/flutter_web_create", "empty", flutterSdkPath, codeVersion);
+			await runTests("flutter_create_tests", "flutter_create_tests.code-workspace", flutterSdkPath, codeVersion);
+			await runTests("flutter_web_create_tests", "flutter_web_create_tests.code-workspace", flutterSdkPath, codeVersion);
+			await runTests("flutter_only", "flutter_hello_world", flutterSdkPath, codeVersion);
+			await runTests("flutter_web_only", "flutter_web", flutterSdkPath, codeVersion);
+			if (flutterRoot) {
+				await runTests("flutter_repository", flutterRoot, flutterSdkPath, codeVersion);
+			} else {
+				console.error("FLUTTER_ROOT/FLUTTER_PATH NOT SET, SKIPPING FLUTTER REPO TESTS");
+				exitCode = 1;
+			}
 		}
 	} catch (e) {
 		exitCode = 1;
