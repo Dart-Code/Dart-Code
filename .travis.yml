@@ -80,6 +80,7 @@ before_install:
   - echo Downloading Dart and Flutter...
   - curl https://storage.googleapis.com/dart-archive/channels/$DART_CHANNEL/latest/sdk/dartsdk-$DART_OS-x64-release.zip > dart-sdk.zip
   - unzip dart-sdk.zip > /dev/null
+  - export DART_PATH=`pwd`/dart-sdk
   - if [[ $RUN_TESTS == "flutter" ]]; then
       mkdir -p flutter;
       cd flutter;
@@ -99,9 +100,8 @@ before_install:
       if [[ $ONLY_RUN_DART_VERSION != "STABLE" ]]; then
         flutter/bin/flutter config --enable-web;
       fi;
+      export FLUTTER_PATH=`pwd`/flutter
     fi;
-  - export FLUTTER_PATH=`pwd`/flutter
-  - export DART_PATH=`pwd`/dart-sdk
 
   # To ensure we follow symlinks properly, put links
   # in folders that we'll use in PATHs.
