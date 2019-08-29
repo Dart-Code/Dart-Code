@@ -1,6 +1,7 @@
+import 'dart:async';
 import 'dart:developer';
 
-main() {
+main() async {
   final s = "Hello!";
   final l = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
   final longStrings = <String>[
@@ -25,6 +26,10 @@ main() {
   }
   log("Logging from dart:developer!");
   genericMethod<bool, double, int, String>();
+
+  // Allow time for the log() call above to make it through before we just terminate
+  // and cause the session to be torn down.
+  await Future.delayed(Duration(milliseconds: 100));
 }
 
 void genericMethod<TBool, TDouble, TInt, TString>() {
