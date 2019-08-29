@@ -32,16 +32,15 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	testEnv.CODE_VERSION = codeVersion;
 
 	// Figure out a filename for results...
-	const dartFriendlyName = (process.env.ONLY_RUN_DART_VERSION || "local").toLowerCase();
-	const codeFriendlyName = codeVersion || "stable";
+	const logsName = process.env.LOGS_NAME;
 
 	// Set some paths that are used inside the test run.
 	const testRunName = testFolder.replace("/", "_");
 	testEnv.TEST_RUN_NAME = testRunName;
-	testEnv.DC_TEST_LOGS = path.join(cwd, ".dart_code_test_logs", `${testRunName}_${dartFriendlyName}_${codeFriendlyName}`);
-	testEnv.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testRunName}_${dartFriendlyName}_${codeFriendlyName}.json`);
-	testEnv.TEST_XML_OUTPUT = path.join(cwd, ".test_results", `${testRunName}_${dartFriendlyName}_${codeFriendlyName}.xml`);
-	testEnv.TEST_CSV_SUMMARY = path.join(cwd, ".test_results", `${dartFriendlyName}_${codeFriendlyName}_summary.csv`);
+	testEnv.DC_TEST_LOGS = path.join(cwd, ".dart_code_test_logs", `${testRunName}_${logsName}`);
+	testEnv.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testRunName}_${logsName}.json`);
+	testEnv.TEST_XML_OUTPUT = path.join(cwd, ".test_results", `${testRunName}_${logsName}.xml`);
+	testEnv.TEST_CSV_SUMMARY = path.join(cwd, ".test_results", `${logsName}_summary.csv`);
 
 	if (!fs.existsSync(testEnv.DC_TEST_LOGS))
 		fs.mkdirSync(testEnv.DC_TEST_LOGS);
@@ -76,7 +75,7 @@ async function runAllTests(): Promise<void> {
 		console.log("\n\n");
 	}
 
-	const codeVersion = process.env.ONLY_RUN_CODE_VERSION === "DEV" ? "insiders" : undefined;
+	const codeVersion = process.env.CODE_VERSION;
 	const dartSdkPath = process.env.DART_PATH_SYMLINK || process.env.DART_PATH || process.env.PATH;
 	const flutterSdkPath = process.env.FLUTTER_PATH_SYMLINK || process.env.FLUTTER_PATH || process.env.PATH;
 
