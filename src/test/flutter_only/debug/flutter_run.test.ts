@@ -1078,11 +1078,11 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 			let didStop = false;
 			dc.waitForEvent("stopped").then(() => didStop = true);
 			await Promise.all([
-				dc.configurationSequence(),
-				dc.waitForEvent("terminated"),
-				dc.launch(config)
+				dc.configurationSequence()
 					.then(() => delay(2000))
 					.then(() => dc.terminateRequest()),
+				dc.waitForEvent("terminated"),
+				dc.launch(config),
 			]);
 
 			assert.equal(didStop, false);
