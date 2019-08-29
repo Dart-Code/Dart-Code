@@ -450,7 +450,7 @@ describe("flutter for web debugger", () => {
 			const config = await startDebugger(flutterWebHelloWorldMainFile);
 			await Promise.all([
 				dc.hitBreakpoint(config, {
-					line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
+					line: positionOf("^// BREAKPOINT2").line,
 					path: fsPath(flutterWebHelloWorldMainFile),
 				}),
 			]);
@@ -515,7 +515,6 @@ describe("flutter for web debugger", () => {
 			watchPromise("logs_expected_text->waitForEvent:initialized", dc.waitForEvent("initialized"))
 				.then((event) => {
 					return watchPromise("logs_expected_text->setBreakpointsRequest", dc.setBreakpointsRequest({
-						// positionOf is 0-based, but seems to want 1-based
 						breakpoints: [{
 							line: positionOf("^// BREAKPOINT1").line,
 							// VS Code says to use {} for expressions, but we want to support Dart's native too, so
