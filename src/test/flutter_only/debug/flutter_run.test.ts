@@ -863,7 +863,7 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 			await openFile(flutterHelloWorldMainFile);
 			const debugConfig = await startDebugger(flutterHelloWorldMainFile);
 			await dc.hitBreakpoint(debugConfig, {
-				line: positionOf("^// BREAKPOINT2").line + 1, // positionOf is 0-based, but seems to want 1-based
+				line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, but seems to want 1-based
 				path: fsPath(flutterHelloWorldMainFile),
 			});
 

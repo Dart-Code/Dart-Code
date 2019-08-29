@@ -23,7 +23,7 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    myTopLevelFunction();
+    genericMethod<bool, double, int, String>();
     return Text(
       // BREAKPOINT1^
       'Hello, World!',
@@ -32,7 +32,11 @@ class MyHomePage extends StatelessWidget {
   }
 }
 
-myTopLevelFunction() {
-  const _ = 1;
-  // BREAKPOINT2^
+void genericMethod<TBool, TDouble, TInt, TString>() {
+  int a = 1;
+  print(a);
+  print('TBool: ' + TBool.toString()); // BREAKPOINT2
+  print('TDouble: ' + TDouble.toString());
+  print('TInt: ' + TInt.toString());
+  print('TString: ' + TString.toString());
 }

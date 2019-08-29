@@ -19,7 +19,6 @@ describe("dart_document_symbol_provider", () => {
 		ensureDocumentSymbol(symbols, "MyHomePage", vs.SymbolKind.Class);
 		ensureDocumentSymbol(symbols, "MyHomePage", vs.SymbolKind.Constructor, "MyHomePage");
 		ensureDocumentSymbol(symbols, "build", vs.SymbolKind.Method, "MyHomePage");
-		ensureDocumentSymbol(symbols, "myTopLevelFunction", vs.SymbolKind.Function);
 		assert.equal(symbols.length, 7);
 	});
 });

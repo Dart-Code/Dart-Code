@@ -43,7 +43,7 @@ class MyHomePage extends StatelessWidget {
       print("Hello, world!");
     }
     log("Logging from dart:developer!");
-    myTopLevelFunction();
+    genericMethod<bool, double, int, String>();
 
     return Text(
       // BREAKPOINT1^
@@ -53,7 +53,11 @@ class MyHomePage extends StatelessWidget {
   }
 }
 
-myTopLevelFunction() {
-  const _ = 1;
-  // BREAKPOINT2^
+void genericMethod<TBool, TDouble, TInt, TString>() {
+  int a = 1;
+  print(a);
+  print('TBool: ' + TBool.toString()); // BREAKPOINT2
+  print('TDouble: ' + TDouble.toString());
+  print('TInt: ' + TInt.toString());
+  print('TString: ' + TString.toString());
 }
