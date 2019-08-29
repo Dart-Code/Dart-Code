@@ -59,22 +59,33 @@ async function runAllTests(): Promise<void> {
 		fs.mkdirSync(".dart_code_test_logs");
 
 	try {
-		if (runDartTests) {
-			await runTests("not_activated/dart_create", "empty", dartSdkPath, codeVersion);
-			await runTests("dart_create_tests", "dart_create_tests.code-workspace", dartSdkPath, codeVersion);
-			await runTests("dart_only", "hello_world", dartSdkPath, codeVersion);
+		if (!process.env.BOT || process.env.BOT === "dart") {
+			await runTests("dart_only", "hello_world");
 		}
-		if (runFlutterTests) {
-			await runTests("multi_root", "projects.code-workspace", flutterSdkPath, codeVersion);
-			await runTests("multi_project_folder", "", flutterSdkPath, codeVersion);
-			await runTests("not_activated/flutter_create", "empty", flutterSdkPath, codeVersion);
-			await runTests("flutter_create_tests", "flutter_create_tests.code-workspace", flutterSdkPath, codeVersion);
-			await runTests("flutter_only", "flutter_hello_world", flutterSdkPath, codeVersion);
-			await runTests("flutter_web_only", "flutter_web", flutterSdkPath, codeVersion);
-			if (flutterRoot) {
-				await runTests("flutter_repository", flutterRoot, flutterSdkPath, codeVersion);
+		if (!process.env.BOT || process.env.BOT === "flutter") {
+			await runTests("flutter_only", "flutter_hello_world");
+		}
+		if (!process.env.BOT || process.env.BOT === "flutter_web") {
+			// TODO: !
+		}
+		if (!process.env.BOT || process.env.BOT === "flutter_web_forked") {
+			await runTests("flutter_web_only", "flutter_web");
+		}
+		if (!process.env.BOT || process.env.BOT === "misc") {
+			await runTests("dart_create_tests", "dart_create_tests.code-workspace");
+			await runTests("not_activated/dart_create", "empty");
+			await runTests("multi_root", "projects.code-workspace");
+			await runTests("multi_project_folder", "");
+			await runTests("not_activated/flutter_create", "empty");
+			await runTests("not_activated/flutter_web_create", "empty");
+			await runTests("flutter_create_tests", "flutter_create_tests.code-workspace");
+			await runTests("flutter_web_create_tests", "flutter_web_create_tests.code-workspace");
+		}
+		if (!process.env.BOT || process.env.BOT === "flutter_repo") {
+			if (process.env.FLUTTER_REPO_PATH) {
+				await runTests("flutter_repository", process.env.FLUTTER_REPO_PATH);
 			} else {
-				console.error("FLUTTER_ROOT/FLUTTER_PATH NOT SET, SKIPPING FLUTTER REPO TESTS");
+				console.error("process.env.FLUTTER_REPO_PATH not set, not running flutter_repo tests");
 				exitCode = 1;
 			}
 		}
