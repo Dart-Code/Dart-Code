@@ -17,7 +17,7 @@ async function runTests(testFolder: string, workspaceFolder: string): Promise<vo
 	testEnv.DC_TEST_LOGS = path.join(cwd, ".dart_code_test_logs", `${testRunName}_${logsName}`);
 	testEnv.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testRunName}_${logsName}.json`);
 	testEnv.TEST_XML_OUTPUT = path.join(cwd, ".test_results", `${testRunName}_${logsName}.xml`);
-	testEnv.TEST_CSV_SUMMARY = path.join(cwd, ".test_results", `${logsName}_summary.csv`);
+	testEnv.TEST_CSV_SUMMARY = path.join(cwd, ".test_results", `${testRunName}_${logsName}_summary.csv`);
 
 	if (!fs.existsSync(testEnv.DC_TEST_LOGS))
 		fs.mkdirSync(testEnv.DC_TEST_LOGS);
