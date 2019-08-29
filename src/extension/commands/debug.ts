@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { CoverageData } from "../../debug/utils";
+import { isInDebugSessionThatProbablySupportsHotReloadContext } from "../../shared/constants";
 import { FlutterServiceExtension, LogSeverity } from "../../shared/enums";
 import { Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
@@ -241,6 +242,11 @@ export class DebugCommands {
 				this.flutterExtensions.resetToDefaults();
 			debugSessions.push(session);
 
+			// Temporary hack to allow controlling the Hot Reload button on the debug toolbar based on
+			// whether it's a web device.
+			if (s.configuration.debuggerType === DebuggerType.Flutter && s.configuration.deviceId !== "chrome")
+				vs.commands.executeCommand("setContext", isInDebugSessionThatProbablySupportsHotReloadContext, true);
+
 			// Process any queued events that came in before the session start
 			// event.
 			const eventsToProcess = pendingCustomEvents.filter((e) => e.session.id === s.id);
@@ -283,8 +289,14 @@ export class DebugCommands {
 		// If this was the last session terminating, then remove all the flags for which service extensions are supported.
 		// Really we should track these per-session, but the changes of them being different given we only support one
 		// SDK at a time are practically zero.
-		if (debugSessions.length === 0)
+		if (debugSessions.length === 0) {
 			this.flutterExtensions.markAllServicesUnloaded();
+			vs.commands.executeCommand(
+				"setContext",
+				isInDebugSessionThatProbablySupportsHotReloadContext,
+				false,
+			);
+		}
 	}
 
 	private handleCustomEvent(e: vs.DebugSessionCustomEvent): boolean {
