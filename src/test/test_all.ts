@@ -64,11 +64,6 @@ async function runAllTests(): Promise<void> {
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter") {
 			await runTests("flutter_only", "flutter_hello_world");
-		}
-		if (!process.env.BOT || process.env.BOT === "flutter_web") {
-			// TODO: !
-		}
-		if (!process.env.BOT || process.env.BOT === "flutter_web_forked") {
 			await runTests("flutter_web_only", "flutter_web");
 		}
 		if (!process.env.BOT || process.env.BOT === "misc") {
