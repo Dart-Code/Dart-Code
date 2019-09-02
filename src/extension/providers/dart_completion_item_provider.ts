@@ -18,7 +18,7 @@ import { config } from "../config";
 export class DartCompletionItemProvider implements CompletionItemProvider, IAmDisposable {
 	private disposables: Disposable[] = [];
 	private cachedCompletions: { [key: number]: as.AvailableSuggestionSet } = {};
-	private existingImports: { [key: string]: { [key: string]: string } } = {};
+	private existingImports: { [key: string]: { [key: string]: { [key: string]: boolean } } } = {};
 
 	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer) {
 		this.disposables.push(analyzer.registerForCompletionAvailableSuggestions((n) => this.storeCompletionSuggestions(n)));
@@ -115,10 +115,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		const existingImports = notification.imports;
 
 		// Map with key "elementName/elementDeclaringLibraryUri"
-		// Value is the first imported URI that imports that element (we track only
-		// the first so that we don't include completion items for each existing
-		// import that includes them).
-		const alreadyImportedSymbols: { [key: string]: string } = {};
+		// Value is a set of imported URIs that import that element.
+		const alreadyImportedSymbols: { [key: string]: { [key: string]: boolean } } = {};
 		for (const existingImport of existingImports.imports) {
 			for (const importedElement of existingImport.elements) {
 				// This is the symbol name and declaring library. That is, the
@@ -131,7 +129,9 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 				const importedUri = existingImports.elements.strings[existingImport.uri];
 
 				const key = `${elementName}/${elementDeclaringLibraryUri}`;
-				alreadyImportedSymbols[key] = importedUri;
+				if (!alreadyImportedSymbols[key])
+					alreadyImportedSymbols[key] = {};
+				alreadyImportedSymbols[key][importedUri] = true;
 			}
 		}
 
@@ -277,13 +277,12 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 					// Trim back to the . to handle enum values
 					// https://github.com/Dart-Code/Dart-Code/issues/1835
 					const key = `${suggestion.label.split(".")[0]}/${suggestion.declaringLibraryUri}`;
-					const firstImportingUri = existingImports && existingImports[key];
+					const importingUris = existingImports && existingImports[key];
 
 					// Keep it only if there are either:
 					// - no URIs importing it
-					// - the first URI importing it is this one (we store only the first
-					// in existingImports so that we only include the item once).
-					return !firstImportingUri || firstImportingUri === suggestionSet.uri;
+					// - the URIs importing it include this one
+					return !importingUris || importingUris[suggestionSet.uri];
 				})
 				.map((suggestion): DelayedCompletionItem => {
 					// Calculate the relevance for this item.
