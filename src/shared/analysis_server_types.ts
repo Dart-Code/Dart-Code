@@ -4484,6 +4484,7 @@ export type ElementKind =
 	| "CONSTRUCTOR_INVOCATION"
 	| "ENUM"
 	| "ENUM_CONSTANT"
+	| "EXTENSION"
 	| "FIELD"
 	| "FILE"
 	| "FUNCTION"
