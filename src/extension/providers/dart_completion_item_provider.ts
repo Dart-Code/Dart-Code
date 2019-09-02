@@ -131,11 +131,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 				const importedUri = existingImports.elements.strings[existingImport.uri];
 
 				const key = `${elementName}/${elementDeclaringLibraryUri}`;
-				// We only need to store that one library imported this so we know
-				// to not include auto-import versions of it later. We refer to this
-				// as the "primary importing uri" elsewhere, but there's nothing
-				// special about it except that it's the one we include (to avoid
-				// dupes).
 				alreadyImportedSymbols[key] = importedUri;
 			}
 		}
@@ -282,13 +277,13 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 					// Trim back to the . to handle enum values
 					// https://github.com/Dart-Code/Dart-Code/issues/1835
 					const key = `${suggestion.label.split(".")[0]}/${suggestion.declaringLibraryUri}`;
-					const primaryImportingUri = existingImports && existingImports[key];
+					const firstImportingUri = existingImports && existingImports[key];
 
 					// Keep it only if there are either:
 					// - no URIs importing it
 					// - the first URI importing it is this one (we store only the first
 					// in existingImports so that we only include the item once).
-					return !primaryImportingUri || primaryImportingUri === suggestionSet.uri;
+					return !firstImportingUri || firstImportingUri === suggestionSet.uri;
 				})
 				.map((suggestion): DelayedCompletionItem => {
 					// Calculate the relevance for this item.
