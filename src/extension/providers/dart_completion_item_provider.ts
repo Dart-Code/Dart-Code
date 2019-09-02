@@ -285,7 +285,9 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 					// When ensuring we don't show items multiple times, we need to use the full
 					// label and not just the first part (otherwise after including an enum we
 					// wouldn't include its values).
-					const fullItemKey = `${suggestion.label}/${suggestion.declaringLibraryUri}`;
+					// Unlike the above, we include the Kind here so that things with similar labels
+					// like Constructors+Class are still included.
+					const fullItemKey = `${suggestion.label}/${suggestion.element.kind}/${suggestion.declaringLibraryUri}`;
 					const itemHasAlreadyBeenIncluded = includedItems[fullItemKey];
 					includedItems[fullItemKey] = true;
 
