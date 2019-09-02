@@ -282,20 +282,25 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 					const key = `${suggestion.label.split(".")[0]}/${suggestion.declaringLibraryUri}`;
 					const importingUris = existingImports && existingImports[key];
 
-					// When ensuring we don't show items multiple times, we need to use the full
-					// label and not just the first part (otherwise after including an enum we
-					// wouldn't include its values).
+					// If there are no URIs already importing this, then include it
+					// as an auto-import.
+					if (!importingUris)
+						return true;
+
+					// Otherwise, it is imported but if it's not by this file, then skip it.
+					if (!importingUris[suggestionSet.uri])
+						return false;
+
+					// Finally, we're importing a file that has this item, so include
+					// it only if it has not already been included by another imported file.
+
 					// Unlike the above, we include the Kind here so that things with similar labels
 					// like Constructors+Class are still included.
 					const fullItemKey = `${suggestion.label}/${suggestion.element.kind}/${suggestion.declaringLibraryUri}`;
 					const itemHasAlreadyBeenIncluded = includedItems[fullItemKey];
 					includedItems[fullItemKey] = true;
 
-					// Keep it only if there are either:
-					// - no URIs importing it
-					// - the URIs importing it include this one
-					//   (but we haven't already added is as part of another)
-					return !importingUris || (importingUris[suggestionSet.uri] && !itemHasAlreadyBeenIncluded);
+					return !itemHasAlreadyBeenIncluded;
 				})
 				.map((suggestion): DelayedCompletionItem => {
 					// Calculate the relevance for this item.
