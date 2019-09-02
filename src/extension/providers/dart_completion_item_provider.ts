@@ -246,6 +246,9 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		// Keep track of suggestion sets we've seen to avoid included them twice.
 		// See https://github.com/dart-lang/sdk/issues/37211.
 		const usedSuggestionSets: { [key: number]: boolean } = {};
+		// Keep track of items items we've included so we don't show dupes if
+		// there are multiple libraries importing the same thing.
+		const includedItems: { [key: string]: boolean; } = {};
 		for (const includedSuggestionSet of resp.includedSuggestionSets) {
 			if (usedSuggestionSets[includedSuggestionSet.id])
 				continue;
@@ -279,10 +282,18 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 					const key = `${suggestion.label.split(".")[0]}/${suggestion.declaringLibraryUri}`;
 					const importingUris = existingImports && existingImports[key];
 
+					// When ensuring we don't show items multiple times, we need to use the full
+					// label and not just the first part (otherwise after including an enum we
+					// wouldn't include its values).
+					const fullItemKey = `${suggestion.label}/${suggestion.declaringLibraryUri}`;
+					const itemHasAlreadyBeenIncluded = includedItems[fullItemKey];
+					includedItems[fullItemKey] = true;
+
 					// Keep it only if there are either:
 					// - no URIs importing it
 					// - the URIs importing it include this one
-					return !importingUris || importingUris[suggestionSet.uri];
+					//   (but we haven't already added is as part of another)
+					return !importingUris || (importingUris[suggestionSet.uri] && !itemHasAlreadyBeenIncluded);
 				})
 				.map((suggestion): DelayedCompletionItem => {
 					// Calculate the relevance for this item.
