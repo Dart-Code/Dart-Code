@@ -64,8 +64,7 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 		it("runs and remains active until told to quit", async () => {
 			const config = await startDebugger(flutterHelloWorldMainFile);
 			await Promise.all([
-				// TODO: We don't get this for web.
-				// dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
+				dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on ${deviceId === "chrome" ? "Chrome" : "Flutter test device"} in debug mode...\n`),
 				dc.configurationSequence(),
 				dc.launch(config),
 			]);
@@ -675,7 +674,7 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 			]);
 		});
 
-		it("correctly marks debuggable external library frames when debugExternalLibraries is true", async () => {
+		it("correctly marks debuggable external library frames when debugExternalLibraries is true", async function () {
 			if (deviceId === "chrome")
 				this.skip();
 
