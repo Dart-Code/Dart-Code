@@ -261,10 +261,10 @@ export function getSymbolKindForElementKind(logger: Logger, kind: as.ElementKind
 	switch (kind) {
 		case "CLASS":
 		case "CLASS_TYPE_ALIAS":
-		case "EXTENSION":
 		case "MIXIN":
 			return vs.SymbolKind.Class;
 		case "COMPILATION_UNIT":
+		case "EXTENSION":
 			return vs.SymbolKind.Module;
 		case "CONSTRUCTOR":
 		case "CONSTRUCTOR_INVOCATION":
