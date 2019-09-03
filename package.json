@@ -1673,9 +1673,9 @@
 	"dependencies": {
 		"minimatch": "^3.0.4",
 		"semver": "^6.3.0",
-		"vscode-debugadapter": "^1.35.0",
-		"vscode-debugprotocol": "^1.35.0",
-		"ws": "^7.1.1"
+		"vscode-debugadapter": "^1.36.0",
+		"vscode-debugprotocol": "^1.36.0",
+		"ws": "^7.1.2"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
@@ -1685,7 +1685,7 @@
 		"@types/semver": "^6.0.1",
 		"@types/sinon": "5.0.5",
 		"@types/vscode": "^1.36.0",
-		"@types/ws": "^6.0.2",
+		"@types/ws": "^6.0.3",
 		"glob": "^7.1.4",
 		"istanbul-instrumenter-loader": "^3.0.1",
 		"mocha": "^5.2.0",
@@ -1695,11 +1695,11 @@
 		"sinon": "^7.3.2",
 		"source-map-support": "^0.5.13",
 		"ts-loader": "^6.0.4",
-		"tslint": "^5.18.0",
-		"typescript": "^3.5.2",
-		"vscode-debugadapter-testsupport": "^1.35.0",
+		"tslint": "^5.19.0",
+		"typescript": "^3.5.3",
+		"vscode-debugadapter-testsupport": "^1.36.0",
 		"vscode-test": "^1.2.0",
-		"webpack": "^4.39.1",
-		"webpack-cli": "^3.3.5"
+		"webpack": "^4.39.3",
+		"webpack-cli": "^3.3.7"
 	}
 }
