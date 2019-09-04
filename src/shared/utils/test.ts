@@ -5,7 +5,7 @@ export function getLaunchConfig(noDebug: boolean, path: string, testName: string
 		{},
 		template,
 		{
-			args: (template.args || []).concat(testName ? ["--name", makeRegexForTest(testName, isGroup)] : []),
+			args: (template ? (template.args || []) : []).concat(testName ? ["--name", makeRegexForTest(testName, isGroup)] : []),
 			name: "Tests",
 			noDebug,
 			program: path,
