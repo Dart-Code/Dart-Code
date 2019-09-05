@@ -288,17 +288,18 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				.getDiagnostics()
 				.filter((file) => file[1].find(isDartError));
 			// Check if any are inside our CWD.
-			const firstRelevantError = dartErrors.find((fd) => {
+			const firstRelevantDiagnostic = dartErrors.find((fd) => {
 				const file = fsPath(fd[0]);
 				return isWithinPath(file, debugConfig.cwd)
 					// Ignore errors in tests unless it's the file we're running.
 					&& (!isTestFile(file) || file === debugConfig.program);
 			});
-			if (firstRelevantError) {
+			if (firstRelevantDiagnostic) {
 				logger.warn("Project has errors, prompting user");
-				const range = firstRelevantError[1][0].range;
-				logger.warn(`    ${fsPath(firstRelevantError[0])}:${range.start.line}:${range.start.character}`);
-				logger.warn(`    ${firstRelevantError[1][0].message.split("\n")[0].trim()}`);
+				const firstRelevantError = firstRelevantDiagnostic[1].find(isDartError);
+				const range = firstRelevantError.range;
+				logger.warn(`    ${fsPath(firstRelevantDiagnostic[0])}:${range.start.line}:${range.start.character}`);
+				logger.warn(`    ${firstRelevantError.message.split("\n")[0].trim()}`);
 				const action = await window.showErrorMessage(
 					"Build errors exist in your project.",
 					{ modal: true },
