@@ -71,11 +71,11 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
-			const testName = treeNode instanceof TestTreeItem ? treeNode.test.name : treeNode instanceof GroupTreeItem ? treeNode.group.name : undefined;
-			if (!testName) {
-				vs.window.showErrorMessage("Unable to start test for node with no test or group name");
-				return;
-			}
+			const testName = treeNode instanceof TestTreeItem
+				? treeNode.test.name
+				: treeNode instanceof GroupTreeItem
+					? treeNode.group.name
+					: undefined;
 			vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(treeNode.resourceUri!),
 				getLaunchConfig(
@@ -87,11 +87,11 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			);
 		}));
 		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
-			const testName = treeNode instanceof TestTreeItem ? treeNode.test.name : treeNode instanceof GroupTreeItem ? treeNode.group.name : undefined;
-			if (!testName) {
-				vs.window.showErrorMessage("Unable to start test for node with no test or group name");
-				return;
-			}
+			const testName = treeNode instanceof TestTreeItem
+				? treeNode.test.name
+				: treeNode instanceof GroupTreeItem
+					? treeNode.group.name
+					: undefined;
 			vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(treeNode.resourceUri!),
 				getLaunchConfig(
