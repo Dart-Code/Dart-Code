@@ -164,12 +164,19 @@ export class SdkUtils {
 				dart: config.sdkPath,
 				dartSdkIsFromFlutter: false,
 				flutter: undefined,
-			}, false, false, false, false);
+			}, false, false, false, false, false);
 		}
 
 		// Search for a Fuchsia root.
 		let fuchsiaRoot: string | undefined;
 		topLevelFolders.forEach((folder) => fuchsiaRoot = fuchsiaRoot || findFuchsiaRoot(folder));
+
+		// Search for Git root to see if this is the Dart SDK.
+		let gitRoot: string | undefined;
+		topLevelFolders.forEach((folder) => gitRoot = gitRoot || findGitRoot(folder));
+		const isDartSdkRepo = !!(gitRoot
+			&& fs.existsSync(path.join(gitRoot, "README.dart-sdk"))
+			&& fs.existsSync(path.join(gitRoot, ".packages")));
 
 		// TODO: This has gotten very messy and needs tidying up...
 
@@ -261,6 +268,7 @@ export class SdkUtils {
 			hasAnyFlutterWebProject,
 			hasAnyStandardDartProject,
 			!!fuchsiaRoot && hasAnyStandardDartProject,
+			isDartSdkRepo,
 		);
 	}
 
@@ -401,14 +409,22 @@ function extractFlutterSdkPathFromPackagesFile(file: string): string | undefined
 }
 
 function findFuchsiaRoot(folder: string): string | undefined {
+	return findRootContainingFolder(folder, ".jiri_root");
+}
+
+function findGitRoot(folder: string): string | undefined {
+	return findRootContainingFolder(folder, ".git");
+}
+
+function findRootContainingFolder(folder: string, childFolderName: string): string | undefined {
 	if (folder) {
 		// Walk up the directories from the workspace root, and see if there
-		// exists a directory which has ".jiri_root" directory as a child.
-		// If such directory is found, that is our fuchsia root.
+		// exists a directory which has ".git" directory as a child.
+		// If such directory is found, that is our git root.
 		let dir = folder;
 		while (dir) {
 			try {
-				if (fs.statSync(path.join(dir, ".jiri_root")).isDirectory()) {
+				if (fs.statSync(path.join(dir, childFolderName)).isDirectory()) {
 					return dir;
 				}
 			} catch { }

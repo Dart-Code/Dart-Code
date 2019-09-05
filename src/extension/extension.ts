@@ -489,8 +489,8 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Prompt for pub get if required
 	function checkForPackages() {
-		// Don't prompt for package updates in the Fuchsia tree.
-		if (workspaceContext.hasProjectsInFuchsiaTree) // TODO: This should be tested per-project.
+		// Don't prompt for package updates in the Fuchsia tree/Dart SDK repo.
+		if (workspaceContext.shouldAvoidFetchingPackages)
 			return;
 		sdkCommands.fetchPackagesOrPrompt(undefined, { alwaysPrompt: true });
 	}
@@ -527,6 +527,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 			newWorkspaceContext.hasOnlyDartProjects !== workspaceContext.hasOnlyDartProjects
 			|| newWorkspaceContext.hasAnyFlutterProjects !== workspaceContext.hasAnyFlutterProjects
 			|| newWorkspaceContext.hasProjectsInFuchsiaTree !== workspaceContext.hasProjectsInFuchsiaTree
+			|| newWorkspaceContext.isDartSdkRepo !== workspaceContext.isDartSdkRepo
 		) {
 			util.reloadExtension();
 			return;

@@ -9,10 +9,12 @@ export class WorkspaceContext {
 		public readonly hasAnyFlutterWebProjects: boolean,
 		public readonly hasAnyStandardDartProjects: boolean,
 		public readonly hasProjectsInFuchsiaTree: boolean,
+		public readonly isDartSdkRepo: boolean,
 	) {
 		this.workspaceTypeDescription = this.buildWorkspaceTypeDescription();
 	}
 
+	get shouldAvoidFetchingPackages() { return this.hasProjectsInFuchsiaTree || this.isDartSdkRepo; }
 	get hasOnlyDartProjects() { return !this.hasAnyFlutterProjects && !this.hasProjectsInFuchsiaTree; }
 	get hasAnyFlutterProjects() { return this.hasAnyFlutterMobileProjects || this.hasAnyFlutterWebProjects; }
 	get shouldLoadFlutterExtension() { return this.hasAnyFlutterProjects; }
