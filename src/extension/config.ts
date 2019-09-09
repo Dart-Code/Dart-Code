@@ -55,6 +55,7 @@ class Config {
 	get closingLabels(): boolean { return this.getConfig<boolean>("closingLabels", true); }
 	get devToolsLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("devToolsLogFile", null))); }
 	get devToolsPort(): undefined | number { return this.getConfig<null | number>("devToolsPort", null); }
+	get devToolsReuseWindows(): boolean { return this.getConfig<boolean>("devToolsReuseWindows", false); }
 	get devToolsTheme(): "dark" | "light" { return this.getConfig<"dark" | "light">("devToolsTheme", "dark"); }
 	get enableSdkFormatter(): boolean { return this.getConfig<boolean>("enableSdkFormatter", true); }
 	get env(): object { return this.getConfig<object>("env", {}); }
@@ -73,6 +74,7 @@ class Config {
 	get flutterSdkPaths(): string[] { return this.getConfig<string[]>("flutterSdkPaths", []).map(resolvePaths); }
 	get flutterSelectDeviceWhenConnected(): boolean { return this.getConfig<boolean>("flutterSelectDeviceWhenConnected", true); }
 	get maxLogLineLength(): number { return this.getConfig<number>("maxLogLineLength", 2000); }
+	get openDevTools(): "never" | "flutter" | "always" { return this.getConfig<"never" | "flutter" | "always">("openDevTools", "never"); }
 	get openTestView(): Array<"testRunStart" | "testFailure"> { return this.getConfig<Array<"testRunStart" | "testFailure">>("openTestView", ["testRunStart"]); }
 	get previewBuildRunnerTasks(): boolean { return this.getConfig<boolean>("previewBuildRunnerTasks", false); }
 	get previewFlutterGutterIcons(): boolean { return this.getConfig<boolean>("previewFlutterGutterIcons", false); }

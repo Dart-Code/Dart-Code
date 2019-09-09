@@ -10,10 +10,13 @@ import { CategoryLogger } from "../../shared/logging";
 import { UnknownNotification } from "../../shared/services/interfaces";
 import { getRandomInt } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
+import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { isRunningLocally } from "../../shared/vscode/utils";
+import { Context } from "../../shared/vscode/workspace";
 import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions } from "../commands/debug";
 import { config } from "../config";
+import { DebuggerType } from "../providers/debug_config_provider";
 import { PubGlobal } from "../pub/global";
 import { StdIOService } from "../services/stdio_service";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
@@ -37,13 +40,13 @@ export class DevToolsManager implements vs.Disposable {
 	/// concurrent launches can wait on the same promise.
 	private devtoolsUrl: Thenable<string> | undefined;
 
-	constructor(private logger: Logger, private sdks: Sdks, private debugCommands: DebugCommands, private analytics: Analytics, private pubGlobal: PubGlobal) {
+	constructor(private logger: Logger, private readonly context: Context, private sdks: Sdks, private debugCommands: DebugCommands, private analytics: Analytics, private pubGlobal: PubGlobal) {
 		this.disposables.push(this.devToolsStatusBarItem);
 	}
 
 	/// Spawns DevTools and returns the full URL to open for that session
 	///   eg. http://127.0.0.1:8123/?port=8543
-	public async spawnForSession(session: DartDebugSessionInformation & { vmServiceUri: string }): Promise<{ url: string, dispose: () => void } | undefined> {
+	public async spawnForSession(session: DartDebugSessionInformation & { vmServiceUri: string }, reuseWindows: boolean, notify: boolean): Promise<{ url: string, dispose: () => void } | undefined> {
 		this.analytics.logDebuggerOpenDevTools();
 
 		const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtools, undefined, "0.1.0", true);
@@ -76,7 +79,11 @@ export class DevToolsManager implements vs.Disposable {
 						await session.session.customRequest(
 							"service",
 							{
-								params: { queryParams },
+								params: {
+									notify,
+									queryParams,
+									reuseWindows,
+								},
 								type: this.debugCommands.flutterExtensions.getServiceMethodName(FlutterService.LaunchDevTools),
 							},
 						);
@@ -126,9 +133,22 @@ export class DevToolsManager implements vs.Disposable {
 			service.registerForServerStarted((n) => {
 				// When a new debug session starts, we need to wait for its VM
 				// Service, then register it with this server.
-				this.disposables.push(this.debugCommands.onDebugSessionVmServiceAvailable(
-					(session) => service.vmRegister({ uri: session.vmServiceUri! }),
-				));
+				this.disposables.push(this.debugCommands.onDebugSessionVmServiceAvailable((session) => {
+					service.vmRegister({ uri: session.vmServiceUri! });
+
+					// Open or prompt for DevTools when appropriate.
+					const debuggerType: DebuggerType = session.session.configuration.debuggerType;
+					if (debuggerType === DebuggerType.Dart || debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.FlutterWeb) {
+						if (config.openDevTools !== "never") {
+							const shouldLaunch = debuggerType !== DebuggerType.Dart || config.openDevTools === "always";
+							if (shouldLaunch)
+								vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true });
+						} else if (debuggerType !== DebuggerType.Dart) {
+							// TODO: Add a button to this to "launch always" (behind a flag for now?)
+							showDevToolsNotificationIfAppropriate(this.context);
+						}
+					}
+				}));
 
 				// And send any existing sessions we have.
 				for (const session of debugSessions) {

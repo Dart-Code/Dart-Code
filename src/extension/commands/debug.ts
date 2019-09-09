@@ -7,11 +7,11 @@ import { FlutterServiceExtension, LogSeverity } from "../../shared/enums";
 import { Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
 import { findProjectFolders } from "../../shared/utils/fs";
-import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
+import { config } from "../config";
 import { FlutterServiceExtensionArgs, FlutterVmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../flutter/vm_service_extensions";
 import { DebuggerType } from "../providers/debug_config_provider";
 import { PubGlobal } from "../pub/global";
@@ -47,9 +47,9 @@ export class DebugCommands {
 	public readonly flutterExtensions: FlutterVmServiceExtensions;
 	private readonly devTools: DevToolsManager;
 
-	constructor(private readonly logger: Logger, private readonly context: Context, workspaceContext: WorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
+	constructor(private readonly logger: Logger, context: Context, workspaceContext: WorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
 		this.flutterExtensions = new FlutterVmServiceExtensions(this.sendServiceSetting);
-		this.devTools = new DevToolsManager(logger, workspaceContext.sdks, this, analytics, pubGlobal);
+		this.devTools = new DevToolsManager(logger, context, workspaceContext.sdks, this, analytics, pubGlobal);
 		context.subscriptions.push(this.devTools);
 		context.subscriptions.push(this.debugMetrics);
 
@@ -94,20 +94,26 @@ export class DebugCommands {
 				logger.warn("Cannot start Observatory for session without debug/observatoryUri");
 			}
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", (args: any) => vs.commands.executeCommand("dart.openDevTools", args)));
-		context.subscriptions.push(vs.commands.registerCommand("dart.openDevTools", async (): Promise<{ url: string, dispose: () => void } | undefined> => {
+		context.subscriptions.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", () => vs.commands.executeCommand("dart.openDevTools")));
+		context.subscriptions.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean }): Promise<{ url: string, dispose: () => void } | undefined> => {
 			if (!debugSessions.length) {
 				vs.window.showInformationMessage("Dart DevTools requires an active debug session.");
 				return;
 			}
-			const session = debugSessions.length === 1
-				? debugSessions[0]
-				: await this.promptForDebugSession();
+			const session = options && options.debugSessionId
+				? debugSessions.find((s) => s.session.id === options.debugSessionId)
+				: debugSessions.length === 1
+					? debugSessions[0]
+					: await this.promptForDebugSession();
 			if (!session)
-				return; // User cancelled
+				return; // User cancelled or specified session was gone
+
+			// Only show a notification if we were not triggered automatically.
+			const notify = !options || options.triggeredAutomatically !== true;
+			const reuseWindows = config.devToolsReuseWindows;
 
 			if (session.vmServiceUri) {
-				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string });
+				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, reuseWindows, notify);
 			} else if (session.session.configuration.noDebug) {
 				vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
 			} else {
@@ -397,9 +403,6 @@ export class DebugCommands {
 		} else if (e.event === "dart.debuggerUris") {
 			session.observatoryUri = e.body.observatoryUri;
 			session.vmServiceUri = e.body.vmServiceUri;
-			const debuggerType: DebuggerType = session.session.configuration.debuggerType;
-			if (debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.FlutterWeb)
-				showDevToolsNotificationIfAppropriate(this.context);
 			this.onDebugSessionVmServiceAvailableEmitter.fire(session);
 			// if (e.body.isProbablyReconnectable) {
 			// 	mostRecentAttachedProbablyReusableObservatoryUri = session.observatoryUri;
