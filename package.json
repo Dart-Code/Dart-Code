@@ -1298,6 +1298,22 @@
 					"description": "The port number to be used for the Dart DevTools.",
 					"scope": "window"
 				},
+				"dart.devToolsReuseWindows": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to try to reuse existing DevTools windows instead of launching new ones. Only works for instances of DevTools launched by the DevTools server on the local machine.",
+					"scope": "window"
+				},
+				"dart.openDevTools": {
+					"enum": [
+						"never",
+						"flutter",
+						"always"
+					],
+					"default": "never",
+					"description": "Whether to automatically open DevTools at the start of a debug session",
+					"scope": "window"
+				},
 				"dart.flutterDaemonLogFile": {
 					"type": [
 						"null",
