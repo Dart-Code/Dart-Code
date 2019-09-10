@@ -1,14 +1,15 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, ensureCompletion, extApi, flutterHelloWorldMainFile, getCompletionsAt, getPackages, setTestContent } from "../../helpers";
+import { activate, ensureCompletion, extApi, flutterHelloWorldMainFile, getCompletionsAt, getPackages, openFile, setTestContent } from "../../helpers";
 
 describe("completion_item_provider", () => {
 
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
-	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
+	beforeEach("activate flutterHelloWorldMainFile", () => activate(undefined));
 
 	it("includes expected completions", async () => {
+		await openFile(flutterHelloWorldMainFile);
 		const completions = await getCompletionsAt("return ^Text");
 
 		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "Text(…)", "Text");
