@@ -1267,11 +1267,16 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private async handlePauseEvent(event: VMEvent) {
-		const kind = event.kind;
-		const thread = event.isolate ? this.threadManager.getThreadInfoFromRef(event.isolate) : undefined;
+		if (!event.isolate) {
+			this.logger.warn(`Unable to handle pause event (${event.kind}) that had no isolate`);
+			return;
+		}
 
-		if (!event.isolate || !thread) {
-			this.logger.warn("No thread for pause event");
+		const kind = event.kind;
+		const thread = this.threadManager.getThreadInfoFromRef(event.isolate);
+
+		if (!thread) {
+			this.logger.warn(`ThreadManager couldn't find thread with ref ${event.isolate.id} to handle ${kind}`);
 			return;
 		}
 
