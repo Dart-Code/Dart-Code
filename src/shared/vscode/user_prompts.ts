@@ -39,7 +39,7 @@ export function showFlutterSurveyNotificationIfAppropriate(context: Context, ope
 		if (fs.existsSync(flutterSettingsPath)) {
 			const json = fs.readFileSync(flutterSettingsPath).toString();
 			const settings = JSON.parse(json);
-			if (settings.enabled) {
+			if (settings.enabled !== false) {
 				clientID = settings.clientId;
 			}
 		}
