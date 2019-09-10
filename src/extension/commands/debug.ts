@@ -244,7 +244,7 @@ export class DebugCommands {
 
 			// Temporary hack to allow controlling the Hot Reload button on the debug toolbar based on
 			// whether it's a web device.
-			if (s.configuration.debuggerType === DebuggerType.Flutter && s.configuration.deviceId !== "chrome")
+			if (s.configuration.debuggerType === DebuggerType.Flutter)
 				vs.commands.executeCommand("setContext", isInDebugSessionThatProbablySupportsHotReloadContext, true);
 
 			// Process any queued events that came in before the session start
