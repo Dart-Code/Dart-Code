@@ -88,13 +88,23 @@ export class FlutterDeviceManager implements vs.Disposable {
 			if (!quickPickIsValid)
 				return;
 
+			const knowEmulatorNames: { [key: string]: string } = {};
+			if (emulatorDevices) {
+				for (const e of emulatorDevices) {
+					if (e.device.type === "emulator")
+						knowEmulatorNames[e.device.id] = e.device.name;
+				}
+			}
+
 			const pickableItems: PickableDevice[] = this.devices
 				.sort(this.deviceSortComparer.bind(this))
 				.filter((d) => this.isSupported(supportedTypes, d))
 				.map((d) => ({
 					description: d.category || d.platform,
 					device: d,
-					label: d.name,
+					label: d.emulatorId && knowEmulatorNames[d.emulatorId]
+						? knowEmulatorNames[d.emulatorId]
+						: d.name,
 				}));
 
 			// If we've got emulators, add them to the list.
