@@ -1,4 +1,4 @@
-import { Event, OutputEvent } from "vscode-debugadapter";
+import { ContinuedEvent, Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { restartReasonManual } from "../shared/constants";
 import { FlutterServiceExtension, LogCategory } from "../shared/enums";
@@ -216,6 +216,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		args: DebugProtocol.RestartArguments,
 	): void {
 		this.sendEvent(new Event("dart.hotRestartRequest"));
+		this.sendEvent(new ContinuedEvent(0, true));
 		this.performReload(true, restartReasonManual);
 		super.restartRequest(response, args);
 	}
