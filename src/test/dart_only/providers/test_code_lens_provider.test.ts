@@ -2,15 +2,6 @@ import * as assert from "assert";
 import * as vs from "vscode";
 import { activate, addLaunchConfigsForTest, extApi, getCodeLens, getPackages, helloWorldTestMainFile, openFile, positionOf, waitForResult } from "../../helpers";
 
-function debugCheck(cls: vs.CodeLens[]) {
-	// TEMP DEBUG
-	for (const cl of cls) {
-		if (!cl.command) {
-			throw new Error(`Got code lens without a command! ${JSON.stringify(cl, undefined, 4)}\n\n\nFull response (${cls.length} items) was:${JSON.stringify(cls, undefined, 4)}`);
-		}
-	}
-}
-
 describe("test_code_lens", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate());
@@ -20,7 +11,6 @@ describe("test_code_lens", () => {
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
-		debugCheck(fileCodeLens);
 		const testPos = positionOf(`test^(".split() splits`);
 
 		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
@@ -42,7 +32,6 @@ describe("test_code_lens", () => {
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
-		debugCheck(fileCodeLens);
 		const groupPos = positionOf("group^(");
 
 		const codeLensForGroup = fileCodeLens.filter((cl) => cl.range.contains(groupPos));
@@ -84,7 +73,6 @@ describe("test_code_lens", () => {
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
-		debugCheck(fileCodeLens);
 		const testPos = positionOf(`test^(".split() splits`);
 
 		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
@@ -128,7 +116,6 @@ describe("test_code_lens", () => {
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
-		debugCheck(fileCodeLens);
 		const groupPos = positionOf("group^(");
 
 		const codeLensForGroup = fileCodeLens.filter((cl) => cl.range.contains(groupPos));
