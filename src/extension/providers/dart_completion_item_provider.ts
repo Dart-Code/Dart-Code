@@ -227,7 +227,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		insertArgumentPlaceholders: boolean,
 		offset: number,
 		resp: as.CompletionResultsNotification,
-	): Promise<CompletionItem[] | undefined> {
+	): Promise<CompletionItem[]> {
 		if (!resp.includedSuggestionSets || !resp.includedElementKinds)
 			return [];
 
@@ -239,7 +239,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 		// Create a fast lookup for relevance boosts based on tag string.
 		const tagBoosts: { [key: string]: number } = {};
-		resp.includedSuggestionRelevanceTags.forEach((r) => tagBoosts[r.tag] = r.relevanceBoost);
+		if (resp.includedSuggestionRelevanceTags)
+			resp.includedSuggestionRelevanceTags.forEach((r) => tagBoosts[r.tag] = r.relevanceBoost);
 
 		const filePath = fsPath(document.uri);
 		const suggestionSetResults: CompletionItem[][] = [];
@@ -258,7 +259,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			// stop and bail out to avoid doing redundant work.
 			await resolvedPromise;
 			if (token && token.isCancellationRequested) {
-				return undefined;
+				return [];
 			}
 
 			const suggestionSet = this.cachedCompletions[includedSuggestionSet.id];
@@ -325,7 +326,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			suggestionSetResults.push(unresolvedItems);
 		}
 
-		return [].concat(...suggestionSetResults);
+		return ([] as vs.CompletionItem[]).concat(...suggestionSetResults);
 	}
 
 	private convertResult(
@@ -373,13 +374,13 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			replacementOffset: number,
 			requiredParameterCount: number | undefined,
 			returnType: string | undefined,
-			selectionLength: number,
-			selectionOffset: number,
+			selectionLength: number | undefined,
+			selectionOffset: number | undefined,
 		},
 	): LazyCompletionItem {
 		const completionItemKind = suggestion.elementKind ? this.getElementKind(suggestion.elementKind) : undefined;
 		let label = suggestion.displayText || suggestion.completionText;
-		let detail = "";
+		let detail: string | undefined;
 		const completionText = new SnippetString();
 		let triggerCompletion = false;
 
@@ -398,7 +399,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			// Add placeholders for params to the completion.
 			if (insertArgumentPlaceholders && hasParams && !nextCharacterIsOpenParen) {
 				completionText.appendText(suggestion.completionText);
-				const args = suggestion.parameterNames.slice(0, suggestion.requiredParameterCount);
+				const args = suggestion.parameterNames!.slice(0, suggestion.requiredParameterCount);
 				completionText.appendText("(");
 				if (args.length) {
 					completionText.appendPlaceholder(args[0]);
@@ -418,7 +419,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			} else {
 				completionText.appendText(suggestion.completionText);
 			}
-		} else if (suggestion.selectionOffset > 0) {
+		} else if (suggestion.selectionOffset && suggestion.selectionLength && suggestion.selectionOffset > 0) {
 			const before = suggestion.completionText.slice(0, suggestion.selectionOffset);
 			const selection = suggestion.completionText.slice(suggestion.selectionOffset, suggestion.selectionOffset + suggestion.selectionLength);
 			// If we have a selection offset (eg. a place to put the cursor) but not any text to pre-select then
@@ -449,7 +450,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			// Otherwise, get return type from method.
 		} else if (suggestion.returnType) {
 			detail =
-				detail === ""
+				detail
 					? suggestion.returnType
 					: detail + " → " + suggestion.returnType;
 		} else if (suggestion.parameterType) {
@@ -578,7 +579,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		return undefined;
 	}
 
-	private getCommitCharacters(kind: as.CompletionSuggestionKind): string[] | undefined {
+	private getCommitCharacters(kind: as.CompletionSuggestionKind | undefined): string[] | undefined {
 		switch (kind) {
 			case "IDENTIFIER":
 			case "INVOCATION":
@@ -622,7 +623,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			const filteredSourceChange: as.SourceChange = {
 				edits: otherFilesEdits,
 				id: change.id,
-				linkedEditGroups: undefined,
+				linkedEditGroups: [],
 				message: change.message,
 				selection: change.selection,
 			};
