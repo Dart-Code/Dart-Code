@@ -249,6 +249,10 @@ export class SdkCommands {
 		if (!conf.runPubGetOnPubspecChanges)
 			return;
 
+		// Never do anything for files inside .dart_tool folders.
+		if (fsPath(uri).indexOf(`${path.sep}.dart_tool${path.sep}`) !== -1)
+			return;
+
 		// Don't do anything if we're in the middle of creating projects, as packages
 		// may  be fetched automatically.
 		if (numProjectCreationsInProgress > 0) {
