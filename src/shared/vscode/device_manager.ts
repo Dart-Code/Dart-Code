@@ -30,9 +30,9 @@ export class FlutterDeviceManager implements vs.Disposable {
 		this.subscriptions.forEach((s) => s.dispose());
 	}
 
-	public isSupported(types: f.PlatformType[], device: { platformType: f.PlatformType }) {
+	public isSupported(types: f.PlatformType[] | undefined, device: { platformType: f.PlatformType | null | undefined }) {
 		// If we don't get any types to filter, assume everything is valid.
-		return device && (!types || !types.length || types.indexOf(device.platformType) !== -1);
+		return device && (!types || !types.length || !device.platformType || types.indexOf(device.platformType) !== -1);
 	}
 
 	public async deviceAdded(dev: f.Device): Promise<void> {
@@ -72,7 +72,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 	}
 
-	public async showDevicePicker(supportedTypes?: f.PlatformType[]): Promise<f.Device> {
+	public async showDevicePicker(supportedTypes?: f.PlatformType[]): Promise<f.Device | undefined> {
 		// If we weren't passed any supported types, we should try to get them for
 		// the whole workspace.
 		if (!supportedTypes && this.daemon.capabilities.providesPlatformTypes) {
@@ -161,8 +161,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return undefined;
 	}
 
-	private shortCacheForSupportedPlatforms: Promise<f.PlatformType[] | undefined>;
-	private async getSupportedPlatformsForWorkspace(): Promise<f.PlatformType[] | undefined> {
+	private shortCacheForSupportedPlatforms: Promise<f.PlatformType[]> | undefined;
+	private async getSupportedPlatformsForWorkspace(): Promise<f.PlatformType[]> {
 		// To avoid triggering this lots of times at startup when lots of devices "connect" at
 		// the same time, we cache the results for 10 seconds. Every time we set the cache, we
 		// set a timer to expire it in 10 seconds.
@@ -278,7 +278,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		// });
 		// if (!name) bail() // Pressing ENTER doesn't work, but escape does, so if
 		// no name, user probably wanted to cancel
-		const name: string = undefined;
+		const name: string | undefined = undefined;
 		const create = this.daemon.createEmulator(name);
 		vs.window.withProgress({
 			location: vs.ProgressLocation.Notification,
@@ -310,7 +310,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			.filter((e) => this.isSupported(supportedTypes, e))
 			.map((e) => ({
 				alwaysShow: false,
-				description: showAsEmulators ? `${e.category || "mobile"} ${this.emulatorLabel(e.platformType)}` : e.platformType,
+				description: showAsEmulators ? `${e.category || "mobile"} ${this.emulatorLabel(e.platformType)}` : e.platformType || undefined,
 				device: {
 					...e,
 					type: "emulator",
