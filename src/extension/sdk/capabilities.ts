@@ -12,7 +12,7 @@ export class DartCapabilities {
 	get supportsDevTools() { return versionIsAtLeast(this.version, "2.1.0"); }
 	get includesSourceForSdkLibs() { return versionIsAtLeast(this.version, "2.2.1"); }
 	get handlesBreakpointsInPartFiles() { return versionIsAtLeast(this.version, "2.2.1-edge"); }
-	get hasDocumentationInCompletions() { return !versionIsAtLeast(this.version, "2.6.0-edge"); }
+	get hasDocumentationInCompletions() { return !versionIsAtLeast(this.version, "2.6.0-dev"); }
 	get handlesPathsEverywhereForBreakpoints() { return versionIsAtLeast(this.version, "2.2.1-edge"); }
 	get supportsDisableServiceTokens() { return versionIsAtLeast(this.version, "2.2.1-dev.4.2"); }
 }
