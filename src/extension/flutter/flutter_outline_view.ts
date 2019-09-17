@@ -36,7 +36,8 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 						this.flutterOutline = n;
 						this.treeNodesByLine = [];
 						// Delay this so if we're getting lots of updates we don't flicker.
-						clearTimeout(this.updateTimeout);
+						if (this.updateTimeout)
+							clearTimeout(this.updateTimeout);
 						if (!this.rootNode)
 							this.update();
 						else
@@ -55,7 +56,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 	private async update() {
 		// Build the tree from our outline
 		if (this.flutterOutline) {
-			this.rootNode = await this.createTreeNode(null, this.flutterOutline.outline, this.activeEditor);
+			this.rootNode = await this.createTreeNode(undefined, this.flutterOutline.outline, this.activeEditor);
 			FlutterOutlineProvider.showTree();
 		} else {
 			this.rootNode = undefined;
@@ -64,7 +65,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 		this.refresh();
 	}
 
-	private async createTreeNode(parent: FlutterWidgetItem, element: as.FlutterOutline, editor: vs.TextEditor): Promise<FlutterWidgetItem> {
+	private async createTreeNode(parent: FlutterWidgetItem | undefined, element: as.FlutterOutline, editor: vs.TextEditor | undefined): Promise<FlutterWidgetItem | undefined> {
 		// Ensure we're still active editor before trying to use.
 		if (editor && editor.document && !editor.document.isClosed && this.activeEditor === editor) {
 			const node = new FlutterWidgetItem(parent, element, editor);
@@ -79,17 +80,19 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 				this.treeNodesByLine[line].push(node);
 			}
 			if (element.children)
-				node.children = await Promise.all(element.children.map((c) => this.createTreeNode(node, c, editor)));
+				node.children = (await Promise.all(element.children.map((c) => this.createTreeNode(node, c, editor)))).filter((n) => n).map((n) => n!);
 
 			return node;
 		}
+
+		return undefined;
 	}
 
-	private setTrackingFile(editor: vs.TextEditor) {
+	private setTrackingFile(editor: vs.TextEditor | undefined) {
 		if (editor && isAnalyzable(editor.document)) {
 			this.activeEditor = editor;
-			this.flutterOutline = null;
-			this.rootNode = null;
+			this.flutterOutline = undefined;
+			this.rootNode = undefined;
 			this.refresh(); // Force update (to nothing) while requests are in-flight.
 			this.analyzer.forceNotificationsFor(fsPath(editor.document.uri));
 		} else if (editor && editor.document.uri.scheme === "file") {
@@ -97,7 +100,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 			// text editors (debug window is considered an editor) so we should only hide the tree
 			// when we know a file that is not ours is selected.
 			// https://github.com/Microsoft/vscode/issues/45188
-			this.activeEditor = null;
+			this.activeEditor = undefined;
 			FlutterOutlineProvider.hideTree();
 		} else {
 			// HACK: If there are no valid open editors, hide the tree.
@@ -125,7 +128,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 		}
 
 		// Set up the new contexts for our node and mark is as current.
-		if (selection && selection.length === 1 && isWidget(selection[0].outline)) {
+		if (this.activeEditor && selection && selection.length === 1 && isWidget(selection[0].outline)) {
 			const fixes = (await getFixes(this.activeEditor, selection[0].outline))
 				.filter((f): f is vs.CodeAction => f instanceof vs.CodeAction)
 				.filter((ca) => ca.kind && ca.kind.value && flutterOutlineCommands.indexOf(ca.kind.value) !== -1);
@@ -134,7 +137,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 			selection[0].fixes = fixes;
 
 			for (const fix of fixes)
-				vs.commands.executeCommand("setContext", WIDGET_SUPPORTS_CONTEXT_PREFIX + fix.kind.value, true);
+				vs.commands.executeCommand("setContext", WIDGET_SUPPORTS_CONTEXT_PREFIX + (fix.kind ? fix.kind.value : "NOKIND"), true);
 
 			// Used so we can show context menu if you right-click the selected one.
 			// We can't support arbitrary context menus, because we can't get the fixes up-front (see
@@ -147,13 +150,13 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 	}
 
 	public getNodeAt(uri: vs.Uri, pos: vs.Position): FlutterWidgetItem | undefined {
-		if (!this.flutterOutline || this.flutterOutline.file !== fsPath(uri) || !this.treeNodesByLine[pos.line])
+		if (!this.activeEditor || !this.flutterOutline || this.flutterOutline.file !== fsPath(uri) || !this.treeNodesByLine[pos.line])
 			return;
 
 		const offset = this.activeEditor.document.offsetAt(pos);
 		const nodes = this.treeNodesByLine[pos.line];
 		// We want the last node that started before the position (eg. most specific).
-		let currentBest = null;
+		let currentBest: FlutterWidgetItem | undefined;
 		for (const item of nodes) {
 			if (item.outline.offset <= offset
 				&& item.outline.offset + item.outline.length >= offset) {
@@ -162,7 +165,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 		}
 
 		if (currentBest === this.rootNode)
-			return null; // Root node isn't actually in the tree.
+			return undefined; // Root node isn't actually in the tree.
 
 		return currentBest;
 	}
@@ -183,7 +186,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 		return [];
 	}
 
-	public getParent(element: FlutterWidgetItem): FlutterWidgetItem {
+	public getParent(element: FlutterWidgetItem): FlutterWidgetItem | undefined {
 		return element.parent;
 	}
 
@@ -195,7 +198,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 	public static hideTree() { this.setTreeVisible(false); }
 
 	public dispose() {
-		this.activeEditor = null;
+		this.activeEditor = undefined;
 		this.subscriptions.forEach((s) => s.dispose());
 	}
 }
@@ -204,21 +207,22 @@ function isWidget(outline: as.FlutterOutline) {
 	return outline.kind !== "DART_ELEMENT";
 }
 
-function getFixes(editor: vs.TextEditor, outline: as.FlutterOutline): Thenable<Array<vs.Command | vs.CodeAction>> {
+async function getFixes(editor: vs.TextEditor, outline: as.FlutterOutline): Promise<Array<vs.Command | vs.CodeAction>> {
 	const pos = editor.document.positionAt(outline.offset);
 	const range = new vs.Range(pos, pos);
-	return vs.commands.executeCommand(
+	const fixes: Array<vs.Command | vs.CodeAction> | undefined = await vs.commands.executeCommand(
 		"vscode.executeCodeActionProvider",
 		editor.document.uri,
 		range,
 	);
+	return fixes || [];
 }
 
 export class FlutterWidgetItem extends vs.TreeItem {
 	public children: FlutterWidgetItem[];
 	public fixes: vs.CodeAction[];
 	constructor(
-		public readonly parent: FlutterWidgetItem,
+		public readonly parent: FlutterWidgetItem | undefined,
 		public readonly outline: as.FlutterOutline,
 		editor: vs.TextEditor,
 	) {
@@ -254,8 +258,8 @@ export class FlutterWidgetItem extends vs.TreeItem {
 				),
 				// Selection (we just want to move cursor, so it's 0-length)
 				new vs.Range(
-					editor.document.positionAt((outline.dartElement ? outline.dartElement.location : outline).offset),
-					editor.document.positionAt((outline.dartElement ? outline.dartElement.location : outline).offset),
+					editor.document.positionAt((outline.dartElement ? outline.dartElement.location! : outline).offset),
+					editor.document.positionAt((outline.dartElement ? outline.dartElement.location! : outline).offset),
 				),
 			],
 			command: "_dart.showCode",
