@@ -21,7 +21,7 @@ export function uniq<T>(array: T[]): T[] {
 }
 
 export function flatMap<T1, T2>(input: T1[], f: (input: T1) => ReadonlyArray<T2>): T2[] {
-	return input.reduce((acc, x) => acc.concat(f(x)), []);
+	return input.reduce((acc, x) => acc.concat(f(x)), [] as T2[]);
 }
 
 export function throttle(fn: (...args: any[]) => void, limitMilliseconds: number): (...args: any[]) => void {

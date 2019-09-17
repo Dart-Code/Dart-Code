@@ -136,7 +136,7 @@ export function isAnalyzable(document: TextDocument): boolean {
 
 	return analyzableLanguages.indexOf(document.languageId) >= 0
 		|| analyzableFilenames.indexOf(path.basename(fsPath(document.uri))) >= 0
-		|| (extension && config.additionalAnalyzerFileExtensions.includes(extension));
+		|| (extension !== undefined && config.additionalAnalyzerFileExtensions.includes(extension));
 }
 
 export function isAnalyzableAndInWorkspace(document: TextDocument): boolean {
