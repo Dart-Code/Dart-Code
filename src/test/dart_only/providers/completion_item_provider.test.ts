@@ -70,8 +70,10 @@ main() {
 
 		const classComp: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
 		assert.equal(classComp.documentation, undefined);
-		assert.equal((classComp._documentation as vs.MarkdownString).value, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
-		assert.equal(((await resolveCompletion(classComp)).documentation as vs.MarkdownString).value, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
+		if (extApi.dartCapabilities.hasDocumentationInCompletions)
+			assert.equal((classComp._documentation as vs.MarkdownString).value, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
+		if (extApi.dartCapabilities.hasDocumentationInCompletions)
+			assert.equal(((await resolveCompletion(classComp)).documentation as vs.MarkdownString).value, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
 		assert.equal(classComp.detail, undefined);
 
 		const constrComp: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
@@ -174,7 +176,8 @@ main() {
 			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:io'");
-			assert.equal((completion.documentation as vs.MarkdownString).value, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
+			if (extApi.dartCapabilities.hasDocumentationInCompletions)
+				assert.equal((completion.documentation as vs.MarkdownString).value, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
 			assert.equal(completion.filterText, "ProcessInfo");
 			assert.equal((completion.insertText as vs.SnippetString).value, "ProcessInfo");
 			assert.equal(completion.keepWhitespace, true);
@@ -228,7 +231,8 @@ main() {
 			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:collection'\n\n({bool equals(K key1, K key2), int hashCode(K key), bool isValidKey(potentialKey)}) → HashMap");
-			assert.equal((completion.documentation as vs.MarkdownString).value, "Creates an unordered hash-table based [Map].");
+			if (extApi.dartCapabilities.hasDocumentationInCompletions)
+				assert.equal((completion.documentation as vs.MarkdownString).value, "Creates an unordered hash-table based [Map].");
 			assert.equal(completion.filterText, "HashMap");
 			assert.equal((completion.insertText as vs.SnippetString).value, "HashMap($0)");
 			assert.equal(completion.keepWhitespace, true);

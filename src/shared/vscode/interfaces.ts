@@ -35,6 +35,7 @@ export interface InternalExtensionApi {
 		supportsDevTools: boolean;
 		includesSourceForSdkLibs: boolean;
 		handlesBreakpointsInPartFiles: boolean;
+		hasDocumentationInCompletions: boolean;
 		supportsDisableServiceTokens: boolean;
 	};
 	debugCommands: DebugCommandHandler;
