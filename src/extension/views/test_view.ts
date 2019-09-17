@@ -18,9 +18,9 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	private disposables: vs.Disposable[] = [];
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<TestItemTreeItem | undefined> = new vs.EventEmitter<TestItemTreeItem | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<TestItemTreeItem | undefined> = this.onDidChangeTreeDataEmitter.event;
-	private onDidStartTestsEmitter: vs.EventEmitter<TestItemTreeItem | undefined> = new vs.EventEmitter<TestItemTreeItem | undefined>();
+	private onDidStartTestsEmitter: vs.EventEmitter<TestItemTreeItem> = new vs.EventEmitter<TestItemTreeItem>();
 	public readonly onDidStartTests: vs.Event<TestItemTreeItem | undefined> = this.onDidStartTestsEmitter.event;
-	private onFirstFailureEmitter: vs.EventEmitter<TestItemTreeItem | undefined> = new vs.EventEmitter<TestItemTreeItem | undefined>();
+	private onFirstFailureEmitter: vs.EventEmitter<TestItemTreeItem> = new vs.EventEmitter<TestItemTreeItem>();
 	public readonly onFirstFailure: vs.Event<TestItemTreeItem | undefined> = this.onFirstFailureEmitter.event;
 	private currentSelectedNode: TestItemTreeItem | undefined;
 
@@ -315,7 +315,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 
 		// Remove from old parent if required.
 		const hasChangedParent = oldParent && oldParent !== testNode.parent;
-		if (hasChangedParent) {
+		if (oldParent && hasChangedParent) {
 			oldParent.tests.splice(oldParent.tests.indexOf(testNode), 1);
 			this.updateNode(oldParent);
 		}
@@ -385,8 +385,10 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	public handleDebugSessionEnd(session: vs.DebugSession) {
 		// Get the suite paths that have us as the owning debug session.
 		const suitePaths = Object.keys(this.owningDebugSessions).filter((suitePath) => {
-			return this.owningDebugSessions[suitePath] && session
-				&& this.owningDebugSessions[suitePath].id === session.id;
+			const owningSession = this.owningDebugSessions[suitePath];
+			return session
+				&& owningSession
+				&& owningSession.id === session.id;
 		});
 
 		// End them all and remove from the lookup.
@@ -488,7 +490,7 @@ class SuiteData {
 				&& g.suiteRunNumber !== currentSuiteRunNumber;
 		});
 		// Reuse the one nearest to the source position.
-		const sortedMatches = matches.sort((g1, g2) => Math.abs(g1.group.line - group.line) - Math.abs(g2.group.line - group.line));
+		const sortedMatches = matches.sort((g1, g2) => Math.abs((g1.group.line || 0) - (group.line || 0)) - Math.abs((g2.group.line || 0) - (group.line || 0)));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
 			handleOldParent(match.parent);
@@ -504,7 +506,7 @@ class SuiteData {
 				&& t.suiteRunNumber !== currentSuiteRunNumber;
 		});
 		// Reuse the one nearest to the source position.
-		const sortedMatches = sortBy(matches, (t) => Math.abs(t.test.line - test.line));
+		const sortedMatches = sortBy(matches, (t) => Math.abs((t.test.line || 0) - (test.line || 0)));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
 			handleOldParent(match.parent);
@@ -599,7 +601,7 @@ class GroupTreeItem extends TestItemTreeItem {
 	public readonly tests: TestTreeItem[] = [];
 
 	constructor(public suite: SuiteData, group: Group) {
-		super(group.name, vs.TreeItemCollapsibleState.Collapsed);
+		super(group.name || "<unnamed>", vs.TreeItemCollapsibleState.Collapsed);
 		this.suiteRunNumber = suite.currentRunNumber;
 		this.group = group;
 		this.contextValue = DART_TEST_GROUP_NODE_CONTEXT;
@@ -633,7 +635,7 @@ class GroupTreeItem extends TestItemTreeItem {
 	}
 
 	get children(): TestItemTreeItem[] {
-		return []
+		return ([] as TestItemTreeItem[])
 			.concat(this.groups.filter((t) => !t.hidden))
 			.concat(this.tests.filter((t) => !t.hidden));
 	}
@@ -659,7 +661,7 @@ class TestTreeItem extends TestItemTreeItem {
 	public readonly outputEvents: Array<PrintNotification | ErrorNotification> = [];
 	private _test: Test; // tslint:disable-line:variable-name
 	constructor(public suite: SuiteData, test: Test, public hidden = false) {
-		super(test.name, vs.TreeItemCollapsibleState.None);
+		super(test.name || "<unnamed>", vs.TreeItemCollapsibleState.None);
 		this.suiteRunNumber = suite.currentRunNumber;
 		this.test = test;
 		this.contextValue = DART_TEST_TEST_NODE_CONTEXT;
@@ -690,9 +692,9 @@ class TestTreeItem extends TestItemTreeItem {
 
 		// Update the label.
 		const parent = this.parent;
-		this.label = parent && parent instanceof GroupTreeItem && parent.fullName && test.name.startsWith(`${parent.fullName} `)
+		this.label = parent && parent instanceof GroupTreeItem && parent.fullName && test.name && test.name.startsWith(`${parent.fullName} `)
 			? test.name.substr(parent.fullName.length + 1) // +1 because of the space (included above).
-			: test.name;
+			: (test.name || "<unnamed>");
 	}
 
 	get fullName(): string | undefined {

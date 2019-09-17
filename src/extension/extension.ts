@@ -79,8 +79,8 @@ import { envUtils } from "./utils/vscode/editor";
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestItemTreeItem, TestResultsProvider } from "./views/test_view";
 
-const DART_MODE: vs.DocumentFilter = { language: "dart", scheme: "file" };
-const HTML_MODE: vs.DocumentFilter = { language: "html", scheme: "file" };
+const DART_MODE = { language: "dart", scheme: "file" };
+const HTML_MODE = { language: "html", scheme: "file" };
 
 const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 // TODO: Define what this means better. Some commands a general Flutter (eg. Hot
