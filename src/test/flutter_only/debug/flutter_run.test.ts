@@ -937,9 +937,9 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 			});
 
 			const variables = await dc.getTopFrameVariables("Locals");
-			const listVariables = await dc.getVariables(variables.find((v) => v.name === "l").variablesReference);
-			const listLongstringVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings").variablesReference);
-			const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m").variablesReference);
+			const listVariables = await dc.getVariables(variables.find((v) => v.name === "l")!.variablesReference);
+			const listLongstringVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference);
+			const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m")!.variablesReference);
 			const allVariables = listVariables.concat(listLongstringVariables).concat(mapVariables);
 
 			for (const variable of allVariables) {

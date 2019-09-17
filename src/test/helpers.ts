@@ -822,7 +822,7 @@ export async function setConfigForTest(section: string, key: string, value: any)
 
 export async function addLaunchConfigsForTest(workspaceUri: vs.Uri, configs: any[]) {
 	const launchConfig = vs.workspace.getConfiguration("launch", workspaceUri);
-	const originalConfigs = launchConfig.get<any[]>("configurations");
+	const originalConfigs = launchConfig.get<any[]>("configurations") || [];
 	const newConfigs = (originalConfigs || []).slice().concat(configs);
 	await launchConfig.update("configurations", newConfigs);
 	defer(() => launchConfig.update("configurations", originalConfigs.length ? originalConfigs : undefined));
@@ -880,7 +880,7 @@ export async function makeTextTree(parent: vs.TreeItem | vs.Uri | undefined, pro
 		// in the file that can only be on way.
 		const expectedLabel = item.contextValue === DART_TEST_SUITE_NODE_CONTEXT
 			? path.relative(
-				fsPath(vs.workspace.getWorkspaceFolder(item.resourceUri)!.uri),
+				fsPath(vs.workspace.getWorkspaceFolder(item.resourceUri!)!.uri),
 				fsPath(item.resourceUri!),
 			).replace("\\", "/")
 			: item.label;
