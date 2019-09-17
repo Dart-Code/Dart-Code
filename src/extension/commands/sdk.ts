@@ -9,7 +9,7 @@ import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, FLUTTER_CREATE_PROJEC
 import { LogCategory } from "../../shared/enums";
 import { Logger, Sdks, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
-import { PromiseCompleter } from "../../shared/utils";
+import { PromiseCompleter, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
 import { findProjectFolders, mkDirRecursive } from "../../shared/utils/fs";
@@ -290,7 +290,7 @@ export class SdkCommands {
 		//   more than 1 - prompt to do all
 		const topLevelFolders = getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
 		const folders = findProjectFolders(topLevelFolders, { requirePubspec: true });
-		const foldersRequiringPackageGet = folders
+		const foldersRequiringPackageGet = uniq(folders)
 			.map(vs.Uri.file)
 			.filter((uri) => config.for(uri).promptToGetPackages)
 			.filter(isPubGetProbablyRequired);
