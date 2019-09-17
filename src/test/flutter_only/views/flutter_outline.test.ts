@@ -16,7 +16,7 @@ describe("flutter_outline", () => {
 		await delay(100);
 
 		const expectedResults = getExpectedResults();
-		const actualResults = (await makeTextTree(undefined, extApi.flutterOutlineTreeProvider)).join("\n");
+		const actualResults = (await makeTextTree(undefined, extApi.flutterOutlineTreeProvider!)).join("\n");
 
 		assert.ok(expectedResults);
 		assert.ok(actualResults);

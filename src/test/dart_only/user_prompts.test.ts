@@ -145,7 +145,7 @@ describe("Survey notification", async () => {
 		const context = extApi.context;
 		assert.equal(context.flutterSurvey2019Q3NotificationDoNotShow, true);
 		// Marked as shown within the last 10 seconds.
-		assert.equal(context.flutterSurvey2019Q3NotificationLastShown > Date.now() - 10000 && context.flutterSurvey2019Q3NotificationLastShown <= Date.now(), true);
+		assert.equal(context.flutterSurvey2019Q3NotificationLastShown && context.flutterSurvey2019Q3NotificationLastShown > Date.now() - 10000 && context.flutterSurvey2019Q3NotificationLastShown <= Date.now(), true);
 	});
 
 	it("shows and updates context values when already seen", async () => {
