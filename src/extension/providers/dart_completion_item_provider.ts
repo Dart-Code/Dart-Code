@@ -451,8 +451,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		} else if (suggestion.returnType) {
 			detail =
 				detail
-					? suggestion.returnType
-					: detail + " → " + suggestion.returnType;
+					? detail + " → " + suggestion.returnType
+					: suggestion.returnType;
 		} else if (suggestion.parameterType) {
 			detail = suggestion.parameterType;
 		}
