@@ -28,15 +28,19 @@ export class PackageMap {
 				continue;
 
 			const index = line.indexOf(":");
-			if (index !== -1) {
+			if (index === 0) {
+				this.localPackageName = line.substr(1);
+			} else if (index !== -1) {
 				const name = line.substr(0, index);
-				const rest = line.substring(index + 1);
+				let rest = line.substring(index + 1).split("#")[0];
+				if (!rest.endsWith("/"))
+					rest = `${rest}/`;
 
 				if (rest.startsWith("file:"))
 					this.map[name] = uriToFilePath(rest);
 				else {
 					this.map[name] = path.join(this.localPackageRoot, rest);
-					if (rest === "lib" || rest === "lib\\" || rest === "lib/")
+					if (!this.localPackageName && (rest === "lib" || rest === "lib\\" || rest === "lib/"))
 						this.localPackageName = name;
 				}
 			}
