@@ -33,6 +33,17 @@ describe("device_manager", () => {
 		assert.deepStrictEqual(dm.currentDevice, emulatedMobile);
 	});
 
+	it("generates the correct label for emulator devices", async () => {
+		assert.equal(dm.currentDevice, undefined);
+
+		// connect a device that has an emaultor ID and ensure we correctly build
+		// it's label (which happens by fetching the emulator list up-front and
+		// then looking it up).
+		await daemon.connect(emulatedMobile, true);
+		assert.deepStrictEqual(dm.currentDevice, emulatedMobile);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), emulator.name);
+	});
+
 	it("auto-selects devices if supported platforms are not known", async () => {
 		assert.equal(dm.currentDevice, undefined);
 
@@ -124,8 +135,8 @@ class FakeFlutterDaemon extends FakeStdIOService implements IFlutterDaemon {
 	public deviceEnable(): Thenable<UnknownResponse> {
 		throw new Error("Method not implemented.");
 	}
-	public getEmulators(): Thenable<f.Emulator[]> {
-		throw new Error("Method not implemented.");
+	public async getEmulators(): Promise<f.Emulator[]> {
+		return [emulator];
 	}
 	public launchEmulator(emulatorId: string): Thenable<void> {
 		throw new Error("Method not implemented.");
@@ -194,11 +205,19 @@ const physicalMobile: f.Device = {
 const emulatedMobile: f.Device = {
 	category: "mobile",
 	emulator: true,
-	emulatorId: undefined,
+	emulatorId: "my_emulator_id",
 	ephemeral: true,
 	id: "ios-simulator",
 	name: "iOS Simulator",
 	platform: "ios-something",
 	platformType: "ios",
 	type: "device",
+};
+
+const emulator: f.Emulator = {
+	category: "mobile",
+	id: "my_emulator_id",
+	name: "My Cool Emulator!",
+	platformType: "ios",
+	type: "emulator",
 };
