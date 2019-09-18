@@ -24,7 +24,7 @@ describe("URL handler", async () => {
 		await urlHandler.handleUri(vs.Uri.parse(`vscode://Dart-Code.dart-code/flutter/sample/my.sample.id`));
 
 		// Expect a single folder, which is out sample app.
-		const childFolders = getChildFolders(tempPath);
+		const childFolders = await getChildFolders(tempPath);
 		assert.equal(childFolders.length, 1);
 
 		const projectFolder = childFolders[0];

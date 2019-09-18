@@ -154,9 +154,9 @@ export class DebugCommands {
 				type: "dart",
 			});
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", () => {
+		context.subscriptions.push(vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", async () => {
 			const topLevelFolders = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
-			const testFolders = findProjectFolders(topLevelFolders, { requirePubspec: true })
+			const testFolders = (await findProjectFolders(topLevelFolders, { requirePubspec: true }))
 				.map((project) => path.join(project, "test"))
 				.filter((testFolder) => fs.existsSync(testFolder));
 			if (testFolders.length === 0) {

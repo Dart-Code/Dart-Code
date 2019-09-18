@@ -24,6 +24,13 @@ export function flatMap<T1, T2>(input: T1[], f: (input: T1) => ReadonlyArray<T2>
 	return input.reduce((acc, x) => acc.concat(f(x)), [] as T2[]);
 }
 
+export async function flatMapAsync<T1, T2>(input: T1[], f: (input: T1) => Promise<ReadonlyArray<T2>>): Promise<T2[]> {
+	let res: T2[] = [];
+	for (const x of input)
+		res = res.concat(await f(x));
+	return res;
+}
+
 export function throttle(fn: (...args: any[]) => void, limitMilliseconds: number): (...args: any[]) => void {
 	let timer: NodeJS.Timer;
 	let lastRunTime: number;

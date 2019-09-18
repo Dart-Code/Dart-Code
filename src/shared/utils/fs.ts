@@ -1,17 +1,32 @@
 import * as fs from "fs";
 import * as path from "path";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../constants";
-import { flatMap } from "../utils";
+import { flatMapAsync } from "../utils";
 import { sortBy } from "./array";
 
-export function getChildFolders(parent: string, options?: { allowBin?: boolean, allowCache?: boolean }): string[] {
+export async function getChildFolders(parent: string, options?: { allowBin?: boolean, allowCache?: boolean }): Promise<string[]> {
 	if (!fs.existsSync(parent))
 		return [];
-	return fs.readdirSync(parent, { withFileTypes: true })
-		.filter((f) => f.isDirectory())
+	const files = await readDirAsync(parent);
+
+	return files.filter((f) => f.isDirectory())
 		.filter((f) => f.name !== "bin" || (options && options.allowBin)) // Don't look in bin folders
 		.filter((f) => f.name !== "cache" || (options && options.allowCache)) // Don't look in cache folders
 		.map((item) => path.join(parent, item.name));
+}
+
+function readDirAsync(folder: string): Promise<fs.Dirent[]> {
+	return new Promise<fs.Dirent[]>((resolve, reject) => {
+		return fs.readdir(folder,
+			{ withFileTypes: true },
+			(err, files) => {
+				if (err)
+					reject(err);
+				else
+					resolve(files);
+			},
+		);
+	});
 }
 
 export function hasPackagesFile(folder: string): boolean {
@@ -35,9 +50,9 @@ export function isFlutterRepo(folder: string): boolean {
 // - have a pubspec.yaml
 // - have a project create trigger file
 // - are the Flutter repo root
-export function findProjectFolders(roots: string[], options: { sort?: boolean, requirePubspec?: boolean } = {}): string[] {
-	const level2Folders = flatMap(roots, getChildFolders);
-	const level3Folders = flatMap(level2Folders, getChildFolders);
+export async function findProjectFolders(roots: string[], options: { sort?: boolean, requirePubspec?: boolean } = {}): Promise<string[]> {
+	const level2Folders = await flatMapAsync(roots, getChildFolders);
+	const level3Folders = await flatMapAsync(level2Folders, getChildFolders);
 	const allPossibleFolders = roots.concat(level2Folders).concat(level3Folders);
 
 	const projectFolders = allPossibleFolders.filter((f) => {

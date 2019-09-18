@@ -28,10 +28,10 @@ export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<
 		return element;
 	}
 
-	public getChildren(element?: PackageDep): PackageDep[] {
+	public async getChildren(element?: PackageDep): Promise<PackageDep[]> {
 		if (!element) {
 			const topLevelFolders = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
-			const allProjects = findProjectFolders(topLevelFolders, { requirePubspec: true });
+			const allProjects = await findProjectFolders(topLevelFolders, { requirePubspec: true });
 
 			const nodes = allProjects.map((folder) => new PackageDepProject(vs.Uri.file(folder)));
 			// If there's only one, just skip over to the deps.

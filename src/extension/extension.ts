@@ -109,7 +109,7 @@ const loggers: Array<{ dispose: () => Promise<void> | void }> = [];
 // (with dispose calls)
 const logger = new EmittingLogger();
 
-export function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
+export async function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
 	if (isDevExtension)
 		logToConsole(logger);
 
@@ -144,7 +144,7 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 	const extensionStartTime = new Date();
 	util.logTime();
 	const sdkUtils = new SdkUtils(logger);
-	const workspaceContext = sdkUtils.scanWorkspace();
+	const workspaceContext = await sdkUtils.scanWorkspace();
 	util.logTime("initWorkspace");
 	const sdks = workspaceContext.sdks;
 
@@ -519,10 +519,10 @@ export function activate(context: vs.ExtensionContext, isRestart: boolean = fals
 
 	// Handle changes to the workspace.
 	// Set the roots, handling project changes that might affect SDKs.
-	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders((f) => {
+	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders(async (f) => {
 		// First check if something changed that will affect our SDK, in which case
 		// we'll perform a silent restart so that we do new SDK searches.
-		const newWorkspaceContext = sdkUtils.scanWorkspace();
+		const newWorkspaceContext = await sdkUtils.scanWorkspace();
 		if (
 			newWorkspaceContext.hasOnlyDartProjects !== workspaceContext.hasOnlyDartProjects
 			|| newWorkspaceContext.hasAnyFlutterProjects !== workspaceContext.hasAnyFlutterProjects
