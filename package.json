@@ -5,7 +5,7 @@
 	"version": "3.5.0-dev",
 	"publisher": "Dart-Code",
 	"engines": {
-		"vscode": "^1.36.0"
+		"vscode": "^1.38.0"
 	},
 	"extensionKind": "workspace",
 	"license": "SEE LICENSE IN LICENSE",
@@ -1673,7 +1673,7 @@
 	"dependencies": {
 		"minimatch": "^3.0.4",
 		"semver": "^6.3.0",
-		"vscode-debugadapter": "^1.36.0",
+		"vscode-debugadapter": "^1.36.1",
 		"vscode-debugprotocol": "^1.36.0",
 		"ws": "^7.1.2"
 	},
@@ -1684,7 +1684,7 @@
 		"@types/node": "^10.14.15",
 		"@types/semver": "^6.0.1",
 		"@types/sinon": "5.0.5",
-		"@types/vscode": "^1.36.0",
+		"@types/vscode": "^1.38.0",
 		"@types/ws": "^6.0.3",
 		"glob": "^7.1.4",
 		"istanbul-instrumenter-loader": "^3.0.1",
@@ -1694,12 +1694,12 @@
 		"signal-exit": "^3.0.2",
 		"sinon": "^7.3.2",
 		"source-map-support": "^0.5.13",
-		"ts-loader": "^6.0.4",
-		"tslint": "^5.19.0",
-		"typescript": "^3.5.3",
+		"ts-loader": "^6.1.0",
+		"tslint": "^5.20.0",
+		"typescript": "^3.6.2",
 		"vscode-debugadapter-testsupport": "^1.36.0",
 		"vscode-test": "^1.2.0",
-		"webpack": "^4.39.3",
-		"webpack-cli": "^3.3.7"
+		"webpack": "^4.40.2",
+		"webpack-cli": "^3.3.9"
 	}
 }
