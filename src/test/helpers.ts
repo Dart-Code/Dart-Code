@@ -678,6 +678,12 @@ export function getRandomTempFolder(): string {
 	return tmpPath;
 }
 
+export function writeTempFile(filename: string, contents: string) {
+	const tempPath = path.join(getRandomTempFolder(), filename);
+	fs.writeFileSync(tempPath, contents);
+	return tempPath;
+}
+
 export async function waitForResult(action: () => boolean, message?: string, milliseconds: number = 3000, throwOnFailure = true): Promise<void> {
 	const res = await waitFor(action, undefined, milliseconds);
 	if (throwOnFailure && !res)
