@@ -17,7 +17,7 @@ abstract class SdkManager {
 	protected abstract get configName(): string;
 	protected abstract get executablePath(): string;
 	protected abstract getLabel(version: string): string;
-	protected abstract setSdk(folder: string): void;
+	protected abstract setSdk(folder: string | undefined): void;
 
 	public changeSdk() {
 		if (this.sdkPaths)
@@ -73,7 +73,7 @@ abstract class SdkManager {
 		} as SdkPickItem].concat(sdkItems);
 
 		vs.window.showQuickPick(items, { placeHolder: "Select an SDK to use" })
-			.then((sdk) => { if (sdk && sdk.folder) this.setSdk(sdk.folder); });
+			.then((sdk) => { if (sdk) this.setSdk(sdk.folder); });
 	}
 }
 
@@ -86,7 +86,7 @@ export class DartSdkManager extends SdkManager {
 	protected getLabel(version: string) {
 		return `Dart SDK ${version}`;
 	}
-	protected setSdk(folder: string) { config.setSdkPath(folder); }
+	protected setSdk(folder: string | undefined) { config.setSdkPath(folder); }
 }
 
 export class FlutterSdkManager extends SdkManager {
@@ -98,7 +98,7 @@ export class FlutterSdkManager extends SdkManager {
 	protected getLabel(version: string) {
 		return `Flutter SDK ${version}`;
 	}
-	protected setSdk(folder: string) { config.setFlutterSdkPath(folder); }
+	protected setSdk(folder: string | undefined) { config.setFlutterSdkPath(folder); }
 }
 
 interface SdkPickItem {
