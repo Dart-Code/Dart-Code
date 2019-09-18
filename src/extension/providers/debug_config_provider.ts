@@ -274,7 +274,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return;
 
 		// TODO: This cast feels nasty?
-		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isAnyFlutter, deviceToLaunchOn);
+		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isAnyFlutter, deviceToLaunchOn, this.deviceManager);
 
 		// Debugger always uses uppercase drive letters to ensure our paths have them regardless of where they came from.
 		debugConfig.program = forceWindowsDriveLetterToUppercase(debugConfig.program);
@@ -449,7 +449,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return this.debugServers[type];
 	}
 
-	private setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, isFlutter: boolean, device: Device | undefined) {
+	private setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, isFlutter: boolean, device: Device | undefined, deviceManager: FlutterDeviceManager) {
 		const conf = config.for(folder && folder.uri);
 
 		// Attach any properties that weren't explicitly set.
@@ -495,7 +495,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.flutterTestLogFile = debugConfig.flutterTestLogFile || conf.flutterTestLogFile;
 			if (!debugConfig.deviceId && device) {
 				debugConfig.deviceId = device.id;
-				debugConfig.deviceName = `${device.name} (${device.platform})`;
+				debugConfig.deviceName = `${deviceManager ? deviceManager.labelForDevice(device) : device.name} (${device.platform})`;
 			}
 			debugConfig.showMemoryUsage =
 				debugConfig.showMemoryUsage || debugConfig.showMemoryUsage === false

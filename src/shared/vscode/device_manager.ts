@@ -12,6 +12,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	private statusBarItem: vs.StatusBarItem;
 	private devices: f.Device[] = [];
 	public currentDevice?: f.Device;
+	private readonly knownEmulatorNames: { [key: string]: string } = {};
 
 	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly autoSelectNewlyConnectedDevices: boolean) {
 		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
@@ -19,6 +20,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 		this.statusBarItem.command = "flutter.selectDevice";
 		this.statusBarItem.show();
 		this.updateStatusBar();
+
+		// Force a request for emulators to stash their names, so we can display
+		// the better name if the automatically-selected device happens to be an
+		// emulator.
+		this.getEmulators().then(() => this.updateStatusBar());
 
 		this.subscriptions.push(this.statusBarItem);
 
@@ -88,23 +94,13 @@ export class FlutterDeviceManager implements vs.Disposable {
 			if (!quickPickIsValid)
 				return;
 
-			const knowEmulatorNames: { [key: string]: string } = {};
-			if (emulatorDevices) {
-				for (const e of emulatorDevices) {
-					if (e.device.type === "emulator")
-						knowEmulatorNames[e.device.id] = e.device.name;
-				}
-			}
-
 			const pickableItems: PickableDevice[] = this.devices
 				.sort(this.deviceSortComparer.bind(this))
 				.filter((d) => this.isSupported(supportedTypes, d))
 				.map((d) => ({
 					description: d.category || d.platform,
 					device: d,
-					label: d.emulatorId && knowEmulatorNames[d.emulatorId]
-						? knowEmulatorNames[d.emulatorId]
-						: d.name,
+					label: this.labelForDevice(d),
 				}));
 
 			// If we've got emulators, add them to the list.
@@ -202,6 +198,12 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return this.shortCacheForSupportedPlatforms;
 	}
 
+	public labelForDevice(device: f.Device) {
+		return device.emulatorId && this.knownEmulatorNames[device.emulatorId]
+			? this.knownEmulatorNames[device.emulatorId]
+			: device.name;
+	}
+
 	public deviceSortComparer(d1: f.Device, d2: f.Device): number {
 		// Always consider current device to be first.
 		if (d1 === this.currentDevice) return -1;
@@ -214,7 +216,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		if (this.currentDevice) {
 			const emulatorLabel = this.currentDevice.emulator ? this.emulatorLabel(this.currentDevice.platformType) : "";
 			const platformLabel = `${this.currentDevice.platform} ${emulatorLabel}`.trim();
-			this.statusBarItem.text = `${this.currentDevice.name} (${platformLabel})`.trim();
+			this.statusBarItem.text = `${this.labelForDevice(this.currentDevice)} (${platformLabel})`.trim();
 		} else {
 			this.statusBarItem.text = "No Device";
 		}
@@ -231,6 +233,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 	private async getEmulators(): Promise<f.Emulator[]> {
 		try {
 			const emus = await this.daemon.getEmulators();
+
+			// Whenever we see emulators, record all their names.
+			for (const e of emus)
+				this.knownEmulatorNames[e.id] = e.name;
+
 			return emus.map((e) => ({
 				category: e.category,
 				id: e.id,
