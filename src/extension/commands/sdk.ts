@@ -32,6 +32,7 @@ import { globalFlutterArgs, safeSpawn } from "../utils/processes";
 import * as channels from "./channels";
 
 const packageNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
+let isFetchingPackages = false;
 let runPubGetDelayTimer: NodeJS.Timer | undefined;
 let lastPubspecSaveReason: vs.TextDocumentSaveReason | undefined;
 let numProjectCreationsInProgress = 0;
@@ -281,7 +282,11 @@ export class SdkCommands {
 		}, debounceDuration); // TODO: Does this need to be configurable?
 	}
 
-	public fetchPackagesOrPrompt(uri: vs.Uri, options?: { alwaysPrompt?: boolean }): void {
+	public async fetchPackagesOrPrompt(uri: vs.Uri, options?: { alwaysPrompt?: boolean }): Promise<void> {
+		if (isFetchingPackages)
+			return;
+		isFetchingPackages = true;
+
 		const forcePrompt = options && options.alwaysPrompt;
 		// We debounced so we might get here and have multiple projects to fetch for
 		// for ex. when we change Git branch we might change many files at once. So
@@ -296,11 +301,13 @@ export class SdkCommands {
 			.filter((uri) => config.for(uri).promptToGetPackages)
 			.filter(isPubGetProbablyRequired);
 		if (!forcePrompt && foldersRequiringPackageGet.length === 0)
-			vs.commands.executeCommand("dart.getPackages", uri);
+			await vs.commands.executeCommand("dart.getPackages", uri);
 		else if (!forcePrompt && foldersRequiringPackageGet.length === 1)
-			vs.commands.executeCommand("dart.getPackages", foldersRequiringPackageGet[0]);
+			await vs.commands.executeCommand("dart.getPackages", foldersRequiringPackageGet[0]);
 		else if (foldersRequiringPackageGet.length)
 			promptToRunPubGet(foldersRequiringPackageGet);
+
+		isFetchingPackages = false;
 	}
 
 	private async runCommandForWorkspace(
