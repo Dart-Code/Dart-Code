@@ -26,13 +26,13 @@ abstract class SdkManager {
 			vs.window.showWarningMessage("Set `${configName}` to enable fast SDK switching.");
 	}
 
-	public searchForSdks(sdkPaths: string[]) {
+	public async searchForSdks(sdkPaths: string[]) {
 		let allPaths: string[] = [];
-		sdkPaths.filter(fs.existsSync).forEach((sdkPath) => {
+		for (const sdkPath of sdkPaths.filter(fs.existsSync)) {
 			allPaths.push(sdkPath);
 			// Add immediate children to support folders-of-SDKs.
-			allPaths = allPaths.concat(getChildFolders(sdkPath));
-		});
+			allPaths = allPaths.concat(await getChildFolders(sdkPath));
+		}
 
 		// Add in the current path if it's not there.
 		if (this.currentSdk && allPaths.indexOf(this.currentSdk) === -1)

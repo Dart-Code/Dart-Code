@@ -142,7 +142,7 @@ export class SdkUtils {
 		}
 	}
 
-	public scanWorkspace(): WorkspaceContext {
+	public async scanWorkspace(): Promise<WorkspaceContext> {
 		this.logger.info("Searching for SDKs...");
 		const topLevelFolders = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
 		const pathOverride = (process.env.DART_PATH_OVERRIDE as string) || "";
@@ -183,7 +183,7 @@ export class SdkUtils {
 		let hasAnyFlutterWebProject: boolean = false;
 		let hasAnyStandardDartProject: boolean = false;
 
-		const allPossibleProjectFolders = findProjectFolders(topLevelFolders);
+		const allPossibleProjectFolders = await findProjectFolders(topLevelFolders);
 
 		// Scan through them all to figure out what type of projects we have.
 		allPossibleProjectFolders.forEach((folder) => {

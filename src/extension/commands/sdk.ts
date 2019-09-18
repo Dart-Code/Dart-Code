@@ -295,7 +295,7 @@ export class SdkCommands {
 		//   1 - then just do that one
 		//   more than 1 - prompt to do all
 		const topLevelFolders = getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
-		const folders = findProjectFolders(topLevelFolders, { requirePubspec: true });
+		const folders = await findProjectFolders(topLevelFolders, { requirePubspec: true });
 		const foldersRequiringPackageGet = uniq(folders)
 			.map(vs.Uri.file)
 			.filter((uri) => config.for(uri).promptToGetPackages)
@@ -346,7 +346,7 @@ export class SdkCommands {
 
 		// Otherwise look for what projects we have.
 		const topLevelFolders = getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
-		const selectableFolders = findProjectFolders(topLevelFolders, { sort: true })
+		const selectableFolders = (await findProjectFolders(topLevelFolders, { sort: true }))
 			.filter(flutterOnly ? util.isFlutterProjectFolder : () => true);
 
 		if (!selectableFolders || !selectableFolders.length) {
