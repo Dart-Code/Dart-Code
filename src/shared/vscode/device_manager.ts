@@ -235,7 +235,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			const emus = await this.daemon.getEmulators();
 
 			// Whenever we see emulators, record all their names.
-			for (const e of emus)
+			for (const e of emus.filter((e) => e.id))
 				this.knownEmulatorNames[e.id] = e.name;
 
 			return emus.map((e) => ({
