@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE } from "../constants";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../constants";
 import { flatMap } from "../utils";
 import { sortBy } from "./array";
 
@@ -23,8 +23,7 @@ export function hasPubspec(folder: string): boolean {
 }
 
 export function hasCreateTriggerFile(folder: string): boolean {
-	return fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE))
-		|| fs.existsSync(path.join(folder, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE));
+	return fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
 }
 
 export function isFlutterRepo(folder: string): boolean {

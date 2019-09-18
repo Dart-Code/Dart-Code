@@ -5,7 +5,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { ProgressLocation, Uri, window } from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, pubPath } from "../../shared/constants";
+import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, pubPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { Logger, Sdks, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
@@ -184,9 +184,6 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.flutter.createSampleProject", (_) => this.createFlutterSampleProject()));
-		// TODO: Move this to Flutter extension, and bounce it through to a hidden command here
-		// (update package.json activation events too!).
-		context.subscriptions.push(vs.commands.registerCommand("flutter.createWebProject", (_) => this.createFlutterWebProject()));
 		context.subscriptions.push(vs.commands.registerCommand("dart.createProject", (_) => this.createDartProject()));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.create", (projectPath: string, templateName: string) => {
 			const args = ["global", "run", "stagehand", templateName];
@@ -449,19 +446,11 @@ export class SdkCommands {
 		});
 	}
 
-	private isFlutterWebTemplate(t: StagehandTemplate) {
-		return t.categories != null && t.categories.indexOf("flutter") !== -1 && t.categories.indexOf("web") !== -1;
-	}
-
 	private async createDartProject(): Promise<void> {
-		return this.createStagehandProject("dart.createProject", DART_STAGEHAND_PROJECT_TRIGGER_FILE, false, (t) => !this.isFlutterWebTemplate(t));
+		return this.createStagehandProject("dart.createProject", DART_STAGEHAND_PROJECT_TRIGGER_FILE, false);
 	}
 
-	private async createFlutterWebProject(): Promise<void> {
-		return this.createStagehandProject("flutter.createWebProject", FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, true, (t) => this.isFlutterWebTemplate(t));
-	}
-
-	private async createStagehandProject(command: string, triggerFilename: string, autoPickIfSingleItem: boolean, filter: (t: StagehandTemplate) => boolean): Promise<void> {
+	private async createStagehandProject(command: string, triggerFilename: string, autoPickIfSingleItem: boolean, filter?: (t: StagehandTemplate) => boolean): Promise<void> {
 		if (!this.sdks || !this.sdks.dart) {
 			this.sdkUtils.showDartActivationFailure(command);
 			return;
@@ -482,7 +471,7 @@ export class SdkCommands {
 			return;
 		}
 
-		const filteredTemplate = templates.filter(filter);
+		const filteredTemplate = filter ? templates.filter(filter) : templates;
 		const sortedTemplates = sortBy(filteredTemplate, (s) => s.label);
 		const pickItems = sortedTemplates.map((t) => ({
 			description: t.name,

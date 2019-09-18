@@ -107,9 +107,7 @@ async function runAllTests(): Promise<void> {
 			await runTests("multi_root", "projects.code-workspace", flutterSdkPath, codeVersion);
 			await runTests("multi_project_folder", "", flutterSdkPath, codeVersion);
 			await runTests("not_activated/flutter_create", "empty", flutterSdkPath, codeVersion);
-			await runTests("not_activated/flutter_web_create", "empty", flutterSdkPath, codeVersion);
 			await runTests("flutter_create_tests", "flutter_create_tests.code-workspace", flutterSdkPath, codeVersion);
-			await runTests("flutter_web_create_tests", "flutter_web_create_tests.code-workspace", flutterSdkPath, codeVersion);
 			await runTests("flutter_only", "flutter_hello_world", flutterSdkPath, codeVersion);
 			await runTests("flutter_web_only", "flutter_web", flutterSdkPath, codeVersion);
 			if (flutterRoot) {
