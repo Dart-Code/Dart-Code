@@ -1018,7 +1018,7 @@
 					],
 					"default": null,
 					"description": "The location of the Dart SDK to use for analyzing and executing code. If blank, Dart Code will attempt to find it from the PATH environment variable. When editing a Flutter project, the version of Dart included in the Flutter SDK is used in preference.",
-					"scope": "window"
+					"scope": "machine-overridable"
 				},
 				"dart.sdkPaths": {
 					"type": "array",
@@ -1027,7 +1027,7 @@
 					"items": {
 						"type": "string"
 					},
-					"scope": "window"
+					"scope": "machine-overridable"
 				},
 				"dart.devToolsTheme": {
 					"enum": [
@@ -1137,7 +1137,7 @@
 					],
 					"default": null,
 					"description": "The path to a directory to save Flutter screenshots.",
-					"scope": "window"
+					"scope": "machine-overridable"
 				},
 				"dart.flutterSdkPath": {
 					"type": [
@@ -1146,7 +1146,7 @@
 					],
 					"default": null,
 					"description": "The location of the Flutter SDK to use. If blank, Dart Code will attempt to find it from the project folder, FLUTTER_ROOT environment variable and the PATH environment variable.",
-					"scope": "window"
+					"scope": "machine-overridable"
 				},
 				"dart.flutterSdkPaths": {
 					"type": "array",
@@ -1155,7 +1155,7 @@
 					"items": {
 						"type": "string"
 					},
-					"scope": "window"
+					"scope": "machine-overridable"
 				},
 				"dart.flutterHotReloadOnSave": {
 					"type": "boolean",
@@ -1287,7 +1287,7 @@
 					],
 					"default": null,
 					"description": "The path to a custom Dart analysis server.",
-					"scope": "window"
+					"scope": "machine-overridable"
 				},
 				"dart.devToolsPort": {
 					"type": [
