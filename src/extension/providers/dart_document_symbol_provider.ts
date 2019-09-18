@@ -20,12 +20,13 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 		const name = outline.element.name
 			? outline.element.name
 			: (outline.element.kind === "EXTENSION" ? "<unnamed extension>" : "<unnamed>");
+		const location = outline.element.location || outline;
 		const symbol = new DocumentSymbol(
 			name,
 			outline.element.parameters,
 			getSymbolKindForElementKind(this.logger, outline.element.kind),
 			this.getCodeOffset(document, outline),
-			toRange(document, outline.element.location.offset, outline.element.location.length),
+			toRange(document, location.offset, location.length),
 		);
 
 		if (outline.children && outline.children.length) {
