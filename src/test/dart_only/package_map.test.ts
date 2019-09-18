@@ -38,7 +38,7 @@ my_test:lib/
 		expectedPathFor(pkg: string) { return `/${pkg}/lib/`; },
 	};
 
-describe.only("PackageMap", async () => {
+describe("PackageMap", async () => {
 	it(`can parse original format`, async () => {
 		const file = writeTempFile(".packages", data.originalFormat);
 		const map = new PackageMap(file);
