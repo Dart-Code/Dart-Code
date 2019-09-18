@@ -82,6 +82,10 @@ import { TestItemTreeItem, TestResultsProvider } from "./views/test_view";
 const DART_MODE = { language: "dart", scheme: "file" };
 const HTML_MODE = { language: "html", scheme: "file" };
 
+const additionalModes = config.additionalAnalyzerFileExtensions.map((ext) => {
+	return {scheme: "file", pattern: `**/*.${ext}`};
+});
+
 const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 // TODO: Define what this means better. Some commands a general Flutter (eg. Hot
 // Reload) and some are more specific (eg. Attach).
@@ -233,10 +237,12 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const renameProvider = new DartRenameProvider(analyzer);
 	const implementationProvider = new DartImplementationProvider(analyzer);
 
-	const activeFileFilters = [DART_MODE];
+	const activeFileFilters: vs.DocumentSelector = [DART_MODE];
+
 	if (config.analyzeAngularTemplates) {
-		// Analyze Angular2 templates, requires the angular_analyzer_plugin.
+		// Analyze files supported by plugins
 		activeFileFilters.push(HTML_MODE);
+		activeFileFilters.push(...additionalModes);
 	}
 
 	// This is registered with VS Code further down, so it's metadata can be collected from all
@@ -352,7 +358,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		}
 
 		if (analyzer.capabilities.supportsCustomFolding && config.analysisServerFolding)
-			context.subscriptions.push(vs.languages.registerFoldingRangeProvider(DART_MODE, new DartFoldingProvider(analyzer)));
+			context.subscriptions.push(vs.languages.registerFoldingRangeProvider(activeFileFilters, new DartFoldingProvider(analyzer)));
 
 		if (analyzer.capabilities.supportsGetSignature)
 			context.subscriptions.push(vs.languages.registerSignatureHelpProvider(
