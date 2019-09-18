@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, window } from "vscode";
-import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, isWin, showLogAction } from "../../shared/constants";
+import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isWin, showLogAction } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter } from "../../shared/utils";
@@ -25,9 +25,6 @@ export class SdkUtils {
 		// code for each command will detect the missing Flutter SDK and respond appropriately.
 		context.subscriptions.push(commands.registerCommand("flutter.createProject", (_) => {
 			this.showRelevantActivationFailureMessage(analytics, workspaceContext, true, "flutter.createProject");
-		}));
-		context.subscriptions.push(commands.registerCommand("flutter.createWebProject", (_) => {
-			this.showRelevantActivationFailureMessage(analytics, workspaceContext, true, "flutter.createWebProject");
 		}));
 		context.subscriptions.push(commands.registerCommand("dart.createProject", (_) => {
 			this.showRelevantActivationFailureMessage(analytics, workspaceContext, false, "dart.createProject");
@@ -195,20 +192,17 @@ export class SdkUtils {
 			const refsFlutterWeb = hasPubspecFile && referencesFlutterWeb(folder);
 			const hasFlutterCreateProjectTriggerFile =
 				fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
-			const hasFlutterStagehandProjectTriggerFile =
-				fs.existsSync(path.join(folder, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE));
 
 			// Special case to detect the Flutter repo root, so we always consider it a Flutter project and will use the local SDK
 			const isFlutterRepo = fs.existsSync(path.join(folder, "bin/flutter")) && fs.existsSync(path.join(folder, "bin/cache/dart-sdk"));
 
-			const isSomethingFlutter = refsFlutter || refsFlutterWeb || hasFlutterCreateProjectTriggerFile || hasFlutterStagehandProjectTriggerFile || isFlutterRepo;
+			const isSomethingFlutter = refsFlutter || refsFlutterWeb || hasFlutterCreateProjectTriggerFile || isFlutterRepo;
 
 			if (isSomethingFlutter) {
 				this.logger.info(`Found Flutter project at ${folder}:
 			Mobile? ${refsFlutter}
 			Web? ${refsFlutterWeb}
 			Create Trigger? ${hasFlutterCreateProjectTriggerFile}
-			Stagehand Trigger? ${hasFlutterStagehandProjectTriggerFile}
 			Flutter Repo? ${isFlutterRepo}`);
 			}
 
@@ -218,7 +212,7 @@ export class SdkUtils {
 			// Set some flags we'll use to construct the workspace, so we know what things we need to light up.
 			hasAnyFlutterProject = hasAnyFlutterProject || isSomethingFlutter;
 			hasAnyFlutterMobileProject = hasAnyFlutterMobileProject || (refsFlutter && !refsFlutterWeb) || hasFlutterCreateProjectTriggerFile;
-			hasAnyFlutterWebProject = hasAnyFlutterWebProject || refsFlutterWeb || hasFlutterStagehandProjectTriggerFile;
+			hasAnyFlutterWebProject = hasAnyFlutterWebProject || refsFlutterWeb;
 			hasAnyStandardDartProject = hasAnyStandardDartProject || (!isSomethingFlutter && hasPubspecFile);
 		});
 

@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, userPromptContextPrefix, yesAction } from "../shared/constants";
+import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, userPromptContextPrefix, yesAction } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { Logger, StagehandTemplate } from "../shared/interfaces";
 import { checkHasFlutterExtension, extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
@@ -126,7 +126,6 @@ async function handleNewProjects(logger: Logger, context: Context): Promise<void
 		await new Promise((resolve) => setTimeout(resolve, 5000));
 	getDartWorkspaceFolders().forEach((wf) => {
 		handleStagehandTrigger(logger, wf, DART_STAGEHAND_PROJECT_TRIGGER_FILE);
-		handleStagehandTrigger(logger, wf, FLUTTER_STAGEHAND_PROJECT_TRIGGER_FILE);
 		handleFlutterCreateTrigger(wf);
 	});
 }
