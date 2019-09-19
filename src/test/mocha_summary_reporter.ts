@@ -1,6 +1,10 @@
 import * as fs from "fs";
 import { ITest, reporters } from "mocha";
 
+const isWin = /^win/.test(process.platform);
+const isMac = process.platform === "darwin";
+const osName = isWin ? "win" : isMac ? "osx" : "linux";
+
 export class SummaryReporter extends reporters.Base {
 	private passed = 0;
 	private skipped = 0;
@@ -26,7 +30,7 @@ export class SummaryReporter extends reporters.Base {
 				return;
 			const name = this.options.reporterOptions.testRunName || "Unknown";
 			fs.appendFileSync(this.options.reporterOptions.summaryFile,
-				`${name},${this.passed},${this.skipped},${this.failed}\n`);
+				`${osName},${name},${this.passed},${this.skipped},${this.failed}\n`);
 		});
 	}
 }
