@@ -173,5 +173,5 @@ jobs:
     steps:
 
       - name: Send notification to Discord
-        run: 'curl -H "Content-Type: application/json" -X POST -d "{\"content\":\"Build failed on $($env:GITHUB_REF.Replace(`"refs/heads/`", `"`")): https://github.com/Dart-Code/Dart-Code/commit/$($env:GITHUB_SHA)/checks\"}" $($env:secrets.DISCORD_WEBHOOK)'
+        run: curl -H "Content-Type: application/json" -X POST -d "{`"content`":`"Build failed on $($env:GITHUB_REF.Replace(`"refs/heads/`", `"`")): https://github.com/Dart-Code/Dart-Code/commit/$($env:GITHUB_SHA)/checks`"}" $env:secrets.DISCORD_WEBHOOK
         shell: pwsh
