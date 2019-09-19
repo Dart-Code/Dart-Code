@@ -1,0 +1,155 @@
+name: Build and Test on Commit
+
+on:
+  push:
+    branches:
+      - gh-actions-test
+
+jobs:
+  build:
+
+    name: "${{ matrix.os }} ${{ matrix.bot }} (Dart: ${{ matrix.dart-version }}, Code: ${{ matrix.code-version }})"
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macOS-latest, ubuntu-latest]#, windows-latest]
+        node-version: [10]
+        dart-version: ["stable"]#, "dev"]
+        code-version: ["stable"]#, "insiders"]
+        bot: ["dart", "flutter"]#, "misc", "flutter_repo"]
+
+    steps:
+
+      - uses: actions/checkout@v1
+
+      - name: Setup XVFB
+        if: matrix.os == 'ubuntu-latest'
+        run: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+
+      - name: Setup Node v${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Setup Dart ${{ matrix.dart-version }}
+        uses: DanTup/gh-actions/setup-dart@v0.0.7
+        with:
+          channel: ${{ matrix.dart-version }}
+
+      - name: Setup Flutter ${{ matrix.dart-version }}
+        if: matrix.bot != 'dart'
+        uses: DanTup/gh-actions/setup-flutter@v0.0.7
+        with:
+          channel: ${{ matrix.dart-version }}
+
+      - name: Print Dart version
+        run: dart --version
+
+      - name: Print Flutter version
+        if: matrix.bot != 'dart'
+        run: flutter --version
+
+      - run: |
+          pub global activate --no-executables devtools
+          pub global activate --no-executables webdev
+          pub global activate --no-executables stagehand
+          pub global activate --no-executables args 1.5.0
+          pub global activate --no-executables meta 1.1.6
+          pub global activate --no-executables pedantic 1.4.0
+          pub global activate --no-executables json_annotation 1.2.0
+        shell: pwsh
+
+      - name: npm ci, lint and build
+        run: |
+          npm ci
+          npm run lint
+          npm run build
+
+      - name: npm test
+        run: |
+          npm test
+        env:
+          CI: true
+          ELECTRON_NO_ATTACH_CONSOLE: 1
+          DISPLAY: ":99.0"
+          BOT: ${{ matrix.bot }}
+          CODE_VERSION: ${{ matrix.code-version }}
+          LOGS_NAME: ${{ matrix.dart-version }}_${{ matrix.code-version }} 
+
+      - name: Store logs
+        uses: actions/upload-artifact@v1
+        if: always()
+        with:
+          name: test-logs-${{ matrix.os }}
+          path: .dart_code_test_logs
+          
+      - name: Store test results
+        uses: actions/upload-artifact@v1
+        if: always()
+        with:
+          name: test-results-${{ matrix.os }}
+          path: .test_results
+          
+      - name: Store coverage
+        uses: actions/upload-artifact@v1
+        if: always()
+        with:
+          name: coverage-${{ matrix.os }}
+          path: coverage
+
+
+  upload_logs:
+
+    name: Upload Logs
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+    
+      - uses: actions/setup-ruby@v1
+        with:
+          ruby-version: 2.5.x
+      - run: gem install dpl
+
+      - name: Fetch Linux test results
+        uses: actions/download-artifact@v1
+        with:
+          name: test-results-ubuntu-latest
+          path: .test_results/linux
+      #- name: Fetch Windows test results
+      #  uses: actions/download-artifact@v1
+      #  with:
+      #    name: test-results-windows-latest
+      #    path: .test_results/win
+      - name: Fetch macOS test results
+        uses: actions/download-artifact@v1
+        with:
+          name: test-results-macOS-latest
+          path: .test_results/osx
+
+      - name: Combine summary files
+        run: find .test_results -name '*_summary.csv' -exec cat {} + > .test_results/summary.csv
+          
+      - name: Upload logs to Amazon S3
+        run: dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".test_results" --upload-dir="$($env:GITHUB_REF.Replace(`"refs/heads/`", `"`"))/$($env:GITHUB_SHA)" --acl=public_read --default_text_charset=utf-8
+        shell: pwsh
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+
+  notify_failure:
+
+    name: Notify Discord of Failure
+    needs: build
+    if: failure()
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Send notification to Discord
+        run: 'curl -H "Content-Type: application/json" -X POST -d "{\"content\":\"Build failed on $($env:GITHUB_REF.Replace(`"refs/heads/`", `"`")): https://github.com/Dart-Code/Dart-Code/commit/$($env:GITHUB_SHA)/checks\"}" $($env:secrets.DISCORD_WEBHOOK)'
+        shell: pwsh
