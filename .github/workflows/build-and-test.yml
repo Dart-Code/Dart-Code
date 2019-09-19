@@ -133,6 +133,13 @@ jobs:
       - name: Combine summary files
         run: find .test_results -name '*_summary.csv' -exec cat {} + > .test_results/summary.csv
           
+      - name: Upload test results to Amazon S3
+        run: dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".dart_code_test_logs" --upload-dir="logs/$($env:GITHUB_REF.Replace(`"refs/heads/`", `"`"))/$($env:GITHUB_SHA)" --acl=public_read --default_text_charset=utf-8
+        shell: pwsh
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          
       - name: Upload logs to Amazon S3
         run: dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".test_results" --upload-dir="$($env:GITHUB_REF.Replace(`"refs/heads/`", `"`"))/$($env:GITHUB_SHA)" --acl=public_read --default_text_charset=utf-8
         shell: pwsh
