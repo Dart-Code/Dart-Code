@@ -76,7 +76,7 @@ jobs:
           DISPLAY: ":99.0"
           BOT: ${{ matrix.bot }}
           CODE_VERSION: ${{ matrix.code-version }}
-          LOGS_NAME: ${{ matrix.dart-version }}_${{ matrix.code-version }} 
+          LOGS_NAME: ${{ matrix.dart-version }}_${{ matrix.code-version }}
 
       - name: Store logs
         uses: actions/upload-artifact@v1
@@ -84,17 +84,17 @@ jobs:
         with:
           name: test-logs-${{ matrix.os }}
           path: .dart_code_test_logs
-          
+
       - name: Store test results
         uses: actions/upload-artifact@v1
         if: always()
         with:
           name: test-results-${{ matrix.os }}
           path: .test_results
-          
+
       - name: Store coverage
         uses: actions/upload-artifact@v1
-        if: always()
+        if: success() && matrix.dart-version == 'stable' && matrix.code-version == 'stable'
         with:
           name: coverage-${{ matrix.os }}
           path: coverage
@@ -108,7 +108,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    
+
       - uses: actions/setup-ruby@v1
         with:
           ruby-version: 2.5.x
@@ -147,20 +147,48 @@ jobs:
 
       - name: Combine summary files
         run: find .test_results -name '*_summary.csv' -exec cat {} + > .test_results/summary.csv
-          
+
       - name: Upload test results to Amazon S3
         run: dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".test_logs" --upload-dir="logs/$($env:GITHUB_REF.Replace(`"refs/heads/`", `"`"))/$($env:GITHUB_SHA)" --acl=public_read --default_text_charset=utf-8
         shell: pwsh
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          
+
       - name: Upload logs to Amazon S3
         run: dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".test_results" --upload-dir="$($env:GITHUB_REF.Replace(`"refs/heads/`", `"`"))/$($env:GITHUB_SHA)" --acl=public_read --default_text_charset=utf-8
         shell: pwsh
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  upload_coverage:
+
+    name: Send Coverage to CodeClimate
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v1
+
+      - name: Fetch Linux coverage
+        uses: actions/download-artifact@v1
+        with:
+          name: coverage-ubuntu-latest
+          path: coverage/linux
+
+      - name: Upload to CodeClimate
+        run: |
+          curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+          chmod +x ./cc-test-reporter
+          export GIT_BRANCH="${GITHUB_REF/refs\/heads\//}"
+          export GIT_SHA="${GITHUB_SHA}"
+          ./cc-test-reporter format-coverage -t lcov -o coverage/codeclimate.json coverage/linux/lcov.info
+          ./cc-test-reporter upload-coverage
+        env:
+          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
 
 
   notify_failure:
