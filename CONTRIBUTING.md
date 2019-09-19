@@ -1,8 +1,6 @@
 [![Discord Chat](https://img.shields.io/badge/chat-discord-blue.svg)](https://discord.gg/xSTPEqm)
 [![Gitter Chat](https://img.shields.io/badge/chat-gitter-blue.svg)](https://gitter.im/dart-code/Dart-Code)
 [![Follow on Twitter](https://img.shields.io/badge/twitter-dartcode-blue.svg)](https://twitter.com/DartCode)
-[![Linux & Mac build status](https://img.shields.io/travis/Dart-Code/Dart-Code/master.svg?label=mac+%26+linux)](https://travis-ci.org/Dart-Code/Dart-Code)
-[![Windows build status](https://img.shields.io/appveyor/ci/DanTup/Dart-Code/master.svg?label=windows&logoWidth=-1)](https://ci.appveyor.com/project/DanTup/dart-code)
 
 # Raising Issues in Dart Code
 
@@ -45,7 +43,7 @@ Automated tests live in the `test` folder and have launch configurations you can
 
 Each test suite consists of a folder of tests (for ex. `general` and `flutter`) and a workspace folder that is loaded at the start of the test runs (at the time of writing there's a `hello_world` and a `flutter_hello_world` app). Config for these lives in two places - the `test_all.ts` script and also the `launch.json` file (one is used for command line running and the other for launching in a way that the debugger can be attached).
 
-All tests will be run on all platforms by Travis and AppVeyor when you submit a PR and the status shown alongside the PR.
+All tests will be run on all platforms when you submit a PR and the status shown alongside the PR.
 
 ## Debugging the Debug Adapters
 
@@ -77,7 +75,7 @@ Debug adapters now run in-process and debugging them should be the same as any o
 
 - Before testing/deploying, ensure you have run `npm install` recently so that your local dependencies match those listed in the dependencies list (in case they have been upgraded)
 - Ensure all local changes are committed and your local folder is free of artifacts/log files/etc.
-- Ensure all automated tests pass (including on Travis and AppVeyor)
+- Ensure all automated tests pass
 - Ensure extension behaves correctly for a Dart project
   - Activates correctly (SDK version appears in status bar)
   - No errors in dev console (Help -> Toggle Developer Tools)

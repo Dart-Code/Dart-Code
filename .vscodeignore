@@ -5,12 +5,10 @@
 .gitignore
 .nyc_output/**
 .test_results/**
-.travis.yml
 .vscode-test/**
 .vscode/**
 *.log
 **/*.map
-appveyor.yml
 CONTRIBUTING.md
 coverage/**
 lints/**
