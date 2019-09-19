@@ -18,7 +18,6 @@ export class AnalyzerCapabilities {
 	}
 
 	get hasCompleteStatementFix() { return versionIsAtLeast(this.version, "1.20.2"); }
-	get supportsAnalyzingHtmlFiles() { return versionIsAtLeast(this.version, "1.18.5"); }
 	get supportsPriorityFilesOutsideAnalysisRoots() { return versionIsAtLeast(this.version, "1.18.2"); }
 	get supportsDiagnostics() { return versionIsAtLeast(this.version, "1.18.1"); }
 	get supportsClosingLabels() { return versionIsAtLeast(this.version, "1.18.4"); }

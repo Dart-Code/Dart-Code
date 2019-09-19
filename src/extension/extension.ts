@@ -234,7 +234,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const implementationProvider = new DartImplementationProvider(analyzer);
 
 	const activeFileFilters = [DART_MODE];
-	if (config.analyzeAngularTemplates && analyzer.capabilities.supportsAnalyzingHtmlFiles) {
+	if (config.analyzeAngularTemplates) {
 		// Analyze Angular2 templates, requires the angular_analyzer_plugin.
 		activeFileFilters.push(HTML_MODE);
 	}
