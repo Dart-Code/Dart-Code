@@ -10,7 +10,7 @@ import { getRandomInt } from "../../../shared/utils/fs";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, delay, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldPathFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, logger, openFile, positionOf, sb, setConfigForTest, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, delay, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, logger, openFile, positionOf, sb, setConfigForTest, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -528,38 +528,6 @@ describe("dart cli debugger", () => {
 		]);
 		const stack = await dc.getStack();
 		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), "deemphasize", "from Pub packages");
-		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
-	});
-
-	it("correctly marks debuggable top frames even if not debuggable, if breakpoint/stepping", async () => {
-		// There is an exception(!) to the deemphasiezed rule. If the reason we stopped was not an exception, the top
-		// frame should never be deemphasized, as the user has explicitly decided to break (or step) there.
-		await openFile(helloWorldPathFile);
-		// For testing, we use `path.current` and `path.Style.platform`. The first calls the second, so by putting a breakpoint
-		// inside path.Style.platform we can ensure multiple stack frames are in the path package.
-		const pathStyleCall = positionOf("path.Style.pl^atform");
-		const pathStyleDef = await getDefinition(pathStyleCall);
-		const config = await startDebugger(helloWorldPathFile, { debugExternalLibraries: false });
-
-		// Put a breakpoint inside the library, even though it's marked as not-debuggable.
-		await dc.hitBreakpoint(config, {
-			line: pathStyleDef.range.start.line + 1,
-			path: fsPath(pathStyleDef.uri),
-		});
-		const stack = await dc.getStack();
-
-		// Top frame is not deemphasized.
-		assert.equal(isExternalPackage(stack.body.stackFrames[0]), true);
-		ensureFrameCategories([stack.body.stackFrames[0]], undefined, undefined);
-
-		// Step in further.
-		await dc.stepIn();
-
-		// Top frame is not deemphasized.
-		assert.equal(isExternalPackage(stack.body.stackFrames[0]), true);
-		ensureFrameCategories([stack.body.stackFrames[0]], undefined, undefined);
-		// Rest are.
-		ensureFrameCategories(stack.body.stackFrames.slice(1).filter(isExternalPackage), "deemphasize", "from Pub packages");
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 	});
 
