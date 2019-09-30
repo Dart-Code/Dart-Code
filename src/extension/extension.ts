@@ -83,7 +83,7 @@ const DART_MODE = { language: "dart", scheme: "file" };
 const HTML_MODE = { language: "html", scheme: "file" };
 
 const additionalModes = config.additionalAnalyzerFileExtensions.map((ext) => {
-	return {scheme: "file", pattern: `**/*.${ext}`};
+	return { scheme: "file", pattern: `**/*.${ext}` };
 });
 
 const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
