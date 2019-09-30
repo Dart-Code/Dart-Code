@@ -336,7 +336,7 @@ describe("dart cli debugger", () => {
 		await openFile(helloWorldHttpFile);
 		// Get location for `http.read`
 		const def = await getDefinition(positionOf("http.re^ad"));
-		const config = await startDebugger(helloWorldHttpFile);
+		const config = await startDebugger(helloWorldHttpFile, { debugExternalLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: def.range.start.line + 1,
 			path: fsPath(def.uri),
