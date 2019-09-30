@@ -399,7 +399,7 @@
 			},
 			{
 				"command": "_flutter.outline.refactor.flutter.removeWidget",
-				"title": "Remove widget",
+				"title": "Remove this widget",
 				"category": "Flutter"
 			}
 		],
