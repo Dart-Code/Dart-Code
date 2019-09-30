@@ -389,12 +389,12 @@
 			},
 			{
 				"command": "_flutter.outline.refactor.flutter.move.up",
-				"title": "Move widget Up",
+				"title": "Move widget up",
 				"category": "Flutter"
 			},
 			{
 				"command": "_flutter.outline.refactor.flutter.move.down",
-				"title": "Move widget Down",
+				"title": "Move widget down",
 				"category": "Flutter"
 			},
 			{
