@@ -422,7 +422,7 @@ describe("dart cli debugger", () => {
 		const httpReadCall = positionOf("http.re^ad(");
 		const config = await startDebugger(helloWorldHttpFile, { debugExternalLibraries: false });
 		await dc.hitBreakpoint(config, {
-			line: httpReadCall.line + 1,
+			line: httpReadCall.line,
 			path: fsPath(helloWorldHttpFile),
 		});
 		await Promise.all([
