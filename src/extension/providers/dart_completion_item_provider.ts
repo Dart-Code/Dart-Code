@@ -437,7 +437,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			} else {
 				completionText.appendText(suggestion.completionText);
 			}
-		} else if (suggestion.selectionOffset && suggestion.selectionLength && suggestion.selectionOffset > 0) {
+		} else if (suggestion.selectionOffset) {
 			const before = suggestion.completionText.slice(0, suggestion.selectionOffset);
 			const selection = suggestion.completionText.slice(suggestion.selectionOffset, suggestion.selectionOffset + suggestion.selectionLength);
 			// If we have a selection offset (eg. a place to put the cursor) but not any text to pre-select then
