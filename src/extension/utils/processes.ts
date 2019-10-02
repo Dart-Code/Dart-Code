@@ -40,6 +40,7 @@ export function safeSpawn(workingDirectory: string | undefined, binPath: string,
 /// Runs a process and returns the exit code, stdout, stderr. Always resolves even for non-zero exit codes.
 export function runProcess(logger: Logger, workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any): Promise<RunProcessResult> {
 	return new Promise((resolve) => {
+		logger.info(`Spawning ${binPath} with args ${JSON.stringify(args)} in ${workingDirectory} with env ${JSON.stringify(envOverrides)}`);
 		const proc = safeSpawn(workingDirectory, binPath, args, envOverrides);
 		logProcess(logger, LogCategory.CommandProcesses, proc);
 
