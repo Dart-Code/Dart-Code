@@ -28,6 +28,10 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 
+      - name: Setup Chrome
+        if: matrix.os == 'macOS-latest'
+        run: brew cask install google-chrome
+        
       - name: Setup Node v${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
