@@ -81,6 +81,8 @@ export class DevToolsManager implements vs.Disposable {
 							{
 								params: {
 									notify,
+									// TODO:
+									// page: "performance",
 									queryParams,
 									reuseWindows,
 								},
@@ -187,7 +189,8 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		portToBind = config.devToolsPort // Always config first
 			|| portToBind                // Then try the last port we bound this session
 			|| (isChromeOS && config.useKnownChromeOSPorts ? CHROME_OS_DEVTOOLS_PORT : 0);
-		const args = ["global", "run", "devtools", "--machine", "--port", portToBind.toString()];
+		// TODO: Use try-ports when it's available.
+		const args = ["global", "run", "devtools", "--machine", "--enable-notifications", "--port", portToBind.toString()];
 
 		this.registerForServerStarted((n) => this.additionalPidsToTerminate.push(n.pid));
 
