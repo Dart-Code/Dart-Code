@@ -913,20 +913,24 @@ export class DartDebugSession extends DebugSession {
 
 								// Call each getter, adding the result as a variable.
 								const getterPromises = getterNames.map(async (getterName, i) => {
-									const getterResult = await this.observatory!.evaluate(thread.ref.id, instanceRef.id, getterName, true);
-									if (getterResult.result.type === "@Error") {
-										return { name: getterName, value: (getterResult.result as VMErrorRef).message, variablesReference: 0 };
-									} else if (getterResult.result.type === "Sentinel") {
-										return { name: getterName, value: (getterResult.result as VMSentinel).valueAsString, variablesReference: 0 };
-									} else {
-										const getterResultInstanceRef = getterResult.result as VMInstanceRef;
-										return this.instanceRefToVariable(
-											thread, canEvaluate,
-											`${instanceRef.evaluateName}.${getterName}`,
-											getterName,
-											getterResultInstanceRef,
-											instance.fields!.length + i <= maxValuesToCallToString,
-										);
+									try {
+										const getterResult = await this.observatory!.evaluate(thread.ref.id, instanceRef.id, getterName, true);
+										if (getterResult.result.type === "@Error") {
+											return { name: getterName, value: (getterResult.result as VMErrorRef).message, variablesReference: 0 };
+										} else if (getterResult.result.type === "Sentinel") {
+											return { name: getterName, value: (getterResult.result as VMSentinel).valueAsString, variablesReference: 0 };
+										} else {
+											const getterResultInstanceRef = getterResult.result as VMInstanceRef;
+											return this.instanceRefToVariable(
+												thread, canEvaluate,
+												`${instanceRef.evaluateName}.${getterName}`,
+												getterName,
+												getterResultInstanceRef,
+												instance.fields!.length + i <= maxValuesToCallToString,
+											);
+										}
+									} catch (e) {
+										return { name: getterName, value: `<${e}>`, variablesReference: 0 };
 									}
 								});
 								fieldAndGetterPromises = fieldAndGetterPromises.concat(getterPromises);
@@ -947,7 +951,13 @@ export class DartDebugSession extends DebugSession {
 				response.body = { variables };
 				this.sendResponse(response);
 			} catch (error) {
-				this.errorResponse(response, `${error}`);
+				// this.errorResponse(response, `${error}`);
+				response.body = {
+					variables: [
+						{ name: "<error>", value: `${error.message || error}`, variablesReference: 0 },
+					],
+				};
+				this.sendResponse(response);
 			}
 		}
 	}
