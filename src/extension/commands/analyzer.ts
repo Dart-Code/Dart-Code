@@ -9,5 +9,9 @@ export class AnalyzerCommands {
 			const res = await analyzer.diagnosticGetServerPort();
 			await envUtils.openInBrowser(`http://127.0.0.1:${res.port}/`);
 		}));
+
+		context.subscriptions.push(vs.commands.registerCommand("dart.reanalyze", async () => {
+			await analyzer.analysisReanalyze();
+		}));
 	}
 }

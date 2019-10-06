@@ -207,6 +207,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.reanalyze",
+				"title": "Reanalyze",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.changeSdk",
 				"title": "Change SDK",
 				"category": "Dart"
@@ -518,6 +523,10 @@
 				},
 				{
 					"command": "dart.openAnalyzerDiagnostics",
+					"when": "dart-code:dartProjectLoaded"
+				},
+				{
+					"command": "dart.reanalyze",
 					"when": "dart-code:dartProjectLoaded"
 				},
 				{
