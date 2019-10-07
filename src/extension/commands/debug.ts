@@ -95,7 +95,13 @@ export class DebugCommands {
 			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", () => vs.commands.executeCommand("dart.openDevTools")));
-		context.subscriptions.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean }): Promise<{ url: string, dispose: () => void } | undefined> => {
+		["Inspector", "Timeline", "Memory", "Performance"].forEach((pageName) => {
+			context.subscriptions.push(vs.commands.registerCommand(`dart.openDevTools${pageName}`, async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean }): Promise<{ url: string, dispose: () => void } | undefined> => {
+				options = Object.assign({}, options, { page: pageName.toLowerCase() });
+				return vs.commands.executeCommand("dart.openDevTools", options);
+			}));
+		});
+		context.subscriptions.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, page?: string }): Promise<{ url: string, dispose: () => void } | undefined> => {
 			if (!debugSessions.length) {
 				vs.window.showInformationMessage("Dart DevTools requires an active debug session.");
 				return;
@@ -111,9 +117,10 @@ export class DebugCommands {
 			// Only show a notification if we were not triggered automatically.
 			const notify = !options || options.triggeredAutomatically !== true;
 			const reuseWindows = config.devToolsReuseWindows;
+			const page = options ? options.page : undefined;
 
 			if (session.vmServiceUri) {
-				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, reuseWindows, notify);
+				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, reuseWindows, notify, page);
 			} else if (session.session.configuration.noDebug) {
 				vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
 			} else {
