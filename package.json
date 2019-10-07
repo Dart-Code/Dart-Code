@@ -350,12 +350,14 @@
 			{
 				"command": "dart.openDevToolsInspector",
 				"title": "Open DevTools Inspector Page",
-				"category": "Dart"
+				"category": "Dart",
+				"icon": "media/commands/inspector.svg"
 			},
 			{
 				"command": "dart.openDevToolsTimeline",
 				"title": "Open DevTools Timeline Page",
-				"category": "Dart"
+				"category": "Dart",
+				"icon": "media/commands/timeline.svg"
 			},
 			{
 				"command": "dart.openDevToolsMemory",
@@ -713,6 +715,16 @@
 					"command": "flutter.hotReload",
 					"group": "navigation@59",
 					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:isInDebugSessionThatSupportsHotReload"
+				},
+				{
+					"command": "dart.openDevToolsInspector",
+					"group": "navigation@90",
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart"
+				},
+				{
+					"command": "dart.openDevToolsTimeline",
+					"group": "navigation@90",
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart"
 				}
 			],
 			"touchBar": [
