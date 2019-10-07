@@ -57,6 +57,24 @@ describe("completion_item_provider", () => {
 		ensureCompletion(completions, vs.CompletionItemKind.Keyword, "final", "final");
 	});
 
+	it("sets cursor position correctly", async () => {
+		await openFile(emptyFile);
+		await setTestContent(`
+foo({String foo}) {}
+
+main() {
+	foo(fo);
+}
+				`);
+		const completions = await getCompletionsAt(`foo(fo^`);
+
+		const comp = ensureCompletion(completions, vs.CompletionItemKind.Variable, "foo: ", "foo: ");
+		if (typeof comp.insertText === "string")
+			throw new Error("Expected SnippetString, got string");
+		else
+			assert.equal(comp.insertText.value, "foo: $0");
+	});
+
 	it("includes classes and constructors from other files", async () => {
 		await openFile(emptyFile);
 		await setTestContent(`
