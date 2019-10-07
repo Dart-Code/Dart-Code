@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/vscode/utils";
-import { activate, currentDoc, defer, emptyFile, helloWorldCreateMethodClassAFile, helloWorldCreateMethodClassBFile, missingFile, openFile, rangeOf, setTestContent, tryDelete, uncommentTestFile, waitForNextAnalysis } from "../../helpers";
+import { activate, currentDoc, defer, emptyFile, ensureTestContent, helloWorldCreateMethodClassAFile, helloWorldCreateMethodClassBFile, missingFile, openFile, rangeOf, setTestContent, tryDelete, uncommentTestFile, waitForNextAnalysis } from "../../helpers";
 
 describe("fix_code_action_provider", () => {
 	beforeEach("activate", () => activate());
@@ -43,5 +43,35 @@ describe("fix_code_action_provider", () => {
 		await (vs.commands.executeCommand(createFileFix!.command!.command, ...createFileFix!.command!.arguments || []));
 
 		assert.ok(fs.existsSync(fsPath(missingFile)));
+	});
+
+	// Skipped due to https://github.com/microsoft/vscode/issues/63129.
+	it.skip("inserts correct indenting for create_method", async () => {
+		await openFile(emptyFile);
+		await setTestContent(`
+main() {
+	missing();
+}
+		`);
+		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("|missing()|")) as Thenable<vs.CodeAction[]>);
+		assert.ok(fixResults);
+		assert.ok(fixResults.length);
+
+		const createFunctionFix = fixResults.find((r) => r.title.indexOf("Create function 'missing'") !== -1);
+		assert.ok(createFunctionFix, "Fix was not found");
+		const debugJson = JSON.stringify(createFunctionFix);
+		assert.ok(createFunctionFix!.command, `Fix did not have a command: ${debugJson}`);
+		assert.ok(createFunctionFix!.command!.command, `Fix command (object) did not have a command (string): ${debugJson}`);
+
+		await (vs.commands.executeCommand(createFunctionFix!.command!.command, ...createFunctionFix!.command!.arguments || []));
+
+		await ensureTestContent(`
+main() {
+	missing();
+}
+
+missing() {
+}
+		`);
 	});
 });
