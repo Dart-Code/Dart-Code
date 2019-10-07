@@ -348,6 +348,26 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.openDevToolsInspector",
+				"title": "Open DevTools Inspector Page",
+				"category": "Dart"
+			},
+			{
+				"command": "dart.openDevToolsTimeline",
+				"title": "Open DevTools Timeline Page",
+				"category": "Dart"
+			},
+			{
+				"command": "dart.openDevToolsMemory",
+				"title": "Open DevTools Memory Page",
+				"category": "Dart"
+			},
+			{
+				"command": "dart.openDevToolsPerformance",
+				"title": "Open DevTools Performance Page",
+				"category": "Dart"
+			},
+			{
 				"command": "_dart.openDevTools.touchBar",
 				"title": "DevTools",
 				"category": "Dart"
@@ -613,6 +633,22 @@
 				},
 				{
 					"command": "dart.openDevTools",
+					"when": "dart-code:dartProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "dart.openDevToolsInspector",
+					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
+				},
+				{
+					"command": "dart.openDevToolsTimeline",
+					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
+				},
+				{
+					"command": "dart.openDevToolsMemory",
+					"when": "dart-code:dartProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "dart.openDevToolsPerformance",
 					"when": "dart-code:dartProjectLoaded && inDebugMode"
 				},
 				{
