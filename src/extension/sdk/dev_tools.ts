@@ -25,7 +25,7 @@ import { envUtils } from "../utils/vscode/editor";
 const devtools = "devtools";
 const devtoolsPackageName = "Dart DevTools";
 
-// This starts off undefined, which means we'll read from config.devToolsPort and all back to 0 (auto-assign).
+// This starts off undefined, which means we'll read from config.devToolsPort and fall back to undefined (use default).
 // Once we get a port we'll update this variable so that if we restart (eg. a silent extension restart due to
 // SDK change or similar) we will try to use the same port, so if the user has browser windows open they're
 // still valid.
@@ -185,11 +185,17 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		super(new CategoryLogger(logger, LogCategory.DevTools), config.maxLogLineLength);
 
 		const pubBinPath = path.join(sdks.dart!, pubPath);
+		const args = ["global", "run", "devtools", "--machine", "--enable-notifications", "--try-ports", "10"];
+
+		// Store the port we'll use for later so we can re-bind to the same port if we restart.
 		portToBind = config.devToolsPort // Always config first
 			|| portToBind                // Then try the last port we bound this session
-			|| (isChromeOS && config.useKnownChromeOSPorts ? CHROME_OS_DEVTOOLS_PORT : 0);
-		// TODO: Use try-ports when it's available.
-		const args = ["global", "run", "devtools", "--machine", "--enable-notifications", "--port", portToBind.toString()];
+			|| (isChromeOS && config.useKnownChromeOSPorts ? CHROME_OS_DEVTOOLS_PORT : undefined);
+
+		if (portToBind) {
+			args.push("--port");
+			args.push(portToBind.toString());
+		}
 
 		this.registerForServerStarted((n) => this.additionalPidsToTerminate.push(n.pid));
 
