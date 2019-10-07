@@ -152,10 +152,11 @@ export function isTestFileOrFolder(path: string): boolean {
 }
 
 export function isTestFile(file: string): boolean {
-	// If we're either in a top-level test folder or the file ends with _test.dart then
-	// assume it's a test. We used to check for /test/ at any level, but sometimes people have
-	// non-test files named test (https://github.com/Dart-Code/Dart-Code/issues/1165).
-	return !!file && isDartFile(file) && (isInsideFolderNamed(file, "test") || file.toLowerCase().endsWith("_test.dart"));
+	// To be a test, you must be _test.dart AND inside a test folder.
+	// https://github.com/Dart-Code/Dart-Code/issues/1165
+	// https://github.com/Dart-Code/Dart-Code/issues/2021
+	// https://github.com/Dart-Code/Dart-Code/issues/2034
+	return !!file && isDartFile(file) && isInsideFolderNamed(file, "test") && file.toLowerCase().endsWith("_test.dart");
 }
 
 // Similate to isTestFile, but requires that the file is _test.dart because it will be used as
@@ -187,7 +188,7 @@ export function isInsideFolderNamed(file: string, folderName: string): boolean {
 
 	const relPath = path.relative(fsPath(ws.uri), file).toLowerCase();
 
-	return relPath === folderName || relPath.startsWith(`${folderName}${path.sep}`);
+	return relPath === folderName || relPath.startsWith(`${folderName}${path.sep}`) || relPath.indexOf(`${path.sep}${folderName}${path.sep}`) !== -1;
 }
 
 export function getLatestSdkVersion(): PromiseLike<string> {
