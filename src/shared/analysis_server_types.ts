@@ -1170,6 +1170,11 @@ export interface EditDartfixRequest {
 	includedFixes?: string[];
 
 	/**
+	 * A flag indicating that "pedantic" fixes should be applied.
+	 */
+	includePedanticFixes?: boolean;
+
+	/**
 	 * A flag indicating that "required" fixes should be applied.
 	 */
 	includeRequiredFixes?: boolean;
@@ -1181,6 +1186,15 @@ export interface EditDartfixRequest {
 	 * an error of type UNKNOWN_FIX will be generated.
 	 */
 	excludedFixes?: string[];
+
+	/**
+	 * The absolute and normalized path to a directory to which
+	 * non-nullability migration output will be written. The output is only
+	 * produced if the non-nullable fix is included. Files in the directory
+	 * might be overwritten, but no previously existing files will be
+	 * deleted.
+	 */
+	outputDir?: FilePath;
 }
 
 /**
@@ -1222,10 +1236,10 @@ export interface EditDartfixResponse {
 
 	/**
 	 * Messages that should be displayed to the user that describe details of
-	 * the fix generation. This could be details that users might want to
-	 * explore before committing the changes to descriptions of exceptions
-	 * that were thrown but that did not stop the fixes from being produced.
-	 * The list will be omitted if it is empty.
+	 * the fix generation. For example, the messages might (a) point out
+	 * details that users might want to explore before committing the changes
+	 * or (b) describe exceptions that were thrown but that did not stop the
+	 * fixes from being produced. The list will be omitted if it is empty.
 	 */
 	details?: string[];
 }
@@ -2009,29 +2023,82 @@ export interface KytheGetKytheEntriesResponse {
 }
 
 /**
- * Return the change that adds the forDesignTime() constructor for the
- * widget class at the given offset.
+ * Return the description of the widget instance at the given location.
+ *
+ * If the location does not have a support widget, an error of type
+ * FLUTTER_GET_WIDGET_DESCRIPTION_NO_WIDGET will be generated.
  */
-export interface FlutterGetChangeAddForDesignTimeConstructorRequest {
+export interface FlutterGetWidgetDescriptionRequest {
 	/**
-	 * The file containing the code of the class.
+	 * The file where the widget instance is created.
 	 */
 	file: FilePath;
 
 	/**
-	 * The offset of the class in the code.
+	 * The offset in the file where the widget instance is created.
 	 */
 	offset: number;
 }
 
 /**
- * Return the change that adds the forDesignTime() constructor for the
- * widget class at the given offset.
+ * Return the description of the widget instance at the given location.
+ *
+ * If the location does not have a support widget, an error of type
+ * FLUTTER_GET_WIDGET_DESCRIPTION_NO_WIDGET will be generated.
  */
-export interface FlutterGetChangeAddForDesignTimeConstructorResponse {
+export interface FlutterGetWidgetDescriptionResponse {
 	/**
-	 * The change that adds the forDesignTime() constructor.
-	 * If the change cannot be produced, an error is returned.
+	 * The list of properties of the widget. Some of the properties might be
+	 * read only, when their editor is not set. This might be
+	 * because they have type that we don't know how to edit, or for
+	 * compound properties that work as containers for sub-properties.
+	 */
+	properties: FlutterWidgetProperty[];
+}
+
+/**
+ * Set the value of a property, or remove it.
+ *
+ * The server will generate a change that the client should apply to the
+ * project to get the value of the property set to the new value.
+ * The complexity of the change might be from updating a single literal
+ * value in the code, to updating multiple files to get libraries imported,
+ * and new intermediate widgets instantiated.
+ */
+export interface FlutterSetWidgetPropertyValueRequest {
+	/**
+	 * The identifier of the property, previously returned as a part of
+	 * a FlutterWidgetProperty.
+	 *
+	 * An error of type FLUTTER_SET_WIDGET_PROPERTY_VALUE_INVALID_ID
+	 * is generated if the identifier is not valid.
+	 */
+	id: number;
+
+	/**
+	 * The new value to set for the property.
+	 *
+	 * If absent, indicates that the property should be removed. If the
+	 * property corresponds to an optional parameter, the corresponding
+	 * named argument is removed. If the property isRequired is
+	 * true, FLUTTER_SET_WIDGET_PROPERTY_VALUE_IS_REQUIRED error
+	 * is generated.
+	 */
+	value?: FlutterWidgetPropertyValue;
+}
+
+/**
+ * Set the value of a property, or remove it.
+ *
+ * The server will generate a change that the client should apply to the
+ * project to get the value of the property set to the new value.
+ * The complexity of the change might be from updating a single literal
+ * value in the code, to updating multiple files to get libraries imported,
+ * and new intermediate widgets instantiated.
+ */
+export interface FlutterSetWidgetPropertyValueResponse {
+	/**
+	 * The change that should be applied.
 	 */
 	change: SourceChange;
 }
@@ -2130,6 +2197,16 @@ export interface ServerErrorNotification {
 	 * error, used for debugging the server.
 	 */
 	stackTrace: string;
+}
+
+/**
+ * The stream of entries describing events happened in the server.
+ */
+export interface ServerLogNotification {
+	/**
+	 *
+	 */
+	entry: ServerLogEntry;
 }
 
 /**
@@ -2662,14 +2739,6 @@ export interface FlutterOutlineNotification {
 	 * The outline associated with the file.
 	 */
 	outline: FlutterOutline;
-
-	/**
-	 * If the file has Flutter widgets that can be rendered, this field
-	 * has the instrumented content of the file, that allows associating
-	 * widgets with corresponding outline nodes. If there are no widgets
-	 * to render, this field is absent.
-	 */
-	instrumentedCode?: string;
 }
 
 /**
@@ -2984,18 +3053,6 @@ export interface AvailableSuggestion {
 	defaultArgumentListTextRanges?: number[];
 
 	/**
-	 * The Dartdoc associated with the element being suggested. This field
-	 * is omitted if there is no Dartdoc associated with the element.
-	 */
-	docComplete?: string;
-
-	/**
-	 * An abbreviated version of the Dartdoc associated with the element being suggested.
-	 * This field is omitted if there is no Dartdoc associated with the element.
-	 */
-	docSummary?: string;
-
-	/**
 	 * If the element is an executable, the names of the formal parameters of
 	 * all kinds - required, optional positional, and optional named. The
 	 * names of positional parameters are empty strings. Omitted if the element
@@ -3300,6 +3357,12 @@ export interface TokenDetails {
 	 * Omitted if the token is not an identifier.
 	 */
 	validElementKinds?: string[];
+
+	/**
+	 * The offset of the first character of the token in the file which it
+	 * originated from.
+	 */
+	offset: number;
 }
 
 /**
@@ -3315,6 +3378,163 @@ export type ExecutionService =
 export type FileKind =
 	"LIBRARY"
 	| "PART";
+
+/**
+ * A property of a Flutter widget.
+ */
+export interface FlutterWidgetProperty {
+	/**
+	 * The documentation of the property to show to the user. Omitted if
+	 * the server does not know the documentation, e.g. because the
+	 * corresponding field is not documented.
+	 */
+	documentation?: string;
+
+	/**
+	 * If the value of this property is set, the Dart code of the expression
+	 * of this property.
+	 */
+	expression?: string;
+
+	/**
+	 * The unique identifier of the property, must be passed back to the
+	 * server when updating the property value. Identifiers become invalid
+	 * on any source code change.
+	 */
+	id: number;
+
+	/**
+	 * True if the property is required, e.g. because it corresponds to
+	 * a required parameter of a constructor.
+	 */
+	isRequired: boolean;
+
+	/**
+	 * If the property expression is a concrete value (e.g. a literal, or
+	 * an enum constant), then it is safe to replace the expression with
+	 * another concrete value. In this case this field is true. Otherwise,
+	 * for example when the expression is a reference to a field, so that
+	 * its value is provided from outside, this field is false.
+	 */
+	isSafeToUpdate: boolean;
+
+	/**
+	 * The name of the property to display to the user.
+	 */
+	name: string;
+
+	/**
+	 * The list of children properties, if any. For example any property of
+	 * type EdgeInsets will have four children properties of type
+	 * double - left / top / right / bottom.
+	 */
+	children?: FlutterWidgetProperty[];
+
+	/**
+	 * The editor that should be used by the client. This field is omitted
+	 * if the server does not know the editor for this property, for example
+	 * because it does not have one of the supported types.
+	 */
+	editor?: FlutterWidgetPropertyEditor;
+
+	/**
+	 * If the expression is set, and the server knows the value of the
+	 * expression, this field is set.
+	 */
+	value?: FlutterWidgetPropertyValue;
+}
+
+/**
+ * An editor for a property of a Flutter widget.
+ */
+export interface FlutterWidgetPropertyEditor {
+	/**
+	 *
+	 */
+	kind: FlutterWidgetPropertyEditorKind;
+
+	/**
+	 *
+	 */
+	enumItems?: FlutterWidgetPropertyValueEnumItem[];
+}
+
+/**
+ * An enumeration of the kinds of property editors.
+ */
+export type FlutterWidgetPropertyEditorKind =
+	"BOOL"
+	| "DOUBLE"
+	| "ENUM"
+	| "ENUM_LIKE"
+	| "INT"
+	| "STRING";
+
+/**
+ * A value of a property of a Flutter widget.
+ */
+export interface FlutterWidgetPropertyValue {
+	/**
+	 *
+	 */
+	boolValue?: boolean;
+
+	/**
+	 *
+	 */
+	doubleValue?: number;
+
+	/**
+	 *
+	 */
+	intValue?: number;
+
+	/**
+	 *
+	 */
+	stringValue?: string;
+
+	/**
+	 *
+	 */
+	enumValue?: FlutterWidgetPropertyValueEnumItem;
+
+	/**
+	 * A free-form expression, which will be used as the value as is.
+	 */
+	expression?: string;
+}
+
+/**
+ * An item of an enumeration in a general sense - actual enum
+ * value, or a static field in a class.
+ */
+export interface FlutterWidgetPropertyValueEnumItem {
+	/**
+	 * The URI of the library containing the className. When the
+	 * enum item is passed back, this will allow the server to import the
+	 * corresponding library if necessary.
+	 */
+	libraryUri: string;
+
+	/**
+	 * The name of the class or enum.
+	 */
+	className: string;
+
+	/**
+	 * The name of the field in the enumeration, or the static field in the
+	 * class.
+	 */
+	name: string;
+
+	/**
+	 * The documentation to show to the user. Omitted if the server does not
+	 * know the documentation, e.g. because the corresponding field is not
+	 * documented.
+	 */
+	documentation?: string;
+}
 
 /**
  * An enumeration of the services provided by the flutter domain that
@@ -3398,48 +3618,6 @@ export interface FlutterOutline {
 	 * children.
 	 */
 	children?: FlutterOutline[];
-
-	/**
-	 * If the node is a widget, and it is instrumented, the unique identifier
-	 * of this widget, that can be used to associate rendering information
-	 * with this node.
-	 */
-	id?: number;
-
-	/**
-	 * True if the node is a widget class, so it can potentially be
-	 * rendered, even if it does not yet have the rendering constructor.
-	 * This field is omitted if the node is not a widget class.
-	 */
-	isWidgetClass?: boolean;
-
-	/**
-	 * If the node is a widget class that can be rendered for IDE, the name
-	 * of the constructor that should be used to instantiate the widget.
-	 * Empty string for default constructor. Absent if the node is not a
-	 * widget class that can be rendered.
-	 */
-	renderConstructor?: string;
-
-	/**
-	 * If the node is a StatefulWidget, and its state class is defined in
-	 * the same file, the name of the state class.
-	 */
-	stateClassName?: string;
-
-	/**
-	 * If the node is a StatefulWidget that can be rendered, and its state
-	 * class is defined in the same file, the offset of the state class code
-	 * in the file.
-	 */
-	stateOffset?: number;
-
-	/**
-	 * If the node is a StatefulWidget that can be rendered, and its state
-	 * class is defined in the same file, the length of the state class code
-	 * in the file.
-	 */
-	stateLength?: number;
 }
 
 /**
@@ -3474,6 +3652,20 @@ export interface FlutterOutlineAttribute {
 	 * This field is absent if the value is not a string literal.
 	 */
 	literalValueString?: string;
+
+	/**
+	 * If the attribute is a named argument, the location of the name,
+	 * without the colon.
+	 */
+	nameLocation?: Location;
+
+	/**
+	 * The location of the value.
+	 *
+	 * This field is always available, but marked optional for backward
+	 * compatibility between new clients with older servers.
+	 */
+	valueLocation?: Location;
 }
 
 /**
@@ -3760,6 +3952,9 @@ export type RequestErrorCode =
 	"CONTENT_MODIFIED"
 	| "DEBUG_PORT_COULD_NOT_BE_OPENED"
 	| "FILE_NOT_ANALYZED"
+	| "FLUTTER_GET_WIDGET_DESCRIPTION_NO_WIDGET"
+	| "FLUTTER_SET_WIDGET_PROPERTY_VALUE_INVALID_ID"
+	| "FLUTTER_SET_WIDGET_PROPERTY_VALUE_IS_REQUIRED"
 	| "FORMAT_INVALID_FILE"
 	| "FORMAT_WITH_ERRORS"
 	| "GET_ERRORS_INVALID_FILE"
@@ -3877,7 +4072,8 @@ export type SearchResultKind =
  * An enumeration of the services provided by the server domain.
  */
 export type ServerService =
-	"STATUS";
+	"LOG"
+	| "STATUS";
 
 /**
  * A representation of a class in a type hierarchy.
@@ -3934,6 +4130,38 @@ export interface TypeHierarchyItem {
 	 */
 	subclasses: number[];
 }
+
+/**
+ * A log entry from the server.
+ */
+export interface ServerLogEntry {
+	/**
+	 * The time (milliseconds since epoch) at which the server created
+	 * this log entry.
+	 */
+	time: number;
+
+	/**
+	 * The kind of the entry, used to determine how to interpret the "data"
+	 * field.
+	 */
+	kind: ServerLogEntryKind;
+
+	/**
+	 * The payload of the entry, the actual format is determined by the
+	 * "kind" field.
+	 */
+	data: string;
+}
+
+/**
+ * An enumeration of the kinds of server long entries.
+ */
+export type ServerLogEntryKind =
+	"NOTIFICATION"
+	| "RAW"
+	| "REQUEST"
+	| "RESPONSE";
 
 /**
  * Create a local variable initialized by the expression that covers
