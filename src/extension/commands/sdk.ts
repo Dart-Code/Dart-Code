@@ -13,6 +13,7 @@ import { PromiseCompleter, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
 import { findProjectFolders, mkDirRecursive } from "../../shared/utils/fs";
+import { writeDartSdkSettingIntoProject, writeFlutterSdkSettingIntoProject } from "../../shared/utils/projects";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
@@ -523,6 +524,9 @@ export class SdkCommands {
 		fs.mkdirSync(fsPath(projectFolderUri));
 		// Create a temp dart file to force extension to load when we open this folder.
 		fs.writeFileSync(path.join(fsPath(projectFolderUri), triggerFilename), JSON.stringify(selectedTemplate.template));
+		// If we're using a custom SDK, we need to apply it to the new project too.
+		if (config.workspaceSdkPath)
+			writeDartSdkSettingIntoProject(config.workspaceSdkPath, fsPath(projectFolderUri));
 
 		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
 		const openInNewWindow = hasFoldersOpen;
@@ -555,6 +559,9 @@ export class SdkCommands {
 		fs.mkdirSync(fsPath(projectFolderUri));
 		// Create a temp dart file to force extension to load when we open this folder.
 		fs.writeFileSync(path.join(fsPath(projectFolderUri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE), "");
+		// If we're using a custom SDK, we need to apply it to the new project too.
+		if (config.workspaceFlutterSdkPath)
+			writeFlutterSdkSettingIntoProject(config.workspaceFlutterSdkPath, fsPath(projectFolderUri));
 
 		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
 		const openInNewWindow = hasFoldersOpen;
@@ -593,7 +600,7 @@ export class SdkCommands {
 		if (!selectedSnippet)
 			return;
 
-		return createFlutterSampleInTempFolder(this.flutterCapabilities, selectedSnippet.snippet.id);
+		return createFlutterSampleInTempFolder(this.flutterCapabilities, selectedSnippet.snippet.id, config.workspaceFlutterSdkPath);
 	}
 
 	private validateDartProjectName(input: string) {
