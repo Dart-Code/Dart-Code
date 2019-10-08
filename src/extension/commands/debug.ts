@@ -107,7 +107,7 @@ export class DebugCommands {
 				return; // User cancelled
 
 			if (session.vmServiceUri) {
-				return this.devTools.spawnForSession(session);
+				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string });
 			} else if (session.session.configuration.noDebug) {
 				vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
 			} else {

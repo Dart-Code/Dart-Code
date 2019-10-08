@@ -7,7 +7,7 @@ import { ProgressLocation, Uri, window } from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, pubPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
-import { Logger, Sdks, StagehandTemplate } from "../../shared/interfaces";
+import { DartSdks, DartWorkspaceContext, Logger, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { PromiseCompleter, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
@@ -17,7 +17,6 @@ import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
 import { fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
-import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { locateBestProjectRoot } from "../project";
 import { DartHoverProvider } from "../providers/dart_hover_provider";
@@ -38,14 +37,14 @@ let lastPubspecSaveReason: vs.TextDocumentSaveReason | undefined;
 let numProjectCreationsInProgress = 0;
 
 export class SdkCommands {
-	private readonly sdks: Sdks;
+	private readonly sdks: DartSdks;
 	private flutterScreenshotPath?: string;
 	// A map of any in-progress commands so we can terminate them if we want to run another.
 	private runningCommands: { [workspaceUriAndCommand: string]: ChainedProcess | undefined; } = {};
 
-	constructor(private readonly logger: Logger, readonly context: vs.ExtensionContext, private readonly workspace: WorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities, private readonly deviceManager: FlutterDeviceManager) {
+	constructor(private readonly logger: Logger, readonly context: vs.ExtensionContext, private readonly workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities, private readonly deviceManager: FlutterDeviceManager) {
 		this.sdks = workspace.sdks;
-		const dartSdkManager = new DartSdkManager(this.logger, this.sdks);
+		const dartSdkManager = new DartSdkManager(this.logger, this.workspace.sdks);
 		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => dartSdkManager.changeSdk()));
 		if (workspace.hasAnyFlutterProjects) {
 			const flutterSdkManager = new FlutterSdkManager(this.logger, workspace.sdks);

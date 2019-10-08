@@ -2,6 +2,7 @@ import { DaemonCapabilities } from "./capabilities/flutter";
 import { LogCategory, LogSeverity } from "./enums";
 import * as f from "./flutter/daemon_interfaces";
 import { UnknownResponse } from "./services/interfaces";
+import { WorkspaceContext } from "./workspace";
 
 export interface Sdks {
 	readonly dart?: string;
@@ -9,6 +10,14 @@ export interface Sdks {
 	readonly flutter?: string;
 	readonly flutterVersion?: string;
 	readonly dartSdkIsFromFlutter: boolean;
+}
+
+export interface DartSdks extends Sdks {
+	readonly dart: string;
+}
+
+export interface DartWorkspaceContext extends WorkspaceContext {
+	readonly sdks: DartSdks;
 }
 
 export interface StagehandTemplate {

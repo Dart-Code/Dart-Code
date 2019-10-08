@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import { noRepeatPromptThreshold, pubGlobalDocsUrl, pubPath } from "../../shared/constants";
 import { LogCategory, VersionStatus } from "../../shared/enums";
 import { fetch } from "../../shared/fetch";
-import { Logger, Sdks } from "../../shared/interfaces";
+import { DartSdks, Logger } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { versionIsAtLeast } from "../../shared/utils";
 import { Context } from "../../shared/vscode/workspace";
@@ -11,7 +11,7 @@ import { safeSpawn } from "../utils/processes";
 import { envUtils } from "../utils/vscode/editor";
 
 export class PubGlobal {
-	constructor(private readonly logger: Logger, private context: Context, private sdks: Sdks) { }
+	constructor(private readonly logger: Logger, private context: Context, private sdks: DartSdks) { }
 
 	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion?: string, autoUpdate: boolean = false): Promise<boolean> {
 		const versionStatus = await this.getInstalledStatus(packageName, packageID, requiredVersion);
@@ -103,8 +103,10 @@ export class PubGlobal {
 	}
 
 	private runCommand(packageName: string, args: string[]): Thenable<string> {
+		const dartSdkPath = this.sdks.dart;
+		const pubBinPath = path.join(dartSdkPath, pubPath);
+
 		return new Promise((resolve, reject) => {
-			const pubBinPath = path.join(this.sdks.dart, pubPath);
 			const proc = safeSpawn(undefined, pubBinPath, args);
 			logProcess(this.logger, LogCategory.CommandProcesses, proc);
 
