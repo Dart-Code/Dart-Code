@@ -5,8 +5,9 @@ import * as vs from "vscode";
 import { FlutterCapabilities } from "../capabilities/flutter";
 import { dartCodeExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../constants";
 import { getRandomInt, mkDirRecursive } from "../utils/fs";
+import { writeFlutterSdkSettingIntoProject } from "../utils/projects";
 
-export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapabilities, sampleID: string): vs.Uri | undefined {
+export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapabilities, sampleID: string, flutterSdkOverride?: string): vs.Uri | undefined {
 	// Ensure we're on at least Flutter v1 so we know creating samples works.
 	if (!flutterCapabilities.supportsCreatingSamples) {
 		vs.window.showErrorMessage("Opening sample projects requires Flutter v1.0 or later");
@@ -21,6 +22,9 @@ export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapa
 
 	// Create a temp dart file to force extension to load when we open this folder.
 	fs.writeFileSync(path.join(tempSamplePath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE), sampleID);
+	// If we're using a custom SDK, we need to apply it to the new project too.
+	if (flutterSdkOverride)
+		writeFlutterSdkSettingIntoProject(flutterSdkOverride, tempSamplePath);
 
 	const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
 	const openInNewWindow = hasFoldersOpen;

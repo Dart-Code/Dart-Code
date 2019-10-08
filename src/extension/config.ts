@@ -21,6 +21,10 @@ class Config {
 		return nullToUndefined(this.config.get<T>(key, defaultValue));
 	}
 
+	private getWorkspaceConfig<T>(key: string): NullAsUndefined<T> {
+		return nullToUndefined(this.config.inspect<T>(key).workspaceValue || this.config.inspect<T>(key).workspaceValue);
+	}
+
 	private async setConfig<T>(key: string, value: T, target: ConfigurationTarget): Promise<void> {
 		await this.config.update(key, value, target);
 	}
@@ -85,6 +89,9 @@ class Config {
 	get useDevToolsDarkTheme() { return this.devToolsTheme === "dark"; }
 	get openTestViewOnFailure() { return this.openTestView.indexOf("testFailure") !== -1; }
 	get openTestViewOnStart() { return this.openTestView.indexOf("testRunStart") !== -1; }
+
+	get workspaceSdkPath(): undefined | string { return resolvePaths(this.getWorkspaceConfig<null | string>("sdkPath")); }
+	get workspaceFlutterSdkPath(): undefined | string { return resolvePaths(this.getWorkspaceConfig<null | string>("flutterSdkPath")); }
 
 	// Options that can be set programatically.
 	public setCheckForSdkUpdates(value: boolean): Thenable<void> { return this.setConfig("checkForSdkUpdates", value, ConfigurationTarget.Global); }
