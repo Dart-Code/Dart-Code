@@ -1084,14 +1084,6 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	}
 
 	/**
-	Return the change that adds the forDesignTime() constructor for the
-	widget class at the given offset.
-	*/
-	flutterGetChangeAddForDesignTimeConstructor(request: as.FlutterGetChangeAddForDesignTimeConstructorRequest): Promise<as.FlutterGetChangeAddForDesignTimeConstructorResponse> {
-		return this.sendRequest("flutter.getChangeAddForDesignTimeConstructor", request);
-	}
-
-	/**
 	Subscribe for services that are specific to individual files.
 	All previous subscriptions are replaced by the current set of
 	subscriptions. If a given service is not included as a key in the map

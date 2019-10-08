@@ -188,7 +188,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			autoImportUri: displayUri,
 			completionText: (resolvedResult && resolvedResult.completion) || suggestion.label,
 			displayText: suggestion.label, // Keep the label for display, so we don't update to show "prefix0" as the user moves to it.
-			docSummary: suggestion.docSummary,
 			elementKind: suggestion.element ? suggestion.element.kind : undefined,
 			isDeprecated: false,
 			kind: undefined, // This is only used when there's no element (eg. keyword completions) that won't happen here.
@@ -380,7 +379,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			autoImportUri?: string,
 			completionText: string,
 			displayText: string | undefined,
-			docSummary: string | undefined,
+			docSummary?: string | undefined,
 			elementKind: as.ElementKind | undefined,
 			isDeprecated: boolean,
 			kind: as.CompletionSuggestionKind | undefined,
