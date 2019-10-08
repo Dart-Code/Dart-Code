@@ -594,7 +594,7 @@ function buildLogHeaders(workspaceContext?: WorkspaceContext) {
 	addToLogHeader(() => ``);
 	addToLogHeader(() => `Dart Code extension: ${extensionVersion}`);
 	addToLogHeader(() => {
-		const ext = vs.extensions.getExtension(flutterExtensionIdentifier);
+		const ext = vs.extensions.getExtension(flutterExtensionIdentifier)!;
 		return `Flutter extension: ${ext.packageJSON.version} (${ext.isActive ? "" : "not "}activated)`;
 	});
 	addToLogHeader(() => `VS Code: ${vs.version}`);
@@ -716,7 +716,7 @@ export async function deactivate(isRestart: boolean = false): Promise<void> {
 function setCommandVisiblity(enable: boolean, workspaceContext?: WorkspaceContext) {
 	vs.commands.executeCommand("setContext", DART_PROJECT_LOADED, enable);
 	// TODO: Make this more specific. Maybe the one above?
-	vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && workspaceContext.hasAnyFlutterProjects);
-	vs.commands.executeCommand("setContext", FLUTTER_MOBILE_PROJECT_LOADED, enable && workspaceContext.hasAnyFlutterMobileProjects);
-	vs.commands.executeCommand("setContext", FLUTTER_WEB_PROJECT_LOADED, enable && workspaceContext.hasAnyFlutterWebProjects);
+	vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyFlutterProjects);
+	vs.commands.executeCommand("setContext", FLUTTER_MOBILE_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyFlutterMobileProjects);
+	vs.commands.executeCommand("setContext", FLUTTER_WEB_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyFlutterWebProjects);
 }

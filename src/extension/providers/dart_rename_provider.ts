@@ -7,11 +7,11 @@ import * as channels from "../commands/channels";
 export class DartRenameProvider implements RenameProvider {
 	constructor(private readonly analyzer: Analyzer) { }
 
-	public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): Thenable<WorkspaceEdit> {
+	public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): Promise<WorkspaceEdit | undefined> {
 		return this.doRename(document, position, newName, token);
 	}
 
-	public prepareRename(document: TextDocument, position: Position, token: CancellationToken): Thenable<{ range: Range, placeholder: string }> {
+	public prepareRename(document: TextDocument, position: Position, token: CancellationToken): Promise<{ range: Range, placeholder: string } | undefined> {
 		return this.getLocation(document, position, token);
 	}
 
@@ -48,24 +48,26 @@ export class DartRenameProvider implements RenameProvider {
 		);
 
 		const promises: Array<Thenable<void>> = [];
-		resp.change.edits.forEach((changeEdit) => {
-			changeEdit.edits.forEach((fileEdit) => {
-				const uri = Uri.file(changeEdit.file);
-				const promise = workspace.openTextDocument(uri);
-				promises.push(
-					promise.then((document) =>
-						workspaceEdit.replace(
-							uri,
-							new Range(
-								document.positionAt(fileEdit.offset),
-								document.positionAt(fileEdit.offset + fileEdit.length),
+		if (resp.change) {
+			resp.change.edits.forEach((changeEdit) => {
+				changeEdit.edits.forEach((fileEdit) => {
+					const uri = Uri.file(changeEdit.file);
+					const promise = workspace.openTextDocument(uri);
+					promises.push(
+						promise.then((document) =>
+							workspaceEdit.replace(
+								uri,
+								new Range(
+									document.positionAt(fileEdit.offset),
+									document.positionAt(fileEdit.offset + fileEdit.length),
+								),
+								fileEdit.replacement,
 							),
-							fileEdit.replacement,
 						),
-					),
-				);
+					);
+				});
 			});
-		});
+		}
 
 		// TODO: This class is inconsistent with other refactors (which are silent when they work, for ex).
 		// We should review what we can extract share (though note that this method must return the edit whereas

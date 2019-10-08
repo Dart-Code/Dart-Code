@@ -79,13 +79,13 @@ export class DartHoverProvider implements HoverProvider {
 
 	// TODO: Update this when things change?
 	private static packageMaps: { [key: string]: PackageMap } = {};
-	private static getPackageMapFor(uri: Uri): PackageMap {
+	private static getPackageMapFor(uri: Uri): PackageMap | undefined {
 		const path = fsPath(uri);
 		if (this.packageMaps[path])
 			return this.packageMaps[path];
 
 		const packagesFile = PackageMap.findPackagesFile(path);
-		const map = packagesFile && new PackageMap(packagesFile);
+		const map = packagesFile ? new PackageMap(packagesFile) : undefined;
 		if (map)
 			this.packageMaps[path] = map;
 		return map;

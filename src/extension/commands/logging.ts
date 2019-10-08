@@ -47,7 +47,8 @@ export class LoggingCommands implements vs.Disposable {
 		isLogging = true;
 		this.disposables.push(logger);
 		vs.commands.executeCommand("setContext", DART_IS_CAPTURING_LOGS_CONTEXT, true);
-		this.currentLogCompleter = new PromiseCompleter<void>();
+		const completer = new PromiseCompleter<void>();
+		this.currentLogCompleter = completer;
 
 		await vs.window.withProgress(
 			{
@@ -56,8 +57,8 @@ export class LoggingCommands implements vs.Disposable {
 				title: `Dart and Flutter logs are being captured. Reproduce your issue then click Cancel.`,
 			},
 			(_, token) => {
-				token.onCancellationRequested(() => this.currentLogCompleter.resolve());
-				return this.currentLogCompleter.promise;
+				token.onCancellationRequested(() => completer.resolve());
+				return completer.promise;
 			},
 		);
 
@@ -71,7 +72,8 @@ export class LoggingCommands implements vs.Disposable {
 	}
 
 	private async stopLogging(): Promise<void> {
-		this.currentLogCompleter.resolve();
+		if (this.currentLogCompleter)
+			this.currentLogCompleter.resolve();
 	}
 
 	private generateFilename(): string {

@@ -33,7 +33,7 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 			: locations;
 	}
 
-	public async provideDefinition(document: TextDocument, position: Position, token: CancellationToken): Promise<DefinitionLink[]> {
+	public async provideDefinition(document: TextDocument, position: Position, token: CancellationToken): Promise<DefinitionLink[] | undefined> {
 		const resp = await this.analyzer.analysisGetNavigation({
 			file: fsPath(document.uri),
 			length: 0,
