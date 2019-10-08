@@ -18,7 +18,7 @@ jobs:
         node-version: [10]
         dart-version: ["stable"]#, "dev"]
         code-version: ["stable"]#, "insiders"]
-        bot: ["dart", "flutter"]#, "misc", "flutter_repo"]
+        bot: ["dart", "flutter", "misc", "flutter_repo"]
         include:
           - dart-version: stable
             flutter-version: master # Temporarily use Flutter master for CocoaPods change
