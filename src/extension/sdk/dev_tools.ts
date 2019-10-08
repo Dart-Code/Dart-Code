@@ -43,7 +43,7 @@ export class DevToolsManager implements vs.Disposable {
 
 	/// Spawns DevTools and returns the full URL to open for that session
 	///   eg. http://127.0.0.1:8123/?port=8543
-	public async spawnForSession(session: DartDebugSessionInformation): Promise<{ url: string, dispose: () => void } | undefined> {
+	public async spawnForSession(session: DartDebugSessionInformation & { vmServiceUri: string }): Promise<{ url: string, dispose: () => void } | undefined> {
 		this.analytics.logDebuggerOpenDevTools();
 
 		const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtools, undefined, "0.1.0", true);
@@ -63,10 +63,10 @@ export class DevToolsManager implements vs.Disposable {
 				location: vs.ProgressLocation.Notification,
 				title: "Opening Dart DevTools...",
 			}, async (_) => {
-				const queryParams: { [key: string]: string } = {
+				const queryParams: { [key: string]: string | undefined } = {
 					hide: "debugger",
 					ide: "VSCode",
-					theme: config.useDevToolsDarkTheme ? "dark" : null,
+					theme: config.useDevToolsDarkTheme ? "dark" : undefined,
 				};
 				const canLaunchDevToolsThroughService = isRunningLocally
 					&& !process.env.DART_CODE_IS_TEST_RUN
@@ -98,7 +98,8 @@ export class DevToolsManager implements vs.Disposable {
 				}
 
 				const paramsString = Object.keys(queryParams)
-					.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key])}`)
+					.filter((key) => queryParams[key] !== undefined)
+					.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key]!)}`)
 					.join("&");
 				const fullUrl = `${url}?${paramsString}&uri=${encodeURIComponent(session.vmServiceUri)}`;
 				await envUtils.openInBrowser(fullUrl);

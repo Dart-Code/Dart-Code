@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
 import { analyzerSnapshotPath, dartPlatformName, dartVMPath, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, isWin, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
-import { IFlutterDaemon, Sdks } from "../shared/interfaces";
+import { DartWorkspaceContext, IFlutterDaemon, Sdks } from "../shared/interfaces";
 import { captureLogs, EmittingLogger, logToConsole } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
 import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../shared/utils";
@@ -150,21 +150,23 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const extensionStartTime = new Date();
 	util.logTime();
 	const sdkUtils = new SdkUtils(logger);
-	const workspaceContext = await sdkUtils.scanWorkspace();
+	const workspaceContextUnverified = await sdkUtils.scanWorkspace();
 	util.logTime("initWorkspace");
-	const sdks = workspaceContext.sdks;
 
 	// Create log headers and set up all other log files.
-	buildLogHeaders(workspaceContext);
+	buildLogHeaders(workspaceContextUnverified);
 	setupLog(config.analyzerLogFile, LogCategory.Analyzer);
 	setupLog(config.flutterDaemonLogFile, LogCategory.FlutterDaemon);
 	setupLog(config.devToolsLogFile, LogCategory.DevTools);
 
-	analytics = new Analytics(logger, workspaceContext);
-	if (!sdks.dart || (workspaceContext.hasAnyFlutterProjects && !sdks.flutter)) {
+	analytics = new Analytics(logger, workspaceContextUnverified);
+	if (!workspaceContextUnverified.sdks.dart || (workspaceContextUnverified.hasAnyFlutterProjects && !workspaceContextUnverified.sdks.flutter)) {
 		// Don't set anything else up; we can't work like this!
-		return sdkUtils.handleMissingSdks(context, analytics, workspaceContext);
+		return sdkUtils.handleMissingSdks(context, analytics, workspaceContextUnverified);
 	}
+
+	const workspaceContext = workspaceContextUnverified as DartWorkspaceContext;
+	const sdks = workspaceContext.sdks;
 
 	if (sdks.flutterVersion) {
 		flutterCapabilities.version = sdks.flutterVersion;
