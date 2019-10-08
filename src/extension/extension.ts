@@ -37,6 +37,7 @@ import { cursorIsInTest, TestCommands } from "./commands/test";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
+import { FlutterIconDecorations } from "./decorations/flutter_icon_decorations";
 import { FlutterUiGuideDecorations } from "./decorations/flutter_ui_guides_decorations";
 import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_decorations";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
@@ -342,6 +343,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	if (config.previewFlutterUiGuides)
 		context.subscriptions.push(new FlutterUiGuideDecorations(analyzer));
+	context.subscriptions.push(new FlutterIconDecorations(logger, analyzer));
 
 	// Setup that requires server version/capabilities.
 	const connectedSetup = analyzer.registerForServerConnected((sc) => {
