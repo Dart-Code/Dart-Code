@@ -31,6 +31,10 @@ jobs:
       - name: Setup Chrome
         if: matrix.os == 'macOS-latest'
         run: brew cask install google-chrome
+      
+      - name: Setup CocoaPods
+        if: matrix.os == 'macOS-latest'
+        run: pod setup
         
       - name: Setup Node v${{ matrix.node-version }}
         uses: actions/setup-node@v1
