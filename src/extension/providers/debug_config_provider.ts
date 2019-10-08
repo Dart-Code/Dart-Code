@@ -291,8 +291,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			const firstRelevantDiagnostic = dartErrors.find((fd) => {
 				const file = fsPath(fd[0]);
 				return isWithinPath(file, debugConfig.cwd)
-					// Ignore errors in tests unless it's the file we're running.
-					&& (!isTestFile(file) || file === debugConfig.program);
+					// Ignore errors in test folder unless it's the file we're running.
+					&& (!isInsideFolderNamed(file, "test") || file === debugConfig.program);
 			});
 			if (firstRelevantDiagnostic) {
 				logger.warn("Project has errors, prompting user");
