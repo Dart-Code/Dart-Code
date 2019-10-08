@@ -47,7 +47,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 		}));
 	}
 
-	private buildForTextEditor(editor: vs.TextEditor): void {
+	private buildForTextEditor(editor: vs.TextEditor | undefined): void {
 		if (editor && editor.document)
 			this.buildFromOutline(editor, openFileTracker.getFlutterOutlineFor(editor.document.uri));
 	}
@@ -213,7 +213,7 @@ class WidgetGuideTracker implements vs.Disposable {
 			// new offsets.
 			const newGuides: WidgetGuide[] = [];
 			for (const guide of this.guideMap.keys()) {
-				const data = this.guideMap.get(guide);
+				const data = this.guideMap.get(guide)!;
 				const currentStartPos = data[0];
 				const currentEndPos = data[1];
 

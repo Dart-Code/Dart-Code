@@ -3,7 +3,7 @@ import * as path from "path";
 import { extensions } from "vscode";
 import { dartCodeExtensionIdentifier, flutterExtensionIdentifier } from "../constants";
 
-export const extensionPath = extensions.getExtension(dartCodeExtensionIdentifier).extensionPath;
+export const extensionPath = extensions.getExtension(dartCodeExtensionIdentifier)!.extensionPath;
 export const extensionVersion = getExtensionVersion();
 export const vsCodeVersionConstraint = getVsCodeVersionConstraint();
 export const isDevExtension = checkIsDevExtension();

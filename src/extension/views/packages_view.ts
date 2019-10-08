@@ -69,8 +69,12 @@ export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<
 		const folders: PackageDepFolder[] = [];
 		const files: PackageDepFile[] = [];
 
+		if (!folder.resourceUri)
+			return [];
+
+		const folderPath = fsPath(folder.resourceUri);
 		children.forEach((child) => {
-			const filePath = path.join(fsPath(folder.resourceUri), child.name);
+			const filePath = path.join(folderPath, child.name);
 			if (child.isFile()) {
 				files.push(new PackageDepFile(vs.Uri.file(filePath)));
 			} else if (child.isDirectory()) {
@@ -134,8 +138,10 @@ export class PackageDepProject extends PackageDep {
 
 		// Calculate relative path to the folder for the description.
 		const wf = vs.workspace.getWorkspaceFolder(resourceUri);
-		const workspaceFolder = fsPath(wf.uri);
-		this.description = path.relative(path.dirname(workspaceFolder), path.dirname(projectFolder));
+		if (wf) {
+			const workspaceFolder = fsPath(wf.uri);
+			this.description = path.relative(path.dirname(workspaceFolder), path.dirname(projectFolder));
+		}
 	}
 }
 

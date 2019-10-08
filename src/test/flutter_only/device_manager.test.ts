@@ -51,7 +51,7 @@ describe("device_manager", () => {
 		// instead of "iPhone X" etc.
 		await daemon.connect(emulatediOSMobile, true);
 		assert.deepStrictEqual(dm.currentDevice, emulatediOSMobile);
-		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), emulatediOSMobile.name);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice!), emulatediOSMobile.name);
 	});
 
 	it("auto-selects devices if supported platforms are not known", async () => {
