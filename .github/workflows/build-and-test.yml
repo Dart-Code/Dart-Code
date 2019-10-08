@@ -19,6 +19,11 @@ jobs:
         dart-version: ["stable"]#, "dev"]
         code-version: ["stable"]#, "insiders"]
         bot: ["dart", "flutter"]#, "misc", "flutter_repo"]
+        include:
+          - dart-version: stable
+            flutter-version: master # Temporarily use Flutter master for CocoaPods change
+          - dart-version: dev
+            flutter-version: dev
 
     steps:
 
@@ -31,12 +36,6 @@ jobs:
       - name: Setup Chrome
         if: matrix.os == 'macOS-latest'
         run: brew cask install google-chrome
-      
-      - name: Setup CocoaPods
-        if: matrix.os == 'macOS-latest'
-        run: |
-          gem install cocoapods -v 1.7.5
-          pod setup
         
       - name: Setup Node v${{ matrix.node-version }}
         uses: actions/setup-node@v1
@@ -52,7 +51,7 @@ jobs:
         if: matrix.bot != 'dart'
         uses: DanTup/gh-actions/setup-flutter@v0.0.7
         with:
-          channel: ${{ matrix.dart-version }}
+          channel: ${{ matrix.flutter-version }}
 
       - name: Print Dart version
         run: dart --version
