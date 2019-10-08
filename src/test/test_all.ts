@@ -46,20 +46,25 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	if (!fs.existsSync(testEnv.DC_TEST_LOGS))
 		fs.mkdirSync(testEnv.DC_TEST_LOGS);
 
-	const res = await vstest.runTests({
-		extensionDevelopmentPath: cwd,
-		extensionTestsEnv: testEnv,
-		extensionTestsPath: path.join(cwd, "out", "src", "test", testFolder),
-		launchArgs: [
-			path.isAbsolute(workspaceFolder)
-				? workspaceFolder
-				: path.join(cwd, "src", "test", "test_projects", workspaceFolder),
-			"--user-data-dir",
-			path.join(cwd, ".dart_code_test_data_dir"),
-		],
-		version: codeVersion,
-	});
-	exitCode = exitCode || res;
+	try {
+		const res = await vstest.runTests({
+			extensionDevelopmentPath: cwd,
+			extensionTestsEnv: testEnv,
+			extensionTestsPath: path.join(cwd, "out", "src", "test", testFolder),
+			launchArgs: [
+				path.isAbsolute(workspaceFolder)
+					? workspaceFolder
+					: path.join(cwd, "src", "test", "test_projects", workspaceFolder),
+				"--user-data-dir",
+				path.join(cwd, ".dart_code_test_data_dir"),
+			],
+			version: codeVersion,
+		});
+		exitCode = exitCode || res;
+	} catch (e) {
+		console.error(e);
+		exitCode = exitCode || 999;
+	}
 
 	console.log(yellow("############################################################"));
 	console.log("\n\n");
