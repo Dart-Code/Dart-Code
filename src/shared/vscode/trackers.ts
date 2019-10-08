@@ -16,10 +16,12 @@ export class DocumentPositionTracker implements vs.Disposable {
 			// new offsets.
 			const newPositions = new Map<vs.Position, vs.Position>();
 			for (const position of this.positionMap.keys()) {
-				const currentOffset = this.positionMap.get(position);
+				const currentOffset = this.positionMap.get(position)!;
 				const newOffset = offsets.get(currentOffset);
 				if (newOffset)
 					newPositions.set(position, doc.positionAt(newOffset));
+				else
+					newPositions.delete(position);
 			}
 
 			this.onPositionsChangedEmitter.fire([doc, newPositions]);
@@ -80,9 +82,12 @@ export class DocumentOffsetTracker implements vs.Disposable {
 			// map to track the current offset.
 			// updateOffset takes the *value*, since we need to map the "current" (not
 			// original) value, and then updates the value in the map.
-			const currentOffset = this.offsetMap.get(offset);
+			const currentOffset = this.offsetMap.get(offset)!;
 			const newOffset = this.updateOffset(currentOffset, e);
-			this.offsetMap.set(offset, newOffset);
+			if (newOffset)
+				this.offsetMap.set(offset, newOffset);
+			else
+				this.offsetMap.delete(offset);
 		}
 
 		this.onOffsetsChangedEmitter.fire([e.document, this.offsetMap]);
