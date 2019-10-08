@@ -28,7 +28,8 @@ export class EditCommands implements vs.Disposable {
 
 	private async writeRecommendedSettings() {
 		const topLevelConfig = vs.workspace.getConfiguration("", null);
-		const existingConfig = topLevelConfig.inspect("[dart]").globalValue;
+		const dartLanguageConfig = topLevelConfig.inspect("[dart]");
+		const existingConfig = dartLanguageConfig ? dartLanguageConfig.globalValue : undefined;
 		const newValues = Object.assign({}, dartRecommendedConfig, existingConfig);
 		await topLevelConfig.update("[dart]", newValues, vs.ConfigurationTarget.Global);
 

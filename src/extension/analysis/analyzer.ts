@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { analyzerSnapshotPath } from "../../shared/constants";
-import { Logger, Sdks } from "../../shared/interfaces";
+import { DartSdks, Logger } from "../../shared/interfaces";
 import { extensionVersion } from "../../shared/vscode/extension_utils";
 import { config } from "../config";
 import { DasAnalyzer } from "./analyzer_das";
@@ -13,7 +13,7 @@ export class Analyzer extends DasAnalyzer {
 	}
 }
 
-export function getAnalyzerArgs(logger: Logger, sdks: Sdks, isLsp: boolean) {
+export function getAnalyzerArgs(logger: Logger, sdks: DartSdks, isLsp: boolean) {
 	const analyzerPath = config.analyzerPath || path.join(sdks.dart, analyzerSnapshotPath);
 
 	// If the ssh host is set, then we are running the analyzer on a remote machine, that same analyzer

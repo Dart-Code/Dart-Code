@@ -4,7 +4,7 @@ import { openFileTracker } from "../analysis/open_file_tracker";
 export class DartDocumentHighlightProvider implements DocumentHighlightProvider {
 	public provideDocumentHighlights(
 		document: TextDocument, position: Position, token: CancellationToken,
-	): DocumentHighlight[] {
+	): DocumentHighlight[] | undefined {
 		const offset = document.offsetAt(position);
 		const occurrences = openFileTracker.getOccurrencesFor(document.uri);
 		if (!occurrences)

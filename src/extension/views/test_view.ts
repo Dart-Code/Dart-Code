@@ -19,9 +19,9 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<TestItemTreeItem | undefined> = new vs.EventEmitter<TestItemTreeItem | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<TestItemTreeItem | undefined> = this.onDidChangeTreeDataEmitter.event;
 	private onDidStartTestsEmitter: vs.EventEmitter<TestItemTreeItem> = new vs.EventEmitter<TestItemTreeItem>();
-	public readonly onDidStartTests: vs.Event<TestItemTreeItem | undefined> = this.onDidStartTestsEmitter.event;
+	public readonly onDidStartTests: vs.Event<TestItemTreeItem> = this.onDidStartTestsEmitter.event;
 	private onFirstFailureEmitter: vs.EventEmitter<TestItemTreeItem> = new vs.EventEmitter<TestItemTreeItem>();
-	public readonly onFirstFailure: vs.Event<TestItemTreeItem | undefined> = this.onFirstFailureEmitter.event;
+	public readonly onFirstFailure: vs.Event<TestItemTreeItem> = this.onFirstFailureEmitter.event;
 	private currentSelectedNode: TestItemTreeItem | undefined;
 
 	// Set this flag we know when a new run starts so we can show the tree; however

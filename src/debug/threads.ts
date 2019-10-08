@@ -213,7 +213,7 @@ export class ThreadInfo {
 	// Whether this thread is infrastructure (eg. not user code), useful for avoiding breaking
 	// on handled exceptions, etc.
 	get isInfrastructure(): boolean {
-		return this.ref && this.ref.name && isKnownInfrastructureThread(this.ref);
+		return this.ref && this.ref.name ? isKnownInfrastructureThread(this.ref) : false;
 	}
 
 	constructor(
