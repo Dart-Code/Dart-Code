@@ -199,7 +199,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	public labelForDevice(device: f.Device) {
-		return device.emulatorId && this.knownEmulatorNames[device.emulatorId]
+		return device.emulatorId && this.knownEmulatorNames[device.emulatorId] && device.platformType === "android"
 			? this.knownEmulatorNames[device.emulatorId]
 			: device.name;
 	}
