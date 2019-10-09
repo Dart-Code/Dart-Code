@@ -523,7 +523,7 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 			const httpReadCall = positionOf("http.re^ad(");
 			const config = await startDebugger(flutterHelloWorldHttpFile, { debugExternalLibraries: false });
 			await dc.hitBreakpoint(config, {
-				line: httpReadCall.line + 1,
+				line: httpReadCall.line,
 				path: fsPath(flutterHelloWorldHttpFile),
 			});
 			await Promise.all([
