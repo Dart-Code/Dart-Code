@@ -53,6 +53,9 @@ jobs:
         uses: DanTup/gh-actions/setup-flutter@v0.0.7
         with:
           channel: ${{ matrix.flutter-version }}
+      
+      - run: flutter update-packages
+        if: matrix.bot != 'dart'
 
       - name: Print Dart version
         run: dart --version
