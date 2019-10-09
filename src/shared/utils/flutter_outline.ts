@@ -54,16 +54,3 @@ export abstract class FlutterOutlineVisitor {
 	// tslint:disable-next-line: no-empty
 	protected visitAttribute(attribute: as.FlutterOutlineAttribute): void { }
 }
-
-export class FlutterOutlineIconVisitor extends FlutterOutlineVisitor {
-	public readonly icons: Array<{ offset: number, length: number, iconName: string }> = [];
-	private readonly iconValuePattern = new RegExp("Icons\\.([\\w_]+)");
-
-	protected visitAttribute(attribute: as.FlutterOutlineAttribute) {
-		if (attribute.label && attribute.valueLocation) {
-			const match = this.iconValuePattern.exec(attribute.label);
-			if (match)
-				this.icons.push({ iconName: match[1], offset: attribute.valueLocation.offset, length: attribute.valueLocation.length });
-		}
-	}
-}

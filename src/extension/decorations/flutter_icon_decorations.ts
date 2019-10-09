@@ -23,7 +23,10 @@ export class FlutterIconDecorations implements vs.Disposable {
 			}
 		}));
 
-		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.setTrackingFile(e)));
+		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => {
+			this.setTrackingFile(e);
+			this.update();
+		}));
 		if (vs.window.activeTextEditor) {
 			this.setTrackingFile(vs.window.activeTextEditor);
 			this.update();

@@ -1,7 +1,7 @@
 import * as vs from "vscode";
-import { FlutterOutline } from "../../shared/analysis_server_types";
+import { FlutterOutline, FlutterOutlineAttribute } from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
-import { FlutterOutlineIconVisitor } from "../../shared/utils/flutter_outline";
+import { FlutterOutlineVisitor } from "../../shared/utils/flutter_outline";
 import { toRange } from "./utils";
 
 export class IconRangeComputer {
@@ -22,5 +22,18 @@ export class IconRangeComputer {
 		});
 
 		return decs;
+	}
+}
+
+class FlutterOutlineIconVisitor extends FlutterOutlineVisitor {
+	public readonly icons: Array<{ offset: number, length: number, iconName: string }> = [];
+	private readonly iconValuePattern = new RegExp("Icons\\.([\\w_]+)");
+
+	protected visitAttribute(attribute: FlutterOutlineAttribute) {
+		if (attribute.label && attribute.valueLocation) {
+			const match = this.iconValuePattern.exec(attribute.label);
+			if (match)
+				this.icons.push({ iconName: match[1], offset: attribute.valueLocation.offset, length: attribute.valueLocation.length });
+		}
 	}
 }
