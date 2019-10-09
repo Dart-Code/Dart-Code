@@ -53,3 +53,9 @@ export interface IFlutterDaemon extends IAmDisposable {
 	registerForDaemonLog(subscriber: (notification: f.DaemonLog) => void): IAmDisposable;
 	registerForDaemonShowMessage(subscriber: (notification: f.ShowMessage) => void): IAmDisposable;
 }
+
+export interface Location {
+	startLine: number;
+	startColumn: number;
+	length: number;
+}

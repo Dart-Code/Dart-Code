@@ -2,10 +2,10 @@ import * as path from "path";
 import { CancellationToken, Location, SymbolInformation, Uri, workspace, WorkspaceSymbolProvider } from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath, toRangeOnLine } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
 import { getSymbolKindForElementKind } from "../analysis/analyzer_das";
-import { isWithinWorkspace, toRangeOnLine } from "../utils";
+import { isWithinWorkspace } from "../utils";
 
 export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer) { }

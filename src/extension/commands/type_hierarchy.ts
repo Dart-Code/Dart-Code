@@ -1,10 +1,9 @@
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath, toRangeOnLine } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
 import * as editors from "../editors";
-import { toRangeOnLine } from "../utils";
 import { showCode } from "../utils/vscode/editor";
 
 export class TypeHierarchyCommand implements vs.Disposable {

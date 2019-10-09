@@ -1,9 +1,8 @@
 import { CancellationToken, OutputChannel, Position, Range, RenameProvider, TextDocument, Uri, workspace, WorkspaceEdit } from "vscode";
 import * as as from "../../shared/analysis_server_types";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath, toRange } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
 import * as channels from "../commands/channels";
-import { toRange } from "../utils";
 
 export class DartRenameProvider implements RenameProvider {
 	constructor(private readonly analyzer: Analyzer) { }

@@ -1,8 +1,7 @@
 import { CancellationToken, DefinitionLink, DefinitionProvider, Location, Position, ReferenceContext, ReferenceProvider, TextDocument, Uri } from "vscode";
 import { flatMap } from "../../shared/utils";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath, toRange, toRangeOnLine } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
-import * as util from "../utils";
 
 export class DartReferenceProvider implements ReferenceProvider, DefinitionProvider {
 	constructor(private readonly analyzer: Analyzer) { }
@@ -25,7 +24,7 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 		const locations = resp.results.map((result) => {
 			return new Location(
 				Uri.file(result.location.file),
-				util.toRangeOnLine(result.location),
+				toRangeOnLine(result.location),
 			);
 		});
 
@@ -53,8 +52,8 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 					target.startColumn = 1;
 
 				return {
-					originSelectionRange: util.toRange(document, region.offset, region.length),
-					targetRange: util.toRangeOnLine(target),
+					originSelectionRange: toRange(document, region.offset, region.length),
+					targetRange: toRangeOnLine(target),
 					targetUri: Uri.file(resp.files[target.fileIndex]),
 				} as DefinitionLink;
 			});
