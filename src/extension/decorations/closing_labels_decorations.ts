@@ -5,10 +5,10 @@ import { Analyzer } from "../analysis/analyzer";
 import { isAnalyzable } from "../utils";
 
 export class ClosingLabelsDecorations implements vs.Disposable {
+	private readonly validLastCharacters = [")", "]"];
 	private subscriptions: vs.Disposable[] = [];
 	private activeEditor?: vs.TextEditor;
 	private closingLabels?: as.AnalysisClosingLabelsNotification;
-	private updateTimeout?: NodeJS.Timer;
 
 	private readonly decorationType = vs.window.createTextEditorDecorationType({
 		after: {
@@ -22,10 +22,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 		this.subscriptions.push(this.analyzer.registerForAnalysisClosingLabels((n) => {
 			if (this.activeEditor && n.file === fsPath(this.activeEditor.document.uri)) {
 				this.closingLabels = n;
-				// Delay this so if we're getting lots of updates we don't flicker.
-				if (this.updateTimeout)
-					clearTimeout(this.updateTimeout);
-				this.updateTimeout = setTimeout(() => this.update(), 500);
+				this.update();
 			}
 		}));
 
@@ -42,6 +39,15 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 		const decorations: { [key: number]: vs.DecorationOptions } = [];
 
 		for (const r of this.closingLabels.labels) {
+			// Ensure the label we got looks like a sensible range, otherwise the outline info
+			// might be stale (eg. we sent two updates, and the outline from in between them just
+			// arrived). In this case, we'll just bail and do nothing, assuming a future update will
+			// have the correct info.
+			const endPos = this.activeEditor.document.positionAt(r.offset + r.length);
+			const lastChar = this.activeEditor.document.getText(new vs.Range(endPos.translate({ characterDelta: -1 }), endPos));
+			if (this.validLastCharacters.indexOf(lastChar) === -1)
+				return;
+
 			const finalCharacterPosition = this.activeEditor.document.positionAt(r.offset + r.length);
 			const finalCharacterRange =
 				finalCharacterPosition.character > 0
