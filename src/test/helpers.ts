@@ -406,7 +406,7 @@ export function positionOf(searchText: string): vs.Position {
 	return doc.positionAt(matchedTextIndex + caretOffset);
 }
 
-export function rangeOf(searchText: string, inside?: vs.Range): vs.Range {
+export function rangeOf(searchText: string, inside?: vs.Range, allowMissing = false): vs.Range | undefined {
 	const doc = currentDoc();
 	const startOffset = searchText.indexOf("|");
 	assert.notEqual(startOffset, -1, `Couldn't find a | in search text (${searchText})`);
@@ -419,12 +419,28 @@ export function rangeOf(searchText: string, inside?: vs.Range): vs.Range {
 	let matchedTextIndex = docText.indexOf(searchText.replace(/\|/g, "").replace(/\n/g, documentEol), startSearchAt);
 	if (endSearchAt > -1 && matchedTextIndex > endSearchAt)
 		matchedTextIndex = -1;
+	if (matchedTextIndex === -1 && allowMissing)
+		return undefined;
 	assert.notEqual(matchedTextIndex, -1, `Couldn't find string ${searchText.replace(/\|/g, "")} in the document to get range of. Document contained:\n${docText}`);
 
 	return new vs.Range(
 		doc.positionAt(matchedTextIndex + startOffset),
 		doc.positionAt(matchedTextIndex + endOffset - 1),
 	);
+}
+
+export function rangesOf(searchText: string): vs.Range[] {
+	const doc = currentDoc();
+	const results = [];
+	let searchRange: vs.Range | undefined;
+	let range: vs.Range | undefined;
+	// tslint:disable-next-line: no-conditional-assignment
+	while (range = rangeOf(searchText, searchRange, true)) {
+		results.push(range);
+		// Next time, search starting from after this range.
+		searchRange = new vs.Range(range.end, doc.positionAt(doc.getText().length));
+	}
+	return results;
 }
 
 export async function getDocumentSymbols(): Promise<Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol | undefined }>> {
@@ -533,7 +549,7 @@ export function ensureDocumentSymbol(symbols: Array<vs.DocumentSymbol & { parent
 	assert.ok(range.end.line);
 }
 
-function rangeString(range: vs.Range) {
+export function rangeString(range: vs.Range) {
 	return `${range.start.line}:${range.start.character}-${range.end.line}:${range.end.character}`;
 }
 
