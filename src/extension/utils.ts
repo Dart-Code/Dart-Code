@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as https from "https";
 import * as os from "os";
 import * as path from "path";
-import { commands, Position, Range, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
+import { commands, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { showLogAction } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
 import { isWithinPath } from "../shared/utils";
@@ -79,28 +79,6 @@ export function createFolderForFile(file?: string) {
 	if (!fs.existsSync(folder))
 		mkDirRecursive(folder);
 	return file;
-}
-
-export interface Location {
-	startLine: number;
-	startColumn: number;
-	length: number;
-}
-
-export function toRange(document: TextDocument, offset: number, length: number): Range {
-	return new Range(document.positionAt(offset), document.positionAt(offset + length));
-}
-
-export function toPosition(location: Location): Position {
-	return new Position(location.startLine - 1, location.startColumn - 1);
-}
-
-// Translates an offset/length to a Range.
-// NOTE: Does not wrap lines because it does not have access to a TextDocument to know
-// where the line ends.
-export function toRangeOnLine(location: Location): Range {
-	const startPos = toPosition(location);
-	return new Range(startPos, startPos.translate(0, location.length));
 }
 
 export function getSdkVersion(logger: Logger, sdkRoot?: string): string | undefined {

@@ -3,9 +3,9 @@ import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { flatMap } from "../../shared/utils";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
 import { getLaunchConfig } from "../../shared/utils/test";
+import { toRange } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
 import { openFileTracker } from "../analysis/open_file_tracker";
-import { toRange } from "../utils";
 
 export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	private disposables: IAmDisposable[] = [];

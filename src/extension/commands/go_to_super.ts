@@ -1,8 +1,7 @@
 import * as vs from "vscode";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath, toRangeOnLine } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
 import * as editors from "../editors";
-import { toRangeOnLine } from "../utils";
 import { showCode } from "../utils/vscode/editor";
 import { findNearestOutlineNode } from "../utils/vscode/outline";
 
