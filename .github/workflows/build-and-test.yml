@@ -47,7 +47,8 @@ jobs:
         with:
           channel: ${{ matrix.dart-version }}
 
-      - name: Setup Flutter ${{ matrix.dart-version }}
+      - name: Setup Flutter ${{ matrix.flutter-version }}
+        id: flutter
         if: matrix.bot != 'dart'
         uses: DanTup/gh-actions/setup-flutter@v0.0.7
         with:
@@ -86,6 +87,7 @@ jobs:
           BOT: ${{ matrix.bot }}
           CODE_VERSION: ${{ matrix.code-version }}
           LOGS_NAME: ${{ matrix.dart-version }}_${{ matrix.code-version }}
+          FLUTTER_PATH: ${{ steps.flutter.outputs.flutter-sdk }}
 
       - name: Store logs
         uses: actions/upload-artifact@v1
