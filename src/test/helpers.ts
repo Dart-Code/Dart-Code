@@ -368,7 +368,7 @@ export async function setTestContent(content: string): Promise<void> {
 	// HACK: Add a small delay to try and reduce the chance of a "Requested result
 	// might be inconsistent with previously returned results" error.
 	await delay(300);
-	await extApi.currentAnalysis;
+	await extApi.currentAnalysis();
 }
 
 export async function uncommentTestFile(): Promise<void> {
@@ -710,7 +710,7 @@ export async function waitForEditorChange(action: () => Thenable<void>): Promise
 
 export async function waitForNextAnalysis(action: () => void | Thenable<void>, timeoutSeconds?: number): Promise<void> {
 	logger.info("Waiting for any in-progress analysis to complete");
-	await extApi.currentAnalysis;
+	await extApi.currentAnalysis();
 	// Get a new completer for the next analysis.
 	const nextAnalysis = extApi.nextAnalysis();
 	logger.info("Running requested action");
@@ -772,7 +772,7 @@ export async function writeBrokenDartCodeIntoFileForTest(file: vs.Uri): Promise<
 	// HACK: Sometimes we see analysis the analysis flag toggle quickly and we get an empty error list
 	// so we need to add a small delay here and then wait for any in progress analysis.
 	await delay(500);
-	await extApi.currentAnalysis;
+	await extApi.currentAnalysis();
 	defer(() => tryDelete(file));
 }
 
