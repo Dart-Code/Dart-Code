@@ -48,7 +48,7 @@ export class FlutterIconDecorations implements vs.Disposable {
 			if (!this.decorationTypes[iconName])
 				this.decorationTypes[iconName] = vs.window.createTextEditorDecorationType({
 					gutterIconPath: vs.Uri.parse(iconUrlFormat.replace("$1", iconName)),
-					gutterIconSize: "80%",
+					gutterIconSize: "75%",
 				});
 		}
 
