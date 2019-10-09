@@ -17,7 +17,7 @@ export class DartFoldingProvider implements FoldingRangeProvider {
 		// Wait up to another few seconds after analysis completed (it might be that we opened a new
 		// file and there was no analysis, in which case we're just waiting for the server to process
 		// the newly added subscription and send results).
-		let foldingRegions: FoldingRegion[];
+		let foldingRegions: FoldingRegion[] | undefined;
 		for (let i = 0; i < 5; i++) {
 			foldingRegions = openFileTracker.getFoldingRegionsFor(document.uri);
 			if (foldingRegions)
@@ -37,7 +37,7 @@ export class DartFoldingProvider implements FoldingRangeProvider {
 		));
 	}
 
-	private getKind(kind: FoldingKind): FoldingRangeKind {
+	private getKind(kind: FoldingKind): FoldingRangeKind | undefined {
 		switch (kind) {
 			case "FILE_HEADER":
 			case "DOCUMENTATION_COMMENT":

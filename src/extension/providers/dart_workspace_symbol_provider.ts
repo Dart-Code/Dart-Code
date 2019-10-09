@@ -44,7 +44,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		const symbol: any = new PartialSymbolInformation(
 			names.name,
 			getSymbolKindForElementKind(this.logger, result.kind),
-			names.containerName,
+			names.containerName || "",
 			new Location(Uri.file(file), undefined),
 		);
 
@@ -73,7 +73,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		}
 		if (result.parameters && result.kind !== "SETTER")
 			name += result.parameters;
-		let containerName: string;
+		let containerName: string | undefined;
 		if (includeFilename) {
 			containerName = this.createDisplayPath(file);
 			if (result.className && !nameIsPrefixedWithClass)
@@ -84,7 +84,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		return { name, containerName };
 	}
 
-	private createDisplayPath(inputPath: string): string {
+	private createDisplayPath(inputPath: string): string | undefined {
 		// HACK: The AS returns paths to the PUB_CACHE folder, which Code can't
 		// convert to relative paths (so they look terrible). If the file exists in
 		// workspace.rootPath we rewrite the path to there which gives us a nice

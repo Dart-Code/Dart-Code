@@ -59,7 +59,7 @@ export class FlutterColorDecorations implements vs.Disposable {
 		}
 	}
 
-	private setTrackingFile(editor: vs.TextEditor) {
+	private setTrackingFile(editor: vs.TextEditor | undefined) {
 		if (editor && isAnalyzable(editor.document)) {
 			this.activeEditor = editor;
 		} else

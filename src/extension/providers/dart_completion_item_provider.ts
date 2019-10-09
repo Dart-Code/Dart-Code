@@ -438,13 +438,13 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			}
 		} else if (suggestion.selectionOffset) {
 			const before = suggestion.completionText.slice(0, suggestion.selectionOffset);
-			const selection = suggestion.completionText.slice(suggestion.selectionOffset, suggestion.selectionOffset + suggestion.selectionLength);
+			const selection = suggestion.completionText.slice(suggestion.selectionOffset, suggestion.selectionOffset + (suggestion.selectionLength || 0));
 			// If we have a selection offset (eg. a place to put the cursor) but not any text to pre-select then
 			// pop open the completion to help the user type the value.
 			// Only do this if it ends with a space (argument completion), see #730.
 			if (!selection && suggestion.completionText.slice(suggestion.selectionOffset - 1, suggestion.selectionOffset) === " ")
 				triggerCompletion = true;
-			const after = suggestion.completionText.slice(suggestion.selectionOffset + suggestion.selectionLength);
+			const after = suggestion.completionText.slice(suggestion.selectionOffset + (suggestion.selectionLength || 0));
 
 			completionText.appendText(before);
 			if (selection)

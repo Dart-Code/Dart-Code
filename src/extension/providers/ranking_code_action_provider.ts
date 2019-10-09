@@ -11,7 +11,7 @@ export class RankingCodeActionProvider implements CodeActionProvider {
 	}
 
 	get metadata(): CodeActionProviderMetadata {
-		const allKinds = flatMap(this.codeActionProviders, (p) => p.metadata.providedCodeActionKinds);
+		const allKinds = flatMap(this.codeActionProviders, (p) => p.metadata.providedCodeActionKinds || []);
 		return { providedCodeActionKinds: uniq(allKinds) };
 	}
 
@@ -21,7 +21,7 @@ export class RankingCodeActionProvider implements CodeActionProvider {
 		const applicableProviders = this.codeActionProviders.filter((p) => languages.match(p.selector, document));
 		const promises = applicableProviders.map((p) => p.provideCodeActions(document, range, context, token));
 		const allResults = await Promise.all(promises);
-		const flatResults = flatMap(allResults, (x) => x);
+		const flatResults = flatMap(allResults, (x) => x || []);
 		return flatResults;
 	}
 }

@@ -36,7 +36,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		this.subscriptions.forEach((s) => s.dispose());
 	}
 
-	public isSupported(types: f.PlatformType[] | undefined, device: { platformType: f.PlatformType | null | undefined }) {
+	public isSupported(types: f.PlatformType[] | undefined, device: { platformType: f.PlatformType | null | undefined } | undefined) {
 		// If we don't get any types to filter, assume everything is valid.
 		return device && (!types || !types.length || !device.platformType || types.indexOf(device.platformType) !== -1);
 	}

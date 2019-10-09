@@ -93,7 +93,7 @@ export class DartDiagnosticProvider {
 
 	private flushResults(notification: as.AnalysisFlushResultsNotification) {
 		this.lastErrorJson = undefined;
-		const entries = notification.files.map<[Uri, Diagnostic[]]>((file) => [Uri.file(file), undefined]);
+		const entries = notification.files.map<[Uri, Diagnostic[] | undefined]>((file) => [Uri.file(file), undefined]);
 		this.diagnostics.set(entries);
 	}
 }

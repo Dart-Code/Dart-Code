@@ -41,7 +41,7 @@ describe("device_manager", () => {
 		// then looking it up).
 		await daemon.connect(emulatedAndroidMobile, true);
 		assert.deepStrictEqual(dm.currentDevice, emulatedAndroidMobile);
-		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), androidEmulator.name);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice!), androidEmulator.name);
 	});
 
 	it("uses the standard device name for iOS simulator devices", async () => {

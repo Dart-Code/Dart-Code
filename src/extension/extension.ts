@@ -449,12 +449,12 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		const tree = vs.window.createTreeView("dartFlutterOutline", { treeDataProvider: flutterOutlineTreeProvider, showCollapseAll: true });
 		tree.onDidChangeSelection((e) => {
 			// TODO: This should be in a tree, not the data provider.
-			flutterOutlineTreeProvider.setContexts(e.selection);
+			flutterOutlineTreeProvider!.setContexts(e.selection);
 		});
 
 		context.subscriptions.push(vs.window.onDidChangeTextEditorSelection((e) => {
 			if (e.selections && e.selections.length) {
-				const node = flutterOutlineTreeProvider.getNodeAt(e.textEditor.document.uri, e.selections[0].start);
+				const node = flutterOutlineTreeProvider!.getNodeAt(e.textEditor.document.uri, e.selections[0].start);
 				if (node && tree.visible)
 					tree.reveal(node, { select: true, focus: false, expand: true });
 			}
