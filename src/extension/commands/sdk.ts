@@ -281,7 +281,7 @@ export class SdkCommands {
 		}, debounceDuration); // TODO: Does this need to be configurable?
 	}
 
-	public async fetchPackagesOrPrompt(uri: vs.Uri, options?: { alwaysPrompt?: boolean }): Promise<void> {
+	public async fetchPackagesOrPrompt(uri: vs.Uri | undefined, options?: { alwaysPrompt?: boolean }): Promise<void> {
 		if (isFetchingPackages)
 			return;
 		isFetchingPackages = true;

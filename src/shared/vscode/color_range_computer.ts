@@ -6,7 +6,7 @@ export class ColorRangeComputer {
 	private readonly namedColorPattern = new RegExp("Colors\\.([\\w_\\[\\]\\.]+)", "g");
 	private readonly colorConstructorPattern = new RegExp(" Color\\(0x([\\w_]{8})\\)", "g");
 
-	public compute(document: vs.TextDocument): { [key: string]: vs.Range[] } | undefined {
+	public compute(document: vs.TextDocument): { [key: string]: vs.Range[] } {
 		const text = document.getText();
 
 		// Build a map of all possible decorations, with those in this file. We need to include all

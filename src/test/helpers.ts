@@ -406,6 +406,8 @@ export function positionOf(searchText: string): vs.Position {
 	return doc.positionAt(matchedTextIndex + caretOffset);
 }
 
+export function rangeOf(searchText: string, inside: vs.Range | undefined, allowMissing: true): vs.Range | undefined;
+export function rangeOf(searchText: string, inside?: vs.Range): vs.Range;
 export function rangeOf(searchText: string, inside?: vs.Range, allowMissing = false): vs.Range | undefined {
 	const doc = currentDoc();
 	const startOffset = searchText.indexOf("|");

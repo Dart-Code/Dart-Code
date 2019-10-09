@@ -117,7 +117,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			logger.info(`Converted cwd to absolute path: ${debugConfig.cwd}`);
 		}
 		if (debugConfig.program && !path.isAbsolute(debugConfig.program) && (debugConfig.cwd || folder)) {
-			debugConfig.program = path.join(debugConfig.cwd || fsPath(folder.uri), debugConfig.program);
+			debugConfig.program = path.join(debugConfig.cwd || fsPath(folder!.uri), debugConfig.program);
 			logger.info(`Converted program to absolute path: ${debugConfig.program}`);
 		}
 
@@ -296,7 +296,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			});
 			if (firstRelevantDiagnostic) {
 				logger.warn("Project has errors, prompting user");
-				const firstRelevantError = firstRelevantDiagnostic[1].find(isDartError);
+				const firstRelevantError = firstRelevantDiagnostic[1].find(isDartError)!;
 				const range = firstRelevantError.range;
 				logger.warn(`    ${fsPath(firstRelevantDiagnostic[0])}:${range.start.line}:${range.start.character}`);
 				logger.warn(`    ${firstRelevantError.message.split("\n")[0].trim()}`);
@@ -403,7 +403,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return this.guessBestEntryPoint(undefined, path.join(projectRoot, "example"));
 	}
 
-	private async getFullVmServiceUri(observatoryUri: string, defaultValue?: string): Promise<string> {
+	private async getFullVmServiceUri(observatoryUri: string | undefined, defaultValue?: string): Promise<string | undefined> {
 		observatoryUri = observatoryUri || await vs.commands.executeCommand("dart.promptForVmService", defaultValue);
 		observatoryUri = observatoryUri && observatoryUri.trim();
 
@@ -479,7 +479,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			? debugConfig.debuggerHandlesPathsEverywhereForBreakpoints
 			: this.dartCapabilities.handlesPathsEverywhereForBreakpoints;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
-		if (isFlutter) {
+		if (isFlutter && this.sdks.flutter) {
 			debugConfig.args = conf.flutterAdditionalArgs.concat(debugConfig.args);
 			debugConfig.forceFlutterVerboseMode = isLogging || isCI;
 			debugConfig.flutterTrackWidgetCreation =
@@ -490,7 +490,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					conf.flutterTrackWidgetCreation;
 			debugConfig.flutterMode = debugConfig.flutterMode || "debug";
 			debugConfig.flutterPlatform = debugConfig.flutterPlatform || "default";
-			debugConfig.flutterPath = debugConfig.flutterPath || (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : undefined);
+			debugConfig.flutterPath = debugConfig.flutterPath || path.join(this.sdks.flutter, flutterPath);
 			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || conf.flutterRunLogFile;
 			debugConfig.flutterTestLogFile = debugConfig.flutterTestLogFile || conf.flutterTestLogFile;
 			if (!debugConfig.deviceId && device) {

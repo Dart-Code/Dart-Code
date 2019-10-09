@@ -2,7 +2,7 @@ import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeA
 import * as as from "../../shared/analysis_server_types";
 import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
-import { isAnalyzableAndInWorkspace } from "../utils";
+import { isAnalyzableAndInWorkspace, notUndefined } from "../utils";
 import { RankedCodeActionProvider } from "./ranking_code_action_provider";
 
 const supportedRefactors: { [key: string]: string } = {
@@ -38,7 +38,7 @@ export class RefactorCodeActionProvider implements RankedCodeActionProvider {
 			});
 			if (token && token.isCancellationRequested)
 				return;
-			return result.kinds.map((k) => this.getRefactorForKind(document, range, k)).filter((r) => r);
+			return result.kinds.map((k) => this.getRefactorForKind(document, range, k)).filter(notUndefined);
 		} catch (e) {
 			// TODO: Swap this back to logError/throw when https://github.com/dart-lang/sdk/issues/33471 is fixed.
 			return [];
@@ -47,7 +47,7 @@ export class RefactorCodeActionProvider implements RankedCodeActionProvider {
 		}
 	}
 
-	private getRefactorForKind(document: TextDocument, range: Range, k: as.RefactoringKind): CodeAction {
+	private getRefactorForKind(document: TextDocument, range: Range, k: as.RefactoringKind): CodeAction | undefined {
 		if (!supportedRefactors[k])
 			return;
 

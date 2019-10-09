@@ -9,7 +9,7 @@ import { openFileTracker } from "../analysis/open_file_tracker";
 export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 	constructor(private readonly logger: Logger) { }
 
-	public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<DocumentSymbol[]> {
+	public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<DocumentSymbol[] | undefined> {
 		const outline = await waitFor(() => openFileTracker.getOutlineFor(document.uri), 500, 60000, token);
 		if (token.isCancellationRequested || !outline || !outline.children || !outline.children.length)
 			return;
@@ -23,7 +23,7 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 		const location = outline.element.location || outline;
 		const symbol = new DocumentSymbol(
 			name,
-			outline.element.parameters,
+			outline.element.parameters || "",
 			getSymbolKindForElementKind(this.logger, outline.element.kind),
 			this.getCodeOffset(document, outline),
 			toRange(document, location.offset, location.length),

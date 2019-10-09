@@ -8,7 +8,7 @@ import { findNearestOutlineNode } from "../utils/vscode/outline";
 export class DartImplementationProvider implements vs.ImplementationProvider {
 	constructor(readonly analyzer: Analyzer) { }
 
-	public async provideImplementation(document: vs.TextDocument, position: vs.Position, token: vs.CancellationToken): Promise<vs.Definition> {
+	public async provideImplementation(document: vs.TextDocument, position: vs.Position, token: vs.CancellationToken): Promise<vs.Definition | undefined> {
 		// Try to use the Outline data to snap our location to a node.
 		// For example in:
 		//
@@ -17,7 +17,9 @@ export class DartImplementationProvider implements vs.ImplementationProvider {
 		// The search.getTypeHierarchy call will only work over "b" but by using outline we
 		// can support the whole "void b();".
 		const outlineNode = findNearestOutlineNode(document, position, true);
-		const offset = outlineNode ? outlineNode.element.location.offset : document.offsetAt(position);
+		const offset = outlineNode && outlineNode.element && outlineNode.element.location
+			? outlineNode.element.location.offset
+			: document.offsetAt(position);
 
 		const hierarchy = await this.analyzer.searchGetTypeHierarchy({
 			file: fsPath(document.uri),
@@ -30,7 +32,7 @@ export class DartImplementationProvider implements vs.ImplementationProvider {
 		// Find the element we started with, since we only want implementations (not super classes).
 		const currentItem = hierarchy.hierarchyItems.find((h) => {
 			const elm = h.memberElement || h.classElement;
-			return elm.location.offset <= offset && elm.location.offset + elm.location.length >= offset;
+			return elm.location && elm.location.offset <= offset && elm.location.offset + elm.location.length >= offset;
 		})
 			// If we didn't find the element when we might have been at a call site, so we'll have to start
 			// at the root.

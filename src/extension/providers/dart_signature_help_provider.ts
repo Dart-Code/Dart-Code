@@ -7,7 +7,7 @@ import { Analyzer } from "../analysis/analyzer";
 export class DartSignatureHelpProvider implements vs.SignatureHelpProvider {
 	constructor(private readonly analyzer: Analyzer) {
 	}
-	public async provideSignatureHelp(document: vs.TextDocument, position: vs.Position, token: vs.CancellationToken): Promise<vs.SignatureHelp> {
+	public async provideSignatureHelp(document: vs.TextDocument, position: vs.Position, token: vs.CancellationToken): Promise<vs.SignatureHelp | undefined> {
 		try {
 			const resp = await this.analyzer.analysisGetSignature({
 				file: fsPath(document.uri),
@@ -15,7 +15,7 @@ export class DartSignatureHelpProvider implements vs.SignatureHelpProvider {
 			});
 
 			if (token && token.isCancellationRequested)
-				return;
+				return undefined;
 
 			const sig = new vs.SignatureInformation(this.getSignatureLabel(resp), new vs.MarkdownString(cleanDartdoc(resp.dartdoc)));
 			sig.parameters = resp.parameters.map((p) => new vs.ParameterInformation(this.getLabel(p)));

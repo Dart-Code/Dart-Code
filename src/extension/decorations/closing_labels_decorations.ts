@@ -76,7 +76,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 		this.activeEditor.setDecorations(this.decorationType, Object.keys(decorations).map((k) => parseInt(k, 10)).map((k) => decorations[k]));
 	}
 
-	private setTrackingFile(editor: vs.TextEditor) {
+	private setTrackingFile(editor: vs.TextEditor | undefined) {
 		if (editor && isAnalyzable(editor.document)) {
 			this.activeEditor = editor;
 			this.closingLabels = undefined;

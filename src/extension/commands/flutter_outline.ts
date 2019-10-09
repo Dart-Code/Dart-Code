@@ -28,9 +28,12 @@ export class FlutterOutlineCommands {
 		}
 
 		const widget = this.tree.selection[0];
-		const fix = widget.fixes.filter((f) => f.command).find((f) => f.kind.value.endsWith(refactorType));
+		const fix = widget.fixes.filter((f) => f.command).find((f) => f.kind && f.kind.value.endsWith(refactorType));
 		if (fix) {
-			vs.commands.executeCommand(fix.command.command, ...fix.command.arguments);
+			if (fix.command && fix.command.arguments)
+				vs.commands.executeCommand(fix.command.command, ...fix.command.arguments);
+			else
+				console.error(`Flutter Outline fix was missing command/arguments`);
 		} else {
 			console.error(`Unable to find command for Flutter Outline: ${refactorType}`);
 		}

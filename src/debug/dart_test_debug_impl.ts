@@ -57,7 +57,7 @@ export class DartTestDebugSession extends DartDebugSession {
 		return this.createRunner(args.dartPath, args.cwd, args.program, appArgs, args.env, args.pubTestLogFile, logger, args.maxLogLineLength);
 	}
 
-	protected createRunner(executable: string, projectFolder: string, program: string, args: string[], envOverrides: any, logFile: string, logger: Logger, maxLogLineLength: number) {
+	protected createRunner(executable: string, projectFolder: string | undefined, program: string, args: string[], envOverrides: any, logFile: string | undefined, logger: Logger, maxLogLineLength: number) {
 		const runner = new TestRunner(executable, projectFolder, args, envOverrides, logFile, logger, maxLogLineLength);
 
 		// Set up subscriptions.
@@ -144,7 +144,7 @@ export class DartTestDebugSession extends DartDebugSession {
 	}
 
 	protected sendTestEventToEditor(notification: any) {
-		let suiteID: number;
+		let suiteID: number | undefined;
 		switch (notification.type) {
 			case "suite":
 				const suite = notification as SuiteNotification;
@@ -172,7 +172,7 @@ export class DartTestDebugSession extends DartDebugSession {
 				break;
 		}
 
-		const suitePath = this.suitePaths[suiteID];
+		const suitePath = suiteID !== undefined ? this.suitePaths[suiteID] : undefined;
 		if (suitePath) {
 			this.sendEvent(new Event(
 				"dart.testRunNotification",

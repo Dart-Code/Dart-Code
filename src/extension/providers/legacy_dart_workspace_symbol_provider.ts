@@ -95,7 +95,7 @@ export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvide
 		return new SymbolInformation(
 			elementPathDescription + parameters,
 			getSymbolKindForElementKind(this.logger, result.path[0].kind),
-			containerName,
+			containerName || "",
 			new Location(
 				Uri.file(result.location.file),
 				toRangeOnLine(result.location),
@@ -103,7 +103,10 @@ export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvide
 		);
 	}
 
-	private createDisplayPath(inputPath: string): string {
+	private createDisplayPath(inputPath: string | undefined): string | undefined {
+		if (!inputPath)
+			return undefined;
+
 		// HACK: The AS returns paths to the PUB_CACHE folder, which Code can't
 		// convert to relative paths (so they look terrible). If the file exists in
 		// workspace.rootPath we rewrite the path to there which gives us a nice

@@ -51,7 +51,7 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 		this.registeredFormatters.length = 0;
 	}
 
-	public async provideDocumentFormattingEdits(document: TextDocument, options: FormattingOptions, token: CancellationToken): Promise<TextEdit[]> {
+	public async provideDocumentFormattingEdits(document: TextDocument, options: FormattingOptions, token: CancellationToken): Promise<TextEdit[] | undefined> {
 		try {
 			return await this.doFormat(document, true); // await is important for catch to work.
 		} catch {
@@ -63,7 +63,7 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 		}
 	}
 
-	public async provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, token: CancellationToken): Promise<TextEdit[] | undefined> | undefined {
+	public async provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, token: CancellationToken): Promise<TextEdit[] | undefined> {
 		try {
 			return await this.doFormat(document, false);
 		} catch {
@@ -94,7 +94,7 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 
 	private shouldFormat(document: TextDocument): boolean {
 		if (!document || !document.uri || document.uri.scheme !== "file")
-			return;
+			return false;
 
 		const resourceConf = config.for(document.uri);
 		const path = fsPath(document.uri);

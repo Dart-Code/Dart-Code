@@ -7,7 +7,7 @@ import { toRange } from "./utils";
 export class IconRangeComputer {
 	constructor(private readonly logger: Logger) { }
 
-	public compute(document: vs.TextDocument, outline: FlutterOutline): { [key: string]: vs.Range[] } | undefined {
+	public compute(document: vs.TextDocument, outline: FlutterOutline): { [key: string]: vs.Range[] } {
 		const iconVisitor = new FlutterOutlineIconVisitor(this.logger);
 		iconVisitor.visit(outline);
 
