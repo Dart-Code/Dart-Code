@@ -87,7 +87,7 @@ jobs:
           BOT: ${{ matrix.bot }}
           CODE_VERSION: ${{ matrix.code-version }}
           LOGS_NAME: ${{ matrix.dart-version }}_${{ matrix.code-version }}
-          FLUTTER_PATH: ${{ steps.flutter.outputs.flutter-sdk }}
+          FLUTTER_REPO_PATH: ${{ steps.flutter.outputs.flutter-sdk }}
 
       - name: Store logs
         uses: actions/upload-artifact@v1
