@@ -817,15 +817,22 @@ export function watchPromise<T>(name: string, promise: Promise<T>): Promise<T> {
 			logger.warn(`Promise ${name} rejected!`, LogCategory.CI);
 	});
 
-	let checkResult: () => void;
-	checkResult = () => {
+	const initialCheck = 3000;
+	const subsequentCheck = 10000;
+	const maxTime = 60000;
+	let checkResult: (timeMS: number) => void;
+	checkResult = (timeMS: number) => {
 		if (didComplete)
 			return;
 		logCompletion = true;
 		logger.info(`Promise ${name} is still unresolved!`, LogCategory.CI);
-		setTimeout(checkResult, 10000);
+		if (timeMS > maxTime) {
+			logger.error(`Promise ${name} not resolved after ${maxTime}ms so no longer watching!`, LogCategory.CI);
+			return;
+		}
+		setTimeout(() => checkResult(timeMS + subsequentCheck), subsequentCheck);
 	};
-	setTimeout(checkResult, 3000); // First log is after 3s, rest are 10s.
+	setTimeout(() => checkResult(initialCheck), initialCheck); // First log is after 3s, rest are 10s.
 
 	return promise;
 }
