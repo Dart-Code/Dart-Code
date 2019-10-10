@@ -16,8 +16,8 @@ jobs:
       matrix:
         os: [macOS-latest, ubuntu-latest, windows-latest]
         node-version: [10]
-        dart-version: [stable, dev]
-        code-version: [stable, insiders]
+        dart-version: [stable]#, dev]
+        code-version: [stable]#, insiders]
         bot: [dart, flutter, misc, flutter_repo]
         include:
           - dart-version: stable
