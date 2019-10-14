@@ -1681,7 +1681,7 @@ export class DartDebugSession extends DebugSession {
 		this.sendEvent(new Event("dart.debugMetrics", { memory: { current, total } }));
 
 		if (this.pollforMemoryMs)
-			setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs);
+			setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs).unref();
 	}
 
 	private getStackFrameData(message: string): MessageWithUriData | undefined {

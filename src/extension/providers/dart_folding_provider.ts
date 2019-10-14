@@ -22,7 +22,7 @@ export class DartFoldingProvider implements FoldingRangeProvider {
 			foldingRegions = openFileTracker.getFoldingRegionsFor(document.uri);
 			if (foldingRegions)
 				break;
-			await new Promise((resolve) => setTimeout(resolve, i * 1000));
+			await new Promise((resolve) => setTimeout(resolve, i * 1000).unref());
 			if (token && token.isCancellationRequested)
 				return;
 		}

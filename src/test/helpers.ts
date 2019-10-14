@@ -830,9 +830,9 @@ export function watchPromise<T>(name: string, promise: Promise<T>): Promise<T> {
 			logger.error(`Promise ${name} not resolved after ${maxTime}ms so no longer watching!`, LogCategory.CI);
 			return;
 		}
-		setTimeout(() => checkResult(timeMS + subsequentCheck), subsequentCheck);
+		setTimeout(() => checkResult(timeMS + subsequentCheck), subsequentCheck).unref();
 	};
-	setTimeout(() => checkResult(initialCheck), initialCheck); // First log is after 3s, rest are 10s.
+	setTimeout(() => checkResult(initialCheck), initialCheck).unref(); // First log is after 3s, rest are 10s.
 
 	return promise;
 }
