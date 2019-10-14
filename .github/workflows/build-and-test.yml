@@ -37,7 +37,7 @@ jobs:
 
       - name: Setup Chrome
         if: matrix.os == 'macOS-latest'
-        run: brew cask install google-chrome
+        run: brew update && brew cask install google-chrome
         
       - name: Setup Node v${{ matrix.node-version }}
         uses: actions/setup-node@v1
