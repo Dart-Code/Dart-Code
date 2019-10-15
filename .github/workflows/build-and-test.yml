@@ -45,14 +45,14 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Setup Dart ${{ matrix.dart-version }}
-        uses: DanTup/gh-actions/setup-dart@v0.0.7
+        uses: DanTup/gh-actions/setup-dart@master
         with:
           channel: ${{ matrix.dart-version }}
 
       - name: Setup Flutter ${{ matrix.flutter-version }}
         id: flutter
         if: matrix.bot != 'dart'
-        uses: DanTup/gh-actions/setup-flutter@v0.0.7
+        uses: DanTup/gh-actions/setup-flutter@master
         with:
           channel: ${{ matrix.flutter-version }}
       
