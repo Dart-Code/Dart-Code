@@ -44,7 +44,6 @@ module.exports = {
 		require("source-map-support").install();
 
 		const callbackAndQuit = (error: any, failures?: number) => {
-			cb(error, failures);
 
 			// Sometimes test runs hang because there are timers left around that
 			// prevent Node from quitting. Mocha used to always call exit at the
@@ -54,8 +53,11 @@ module.exports = {
 			// if it quits normally the error will not be written.
 			setTimeout(() => {
 				console.error(`Test process did not quit within 10 seconds, calling exit!`);
-				process.exit();
+				process.exit(1);
 			}, 10000).unref();
+
+			console.log(`Test run is complete! Will quit in 10 seconds if process is still alive...`);
+			cb(error, failures);
 		};
 
 		glob("**/**.test.js", { cwd: testsRoot }, (err, files) => {
