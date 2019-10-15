@@ -177,7 +177,7 @@ class MyWidget extends StatelessWidget {
     return new Container();
   }
 }
-		`);
+		`, true);
 
 		assert(refactorPrompt.calledOnce);
 	});
