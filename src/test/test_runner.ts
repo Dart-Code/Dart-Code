@@ -43,9 +43,24 @@ module.exports = {
 		// Set up source map support.
 		require("source-map-support").install();
 
+		const callbackAndQuit = (error: any, failures?: number) => {
+			cb(error, failures);
+
+			// Sometimes test runs hang because there are timers left around that
+			// prevent Node from quitting. Mocha used to always call exit at the
+			// end of a run, but that changed in v4. To avoid hanging CI builds,
+			// write an error and then just quit if we're still around after 10 seconds.
+			// unref() will prevent the timeout from keeping the process alive, so
+			// if it quits normally the error will not be written.
+			setTimeout(() => {
+				console.error(`Test process did not quit within 10 seconds, calling exit!`);
+				process.exit();
+			}, 10000).unref();
+		};
+
 		glob("**/**.test.js", { cwd: testsRoot }, (err, files) => {
 			if (err) {
-				return cb(err);
+				return callbackAndQuit(err);
 			}
 
 			// Add files to the test suite
@@ -53,9 +68,9 @@ module.exports = {
 
 			try {
 				// Run the mocha test
-				mocha.run((failures) => cb(null, failures));
+				mocha.run((failures) => callbackAndQuit(null, failures));
 			} catch (err) {
-				cb(err);
+				callbackAndQuit(err);
 			}
 		});
 	},
