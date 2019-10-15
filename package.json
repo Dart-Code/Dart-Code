@@ -1685,7 +1685,7 @@
 		"@types/ws": "^6.0.3",
 		"glob": "^7.1.4",
 		"istanbul-instrumenter-loader": "^3.0.1",
-		"mocha": "^5.2.0",
+		"mocha": "^6.2.1",
 		"nyc": "^13.3.0",
 		"remap-istanbul": "^0.13.0",
 		"signal-exit": "^3.0.2",
