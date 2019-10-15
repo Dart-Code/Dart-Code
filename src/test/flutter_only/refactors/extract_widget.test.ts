@@ -43,7 +43,7 @@ class MyOtherWidget extends StatelessWidget {
     return new Container();
   }
 }
-		`);
+		`, true);
 	});
 
 	it("displays an error if an invalid range is selected", async () => {

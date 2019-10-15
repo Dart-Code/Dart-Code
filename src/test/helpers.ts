@@ -653,16 +653,22 @@ export function ensureNoSnippet(items: vs.CompletionItem[], label: string): void
 	ensureNoCompletion(items, vs.CompletionItemKind.Snippet, label);
 }
 
-export async function ensureTestContent(expected: string): Promise<void> {
+export async function ensureTestContent(expected: string, allowNewMismatches = false): Promise<void> {
 	const doc = currentDoc();
+	function normalise(text: string) {
+		text = text.replace(/\r/g, "").trim();
+		if (allowNewMismatches)
+			text = text.replace(/ new /g, " ");
+		return text;
+	}
 	// Wait for a short period before checking to reduce changes of flaky tests.
-	await waitForResult(() =>
-		doc.getText().replace(/\r/g, "").trim() === expected.replace(/\r/g, "").trim(),
+	await waitForResult(
+		() => normalise(doc.getText()) === normalise(expected),
 		"Document content did not match expected",
 		100,
 		false,
 	);
-	assert.equal(doc.getText().replace(/\r/g, "").trim(), expected.replace(/\r/g, "").trim());
+	assert.equal(normalise(doc.getText()), normalise(expected));
 }
 
 export async function ensureTestSelection(expected: vs.Range): Promise<void> {
