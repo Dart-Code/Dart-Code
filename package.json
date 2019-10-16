@@ -1688,7 +1688,6 @@
 		"mocha": "^6.2.1",
 		"nyc": "^13.3.0",
 		"remap-istanbul": "^0.13.0",
-		"signal-exit": "^3.0.2",
 		"sinon": "^7.3.2",
 		"source-map-support": "^0.5.13",
 		"ts-loader": "^6.1.0",
