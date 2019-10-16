@@ -162,19 +162,11 @@ export class TestOutlineVisitor extends OutlineVisitor {
 		// Strip off the function name/parent like test( or testWidget(
 		const openParen = elementName.indexOf("(");
 		const closeParen = elementName.lastIndexOf(")");
-		if (openParen === -1 || closeParen === -1 || openParen > closeParen)
+		if (openParen === -1 || closeParen === -1 || openParen >= closeParen)
 			return;
-		elementName = elementName.substring(openParen + 1, closeParen);
 
-		// To avoid implemented Dart string parsing here (escaping, triple quotes, etc.)
-		// we will just require that a string is quoted at each end with the same character
-		// and contains zero of that character inside the string, and zero backslashes.
-		const quoteCharacter = elementName.substr(0, 1);
-		if (elementName.slice(-1) !== quoteCharacter)
-			return;
-		elementName = elementName.slice(1, -1);
-		if (elementName.indexOf(quoteCharacter) !== -1 || elementName.indexOf("\\") !== -1)
-			return;
+		elementName = elementName
+			.substring(openParen + 2, closeParen - 1);
 
 		return elementName;
 	}
