@@ -7,7 +7,7 @@ import "package:test/test.dart";
 // test/tree_test.dart (fail.svg)
 //     failing group 1 (fail.svg)
 //         group 1.1 (pass.svg)
-//             passing test 1 (pass.svg)
+//             passing test 1 with ' some " quotes in name (pass.svg)
 //         passing test 1 (pass.svg)
 //         failing test 1 (fail.svg)
 //         skipped test 1 (skip.svg)
@@ -29,7 +29,8 @@ void main() {
     test("failing test 1", () => expect(1, equals(2)));
     test("skipped test 1", () {}, skip: true);
     group("group 1.1", () {
-      test("passing test 1", () => expect(1, equals(1)));
+      test("passing test 1 with ' some \" quotes in name",
+          () => expect(1, equals(1)));
     });
   });
   group("skipped group 2", () {

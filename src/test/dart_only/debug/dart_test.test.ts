@@ -223,7 +223,13 @@ describe("dart test debugger", () => {
 		visitor.visit(outline);
 		for (const test of visitor.tests.filter((t) => !t.isGroup)) {
 			// Run the test.
-			await runWithoutDebugging(helloWorldTestTreeFile, ["--name", makeRegexForTest(test.fullName, test.isGroup)]);
+			await runWithoutDebugging(
+				helloWorldTestTreeFile,
+				["--name", makeRegexForTest(test.fullName, test.isGroup)],
+				// Ensure the output contained the test name as a sanity check
+				// that it ran.
+				dc.assertOutputContains("stdout", test.fullName),
+			);
 			await checkResults(`After running ${numRuns++} tests (most recently ${test.fullName})`);
 		}
 	}).timeout(180000); // This test runs lots of tests, and they're quite slow to start up currently.
@@ -279,12 +285,13 @@ describe("dart test debugger", () => {
 		// after a full suite run?
 	});
 
-	async function runWithoutDebugging(file: vs.Uri, args?: string[]): Promise<void> {
+	async function runWithoutDebugging(file: vs.Uri, args?: string[], ...otherEvents: Array<Promise<any>>): Promise<void> {
 		await openFile(file);
 		const config = await startDebugger(file, { args, noDebug: true });
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
+			...otherEvents,
 			dc.launch(config),
 		]);
 	}
