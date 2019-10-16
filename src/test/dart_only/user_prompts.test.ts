@@ -23,7 +23,7 @@ describe("DevTools notification", async () => {
 		// Was asked, and launched..
 		assert.equal(wantToTryPrompt.calledOnce, true);
 		assert.equal(openDevToolsCommand.calledOnce, true);
-		assert.equal(res, true);
+		assert.equal(res.didOpen, true);
 
 		// Flags were updated.
 		const context = extApi.context;
@@ -49,7 +49,7 @@ describe("DevTools notification", async () => {
 		// Was asked, and launched..
 		assert.equal(wantToTryPrompt.calledOnce, true);
 		assert.equal(openDevToolsCommand.calledOnce, true);
-		assert.equal(res, true);
+		assert.equal(res.didOpen, true);
 
 		// Flags were updated.
 		assert.equal(context.devToolsNotificationDoNotShow, false);
@@ -75,7 +75,7 @@ describe("DevTools notification", async () => {
 		// Was not asked, or launched.
 		assert.equal(wantToTryPrompt.called, false);
 		assert.equal(openDevToolsCommand.called, false);
-		assert.equal(res, false);
+		assert.equal(res.didOpen, false);
 	});
 
 	it("writes do-not-show-again flag", async () => {
@@ -90,7 +90,7 @@ describe("DevTools notification", async () => {
 		// Was asked, but not launched.
 		assert.equal(wantToTryPrompt.called, true);
 		assert.equal(openDevToolsCommand.called, false);
-		assert.equal(res, false);
+		assert.equal(res.didOpen, false);
 
 		// Flag was written.
 		assert.equal(extApi.context.devToolsNotificationDoNotShow, true);
@@ -110,7 +110,7 @@ describe("DevTools notification", async () => {
 		// Was not asked, or launched.
 		assert.equal(wantToTryPrompt.called, false);
 		assert.equal(openDevToolsCommand.called, false);
-		assert.equal(res, false);
+		assert.equal(res.didOpen, false);
 	});
 });
 

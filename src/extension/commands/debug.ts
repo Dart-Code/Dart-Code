@@ -7,6 +7,7 @@ import { FlutterServiceExtension, LogSeverity } from "../../shared/enums";
 import { Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
 import { findProjectFolders } from "../../shared/utils/fs";
+import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { WorkspaceContext } from "../../shared/workspace";
@@ -47,7 +48,7 @@ export class DebugCommands {
 	public readonly flutterExtensions: FlutterVmServiceExtensions;
 	private readonly devTools: DevToolsManager;
 
-	constructor(private readonly logger: Logger, context: Context, workspaceContext: WorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
+	constructor(private readonly logger: Logger, private context: Context, workspaceContext: WorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
 		this.flutterExtensions = new FlutterVmServiceExtensions(this.sendServiceSetting);
 		this.devTools = new DevToolsManager(logger, context, workspaceContext.sdks, this, analytics, pubGlobal);
 		context.subscriptions.push(this.devTools);
@@ -411,6 +412,22 @@ export class DebugCommands {
 			session.observatoryUri = e.body.observatoryUri;
 			session.vmServiceUri = e.body.vmServiceUri;
 			this.onDebugSessionVmServiceAvailableEmitter.fire(session);
+
+			// Open or prompt for DevTools when appropriate.
+			const debuggerType: DebuggerType = session.session.configuration.debuggerType;
+			if (debuggerType === DebuggerType.Dart || debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.FlutterWeb) {
+				if (config.openDevTools !== "never") {
+					const shouldLaunch = debuggerType !== DebuggerType.Dart || config.openDevTools === "always";
+					if (shouldLaunch)
+						vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true });
+				} else if (debuggerType !== DebuggerType.Dart) {
+					showDevToolsNotificationIfAppropriate(this.context).then((res) => {
+						if (res.shouldAlwaysOpen)
+							config.setOpenDevTools("flutter");
+					});
+				}
+			}
+
 			// if (e.body.isProbablyReconnectable) {
 			// 	mostRecentAttachedProbablyReusableObservatoryUri = session.observatoryUri;
 			// } else {
