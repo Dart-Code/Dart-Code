@@ -10,13 +10,11 @@ import { CategoryLogger } from "../../shared/logging";
 import { UnknownNotification } from "../../shared/services/interfaces";
 import { getRandomInt } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
-import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { isRunningLocally } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions } from "../commands/debug";
 import { config } from "../config";
-import { DebuggerType } from "../providers/debug_config_provider";
 import { PubGlobal } from "../pub/global";
 import { StdIOService } from "../services/stdio_service";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
@@ -136,19 +134,6 @@ export class DevToolsManager implements vs.Disposable {
 				// Service, then register it with this server.
 				this.disposables.push(this.debugCommands.onDebugSessionVmServiceAvailable((session) => {
 					service.vmRegister({ uri: session.vmServiceUri! });
-
-					// Open or prompt for DevTools when appropriate.
-					const debuggerType: DebuggerType = session.session.configuration.debuggerType;
-					if (debuggerType === DebuggerType.Dart || debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.FlutterWeb) {
-						if (config.openDevTools !== "never") {
-							const shouldLaunch = debuggerType !== DebuggerType.Dart || config.openDevTools === "always";
-							if (shouldLaunch)
-								vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true });
-						} else if (debuggerType !== DebuggerType.Dart) {
-							// TODO: Add a button to this to "launch always" (behind a flag for now?)
-							showDevToolsNotificationIfAppropriate(this.context);
-						}
-					}
 				}));
 
 				// And send any existing sessions we have.

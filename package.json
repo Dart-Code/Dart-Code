@@ -1348,7 +1348,7 @@
 				},
 				"dart.devToolsReuseWindows": {
 					"type": "boolean",
-					"default": false,
+					"default": true,
 					"description": "Whether to try to reuse existing DevTools windows instead of launching new ones. Only works for instances of DevTools launched by the DevTools server on the local machine.",
 					"scope": "window"
 				},
@@ -1359,7 +1359,7 @@
 						"always"
 					],
 					"default": "never",
-					"description": "Whether to automatically open DevTools at the start of a debug session",
+					"description": "Whether to automatically open DevTools at the start of a debug session.",
 					"scope": "window"
 				},
 				"dart.flutterDaemonLogFile": {

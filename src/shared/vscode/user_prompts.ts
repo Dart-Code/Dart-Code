@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { doNotAskAgainAction, flutterSurveyPromptWithAnalytics, flutterSurveyPromptWithoutAnalytics, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, noThanksAction, openDevToolsAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
+import { alwaysOpenAction, doNotAskAgainAction, flutterSurveyPromptWithAnalytics, flutterSurveyPromptWithoutAnalytics, isWin, longRepeatPromptThreshold, notTodayAction, openDevToolsAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
 import { Logger } from "../interfaces";
 import { Context } from "./workspace";
 
@@ -72,7 +72,7 @@ export function showFlutterSurveyNotificationIfAppropriate(context: Context, ope
 	return true;
 }
 
-export async function showDevToolsNotificationIfAppropriate(context: Context): Promise<boolean> {
+export async function showDevToolsNotificationIfAppropriate(context: Context): Promise<{ didOpen: boolean, shouldAlwaysOpen?: boolean }> {
 	const lastShown = context.devToolsNotificationLastShown;
 	const timesShown = context.devToolsNotificationsShown || 0;
 	const doNotShow = context.devToolsNotificationDoNotShow;
@@ -88,15 +88,18 @@ export async function showDevToolsNotificationIfAppropriate(context: Context): P
 	context.devToolsNotificationsShown = timesShown + 1;
 	context.devToolsNotificationLastShown = Date.now();
 
-	const choice = await vs.window.showInformationMessage(wantToTryDevToolsPrompt, openDevToolsAction, noThanksAction, doNotAskAgainAction);
+	const choice = await vs.window.showInformationMessage(wantToTryDevToolsPrompt, openDevToolsAction, alwaysOpenAction, notTodayAction, doNotAskAgainAction);
 	if (choice === doNotAskAgainAction) {
 		context.devToolsNotificationDoNotShow = true;
-		return false;
+		return { didOpen: false };
+	} else if (choice === alwaysOpenAction) {
+		vs.commands.executeCommand("dart.openDevTools");
+		return { didOpen: true, shouldAlwaysOpen: true };
 	} else if (choice === openDevToolsAction) {
 		vs.commands.executeCommand("dart.openDevTools");
-		return true;
+		return { didOpen: true };
 	} else {
 		// No thanks.
-		return false;
+		return { didOpen: false };
 	}
 }

@@ -47,10 +47,11 @@ export const restartReasonSave = "save";
 export const pubGlobalDocsUrl = "https://www.dartlang.org/tools/pub/cmd/pub-global";
 export const stagehandInstallationInstructionsUrl = "https://github.com/dart-lang/stagehand#installation";
 
-export const wantToTryDevToolsPrompt = "Dart DevTools (preview) includes additional tools for debugging and profiling Flutter apps, including a Widget Inspector. Try it?";
+export const wantToTryDevToolsPrompt = "Dart DevTools includes additional tools for debugging and profiling Flutter apps, including a Widget Inspector. Try it?";
 export const openDevToolsAction = "Open DevTools";
-export const noThanksAction = "No Thanks";
-export const doNotAskAgainAction = "Don't Ask Again";
+export const alwaysOpenAction = "Always Open";
+export const notTodayAction = "No";
+export const doNotAskAgainAction = "Don't Ask";
 
 export const flutterSurveyPromptWithAnalytics = "Help improve Flutter! Take our Q3 survey. By clicking on this link you agree to share feature usage along with the survey responses.";
 export const flutterSurveyPromptWithoutAnalytics = "Help improve Flutter! Take our Q3 survey.";
