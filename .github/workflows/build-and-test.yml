@@ -21,11 +21,10 @@ jobs:
         bot: [dart, flutter, misc, flutter_repo]
         include:
           - dart-version: stable
-            # Temporarily use Flutter master for CocoaPods change
-            flutter-version: master # stable
+            # Temporarily use Flutter dev for CocoaPods change
+            flutter-version: dev
           - dart-version: dev
-            # Temporarily use Flutter master for CocoaPods change
-            flutter-version: master # dev
+            flutter-version: dev
 
     steps:
 
