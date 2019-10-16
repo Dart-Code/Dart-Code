@@ -135,11 +135,11 @@ jobs:
         with:
           name: test-results-ubuntu-latest
           path: .test_results/linux
-      #- name: Fetch Windows test results
-      #  uses: actions/download-artifact@v1
-      #  with:
-      #    name: test-results-windows-latest
-      #    path: .test_results/win
+      - name: Fetch Windows test results
+        uses: actions/download-artifact@v1
+        with:
+          name: test-results-windows-latest
+          path: .test_results/win
       - name: Fetch macOS test results
         uses: actions/download-artifact@v1
         with:
@@ -150,11 +150,11 @@ jobs:
         with:
           name: test-logs-ubuntu-latest
           path: .test_logs/linux
-      #- name: Fetch Windows test logs
-      #  uses: actions/download-artifact@v1
-      #  with:
-      #    name: test-results-windows-latest
-      #    path: .test_logs/win
+      - name: Fetch Windows test logs
+        uses: actions/download-artifact@v1
+        with:
+          name: test-logs-windows-latest
+          path: .test_logs/win
       - name: Fetch macOS test logs
         uses: actions/download-artifact@v1
         with:
