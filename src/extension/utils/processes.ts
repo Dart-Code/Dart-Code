@@ -34,7 +34,8 @@ export function safeSpawn(workingDirectory: string | undefined, binPath: string,
 	const customEnv = envOverrides
 		? Object.assign(Object.create(toolEnv), envOverrides) // Do it this way so we can override toolEnv if required.
 		: toolEnv;
-	return child_process.spawn(`"${binPath}"`, args.map((a) => `"${a}"`), { cwd: workingDirectory, env: customEnv, shell: true });
+	const quotedArgs = args.map((a) => `"${a.replace(/"/g, `\\"`)}"`);
+	return child_process.spawn(`"${binPath}"`, quotedArgs, { cwd: workingDirectory, env: customEnv, shell: true });
 }
 
 /// Runs a process and returns the exit code, stdout, stderr. Always resolves even for non-zero exit codes.
