@@ -385,7 +385,12 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 				await watchPromise("stops_at_a_breakpoint->hitBreakpoint", dc.hitBreakpoint(config, expectedLocation));
 				const stack = await dc.getStack();
 				const frames = stack.body.stackFrames;
-				assert.equal(frames[0].name, "MyHomePage.build");
+				// Web/Flutter have slightly different representations of this
+				// so allow either.
+				if (frames[0].name.indexOf(".") !== -1)
+					assert.equal(frames[0].name, "MyHomePage.build");
+				else
+					assert.equal(frames[0].name, "build");
 				assert.equal(frames[0].source!.path, expectedLocation.path);
 				assert.equal(frames[0].source!.name, "package:hello_world/main.dart");
 
@@ -407,7 +412,12 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 							.then(async (_) => {
 								const stack = await watchPromise(`stops_at_a_breakpoint->reload:${i}->getStack`, dc.getStack());
 								const frames = stack.body.stackFrames;
-								assert.equal(frames[0].name, "MyHomePage.build");
+								// Web/Flutter have slightly different representations of this
+								// so allow either.
+								if (frames[0].name.indexOf(".") !== -1)
+									assert.equal(frames[0].name, "MyHomePage.build");
+								else
+									assert.equal(frames[0].name, "build");
 								assert.equal(frames[0].source!.path, expectedLocation.path);
 								assert.equal(frames[0].source!.name, "package:hello_world/main.dart");
 							})
