@@ -262,6 +262,9 @@ export class DartDebugClient extends DebugClient {
 			Promise.race([
 				this.assertOutputContains("stdout", "Reloaded"),
 				this.assertOutputContains("stderr", "Reloaded"),
+				// TODO: Remove these two when web isn't doing restarts for reloads.
+				this.assertOutputContains("stdout", "Restarted"),
+				this.assertOutputContains("stderr", "Restarted"),
 			]),
 			this.customRequest("hotReload"),
 		]);
