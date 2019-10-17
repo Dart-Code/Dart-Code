@@ -368,9 +368,6 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 					: ` after ${numReloads} reload${numReloads === 1 ? "" : "s"}`;
 
 			it("stops at a breakpoint" + reloadDescription, async function () {
-				if (deviceId === "chrome")
-					this.skip();
-
 				if (numReloads && extApi.flutterCapabilities.hasEvictBug) {
 					this.skip();
 					return;
