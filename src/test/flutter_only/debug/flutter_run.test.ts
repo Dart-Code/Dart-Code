@@ -1157,10 +1157,7 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 			]);
 		});
 
-		it("writes exception to stderr", async function () {
-			if (deviceId === "chrome")
-				this.skip();
-
+		it("writes exception to stderr", async () => {
 			await openFile(flutterHelloWorldBrokenFile);
 			const config = await startDebugger(flutterHelloWorldBrokenFile);
 			await Promise.all([
@@ -1204,9 +1201,6 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 		});
 
 		it("renders correct output for structured errors", async function () {
-			if (deviceId === "chrome")
-				this.skip();
-
 			if (!extApi.flutterCapabilities.hasUpdatedStructuredErrorsFormat) {
 				this.skip();
 				return;
@@ -1234,7 +1228,7 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 			try {
 				await dc.hotReload();
 				await waitForResult(
-					() => stderrOutput.indexOf("════════ Exception caught by widgets library") !== -1
+					() => stderrOutput.toLowerCase().indexOf("exception caught by widgets library") !== -1
 						&& stderrOutput.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1,
 					"Waiting for error output",
 					5000,
@@ -1251,10 +1245,10 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 			// Grab online the lines that form our error.
 			let stdErrLines = stderrOutput.split("\n").map((l) => l.trim());
 			// Trim off stuff before our error.
-			const firstErrorLine = stdErrLines.findIndex((l) => l.indexOf("════════ Exception caught by widgets library") !== -1);
+			const firstErrorLine = stdErrLines.findIndex((l) => l.toLowerCase().indexOf("exception caught by widgets library") !== -1);
 			stdErrLines = stdErrLines.slice(firstErrorLine);
 			// Trim off stuff after our error.
-			const lastErrorLine = stdErrLines.findIndex((l) => l.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1);
+			const lastErrorLine = stdErrLines.findIndex((l) => l.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1);
 			stdErrLines = stdErrLines.slice(0, lastErrorLine + 1);
 
 			// Handle old/new error messages for stable/dev.
@@ -1290,7 +1284,7 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 					grey2(`════════════════════════════════════════════════════════════════════════════════`),
 				];
 
-			assert.deepStrictEqual(stdErrLines, expectedErrorLines);
+			assert.deepStrictEqual(stdErrLines.map((s) => s.toLowerCase()), expectedErrorLines.map((s) => s.toLowerCase()));
 		});
 	});
 });
