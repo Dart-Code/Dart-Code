@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { alwaysOpenAction, doNotAskAgainAction, flutterSurveyPromptWithAnalytics, flutterSurveyPromptWithoutAnalytics, isWin, longRepeatPromptThreshold, notTodayAction, openDevToolsAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
+import { alwaysOpenAction, doNotAskAgainAction, flutterSurveyPromptWithAnalytics, flutterSurveyPromptWithoutAnalytics, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, notTodayAction, openDevToolsAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
 import { Logger } from "../interfaces";
 import { Context } from "./workspace";
 
@@ -79,11 +79,11 @@ export async function showDevToolsNotificationIfAppropriate(context: Context): P
 
 	// Don't show this notification more than 10 times or if user said not to.
 	if (doNotShow || timesShown >= 10)
-		return false;
+		return { didOpen: false };
 
 	// Don't show this notification if we've shown it in the last 20 hours.
 	if (lastShown && Date.now() - lastShown < noRepeatPromptThreshold)
-		return false;
+		return { didOpen: false };
 
 	context.devToolsNotificationsShown = timesShown + 1;
 	context.devToolsNotificationLastShown = Date.now();
