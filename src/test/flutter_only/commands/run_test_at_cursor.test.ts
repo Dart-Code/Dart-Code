@@ -20,6 +20,7 @@ describe("run test at cursor", () => {
 		// Also ensure the command exists.
 		const command = (await vs.commands.getCommands(true)).filter((id) => id === "dart.runTestAtCursor");
 		assert.ok(command);
+		assert.ok(command.length);
 	});
 
 	it("command is not available when cursor is not inside a test", async () => {
