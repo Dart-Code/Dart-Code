@@ -1370,7 +1370,7 @@ export class DartDebugSession extends DebugSession {
 			text = await this.callToString(isolate, instanceRef, true);
 		// If it has a custom toString(), put that in parens after the type name.
 		if (instanceRef.kind === "PlainInstance" && instanceRef.class && instanceRef.class.name) {
-			if (text === `Instance of '${instanceRef.class.name}'` || text === instanceRef.class.name)
+			if (text === `Instance of '${instanceRef.class.name}'` || text === instanceRef.class.name || !text)
 				text = instanceRef.class.name;
 			else
 				text = `${instanceRef.class.name} (${text})`;
