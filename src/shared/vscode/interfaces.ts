@@ -31,6 +31,8 @@ export interface InternalExtensionApi {
 	context: Context;
 	currentAnalysis: () => Promise<void>;
 	cursorIsInTest: boolean;
+	isInTestFile: boolean;
+	isInImplementationFile: boolean;
 	dartCapabilities: {
 		supportsDevTools: boolean;
 		includesSourceForSdkLibs: boolean;
