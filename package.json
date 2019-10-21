@@ -147,6 +147,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.jumpBetweenTestImplementationFile",
+				"title": "Jump Between Test/Implementation File",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.debugTestAtCursor",
 				"title": "Debug Test At Cursor",
 				"category": "Dart"
@@ -467,6 +472,10 @@
 				{
 					"command": "dart.runTestAtCursor",
 					"when": "dart-code:dartProjectLoaded && !inDebugMode && dart-code:cursorIsInTest"
+				},
+				{
+					"command": "dart.jumpBetweenTestImplementationFile",
+					"when": "dart-code:dartProjectLoaded && dart-code:canJumpToTestImplementationFile"
 				},
 				{
 					"command": "dart.debugTestAtCursor",

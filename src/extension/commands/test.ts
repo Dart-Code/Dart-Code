@@ -1,10 +1,19 @@
+import * as fs from "fs";
+import * as path from "path";
 import * as vs from "vscode";
 import { Logger } from "../../shared/interfaces";
-import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
+import { TestOutlineVisitor } from "../../shared/utils/outline";
+import { fsPath } from "../../shared/vscode/utils";
 import { openFileTracker } from "../analysis/open_file_tracker";
+import { isDartDocument } from "../editors";
+import { isTestFile } from "../utils";
 
-export const CURSOR_IS_IN_TEST = "dart-code:cursorIsInTest";
-export let cursorIsInTest = false; // HACK: Used for testing since we can't read contexts?
+const CURSOR_IS_IN_TEST = "dart-code:cursorIsInTest";
+const CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION = "dart-code:canJumpToTestImplementationFile";
+// HACK: Used for testing since we can't read contexts?
+export let cursorIsInTest = false;
+export let isInTestFile = false;
+export let isInImplementationFile = false;
 
 export class TestCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
@@ -12,8 +21,10 @@ export class TestCommands implements vs.Disposable {
 	constructor(private readonly logger: Logger) {
 		this.disposables.push(
 			vs.commands.registerCommand("dart.runTestAtCursor", () => this.runTestAtCursor(false), this),
+			vs.commands.registerCommand("dart.jumpBetweenTestImplementationFile", () => this.jumpBetweenTestImplementation(), this),
 			vs.commands.registerCommand("dart.debugTestAtCursor", () => this.runTestAtCursor(true), this),
-			vs.window.onDidChangeTextEditorSelection((e) => this.updateContext(e)),
+			vs.window.onDidChangeTextEditorSelection((e) => this.updateSelectionContexts(e)),
+			vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)),
 		);
 	}
 
@@ -31,10 +42,79 @@ export class TestCommands implements vs.Disposable {
 		}
 	}
 
-	private updateContext(e: vs.TextEditorSelectionChangeEvent): void {
+	private async jumpBetweenTestImplementation(): Promise<void> {
+		const e = vs.window.activeTextEditor;
+		if (e && e.document && isDartDocument(e.document)) {
+			const filePath = fsPath(e.document.uri);
+			const otherFile =
+				isTestFile(filePath)
+					? this.getImplementationFileForTest(filePath)
+					: this.getTestFileForImplementation(filePath);
+
+			if (otherFile) {
+				vs.workspace.openTextDocument(otherFile).then((document) => {
+					vs.window.showTextDocument(document);
+				});
+			}
+		}
+	}
+
+	private updateSelectionContexts(e: vs.TextEditorSelectionChangeEvent): void {
 		const isValidTestLocation = !!(e.textEditor && e.selections && e.selections.length === 1 && this.testForCursor(e.textEditor));
 		vs.commands.executeCommand("setContext", CURSOR_IS_IN_TEST, isValidTestLocation);
 		cursorIsInTest = isValidTestLocation;
+	}
+
+	private updateEditorContexts(e: vs.TextEditor): void {
+		isInTestFile = false;
+		isInImplementationFile = false;
+
+		if (e && e.document && isDartDocument(e.document)) {
+			const filePath = fsPath(e.document.uri);
+			if (isTestFile(filePath)) {
+				isInTestFile = !!this.getImplementationFileForTest(filePath);
+			} else {
+				isInImplementationFile = !!this.getTestFileForImplementation(filePath);
+			}
+		}
+
+		vs.commands.executeCommand("setContext", CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION, isInTestFile || isInImplementationFile);
+	}
+
+	private getImplementationFileForTest(filePath: string) {
+		const pathSegments = filePath.split(path.sep);
+
+		// Replace test folder with lib.
+		const testFolderIndex = pathSegments.lastIndexOf("test");
+		if (testFolderIndex !== -1)
+			pathSegments[testFolderIndex] = "lib";
+
+		// Remove _test from the filename.
+		pathSegments[pathSegments.length - 1] = pathSegments[pathSegments.length - 1].replace(/_test\.dart/, ".dart");
+
+		// Only return if the file exists.
+		const implementationFilePath = pathSegments.join(path.sep);
+		return fs.existsSync(implementationFilePath)
+			? implementationFilePath
+			: undefined;
+	}
+
+	private getTestFileForImplementation(filePath: string) {
+		const pathSegments = filePath.split(path.sep);
+
+		// Replace lib folder with test.
+		const libFolderIndex = pathSegments.lastIndexOf("lib");
+		if (libFolderIndex !== -1)
+			pathSegments[libFolderIndex] = "test";
+
+		// Add _test to the filename.
+		pathSegments[pathSegments.length - 1] = pathSegments[pathSegments.length - 1].replace(/\.dart/, "_test.dart");
+
+		// Only return if the file exists.
+		const testFilePath = pathSegments.join(path.sep);
+		return fs.existsSync(testFilePath)
+			? testFilePath
+			: undefined;
 	}
 
 	private testForCursor(editor: vs.TextEditor): TestOutlineInfo | undefined {
