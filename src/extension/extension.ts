@@ -33,7 +33,7 @@ import { LoggingCommands } from "./commands/logging";
 import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
 import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
-import { cursorIsInTest, TestCommands } from "./commands/test";
+import { cursorIsInTest, isInImplementationFile, isInTestFile, TestCommands } from "./commands/test";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
@@ -561,6 +561,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			context: extContext,
 			currentAnalysis: () => analyzer.currentAnalysis,
 			get cursorIsInTest() { return cursorIsInTest; },
+			get isInTestFile() { return isInTestFile; },
+			get isInImplementationFile() { return isInImplementationFile; },
 			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
 			dartCapabilities,
 			debugCommands,

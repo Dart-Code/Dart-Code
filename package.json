@@ -147,8 +147,8 @@
 				"category": "Dart"
 			},
 			{
-				"command": "dart.jumpBetweenTestImplementationFile",
-				"title": "Jump Between Test/Implementation File",
+				"command": "dart.goToTestOrImplementationFile",
+				"title": "Go to Test/Implementation File",
 				"category": "Dart"
 			},
 			{
@@ -474,8 +474,8 @@
 					"when": "dart-code:dartProjectLoaded && !inDebugMode && dart-code:cursorIsInTest"
 				},
 				{
-					"command": "dart.jumpBetweenTestImplementationFile",
-					"when": "dart-code:dartProjectLoaded && dart-code:canJumpToTestImplementationFile"
+					"command": "dart.goToTestOrImplementationFile",
+					"when": "dart-code:dartProjectLoaded && dart-code:canGoToTestOrImplementationFile"
 				},
 				{
 					"command": "dart.debugTestAtCursor",

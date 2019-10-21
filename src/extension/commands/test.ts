@@ -9,7 +9,7 @@ import { isDartDocument } from "../editors";
 import { isTestFile } from "../utils";
 
 const CURSOR_IS_IN_TEST = "dart-code:cursorIsInTest";
-const CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION = "dart-code:canJumpToTestImplementationFile";
+const CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION = "dart-code:canGoToTestOrImplementationFile";
 // HACK: Used for testing since we can't read contexts?
 export let cursorIsInTest = false;
 export let isInTestFile = false;
@@ -21,7 +21,7 @@ export class TestCommands implements vs.Disposable {
 	constructor(private readonly logger: Logger) {
 		this.disposables.push(
 			vs.commands.registerCommand("dart.runTestAtCursor", () => this.runTestAtCursor(false), this),
-			vs.commands.registerCommand("dart.jumpBetweenTestImplementationFile", () => this.jumpBetweenTestImplementation(), this),
+			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
 			vs.commands.registerCommand("dart.debugTestAtCursor", () => this.runTestAtCursor(true), this),
 			vs.window.onDidChangeTextEditorSelection((e) => this.updateSelectionContexts(e)),
 			vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)),
@@ -42,7 +42,7 @@ export class TestCommands implements vs.Disposable {
 		}
 	}
 
-	private async jumpBetweenTestImplementation(): Promise<void> {
+	private async goToTestOrImplementationFile(): Promise<void> {
 		const e = vs.window.activeTextEditor;
 		if (e && e.document && isDartDocument(e.document)) {
 			const filePath = fsPath(e.document.uri);
@@ -52,9 +52,8 @@ export class TestCommands implements vs.Disposable {
 					: this.getTestFileForImplementation(filePath);
 
 			if (otherFile) {
-				vs.workspace.openTextDocument(otherFile).then((document) => {
-					vs.window.showTextDocument(document);
-				});
+				const document = await vs.workspace.openTextDocument(otherFile);
+				await vs.window.showTextDocument(document);
 			}
 		}
 	}
