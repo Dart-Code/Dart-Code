@@ -667,13 +667,13 @@
 				{
 					"command": "flutter.hotReload",
 					"group": "navigation@59",
-					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:flutterMobileProjectLoaded && dart-code:isInDebugSessionThatProbablySupportsHotReload"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:isInDebugSessionThatSupportsHotReload"
 				}
 			],
 			"touchBar": [
 				{
 					"command": "_flutter.hotReload.touchBar",
-					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:flutterMobileProjectLoaded && dart-code:isInDebugSessionThatProbablySupportsHotReload",
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:isInDebugSessionThatSupportsHotReload",
 					"group": "9_debug@4"
 				},
 				{

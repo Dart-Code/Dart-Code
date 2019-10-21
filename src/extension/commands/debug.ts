@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { CoverageData } from "../../debug/utils";
-import { isInDebugSessionThatProbablySupportsHotReloadContext } from "../../shared/constants";
+import { isInDebugSessionThatSupportsHotReloadContext } from "../../shared/constants";
 import { FlutterServiceExtension, LogSeverity } from "../../shared/enums";
 import { Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
@@ -243,9 +243,11 @@ export class DebugCommands {
 			debugSessions.push(session);
 
 			// Temporary hack to allow controlling the Hot Reload button on the debug toolbar based on
-			// whether it's a web device.
-			if (s.configuration.debuggerType === DebuggerType.Flutter)
-				vs.commands.executeCommand("setContext", isInDebugSessionThatProbablySupportsHotReloadContext, true);
+			// the session type, since the debug toolbar does not allow us to dynamically update
+			// when we see the extension load.
+			// https://github.com/microsoft/vscode/issues/69398
+			if (s.configuration.debuggerType === DebuggerType.Flutter || s.configuration.debuggerType === DebuggerType.FlutterWeb)
+				vs.commands.executeCommand("setContext", isInDebugSessionThatSupportsHotReloadContext, true);
 
 			// Process any queued events that came in before the session start
 			// event.
@@ -293,7 +295,7 @@ export class DebugCommands {
 			this.flutterExtensions.markAllServicesUnloaded();
 			vs.commands.executeCommand(
 				"setContext",
-				isInDebugSessionThatProbablySupportsHotReloadContext,
+				isInDebugSessionThatSupportsHotReloadContext,
 				false,
 			);
 		}
