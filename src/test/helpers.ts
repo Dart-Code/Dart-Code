@@ -35,6 +35,7 @@ const testFolder = path.join(ext.extensionPath, "src/test");
 // Dart
 export const helloWorldFolder = vs.Uri.file(path.join(testFolder, "test_projects/hello_world"));
 export const helloWorldMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/main.dart"));
+export const helloWorldMainLibFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/basic.dart"));
 export const helloWorldDeferredEntryFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/deferred_entry.dart"));
 export const helloWorldPartEntryFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/part.dart"));
 export const helloWorldPubspec = vs.Uri.file(path.join(fsPath(helloWorldFolder), "pubspec.yaml"));
