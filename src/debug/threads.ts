@@ -236,7 +236,7 @@ export class ThreadInfo {
 		return Promise.all(removeBreakpointPromises);
 	}
 
-	public removeAllBreakpoints(): Promise<void> {
+	public removeAllBreakpoints(): Promise<any> {
 		const removeBreakpointPromises = [];
 		for (const uri of Object.keys(this.vmBps)) {
 			removeBreakpointPromises.push(this.removeBreakpointsAtUri(uri));

@@ -9,12 +9,7 @@
 		],
 		"sourceMap": true,
 		"rootDir": "src",
-		"noImplicitAny": true,
-		"noImplicitThis": true,
-		"alwaysStrict": true,
-		"strictFunctionTypes": true,
-		"strictPropertyInitialization": true,
-		"strictNullChecks": true
+		"strict": true
 	},
 	"exclude": [
 		"node_modules",
