@@ -45,7 +45,9 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 			names.name,
 			getSymbolKindForElementKind(this.logger, result.kind),
 			names.containerName || "",
-			new Location(Uri.file(file), undefined),
+			// HACK: Work around the incorrect typing in VS Code with !
+			// https://github.com/microsoft/vscode/issues/69558
+			new Location(Uri.file(file), undefined!),
 		);
 
 		symbol.locationData = {
