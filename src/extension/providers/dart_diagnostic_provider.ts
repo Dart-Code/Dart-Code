@@ -88,6 +88,8 @@ export class DartDiagnosticProvider {
 		const tags: DiagnosticTag[] = [];
 		if (error.code === "dead_code" || error.code === "unused_local_variable" || error.code === "unused_import")
 			tags.push(DiagnosticTag.Unnecessary);
+		if (error.code === "deprecated_member_use" || error.code === "deprecated_member_use_from_same_package")
+			tags.push(DiagnosticTag.Deprecated);
 		return tags;
 	}
 
