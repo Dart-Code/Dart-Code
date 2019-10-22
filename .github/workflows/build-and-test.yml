@@ -21,8 +21,7 @@ jobs:
         bot: [dart, flutter, flutter_web, misc, flutter_repo]
         include:
           - dart-version: stable
-            # Temporarily use Flutter dev for CocoaPods change
-            flutter-version: dev
+            flutter-version: stable
           - dart-version: dev
             flutter-version: dev
 
