@@ -1,5 +1,5 @@
 import * as path from "path";
-import { CancellationToken, Location, SymbolInformation, Uri, workspace, WorkspaceSymbolProvider } from "vscode";
+import { CancellationToken, Location, SymbolInformation, SymbolKind, Uri, workspace, WorkspaceSymbolProvider } from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { escapeRegExp } from "../../shared/utils";
@@ -48,13 +48,12 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 			// HACK: Work around the incorrect typing in VS Code with !
 			// https://github.com/microsoft/vscode/issues/69558
 			new Location(Uri.file(file), undefined!),
+			{
+				file,
+				length: result.codeLength,
+				offset: result.codeOffset,
+			},
 		);
-
-		symbol.locationData = {
-			file,
-			length: result.codeLength,
-			offset: result.codeOffset,
-		};
 
 		return symbol;
 	}
@@ -122,9 +121,13 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 }
 
 class PartialSymbolInformation extends SymbolInformation {
-	public locationData: {
-		file: string;
-		offset: number;
-		length: number;
-	};
+	constructor(
+		name: string, kind: SymbolKind, containerName: string, location: Location,
+		public readonly locationData: {
+			readonly file: string;
+			readonly offset: number;
+			readonly length: number;
+		}) {
+		super(name, kind, containerName, location);
+	}
 }

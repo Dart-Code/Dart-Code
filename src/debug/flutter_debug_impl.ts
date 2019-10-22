@@ -18,7 +18,7 @@ const flutterExceptionEndBannerPrefix = "═════════════
 
 export class FlutterDebugSession extends DartDebugSession {
 	private flutter?: FlutterRunBase;
-	public flutterTrackWidgetCreation: boolean;
+	public flutterTrackWidgetCreation = false;
 	private currentRunningAppId?: string;
 	private appHasStarted = false;
 	private appHasBeenToldToStopOrDetach = false;

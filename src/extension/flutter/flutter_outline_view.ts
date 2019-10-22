@@ -180,9 +180,9 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 
 	public getChildren(element?: FlutterWidgetItem): FlutterWidgetItem[] {
 		if (element)
-			return element.children || [];
+			return element.children;
 		if (this.rootNode)
-			return this.rootNode.children || [];
+			return this.rootNode.children;
 		return [];
 	}
 
@@ -219,8 +219,8 @@ async function getFixes(editor: vs.TextEditor, outline: as.FlutterOutline): Prom
 }
 
 export class FlutterWidgetItem extends vs.TreeItem {
-	public children: FlutterWidgetItem[];
-	public fixes: vs.CodeAction[];
+	public children: FlutterWidgetItem[] = [];
+	public fixes: vs.CodeAction[] = [];
 	constructor(
 		public readonly parent: FlutterWidgetItem | undefined,
 		public readonly outline: as.FlutterOutline,

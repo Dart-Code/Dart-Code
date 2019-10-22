@@ -560,13 +560,11 @@ export abstract class TestItemTreeItem extends vs.TreeItem {
 }
 
 export class SuiteTreeItem extends TestItemTreeItem {
-	private _suite: Suite; // tslint:disable-line:variable-name
 	public readonly groups: GroupTreeItem[] = [];
 	public readonly tests: TestTreeItem[] = [];
 
-	constructor(suite: Suite) {
+	constructor(public readonly suite: Suite) {
 		super(vs.Uri.file(suite.path), vs.TreeItemCollapsibleState.Collapsed);
-		this.suite = suite;
 		this.contextValue = DART_TEST_SUITE_NODE_CONTEXT;
 		this.resourceUri = vs.Uri.file(suite.path);
 		this.description = true;
@@ -585,14 +583,6 @@ export class SuiteTreeItem extends TestItemTreeItem {
 			...this.tests.filter((t) => !t.hidden),
 		];
 	}
-
-	get suite(): Suite {
-		return this._suite;
-	}
-
-	set suite(suite: Suite) {
-		this._suite = suite;
-	}
 }
 
 class GroupTreeItem extends TestItemTreeItem {
@@ -603,6 +593,7 @@ class GroupTreeItem extends TestItemTreeItem {
 	constructor(public suite: SuiteData, group: Group) {
 		super(group.name || "<unnamed>", vs.TreeItemCollapsibleState.Collapsed);
 		this.suiteRunNumber = suite.currentRunNumber;
+		this._group = group; // Keep TS happy, but then we need to call the setter.
 		this.group = group;
 		this.contextValue = DART_TEST_GROUP_NODE_CONTEXT;
 		this.resourceUri = vs.Uri.file(suite.path);
@@ -663,6 +654,7 @@ class TestTreeItem extends TestItemTreeItem {
 	constructor(public suite: SuiteData, test: Test, public hidden = false) {
 		super(test.name || "<unnamed>", vs.TreeItemCollapsibleState.None);
 		this.suiteRunNumber = suite.currentRunNumber;
+		this._test = test; // Keep TS happy, but then we need to call the setter.
 		this.test = test;
 		this.contextValue = DART_TEST_TEST_NODE_CONTEXT;
 		this.resourceUri = vs.Uri.file(suite.path);

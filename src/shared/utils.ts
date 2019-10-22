@@ -58,8 +58,8 @@ export function escapeRegExp(input: string): string {
 
 export class PromiseCompleter<T> {
 	public promise: Promise<T>;
-	public resolve: (value?: T | PromiseLike<T>) => void;
-	public reject: (error?: any, stackTrace?: string) => void;
+	public resolve!: (value?: T | PromiseLike<T>) => void;
+	public reject!: (error?: any, stackTrace?: string) => void;
 
 	constructor() {
 		this.promise = new Promise((res, rej) => {
