@@ -81,10 +81,6 @@ class Config {
 	get useKnownChromeOSPorts(): boolean { return this.getConfig<boolean>("useKnownChromeOSPorts", true); }
 	get warnWhenEditingFilesOutsideWorkspace(): boolean { return this.getConfig<boolean>("warnWhenEditingFilesOutsideWorkspace", true); }
 
-	// Hidden settings
-	// TODO: Remove this?
-	get previewHotReloadCoverageMarkers() { return this.getConfig<boolean>("previewHotReloadCoverageMarkers", false); }
-
 	// Helpers
 	get useDevToolsDarkTheme() { return this.devToolsTheme === "dark"; }
 	get openTestViewOnFailure() { return this.openTestView.indexOf("testFailure") !== -1; }

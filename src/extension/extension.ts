@@ -40,7 +40,6 @@ import { ClosingLabelsDecorations } from "./decorations/closing_labels_decoratio
 import { FlutterColorDecorations } from "./decorations/flutter_color_decorations";
 import { FlutterIconDecorations } from "./decorations/flutter_icon_decorations";
 import { FlutterUiGuideDecorations } from "./decorations/flutter_ui_guides_decorations";
-import { HotReloadCoverageDecorations } from "./decorations/hot_reload_coverage_decorations";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { FlutterOutlineProvider } from "./flutter/flutter_outline_view";
@@ -464,10 +463,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		const flutterOutlineCommands = new FlutterOutlineCommands(tree, context);
 	}
 
-	if (workspaceContext.hasAnyFlutterProjects && config.previewHotReloadCoverageMarkers) {
-		context.subscriptions.push(new HotReloadCoverageDecorations(logger, debugCommands));
-	}
-
 	context.subscriptions.push(vs.commands.registerCommand("dart.package.openFile", (filePath) => {
 		if (!filePath) return;
 
@@ -695,7 +690,6 @@ function getSettingsThatRequireRestart() {
 		+ config.analyzeAngularTemplates
 		+ config.analysisServerFolding
 		+ config.showTestCodeLens
-		+ config.previewHotReloadCoverageMarkers
 		+ config.previewBuildRunnerTasks
 		+ config.flutterOutline
 		+ config.triggerSignatureHelpAutomatically
