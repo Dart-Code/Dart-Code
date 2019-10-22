@@ -49,6 +49,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		response: DebugProtocol.InitializeResponse,
 		args: DebugProtocol.InitializeRequestArguments,
 	): void {
+		response.body = response.body || {};
 		response.body.supportsRestartRequest = true;
 		super.initializeRequest(response, args);
 	}
@@ -99,7 +100,13 @@ export class FlutterDebugSession extends DartDebugSession {
 			this.connectToObservatoryIfReady();
 			this.sendEvent(new Event("dart.launched"));
 		});
-		this.flutter.registerForAppStop((n) => { this.currentRunningAppId = undefined; this.flutter.dispose(); });
+		this.flutter.registerForAppStop((n) => {
+			this.currentRunningAppId = undefined;
+			if (this.flutter) {
+				this.flutter.dispose();
+				this.flutter = undefined;
+			}
+		});
 		this.flutter.registerForAppProgress((e) => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished, progressID: e.progressId || e.id })));
 		// TODO: Should this use logToUser?
 		this.flutter.registerForError((err) => this.sendEvent(new OutputEvent(`${err}\n`, "stderr")));
@@ -288,6 +295,9 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	protected async handleInspectEvent(event: VMEvent): Promise<void> {
+		if (!this.flutter || !this.currentRunningAppId)
+			return;
+
 		const selectedWidget = await this.flutter.callServiceExtension(
 			this.currentRunningAppId,
 			"ext.flutter.inspector.getSelectedSummaryWidget",
@@ -413,6 +423,9 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	public handleServiceExtensionAdded(event: VMEvent) {
 		super.handleServiceExtensionAdded(event);
+
+		if (!this.flutter || !this.currentRunningAppId)
+			return;
 
 		if (event.extensionRPC === FlutterServiceExtension.InspectorStructuredErrors && this.useFlutterStructuredErrors) {
 			this.flutter.callServiceExtension(this.currentRunningAppId, event.extensionRPC, { enabled: true });

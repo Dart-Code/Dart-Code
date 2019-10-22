@@ -222,19 +222,21 @@ export class ThreadInfo {
 		public readonly num: number) {
 	}
 
-	private removeBreakpointsAtUri(uri: string): Promise<DebuggerResult[]> {
+	private removeBreakpointsAtUri(uri: string): Promise<any> {
 		const removeBreakpointPromises = [];
 		const breakpoints = this.vmBps[uri];
 		if (breakpoints) {
-			for (const bp of breakpoints) {
-				removeBreakpointPromises.push(this.manager.debugSession.observatory.removeBreakpoint(this.ref.id, bp.id));
+			if (this.manager.debugSession.observatory) {
+				for (const bp of breakpoints) {
+					removeBreakpointPromises.push(this.manager.debugSession.observatory.removeBreakpoint(this.ref.id, bp.id));
+				}
 			}
 			delete this.vmBps[uri];
 		}
 		return Promise.all(removeBreakpointPromises);
 	}
 
-	public removeAllBreakpoints(): Promise<DebuggerResult[]> {
+	public removeAllBreakpoints(): Promise<void> {
 		const removeBreakpointPromises = [];
 		for (const uri of Object.keys(this.vmBps)) {
 			removeBreakpointPromises.push(this.removeBreakpointsAtUri(uri));
@@ -244,7 +246,7 @@ export class ThreadInfo {
 		});
 	}
 
-	public async setBreakpoints(logger: Logger, uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<VMBreakpoint[]> {
+	public async setBreakpoints(logger: Logger, uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<Array<VMBreakpoint | undefined>> {
 		// Remove all current bps.
 		await this.removeBreakpointsAtUri(uri);
 		this.vmBps[uri] = [];
@@ -252,6 +254,9 @@ export class ThreadInfo {
 		return Promise.all(
 			breakpoints.map(async (bp) => {
 				try {
+					if (!this.manager.debugSession.observatory)
+						return undefined;
+
 					const result = await this.manager.debugSession.observatory.addBreakpointWithScriptUri(this.ref.id, uri, bp.line, bp.column);
 					const vmBp: VMBreakpoint = (result.result as VMBreakpoint);
 					this.vmBps[uri].push(vmBp);
@@ -300,7 +305,7 @@ export class ThreadInfo {
 	}
 
 	public async resume(step?: string): Promise<void> {
-		if (!this.paused || this.hasPendingResume)
+		if (!this.paused || this.hasPendingResume || !this.manager.debugSession.observatory)
 			return;
 
 		this.hasPendingResume = true;
@@ -322,13 +327,16 @@ export class ThreadInfo {
 			const completer: PromiseCompleter<VMScript> = new PromiseCompleter();
 			this.scriptCompleters[scriptId] = completer;
 
-			const observatory = this.manager.debugSession.observatory;
-			observatory.getObject(this.ref.id, scriptRef.id).then((result: DebuggerResult) => {
-				const script: VMScript = result.result as VMScript;
-				completer.resolve(script);
-			}).catch((error) => {
-				completer.reject(error);
-			});
+			if (this.manager.debugSession.observatory) {
+				this.manager.debugSession.observatory.getObject(this.ref.id, scriptRef.id).then((result: DebuggerResult) => {
+					const script: VMScript = result.result as VMScript;
+					completer.resolve(script);
+				}).catch((error) => {
+					completer.reject(error);
+				});
+			} else {
+				completer.reject(`Observatory connection is no longer available`);
+			}
 
 			return completer.promise;
 		}
@@ -339,7 +347,7 @@ export class ThreadInfo {
 	}
 
 	public handlePaused(atAsyncSuspension?: boolean, exception?: VMInstanceRef) {
-		this.atAsyncSuspension = atAsyncSuspension;
+		this.atAsyncSuspension = atAsyncSuspension === true;
 		if (exception) {
 			(exception as InstanceWithEvaluateName).evaluateName = "$e";
 			this.exceptionReference = this.storeData(exception);

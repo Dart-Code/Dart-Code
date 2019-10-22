@@ -18,11 +18,20 @@ class Config {
 	}
 
 	private getConfig<T>(key: string, defaultValue: T): NullAsUndefined<T> {
-		return nullToUndefined(this.config.get<T>(key, defaultValue));
+		const value = this.config.get<T>(key, defaultValue);
+		return nullToUndefined(value);
 	}
 
 	private getWorkspaceConfig<T>(key: string): NullAsUndefined<T> {
-		return nullToUndefined(this.config.inspect<T>(key).workspaceValue || this.config.inspect<T>(key).workspaceValue);
+		const c = this.config.inspect<T>(key);
+
+		if (c && c.workspaceValue)
+			return nullToUndefined(c.workspaceValue);
+
+		if (c && c.workspaceFolderValue)
+			return nullToUndefined(c.workspaceFolderValue);
+
+		return undefined as NullAsUndefined<T>;
 	}
 
 	private async setConfig<T>(key: string, value: T, target: ConfigurationTarget): Promise<void> {
