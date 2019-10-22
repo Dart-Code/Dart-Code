@@ -1,4 +1,4 @@
-import { CancellationToken, DocumentSymbol, DocumentSymbolProvider, TextDocument } from "vscode";
+import { CancellationToken, DocumentSymbol, DocumentSymbolProvider, SymbolTag, TextDocument } from "vscode";
 import { Outline } from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { waitFor } from "../../shared/utils/promises";
@@ -28,6 +28,10 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 			this.getCodeOffset(document, outline),
 			toRange(document, location.offset, location.length),
 		);
+
+		// tslint:disable-next-line: no-bitwise
+		if (outline.element.flags & 0x20)
+			symbol.tags = [SymbolTag.Deprecated];
 
 		if (outline.children && outline.children.length) {
 			symbol.children = outline.children.filter(this.shouldShow).map((r) => this.convertResult(document, r));
