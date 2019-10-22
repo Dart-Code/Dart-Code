@@ -60,7 +60,7 @@ export class DartDebugSession extends DebugSession {
 	public showDartDeveloperLogs = true;
 	public useFlutterStructuredErrors = false;
 	public evaluateGettersInDebugViews = false;
-	public debuggerHandlesPathsEverywhereForBreakpoints: boolean;
+	public debuggerHandlesPathsEverywhereForBreakpoints = false;
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
 	protected sendStdOutToConsole: boolean = true;

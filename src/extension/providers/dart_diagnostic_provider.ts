@@ -1,4 +1,4 @@
-import { Diagnostic, DiagnosticCollection, DiagnosticRelatedInformation, DiagnosticSeverity, DiagnosticTag, Location, Uri } from "vscode";
+import { Diagnostic, DiagnosticCollection, DiagnosticRelatedInformation, DiagnosticSeverity, DiagnosticTag, Location, Range, Uri } from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { toRangeOnLine } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
@@ -44,11 +44,11 @@ export class DartDiagnosticProvider {
 			toRangeOnLine(error.location),
 			error.message,
 			DartDiagnosticProvider.getSeverity(error.severity, error.type),
+			error.type,
 		);
 		diag.code = error.code;
 		diag.source = "dart";
 		diag.tags = DartDiagnosticProvider.getTags(error);
-		diag.type = error.type;
 		if (error.correction)
 			diag.message += `\n${error.correction}`;
 		if (error.contextMessages && error.contextMessages.length)
@@ -99,5 +99,12 @@ export class DartDiagnosticProvider {
 }
 
 export class DartDiagnostic extends Diagnostic {
-	public type: string;
+	constructor(
+		range: Range,
+		message: string,
+		severity: DiagnosticSeverity,
+		public readonly type: string,
+	) {
+		super(range, message, severity);
+	}
 }

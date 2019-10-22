@@ -16,7 +16,7 @@ import { globalFlutterArgs, safeSpawn } from "../utils/processes";
 
 export class FlutterDaemon extends StdIOService<UnknownNotification> implements IFlutterDaemon {
 	private hasStarted = false;
-	private startupReporter: vs.Progress<{ message?: string; increment?: number }>;
+	private startupReporter: vs.Progress<{ message?: string; increment?: number }> | undefined;
 	private daemonStartedCompleter = new PromiseCompleter();
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
