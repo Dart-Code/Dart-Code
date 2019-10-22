@@ -4,6 +4,7 @@ import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { config } from "../extension/config";
+import { notUndefined } from "../extension/utils";
 import { getLogHeader } from "../extension/utils/log";
 import { safeSpawn } from "../extension/utils/processes";
 import { VmServiceCapabilities } from "../shared/capabilities/vm_service";
@@ -559,10 +560,9 @@ export class DartDebugSession extends DebugSession {
 		// work everywhere.
 		// TODO: The `|| source.name` stops a crash (#1566) but doesn't actually make
 		// the breakpoints work. This needs more work.
-		const mapToPackagePath = this.packageMap && !this.debuggerHandlesPathsEverywhereForBreakpoints;
-		const uri = mapToPackagePath
-			? (this.packageMap.convertFileToPackageUri(source.path) || formatPathForVm(source.path || source.name)!)
-			: formatPathForVm(source.path || source.name);
+		const uri = this.packageMap && !this.debuggerHandlesPathsEverywhereForBreakpoints
+			? (this.packageMap.convertFileToPackageUri(source.path) || formatPathForVm(source.path || source.name!)!)
+			: formatPathForVm(source.path || source.name!);
 
 		try {
 			const result = await this.threadManager.setBreakpoints(uri, breakpoints);
@@ -870,7 +870,7 @@ export class DartDebugSession extends DebugSession {
 							// Add them in order.
 							const elementVariables = await Promise.all(elementPromises);
 							variables = variables.concat(elementVariables);
-						} else if (instance.associations) {
+						} else if (instance.associations && instanceRef.evaluateName) {
 							const len = instance.associations.length;
 							for (let i = 0; i < len; i++) {
 								const association = instance.associations[i];
@@ -1318,17 +1318,21 @@ export class DartDebugSession extends DebugSession {
 			if (kind === "PauseBreakpoint" && event.pauseBreakpoints && event.pauseBreakpoints.length) {
 				reason = "breakpoint";
 
-				const breakpoints = event.pauseBreakpoints.map((bp) => thread.breakpoints[bp.id]);
+				const potentialBreakpoints: Array<DebugProtocol.SourceBreakpoint | undefined> = event.pauseBreakpoints.map((bp) => thread.breakpoints[bp.id]);
 				// When attaching to an already-stopped process, this event can be handled before the
 				// breakpoints have been registered. If that happens, replace any unknown breakpoints with
 				// dummy unconditional breakpoints.
 				// TODO: Ensure that VM breakpoint state is reconciled with debugger breakpoint state before
 				// handling thread state so that this doesn't happen, and remove this check.
-				const hasUnknownBreakpoints = breakpoints.indexOf(undefined) !== -1;
+				const hasUnknownBreakpoints = potentialBreakpoints.indexOf(undefined) !== -1;
 
 				if (!hasUnknownBreakpoints) {
+					// There can't be any undefined here because of the above, but the types don't know that
+					// so strip the undefineds.
+					const breakpoints = potentialBreakpoints.filter(notUndefined);
+
 					const hasUnconditionalBreakpoints = !!breakpoints.find((bp) => !bp.condition && !bp.logMessage);
-					const conditionalBreakpoints = breakpoints.filter((bp) => bp.condition);
+					const conditionalBreakpoints = breakpoints.filter((bp) => bp.condition) as Array<DebugProtocol.SourceBreakpoint & { condition: string }>;
 					const logPoints = breakpoints.filter((bp) => bp.logMessage);
 
 					// Evalute conditions to see if we should remain stopped or continue.
@@ -1338,6 +1342,9 @@ export class DartDebugSession extends DebugSession {
 
 					// Output any logpoint messages.
 					for (const logPoint of logPoints) {
+						if (!logPoint.logMessage)
+							continue;
+
 						const logMessage = logPoint.logMessage
 							.replace(/(^|[^\\\$]){/g, "$1\${") // Prefix any {tokens} with $ if they don't have
 							.replace(/\\({)/g, "$1") // Remove slashes
@@ -1367,11 +1374,11 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	// Like valueAsString, but will call toString() if the thing is truncated.
-	private async fullValueAsString(isolate: VMIsolateRef, instanceRef: VMInstanceRef): Promise<string | undefined> {
+	private async fullValueAsString(isolate: VMIsolateRef | undefined, instanceRef: VMInstanceRef): Promise<string | undefined> {
 		let text: string | undefined;
 		if (!instanceRef.valueAsStringIsTruncated)
 			text = this.valueAsString(instanceRef, false);
-		if (!text)
+		if (!text && isolate)
 			text = await this.callToString(isolate, instanceRef, true);
 		// If it has a custom toString(), put that in parens after the type name.
 		if (instanceRef.kind === "PlainInstance" && instanceRef.class && instanceRef.class.name) {
@@ -1383,7 +1390,7 @@ export class DartDebugSession extends DebugSession {
 		return text;
 	}
 
-	private async anyBreakpointConditionReturnsTrue(breakpoints: DebugProtocol.SourceBreakpoint[], thread: ThreadInfo) {
+	private async anyBreakpointConditionReturnsTrue(breakpoints: Array<DebugProtocol.SourceBreakpoint & { condition: string }>, thread: ThreadInfo) {
 		for (const bp of breakpoints) {
 			const evalResult = await this.evaluateAndSendErrors(thread, bp.condition);
 			if (evalResult) {
@@ -1400,10 +1407,14 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private callService(type: string, args: any): Promise<any> {
+		if (!this.observatory)
+			throw new Error("Observatory connection is not available");
 		return this.observatory.callMethod(type, args);
 	}
 
-	private async evaluateAndSendErrors(thread: ThreadInfo, expression: string): Promise<VMInstanceRef> {
+	private async evaluateAndSendErrors(thread: ThreadInfo, expression: string): Promise<VMInstanceRef | undefined> {
+		if (!this.observatory)
+			return;
 		try {
 			const result = await this.observatory.evaluateInFrame(thread.ref.id, 0, expression, true);
 			if (result.result.type !== "@Error") {
@@ -1428,11 +1439,11 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	private notifyServiceExtensionAvailable(id: string, isolateId: string) {
+	private notifyServiceExtensionAvailable(id: string, isolateId: string | undefined) {
 		this.sendEvent(new Event("dart.serviceExtensionAdded", { id, isolateId }));
 	}
 
-	private notifyServiceRegistered(service: string, method: string) {
+	private notifyServiceRegistered(service: string, method: string | undefined) {
 		this.sendEvent(new Event("dart.serviceRegistered", { service, method }));
 	}
 
@@ -1467,10 +1478,10 @@ export class DartDebugSession extends DebugSession {
 	}, 2000);
 
 	private async getCoverageReport(scriptUris: string[]): Promise<Array<{ hostScriptPath: string, script: VMScript, tokenPosTable: number[][], startPos: number, endPos: number, hits: number[], misses: number[] }>> {
-		if (!scriptUris || !scriptUris.length)
+		if (!scriptUris || !scriptUris.length || !this.observatory)
 			return [];
 
-		const result = await this.observatory!.getVM();
+		const result = await this.observatory.getVM();
 		const vm = result.result as VM;
 
 		const isolatePromises = vm.isolates.map((isolateRef) => this.observatory!.getIsolate(isolateRef.id));
@@ -1780,9 +1791,7 @@ export class DartDebugSession extends DebugSession {
 
 export interface InstanceWithEvaluateName extends VMInstanceRef {
 	// Undefined means we cannot evaluate
-	// Null means we use the name
-	// Otherwise we use the string
-	evaluateName: string | null | undefined;
+	evaluateName: string | undefined;
 }
 
 export type VmExceptionMode = "None" | "Unhandled" | "All";

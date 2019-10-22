@@ -64,7 +64,7 @@ export class TestCommands implements vs.Disposable {
 		cursorIsInTest = isValidTestLocation;
 	}
 
-	private updateEditorContexts(e: vs.TextEditor): void {
+	private updateEditorContexts(e: vs.TextEditor | undefined): void {
 		isInTestFile = false;
 		isInImplementationFile = false;
 

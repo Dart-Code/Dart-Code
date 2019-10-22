@@ -3,6 +3,7 @@ import * as as from "../../shared/analysis_server_types";
 import { flatMap } from "../../shared/utils";
 import { fsPath, toRange } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
+import { notUndefined } from "../utils";
 import { findNearestOutlineNode } from "../utils/vscode/outline";
 
 export class DartImplementationProvider implements vs.ImplementationProvider {
@@ -41,16 +42,19 @@ export class DartImplementationProvider implements vs.ImplementationProvider {
 		const isClass = !currentItem.memberElement;
 		function getDescendants(item: as.TypeHierarchyItem): as.TypeHierarchyItem[] {
 			return [
-				...item.subclasses.map((i) => hierarchy.hierarchyItems[i]),
-				...flatMap(item.subclasses, (i) => getDescendants(hierarchy.hierarchyItems[i])),
+				...item.subclasses.map((i) => hierarchy.hierarchyItems![i]),
+				...flatMap(item.subclasses, (i) => getDescendants(hierarchy.hierarchyItems![i])),
 			];
 		}
 		const descendants = getDescendants(currentItem)
 			.map((d) => isClass ? d.classElement : d.memberElement)
-			.filter((d) => d);
+			.filter(notUndefined);
 
 		const locations: vs.Location[] = [];
 		for (const element of descendants) {
+			if (!element.location)
+				continue;
+
 			const range = toRange(
 				await vs.workspace.openTextDocument(element.location.file),
 				element.location.offset,

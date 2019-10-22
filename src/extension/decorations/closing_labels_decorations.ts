@@ -36,7 +36,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 		if (!this.closingLabels || !this.activeEditor || this.closingLabels.file !== fsPath(this.activeEditor.document.uri))
 			return;
 
-		const decorations: { [key: number]: vs.DecorationOptions } = [];
+		const decorations: { [key: number]: vs.DecorationOptions & { renderOptions: { after: {} } } } = [];
 
 		for (const r of this.closingLabels.labels) {
 			// Ensure the label we got looks like a sensible range, otherwise the outline info
