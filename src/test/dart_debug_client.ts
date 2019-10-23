@@ -257,7 +257,12 @@ export class DartDebugClient extends DebugClient {
 		await delay(500);
 
 		await Promise.all([
-			this.assertOutputContains("stdout", "Reloaded"),
+			// We might get the text in either stderr or stdout depending on
+			// whether an error occurred during reassemble.
+			Promise.race([
+				this.assertOutputContains("stdout", "Reloaded"),
+				this.assertOutputContains("stderr", "Reloaded"),
+			]),
 			this.customRequest("hotReload"),
 		]);
 	}
