@@ -315,6 +315,8 @@ export let fileSafeCurrentTestName: string = "unknown";
 beforeEach("stash current test name", async function () {
 	currentTestName = this.currentTest ? this.currentTest.fullTitle() : "unknown";
 	fileSafeCurrentTestName = filenameSafe(currentTestName);
+
+	deferUntilLast(() => fileSafeCurrentTestName = "unknown");
 });
 
 export let sb: sinon.SinonSandbox;
