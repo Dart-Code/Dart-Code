@@ -174,7 +174,7 @@ export function isInsideFolderNamed(file: string, folderName: string): boolean {
 	return segments.indexOf(folderName.toLowerCase()) !== -1;
 }
 
-export function getLatestSdkVersion(): PromiseLike<string> {
+export function getLatestSdkVersion(): Promise<string> {
 	return new Promise<string>((resolve, reject) => {
 		const options: https.RequestOptions = {
 			hostname: "storage.googleapis.com",
