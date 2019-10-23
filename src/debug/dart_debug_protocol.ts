@@ -303,11 +303,6 @@ export interface VMLogRecord extends VMResponse {
 	stackTrace: VMInstanceRef;
 }
 
-export interface VMVersion extends VMResponse {
-	major: number;
-	minor: number;
-}
-
 export interface VMSourceReport extends VMResponse {
 	// A list of ranges in the program source.  These ranges correspond
 	// to ranges of executable code in the user's program (functions,
