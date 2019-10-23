@@ -21,7 +21,7 @@ abstract class SdkManager {
 
 	public changeSdk() {
 		if (this.sdkPaths)
-			this.searchForSdks(this.sdkPaths);
+			this.searchForSdks(this.sdkPaths).catch((e) => console.error(e));
 		else
 			vs.window.showWarningMessage("Set `${configName}` to enable fast SDK switching.");
 	}

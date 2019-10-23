@@ -226,7 +226,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 	protected handleNotification(evt: UnknownNotification): void {
 		switch ((evt as any).method || evt.event) {
 			case "server.started":
-				this.notify(this.serverStartedSubscriptions, evt.params as ServerStartedNotification);
+				this.notify(this.serverStartedSubscriptions, evt.params as ServerStartedNotification).catch((e) => console.error(e));
 				break;
 
 		}

@@ -86,33 +86,33 @@ export class Analytics {
 	}
 
 	public logExtensionStartup(timeInMS: number) {
-		this.event(Category.Extension, EventAction.Activated);
-		this.time(Category.Extension, TimingVariable.Startup, timeInMS);
+		this.event(Category.Extension, EventAction.Activated).catch((e) => this.logger.info(e));
+		this.time(Category.Extension, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(e));
 	}
 	public logExtensionRestart(timeInMS: number) {
-		this.event(Category.Extension, EventAction.Restart);
-		this.time(Category.Extension, TimingVariable.Startup, timeInMS);
+		this.event(Category.Extension, EventAction.Restart).catch((e) => this.logger.info(e));
+		this.time(Category.Extension, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(e));
 	}
 	public logExtensionShutdown(): PromiseLike<void> { return this.event(Category.Extension, EventAction.Deactivated); }
-	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
-	public logError(description: string, fatal: boolean) { this.error(description, fatal); }
-	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
-	public logDebugSessionDuration(debuggerType: string, timeInMS: number) { this.time(Category.Debugger, TimingVariable.SessionDuration, timeInMS, debuggerType); }
-	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS); }
+	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure).catch((e) => this.logger.info(e)); }
+	public logError(description: string, fatal: boolean) { this.error(description, fatal).catch((e) => this.logger.info(e)); }
+	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(e)); }
+	public logDebugSessionDuration(debuggerType: string, timeInMS: number) { this.time(Category.Debugger, TimingVariable.SessionDuration, timeInMS, debuggerType).catch((e) => this.logger.info(e)); }
+	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS).catch((e) => this.logger.info(e)); }
 	public logDebuggerStart(resourceUri: Uri | undefined, debuggerType: string, runType: string) {
 		const customData = {
 			cd15: debuggerType,
 			cd16: runType,
 		};
-		this.event(Category.Debugger, EventAction.Activated, resourceUri, customData);
+		this.event(Category.Debugger, EventAction.Activated, resourceUri, customData).catch((e) => this.logger.info(e));
 	}
-	public logDebuggerRestart() { this.event(Category.Debugger, EventAction.Restart); }
-	public logDebuggerHotReload() { this.event(Category.Debugger, EventAction.HotReload); }
-	public logDebuggerOpenObservatory() { this.event(Category.Debugger, EventAction.OpenObservatory); }
-	public logDebuggerOpenTimeline() { this.event(Category.Debugger, EventAction.OpenTimeline); }
-	public logDebuggerOpenDevTools() { this.event(Category.Debugger, EventAction.OpenDevTools); }
+	public logDebuggerRestart() { this.event(Category.Debugger, EventAction.Restart).catch((e) => this.logger.info(e)); }
+	public logDebuggerHotReload() { this.event(Category.Debugger, EventAction.HotReload).catch((e) => this.logger.info(e)); }
+	public logDebuggerOpenObservatory() { this.event(Category.Debugger, EventAction.OpenObservatory).catch((e) => this.logger.info(e)); }
+	public logDebuggerOpenTimeline() { this.event(Category.Debugger, EventAction.OpenTimeline).catch((e) => this.logger.info(e)); }
+	public logDebuggerOpenDevTools() { this.event(Category.Debugger, EventAction.OpenDevTools).catch((e) => this.logger.info(e)); }
 
-	private event(category: Category, action: EventAction, resourceUri?: Uri, customData?: any): PromiseLike<void> {
+	private event(category: Category, action: EventAction, resourceUri?: Uri, customData?: any): Promise<void> {
 		const data: any = {
 			ea: EventAction[action],
 			ec: Category[category],
@@ -146,7 +146,7 @@ export class Analytics {
 		// if (isDevExtension)
 		// 	console.log(`${data.utc}:${data.utv} timing: ${Math.round(timeInMS)}ms ${label ? `(${label})` : ""}`);
 
-		this.send(data);
+		return this.send(data);
 	}
 
 	private error(description: string, fatal: boolean) {
@@ -156,7 +156,7 @@ export class Analytics {
 			t: "exception",
 		};
 
-		this.send(data);
+		return this.send(data);
 	}
 
 	private async send(customData: any, resourceUri?: Uri): Promise<void> {

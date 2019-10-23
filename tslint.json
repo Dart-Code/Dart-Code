@@ -11,7 +11,6 @@
 	},
 	"rulesDirectory": "lints/",
 	"rules": {
-		// Try to keep synced with Flutter extension!
 		"disallow-fspath": true,
 		"disallow-importing-non-shared-code": true,
 		"disallow-vscode": true,
@@ -27,11 +26,8 @@
 			"options": "allow-empty-catch"
 		},
 		"space-before-function-paren": false,
-		// TODO: These don't seem to work?
-		// "no-unused-expression": true,
-		// "no-floating-promises": true,
-		// TODO: Re-enable these (currently it seems hit-and-miss whether the IDE notices them
-		// so sometimes it reports no errors, then later complains?!)
+		"no-unused-expression": true,
+		"no-floating-promises": true,
 		"max-line-length": false,
 		"ordered-imports": false,
 		"no-shadowed-variable": false

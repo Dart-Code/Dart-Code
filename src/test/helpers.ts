@@ -152,7 +152,7 @@ export async function activateWithoutAnalysis(): Promise<void> {
 		console.warn("Extension has no exports, it probably has not activated correctly! Check the extension startup logs.");
 }
 
-export async function attachLoggingWhenExtensionAvailable(attempt = 1) {
+export function attachLoggingWhenExtensionAvailable(attempt = 1) {
 	if (logger && !(logger instanceof BufferedLogger)) {
 		console.warn("Logging was already set up!");
 		return;
@@ -933,6 +933,7 @@ export function watchPromise<T>(name: string, promise: Promise<T>): Promise<T> {
 	// We'll log completion of the promise only if we'd logged that it was still in
 	// progress at some point.
 	let logCompletion = false;
+	// tslint:disable-next-line: no-floating-promises
 	promise.then((_) => {
 		didComplete = true;
 		if (logCompletion)

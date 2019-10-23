@@ -195,7 +195,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 		if (error && error.code === "SERVER_ERROR") {
 			error.method = method;
-			this.notify(this.requestErrorSubscriptions, error);
+			this.notify(this.requestErrorSubscriptions, error).catch((e) => console.error(e));
 		}
 
 		if (error) {

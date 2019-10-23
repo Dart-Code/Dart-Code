@@ -1896,7 +1896,7 @@
 		"watch": "webpack --mode development --watch --info-verbosity verbose",
 		"build-tests": "tsc -p ./",
 		"watch-tests": "tsc -p ./ --watch",
-		"lint": "tslint 'src/**/*.ts' -t verbose",
+		"lint": "tslint --project tsconfig.json 'src/**/*.ts' -t verbose",
 		"test": "npm run build-with-instrumentation && npm run build-tests && npm run instrument && npm run test-only && npm run report_lcov && npm run report_screen",
 		"instrument": "cd out/src && nyc instrument --compact false --in-place . . && cd ../..",
 		"test-only": "node ./out/src/test/test_all.js",
