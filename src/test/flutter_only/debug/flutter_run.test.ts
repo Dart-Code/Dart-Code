@@ -11,7 +11,7 @@ import { DartDebugClient } from "../../dart_debug_client";
 import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester } from "../../debug_helpers";
 import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getPackages, openFile, positionOf, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
-for (const deviceId of ["flutter-tester"/*, "chrome"*/]) {
+for (const deviceId of ["flutter-tester", "chrome"]) {
 	const deviceName = deviceId === "chrome" ? "Chrome" : "Flutter test device";
 	describe(`flutter run debugger (launch on ${deviceId})`, () => {
 		// We have tests that require external packages.
