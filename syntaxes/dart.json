@@ -317,12 +317,13 @@
 		"string-interp": {
 			"patterns": [
 				{
+					"name": "variable.dart",
+					"match": "(\\$)\\w+",
 					"captures": {
 						"1": {
-							"name": "variable.parameter.dart"
+							"name": "variable.punctuation.dart"
 						}
-					},
-					"match": "\\$(\\w+)"
+					}
 				},
 				{
 					"begin": "\\$\\{",
