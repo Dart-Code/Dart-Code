@@ -318,14 +318,19 @@
 			"patterns": [
 				{
 					"captures": {
-						"2": {
-							"name": "variable.parameter.dart"
-						},
-						"3": {
+						"1": {
 							"name": "variable.parameter.dart"
 						}
 					},
-					"match": "\\$((\\w+)|\\{([^{}]+)\\})"
+					"match": "\\$(\\w+)"
+				},
+				{
+					"captures": {
+						"1": {
+							"name": "variable.parameter.dart"
+						}
+					},
+					"match": "\\$\\{([^{}]+)\\}"
 				},
 				{
 					"match": "\\\\.",
