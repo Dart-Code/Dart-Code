@@ -325,12 +325,20 @@
 					"match": "\\$(\\w+)"
 				},
 				{
+					"begin": "\\$\\{",
+					"end": "\\}",
 					"captures": {
-						"1": {
-							"name": "variable.parameter.dart"
+						"0": {
+							"name": "punctuation.definition.template-expression.begin.dart"
 						}
 					},
-					"match": "\\$\\{([^{}]+)\\}"
+					"contentName": "meta.template.expression",
+					"patterns": [
+						{
+							"match": ".+",
+							"include": "$self"
+						}
+					]
 				},
 				{
 					"match": "\\\\.",
