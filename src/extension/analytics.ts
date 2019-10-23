@@ -143,8 +143,8 @@ export class Analytics {
 		};
 
 		this.logger.info(`${data.utc}:${data.utv} timing: ${Math.round(timeInMS)}ms ${label ? `(${label})` : ""}`);
-		if (isDevExtension)
-			console.log(`${data.utc}:${data.utv} timing: ${Math.round(timeInMS)}ms ${label ? `(${label})` : ""}`);
+		// if (isDevExtension)
+		// 	console.log(`${data.utc}:${data.utv} timing: ${Math.round(timeInMS)}ms ${label ? `(${label})` : ""}`);
 
 		this.send(data);
 	}
