@@ -1209,6 +1209,9 @@ for (const deviceId of ["flutter-tester"/*, "chrome"*/]) {
 
 			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.InspectorStructuredErrors) === true);
 
+			// Allow the initial error to be printed before we start collecting stderr.
+			await delay(500);
+
 			// Collect all output to stderr.
 			let stderrOutput = "";
 			const handleOutput = (event: DebugProtocol.OutputEvent) => {
