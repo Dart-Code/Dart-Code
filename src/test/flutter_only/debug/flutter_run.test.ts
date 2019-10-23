@@ -799,10 +799,7 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 			]);
 		});
 
-		it("provides local variables when stopped at a breakpoint", async function () {
-			if (deviceId === "chrome")
-				this.skip();
-
+		it("provides local variables when stopped at a breakpoint", async () => {
 			await setConfigForTest("dart", "previewToStringInDebugViews", true);
 			await openFile(flutterHelloWorldMainFile);
 			const debugConfig = await startDebugger(flutterHelloWorldMainFile);
@@ -824,11 +821,16 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 				ensureVariableWithIndex(listVariables, i, `l[${i}]`, `[${i}]`, `${i}`);
 			}
 
-			const longStringListVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference);
-			ensureVariable(longStringListVariables, "longStrings[0]", "[0]", {
-				ends: "…\"", // String is truncated here.
-				starts: "\"This is a long string that is 300 characters!",
-			});
+			// TODO: Remove this condition when web truncates variables
+			if (deviceId !== "chrome") {
+				const longStringListVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference);
+				ensureVariable(longStringListVariables, "longStrings[0]", "[0]", {
+					ends: "…\"", // String is truncated here.
+					starts: "\"This is a long string that is 300 characters!",
+				});
+			} else {
+				console.warn(`Skipping long string check for Chrome...`);
+			}
 
 			const shortdateListVariables = await dc.getVariables(variables.find((v) => v.name === "tenDates")!.variablesReference);
 			ensureVariable(shortdateListVariables, "tenDates[0]", "[0]", "DateTime (2005-01-01 00:00:00.000)");
