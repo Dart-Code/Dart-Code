@@ -1141,15 +1141,13 @@ import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHe
 			dc.on("output", handleOutput);
 
 			try {
-				await Promise.all([
-					waitForResult(
-						() => stderrOutput.indexOf("════════ Exception caught by widgets library") !== -1
-							&& stderrOutput.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1,
-						"Waiting for error output",
-						5000,
-					),
-					dc.hotReload(),
-				]);
+				await dc.hotReload();
+				await waitForResult(
+					() => stderrOutput.indexOf("════════ Exception caught by widgets library") !== -1
+						&& stderrOutput.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1,
+					"Waiting for error output",
+					5000,
+				);
 			} finally {
 				dc.removeListener("output", handleOutput);
 			}
