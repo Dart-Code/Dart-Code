@@ -64,8 +64,8 @@ export class DasEditCommands implements vs.Disposable {
 		</html>
 		`;
 
-		function syncScroll() {
-			if (!editor)
+		vs.window.onDidChangeTextEditorVisibleRanges((e) => {
+			if (!editor || !e || e.textEditor !== editor)
 				return;
 
 			const firstVisibleLine = editor.visibleRanges[0].start.line;
@@ -74,9 +74,7 @@ export class DasEditCommands implements vs.Disposable {
 			const totalLines = editor.document.lineCount;
 
 			panel.webview.postMessage({ command: "updateScrollPosition", args: { firstVisibleLine, lastVisibleLine, firstSelectedLine, totalLines } });
-
-			setTimeout(() => syncScroll(), 100);
-		}
+		});
 		function updatePreviews() {
 			if (!editor)
 				return;
@@ -88,9 +86,8 @@ export class DasEditCommands implements vs.Disposable {
 
 			panel.webview.postMessage({ command: "updatePreviews", args: { firstVisibleLine, lastVisibleLine, firstSelectedLine, totalLines } });
 
-			setTimeout(() => updatePreviews(), 10000);
+			setTimeout(() => updatePreviews(), 60000);
 		}
-		setTimeout(() => syncScroll(), 0);
 		setTimeout(() => updatePreviews(), 0);
 	}
 

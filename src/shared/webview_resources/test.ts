@@ -55,6 +55,6 @@ window.addEventListener("message", (event) => {
 		if (isFinite(newLineHeight))
 			lineHeight = newLineHeight;
 		document.documentElement.style.height = `${args.totalLines * lineHeight}px`;
-		document.documentElement.scrollTop = args.firstVisibleLine * lineHeight;
+		document.documentElement.scrollTo({ top: args.firstVisibleLine * lineHeight, behavior: "auto" });
 	}
 });
