@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
+import { isWin } from "../../../shared/constants";
 import { LazyCompletionItem } from "../../../shared/vscode/interfaces";
 import { acceptFirstSuggestion, activate, currentDoc, emptyFile, ensureCompletion, ensureNoCompletion, ensureTestContent, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, getCompletionsViaProviderAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, resolveCompletion, select, setTestContent } from "../../helpers";
 
@@ -136,7 +137,12 @@ main() {
 
 	it.skip("sorts completions by relevance");
 
-	it("inserts full text for overrides", async () => {
+	it("inserts full text for overrides", async function () {
+		// Skip on Windows until VS Code issue is resolved
+		// https://github.com/microsoft/vscode/issues/83239
+		if (isWin)
+			return this.skip();
+
 		await setTestContent(`
 abstract class Person {
   String get name;
