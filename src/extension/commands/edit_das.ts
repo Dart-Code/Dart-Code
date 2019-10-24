@@ -1,7 +1,9 @@
 import * as fs from "fs";
+import * as path from "path";
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
+import { extensionPath } from "../../shared/vscode/extension_utils";
 import { fsPath } from "../../shared/vscode/utils";
 import { Analyzer } from "../analysis/analyzer";
 import * as editors from "../editors";
@@ -36,14 +38,60 @@ export class DasEditCommands implements vs.Disposable {
 		const editor = vs.window.activeTextEditor;
 		if (!editor || !editor.selection || !this.analyzer.capabilities.hasCompleteStatementFix)
 			return;
-		const document = editor.document;
-		const file = fsPath(document.uri);
-		const offset = document.offsetAt(editor.selection.end);
 
-		const res = await this.analyzer.editGetStatementCompletion({ file, offset });
+		const panel = vs.window.createWebviewPanel(
+			"dartScrollTest",
+			"Scroll test",
+			(editor.viewColumn || vs.ViewColumn.One) + 1,
+			{
+				enableScripts: true,
+				localResourceRoots: [vs.Uri.file(path.join(extensionPath, "out/src/shared/webview_resources"))],
+				retainContextWhenHidden: true,
+			},
+		);
 
-		if (res && res.change)
-			await this.applyEdits(document, res.change);
+		const scriptPath = vs.Uri.file(path.join(extensionPath, "out/src/shared/webview_resources/test.js"));
+		const scriptUri = panel.webview.asWebviewUri(scriptPath);
+		panel.webview.html = `
+		<html>
+		<head>
+			<meta http-equiv="Content-Security-Policy" content="default-src ${panel.webview.cspSource} https://raw.githubusercontent.com/Dart-Code/Icons/master/;">
+		</head>
+		<body>
+			<div id="info"></div>
+			<script src="${scriptUri}"></script>
+		</body>
+		</html>
+		`;
+
+		function syncScroll() {
+			if (!editor)
+				return;
+
+			const firstVisibleLine = editor.visibleRanges[0].start.line;
+			const lastVisibleLine = editor.visibleRanges[0].end.line;
+			const firstSelectedLine = editor.selection.start.line;
+			const totalLines = editor.document.lineCount;
+
+			panel.webview.postMessage({ command: "updateScrollPosition", args: { firstVisibleLine, lastVisibleLine, firstSelectedLine, totalLines } });
+
+			setTimeout(() => syncScroll(), 100);
+		}
+		function updatePreviews() {
+			if (!editor)
+				return;
+
+			const firstVisibleLine = editor.visibleRanges[0].start.line;
+			const lastVisibleLine = editor.visibleRanges[0].end.line;
+			const firstSelectedLine = editor.selection.start.line;
+			const totalLines = editor.document.lineCount;
+
+			panel.webview.postMessage({ command: "updatePreviews", args: { firstVisibleLine, lastVisibleLine, firstSelectedLine, totalLines } });
+
+			setTimeout(() => updatePreviews(), 10000);
+		}
+		setTimeout(() => syncScroll(), 0);
+		setTimeout(() => updatePreviews(), 0);
 	}
 
 	private async sendEdit(f: (a: { file: string }) => Thenable<{ edit: as.SourceFileEdit }>, commandName: string, document: vs.TextDocument): Promise<void> {
