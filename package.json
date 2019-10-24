@@ -639,19 +639,19 @@
 				},
 				{
 					"command": "dart.openDevToolsInspector",
-					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded && dart-code:isInFlutterDebugModeDebugSession"
 				},
 				{
 					"command": "dart.openDevToolsTimeline",
-					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded && dart-code:isInFlutterProfileModeDebugSession"
 				},
 				{
 					"command": "dart.openDevToolsMemory",
-					"when": "dart-code:dartProjectLoaded && inDebugMode"
+					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded && dart-code:isInFlutterProfileModeDebugSession"
 				},
 				{
 					"command": "dart.openDevToolsPerformance",
-					"when": "dart-code:dartProjectLoaded && inDebugMode"
+					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded && dart-code:isInFlutterProfileModeDebugSession"
 				},
 				{
 					"command": "_dart.openDevTools.touchBar",
@@ -719,12 +719,12 @@
 				{
 					"command": "dart.openDevToolsInspector",
 					"group": "navigation@90",
-					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:isInFlutterDebugModeDebugSession"
 				},
 				{
 					"command": "dart.openDevToolsTimeline",
 					"group": "navigation@90",
-					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:isInFlutterProfileModeDebugSession"
 				}
 			],
 			"touchBar": [

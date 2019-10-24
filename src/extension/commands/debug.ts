@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { CoverageData } from "../../debug/utils";
-import { isInDebugSessionThatSupportsHotReloadContext } from "../../shared/constants";
+import { isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
 import { FlutterServiceExtension, LogSeverity } from "../../shared/enums";
 import { Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
@@ -260,8 +260,14 @@ export class DebugCommands {
 			// the session type, since the debug toolbar does not allow us to dynamically update
 			// when we see the extension load.
 			// https://github.com/microsoft/vscode/issues/69398
-			if (s.configuration.debuggerType === DebuggerType.Flutter || s.configuration.debuggerType === DebuggerType.FlutterWeb)
+			if (s.configuration.debuggerType === DebuggerType.Flutter || s.configuration.debuggerType === DebuggerType.FlutterWeb) {
 				vs.commands.executeCommand("setContext", isInDebugSessionThatSupportsHotReloadContext, true);
+				const mode: "debug" | "profile" | "release" = s.configuration.flutterMode;
+				if (mode === "debug")
+					vs.commands.executeCommand("setContext", isInFlutterDebugModeDebugSessionContext, true);
+				if (mode === "profile")
+					vs.commands.executeCommand("setContext", isInFlutterProfileModeDebugSessionContext, true);
+			}
 
 			// Process any queued events that came in before the session start
 			// event.
@@ -307,11 +313,12 @@ export class DebugCommands {
 		// SDK at a time are practically zero.
 		if (debugSessions.length === 0) {
 			this.flutterExtensions.markAllServicesUnloaded();
-			vs.commands.executeCommand(
-				"setContext",
+			for (const debugContext of [
 				isInDebugSessionThatSupportsHotReloadContext,
-				false,
-			);
+				isInFlutterDebugModeDebugSessionContext,
+				isInFlutterProfileModeDebugSessionContext,
+			])
+				vs.commands.executeCommand("setContext", debugContext, false);
 		}
 	}
 

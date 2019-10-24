@@ -86,6 +86,8 @@ export const REFACTOR_ANYWAY = "Refactor Anyway";
 export const TRACK_WIDGET_CREATION_ENABLED = "dart-code:trackWidgetCreationEnabled";
 export const HAS_LAST_DEBUG_CONFIG = "dart-code:hasLastDebugConfig";
 export const isInDebugSessionThatSupportsHotReloadContext = "dart-code:isInDebugSessionThatSupportsHotReload";
+export const isInFlutterDebugModeDebugSessionContext = "dart-code:isInFlutterDebugModeDebugSession";
+export const isInFlutterProfileModeDebugSessionContext = "dart-code:isInFlutterProfileModeDebugSession";
 export const showErrorsAction = "Show Errors";
 export const debugAnywayAction = "Debug Anyway";
 
