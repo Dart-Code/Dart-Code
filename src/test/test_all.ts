@@ -49,20 +49,23 @@ async function runTests(testFolder: string, workspaceFolder: string, sdkPaths: s
 	// The VS Code download is often flaky on GH Actions, so we want to retry
 	// if required - however we don't want to re-run tests if they fail, so do
 	// the download step separately.
-	let remainingAttempts = 5;
-	while (remainingAttempts > 0) {
+	let currentAttempt = 1;
+	const maxAttempts = 5;
+	while (currentAttempt <= maxAttempts) {
 		try {
-			remainingAttempts--;
+			console.log(`Attempting to download VS Code attempt #${currentAttempt}`);
 			await vstest.downloadAndUnzipVSCode();
 			break;
 		} catch (e) {
-			if (remainingAttempts > 0)
-				console.warn(`Failed to download VS Code, will retry: ${e}`);
-			else
+			if (currentAttempt >= maxAttempts)
 				throw e;
+
+			console.warn(`Failed to download VS Code, will retry: ${e}`);
+			currentAttempt++;
 		}
 	}
 
+	console.log("Running tests with pre-downloaded VS Code");
 	try {
 		const res = await vstest.runTests({
 			extensionDevelopmentPath: cwd,
