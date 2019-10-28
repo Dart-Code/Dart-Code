@@ -11,8 +11,6 @@ export class Context {
 		return new Context(context);
 	}
 
-	get devToolsNotificationsShown(): number | undefined { return (this.context.globalState.get("devToolsNotificationsShown") as number) || 0; }
-	set devToolsNotificationsShown(value: number | undefined) { this.context.globalState.update("devToolsNotificationsShown", value); }
 	get devToolsNotificationLastShown(): number | undefined { return this.context.globalState.get("devToolsNotificationLastShown") as number; }
 	set devToolsNotificationLastShown(value: number | undefined) { this.context.globalState.update("devToolsNotificationLastShown", value); }
 	get devToolsNotificationDoNotShow(): boolean | undefined { return !!this.context.globalState.get("devToolsNotificationDoNotShowAgain"); }

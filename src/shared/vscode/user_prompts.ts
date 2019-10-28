@@ -74,18 +74,16 @@ export function showFlutterSurveyNotificationIfAppropriate(context: Context, ope
 
 export async function showDevToolsNotificationIfAppropriate(context: Context): Promise<{ didOpen: boolean, shouldAlwaysOpen?: boolean }> {
 	const lastShown = context.devToolsNotificationLastShown;
-	const timesShown = context.devToolsNotificationsShown || 0;
 	const doNotShow = context.devToolsNotificationDoNotShow;
 
 	// Don't show this notification more than 10 times or if user said not to.
-	if (doNotShow || timesShown >= 10)
+	if (doNotShow)
 		return { didOpen: false };
 
 	// Don't show this notification if we've shown it in the last 20 hours.
 	if (lastShown && Date.now() - lastShown < noRepeatPromptThreshold)
 		return { didOpen: false };
 
-	context.devToolsNotificationsShown = timesShown + 1;
 	context.devToolsNotificationLastShown = Date.now();
 
 	const choice = await vs.window.showInformationMessage(wantToTryDevToolsPrompt, openDevToolsAction, alwaysOpenAction, notTodayAction, doNotAskAgainAction);

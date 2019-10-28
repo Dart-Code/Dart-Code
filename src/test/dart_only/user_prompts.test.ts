@@ -28,14 +28,12 @@ describe("DevTools notification", async () => {
 		// Flags were updated.
 		const context = extApi.context;
 		assert.equal(context.devToolsNotificationDoNotShow, false);
-		assert.equal(context.devToolsNotificationsShown, 1);
 		// Marked as shown within the last 10 seconds.
 		assert.equal(context.devToolsNotificationLastShown && context.devToolsNotificationLastShown > Date.now() - 10000 && context.devToolsNotificationLastShown <= Date.now(), true);
 	});
 
 	it("shows and updates context values when already set", async () => {
 		const context = extApi.context;
-		context.devToolsNotificationsShown = 3;
 		context.devToolsNotificationLastShown = Date.now() - (noRepeatPromptThreshold + twoHoursInMs);
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
@@ -53,14 +51,12 @@ describe("DevTools notification", async () => {
 
 		// Flags were updated.
 		assert.equal(context.devToolsNotificationDoNotShow, false);
-		assert.equal(context.devToolsNotificationsShown, 4);
 		// Marked as shown within the last 10 seconds.
 		assert.equal(context.devToolsNotificationLastShown > Date.now() - 10000 && context.devToolsNotificationLastShown <= Date.now(), true);
 	});
 
 	it("does not show if shown in the last 20 hours", async () => {
 		const context = extApi.context;
-		context.devToolsNotificationsShown = 3;
 		const fiveHoursInMs = 1000 * 60 * 60 * 5;
 		context.devToolsNotificationLastShown = Date.now() - fiveHoursInMs;
 

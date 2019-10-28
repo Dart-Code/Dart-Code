@@ -863,7 +863,6 @@ export async function addLaunchConfigsForTest(workspaceUri: vs.Uri, configs: any
 }
 
 export function clearAllContext(context: Context): Promise<void> {
-	context.devToolsNotificationsShown = undefined;
 	context.devToolsNotificationLastShown = undefined;
 	context.devToolsNotificationDoNotShow = undefined;
 	context.flutterSurvey2019Q3NotificationLastShown = undefined;
