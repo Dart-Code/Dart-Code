@@ -349,14 +349,14 @@
 			},
 			{
 				"command": "dart.openDevToolsInspector",
-				"title": "Open DevTools Inspector Page",
-				"category": "Dart",
+				"title": "Open DevTools Widget Inspector Page",
+				"category": "Flutter",
 				"icon": "media/commands/inspector.svg"
 			},
 			{
 				"command": "dart.openDevToolsTimeline",
 				"title": "Open DevTools Timeline Page",
-				"category": "Dart",
+				"category": "Flutter",
 				"icon": "media/commands/timeline.svg"
 			},
 			{
