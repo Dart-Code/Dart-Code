@@ -1765,6 +1765,20 @@ export class DartDebugSession extends DebugSession {
 	// Logs a message back to the editor. Does not add its own newlines, you must
 	// provide them!
 	protected logToUser(message: string, category?: string, colorText = (s: string) => s) {
+		// TODO: This needs to buffer. Sometimes messages come through in chunks and we need to stitch them together
+		// before we can parse stack frames:
+		// [5:01:50 PM] [General] [Info] [stderr] Unhandled exception:
+		// Excep
+		// [5:01:50 PM] [General] [Info] [stderr] tion: Oop
+		// [5:01:50 PM] [General] [Info] [stderr] s
+		// [5:01:50 PM] [General] [Info] [stderr]
+		// [5:01:50 PM] [General] [Info] [stderr] #
+		// [5:01:50 PM] [General] [Info] [stderr] 0
+		// [5:01:50 PM] [General] [Info] [stderr]
+		// [5:01:50 PM] [General] [Info] [stderr]
+		// [5:01:50 PM] [General] [Info] [stderr]     main (file:///D:/a/
+		// [5:01:50 PM] [General] [Info] [stderr] Dart-Code/Dart-Code/src/test/test_projects/hello_world/bin/broken.dart:2:3)
+
 		// Extract stack frames from the message so we can do nicer formatting of them.
 		const frame = this.getStackFrameData(message) || this.getWebStackFrameData(message) || this.getMessageWithUriData(message);
 
