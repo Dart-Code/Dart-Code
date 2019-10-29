@@ -1265,37 +1265,21 @@ for (const deviceId of ["flutter-tester"/*, "chrome"*/]) {
 			stdErrLines = stdErrLines.slice(0, lastErrorLine + 1);
 
 			// Handle old/new error messages for stable/dev.
-			const expectedErrorLines = stdErrLines.find((l) => l.indexOf("The relevant error-causing widget was") !== -1)
-				? [
-					grey2(`════════ Exception caught by widgets library ═══════════════════════════════════`),
-					grey(`The following _Exception was thrown building MyBrokenHomePage(dirty):`),
-					`Exception: Oops`,
-					grey(`The relevant error-causing widget was`),
-					grey2(`MyBrokenHomePage`),
-					grey(`When the exception was thrown, this was the stack`),
-					grey2(`#0      MyBrokenHomePage._throwAnException`),
-					grey2(`#1      MyBrokenHomePage.build`),
-					grey(`#2      StatelessElement.build`),
-					grey(`#3      ComponentElement.performRebuild`),
-					grey(`#4      Element.rebuild`),
-					grey(`...`),
-					grey2(`════════════════════════════════════════════════════════════════════════════════`),
-				]
-				: [
-					grey2(`════════ Exception caught by widgets library ═══════════════════════════════════`),
-					grey(`The following _Exception was thrown building MyBrokenHomePage(dirty):`),
-					`Exception: Oops`,
-					grey(`User-created ancestor of the error-causing widget was`),
-					grey2(`MaterialApp`),
-					grey(`When the exception was thrown, this was the stack`),
-					grey2(`#0      MyBrokenHomePage._throwAnException`),
-					grey2(`#1      MyBrokenHomePage.build`),
-					grey(`#2      StatelessElement.build`),
-					grey(`#3      ComponentElement.performRebuild`),
-					grey(`#4      Element.rebuild`),
-					grey(`...`),
-					grey2(`════════════════════════════════════════════════════════════════════════════════`),
-				];
+			const expectedErrorLines = [
+				grey2(`════════ Exception caught by widgets library ═══════════════════════════════════`),
+				grey(`The following _Exception was thrown building MyBrokenHomePage(dirty):`),
+				`Exception: Oops`,
+				grey(`The relevant error-causing widget was`),
+				grey2(`MyBrokenHomePage`),
+				grey(`When the exception was thrown, this was the stack`),
+				grey2(`#0      MyBrokenHomePage._throwAnException`),
+				grey2(`#1      MyBrokenHomePage.build`),
+				grey(`#2      StatelessElement.build`),
+				grey(`#3      ComponentElement.performRebuild`),
+				grey(`#4      Element.rebuild`),
+				grey(`...`),
+				grey2(`════════════════════════════════════════════════════════════════════════════════`),
+			];
 
 			assert.deepStrictEqual(stdErrLines.map((s) => s.toLowerCase()), expectedErrorLines.map((s) => s.toLowerCase()));
 		});
