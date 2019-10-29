@@ -1211,6 +1211,11 @@ for (const deviceId of ["flutter-tester"/*, "chrome"*/]) {
 			if (!extApi.flutterCapabilities.hasUpdatedStructuredErrorsFormat)
 				return this.skip();
 
+			// Currently this test fails on Chrome because we always lose the race
+			// with enabling structured errors versus the error occurring
+			if (deviceId === "chrome")
+				return this.skip();
+
 			await openFile(flutterHelloWorldBrokenFile);
 			const config = await startDebugger(flutterHelloWorldBrokenFile);
 
