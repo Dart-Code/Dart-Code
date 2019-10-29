@@ -5,6 +5,7 @@ import { Logger } from "../../shared/interfaces";
 import { PromiseCompleter, versionIsAtLeast } from "../../shared/utils";
 import { extensionVersion } from "../../shared/vscode/extension_utils";
 import { config } from "../config";
+import { DartCapabilities } from "../sdk/capabilities";
 import { escapeShell, reloadExtension } from "../utils";
 import { AnalyzerGen } from "./analyzer_gen";
 
@@ -43,7 +44,7 @@ export class DasAnalyzer extends AnalyzerGen {
 	private currentAnalysisCompleter?: PromiseCompleter<void>;
 	public capabilities: AnalyzerCapabilities = AnalyzerCapabilities.empty;
 
-	constructor(logger: Logger, dartVMPath: string, analyzerPath: string) {
+	constructor(logger: Logger, dartVMPath: string, dartCapabilities: DartCapabilities, analyzerPath: string) {
 		super(logger, config.maxLogLineLength);
 
 		let analyzerArgs = [];
@@ -65,6 +66,15 @@ export class DasAnalyzer extends AnalyzerGen {
 		// The analysis server supports a verbose instrumentation log file.
 		if (config.analyzerInstrumentationLogFile)
 			analyzerArgs.push(`--instrumentation-log-file=${config.analyzerInstrumentationLogFile}`);
+
+		// Enable the completion model only if the SDK supports it and the
+		// user hasn't already got it in analyzerAdditionalArgs (they may have
+		// enabled it previously and we don't want to break if they also tick
+		// the new setting).
+		const alreadyHasCompletionModelEnabled = config.analyzerAdditionalArgs
+			&& config.analyzerAdditionalArgs.indexOf("--enable-completion-model") !== -1;
+		if (config.enableMachineLearningCodeCompletion && !alreadyHasCompletionModelEnabled && dartCapabilities.supportsCompletionModel)
+			analyzerArgs.push(`--enable-completion-model`);
 
 		// Allow arbitrary args to be passed to the analysis server.
 		if (config.analyzerAdditionalArgs)

@@ -192,7 +192,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		return;
 	}
 
-	analyzer = new Analyzer(logger, path.join(sdks.dart, dartVMPath), analyzerPath);
+	analyzer = new Analyzer(logger, path.join(sdks.dart, dartVMPath), dartCapabilities, analyzerPath);
 	context.subscriptions.push(analyzer);
 
 	// Log analysis server startup time when we get the welcome message/version.
@@ -689,6 +689,7 @@ function getSettingsThatRequireRestart() {
 		+ config.analyzerInstrumentationLogFile
 		+ config.extensionLogFile
 		+ config.analyzerAdditionalArgs
+		+ config.enableMachineLearningCodeCompletion
 		+ config.flutterSdkPath
 		+ config.flutterSelectDeviceWhenConnected
 		+ config.closingLabels

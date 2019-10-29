@@ -5,11 +5,12 @@ import { analyzerSnapshotPath } from "../../shared/constants";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { extensionVersion } from "../../shared/vscode/extension_utils";
 import { config } from "../config";
+import { DartCapabilities } from "../sdk/capabilities";
 import { DasAnalyzer } from "./analyzer_das";
 
 export class Analyzer extends DasAnalyzer {
-	constructor(logger: Logger, dartVMPath: string, analyzerPath: string) {
-		super(logger, dartVMPath, analyzerPath);
+	constructor(logger: Logger, dartVMPath: string, dartCapabilities: DartCapabilities, analyzerPath: string) {
+		super(logger, dartVMPath, dartCapabilities, analyzerPath);
 	}
 }
 
