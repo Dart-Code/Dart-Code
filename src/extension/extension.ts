@@ -547,6 +547,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		checkForPackages();
 	}));
 
+	setUserAgent(extensionVersion);
+
 	return {
 		...new DartExtensionApi(),
 		[internalApiSymbol]: {

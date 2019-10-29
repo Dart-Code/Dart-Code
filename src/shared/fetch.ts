@@ -2,6 +2,13 @@ import * as http from "http";
 import * as https from "https";
 import * as url from "url";
 
+// To avoid depending on VS Code files here, this is overwritten in extension.ts.
+let userAgent = "Dart-Code https://dartcode.org/";
+
+export function setUserAgent(extensionVersion: string) {
+	userAgent = `Dart-Code/${extensionVersion} (https://dartcode.org/)`;
+}
+
 // TODO: Move over things over to this...
 export function fetch(urlString: string) {
 	const u = url.parse(urlString);
@@ -16,6 +23,9 @@ export function fetch(urlString: string) {
 function fetchHttps(hostname: string | undefined, port: string | undefined, path: string | undefined): Promise<string> {
 	return new Promise<string>((resolve, reject) => {
 		const options: https.RequestOptions = {
+			headers: {
+				"User-Agent": userAgent,
+			},
 			hostname,
 			method: "GET",
 			path,
@@ -41,6 +51,9 @@ function fetchHttps(hostname: string | undefined, port: string | undefined, path
 function fetchHttp(hostname: string | undefined, port: string | undefined, path: string | undefined): Promise<string> {
 	return new Promise<string>((resolve, reject) => {
 		const options: http.RequestOptions = {
+			headers: {
+				"User-Agent": userAgent,
+			},
 			hostname,
 			method: "GET",
 			path,
