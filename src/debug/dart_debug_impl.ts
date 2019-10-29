@@ -815,30 +815,38 @@ export class DartDebugSession extends DebugSession {
 		} else if (data.data.type === "MapEntry") {
 			const mapRef = data.data as VMMapEntry;
 
-			const results = await Promise.all([
-				this.observatory.getObject(thread.ref.id, mapRef.keyId),
-				this.observatory.getObject(thread.ref.id, mapRef.valueId),
-			]);
+			const keyResult = this.observatory.getObject(thread.ref.id, mapRef.keyId);
+			const valueResult = this.observatory.getObject(thread.ref.id, mapRef.valueId);
 
 			const variables: DebugProtocol.Variable[] = [];
-
-			const [keyDebuggerResult, valueDebuggerResult] = results;
-			const keyInstanceRef = keyDebuggerResult.result as VMInstanceRef;
-			const valueInstanceRef = valueDebuggerResult.result as VMInstanceRef;
-
-			variables.push(await this.instanceRefToVariable(thread, false, "key", "key", keyInstanceRef, true));
-
 			let canEvaluateValueName = false;
 			let valueEvaluateName = "value";
-			if (this.isSimpleKind(keyInstanceRef.kind)) {
-				canEvaluateValueName = true;
-				valueEvaluateName = `${mapRef.mapEvaluateName}[${this.valueAsString(keyInstanceRef)}]`;
+
+			try {
+				const keyDebuggerResult = await keyResult;
+				const keyInstanceRef = keyDebuggerResult.result as VMInstanceRef;
+
+				variables.push(await this.instanceRefToVariable(thread, false, "key", "key", keyInstanceRef, true));
+
+				if (this.isSimpleKind(keyInstanceRef.kind)) {
+					canEvaluateValueName = true;
+					valueEvaluateName = `${mapRef.mapEvaluateName}[${this.valueAsString(keyInstanceRef)}]`;
+				}
+			} catch (error) {
+				variables.push({ name: "key", value: this.errorAsDisplayValue(error), variablesReference: 0 });
 			}
 
-			variables.push(await this.instanceRefToVariable(thread, canEvaluateValueName, valueEvaluateName, "value", valueInstanceRef, true));
+			try {
+				const valueDebuggerResult = await valueResult;
+				const valueInstanceRef = valueDebuggerResult.result as VMInstanceRef;
+				variables.push(await this.instanceRefToVariable(thread, canEvaluateValueName, valueEvaluateName, "value", valueInstanceRef, true));
+			} catch (error) {
+				variables.push({ name: "value", value: this.errorAsDisplayValue(error), variablesReference: 0 });
+			}
 
 			response.body = { variables };
 			this.sendResponse(response);
+
 		} else {
 			const instanceRef = data.data as InstanceWithEvaluateName;
 
@@ -930,7 +938,7 @@ export class DartDebugSession extends DebugSession {
 											);
 										}
 									} catch (e) {
-										return { name: getterName, value: `<${e}>`, variablesReference: 0 };
+										return { name: getterName, value: this.errorAsDisplayValue(e), variablesReference: 0 };
 									}
 								});
 								fieldAndGetterPromises = fieldAndGetterPromises.concat(getterPromises);
@@ -951,15 +959,23 @@ export class DartDebugSession extends DebugSession {
 				response.body = { variables };
 				this.sendResponse(response);
 			} catch (error) {
-				// this.errorResponse(response, `${error}`);
 				response.body = {
 					variables: [
-						{ name: "<error>", value: `${error.message || error}`, variablesReference: 0 },
+						{ name: "<error>", value: this.errorAsDisplayValue(error), variablesReference: 0 },
 					],
 				};
 				this.sendResponse(response);
 			}
 		}
+	}
+
+	private errorAsDisplayValue(error: any) {
+		if (!error)
+			return `<unknown error>`;
+		const message = `${error.message || error}`;
+		if (!message)
+			return `<unknown error>`;
+		return `<${message.split("\n")[0].trim()}>`;
 	}
 
 	private async getGetterNamesForHierarchy(thread: VMIsolateRef, classRef: VMClassRef | undefined): Promise<string[]> {

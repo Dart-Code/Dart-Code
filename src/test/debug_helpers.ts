@@ -57,8 +57,8 @@ export async function ensureMapEntry(mapEntries: DebugProtocol.Variable[], entry
 
 		const key = variable[0] as DebugProtocol.Variable;
 		const value = variable[1] as DebugProtocol.Variable;
-		assert.ok(key);
-		assert.ok(value);
+		assert.ok(key, "Didn't get Key variable");
+		assert.ok(value, "Didn't get Value variable");
 		if (key.name === entry.key.name
 			&& key.value === entry.key.value
 			&& key.evaluateName === entry.key.evaluateName
