@@ -5,8 +5,10 @@ import * as vs from "vscode";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
 import { analyzerSnapshotPath, dartPlatformName, dartVMPath, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, isWin, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
+import { setUserAgent } from "../shared/fetch";
 import { DartWorkspaceContext, IFlutterDaemon, Sdks } from "../shared/interfaces";
 import { captureLogs, EmittingLogger, logToConsole } from "../shared/logging";
+import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
 import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../shared/utils";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
@@ -336,7 +338,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	util.logTime("All other stuff before debugger..");
 
-	const pubGlobal = new PubGlobal(logger, extContext, sdks);
+	const pubApi = new PubApi();
+	const pubGlobal = new PubGlobal(logger, extContext, sdks, pubApi);
 
 	// Set up debug stuff.
 	const debugProvider = new DebugConfigProvider(logger, sdks, analytics, pubGlobal, flutterDaemon, deviceManager, dartCapabilities, flutterCapabilities);

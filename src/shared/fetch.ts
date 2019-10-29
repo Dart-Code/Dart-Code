@@ -10,20 +10,21 @@ export function setUserAgent(extensionVersion: string) {
 }
 
 // TODO: Move over things over to this...
-export function fetch(urlString: string) {
+export function fetch(urlString: string, headers?: http.OutgoingHttpHeaders) {
 	const u = url.parse(urlString);
 	if (u.protocol === "https:")
-		return fetchHttps(u.hostname, u.port, u.path);
+		return fetchHttps(u.hostname, u.port, u.path, headers);
 	else if (u.protocol === "http:")
-		return fetchHttp(u.hostname, u.port, u.path);
+		return fetchHttp(u.hostname, u.port, u.path, headers);
 	else
 		throw new Error(`Cannot fetch URL ${urlString}`);
 }
 
-function fetchHttps(hostname: string | undefined, port: string | undefined, path: string | undefined): Promise<string> {
+function fetchHttps(hostname: string | undefined, port: string | undefined, path: string | undefined, headers: http.OutgoingHttpHeaders = {}): Promise<string> {
 	return new Promise<string>((resolve, reject) => {
 		const options: https.RequestOptions = {
 			headers: {
+				...headers,
 				"User-Agent": userAgent,
 			},
 			hostname,
@@ -48,10 +49,11 @@ function fetchHttps(hostname: string | undefined, port: string | undefined, path
 	});
 }
 
-function fetchHttp(hostname: string | undefined, port: string | undefined, path: string | undefined): Promise<string> {
+function fetchHttp(hostname: string | undefined, port: string | undefined, path: string | undefined, headers: http.OutgoingHttpHeaders = {}): Promise<string> {
 	return new Promise<string>((resolve, reject) => {
 		const options: http.RequestOptions = {
 			headers: {
+				...headers,
 				"User-Agent": userAgent,
 			},
 			hostname,

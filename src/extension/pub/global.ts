@@ -2,16 +2,16 @@ import * as path from "path";
 import * as vs from "vscode";
 import { noRepeatPromptThreshold, pubGlobalDocsUrl, pubPath } from "../../shared/constants";
 import { LogCategory, VersionStatus } from "../../shared/enums";
-import { fetch } from "../../shared/fetch";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
+import { PubApi } from "../../shared/pub/api";
 import { versionIsAtLeast } from "../../shared/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { safeSpawn } from "../utils/processes";
 import { envUtils } from "../utils/vscode/editor";
 
 export class PubGlobal {
-	constructor(private readonly logger: Logger, private context: Context, private sdks: DartSdks) { }
+	constructor(private readonly logger: Logger, private context: Context, private sdks: DartSdks, private pubApi: PubApi) { }
 
 	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion?: string, autoUpdate: boolean = false): Promise<boolean> {
 		const versionStatus = await this.getInstalledStatus(packageName, packageID, requiredVersion);
@@ -80,8 +80,8 @@ export class PubGlobal {
 		if (!lastChecked || lastChecked <= Date.now() - noRepeatPromptThreshold) {
 			this.context.setPackageLastCheckedForUpdates(packageID, Date.now());
 			try {
-				const packageJson = JSON.parse(await fetch(`https://pub.dartlang.org/api/packages/${packageID}`));
-				if (!versionIsAtLeast(match[1], packageJson.latest.version))
+				const pubPackage = await this.pubApi.getPackage(packageID);
+				if (!versionIsAtLeast(match[1], pubPackage.latest.version))
 					return VersionStatus.UpdateAvailable;
 			} catch (e) {
 				// If we fail to call the API to check for a new version, then we can run
