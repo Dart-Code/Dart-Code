@@ -3,7 +3,6 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { platformEol } from "../../../shared/constants";
 import { FlutterService, FlutterServiceExtension } from "../../../shared/enums";
 import { fetch } from "../../../shared/fetch";
 import { grey, grey2 } from "../../../shared/utils/colors";
@@ -790,7 +789,7 @@ for (const deviceId of ["flutter-tester"/*, "chrome"*/]) {
 					.then(() => delay(5000))
 					.then(() => dc.terminateRequest()),
 				dc.waitForEvent("terminated"),
-				dc.assertOutputContains("stdout", `Hello! The {year} is """${(new Date()).getFullYear()}"""${platformEol}`),
+				dc.assertOutputContains("stdout", `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`),
 				dc.launch(config),
 			]);
 		});
