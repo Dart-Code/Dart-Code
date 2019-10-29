@@ -173,6 +173,8 @@ function setupTestLogging(): boolean {
 			// after we closed our log file to be included in the next.
 			logger = new BufferedLogger();
 
+			// Wait a little before closing, to ensure we capture anything in-progress.
+			await delay(1000);
 			await testLogger.dispose();
 			// On CI, we delete logs for passing tests to save money on S3 :-)
 			if (process.env.CI && testResult === "passed") {
