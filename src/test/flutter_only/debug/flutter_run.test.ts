@@ -1177,7 +1177,7 @@ for (const deviceId of ["flutter-tester"/*, "chrome"*/]) {
 				watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
 				watchPromise(
 					"writes_failure_output->assertOutputContains",
-					dc.assertOutputContains("stderr", "#0      MyBrokenHomePage.build")
+					dc.assertOutputContains("stderr", "_throwAnException")
 						.then((event) => {
 							assert.equal(event.body.output.indexOf("package:hello_world/broken.dart"), -1);
 							assert.equal(event.body.source!.name, "package:hello_world/broken.dart");

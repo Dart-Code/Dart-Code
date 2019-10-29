@@ -18,6 +18,11 @@ class MyBrokenHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    _throwAnException();
+    return Text("test");
+  }
+
+  void _throwAnException() {
     throw Exception("Oops");
   }
 }
