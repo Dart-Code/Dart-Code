@@ -842,9 +842,15 @@ for (const deviceId of ["flutter-tester"/*, "chrome"*/]) {
 			ensureVariable(mapVariables, undefined, "4", `"s" -> "Hello!"`);
 			ensureVariable(mapVariables, undefined, "5", `DateTime -> "valentines-2000"`);
 			ensureVariable(mapVariables, undefined, "6", `DateTime -> "new-year-2005"`);
-			ensureVariable(mapVariables, undefined, "7", `true -> true`);
-			ensureVariable(mapVariables, undefined, "8", `1 -> "one"`);
-			ensureVariable(mapVariables, undefined, "9", `1.1 -> "one-point-one"`);
+			// TODO: Remove this condition when web supports these
+			// https://github.com/dart-lang/webdev/issues/789
+			if (deviceId !== "chrome") {
+				ensureVariable(mapVariables, undefined, "7", `true -> true`);
+				ensureVariable(mapVariables, undefined, "8", `1 -> "one"`);
+				ensureVariable(mapVariables, undefined, "9", `1.1 -> "one-point-one"`);
+			} else {
+				console.warn(`Skipping bool/num check for Chrome...`);
+			}
 
 			await ensureMapEntry(mapVariables, {
 				key: { evaluateName: undefined, name: "key", value: `"l"` },
@@ -866,18 +872,24 @@ for (const deviceId of ["flutter-tester"/*, "chrome"*/]) {
 				key: { evaluateName: undefined, name: "key", value: `DateTime (2005-01-01 00:00:00.000)` },
 				value: { evaluateName: undefined, name: "value", value: `"new-year-2005"` },
 			}, dc);
-			await ensureMapEntry(mapVariables, {
-				key: { evaluateName: undefined, name: "key", value: "true" },
-				value: { evaluateName: `m[true]`, name: "value", value: "true" },
-			}, dc);
-			await ensureMapEntry(mapVariables, {
-				key: { evaluateName: undefined, name: "key", value: "1" },
-				value: { evaluateName: `m[1]`, name: "value", value: `"one"` },
-			}, dc);
-			await ensureMapEntry(mapVariables, {
-				key: { evaluateName: undefined, name: "key", value: "1.1" },
-				value: { evaluateName: `m[1.1]`, name: "value", value: `"one-point-one"` },
-			}, dc);
+			// TODO: Remove this condition when web supports these
+			// https://github.com/dart-lang/webdev/issues/789
+			if (deviceId !== "chrome") {
+				await ensureMapEntry(mapVariables, {
+					key: { evaluateName: undefined, name: "key", value: "true" },
+					value: { evaluateName: `m[true]`, name: "value", value: "true" },
+				}, dc);
+				await ensureMapEntry(mapVariables, {
+					key: { evaluateName: undefined, name: "key", value: "1" },
+					value: { evaluateName: `m[1]`, name: "value", value: `"one"` },
+				}, dc);
+				await ensureMapEntry(mapVariables, {
+					key: { evaluateName: undefined, name: "key", value: "1.1" },
+					value: { evaluateName: `m[1.1]`, name: "value", value: `"one-point-one"` },
+				}, dc);
+			} else {
+				console.warn(`Skipping bool/num check for Chrome...`);
+			}
 
 			await Promise.all([
 				dc.waitForEvent("terminated"),
