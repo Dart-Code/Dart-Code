@@ -2,14 +2,9 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { alwaysOpenAction, doNotAskAgainAction, flutterSurveyPromptWithAnalytics, flutterSurveyPromptWithoutAnalytics, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, notTodayAction, openDevToolsAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
+import { alwaysOpenAction, doNotAskAgainAction, flutterSurveyPromptWithAnalytics, flutterSurveyPromptWithoutAnalytics, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, notTodayAction, openDevToolsAction, surveyBaseUrl, surveyEnd, surveyStart, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
 import { Logger } from "../interfaces";
 import { Context } from "./workspace";
-
-// Mon Aug 12 2019 17:00:00 GMT+0100 (British Summer Time UTC+1) = Mon Aug 12 09:00 PDT (UTC-7)
-export const surveyStart = Date.UTC(2019, 7 /* Month is 0-based!! */, 12, 16, 0);
-// Sun Aug 25 2019 02:00:00 GMT+0100 (British Summer Time UTC+1) = Sat Aug 24 18:00 PDT (UTC-7).
-export const surveyEnd = Date.UTC(2019, 7 /* Month is 0-based!! */, 25, 1, 0);
 
 /// Shows Survey notification if appropriate. Returns whether a notification was shown
 /// (not whether it was clicked/opened).
@@ -17,8 +12,8 @@ export function showFlutterSurveyNotificationIfAppropriate(context: Context, ope
 	if (now <= surveyStart || now >= surveyEnd)
 		return false;
 
-	const lastShown = context.flutterSurvey2019Q3NotificationLastShown;
-	const doNotShow = context.flutterSurvey2019Q3NotificationDoNotShow;
+	const lastShown = context.flutterSurvey2019Q4NotificationLastShown;
+	const doNotShow = context.flutterSurvey2019Q4NotificationDoNotShow;
 
 	// Don't show this notification if user previously said not to.
 	if (doNotShow)
@@ -48,21 +43,21 @@ export function showFlutterSurveyNotificationIfAppropriate(context: Context, ope
 	}
 
 	const prompt = clientID ? flutterSurveyPromptWithAnalytics : flutterSurveyPromptWithoutAnalytics;
-	const surveyUrl = "https://google.qualtrics.com/jfe/form/SV_3kiGXYfYOfXUjB3?Source=VSCode"
+	const surveyUrl = surveyBaseUrl
 		+ (clientID ? `&ClientID=${encodeURIComponent(clientID)}` : "");
 
 	// Mark the last time we've shown it (now) so we can avoid showing again for
 	// 40 hours.
-	context.flutterSurvey2019Q3NotificationLastShown = Date.now();
+	context.flutterSurvey2019Q4NotificationLastShown = Date.now();
 
 	// Prompt to show and handle response.
 	vs.window.showInformationMessage(prompt, takeSurveyAction, doNotAskAgainAction).then(async (choice) => {
 		if (choice === doNotAskAgainAction) {
-			context.flutterSurvey2019Q3NotificationDoNotShow = true;
+			context.flutterSurvey2019Q4NotificationDoNotShow = true;
 		} else if (choice === takeSurveyAction) {
 			// Mark as do-not-show-again if they answer it, since it seems silly
 			// to show them again if they already completed it.
-			context.flutterSurvey2019Q3NotificationDoNotShow = true;
+			context.flutterSurvey2019Q4NotificationDoNotShow = true;
 			await openInBrowser(surveyUrl);
 		}
 	});

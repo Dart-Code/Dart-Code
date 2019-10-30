@@ -867,8 +867,8 @@ export async function addLaunchConfigsForTest(workspaceUri: vs.Uri, configs: any
 export function clearAllContext(context: Context): Promise<void> {
 	context.devToolsNotificationLastShown = undefined;
 	context.devToolsNotificationDoNotShow = undefined;
-	context.flutterSurvey2019Q3NotificationLastShown = undefined;
-	context.flutterSurvey2019Q3NotificationDoNotShow = undefined;
+	context.flutterSurvey2019Q4NotificationLastShown = undefined;
+	context.flutterSurvey2019Q4NotificationDoNotShow = undefined;
 
 	// HACK Updating context is async, but since we use setters we can't easily wait
 	// and this is only test code...
