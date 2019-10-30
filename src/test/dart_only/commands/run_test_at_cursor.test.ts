@@ -1,12 +1,14 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, extApi, getPackages, helloWorldTestMainFile, openFile, positionOf, waitForResult } from "../../helpers";
+import { activate, currentEditor, extApi, getPackages, helloWorldTestMainFile, openFile, positionOf, waitForResult } from "../../helpers";
 
 describe("run test at cursor", () => {
 
 	before("get packages", () => getPackages());
 	beforeEach("activate and wait for outline", async () => {
 		await activate(helloWorldTestMainFile);
+		const editor = currentEditor();
+		editor.selection = new vs.Selection(editor.document.positionAt(0), editor.document.positionAt(0));
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 	});
 
