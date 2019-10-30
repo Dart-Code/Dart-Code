@@ -87,11 +87,17 @@ async function runAllTests(): Promise<void> {
 		if (!process.env.BOT || process.env.BOT === "dart") {
 			await runTests("dart", "hello_world");
 		}
+		if (!process.env.BOT || process.env.BOT === "dart_debug") {
+			await runTests("dart_debug", "hello_world");
+		}
 		if (!process.env.BOT || process.env.BOT === "dart_web") {
 			await runTests("web", "web");
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter") {
 			await runTests("flutter", "flutter_hello_world");
+		}
+		if (!process.env.BOT || process.env.BOT === "flutter_debug") {
+			await runTests("flutter_debug", "flutter_hello_world");
 		}
 		if (!process.env.BOT || process.env.BOT === "misc") {
 			await runTests("dart_create_tests", "dart_create_tests.code-workspace");
