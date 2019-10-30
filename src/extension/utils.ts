@@ -6,7 +6,7 @@ import { commands, TextDocument, Uri, window, workspace, WorkspaceFolder } from 
 import { showLogAction } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
 import { isWithinPath } from "../shared/utils";
-import { hasPackagesFile, hasPubspec, mkDirRecursive } from "../shared/utils/fs";
+import { hasPubspec, mkDirRecursive } from "../shared/utils/fs";
 import { fsPath, isDartWorkspaceFolder } from "../shared/vscode/utils";
 import { config } from "./config";
 import { locateBestProjectRoot } from "./project";
@@ -148,7 +148,7 @@ export function isTestFolder(path: string): boolean {
 }
 
 export function checkProjectSupportsPubRunTest(folder: string): boolean {
-	return hasPackagesFile(folder) && hasPubspec(folder);
+	return hasPubspec(folder);
 }
 
 export function isDartFile(file: string): boolean {
