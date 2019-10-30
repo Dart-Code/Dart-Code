@@ -155,11 +155,11 @@ export class DartDebugSession extends DebugSession {
 			if (match) {
 				this.initDebugger(this.websocketUriForObservatoryUri(match[1]));
 			} else if (this.sendStdOutToConsole)
-				this.logToUser(data.toString(), "stdout");
+				this.logToUserBuffered(data.toString(), "stdout");
 		});
 		process.stderr.setEncoding("utf8");
 		process.stderr.on("data", (data) => {
-			this.logToUser(data.toString(), "stderr");
+			this.logToUserBuffered(data.toString(), "stderr");
 		});
 		process.on("error", (error) => {
 			this.logToUser(`${error}\n`, "stderr");
@@ -1762,23 +1762,33 @@ export class DartDebugSession extends DebugSession {
 		return undefined;
 	}
 
+	/// Buffers text and sends to the user when a newline is recieved. This is to handle stderr/stdout which
+	/// might arrive in chunks but we need to process in lines.
+	///    [5:01:50 PM] [General] [Info] [stderr] tion: Oop
+	///    [5:01:50 PM] [General] [Info] [stderr] s
+	///    [5:01:50 PM] [General] [Info] [stderr]
+	///    [5:01:50 PM] [General] [Info] [stderr] #
+	///    [5:01:50 PM] [General] [Info] [stderr] 0
+	///    [5:01:50 PM] [General] [Info] [stderr]
+	///    [5:01:50 PM] [General] [Info] [stderr]
+	///    [5:01:50 PM] [General] [Info] [stderr]     main (file:///D:/a/
+	///    [5:01:50 PM] [General] [Info] [stderr] Dart-Code/Dart-Code/src/test/test_projects/hello_world/bin/broken.dart:2:3)
+	protected logToUserBuffered(message: string, category: string) {
+		this.logBuffer[category] = this.logBuffer[category] || "";
+		this.logBuffer[category] += message;
+
+		const lastNewLine = this.logBuffer[category].lastIndexOf("\n");
+		if (lastNewLine !== -1) {
+			const processString = this.logBuffer[category].substr(0, lastNewLine);
+			this.logBuffer[category] = this.logBuffer[category].substr(lastNewLine);
+			this.logToUser(processString, category);
+		}
+	}
+	private logBuffer: { [key: string]: string } = {};
+
 	// Logs a message back to the editor. Does not add its own newlines, you must
 	// provide them!
 	protected logToUser(message: string, category?: string, colorText = (s: string) => s) {
-		// TODO: This needs to buffer. Sometimes messages come through in chunks and we need to stitch them together
-		// before we can parse stack frames:
-		// [5:01:50 PM] [General] [Info] [stderr] Unhandled exception:
-		// Excep
-		// [5:01:50 PM] [General] [Info] [stderr] tion: Oop
-		// [5:01:50 PM] [General] [Info] [stderr] s
-		// [5:01:50 PM] [General] [Info] [stderr]
-		// [5:01:50 PM] [General] [Info] [stderr] #
-		// [5:01:50 PM] [General] [Info] [stderr] 0
-		// [5:01:50 PM] [General] [Info] [stderr]
-		// [5:01:50 PM] [General] [Info] [stderr]
-		// [5:01:50 PM] [General] [Info] [stderr]     main (file:///D:/a/
-		// [5:01:50 PM] [General] [Info] [stderr] Dart-Code/Dart-Code/src/test/test_projects/hello_world/bin/broken.dart:2:3)
-
 		// Extract stack frames from the message so we can do nicer formatting of them.
 		const frame = this.getStackFrameData(message) || this.getWebStackFrameData(message) || this.getMessageWithUriData(message);
 
