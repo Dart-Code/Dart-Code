@@ -5,10 +5,15 @@ import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
-import { killFlutterTester, spawnFlutterProcess } from "../../debug_helpers";
+import { flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, spawnFlutterProcess } from "../../debug_helpers";
 import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldExampleSubFolder, flutterHelloWorldFolder, flutterHelloWorldMainFile, getAttachConfiguration, getPackages, logger, watchPromise } from "../../helpers";
 
 describe("flutter run debugger (attach)", () => {
+	beforeEach("Skip attach tests for web devices", function () {
+		if (flutterTestDeviceIsWeb)
+			this.skip();
+	});
+
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
@@ -37,7 +42,7 @@ describe("flutter run debugger (attach)", () => {
 			args: extApi.flutterCapabilities.supportsPidFileForMachine
 				? ["--pid-file", path.join(os.tmpdir(), fileSafeCurrentTestName)]
 				: [],
-			deviceId: "flutter-tester",
+			deviceId: flutterTestDeviceId,
 			observatoryUri,
 		});
 		if (!config)

@@ -316,10 +316,10 @@ export class SdkCommands {
 		args: string[],
 		selection?: vs.Uri,
 	): Promise<number | undefined> {
-
 		const folderToRunCommandIn = await this.getFolderToRunCommandIn(placeHolder, selection);
 		if (!folderToRunCommandIn)
 			return;
+
 		const containingWorkspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(folderToRunCommandIn));
 		if (!containingWorkspace) {
 			this.logger.error(`Failed to get workspace folder for ${folderToRunCommandIn}`);

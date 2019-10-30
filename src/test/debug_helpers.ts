@@ -8,6 +8,9 @@ import { logProcess } from "../shared/logging";
 import { DartDebugClient } from "./dart_debug_client";
 import { currentTestName, defer, extApi, getLaunchConfiguration, logger } from "./helpers";
 
+export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
+export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
+
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {
 	assert.ok(variables && variables.length, "No variables given to search");
 	let v = variables.find((v) => v.name === name);
