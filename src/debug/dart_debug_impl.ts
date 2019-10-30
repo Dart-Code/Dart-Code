@@ -1159,7 +1159,10 @@ export class DartDebugSession extends DebugSession {
 				this.sendResponse(response);
 			}
 		} catch (e) {
-			this.errorResponse(response, `${e}`);
+			if (e && e.message && e.message.indexOf("UnimplementedError") !== -1)
+				this.errorResponse(response, `Evaluation not yet implemented`);
+			else
+				this.errorResponse(response, `${e}`);
 		}
 	}
 
