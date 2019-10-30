@@ -18,7 +18,7 @@ jobs:
         node-version: [10]
         dart-version: [stable, dev]
         code-version: [stable, insiders]
-        bot: [dart, flutter, flutter_web, misc] #, flutter_repo]
+        bot: [dart, dart_debug, flutter, flutter_debug, flutter_web, misc] #, flutter_repo]
         include:
           - dart-version: stable
             flutter-version: stable
@@ -49,19 +49,19 @@ jobs:
 
       - name: Setup Flutter ${{ matrix.flutter-version }}
         id: flutter
-        if: matrix.bot != 'dart'
+        if: "!startsWith(matrix.bot, 'dart')"
         uses: DanTup/gh-actions/setup-flutter@master
         with:
           channel: ${{ matrix.flutter-version }}
       
       #- run: flutter update-packages
-      #  if: matrix.bot != 'dart'
+      #  if: "!startsWith(matrix.bot, 'dart')"
 
       - name: Print Dart version
         run: dart --version
 
       - name: Print Flutter version
-        if: matrix.bot != 'dart'
+        if: "!startsWith(matrix.bot, 'dart')"
         run: flutter --version
 
       - run: |
