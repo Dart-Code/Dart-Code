@@ -498,9 +498,10 @@ export class ObservatoryConnection {
 		});
 	}
 
-	public invoke(isolateId: string, targetId: string, selector: string, argumentIds: string[]): Promise<DebuggerResult> {
+	public invoke(isolateId: string, targetId: string, selector: string, argumentIds: string[], disableBreakpoints: boolean | undefined): Promise<DebuggerResult> {
 		return this.callMethod("invoke", {
 			argumentIds,
+			disableBreakpoints,
 			isolateId,
 			selector,
 			targetId,
