@@ -8,7 +8,7 @@ on:
 jobs:
   build:
 
-    name: "${{ matrix.os }} ${{ matrix.bot }} (Dart: ${{ matrix.dart-version }}, Code: ${{ matrix.code-version }})"
+    name: "${{ matrix.bot }} (Dart: ${{ matrix.dart-version }}, Code: ${{ matrix.code-version }}, ${{ matrix.os }})"
     runs-on: ${{ matrix.os }}
 
     strategy:
