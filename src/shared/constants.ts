@@ -60,7 +60,7 @@ export const takeSurveyAction = "Take Survey";
 // To confirm dates in PST(/PDT), paste this into Chrome dev console:
 // new Date(Date.UTC(...)).toLocaleString("en-US", {timeZone: "America/Los_Angeles"})
 // "11/23/2019, 9:00:00 AM"
-export const surveyStart = Date.UTC(2019, 10 /* Month is 0-based!! */, 23, 17, 0);
+export const surveyStart = Date.UTC(2019, 10 /* Month is 0-based!! */, 22, 17, 0);
 // "12/1/2019, 6:00:00 PM"
 export const surveyEnd = Date.UTC(2019, 11 /* Month is 0-based!! */, 2, 2, 0);
 
