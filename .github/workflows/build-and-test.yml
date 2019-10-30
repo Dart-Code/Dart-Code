@@ -54,8 +54,8 @@ jobs:
         with:
           channel: ${{ matrix.flutter-version }}
       
-      #- run: flutter update-packages
-      #  if: "!startsWith(matrix.bot, 'dart')"
+      - run: flutter update-packages
+        if: matrix.bot == 'flutter_repo'
 
       - name: Print Dart version
         run: dart --version
