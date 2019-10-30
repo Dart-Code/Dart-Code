@@ -124,7 +124,7 @@
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/hello_world",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/src/test/dart_only",
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/dart",
 				"--user-data-dir=${workspaceRoot}/.dart_code_test_data_dir"
 			],
 			"env": {
@@ -148,7 +148,7 @@
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/flutter_hello_world",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/src/test/flutter_only",
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/flutter",
 				"--user-data-dir=${workspaceRoot}/.dart_code_test_data_dir"
 			],
 			"env": {
@@ -172,7 +172,7 @@
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/web",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/src/test/web_only",
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/web",
 				"--user-data-dir=${workspaceRoot}/.dart_code_test_data_dir"
 			],
 			"env": {
