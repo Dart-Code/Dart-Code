@@ -1355,7 +1355,7 @@
 				"dart.enableMachineLearningCodeCompletion": {
 					"type": "boolean",
 					"default": false,
-					"description": "Controls wether to use a machine-learned model for improved code completion rankings and suggestions.",
+					"description": "Controls whether to use a machine-learned model for improved code completion rankings and suggestions.",
 					"scope": "window"
 				},
 				"dart.openDevTools": {
