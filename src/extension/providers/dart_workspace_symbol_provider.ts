@@ -51,7 +51,9 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 			{
 				file,
 				length: result.codeLength,
-				offset: result.codeOffset,
+				// Fall back to offset when the server gives us a bad codeOffset
+				// https://github.com/dart-lang/sdk/issues/39192.
+				offset: result.codeOffset || result.offset,
 			},
 		);
 
