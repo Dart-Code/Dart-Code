@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest] #, macOS-latest]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
         node-version: [10]
         dart-version: [stable]#, dev]
         code-version: [stable]#, insiders]
