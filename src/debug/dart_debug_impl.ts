@@ -1011,9 +1011,7 @@ export class DartDebugSession extends DebugSession {
 
 		try {
 			const result = this.capabilities.hasInvoke
-				// TODO: Change the last false to try here once the proxy doesn't throw on disableBreakpoints
-				// https://github.com/dart-lang/webdev/pull/799
-				? await this.observatory.invoke(isolate.id, instanceRef.id, "toString", [], false)
+				? await this.observatory.invoke(isolate.id, instanceRef.id, "toString", [], true)
 				: await this.observatory.evaluate(isolate.id, instanceRef.id, "toString()", true);
 			if (result.result.type === "@Error") {
 				return undefined;
