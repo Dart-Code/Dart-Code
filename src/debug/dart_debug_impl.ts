@@ -1381,7 +1381,10 @@ export class DartDebugSession extends DebugSession {
 				reason = "step";
 			} else if (kind === "PauseException") {
 				reason = "exception";
-				exceptionText = await this.fullValueAsString(event.isolate, event.exception!);
+				exceptionText =
+					event.exception
+						? await this.fullValueAsString(event.isolate, event.exception)
+						: undefined;
 			}
 
 			thread.handlePaused(event.atAsyncSuspension, event.exception);
