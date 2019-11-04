@@ -54,7 +54,11 @@ export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<
 	}
 
 	private getPackages(project: PackageDepProject): PackageDep[] {
-		const map = new PackageMap(path.join(fsPath(project.resourceUri!), ".packages"));
+		const packagesFile = path.join(fsPath(project.resourceUri!), ".packages")
+		if (!fs.existsSync(packagesFile))
+			return [];
+
+		const map = new PackageMap(packagesFile);
 		const packages = map.packages;
 		const packageNames = sortBy(Object.keys(packages), (s) => s.toLowerCase());
 
