@@ -24,7 +24,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		public readonly maxLogLineLength: number | undefined,
 		public messagesWrappedInBrackets: boolean = false,
 		public readonly treatHandlingErrorsAsUnhandledMessages: boolean = false,
-		private readonly logFile?: string) {
+		private logFile?: string) {
 	}
 
 	protected createProcess(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any) {
@@ -248,12 +248,6 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	public dispose() {
-		if (this.logStream) {
-			this.logStream.end();
-			this.logStream = undefined;
-			this.openLogFile = undefined;
-		}
-
 		for (const pid of this.additionalPidsToTerminate) {
 			try {
 				process.kill(pid);
@@ -272,6 +266,22 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		}
 		this.process = undefined;
 
-		this.disposables.forEach((d) => d.dispose());
+		this.disposables.forEach(async (d) => {
+			try {
+				return await d.dispose();
+			} catch (e) {
+				this.logger.error({ message: e.toString() });
+			}
+		});
+
+		// Clear log file so if any more log events come through later, we don't
+		// create a new log file and overwrite what we had.
+		this.logFile = undefined;
+
+		if (this.logStream) {
+			this.logStream.end();
+			this.logStream = undefined;
+			this.openLogFile = undefined;
+		}
 	}
 }
