@@ -381,7 +381,7 @@ export class DebugCommands {
 		return true;
 	}
 
-	private handleCustomEventWithSession(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent) {
+	private async handleCustomEventWithSession(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent) {
 		if (e.event === "dart.launching") {
 			vs.window.withProgress(
 				{ location: vs.ProgressLocation.Notification },
@@ -402,6 +402,16 @@ export class DebugCommands {
 				} catch (e) {
 					this.logger.error(`Failed to parse URL from Flutter app.webLaunchUrl event: ${e.body.url}`);
 				}
+			}
+		} else if (e.event === "dart.exposeUrl") {
+			const originalUrl = e.body.url as string;
+			try {
+				const exposedUrl = await envUtils.asExternalUri(vs.Uri.parse(originalUrl, true));
+				// HACK: Convert %24 back to $
+				session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl: exposedUrl.toString().replace(/%24/g, "$") });
+			} catch (e) {
+				this.logger.error(`Failed to expose URL ${originalUrl}: ${e}`);
+				session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl: originalUrl });
 			}
 		} else if (e.event === "dart.progress") {
 			if (e.body.message) {

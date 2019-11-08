@@ -10,7 +10,7 @@ import { LogCategory, LogSeverity } from "../shared/enums";
 import { LogMessage, SpawnedProcess } from "../shared/interfaces";
 import { safeSpawn } from "../shared/processes";
 import { PackageMap } from "../shared/pub/package_map";
-import { errorString, notUndefined, uniq, uriToFilePath } from "../shared/utils";
+import { errorString, notUndefined, PromiseCompleter, uniq, uriToFilePath } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
 import { applyColor, grey, grey2 } from "../shared/utils/colors";
 import { getRandomInt } from "../shared/utils/fs";
@@ -1316,12 +1316,30 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
+	private urlExposeCompleters: { [key: string]: PromiseCompleter<string> } = {};
+	protected async exposeUrl(url: string): Promise<string> {
+		if (this.urlExposeCompleters[url])
+			return this.urlExposeCompleters[url].promise;
+
+		const completer = new PromiseCompleter<string>();
+		this.urlExposeCompleters[url] = completer;
+
+		this.sendEvent(new Event("dart.exposeUrl", { url }));
+
+		return completer.promise;
+	}
+
 	protected async customRequest(request: string, response: DebugProtocol.Response, args: any): Promise<void> {
 		try {
 			switch (request) {
 				case "service":
 					await this.callService(args.type, args.params);
 					this.sendResponse(response);
+					break;
+				case "exposeUrlResponse":
+					const completer = this.urlExposeCompleters[args.originalUrl];
+					if (completer)
+						completer.resolve(args.exposedUrl);
 					break;
 				case "updateDebugOptions":
 					this.debugExternalLibraries = !!args.debugExternalLibraries;
