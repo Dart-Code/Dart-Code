@@ -12,7 +12,7 @@ import { observatoryListeningBannerPattern, pleaseReportBug } from "../shared/co
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { LogMessage } from "../shared/interfaces";
 import { PackageMap } from "../shared/pub/package_map";
-import { errorString, flatMap, throttle, uniq, uriToFilePath } from "../shared/utils";
+import { errorString, flatMap, PromiseCompleter, throttle, uniq, uriToFilePath } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
 import { applyColor, grey, grey2 } from "../shared/utils/colors";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
@@ -1184,6 +1184,19 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
+	private urlExposeCompleters: { [key: string]: PromiseCompleter<string> } = {};
+	protected async exposeUrl(url: string): Promise<string> {
+		if (this.urlExposeCompleters[url])
+			return this.urlExposeCompleters[url].promise;
+
+		const completer = new PromiseCompleter<string>();
+		this.urlExposeCompleters[url] = completer;
+
+		this.sendEvent(new Event("dart.exposeUrl", { url }));
+
+		return completer.promise;
+	}
+
 	protected async customRequest(request: string, response: DebugProtocol.Response, args: any): Promise<void> {
 		try {
 			switch (request) {
@@ -1203,6 +1216,11 @@ export class DartDebugSession extends DebugSession {
 					if (this.childProcess && !this.childProcess.killed && !this.processExited)
 						this.childProcess.stdin.write(args.input);
 					this.sendResponse(response);
+					break;
+				case "exposeUrlResponse":
+					const completer = this.urlExposeCompleters[args.originalUrl];
+					if (completer)
+						completer.resolve(args.exposedUrl);
 					break;
 				case "updateDebugOptions":
 					this.debugExternalLibraries = !!args.debugExternalLibraries;

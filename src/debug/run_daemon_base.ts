@@ -8,6 +8,7 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 		public readonly mode: RunMode,
 		logFile: string | undefined,
 		logger: Logger,
+		private readonly urlExposer: (url: string) => Promise<string>,
 		maxLogLineLength: number,
 		messagesWrappedInBrackets: boolean = false,
 		treatHandlingErrorsAsUnhandledMessages: boolean = false) {
@@ -31,7 +32,7 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 	protected async handleRequest(method: string, params: any): Promise<any> {
 		switch (method) {
 			case "app.exposeUrl":
-				return params.url;
+				return this.urlExposer(params.url);
 			default:
 				throw new Error(`Unknown request ${method}`);
 		}

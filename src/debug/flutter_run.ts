@@ -5,8 +5,8 @@ import { CategoryLogger } from "../shared/logging";
 import { RunDaemonBase, RunMode } from "./run_daemon_base";
 
 export class FlutterRun extends RunDaemonBase {
-	constructor(mode: RunMode, flutterBinPath: string, projectFolder: string | undefined, args: string[], envOverrides: any, logFile: string | undefined, logger: Logger, maxLogLineLength: number) {
-		super(mode, logFile, new CategoryLogger(logger, LogCategory.FlutterRun), maxLogLineLength, true, true);
+	constructor(mode: RunMode, flutterBinPath: string, projectFolder: string | undefined, args: string[], envOverrides: any, logFile: string | undefined, logger: Logger, urlExposer: (url: string) => Promise<string>, maxLogLineLength: number) {
+		super(mode, logFile, new CategoryLogger(logger, LogCategory.FlutterRun), urlExposer, maxLogLineLength, true, true);
 
 		const command = mode === RunMode.Attach ? "attach" : "run";
 

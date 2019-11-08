@@ -187,7 +187,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			appArgs.push("-v");
 		}
 
-		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterPath, args.cwd, appArgs, args.env, args.flutterRunLogFile, logger, this.maxLogLineLength);
+		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterPath, args.cwd, appArgs, args.env, args.flutterRunLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
 	}
 
 	private connectToObservatoryIfReady() {
