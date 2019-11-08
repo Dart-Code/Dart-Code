@@ -28,6 +28,15 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 		return this.subscribe(this.unhandledMessageSubscriptions, subscriber);
 	}
 
+	protected async handleRequest(method: string, params: any): Promise<any> {
+		switch (method) {
+			case "app.exposeUrl":
+				return params.url;
+			default:
+				throw new Error(`Unknown request ${method}`);
+		}
+	}
+
 	// TODO: Can we code-gen all this like the analysis server?
 
 	protected handleNotification(evt: UnknownNotification) {
