@@ -908,11 +908,9 @@ describe("dart cli debugger", () => {
 	it("moves known files from call stacks to metadata", async () => {
 		await openFile(helloWorldBrokenFile);
 		const config = await startDebugger(helloWorldBrokenFile);
+		config!.noDebug = true;
 		await Promise.all([
-			dc.configurationSequence()
-				// Disable breaking on exceptions because Dart doesn't write the
-				// stderr while paused and this test isn't to check pausing works.
-				.then(() => dc.setExceptionBreakpointsRequest({ filters: [] })),
+			dc.configurationSequence(),
 			watchPromise(
 				"writes_failure_output->assertOutputContains",
 				dc.assertOutputContains("stderr", "#0      main")
