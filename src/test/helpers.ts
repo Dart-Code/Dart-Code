@@ -104,17 +104,23 @@ export const flutterWebTestBrokenFile = vs.Uri.file(path.join(fsPath(flutterWebH
 export const flutterWebTestOtherFile = vs.Uri.file(path.join(fsPath(flutterWebHelloWorldFolder), "test/other_test.dart"));
 
 export function currentEditor(): vs.TextEditor {
-	if (!vs.window.activeTextEditor)
-		throw new Error("There is no active editor");
-	return vs.window.activeTextEditor!;
+	let editor = vs.window.activeTextEditor;
+	if (!editor || editor.document.uri.scheme !== "file") {
+		const firstEditor = vs.window.visibleTextEditors.find((e) => e.document.uri.scheme === "file");
+		if (firstEditor)
+			logger.warn(`Current active editor is not a file (${editor ? editor.document.uri : "none"}) so using first visible editor (${firstEditor.document.uri})`);
+		editor = firstEditor;
+	}
+
+	if (!editor)
+		throw new Error("There is no active or visible editor");
+
+	return editor;
 }
 export function currentDoc(): vs.TextDocument {
-	if (!vs.window.activeTextEditor || !vs.window.activeTextEditor.document)
-		throw new Error("There is no active document");
-	if (vs.window.activeTextEditor.document.uri.scheme !== "file")
-		logger.warn(`Current active editor is not file:/// scheme! (${vs.window.activeTextEditor.document.uri})`);
-	return vs.window.activeTextEditor.document;
+	return currentEditor().document;
 }
+
 export let documentEol: string;
 
 function getDefaultFile(): vs.Uri {
