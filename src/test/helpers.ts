@@ -111,6 +111,8 @@ export function currentEditor(): vs.TextEditor {
 export function currentDoc(): vs.TextDocument {
 	if (!vs.window.activeTextEditor || !vs.window.activeTextEditor.document)
 		throw new Error("There is no active document");
+	if (vs.window.activeTextEditor.document.uri.scheme !== "file")
+		logger.warn(`Current active editor is not file:/// scheme! (${vs.window.activeTextEditor.document.uri})`);
 	return vs.window.activeTextEditor.document;
 }
 export let documentEol: string;
