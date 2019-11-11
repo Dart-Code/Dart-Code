@@ -24,11 +24,6 @@ jobs:
             flutter-version: stable
           - dart-version: dev
             flutter-version: master
-        # Temporarily exclude macOS from VS Code Stable due to
-        # https://github.com/microsoft/vscode/issues/82676
-        exclude:
-          - os: macOS-latest
-            code-version: stable
 
     steps:
 
