@@ -64,6 +64,10 @@ jobs:
         if: "!startsWith(matrix.bot, 'dart')"
         run: flutter --version
 
+      - name: Enable Flutter web support
+        if: "startsWith(matrix.bot, 'flutter')"
+        run: flutter config --enable-web
+
       - run: |
           pub global activate --no-executables devtools
           pub global activate --no-executables webdev
