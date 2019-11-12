@@ -17,7 +17,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-latest]
         node-version: [10]
         dart-version: [stable, dev]
-        code-version: [stable, insiders]
+        code-version: [stable] #, insiders]
         bot: [flutter_debug, flutter_test_debug, flutter_web_debug, flutter_repo, dart_debug, dart, flutter, misc]
         include:
           - dart-version: stable
