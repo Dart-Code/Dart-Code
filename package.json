@@ -1545,6 +1545,14 @@
 								"type": "string",
 								"description": "The ID of the device to launch your Flutter app on. If not supplied, will use the selected device shown in the status bar."
 							},
+							"console": {
+								"enum": [
+									"debugConsole",
+									"terminal"
+								],
+								"default": "debugConsole",
+								"description": "Whether to run applications in the debug console (which does not support reading user input) or a pseudo terminal (which does)."
+							},
 							"enableAsserts": {
 								"type": "boolean",
 								"description": "Run the VM with --asserts-enabled.",
