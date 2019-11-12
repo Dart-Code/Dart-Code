@@ -1470,10 +1470,10 @@
 					"description": "Whether to register Pub Build Runner tasks with VS Code.",
 					"scope": "window"
 				},
-				"dart.previewFlutterGutterIcons": {
+				"dart.flutterGutterIcons": {
 					"type": "boolean",
-					"default": false,
-					"description": "Whether to enable Flutter icons and colors in the editor gutter.",
+					"default": true,
+					"description": "Whether to show Flutter icons and colors in the editor gutter.",
 					"scope": "window"
 				},
 				"dart.previewFlutterUiGuides": {

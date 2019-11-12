@@ -348,7 +348,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	if (config.previewFlutterUiGuides)
 		context.subscriptions.push(new FlutterUiGuideDecorations(analyzer));
-	if (config.previewFlutterGutterIcons) {
+	if (config.flutterGutterIcons) {
 		context.subscriptions.push(new FlutterIconDecorations(logger, analyzer));
 		context.subscriptions.push(new FlutterColorDecorations(logger, path.join(context.globalStoragePath, "flutterColors")));
 	}

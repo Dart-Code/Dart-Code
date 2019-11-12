@@ -67,6 +67,7 @@ class Config {
 	get flutterCreateIOSLanguage(): "objc" | "swift" { return this.getConfig<"objc" | "swift">("flutterCreateIOSLanguage", "swift"); }
 	get flutterCreateOrganization(): undefined | string { return this.getConfig<null | string>("flutterCreateOrganization", null); }
 	get flutterDaemonLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterDaemonLogFile", null))); }
+	get flutterGutterIcons(): boolean { return this.getConfig<boolean>("flutterGutterIcons", true); }
 	get flutterHotReloadOnSave(): boolean { return this.getConfig<boolean>("flutterHotReloadOnSave", true); }
 	get flutterHotRestartOnSave(): boolean { return this.getConfig<boolean>("flutterHotRestartOnSave", false); }
 	get flutterOutline(): boolean { return this.getConfig<boolean>("flutterOutline", true); }
@@ -78,7 +79,6 @@ class Config {
 	get openDevTools(): "never" | "flutter" | "always" { return this.getConfig<"never" | "flutter" | "always">("openDevTools", "never"); }
 	get openTestView(): Array<"testRunStart" | "testFailure"> { return this.getConfig<Array<"testRunStart" | "testFailure">>("openTestView", ["testRunStart"]); }
 	get previewBuildRunnerTasks(): boolean { return this.getConfig<boolean>("previewBuildRunnerTasks", false); }
-	get previewFlutterGutterIcons(): boolean { return this.getConfig<boolean>("previewFlutterGutterIcons", false); }
 	get previewFlutterUiGuides(): boolean { return this.getConfig<boolean>("previewFlutterUiGuides", false); }
 	get previewFlutterUiGuidesCustomTracking(): boolean { return this.getConfig<boolean>("previewFlutterUiGuidesCustomTracking", false); }
 	get previewToStringInDebugViews(): boolean { return this.getConfig<boolean>("previewToStringInDebugViews", false); }
