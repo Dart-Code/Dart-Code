@@ -332,7 +332,6 @@ beforeEach("stash current test name", async function () {
 export let sb: sinon.SinonSandbox;
 beforeEach("create sinon sandbox", () => { sb = sinon.createSandbox(); });
 afterEach("destroy sinon sandbox", () => sb.restore());
-afterEach("make empty file empty", () => fs.writeFileSync(fsPath(emptyFile), ""));
 
 before("throw if DART_CODE_IS_TEST_RUN is not set", () => {
 	if (!process.env.DART_CODE_IS_TEST_RUN)
@@ -373,7 +372,7 @@ export async function setTestContent(content: string): Promise<void> {
 		doc.positionAt(0),
 		doc.positionAt(doc.getText().length),
 	);
-	logger.info(`Replacing content for file ${doc.uri}`);
+	logger.info(`Replacing content for file ${doc.uri} with ${content.length} characters`);
 	// TODO: May be able to replace this with
 	// return editor.edit((eb) => eb.replace(all, content));
 	// once the fix for https://github.com/dart-lang/sdk/issues/32914
