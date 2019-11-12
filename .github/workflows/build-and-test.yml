@@ -23,7 +23,7 @@ jobs:
           - dart-version: stable
             flutter-version: stable
           - dart-version: dev
-            flutter-version: master
+            flutter-version: dev
 
     steps:
 
