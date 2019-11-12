@@ -78,15 +78,17 @@ jobs:
           pub global activate --no-executables json_annotation 1.2.0
         shell: pwsh
 
-      - name: npm ci, lint and build
-        run: |
-          npm ci
-          npm run lint
-          npm run build
+      - name: npm ci
+        run: npm ci
+        
+      - name: npm lint
+        run: npm run lint
+          
+      - name: npm build
+        run: npm run build
 
       - name: npm test
-        run: |
-          npm test
+        run: npm test
         env:
           CI: true
           ELECTRON_NO_ATTACH_CONSOLE: 1
