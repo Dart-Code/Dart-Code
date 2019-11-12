@@ -19,6 +19,10 @@ class EnvUtils {
 	public async openInBrowser(url: string): Promise<boolean> {
 		return vs.env.openExternal(vs.Uri.parse(url));
 	}
+
+	public async asExternalUri(uri: vs.Uri): Promise<vs.Uri> {
+		return vs.env.asExternalUri(uri);
+	}
 }
 
 export const envUtils = new EnvUtils();

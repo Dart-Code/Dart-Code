@@ -107,7 +107,9 @@ export class DevToolsManager implements vs.Disposable {
 					.filter((key) => queryParams[key] !== undefined)
 					.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key]!)}`)
 					.join("&");
-				const fullUrl = `${url}?${paramsString}&uri=${encodeURIComponent(session.vmServiceUri)}`;
+				const vmServiceUri = vs.Uri.parse(session.vmServiceUri);
+				const exposedUri = await envUtils.asExternalUri(vmServiceUri);
+				const fullUrl = `${url}?${paramsString}&uri=${encodeURIComponent(exposedUri.toString())}`;
 				await envUtils.openInBrowser(fullUrl);
 			});
 
