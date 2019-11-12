@@ -27,6 +27,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	request: string;
 	cwd?: string;
 	enableAsserts: boolean;
+	console: "debugConsole" | "terminal";
 	dartPath: string;
 	debugSdkLibraries: boolean;
 	debugExternalLibraries: boolean;
