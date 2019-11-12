@@ -2,12 +2,12 @@ import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeA
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
+import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { isAnalyzableAndInWorkspace } from "../utils";
 import { RankedCodeActionProvider } from "./ranking_code_action_provider";
 
 export class AssistCodeActionProvider implements RankedCodeActionProvider {
-	constructor(private readonly logger: Logger, public readonly selector: DocumentSelector, private readonly analyzer: Analyzer) { }
+	constructor(private readonly logger: Logger, public readonly selector: DocumentSelector, private readonly analyzer: DasAnalyzerClient) { }
 
 	public readonly rank = 10;
 

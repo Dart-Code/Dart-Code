@@ -1,13 +1,13 @@
 import { Diagnostic, DiagnosticCollection, DiagnosticRelatedInformation, DiagnosticSeverity, DiagnosticTag, Location, Range, Uri } from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { toRangeOnLine } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
+import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { config } from "../config";
 
 // TODO: This is not a provider?
 export class DartDiagnosticProvider {
 	private lastErrorJson: string | undefined;
-	constructor(private readonly analyzer: Analyzer, private readonly diagnostics: DiagnosticCollection) {
+	constructor(private readonly analyzer: DasAnalyzerClient, private readonly diagnostics: DiagnosticCollection) {
 		this.analyzer.registerForAnalysisErrors((es) => this.handleErrors(es));
 
 		// Fired when files are deleted

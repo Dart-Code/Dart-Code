@@ -4,12 +4,11 @@ import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { escapeRegExp } from "../../shared/utils";
 import { fsPath, toRange } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
-import { getSymbolKindForElementKind } from "../analysis/analyzer_das";
+import { DasAnalyzerClient, getSymbolKindForElementKind } from "../analysis/analyzer_das";
 
 export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	private badChars: RegExp = new RegExp("[^0-9a-z\-]", "gi");
-	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer) { }
+	constructor(private readonly logger: Logger, private readonly analyzer: DasAnalyzerClient) { }
 
 	public async provideWorkspaceSymbols(query: string, token: CancellationToken): Promise<SymbolInformation[] | undefined> {
 		if (query.length === 0)

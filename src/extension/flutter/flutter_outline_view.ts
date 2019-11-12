@@ -7,8 +7,7 @@ import { nullLogger } from "../../shared/logging";
 import { extensionPath } from "../../shared/vscode/extension_utils";
 import { getIconForSymbolKind } from "../../shared/vscode/mappings";
 import { fsPath } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
-import { getSymbolKindForElementKind } from "../analysis/analyzer_das";
+import { DasAnalyzerClient, getSymbolKindForElementKind } from "../analysis/analyzer_das";
 import { flutterOutlineCommands } from "../commands/flutter_outline";
 import { isAnalyzable } from "../utils";
 
@@ -27,7 +26,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 	public readonly onDidChangeTreeData: vs.Event<FlutterWidgetItem | undefined> = this.onDidChangeTreeDataEmitter.event;
 	private lastSelectedWidget: FlutterWidgetItem | undefined;
 
-	constructor(private readonly analyzer: Analyzer) {
+	constructor(private readonly analyzer: DasAnalyzerClient) {
 		this.analyzer = analyzer;
 		this.analyzer.registerForServerConnected((c) => {
 			if (analyzer.capabilities.supportsFlutterOutline) {

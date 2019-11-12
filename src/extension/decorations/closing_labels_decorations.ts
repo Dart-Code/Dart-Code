@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { fsPath } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
+import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { isAnalyzable } from "../utils";
 
 export class ClosingLabelsDecorations implements vs.Disposable {
@@ -18,7 +18,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 		rangeBehavior: vs.DecorationRangeBehavior.ClosedOpen,
 	});
 
-	constructor(private readonly analyzer: Analyzer) {
+	constructor(private readonly analyzer: DasAnalyzerClient) {
 		this.subscriptions.push(this.analyzer.registerForAnalysisClosingLabels((n) => {
 			if (this.activeEditor && n.file === fsPath(this.activeEditor.document.uri)) {
 				this.closingLabels = n;

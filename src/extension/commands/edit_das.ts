@@ -3,13 +3,13 @@ import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
+import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import * as editors from "../editors";
 
 export class DasEditCommands implements vs.Disposable {
 	private commands: vs.Disposable[] = [];
 
-	constructor(private readonly logger: Logger, private readonly context: vs.ExtensionContext, private readonly analyzer: Analyzer) {
+	constructor(private readonly logger: Logger, private readonly context: vs.ExtensionContext, private readonly analyzer: DasAnalyzerClient) {
 		this.commands.push(
 			vs.commands.registerCommand("_dart.organizeImports", this.organizeImports, this),
 			vs.commands.registerCommand("dart.sortMembers", this.sortMembers, this),

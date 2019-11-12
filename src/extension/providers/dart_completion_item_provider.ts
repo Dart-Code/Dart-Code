@@ -8,7 +8,7 @@ import { cleanDartdoc } from "../../shared/utils/dartdocs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { DelayedCompletionItem, LazyCompletionItem } from "../../shared/vscode/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
+import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { hasOverlappingEdits } from "../commands/edit_das";
 import { config } from "../config";
 
@@ -20,7 +20,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	private cachedCompletions: { [key: number]: as.AvailableSuggestionSet } = {};
 	private existingImports: { [key: string]: { [key: string]: { [key: string]: boolean } } } = {};
 
-	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer) {
+	constructor(private readonly logger: Logger, private readonly analyzer: DasAnalyzerClient) {
 		this.disposables.push(analyzer.registerForCompletionAvailableSuggestions((n) => this.storeCompletionSuggestions(n)));
 		this.disposables.push(analyzer.registerForCompletionExistingImports((n) => this.storeExistingImports(n)));
 	}

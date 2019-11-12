@@ -3,7 +3,7 @@ import { FlutterOutline } from "../../shared/analysis_server_types";
 import { flatMap } from "../../shared/utils";
 import { DocumentPositionTracker } from "../../shared/vscode/trackers";
 import { fsPath } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
+import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { openFileTracker } from "../analysis/open_file_tracker";
 import { config } from "../config";
 
@@ -21,7 +21,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 		rangeBehavior: vs.DecorationRangeBehavior.OpenOpen,
 	});
 
-	constructor(private readonly analyzer: Analyzer) {
+	constructor(private readonly analyzer: DasAnalyzerClient) {
 		// Update any editor that becomes active.
 		this.disposables.push(vs.window.onDidChangeActiveTextEditor((e) => this.buildForTextEditor(e)));
 

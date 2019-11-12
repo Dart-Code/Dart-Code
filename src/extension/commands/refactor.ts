@@ -4,7 +4,7 @@ import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../shared/cons
 import { Logger } from "../../shared/interfaces";
 import { unique } from "../../shared/utils/array";
 import { fsPath } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
+import { DasAnalyzerClient } from "../analysis/analyzer_das";
 
 const refactorOptions: { [key: string]: (feedback?: as.RefactoringFeedback) => as.RefactoringOptions } = {
 	EXTRACT_LOCAL_VARIABLE: getExtractLocalVariableArgs,
@@ -15,7 +15,7 @@ const refactorOptions: { [key: string]: (feedback?: as.RefactoringFeedback) => a
 export class RefactorCommands implements vs.Disposable {
 	private commands: vs.Disposable[] = [];
 
-	constructor(private readonly logger: Logger, private readonly context: vs.ExtensionContext, private readonly analyzer: Analyzer) {
+	constructor(private readonly logger: Logger, private readonly context: vs.ExtensionContext, private readonly analyzer: DasAnalyzerClient) {
 		this.commands.push(
 			vs.commands.registerCommand("_dart.performRefactor", this.performRefactor, this),
 		);

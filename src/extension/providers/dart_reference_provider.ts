@@ -1,10 +1,11 @@
 import { CancellationToken, DefinitionLink, DefinitionProvider, Location, Position, ReferenceContext, ReferenceProvider, TextDocument, Uri } from "vscode";
 import { flatMap } from "../../shared/utils";
 import { fsPath, toRange, toRangeOnLine } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
+import { DasAnalyzerClient } from "../analysis/analyzer_das";
+import * as util from "../utils";
 
 export class DartReferenceProvider implements ReferenceProvider, DefinitionProvider {
-	constructor(private readonly analyzer: Analyzer) { }
+	constructor(private readonly analyzer: DasAnalyzerClient) { }
 
 	public async provideReferences(document: TextDocument, position: Position, context: ReferenceContext, token: CancellationToken): Promise<Location[] | undefined> {
 		// If we want to include the decleration, kick off a request for that.

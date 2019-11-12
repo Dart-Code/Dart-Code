@@ -4,10 +4,10 @@ import { Logger } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
 import { cleanDartdoc } from "../../shared/utils/dartdocs";
 import { fsPath } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
+import { DasAnalyzerClient } from "../analysis/analyzer_das";
 
 export class DartHoverProvider implements HoverProvider {
-	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer) { }
+	constructor(private readonly logger: Logger, private readonly analyzer: DasAnalyzerClient) { }
 
 	public async provideHover(document: TextDocument, position: Position, token: CancellationToken): Promise<Hover | undefined> {
 		try {

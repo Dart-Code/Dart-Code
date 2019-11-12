@@ -3,12 +3,11 @@ import { CancellationToken, Location, SymbolInformation, Uri, workspace, Workspa
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { fsPath, toRangeOnLine } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
-import { getSymbolKindForElementKind } from "../analysis/analyzer_das";
+import { DasAnalyzerClient, getSymbolKindForElementKind } from "../analysis/analyzer_das";
 import { isWithinWorkspace } from "../utils";
 
 export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
-	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer) { }
+	constructor(private readonly logger: Logger, private readonly analyzer: DasAnalyzerClient) { }
 
 	public async provideWorkspaceSymbols(query: string, token: CancellationToken): Promise<SymbolInformation[] | undefined> {
 		if (query.length === 0)

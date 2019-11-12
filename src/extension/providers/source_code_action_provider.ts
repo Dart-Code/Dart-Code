@@ -4,7 +4,7 @@ import { isAnalyzableAndInWorkspace } from "../utils";
 const SourceSortMembers = CodeActionKind.Source.append("sortMembers");
 
 export class SourceCodeActionProvider implements CodeActionProvider {
-	public readonly metadata: CodeActionProviderMetadata = {
+	public static readonly metadata: CodeActionProviderMetadata = {
 		providedCodeActionKinds: [CodeActionKind.Source, CodeActionKind.SourceOrganizeImports, SourceSortMembers],
 	};
 
