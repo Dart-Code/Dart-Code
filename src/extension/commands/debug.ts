@@ -17,7 +17,7 @@ import { FlutterServiceExtensionArgs, FlutterVmServiceExtensions, timeDilationNo
 import { DebuggerType } from "../providers/debug_config_provider";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools";
-import { DartDebugSessionInformation } from "../utils/vscode/debug";
+import { DartDebugSessionInformation, DartDebugSessionPseudoterminal } from "../utils/vscode/debug";
 import { envUtils } from "../utils/vscode/editor";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
@@ -249,7 +249,15 @@ export class DebugCommands {
 
 	public handleDebugSessionStart(s: vs.DebugSession): void {
 		if (s.type === "dart") {
-			const session = new DartDebugSessionInformation(s, s.configuration ? DebuggerType[s.configuration.debuggerType] : "<unknown>");
+			const debuggerType = s.configuration ? DebuggerType[s.configuration.debuggerType] : "<unknown>";
+			const consoleType: "debugConsole" | "terminal" = s.configuration.console;
+			let terminal: DartDebugSessionPseudoterminal | undefined;
+			if (consoleType === "terminal") {
+				const terminalName = s.name || debuggerType;
+				terminal = new DartDebugSessionPseudoterminal(terminalName);
+				terminal.userInput((input) => s.customRequest("dart.userInput", { input }));
+			}
+			const session = new DartDebugSessionInformation(s, debuggerType, terminal);
 			// If we're the first fresh debug session, reset all settings to default.
 			// Subsequent launches will inherit the "current" values.
 			if (debugSessions.length === 0)
@@ -305,9 +313,14 @@ export class DebugCommands {
 		debugSessions.splice(sessionIndex, 1);
 
 		this.clearProgressIndicators(session);
+
+		if (session.terminal)
+			session.terminal.end();
+
 		this.debugMetrics.hide();
 		const debugSessionEnd = new Date();
 		this.analytics.logDebugSessionDuration(session.debuggerType, debugSessionEnd.getTime() - session.sessionStart.getTime());
+
 		// If this was the last session terminating, then remove all the flags for which service extensions are supported.
 		// Really we should track these per-session, but the changes of them being different given we only support one
 		// SDK at a time are practically zero.
@@ -383,6 +396,12 @@ export class DebugCommands {
 			);
 		} else if (e.event === "dart.launched") {
 			this.clearProgressIndicators(session);
+		} else if (e.event === "dart.output") {
+			if (session.terminal) {
+				session.terminal.addOutput(e.body.message, e.body.category);
+			} else {
+				this.logger.warn(`Got output event for session without pseudoterminal: ${e.body.message}`);
+			}
 		} else if (e.event === "dart.progress") {
 			if (e.body.message) {
 				if (session.launchProgressReporter) {
