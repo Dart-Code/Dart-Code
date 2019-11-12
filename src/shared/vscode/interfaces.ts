@@ -71,7 +71,7 @@ export interface InternalExtensionApi {
 		getInstalledStatus(packageName: string, packageID: string, requiredVersion?: string): Promise<VersionStatus>;
 		uninstall(packageID: string): Promise<void>;
 	};
-	renameProvider: RenameProvider;
+	renameProvider: RenameProvider | undefined;
 	safeSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any) => child_process.ChildProcess;
 	testTreeProvider: TestResultsProvider;
 	workspaceContext: WorkspaceContext;

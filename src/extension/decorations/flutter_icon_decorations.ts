@@ -4,7 +4,7 @@ import { Logger } from "../../shared/interfaces";
 import { iconUrlFormat } from "../../shared/utils/dartdocs";
 import { IconRangeComputer } from "../../shared/vscode/icon_range_computer";
 import { fsPath } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
+import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { openFileTracker } from "../analysis/open_file_tracker";
 import { isAnalyzable } from "../utils";
 
@@ -15,9 +15,9 @@ export class FlutterIconDecorations implements vs.Disposable {
 
 	private readonly decorationTypes: { [key: string]: vs.TextEditorDecorationType } = {};
 
-	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer) {
+	constructor(private readonly logger: Logger, private readonly dasClient: DasAnalyzerClient) {
 		this.computer = new IconRangeComputer(logger);
-		this.subscriptions.push(this.analyzer.registerForFlutterOutline(async (n) => {
+		this.subscriptions.push(this.dasClient.registerForFlutterOutline(async (n) => {
 			if (this.activeEditor && fsPath(this.activeEditor.document.uri) === n.file) {
 				this.update(n.outline);
 			}

@@ -45,9 +45,6 @@ describe("dart_formatting_edit_provider", () => {
 	});
 
 	it("does not format the document if disabled", async () => {
-		// TODO: How can we handle this in LSP?
-		// https://github.com/microsoft/vscode/issues/70314#issuecomment-502699605
-
 		await setConfigForTest("editor", "formatOnSave", true);
 		await setConfigForTest("dart", "enableSdkFormatter", false);
 		await setTestContent(unformattedContent);

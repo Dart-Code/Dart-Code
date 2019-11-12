@@ -2,12 +2,12 @@ import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { flatMap } from "../../shared/utils";
 import { fsPath, toRange } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
 import { notUndefined } from "../utils";
+import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { findNearestOutlineNode } from "../utils/vscode/outline";
 
 export class DartImplementationProvider implements vs.ImplementationProvider {
-	constructor(readonly analyzer: Analyzer) { }
+	constructor(readonly analyzer: DasAnalyzerClient) { }
 
 	public async provideImplementation(document: vs.TextDocument, position: vs.Position, token: vs.CancellationToken): Promise<vs.Definition | undefined> {
 		// Try to use the Outline data to snap our location to a node.

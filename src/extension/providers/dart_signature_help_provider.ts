@@ -2,10 +2,10 @@ import * as vs from "vscode";
 import { AnalysisGetSignatureResponse, ParameterInfo } from "../../shared/analysis_server_types";
 import { cleanDartdoc } from "../../shared/utils/dartdocs";
 import { fsPath } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
+import { DasAnalyzerClient } from "../analysis/analyzer_das";
 
 export class DartSignatureHelpProvider implements vs.SignatureHelpProvider {
-	constructor(private readonly analyzer: Analyzer) {
+	constructor(private readonly analyzer: DasAnalyzerClient) {
 	}
 	public async provideSignatureHelp(document: vs.TextDocument, position: vs.Position, token: vs.CancellationToken): Promise<vs.SignatureHelp | undefined> {
 		try {

@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { fsPath, toRangeOnLine } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
+import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import * as editors from "../editors";
 import { showCode } from "../utils/vscode/editor";
 import { findNearestOutlineNode } from "../utils/vscode/outline";
@@ -8,7 +8,7 @@ import { findNearestOutlineNode } from "../utils/vscode/outline";
 export class GoToSuperCommand implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor(private readonly analyzer: Analyzer) {
+	constructor(private readonly analyzer: DasAnalyzerClient) {
 		this.disposables.push(vs.commands.registerCommand("dart.goToSuper", this.goToSuper, this));
 	}
 

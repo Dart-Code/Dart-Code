@@ -12,7 +12,7 @@ import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { getSdkVersion } from "../utils";
-import { Analyzer } from "./analyzer";
+import { DasAnalyzerClient } from "./analyzer_das";
 
 const maxErrorReportCount = 3;
 const sendFakeErrorAtStartup = false;
@@ -23,7 +23,7 @@ export class AnalyzerStatusReporter {
 	private analysisInProgress = false;
 	private analyzingPromise?: PromiseCompleter<void>;
 
-	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer, private readonly workspaceContext: WorkspaceContext, private readonly analytics: Analytics) {
+	constructor(private readonly logger: Logger, private readonly analyzer: DasAnalyzerClient, private readonly workspaceContext: WorkspaceContext, private readonly analytics: Analytics) {
 		// TODO: Should these go in disposables?
 		// If so, do we need to worry about server cleaning them up if it disposes first?
 		analyzer.registerForServerStatus((n) => this.handleServerStatus(n));

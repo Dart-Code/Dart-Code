@@ -1,12 +1,16 @@
+import * as path from "path";
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
+import { Analyzer } from "../../shared/analyzer";
+import { dartVMPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
-import { Logger } from "../../shared/interfaces";
+import { DartSdks, Logger } from "../../shared/interfaces";
 import { PromiseCompleter, versionIsAtLeast } from "../../shared/utils";
-import { extensionVersion } from "../../shared/vscode/extension_utils";
+import { Analytics } from "../analytics";
 import { config } from "../config";
 import { DartCapabilities } from "../sdk/capabilities";
 import { escapeShell, reloadExtension } from "../utils";
+import { getAnalyzerArgs } from "./analyzer";
 import { AnalyzerGen } from "./analyzer_gen";
 
 export class AnalyzerCapabilities {
@@ -36,7 +40,31 @@ export class AnalyzerCapabilities {
 	get supportsIncludedImports() { return versionIsAtLeast(this.version, "1.27.1"); }
 }
 
-export class DasAnalyzer extends AnalyzerGen {
+export class DasAnalyzer extends Analyzer {
+	public readonly client: DasAnalyzerClient;
+
+	constructor(logger: Logger, analytics: Analytics, sdks: DartSdks, dartCapabilities: DartCapabilities) {
+		super();
+		this.client = new DasAnalyzerClient(logger, sdks, dartCapabilities);
+
+		const connectedEvent = this.client.registerForServerConnected((sc) => {
+			analytics.analysisServerVersion = sc.version;
+			this.onReadyCompleter.resolve();
+			connectedEvent.dispose();
+		});
+
+		this.client.registerForServerStatus((params) => {
+			if (params.analysis)
+				this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: params.analysis.isAnalyzing });
+		});
+	}
+
+	public getDiagnosticServerPort(): Promise<{ port: number; }> {
+		return this.client.diagnosticGetServerPort();
+	}
+}
+
+export class DasAnalyzerClient extends AnalyzerGen {
 	private lastDiagnostics?: as.ContextData[];
 	private launchArgs: string[];
 	private version?: string;
@@ -44,43 +72,10 @@ export class DasAnalyzer extends AnalyzerGen {
 	private currentAnalysisCompleter?: PromiseCompleter<void>;
 	public capabilities: AnalyzerCapabilities = AnalyzerCapabilities.empty;
 
-	constructor(logger: Logger, dartVMPath: string, dartCapabilities: DartCapabilities, analyzerPath: string) {
+	constructor(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities) {
 		super(logger, config.maxLogLineLength);
 
-		let analyzerArgs = [];
-
-		// Optionally start Observatory for the analyzer.
-		if (config.analyzerObservatoryPort)
-			analyzerArgs.push(`--enable-vm-service=${config.analyzerObservatoryPort}`);
-
-		analyzerArgs.push(analyzerPath);
-
-		// Optionally start the analyzer's diagnostic web server on the given port.
-		if (config.analyzerDiagnosticsPort)
-			analyzerArgs.push(`--port=${config.analyzerDiagnosticsPort}`);
-
-		// Add info about the extension that will be collected for crash reports etc.
-		analyzerArgs.push(`--client-id=Dart-Code.dart-code`);
-		analyzerArgs.push(`--client-version=${extensionVersion}`);
-
-		// The analysis server supports a verbose instrumentation log file.
-		if (config.analyzerInstrumentationLogFile)
-			analyzerArgs.push(`--instrumentation-log-file=${config.analyzerInstrumentationLogFile}`);
-
-		// Enable the completion model only if the SDK supports it and the
-		// user hasn't already got it in analyzerAdditionalArgs (they may have
-		// enabled it previously and we don't want to break if they also tick
-		// the new setting).
-		const alreadyHasCompletionModelEnabled = config.analyzerAdditionalArgs
-			&& config.analyzerAdditionalArgs.indexOf("--enable-completion-model") !== -1;
-		if (config.enableMachineLearningCodeCompletion && !alreadyHasCompletionModelEnabled && dartCapabilities.supportsCompletionModel)
-			analyzerArgs.push(`--enable-completion-model`);
-
-		// Allow arbitrary args to be passed to the analysis server.
-		if (config.analyzerAdditionalArgs)
-			analyzerArgs = analyzerArgs.concat(config.analyzerAdditionalArgs);
-
-		this.launchArgs = analyzerArgs;
+		this.launchArgs = getAnalyzerArgs(logger, sdks, dartCapabilities, false);
 
 		// Hook error subscriptions so we can try and get diagnostic info if this happens.
 		this.registerForServerError((e) => this.requestDiagnosticsUpdate());
@@ -89,8 +84,9 @@ export class DasAnalyzer extends AnalyzerGen {
 		// Register for version.
 		this.registerForServerConnected((e) => { this.version = e.version; this.capabilities.version = this.version; });
 
-		let binaryPath = dartVMPath;
-		let processArgs = analyzerArgs.slice();
+		const fullDartVmPath = path.join(sdks.dart, dartVMPath);
+		let binaryPath = fullDartVmPath;
+		let processArgs = this.launchArgs.slice();
 
 		// Since we communicate with the analysis server over STDOUT/STDIN, it is trivial for us
 		// to support launching it on a remote machine over SSH. This can be useful if the codebase
@@ -98,7 +94,7 @@ export class DasAnalyzer extends AnalyzerGen {
 		// result in excessive file reading over SSHFS.
 		if (config.analyzerSshHost) {
 			binaryPath = "ssh";
-			processArgs.unshift(dartVMPath);
+			processArgs.unshift(fullDartVmPath);
 			processArgs = [
 				// SSH quiet mode, which prevents SSH from interfering with the STDOUT/STDIN communication
 				// with the analysis server.

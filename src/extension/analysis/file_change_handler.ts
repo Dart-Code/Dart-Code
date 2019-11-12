@@ -3,12 +3,12 @@ import * as as from "../../shared/analysis_server_types";
 import { fsPath } from "../../shared/vscode/utils";
 import { config } from "../config";
 import * as util from "../utils";
-import { Analyzer } from "./analyzer";
+import { DasAnalyzerClient } from "./analyzer_das";
 
 export class FileChangeHandler implements vs.Disposable {
 	private readonly disposables: vs.Disposable[] = [];
 	private readonly filesWarnedAbout = new Set<string>();
-	constructor(private readonly analyzer: Analyzer) {
+	constructor(private readonly analyzer: DasAnalyzerClient) {
 		this.disposables.push(
 			vs.workspace.onDidOpenTextDocument((td) => this.onDidOpenTextDocument(td)),
 			vs.workspace.onDidChangeTextDocument((e) => this.onDidChangeTextDocument(e)),

@@ -4,7 +4,7 @@ import { flatMap } from "../../shared/utils";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
 import { getLaunchConfig } from "../../shared/utils/test";
 import { toRange } from "../../shared/vscode/utils";
-import { Analyzer } from "../analysis/analyzer";
+import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { openFileTracker } from "../analysis/open_file_tracker";
 
 export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
@@ -12,7 +12,7 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	private onDidChangeCodeLensesEmitter: EventEmitter<void> = new EventEmitter<void>();
 	public readonly onDidChangeCodeLenses: Event<void> = this.onDidChangeCodeLensesEmitter.event;
 
-	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer) {
+	constructor(private readonly logger: Logger, private readonly analyzer: DasAnalyzerClient) {
 		this.disposables.push(this.analyzer.registerForAnalysisOutline((n) => {
 			this.onDidChangeCodeLensesEmitter.fire();
 		}));

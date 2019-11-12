@@ -4,11 +4,11 @@ import * as as from "../../shared/analysis_server_types";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
-import { Analyzer } from "../analysis/analyzer";
+import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { config } from "../config";
 
 export class DartFormattingEditProvider implements DocumentFormattingEditProvider, OnTypeFormattingEditProvider, IAmDisposable {
-	constructor(private readonly logger: Logger, private readonly analyzer: Analyzer, private readonly context: Context) {
+	constructor(private readonly logger: Logger, private readonly analyzer: DasAnalyzerClient, private readonly context: Context) {
 		workspace.onDidChangeConfiguration((e) => {
 			if (e.affectsConfiguration("dart.enableSdkFormatter")) {
 				if (config.enableSdkFormatter)

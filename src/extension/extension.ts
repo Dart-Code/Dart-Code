@@ -2,8 +2,9 @@ import * as fs from "fs";
 import * as path from "path";
 import { isArray } from "util";
 import * as vs from "vscode";
+import { Analyzer } from "../shared/analyzer";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
-import { analyzerSnapshotPath, dartPlatformName, dartVMPath, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, isWin, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName } from "../shared/constants";
+import { dartPlatformName, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, isWin, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { setUserAgent } from "../shared/fetch";
 import { DartWorkspaceContext, IFlutterDaemon, Sdks } from "../shared/interfaces";
@@ -18,7 +19,7 @@ import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
 import { fsPath, getDartWorkspaceFolders, isRunningLocally } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
-import { Analyzer } from "./analysis/analyzer";
+import { DasAnalyzer } from "./analysis/analyzer_das";
 import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
 import { FileChangeHandler } from "./analysis/file_change_handler";
 import { openFileTracker } from "./analysis/open_file_tracker";
@@ -184,45 +185,24 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Fire up the analyzer process.
 	const analyzerStartTime = new Date();
-	const analyzerPath = config.analyzerPath || path.join(sdks.dart, analyzerSnapshotPath);
-	// If the ssh host is set, then we are running the analyzer on a remote machine, that same analyzer
-	// might not exist on the local machine.
-	if (!config.analyzerSshHost && !fs.existsSync(analyzerPath)) {
-		vs.window.showErrorMessage("Could not find a Dart Analysis Server at " + analyzerPath);
-		return;
-	}
-
-	analyzer = new Analyzer(logger, path.join(sdks.dart, dartVMPath), dartCapabilities, analyzerPath);
+	analyzer = new DasAnalyzer(logger, analytics, sdks, dartCapabilities);
+	const dasClient = (analyzer as DasAnalyzer).client;
 	context.subscriptions.push(analyzer);
 
-	// Log analysis server startup time when we get the welcome message/version.
-	const connectedEvents = analyzer.registerForServerConnected((sc) => {
-		analytics.analysisServerVersion = sc.version;
+	analyzer.onReady.then(() => {
 		const analyzerEndTime = new Date();
 		analytics.logAnalyzerStartupTime(analyzerEndTime.getTime() - analyzerStartTime.getTime());
-		connectedEvents.dispose();
 	});
-
-	const nextAnalysis = () =>
-		new Promise<void>((resolve, reject) => {
-			const disposable = analyzer.registerForServerStatus((ss) => {
-				if (ss.analysis && !ss.analysis.isAnalyzing) {
-					resolve();
-					disposable.dispose();
-				}
-			});
-		});
 
 	// Log analysis server first analysis completion time when it completes.
 	let analysisStartTime: Date;
-	const initialAnalysis = nextAnalysis();
-	const analysisCompleteEvents = analyzer.registerForServerStatus((ss) => {
+	const analysisCompleteEvents = analyzer.onAnalysisStatusChange.listen((status) => {
 		// Analysis started for the first time.
-		if (ss.analysis && ss.analysis.isAnalyzing && !analysisStartTime)
+		if (status.isAnalyzing && !analysisStartTime)
 			analysisStartTime = new Date();
 
 		// Analysis ends for the first time.
-		if (ss.analysis && !ss.analysis.isAnalyzing && analysisStartTime) {
+		if (!status.isAnalyzing && analysisStartTime) {
 			const analysisEndTime = new Date();
 			analytics.logAnalyzerFirstAnalysisTime(analysisEndTime.getTime() - analysisStartTime.getTime());
 			analysisCompleteEvents.dispose();
@@ -231,16 +211,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Set up providers.
 	// TODO: Do we need to push all these to subscriptions?!
-	const hoverProvider = new DartHoverProvider(logger, analyzer);
-	const formattingEditProvider = new DartFormattingEditProvider(logger, analyzer, extContext);
-	context.subscriptions.push(formattingEditProvider);
-	const completionItemProvider = new DartCompletionItemProvider(logger, analyzer);
-	const referenceProvider = new DartReferenceProvider(analyzer);
-	const documentHighlightProvider = new DartDocumentHighlightProvider();
-	const sourceCodeActionProvider = new SourceCodeActionProvider();
 
-	const renameProvider = new DartRenameProvider(analyzer);
-	const implementationProvider = new DartImplementationProvider(analyzer);
+	const completionItemProvider = new DartCompletionItemProvider(logger, dasClient);
+	const referenceProvider = new DartReferenceProvider(dasClient);
 
 	const activeFileFilters: vs.DocumentSelector = [DART_MODE];
 
@@ -255,25 +228,34 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const rankingCodeActionProvider = new RankingCodeActionProvider();
 
 	const triggerCharacters = ".(${'\"/\\".split("");
-	context.subscriptions.push(vs.languages.registerHoverProvider(activeFileFilters, hoverProvider));
+	context.subscriptions.push(vs.languages.registerHoverProvider(activeFileFilters, new DartHoverProvider(logger, dasClient)));
+	const formattingEditProvider = new DartFormattingEditProvider(logger, dasClient, extContext);
+	context.subscriptions.push(formattingEditProvider);
 	formattingEditProvider.registerDocumentFormatter(activeFileFilters);
-	context.subscriptions.push(vs.languages.registerCompletionItemProvider(activeFileFilters, completionItemProvider, ...triggerCharacters));
-	context.subscriptions.push(vs.languages.registerDefinitionProvider(activeFileFilters, referenceProvider));
-	context.subscriptions.push(vs.languages.registerReferenceProvider(activeFileFilters, referenceProvider));
-	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(activeFileFilters, documentHighlightProvider));
-	rankingCodeActionProvider.registerProvider(new AssistCodeActionProvider(logger, activeFileFilters, analyzer));
-	rankingCodeActionProvider.registerProvider(new FixCodeActionProvider(logger, activeFileFilters, analyzer));
-	rankingCodeActionProvider.registerProvider(new RefactorCodeActionProvider(activeFileFilters, analyzer));
+	// Only for Dart.
+	formattingEditProvider.registerTypingFormatter(DART_MODE, "}", ";");
+	if (completionItemProvider)
+		context.subscriptions.push(vs.languages.registerCompletionItemProvider(activeFileFilters, completionItemProvider, ...triggerCharacters));
+	if (referenceProvider) {
+		context.subscriptions.push(vs.languages.registerDefinitionProvider(activeFileFilters, referenceProvider));
+		context.subscriptions.push(vs.languages.registerReferenceProvider(activeFileFilters, referenceProvider));
+	}
+	let renameProvider: DartRenameProvider | undefined;
+	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(activeFileFilters, new DartDocumentHighlightProvider()));
+	rankingCodeActionProvider.registerProvider(new AssistCodeActionProvider(logger, activeFileFilters, dasClient));
+	rankingCodeActionProvider.registerProvider(new FixCodeActionProvider(logger, activeFileFilters, dasClient));
+	rankingCodeActionProvider.registerProvider(new RefactorCodeActionProvider(activeFileFilters, dasClient));
+
+	renameProvider = new DartRenameProvider(dasClient);
 	context.subscriptions.push(vs.languages.registerRenameProvider(activeFileFilters, renameProvider));
 
-	// Some actions only apply to Dart.
-	formattingEditProvider.registerTypingFormatter(DART_MODE, "}", ";");
-	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, sourceCodeActionProvider, sourceCodeActionProvider.metadata));
+	// Dart only.
+	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, new SourceCodeActionProvider(), SourceCodeActionProvider.metadata));
+	context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, new DartImplementationProvider(dasClient)));
 
 	rankingCodeActionProvider.registerProvider(new IgnoreLintCodeActionProvider(activeFileFilters));
-	context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, implementationProvider));
 	if (config.showTestCodeLens) {
-		const codeLensProvider = new TestCodeLensProvider(logger, analyzer);
+		const codeLensProvider = new TestCodeLensProvider(logger, dasClient);
 		context.subscriptions.push(codeLensProvider);
 		context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
 	}
@@ -291,19 +273,20 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => util.isInsideFlutterProject(uri) || util.isInsideFlutterWebProject(uri))));
 
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE.language, new DartLanguageConfiguration()));
-	const statusReporter = new AnalyzerStatusReporter(logger, analyzer, workspaceContext, analytics);
+	const statusReporter = new AnalyzerStatusReporter(logger, dasClient, workspaceContext, analytics);
 
 	// Set up diagnostics.
 	const diagnostics = vs.languages.createDiagnosticCollection("dart");
 	context.subscriptions.push(diagnostics);
-	const diagnosticsProvider = new DartDiagnosticProvider(analyzer, diagnostics);
+	const diagnosticsProvider = new DartDiagnosticProvider(dasClient, diagnostics);
 
 	// TODO: Currently calculating analysis roots requires the version to check if
 	// we need the package workaround. In future if we stop supporting server < 1.20.1 we
 	// can unwrap this call so that it'll start sooner.
-	const serverConnected = analyzer.registerForServerConnected((sc) => {
+	const serverConnected = dasClient.registerForServerConnected((sc) => {
 		serverConnected.dispose();
-		recalculateAnalysisRoots();
+		if (vs.workspace.workspaceFolders)
+			recalculateAnalysisRoots();
 
 		// Set up a handler to warn the user if they open a Dart file and we
 		// never set up the analyzer
@@ -320,7 +303,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	});
 
 	// Hook editor changes to send updated contents to analyzer.
-	context.subscriptions.push(new FileChangeHandler(analyzer));
+	context.subscriptions.push(new FileChangeHandler(dasClient));
 
 	// Fire up Flutter daemon if required.
 	if (workspaceContext.hasAnyFlutterMobileProjects && sdks.flutter) {
@@ -346,34 +329,34 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
 	context.subscriptions.push(debugProvider);
 
+	// Setup that requires server version/capabilities.
 	if (config.previewFlutterUiGuides)
-		context.subscriptions.push(new FlutterUiGuideDecorations(analyzer));
+		context.subscriptions.push(new FlutterUiGuideDecorations(dasClient));
 	if (config.flutterGutterIcons) {
-		context.subscriptions.push(new FlutterIconDecorations(logger, analyzer));
+		context.subscriptions.push(new FlutterIconDecorations(logger, dasClient));
 		context.subscriptions.push(new FlutterColorDecorations(logger, path.join(context.globalStoragePath, "flutterColors")));
 	}
 
-	// Setup that requires server version/capabilities.
-	const connectedSetup = analyzer.registerForServerConnected((sc) => {
+	const connectedSetup = dasClient.registerForServerConnected((sc) => {
 		connectedSetup.dispose();
 
-		if (analyzer.capabilities.supportsClosingLabels && config.closingLabels) {
-			context.subscriptions.push(new ClosingLabelsDecorations(analyzer));
+		if (dasClient.capabilities.supportsClosingLabels && config.closingLabels) {
+			context.subscriptions.push(new ClosingLabelsDecorations(dasClient));
 		}
 
-		if (analyzer.capabilities.supportsGetDeclerations) {
-			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(logger, analyzer)));
+		if (dasClient.capabilities.supportsGetDeclerations) {
+			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(logger, dasClient)));
 		} else {
-			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(logger, analyzer)));
+			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(logger, dasClient)));
 		}
 
-		if (analyzer.capabilities.supportsCustomFolding && config.analysisServerFolding)
-			context.subscriptions.push(vs.languages.registerFoldingRangeProvider(activeFileFilters, new DartFoldingProvider(analyzer)));
+		if (dasClient.capabilities.supportsCustomFolding && config.analysisServerFolding)
+			context.subscriptions.push(vs.languages.registerFoldingRangeProvider(activeFileFilters, new DartFoldingProvider(dasClient)));
 
-		if (analyzer.capabilities.supportsGetSignature)
+		if (dasClient.capabilities.supportsGetSignature)
 			context.subscriptions.push(vs.languages.registerSignatureHelpProvider(
 				DART_MODE,
-				new DartSignatureHelpProvider(analyzer),
+				new DartSignatureHelpProvider(dasClient),
 				...(config.triggerSignatureHelpAutomatically ? ["(", ","] : []),
 			));
 
@@ -382,11 +365,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
 		});
 
-		context.subscriptions.push(openFileTracker.create(logger, analyzer, workspaceContext));
+		context.subscriptions.push(openFileTracker.create(logger, dasClient, workspaceContext));
 
 		// Set up completions for unimported items.
-		if (analyzer.capabilities.supportsAvailableSuggestions && config.autoImportCompletions) {
-			analyzer.completionSetSubscriptions({
+		if (dasClient.capabilities.supportsAvailableSuggestions && config.autoImportCompletions) {
+			dasClient.completionSetSubscriptions({
 				subscriptions: ["AVAILABLE_SUGGESTION_SETS"],
 			});
 		}
@@ -410,12 +393,12 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Set up commands for Dart editors.
 	context.subscriptions.push(new EditCommands());
-	context.subscriptions.push(new DasEditCommands(logger, context, analyzer));
-	context.subscriptions.push(new RefactorCommands(logger, context, analyzer));
+	context.subscriptions.push(new DasEditCommands(logger, context, dasClient));
+	context.subscriptions.push(new RefactorCommands(logger, context, dasClient));
 
 	// Register misc commands.
-	context.subscriptions.push(new TypeHierarchyCommand(logger, analyzer));
-	context.subscriptions.push(new GoToSuperCommand(analyzer));
+	context.subscriptions.push(new TypeHierarchyCommand(logger, dasClient));
+	context.subscriptions.push(new GoToSuperCommand(dasClient));
 	context.subscriptions.push(new LoggingCommands(logger, context.logPath));
 	context.subscriptions.push(new OpenInOtherEditorCommands(logger, sdks));
 	context.subscriptions.push(new TestCommands(logger));
@@ -447,7 +430,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	let flutterOutlineTreeProvider: FlutterOutlineProvider | undefined;
 	if (config.flutterOutline) {
 		// TODO: Extract this out - it's become messy since TreeView was added in.
-		flutterOutlineTreeProvider = new FlutterOutlineProvider(analyzer);
+		flutterOutlineTreeProvider = new FlutterOutlineProvider(dasClient);
 		const tree = vs.window.createTreeView("dartFlutterOutline", { treeDataProvider: flutterOutlineTreeProvider, showCollapseAll: true });
 		tree.onDidChangeSelection((e) => {
 			// TODO: This should be in a tree, not the data provider.
@@ -555,11 +538,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	return {
 		...new DartExtensionApi(),
 		[internalApiSymbol]: {
-			analyzerCapabilities: analyzer.capabilities,
-			cancelAllAnalysisRequests: () => analyzer.cancelAllRequests(),
+			analyzerCapabilities: dasClient && dasClient.capabilities,
+			cancelAllAnalysisRequests: () => dasClient && dasClient.cancelAllRequests(),
 			completionItemProvider,
 			context: extContext,
-			currentAnalysis: () => analyzer.currentAnalysis,
+			currentAnalysis: () => analyzer.onCurrentAnalysisComplete,
 			get cursorIsInTest() { return cursorIsInTest; },
 			get isInTestFile() { return isInTestFile; },
 			get isInImplementationFile() { return isInImplementationFile; },
@@ -572,9 +555,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			flutterCapabilities,
 			flutterOutlineTreeProvider,
 			getLogHeader,
-			initialAnalysis,
+			initialAnalysis: analyzer.onInitialAnalysis,
 			logger,
-			nextAnalysis,
+			nextAnalysis: () => analyzer.onNextAnalysisComplete,
 			packagesTreeProvider: dartPackagesProvider,
 			pubGlobal,
 			renameProvider,
@@ -650,7 +633,7 @@ function recalculateAnalysisRoots() {
 		}
 	});
 
-	analyzer.analysisSetAnalysisRoots({
+	(analyzer as DasAnalyzer).client.analysisSetAnalysisRoots({
 		excluded: excludeFolders,
 		included: analysisRoots,
 	});
@@ -667,8 +650,8 @@ function handleConfigurationChange(sdks: Sdks) {
 	const settingsChanged = previousSettings !== newSettings;
 	previousSettings = newSettings;
 
-	if (todoSettingChanged) {
-		analyzer.analysisReanalyze();
+	if (todoSettingChanged && analyzer instanceof DasAnalyzer) {
+		analyzer.client.analysisReanalyze();
 	}
 
 	if (settingsChanged) {
@@ -704,6 +687,7 @@ function getSettingsThatRequireRestart() {
 
 export async function deactivate(isRestart: boolean = false): Promise<void> {
 	setCommandVisiblity(false);
+	await analyzer.dispose();
 	vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, false);
 	if (!isRestart) {
 		vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, false);
