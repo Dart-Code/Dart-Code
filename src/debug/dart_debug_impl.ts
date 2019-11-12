@@ -57,6 +57,7 @@ export class DartDebugSession extends DebugSession {
 	private logStream?: fs.WriteStream;
 	public debugSdkLibraries = false;
 	public debugExternalLibraries = false;
+	public sendOutputAsCustomEvent = false;
 	public showDartDeveloperLogs = true;
 	public useFlutterStructuredErrors = false;
 	public evaluateGettersInDebugViews = false;
@@ -135,6 +136,7 @@ export class DartDebugSession extends DebugSession {
 		this.showDartDeveloperLogs = args.showDartDeveloperLogs;
 		this.useFlutterStructuredErrors = args.useFlutterStructuredErrors;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
+		this.sendOutputAsCustomEvent = args.console === "terminal";
 		this.debuggerHandlesPathsEverywhereForBreakpoints = args.debuggerHandlesPathsEverywhereForBreakpoints;
 		this.logFile = args.observatoryLogFile;
 		this.maxLogLineLength = args.maxLogLineLength;
@@ -1200,6 +1202,15 @@ export class DartDebugSession extends DebugSession {
 					this.errorResponse(response, e && e.message);
 				}
 				break;
+			case "dart.userInput":
+				if (this.childProcess && !this.childProcess.killed && !this.processExited) {
+					try {
+						this.childProcess.stdin.write(args.input);
+					} catch (e) {
+						this.logger.error(`Failed to write to process stdin: ${e}`);
+					}
+				}
+				break;
 			// Flutter requests that may be sent during test runs or other places
 			// that we don't currently support. TODO: Fix this by moving all the
 			// service extension stuff out of Flutter to here, and making it not
@@ -1801,8 +1812,8 @@ export class DartDebugSession extends DebugSession {
 
 		const lastNewLine = this.logBuffer[category].lastIndexOf("\n");
 		if (lastNewLine !== -1) {
-			const processString = this.logBuffer[category].substr(0, lastNewLine);
-			this.logBuffer[category] = this.logBuffer[category].substr(lastNewLine);
+			const processString = this.logBuffer[category].substr(0, lastNewLine + 1);
+			this.logBuffer[category] = this.logBuffer[category].substr(lastNewLine + 1);
 			this.logToUser(processString, category);
 		}
 	}
@@ -1811,6 +1822,10 @@ export class DartDebugSession extends DebugSession {
 	// Logs a message back to the editor. Does not add its own newlines, you must
 	// provide them!
 	protected logToUser(message: string, category?: string, colorText = (s: string) => s) {
+		if (this.sendOutputAsCustomEvent) {
+			this.sendEvent(new Event("dart.output", { message, category }));
+			return;
+		}
 		// Extract stack frames from the message so we can do nicer formatting of them.
 		const frame = this.getStackFrameData(message) || this.getWebStackFrameData(message) || this.getMessageWithUriData(message);
 
