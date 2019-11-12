@@ -367,16 +367,18 @@ export function deferUntilLast(callback: (result?: "failed" | "passed") => Promi
 }
 
 export async function setTestContent(content: string): Promise<void> {
-	const doc = currentDoc();
+	const editor = currentEditor();
+	const doc = editor.document;
 	const all = new vs.Range(
 		doc.positionAt(0),
 		doc.positionAt(doc.getText().length),
 	);
+	logger.info(`Replacing content for file ${doc.uri}`);
 	// TODO: May be able to replace this with
 	// return editor.edit((eb) => eb.replace(all, content));
 	// once the fix for https://github.com/dart-lang/sdk/issues/32914
 	// has made it all the way through.
-	await currentEditor().edit((eb) => eb.replace(all, content));
+	await editor.edit((eb) => eb.replace(all, content));
 
 	// HACK: Add a small delay to try and reduce the chance of a "Requested result
 	// might be inconsistent with previously returned results" error.
@@ -410,6 +412,7 @@ export function positionOf(searchText: string): vs.Position {
 	// source file is \r\n!
 	searchText = searchText.replace(/\r/g, "").replace(/\n/g, documentEol);
 	const doc = currentDoc();
+	logger.info(`Searching for "${searchText}" in ${doc.uri}`);
 	const caretOffset = searchText.indexOf("^");
 	assert.notEqual(caretOffset, -1, `Couldn't find a ^ in search text (${searchText})`);
 	const docText = doc.getText();
