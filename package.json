@@ -1751,6 +1751,7 @@
 		"semver": "^6.3.0",
 		"vscode-debugadapter": "^1.37.1",
 		"vscode-debugprotocol": "^1.37.0",
+		"vscode-languageclient": "^5.2.1",
 		"ws": "^7.1.2"
 	},
 	"devDependencies": {
