@@ -45,7 +45,7 @@ import { FlutterUiGuideDecorations } from "./decorations/flutter_ui_guides_decor
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { FlutterOutlineProvider } from "./flutter/flutter_outline_view";
-import { setUpHotReloadOnSave } from "./flutter/hot_reload_save_handler";
+import { HotReloadOnSaveHandler } from "./flutter/hot_reload_save_handler";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
@@ -402,7 +402,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Wire up handling of Hot Reload on Save.
 	if (workspaceContext.hasAnyFlutterProjects) {
-		setUpHotReloadOnSave(context, debugCommands);
+		context.subscriptions.push(new HotReloadOnSaveHandler(debugCommands));
 	}
 
 	// Register URI handler.

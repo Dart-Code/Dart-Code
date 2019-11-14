@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as https from "https";
 import * as os from "os";
 import * as path from "path";
-import { commands, TextDocument, Uri, window, workspace, WorkspaceFolder } from "vscode";
+import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { showLogAction } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
 import { isWithinPath } from "../shared/utils";
@@ -102,23 +102,26 @@ export function getSdkVersion(logger: Logger, sdkRoot?: string): string | undefi
 	}
 }
 
-export function isAnalyzable(document: TextDocument): boolean {
-	if (document.isUntitled || !fsPath(document.uri) || document.uri.scheme !== "file")
+export function isAnalyzable(file: { uri: Uri, isUntitled?: boolean, languageId?: string }): boolean {
+	if (file.isUntitled || !fsPath(file.uri) || file.uri.scheme !== "file")
 		return false;
 
 	const analyzableLanguages = ["dart", "html"];
 	const analyzableFilenames = [".analysis_options", "analysis_options.yaml", "pubspec.yaml"];
+	// We have to include dart/html extensions as this function may be called without a language ID
+	// (for example when triggered by a file system watcher).
+	const analyzableFileExtensions = ["dart", "htm", "html"].concat(config.additionalAnalyzerFileExtensions);
 
-	const extName = path.extname(fsPath(document.uri));
+	const extName = path.extname(fsPath(file.uri));
 	const extension = extName ? extName.substr(1) : undefined;
 
-	return analyzableLanguages.indexOf(document.languageId) >= 0
-		|| analyzableFilenames.indexOf(path.basename(fsPath(document.uri))) >= 0
-		|| (extension !== undefined && config.additionalAnalyzerFileExtensions.includes(extension));
+	return (file.languageId && analyzableLanguages.indexOf(file.languageId) >= 0)
+		|| analyzableFilenames.indexOf(path.basename(fsPath(file.uri))) >= 0
+		|| (extension !== undefined && analyzableFileExtensions.includes(extension));
 }
 
-export function isAnalyzableAndInWorkspace(document: TextDocument): boolean {
-	return isAnalyzable(document) && isWithinWorkspace(fsPath(document.uri));
+export function isAnalyzableAndInWorkspace(file: { uri: Uri, isUntitled?: boolean, languageId?: string }): boolean {
+	return isAnalyzable(file) && isWithinWorkspace(fsPath(file.uri));
 }
 
 export function isWithinWorkspace(file: string) {

@@ -252,20 +252,24 @@ export class DartDebugClient extends DebugClient {
 		return this.assertTestStatus(testName, "error");
 	}
 
+	public async waitForHotReload(): Promise<void> {
+		// We might get the text in either stderr or stdout depending on
+		// whether an error occurred during reassemble.
+		await Promise.race([
+			this.assertOutputContains("stdout", "Reloaded"),
+			this.assertOutputContains("stderr", "Reloaded"),
+			// TODO: Remove these two when web isn't doing restarts for reloads.
+			this.assertOutputContains("stdout", "Restarted"),
+			this.assertOutputContains("stderr", "Restarted"),
+		]);
+	}
+
 	public async hotReload(): Promise<void> {
 		// If we reload too fast, things fail :-/
 		await delay(500);
 
 		await Promise.all([
-			// We might get the text in either stderr or stdout depending on
-			// whether an error occurred during reassemble.
-			Promise.race([
-				this.assertOutputContains("stdout", "Reloaded"),
-				this.assertOutputContains("stderr", "Reloaded"),
-				// TODO: Remove these two when web isn't doing restarts for reloads.
-				this.assertOutputContains("stdout", "Restarted"),
-				this.assertOutputContains("stderr", "Restarted"),
-			]),
+			this.waitForHotReload(),
 			this.customRequest("hotReload"),
 		]);
 	}

@@ -815,6 +815,26 @@ export async function writeBrokenDartCodeIntoFileForTest(file: vs.Uri): Promise<
 	defer(() => tryDelete(file));
 }
 
+export async function saveTrivialChangeToFile(uri: vs.Uri) {
+	const editor = await openFile(uri);
+	const doc = editor.document;
+	await setTestContent(doc.getText() + " // test");
+	await doc.save();
+}
+
+export function makeTrivialChangeToFileDirectly(uri: vs.Uri): Promise<void> {
+	return new Promise((resolve, reject) => {
+		const filePath = fsPath(uri);
+		const originalContents = fs.readFileSync(filePath);
+		fs.writeFile(filePath, originalContents + " // test", (error) => {
+			if (error)
+				reject(error);
+			else
+				resolve();
+		});
+	});
+}
+
 // Watches a promise and reports every 10s while it's unresolved. This is to aid tracking
 // down hangs in test runs where multiple promises can be spawned together and generate
 // lots of log output, making it hard to keep track of which did not complete.

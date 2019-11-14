@@ -9,7 +9,7 @@ import { grey, grey2 } from "../../../shared/utils/colors";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getPackages, openFile, positionOf, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getPackages, openFile, positionOf, saveTrivialChangeToFile, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 for (const deviceId of ["flutter-tester", "chrome"]) {
 	const deviceName = deviceId === "chrome" ? "Chrome" : "Flutter test device";
@@ -257,6 +257,27 @@ for (const deviceId of ["flutter-tester", "chrome"]) {
 			await Promise.all([
 				watchPromise("hot_reloads_successfully->waitForEvent:terminated", dc.waitForEvent("terminated")),
 				watchPromise("hot_reloads_successfully->terminateRequest", dc.terminateRequest()),
+			]);
+		});
+
+		it("hot reloads on save", async () => {
+			const config = await startDebugger(flutterHelloWorldMainFile);
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.launch(config),
+			]);
+
+			// If we go too fast, things fail..
+			await delay(500);
+
+			await Promise.all([
+				dc.waitForHotReload(),
+				saveTrivialChangeToFile(flutterHelloWorldMainFile),
+			]);
+
+			await Promise.all([
+				dc.waitForEvent("terminated"),
+				dc.terminateRequest(),
 			]);
 		});
 

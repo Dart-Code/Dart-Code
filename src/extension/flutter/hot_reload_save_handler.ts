@@ -1,25 +1,36 @@
 import * as path from "path";
-import { commands, debug, DiagnosticSeverity, ExtensionContext, languages, workspace } from "vscode";
+import { commands, DiagnosticSeverity, languages, Uri, workspace } from "vscode";
 import { restartReasonSave } from "../../shared/constants";
 import { FlutterService } from "../../shared/enums";
+import { IAmDisposable } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { DebugCommands } from "../commands/debug";
 import { config } from "../config";
 import { isAnalyzableAndInWorkspace } from "../utils";
 
-export function setUpHotReloadOnSave(context: ExtensionContext, debugCommands: DebugCommands) {
-	let hotReloadDelayTimer: NodeJS.Timer | undefined;
-	context.subscriptions.push(workspace.onDidSaveTextDocument((td) => {
-		if (!debug.activeDebugSession)
+export class HotReloadOnSaveHandler implements IAmDisposable {
+	private disposables: IAmDisposable[] = [];
+	private hotReloadDelayTimer: NodeJS.Timer | undefined;
+
+	constructor(private readonly debugCommands: DebugCommands) {
+		// Non-FS-watcher version (onDidSave).
+		this.disposables.push(workspace.onDidSaveTextDocument((td) => {
+			this.triggerReload(td);
+		}));
+	}
+
+	private triggerReload(file: { uri: Uri, isUntitled?: boolean, languageId?: string }) {
+		// Never do anything for files inside .dart_tool folders.
+		if (fsPath(file.uri).indexOf(`${path.sep}.dart_tool${path.sep}`) !== -1)
 			return;
 
 		const shouldHotReload =
-			debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload)
+			this.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload)
 			&& config.flutterHotReloadOnSave;
 
 		const shouldHotRestart =
-			!debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload)
-			&& debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart)
+			!this.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload)
+			&& this.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart)
 			&& config.flutterHotRestartOnSave;
 
 		// Don't do if there are no debug sessions that support it.
@@ -29,24 +40,31 @@ export function setUpHotReloadOnSave(context: ExtensionContext, debugCommands: D
 		const commandToRun = shouldHotReload ? "flutter.hotReload" : "flutter.hotRestart";
 
 		// Bail out if we're in an external file, or not Dart.
-		if (!isAnalyzableAndInWorkspace(td) || path.extname(fsPath(td.uri)) !== ".dart")
+		if (!isAnalyzableAndInWorkspace(file) || path.extname(fsPath(file.uri)) !== ".dart")
 			return;
 
 		// Don't do if we have errors for the saved file.
-		const errors = languages.getDiagnostics(td.uri);
+		const errors = languages.getDiagnostics(file.uri);
 		const hasErrors = errors && errors.find((d) => d.source === "dart" && d.severity === DiagnosticSeverity.Error) != null;
 		if (hasErrors)
 			return;
 
 		// Debounce to avoid reloading multiple times during multi-file-save (Save All).
 		// Hopefully we can improve in future: https://github.com/Microsoft/vscode/issues/42913
-		if (hotReloadDelayTimer) {
-			clearTimeout(hotReloadDelayTimer);
+		if (this.hotReloadDelayTimer) {
+			clearTimeout(this.hotReloadDelayTimer);
 		}
 
-		hotReloadDelayTimer = setTimeout(() => {
-			hotReloadDelayTimer = undefined;
+		this.hotReloadDelayTimer = setTimeout(() => {
+			this.hotReloadDelayTimer = undefined;
 			commands.executeCommand(commandToRun, { reason: restartReasonSave });
 		}, 200);
-	}));
+	}
+
+	public dispose(): void | Promise<void> {
+		if (this.hotReloadDelayTimer)
+			clearTimeout(this.hotReloadDelayTimer);
+
+		this.disposables.forEach((d) => d.dispose());
+	}
 }
