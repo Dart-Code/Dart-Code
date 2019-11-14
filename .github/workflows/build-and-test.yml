@@ -18,7 +18,7 @@ jobs:
         node-version: [10]
         dart-version: [stable, dev]
         code-version: [stable] #, insiders]
-        bot: [flutter_debug, flutter_test_debug, flutter_web_debug, flutter_repo, dart_debug, dart, flutter, misc]
+        bot: [flutter_debug, flutter_debug_chrome, flutter_test_debug, flutter_web_debug, flutter_repo, dart_debug, dart, flutter, misc]
         include:
           - dart-version: stable
             flutter-version: stable
