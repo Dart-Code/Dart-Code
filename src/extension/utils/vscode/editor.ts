@@ -21,7 +21,12 @@ class EnvUtils {
 	}
 
 	public async asExternalUri(uri: vs.Uri): Promise<vs.Uri> {
-		return vs.env.asExternalUri(uri);
+		// TODO: Remove this scheme mapping when https://github.com/microsoft/vscode/issues/84819
+		// is resolved.
+		const scheme = uri.scheme;
+		const fakeScheme = scheme === "ws" ? "http" : "https";
+		const mappedUri = await vs.env.asExternalUri(uri.with({ scheme: fakeScheme }));
+		return mappedUri.with({ scheme });
 	}
 }
 
