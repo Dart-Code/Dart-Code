@@ -15,8 +15,28 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 	constructor(private readonly debugCommands: DebugCommands) {
 		// Non-FS-watcher version (onDidSave).
 		this.disposables.push(workspace.onDidSaveTextDocument((td) => {
+			// Bail if we're using fs-watcher instead. We still wire this
+			// handler up so we don't need to reload for this setting change.
+			if (config.previewHotReloadOnSaveWatcher)
+				return;
+
 			this.triggerReload(td);
 		}));
+
+		// FS-watcher version.
+		const watcher = workspace.createFileSystemWatcher("**/*.dart");
+		this.disposables.push(watcher);
+		watcher.onDidChange(this.handleFileSystemChange, this);
+		watcher.onDidCreate(this.handleFileSystemChange, this);
+	}
+
+	private handleFileSystemChange(uri: Uri) {
+		// Bail if we're not using fs-watcher instead. We still wire this
+		// handler up so we don't need to reload for this setting change.
+		if (!config.previewHotReloadOnSaveWatcher)
+			return;
+
+		this.triggerReload({ uri });
 	}
 
 	private triggerReload(file: { uri: Uri, isUntitled?: boolean, languageId?: string }) {
