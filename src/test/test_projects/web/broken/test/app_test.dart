@@ -1,8 +1,8 @@
 @TestOn('browser')
 import 'package:angular_test/angular_test.dart';
+import 'package:broken/app_component.dart';
+import 'package:broken/app_component.template.dart' as ng;
 import 'package:test/test.dart';
-import 'package:hello_world/app_component.dart';
-import 'package:hello_world/app_component.template.dart' as ng;
 
 void main() {
   final testBed =
