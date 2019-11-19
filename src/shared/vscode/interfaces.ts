@@ -39,6 +39,7 @@ export interface InternalExtensionApi {
 		handlesBreakpointsInPartFiles: boolean;
 		hasDocumentationInCompletions: boolean;
 		supportsDisableServiceTokens: boolean;
+		webSupportsDebugging: boolean;
 		webSupportsEvaluation: boolean;
 	};
 	debugCommands: DebugCommandHandler;

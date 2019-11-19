@@ -93,6 +93,7 @@ export const flutterTestBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWo
 // Web
 export const webProjectContainerFolder = vs.Uri.file(path.join(testFolder, "test_projects/web"));
 export const webHelloWorldFolder = vs.Uri.file(path.join(fsPath(webProjectContainerFolder), "hello_world"));
+export const webHelloWorldMainFile = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "lib/src/todo_list/todo_list_component.dart"));
 export const webHelloWorldIndexFile = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "web/index.html"));
 export const webHelloWorldExampleSubFolder = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "example"));
 export const webHelloWorldExampleSubFolderIndexFile = vs.Uri.file(path.join(fsPath(webHelloWorldExampleSubFolder), "web/index.html"));
