@@ -18,4 +18,5 @@ export class DartCapabilities {
 	get supportsCompletionModel() { return versionIsAtLeast(this.version, "2.5.0"); }
 	// TODO: Update this (along with Flutter) when supported.
 	get webSupportsEvaluation() { return false; }
+	get webSupportsDebugging() { return false; }
 }

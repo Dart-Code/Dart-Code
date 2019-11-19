@@ -6,7 +6,7 @@ import { fetch } from "../../../shared/fetch";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise, webBrokenIndexFile, webHelloWorldExampleSubFolderIndexFile, webHelloWorldFolder, webHelloWorldIndexFile } from "../../helpers";
+import { activate, defer, delay, ext, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise, webBrokenIndexFile, webHelloWorldExampleSubFolderIndexFile, webHelloWorldFolder, webHelloWorldIndexFile, webHelloWorldMainFile } from "../../helpers";
 
 describe("web debugger", () => {
 	beforeEach("activate webHelloWorldIndexFile", () => activate(webHelloWorldIndexFile));
@@ -317,12 +317,17 @@ describe("web debugger", () => {
 				? ""
 				: ` after ${numReloads} reload${numReloads === 1 ? "" : "s"}`;
 
-		it("stops at a breakpoint" + reloadDescription, async () => {
-			await openFile(webHelloWorldIndexFile);
+		it("stops at a breakpoint" + reloadDescription, async function () {
+			if (!extApi.dartCapabilities.webSupportsDebugging) {
+				this.skip();
+				return;
+			}
+
+			await openFile(webHelloWorldMainFile);
 			const config = await startDebugger(webHelloWorldIndexFile);
 			const expectedLocation = {
-				line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-				path: fsPath(webHelloWorldIndexFile),
+				line: positionOf("^// BREAKPOINT1").line,
+				path: fsPath(webHelloWorldMainFile),
 			};
 			await watchPromise("stops_at_a_breakpoint->hitBreakpoint", dc.hitBreakpoint(config, expectedLocation));
 			const stack = await dc.getStack();
