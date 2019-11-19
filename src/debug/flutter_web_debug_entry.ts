@@ -1,4 +1,4 @@
 import { DebugSession } from "vscode-debugadapter";
-import { FlutterWebDebugSession } from "./flutter_web_debug_impl";
+import { WebDebugSession } from "./web_debug_impl";
 
-DebugSession.run(FlutterWebDebugSession);
+DebugSession.run(WebDebugSession);

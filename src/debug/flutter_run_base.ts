@@ -3,7 +3,7 @@ import * as f from "../shared/flutter/daemon_interfaces";
 import { IAmDisposable, Logger } from "../shared/interfaces";
 import { UnknownNotification, UnknownResponse } from "../shared/services/interfaces";
 
-export abstract class FlutterRunBase extends StdIOService<UnknownNotification> {
+export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 	constructor(
 		public readonly mode: RunMode,
 		logFile: string | undefined,
@@ -15,7 +15,7 @@ export abstract class FlutterRunBase extends StdIOService<UnknownNotification> {
 	}
 
 	protected shouldHandleMessage(message: string): boolean {
-		// Everything in flutter is wrapped in [] so we can tell what to handle.
+		// Everything in daemon is wrapped in [] so we can tell what to handle.
 		return message.startsWith("[{") && message.endsWith("}]");
 	}
 

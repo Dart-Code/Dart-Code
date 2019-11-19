@@ -8,16 +8,16 @@ import { DartDebugSession } from "../../debug/dart_debug_impl";
 import { DartTestDebugSession } from "../../debug/dart_test_debug_impl";
 import { FlutterDebugSession } from "../../debug/flutter_debug_impl";
 import { FlutterTestDebugSession } from "../../debug/flutter_test_debug_impl";
-import { FlutterWebDebugSession } from "../../debug/flutter_web_debug_impl";
-import { FlutterWebTestDebugSession } from "../../debug/flutter_web_test_debug_impl";
 import { FlutterLaunchRequestArguments } from "../../debug/utils";
+import { WebDebugSession } from "../../debug/web_debug_impl";
+import { WebTestDebugSession } from "../../debug/web_test_debug_impl";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { CHROME_OS_VM_SERVICE_PORT, dartVMPath, debugAnywayAction, flutterPath, HAS_LAST_DEBUG_CONFIG, isChromeOS, pubPath, pubSnapshotPath, showErrorsAction } from "../../shared/constants";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { IFlutterDaemon, Logger, Sdks } from "../../shared/interfaces";
 import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../../shared/utils";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
-import { fsPath, isRunningLocally } from "../../shared/vscode/utils";
+import { fsPath } from "../../shared/vscode/utils";
 import { Analytics } from "../analytics";
 import { LastDebugSession } from "../commands/debug";
 import { isLogging } from "../commands/logging";
@@ -26,12 +26,10 @@ import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
 import { DartCapabilities } from "../sdk/capabilities";
-import { checkProjectSupportsPubRunTest, isDartFile, isFlutterProjectFolder, isFlutterWebProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder } from "../utils";
+import { checkProjectSupportsPubRunTest, isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, isWebProjectFolder } from "../utils";
 import { TestResultsProvider } from "../views/test_view";
 
 const isCI = !!process.env.CI;
-
-let hasShownFlutterWebDebugWarning = false;
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugServers: { [index: string]: net.Server } = {};
@@ -169,22 +167,18 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			&& !isInsideFolderNamed(debugConfig.program, "bin")
 			&& !isInsideFolderNamed(debugConfig.program, "tool")
 			&& !isInsideFolderNamed(debugConfig.program, ".dart_tool")) {
-			// Check if we're a Flutter or FlutterWeb project.
-			if (isFlutterWebProjectFolder(debugConfig.cwd as string)) {
-				debugType = DebuggerType.FlutterWeb;
-				if (isFlutterProjectFolder(debugConfig.cwd as string)) {
-					logger.error("Flutter web project references sdk:flutter and may fail to launch");
-					window.showWarningMessage("Flutter web projects may fail to launch if they reference the Flutter SDK in pubspec.yaml");
-				}
+			// Check if we're a Flutter or Web project.
+			if (isWebProjectFolder(debugConfig.cwd as string)) {
+				debugType = DebuggerType.Web;
 			} else if (isFlutterProjectFolder(debugConfig.cwd as string))
 				debugType = DebuggerType.Flutter;
 			else
-				logger.info(`Non-Dart Project (${debugConfig.program}) not recognised as Flutter or FlutterWeb, will use Dart debugger`);
+				logger.info(`Project (${debugConfig.program}) not recognised as Flutter or Web, will use Dart debugger`);
 		}
 		logger.info(`Detected launch project as ${DebuggerType[debugType]}`);
 
 		// Some helpers for conditions below.
-		const isAnyFlutter = debugType === DebuggerType.Flutter || debugType === DebuggerType.FlutterWeb;
+		const isAnyFlutter = debugType === DebuggerType.Flutter || debugType === DebuggerType.Web;
 		const isStandardFlutter = debugType === DebuggerType.Flutter;
 
 		const isTest = debugConfig.program && isTestFileOrFolder(debugConfig.program as string);
@@ -202,8 +196,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				case DebuggerType.Flutter:
 					debugType = DebuggerType.FlutterTest;
 					break;
-				case DebuggerType.FlutterWeb:
-					debugType = DebuggerType.FlutterWebTest;
+				case DebuggerType.Web:
+					debugType = DebuggerType.WebTest;
 					break;
 				default:
 					logger.info("Unknown debugType, unable to switch to test debugger");
@@ -211,17 +205,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 		logger.info(`Using ${DebuggerType[debugType]} debug adapter for this session`);
 
-		if (debugType === DebuggerType.FlutterWebTest) {
-			// TODO: IMPORTANT! When removing this if statement, add FlutterWebTest to
+		if (debugType === DebuggerType.WebTest) {
+			// TODO: IMPORTANT! When removing this if statement, add WebTest to
 			// the call to TestResultsProvider.flagSuiteStart below!
-			logger.error("Tests in Flutter web projects are not currently supported");
-			window.showErrorMessage("Tests in Flutter web projects are not currently supported");
-			return undefined; // undefined means silent (don't open launch.json).
-		}
-
-		if (!isRunningLocally && debugType === DebuggerType.FlutterWeb) {
-			logger.error("Flutter web projects cannot currently run in remote workspaces");
-			window.showErrorMessage("Flutter web projects cannot currently run in remote workspaces");
+			logger.error("Tests in web projects are not currently supported");
+			window.showErrorMessage("Tests in web projects are not currently supported");
 			return undefined; // undefined means silent (don't open launch.json).
 		}
 
@@ -337,18 +325,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// TODO: Why do we need this cast? The node-mock-debug does not?
 		(debugConfig as any).debugServer = serverAddress.port;
 
-		// We don't support debug for (unforked) FlutterWeb
-		if (debugType === DebuggerType.FlutterWeb && !debugConfig.noDebug) {
-			// TODO: Support this! :)
-			debugConfig.noDebug = true;
-			if (!hasShownFlutterWebDebugWarning) {
-				window.showInformationMessage("Breakpoints and stepping are not supported in VS Code for Flutter web projects, please use your browsers developer tools if you need to break or step through code.");
-				hasShownFlutterWebDebugWarning = true;
-			}
-		}
-
 		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
-		if (debugType === DebuggerType.FlutterTest /*|| debugType === DebuggerType.FlutterWebTest*/ || debugType === DebuggerType.PubTest) {
+		if (debugType === DebuggerType.FlutterTest /*|| debugType === DebuggerType.WebTest*/ || debugType === DebuggerType.PubTest) {
 			const isRunningTestSubset = debugConfig.args && (debugConfig.args.indexOf("--name") !== -1 || debugConfig.args.indexOf("--pname") !== -1);
 			TestResultsProvider.flagSuiteStart(debugConfig.program, !isRunningTestSubset);
 		}
@@ -366,7 +344,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	private installDependencies(debugType: DebuggerType, pubGlobal: PubGlobal) {
-		return debugType === DebuggerType.FlutterWeb
+		return debugType === DebuggerType.Web
 			? new WebDev(pubGlobal).promptToInstallIfRequired()
 			: true;
 	}
@@ -421,10 +399,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				return this.spawnOrGetServer("flutter", port, () => new FlutterDebugSession());
 			case DebuggerType.FlutterTest:
 				return this.spawnOrGetServer("flutterTest", port, () => new FlutterTestDebugSession());
-			case DebuggerType.FlutterWeb:
-				return this.spawnOrGetServer("flutterWeb", port, () => new FlutterWebDebugSession());
-			case DebuggerType.FlutterWebTest:
-				return this.spawnOrGetServer("pubTest", port, () => new FlutterWebTestDebugSession());
+			case DebuggerType.Web:
+				return this.spawnOrGetServer("web", port, () => new WebDebugSession());
+			case DebuggerType.WebTest:
+				return this.spawnOrGetServer("pubTest", port, () => new WebTestDebugSession());
 			case DebuggerType.Dart:
 				return this.spawnOrGetServer("dart", port, () => new DartDebugSession());
 			case DebuggerType.PubTest:
@@ -520,6 +498,6 @@ export enum DebuggerType {
 	PubTest,
 	Flutter,
 	FlutterTest,
-	FlutterWeb,
-	FlutterWebTest,
+	Web,
+	WebTest,
 }

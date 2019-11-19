@@ -5,18 +5,18 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterWebHelloWorldFolder, flutterWebTestBrokenFile, flutterWebTestMainFile, flutterWebTestOtherFile, getLaunchConfiguration, logger, openFile, positionOf, withTimeout } from "../../helpers";
+import { activate, defer, delay, ext, extApi, getLaunchConfiguration, logger, openFile, positionOf, webHelloWorldFolder, webTestBrokenFile, webTestMainFile, webTestOtherFile, withTimeout } from "../../helpers";
 
-describe.skip("flutter for web test debugger", () => {
-	beforeEach("activate flutterWebTestMainFile", async () => {
-		await activate(flutterWebTestMainFile);
+describe.skip("web test debugger", () => {
+	beforeEach("activate webTestMainFile", async () => {
+		await activate(webTestMainFile);
 	});
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
 		dc = new DartDebugClient(
 			process.execPath,
-			path.join(ext.extensionPath, "out/extension/debug/flutter_web_test_debug_entry.js"),
+			path.join(ext.extensionPath, "out/extension/debug/web_test_debug_entry.js"),
 			"dart",
 			undefined,
 			extApi.debugCommands,
@@ -46,7 +46,7 @@ describe.skip("flutter for web test debugger", () => {
 	}
 
 	it("runs a Flutter test script to completion", async () => {
-		const config = await startDebugger(flutterWebTestMainFile);
+		const config = await startDebugger(webTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
@@ -55,7 +55,7 @@ describe.skip("flutter for web test debugger", () => {
 	});
 
 	it("receives the expected events from a Flutter test script", async () => {
-		const config = await startDebugger(flutterWebTestMainFile);
+		const config = await startDebugger(webTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutputContains("stdout", `✓ Hello world test`),
@@ -66,7 +66,7 @@ describe.skip("flutter for web test debugger", () => {
 	});
 
 	it("receives the expected events from a Flutter test script when run with variables in launch config", async () => {
-		const relativePath = path.relative(fsPath(flutterWebHelloWorldFolder), fsPath(flutterWebTestMainFile));
+		const relativePath = path.relative(fsPath(webHelloWorldFolder), fsPath(webTestMainFile));
 		const config = await startDebugger(`\${workspaceFolder}/${relativePath}`);
 		await Promise.all([
 			dc.configurationSequence(),
@@ -78,8 +78,8 @@ describe.skip("flutter for web test debugger", () => {
 	});
 
 	it("successfully runs a Flutter test script with a relative path", async () => {
-		const config = await startDebugger(flutterWebTestMainFile);
-		config.program = path.relative(fsPath(flutterWebHelloWorldFolder), fsPath(flutterWebTestMainFile));
+		const config = await startDebugger(webTestMainFile);
+		config.program = path.relative(fsPath(webHelloWorldFolder), fsPath(webTestMainFile));
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutputContains("stdout", `✓ Hello world test`),
@@ -90,8 +90,8 @@ describe.skip("flutter for web test debugger", () => {
 	});
 
 	it("runs the provided script regardless of what's open", async () => {
-		await openFile(flutterWebTestMainFile);
-		const config = await startDebugger(flutterWebTestOtherFile);
+		await openFile(webTestMainFile);
+		const config = await startDebugger(webTestOtherFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutputContains("stdout", `✓ Other tests group Other test\n`),
@@ -102,7 +102,7 @@ describe.skip("flutter for web test debugger", () => {
 	});
 
 	it("runs the open script if no file is provided", async () => {
-		await openFile(flutterWebTestOtherFile);
+		await openFile(webTestOtherFile);
 		const config = await startDebugger(undefined);
 		await Promise.all([
 			dc.configurationSequence(),
@@ -114,7 +114,7 @@ describe.skip("flutter for web test debugger", () => {
 	});
 
 	it("runs the open script if program is set to ${file}", async () => {
-		await openFile(flutterWebTestOtherFile);
+		await openFile(webTestOtherFile);
 		const config = await startDebugger("${file}");
 		await Promise.all([
 			dc.configurationSequence(),
@@ -140,17 +140,17 @@ describe.skip("flutter for web test debugger", () => {
 	});
 
 	it("stops at a breakpoint", async () => {
-		await openFile(flutterWebTestMainFile);
-		const config = await startDebugger(flutterWebTestMainFile);
+		await openFile(webTestMainFile);
+		const config = await startDebugger(webTestMainFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: fsPath(flutterWebTestMainFile),
+			path: fsPath(webTestMainFile),
 		});
 	});
 
 	it("stops on exception", async () => {
-		await openFile(flutterWebTestBrokenFile);
-		const config = await startDebugger(flutterWebTestBrokenFile);
+		await openFile(webTestBrokenFile);
+		const config = await startDebugger(webTestBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {}),
@@ -161,21 +161,21 @@ describe.skip("flutter for web test debugger", () => {
 	it.skip("stops at the correct location on exception", async () => {
 		// TODO: Check the expected location is in the call stack, and that the frames above it are all marked
 		// as deemphasized.
-		await openFile(flutterWebTestBrokenFile);
-		const config = await startDebugger(flutterWebTestBrokenFile);
+		await openFile(webTestBrokenFile);
+		const config = await startDebugger(webTestBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(flutterWebTestBrokenFile),
+				path: fsPath(webTestBrokenFile),
 			}),
 			dc.launch(config),
 		]);
 	});
 
 	it("provides exception details when stopped on exception", async () => {
-		await openFile(flutterWebTestBrokenFile);
-		const config = await startDebugger(flutterWebTestBrokenFile);
+		await openFile(webTestBrokenFile);
+		const config = await startDebugger(webTestBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {}),
@@ -192,8 +192,8 @@ describe.skip("flutter for web test debugger", () => {
 	});
 
 	it("send failure results for failing tests", async () => {
-		await openFile(flutterWebTestBrokenFile);
-		const config = await startDebugger(flutterWebTestBrokenFile);
+		await openFile(webTestBrokenFile);
+		const config = await startDebugger(webTestBrokenFile);
 		config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),

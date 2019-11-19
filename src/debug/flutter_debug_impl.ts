@@ -8,8 +8,8 @@ import { grey, grey2 } from "../shared/utils/colors";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
-import { FlutterRunBase, RunMode } from "./flutter_run_base";
 import { DebugAdapterLogger } from "./logging";
+import { RunDaemonBase, RunMode } from "./run_daemon_base";
 import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments } from "./utils";
 
 const objectGroupName = "my-group";
@@ -17,7 +17,7 @@ const flutterExceptionStartBannerPrefix = "══╡ EXCEPTION CAUGHT BY";
 const flutterExceptionEndBannerPrefix = "══════════════════════════════════════════";
 
 export class FlutterDebugSession extends DartDebugSession {
-	private flutter?: FlutterRunBase;
+	private runDaemon?: RunDaemonBase;
 	public flutterTrackWidgetCreation = false;
 	private currentRunningAppId?: string;
 	private appHasStarted = false;
@@ -85,35 +85,35 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.allowTerminatingObservatoryVmPid = args.deviceId === "flutter-tester" && !isAttach;
 
 		const logger = new DebugAdapterLogger(this, this.logCategory);
-		this.flutter = this.spawnRunDaemon(isAttach, args, logger);
-		this.flutter.registerForUnhandledMessages((msg) => this.handleLogOutput(msg));
+		this.runDaemon = this.spawnRunDaemon(isAttach, args, logger);
+		this.runDaemon.registerForUnhandledMessages((msg) => this.handleLogOutput(msg));
 
 		// Set up subscriptions.
-		this.flutter.registerForDaemonConnect((n) => this.additionalPidsToTerminate.push(n.pid));
-		this.flutter.registerForAppStart((n) => this.currentRunningAppId = n.appId);
-		this.flutter.registerForAppDebugPort((n) => {
+		this.runDaemon.registerForDaemonConnect((n) => this.additionalPidsToTerminate.push(n.pid));
+		this.runDaemon.registerForAppStart((n) => this.currentRunningAppId = n.appId);
+		this.runDaemon.registerForAppDebugPort((n) => {
 			this.observatoryUri = n.wsUri;
 			this.connectToObservatoryIfReady();
 		});
-		this.flutter.registerForAppStarted((n) => {
+		this.runDaemon.registerForAppStarted((n) => {
 			this.appHasStarted = true;
 			this.connectToObservatoryIfReady();
 			this.sendEvent(new Event("dart.launched"));
 		});
-		this.flutter.registerForAppStop((n) => {
+		this.runDaemon.registerForAppStop((n) => {
 			this.currentRunningAppId = undefined;
-			if (this.flutter) {
-				this.flutter.dispose();
-				this.flutter = undefined;
+			if (this.runDaemon) {
+				this.runDaemon.dispose();
+				this.runDaemon = undefined;
 			}
 		});
-		this.flutter.registerForAppProgress((e) => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished, progressID: e.progressId || e.id })));
+		this.runDaemon.registerForAppProgress((e) => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished, progressID: e.progressId || e.id })));
 		// TODO: Should this use logToUser?
-		this.flutter.registerForError((err) => this.sendEvent(new OutputEvent(`${err}\n`, "stderr")));
-		this.flutter.registerForDaemonLog((msg) => this.handleLogOutput(msg.log, msg.error));
-		this.flutter.registerForAppLog((msg) => this.handleLogOutput(msg.log, msg.error));
+		this.runDaemon.registerForError((err) => this.sendEvent(new OutputEvent(`${err}\n`, "stderr")));
+		this.runDaemon.registerForDaemonLog((msg) => this.handleLogOutput(msg.log, msg.error));
+		this.runDaemon.registerForAppLog((msg) => this.handleLogOutput(msg.log, msg.error));
 
-		return this.flutter.process;
+		return this.runDaemon.process;
 	}
 
 	private handleLogOutput(msg: string, forceErrorCategory = false) {
@@ -131,7 +131,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 	}
 
-	protected spawnRunDaemon(isAttach: boolean, args: FlutterLaunchRequestArguments, logger: Logger): FlutterRunBase {
+	protected spawnRunDaemon(isAttach: boolean, args: FlutterLaunchRequestArguments, logger: Logger): RunDaemonBase {
 		let appArgs = [];
 		if (!isAttach || args.program) {
 			appArgs.push("--target");
@@ -197,13 +197,13 @@ export class FlutterDebugSession extends DartDebugSession {
 		if (!this.appHasBeenToldToStopOrDetach) {
 			this.appHasBeenToldToStopOrDetach = true;
 			try {
-				if (this.currentRunningAppId && this.appHasStarted && !this.processExited && this.flutter) {
+				if (this.currentRunningAppId && this.appHasStarted && !this.processExited && this.runDaemon) {
 					// Request to quit/detach, but don't await it since we sometimes
 					// don't get responses before the process quits.
-					if (this.flutter.mode === RunMode.Run)
-						this.flutter.stop(this.currentRunningAppId);
+					if (this.runDaemon.mode === RunMode.Run)
+						this.runDaemon.stop(this.currentRunningAppId);
 					else
-						this.flutter.detach(this.currentRunningAppId);
+						this.runDaemon.detach(this.currentRunningAppId);
 
 					// Now wait for the process to terminate up to 3s.
 					await Promise.race([
@@ -229,7 +229,7 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	private async performReload(hotRestart: boolean, reason: string): Promise<any> {
-		if (!this.appHasStarted || !this.currentRunningAppId || !this.flutter)
+		if (!this.appHasStarted || !this.currentRunningAppId || !this.runDaemon)
 			return;
 
 		if (this.isReloadInProgress) {
@@ -239,7 +239,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.isReloadInProgress = true;
 		const restartType = hotRestart ? "hot-restart" : "hot-reload";
 		try {
-			await this.flutter.restart(this.currentRunningAppId, !this.noDebug, hotRestart, reason);
+			await this.runDaemon.restart(this.currentRunningAppId, !this.noDebug, hotRestart, reason);
 			this.requestCoverageUpdate(restartType);
 		} catch (e) {
 			this.sendEvent(new OutputEvent(`Error running ${restartType}: ${e}\n`, "stderr"));
@@ -252,22 +252,22 @@ export class FlutterDebugSession extends DartDebugSession {
 		try {
 			switch (request) {
 				case "serviceExtension":
-					if (this.currentRunningAppId && this.flutter)
-						await this.flutter.callServiceExtension(this.currentRunningAppId, args.type, args.params);
+					if (this.currentRunningAppId && this.runDaemon)
+						await this.runDaemon.callServiceExtension(this.currentRunningAppId, args.type, args.params);
 					this.sendResponse(response);
 					break;
 
 				case "checkPlatformOverride":
-					if (this.currentRunningAppId && this.flutter) {
-						const result = await this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", undefined);
+					if (this.currentRunningAppId && this.runDaemon) {
+						const result = await this.runDaemon.callServiceExtension(this.currentRunningAppId, "ext.flutter.platformOverride", undefined);
 						this.sendEvent(new Event("dart.flutter.updatePlatformOverride", { platform: result.value }));
 					}
 					this.sendResponse(response);
 					break;
 
 				case "checkIsWidgetCreationTracked":
-					if (this.currentRunningAppId && this.flutter) {
-						const result = await this.flutter.callServiceExtension(this.currentRunningAppId, "ext.flutter.inspector.isWidgetCreationTracked", undefined);
+					if (this.currentRunningAppId && this.runDaemon) {
+						const result = await this.runDaemon.callServiceExtension(this.currentRunningAppId, "ext.flutter.inspector.isWidgetCreationTracked", undefined);
 						this.sendEvent(new Event("dart.flutter.updateIsWidgetCreationTracked", { isWidgetCreationTracked: result.result }));
 					}
 					this.sendResponse(response);
@@ -295,10 +295,10 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	protected async handleInspectEvent(event: VMEvent): Promise<void> {
-		if (!this.flutter || !this.currentRunningAppId)
+		if (!this.runDaemon || !this.currentRunningAppId)
 			return;
 
-		const selectedWidget = await this.flutter.callServiceExtension(
+		const selectedWidget = await this.runDaemon.callServiceExtension(
 			this.currentRunningAppId,
 			"ext.flutter.inspector.getSelectedSummaryWidget",
 			{ previousSelectionId: null, objectGroup: objectGroupName },
@@ -311,7 +311,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			this.sendEvent(new Event("dart.navigate", { file, line, column }));
 		}
 		// console.log(JSON.stringify(selectedWidget));
-		await this.flutter.callServiceExtension(
+		await this.runDaemon.callServiceExtension(
 			this.currentRunningAppId,
 			"ext.flutter.inspector.disposeGroup",
 			{ objectGroup: objectGroupName },
@@ -424,11 +424,11 @@ export class FlutterDebugSession extends DartDebugSession {
 	public handleServiceExtensionAdded(event: VMEvent) {
 		super.handleServiceExtensionAdded(event);
 
-		if (!this.flutter || !this.currentRunningAppId)
+		if (!this.runDaemon || !this.currentRunningAppId)
 			return;
 
 		if (event.extensionRPC === FlutterServiceExtension.InspectorStructuredErrors && this.useFlutterStructuredErrors) {
-			this.flutter.callServiceExtension(this.currentRunningAppId, event.extensionRPC, { enabled: true });
+			this.runDaemon.callServiceExtension(this.currentRunningAppId, event.extensionRPC, { enabled: true });
 		}
 	}
 }

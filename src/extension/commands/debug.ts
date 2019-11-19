@@ -285,7 +285,7 @@ export class DebugCommands {
 		// the session type, since the debug toolbar does not allow us to dynamically update
 		// when we see the extension load.
 		// https://github.com/microsoft/vscode/issues/69398
-		if (s.configuration.debuggerType === DebuggerType.Flutter || s.configuration.debuggerType === DebuggerType.FlutterWeb) {
+		if (s.configuration.debuggerType === DebuggerType.Flutter || s.configuration.debuggerType === DebuggerType.Web) {
 			vs.commands.executeCommand("setContext", isInDebugSessionThatSupportsHotReloadContext, true);
 			const mode: "debug" | "profile" | "release" = s.configuration.flutterMode;
 			if (mode === "debug")
@@ -460,7 +460,7 @@ export class DebugCommands {
 
 			// Open or prompt for DevTools when appropriate.
 			const debuggerType: DebuggerType = session.session.configuration.debuggerType;
-			if (debuggerType === DebuggerType.Dart || debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.FlutterWeb) {
+			if (debuggerType === DebuggerType.Dart || debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.Web) {
 				if (config.openDevTools !== "never") {
 					const shouldLaunch = debuggerType !== DebuggerType.Dart || config.openDevTools === "always";
 					if (shouldLaunch)

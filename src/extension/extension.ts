@@ -95,7 +95,7 @@ const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 // Reload) and some are more specific (eg. Attach).
 const FLUTTER_PROJECT_LOADED = "dart-code:anyFlutterProjectLoaded";
 const FLUTTER_MOBILE_PROJECT_LOADED = "dart-code:flutterMobileProjectLoaded";
-const FLUTTER_WEB_PROJECT_LOADED = "dart-code:flutterWebProjectLoaded";
+const WEB_PROJECT_LOADED = "dart-code:WebProjectLoaded";
 export const FLUTTER_SUPPORTS_ATTACH = "dart-code:flutterSupportsAttach";
 const DART_PLATFORM_NAME = "dart-code:dartPlatformName";
 export const SERVICE_EXTENSION_CONTEXT_PREFIX = "dart-code:serviceExtension.";
@@ -270,7 +270,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Snippets are language-specific
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));
-	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => util.isInsideFlutterProject(uri) || util.isInsideFlutterWebProject(uri))));
+	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => util.isInsideFlutterProject(uri))));
 
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE.language, new DartLanguageConfiguration()));
 	const statusReporter = new AnalyzerStatusReporter(logger, dasClient, workspaceContext, analytics);
@@ -704,5 +704,5 @@ function setCommandVisiblity(enable: boolean, workspaceContext?: WorkspaceContex
 	// TODO: Make this more specific. Maybe the one above?
 	vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyFlutterProjects);
 	vs.commands.executeCommand("setContext", FLUTTER_MOBILE_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyFlutterMobileProjects);
-	vs.commands.executeCommand("setContext", FLUTTER_WEB_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyFlutterWebProjects);
+	vs.commands.executeCommand("setContext", WEB_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyWebProjects);
 }

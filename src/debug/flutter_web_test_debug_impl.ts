@@ -1,9 +1,9 @@
 import { DartTestDebugSession } from "./dart_test_debug_impl";
-import { FlutterLaunchRequestArguments } from "./utils";
+import { DartLaunchRequestArguments } from "./utils";
 
-export class FlutterWebTestDebugSession extends DartTestDebugSession {
+export class WebTestDebugSession extends DartTestDebugSession {
 
-	protected spawnProcess(args: FlutterLaunchRequestArguments): any {
+	protected spawnProcess(args: DartLaunchRequestArguments): any {
 		// TODO: This!
 	}
 }

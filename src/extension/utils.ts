@@ -10,15 +10,15 @@ import { hasPubspec, mkDirRecursive } from "../shared/utils/fs";
 import { fsPath, isDartWorkspaceFolder } from "../shared/vscode/utils";
 import { config } from "./config";
 import { locateBestProjectRoot } from "./project";
-import { referencesFlutterSdk, referencesFlutterWeb } from "./sdk/utils";
+import { referencesFlutterSdk } from "./sdk/utils";
 import { getExtensionLogPath } from "./utils/log";
 
 export function isFlutterWorkspaceFolder(folder?: WorkspaceFolder): boolean {
 	return !!(folder && isDartWorkspaceFolder(folder) && isFlutterProjectFolder(fsPath(folder.uri)));
 }
 
-export function isFlutterWebWorkspaceFolder(folder?: WorkspaceFolder): boolean {
-	return !!(folder && isDartWorkspaceFolder(folder) && isFlutterWebProjectFolder(fsPath(folder.uri)));
+export function isWebWorkspaceFolder(folder?: WorkspaceFolder): boolean {
+	return !!(folder && isDartWorkspaceFolder(folder) && isWebProjectFolder(fsPath(folder.uri)));
 }
 
 export function isInsideFlutterProject(uri?: Uri): boolean {
@@ -32,23 +32,25 @@ export function isInsideFlutterProject(uri?: Uri): boolean {
 		return isFlutterWorkspaceFolder(workspace.getWorkspaceFolder(uri));
 }
 
-export function isInsideFlutterWebProject(uri?: Uri): boolean {
+export function isInsideWebProject(uri?: Uri): boolean {
 	if (!uri)
 		return false;
 
 	const projectRoot = locateBestProjectRoot(fsPath(uri));
 	if (projectRoot)
-		return isFlutterWebProjectFolder(projectRoot);
+		return isWebProjectFolder(projectRoot);
 	else
-		return isFlutterWebWorkspaceFolder(workspace.getWorkspaceFolder(uri));
+		return isWebWorkspaceFolder(workspace.getWorkspaceFolder(uri));
 }
 
 export function isFlutterProjectFolder(folder?: string): boolean {
 	return referencesFlutterSdk(folder);
 }
 
-export function isFlutterWebProjectFolder(folder?: string): boolean {
-	return referencesFlutterWeb(folder);
+export function isWebProjectFolder(folder?: string): boolean {
+	return false;
+	// Fix this up to detect non-Flutter web projects.
+	// return referencesFlutterWeb(folder);
 }
 
 export function resolvePaths<T extends string | undefined>(p: T): string | (undefined extends T ? undefined : never) {
