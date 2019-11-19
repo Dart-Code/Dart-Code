@@ -18,6 +18,8 @@ export class DartDebugSessionInformation {
 
 const spawnedTerminalsByName: { [key: string]: vs.Terminal } = {};
 export class DartDebugSessionPseudoterminal {
+	private readonly closeCompleter = new PromiseCompleter<void>();
+	public readonly close = this.closeCompleter.promise;
 	private readonly userInputEmitter = new vs.EventEmitter<string>();
 	public readonly userInput = this.userInputEmitter.event;
 	private readonly emitter = new vs.EventEmitter<string>();
@@ -27,7 +29,7 @@ export class DartDebugSessionPseudoterminal {
 
 	constructor(public readonly terminalName: string) {
 		this.pseudoterminal = {
-			close: () => { },  // TODO: End debug session!
+			close: () => this.closeCompleter.resolve(),
 			handleInput: (data) => {
 				if (!this.isRunning)
 					return;
