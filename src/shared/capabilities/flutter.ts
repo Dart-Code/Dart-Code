@@ -19,6 +19,9 @@ export class FlutterCapabilities {
 	get supportsFlutterCreateListSamples() { return versionIsAtLeast(this.version, "1.3.10"); }
 	// TODO: Figure this out.
 	get webSupportsDebugging() { return false; }
+	// TODO: Fix these versions.
+	get supportsForceWsVmService() { return versionIsAtLeast(this.version, "1.12.4"); }
+	get supportsExposeUrl() { return versionIsAtLeast(this.version, "1.12.4"); }
 }
 
 export class DaemonCapabilities {

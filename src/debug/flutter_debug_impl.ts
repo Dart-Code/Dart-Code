@@ -177,6 +177,11 @@ export class FlutterDebugSession extends DartDebugSession {
 					appArgs.push("--observatory-port");
 					appArgs.push(args.vmServicePort.toString());
 				}
+
+				if (args.supportsForceWsVmService)
+					appArgs.push("--web-force-ws");
+				if (args.supportsExposeUrl)
+					appArgs.push("--web-allow-expose-url");
 			}
 		}
 
