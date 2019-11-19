@@ -93,16 +93,16 @@ for (const deviceId of ["flutter-tester", "chrome"]) {
 				dc.launch(config),
 			]);
 
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === true);
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === true);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(FlutterService.HotRestart) === true);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(FlutterService.HotReload) === true);
 
 			await Promise.all([
 				dc.waitForEvent("terminated"),
 				dc.terminateRequest(),
 			]);
 
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === false);
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === false);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(FlutterService.HotRestart) === false);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(FlutterService.HotReload) === false);
 		});
 
 		it("expected debugger services are available in noDebug mode", async () => {
@@ -113,16 +113,16 @@ for (const deviceId of ["flutter-tester", "chrome"]) {
 				dc.launch(config),
 			]);
 
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === true);
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === true);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(FlutterService.HotRestart) === true);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(FlutterService.HotReload) === true);
 
 			await Promise.all([
 				dc.waitForEvent("terminated"),
 				dc.terminateRequest(),
 			]);
 
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === false);
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === false);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(FlutterService.HotRestart) === false);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(FlutterService.HotReload) === false);
 		});
 
 		it("expected debugger service extensions are available in debug mode", async () => {
@@ -132,16 +132,16 @@ for (const deviceId of ["flutter-tester", "chrome"]) {
 				dc.launch(config),
 			]);
 
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === true);
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === true);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === true);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === true);
 
 			await Promise.all([
 				dc.waitForEvent("terminated"),
 				dc.terminateRequest(),
 			]);
 
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === false);
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === false);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === false);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === false);
 		});
 
 		it("expected debugger service extensions are available in noDebug mode", async () => {
@@ -152,16 +152,16 @@ for (const deviceId of ["flutter-tester", "chrome"]) {
 				dc.launch(config),
 			]);
 
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === true);
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === true);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === true);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === true);
 
 			await Promise.all([
 				dc.waitForEvent("terminated"),
 				dc.terminateRequest(),
 			]);
 
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === false);
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === false);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === false);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === false);
 		});
 
 		it("can quit during a build", async function () {
@@ -1254,7 +1254,7 @@ for (const deviceId of ["flutter-tester", "chrome"]) {
 				dc.launch(config),
 			]);
 
-			await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.InspectorStructuredErrors) === true);
+			await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.InspectorStructuredErrors) === true);
 
 			// Allow the initial error to be printed before we start collecting stderr.
 			await delay(500);

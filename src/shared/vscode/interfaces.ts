@@ -7,7 +7,7 @@ import { WorkspaceContext } from "../workspace";
 import { Context } from "./workspace";
 
 export interface DebugCommandHandler {
-	flutterExtensions: {
+	vmServices: {
 		serviceIsRegistered(service: FlutterService): boolean;
 		serviceExtensionIsLoaded(extension: FlutterServiceExtension): boolean;
 	};
