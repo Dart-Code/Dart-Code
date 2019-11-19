@@ -351,9 +351,9 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.updateNode(testNode.parent);
 		this.updateAllStatuses(suite);
 
-		if (testNode.status === TestStatus.Failed && TestResultsProvider.nextFailureIsFirst) {
+		if ((testNode.status === TestStatus.Failed || testNode.status === TestStatus.Errored) && TestResultsProvider.nextFailureIsFirst) {
 			TestResultsProvider.nextFailureIsFirst = false;
-			this.onFirstFailureEmitter.fire(suite.node);
+			this.onFirstFailureEmitter.fire(testNode);
 		}
 	}
 
