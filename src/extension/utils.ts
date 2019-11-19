@@ -17,10 +17,6 @@ export function isFlutterWorkspaceFolder(folder?: WorkspaceFolder): boolean {
 	return !!(folder && isDartWorkspaceFolder(folder) && isFlutterProjectFolder(fsPath(folder.uri)));
 }
 
-export function isWebWorkspaceFolder(folder?: WorkspaceFolder): boolean {
-	return !!(folder && isDartWorkspaceFolder(folder) && isWebProjectFolder(fsPath(folder.uri)));
-}
-
 export function isInsideFlutterProject(uri?: Uri): boolean {
 	if (!uri)
 		return false;
@@ -32,25 +28,8 @@ export function isInsideFlutterProject(uri?: Uri): boolean {
 		return isFlutterWorkspaceFolder(workspace.getWorkspaceFolder(uri));
 }
 
-export function isInsideWebProject(uri?: Uri): boolean {
-	if (!uri)
-		return false;
-
-	const projectRoot = locateBestProjectRoot(fsPath(uri));
-	if (projectRoot)
-		return isWebProjectFolder(projectRoot);
-	else
-		return isWebWorkspaceFolder(workspace.getWorkspaceFolder(uri));
-}
-
 export function isFlutterProjectFolder(folder?: string): boolean {
 	return referencesFlutterSdk(folder);
-}
-
-export function isWebProjectFolder(folder?: string): boolean {
-	return false;
-	// Fix this up to detect non-Flutter web projects.
-	// return referencesFlutterWeb(folder);
 }
 
 export function resolvePaths<T extends string | undefined>(p: T): string | (undefined extends T ? undefined : never) {

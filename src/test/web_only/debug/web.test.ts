@@ -5,13 +5,13 @@ import { FlutterService, FlutterServiceExtension } from "../../../shared/enums";
 import { fetch } from "../../../shared/fetch";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
-import { ensureVariable, killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise, webBrokenMainFile, webHelloWorldExampleSubFolderMainFile, webHelloWorldFolder, webHelloWorldMainFile } from "../../helpers";
+import { ensureVariable } from "../../debug_helpers";
+import { activate, defer, delay, ext, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise, webBrokenIndexFile, webHelloWorldExampleSubFolderIndexFile, webHelloWorldFolder, webHelloWorldIndexFile } from "../../helpers";
 
 describe("web debugger", () => {
-	beforeEach("activate webHelloWorldMainFile", () => activate(webHelloWorldMainFile));
-	before("get packages (0)", () => getPackages(webHelloWorldMainFile));
-	before("get packages (1)", () => getPackages(webBrokenMainFile));
+	beforeEach("activate webHelloWorldIndexFile", () => activate(webHelloWorldIndexFile));
+	before("get packages (0)", () => getPackages(webHelloWorldIndexFile));
+	before("get packages (1)", () => getPackages(webBrokenIndexFile));
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
@@ -21,12 +21,9 @@ describe("web debugger", () => {
 		defer(() => thisDc.stop());
 	});
 
-	afterEach(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
-
 	async function startDebugger(script?: vs.Uri | string, cwd?: string): Promise<vs.DebugConfiguration> {
 		const config = await getLaunchConfiguration(script, {
 			cwd,
-			deviceId: "flutter-tester",
 		});
 		if (!config)
 			throw new Error(`Could not get launch configuration (got ${config})`);
@@ -34,8 +31,8 @@ describe("web debugger", () => {
 		return config;
 	}
 
-	it("runs a Flutter web application and remains active until told to quit", async () => {
-		const config = await startDebugger(webHelloWorldMainFile);
+	it("runs a web application and remains active until told to quit", async () => {
+		const config = await startDebugger(webHelloWorldIndexFile);
 		await Promise.all([
 			dc.assertOutputContains("stdout", "Serving `web` on http://127.0.0.1:"),
 			dc.configurationSequence(),
@@ -53,7 +50,7 @@ describe("web debugger", () => {
 	});
 
 	it("expected debugger services are available in debug mode", async () => {
-		const config = await startDebugger(webHelloWorldMainFile);
+		const config = await startDebugger(webHelloWorldIndexFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -72,7 +69,7 @@ describe("web debugger", () => {
 	});
 
 	it("expected debugger services are available in noDebug mode", async () => {
-		const config = await startDebugger(webHelloWorldMainFile);
+		const config = await startDebugger(webHelloWorldIndexFile);
 		config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
@@ -92,7 +89,7 @@ describe("web debugger", () => {
 	});
 
 	it("expected debugger service extensions are available in debug mode", async () => {
-		const config = await startDebugger(webHelloWorldMainFile);
+		const config = await startDebugger(webHelloWorldIndexFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -111,7 +108,7 @@ describe("web debugger", () => {
 	});
 
 	it("expected debugger service extensions are available in noDebug mode", async () => {
-		const config = await startDebugger(webHelloWorldMainFile);
+		const config = await startDebugger(webHelloWorldIndexFile);
 		config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
@@ -133,7 +130,7 @@ describe("web debugger", () => {
 	// Skipped because this is super-flaky. If we quit to early, the processes are not
 	// cleaned up properly. This should be fixed when we move to the un-forked version.
 	it.skip("can quit during a build", async () => {
-		const config = await startDebugger(webHelloWorldMainFile);
+		const config = await startDebugger(webHelloWorldIndexFile);
 		// Kick off a build, but do not await it...
 		Promise.all([
 			dc.configurationSequence(),
@@ -153,9 +150,9 @@ describe("web debugger", () => {
 		]);
 	});
 
-	it("runs a Flutter web application with a relative path", async () => {
-		const config = await startDebugger(webHelloWorldMainFile);
-		config.program = path.relative(fsPath(webHelloWorldFolder), fsPath(webHelloWorldMainFile));
+	it("runs a web application with a relative path", async () => {
+		const config = await startDebugger(webHelloWorldIndexFile);
+		config.program = path.relative(fsPath(webHelloWorldFolder), fsPath(webHelloWorldIndexFile));
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -171,9 +168,9 @@ describe("web debugger", () => {
 		]);
 	}).timeout(90000); // The 10 second delay makes this test slower and sometimes hit 60s.
 
-	it("runs a Flutter web application with a variable in cwd", async () => {
-		const config = await startDebugger(webHelloWorldMainFile, "${workspaceFolder}/hello_world/");
-		config.program = path.relative(fsPath(webHelloWorldFolder), fsPath(webHelloWorldMainFile));
+	it("runs a web application with a variable in cwd", async () => {
+		const config = await startDebugger(webHelloWorldIndexFile, "${workspaceFolder}/hello_world/");
+		config.program = path.relative(fsPath(webHelloWorldFolder), fsPath(webHelloWorldIndexFile));
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -190,7 +187,7 @@ describe("web debugger", () => {
 	});
 
 	it.skip("hot reloads successfully", async () => {
-		const config = await startDebugger(webHelloWorldMainFile);
+		const config = await startDebugger(webHelloWorldIndexFile);
 		await Promise.all([
 			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
 			watchPromise("hot_reloads_successfully->launch", dc.launch(config)),
@@ -209,7 +206,7 @@ describe("web debugger", () => {
 	});
 
 	it("hot restarts successfully", async () => {
-		const config = await startDebugger(webHelloWorldMainFile);
+		const config = await startDebugger(webHelloWorldIndexFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -234,7 +231,7 @@ describe("web debugger", () => {
 	});
 
 	it.skip("runs projects in sub-folders when the open file is in a project sub-folder", async () => {
-		await openFile(webHelloWorldExampleSubFolderMainFile);
+		await openFile(webHelloWorldExampleSubFolderIndexFile);
 		const config = await startDebugger();
 		await Promise.all([
 			dc.configurationSequence(),
@@ -285,14 +282,14 @@ describe("web debugger", () => {
 	});
 
 	it("can launch DevTools", async function () {
-		if (!extApi.flutterCapabilities.supportsDevTools) {
+		if (!extApi.dartCapabilities.supportsDevTools) {
 			this.skip();
 			return;
 		}
 
 		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
 
-		const config = await startDebugger(webHelloWorldMainFile);
+		const config = await startDebugger(webHelloWorldIndexFile);
 		await Promise.all([
 			watchPromise("launchDevTools->start->configurationSequence", dc.configurationSequence()),
 			watchPromise("launchDevTools->start->launch", dc.launch(config)),
@@ -320,17 +317,12 @@ describe("web debugger", () => {
 				? ""
 				: ` after ${numReloads} reload${numReloads === 1 ? "" : "s"}`;
 
-		it("stops at a breakpoint" + reloadDescription, async function () {
-			if (!extApi.flutterCapabilities.webSupportsDebugging) {
-				this.skip();
-				return;
-			}
-
-			await openFile(webHelloWorldMainFile);
-			const config = await startDebugger(webHelloWorldMainFile);
+		it("stops at a breakpoint" + reloadDescription, async () => {
+			await openFile(webHelloWorldIndexFile);
+			const config = await startDebugger(webHelloWorldIndexFile);
 			const expectedLocation = {
 				line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-				path: fsPath(webHelloWorldMainFile),
+				path: fsPath(webHelloWorldIndexFile),
 			};
 			await watchPromise("stops_at_a_breakpoint->hitBreakpoint", dc.hitBreakpoint(config, expectedLocation));
 			const stack = await dc.getStack();
@@ -346,7 +338,7 @@ describe("web debugger", () => {
 			// We need to also include expectedLocation since this overwrites all BPs.
 			await dc.setBreakpointsRequest({
 				breakpoints: [{ line: 0 }, expectedLocation],
-				source: { path: fsPath(webHelloWorldMainFile) },
+				source: { path: fsPath(webHelloWorldIndexFile) },
 			});
 
 			// Reload and ensure we hit the breakpoint on each one.
@@ -370,17 +362,17 @@ describe("web debugger", () => {
 
 	describe("can evaluate at breakpoint", () => {
 		it("simple expressions", async function () {
-			if (!extApi.flutterCapabilities.webSupportsDebugging) {
+			if (!extApi.dartCapabilities.webSupportsEvaluation) {
 				this.skip();
 				return;
 			}
 
-			await openFile(webHelloWorldMainFile);
-			const config = await startDebugger(webHelloWorldMainFile);
+			await openFile(webHelloWorldIndexFile);
+			const config = await startDebugger(webHelloWorldIndexFile);
 			await Promise.all([
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-					path: fsPath(webHelloWorldMainFile),
+					path: fsPath(webHelloWorldIndexFile),
 				}),
 			]);
 
@@ -391,17 +383,17 @@ describe("web debugger", () => {
 		});
 
 		it("complex expression expressions", async function () {
-			if (!extApi.flutterCapabilities.webSupportsDebugging) {
+			if (!extApi.dartCapabilities.webSupportsEvaluation) {
 				this.skip();
 				return;
 			}
 
-			await openFile(webHelloWorldMainFile);
-			const config = await startDebugger(webHelloWorldMainFile);
+			await openFile(webHelloWorldIndexFile);
+			const config = await startDebugger(webHelloWorldIndexFile);
 			await Promise.all([
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-					path: fsPath(webHelloWorldMainFile),
+					path: fsPath(webHelloWorldIndexFile),
 				}),
 			]);
 
@@ -412,17 +404,17 @@ describe("web debugger", () => {
 		});
 
 		it("an expression that returns a variable", async function () {
-			if (!extApi.flutterCapabilities.webSupportsDebugging) {
+			if (!extApi.dartCapabilities.webSupportsEvaluation) {
 				this.skip();
 				return;
 			}
 
-			await openFile(webHelloWorldMainFile);
-			const config = await startDebugger(webHelloWorldMainFile);
+			await openFile(webHelloWorldIndexFile);
+			const config = await startDebugger(webHelloWorldIndexFile);
 			await Promise.all([
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-					path: fsPath(webHelloWorldMainFile),
+					path: fsPath(webHelloWorldIndexFile),
 				}),
 			]);
 
@@ -434,17 +426,17 @@ describe("web debugger", () => {
 		});
 
 		it("complex expression expressions when in a top level function", async function () {
-			if (!extApi.flutterCapabilities.webSupportsDebugging) {
+			if (!extApi.dartCapabilities.webSupportsEvaluation) {
 				this.skip();
 				return;
 			}
 
-			await openFile(webHelloWorldMainFile);
-			const config = await startDebugger(webHelloWorldMainFile);
+			await openFile(webHelloWorldIndexFile);
+			const config = await startDebugger(webHelloWorldIndexFile);
 			await Promise.all([
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT2").line,
-					path: fsPath(webHelloWorldMainFile),
+					path: fsPath(webHelloWorldIndexFile),
 				}),
 			]);
 
@@ -457,37 +449,31 @@ describe("web debugger", () => {
 
 	// Skipped due to https://github.com/flutter/flutter/issues/17007.
 	it.skip("stops on exception", async function () {
-		if (!extApi.flutterCapabilities.webSupportsDebugging) {
+		if (!extApi.dartCapabilities.webSupportsEvaluation) {
 			this.skip();
 			return;
 		}
 
-		await openFile(webBrokenMainFile);
-		const config = await startDebugger(webBrokenMainFile);
+		await openFile(webBrokenIndexFile);
+		const config = await startDebugger(webBrokenIndexFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^Oops").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(webBrokenMainFile),
+				path: fsPath(webBrokenIndexFile),
 			}),
 			dc.launch(config),
 		]);
 	});
 
-	// Skipped due to https://github.com/flutter/flutter/issues/17007.
-	it.skip("provides exception details when stopped on exception", async function () {
-		if (!extApi.flutterCapabilities.webSupportsDebugging) {
-			this.skip();
-			return;
-		}
-
-		await openFile(webBrokenMainFile);
-		const config = await startDebugger(webBrokenMainFile);
+	it("provides exception details when stopped on exception", async () => {
+		await openFile(webBrokenIndexFile);
+		const config = await startDebugger(webBrokenIndexFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(webBrokenMainFile),
+				path: fsPath(webBrokenIndexFile),
 			}),
 			dc.launch(config),
 		]);
@@ -497,13 +483,13 @@ describe("web debugger", () => {
 	});
 
 	it("logs expected text (and does not stop) at a logpoint", async function () {
-		if (!extApi.flutterCapabilities.webSupportsDebugging) {
+		if (!extApi.dartCapabilities.webSupportsEvaluation) {
 			this.skip();
 			return;
 		}
 
-		await openFile(webHelloWorldMainFile);
-		const config = await watchPromise("logs_expected_text->startDebugger", startDebugger(webHelloWorldMainFile));
+		await openFile(webHelloWorldIndexFile);
+		const config = await watchPromise("logs_expected_text->startDebugger", startDebugger(webHelloWorldIndexFile));
 		await Promise.all([
 			watchPromise("logs_expected_text->waitForEvent:initialized", dc.waitForEvent("initialized"))
 				.then((event) => {
@@ -514,7 +500,7 @@ describe("web debugger", () => {
 							// we have examples of both (as well as "escaped" brackets).
 							logMessage: "The \\{year} is {(new DateTime.now()).year}",
 						}],
-						source: { path: fsPath(webHelloWorldMainFile) },
+						source: { path: fsPath(webHelloWorldIndexFile) },
 					}));
 				}).then((response) => watchPromise("logs_expected_text->configurationDoneRequest", dc.configurationDoneRequest())),
 			watchPromise("logs_expected_text->assertOutputContainsYear", dc.assertOutputContains("stdout", `The {year} is ${(new Date()).getFullYear()}\n`)),
@@ -525,8 +511,8 @@ describe("web debugger", () => {
 	it("writes failure output", async () => {
 		// This test really wants to check stderr, but since the widgets library catches the exception is
 		// just comes via stdout.
-		await openFile(webBrokenMainFile);
-		const config = await startDebugger(webBrokenMainFile);
+		await openFile(webBrokenIndexFile);
+		const config = await startDebugger(webBrokenIndexFile);
 		await Promise.all([
 			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
 			watchPromise("writes_failure_output->assertOutputContains", dc.assertOutputContains("stderr", "Exception: Oops\n")),
@@ -536,8 +522,8 @@ describe("web debugger", () => {
 
 	// Skipped due to https://github.com/dart-lang/webdev/issues/379
 	it.skip("moves known files from call stacks to metadata", async () => {
-		await openFile(webBrokenMainFile);
-		const config = await startDebugger(webBrokenMainFile);
+		await openFile(webBrokenIndexFile);
+		const config = await startDebugger(webBrokenIndexFile);
 		await Promise.all([
 			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
 			watchPromise(
@@ -546,7 +532,7 @@ describe("web debugger", () => {
 					.then((event) => {
 						assert.equal(event.body.output.indexOf("package:broken/main.dart"), -1);
 						assert.equal(event.body.source!.name, "package:broken/main.dart");
-						assert.equal(event.body.source!.path, fsPath(webBrokenMainFile));
+						assert.equal(event.body.source!.path, fsPath(webBrokenIndexFile));
 						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
 						assert.equal(event.body.column, 5);
 					}),
