@@ -165,14 +165,14 @@
 			]
 		},
 		{
-			"name": "Launch Tests (Flutter for web)",
+			"name": "Launch Tests (Web)",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				"${workspaceRoot}/src/test/test_projects/flutter_web",
+				"${workspaceRoot}/src/test/test_projects/web",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/src/test/flutter_web_only",
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/web_only",
 				"--user-data-dir=${workspaceRoot}/.dart_code_test_data_dir"
 			],
 			"env": {

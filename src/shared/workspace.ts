@@ -6,7 +6,7 @@ export class WorkspaceContext {
 	constructor(
 		public readonly sdks: Sdks,
 		public readonly hasAnyFlutterMobileProjects: boolean,
-		public readonly hasAnyFlutterWebProjects: boolean,
+		public readonly hasAnyWebProjects: boolean,
 		public readonly hasAnyStandardDartProjects: boolean,
 		public readonly hasProjectsInFuchsiaTree: boolean,
 		public readonly isDartSdkRepo: boolean,
@@ -16,7 +16,7 @@ export class WorkspaceContext {
 
 	get shouldAvoidFetchingPackages() { return this.hasProjectsInFuchsiaTree || this.isDartSdkRepo; }
 	get hasOnlyDartProjects() { return !this.hasAnyFlutterProjects && !this.hasProjectsInFuchsiaTree; }
-	get hasAnyFlutterProjects() { return this.hasAnyFlutterMobileProjects || this.hasAnyFlutterWebProjects; }
+	get hasAnyFlutterProjects() { return this.hasAnyFlutterMobileProjects; }
 	get shouldLoadFlutterExtension() { return this.hasAnyFlutterProjects; }
 
 	/// Used only for display (for ex stats), not behaviour.
@@ -28,8 +28,6 @@ export class WorkspaceContext {
 			types.push("Dart");
 		if (this.hasAnyFlutterMobileProjects)
 			types.push("Flutter");
-		if (this.hasAnyFlutterWebProjects)
-			types.push("Flutter Web");
 		if (this.hasProjectsInFuchsiaTree)
 			types.push("Fuchsia");
 

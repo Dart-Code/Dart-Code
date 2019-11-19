@@ -107,6 +107,7 @@ async function runAllTests(): Promise<void> {
 			await runTests("not_activated/dart_create", "empty", dartSdkPath, codeVersion);
 			await runTests("dart_create_tests", "dart_create_tests.code-workspace", dartSdkPath, codeVersion);
 			await runTests("dart_only", "hello_world", dartSdkPath, codeVersion);
+			await runTests("web_only", "web", dartSdkPath, codeVersion);
 		}
 		if (runFlutterTests) {
 			await runTests("multi_root", "projects.code-workspace", flutterSdkPath, codeVersion);
@@ -114,7 +115,6 @@ async function runAllTests(): Promise<void> {
 			await runTests("not_activated/flutter_create", "empty", flutterSdkPath, codeVersion);
 			await runTests("flutter_create_tests", "flutter_create_tests.code-workspace", flutterSdkPath, codeVersion);
 			await runTests("flutter_only", "flutter_hello_world", flutterSdkPath, codeVersion);
-			// await runTests("flutter_web_only", "flutter_web", flutterSdkPath, codeVersion);
 			if (flutterRoot) {
 				await runTests("flutter_repository", flutterRoot, flutterSdkPath, codeVersion);
 			} else {

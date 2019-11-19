@@ -72,7 +72,7 @@ export class DartDebugSession extends DebugSession {
 	protected processExit: Promise<void> = Promise.resolve();
 	protected maxLogLineLength: number = 1000; // This should always be overriden in launch/attach requests but we have it here for narrower types.
 	protected shouldKillProcessOnTerminate = true;
-	protected logCategory = LogCategory.General; // This isn't used as General, since both Flutter and FlutterWeb override it.
+	protected logCategory = LogCategory.General; // This isn't used as General, since both debuggers override it.
 	// protected observatoryUriIsProbablyReconnectable = false;
 	private readonly logger = new DebugAdapterLogger(this, LogCategory.Observatory);
 
@@ -1861,8 +1861,7 @@ export class DartDebugSession extends DebugSession {
 
 			// Colour based on whether it's framework code or not.
 			const isFramework = this.isSdkLibrary(frame.sourceUri)
-				|| (this.isExternalLibrary(frame.sourceUri) && frame.sourceUri.startsWith("package:flutter/"))
-				|| (this.isExternalLibrary(frame.sourceUri) && frame.sourceUri.startsWith("package:flutter_web/"));
+				|| (this.isExternalLibrary(frame.sourceUri) && frame.sourceUri.startsWith("package:flutter/"));
 
 			const colouredText = isFramework ? applyColor(text, grey) : applyColor(text, grey2);
 			output.body.output = `${colouredText}\n`;

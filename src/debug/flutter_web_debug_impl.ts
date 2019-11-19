@@ -1,11 +1,11 @@
 import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
 import { FlutterDebugSession } from "./flutter_debug_impl";
-import { FlutterRunBase, RunMode } from "./flutter_run_base";
-import { FlutterWebRun } from "./flutter_web_run";
+import { RunDaemonBase, RunMode } from "./run_daemon_base";
 import { FlutterLaunchRequestArguments } from "./utils";
+import { WebRun } from "./web_run";
 
-export class FlutterWebDebugSession extends FlutterDebugSession {
+export class WebDebugSession extends FlutterDebugSession {
 	constructor() {
 		super();
 
@@ -15,7 +15,7 @@ export class FlutterWebDebugSession extends FlutterDebugSession {
 		this.logCategory = LogCategory.WebDaemon;
 	}
 
-	protected spawnRunDaemon(isAttach: boolean, args: FlutterLaunchRequestArguments, logger: Logger): FlutterRunBase {
+	protected spawnRunDaemon(isAttach: boolean, args: FlutterLaunchRequestArguments, logger: Logger): RunDaemonBase {
 		let appArgs: string[] = [];
 
 		// TODO: Is any of this relevant?
@@ -42,6 +42,6 @@ export class FlutterWebDebugSession extends FlutterDebugSession {
 		}
 
 		// TODO: Attach?
-		return new FlutterWebRun(isAttach ? RunMode.Attach : RunMode.Run, args.pubPath, args.cwd, appArgs, args.env, args.webDaemonLogFile, logger, this.maxLogLineLength);
+		return new WebRun(isAttach ? RunMode.Attach : RunMode.Run, args.pubPath, args.cwd, appArgs, args.env, args.webDaemonLogFile, logger, this.maxLogLineLength);
 	}
 }

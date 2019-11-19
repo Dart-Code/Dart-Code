@@ -88,7 +88,7 @@ export class FlutterVmServiceExtensions {
 				// TODO: We should send all open workspaces (arg0, arg1, arg2) so that it
 				// works for open packages too.
 				const debuggerType: DebuggerType = e.session.configuration.debuggerType;
-				if (debuggerType !== DebuggerType.FlutterWeb) {
+				if (debuggerType !== DebuggerType.Web) {
 					e.session.customRequest(
 						"serviceExtension",
 						{
