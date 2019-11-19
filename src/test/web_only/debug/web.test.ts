@@ -56,16 +56,16 @@ describe("web debugger", () => {
 			dc.launch(config),
 		]);
 
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === false); // TODO: Make true when supported!
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === true);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(FlutterService.HotReload) === false); // TODO: Make true when supported!
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(FlutterService.HotRestart) === true);
 
 		await Promise.all([
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		]);
 
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === false);
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === false);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(FlutterService.HotReload) === false);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(FlutterService.HotRestart) === false);
 	});
 
 	it("expected debugger services are available in noDebug mode", async () => {
@@ -76,16 +76,16 @@ describe("web debugger", () => {
 			dc.launch(config),
 		]);
 
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === false); // TODO: Make true when supported!
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === true);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(FlutterService.HotReload) === false); // TODO: Make true when supported!
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(FlutterService.HotRestart) === true);
 
 		await Promise.all([
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		]);
 
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload) === false);
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart) === false);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(FlutterService.HotReload) === false);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(FlutterService.HotRestart) === false);
 	});
 
 	it("expected debugger service extensions are available in debug mode", async () => {
@@ -95,16 +95,16 @@ describe("web debugger", () => {
 			dc.launch(config),
 		]);
 
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === true);
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === true);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === true);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === true);
 
 		await Promise.all([
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		]);
 
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === false);
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === false);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === false);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === false);
 	});
 
 	it("expected debugger service extensions are available in noDebug mode", async () => {
@@ -115,16 +115,16 @@ describe("web debugger", () => {
 			dc.launch(config),
 		]);
 
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === true);
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === true);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === true);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === true);
 
 		await Promise.all([
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		]);
 
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === false);
-		await waitForResult(() => extApi.debugCommands.flutterExtensions.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === false);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.DebugPaint) === false);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(FlutterServiceExtension.DebugBanner) === false);
 	});
 
 	// Skipped because this is super-flaky. If we quit to early, the processes are not
