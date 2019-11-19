@@ -465,7 +465,7 @@ export class DebugCommands {
 					const shouldLaunch = debuggerType !== DebuggerType.Dart || config.openDevTools === "always";
 					if (shouldLaunch)
 						vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true });
-				} else if (debuggerType !== DebuggerType.Dart) {
+				} else if (debuggerType === DebuggerType.Flutter) {
 					showDevToolsNotificationIfAppropriate(this.context).then((res) => {
 						if (res.shouldAlwaysOpen)
 							config.setOpenDevTools("flutter");

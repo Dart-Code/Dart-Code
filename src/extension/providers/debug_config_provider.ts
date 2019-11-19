@@ -26,7 +26,7 @@ import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
 import { DartCapabilities } from "../sdk/capabilities";
-import { checkProjectSupportsPubRunTest, isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, isWebProjectFolder } from "../utils";
+import { checkProjectSupportsPubRunTest, isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder } from "../utils";
 import { TestResultsProvider } from "../views/test_view";
 
 const isCI = !!process.env.CI;
@@ -168,7 +168,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			&& !isInsideFolderNamed(debugConfig.program, "tool")
 			&& !isInsideFolderNamed(debugConfig.program, ".dart_tool")) {
 			// Check if we're a Flutter or Web project.
-			if (isWebProjectFolder(debugConfig.cwd as string)) {
+			if (isInsideFolderNamed(debugConfig.program, "web")) {
 				debugType = DebuggerType.Web;
 			} else if (isFlutterProjectFolder(debugConfig.cwd as string))
 				debugType = DebuggerType.Flutter;
