@@ -1,7 +1,6 @@
-import 'package:broken/main.dart' as app;
-import 'package:flutter_web_ui/ui.dart' as ui;
+import 'package:angular/angular.dart';
+import 'package:hello_world/app_component.template.dart' as ng;
 
-main() async {
-  await ui.webOnlyInitializePlatform();
-  app.main();
+void main() {
+  runApp(ng.AppComponentNgFactory);
 }
