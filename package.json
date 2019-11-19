@@ -941,8 +941,7 @@
 			"[dart]": {
 				"editor.tabSize": 2,
 				"editor.insertSpaces": true,
-				"editor.detectIndentation": false,
-				"editor.suggest.overwriteOnAccept": true
+				"editor.detectIndentation": false
 			}
 		},
 		"configuration": {
