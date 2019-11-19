@@ -64,6 +64,8 @@ export interface FlutterLaunchRequestArguments extends DartLaunchRequestArgument
 	flutterPlatform?: "default" | "android-arm" | "android-arm64" | "android-x86" | "android-x64";
 	flutterRunLogFile?: string;
 	flutterTestLogFile?: string;
+	supportsExposeUrl: boolean;
+	supportsForceWsVmService: boolean;
 }
 
 export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestArguments {
