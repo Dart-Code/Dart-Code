@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { CoverageData } from "../../debug/utils";
 import { isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
-import { DebugOption, debugOptionNames, FlutterServiceExtension, LogSeverity } from "../../shared/enums";
+import { DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
 import { findProjectFolders } from "../../shared/utils/fs";
@@ -13,7 +13,7 @@ import { Context } from "../../shared/vscode/workspace";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { FlutterServiceExtensionArgs, FlutterVmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../flutter/vm_service_extensions";
+import { ServiceExtensionArgs, timeDilationNormal, timeDilationSlow, VmServiceExtensions } from "../flutter/vm_service_extensions";
 import { DebuggerType } from "../providers/debug_config_provider";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools";
@@ -47,11 +47,11 @@ export class DebugCommands {
 	public readonly onFirstFrame = this.onFirstFrameEmitter.event;
 	private onDebugSessionVmServiceAvailableEmitter = new vs.EventEmitter<DartDebugSessionInformation>();
 	public readonly onDebugSessionVmServiceAvailable = this.onDebugSessionVmServiceAvailableEmitter.event;
-	public readonly flutterExtensions: FlutterVmServiceExtensions;
+	public readonly vmServices: VmServiceExtensions;
 	private readonly devTools: DevToolsManager;
 
 	constructor(private readonly logger: Logger, private context: Context, workspaceContext: WorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
-		this.flutterExtensions = new FlutterVmServiceExtensions(this.sendServiceSetting);
+		this.vmServices = new VmServiceExtensions(this.sendServiceSetting);
 		this.devTools = new DevToolsManager(logger, context, workspaceContext.sdks, this, analytics, pubGlobal);
 		context.subscriptions.push(this.devTools);
 		context.subscriptions.push(this.debugOptions);
@@ -61,16 +61,16 @@ export class DebugCommands {
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		context.subscriptions.push(vs.debug.onDidTerminateDebugSession((s) => this.handleDebugSessionEnd(s)));
 
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => this.flutterExtensions.toggle(FlutterServiceExtension.PlatformOverride, "iOS", "android")));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.flutterExtensions.toggle(FlutterServiceExtension.DebugPaint)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.flutterExtensions.toggle(FlutterServiceExtension.PerformanceOverlay)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.flutterExtensions.toggle(FlutterServiceExtension.RepaintRainbow)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => this.flutterExtensions.toggle(FlutterServiceExtension.DebugBanner)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleCheckElevations", () => this.flutterExtensions.toggle(FlutterServiceExtension.CheckElevations)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.flutterExtensions.toggle(FlutterServiceExtension.PaintBaselines)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.flutterExtensions.toggle(FlutterServiceExtension.SlowAnimations, timeDilationNormal, timeDilationSlow)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.inspectWidget", () => this.flutterExtensions.toggle(FlutterServiceExtension.InspectorSelectMode, true, true)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => this.flutterExtensions.toggle(FlutterServiceExtension.InspectorSelectMode, false, false)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => this.vmServices.toggle(VmServiceExtension.PlatformOverride, "iOS", "android")));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.vmServices.toggle(VmServiceExtension.DebugPaint)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.vmServices.toggle(VmServiceExtension.PerformanceOverlay)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.vmServices.toggle(VmServiceExtension.RepaintRainbow)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => this.vmServices.toggle(VmServiceExtension.DebugBanner)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleCheckElevations", () => this.vmServices.toggle(VmServiceExtension.CheckElevations)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.vmServices.toggle(VmServiceExtension.PaintBaselines)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.vmServices.toggle(VmServiceExtension.SlowAnimations, timeDilationNormal, timeDilationSlow)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.inspectWidget", () => this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, true, true)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, false, false)));
 
 		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", async () => {
 			if (!debugSessions.length)
@@ -278,7 +278,7 @@ export class DebugCommands {
 		// If we're the first fresh debug session, reset all settings to default.
 		// Subsequent launches will inherit the "current" values.
 		if (debugSessions.length === 0)
-			this.flutterExtensions.resetToDefaults();
+			this.vmServices.resetToDefaults();
 		debugSessions.push(session);
 
 		// Temporary hack to allow controlling the Hot Reload button on the debug toolbar based on
@@ -308,7 +308,7 @@ export class DebugCommands {
 	}
 
 	public handleDebugSessionCustomEvent(e: vs.DebugSessionCustomEvent): void {
-		this.flutterExtensions.handleDebugEvent(e);
+		this.vmServices.handleDebugEvent(e);
 		if (this.handleCustomEvent(e))
 			return;
 		const session = debugSessions.find((ds) => ds.session.id === e.session.id);
@@ -342,7 +342,7 @@ export class DebugCommands {
 		// Really we should track these per-session, but the changes of them being different given we only support one
 		// SDK at a time are practically zero.
 		if (debugSessions.length === 0) {
-			this.flutterExtensions.markAllServicesUnloaded();
+			this.vmServices.markAllServicesUnloaded();
 			this.debugOptions.hide();
 			this.debugMetrics.hide();
 			for (const debugContext of [
@@ -526,7 +526,7 @@ export class DebugCommands {
 		return selectedItem && selectedItem.session;
 	}
 
-	private sendServiceSetting(extension: FlutterServiceExtension, args: FlutterServiceExtensionArgs) {
+	private sendServiceSetting(extension: VmServiceExtension, args: ServiceExtensionArgs) {
 		debugSessions.forEach((session) => {
 			session.session.customRequest("serviceExtension", args);
 		});

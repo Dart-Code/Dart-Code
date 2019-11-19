@@ -1,15 +1,15 @@
 import * as child_process from "child_process";
 import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
 import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server_types";
-import { FlutterService, FlutterServiceExtension, TestStatus, VersionStatus } from "../enums";
+import { TestStatus, VersionStatus, VmService, VmServiceExtension } from "../enums";
 import { EmittingLogger } from "../logging";
 import { WorkspaceContext } from "../workspace";
 import { Context } from "./workspace";
 
 export interface DebugCommandHandler {
 	vmServices: {
-		serviceIsRegistered(service: FlutterService): boolean;
-		serviceExtensionIsLoaded(extension: FlutterServiceExtension): boolean;
+		serviceIsRegistered(service: VmService): boolean;
+		serviceExtensionIsLoaded(extension: VmServiceExtension): boolean;
 	};
 	handleDebugSessionStart(session: DebugSession): void;
 	handleDebugSessionEnd(session: DebugSession): void;
