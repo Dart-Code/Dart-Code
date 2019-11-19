@@ -1,7 +1,7 @@
 import * as path from "path";
 import { commands, DiagnosticSeverity, languages, Uri, workspace } from "vscode";
 import { restartReasonSave } from "../../shared/constants";
-import { FlutterService } from "../../shared/enums";
+import { VmService } from "../../shared/enums";
 import { IAmDisposable } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { DebugCommands } from "../commands/debug";
@@ -45,12 +45,12 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 			return;
 
 		const shouldHotReload =
-			this.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload)
+			this.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload)
 			&& config.flutterHotReloadOnSave;
 
 		const shouldHotRestart =
-			!this.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotReload)
-			&& this.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.HotRestart)
+			!this.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload)
+			&& this.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart)
 			&& config.flutterHotRestartOnSave;
 
 		// Don't do if there are no debug sessions that support it.

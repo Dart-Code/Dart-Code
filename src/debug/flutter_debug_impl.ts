@@ -1,7 +1,7 @@
 import { ContinuedEvent, Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { restartReasonManual } from "../shared/constants";
-import { FlutterServiceExtension, LogCategory } from "../shared/enums";
+import { LogCategory, VmServiceExtension } from "../shared/enums";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
 import { Logger } from "../shared/interfaces";
 import { grey, grey2 } from "../shared/utils/colors";
@@ -427,7 +427,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		if (!this.runDaemon || !this.currentRunningAppId)
 			return;
 
-		if (event.extensionRPC === FlutterServiceExtension.InspectorStructuredErrors && this.useFlutterStructuredErrors) {
+		if (event.extensionRPC === VmServiceExtension.InspectorStructuredErrors && this.useFlutterStructuredErrors) {
 			this.runDaemon.callServiceExtension(this.currentRunningAppId, event.extensionRPC, { enabled: true });
 		}
 	}

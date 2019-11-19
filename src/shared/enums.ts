@@ -12,7 +12,7 @@ export enum TestStatus {
 }
 
 /// The service extensions we know about.
-export enum FlutterServiceExtension {
+export enum VmServiceExtension {
 	PlatformOverride = "ext.flutter.platformOverride",
 	DebugBanner = "ext.flutter.debugAllowBanner",
 	CheckElevations = "ext.flutter.debugCheckElevationsEnabled",
@@ -27,7 +27,7 @@ export enum FlutterServiceExtension {
 }
 
 /// The service extensions we know about and allow toggling via commands.
-export enum FlutterService {
+export enum VmService {
 	HotReload = "reloadSources",
 	HotRestart = "hotRestart",
 	LaunchDevTools = "launchDevTools",

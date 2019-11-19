@@ -4,7 +4,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { window, workspace } from "vscode";
 import { CHROME_OS_DEVTOOLS_PORT, isChromeOS, pubPath } from "../../shared/constants";
-import { FlutterService, LogCategory } from "../../shared/enums";
+import { LogCategory, VmService } from "../../shared/enums";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { UnknownNotification } from "../../shared/services/interfaces";
@@ -71,7 +71,7 @@ export class DevToolsManager implements vs.Disposable {
 				};
 				const canLaunchDevToolsThroughService = isRunningLocally
 					&& !process.env.DART_CODE_IS_TEST_RUN
-					&& await waitFor(() => this.debugCommands.flutterExtensions.serviceIsRegistered(FlutterService.LaunchDevTools), 500);
+					&& await waitFor(() => this.debugCommands.vmServices.serviceIsRegistered(VmService.LaunchDevTools), 500);
 				if (canLaunchDevToolsThroughService) {
 					try {
 						await session.session.customRequest(
@@ -83,7 +83,7 @@ export class DevToolsManager implements vs.Disposable {
 									queryParams,
 									reuseWindows,
 								},
-								type: this.debugCommands.flutterExtensions.getServiceMethodName(FlutterService.LaunchDevTools),
+								type: this.debugCommands.vmServices.getServiceMethodName(VmService.LaunchDevTools),
 							},
 						);
 
