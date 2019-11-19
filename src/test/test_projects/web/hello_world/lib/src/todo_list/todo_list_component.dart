@@ -29,7 +29,9 @@ class TodoListComponent implements OnInit {
 
   @override
   Future<Null> ngOnInit() async {
+    genericMethod<bool, double, int, String>();
     items = await todoListService.getTodoList();
+    // BREAKPOINT1^
   }
 
   void add() {
@@ -38,4 +40,13 @@ class TodoListComponent implements OnInit {
   }
 
   String remove(int index) => items.removeAt(index);
+}
+
+void genericMethod<TBool, TDouble, TInt, TString>() {
+  int a = 1;
+  print(a);
+  print('TBool: ' + TBool.toString()); // BREAKPOINT2
+  print('TDouble: ' + TDouble.toString());
+  print('TInt: ' + TInt.toString());
+  print('TString: ' + TString.toString());
 }
