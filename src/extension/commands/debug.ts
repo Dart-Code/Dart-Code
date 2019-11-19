@@ -256,6 +256,7 @@ export class DebugCommands {
 				const terminalName = s.name || debuggerType;
 				terminal = new DartDebugSessionPseudoterminal(terminalName);
 				terminal.userInput((input) => s.customRequest("dart.userInput", { input }));
+				terminal.close.then(() => s.customRequest("disconnect"));
 			}
 			const session = new DartDebugSessionInformation(s, debuggerType, terminal);
 			// If we're the first fresh debug session, reset all settings to default.
