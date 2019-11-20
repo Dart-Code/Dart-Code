@@ -1500,6 +1500,12 @@
 					"description": "Whether to perform hot-reload-on-save based on a filesystem watcher for Dart files rather than using VS Code's onDidSave event. This allows reloads to trigger when external tools modify Dart source files.",
 					"scope": "window"
 				},
+				"dart.previewDebuggerStepBack": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to enable the debuggers 'Step Back' functionality. This is behind a flag while VS Code does not support enabling it separately to the 'Reverse Continue' button.",
+					"scope": "window"
+				},
 				"dart.autoImportCompletions": {
 					"type": "boolean",
 					"default": true,
