@@ -2,7 +2,7 @@ import { CancellationToken, Hover, HoverProvider, Position, Range, TextDocument,
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
-import { cleanDartdoc } from "../../shared/utils/dartdocs";
+import { cleanDartdoc } from "../../shared/vscode/extension_utils";
 import { fsPath } from "../../shared/vscode/utils";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
 
