@@ -6,6 +6,7 @@ import { Logger } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter } from "../../shared/utils";
 import { findProjectFolders, hasPubspec } from "../../shared/utils/fs";
+import { resolvedPromise } from "../../shared/utils/promises";
 import { fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
@@ -186,7 +187,7 @@ export class SdkUtils {
 		const allPossibleProjectFolders = await findProjectFolders(topLevelFolders);
 
 		// Scan through them all to figure out what type of projects we have.
-		allPossibleProjectFolders.forEach((folder) => {
+		for (const folder of allPossibleProjectFolders) {
 			const hasPubspecFile = hasPubspec(folder);
 			const refsFlutter = hasPubspecFile && referencesFlutterSdk(folder);
 			const refsFlutterWeb = hasPubspecFile && referencesFlutterWeb(folder);
@@ -195,6 +196,9 @@ export class SdkUtils {
 
 			// Special case to detect the Flutter repo root, so we always consider it a Flutter project and will use the local SDK
 			const isFlutterRepo = fs.existsSync(path.join(folder, "bin/flutter")) && fs.existsSync(path.join(folder, "bin/cache/dart-sdk"));
+
+			// Since we just blocked on a lot of sync FS, yield.
+			await resolvedPromise;
 
 			const isSomethingFlutter = refsFlutter || refsFlutterWeb || hasFlutterCreateProjectTriggerFile || isFlutterRepo;
 
@@ -214,7 +218,7 @@ export class SdkUtils {
 			hasAnyFlutterMobileProject = hasAnyFlutterMobileProject || (refsFlutter && !refsFlutterWeb) || hasFlutterCreateProjectTriggerFile;
 			hasAnyFlutterWebProject = hasAnyFlutterWebProject || refsFlutterWeb;
 			hasAnyStandardDartProject = hasAnyStandardDartProject || (!isSomethingFlutter && hasPubspecFile);
-		});
+		}
 
 		if (fuchsiaRoot) {
 			this.logger.info(`Found Fuchsia root at ${fuchsiaRoot}`);
@@ -234,6 +238,8 @@ export class SdkUtils {
 		].concat(paths).filter(notUndefined);
 
 		const flutterSdkPath = this.findFlutterSdk(flutterSdkSearchPaths);
+		// Since we just blocked on a lot of sync FS, yield.
+		await resolvedPromise;
 
 		const dartSdkSearchPaths = [
 			fuchsiaRoot && path.join(fuchsiaRoot, "topaz/tools/prebuilt-dart-sdk", `${dartPlatformName}-x64`),
@@ -251,6 +257,8 @@ export class SdkUtils {
 			.filter(notUndefined);
 
 		const dartSdkPath = this.findDartSdk(dartSdkSearchPaths);
+		// Since we just blocked on a lot of sync FS, yield.
+		await resolvedPromise;
 
 		return new WorkspaceContext(
 			{
