@@ -1,7 +1,7 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
+import { CapabilitiesEvent, DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { config } from "../extension/config";
 import { notUndefined } from "../extension/utils";
@@ -138,6 +138,9 @@ export class DartDebugSession extends DebugSession {
 		this.debuggerHandlesPathsEverywhereForBreakpoints = args.debuggerHandlesPathsEverywhereForBreakpoints;
 		this.logFile = args.observatoryLogFile;
 		this.maxLogLineLength = args.maxLogLineLength;
+
+		if (args.previewDebuggerStepBack)
+			this.sendEvent(new CapabilitiesEvent({ supportsStepBack: true }));
 
 		this.sendResponse(response);
 
@@ -1091,7 +1094,20 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected stepBackRequest(response: DebugProtocol.StepBackResponse, args: DebugProtocol.StepBackArguments): void {
-		// unsupported
+		const thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
+		if (!thread) {
+			this.errorResponse(response, `No thread with id ${args.threadId}`);
+			return;
+		}
+		thread.resume("Rewind").then((_) => {
+			this.sendResponse(response);
+			this.requestCoverageUpdate("rewind");
+		}).catch((error) => this.errorResponse(response, `${error}`));
+	}
+
+	protected reverseContinueRequest(response: DebugProtocol.ReverseContinueResponse, args: DebugProtocol.ReverseContinueArguments): void {
+		this.logToUser("Reverse continue is not supported\n");
+		this.errorResponse(response, `Reverse continue is not supported for the Dart debugger`);
 	}
 
 	protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): Promise<void> {
