@@ -1,6 +1,7 @@
 import * as assert from "assert";
+import { Uri } from "vscode";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
-import { cleanDartdoc } from "../../shared/vscode/extension_utils";
+import { cleanDartdoc, extensionPath } from "../../shared/vscode/extension_utils";
 
 describe("cleanDartDoc", () => {
 	it("replaces Flutter's image tags with external Material image tags", () => {
@@ -9,8 +10,8 @@ describe("cleanDartDoc", () => {
 		<p><i class="material-icons md-36">360</i> &#x2014; material icon named "360".</p>
 		`;
 		const expected = `
-		![360](https://raw.githubusercontent.com/Dart-Code/Icons/master/material/360%402x.png|width=32,height=32)
-		![360](https://raw.githubusercontent.com/Dart-Code/Icons/master/material/360%402x.png|width=32,height=32)
+		![360](${Uri.file(extensionPath)}/media/doc-icons/material/360%402x.png|width=32,height=32)
+		![360](${Uri.file(extensionPath)}/media/doc-icons/material/360%402x.png|width=32,height=32)
 		`;
 		assert.equal(cleanDartdoc(input), expected);
 	});
