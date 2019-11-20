@@ -4,8 +4,8 @@ import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKin
 import * as as from "../../shared/analysis_server_types";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { flatMap } from "../../shared/utils";
-import { cleanDartdoc } from "../../shared/utils/dartdocs";
 import { resolvedPromise } from "../../shared/utils/promises";
+import { cleanDartdoc } from "../../shared/vscode/extension_utils";
 import { DelayedCompletionItem, LazyCompletionItem } from "../../shared/vscode/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";

@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import { FlutterOutline } from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
-import { iconUrlFormat } from "../../shared/utils/dartdocs";
+import { docsIconPathFormat } from "../../shared/vscode/extension_utils";
 import { IconRangeComputer } from "../../shared/vscode/icon_range_computer";
 import { fsPath } from "../../shared/vscode/utils";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
@@ -50,7 +50,7 @@ export class FlutterIconDecorations implements vs.Disposable {
 		for (const iconName of Object.keys(results)) {
 			if (!this.decorationTypes[iconName])
 				this.decorationTypes[iconName] = vs.window.createTextEditorDecorationType({
-					gutterIconPath: vs.Uri.parse(iconUrlFormat.replace("$1", iconName)),
+					gutterIconPath: vs.Uri.parse(docsIconPathFormat.replace("$1", iconName)),
 					gutterIconSize: "75%",
 				});
 		}

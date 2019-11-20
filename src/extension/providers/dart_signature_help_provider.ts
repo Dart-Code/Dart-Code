@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { AnalysisGetSignatureResponse, ParameterInfo } from "../../shared/analysis_server_types";
-import { cleanDartdoc } from "../../shared/utils/dartdocs";
+import { cleanDartdoc } from "../../shared/vscode/extension_utils";
 import { fsPath } from "../../shared/vscode/utils";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
 

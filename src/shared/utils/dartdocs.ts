@@ -1,6 +1,5 @@
 import { escapeRegExp } from "../utils";
 
-export const iconUrlFormat = "https://raw.githubusercontent.com/Dart-Code/Icons/master/material/$1%402x.png";
 const iconRegex = new RegExp(
 	`(?:${escapeRegExp("<p>")})?`
 	+ escapeRegExp('<i class="material-icons md-36">')
@@ -20,7 +19,7 @@ const dartDocCodeBlockSections = new RegExp(
 	"gi",
 );
 
-export function cleanDartdoc(doc: string | undefined): string {
+export function cleanDartdoc(doc: string | undefined, iconPathFormat: string): string {
 	if (!doc)
 		return "";
 
@@ -32,7 +31,7 @@ export function cleanDartdoc(doc: string | undefined): string {
 	// Remove colons from old-style references like [:foo:].
 	doc = doc.replace(/\[:\S+:\]/g, (match) => `[${match.substring(2, match.length - 2)}]`);
 
-	doc = doc.replace(iconRegex, `![$1](${iconUrlFormat}|width=32,height=32)`);
+	doc = doc.replace(iconRegex, `![$1](${iconPathFormat}|width=32,height=32)`);
 
 	// Remove any directives like {@template xxx}
 	doc = doc.replace(dartDocDirectives, "");
