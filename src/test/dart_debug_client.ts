@@ -9,7 +9,7 @@ import { DebugCommandHandler, TestResultsProvider } from "../shared/vscode/inter
 import { DebugClient, ILocation, IPartialLocation } from "./debug_client_ms";
 import { delay, logger, watchPromise, withTimeout } from "./helpers";
 
-const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.serviceRegistered", "dart.debuggerUris"];
+const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.serviceRegistered", "dart.debuggerUris", "dart.output"];
 
 export class DartDebugClient extends DebugClient {
 	private currentSession?: DebugSession;
