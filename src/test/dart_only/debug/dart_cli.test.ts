@@ -139,6 +139,18 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
+	it("receives the expected output when running in the terminal", async () => {
+		const config = await startDebugger(helloWorldMainFile);
+		config.console = "terminal";
+		await Promise.all([
+			dc.configurationSequence(),
+			dc.waitForCustomEvent("dart.output", (msg: { message: string, category: string | undefined }) => msg.category === "stdout" && msg.message === "Hello, world!\n"),
+			dc.waitForCustomEvent("dart.output", (msg: { message: string, category: string | undefined }) => (msg.category === "console" || !msg.category) && msg.message === `${grey("[log] ")}Logging from dart:developer!\n`),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		]);
+	});
+
 	it("passes launch.json's vmAdditionalArgs to the VM", async () => {
 		const config = await startDebugger(helloWorldMainFile);
 		config!.vmAdditionalArgs = ["--fake-flag"];
