@@ -384,9 +384,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, analytics, pubGlobal);
 
 	// Wire up handling of Hot Reload on Save.
-	if (workspaceContext.hasAnyFlutterProjects) {
-		context.subscriptions.push(new HotReloadOnSaveHandler(debugCommands));
-	}
+	context.subscriptions.push(new HotReloadOnSaveHandler(debugCommands));
 
 	// Register URI handler.
 	context.subscriptions.push(vs.window.registerUriHandler(new DartUriHandler(flutterCapabilities)));
