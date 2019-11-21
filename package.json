@@ -1208,13 +1208,13 @@
 				"dart.flutterHotReloadOnSave": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to automatically send a Hot Reload request during a Flutter debug session when saving files.",
+					"description": "Whether to automatically send a Hot Reload request during debug session when saving files.",
 					"scope": "window"
 				},
 				"dart.flutterHotRestartOnSave": {
 					"type": "boolean",
-					"default": false,
-					"description": "Whether to automatically send a Hot Restart request during a Flutter debug session when saving files if Hot Reload is not available.",
+					"default": true,
+					"description": "Whether to automatically send a Hot Restart request during a debug session when saving files if Hot Reload is not available but Hot Restart is.",
 					"scope": "window"
 				},
 				"dart.flutterCreateOrganization": {
