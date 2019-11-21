@@ -101,6 +101,18 @@ export function isAnalyzable(file: { uri: Uri, isUntitled?: boolean, languageId?
 		|| (extension !== undefined && analyzableFileExtensions.includes(extension));
 }
 
+export function shouldHotReloadFor(file: { uri: Uri, isUntitled?: boolean, languageId?: string }): boolean {
+	if (file.isUntitled || !fsPath(file.uri) || file.uri.scheme !== "file")
+		return false;
+
+	const reloadableFileExtensions = ["dart", "htm", "html", "css"];
+
+	const extName = path.extname(fsPath(file.uri));
+	const extension = extName ? extName.substr(1) : undefined;
+
+	return extension !== undefined && reloadableFileExtensions.includes(extension);
+}
+
 export function isAnalyzableAndInWorkspace(file: { uri: Uri, isUntitled?: boolean, languageId?: string }): boolean {
 	return isAnalyzable(file) && isWithinWorkspace(fsPath(file.uri));
 }

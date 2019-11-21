@@ -6,7 +6,7 @@ import { IAmDisposable } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { DebugCommands } from "../commands/debug";
 import { config } from "../config";
-import { isAnalyzableAndInWorkspace } from "../utils";
+import { isWithinWorkspace, shouldHotReloadFor } from "../utils";
 
 export class HotReloadOnSaveHandler implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
@@ -24,6 +24,7 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		}));
 
 		// FS-watcher version.
+		// TODO: Make this support everything that shouldHotReloadFor() does.
 		const watcher = workspace.createFileSystemWatcher("**/*.dart");
 		this.disposables.push(watcher);
 		watcher.onDidChange(this.handleFileSystemChange, this);
@@ -60,7 +61,7 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		const commandToRun = shouldHotReload ? "flutter.hotReload" : "flutter.hotRestart";
 
 		// Bail out if we're in an external file, or not Dart.
-		if (!isAnalyzableAndInWorkspace(file) || path.extname(fsPath(file.uri)) !== ".dart")
+		if (!isWithinWorkspace(fsPath(file.uri)) || !shouldHotReloadFor(file))
 			return;
 
 		// Don't do if we have errors for the saved file.
