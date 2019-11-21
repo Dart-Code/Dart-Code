@@ -53,6 +53,8 @@ class Config {
 	get buildRunnerAdditionalArgs(): string[] { return this.getConfig<string[]>("buildRunnerAdditionalArgs", []); }
 	get checkForSdkUpdates(): boolean { return this.getConfig<boolean>("checkForSdkUpdates", true); }
 	get closingLabels(): boolean { return this.getConfig<boolean>("closingLabels", true); }
+	get debugExternalLibraries(): boolean { return this.getConfig<boolean>("debugExternalLibraries", false); }
+	get debugSdkLibraries(): boolean { return this.getConfig<boolean>("debugSdkLibraries", false); }
 	get devToolsLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("devToolsLogFile", null))); }
 	get devToolsPort(): undefined | number { return this.getConfig<null | number>("devToolsPort", null); }
 	get devToolsReuseWindows(): boolean { return this.getConfig<boolean>("devToolsReuseWindows", true); }
@@ -107,6 +109,8 @@ class Config {
 	public setCheckForSdkUpdates(value: boolean): Thenable<void> { return this.setConfig("checkForSdkUpdates", value, ConfigurationTarget.Global); }
 	public setFlutterSdkPath(value: string | undefined): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Workspace); }
 	public setGlobalDartSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Global); }
+	public setGlobalDebugSdkLibraries(value: boolean): Thenable<void> { return this.setConfig("debugSdkLibraries", value, ConfigurationTarget.Global); }
+	public setGlobalDebugExternalLibraries(value: boolean): Thenable<void> { return this.setConfig("debugExternalLibraries", value, ConfigurationTarget.Global); }
 	public setGlobalFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Global); }
 	public setOpenDevTools(value: "never" | "flutter" | "always" | undefined): Thenable<void> { return this.setConfig("openDevTools", value, ConfigurationTarget.Global); }
 	public setSdkPath(value: string | undefined): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
@@ -131,8 +135,6 @@ class ResourceConfig {
 	}
 
 	get analysisExcludedFolders(): string[] { return this.getConfig<string[]>("analysisExcludedFolders", []); }
-	get debugExternalLibraries(): boolean { return this.getConfig<boolean>("debugExternalLibraries", false); }
-	get debugSdkLibraries(): boolean { return this.getConfig<boolean>("debugSdkLibraries", false); }
 	get doNotFormat(): string[] { return this.getConfig<string[]>("doNotFormat", []); }
 	get enableCompletionCommitCharacters(): boolean { return this.getConfig<boolean>("enableCompletionCommitCharacters", false); }
 	get evaluateGettersInDebugViews(): boolean { return this.getConfig<boolean>("evaluateGettersInDebugViews", true); }

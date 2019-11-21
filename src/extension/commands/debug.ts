@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { CoverageData } from "../../debug/utils";
 import { isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
-import { FlutterServiceExtension, LogSeverity } from "../../shared/enums";
+import { DebugOption, debugOptionNames, FlutterServiceExtension, LogSeverity } from "../../shared/enums";
 import { Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
 import { findProjectFolders } from "../../shared/utils/fs";
@@ -34,6 +34,8 @@ export class LastDebugSession {
 }
 
 export class DebugCommands {
+	private debugOptions = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left, 0);
+	private currentDebugOption = DebugOption.MyCode;
 	private debugMetrics = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 0);
 	private onWillHotReloadEmitter = new vs.EventEmitter<void>();
 	public readonly onWillHotReload = this.onWillHotReloadEmitter.event;
@@ -52,6 +54,7 @@ export class DebugCommands {
 		this.flutterExtensions = new FlutterVmServiceExtensions(this.sendServiceSetting);
 		this.devTools = new DevToolsManager(logger, context, workspaceContext.sdks, this, analytics, pubGlobal);
 		context.subscriptions.push(this.devTools);
+		context.subscriptions.push(this.debugOptions);
 		context.subscriptions.push(this.debugMetrics);
 
 		context.subscriptions.push(vs.debug.onDidStartDebugSession((s) => this.handleDebugSessionStart(s)));
@@ -245,49 +248,63 @@ export class DebugCommands {
 				value: defaultValue,
 			});
 		}));
+
+		// Debug options.
+		if (config.debugSdkLibraries && config.debugExternalLibraries)
+			this.currentDebugOption = DebugOption.MyCodePackagesSdk;
+		else if (config.debugSdkLibraries)
+			this.currentDebugOption = DebugOption.MyCodeSdk;
+		else if (config.debugExternalLibraries)
+			this.currentDebugOption = DebugOption.MyCodePackages;
+		context.subscriptions.push(vs.commands.registerCommand("_dart.toggleDebugOptions", this.toggleDebugOptions, this));
+		this.debugOptions.text = `Debug ${debugOptionNames[this.currentDebugOption]}`;
+		this.debugOptions.command = "_dart.toggleDebugOptions";
 	}
 
 	public handleDebugSessionStart(s: vs.DebugSession): void {
-		if (s.type === "dart") {
-			const debuggerType = s.configuration ? DebuggerType[s.configuration.debuggerType] : "<unknown>";
-			const consoleType: "debugConsole" | "terminal" = s.configuration.console;
-			let terminal: DartDebugSessionPseudoterminal | undefined;
-			if (consoleType === "terminal") {
-				const terminalName = s.name || debuggerType;
-				terminal = new DartDebugSessionPseudoterminal(terminalName);
-				terminal.userInput((input) => s.customRequest("dart.userInput", { input }));
-				terminal.close.then(() => s.customRequest("disconnect"));
-			}
-			const session = new DartDebugSessionInformation(s, debuggerType, terminal);
-			// If we're the first fresh debug session, reset all settings to default.
-			// Subsequent launches will inherit the "current" values.
-			if (debugSessions.length === 0)
-				this.flutterExtensions.resetToDefaults();
-			debugSessions.push(session);
+		if (s.type !== "dart")
+			return;
 
-			// Temporary hack to allow controlling the Hot Reload button on the debug toolbar based on
-			// the session type, since the debug toolbar does not allow us to dynamically update
-			// when we see the extension load.
-			// https://github.com/microsoft/vscode/issues/69398
-			if (s.configuration.debuggerType === DebuggerType.Flutter || s.configuration.debuggerType === DebuggerType.FlutterWeb) {
-				vs.commands.executeCommand("setContext", isInDebugSessionThatSupportsHotReloadContext, true);
-				const mode: "debug" | "profile" | "release" = s.configuration.flutterMode;
-				if (mode === "debug")
-					vs.commands.executeCommand("setContext", isInFlutterDebugModeDebugSessionContext, true);
-				if (mode === "profile")
-					vs.commands.executeCommand("setContext", isInFlutterProfileModeDebugSessionContext, true);
-			}
-
-			// Process any queued events that came in before the session start
-			// event.
-			const eventsToProcess = pendingCustomEvents.filter((e) => e.session.id === s.id);
-			pendingCustomEvents = pendingCustomEvents.filter((e) => e.session.id !== s.id);
-
-			eventsToProcess.forEach((e) => {
-				this.logger.info(`Processing delayed event ${e.event} for session ${e.session.id}`);
-				this.handleCustomEventWithSession(session, e);
-			});
+		const debuggerType = s.configuration ? DebuggerType[s.configuration.debuggerType] : "<unknown>";
+		const consoleType: "debugConsole" | "terminal" = s.configuration.console;
+		let terminal: DartDebugSessionPseudoterminal | undefined;
+		if (consoleType === "terminal") {
+			const terminalName = s.name || debuggerType;
+			terminal = new DartDebugSessionPseudoterminal(terminalName);
+			terminal.userInput((input) => s.customRequest("dart.userInput", { input }));
+			terminal.close.then(() => s.customRequest("disconnect"));
 		}
+		const session = new DartDebugSessionInformation(s, debuggerType, terminal);
+		// If we're the first fresh debug session, reset all settings to default.
+		// Subsequent launches will inherit the "current" values.
+		if (debugSessions.length === 0)
+			this.flutterExtensions.resetToDefaults();
+		debugSessions.push(session);
+
+		// Temporary hack to allow controlling the Hot Reload button on the debug toolbar based on
+		// the session type, since the debug toolbar does not allow us to dynamically update
+		// when we see the extension load.
+		// https://github.com/microsoft/vscode/issues/69398
+		if (s.configuration.debuggerType === DebuggerType.Flutter || s.configuration.debuggerType === DebuggerType.FlutterWeb) {
+			vs.commands.executeCommand("setContext", isInDebugSessionThatSupportsHotReloadContext, true);
+			const mode: "debug" | "profile" | "release" = s.configuration.flutterMode;
+			if (mode === "debug")
+				vs.commands.executeCommand("setContext", isInFlutterDebugModeDebugSessionContext, true);
+			if (mode === "profile")
+				vs.commands.executeCommand("setContext", isInFlutterProfileModeDebugSessionContext, true);
+		}
+
+		// Process any queued events that came in before the session start
+		// event.
+		const eventsToProcess = pendingCustomEvents.filter((e) => e.session.id === s.id);
+		pendingCustomEvents = pendingCustomEvents.filter((e) => e.session.id !== s.id);
+
+		eventsToProcess.forEach((e) => {
+			this.logger.info(`Processing delayed event ${e.event} for session ${e.session.id}`);
+			this.handleCustomEventWithSession(session, e);
+		});
+
+		this.debugOptions.show();
 	}
 
 	public handleDebugSessionCustomEvent(e: vs.DebugSessionCustomEvent): void {
@@ -318,7 +335,6 @@ export class DebugCommands {
 		if (session.terminal)
 			session.terminal.end();
 
-		this.debugMetrics.hide();
 		const debugSessionEnd = new Date();
 		this.analytics.logDebugSessionDuration(session.debuggerType, debugSessionEnd.getTime() - session.sessionStart.getTime());
 
@@ -327,6 +343,8 @@ export class DebugCommands {
 		// SDK at a time are practically zero.
 		if (debugSessions.length === 0) {
 			this.flutterExtensions.markAllServicesUnloaded();
+			this.debugOptions.hide();
+			this.debugMetrics.hide();
 			for (const debugContext of [
 				isInDebugSessionThatSupportsHotReloadContext,
 				isInFlutterDebugModeDebugSessionContext,
@@ -461,6 +479,25 @@ export class DebugCommands {
 			// 	mostRecentAttachedProbablyReusableObservatoryUri = undefined;
 			// }
 		}
+	}
+
+	private toggleDebugOptions() {
+		// -1 is because we skip the last combination when toggling since it seems uncommon.
+		this.currentDebugOption = (this.currentDebugOption + 1) % (debugOptionNames.length - 1);
+		this.debugOptions.text = `Debug ${debugOptionNames[this.currentDebugOption]}`;
+
+		const debugExternalLibraries = this.currentDebugOption === DebugOption.MyCodePackages || this.currentDebugOption === DebugOption.MyCodePackagesSdk;
+		const debugSdkLibraries = this.currentDebugOption === DebugOption.MyCodeSdk || this.currentDebugOption === DebugOption.MyCodePackagesSdk;
+
+		config.setGlobalDebugExternalLibraries(debugExternalLibraries);
+		config.setGlobalDebugSdkLibraries(debugSdkLibraries);
+
+		debugSessions.forEach((session) => {
+			session.session.customRequest("updateDebugOptions", {
+				debugExternalLibraries,
+				debugSdkLibraries,
+			});
+		});
 	}
 
 	private clearProgressIndicators(session: DartDebugSessionInformation): void {
