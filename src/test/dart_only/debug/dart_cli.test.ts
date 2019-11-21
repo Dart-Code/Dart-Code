@@ -385,6 +385,33 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
+	it("steps into the SDK if debugSdkLibraries is enabled during the run", async () => {
+		await openFile(helloWorldMainFile);
+		// Get location for `print`
+		const printCall = positionOf("pri^nt(");
+		const config = await startDebugger(helloWorldMainFile, { debugSdkLibraries: false });
+		await dc.hitBreakpoint(config, {
+			line: printCall.line + 1,
+			path: fsPath(helloWorldMainFile),
+		});
+		await dc.customRequest("updateDebugOptions", { debugSdkLibraries: true });
+		await delay(100);
+		await Promise.all([
+			dc.assertStoppedLocation("step", {
+				// SDK source will have no filename, because we download it
+				path: undefined,
+			}).then((response) => {
+				// Ensure the top stack frame matches
+				const frame = response.body.stackFrames[0];
+				assert.equal(frame.name, "print");
+				// We don't get a source path, because the source is downloaded from the VM
+				assert.equal(frame.source!.path, undefined);
+				assert.equal(frame.source!.name, "dart:core/print.dart");
+			}),
+			dc.stepIn(),
+		]);
+	});
+
 	it("does not step into the SDK if debugSdkLibraries is false", async () => {
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
