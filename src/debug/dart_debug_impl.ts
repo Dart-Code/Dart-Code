@@ -1196,26 +1196,19 @@ export class DartDebugSession extends DebugSession {
 					this.sendResponse(response);
 					break;
 				case "service":
-					try {
-						await this.callService(args.type, args.params);
-						this.sendResponse(response);
-					} catch (e) {
-						this.errorResponse(response, e && e.message);
-					}
+					await this.callService(args.type, args.params);
+					this.sendResponse(response);
 					break;
 				case "dart.userInput":
-					if (this.childProcess && !this.childProcess.killed && !this.processExited) {
-						try {
-							this.childProcess.stdin.write(args.input);
-						} catch (e) {
-							this.logger.error(`Failed to write to process stdin: ${e}`);
-						}
-					}
+					if (this.childProcess && !this.childProcess.killed && !this.processExited)
+						this.childProcess.stdin.write(args.input);
+					this.sendResponse(response);
 					break;
 				case "updateDebugOptions":
-					this.debugExternalLibraries = args.debugExternalLibraries;
-					this.debugSdkLibraries = args.debugSdkLibraries;
+					this.debugExternalLibraries = !!args.debugExternalLibraries;
+					this.debugSdkLibraries = !!args.debugSdkLibraries;
 					await this.threadManager.setLibrariesDuggableForAllIsolates();
+					this.sendResponse(response);
 					break;
 				// Flutter requests that may be sent during test runs or other places
 				// that we don't currently support. TODO: Fix this by moving all the
@@ -1238,6 +1231,7 @@ export class DartDebugSession extends DebugSession {
 			}
 		} catch (e) {
 			this.logger.error(`Error handling '${request}' custom request: ${e}`);
+			this.errorResponse(response, e && e.message);
 		}
 	}
 
