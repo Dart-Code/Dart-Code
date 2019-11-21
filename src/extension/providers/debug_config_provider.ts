@@ -327,16 +327,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// TODO: Why do we need this cast? The node-mock-debug does not?
 		(debugConfig as any).debugServer = serverAddress.port;
 
-		// We don't properly support debug for web (no --start-paused so BPs will be missed etc.)
-		if (debugType === DebuggerType.Web && !debugConfig.noDebug) {
-			// TODO: Support this! :)
-			debugConfig.noDebug = true;
-			if (!hasShownWebDebugWarning) {
-				window.showInformationMessage("Breakpoints and stepping are not currently supported for web projects, please use your browsers developer tools if you need to break or step through code.");
-				hasShownWebDebugWarning = true;
-			}
-		}
-
 		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
 		if (debugType === DebuggerType.FlutterTest /*|| debugType === DebuggerType.WebTest*/ || debugType === DebuggerType.PubTest) {
 			const isRunningTestSubset = debugConfig.args && (debugConfig.args.indexOf("--name") !== -1 || debugConfig.args.indexOf("--pname") !== -1);
