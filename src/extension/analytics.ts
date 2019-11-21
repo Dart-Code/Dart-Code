@@ -185,7 +185,7 @@ export class Analytics {
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,
 			cd5: codeVersion,
-			cd6: resourceUri ? this.getDebuggerPreference(resourceUri) : null,
+			cd6: resourceUri ? this.getDebuggerPreference() : null,
 			cd7: this.workspaceContext.workspaceTypeDescription,
 			cd8: config.closingLabels ? "On" : "Off",
 			cd9: this.workspaceContext.hasAnyFlutterProjects ? (config.flutterHotReloadOnSave ? "On" : "Off") : null,
@@ -245,13 +245,12 @@ export class Analytics {
 		});
 	}
 
-	private getDebuggerPreference(resourceUri: Uri): string {
-		const conf = config.for(resourceUri);
-		if (conf.debugSdkLibraries && conf.debugExternalLibraries)
+	private getDebuggerPreference(): string {
+		if (config.debugSdkLibraries && config.debugExternalLibraries)
 			return "All code";
-		else if (conf.debugSdkLibraries)
+		else if (config.debugSdkLibraries)
 			return "My code + SDK";
-		else if (conf.debugExternalLibraries)
+		else if (config.debugExternalLibraries)
 			return "My code + Libraries";
 		else
 			return "My code";

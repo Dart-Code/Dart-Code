@@ -59,3 +59,11 @@ export enum LogSeverity {
 	Warn,
 	Error,
 }
+
+export const debugOptionNames = ["my code", "my code + packages", "my code + packages + SDK", "my code + SDK"];
+export enum DebugOption {
+	MyCode,
+	MyCodePackages,
+	MyCodePackagesSdk,
+	MyCodeSdk,
+}

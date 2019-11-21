@@ -1185,50 +1185,59 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected async customRequest(request: string, response: DebugProtocol.Response, args: any): Promise<void> {
-		switch (request) {
-			case "coverageFilesUpdate":
-				this.knownOpenFiles = args.scriptUris;
-				this.sendResponse(response);
-				break;
-			case "requestCoverageUpdate":
-				this.requestCoverageUpdate("editor");
-				this.sendResponse(response);
-				break;
-			case "service":
-				try {
-					await this.callService(args.type, args.params);
+		try {
+			switch (request) {
+				case "coverageFilesUpdate":
+					this.knownOpenFiles = args.scriptUris;
 					this.sendResponse(response);
-				} catch (e) {
-					this.errorResponse(response, e && e.message);
-				}
-				break;
-			case "dart.userInput":
-				if (this.childProcess && !this.childProcess.killed && !this.processExited) {
+					break;
+				case "requestCoverageUpdate":
+					this.requestCoverageUpdate("editor");
+					this.sendResponse(response);
+					break;
+				case "service":
 					try {
-						this.childProcess.stdin.write(args.input);
+						await this.callService(args.type, args.params);
+						this.sendResponse(response);
 					} catch (e) {
-						this.logger.error(`Failed to write to process stdin: ${e}`);
+						this.errorResponse(response, e && e.message);
 					}
-				}
-				break;
-			// Flutter requests that may be sent during test runs or other places
-			// that we don't currently support. TODO: Fix this by moving all the
-			// service extension stuff out of Flutter to here, and making it not
-			// Flutter-specific. This requires sending all service extensions
-			// directly to the VM and not via Flutter's run daemon.
-			case "serviceExtension":
-			case "checkPlatformOverride":
-			case "checkIsWidgetCreationTracked":
-			case "hotReload":
-			case "hotRestart":
-				// TODO: Get rid of this!
-				this.log(`Ignoring Flutter customRequest ${request} for non-Flutter-run app`, LogSeverity.Warn);
-				this.sendResponse(response);
-				break;
-			default:
-				this.log(`Unknown customRequest ${request}`, LogSeverity.Warn);
-				super.customRequest(request, response, args);
-				break;
+					break;
+				case "dart.userInput":
+					if (this.childProcess && !this.childProcess.killed && !this.processExited) {
+						try {
+							this.childProcess.stdin.write(args.input);
+						} catch (e) {
+							this.logger.error(`Failed to write to process stdin: ${e}`);
+						}
+					}
+					break;
+				case "updateDebugOptions":
+					this.debugExternalLibraries = args.debugExternalLibraries;
+					this.debugSdkLibraries = args.debugSdkLibraries;
+					await this.threadManager.setLibrariesDuggableForAllIsolates();
+					break;
+				// Flutter requests that may be sent during test runs or other places
+				// that we don't currently support. TODO: Fix this by moving all the
+				// service extension stuff out of Flutter to here, and making it not
+				// Flutter-specific. This requires sending all service extensions
+				// directly to the VM and not via Flutter's run daemon.
+				case "serviceExtension":
+				case "checkPlatformOverride":
+				case "checkIsWidgetCreationTracked":
+				case "hotReload":
+				case "hotRestart":
+					// TODO: Get rid of this!
+					this.log(`Ignoring Flutter customRequest ${request} for non-Flutter-run app`, LogSeverity.Warn);
+					this.sendResponse(response);
+					break;
+				default:
+					this.log(`Unknown customRequest ${request}`, LogSeverity.Warn);
+					super.customRequest(request, response, args);
+					break;
+			}
+		} catch (e) {
+			this.logger.error(`Error handling '${request}' custom request: ${e}`);
 		}
 	}
 

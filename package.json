@@ -994,13 +994,13 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Whether to mark SDK libraries as debuggable, enabling stepping into them while debugging.",
-					"scope": "resource"
+					"scope": "window"
 				},
 				"dart.debugExternalLibraries": {
 					"type": "boolean",
 					"default": false,
 					"description": "Whether to mark external pub package libraries as debuggable, enabling stepping into them while debugging.",
-					"scope": "resource"
+					"scope": "window"
 				},
 				"dart.showDartDeveloperLogs": {
 					"type": "boolean",

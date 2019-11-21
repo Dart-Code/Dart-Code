@@ -47,6 +47,10 @@ export class ThreadManager {
 		}
 	}
 
+	public async setLibrariesDuggableForAllIsolates() {
+		await Promise.all(this.threads.map((thread) => this.setLibrariesDebuggable(thread.ref)));
+	}
+
 	public receivedConfigurationDone() {
 		this.hasConfigurationDone = true;
 
