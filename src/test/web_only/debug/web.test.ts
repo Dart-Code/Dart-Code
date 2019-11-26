@@ -88,45 +88,6 @@ describe("web debugger", () => {
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === false);
 	});
 
-	it("expected debugger service extensions are available in debug mode", async () => {
-		const config = await startDebugger(webHelloWorldIndexFile);
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.launch(config),
-		]);
-
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true);
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true);
-
-		await Promise.all([
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		]);
-
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === false);
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false);
-	});
-
-	it("expected debugger service extensions are available in noDebug mode", async () => {
-		const config = await startDebugger(webHelloWorldIndexFile);
-		config.noDebug = true;
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.launch(config),
-		]);
-
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true);
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true);
-
-		await Promise.all([
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		]);
-
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === false);
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false);
-	});
-
 	// Skipped because this is super-flaky. If we quit to early, the processes are not
 	// cleaned up properly. This should be fixed when we move to the un-forked version.
 	it.skip("can quit during a build", async () => {
