@@ -99,6 +99,7 @@ export const webHelloWorldExampleSubFolder = vs.Uri.file(path.join(fsPath(webHel
 export const webHelloWorldExampleSubFolderIndexFile = vs.Uri.file(path.join(fsPath(webHelloWorldExampleSubFolder), "web/index.html"));
 export const webBrokenFolder = vs.Uri.file(path.join(fsPath(webProjectContainerFolder), "broken"));
 export const webBrokenIndexFile = vs.Uri.file(path.join(fsPath(webBrokenFolder), "web/index.html"));
+export const webBrokenMainFile = vs.Uri.file(path.join(fsPath(webBrokenFolder), "lib/src/todo_list/todo_list_component.dart"));
 // Web tests
 export const webTestMainFile = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "test/basic_test.dart"));
 export const webTestBrokenFile = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "test/broken_test.dart"));
