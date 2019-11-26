@@ -1,12 +1,12 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { VmService, VmServiceExtension } from "../../../shared/enums";
+import { VmService } from "../../../shared/enums";
 import { fetch } from "../../../shared/fetch";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise, webBrokenIndexFile, webHelloWorldExampleSubFolderIndexFile, webHelloWorldFolder, webHelloWorldIndexFile, webHelloWorldMainFile } from "../../helpers";
+import { activate, defer, delay, ext, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolderIndexFile, webHelloWorldFolder, webHelloWorldIndexFile, webHelloWorldMainFile } from "../../helpers";
 
 describe("web debugger", () => {
 	beforeEach("activate webHelloWorldIndexFile", () => activate(webHelloWorldIndexFile));
@@ -414,7 +414,7 @@ describe("web debugger", () => {
 	});
 
 	// Skipped due to https://github.com/flutter/flutter/issues/17007.
-	it.skip("stops on exception", async function () {
+	it("stops on exception", async function () {
 		if (!extApi.dartCapabilities.webSupportsEvaluation) {
 			this.skip();
 			return;
@@ -432,13 +432,14 @@ describe("web debugger", () => {
 		]);
 	});
 
-	it("provides exception details when stopped on exception", async () => {
-		await openFile(webBrokenIndexFile);
+	// Skipped because unable to set break-on-exceptions without start-paused
+	it.skip("provides exception details when stopped on exception", async () => {
+		await openFile(webBrokenMainFile);
 		const config = await startDebugger(webBrokenIndexFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
-				line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
+				line: positionOf("^Oops").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: fsPath(webBrokenIndexFile),
 			}),
 			dc.launch(config),
@@ -448,7 +449,8 @@ describe("web debugger", () => {
 		ensureVariable(variables, "$e.message", "message", `"(TODO WHEN UNSKIPPING)"`);
 	});
 
-	it("logs expected text (and does not stop) at a logpoint", async function () {
+	// Skipped because unable to set logpoints reliably without start-paused
+	it.skip("logs expected text (and does not stop) at a logpoint", async function () {
 		if (!extApi.dartCapabilities.webSupportsEvaluation) {
 			this.skip();
 			return;
@@ -474,7 +476,8 @@ describe("web debugger", () => {
 		]);
 	});
 
-	it("writes failure output", async () => {
+	// Skipped due to https://github.com/dart-lang/webdev/issues/837.
+	it.skip("writes failure output", async () => {
 		// This test really wants to check stderr, but since the widgets library catches the exception is
 		// just comes via stdout.
 		await openFile(webBrokenIndexFile);
