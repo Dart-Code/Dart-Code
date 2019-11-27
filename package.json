@@ -1506,6 +1506,12 @@
 					"description": "Whether to enable the debuggers 'Step Back' functionality. This is behind a flag while VS Code does not support enabling it separately to the 'Reverse Continue' button.",
 					"scope": "window"
 				},
+				"dart.previewNewCompletionPlaceholders": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to enable new behaviour for code completion to include @required arguments as placeholders (when using dart.insertArgumentPlaceholders).",
+					"scope": "window"
+				},
 				"dart.autoImportCompletions": {
 					"type": "boolean",
 					"default": true,
