@@ -199,6 +199,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			relevance,
 			replacementLength,
 			replacementOffset,
+			requiredParameterCount: suggestion.requiredParameterCount,
 			returnType: suggestion.element ? suggestion.element.returnType : undefined,
 			selectionLength: resolvedResult && resolvedResult.change && resolvedResult.change.selection ? 0 : undefined,
 			selectionOffset: resolvedResult && resolvedResult.change && resolvedResult.change.selection ? resolvedResult.change.selection.offset : undefined,
@@ -370,6 +371,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			relevance: suggestion.relevance,
 			replacementLength: notification.replacementLength,
 			replacementOffset: notification.replacementOffset,
+			requiredParameterCount: suggestion.requiredParameterCount,
 			returnType: suggestion.returnType || (suggestion.element ? suggestion.element.returnType : undefined),
 			selectionLength: suggestion.selectionLength,
 			selectionOffset: suggestion.selectionOffset,
@@ -380,6 +382,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		document: TextDocument, nextCharacter: string, enableCommitCharacters: boolean, insertArgumentPlaceholders: boolean, suggestion: {
 			autoImportUri?: string,
 			completionText: string,
+			defaultArgumentListString: string | undefined,
+			defaultArgumentListTextRanges: number[] | undefined,
 			displayText: string | undefined,
 			docSummary?: string | undefined,
 			elementKind: as.ElementKind | undefined,
@@ -388,8 +392,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			parameterNames: string[] | undefined,
 			parameters: string | undefined,
 			parameterType: string | undefined,
-			defaultArgumentListString: string | undefined,
-			defaultArgumentListTextRanges: number[] | undefined,
+			requiredParameterCount: number | undefined,
 			relevance: number,
 			replacementLength: number,
 			replacementOffset: number,
@@ -417,7 +420,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			const hasParams = (suggestion.parameterNames && suggestion.parameterNames.length > 0) || !!suggestion.defaultArgumentListString;
 
 			// Add placeholders for params to the completion.
-			if (insertArgumentPlaceholders && hasParams && !nextCharacterIsOpenParen) {
+			if (config.previewNewCompletionPlaceholders && insertArgumentPlaceholders && hasParams && !nextCharacterIsOpenParen) {
 				completionText.appendText(suggestion.completionText);
 				completionText.appendText("(");
 				if (suggestion.defaultArgumentListString) {
@@ -430,6 +433,19 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 					}
 				} else
 					completionText.appendTabstop(); // Put a tap stop between parens since there are optional args.
+				completionText.appendText(")");
+			} else if (insertArgumentPlaceholders && hasParams && !nextCharacterIsOpenParen) {
+				completionText.appendText(suggestion.completionText);
+				const args = suggestion.parameterNames!.slice(0, suggestion.requiredParameterCount);
+				completionText.appendText("(");
+				if (args.length) {
+					completionText.appendPlaceholder(args[0]);
+					for (const arg of args.slice(1)) {
+						completionText.appendText(", ");
+						completionText.appendPlaceholder(arg);
+					}
+				} else
+					completionText.appendTabstop(config.previewNewCompletionPlaceholders ? undefined : 0); // Put a tap stop between parens since there are optional args.
 				completionText.appendText(")");
 			} else if (insertArgumentPlaceholders && !nextCharacterIsOpenParen) {
 				completionText.appendText(suggestion.completionText);
@@ -451,7 +467,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			if (selection)
 				completionText.appendPlaceholder(selection);
 			else
-				completionText.appendTabstop(0);
+				completionText.appendTabstop(config.previewNewCompletionPlaceholders ? undefined : 0);
 			completionText.appendText(after);
 		} else {
 			completionText.appendText(suggestion.completionText);
