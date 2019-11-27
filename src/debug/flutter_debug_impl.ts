@@ -108,6 +108,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			}
 		});
 		this.runDaemon.registerForAppProgress((e) => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished, progressID: e.progressId || e.id })));
+		this.runDaemon.registerForAppWebLaunchUrl((e) => this.sendEvent(new Event("dart.webLaunchUrl", { url: e.url, launched: e.launched })));
 		// TODO: Should this use logToUser?
 		this.runDaemon.registerForError((err) => this.sendEvent(new OutputEvent(`${err}\n`, "stderr")));
 		this.runDaemon.registerForDaemonLog((msg) => this.handleLogOutput(msg.log, msg.error));

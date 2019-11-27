@@ -421,6 +421,16 @@ export class DebugCommands {
 			} else {
 				this.logger.warn(`Got output event for session without pseudoterminal: ${e.body.message}`);
 			}
+		} else if (e.event === "dart.webLaunchUrl") {
+			const launched = !!e.body.launched;
+			if (!launched) {
+				try {
+					const uri = vs.Uri.parse(e.body.url, true);
+					envUtils.openInBrowser(uri.toString());
+				} catch (e) {
+					this.logger.error(`Failed to parse URL from Flutter app.webLaunchUrl event: ${e.body.url}`);
+				}
+			}
 		} else if (e.event === "dart.progress") {
 			if (e.body.message) {
 				if (session.launchProgressReporter) {

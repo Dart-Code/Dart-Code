@@ -48,6 +48,9 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 			case "app.started":
 				this.notify(this.appStartedSubscriptions, evt.params as f.AppEvent);
 				break;
+			case "app.webLaunchUrl":
+				this.notify(this.appWebLaunchUrlSubscriptions, evt.params as f.AppWebLaunchUrl);
+				break;
 			case "app.stop":
 				this.notify(this.appStopSubscriptions, evt.params as f.AppEvent);
 				break;
@@ -74,6 +77,7 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 	private appStartedSubscriptions: Array<(notification: f.AppEvent) => void> = [];
 	private appStopSubscriptions: Array<(notification: f.AppEvent) => void> = [];
 	private appProgressSubscriptions: Array<(notification: f.AppProgress) => void> = [];
+	private appWebLaunchUrlSubscriptions: Array<(notification: f.AppWebLaunchUrl) => void> = [];
 	private appLogSubscriptions: Array<(notification: f.AppLog) => void> = [];
 	private errorSubscriptions: Array<(notification: string) => void> = [];
 	private daemonLogMessageSubscriptions: Array<(notification: f.DaemonLogMessage) => void> = [];
@@ -121,6 +125,10 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 
 	public registerForAppProgress(subscriber: (notification: f.AppProgress) => void): IAmDisposable {
 		return this.subscribe(this.appProgressSubscriptions, subscriber);
+	}
+
+	public registerForAppWebLaunchUrl(subscriber: (notification: f.AppWebLaunchUrl) => void): IAmDisposable {
+		return this.subscribe(this.appWebLaunchUrlSubscriptions, subscriber);
 	}
 
 	public registerForAppLog(subscriber: (notification: f.AppLog) => void): IAmDisposable {

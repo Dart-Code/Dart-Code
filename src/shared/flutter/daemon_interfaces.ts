@@ -54,6 +54,11 @@ export interface AppProgress extends AppEvent {
 	progressId: string;
 }
 
+export interface AppWebLaunchUrl extends AppEvent {
+	url: string;
+	launched: boolean;
+}
+
 export interface DaemonLogMessage {
 	level: "info" | "warning" | "error";
 	message: string;
