@@ -121,12 +121,10 @@ export class ThreadManager {
 				// Only log the first setLibraryDebuggable error for now
 				// because for web we get a *lot* and it's very sapammy in the logs.
 				// Remove this variable/condition when https://github.com/dart-lang/webdev/issues/606
-				// is resolved.
+				// is resolved and change `info` to `warn`.
 				if (!hasLoggedError)
 					this.logger.info(errorString(e));
 				hasLoggedError = true;
-				// For web, the protocol version says this is supported, but it throws.
-				// TODO: Remove this catch blog if/when the stable release does not throw.
 			});
 	}
 
