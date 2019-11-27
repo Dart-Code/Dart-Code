@@ -16,8 +16,8 @@ module.exports = {
 				summaryFile: process.env.TEST_CSV_SUMMARY,
 				testRunName: process.env.TEST_RUN_NAME,
 			},
-			slow: 10000,       // increased threshold before marking a test as slow
-			timeout: 180000,   // increased timeout because starting up Code, Analyzer, Pub, etc. is slooow
+			slow: 30000,       // increased threshold before marking a test as slow
+			timeout: 360000,   // increased timeout because starting up Code, Analyzer, Pub, etc. is slooow
 			ui: "bdd",        // the TDD UI is being used in extension.test.ts (suite, test, etc.)
 			useColors: true,  // colored output from test results
 		});

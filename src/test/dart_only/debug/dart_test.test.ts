@@ -232,7 +232,7 @@ describe("dart test debugger", () => {
 			);
 			await checkResults(`After running ${numRuns++} tests (most recently ${test.fullName})`);
 		}
-	}).timeout(180000); // This test runs lots of tests, and they're quite slow to start up currently.
+	});
 
 	it("merges same name groups but not tests from the same run", async () => {
 		// This test is similar to above but contains adjacent tests with the same name.
