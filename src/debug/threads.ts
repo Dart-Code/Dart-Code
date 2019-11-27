@@ -106,6 +106,7 @@ export class ThreadManager {
 		// Set whether libraries should be debuggable based on user settings.
 		const response = await this.debugSession.observatory.getIsolate(isolateRef.id);
 		const isolate: VMIsolate = response.result as VMIsolate;
+		let hasLoggedError = false;
 		await Promise.all(
 			isolate.libraries.filter((l) => this.debugSession.isValidToDebug(l.uri)).map((library): Promise<any> => {
 				if (!this.debugSession.observatory)
@@ -117,7 +118,13 @@ export class ThreadManager {
 					|| (this.debugSession.isExternalLibrary(library.uri) && !this.debugSession.debugExternalLibraries));
 				return this.debugSession.observatory.setLibraryDebuggable(isolate.id, library.id, shouldDebug);
 			})).catch((e) => {
-				this.logger.info(errorString(e));
+				// Only log the first setLibraryDebuggable error for now
+				// because for web we get a *lot* and it's very sapammy in the logs.
+				// Remove this variable/condition when https://github.com/dart-lang/webdev/issues/606
+				// is resolved.
+				if (!hasLoggedError)
+					this.logger.info(errorString(e));
+				hasLoggedError = true;
 				// For web, the protocol version says this is supported, but it throws.
 				// TODO: Remove this catch blog if/when the stable release does not throw.
 			});
