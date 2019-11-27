@@ -34,18 +34,18 @@ describe("web debugger", () => {
 	it("runs a web application and remains active until told to quit", async () => {
 		const config = await startDebugger(webHelloWorldIndexFile);
 		await Promise.all([
-			dc.assertOutputContains("stdout", "Serving `web` on http://127.0.0.1:"),
-			dc.configurationSequence(),
-			dc.launch(config),
+			watchPromise("assertOutputContains(serving web on)", dc.assertOutputContains("stdout", "Serving `web` on http://127.0.0.1:")),
+			watchPromise("configurationSequence", dc.configurationSequence()),
+			watchPromise("launch", dc.launch(config)),
 		]);
 
 		// Ensure we're still responsive after 3 seconds.
 		await delay(3000);
-		await dc.threadsRequest();
+		await watchPromise("threadsRequest", dc.threadsRequest());
 
 		await Promise.all([
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
+			watchPromise("waitForEvent(terminated)", dc.waitForEvent("terminated")),
+			watchPromise("terminateRequest", dc.terminateRequest()),
 		]);
 	});
 
