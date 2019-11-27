@@ -165,14 +165,14 @@
 			]
 		},
 		{
-			"name": "Launch Tests (Dart Web)",
+			"name": "Launch Tests (Dart Web Debug)",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/web",
 				"--extensionDevelopmentPath=${workspaceRoot}",
-				"--extensionTestsPath=${workspaceRoot}/out/src/test/web",
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/web_debug",
 				"--user-data-dir=${workspaceRoot}/.dart_code_test_data_dir"
 			],
 			"env": {
