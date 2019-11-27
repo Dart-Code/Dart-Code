@@ -690,7 +690,7 @@ export async function ensureTestContent(expected: string, allowNewMismatches = f
 
 export async function ensureTestSelection(expected: vs.Range): Promise<void> {
 	const editor = currentEditor();
-	assert.equal(editor.selection.isEqual(expected), true, `${rangeString(editor.selection)} vs ${rangeString(expected)}`);
+	assert.equal(editor.selection.isEqual(expected), true, `actual: ${rangeString(editor.selection)} (${editor.document.getText(editor.selection)}) vs expected: ${rangeString(expected)} (${editor.document.getText(expected)})`);
 }
 
 export async function ensureTestContentWithCursorPos(expected: string): Promise<void> {
