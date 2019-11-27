@@ -187,6 +187,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		const completionItem = this.makeCompletion(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, {
 			autoImportUri: displayUri,
 			completionText: (resolvedResult && resolvedResult.completion) || suggestion.label,
+			defaultArgumentListString: suggestion.defaultArgumentListString,
+			defaultArgumentListTextRanges: suggestion.defaultArgumentListTextRanges,
 			displayText: suggestion.label, // Keep the label for display, so we don't update to show "prefix0" as the user moves to it.
 			elementKind: suggestion.element ? suggestion.element.kind : undefined,
 			isDeprecated: false,
@@ -197,7 +199,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			relevance,
 			replacementLength,
 			replacementOffset,
-			requiredParameterCount: suggestion.requiredParameterCount,
 			returnType: suggestion.element ? suggestion.element.returnType : undefined,
 			selectionLength: resolvedResult && resolvedResult.change && resolvedResult.change.selection ? 0 : undefined,
 			selectionOffset: resolvedResult && resolvedResult.change && resolvedResult.change.selection ? resolvedResult.change.selection.offset : undefined,
@@ -356,6 +357,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	): CompletionItem {
 		return this.makeCompletion(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, {
 			completionText: suggestion.completion,
+			defaultArgumentListString: suggestion.defaultArgumentListString,
+			defaultArgumentListTextRanges: suggestion.defaultArgumentListTextRanges,
 			displayText: suggestion.displayText,
 			docSummary: suggestion.docSummary,
 			elementKind: suggestion.element ? suggestion.element.kind : undefined,
@@ -367,7 +370,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			relevance: suggestion.relevance,
 			replacementLength: notification.replacementLength,
 			replacementOffset: notification.replacementOffset,
-			requiredParameterCount: suggestion.requiredParameterCount,
 			returnType: suggestion.returnType || (suggestion.element ? suggestion.element.returnType : undefined),
 			selectionLength: suggestion.selectionLength,
 			selectionOffset: suggestion.selectionOffset,
@@ -386,10 +388,11 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			parameterNames: string[] | undefined,
 			parameters: string | undefined,
 			parameterType: string | undefined,
+			defaultArgumentListString: string | undefined,
+			defaultArgumentListTextRanges: number[] | undefined,
 			relevance: number,
 			replacementLength: number,
 			replacementOffset: number,
-			requiredParameterCount: number | undefined,
 			returnType: string | undefined,
 			selectionLength: number | undefined,
 			selectionOffset: number | undefined,
@@ -411,18 +414,19 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			label += suggestion.parameters.length === 2 ? "()" : "(…)";
 			detail = suggestion.parameters;
 
-			const hasParams = suggestion.parameterNames && suggestion.parameterNames.length > 0;
+			const hasParams = (suggestion.parameterNames && suggestion.parameterNames.length > 0) || suggestion.defaultArgumentListString;
 
 			// Add placeholders for params to the completion.
 			if (insertArgumentPlaceholders && hasParams && !nextCharacterIsOpenParen) {
 				completionText.appendText(suggestion.completionText);
-				const args = suggestion.parameterNames!.slice(0, suggestion.requiredParameterCount);
 				completionText.appendText("(");
-				if (args.length) {
-					completionText.appendPlaceholder(args[0]);
-					for (const arg of args.slice(1)) {
-						completionText.appendText(", ");
-						completionText.appendPlaceholder(arg);
+				if (suggestion.defaultArgumentListString) {
+					for (const arg of this.extractTabstopDataForNamedArgs(suggestion.defaultArgumentListString, suggestion.defaultArgumentListTextRanges || [])) {
+						const text = suggestion.defaultArgumentListString.substring(arg.start, arg.end);
+						if (arg.tabStop)
+							completionText.appendPlaceholder(text);
+						else
+							completionText.appendText(text);
 					}
 				} else
 					completionText.appendTabstop(0); // Put a tap stop between parens since there are optional args.
@@ -430,7 +434,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			} else if (insertArgumentPlaceholders && !nextCharacterIsOpenParen) {
 				completionText.appendText(suggestion.completionText);
 				completionText.appendText("(");
-				if (hasParams)
+				if (hasParams) // TODO: Can this ever be hit? Surely it'd go into the one above?
 					completionText.appendTabstop(0);
 				completionText.appendText(")");
 			} else {
@@ -520,6 +524,45 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		//   1 -> 999999
 		completion.sortText = (1000000 - suggestion.relevance).toString() + label.trim();
 		return completion;
+	}
+
+	/// Argument info comes through as a stringle string like "a: null, b: null"
+	/// and an array of ints that are offset/length pairs. [3,4,12,4] means
+	/// characters 3-7 and 12 - 16 are tabstops.
+	///
+	/// To process this more easily, we first convert this into an array like:
+	///
+	/// ```
+	/// [
+	///   { start: 0, end: 3, tabStop: false },
+	///   { start: 3, end: 7, tabStop: true },
+	///   { start: 7, end: 12, tabStop: false },
+	///   { start: 12, end: 16, tabStop: true },
+	/// ]
+	/// ```
+	private extractTabstopDataForNamedArgs(argListString: string, argListTextRanges: number[]): Array<{ start: number, end: number, tabStop: boolean }> {
+		const ranges: Array<{ start: number, end: number, tabStop: boolean }> = [];
+		let currentIndex = 0;
+
+		// For each range, push anything that comes before it, and it.
+		for (const range of this.extractOffsetLengthPairs(argListTextRanges)) {
+			ranges.push({ start: currentIndex, end: range[0], tabStop: false });
+			ranges.push({ start: range[0], end: range[1], tabStop: true });
+			currentIndex = range[1];
+		}
+		// Then push anything left at the end.
+		if (currentIndex < argListString.length)
+			ranges.push({ start: currentIndex, end: argListString.length, tabStop: false });
+
+		return ranges;
+	}
+
+	private extractOffsetLengthPairs(numberPairs: number[]): Array<[number, number]> {
+		const pairs: Array<[number, number]> = [];
+		for (let i = 0; i < numberPairs.length - 1; i += 2) {
+			pairs.push([numberPairs[i], numberPairs[i] + numberPairs[i + 1]]);
+		}
+		return pairs;
 	}
 
 	private getSuggestionKind(kind: as.CompletionSuggestionKind, label: string): CompletionItemKind | undefined {
