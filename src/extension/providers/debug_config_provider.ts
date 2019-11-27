@@ -31,8 +31,6 @@ import { TestResultsProvider } from "../views/test_view";
 
 const isCI = !!process.env.CI;
 
-let hasShownWebDebugWarning = false;
-
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugServers: { [index: string]: net.Server } = {};
 
