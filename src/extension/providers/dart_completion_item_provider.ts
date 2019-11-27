@@ -414,7 +414,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			label += suggestion.parameters.length === 2 ? "()" : "(…)";
 			detail = suggestion.parameters;
 
-			const hasParams = (suggestion.parameterNames && suggestion.parameterNames.length > 0) || suggestion.defaultArgumentListString;
+			const hasParams = (suggestion.parameterNames && suggestion.parameterNames.length > 0) || !!suggestion.defaultArgumentListString;
 
 			// Add placeholders for params to the completion.
 			if (insertArgumentPlaceholders && hasParams && !nextCharacterIsOpenParen) {
@@ -429,14 +429,11 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 							completionText.appendText(text);
 					}
 				} else
-					completionText.appendTabstop(0); // Put a tap stop between parens since there are optional args.
+					completionText.appendTabstop(); // Put a tap stop between parens since there are optional args.
 				completionText.appendText(")");
 			} else if (insertArgumentPlaceholders && !nextCharacterIsOpenParen) {
 				completionText.appendText(suggestion.completionText);
-				completionText.appendText("(");
-				if (hasParams) // TODO: Can this ever be hit? Surely it'd go into the one above?
-					completionText.appendTabstop(0);
-				completionText.appendText(")");
+				completionText.appendText("()");
 			} else {
 				completionText.appendText(suggestion.completionText);
 			}
