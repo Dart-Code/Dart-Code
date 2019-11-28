@@ -6,11 +6,11 @@ let exitCode = 0;
 const cwd = process.cwd();
 const testEnv = Object.create(process.env);
 
-async function runTests(testFolder: string, workspaceFolder: string, env?: {}): Promise<void> {
+async function runTests(testFolder: string, workspaceFolder: string, logSuffix?: string, env?: {}): Promise<void> {
 	console.log(
 		`Running ${testFolder} tests folder in workspace ${workspaceFolder}`);
 
-	const logsName = process.env.LOGS_NAME;
+	const logsName = logSuffix ? `${process.env.LOGS_NAME}_${logSuffix}` : process.env.LOGS_NAME;
 	const testRunName = `${testFolder.replace("/", "_")}_${logsName}`;
 
 	testEnv.TEST_RUN_NAME = testRunName;
@@ -100,7 +100,7 @@ async function runAllTests(): Promise<void> {
 			await runTests("flutter_debug", "flutter_hello_world");
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter_debug_chrome") {
-			await runTests("flutter_debug", "flutter_hello_world", { FLUTTER_TEST_DEVICE_ID: "chrome" });
+			await runTests("flutter_debug", "flutter_hello_world", "chrome", { FLUTTER_TEST_DEVICE_ID: "chrome" });
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter_test_debug") {
 			await runTests("flutter_test_debug", "flutter_hello_world");
