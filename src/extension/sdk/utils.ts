@@ -232,7 +232,7 @@ export class SdkUtils {
 			fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter"),
 			firstFlutterMobileProject,
 			firstFlutterMobileProject && extractFlutterSdkPathFromPackagesFile(path.join(firstFlutterMobileProject, ".packages")),
-			firstFlutterMobileProject && path.join(firstFlutterMobileProject, "flutter"),
+			firstFlutterMobileProject && path.join(firstFlutterMobileProject, ".flutter"),
 			firstFlutterMobileProject && path.join(firstFlutterMobileProject, "vendor/flutter"),
 			process.env.FLUTTER_ROOT,
 		].concat(paths).filter(notUndefined);
