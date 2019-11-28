@@ -159,9 +159,10 @@ export class FlutterDebugSession extends DartDebugSession {
 				appArgs.push("--release");
 			} else {
 				// Debug mode
-				if (this.flutterTrackWidgetCreation) {
+				if (this.flutterTrackWidgetCreation)
 					appArgs.push("--track-widget-creation");
-				}
+				else
+					appArgs.push("--no-track-widget-creation");
 			}
 
 			if (args.flutterPlatform && args.flutterPlatform !== "default") {
