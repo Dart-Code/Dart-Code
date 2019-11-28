@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - gh-actions-test
+      - gh-actions-test-debugging
 
 jobs:
   build:
