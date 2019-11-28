@@ -10,8 +10,8 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 	console.log(
 		`Running ${testFolder} tests folder in workspace ${workspaceFolder}`);
 
-	const logsName = logSuffix ? `${process.env.LOGS_NAME}_${logSuffix}` : process.env.LOGS_NAME;
-	const testRunName = `${testFolder.replace("/", "_")}_${logsName}`;
+	const logsName = process.env.LOGS_NAME;
+	const testRunName = `${testFolder.replace("/", "_")}${logSuffix ? `_${logSuffix}` : ""}_${logsName}`;
 
 	testEnv.TEST_RUN_NAME = testRunName;
 	testEnv.DC_TEST_LOGS = path.join(cwd, ".dart_code_test_logs", `${testRunName}`);
