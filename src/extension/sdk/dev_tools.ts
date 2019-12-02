@@ -10,7 +10,7 @@ import { CategoryLogger } from "../../shared/logging";
 import { UnknownNotification } from "../../shared/services/interfaces";
 import { getRandomInt } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
-import { isRunningLocally } from "../../shared/vscode/utils";
+import { envUtils, isRunningLocally } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions } from "../commands/debug";
@@ -18,7 +18,6 @@ import { config } from "../config";
 import { PubGlobal } from "../pub/global";
 import { StdIOService } from "../services/stdio_service";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
-import { envUtils } from "../utils/vscode/editor";
 
 const devtools = "devtools";
 const devtoolsPackageName = "Dart DevTools";

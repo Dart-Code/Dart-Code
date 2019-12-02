@@ -1,4 +1,4 @@
-import { ExtensionKind, extensions, Position, Range, TextDocument, Uri, workspace, WorkspaceFolder } from "vscode";
+import { env as vsEnv, ExtensionKind, extensions, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType, Uri, workspace, WorkspaceFolder } from "vscode";
 import { dartCodeExtensionIdentifier } from "../constants";
 import { Location } from "../interfaces";
 import { forceWindowsDriveLetterToUppercase } from "../utils";
@@ -45,3 +45,31 @@ export function toRangeOnLine(location: Location): Range {
 	const startPos = toPosition(location);
 	return new Range(startPos, startPos.translate(0, location.length));
 }
+
+export function showCode(editor: TextEditor, displayRange: Range, highlightRange: Range, selectionRange?: Range): void {
+	if (selectionRange)
+		editor.selection = new Selection(selectionRange.start, selectionRange.end);
+
+	// Ensure the code is visible on screen.
+	editor.revealRange(displayRange, TextEditorRevealType.InCenterIfOutsideViewport);
+
+	// TODO: Implement highlighting
+	// See https://github.com/Microsoft/vscode/issues/45059
+}
+
+class EnvUtils {
+	public async openInBrowser(url: string): Promise<boolean> {
+		return vsEnv.openExternal(Uri.parse(url));
+	}
+
+	public async asExternalUri(uri: Uri): Promise<Uri> {
+		// TODO: Remove this scheme mapping when https://github.com/microsoft/vscode/issues/84819
+		// is resolved.
+		const scheme = uri.scheme;
+		const fakeScheme = scheme === "ws" ? "http" : "https";
+		const mappedUri = await vsEnv.asExternalUri(uri.with({ scheme: fakeScheme }));
+		return mappedUri.with({ scheme });
+	}
+}
+
+export const envUtils = new EnvUtils();

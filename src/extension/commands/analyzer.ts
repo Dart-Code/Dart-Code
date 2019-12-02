@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { Analyzer } from "../../shared/analyzer";
-import { envUtils } from "../utils/vscode/editor";
+import { envUtils } from "../../shared/vscode/utils";
 
 export class AnalyzerCommands {
 	constructor(context: vs.ExtensionContext, analyzer: Analyzer) {

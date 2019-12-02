@@ -7,12 +7,11 @@ import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter } from "../../shared/utils";
 import { findProjectFolders, hasPubspec } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
-import { fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { envUtils, fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { getSdkVersion, notUndefined, openExtensionLogFile, reloadExtension, resolvePaths } from "../utils";
-import { envUtils } from "../utils/vscode/editor";
 
 // TODO: Tidy this class up (it exists mainly to share logger).
 export class SdkUtils {

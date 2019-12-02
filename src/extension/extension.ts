@@ -16,7 +16,7 @@ import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
-import { fsPath, getDartWorkspaceFolders, isRunningLocally } from "../shared/vscode/utils";
+import { envUtils, fsPath, getDartWorkspaceFolders, isRunningLocally } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { DasAnalyzer } from "./analysis/analyzer_das";
@@ -79,7 +79,6 @@ import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
 import { safeSpawn } from "./utils/processes";
-import { envUtils } from "./utils/vscode/editor";
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestItemTreeItem, TestResultsProvider } from "./views/test_view";
 

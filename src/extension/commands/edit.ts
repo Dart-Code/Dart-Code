@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { dartRecommendedConfig, openSettingsAction } from "../../shared/constants";
-import { showCode } from "../utils/vscode/editor";
+import { showCode } from "../../shared/vscode/utils";
 
 export class EditCommands implements vs.Disposable {
 	private commands: vs.Disposable[] = [];

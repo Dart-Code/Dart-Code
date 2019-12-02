@@ -1,8 +1,7 @@
 import * as vs from "vscode";
-import { fsPath, toRangeOnLine } from "../../shared/vscode/utils";
+import { fsPath, showCode, toRangeOnLine } from "../../shared/vscode/utils";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import * as editors from "../editors";
-import { showCode } from "../utils/vscode/editor";
 import { findNearestOutlineNode } from "../utils/vscode/outline";
 
 export class GoToSuperCommand implements vs.Disposable {

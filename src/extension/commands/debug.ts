@@ -8,7 +8,7 @@ import { Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
 import { findProjectFolders } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
-import { fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { envUtils, fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
@@ -18,7 +18,6 @@ import { DebuggerType } from "../providers/debug_config_provider";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools";
 import { DartDebugSessionInformation, DartDebugSessionPseudoterminal } from "../utils/vscode/debug";
-import { envUtils } from "../utils/vscode/editor";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
 // export let mostRecentAttachedProbablyReusableObservatoryUri: string;
