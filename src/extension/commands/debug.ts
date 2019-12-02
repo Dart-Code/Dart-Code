@@ -356,19 +356,20 @@ export class DebugCommands {
 	private handleCustomEvent(e: vs.DebugSessionCustomEvent): boolean {
 		if (e.event === "dart.log") {
 			const message: LogMessage = e.body;
+			const logMessage = `[${e.session.name}] ${message.message}`;
 			// TODO: Can we get rid of this switch?
 			switch (message.severity) {
 				case LogSeverity.Info:
-					this.logger.info(message.message, message.category);
+					this.logger.info(logMessage, message.category);
 					break;
 				case LogSeverity.Warn:
-					this.logger.warn(message.message, message.category);
+					this.logger.warn(logMessage, message.category);
 					break;
 				case LogSeverity.Error:
-					this.logger.error(message.message, message.category);
+					this.logger.error(logMessage, message.category);
 					break;
 				default:
-					this.logger.warn(`Failed to handle log event ${JSON.stringify(message)}`);
+					this.logger.warn(`Failed to handle log event [${e.session.name}] ${JSON.stringify(message)}`);
 			}
 		} else if (e.event === "dart.hotRestartRequest") {
 			// This event comes back when the user restarts with the Restart button
