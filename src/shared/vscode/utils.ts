@@ -65,10 +65,17 @@ class EnvUtils {
 	public async asExternalUri(uri: Uri): Promise<Uri> {
 		// TODO: Remove this scheme mapping when https://github.com/microsoft/vscode/issues/84819
 		// is resolved.
-		const scheme = uri.scheme;
-		const fakeScheme = scheme === "ws" ? "http" : "https";
+		const fakeScheme = uri.scheme === "ws" ? "http" : "https";
 		const mappedUri = await vsEnv.asExternalUri(uri.with({ scheme: fakeScheme }));
-		return mappedUri.with({ scheme });
+
+		// Now we need to map the scheme back to WS if that's what was originally asked for, however
+		// we need to take into account whether asExternalUri pushed is up to secure, so use
+		// the http/https to decide which to go back to.
+		let newScheme = mappedUri.scheme;
+		if (uri.scheme === "ws" || uri.scheme === "wss")
+			newScheme = mappedUri.scheme === "https" ? "wss" : "ws";
+
+		return mappedUri.with({ scheme: newScheme });
 	}
 }
 
