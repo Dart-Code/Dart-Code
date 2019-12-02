@@ -1383,7 +1383,7 @@
 						"string"
 					],
 					"default": null,
-					"description": "The path to a log file for 'flutter run' which is used to launch Flutter applications from VS Code. This is useful when trying to diagnose issues with applications launching (or failing to) on simulators and devices.",
+					"description": "The path to a log file for 'flutter run' which is used to launch Flutter applications from VS Code. This is useful when trying to diagnose issues with applications launching (or failing to) on simulators and devices. Use ${name} in the log file name to prevent concurrent debug sessions overwriting each others logs.",
 					"scope": "resource"
 				},
 				"dart.flutterTestLogFile": {
@@ -1392,7 +1392,7 @@
 						"string"
 					],
 					"default": null,
-					"description": "The path to a log file for 'flutter test' which is used to run unit tests from VS Code. This is useful when trying to diagnose issues with unit test executions.",
+					"description": "The path to a log file for 'flutter test' which is used to run unit tests from VS Code. This is useful when trying to diagnose issues with unit test executions. Use ${name} in the log file name to prevent concurrent debug sessions overwriting each others logs.",
 					"scope": "resource"
 				},
 				"dart.pubTestLogFile": {
@@ -1401,7 +1401,7 @@
 						"string"
 					],
 					"default": null,
-					"description": "The path to a log file for 'pub run test' runs. This is useful when trying to diagnose issues with unit test executions.",
+					"description": "The path to a log file for 'pub run test' runs. This is useful when trying to diagnose issues with unit test executions. Use ${name} in the log file name to prevent concurrent debug sessions overwriting each others logs.",
 					"scope": "resource"
 				},
 				"dart.observatoryLogFile": {
@@ -1410,7 +1410,7 @@
 						"string"
 					],
 					"default": null,
-					"description": "The path to a log file for communication between Dart Code and Observatory (the VM debugger). This is useful when trying to diagnose issues with debugging such as missed breakpoints.",
+					"description": "The path to a log file for communication between Dart Code and Observatory (the VM debugger). This is useful when trying to diagnose issues with debugging such as missed breakpoints. Use ${name} in the log file name to prevent concurrent debug sessions overwriting each others logs.",
 					"scope": "resource"
 				},
 				"dart.useKnownChromeOSPorts": {
@@ -1425,7 +1425,7 @@
 						"string"
 					],
 					"default": null,
-					"description": "The path to a log file for communication between Dart Code and the webdev daemon. This is useful when trying to diagnose issues with launching web applications.",
+					"description": "The path to a log file for communication between Dart Code and the webdev daemon. This is useful when trying to diagnose issues with launching web applications. Use ${name} in the log file name to prevent concurrent debug sessions overwriting each others logs.",
 					"scope": "resource"
 				},
 				"dart.vmAdditionalArgs": {

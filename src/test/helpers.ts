@@ -9,7 +9,7 @@ import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
-import { BufferedLogger, flatMap } from "../shared/utils";
+import { BufferedLogger, filenameSafe, flatMap } from "../shared/utils";
 import { tryDeleteFile } from "../shared/utils/fs";
 import { waitFor } from "../shared/utils/promises";
 import { DelayedCompletionItem, InternalExtensionApi } from "../shared/vscode/interfaces";
@@ -774,11 +774,6 @@ export async function withTimeout<T>(promise: Thenable<T>, message: string | (()
 			resolve(result);
 		});
 	});
-}
-
-// This same logic exists in the website to link back to logs.
-export function filenameSafe(input: string) {
-	return input.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
 }
 
 async function getResolvedDebugConfiguration(extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {

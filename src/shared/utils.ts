@@ -52,6 +52,10 @@ export function throttle(fn: (...args: any[]) => void, limitMilliseconds: number
 	};
 }
 
+export function filenameSafe(input: string) {
+	return input.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
+}
+
 export function escapeRegExp(input: string): string {
 	return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 }

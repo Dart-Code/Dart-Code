@@ -15,7 +15,7 @@ import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { CHROME_OS_VM_SERVICE_PORT, dartVMPath, debugAnywayAction, flutterPath, HAS_LAST_DEBUG_CONFIG, isChromeOS, pubPath, pubSnapshotPath, showErrorsAction } from "../../shared/constants";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { IFlutterDaemon, Logger, Sdks } from "../../shared/interfaces";
-import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../../shared/utils";
+import { filenameSafe, forceWindowsDriveLetterToUppercase, isWithinPath } from "../../shared/utils";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { fsPath } from "../../shared/vscode/utils";
 import { Analytics } from "../analytics";
@@ -439,12 +439,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
 		debugConfig.vmServicePort = debugConfig.vmServicePort || (isChromeOS && config.useKnownChromeOSPorts ? CHROME_OS_VM_SERVICE_PORT : 0);
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart!, dartVMPath);
-		debugConfig.observatoryLogFile = debugConfig.observatoryLogFile || conf.observatoryLogFile;
-		debugConfig.webDaemonLogFile = debugConfig.webDaemonLogFile || conf.webDaemonLogFile;
+		debugConfig.observatoryLogFile = this.insertSessionName(debugConfig, debugConfig.observatoryLogFile || conf.observatoryLogFile);
+		debugConfig.webDaemonLogFile = this.insertSessionName(debugConfig, debugConfig.webDaemonLogFile || conf.webDaemonLogFile);
 		debugConfig.maxLogLineLength = debugConfig.maxLogLineLength || config.maxLogLineLength;
 		debugConfig.pubPath = debugConfig.pubPath || path.join(this.sdks.dart!, pubPath);
 		debugConfig.pubSnapshotPath = debugConfig.pubSnapshotPath || path.join(this.sdks.dart!, pubSnapshotPath);
-		debugConfig.pubTestLogFile = debugConfig.pubTestLogFile || conf.pubTestLogFile;
+		debugConfig.pubTestLogFile = this.insertSessionName(debugConfig, debugConfig.pubTestLogFile || conf.pubTestLogFile);
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries !== undefined && debugConfig.debugSdkLibraries !== null
 			? debugConfig.debugSdkLibraries
 			: !!config.debugSdkLibraries;
@@ -470,8 +470,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.flutterMode = debugConfig.flutterMode || "debug";
 			debugConfig.flutterPlatform = debugConfig.flutterPlatform || "default";
 			debugConfig.flutterPath = debugConfig.flutterPath || path.join(this.sdks.flutter, flutterPath);
-			debugConfig.flutterRunLogFile = debugConfig.flutterRunLogFile || conf.flutterRunLogFile;
-			debugConfig.flutterTestLogFile = debugConfig.flutterTestLogFile || conf.flutterTestLogFile;
+			debugConfig.flutterRunLogFile = this.insertSessionName(debugConfig, debugConfig.flutterRunLogFile || conf.flutterRunLogFile);
+			debugConfig.flutterTestLogFile = this.insertSessionName(debugConfig, debugConfig.flutterTestLogFile || conf.flutterTestLogFile);
 			if (!debugConfig.deviceId && device) {
 				debugConfig.deviceId = device.id;
 				debugConfig.deviceName = `${deviceManager ? deviceManager.labelForDevice(device) : device.name} (${device.platform})`;
@@ -481,6 +481,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					? debugConfig.showMemoryUsage
 					: debugConfig.flutterMode === "profile";
 		}
+	}
+
+	private insertSessionName(args: { name: string }, logPath: string | undefined) {
+		return logPath
+			? logPath.replace(/\${name}/, filenameSafe(args.name || "unnamed-session"))
+			: logPath;
 	}
 
 	public dispose() {
