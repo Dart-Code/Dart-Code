@@ -669,7 +669,6 @@ function getSettingsThatRequireRestart() {
 		+ config.analyzerInstrumentationLogFile
 		+ config.extensionLogFile
 		+ config.analyzerAdditionalArgs
-		+ config.enableMachineLearningCodeCompletion
 		+ config.flutterSdkPath
 		+ config.flutterSelectDeviceWhenConnected
 		+ config.closingLabels

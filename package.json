@@ -1352,12 +1352,6 @@
 					"description": "Whether to try to reuse existing DevTools windows instead of launching new ones. Only works for instances of DevTools launched by the DevTools server on the local machine.",
 					"scope": "window"
 				},
-				"dart.enableMachineLearningCodeCompletion": {
-					"type": "boolean",
-					"default": false,
-					"description": "Controls whether to use a machine-learned model for improved code completion rankings and suggestions.",
-					"scope": "window"
-				},
 				"dart.openDevTools": {
 					"enum": [
 						"never",

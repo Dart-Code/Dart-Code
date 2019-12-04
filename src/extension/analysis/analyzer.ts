@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { analyzerSnapshotPath } from "../../shared/constants";
-import { DartSdks, Logger, Sdks } from "../../shared/interfaces";
+import { DartSdks, Logger } from "../../shared/interfaces";
 import { extensionVersion } from "../../shared/vscode/extension_utils";
 import { config } from "../config";
 import { DartCapabilities } from "../sdk/capabilities";
@@ -45,15 +45,6 @@ function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilit
 	// The analysis server supports a verbose instrumentation log file.
 	if (config.analyzerInstrumentationLogFile)
 		analyzerArgs.push(`--instrumentation-log-file=${config.analyzerInstrumentationLogFile}`);
-
-	// Enable the completion model only if the SDK supports it and the
-	// user hasn't already got it in analyzerAdditionalArgs (they may have
-	// enabled it previously and we don't want to break if they also tick
-	// the new setting).
-	const alreadyHasCompletionModelEnabled = config.analyzerAdditionalArgs
-		&& config.analyzerAdditionalArgs.indexOf("--enable-completion-model") !== -1;
-	if (config.enableMachineLearningCodeCompletion && !alreadyHasCompletionModelEnabled && dartCapabilities.supportsCompletionModel)
-		analyzerArgs.push(`--enable-completion-model`);
 
 	// Allow arbitrary args to be passed to the analysis server.
 	if (config.analyzerAdditionalArgs)
