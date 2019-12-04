@@ -346,7 +346,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		]);
 	});
 
-	const numReloads = 2;
+	const numReloads = 1;
 	it(`stops at a breakpoint after each reload (${numReloads})`, async function () {
 		if (numReloads && extApi.flutterCapabilities.hasEvictBug)
 			return this.skip();
