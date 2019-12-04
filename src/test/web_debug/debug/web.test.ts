@@ -248,58 +248,52 @@ describe("web debugger", () => {
 		]);
 	});
 
-	[0, 1, 2].forEach((numReloads) => {
-		const reloadDescription =
-			numReloads === 0
-				? ""
-				: ` after ${numReloads} reload${numReloads === 1 ? "" : "s"}`;
+	const numReloads = 2;
+	it(`stops at a breakpoint after each reload (${numReloads})`, async function () {
+		if (!extApi.dartCapabilities.webSupportsDebugging) {
+			this.skip();
+			return;
+		}
 
-		it("stops at a breakpoint" + reloadDescription, async function () {
-			if (!extApi.dartCapabilities.webSupportsDebugging) {
-				this.skip();
-				return;
-			}
+		await openFile(webHelloWorldMainFile);
+		const config = await startDebugger(webHelloWorldIndexFile);
+		const expectedLocation = {
+			line: positionOf("^// BREAKPOINT1").line,
+			path: fsPath(webHelloWorldMainFile),
+		};
+		await watchPromise("stops_at_a_breakpoint->hitBreakpoint", dc.hitBreakpoint(config, expectedLocation));
+		const stack = await dc.getStack();
+		const frames = stack.body.stackFrames;
+		assert.equal(frames[0].name, "MyHomePage.build");
+		assert.equal(frames[0].source!.path, expectedLocation.path);
+		assert.equal(frames[0].source!.name, "package:hello_world/main.dart");
 
-			await openFile(webHelloWorldMainFile);
-			const config = await startDebugger(webHelloWorldIndexFile);
-			const expectedLocation = {
-				line: positionOf("^// BREAKPOINT1").line,
-				path: fsPath(webHelloWorldMainFile),
-			};
-			await watchPromise("stops_at_a_breakpoint->hitBreakpoint", dc.hitBreakpoint(config, expectedLocation));
-			const stack = await dc.getStack();
-			const frames = stack.body.stackFrames;
-			assert.equal(frames[0].name, "MyHomePage.build");
-			assert.equal(frames[0].source!.path, expectedLocation.path);
-			assert.equal(frames[0].source!.name, "package:hello_world/main.dart");
+		await watchPromise("stops_at_a_breakpoint->resume", dc.resume());
 
-			await watchPromise("stops_at_a_breakpoint->resume", dc.resume());
-
-			// Add some invalid breakpoints because in the past they've caused us issues
-			// https://github.com/Dart-Code/Dart-Code/issues/1437.
-			// We need to also include expectedLocation since this overwrites all BPs.
-			await dc.setBreakpointsRequest({
-				breakpoints: [{ line: 0 }, expectedLocation],
-				source: { path: fsPath(webHelloWorldIndexFile) },
-			});
-
-			// Reload and ensure we hit the breakpoint on each one.
-			for (let i = 0; i < numReloads; i++) {
-				await delay(2000); // TODO: Remove this attempt to see if reloading too fast is causing our flakes...
-				await Promise.all([
-					watchPromise(`stops_at_a_breakpoint->reload:${i}->assertStoppedLocation:breakpoint`, dc.assertStoppedLocation("breakpoint", expectedLocation))
-						.then(async (_) => {
-							const stack = await watchPromise(`stops_at_a_breakpoint->reload:${i}->getStack`, dc.getStack());
-							const frames = stack.body.stackFrames;
-							assert.equal(frames[0].name, "MyHomePage.build");
-							assert.equal(frames[0].source!.path, expectedLocation.path);
-							assert.equal(frames[0].source!.name, "package:hello_world/main.dart");
-						})
-						.then((_) => watchPromise(`stops_at_a_breakpoint->reload:${i}->resume`, dc.resume())),
-					watchPromise(`stops_at_a_breakpoint->reload:${i}->hotReload:breakpoint`, dc.hotReload()),
-				]);
-			}
+		// Add some invalid breakpoints because in the past they've caused us issues
+		// https://github.com/Dart-Code/Dart-Code/issues/1437.
+		// We need to also include expectedLocation since this overwrites all BPs.
+		await dc.setBreakpointsRequest({
+			breakpoints: [{ line: 0 }, expectedLocation],
+			source: { path: fsPath(webHelloWorldIndexFile) },
 		});
+
+		// Reload and ensure we hit the breakpoint on each one.
+		for (let i = 0; i < numReloads; i++) {
+			await delay(2000); // TODO: Remove this attempt to see if reloading too fast is causing our flakes...
+			await Promise.all([
+				watchPromise(`stops_at_a_breakpoint->reload:${i}->assertStoppedLocation:breakpoint`, dc.assertStoppedLocation("breakpoint", expectedLocation))
+					.then(async (_) => {
+						const stack = await watchPromise(`stops_at_a_breakpoint->reload:${i}->getStack`, dc.getStack());
+						const frames = stack.body.stackFrames;
+						assert.equal(frames[0].name, "MyHomePage.build");
+						assert.equal(frames[0].source!.path, expectedLocation.path);
+						assert.equal(frames[0].source!.name, "package:hello_world/main.dart");
+					})
+					.then((_) => watchPromise(`stops_at_a_breakpoint->reload:${i}->resume`, dc.resume())),
+				watchPromise(`stops_at_a_breakpoint->reload:${i}->hotReload:breakpoint`, dc.hotReload()),
+			]);
+		}
 	});
 
 	describe("can evaluate at breakpoint", () => {
