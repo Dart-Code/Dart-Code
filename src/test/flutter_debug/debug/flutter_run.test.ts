@@ -86,7 +86,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		it("in the test script being run");
 	});
 
-	it("expected debugger services are available in debug mode", async () => {
+	it("expected debugger services/extensions are available in debug mode", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
@@ -95,43 +95,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === true);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === true);
-
-		await Promise.all([
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		]);
-
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === false);
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false);
-	});
-
-	it("expected debugger services are available in noDebug mode", async () => {
-		const config = await startDebugger(flutterHelloWorldMainFile);
-		config.noDebug = true;
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.launch(config),
-		]);
-
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === true);
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === true);
-
-		await Promise.all([
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		]);
-
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === false);
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false);
-	});
-
-	it("expected debugger service extensions are available in debug mode", async () => {
-		const config = await startDebugger(flutterHelloWorldMainFile);
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.launch(config),
-		]);
-
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true);
 
@@ -140,11 +103,13 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.terminateRequest(),
 		]);
 
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === false);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === false);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false);
 	});
 
-	it("expected debugger service extensions are available in noDebug mode", async () => {
+	it("expected debugger services/extensions are available in noDebug mode", async () => {
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		config.noDebug = true;
 		await Promise.all([
@@ -152,6 +117,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.launch(config),
 		]);
 
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === true);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === true);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true);
 
@@ -160,6 +127,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.terminateRequest(),
 		]);
 
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === false);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === false);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false);
 	});
