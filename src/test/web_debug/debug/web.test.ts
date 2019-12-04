@@ -248,7 +248,7 @@ describe("web debugger", () => {
 		]);
 	});
 
-	const numReloads = 2;
+	const numReloads = 1;
 	it(`stops at a breakpoint after each reload (${numReloads})`, async function () {
 		if (!extApi.dartCapabilities.webSupportsDebugging) {
 			this.skip();
