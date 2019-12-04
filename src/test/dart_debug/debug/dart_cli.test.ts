@@ -164,26 +164,16 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it("can run with a relative path in launch config", async () => {
-		const config = await startDebugger(helloWorldMainFile);
-		config!.program = path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile));
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.assertOutput("stdout", "Hello, world!"),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
-		]);
+	it("resolves relative paths", async () => {
+		const config = await getLaunchConfiguration(
+			path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile)),
+		);
+		assert.equal(config!.program, fsPath(helloWorldMainFile));
 	});
 
-	it("can run with a variable in cwd", async () => {
-		const config = await startDebugger(helloWorldMainFile, { cwd: "${workspaceFolder}/" });
-		config.program = path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile));
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.assertOutput("stdout", "Hello, world!"),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
-		]);
+	it("resolves variables like ${workspaceFolder}", async () => {
+		const config = await getLaunchConfiguration(helloWorldMainFile, { cwd: "${workspaceFolder}/foo" });
+		assert.equal(config!.cwd, `${fsPath(helloWorldFolder)}/foo`);
 	});
 
 	it("runs bin/main.dart if no file is open/provided", async () => {

@@ -6,7 +6,7 @@ import { fetch } from "../../../shared/fetch";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolderIndexFile, webHelloWorldFolder, webHelloWorldIndexFile, webHelloWorldMainFile } from "../../helpers";
+import { activate, defer, delay, ext, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolderIndexFile, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
 
 describe("web debugger", () => {
 	beforeEach("activate webHelloWorldIndexFile", () => activate(webHelloWorldIndexFile));
@@ -111,40 +111,16 @@ describe("web debugger", () => {
 		]);
 	});
 
-	it("runs a web application with a relative path", async () => {
-		const config = await startDebugger(webHelloWorldIndexFile);
-		config.program = path.relative(fsPath(webHelloWorldFolder), fsPath(webHelloWorldIndexFile));
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.launch(config),
-		]);
+	it("resolves relative paths", async () => {
+		const config = await getLaunchConfiguration(
+			path.relative(fsPath(webProjectContainerFolder), fsPath(webHelloWorldMainFile)),
+		);
+		assert.equal(config!.program, fsPath(webHelloWorldMainFile));
+	});
 
-		// Ensure we're still responsive after 3 seconds.
-		await delay(3000);
-		await dc.threadsRequest();
-
-		await Promise.all([
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		]);
-	}).timeout(90000); // The 10 second delay makes this test slower and sometimes hit 60s.
-
-	it("runs a web application with a variable in cwd", async () => {
-		const config = await startDebugger(webHelloWorldIndexFile, "${workspaceFolder}/hello_world/");
-		config.program = path.relative(fsPath(webHelloWorldFolder), fsPath(webHelloWorldIndexFile));
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.launch(config),
-		]);
-
-		// Ensure we're still responsive after 3 seconds.
-		await delay(3000);
-		await dc.threadsRequest();
-
-		await Promise.all([
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		]);
+	it("resolves variables like ${workspaceFolder}", async () => {
+		const config = await getLaunchConfiguration(webHelloWorldMainFile, { cwd: "${workspaceFolder}/foo" });
+		assert.equal(config!.cwd, `${fsPath(webProjectContainerFolder)}/foo`);
 	});
 
 	it.skip("hot reloads successfully", async () => {
