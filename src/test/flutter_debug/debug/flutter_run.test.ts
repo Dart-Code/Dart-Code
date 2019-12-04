@@ -175,40 +175,16 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		]);
 	});
 
-	it("can run with a relative path in launch config", async () => {
-		const config = await startDebugger(flutterHelloWorldMainFile);
-		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldMainFile));
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.launch(config),
-		]);
+	it("resolves relative paths", async () => {
+		const config = await getLaunchConfiguration(
+			path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldMainFile)),
+		);
+		assert.equal(config!.program, fsPath(flutterHelloWorldMainFile));
+	});
 
-		// Ensure we're still responsive after 3 seconds.
-		await delay(3000);
-		await dc.threadsRequest();
-
-		await Promise.all([
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		]);
-	}).timeout(90000); // The 10 second delay makes this test slower and sometimes hit 60s.
-
-	it("can run with a variable in cwd", async () => {
-		const config = await startDebugger(flutterHelloWorldMainFile, { cwd: "${workspaceFolder}/" });
-		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldMainFile));
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.launch(config),
-		]);
-
-		// Ensure we're still responsive after 3 seconds.
-		await delay(3000);
-		await dc.threadsRequest();
-
-		await Promise.all([
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		]);
+	it("resolves variables like ${workspaceFolder}", async () => {
+		const config = await getLaunchConfiguration(flutterHelloWorldMainFile, { cwd: "${workspaceFolder}/foo" });
+		assert.equal(config!.cwd, `${fsPath(flutterHelloWorldFolder)}/foo`);
 	});
 
 	it("can hot reload", async function () {
