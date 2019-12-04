@@ -28,7 +28,7 @@ jobs:
             code-version: stable
           - dart-version: dev
             flutter-version: dev
-            code-version: dev
+            code-version: insiders
 
     steps:
 
