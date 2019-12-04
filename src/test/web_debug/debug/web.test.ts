@@ -6,7 +6,7 @@ import { fetch } from "../../../shared/fetch";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolderIndexFile, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, delay, ext, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
 
 describe("web debugger", () => {
 	beforeEach("activate webHelloWorldIndexFile", () => activate(webHelloWorldIndexFile));
@@ -167,55 +167,18 @@ describe("web debugger", () => {
 		]);
 	});
 
-	it.skip("runs projects in sub-folders when the open file is in a project sub-folder", async () => {
+	it.skip("resolves project program/cwds in sub-folders when the open file is in a project sub-folder", async () => {
 		await openFile(webHelloWorldExampleSubFolderIndexFile);
-		const config = await startDebugger();
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.launch(config),
-			// TODO: Remove this when we're not forced into noDebug mode, which
-			// results in InitializedEvent coming immediately, before the debugger
-			// is ready to accept reloads.
-			dc.waitForEvent("dart.launched"),
-		]);
-
-		// If we restart too fast, things fail :-/
-		await delay(1000);
-
-		await Promise.all([
-			dc.assertOutputContains("stdout", "This output is from an example sub-folder!"),
-			dc.customRequest("hotRestart"),
-		]);
-
-		await Promise.all([
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		]);
+		const config = await getLaunchConfiguration();
+		assert.equal(config!.program, fsPath(webHelloWorldExampleSubFolderIndexFile));
+		assert.equal(config!.cwd, fsPath(webHelloWorldExampleSubFolder));
 	});
 
-	it.skip("runs projects in sub-folders when cwd is set to a project sub-folder", async () => {
-		const config = await startDebugger(undefined, "example");
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.launch(config),
-			// TODO: Remove this when we're not forced into noDebug mode, which
-			// results in InitializedEvent coming immediately, before the debugger
-			// is ready to accept reloads.
-			dc.waitForEvent("dart.launched"),
-		]);
-
-		// If we restart too fast, things fail :-/
-		await delay(1000);
-
-		await Promise.all([
-			dc.assertOutputContains("stdout", "This output is from an example sub-folder!"),
-			dc.customRequest("hotRestart"),
-		]);
-
-		await Promise.all([
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		]);
+	it.skip("can run projects in sub-folders when cwd is set to a project sub-folder", async () => {
+		await closeAllOpenFiles();
+		const config = await getLaunchConfiguration(undefined, { cwd: "example" });
+		assert.equal(config!.program, fsPath(webHelloWorldExampleSubFolderIndexFile));
+		assert.equal(config!.cwd, fsPath(webHelloWorldExampleSubFolder));
 	});
 
 	it("can launch DevTools", async function () {

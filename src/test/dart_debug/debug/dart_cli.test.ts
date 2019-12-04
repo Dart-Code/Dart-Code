@@ -10,7 +10,7 @@ import { getRandomInt } from "../../../shared/utils/fs";
 import { fsPath } from "../../../shared/vscode/utils";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, delay, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, logger, openFile, positionOf, sb, setConfigForTest, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, delay, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, logger, openFile, positionOf, sb, setConfigForTest, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -176,58 +176,36 @@ describe("dart cli debugger", () => {
 		assert.equal(config!.cwd, `${fsPath(helloWorldFolder)}/foo`);
 	});
 
-	it("runs bin/main.dart if no file is open/provided", async () => {
+	it("resolves program as bin/main.dart if no file is open/provided", async () => {
 		await closeAllOpenFiles();
-		const config = await startDebugger();
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.assertOutput("stdout", "Hello, world!"),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
-		]);
+		const config = await getLaunchConfiguration(undefined);
+		assert.equal(config!.program, fsPath(helloWorldMainFile));
 	});
 
-	it("runs the provided script regardless of what's open", async () => {
+	it("uses the launch config program regardless of what's open", async () => {
 		await openFile(helloWorldMainFile);
-		const config = await startDebugger(helloWorldGoodbyeFile);
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.assertOutput("stdout", "Goodbye!"),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
-		]);
+		const config = await getLaunchConfiguration(helloWorldGoodbyeFile);
+		assert.equal(config!.program, fsPath(helloWorldGoodbyeFile));
 	});
 
-	it("runs the open script if no file is provided", async () => {
+	it("resolves program to the open script if no file is provided", async () => {
 		await openFile(helloWorldGoodbyeFile);
-		const config = await startDebugger();
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.assertOutput("stdout", "Goodbye!"),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
-		]);
+		const config = await getLaunchConfiguration();
+		assert.equal(config!.program, fsPath(helloWorldGoodbyeFile));
 	});
 
-	it("can run projects in sub-folders when the open file is in a project sub-folder", async () => {
+	it("resolves project program/cwds in sub-folders when the open file is in a project sub-folder", async () => {
 		await openFile(helloWorldExampleSubFolderMainFile);
-		const config = await startDebugger();
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.assertOutputContains("stdout", "This output is from an example sub-folder!"),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
-		]);
+		const config = await getLaunchConfiguration();
+		assert.equal(config!.program, fsPath(helloWorldExampleSubFolderMainFile));
+		assert.equal(config!.cwd, fsPath(helloWorldExampleSubFolder));
 	});
 
 	it("can run projects in sub-folders when cwd is set to a project sub-folder", async () => {
-		const config = await startDebugger(undefined, { cwd: "example" });
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.assertOutputContains("stdout", "This output is from an example sub-folder!"),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
-		]);
+		await closeAllOpenFiles();
+		const config = await getLaunchConfiguration(undefined, { cwd: "example" });
+		assert.equal(config!.program, fsPath(helloWorldExampleSubFolderMainFile));
+		assert.equal(config!.cwd, fsPath(helloWorldExampleSubFolder));
 	});
 
 	it("can launch DevTools", async function () {
