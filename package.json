@@ -1763,7 +1763,7 @@
 		"instrument": "cd out/src && nyc instrument --compact false . . && cd ../..",
 		"remap_coverage": "cd out/src && node ../../out/src/test/remap_coverage.js && cd ../..",
 		"test-only": "node ./out/src/test/test_all.js",
-		"report_lcov": "nyc report -r lcovonly",
+		"report_lcov": "nyc report -r lcovonly --report-dir coverage/$BOT",
 		"report_screen": "nyc report"
 	},
 	"dependencies": {
