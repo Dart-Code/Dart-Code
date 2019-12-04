@@ -5,6 +5,7 @@ on:
     branches:
       - gh-actions-test
       - gh-actions-test-debugging
+      - gh-actions-test-coverage
 
 jobs:
   build:
