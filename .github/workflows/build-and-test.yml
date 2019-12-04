@@ -207,7 +207,8 @@ jobs:
           chmod +x ./cc-test-reporter
           export GIT_BRANCH="${GITHUB_REF/refs\/heads\//}"
           export GIT_SHA="${GITHUB_SHA}"
-          ./cc-test-reporter format-coverage -t lcov -o coverage/codeclimate.json coverage/linux/lcov.info
+          find coverage/**/**/lcov.info | cut -d '/' -f2- | xargs -I % -n1 ./cc-test-reporter format-coverage -t lcov -o coverage/%.json coverage/% # -p /home/runner/work/Dart-Code/Dart-Code
+          ./cc-test-reporter sum-coverage -o coverage/codeclimate.json coverage/**/**/lcov.info.json
           ./cc-test-reporter upload-coverage
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
