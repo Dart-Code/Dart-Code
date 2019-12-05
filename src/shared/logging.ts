@@ -90,7 +90,7 @@ export function logToConsole(logger: EmittingLogger): void {
 	});
 }
 
-export function captureLogs(logger: EmittingLogger, file: string, header: string, maxLogLineLength: number, logCategories?: LogCategory[]): ({ dispose: () => Promise<void> | void }) {
+export function captureLogs(logger: EmittingLogger, file: string, header: string, maxLogLineLength: number, logCategories?: LogCategory[], excludeLogCategories = false): ({ dispose: () => Promise<void> | void }) {
 	if (!file || !path.isAbsolute(file))
 		throw new Error("Path passed to logTo must be an absolute path");
 	const time = (detailed = false) => detailed ? `[${(new Date()).toTimeString()}] ` : `[${(new Date()).toLocaleTimeString()}] `;
@@ -107,7 +107,11 @@ export function captureLogs(logger: EmittingLogger, file: string, header: string
 		// - The category filter includes this category; or
 		// - The log is WARN/ERROR (they get logged everywhere).
 		const shouldLog = !logCategories
-			|| logCategories.indexOf(e.category) !== -1
+			|| (
+				excludeLogCategories
+					? logCategories.indexOf(e.category) === -1
+					: logCategories.indexOf(e.category) !== -1
+			)
 			|| e.severity === LogSeverity.Warn
 			|| e.severity === LogSeverity.Error;
 		if (!shouldLog)

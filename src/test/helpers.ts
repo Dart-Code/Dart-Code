@@ -176,7 +176,11 @@ function setupTestLogging(): boolean {
 		const logFile = fileSafeCurrentTestName + ".txt";
 		const logPath = path.join(logFolder, logFile);
 
-		const testLogger = captureLogs(emittingLogger, logPath, extApi.getLogHeader(), 20000);
+		// For debugger tests, the analyzer log is just noise, so we filter it out.
+		const excludeLogCategories = process.env.BOT && process.env.BOT.indexOf("debug") !== -1
+			? [LogCategory.Analyzer]
+			: undefined;
+		const testLogger = captureLogs(emittingLogger, logPath, extApi.getLogHeader(), 20000, excludeLogCategories, true);
 
 		deferUntilLast(async (testResult?: "passed" | "failed") => {
 			// Put a new buffered logger back to capture any logging output happening
