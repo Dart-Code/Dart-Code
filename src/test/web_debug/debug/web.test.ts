@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
+import { isLinux } from "../../../shared/constants";
 import { VmService } from "../../../shared/enums";
 import { fetch } from "../../../shared/fetch";
 import { fsPath } from "../../../shared/vscode/utils";
@@ -9,9 +10,17 @@ import { ensureVariable } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, delay, ext, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
 
 describe("web debugger", () => {
-	beforeEach("activate webHelloWorldIndexFile", () => activate(webHelloWorldIndexFile));
 	before("get packages (0)", () => getPackages(webHelloWorldIndexFile));
 	before("get packages (1)", () => getPackages(webBrokenIndexFile));
+
+	beforeEach("activate webHelloWorldIndexFile", () => activate(webHelloWorldIndexFile));
+
+	beforeEach("Skip if Linux on CI", function () {
+		// Linux web tests currently fail for unknown reasons.
+		// https://github.com/Dart-Code/Dart-Code/issues/2147
+		if (process.env.CI && isLinux)
+			this.skip();
+	});
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
