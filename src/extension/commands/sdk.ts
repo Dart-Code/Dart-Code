@@ -295,6 +295,7 @@ export class SdkCommands {
 			return;
 		}
 		isFetchingPackages = true;
+		// TODO: Extract this into a Pub class with the things in pub.ts.
 
 		try {
 			const forcePrompt = options && options.alwaysPrompt;

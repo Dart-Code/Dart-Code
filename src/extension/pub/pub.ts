@@ -3,6 +3,8 @@ import * as path from "path";
 import { commands, Uri, window } from "vscode";
 import { fsPath } from "../../shared/vscode/utils";
 
+// TODO: Wrap these up into a class.
+
 export function isPubGetProbablyRequired(folderUri: Uri): boolean {
 	const folder = fsPath(folderUri);
 	const pubspecPath = path.join(folder, "pubspec.yaml");
