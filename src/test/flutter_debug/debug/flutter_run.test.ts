@@ -20,7 +20,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	beforeEach("Skip if web device is not supported", function () {
 		// TODO: Remove branch check when Flutter removes it.
-		if (flutterTestDeviceIsWeb && process.env.ONLY_RUN_DART_VERSION === "STABLE")
+		if (flutterTestDeviceIsWeb && process.env.FLUTTER_VERSION === "stable")
 			this.skip();
 	});
 
