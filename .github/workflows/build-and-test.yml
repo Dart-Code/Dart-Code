@@ -100,6 +100,8 @@ jobs:
           DISPLAY: ":99.0"
           BOT: ${{ matrix.bot }}
           CODE_VERSION: ${{ matrix.code-version }}
+          DART_VERSION: ${{ matrix.dart-version }}
+          FLUTTER_VERSION: ${{ matrix.flutter-version }}
           LOGS_NAME: ${{ matrix.dart-version }}_${{ matrix.code-version }}
           FLUTTER_REPO_PATH: ${{ steps.flutter.outputs.flutter-sdk }}
 
