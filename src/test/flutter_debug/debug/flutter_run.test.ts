@@ -178,6 +178,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("resolves relative paths", async () => {
 		const config = await getLaunchConfiguration(
 			path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldMainFile)),
+			{ deviceId: flutterTestDeviceId },
 		);
 		assert.equal(config!.program, fsPath(flutterHelloWorldMainFile));
 	});
@@ -271,14 +272,14 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	it("resolves project program/cwds in sub-folders when the open file is in a project sub-folder", async () => {
 		await openFile(flutterHelloWorldExampleSubFolderMainFile);
-		const config = await getLaunchConfiguration();
+		const config = await getLaunchConfiguration(undefined, { deviceId: flutterTestDeviceId });
 		assert.equal(config!.program, fsPath(flutterHelloWorldExampleSubFolderMainFile));
 		assert.equal(config!.cwd, fsPath(flutterHelloWorldExampleSubFolder));
 	});
 
 	it("can run projects in sub-folders when cwd is set to a project sub-folder", async () => {
 		await closeAllOpenFiles();
-		const config = await getLaunchConfiguration(undefined, { cwd: "example" });
+		const config = await getLaunchConfiguration(undefined, { cwd: "example", deviceId: flutterTestDeviceId });
 		assert.equal(config!.program, fsPath(flutterHelloWorldExampleSubFolderMainFile));
 		assert.equal(config!.cwd, fsPath(flutterHelloWorldExampleSubFolder));
 	});
