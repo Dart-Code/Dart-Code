@@ -30,7 +30,7 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 	while (currentAttempt <= maxAttempts) {
 		try {
 			console.log(`Attempting to download VS Code attempt #${currentAttempt}`);
-			await vstest.downloadAndUnzipVSCode();
+			await vstest.downloadAndUnzipVSCode(process.env.CODE_VERSION);
 			break;
 		} catch (e) {
 			if (currentAttempt >= maxAttempts)
