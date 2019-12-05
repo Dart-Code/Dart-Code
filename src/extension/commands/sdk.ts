@@ -241,15 +241,20 @@ export class SdkCommands {
 	}
 
 	private handlePubspecChange(uri: vs.Uri) {
+		this.logger.info(`Pubspec ${fsPath(uri)} was modified`);
 		const conf = config.for(uri);
 
 		// Don't do anything if we're disabled.
-		if (!conf.runPubGetOnPubspecChanges)
+		if (!conf.runPubGetOnPubspecChanges) {
+			this.logger.info(`Automatically running "pub get" is disabled`);
 			return;
+		}
 
 		// Never do anything for files inside .dart_tool folders.
-		if (fsPath(uri).indexOf(`${path.sep}.dart_tool${path.sep}`) !== -1)
+		if (fsPath(uri).indexOf(`${path.sep}.dart_tool${path.sep}`) !== -1) {
+			this.logger.info(`Change was inside a .dart_tool folder, skipping`);
 			return;
+		}
 
 		// Don't do anything if we're in the middle of creating projects, as packages
 		// may  be fetched automatically.
@@ -261,8 +266,10 @@ export class SdkCommands {
 		// If we're in Fuchsia, we don't want to `pub get` by default but we do want to allow
 		// it to be overridden, so only read the setting if it's been declared explicitly.
 		// TODO: This should be handled per-project for a multi-root workspace.
-		if (this.workspace.shouldAvoidFetchingPackages && !conf.runPubGetOnPubspecChangesIsConfiguredExplicitly)
+		if (this.workspace.shouldAvoidFetchingPackages && !conf.runPubGetOnPubspecChangesIsConfiguredExplicitly) {
+			this.logger.info(`Workspace suppresses "pub get"`);
 			return;
+		}
 
 		// Cancel any existing delayed timer.
 		if (runPubGetDelayTimer) {
@@ -283,31 +290,36 @@ export class SdkCommands {
 	}
 
 	public async fetchPackagesOrPrompt(uri: vs.Uri | undefined, options?: { alwaysPrompt?: boolean }): Promise<void> {
-		if (isFetchingPackages)
+		if (isFetchingPackages) {
+			this.logger.info(`Already running pub get, skipping!`);
 			return;
+		}
 		isFetchingPackages = true;
 
-		const forcePrompt = options && options.alwaysPrompt;
-		// We debounced so we might get here and have multiple projects to fetch for
-		// for ex. when we change Git branch we might change many files at once. So
-		// check how many there are, and if there are:
-		//   0 - then just use Uri
-		//   1 - then just do that one
-		//   more than 1 - prompt to do all
-		const topLevelFolders = getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
-		const folders = await findProjectFolders(topLevelFolders, { requirePubspec: true });
-		const foldersRequiringPackageGet = uniq(folders)
-			.map(vs.Uri.file)
-			.filter((uri) => config.for(uri).promptToGetPackages)
-			.filter(isPubGetProbablyRequired);
-		if (!forcePrompt && foldersRequiringPackageGet.length === 0)
-			await vs.commands.executeCommand("dart.getPackages", uri);
-		else if (!forcePrompt && foldersRequiringPackageGet.length === 1)
-			await vs.commands.executeCommand("dart.getPackages", foldersRequiringPackageGet[0]);
-		else if (foldersRequiringPackageGet.length)
-			promptToRunPubGet(foldersRequiringPackageGet);
-
-		isFetchingPackages = false;
+		try {
+			const forcePrompt = options && options.alwaysPrompt;
+			// We debounced so we might get here and have multiple projects to fetch for
+			// for ex. when we change Git branch we might change many files at once. So
+			// check how many there are, and if there are:
+			//   0 - then just use Uri
+			//   1 - then just do that one
+			//   more than 1 - prompt to do all
+			const topLevelFolders = getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
+			const folders = await findProjectFolders(topLevelFolders, { requirePubspec: true });
+			const foldersRequiringPackageGet = uniq(folders)
+				.map(vs.Uri.file)
+				.filter((uri) => config.for(uri).promptToGetPackages)
+				.filter(isPubGetProbablyRequired);
+			this.logger.info(`Found ${foldersRequiringPackageGet.length} folders requiring "pub get":${foldersRequiringPackageGet.map((uri) => `\n    ${fsPath(uri)}`).join("")}`);
+			if (!forcePrompt && foldersRequiringPackageGet.length === 0)
+				await vs.commands.executeCommand("dart.getPackages", uri);
+			else if (!forcePrompt && foldersRequiringPackageGet.length === 1)
+				await vs.commands.executeCommand("dart.getPackages", foldersRequiringPackageGet[0]);
+			else if (foldersRequiringPackageGet.length)
+				promptToRunPubGet(foldersRequiringPackageGet);
+		} finally {
+			isFetchingPackages = false;
+		}
 	}
 
 	private async runCommandForWorkspace(
