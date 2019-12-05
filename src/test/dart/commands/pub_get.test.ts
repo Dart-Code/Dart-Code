@@ -13,7 +13,7 @@ describe("pub get", () => {
 
 		const editor = await openFile(helloWorldPubspec);
 		const doc = editor.document;
-		await setTestContent(doc.getText() + " ");
+		await setTestContent(doc.getText() + " # test");
 		await doc.save();
 
 		// Allow a short time for the command to be called because this is now a
@@ -29,7 +29,7 @@ describe("pub get", () => {
 
 		const editor = await openFile(helloWorldPubspec);
 		const doc = editor.document;
-		await setTestContent(doc.getText() + " ");
+		await setTestContent(doc.getText() + " # test");
 		await doc.save();
 
 		// Wait for 2s then ensure it still hadn't run.
@@ -45,7 +45,7 @@ describe("pub get", () => {
 
 		const editor = await openFile(helloWorldPubspec);
 		const doc = editor.document;
-		await setTestContent(doc.getText() + " ");
+		await setTestContent(doc.getText() + " # test");
 
 		// Wait for 1sec and ensure it wasn't called.
 		await delay(1000);
@@ -53,7 +53,7 @@ describe("pub get", () => {
 
 		// Wait for 7sec and make another change to test debouncing.
 		await delay(7000);
-		await setTestContent(doc.getText() + " ");
+		await setTestContent(doc.getText() + " # test");
 
 		// Wait for 5sec and ensure it still wasn't called (because it was pushed back to 10sec again).
 		await delay(5000);
