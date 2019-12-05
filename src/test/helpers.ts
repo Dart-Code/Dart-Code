@@ -336,8 +336,16 @@ beforeEach("stash current test name", async function () {
 });
 
 export let sb: sinon.SinonSandbox;
-beforeEach("create sinon sandbox", () => { sb = sinon.createSandbox(); });
-afterEach("destroy sinon sandbox", () => sb.restore());
+beforeEach("create sinon sandbox", () => {
+	if (logger)
+		logger.info(`Creating sinon sandbox`);
+	sb = sinon.createSandbox();
+});
+afterEach("destroy sinon sandbox", () => {
+	if (logger)
+		logger.info(`Restoring sinon sandbox`);
+	sb.restore();
+});
 
 before("throw if DART_CODE_IS_TEST_RUN is not set", () => {
 	if (!process.env.DART_CODE_IS_TEST_RUN)
