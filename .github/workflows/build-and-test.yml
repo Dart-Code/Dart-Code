@@ -1,11 +1,6 @@
 name: Build and Test on Commit
 
-on:
-  push:
-    branches:
-      - gh-actions-test
-      - gh-actions-test-debugging
-      - gh-actions-test-coverage
+on: push
 
 jobs:
   build:
