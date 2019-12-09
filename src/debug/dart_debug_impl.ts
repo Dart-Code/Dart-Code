@@ -151,21 +151,25 @@ export class DartDebugSession extends DebugSession {
 		this.processExited = false;
 		this.processExit = new Promise((resolve) => process.on("exit", resolve));
 
-		process.stdout.setEncoding("utf8");
-		process.stdout.on("data", (data) => {
-			let match: RegExpExecArray | null = null;
-			if (this.shouldConnectDebugger && this.parseObservatoryUriFromStdOut && !this.observatory) {
-				match = observatoryListeningBannerPattern.exec(data.toString());
-			}
-			if (match) {
-				this.initDebugger(this.websocketUriForObservatoryUri(match[1]));
-			} else if (this.sendStdOutToConsole)
-				this.logToUserBuffered(data.toString(), "stdout");
-		});
-		process.stderr.setEncoding("utf8");
-		process.stderr.on("data", (data) => {
-			this.logToUserBuffered(data.toString(), "stderr");
-		});
+		if (process.stdout) {
+			process.stdout.setEncoding("utf8");
+			process.stdout.on("data", (data) => {
+				let match: RegExpExecArray | null = null;
+				if (this.shouldConnectDebugger && this.parseObservatoryUriFromStdOut && !this.observatory) {
+					match = observatoryListeningBannerPattern.exec(data.toString());
+				}
+				if (match) {
+					this.initDebugger(this.websocketUriForObservatoryUri(match[1]));
+				} else if (this.sendStdOutToConsole)
+					this.logToUserBuffered(data.toString(), "stdout");
+			});
+		}
+		if (process.stderr) {
+			process.stderr.setEncoding("utf8");
+			process.stderr.on("data", (data) => {
+				this.logToUserBuffered(data.toString(), "stderr");
+			});
+		}
 		process.on("error", (error) => {
 			this.logToUser(`${error}\n`, "stderr");
 		});
@@ -1200,7 +1204,7 @@ export class DartDebugSession extends DebugSession {
 					this.sendResponse(response);
 					break;
 				case "dart.userInput":
-					if (this.childProcess && !this.childProcess.killed && !this.processExited)
+					if (this.childProcess && !this.childProcess.killed && !this.processExited && this.childProcess.stdin)
 						this.childProcess.stdin.write(args.input);
 					this.sendResponse(response);
 					break;

@@ -47,8 +47,10 @@ export function runProcess(logger: Logger, workingDirectory: string | undefined,
 
 		const out: string[] = [];
 		const err: string[] = [];
-		proc.stdout.on("data", (data: Buffer) => out.push(data.toString()));
-		proc.stderr.on("data", (data: Buffer) => err.push(data.toString()));
+		if (proc.stdout)
+			proc.stdout.on("data", (data: Buffer) => out.push(data.toString()));
+		if (proc.stderr)
+			proc.stderr.on("data", (data: Buffer) => err.push(data.toString()));
 		proc.on("exit", (code) => {
 			resolve(new RunProcessResult(nullToUndefined(code), out.join(""), err.join("")));
 		});

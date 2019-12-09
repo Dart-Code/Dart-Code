@@ -75,8 +75,10 @@ export const nullLogger = new NullLogger();
 export function logProcess(logger: Logger, category: LogCategory, process: child_process.ChildProcess): void {
 	const prefix = `(PROC ${process.pid})`;
 	logger.info(`${prefix} Logging data for process...`, category);
-	process.stdout.on("data", (data) => logger.info(`${prefix} ${data}`, category));
-	process.stderr.on("data", (data) => logger.info(`${prefix} ${data}`, category));
+	if (process.stdout)
+		process.stdout.on("data", (data) => logger.info(`${prefix} ${data}`, category));
+	if (process.stderr)
+		process.stderr.on("data", (data) => logger.info(`${prefix} ${data}`, category));
 	process.on("close", (code, signal) => logger.info(`${prefix} closed (${code}, ${signal})`, category));
 	process.on("exit", (code, signal) => logger.info(`${prefix} exited (${code}, ${signal})`, category));
 }
