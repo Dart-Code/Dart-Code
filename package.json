@@ -1139,10 +1139,10 @@
 					"description": "When to automatically switch focus to the test list (array to support multiple values).",
 					"scope": "window"
 				},
-				"dart.reportAnalyzerErrors": {
+				"dart.notifyAnalyzerErrors": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to offer to report analysis server exceptions when they occur.",
+					"description": "Whether to show a notification the first few times an analysis server exception occurs.",
 					"scope": "window"
 				},
 				"dart.allowAnalytics": {

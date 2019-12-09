@@ -5,7 +5,7 @@ import { env, ProgressLocation, version as codeVersion, window, workspace } from
 import { RequestError, ServerErrorNotification, ServerStatusNotification } from "../../shared/analysis_server_types";
 import { LogCategory } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
-import { isStableSdk, PromiseCompleter } from "../../shared/utils";
+import { PromiseCompleter } from "../../shared/utils";
 import { getRandomInt } from "../../shared/utils/fs";
 import { extensionVersion } from "../../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../../shared/workspace";
@@ -94,70 +94,47 @@ export class AnalyzerStatusReporter {
 		errorCount++;
 
 		// Offer to report the error.
-		if (config.reportAnalyzerErrors && errorCount <= maxErrorReportCount && this.shouldReportErrors()) {
-			const shouldReport: string = "Generate error report";
-			window.showErrorMessage(`Exception from the Dart analysis server: ${error.message}`, shouldReport).then((res) => {
-				if (res === shouldReport)
-					this.reportError(error, method);
+		if (config.notifyAnalyzerErrors && errorCount <= maxErrorReportCount) {
+			const showLog: string = "Show log";
+			window.showErrorMessage(`Exception from the Dart analysis server: ${error.message}`, showLog).then((res) => {
+				if (res === showLog)
+					this.showErrorLog(error, method);
 			});
 		}
 	}
 
-	private shouldReportErrors(): boolean {
-		const sdks = this.workspaceContext.sdks;
-		if (this.workspaceContext.hasAnyFlutterProjects && sdks.flutter)
-			return !isStableSdk(getSdkVersion(this.logger, sdks.flutter));
-		else
-			return !isStableSdk(getSdkVersion(this.logger, sdks.dart));
-	}
-
-	private reportError(error: ServerErrorNotification, method?: string) {
+	private showErrorLog(error: ServerErrorNotification, method?: string) {
 		const sdkVersion = getSdkVersion(this.logger, this.workspaceContext.sdks.dart);
 		const flutterSdkVersion = this.workspaceContext.sdks.dartSdkIsFromFlutter
 			? getSdkVersion(this.logger, this.workspaceContext.sdks.flutter)
 			: undefined;
 
-		// Attempt to get the last diagnostics
-		const diagnostics = this.analyzer.getLastDiagnostics();
 		const analyzerArgs = this.analyzer.getAnalyzerLaunchArgs();
 
 		const data = `
-Please review the below report for any information you do not wish to share and report to
-  https://github.com/dart-lang/sdk/issues/new
-
-Exception from analysis server (running from VSCode / Dart Code)
-
-### What I was doing
-
-(please describe what you were doing when this exception occurred)
-${method ? "\n### Request\n\nWhile responding to request: `" + method + "`\n" : ""}
+${method ? "### Request\n\nServer was responding to request: `" + method + "`\n" : ""}
 ### Versions
 
-- ${flutterSdkVersion ? `Flutter SDK ${flutterSdkVersion}` : `Dart SDK ${sdkVersion}`}
-- ${env.appName} ${codeVersion}
-- Dart Code ${extensionVersion}
+- ${env.appName} v${codeVersion}
+- Dart Code v${extensionVersion}
+- ${flutterSdkVersion ? `Flutter SDK v${flutterSdkVersion}` : `Dart SDK v${sdkVersion}`}
 
 ### Analyzer Info
 
 The analyzer was launched using the arguments:
 
-\`\`\`text
-${analyzerArgs.join("\n")}
-\`\`\`
+${analyzerArgs.map((a) => `- ${a}`).join("\n")}
 
 ### Exception${error.isFatal ? " (fatal)" : ""}
 
 ${error.message}
 
-\`\`\`text
 ${error.stackTrace.trim()}
-\`\`\`
-${diagnostics ? "\nDiagnostics requested after the error occurred are:\n\n```js\n" + JSON.stringify(diagnostics, undefined, 4) + "\n```\n" : ""}
 `;
 
 		const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.md`;
 		const tempPath = path.join(os.tmpdir(), fileName);
-		fs.writeFileSync(tempPath, data);
+		fs.writeFileSync(tempPath, data.trim());
 		workspace.openTextDocument(tempPath).then((document) => {
 			window.showTextDocument(document);
 		});
