@@ -20,7 +20,7 @@ import { ProtocolClient } from 'vscode-debugadapter-testsupport/lib/protocolClie
 import { DebugProtocol } from 'vscode-debugprotocol';
 
 export interface ILocation {
-	path: string;
+	path?: string;
 	line: number;
 	column?: number;
 	verified?: boolean;
@@ -476,7 +476,7 @@ export class DebugClient extends ProtocolClient {
 				const actualLocation: ILocation = {
 					column: bp.column,
 					line: bp.line!,
-					path: bp.source!.path!
+					path: bp.source && bp.source.path
 				};
 				this.assertPartialLocationsEqual(actualLocation, expectedBPLocation || location);
 
