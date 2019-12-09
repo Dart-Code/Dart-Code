@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { SpawnOptions } from "child_process";
+import { SpawnOptionsWithoutStdio } from "child_process";
 import { DebugSession, DebugSessionCustomEvent } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
@@ -13,8 +13,8 @@ const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.s
 
 export class DartDebugClient extends DebugClient {
 	private currentSession?: DebugSession;
-	constructor(runtime: string, executable: string, debugType: string, spawnOptions: SpawnOptions | undefined, private debugCommands: DebugCommandHandler, testProvider: TestResultsProvider | undefined) {
-		super(runtime, executable, debugType, spawnOptions);
+	constructor(runtime: string, executable: string, debugType: string, spawnOptions: SpawnOptionsWithoutStdio | undefined, private debugCommands: DebugCommandHandler, testProvider: TestResultsProvider | undefined) {
+		super(runtime, executable, debugType, spawnOptions, true);
 
 		// Set up handlers for any custom events our tests may rely on (can't find
 		// a way to just do them all 🤷‍♂️).
