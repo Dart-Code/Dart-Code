@@ -2,7 +2,7 @@
 // a subclass to provide most additional functionality to keep it easy to update this as MS update theirs.
 //
 // Original source:
-// https://raw.githubusercontent.com/Microsoft/vscode-debugadapter-node/master/testSupport/extension/debugClient.ts
+// https://raw.githubusercontent.com/microsoft/vscode-debugadapter-node/master/testSupport/src/debugClient.ts
 
 /* tslint:disable */
 
@@ -20,7 +20,7 @@ import { ProtocolClient } from 'vscode-debugadapter-testsupport/lib/protocolClie
 import { DebugProtocol } from 'vscode-debugprotocol';
 
 export interface ILocation {
-	path?: string;
+	path: string;
 	line: number;
 	column?: number;
 	verified?: boolean;
@@ -40,7 +40,7 @@ export class DebugClient extends ProtocolClient {
 	private _runtime: string;
 	private _executable: string;
 	private _adapterProcess?: cp.ChildProcess;
-	private _spawnOptions?: cp.SpawnOptions;
+	private _spawnOptions?: cp.SpawnOptionsWithoutStdio;
 	private _enableStderr: boolean;
 	private _debugType: string;
 	private _socket?: net.Socket;
@@ -65,12 +65,12 @@ export class DebugClient extends ProtocolClient {
 	 *     return dc.hitBreakpoint({ program: 'test.js' }, 'test.js', 15);
 	 * });
 	 */
-	constructor(runtime: string, executable: string, debugType: string, spawnOptions?: cp.SpawnOptions) {
+	constructor(runtime: string, executable: string, debugType: string, spawnOptions?: cp.SpawnOptionsWithoutStdio, enableStderr?: boolean) {
 		super();
 		this._runtime = runtime;
 		this._executable = executable;
 		this._spawnOptions = spawnOptions;
-		this._enableStderr = false;
+		this._enableStderr = !!enableStderr;
 		this._debugType = debugType;
 		this._supportsConfigurationDoneRequest = false;
 
@@ -104,7 +104,7 @@ export class DebugClient extends ProtocolClient {
 			} else {
 				this._adapterProcess = cp.spawn(this._runtime, [this._executable], this._spawnOptions);
 				const sanitize = (s: string) => s.toString().replace(/\r?\n$/mg, '');
-				this._adapterProcess.stderr.on('data', (data: string) => {
+				this._adapterProcess.stderr!.on('data', (data: string) => {
 					if (this._enableStderr) {
 						console.log(sanitize(data));
 					}
@@ -120,7 +120,7 @@ export class DebugClient extends ProtocolClient {
 					}
 				});
 
-				this.connect(this._adapterProcess.stdout, this._adapterProcess.stdin);
+				this.connect(this._adapterProcess.stdout!, this._adapterProcess.stdin!);
 				resolve();
 			}
 		});
@@ -179,12 +179,12 @@ export class DebugClient extends ProtocolClient {
 		return this.send('restart', args);
 	}
 
-	public disconnectRequest(args?: DebugProtocol.DisconnectArguments): Promise<DebugProtocol.DisconnectResponse> {
-		return this.send('disconnect', args);
-	}
-
 	public terminateRequest(args?: DebugProtocol.TerminateArguments): Promise<DebugProtocol.TerminateResponse> {
 		return this.send('terminate', args);
+	}
+
+	public disconnectRequest(args?: DebugProtocol.DisconnectArguments): Promise<DebugProtocol.DisconnectResponse> {
+		return this.send('disconnect', args);
 	}
 
 	public setBreakpointsRequest(args: DebugProtocol.SetBreakpointsArguments): Promise<DebugProtocol.SetBreakpointsResponse> {
@@ -197,6 +197,14 @@ export class DebugClient extends ProtocolClient {
 
 	public setExceptionBreakpointsRequest(args: DebugProtocol.SetExceptionBreakpointsArguments): Promise<DebugProtocol.SetExceptionBreakpointsResponse> {
 		return this.send('setExceptionBreakpoints', args);
+	}
+
+	public dataBreakpointInfoRequest(args: DebugProtocol.DataBreakpointInfoArguments): Promise<DebugProtocol.DataBreakpointInfoResponse> {
+		return this.send('dataBreakpointInfo', args);
+	}
+
+	public setDataBreakpointsRequest(args: DebugProtocol.SetDataBreakpointsArguments): Promise<DebugProtocol.SetDataBreakpointsResponse> {
+		return this.send('setDataBreakpoints', args);
 	}
 
 	public continueRequest(args: DebugProtocol.ContinueArguments): Promise<DebugProtocol.ContinueResponse> {
@@ -294,17 +302,17 @@ export class DebugClient extends ProtocolClient {
 	 * The promise will be rejected if a timeout occurs.
 	 */
 	public waitForEvent(eventType: string, timeout?: number): Promise<DebugProtocol.Event> {
-
-		timeout = timeout || this.defaultTimeout;
+		let timeoutHandler: any;
 
 		return new Promise((resolve, reject) => {
-			this.once(eventType, (event: any) => {
+			this.once(eventType, event => {
+				clearTimeout(timeoutHandler);
 				resolve(event);
 			});
 			if (!this._socket) {	// no timeouts if debugging the tests
-				setTimeout(() => {
+				timeoutHandler = setTimeout(() => {
 					reject(new Error(`no event '${eventType}' received after ${timeout} ms`));
-				}, timeout!);
+				}, timeout || this.defaultTimeout);
 			}
 		});
 	}
@@ -324,14 +332,13 @@ export class DebugClient extends ProtocolClient {
 	/**
 	 * Returns a promise that will resolve if a 'initialize' and a 'launch' request were successful.
 	 */
-	public launch(launchArgs: any): Promise<void> {
-
-		return this.initializeRequest().then(response => {
+	public async launch(launchArgs: any): Promise<void> {
+		await this.initializeRequest().then(response => {
 			if (response.body && response.body.supportsConfigurationDoneRequest) {
 				this._supportsConfigurationDoneRequest = true;
 			}
 			return this.launchRequest(launchArgs);
-		}).then((_) => { });
+		});
 	}
 
 	private configurationDone(): Promise<DebugProtocol.Response> {
@@ -389,26 +396,26 @@ export class DebugClient extends ProtocolClient {
 	 */
 	public assertOutput(category: string, expected: string, timeout?: number): Promise<DebugProtocol.Event> {
 
-		timeout = timeout || this.defaultTimeout;
-
 		return new Promise((resolve, reject) => {
 			let output = '';
-			this.on('output', (event: any) => {
+			let timeoutHandler: any;
+			this.on('output', event => {
 				const e = <DebugProtocol.OutputEvent>event;
 				if (e.body.category === category) {
 					output += e.body.output;
 					if (output.indexOf(expected) === 0) {
+						clearTimeout(timeoutHandler);
 						resolve(event);
 					} else if (expected.indexOf(output) !== 0) {
-						const sanitize = (s: string) => s.toString().replace(/\r/mg, "\\r").replace(/\n/mg, "\\n").replace(/\u001B/g, "").replace(/&/g, "&amp;");
+						const sanitize = (s: string) => s.toString().replace(/\r/mg, '\\r').replace(/\n/mg, '\\n');
 						reject(new Error(`received data '${sanitize(output)}' is not a prefix of the expected data '${sanitize(expected)}'`));
 					}
 				}
 			});
 			if (!this._socket) {	// no timeouts if debugging the tests
-				setTimeout(() => {
+				timeoutHandler = setTimeout(() => {
 					reject(new Error(`not enough output data received after ${timeout} ms`));
-				}, timeout!);
+				}, timeout || this.defaultTimeout);
 			}
 		});
 	}
@@ -469,7 +476,7 @@ export class DebugClient extends ProtocolClient {
 				const actualLocation: ILocation = {
 					column: bp.column,
 					line: bp.line!,
-					path: bp.source && bp.source.path
+					path: bp.source!.path!
 				};
 				this.assertPartialLocationsEqual(actualLocation, expectedBPLocation || location);
 
