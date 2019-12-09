@@ -1,4 +1,4 @@
-import { activate, ensureTestContent, organizeImports, setTestContent } from "../../helpers";
+import { activate, ensureTestContent, executeOrganizeImportsCodeAction, setTestContent } from "../../helpers";
 
 describe("organize imports", () => {
 	beforeEach("activate", () => activate());
@@ -14,7 +14,7 @@ main() async {
 }
 		`);
 
-		await organizeImports();
+		await executeOrganizeImportsCodeAction();
 
 		await ensureTestContent(`
 import "dart:async";
@@ -37,7 +37,7 @@ main() async {
 }
 		`);
 
-		await organizeImports();
+		await executeOrganizeImportsCodeAction();
 
 		await ensureTestContent(`
 import "dart:async";

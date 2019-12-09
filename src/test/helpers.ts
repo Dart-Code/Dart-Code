@@ -13,7 +13,7 @@ import { BufferedLogger, filenameSafe, flatMap } from "../shared/utils";
 import { tryDeleteFile } from "../shared/utils/fs";
 import { waitFor } from "../shared/utils/promises";
 import { DelayedCompletionItem, InternalExtensionApi } from "../shared/vscode/interfaces";
-import { fsPath } from "../shared/vscode/utils";
+import { fsPath, SourceSortMembersCodeActionKind } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
@@ -104,6 +104,8 @@ export const webBrokenMainFile = vs.Uri.file(path.join(fsPath(webBrokenFolder), 
 export const webTestMainFile = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "test/basic_test.dart"));
 export const webTestBrokenFile = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "test/broken_test.dart"));
 export const webTestOtherFile = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "test/other_test.dart"));
+
+const startOfDocument = new vs.Range(new vs.Position(0, 0), new vs.Position(0, 0));
 
 export function currentEditor(): vs.TextEditor {
 	let editor = vs.window.activeTextEditor;
@@ -419,11 +421,19 @@ export function select(range: vs.Range) {
 	currentEditor().selection = new vs.Selection(range.start, range.end);
 }
 
-export async function organizeImports() {
-	const codeActions = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, new vs.Range(new vs.Position(0, 0), new vs.Position(0, 0))) as Thenable<vs.CodeAction[]>);
-	const organizeImportsAction = codeActions.filter((ca) => vs.CodeActionKind.SourceOrganizeImports.contains(ca.kind!));
-	assert.equal(organizeImportsAction.length, 1);
-	await waitForEditorChange(() => vs.commands.executeCommand(organizeImportsAction[0].command!.command, ...organizeImportsAction[0].command!.arguments!));
+export async function executeOrganizeImportsCodeAction() {
+	return executeCodeActionByKind(vs.CodeActionKind.SourceOrganizeImports, startOfDocument);
+}
+
+export async function executeSortMembersCodeAction() {
+	return executeCodeActionByKind(SourceSortMembersCodeActionKind, startOfDocument);
+}
+
+export async function executeCodeActionByKind(kind: vs.CodeActionKind, range: vs.Range) {
+	const codeActions = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, range) as Thenable<vs.CodeAction[]>);
+	const matchingAction = codeActions.filter((ca) => kind.contains(ca.kind!));
+	assert.equal(matchingAction.length, 1);
+	await waitForEditorChange(() => vs.commands.executeCommand(matchingAction[0].command!.command, ...matchingAction[0].command!.arguments!));
 }
 
 export function positionOf(searchText: string): vs.Position {

@@ -1,5 +1,4 @@
-import * as vs from "vscode";
-import { activate, ensureTestContent, setTestContent, waitForEditorChange } from "../../helpers";
+import { activate, ensureTestContent, executeSortMembersCodeAction, setTestContent } from "../../helpers";
 
 describe("sort members", () => {
 
@@ -19,7 +18,7 @@ dd() {}
 cc() {}
 		`);
 
-		await waitForEditorChange(() => vs.commands.executeCommand("dart.sortMembers"));
+		await executeSortMembersCodeAction();
 
 		// b&a inside the class seem sorted the wrong way?
 		// https://github.com/dart-lang/sdk/issues/32683

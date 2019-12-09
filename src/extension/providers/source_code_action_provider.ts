@@ -1,11 +1,10 @@
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, CodeActionProviderMetadata, Range, TextDocument } from "vscode";
+import { SourceSortMembersCodeActionKind } from "../../shared/vscode/utils";
 import { isAnalyzableAndInWorkspace } from "../utils";
-
-const SourceSortMembers = CodeActionKind.Source.append("sortMembers");
 
 export class SourceCodeActionProvider implements CodeActionProvider {
 	public static readonly metadata: CodeActionProviderMetadata = {
-		providedCodeActionKinds: [CodeActionKind.Source, CodeActionKind.SourceOrganizeImports, SourceSortMembers],
+		providedCodeActionKinds: [CodeActionKind.Source, CodeActionKind.SourceOrganizeImports, SourceSortMembersCodeActionKind],
 	};
 
 	public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): CodeAction[] | undefined {
@@ -32,14 +31,14 @@ export class SourceCodeActionProvider implements CodeActionProvider {
 		if (!context
 			|| !context.only
 			|| context.only.contains(CodeActionKind.Source)
-			|| context.only.contains(SourceSortMembers)) {
+			|| context.only.contains(SourceSortMembersCodeActionKind)) {
 			actions.push({
 				command: {
 					arguments: [document],
 					command: "dart.sortMembers",
 					title: "Sort Members",
 				},
-				kind: SourceSortMembers,
+				kind: SourceSortMembersCodeActionKind,
 				title: "Sort Members",
 			});
 		}
