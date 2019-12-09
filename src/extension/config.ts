@@ -87,7 +87,7 @@ class Config {
 	get previewNewCompletionPlaceholders(): boolean { return this.getConfig<boolean>("previewNewCompletionPlaceholders", false); }
 	get previewToStringInDebugViews(): boolean { return this.getConfig<boolean>("previewToStringInDebugViews", false); }
 	get promptToRunIfErrors(): boolean { return this.getConfig<boolean>("promptToRunIfErrors", true); }
-	get reportAnalyzerErrors(): boolean { return this.getConfig<boolean>("reportAnalyzerErrors", true); }
+	get notifyAnalyzerErrors(): boolean { return this.getConfig<boolean>("notifyAnalyzerErrors", true); }
 	get sdkPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("sdkPath", null)); }
 	get sdkPaths(): string[] { return this.getConfig<string[]>("sdkPaths", []).map(resolvePaths); }
 	get showIgnoreQuickFixes(): boolean { return this.getConfig<boolean>("showIgnoreQuickFixes", false); }
