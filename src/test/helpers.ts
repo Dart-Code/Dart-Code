@@ -731,7 +731,7 @@ export function getRandomTempFolder(): string {
 	return tmpPath;
 }
 
-export async function waitForResult(action: () => boolean, message?: string, milliseconds: number = 3000, throwOnFailure = true): Promise<void> {
+export async function waitForResult(action: () => boolean, message?: string, milliseconds: number = 6000, throwOnFailure = true): Promise<void> {
 	const res = await waitFor(action, undefined, milliseconds);
 	if (throwOnFailure && !res)
 		throw new Error(`Action didn't return true within ${milliseconds}ms (${message})`);
