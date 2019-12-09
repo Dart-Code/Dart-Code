@@ -1,4 +1,3 @@
-import * as child_process from "child_process";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -7,7 +6,7 @@ import { ProgressLocation, Uri, window } from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, pubPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
-import { DartSdks, DartWorkspaceContext, Logger, StagehandTemplate } from "../../shared/interfaces";
+import { DartSdks, DartWorkspaceContext, Logger, SpawnedProcess, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { PromiseCompleter, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
@@ -644,11 +643,11 @@ class ChainedProcess {
 	public processNumber = ChainedProcess.processNumber++;
 	private completer: PromiseCompleter<number | undefined> = new PromiseCompleter<number | undefined>();
 	public readonly completed = this.completer.promise;
-	public process: child_process.ChildProcess | undefined;
+	public process: SpawnedProcess | undefined;
 	private isCancelled = false;
 	public get hasStarted() { return this.process !== undefined; }
 
-	constructor(private readonly spawn: () => child_process.ChildProcess, parent: ChainedProcess | undefined) {
+	constructor(private readonly spawn: () => SpawnedProcess, parent: ChainedProcess | undefined) {
 		// We'll either start immediately, or if given a parent process only when it completes.
 		if (parent) {
 			parent.completed.then(() => this.start());

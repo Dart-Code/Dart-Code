@@ -1,6 +1,5 @@
-import * as child_process from "child_process";
 import * as fs from "fs";
-import { IAmDisposable, Logger } from "../../shared/interfaces";
+import { IAmDisposable, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { UnknownResponse } from "../../shared/services/interfaces";
 import { getLogHeader } from "../utils/log";
 import { safeSpawn } from "../utils/processes";
@@ -9,7 +8,7 @@ import { safeSpawn } from "../utils/processes";
 
 export abstract class StdIOService<T> implements IAmDisposable {
 	private readonly disposables: IAmDisposable[] = [];
-	public process?: child_process.ChildProcess;
+	public process?: SpawnedProcess;
 	protected readonly additionalPidsToTerminate: number[] = [];
 	private nextRequestID = 1;
 	private readonly activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] | "CANCELLED" } = {};
@@ -38,23 +37,19 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 		this.logTraffic(`    PID: ${process.pid}`);
 
-		if (this.process.stdout) {
-			this.process.stdout.on("data", (data: Buffer) => {
-				const message = data.toString();
+		this.process.stdout.on("data", (data: Buffer) => {
+			const message = data.toString();
 
-				// Add this message to the buffer for processing.
-				this.messageBuffer.push(message);
+			// Add this message to the buffer for processing.
+			this.messageBuffer.push(message);
 
-				// Kick off processing if we have a full message.
-				if (message.indexOf("\n") >= 0)
-					this.processMessageBuffer();
-			});
-		}
-		if (this.process.stderr) {
-			this.process.stderr.on("data", (data: Buffer) => {
-				this.logTraffic(`${data.toString()}`, true);
-			});
-		}
+			// Kick off processing if we have a full message.
+			if (message.indexOf("\n") >= 0)
+				this.processMessageBuffer();
+		});
+		this.process.stderr.on("data", (data: Buffer) => {
+			this.logTraffic(`${data.toString()}`, true);
+		});
 		this.process.on("exit", (code, signal) => {
 			this.logTraffic(`Process terminated! ${code}, ${signal}`);
 			this.processExited = true;
@@ -94,7 +89,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 	protected sendMessage<T>(json: string) {
 		this.logTraffic(`==> ${json}`);
-		if (this.process && this.process.stdin)
+		if (this.process)
 			this.process.stdin.write(json);
 		else
 			this.logTraffic(`  (not sent: no process)`);

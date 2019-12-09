@@ -1,3 +1,5 @@
+import * as child_process from "child_process";
+import * as stream from "stream";
 import { DaemonCapabilities } from "./capabilities/flutter";
 import { LogCategory, LogSeverity } from "./enums";
 import * as f from "./flutter/daemon_interfaces";
@@ -68,3 +70,9 @@ export interface Location {
 	startColumn: number;
 	length: number;
 }
+
+export type SpawnedProcess = child_process.ChildProcess & {
+	stdin: stream.Writable,
+	stdout: stream.Readable,
+	stderr: stream.Readable,
+};

@@ -1,6 +1,6 @@
 import * as child_process from "child_process";
 import { LogCategory } from "../../shared/enums";
-import { Logger } from "../../shared/interfaces";
+import { Logger, SpawnedProcess } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { nullToUndefined } from "./misc";
 
@@ -26,7 +26,7 @@ export function setupToolEnv(envOverrides?: object) {
 // TODO: Should we move this to extension activate?
 setupToolEnv();
 
-export function safeSpawn(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any): child_process.ChildProcess {
+export function safeSpawn(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any): SpawnedProcess {
 	// Spawning processes on Windows with funny symbols in the path requires quoting. However if you quote an
 	// executable with a space in its path and an argument also has a space, you have to then quote all of the
 	// arguments too!\
@@ -35,7 +35,7 @@ export function safeSpawn(workingDirectory: string | undefined, binPath: string,
 		? Object.assign(Object.create(toolEnv), envOverrides) // Do it this way so we can override toolEnv if required.
 		: toolEnv;
 	const quotedArgs = args.map((a) => `"${a.replace(/"/g, `\\"`)}"`);
-	return child_process.spawn(`"${binPath}"`, quotedArgs, { cwd: workingDirectory, env: customEnv, shell: true });
+	return child_process.spawn(`"${binPath}"`, quotedArgs, { cwd: workingDirectory, env: customEnv, shell: true }) as SpawnedProcess;
 }
 
 /// Runs a process and returns the exit code, stdout, stderr. Always resolves even for non-zero exit codes.
@@ -47,10 +47,8 @@ export function runProcess(logger: Logger, workingDirectory: string | undefined,
 
 		const out: string[] = [];
 		const err: string[] = [];
-		if (proc.stdout)
-			proc.stdout.on("data", (data: Buffer) => out.push(data.toString()));
-		if (proc.stderr)
-			proc.stderr.on("data", (data: Buffer) => err.push(data.toString()));
+		proc.stdout.on("data", (data: Buffer) => out.push(data.toString()));
+		proc.stderr.on("data", (data: Buffer) => err.push(data.toString()));
 		proc.on("exit", (code) => {
 			resolve(new RunProcessResult(nullToUndefined(code), out.join(""), err.join("")));
 		});

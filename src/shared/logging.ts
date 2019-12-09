@@ -1,10 +1,9 @@
-import * as child_process from "child_process";
 import { EventEmitter } from "events";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { LogCategory, LogSeverity } from "./enums";
-import { IAmDisposable, Logger, LogMessage, SomeError } from "./interfaces";
+import { IAmDisposable, Logger, LogMessage, SomeError, SpawnedProcess } from "./interfaces";
 import { errorString } from "./utils";
 
 class LogEmitter extends EventEmitter {
@@ -72,13 +71,11 @@ class NullLogger implements Logger {
 
 export const nullLogger = new NullLogger();
 
-export function logProcess(logger: Logger, category: LogCategory, process: child_process.ChildProcess): void {
+export function logProcess(logger: Logger, category: LogCategory, process: SpawnedProcess): void {
 	const prefix = `(PROC ${process.pid})`;
 	logger.info(`${prefix} Logging data for process...`, category);
-	if (process.stdout)
-		process.stdout.on("data", (data) => logger.info(`${prefix} ${data}`, category));
-	if (process.stderr)
-		process.stderr.on("data", (data) => logger.info(`${prefix} ${data}`, category));
+	process.stdout.on("data", (data) => logger.info(`${prefix} ${data}`, category));
+	process.stderr.on("data", (data) => logger.info(`${prefix} ${data}`, category));
 	process.on("close", (code, signal) => logger.info(`${prefix} closed (${code}, ${signal})`, category));
 	process.on("exit", (code, signal) => logger.info(`${prefix} exited (${code}, ${signal})`, category));
 }

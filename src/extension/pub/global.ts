@@ -112,10 +112,8 @@ export class PubGlobal {
 
 			const stdout: string[] = [];
 			const stderr: string[] = [];
-			if (proc.stdout)
-				proc.stdout.on("data", (data) => stdout.push(data.toString()));
-			if (proc.stderr)
-				proc.stderr.on("data", (data) => stderr.push(data.toString()));
+			proc.stdout.on("data", (data) => stdout.push(data.toString()));
+			proc.stderr.on("data", (data) => stderr.push(data.toString()));
 			proc.on("close", (code) => {
 				if (!code) {
 					resolve(stdout.join(""));

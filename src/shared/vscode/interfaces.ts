@@ -1,7 +1,7 @@
-import * as child_process from "child_process";
 import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
 import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server_types";
 import { TestStatus, VersionStatus, VmService, VmServiceExtension } from "../enums";
+import { SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
 import { WorkspaceContext } from "../workspace";
 import { Context } from "./workspace";
@@ -74,7 +74,7 @@ export interface InternalExtensionApi {
 		uninstall(packageID: string): Promise<void>;
 	};
 	renameProvider: RenameProvider | undefined;
-	safeSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any) => child_process.ChildProcess;
+	safeSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any) => SpawnedProcess;
 	testTreeProvider: TestResultsProvider;
 	workspaceContext: WorkspaceContext;
 }

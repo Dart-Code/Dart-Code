@@ -1,5 +1,5 @@
-import * as child_process from "child_process";
 import * as vs from "vscode";
+import { SpawnedProcess } from "../../shared/interfaces";
 
 const channels: { [key: string]: vs.OutputChannel } = {};
 
@@ -17,10 +17,8 @@ export function getChannel(name: string): vs.OutputChannel {
 	return channels[name];
 }
 
-export function runProcessInChannel(process: child_process.ChildProcess, channel: vs.OutputChannel) {
-	if (process.stdout)
-		process.stdout.on("data", (data) => channel.append(data.toString()));
-	if (process.stderr)
-		process.stderr.on("data", (data) => channel.append(data.toString()));
+export function runProcessInChannel(process: SpawnedProcess, channel: vs.OutputChannel) {
+	process.stdout.on("data", (data) => channel.append(data.toString()));
+	process.stderr.on("data", (data) => channel.append(data.toString()));
 	process.on("close", (code) => channel.appendLine(`exit code ${code}`));
 }

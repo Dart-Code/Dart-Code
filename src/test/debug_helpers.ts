@@ -1,9 +1,9 @@
 import * as assert from "assert";
-import { ChildProcess } from "child_process";
 import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { isWin, observatoryListeningBannerPattern } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
+import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
 import { DartDebugClient } from "./dart_debug_client";
 import { currentTestName, defer, extApi, getLaunchConfiguration, logger } from "./helpers";
@@ -126,15 +126,13 @@ export class DartProcess {
 	public get hasExited() { return this.exited; }
 	private exited: boolean = false;
 
-	constructor(public readonly process: ChildProcess) {
+	constructor(public readonly process: SpawnedProcess) {
 		this.observatoryUri = new Promise((resolve, reject) => {
-			if (process.stdout) {
-				process.stdout.on("data", (data) => {
-					const match = observatoryListeningBannerPattern.exec(data.toString());
-					if (match)
-						resolve(match[1]);
-				});
-			}
+			process.stdout.on("data", (data) => {
+				const match = observatoryListeningBannerPattern.exec(data.toString());
+				if (match)
+					resolve(match[1]);
+			});
 		});
 		this.exitCode = new Promise<number | null>((resolve, reject) => {
 			process.on("exit", (code) => { this.exited = true; resolve(code); });

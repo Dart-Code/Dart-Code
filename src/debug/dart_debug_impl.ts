@@ -1,4 +1,3 @@
-import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { CapabilitiesEvent, DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
@@ -10,7 +9,7 @@ import { safeSpawn } from "../extension/utils/processes";
 import { VmServiceCapabilities } from "../shared/capabilities/vm_service";
 import { observatoryListeningBannerPattern, pleaseReportBug } from "../shared/constants";
 import { LogCategory, LogSeverity } from "../shared/enums";
-import { LogMessage } from "../shared/interfaces";
+import { LogMessage, SpawnedProcess } from "../shared/interfaces";
 import { PackageMap } from "../shared/pub/package_map";
 import { errorString, flatMap, throttle, uniq, uriToFilePath } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
@@ -36,7 +35,7 @@ const messageWithUriPattern = new RegExp(`(.*?)((?:package|dart|file):.*\\.dart)
 // completionsRequest(response: DebugProtocol.CompletionsResponse, args: DebugProtocol.CompletionsArguments): void;
 export class DartDebugSession extends DebugSession {
 	// TODO: Tidy all this up
-	protected childProcess?: child_process.ChildProcess;
+	protected childProcess?: SpawnedProcess;
 	protected additionalPidsToTerminate: number[] = [];
 	// We normally track the pid from Observatory to terminate the VM afterwards, but for Flutter Run it's
 	// a remote PID and therefore doesn't make sense to try and terminate.
@@ -150,26 +149,21 @@ export class DartDebugSession extends DebugSession {
 		const process = this.childProcess;
 		this.processExited = false;
 		this.processExit = new Promise((resolve) => process.on("exit", resolve));
-
-		if (process.stdout) {
-			process.stdout.setEncoding("utf8");
-			process.stdout.on("data", (data) => {
-				let match: RegExpExecArray | null = null;
-				if (this.shouldConnectDebugger && this.parseObservatoryUriFromStdOut && !this.observatory) {
-					match = observatoryListeningBannerPattern.exec(data.toString());
-				}
-				if (match) {
-					this.initDebugger(this.websocketUriForObservatoryUri(match[1]));
-				} else if (this.sendStdOutToConsole)
-					this.logToUserBuffered(data.toString(), "stdout");
-			});
-		}
-		if (process.stderr) {
-			process.stderr.setEncoding("utf8");
-			process.stderr.on("data", (data) => {
-				this.logToUserBuffered(data.toString(), "stderr");
-			});
-		}
+		process.stdout.setEncoding("utf8");
+		process.stdout.on("data", (data) => {
+			let match: RegExpExecArray | null = null;
+			if (this.shouldConnectDebugger && this.parseObservatoryUriFromStdOut && !this.observatory) {
+				match = observatoryListeningBannerPattern.exec(data.toString());
+			}
+			if (match) {
+				this.initDebugger(this.websocketUriForObservatoryUri(match[1]));
+			} else if (this.sendStdOutToConsole)
+				this.logToUserBuffered(data.toString(), "stdout");
+		});
+		process.stderr.setEncoding("utf8");
+		process.stderr.on("data", (data) => {
+			this.logToUserBuffered(data.toString(), "stderr");
+		});
 		process.on("error", (error) => {
 			this.logToUser(`${error}\n`, "stderr");
 		});
@@ -1204,7 +1198,7 @@ export class DartDebugSession extends DebugSession {
 					this.sendResponse(response);
 					break;
 				case "dart.userInput":
-					if (this.childProcess && !this.childProcess.killed && !this.processExited && this.childProcess.stdin)
+					if (this.childProcess && !this.childProcess.killed && !this.processExited)
 						this.childProcess.stdin.write(args.input);
 					this.sendResponse(response);
 					break;
