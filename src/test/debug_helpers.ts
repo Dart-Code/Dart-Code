@@ -128,11 +128,13 @@ export class DartProcess {
 
 	constructor(public readonly process: ChildProcess) {
 		this.observatoryUri = new Promise((resolve, reject) => {
-			process.stdout.on("data", (data) => {
-				const match = observatoryListeningBannerPattern.exec(data.toString());
-				if (match)
-					resolve(match[1]);
-			});
+			if (process.stdout) {
+				process.stdout.on("data", (data) => {
+					const match = observatoryListeningBannerPattern.exec(data.toString());
+					if (match)
+						resolve(match[1]);
+				});
+			}
 		});
 		this.exitCode = new Promise<number | null>((resolve, reject) => {
 			process.on("exit", (code) => { this.exited = true; resolve(code); });

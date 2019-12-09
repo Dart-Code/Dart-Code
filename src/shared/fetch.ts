@@ -12,10 +12,10 @@ export function setUserAgent(extensionVersion: string) {
 // TODO: Move over things over to this...
 export function fetch(urlString: string, headers?: http.OutgoingHttpHeaders) {
 	const u = url.parse(urlString);
-	if (u.protocol === "https:")
-		return fetchHttps(u.hostname, u.port, u.path, headers);
-	else if (u.protocol === "http:")
-		return fetchHttp(u.hostname, u.port, u.path, headers);
+	if (u.protocol === "https:" && u.hostname)
+		return fetchHttps(u.hostname, u.port || "443", u.path || "", headers);
+	else if (u.protocol === "http:" && u.hostname)
+		return fetchHttp(u.hostname, u.port || "80", u.path || "", headers);
 	else
 		throw new Error(`Cannot fetch URL ${urlString}`);
 }

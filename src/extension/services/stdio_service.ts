@@ -38,19 +38,23 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 		this.logTraffic(`    PID: ${process.pid}`);
 
-		this.process.stdout.on("data", (data: Buffer) => {
-			const message = data.toString();
+		if (this.process.stdout) {
+			this.process.stdout.on("data", (data: Buffer) => {
+				const message = data.toString();
 
-			// Add this message to the buffer for processing.
-			this.messageBuffer.push(message);
+				// Add this message to the buffer for processing.
+				this.messageBuffer.push(message);
 
-			// Kick off processing if we have a full message.
-			if (message.indexOf("\n") >= 0)
-				this.processMessageBuffer();
-		});
-		this.process.stderr.on("data", (data: Buffer) => {
-			this.logTraffic(`${data.toString()}`, true);
-		});
+				// Kick off processing if we have a full message.
+				if (message.indexOf("\n") >= 0)
+					this.processMessageBuffer();
+			});
+		}
+		if (this.process.stderr) {
+			this.process.stderr.on("data", (data: Buffer) => {
+				this.logTraffic(`${data.toString()}`, true);
+			});
+		}
 		this.process.on("exit", (code, signal) => {
 			this.logTraffic(`Process terminated! ${code}, ${signal}`);
 			this.processExited = true;
@@ -90,7 +94,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 	protected sendMessage<T>(json: string) {
 		this.logTraffic(`==> ${json}`);
-		if (this.process)
+		if (this.process && this.process.stdin)
 			this.process.stdin.write(json);
 		else
 			this.logTraffic(`  (not sent: no process)`);

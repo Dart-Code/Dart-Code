@@ -315,7 +315,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// Updated node bindings say address can be a string (used for pipes) but
 		// this should never be the case here. This check is to keep the types happy.
-		if (typeof serverAddress === "string") {
+		if (!serverAddress || typeof serverAddress === "string") {
 			logger.info("Debug server does not have a valid address");
 			window.showErrorMessage("Debug server does not have a valid address");
 			return undefined;

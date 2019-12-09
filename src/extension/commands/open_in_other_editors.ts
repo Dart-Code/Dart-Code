@@ -73,9 +73,11 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 			const proc = safeSpawn(folder, binPath, ["config", "--machine"]);
 			logProcess(this.logger, LogCategory.CommandProcesses, proc);
 			const output: string[] = [];
-			proc.stdout.on("data", (data: Buffer) => {
-				output.push(data.toString());
-			});
+			if (proc.stdout) {
+				proc.stdout.on("data", (data: Buffer) => {
+					output.push(data.toString());
+				});
+			}
 			proc.on("exit", () => {
 				try {
 					if (output.length) {
