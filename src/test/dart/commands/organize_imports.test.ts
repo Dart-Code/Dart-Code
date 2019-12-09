@@ -1,8 +1,6 @@
-import * as vs from "vscode";
-import { activate, ensureTestContent, setTestContent, waitForEditorChange } from "../../helpers";
+import { activate, ensureTestContent, organizeImports, setTestContent } from "../../helpers";
 
 describe("organize imports", () => {
-
 	beforeEach("activate", () => activate());
 
 	it("sorts imports", async () => {
@@ -16,7 +14,7 @@ main() async {
 }
 		`);
 
-		await waitForEditorChange(() => vs.commands.executeCommand("_dart.organizeImports"));
+		await organizeImports();
 
 		await ensureTestContent(`
 import "dart:async";
@@ -39,7 +37,7 @@ main() async {
 }
 		`);
 
-		await waitForEditorChange(() => vs.commands.executeCommand("_dart.organizeImports"));
+		await organizeImports();
 
 		await ensureTestContent(`
 import "dart:async";

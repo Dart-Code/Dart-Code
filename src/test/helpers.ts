@@ -419,6 +419,13 @@ export function select(range: vs.Range) {
 	currentEditor().selection = new vs.Selection(range.start, range.end);
 }
 
+export async function organizeImports() {
+	const codeActions = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, new vs.Range(new vs.Position(0, 0), new vs.Position(0, 0))) as Thenable<vs.CodeAction[]>);
+	const organizeImportsAction = codeActions.filter((ca) => vs.CodeActionKind.SourceOrganizeImports.contains(ca.kind!));
+	assert.equal(organizeImportsAction.length, 1);
+	await waitForEditorChange(() => vs.commands.executeCommand(organizeImportsAction[0].command!.command, ...organizeImportsAction[0].command!.arguments!));
+}
+
 export function positionOf(searchText: string): vs.Position {
 	// Normalise search text to match the document, since our literal template
 	// strings in tests end up compiled as only \n on Windows even thouh the
