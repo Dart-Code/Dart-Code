@@ -450,7 +450,7 @@
 			},
 			{
 				"command": "dart.openDevTools",
-				"when": "dart-code:dartProjectLoaded && inDebugMode",
+				"when": "dart-code:dartProjectLoaded",
 				"key": "ctrl+alt+d",
 				"win": "ctrl+alt+d"
 			}
@@ -635,7 +635,7 @@
 				},
 				{
 					"command": "dart.openDevTools",
-					"when": "dart-code:dartProjectLoaded && inDebugMode"
+					"when": "dart-code:dartProjectLoaded"
 				},
 				{
 					"command": "dart.openDevToolsInspector",

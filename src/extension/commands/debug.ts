@@ -106,7 +106,7 @@ export class DebugCommands {
 		});
 		context.subscriptions.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, page?: string }): Promise<{ url: string, dispose: () => void } | undefined> => {
 			if (!debugSessions.length) {
-				vs.window.showInformationMessage("Dart DevTools requires an active debug session.");
+				vs.window.showInformationMessage("You must have an active debug session to start DevTools.");
 				return;
 			}
 			const session = options && options.debugSessionId
