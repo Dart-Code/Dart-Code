@@ -1281,7 +1281,7 @@
 					],
 					"default": null,
 					"description": "The path to a log file for very detailed logging in the Dart analysis server that may be useful when trying to diagnose analysis server issues.",
-					"scope": "window"
+					"scope": "machine-overridable"
 				},
 				"dart.analyzerSshHost": {
 					"type": [
@@ -1299,7 +1299,7 @@
 					],
 					"default": null,
 					"description": "The path to a low-traffic log file for basic extension and editor issues.",
-					"scope": "window"
+					"scope": "machine-overridable"
 				},
 				"dart.devToolsLogFile": {
 					"type": [
@@ -1308,7 +1308,7 @@
 					],
 					"default": null,
 					"description": "The path to a low-traffic log file for the Dart DevTools service.",
-					"scope": "window"
+					"scope": "machine-overridable"
 				},
 				"dart.analyzerLogFile": {
 					"type": [
@@ -1317,7 +1317,7 @@
 					],
 					"default": null,
 					"description": "The path to a log file for communication between Dart Code and the analysis server.",
-					"scope": "window"
+					"scope": "machine-overridable"
 				},
 				"dart.analyzerObservatoryPort": {
 					"type": [
@@ -1369,7 +1369,7 @@
 					],
 					"default": null,
 					"description": "The path to a log file for the 'flutter daemon' communication which is the service that provides information about connected devices used to show in the status bar.",
-					"scope": "window"
+					"scope": "machine-overridable"
 				},
 				"dart.flutterRunLogFile": {
 					"type": [
@@ -1378,7 +1378,7 @@
 					],
 					"default": null,
 					"description": "The path to a log file for 'flutter run' which is used to launch Flutter applications from VS Code. This is useful when trying to diagnose issues with applications launching (or failing to) on simulators and devices. Use ${name} in the log file name to prevent concurrent debug sessions overwriting each others logs.",
-					"scope": "resource"
+					"scope": "machine-overridable"
 				},
 				"dart.flutterTestLogFile": {
 					"type": [
@@ -1387,7 +1387,7 @@
 					],
 					"default": null,
 					"description": "The path to a log file for 'flutter test' which is used to run unit tests from VS Code. This is useful when trying to diagnose issues with unit test executions. Use ${name} in the log file name to prevent concurrent debug sessions overwriting each others logs.",
-					"scope": "resource"
+					"scope": "machine-overridable"
 				},
 				"dart.pubTestLogFile": {
 					"type": [
@@ -1396,7 +1396,7 @@
 					],
 					"default": null,
 					"description": "The path to a log file for 'pub run test' runs. This is useful when trying to diagnose issues with unit test executions. Use ${name} in the log file name to prevent concurrent debug sessions overwriting each others logs.",
-					"scope": "resource"
+					"scope": "machine-overridable"
 				},
 				"dart.observatoryLogFile": {
 					"type": [
@@ -1405,7 +1405,7 @@
 					],
 					"default": null,
 					"description": "The path to a log file for communication between Dart Code and Observatory (the VM debugger). This is useful when trying to diagnose issues with debugging such as missed breakpoints. Use ${name} in the log file name to prevent concurrent debug sessions overwriting each others logs.",
-					"scope": "resource"
+					"scope": "machine-overridable"
 				},
 				"dart.useKnownChromeOSPorts": {
 					"type": "boolean",
@@ -1420,7 +1420,7 @@
 					],
 					"default": null,
 					"description": "The path to a log file for communication between Dart Code and the webdev daemon. This is useful when trying to diagnose issues with launching web applications. Use ${name} in the log file name to prevent concurrent debug sessions overwriting each others logs.",
-					"scope": "resource"
+					"scope": "machine-overridable"
 				},
 				"dart.vmAdditionalArgs": {
 					"type": "array",
