@@ -1502,7 +1502,7 @@
 				},
 				"dart.previewNewCompletionPlaceholders": {
 					"type": "boolean",
-					"default": false,
+					"default": true,
 					"description": "Whether to enable new behaviour for code completion to include @required arguments as placeholders (when using dart.insertArgumentPlaceholders).",
 					"scope": "window"
 				},

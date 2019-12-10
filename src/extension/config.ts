@@ -84,7 +84,7 @@ class Config {
 	get previewFlutterUiGuides(): boolean { return this.getConfig<boolean>("previewFlutterUiGuides", false); }
 	get previewFlutterUiGuidesCustomTracking(): boolean { return this.getConfig<boolean>("previewFlutterUiGuidesCustomTracking", false); }
 	get previewHotReloadOnSaveWatcher(): boolean { return this.getConfig<boolean>("previewHotReloadOnSaveWatcher", false); }
-	get previewNewCompletionPlaceholders(): boolean { return this.getConfig<boolean>("previewNewCompletionPlaceholders", false); }
+	get previewNewCompletionPlaceholders(): boolean { return this.getConfig<boolean>("previewNewCompletionPlaceholders", true); }
 	get previewToStringInDebugViews(): boolean { return this.getConfig<boolean>("previewToStringInDebugViews", false); }
 	get promptToRunIfErrors(): boolean { return this.getConfig<boolean>("promptToRunIfErrors", true); }
 	get notifyAnalyzerErrors(): boolean { return this.getConfig<boolean>("notifyAnalyzerErrors", true); }
