@@ -7,7 +7,7 @@
 	"engines": {
 		"vscode": "^1.40.0"
 	},
-	"extensionKind": "workspace",
+	"extensionKind": ["workspace"],
 	"license": "SEE LICENSE IN LICENSE",
 	"bugs": {
 		"url": "https://github.com/Dart-Code/Dart-Code/issues"
