@@ -431,7 +431,17 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const conf = config.for(folder && folder.uri);
 
 		// Attach any properties that weren't explicitly set.
-		debugConfig.name = debugConfig.name || "Dart & Flutter";
+		if (!debugConfig.name) {
+			if (isFlutter && debugConfig.deviceId) {
+				debugConfig.name = `Flutter (${debugConfig.deviceId})`;
+			} else if (isFlutter && device) {
+				debugConfig.name = `Flutter (${deviceManager ? deviceManager.labelForDevice(device) : device.name})`;
+			} else if (isFlutter) {
+				debugConfig.name = "Flutter";
+			} else {
+				debugConfig.name = "Dart";
+			}
+		}
 		debugConfig.type = debugConfig.type || "dart";
 		debugConfig.request = debugConfig.request || "launch";
 		debugConfig.cwd = debugConfig.cwd || (folder && fsPath(folder.uri));
