@@ -1,4 +1,4 @@
-name: Build and Test on Commit
+name: Test
 
 on: push
 
