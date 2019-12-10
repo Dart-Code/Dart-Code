@@ -59,15 +59,8 @@ export class DartHoverProvider implements HoverProvider {
 				documentation = `*${hover.containingLibraryName}*\n\n` + documentation;
 		} else {
 			const containingLibraryName = hover.containingLibraryName;
-			const containingLibraryPath = hover.containingLibraryPath;
 			if (containingLibraryName) {
 				documentation = `*${containingLibraryName}*\n\n` + documentation;
-			} else if (containingLibraryPath) {
-				const packageMap = DartHoverProvider.getPackageMapFor(documentUri);
-				const packagePath = packageMap && packageMap.convertFileToPackageUri(containingLibraryPath, false);
-				const packageName = packagePath && packagePath.split("/")[0];
-				if (packageName)
-					documentation = `*${packageName}*\n\n` + documentation;
 			}
 		}
 

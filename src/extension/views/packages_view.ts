@@ -5,7 +5,7 @@ import { DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACK
 import { Logger } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
 import { sortBy } from "../../shared/utils/array";
-import { findProjectFolders } from "../../shared/utils/fs";
+import { areSameFolder, findProjectFolders } from "../../shared/utils/fs";
 import { fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 
 export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<PackageDep> {
@@ -54,7 +54,8 @@ export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<
 	}
 
 	private getPackages(project: PackageDepProject): PackageDep[] {
-		const packagesFile = path.join(fsPath(project.resourceUri!), ".packages");
+		const projectFolder = fsPath(project.resourceUri!);
+		const packagesFile = path.join(projectFolder, ".packages");
 		if (!fs.existsSync(packagesFile))
 			return [];
 
@@ -62,10 +63,14 @@ export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<
 		const packages = map.packages;
 		const packageNames = sortBy(Object.keys(packages), (s) => s.toLowerCase());
 
-		return packageNames.filter((name) => name !== map.localPackageName).map((name) => {
-			const path = packages[name];
-			return new PackageDepPackage(`${name}`, vs.Uri.file(path));
-		});
+		const packageDepNodes = packageNames
+			.filter((name) => packages[name] && !areSameFolder(packages[name], path.join(projectFolder, "lib")))
+			.map((name) => {
+				const path = packages[name];
+				return new PackageDepPackage(`${name}`, vs.Uri.file(path));
+			});
+
+		return packageDepNodes;
 	}
 
 	private getFilesAndFolders(folder: PackageDepFolder): PackageDep[] {

@@ -88,3 +88,11 @@ export function mkDirRecursive(folder: string) {
 	if (!fs.existsSync(folder))
 		fs.mkdirSync(folder);
 }
+
+export function areSameFolder(folder1: string, folder2: string) {
+	// Trim any trailing path separators of either direction.
+	folder1 = folder1.replace(/[\\/]+$/, "");
+	folder2 = folder2.replace(/[\\/]+$/, "");
+
+	return folder1 === folder2;
+}
