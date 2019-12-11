@@ -1,3 +1,5 @@
+import { URL } from "url";
+import * as vs from "vscode";
 import { env as vsEnv, ExtensionKind, extensions, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType, Uri, workspace, WorkspaceFolder } from "vscode";
 import { dartCodeExtensionIdentifier } from "../constants";
 import { Location, Logger } from "../interfaces";
@@ -64,13 +66,23 @@ class EnvUtils {
 		return vsEnv.openExternal(Uri.parse(url));
 	}
 
-	public async asExternalUri(uri: Uri, logger: Logger = nullLogger): Promise<Uri> {
+	public async exposeUrl(uri: vs.Uri, logger: Logger = nullLogger): Promise<string> {
 		logger.info(`Exposing URL: ${uri.toString()}`);
+		const isWebSocket = uri.scheme === "ws" || uri.scheme === "wss";
+		const isSecure = uri.scheme === "wss" || uri.scheme === "https";
 
 		// TODO: Remove this scheme mapping when https://github.com/microsoft/vscode/issues/84819
 		// is resolved.
-		const fakeScheme = uri.scheme === "ws" ? "http" : "https";
-		const uriToMap = uri.with({ scheme: fakeScheme });
+		let fakeScheme = uri.scheme;
+		if (isWebSocket)
+			fakeScheme = isSecure ? "https" : "http";
+
+		const url = new URL(uriToString(uri));
+		let fakeAuthority = uri.authority;
+		if (!url.port)
+			fakeAuthority = `${url.hostname}:${isSecure ? "443" : "80"}`;
+
+		const uriToMap = uri.with({ scheme: fakeScheme, authority: fakeAuthority });
 		logger.info(`Mapping URL: ${uriToMap.toString()}`);
 
 		const mappedUri = await vsEnv.asExternalUri(uriToMap);
@@ -80,14 +92,25 @@ class EnvUtils {
 		// we need to take into account whether asExternalUri pushed is up to secure, so use
 		// the http/https to decide which to go back to.
 		let newScheme = mappedUri.scheme;
-		if (uri.scheme === "ws" || uri.scheme === "wss")
+		if (isWebSocket)
+			// Note: We use mappedUri.scheme here and not isSecure because we
+			// care if the *exposed* URI is secure.
 			newScheme = mappedUri.scheme === "https" ? "wss" : "ws";
 
-		const finalUri = mappedUri.with({ scheme: newScheme });
-		logger.info(`Final URL: ${finalUri.toString()}`);
+		const finalUri = uriToString(mappedUri.with({ scheme: newScheme }));
+		logger.info(`Final URI: ${finalUri}`);
 
-		return finalUri;
+		const finalUrl = new URL(finalUri).toString();
+		logger.info(`Final URL: ${finalUrl}`);
+
+		return finalUrl;
 	}
+}
+
+function uriToString(uri: vs.Uri) {
+	return uri.toString()
+		.replace(/%24/g, "$")
+		.replace(/%5B/g, "[");
 }
 
 export const envUtils = new EnvUtils();
