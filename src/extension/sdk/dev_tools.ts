@@ -107,9 +107,9 @@ export class DevToolsManager implements vs.Disposable {
 					.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key]!)}`)
 					.join("&");
 				const vmServiceUri = vs.Uri.parse(session.vmServiceUri);
-				const exposedUri = await envUtils.asExternalUri(vmServiceUri);
-				const fullUrl = `${url}?${paramsString}&uri=${encodeURIComponent(exposedUri.toString())}`;
-				await envUtils.openInBrowser(fullUrl);
+				const exposedUrl = await envUtils.exposeUrl(vmServiceUri, this.logger);
+				const fullUrl = `${url}?${paramsString}&uri=${encodeURIComponent(exposedUrl)}`;
+				await envUtils.openInBrowser(fullUrl, this.logger);
 			});
 
 			this.devToolsStatusBarItem.text = "Dart DevTools";
