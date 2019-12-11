@@ -1,6 +1,7 @@
 import { env as vsEnv, ExtensionKind, extensions, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType, Uri, workspace, WorkspaceFolder } from "vscode";
 import { dartCodeExtensionIdentifier } from "../constants";
-import { Location } from "../interfaces";
+import { Location, Logger } from "../interfaces";
+import { nullLogger } from "../logging";
 import { forceWindowsDriveLetterToUppercase } from "../utils";
 
 const dartExtension = extensions.getExtension(dartCodeExtensionIdentifier);
@@ -58,15 +59,22 @@ export function showCode(editor: TextEditor, displayRange: Range, highlightRange
 }
 
 class EnvUtils {
-	public async openInBrowser(url: string): Promise<boolean> {
+	public async openInBrowser(url: string, logger: Logger = nullLogger): Promise<boolean> {
+		logger.info(`Opening external URL: ${url}`);
 		return vsEnv.openExternal(Uri.parse(url));
 	}
 
-	public async asExternalUri(uri: Uri): Promise<Uri> {
+	public async asExternalUri(uri: Uri, logger: Logger = nullLogger): Promise<Uri> {
+		logger.info(`Exposing URL: ${uri.toString()}`);
+
 		// TODO: Remove this scheme mapping when https://github.com/microsoft/vscode/issues/84819
 		// is resolved.
 		const fakeScheme = uri.scheme === "ws" ? "http" : "https";
-		const mappedUri = await vsEnv.asExternalUri(uri.with({ scheme: fakeScheme }));
+		const uriToMap = uri.with({ scheme: fakeScheme });
+		logger.info(`Mapping URL: ${uriToMap.toString()}`);
+
+		const mappedUri = await vsEnv.asExternalUri(uriToMap);
+		logger.info(`Mapped URL: ${mappedUri.toString()}`);
 
 		// Now we need to map the scheme back to WS if that's what was originally asked for, however
 		// we need to take into account whether asExternalUri pushed is up to secure, so use
@@ -75,7 +83,10 @@ class EnvUtils {
 		if (uri.scheme === "ws" || uri.scheme === "wss")
 			newScheme = mappedUri.scheme === "https" ? "wss" : "ws";
 
-		return mappedUri.with({ scheme: newScheme });
+		const finalUri = mappedUri.with({ scheme: newScheme });
+		logger.info(`Final URL: ${finalUri.toString()}`);
+
+		return finalUri;
 	}
 }
 
