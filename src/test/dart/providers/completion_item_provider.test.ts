@@ -73,7 +73,7 @@ main() {
 		if (typeof comp.insertText === "string")
 			throw new Error("Expected SnippetString, got string");
 		else
-			assert.equal(comp.insertText!.value, "foo: $0");
+			assert.equal(comp.insertText!.value, "foo: $1");
 	});
 
 	it("includes classes and constructors from other files", async () => {
@@ -258,7 +258,7 @@ main() {
 			if (extApi.dartCapabilities.hasDocumentationInCompletions)
 				assert.equal((completion.documentation as vs.MarkdownString).value, "Creates an unordered hash-table based [Map].");
 			assert.equal(completion.filterText, "HashMap");
-			assert.equal((completion.insertText as vs.SnippetString).value, "HashMap($0)");
+			assert.equal((completion.insertText as vs.SnippetString).value, "HashMap($1)");
 			assert.equal(completion.keepWhitespace, true);
 			assert.equal(completion.kind, vs.CompletionItemKind.Constructor);
 			assert.equal(completion.label, "HashMap(…)");
