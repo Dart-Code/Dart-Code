@@ -12,6 +12,10 @@ export class PublishClosingLabelsNotification {
 	public static type = new NotificationType<ClosingLabelsParams, void>("dart/textDocument/publishClosingLabels");
 }
 
+export class PublishOutlineNotification {
+	public static type = new NotificationType<OutlineParams, void>("dart/textDocument/publishOutline");
+}
+
 export class SuperRequest {
 	public static type = new RequestType<TextDocumentPositionParams, Location | null, void, void>("dart/textDocument/super");
 }
@@ -28,4 +32,22 @@ export interface ClosingLabelsParams {
 export interface ClosingLabel {
 	readonly label: string;
 	readonly range: Range;
+}
+
+export interface OutlineParams {
+	readonly uri: string;
+	readonly outline: Outline;
+}
+
+export interface Outline {
+	readonly element: Element;
+	readonly range: Range;
+	readonly codeRange: Range;
+	readonly children: Outline[] | undefined;
+}
+
+export interface Element {
+	readonly name: string;
+	readonly range: Range;
+	readonly kind: string;
 }

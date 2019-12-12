@@ -11,14 +11,18 @@ import { AnalyzerStatusNotification, DiagnosticServerRequest } from "../lsp/cust
 import { DartCapabilities } from "../sdk/capabilities";
 import { safeSpawn } from "../utils/processes";
 import { getAnalyzerArgs } from "./analyzer";
+import { LspFileTracker } from "./file_tracker_lsp";
 
 export class LspAnalyzer extends Analyzer {
 	public readonly client: LanguageClient;
+	public readonly fileTracker: LspFileTracker;
 
 	constructor(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
 		this.client = createClient(this.logger, sdks, dartCapabilities);
+		this.fileTracker = new LspFileTracker(logger, this.client);
 		this.disposables.push(this.client.start());
+		this.disposables.push(this.fileTracker);
 
 		this.client.onReady().then(() => {
 			// Reminder: These onNotification calls only hold ONE handler!
@@ -40,6 +44,7 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 		initializationOptions: {
 			// 	onlyAnalyzeProjectsWithOpenFiles: true,
 			closingLabels: config.closingLabels,
+			outline: true,
 		},
 		outputChannelName: "LSP",
 	};
