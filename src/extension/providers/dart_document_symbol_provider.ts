@@ -2,12 +2,12 @@ import { CancellationToken, DocumentSymbol, DocumentSymbolProvider, SymbolTag, T
 import { Outline } from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { waitFor } from "../../shared/utils/promises";
-import { FileTracker } from "../../shared/vscode/interfaces";
 import { toRange } from "../../shared/vscode/utils";
 import { getSymbolKindForElementKind } from "../analysis/analyzer_das";
+import { DasFileTracker } from "../analysis/open_file_tracker";
 
 export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
-	constructor(private readonly logger: Logger, private readonly fileTracker: FileTracker) { }
+	constructor(private readonly logger: Logger, private readonly fileTracker: DasFileTracker) { }
 
 	public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<DocumentSymbol[] | undefined> {
 		const outline = await waitFor(() => this.fileTracker.getOutlineFor(document.uri), 500, 60000, token);

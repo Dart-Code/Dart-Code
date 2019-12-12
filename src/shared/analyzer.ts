@@ -2,11 +2,9 @@ import { EventEmitter } from "./events";
 import { IAmDisposable, Logger } from "./interfaces";
 import { PromiseCompleter } from "./utils";
 import { resolvedPromise } from "./utils/promises";
-import { FileTracker } from "./vscode/interfaces";
 
 export abstract class Analyzer implements IAmDisposable {
 	protected disposables: IAmDisposable[] = [];
-	public abstract fileTracker: FileTracker;
 
 	protected readonly onReadyCompleter = new PromiseCompleter<void>();
 	public readonly onReady = this.onReadyCompleter.promise;

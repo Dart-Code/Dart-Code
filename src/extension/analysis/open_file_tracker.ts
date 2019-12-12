@@ -2,14 +2,13 @@ import { Disposable, TextDocument, Uri, window, workspace } from "vscode";
 import { FlutterOutline, FoldingRegion, Occurrences, Outline } from "../../shared/analysis_server_types";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
-import { FileTracker } from "../../shared/vscode/interfaces";
 import { WorkspaceContext } from "../../shared/workspace";
 import { isUsingLsp } from "../extension";
 import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
 import { DasAnalyzerClient } from "./analyzer_das";
 
-export class DasFileTracker implements FileTracker, IAmDisposable {
+export class DasFileTracker implements IAmDisposable {
 	private disposables: Disposable[] = [];
 	private readonly outlines: { [key: string]: Outline } = {};
 	private readonly flutterOutlines: { [key: string]: FlutterOutline } = {};

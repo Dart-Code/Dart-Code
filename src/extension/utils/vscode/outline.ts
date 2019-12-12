@@ -1,8 +1,8 @@
 import * as vs from "vscode";
 import * as as from "../../../shared/analysis_server_types";
-import { FileTracker } from "../../../shared/vscode/interfaces";
+import { DasFileTracker } from "../../analysis/open_file_tracker";
 
-export function findNearestOutlineNode(fileTracker: FileTracker, document: vs.TextDocument, position: vs.Position, useReducedRange = false, kinds: as.ElementKind[] = ["CLASS", "METHOD", "GETTER", "SETTER"]) {
+export function findNearestOutlineNode(fileTracker: DasFileTracker, document: vs.TextDocument, position: vs.Position, useReducedRange = false, kinds: as.ElementKind[] = ["CLASS", "METHOD", "GETTER", "SETTER"]) {
 	const outline = fileTracker.getOutlineFor(document.uri);
 	return outline && findNode([outline], document.offsetAt(position), useReducedRange, kinds);
 }

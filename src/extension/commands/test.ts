@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
-import { FileTracker } from "../../shared/vscode/interfaces";
+import { DasFileTracker } from "../analysis/open_file_tracker";
 import { isDartDocument } from "../editors";
 import { isTestFile } from "../utils";
 
@@ -18,7 +18,7 @@ export let isInImplementationFile = false;
 export class TestCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor(private readonly logger: Logger, private readonly fileTracker: FileTracker) {
+	constructor(private readonly logger: Logger, private readonly fileTracker: DasFileTracker) {
 		this.disposables.push(
 			vs.commands.registerCommand("dart.runTestAtCursor", () => this.runTestAtCursor(false), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
