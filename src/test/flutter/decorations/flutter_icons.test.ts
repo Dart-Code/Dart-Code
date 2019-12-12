@@ -23,7 +23,7 @@ var btn2 = RaisedButton.icon(
 		`));
 
 		const doc = currentDoc();
-		const outline = extApi.dasFileTracker.getFlutterOutlineFor(doc.uri)!;
+		const outline = extApi.fileTracker.getFlutterOutlineFor!(doc.uri)!;
 		const computer = new IconRangeComputer(extApi.logger);
 		const results = computer.compute(doc, outline);
 

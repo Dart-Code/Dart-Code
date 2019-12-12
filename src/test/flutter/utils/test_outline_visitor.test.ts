@@ -6,7 +6,7 @@ describe("test_outline_visitor", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate and wait for outline", async () => {
 		await activate(flutterTestOtherFile);
-		await waitForResult(() => !!extApi.dasFileTracker.getOutlineFor(flutterTestOtherFile));
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestOtherFile));
 	});
 
 	it("reads the correct groups and tests", function () {
@@ -15,7 +15,7 @@ describe("test_outline_visitor", () => {
 			return;
 		}
 
-		const outline = extApi.dasFileTracker.getOutlineFor(flutterTestOtherFile);
+		const outline = extApi.fileTracker.getOutlineFor(flutterTestOtherFile);
 
 		const visitor = new TestOutlineVisitor(logger);
 		visitor.visit(outline!);
