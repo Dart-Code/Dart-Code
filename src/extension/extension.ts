@@ -50,6 +50,7 @@ import { FlutterOutlineProvider } from "./flutter/flutter_outline_view";
 import { HotReloadOnSaveHandler } from "./flutter/hot_reload_save_handler";
 import { LspAnalyzerStatusReporter } from "./lsp/analyzer_status_reporter";
 import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
+import { LspGoToSuperCommand } from "./lsp/go_to_super";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
@@ -432,6 +433,13 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(new OpenInOtherEditorCommands(logger, sdks));
 	if (dasAnalyzer)
 		context.subscriptions.push(new DasTestCommands(logger, dasAnalyzer.fileTracker));
+
+	if (lspClient) {
+		// TODO: LSP equivs of the others...
+		// Refactors
+		// TypeHierarchyCommand
+		context.subscriptions.push(new LspGoToSuperCommand(lspClient));
+	}
 
 	// Set up commands for Dart editors.
 	context.subscriptions.push(new EditCommands());
