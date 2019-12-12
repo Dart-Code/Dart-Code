@@ -4,16 +4,15 @@ import { flatMap } from "../../shared/utils";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
 import { getLaunchConfig } from "../../shared/utils/test";
 import { toRange } from "../../shared/vscode/utils";
-import { DasAnalyzerClient } from "../analysis/analyzer_das";
-import { openFileTracker } from "../analysis/open_file_tracker";
+import { DasAnalyzer } from "../analysis/analyzer_das";
 
 export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 	private onDidChangeCodeLensesEmitter: EventEmitter<void> = new EventEmitter<void>();
 	public readonly onDidChangeCodeLenses: Event<void> = this.onDidChangeCodeLensesEmitter.event;
 
-	constructor(private readonly logger: Logger, private readonly analyzer: DasAnalyzerClient) {
-		this.disposables.push(this.analyzer.registerForAnalysisOutline((n) => {
+	constructor(private readonly logger: Logger, private readonly analyzer: DasAnalyzer) {
+		this.disposables.push(this.analyzer.client.registerForAnalysisOutline((n) => {
 			this.onDidChangeCodeLensesEmitter.fire();
 		}));
 
@@ -35,13 +34,13 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		// This method has to be FAST because it affects layout of the document (adds extra lines) so
 		// we don't already have an outline, we won't wait for one. A new outline arriving will trigger a
 		// re-request anyway.
-		const outline = openFileTracker.getOutlineFor(document.uri);
+		const outline = this.analyzer.fileTracker.getOutlineFor(document.uri);
 		if (!outline || !outline.children || !outline.children.length)
 			return;
 
 		// We should only show the Code Lens for projects we know can actually handle `pub run` (for ex. the
 		// SDK codebase cannot, and will therefore run all tests when you click them).
-		if (!openFileTracker.supportsPubRunTest(document.uri))
+		if (!this.analyzer.fileTracker.supportsPubRunTest(document.uri))
 			return;
 
 		const runConfigs = workspace.getConfiguration("launch", document.uri).get<any[]>("configurations") || [];

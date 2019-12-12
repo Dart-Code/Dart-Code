@@ -3,8 +3,7 @@ import { FlutterOutline } from "../../shared/analysis_server_types";
 import { flatMap } from "../../shared/utils";
 import { DocumentPositionTracker } from "../../shared/vscode/trackers";
 import { fsPath } from "../../shared/vscode/utils";
-import { DasAnalyzerClient } from "../analysis/analyzer_das";
-import { openFileTracker } from "../analysis/open_file_tracker";
+import { DasAnalyzer } from "../analysis/analyzer_das";
 import { config } from "../config";
 
 const nonBreakingSpace = "\xa0";
@@ -21,7 +20,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 		rangeBehavior: vs.DecorationRangeBehavior.OpenOpen,
 	});
 
-	constructor(private readonly analyzer: DasAnalyzerClient) {
+	constructor(private readonly analyzer: DasAnalyzer) {
 		// Update any editor that becomes active.
 		this.disposables.push(vs.window.onDidChangeActiveTextEditor((e) => this.buildForTextEditor(e)));
 
@@ -40,7 +39,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 
 		// Whenever we get a new Flutter Outline, if it's for the active document,
 		// update that too.
-		this.disposables.push(this.analyzer.registerForFlutterOutline((on) => {
+		this.disposables.push(this.analyzer.client.registerForFlutterOutline((on) => {
 			const editor = vs.window.activeTextEditor;
 			if (editor && editor.document && fsPath(editor.document.uri) === on.file)
 				this.buildFromOutline(editor, on.outline);
@@ -49,7 +48,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 
 	private buildForTextEditor(editor: vs.TextEditor | undefined): void {
 		if (editor && editor.document)
-			this.buildFromOutline(editor, openFileTracker.getFlutterOutlineFor(editor.document.uri));
+			this.buildFromOutline(editor, this.analyzer.fileTracker.getFlutterOutlineFor(editor.document.uri));
 	}
 
 	private buildFromOutline(editor: vs.TextEditor, outline: FlutterOutline | undefined): void {

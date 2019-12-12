@@ -22,7 +22,6 @@ import { WorkspaceContext } from "../shared/workspace";
 import { DasAnalyzer } from "./analysis/analyzer_das";
 import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
 import { FileChangeHandler } from "./analysis/file_change_handler";
-import { openFileTracker } from "./analysis/open_file_tracker";
 import { Analytics } from "./analytics";
 import { DartExtensionApi } from "./api";
 import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
@@ -185,8 +184,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Fire up the analyzer process.
 	const analyzerStartTime = new Date();
-	analyzer = new DasAnalyzer(logger, analytics, sdks, dartCapabilities);
-	const dasClient = (analyzer as DasAnalyzer).client;
+	analyzer = new DasAnalyzer(logger, analytics, sdks, dartCapabilities, workspaceContext);
+	const dasAnalyzer = (analyzer as DasAnalyzer);
+	const dasClient = dasAnalyzer.client;
 	const lspClient = undefined;
 	context.subscriptions.push(analyzer);
 
@@ -246,7 +246,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	}
 	let renameProvider: DartRenameProvider | undefined;
 	if (!isUsingLsp && dasClient) {
-		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(activeFileFilters, new DartDocumentHighlightProvider()));
+		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(activeFileFilters, new DartDocumentHighlightProvider(dasAnalyzer.fileTracker)));
 		rankingCodeActionProvider.registerProvider(new AssistCodeActionProvider(logger, activeFileFilters, dasClient));
 		rankingCodeActionProvider.registerProvider(new FixCodeActionProvider(logger, activeFileFilters, dasClient));
 		rankingCodeActionProvider.registerProvider(new RefactorCodeActionProvider(activeFileFilters, dasClient));
@@ -256,11 +256,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 		// Dart only.
 		context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, new SourceCodeActionProvider(), SourceCodeActionProvider.metadata));
-		context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, new DartImplementationProvider(dasClient)));
+		context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, new DartImplementationProvider(dasAnalyzer)));
 
 		rankingCodeActionProvider.registerProvider(new IgnoreLintCodeActionProvider(activeFileFilters));
 		if (config.showTestCodeLens) {
-			const codeLensProvider = new TestCodeLensProvider(logger, dasClient);
+			const codeLensProvider = new TestCodeLensProvider(logger, dasAnalyzer);
 			context.subscriptions.push(codeLensProvider);
 			context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
 		}
@@ -343,10 +343,10 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Setup that requires server version/capabilities.
 	if (!isUsingLsp && dasClient) {
 		if (config.previewFlutterUiGuides)
-			context.subscriptions.push(new FlutterUiGuideDecorations(dasClient));
+			context.subscriptions.push(new FlutterUiGuideDecorations(dasAnalyzer));
 
 		if (config.flutterGutterIcons) {
-			context.subscriptions.push(new FlutterIconDecorations(logger, dasClient));
+			context.subscriptions.push(new FlutterIconDecorations(logger, dasAnalyzer));
 			context.subscriptions.push(new FlutterColorDecorations(logger, path.join(context.globalStoragePath, "flutterColors")));
 		}
 
@@ -364,7 +364,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			}
 
 			if (dasClient.capabilities.supportsCustomFolding && config.analysisServerFolding)
-				context.subscriptions.push(vs.languages.registerFoldingRangeProvider(activeFileFilters, new DartFoldingProvider(dasClient)));
+				context.subscriptions.push(vs.languages.registerFoldingRangeProvider(activeFileFilters, new DartFoldingProvider(dasAnalyzer)));
 
 			if (dasClient.capabilities.supportsGetSignature)
 				context.subscriptions.push(vs.languages.registerSignatureHelpProvider(
@@ -373,12 +373,10 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 					...(config.triggerSignatureHelpAutomatically ? ["(", ","] : []),
 				));
 
-			const documentSymbolProvider = new DartDocumentSymbolProvider(logger);
+			const documentSymbolProvider = new DartDocumentSymbolProvider(logger, dasAnalyzer.fileTracker);
 			activeFileFilters.forEach((filter) => {
 				context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
 			});
-
-			context.subscriptions.push(openFileTracker.create(logger, dasClient, workspaceContext));
 
 			// Set up completions for unimported items.
 			if (dasClient.capabilities.supportsAvailableSuggestions && config.autoImportCompletions) {
@@ -405,7 +403,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	context.subscriptions.push(new LoggingCommands(logger, context.logPath));
 	context.subscriptions.push(new OpenInOtherEditorCommands(logger, sdks));
-	context.subscriptions.push(new TestCommands(logger));
+	context.subscriptions.push(new TestCommands(logger, dasAnalyzer.fileTracker));
 
 	// Set up commands for Dart editors.
 	context.subscriptions.push(new EditCommands());
@@ -413,7 +411,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		context.subscriptions.push(new DasEditCommands(logger, context, dasClient));
 		context.subscriptions.push(new RefactorCommands(logger, context, dasClient));
 		context.subscriptions.push(new TypeHierarchyCommand(logger, dasClient));
-		context.subscriptions.push(new GoToSuperCommand(dasClient));
+		context.subscriptions.push(new GoToSuperCommand(dasAnalyzer));
 	}
 
 	// Register our view providers.
@@ -564,7 +562,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			debugCommands,
 			debugProvider,
 			envUtils,
-			fileTracker: openFileTracker,
+			fileTracker: dasAnalyzer.fileTracker,
 			flutterCapabilities,
 			flutterOutlineTreeProvider,
 			getLogHeader,

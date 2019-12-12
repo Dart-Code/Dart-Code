@@ -1,15 +1,14 @@
 import { CancellationToken, FoldingContext, FoldingRange, FoldingRangeKind, FoldingRangeProvider, TextDocument } from "vscode";
 import { FoldingKind, FoldingRegion } from "../../shared/analysis_server_types";
-import { DasAnalyzerClient } from "../analysis/analyzer_das";
-import { openFileTracker } from "../analysis/open_file_tracker";
+import { DasAnalyzer } from "../analysis/analyzer_das";
 
 export class DartFoldingProvider implements FoldingRangeProvider {
-	constructor(private readonly analyzer: DasAnalyzerClient) { }
+	constructor(private readonly analyzer: DasAnalyzer) { }
 
 	public async provideFoldingRanges(document: TextDocument, context: FoldingContext, token: CancellationToken): Promise<FoldingRange[] | undefined> {
 		// Wait for any current analysis to complete (eg. if we've just opened a project it
 		// may take a while to get the results).
-		await this.analyzer.currentAnalysis;
+		await this.analyzer.client.currentAnalysis;
 
 		if (token && token.isCancellationRequested)
 			return;
@@ -19,7 +18,7 @@ export class DartFoldingProvider implements FoldingRangeProvider {
 		// the newly added subscription and send results).
 		let foldingRegions: FoldingRegion[] | undefined;
 		for (let i = 0; i < 5; i++) {
-			foldingRegions = openFileTracker.getFoldingRegionsFor(document.uri);
+			foldingRegions = this.analyzer.fileTracker.getFoldingRegionsFor(document.uri);
 			if (foldingRegions)
 				break;
 			await new Promise((resolve) => setTimeout(resolve, i * 1000).unref());

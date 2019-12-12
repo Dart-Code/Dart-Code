@@ -4,13 +4,13 @@ import { Logger } from "../../shared/interfaces";
 import { waitFor } from "../../shared/utils/promises";
 import { toRange } from "../../shared/vscode/utils";
 import { getSymbolKindForElementKind } from "../analysis/analyzer_das";
-import { openFileTracker } from "../analysis/open_file_tracker";
+import { FileTracker } from "../analysis/open_file_tracker";
 
 export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
-	constructor(private readonly logger: Logger) { }
+	constructor(private readonly logger: Logger, private readonly fileTracker: FileTracker) { }
 
 	public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<DocumentSymbol[] | undefined> {
-		const outline = await waitFor(() => openFileTracker.getOutlineFor(document.uri), 500, 60000, token);
+		const outline = await waitFor(() => this.fileTracker.getOutlineFor(document.uri), 500, 60000, token);
 		if (token.isCancellationRequested || !outline || !outline.children || !outline.children.length)
 			return;
 		return outline.children.map((r) => this.convertResult(document, r));

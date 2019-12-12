@@ -7,12 +7,14 @@ import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { PromiseCompleter, versionIsAtLeast } from "../../shared/utils";
+import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { DartCapabilities } from "../sdk/capabilities";
 import { escapeShell, reloadExtension } from "../utils";
 import { getAnalyzerArgs } from "./analyzer";
 import { AnalyzerGen } from "./analyzer_gen";
+import { FileTracker } from "./open_file_tracker";
 
 export class AnalyzerCapabilities {
 	public static get empty() { return new AnalyzerCapabilities("0.0.0"); }
@@ -43,10 +45,14 @@ export class AnalyzerCapabilities {
 
 export class DasAnalyzer extends Analyzer {
 	public readonly client: DasAnalyzerClient;
+	public readonly fileTracker: FileTracker;
 
-	constructor(logger: Logger, analytics: Analytics, sdks: DartSdks, dartCapabilities: DartCapabilities) {
+	constructor(logger: Logger, analytics: Analytics, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
 		this.client = new DasAnalyzerClient(this.logger, sdks, dartCapabilities);
+		this.fileTracker = new FileTracker(logger, this.client, wsContext);
+		this.disposables.push(this.client);
+		this.disposables.push(this.fileTracker);
 
 		const connectedEvent = this.client.registerForServerConnected((sc) => {
 			// TODO: Lsp equiv.

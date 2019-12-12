@@ -1,13 +1,13 @@
 import * as vs from "vscode";
 import { fsPath, showCode, toRangeOnLine } from "../../shared/vscode/utils";
-import { DasAnalyzerClient } from "../analysis/analyzer_das";
+import { DasAnalyzer } from "../analysis/analyzer_das";
 import * as editors from "../editors";
 import { findNearestOutlineNode } from "../utils/vscode/outline";
 
 export class GoToSuperCommand implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor(private readonly analyzer: DasAnalyzerClient) {
+	constructor(private readonly analyzer: DasAnalyzer) {
 		this.disposables.push(vs.commands.registerCommand("dart.goToSuper", this.goToSuper, this));
 	}
 
@@ -21,12 +21,12 @@ export class GoToSuperCommand implements vs.Disposable {
 		const document = editor.document;
 		const position = editor.selection.start;
 
-		const outlineNode = findNearestOutlineNode(document, position);
+		const outlineNode = findNearestOutlineNode(this.analyzer.fileTracker, document, position);
 		const offset = outlineNode && outlineNode.element && outlineNode.element.location
 			? outlineNode.element.location.offset
 			: document.offsetAt(position);
 
-		const hierarchy = await this.analyzer.searchGetTypeHierarchy({
+		const hierarchy = await this.analyzer.client.searchGetTypeHierarchy({
 			file: fsPath(document.uri),
 			offset,
 			superOnly: true,

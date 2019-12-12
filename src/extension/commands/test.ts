@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { Logger } from "../../shared/interfaces";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
 import { fsPath } from "../../shared/vscode/utils";
-import { openFileTracker } from "../analysis/open_file_tracker";
+import { FileTracker } from "../analysis/open_file_tracker";
 import { isDartDocument } from "../editors";
 import { isTestFile } from "../utils";
 
@@ -18,7 +18,7 @@ export let isInImplementationFile = false;
 export class TestCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor(private readonly logger: Logger) {
+	constructor(private readonly logger: Logger, private readonly fileTracker: FileTracker) {
 		this.disposables.push(
 			vs.commands.registerCommand("dart.runTestAtCursor", () => this.runTestAtCursor(false), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
@@ -118,13 +118,13 @@ export class TestCommands implements vs.Disposable {
 
 	private testForCursor(editor: vs.TextEditor): TestOutlineInfo | undefined {
 		const document = editor.document;
-		const outline = openFileTracker.getOutlineFor(document.uri);
+		const outline = this.fileTracker.getOutlineFor(document.uri);
 		if (!outline || !outline.children || !outline.children.length)
 			return;
 
 		// We should only allow running for projects we know can actually handle `pub run` (for ex. the
 		// SDK codebase cannot, and will therefore run all tests).
-		if (!openFileTracker.supportsPubRunTest(document.uri))
+		if (!this.fileTracker.supportsPubRunTest(document.uri))
 			return;
 
 		const visitor = new TestOutlineVisitor(this.logger);

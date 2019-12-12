@@ -2,12 +2,12 @@ import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { flatMap } from "../../shared/utils";
 import { fsPath, toRange } from "../../shared/vscode/utils";
+import { DasAnalyzer } from "../analysis/analyzer_das";
 import { notUndefined } from "../utils";
-import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { findNearestOutlineNode } from "../utils/vscode/outline";
 
 export class DartImplementationProvider implements vs.ImplementationProvider {
-	constructor(readonly analyzer: DasAnalyzerClient) { }
+	constructor(readonly analyzer: DasAnalyzer) { }
 
 	public async provideImplementation(document: vs.TextDocument, position: vs.Position, token: vs.CancellationToken): Promise<vs.Definition | undefined> {
 		// Try to use the Outline data to snap our location to a node.
@@ -17,12 +17,12 @@ export class DartImplementationProvider implements vs.ImplementationProvider {
 		//
 		// The search.getTypeHierarchy call will only work over "b" but by using outline we
 		// can support the whole "void b();".
-		const outlineNode = findNearestOutlineNode(document, position, true);
+		const outlineNode = findNearestOutlineNode(this.analyzer.fileTracker, document, position, true);
 		const offset = outlineNode && outlineNode.element && outlineNode.element.location
 			? outlineNode.element.location.offset
 			: document.offsetAt(position);
 
-		const hierarchy = await this.analyzer.searchGetTypeHierarchy({
+		const hierarchy = await this.analyzer.client.searchGetTypeHierarchy({
 			file: fsPath(document.uri),
 			offset,
 		});
