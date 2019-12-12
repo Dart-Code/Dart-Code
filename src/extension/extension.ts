@@ -20,6 +20,7 @@ import { envUtils, getDartWorkspaceFolders, isRunningLocally } from "../shared/v
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { DasAnalyzer } from "./analysis/analyzer_das";
+import { LspAnalyzer } from "./analysis/analyzer_lsp";
 import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
 import { FileChangeHandler } from "./analysis/file_change_handler";
 import { Analytics } from "./analytics";
@@ -195,10 +196,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Fire up the analyzer process.
 	const analyzerStartTime = new Date();
-	analyzer = new DasAnalyzer(logger, analytics, sdks, dartCapabilities, workspaceContext);
-	const dasAnalyzer = (analyzer as DasAnalyzer);
-	const dasClient = dasAnalyzer.client;
-	const lspClient = undefined;
+
+	analyzer = isUsingLsp ? new LspAnalyzer(logger, sdks, dartCapabilities) : new DasAnalyzer(logger, analytics, sdks, dartCapabilities, workspaceContext);
+	const dasAnalyzer = isUsingLsp ? undefined : (analyzer as DasAnalyzer);
+	const dasClient = dasAnalyzer ? dasAnalyzer.client : undefined;
+	const lspClient = dasClient ? undefined : (analyzer as LspAnalyzer).client;
 	context.subscriptions.push(analyzer);
 
 	analyzer.onReady.then(() => {
@@ -256,7 +258,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		context.subscriptions.push(vs.languages.registerReferenceProvider(activeFileFilters, referenceProvider));
 	}
 	let renameProvider: DartRenameProvider | undefined;
-	if (!isUsingLsp && dasClient) {
+	if (!isUsingLsp && dasClient && dasAnalyzer) {
 		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(activeFileFilters, new DartDocumentHighlightProvider(dasAnalyzer.fileTracker)));
 		rankingCodeActionProvider.registerProvider(new AssistCodeActionProvider(logger, activeFileFilters, dasClient));
 		rankingCodeActionProvider.registerProvider(new FixCodeActionProvider(logger, activeFileFilters, dasClient));
