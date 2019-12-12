@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { LanguageClient } from "vscode-languageclient";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath } from "../../shared/utils/fs";
 import { ClosingLabelsParams, PublishClosingLabelsNotification } from "./custom_protocol";
 
 export class LspClosingLabelsDecorations implements vs.Disposable {
