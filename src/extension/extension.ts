@@ -35,7 +35,7 @@ import { LoggingCommands } from "./commands/logging";
 import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
 import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
-import { cursorIsInTest, isInImplementationFile, isInTestFile, TestCommands } from "./commands/test";
+import { cursorIsInTest, DasTestCommands, isInImplementationFile, isInTestFile } from "./commands/test";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
@@ -403,7 +403,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	context.subscriptions.push(new LoggingCommands(logger, context.logPath));
 	context.subscriptions.push(new OpenInOtherEditorCommands(logger, sdks));
-	context.subscriptions.push(new TestCommands(logger, dasAnalyzer.fileTracker));
+	if (dasAnalyzer)
+		context.subscriptions.push(new DasTestCommands(logger, dasAnalyzer.fileTracker));
 
 	// Set up commands for Dart editors.
 	context.subscriptions.push(new EditCommands());

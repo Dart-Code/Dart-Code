@@ -15,10 +15,10 @@ export let cursorIsInTest = false;
 export let isInTestFile = false;
 export let isInImplementationFile = false;
 
-export class TestCommands implements vs.Disposable {
+abstract class TestCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor(private readonly logger: Logger, private readonly fileTracker: DasFileTracker) {
+	constructor(protected readonly logger: Logger) {
 		this.disposables.push(
 			vs.commands.registerCommand("dart.runTestAtCursor", () => this.runTestAtCursor(false), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
@@ -116,7 +116,21 @@ export class TestCommands implements vs.Disposable {
 			: undefined;
 	}
 
-	private testForCursor(editor: vs.TextEditor): TestOutlineInfo | undefined {
+	protected abstract testForCursor(editor: vs.TextEditor): TestOutlineInfo | undefined;
+
+	public dispose(): any {
+		for (const command of this.disposables)
+			command.dispose();
+	}
+
+}
+
+export class DasTestCommands extends TestCommands {
+	constructor(logger: Logger, private readonly fileTracker: DasFileTracker) {
+		super(logger);
+	}
+
+	protected testForCursor(editor: vs.TextEditor): TestOutlineInfo | undefined {
 		const document = editor.document;
 		const outline = this.fileTracker.getOutlineFor(document.uri);
 		if (!outline || !outline.children || !outline.children.length)
@@ -135,10 +149,4 @@ export class TestCommands implements vs.Disposable {
 			return new vs.Range(start, end).contains(editor.selection);
 		});
 	}
-
-	public dispose(): any {
-		for (const command of this.disposables)
-			command.dispose();
-	}
-
 }
