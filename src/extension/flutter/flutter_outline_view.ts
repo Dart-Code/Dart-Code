@@ -1,5 +1,3 @@
-"use strict";
-
 import * as path from "path";
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
@@ -15,89 +13,20 @@ const DART_SHOW_FLUTTER_OUTLINE = "dart-code:showFlutterOutline";
 const WIDGET_SELECTED_CONTEXT = "dart-code:isSelectedWidget";
 const WIDGET_SUPPORTS_CONTEXT_PREFIX = "dart-code:widgetSupports:";
 
-export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidgetItem>, vs.Disposable {
-	private subscriptions: vs.Disposable[] = [];
-	private activeEditor: vs.TextEditor | undefined;
-	private flutterOutline: as.FlutterOutline | undefined;
-	private rootNode: FlutterWidgetItem | undefined;
-	private treeNodesByLine: { [key: number]: FlutterWidgetItem[]; } = [];
-	private updateTimeout: NodeJS.Timer | undefined;
-	private onDidChangeTreeDataEmitter: vs.EventEmitter<FlutterWidgetItem | undefined> = new vs.EventEmitter<FlutterWidgetItem | undefined>();
+abstract class FlutterOutlineProvider<TRoot> implements vs.TreeDataProvider<FlutterWidgetItem>, vs.Disposable {
+	protected subscriptions: vs.Disposable[] = [];
+	protected activeEditor: vs.TextEditor | undefined;
+	protected flutterOutline: TRoot | undefined;
+	protected rootNode: FlutterWidgetItem | undefined;
+	protected treeNodesByLine: { [key: number]: FlutterWidgetItem[]; } = [];
+	protected updateTimeout: NodeJS.Timer | undefined;
+	protected onDidChangeTreeDataEmitter: vs.EventEmitter<FlutterWidgetItem | undefined> = new vs.EventEmitter<FlutterWidgetItem | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<FlutterWidgetItem | undefined> = this.onDidChangeTreeDataEmitter.event;
-	private lastSelectedWidget: FlutterWidgetItem | undefined;
+	protected lastSelectedWidget: FlutterWidgetItem | undefined;
 
-	constructor(private readonly analyzer: DasAnalyzer) {
-		this.analyzer = analyzer;
-		this.analyzer.client.registerForServerConnected((c) => {
-			if (analyzer.client.capabilities.supportsFlutterOutline) {
-				this.analyzer.client.registerForFlutterOutline((n) => {
-					if (this.activeEditor && n.file === fsPath(this.activeEditor.document.uri)) {
-						this.flutterOutline = n.outline;
-						this.treeNodesByLine = [];
-						// Delay this so if we're getting lots of updates we don't flicker.
-						if (this.updateTimeout)
-							clearTimeout(this.updateTimeout);
-						if (!this.rootNode)
-							this.update();
-						else
-							this.updateTimeout = setTimeout(() => this.update(), 200);
-					}
-				});
-
-				this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.setTrackingFile(e)));
-				if (vs.window.activeTextEditor) {
-					this.setTrackingFile(vs.window.activeTextEditor);
-				}
-			}
-		});
-	}
-
-	private async update() {
-		// Build the tree from our outline
-		if (this.flutterOutline) {
-			this.rootNode = await this.createTreeNode(undefined, this.flutterOutline, this.activeEditor);
-			FlutterOutlineProvider.showTree();
-		} else {
-			this.rootNode = undefined;
-			FlutterOutlineProvider.hideTree();
-		}
-		this.refresh();
-	}
-
-	private async createTreeNode(parent: FlutterWidgetItem | undefined, element: as.FlutterOutline, editor: vs.TextEditor | undefined): Promise<FlutterWidgetItem | undefined> {
-		// Ensure we're still active editor before trying to use.
-		if (editor && editor.document && !editor.document.isClosed && this.activeEditor === editor) {
-			const node = new FlutterWidgetItem(parent, element, editor);
-
-			// Add this node to a lookup by line so we can quickly find it as the user moves around the doc.
-			const startLine = editor.document.positionAt(element.offset).line;
-			const endLine = editor.document.positionAt(element.offset + element.length).line;
-			for (let line = startLine; line <= endLine; line++) {
-				if (!this.treeNodesByLine[line]) {
-					this.treeNodesByLine[line] = [];
-				}
-				this.treeNodesByLine[line].push(node);
-			}
-			if (element.children)
-				node.children = (await Promise.all(element.children.map((c) => this.createTreeNode(node, c, editor)))).filter((n) => n).map((n) => n!);
-
-			return node;
-		}
-
-		return undefined;
-	}
-
-	private setTrackingFile(editor: vs.TextEditor | undefined) {
+	protected setTrackingFile(editor: vs.TextEditor | undefined) {
 		if (editor && isAnalyzable(editor.document)) {
-			this.activeEditor = editor;
-			this.flutterOutline = this.analyzer.fileTracker.getFlutterOutlineFor(this.activeEditor.document.uri);
-			if (this.flutterOutline)
-				this.update();
-			else {
-				this.rootNode = undefined;
-				this.refresh(); // Force update (to nothing) while requests are in-flight.
-			}
-			this.analyzer.client.forceNotificationsFor(fsPath(editor.document.uri));
+			this.loadExistingOutline();
 		} else if (editor && editor.document.uri.scheme === "file") {
 			// HACK: We can't currently reliably tell when editors are changed that are only real
 			// text editors (debug window is considered an editor) so we should only hide the tree
@@ -117,6 +46,8 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 			}, 100);
 		}
 	}
+
+	protected abstract loadExistingOutline(): void;
 
 	public async setContexts(selection: FlutterWidgetItem[]) {
 		// Unmark the old node as being selected.
@@ -203,6 +134,81 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 	public dispose() {
 		this.activeEditor = undefined;
 		this.subscriptions.forEach((s) => s.dispose());
+	}
+}
+
+export class DasFlutterOutlineProvider extends FlutterOutlineProvider<as.FlutterOutline> {
+	constructor(protected readonly analyzer: DasAnalyzer) {
+		super();
+		this.analyzer.client.registerForServerConnected((c) => {
+			if (analyzer.client.capabilities.supportsFlutterOutline) {
+				this.analyzer.client.registerForFlutterOutline((n) => {
+					if (this.activeEditor && n.file === fsPath(this.activeEditor.document.uri)) {
+						this.flutterOutline = n.outline;
+						this.treeNodesByLine = [];
+						// Delay this so if we're getting lots of updates we don't flicker.
+						if (this.updateTimeout)
+							clearTimeout(this.updateTimeout);
+						if (!this.rootNode)
+							this.update();
+						else
+							this.updateTimeout = setTimeout(() => this.update(), 200);
+					}
+				});
+
+				this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.setTrackingFile(e)));
+				if (vs.window.activeTextEditor) {
+					this.setTrackingFile(vs.window.activeTextEditor);
+				}
+			}
+		});
+	}
+
+	protected loadExistingOutline() {
+		this.flutterOutline = this.activeEditor ? this.analyzer.fileTracker.getFlutterOutlineFor(this.activeEditor.document.uri) : undefined;
+		if (this.flutterOutline)
+			this.update();
+		else {
+			this.rootNode = undefined;
+			this.refresh(); // Force update (to nothing) while requests are in-flight.
+		}
+		if (this.activeEditor)
+			this.analyzer.client.forceNotificationsFor(fsPath(this.activeEditor.document.uri));
+	}
+
+	private async update() {
+		// Build the tree from our outline
+		if (this.flutterOutline) {
+			this.rootNode = await this.createTreeNode(undefined, this.flutterOutline, this.activeEditor);
+			FlutterOutlineProvider.showTree();
+		} else {
+			this.rootNode = undefined;
+			FlutterOutlineProvider.hideTree();
+		}
+		this.refresh();
+	}
+
+	private async createTreeNode(parent: FlutterWidgetItem | undefined, element: as.FlutterOutline, editor: vs.TextEditor | undefined): Promise<FlutterWidgetItem | undefined> {
+		// Ensure we're still active editor before trying to use.
+		if (editor && editor.document && !editor.document.isClosed && this.activeEditor === editor) {
+			const node = new FlutterWidgetItem(parent, element, editor);
+
+			// Add this node to a lookup by line so we can quickly find it as the user moves around the doc.
+			const startLine = editor.document.positionAt(element.offset).line;
+			const endLine = editor.document.positionAt(element.offset + element.length).line;
+			for (let line = startLine; line <= endLine; line++) {
+				if (!this.treeNodesByLine[line]) {
+					this.treeNodesByLine[line] = [];
+				}
+				this.treeNodesByLine[line].push(node);
+			}
+			if (element.children)
+				node.children = (await Promise.all(element.children.map((c) => this.createTreeNode(node, c, editor)))).filter((n) => n).map((n) => n!);
+
+			return node;
+		}
+
+		return undefined;
 	}
 }
 
