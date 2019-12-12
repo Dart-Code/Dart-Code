@@ -49,6 +49,7 @@ import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { FlutterOutlineProvider } from "./flutter/flutter_outline_view";
 import { HotReloadOnSaveHandler } from "./flutter/hot_reload_save_handler";
 import { LspAnalyzerStatusReporter } from "./lsp/analyzer_status_reporter";
+import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
@@ -226,6 +227,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Set up providers.
 	// TODO: Do we need to push all these to subscriptions?!
+
+	if (lspClient)
+		context.subscriptions.push(new LspClosingLabelsDecorations(lspClient));
 
 	const completionItemProvider = isUsingLsp || !dasClient ? undefined : new DartCompletionItemProvider(logger, dasClient);
 	const referenceProvider = isUsingLsp || !dasClient ? undefined : new DartReferenceProvider(dasClient);
