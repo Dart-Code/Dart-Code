@@ -201,6 +201,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const analyzerStartTime = new Date();
 
 	analyzer = isUsingLsp ? new LspAnalyzer(logger, sdks, dartCapabilities) : new DasAnalyzer(logger, analytics, sdks, dartCapabilities, workspaceContext);
+	const lspAnalyzer = isUsingLsp ? (analyzer as LspAnalyzer) : undefined;
 	const dasAnalyzer = isUsingLsp ? undefined : (analyzer as DasAnalyzer);
 	const dasClient = dasAnalyzer ? dasAnalyzer.client : undefined;
 	const lspClient = dasClient ? undefined : (analyzer as LspAnalyzer).client;
@@ -593,10 +594,10 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			currentAnalysis: () => analyzer.onCurrentAnalysisComplete,
 			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
 			dartCapabilities,
+			dasFileTracker: dasAnalyzer ? dasAnalyzer.fileTracker : undefined,
 			debugCommands,
 			debugProvider,
 			envUtils,
-			fileTracker: dasAnalyzer ? dasAnalyzer.fileTracker : undefined,
 			flutterCapabilities,
 			flutterOutlineTreeProvider,
 			get cursorIsInTest() { return cursorIsInTest; },
