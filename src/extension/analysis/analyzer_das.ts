@@ -14,7 +14,7 @@ import { DartCapabilities } from "../sdk/capabilities";
 import { escapeShell, promptToReloadExtension } from "../utils";
 import { getAnalyzerArgs } from "./analyzer";
 import { AnalyzerGen } from "./analyzer_gen";
-import { DasFileTracker } from "./open_file_tracker";
+import { DasFileTracker } from "./file_tracker_das";
 
 export class AnalyzerCapabilities {
 	public static get empty() { return new AnalyzerCapabilities("0.0.0"); }

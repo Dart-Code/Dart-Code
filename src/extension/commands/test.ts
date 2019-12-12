@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
-import { DasFileTracker } from "../analysis/open_file_tracker";
+import { DasFileTracker } from "../analysis/file_tracker_das";
 import { isDartDocument } from "../editors";
 import { isTestFile } from "../utils";
 
