@@ -111,6 +111,7 @@ let analytics: Analytics;
 let showTodos: boolean | undefined;
 let previousSettings: string;
 const loggers: Array<{ dispose: () => Promise<void> | void }> = [];
+export let isUsingLsp = false;
 
 // TODO: If dev mode, subscribe to logs for errors/warnings and surface to UI
 // (with dispose calls)
@@ -186,6 +187,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const analyzerStartTime = new Date();
 	analyzer = new DasAnalyzer(logger, analytics, sdks, dartCapabilities);
 	const dasClient = (analyzer as DasAnalyzer).client;
+	const lspClient = undefined;
 	context.subscriptions.push(analyzer);
 
 	analyzer.onReady.then(() => {
@@ -211,13 +213,14 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Set up providers.
 	// TODO: Do we need to push all these to subscriptions?!
 
-	const completionItemProvider = new DartCompletionItemProvider(logger, dasClient);
-	const referenceProvider = new DartReferenceProvider(dasClient);
+	const completionItemProvider = isUsingLsp || !dasClient ? undefined : new DartCompletionItemProvider(logger, dasClient);
+	const referenceProvider = isUsingLsp || !dasClient ? undefined : new DartReferenceProvider(dasClient);
 
 	const activeFileFilters: vs.DocumentSelector = [DART_MODE];
 
-	if (config.analyzeAngularTemplates) {
+	if (!isUsingLsp && config.analyzeAngularTemplates) {
 		// Analyze files supported by plugins
+		// Analyze Angular2 templates, requires the angular_analyzer_plugin.
 		activeFileFilters.push(HTML_MODE);
 		activeFileFilters.push(...additionalModes);
 	}
@@ -227,12 +230,14 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const rankingCodeActionProvider = new RankingCodeActionProvider();
 
 	const triggerCharacters = ".(${'\"/\\".split("");
-	context.subscriptions.push(vs.languages.registerHoverProvider(activeFileFilters, new DartHoverProvider(logger, dasClient)));
-	const formattingEditProvider = new DartFormattingEditProvider(logger, dasClient, extContext);
-	context.subscriptions.push(formattingEditProvider);
-	formattingEditProvider.registerDocumentFormatter(activeFileFilters);
-	// Only for Dart.
-	formattingEditProvider.registerTypingFormatter(DART_MODE, "}", ";");
+	if (!isUsingLsp && dasClient) {
+		context.subscriptions.push(vs.languages.registerHoverProvider(activeFileFilters, new DartHoverProvider(logger, dasClient)));
+		const formattingEditProvider = new DartFormattingEditProvider(logger, dasClient, extContext);
+		context.subscriptions.push(formattingEditProvider);
+		formattingEditProvider.registerDocumentFormatter(activeFileFilters);
+		// Only for Dart.
+		formattingEditProvider.registerTypingFormatter(DART_MODE, "}", ";");
+	}
 	if (completionItemProvider)
 		context.subscriptions.push(vs.languages.registerCompletionItemProvider(activeFileFilters, completionItemProvider, ...triggerCharacters));
 	if (referenceProvider) {
@@ -240,23 +245,25 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		context.subscriptions.push(vs.languages.registerReferenceProvider(activeFileFilters, referenceProvider));
 	}
 	let renameProvider: DartRenameProvider | undefined;
-	context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(activeFileFilters, new DartDocumentHighlightProvider()));
-	rankingCodeActionProvider.registerProvider(new AssistCodeActionProvider(logger, activeFileFilters, dasClient));
-	rankingCodeActionProvider.registerProvider(new FixCodeActionProvider(logger, activeFileFilters, dasClient));
-	rankingCodeActionProvider.registerProvider(new RefactorCodeActionProvider(activeFileFilters, dasClient));
+	if (!isUsingLsp && dasClient) {
+		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(activeFileFilters, new DartDocumentHighlightProvider()));
+		rankingCodeActionProvider.registerProvider(new AssistCodeActionProvider(logger, activeFileFilters, dasClient));
+		rankingCodeActionProvider.registerProvider(new FixCodeActionProvider(logger, activeFileFilters, dasClient));
+		rankingCodeActionProvider.registerProvider(new RefactorCodeActionProvider(activeFileFilters, dasClient));
 
-	renameProvider = new DartRenameProvider(dasClient);
-	context.subscriptions.push(vs.languages.registerRenameProvider(activeFileFilters, renameProvider));
+		renameProvider = new DartRenameProvider(dasClient);
+		context.subscriptions.push(vs.languages.registerRenameProvider(activeFileFilters, renameProvider));
 
-	// Dart only.
-	context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, new SourceCodeActionProvider(), SourceCodeActionProvider.metadata));
-	context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, new DartImplementationProvider(dasClient)));
+		// Dart only.
+		context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, new SourceCodeActionProvider(), SourceCodeActionProvider.metadata));
+		context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, new DartImplementationProvider(dasClient)));
 
-	rankingCodeActionProvider.registerProvider(new IgnoreLintCodeActionProvider(activeFileFilters));
-	if (config.showTestCodeLens) {
-		const codeLensProvider = new TestCodeLensProvider(logger, dasClient);
-		context.subscriptions.push(codeLensProvider);
-		context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
+		rankingCodeActionProvider.registerProvider(new IgnoreLintCodeActionProvider(activeFileFilters));
+		if (config.showTestCodeLens) {
+			const codeLensProvider = new TestCodeLensProvider(logger, dasClient);
+			context.subscriptions.push(codeLensProvider);
+			context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
+		}
 	}
 
 	// Register the ranking provider from VS Code now that it has all of its delegates.
@@ -272,37 +279,42 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => util.isInsideFlutterProject(uri))));
 
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE.language, new DartLanguageConfiguration()));
-	const statusReporter = new AnalyzerStatusReporter(logger, dasClient, workspaceContext, analytics);
+
+	if (dasClient)
+		// tslint:disable-next-line: no-unused-expression
+		new AnalyzerStatusReporter(logger, dasClient, workspaceContext, analytics);
 
 	// Set up diagnostics.
-	const diagnostics = vs.languages.createDiagnosticCollection("dart");
-	context.subscriptions.push(diagnostics);
-	const diagnosticsProvider = new DartDiagnosticProvider(dasClient, diagnostics);
+	if (!isUsingLsp && dasClient) {
+		const diagnostics = vs.languages.createDiagnosticCollection("dart");
+		context.subscriptions.push(diagnostics);
+		const diagnosticsProvider = new DartDiagnosticProvider(dasClient, diagnostics);
 
-	// TODO: Currently calculating analysis roots requires the version to check if
-	// we need the package workaround. In future if we stop supporting server < 1.20.1 we
-	// can unwrap this call so that it'll start sooner.
-	const serverConnected = dasClient.registerForServerConnected((sc) => {
-		serverConnected.dispose();
-		if (vs.workspace.workspaceFolders)
-			recalculateAnalysisRoots();
+		// TODO: Currently calculating analysis roots requires the version to check if
+		// we need the package workaround. In future if we stop supporting server < 1.20.1 we
+		// can unwrap this call so that it'll start sooner.
+		const serverConnected = dasClient.registerForServerConnected((sc) => {
+			serverConnected.dispose();
+			if (vs.workspace.workspaceFolders)
+				recalculateAnalysisRoots();
 
-		// Set up a handler to warn the user if they open a Dart file and we
-		// never set up the analyzer
-		let hasWarnedAboutLooseDartFiles = false;
-		const handleOpenFile = (d: vs.TextDocument) => {
-			if (d.languageId === "dart" && analysisRoots.length === 0 && !hasWarnedAboutLooseDartFiles) {
-				hasWarnedAboutLooseDartFiles = true;
-				vs.window.showWarningMessage("For full Dart language support, please open a folder containing your Dart files instead of individual loose files");
-			}
-		};
-		context.subscriptions.push(vs.workspace.onDidOpenTextDocument((d) => handleOpenFile(d)));
-		// Fire for editors already visible at the time this code runs.
-		vs.window.visibleTextEditors.forEach((e) => handleOpenFile(e.document));
-	});
+			// Set up a handler to warn the user if they open a Dart file and we
+			// never set up the analyzer
+			let hasWarnedAboutLooseDartFiles = false;
+			const handleOpenFile = (d: vs.TextDocument) => {
+				if (d.languageId === "dart" && analysisRoots.length === 0 && !hasWarnedAboutLooseDartFiles) {
+					hasWarnedAboutLooseDartFiles = true;
+					vs.window.showWarningMessage("For full Dart language support, please open a folder containing your Dart files instead of individual loose files");
+				}
+			};
+			context.subscriptions.push(vs.workspace.onDidOpenTextDocument((d) => handleOpenFile(d)));
+			// Fire for editors already visible at the time this code runs.
+			vs.window.visibleTextEditors.forEach((e) => handleOpenFile(e.document));
+		});
 
-	// Hook editor changes to send updated contents to analyzer.
-	context.subscriptions.push(new FileChangeHandler(dasClient));
+		// Hook editor changes to send updated contents to analyzer.
+		context.subscriptions.push(new FileChangeHandler(dasClient));
+	}
 
 	// Fire up Flutter daemon if required.
 	if (workspaceContext.hasAnyFlutterMobileProjects && sdks.flutter) {
@@ -329,50 +341,53 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(debugProvider);
 
 	// Setup that requires server version/capabilities.
-	if (config.previewFlutterUiGuides)
-		context.subscriptions.push(new FlutterUiGuideDecorations(dasClient));
-	if (config.flutterGutterIcons) {
-		context.subscriptions.push(new FlutterIconDecorations(logger, dasClient));
-		context.subscriptions.push(new FlutterColorDecorations(logger, path.join(context.globalStoragePath, "flutterColors")));
-	}
+	if (!isUsingLsp && dasClient) {
+		if (config.previewFlutterUiGuides)
+			context.subscriptions.push(new FlutterUiGuideDecorations(dasClient));
 
-	const connectedSetup = dasClient.registerForServerConnected((sc) => {
-		connectedSetup.dispose();
-
-		if (dasClient.capabilities.supportsClosingLabels && config.closingLabels) {
-			context.subscriptions.push(new ClosingLabelsDecorations(dasClient));
+		if (config.flutterGutterIcons) {
+			context.subscriptions.push(new FlutterIconDecorations(logger, dasClient));
+			context.subscriptions.push(new FlutterColorDecorations(logger, path.join(context.globalStoragePath, "flutterColors")));
 		}
 
-		if (dasClient.capabilities.supportsGetDeclerations) {
-			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(logger, dasClient)));
-		} else {
-			context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(logger, dasClient)));
-		}
+		const connectedSetup = dasClient.registerForServerConnected((sc) => {
+			connectedSetup.dispose();
 
-		if (dasClient.capabilities.supportsCustomFolding && config.analysisServerFolding)
-			context.subscriptions.push(vs.languages.registerFoldingRangeProvider(activeFileFilters, new DartFoldingProvider(dasClient)));
+			if (dasClient.capabilities.supportsClosingLabels && config.closingLabels) {
+				context.subscriptions.push(new ClosingLabelsDecorations(dasClient));
+			}
 
-		if (dasClient.capabilities.supportsGetSignature)
-			context.subscriptions.push(vs.languages.registerSignatureHelpProvider(
-				DART_MODE,
-				new DartSignatureHelpProvider(dasClient),
-				...(config.triggerSignatureHelpAutomatically ? ["(", ","] : []),
-			));
+			if (dasClient.capabilities.supportsGetDeclerations) {
+				context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(logger, dasClient)));
+			} else {
+				context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(logger, dasClient)));
+			}
 
-		const documentSymbolProvider = new DartDocumentSymbolProvider(logger);
-		activeFileFilters.forEach((filter) => {
-			context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
-		});
+			if (dasClient.capabilities.supportsCustomFolding && config.analysisServerFolding)
+				context.subscriptions.push(vs.languages.registerFoldingRangeProvider(activeFileFilters, new DartFoldingProvider(dasClient)));
 
-		context.subscriptions.push(openFileTracker.create(logger, dasClient, workspaceContext));
+			if (dasClient.capabilities.supportsGetSignature)
+				context.subscriptions.push(vs.languages.registerSignatureHelpProvider(
+					DART_MODE,
+					new DartSignatureHelpProvider(dasClient),
+					...(config.triggerSignatureHelpAutomatically ? ["(", ","] : []),
+				));
 
-		// Set up completions for unimported items.
-		if (dasClient.capabilities.supportsAvailableSuggestions && config.autoImportCompletions) {
-			dasClient.completionSetSubscriptions({
-				subscriptions: ["AVAILABLE_SUGGESTION_SETS"],
+			const documentSymbolProvider = new DartDocumentSymbolProvider(logger);
+			activeFileFilters.forEach((filter) => {
+				context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
 			});
-		}
-	});
+
+			context.subscriptions.push(openFileTracker.create(logger, dasClient, workspaceContext));
+
+			// Set up completions for unimported items.
+			if (dasClient.capabilities.supportsAvailableSuggestions && config.autoImportCompletions) {
+				dasClient.completionSetSubscriptions({
+					subscriptions: ["AVAILABLE_SUGGESTION_SETS"],
+				});
+			}
+		});
+	}
 
 	// Handle config changes so we can reanalyze if necessary.
 	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(() => handleConfigurationChange(sdks)));
@@ -388,17 +403,18 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Register URI handler.
 	context.subscriptions.push(vs.window.registerUriHandler(new DartUriHandler(flutterCapabilities)));
 
-	// Set up commands for Dart editors.
-	context.subscriptions.push(new EditCommands());
-	context.subscriptions.push(new DasEditCommands(logger, context, dasClient));
-	context.subscriptions.push(new RefactorCommands(logger, context, dasClient));
-
-	// Register misc commands.
-	context.subscriptions.push(new TypeHierarchyCommand(logger, dasClient));
-	context.subscriptions.push(new GoToSuperCommand(dasClient));
 	context.subscriptions.push(new LoggingCommands(logger, context.logPath));
 	context.subscriptions.push(new OpenInOtherEditorCommands(logger, sdks));
 	context.subscriptions.push(new TestCommands(logger));
+
+	// Set up commands for Dart editors.
+	context.subscriptions.push(new EditCommands());
+	if (dasClient) {
+		context.subscriptions.push(new DasEditCommands(logger, context, dasClient));
+		context.subscriptions.push(new RefactorCommands(logger, context, dasClient));
+		context.subscriptions.push(new TypeHierarchyCommand(logger, dasClient));
+		context.subscriptions.push(new GoToSuperCommand(dasClient));
+	}
 
 	// Register our view providers.
 	const dartPackagesProvider = new DartPackagesProvider(logger);
@@ -425,7 +441,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		}),
 	);
 	let flutterOutlineTreeProvider: FlutterOutlineProvider | undefined;
-	if (config.flutterOutline) {
+	if (!isUsingLsp && config.flutterOutline && dasClient) {
 		// TODO: Extract this out - it's become messy since TreeView was added in.
 		flutterOutlineTreeProvider = new FlutterOutlineProvider(dasClient);
 		const tree = vs.window.createTreeView("dartFlutterOutline", { treeDataProvider: flutterOutlineTreeProvider, showCollapseAll: true });
@@ -554,6 +570,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			getLogHeader,
 			initialAnalysis: analyzer.onInitialAnalysis,
 			logger,
+			lspClient,
 			nextAnalysis: () => analyzer.onNextAnalysisComplete,
 			packagesTreeProvider: dartPackagesProvider,
 			pubGlobal,
