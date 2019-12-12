@@ -1,8 +1,8 @@
 import { Uri } from "vscode";
 import { LanguageClient } from "vscode-languageclient";
+import { Outline, PublishOutlineNotification } from "../../shared/analysis/lsp/custom_protocol";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
-import { Outline, PublishOutlineNotification } from "../lsp/custom_protocol";
 import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
 

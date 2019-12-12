@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import { LanguageClient } from "vscode-languageclient";
+import { ClosingLabelsParams, PublishClosingLabelsNotification } from "../../shared/analysis/lsp/custom_protocol";
 import { fsPath } from "../../shared/utils/fs";
-import { ClosingLabelsParams, PublishClosingLabelsNotification } from "./custom_protocol";
 
 export class LspClosingLabelsDecorations implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];

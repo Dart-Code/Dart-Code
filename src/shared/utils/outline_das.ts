@@ -126,7 +126,7 @@ export abstract class OutlineVisitor {
 }
 
 export class TestOutlineVisitor extends OutlineVisitor {
-	public readonly tests: TestOutlineInfo[] = [];
+	public readonly tests: DasTestOutlineInfo[] = [];
 	private readonly names: string[] = [];
 	protected visitUnitTestTest(outline: as.Outline) {
 		this.addTest(outline, super.visitUnitTestTest);
@@ -175,9 +175,12 @@ export class TestOutlineVisitor extends OutlineVisitor {
 export interface TestOutlineInfo {
 	fullName: string;
 	file: string;
+	isGroup: boolean;
+}
+
+export interface DasTestOutlineInfo extends TestOutlineInfo {
 	offset: number;
 	length: number;
-	isGroup: boolean;
 }
 
 export class ClassOutlineVisitor extends OutlineVisitor {
