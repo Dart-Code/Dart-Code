@@ -116,6 +116,9 @@ class Config {
 	public setSdkPath(value: string | undefined): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
 	public setWarnWhenEditingFilesOutsideWorkspace(value: boolean): Thenable<void> { return this.setConfig("warnWhenEditingFilesOutsideWorkspace", value, ConfigurationTarget.Global); }
 
+	// Preview features.
+	get previewLsp() { return this.getConfig<boolean>("previewLsp", false); }
+
 	public for(uri?: Uri): ResourceConfig {
 		return new ResourceConfig(uri);
 	}

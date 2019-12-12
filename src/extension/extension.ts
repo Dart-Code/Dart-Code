@@ -189,6 +189,10 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		context.subscriptions.push(new StatusBarVersionTracker(workspaceContext));
 	}
 
+	if (config.previewLsp || process.env.DART_CODE_FORCE_LSP) {
+		isUsingLsp = true;
+	}
+
 	// Fire up the analyzer process.
 	const analyzerStartTime = new Date();
 	analyzer = new DasAnalyzer(logger, analytics, sdks, dartCapabilities, workspaceContext);
