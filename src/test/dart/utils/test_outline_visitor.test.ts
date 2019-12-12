@@ -7,12 +7,12 @@ describe("test_outline_visitor", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate and wait for outline", async () => {
 		await activate(helloWorldTestMainFile);
-		await waitForResult(() => !!extApi.dasFileTracker.getOutlineFor(helloWorldTestMainFile));
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 	});
 
 	it("reads the correct groups and tests", () => {
 		const visitor = new TestOutlineVisitor(logger);
-		const outline = extApi.dasFileTracker.getOutlineFor(helloWorldTestMainFile);
+		const outline = extApi.fileTracker.getOutlineFor(helloWorldTestMainFile);
 		if (!outline)
 			throw new Error(`Did not get outline for ${helloWorldTestMainFile}`);
 		visitor.visit(outline);

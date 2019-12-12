@@ -24,10 +24,6 @@ export class LspFileTracker implements IAmDisposable {
 		return this.outlines[fsPath(file)];
 	}
 
-	public getFlutterOutlineFor(file: { fsPath: string } | string): /*FlutterOutline |*/ undefined {
-		throw new Error("not done");
-	}
-
 	public supportsPubRunTest(file: { fsPath: string } | string): boolean | undefined {
 		// TODO: Both FileTrackers have a copy of this!
 		const path = fsPath(file);

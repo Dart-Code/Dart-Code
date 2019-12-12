@@ -49,11 +49,11 @@ export interface InternalExtensionApi {
 	envUtils: {
 		openInBrowser(url: string): Promise<boolean>;
 	};
-	dasFileTracker: {
+	fileTracker: {
 		getOutlineFor(file: Uri): Outline | undefined;
-		getFlutterOutlineFor(file: Uri): FlutterOutline | undefined;
-		getLastPriorityFiles(): string[];
-		getLastSubscribedFiles(): string[];
+		getFlutterOutlineFor?: (file: Uri) => FlutterOutline | undefined;
+		getLastPriorityFiles?: () => string[];
+		getLastSubscribedFiles?: () => string[];
 	};
 	flutterCapabilities: {
 		supportsPidFileForMachine: boolean;

@@ -77,7 +77,6 @@ abstract class TestCommands implements vs.Disposable {
 	private updateSelectionContexts(e: vs.TextEditorSelectionChangeEvent): void {
 		const isValidTestLocation = !!(e.textEditor && e.selections && e.selections.length === 1 && this.testForCursor(e.textEditor));
 		vs.commands.executeCommand("setContext", CURSOR_IS_IN_TEST, isValidTestLocation);
-		console.log(isValidTestLocation);
 		cursorIsInTest = isValidTestLocation;
 	}
 

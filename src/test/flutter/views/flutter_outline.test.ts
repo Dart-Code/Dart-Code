@@ -11,7 +11,7 @@ describe("flutter_outline", () => {
 		assert.ok(extApi.flutterOutlineTreeProvider);
 
 		await openFile(flutterHelloWorldOutlineFile);
-		await waitForResult(() => !!extApi.dasFileTracker.getOutlineFor(flutterHelloWorldOutlineFile));
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterHelloWorldOutlineFile));
 
 		// Wait until we get some child nodes so we know the outline has been processed.
 		await waitFor(async () => {

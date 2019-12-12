@@ -8,7 +8,7 @@ describe("test_code_lens", () => {
 
 	it("includes run/debug actions for tests", async function () {
 		const editor = await openFile(helloWorldTestMainFile);
-		await waitForResult(() => !!extApi.dasFileTracker.getOutlineFor(helloWorldTestMainFile));
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
 		const testPos = positionOf(`test^(".split() splits`);
@@ -37,7 +37,7 @@ describe("test_code_lens", () => {
 
 	it("includes run/debug actions for groups", async () => {
 		const editor = await openFile(helloWorldTestMainFile);
-		await waitForResult(() => !!extApi.dasFileTracker.getOutlineFor(helloWorldTestMainFile));
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
 		const groupPos = positionOf("group^(");
@@ -78,7 +78,7 @@ describe("test_code_lens", () => {
 		);
 
 		const editor = await openFile(helloWorldTestMainFile);
-		await waitForResult(() => !!extApi.dasFileTracker.getOutlineFor(helloWorldTestMainFile));
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
 		const testPos = positionOf(`test^(".split() splits`);
@@ -129,7 +129,7 @@ describe("test_code_lens", () => {
 		);
 
 		const editor = await openFile(helloWorldTestMainFile);
-		await waitForResult(() => !!extApi.dasFileTracker.getOutlineFor(helloWorldTestMainFile));
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
 		const groupPos = positionOf("group^(");
