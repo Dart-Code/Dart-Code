@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import { DART_DEP_FILE_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT } from "../../../shared/constants";
-import { fsPath } from "../../../shared/vscode/utils";
+import { fsPath } from "../../../shared/utils/fs";
 import { ensurePackageTreeNode, extApi, getPackages, myPackageThingFile, renderedItemLabel } from "../../helpers";
 
 describe("packages tree", () => {

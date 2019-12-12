@@ -1,8 +1,8 @@
 import * as vs from "vscode";
 import { FlutterOutline } from "../../shared/analysis_server_types";
 import { flatMap } from "../../shared/utils";
+import { fsPath } from "../../shared/utils/fs";
 import { DocumentPositionTracker } from "../../shared/vscode/trackers";
-import { fsPath } from "../../shared/vscode/utils";
 import { DasAnalyzer } from "../analysis/analyzer_das";
 import { config } from "../config";
 

@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as vs from "vscode";
 import { platformEol } from "../../../shared/constants";
 import { LogCategory } from "../../../shared/enums";
-import { fsPath } from "../../../shared/vscode/utils";
+import { fsPath } from "../../../shared/utils/fs";
 import { activate, logger, sb, waitForResult } from "../../helpers";
 
 describe("capture logs command", () => {

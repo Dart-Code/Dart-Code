@@ -1,8 +1,8 @@
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, DocumentSelector, Range, TextDocument } from "vscode";
 import * as as from "../../shared/analysis_server_types";
-import { fsPath } from "../../shared/vscode/utils";
-import { isAnalyzableAndInWorkspace, notUndefined } from "../utils";
+import { fsPath } from "../../shared/utils/fs";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
+import { isAnalyzableAndInWorkspace, notUndefined } from "../utils";
 import { RankedCodeActionProvider } from "./ranking_code_action_provider";
 
 const supportedRefactors: { [key: string]: string } = {

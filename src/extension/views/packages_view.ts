@@ -5,8 +5,8 @@ import { DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACK
 import { Logger } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
 import { sortBy } from "../../shared/utils/array";
-import { areSameFolder, findProjectFolders } from "../../shared/utils/fs";
-import { fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { areSameFolder, findProjectFolders, fsPath } from "../../shared/utils/fs";
+import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 
 export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<PackageDep> {
 	private readonly watcher: vs.FileSystemWatcher;

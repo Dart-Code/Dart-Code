@@ -5,9 +5,9 @@ import { TestStatus } from "../../shared/enums";
 import { ErrorNotification, Group, GroupNotification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../../shared/test_protocol";
 import { flatMap, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
+import { fsPath } from "../../shared/utils/fs";
 import { getLaunchConfig } from "../../shared/utils/test";
 import { extensionPath } from "../../shared/vscode/extension_utils";
-import { fsPath } from "../../shared/vscode/utils";
 import { getChannel } from "../commands/channels";
 
 // TODO: Refactor all of this crazy logic out of test_view into its own class, so that consuming the test results is much

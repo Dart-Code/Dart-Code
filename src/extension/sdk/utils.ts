@@ -5,9 +5,9 @@ import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath,
 import { Logger } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter } from "../../shared/utils";
-import { findProjectFolders, hasPubspec } from "../../shared/utils/fs";
+import { findProjectFolders, fsPath, hasPubspec } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
-import { envUtils, fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";

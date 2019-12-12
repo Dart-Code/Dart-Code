@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { isLinux } from "../../../shared/constants";
 import { VmService } from "../../../shared/enums";
 import { fetch } from "../../../shared/fetch";
-import { fsPath } from "../../../shared/vscode/utils";
+import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, delay, ext, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";

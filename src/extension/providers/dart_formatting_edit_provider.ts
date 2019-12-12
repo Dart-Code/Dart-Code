@@ -2,7 +2,7 @@ import * as minimatch from "minimatch";
 import { CancellationToken, DocumentFormattingEditProvider, DocumentSelector, FormattingOptions, languages, OnTypeFormattingEditProvider, Position, Range, TextDocument, TextEdit, window, workspace } from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath } from "../../shared/utils/fs";
 import { Context } from "../../shared/vscode/workspace";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { config } from "../config";

@@ -5,7 +5,7 @@ import { androidStudioPaths, flutterPath, isMac } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath } from "../../shared/utils/fs";
 import { safeSpawn } from "../utils/processes";
 
 export class OpenInOtherEditorCommands implements vs.Disposable {

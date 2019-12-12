@@ -1,6 +1,5 @@
 import * as assert from "assert";
-import { isWithinPath } from "../../../shared/utils";
-import { fsPath } from "../../../shared/vscode/utils";
+import { fsPath, isWithinPath } from "../../../shared/utils/fs";
 import { emptyFile, everythingFile, ext, flutterEmptyFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, helloWorldFolder } from "../../helpers";
 
 describe("isWithinPath", () => {

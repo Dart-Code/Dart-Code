@@ -1,8 +1,8 @@
 import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
-import { LanguageClient } from "vscode-languageclient";
-import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server_types";
+import { AvailableSuggestion, FlutterOutline, Occurrences, Outline } from "../analysis_server_types";
+import { Analyzer } from "../analyzer";
 import { TestStatus, VersionStatus, VmService, VmServiceExtension } from "../enums";
-import { SpawnedProcess } from "../interfaces";
+import { IAmDisposable, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
 import { WorkspaceContext } from "../workspace";
 import { Context } from "./workspace";
@@ -48,11 +48,9 @@ export interface InternalExtensionApi {
 	envUtils: {
 		openInBrowser(url: string): Promise<boolean>;
 	};
-	fileTracker: {
-		getOutlineFor(file: Uri): Outline | undefined;
-		getFlutterOutlineFor(file: Uri): FlutterOutline | undefined;
-		getLastPriorityFiles(): string[];
-		getLastSubscribedFiles(): string[];
+	fileTracker: FileTracker & {
+		getLastPriorityFiles?: () => string[],
+		getLastSubscribedFiles?: () => string[],
 	};
 	flutterCapabilities: {
 		supportsPidFileForMachine: boolean;
@@ -67,7 +65,7 @@ export interface InternalExtensionApi {
 	getLogHeader: () => string;
 	initialAnalysis: Promise<void>;
 	logger: EmittingLogger;
-	lspClient: LanguageClient | undefined;
+	analyzer: Analyzer;
 	nextAnalysis: () => Promise<void>;
 	packagesTreeProvider: TreeDataProvider<TreeItem>;
 	pubGlobal: {
@@ -122,4 +120,11 @@ export interface FlutterSampleSnippet {
 	readonly id: string;
 	readonly file: string;
 	readonly description: string;
+}
+
+export interface FileTracker extends IAmDisposable {
+	getOutlineFor(file: Uri): Outline | undefined;
+	getFlutterOutlineFor(file: Uri): FlutterOutline | undefined;
+	getOccurrencesFor(file: Uri): Occurrences[] | undefined;
+	supportsPubRunTest(file: Uri): boolean | undefined;
 }

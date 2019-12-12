@@ -47,19 +47,13 @@ describe("dart_hover_provider", () => {
 	}
 
 	function getExpectedSignature(method: string, returnType: string): string {
-		return (
-			extApi.lspClient
-			|| (extApi.analyzerCapabilities && extApi.analyzerCapabilities.hasNewSignatureFormat)
-		)
+		return (!extApi.analyzerCapabilities || extApi.analyzerCapabilities.hasNewSignatureFormat)
 			? `${returnType} ${method.startsWith("(") ? `Function${method}` : method}`
 			: `${method} → ${returnType}`;
 	}
 
 	function getExpectedDoc(packagePath: string, doc: string): string {
-		return (
-			extApi.lspClient
-			|| (extApi.analyzerCapabilities && extApi.analyzerCapabilities.hasNewHoverLibraryFormat)
-		) && packagePath
+		return (!extApi.analyzerCapabilities || extApi.analyzerCapabilities.hasNewHoverLibraryFormat) && packagePath
 			? `*${packagePath}*\n\n${doc}`
 			: doc;
 	}

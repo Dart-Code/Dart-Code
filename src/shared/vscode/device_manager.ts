@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import { flatMap } from "../../shared/utils";
-import { findProjectFolders } from "../../shared/utils/fs";
-import { fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { findProjectFolders, fsPath } from "../../shared/utils/fs";
+import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import * as f from "../flutter/daemon_interfaces";
 import { IFlutterDaemon, Logger } from "../interfaces";
 import { unique } from "../utils/array";

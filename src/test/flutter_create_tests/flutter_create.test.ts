@@ -5,8 +5,8 @@ import * as vs from "vscode";
 import { dartCodeExtensionIdentifier } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { internalApiSymbol } from "../../shared/symbols";
+import { fsPath } from "../../shared/utils/fs";
 import { InternalExtensionApi } from "../../shared/vscode/interfaces";
-import { fsPath } from "../../shared/vscode/utils";
 import { activate, extApi, logger, waitForResult } from "../helpers";
 
 describe("flutter", () => {

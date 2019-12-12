@@ -14,7 +14,7 @@ import { DartCapabilities } from "../sdk/capabilities";
 import { escapeShell, reloadExtension } from "../utils";
 import { getAnalyzerArgs } from "./analyzer";
 import { AnalyzerGen } from "./analyzer_gen";
-import { FileTracker } from "./open_file_tracker";
+import { DasFileTracker } from "./open_file_tracker";
 
 export class AnalyzerCapabilities {
 	public static get empty() { return new AnalyzerCapabilities("0.0.0"); }
@@ -45,12 +45,12 @@ export class AnalyzerCapabilities {
 
 export class DasAnalyzer extends Analyzer {
 	public readonly client: DasAnalyzerClient;
-	public readonly fileTracker: FileTracker;
+	public readonly fileTracker: DasFileTracker;
 
 	constructor(logger: Logger, analytics: Analytics, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
 		this.client = new DasAnalyzerClient(this.logger, sdks, dartCapabilities);
-		this.fileTracker = new FileTracker(logger, this.client, wsContext);
+		this.fileTracker = new DasFileTracker(logger, this.client, wsContext);
 		this.disposables.push(this.client);
 		this.disposables.push(this.fileTracker);
 

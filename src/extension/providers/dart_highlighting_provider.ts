@@ -1,5 +1,5 @@
 import { CancellationToken, DocumentHighlight, DocumentHighlightProvider, Position, Range, TextDocument } from "vscode";
-import { FileTracker } from "../analysis/open_file_tracker";
+import { FileTracker } from "../../shared/vscode/interfaces";
 
 export class DartDocumentHighlightProvider implements DocumentHighlightProvider {
 	constructor(private readonly fileTracker: FileTracker) {

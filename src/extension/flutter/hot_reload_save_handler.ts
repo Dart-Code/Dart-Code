@@ -3,7 +3,7 @@ import { commands, DiagnosticSeverity, languages, Uri, workspace } from "vscode"
 import { restartReasonSave } from "../../shared/constants";
 import { VmService } from "../../shared/enums";
 import { IAmDisposable } from "../../shared/interfaces";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath } from "../../shared/utils/fs";
 import { DebugCommands } from "../commands/debug";
 import { config } from "../config";
 import { isWithinWorkspace, shouldHotReloadFor } from "../utils";

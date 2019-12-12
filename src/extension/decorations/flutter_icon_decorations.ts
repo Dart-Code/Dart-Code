@@ -1,9 +1,9 @@
 import * as vs from "vscode";
 import { FlutterOutline } from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
+import { fsPath } from "../../shared/utils/fs";
 import { docsIconPathFormat } from "../../shared/vscode/extension_utils";
 import { IconRangeComputer } from "../../shared/vscode/icon_range_computer";
-import { fsPath } from "../../shared/vscode/utils";
 import { DasAnalyzer } from "../analysis/analyzer_das";
 import { isAnalyzable } from "../utils";
 

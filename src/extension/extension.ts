@@ -11,12 +11,12 @@ import { DartWorkspaceContext, IFlutterDaemon, Sdks } from "../shared/interfaces
 import { captureLogs, EmittingLogger, logToConsole } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
-import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../shared/utils";
+import { forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../shared/utils/fs";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
-import { envUtils, fsPath, getDartWorkspaceFolders, isRunningLocally } from "../shared/vscode/utils";
+import { envUtils, getDartWorkspaceFolders, isRunningLocally } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { DasAnalyzer } from "./analysis/analyzer_das";
@@ -549,14 +549,12 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	return {
 		...new DartExtensionApi(),
 		[internalApiSymbol]: {
+			analyzer,
 			analyzerCapabilities: dasClient && dasClient.capabilities,
 			cancelAllAnalysisRequests: () => dasClient && dasClient.cancelAllRequests(),
 			completionItemProvider,
 			context: extContext,
 			currentAnalysis: () => analyzer.onCurrentAnalysisComplete,
-			get cursorIsInTest() { return cursorIsInTest; },
-			get isInTestFile() { return isInTestFile; },
-			get isInImplementationFile() { return isInImplementationFile; },
 			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
 			dartCapabilities,
 			debugCommands,
@@ -565,10 +563,12 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			fileTracker: dasAnalyzer.fileTracker,
 			flutterCapabilities,
 			flutterOutlineTreeProvider,
+			get cursorIsInTest() { return cursorIsInTest; },
+			get isInImplementationFile() { return isInImplementationFile; },
+			get isInTestFile() { return isInTestFile; },
 			getLogHeader,
 			initialAnalysis: analyzer.onInitialAnalysis,
 			logger,
-			lspClient,
 			nextAnalysis: () => analyzer.onNextAnalysisComplete,
 			packagesTreeProvider: dartPackagesProvider,
 			pubGlobal,

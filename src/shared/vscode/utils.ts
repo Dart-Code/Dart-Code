@@ -4,7 +4,6 @@ import { CodeActionKind, env as vsEnv, ExtensionKind, extensions, Position, Rang
 import { dartCodeExtensionIdentifier } from "../constants";
 import { Location, Logger } from "../interfaces";
 import { nullLogger } from "../logging";
-import { forceWindowsDriveLetterToUppercase } from "../utils";
 
 export const SourceSortMembersCodeActionKind = CodeActionKind.Source.append("sortMembers");
 
@@ -12,11 +11,6 @@ const dartExtension = extensions.getExtension(dartCodeExtensionIdentifier);
 // The extension kind is declared as Workspace, but VS Code will return UI in the
 // case that there is no remote extension host.
 export const isRunningLocally = !dartExtension || dartExtension.extensionKind === ExtensionKind.UI;
-
-export function fsPath(uri: Uri | string) {
-	// tslint:disable-next-line:disallow-fspath
-	return forceWindowsDriveLetterToUppercase(uri instanceof Uri ? uri.fsPath : uri);
-}
 
 export function getDartWorkspaceFolders(): WorkspaceFolder[] {
 	if (!workspace.workspaceFolders)

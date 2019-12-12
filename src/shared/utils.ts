@@ -5,17 +5,6 @@ import { flutterExecutableName, isWin } from "./constants";
 import { LogCategory } from "./enums";
 import { Logger, SomeError } from "./interfaces";
 
-export function forceWindowsDriveLetterToUppercase(p: string): string {
-	if (p && isWin && path.isAbsolute(p) && p.charAt(0) === p.charAt(0).toLowerCase())
-		p = p.substr(0, 1).toUpperCase() + p.substr(1);
-	return p;
-}
-
-export function isWithinPath(file: string, folder: string) {
-	const relative = path.relative(folder, file);
-	return !!relative && !relative.startsWith("..") && !path.isAbsolute(relative);
-}
-
 export function uniq<T>(array: T[]): T[] {
 	return array.filter((value, index) => array.indexOf(value) === index);
 }

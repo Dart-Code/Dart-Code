@@ -1,8 +1,24 @@
 import * as fs from "fs";
 import * as path from "path";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../constants";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, isWin } from "../constants";
 import { flatMapAsync } from "../utils";
 import { sortBy } from "./array";
+
+export function fsPath(uri: { fsPath: string } | string) {
+	// tslint:disable-next-line:disallow-fspath
+	return forceWindowsDriveLetterToUppercase(typeof uri === "string" ? uri : uri.fsPath);
+}
+
+export function forceWindowsDriveLetterToUppercase(p: string): string {
+	if (p && isWin && path.isAbsolute(p) && p.charAt(0) === p.charAt(0).toLowerCase())
+		p = p.substr(0, 1).toUpperCase() + p.substr(1);
+	return p;
+}
+
+export function isWithinPath(file: string, folder: string) {
+	const relative = path.relative(folder, file);
+	return !!relative && !relative.startsWith("..") && !path.isAbsolute(relative);
+}
 
 export async function getChildFolders(parent: string, options?: { allowBin?: boolean, allowCache?: boolean }): Promise<string[]> {
 	if (!fs.existsSync(parent))

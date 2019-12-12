@@ -5,7 +5,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { DART_STAGEHAND_PROJECT_TRIGGER_FILE } from "../../../shared/constants";
 import { StagehandTemplate } from "../../../shared/interfaces";
-import { fsPath } from "../../../shared/vscode/utils";
+import { fsPath } from "../../../shared/utils/fs";
 import { attachLoggingWhenExtensionAvailable, ext, getRandomTempFolder, sb } from "../../helpers";
 
 describe("test environment", () => {

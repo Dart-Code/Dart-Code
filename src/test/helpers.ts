@@ -10,10 +10,10 @@ import { Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
 import { BufferedLogger, filenameSafe, flatMap } from "../shared/utils";
-import { tryDeleteFile } from "../shared/utils/fs";
+import { fsPath, tryDeleteFile } from "../shared/utils/fs";
 import { waitFor } from "../shared/utils/promises";
 import { DelayedCompletionItem, InternalExtensionApi } from "../shared/vscode/interfaces";
-import { fsPath, SourceSortMembersCodeActionKind } from "../shared/vscode/utils";
+import { SourceSortMembersCodeActionKind } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;

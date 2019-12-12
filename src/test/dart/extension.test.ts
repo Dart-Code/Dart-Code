@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { isWin } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath } from "../../shared/utils/fs";
 import { activateWithoutAnalysis, ext, extApi, logger } from "../helpers";
 
 const sampleFilePath = (isWin ? "X:\\" : "/tmp/") + "sample.dart";

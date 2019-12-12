@@ -1,7 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
 import { isWin } from "../constants";
-import { findFile, isWithinPath, uriToFilePath } from "../utils";
+import { findFile, uriToFilePath } from "../utils";
+import { isWithinPath } from "../utils/fs";
 
 export class PackageMap {
 	public static findPackagesFile<T extends string | undefined>(entryPoint: T): string | (undefined extends T ? undefined : never) {

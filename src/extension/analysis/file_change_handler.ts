@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath } from "../../shared/utils/fs";
 import { config } from "../config";
 import * as util from "../utils";
 import { DasAnalyzerClient } from "./analyzer_das";

@@ -3,7 +3,7 @@ import * as as from "../../shared/analysis_server_types";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { unique } from "../../shared/utils/array";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath } from "../../shared/utils/fs";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
 
 const refactorOptions: { [key: string]: (feedback?: as.RefactoringFeedback) => as.RefactoringOptions } = {

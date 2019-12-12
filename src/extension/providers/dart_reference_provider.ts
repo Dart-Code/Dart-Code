@@ -1,8 +1,8 @@
 import { CancellationToken, DefinitionLink, DefinitionProvider, Location, Position, ReferenceContext, ReferenceProvider, TextDocument, Uri } from "vscode";
 import { flatMap } from "../../shared/utils";
-import { fsPath, toRange, toRangeOnLine } from "../../shared/vscode/utils";
+import { fsPath } from "../../shared/utils/fs";
+import { toRange, toRangeOnLine } from "../../shared/vscode/utils";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
-import * as util from "../utils";
 
 export class DartReferenceProvider implements ReferenceProvider, DefinitionProvider {
 	constructor(private readonly analyzer: DasAnalyzerClient) { }

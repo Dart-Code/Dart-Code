@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { commands, Uri, window } from "vscode";
-import { fsPath } from "../../shared/vscode/utils";
+import { fsPath } from "../../shared/utils/fs";
 
 // TODO: Wrap these up into a class.
 

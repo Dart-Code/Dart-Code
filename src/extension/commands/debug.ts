@@ -6,9 +6,9 @@ import { isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebug
 import { DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
-import { findProjectFolders } from "../../shared/utils/fs";
+import { findProjectFolders, fsPath } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
-import { envUtils, fsPath, getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";

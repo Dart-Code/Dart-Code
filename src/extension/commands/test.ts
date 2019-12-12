@@ -2,9 +2,9 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { Logger } from "../../shared/interfaces";
+import { fsPath } from "../../shared/utils/fs";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
-import { fsPath } from "../../shared/vscode/utils";
-import { FileTracker } from "../analysis/open_file_tracker";
+import { FileTracker } from "../../shared/vscode/interfaces";
 import { isDartDocument } from "../editors";
 import { isTestFile } from "../utils";
 

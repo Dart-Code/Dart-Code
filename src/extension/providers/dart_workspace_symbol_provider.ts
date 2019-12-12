@@ -3,7 +3,8 @@ import { CancellationToken, Location, SymbolInformation, SymbolKind, Uri, worksp
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { escapeRegExp } from "../../shared/utils";
-import { fsPath, toRange } from "../../shared/vscode/utils";
+import { fsPath } from "../../shared/utils/fs";
+import { toRange } from "../../shared/vscode/utils";
 import { DasAnalyzerClient, getSymbolKindForElementKind } from "../analysis/analyzer_das";
 
 export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
