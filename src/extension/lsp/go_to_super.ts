@@ -1,8 +1,8 @@
 import * as vs from "vscode";
 import { LanguageClient } from "vscode-languageclient";
+import { SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { showCode } from "../../shared/vscode/utils";
 import * as editors from "../editors";
-import { SuperRequest } from "./custom_protocol";
 
 export class LspGoToSuperCommand implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];

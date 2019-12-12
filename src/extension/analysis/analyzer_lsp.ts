@@ -1,13 +1,13 @@
 import * as path from "path";
 import * as stream from "stream";
 import { LanguageClient, LanguageClientOptions, StreamInfo } from "vscode-languageclient";
+import { AnalyzerStatusNotification, DiagnosticServerRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { dartVMPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { config } from "../config";
-import { AnalyzerStatusNotification, DiagnosticServerRequest } from "../lsp/custom_protocol";
 import { DartCapabilities } from "../sdk/capabilities";
 import { safeSpawn } from "../utils/processes";
 import { getAnalyzerArgs } from "./analyzer";

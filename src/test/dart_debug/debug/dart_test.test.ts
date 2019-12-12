@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { TestStatus } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
-import { TestOutlineVisitor } from "../../../shared/utils/outline";
+import { TestOutlineVisitor } from "../../../shared/utils/outline_das";
 import { makeRegexForTest } from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { activate, defer, delay, ext, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, withTimeout } from "../../helpers";

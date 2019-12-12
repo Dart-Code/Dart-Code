@@ -1,8 +1,7 @@
-import { CancellationToken, CodeLens, CodeLensProvider, commands, debug, Event, EventEmitter, TextDocument, Uri, workspace } from "vscode";
+import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument, workspace } from "vscode";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { flatMap } from "../../shared/utils";
-import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
-import { getLaunchConfig } from "../../shared/utils/test";
+import { TestOutlineVisitor } from "../../shared/utils/outline_das";
 import { toRange } from "../../shared/vscode/utils";
 import { DasAnalyzer } from "../analysis/analyzer_das";
 
@@ -14,19 +13,6 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	constructor(private readonly logger: Logger, private readonly analyzer: DasAnalyzer) {
 		this.disposables.push(this.analyzer.client.registerForAnalysisOutline((n) => {
 			this.onDidChangeCodeLensesEmitter.fire();
-		}));
-
-		this.disposables.push(commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => {
-			debug.startDebugging(
-				workspace.getWorkspaceFolder(Uri.file(test.file)),
-				getLaunchConfig(false, test.file, test.fullName, test.isGroup, launchTemplate),
-			);
-		}));
-		this.disposables.push(commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => {
-			debug.startDebugging(
-				workspace.getWorkspaceFolder(Uri.file(test.file)),
-				getLaunchConfig(true, test.file, test.fullName, test.isGroup, launchTemplate),
-			);
 		}));
 	}
 

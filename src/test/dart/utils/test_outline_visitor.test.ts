@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { TestOutlineVisitor } from "../../../shared/utils/outline";
+import { TestOutlineVisitor } from "../../../shared/utils/outline_das";
 import { activate, extApi, getPackages, helloWorldTestMainFile, logger, waitForResult } from "../../helpers";
 
 describe("test_outline_visitor", () => {
