@@ -5,6 +5,7 @@ import { Analyzer } from "../../shared/analyzer";
 import { dartVMPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
+import { CategoryLogger } from "../../shared/logging";
 import { PromiseCompleter, versionIsAtLeast } from "../../shared/utils";
 import { Analytics } from "../analytics";
 import { config } from "../config";
@@ -44,8 +45,8 @@ export class DasAnalyzer extends Analyzer {
 	public readonly client: DasAnalyzerClient;
 
 	constructor(logger: Logger, analytics: Analytics, sdks: DartSdks, dartCapabilities: DartCapabilities) {
-		super();
-		this.client = new DasAnalyzerClient(logger, sdks, dartCapabilities);
+		super(new CategoryLogger(logger, LogCategory.Analyzer));
+		this.client = new DasAnalyzerClient(this.logger, sdks, dartCapabilities);
 
 		const connectedEvent = this.client.registerForServerConnected((sc) => {
 			analytics.analysisServerVersion = sc.version;

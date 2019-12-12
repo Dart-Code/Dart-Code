@@ -1,5 +1,5 @@
 import { EventEmitter } from "./events";
-import { IAmDisposable } from "./interfaces";
+import { IAmDisposable, Logger } from "./interfaces";
 import { PromiseCompleter } from "./utils";
 import { resolvedPromise } from "./utils/promises";
 
@@ -20,7 +20,7 @@ export abstract class Analyzer implements IAmDisposable {
 
 	public abstract getDiagnosticServerPort(): Promise<{ port: number }>;
 
-	constructor() {
+	constructor(protected readonly logger: Logger) {
 		this.setup();
 	}
 

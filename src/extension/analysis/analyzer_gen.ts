@@ -3,15 +3,13 @@
 
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
-import { LogCategory } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
-import { CategoryLogger } from "../../shared/logging";
 import { UnknownNotification, UnknownResponse } from "../../shared/services/interfaces";
 import { StdIOService } from "../services/stdio_service";
 
 export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	constructor(logger: Logger, maxLogLineLength: number | undefined) {
-		super(new CategoryLogger(logger, LogCategory.Analyzer), maxLogLineLength);
+		super(logger, maxLogLineLength);
 	}
 
 	protected buildRequest<TReq>(id: number, method: string, params?: TReq): { id: string, method: string, params?: TReq } {
