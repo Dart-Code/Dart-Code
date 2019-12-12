@@ -4,6 +4,8 @@ import { PromiseCompleter } from "./utils";
 import { resolvedPromise } from "./utils/promises";
 
 export abstract class Analyzer implements IAmDisposable {
+	protected disposables: IAmDisposable[] = [];
+
 	protected readonly onReadyCompleter = new PromiseCompleter<void>();
 	public readonly onReady = this.onReadyCompleter.promise;
 
@@ -22,6 +24,7 @@ export abstract class Analyzer implements IAmDisposable {
 
 	constructor(protected readonly logger: Logger) {
 		this.setup();
+		this.disposables.push(this.onAnalysisStatusChangeEmitter);
 	}
 
 	private async setup(): Promise<void> {
@@ -36,6 +39,6 @@ export abstract class Analyzer implements IAmDisposable {
 	}
 
 	public dispose(): void | Promise<void> {
-		this.onAnalysisStatusChangeEmitter.dispose();
+		this.disposables.forEach((d) => d.dispose());
 	}
 }

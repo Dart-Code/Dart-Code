@@ -47,13 +47,19 @@ describe("dart_hover_provider", () => {
 	}
 
 	function getExpectedSignature(method: string, returnType: string): string {
-		return extApi.analyzerCapabilities.hasNewSignatureFormat
+		return (
+			extApi.lspClient
+			|| (extApi.analyzerCapabilities && extApi.analyzerCapabilities.hasNewSignatureFormat)
+		)
 			? `${returnType} ${method.startsWith("(") ? `Function${method}` : method}`
 			: `${method} → ${returnType}`;
 	}
 
 	function getExpectedDoc(packagePath: string, doc: string): string {
-		return (extApi.analyzerCapabilities.hasNewHoverLibraryFormat) && packagePath
+		return (
+			extApi.lspClient
+			|| (extApi.analyzerCapabilities && extApi.analyzerCapabilities.hasNewHoverLibraryFormat)
+		) && packagePath
 			? `*${packagePath}*\n\n${doc}`
 			: doc;
 	}
@@ -86,7 +92,7 @@ describe("dart_hover_provider", () => {
 
 	it("returns expected information for a setter", async function () {
 		// https://github.com/dart-lang/sdk/issues/32703
-		if (extApi.analyzerCapabilities.isDart2) {
+		if (extApi.analyzerCapabilities && extApi.analyzerCapabilities.isDart2) {
 			this.skip();
 			return;
 		}
@@ -157,7 +163,7 @@ describe("dart_hover_provider", () => {
 	it("returns expected information for a type from another package", async () => {
 		const hover = await getHoverAt("http.Cli^ent");
 		assert.equal(hover.displayText, "abstract class Client");
-		if (extApi.analyzerCapabilities.hasNewHoverLibraryFormat)
+		if (!extApi.analyzerCapabilities || extApi.analyzerCapabilities.hasNewHoverLibraryFormat)
 			assert.ok(hover.documentation!.indexOf("*package:http/src/client.dart*") === 0);
 		else
 			assert.ok(hover.documentation!.indexOf("*package:http*") === 0);
@@ -167,7 +173,7 @@ describe("dart_hover_provider", () => {
 	it("returns expected information for a type from an SDK library", async () => {
 		const hover = await getHoverAt("Fut^ure<String>");
 		assert.equal(hover.displayText, "abstract class Future<T>");
-		if (extApi.analyzerCapabilities.hasNewHoverLibraryFormat)
+		if (!extApi.analyzerCapabilities || extApi.analyzerCapabilities.hasNewHoverLibraryFormat)
 			assert.ok(hover.documentation!.indexOf("*dart:async*") === 0);
 		else
 			assert.ok(hover.documentation!.indexOf("*dart.async*") === 0);

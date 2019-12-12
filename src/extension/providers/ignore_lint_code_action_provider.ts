@@ -1,4 +1,4 @@
-import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, Diagnostic, DocumentSelector, Range, TextDocument, WorkspaceEdit } from "vscode";
+import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, Diagnostic, DiagnosticSeverity, DocumentSelector, Range, TextDocument, WorkspaceEdit } from "vscode";
 import { config } from "../config";
 import { isAnalyzableAndInWorkspace } from "../utils";
 import { DartDiagnostic } from "./dart_diagnostic_provider";
@@ -26,7 +26,10 @@ export class IgnoreLintCodeActionProvider implements RankedCodeActionProvider {
 			return;
 
 		const lintErrors = context.diagnostics.filter((d) => {
-			return d instanceof DartDiagnostic && (d.type === "LINT" || d.type === "HINT");
+			// Non-LSP:
+			return (d instanceof DartDiagnostic && (d.type === "LINT" || d.type === "HINT")
+				// LSP:
+				|| (d.source === "dart" && d.severity === DiagnosticSeverity.Information));
 		});
 		if (!lintErrors.length)
 			return;

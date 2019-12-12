@@ -1,4 +1,5 @@
 import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { LanguageClient } from "vscode-languageclient";
 import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server_types";
 import { TestStatus, VersionStatus, VmService, VmServiceExtension } from "../enums";
 import { SpawnedProcess } from "../interfaces";
@@ -66,6 +67,7 @@ export interface InternalExtensionApi {
 	getLogHeader: () => string;
 	initialAnalysis: Promise<void>;
 	logger: EmittingLogger;
+	lspClient: LanguageClient | undefined;
 	nextAnalysis: () => Promise<void>;
 	packagesTreeProvider: TreeDataProvider<TreeItem>;
 	pubGlobal: {

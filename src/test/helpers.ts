@@ -219,11 +219,12 @@ export async function activate(file?: vs.Uri | null | undefined): Promise<void> 
 	} else {
 		logger.info(`Not opening any file`);
 	}
-	logger.info(`Waiting for initial and any in-progress analysis`);
+	logger.info(`Waiting for initial analysis`);
 	await extApi.initialAnalysis;
 	// Opening a file above may start analysis after a short period so give it time to start
 	// before we continue.
 	await delay(200);
+	logger.info(`Waiting for in-progress analysis`);
 	await extApi.currentAnalysis();
 
 	logger.info(`Cancelling any in-progress requests`);

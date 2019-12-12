@@ -49,6 +49,7 @@ export class DasAnalyzer extends Analyzer {
 		this.client = new DasAnalyzerClient(this.logger, sdks, dartCapabilities);
 
 		const connectedEvent = this.client.registerForServerConnected((sc) => {
+			// TODO: Lsp equiv.
 			analytics.analysisServerVersion = sc.version;
 			this.onReadyCompleter.resolve();
 			connectedEvent.dispose();

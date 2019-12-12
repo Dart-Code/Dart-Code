@@ -170,7 +170,7 @@ class Student extends Person {
 
 	describe("with SuggestionSet support", () => {
 		beforeEach("ensure SuggestionSets are supported", async function () {
-			if (!extApi.analyzerCapabilities.supportsAvailableSuggestions)
+			if (extApi.analyzerCapabilities && !extApi.analyzerCapabilities.supportsAvailableSuggestions)
 				this.skip();
 		});
 

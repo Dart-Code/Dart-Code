@@ -19,7 +19,7 @@ describe("completion_item_provider", () => {
 
 	describe("with SuggestionSet support", () => {
 		beforeEach("ensure SuggestionSets are supported", function () {
-			if (!extApi.analyzerCapabilities.supportsAvailableSuggestions)
+			if (extApi.analyzerCapabilities && !extApi.analyzerCapabilities.supportsAvailableSuggestions)
 				this.skip();
 		});
 

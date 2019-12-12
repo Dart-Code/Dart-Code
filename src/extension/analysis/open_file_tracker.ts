@@ -3,6 +3,7 @@ import { FlutterOutline, FoldingRegion, Occurrences, Outline } from "../../share
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
+import { isUsingLsp } from "../extension";
 import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
 import { DasAnalyzerClient } from "./analyzer_das";
@@ -14,6 +15,8 @@ const folding: { [key: string]: FoldingRegion[] } = {};
 const pubRunTestSupport: { [key: string]: boolean } = {};
 let lastPriorityFiles: string[] = [];
 let lastSubscribedFiles: string[] = [];
+
+// TODO: Need an LSP version of this to get outlines etc.
 
 class OpenFileTracker implements IAmDisposable {
 	private disposables: Disposable[] = [];
@@ -77,8 +80,8 @@ class OpenFileTracker implements IAmDisposable {
 			await this.analyzer.analysisSetSubscriptions({
 				subscriptions: {
 					CLOSING_LABELS: this.analyzer.capabilities.supportsClosingLabels ? openFiles : undefined,
-					FOLDING: openFiles,
-					OCCURRENCES: openFiles,
+					FOLDING: isUsingLsp ? undefined : openFiles,
+					OCCURRENCES: isUsingLsp ? undefined : openFiles,
 					OUTLINE: openFiles,
 				},
 			});

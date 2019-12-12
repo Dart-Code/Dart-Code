@@ -10,7 +10,8 @@ const derivedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_s
 describe("go_to_super_method", () => {
 	beforeEach("activate and wait for outline", async () => {
 		await activate(derivedFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(derivedFile));
+		if (!extApi.lspClient)
+			await waitForResult(() => !!extApi.fileTracker.getOutlineFor(derivedFile));
 	});
 
 	it("navigates to base class within the same file", async () => {
