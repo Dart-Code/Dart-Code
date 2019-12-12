@@ -369,16 +369,17 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
 	context.subscriptions.push(debugProvider);
 
-	// Setup that requires server version/capabilities.
+	if (config.flutterGutterIcons)
+		context.subscriptions.push(new FlutterColorDecorations(logger, path.join(context.globalStoragePath, "flutterColors")));
+
 	if (!isUsingLsp && dasClient && dasAnalyzer) {
 		if (config.previewFlutterUiGuides)
 			context.subscriptions.push(new FlutterUiGuideDecorations(dasAnalyzer));
 
-		if (config.flutterGutterIcons) {
+		if (config.flutterGutterIcons)
 			context.subscriptions.push(new FlutterIconDecorations(logger, dasAnalyzer));
-			context.subscriptions.push(new FlutterColorDecorations(logger, path.join(context.globalStoragePath, "flutterColors")));
-		}
 
+		// Setup that requires server version/capabilities.
 		const connectedSetup = dasClient.registerForServerConnected((sc) => {
 			connectedSetup.dispose();
 
