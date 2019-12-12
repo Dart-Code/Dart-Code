@@ -217,7 +217,7 @@ describe("dart test debugger", () => {
 		let numRuns = 1;
 		await checkResults(`After initial run`);
 		const visitor = new TestOutlineVisitor(logger);
-		const outline = extApi.fileTracker.getOutlineFor(helloWorldTestTreeFile);
+		const outline = extApi.dasFileTracker.getOutlineFor(helloWorldTestTreeFile);
 		if (!outline)
 			throw new Error(`Did not get outline for ${helloWorldTestTreeFile}`);
 		visitor.visit(outline);
@@ -256,7 +256,7 @@ describe("dart test debugger", () => {
 		let numRuns = 1;
 		await checkResults(`After initial run`);
 		const visitor = new TestOutlineVisitor(logger);
-		const outline = extApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
+		const outline = extApi.dasFileTracker.getOutlineFor(helloWorldTestDupeNameFile);
 		if (!outline)
 			throw new Error(`Did not get outline for ${helloWorldTestDupeNameFile}`);
 		visitor.visit(outline);

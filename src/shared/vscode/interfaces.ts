@@ -49,7 +49,7 @@ export interface InternalExtensionApi {
 	envUtils: {
 		openInBrowser(url: string): Promise<boolean>;
 	};
-	fileTracker: {
+	dasFileTracker: {
 		getOutlineFor(file: Uri): Outline | undefined;
 		getFlutterOutlineFor(file: Uri): FlutterOutline | undefined;
 		getLastPriorityFiles(): string[];

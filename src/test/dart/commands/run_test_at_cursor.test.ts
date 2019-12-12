@@ -9,7 +9,7 @@ describe("run test at cursor", () => {
 		await activate(helloWorldTestMainFile);
 		const editor = currentEditor();
 		editor.selection = new vs.Selection(editor.document.positionAt(0), editor.document.positionAt(0));
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
+		await waitForResult(() => !!extApi.dasFileTracker.getOutlineFor(helloWorldTestMainFile));
 	});
 
 	it("command is available when cursor is inside a test", async () => {

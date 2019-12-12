@@ -7,7 +7,7 @@ describe("run test at cursor", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate and wait for outline", async () => {
 		await activate(flutterTestOtherFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestOtherFile));
+		await waitForResult(() => !!extApi.dasFileTracker.getOutlineFor(flutterTestOtherFile));
 	});
 
 	it("command is available when cursor is inside a test", async () => {
