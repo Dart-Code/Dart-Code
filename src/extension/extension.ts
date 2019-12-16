@@ -46,7 +46,7 @@ import { FlutterIconDecorations } from "./decorations/flutter_icon_decorations";
 import { FlutterUiGuideDecorations } from "./decorations/flutter_ui_guides_decorations";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
-import { DasFlutterOutlineProvider } from "./flutter/flutter_outline_view";
+import { DasFlutterOutlineProvider, FlutterOutlineProvider, LspFlutterOutlineProvider } from "./flutter/flutter_outline_view";
 import { HotReloadOnSaveHandler } from "./flutter/hot_reload_save_handler";
 import { LspAnalyzerStatusReporter } from "./lsp/analyzer_status_reporter";
 import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
@@ -200,7 +200,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Fire up the analyzer process.
 	const analyzerStartTime = new Date();
 
-	analyzer = isUsingLsp ? new LspAnalyzer(logger, sdks, dartCapabilities) : new DasAnalyzer(logger, analytics, sdks, dartCapabilities, workspaceContext);
+	analyzer = isUsingLsp ? new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext) : new DasAnalyzer(logger, analytics, sdks, dartCapabilities, workspaceContext);
 	const lspAnalyzer = isUsingLsp ? (analyzer as LspAnalyzer) : undefined;
 	const dasAnalyzer = isUsingLsp ? undefined : (analyzer as DasAnalyzer);
 	const dasClient = dasAnalyzer ? dasAnalyzer.client : undefined;
@@ -478,10 +478,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			testTreeProvider.setSelectedNodes(e.selection && e.selection.length === 1 ? e.selection[0] as TestItemTreeItem : undefined);
 		}),
 	);
-	let flutterOutlineTreeProvider: DasFlutterOutlineProvider | undefined;
-	if (!isUsingLsp && config.flutterOutline && dasAnalyzer) {
+	let flutterOutlineTreeProvider: FlutterOutlineProvider | undefined;
+	if (config.flutterOutline) {
 		// TODO: Extract this out - it's become messy since TreeView was added in.
-		flutterOutlineTreeProvider = new DasFlutterOutlineProvider(dasAnalyzer);
+
+		flutterOutlineTreeProvider = dasAnalyzer ? new DasFlutterOutlineProvider(dasAnalyzer) : new LspFlutterOutlineProvider(lspAnalyzer!);
 		const tree = vs.window.createTreeView("dartFlutterOutline", { treeDataProvider: flutterOutlineTreeProvider, showCollapseAll: true });
 		tree.onDidChangeSelection((e) => {
 			// TODO: This should be in a tree, not the data provider.
@@ -497,6 +498,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		}));
 		context.subscriptions.push(tree);
 		context.subscriptions.push(flutterOutlineTreeProvider);
+		// TODO: This doesn't work for LSP!!!
 		const flutterOutlineCommands = new FlutterOutlineCommands(tree, context);
 	}
 

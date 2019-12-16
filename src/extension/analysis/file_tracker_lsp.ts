@@ -1,6 +1,7 @@
 import { Uri } from "vscode";
 import { LanguageClient } from "vscode-languageclient";
-import { Outline, PublishOutlineNotification } from "../../shared/analysis/lsp/custom_protocol";
+import { FlutterOutline, FlutterOutlineParams, Outline, PublishFlutterOutlineNotification, PublishOutlineNotification } from "../../shared/analysis/lsp/custom_protocol";
+import { EventEmitter } from "../../shared/events";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
 import { locateBestProjectRoot } from "../project";
@@ -9,7 +10,11 @@ import * as util from "../utils";
 export class LspFileTracker implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 	private readonly outlines: { [key: string]: Outline } = {};
+	private readonly flutterOutlines: { [key: string]: FlutterOutline } = {};
 	private readonly pubRunTestSupport: { [key: string]: boolean } = {};
+
+	protected readonly onFlutterOutlineEmitter = new EventEmitter<FlutterOutlineParams>();
+	public readonly onFlutterOutline = this.onFlutterOutlineEmitter.event;
 
 	constructor(private readonly logger: Logger, private readonly analyzer: LanguageClient) {
 		analyzer.onReady().then(() => {
@@ -17,11 +22,20 @@ export class LspFileTracker implements IAmDisposable {
 				const filePath = fsPath(Uri.parse(n.uri));
 				this.outlines[filePath] = n.outline;
 			});
+			this.analyzer.onNotification(PublishFlutterOutlineNotification.type, (n) => {
+				const filePath = fsPath(Uri.parse(n.uri));
+				this.flutterOutlines[filePath] = n.outline;
+				this.onFlutterOutlineEmitter.fire(n);
+			});
 		});
 	}
 
 	public getOutlineFor(file: { fsPath: string } | string): Outline | undefined {
 		return this.outlines[fsPath(file)];
+	}
+
+	public getFlutterOutlineFor(file: { fsPath: string } | string): FlutterOutline | undefined {
+		return this.flutterOutlines[fsPath(file)];
 	}
 
 	public supportsPubRunTest(file: { fsPath: string } | string): boolean | undefined {

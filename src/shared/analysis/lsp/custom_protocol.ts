@@ -16,6 +16,10 @@ export class PublishOutlineNotification {
 	public static type = new NotificationType<OutlineParams, void>("dart/textDocument/publishOutline");
 }
 
+export class PublishFlutterOutlineNotification {
+	public static type = new NotificationType<FlutterOutlineParams, void>("dart/textDocument/publishFlutterOutline");
+}
+
 export class SuperRequest {
 	public static type = new RequestType<TextDocumentPositionParams, Location | null, void, void>("dart/textDocument/super");
 }
@@ -46,8 +50,21 @@ export interface Outline {
 	readonly children: Outline[] | undefined;
 }
 
+export interface FlutterOutlineParams {
+	readonly uri: string;
+	readonly outline: FlutterOutline;
+}
+
+export interface FlutterOutline {
+	readonly dartElement: Element | undefined;
+	readonly range: Range;
+	readonly codeRange: Range;
+	readonly children: FlutterOutline[] | undefined;
+	readonly kind: string;
+}
+
 export interface Element {
 	readonly name: string;
-	readonly range: Range;
+	readonly range: Range | undefined;
 	readonly kind: string;
 }

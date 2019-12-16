@@ -278,7 +278,7 @@ export class DasAnalyzerClient extends AnalyzerGen {
 	}
 }
 
-export function getSymbolKindForElementKind(logger: Logger, kind: as.ElementKind): vs.SymbolKind {
+export function getSymbolKindForElementKind(logger: Logger, kind: as.ElementKind | string): vs.SymbolKind {
 	switch (kind) {
 		case "CLASS":
 		case "CLASS_TYPE_ALIAS":
