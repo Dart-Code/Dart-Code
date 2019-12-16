@@ -7,6 +7,7 @@ import { dartVMPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
+import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { DartCapabilities } from "../sdk/capabilities";
 import { safeSpawn } from "../utils/processes";
@@ -17,9 +18,9 @@ export class LspAnalyzer extends Analyzer {
 	public readonly client: LanguageClient;
 	public readonly fileTracker: LspFileTracker;
 
-	constructor(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities) {
+	constructor(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
-		this.client = createClient(this.logger, sdks, dartCapabilities);
+		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext);
 		this.fileTracker = new LspFileTracker(logger, this.client);
 		this.disposables.push(this.client.start());
 		this.disposables.push(this.fileTracker);
@@ -39,11 +40,12 @@ export class LspAnalyzer extends Analyzer {
 	}
 }
 
-function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities): LanguageClient {
+function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext): LanguageClient {
 	const clientOptions: LanguageClientOptions = {
 		initializationOptions: {
 			// 	onlyAnalyzeProjectsWithOpenFiles: true,
 			closingLabels: config.closingLabels,
+			flutterOutline: wsContext.hasAnyFlutterProjects,
 			outline: true,
 		},
 		outputChannelName: "LSP",

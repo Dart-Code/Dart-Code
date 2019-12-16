@@ -1,11 +1,15 @@
 import * as path from "path";
 import * as vs from "vscode";
+import * as lsp from "vscode-languageclient";
+import { FlutterOutline } from "../../shared/analysis/lsp/custom_protocol";
 import * as as from "../../shared/analysis_server_types";
 import { nullLogger } from "../../shared/logging";
 import { fsPath } from "../../shared/utils/fs";
 import { extensionPath } from "../../shared/vscode/extension_utils";
 import { getIconForSymbolKind } from "../../shared/vscode/mappings";
+import { lspToPosition, lspToRange, toRange } from "../../shared/vscode/utils";
 import { DasAnalyzer, getSymbolKindForElementKind } from "../analysis/analyzer_das";
+import { LspAnalyzer } from "../analysis/analyzer_lsp";
 import { flutterOutlineCommands } from "../commands/flutter_outline";
 import { isAnalyzable } from "../utils";
 
@@ -13,10 +17,10 @@ const DART_SHOW_FLUTTER_OUTLINE = "dart-code:showFlutterOutline";
 const WIDGET_SELECTED_CONTEXT = "dart-code:isSelectedWidget";
 const WIDGET_SUPPORTS_CONTEXT_PREFIX = "dart-code:widgetSupports:";
 
-abstract class FlutterOutlineProvider<TRoot> implements vs.TreeDataProvider<FlutterWidgetItem>, vs.Disposable {
+export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidgetItem>, vs.Disposable {
 	protected subscriptions: vs.Disposable[] = [];
 	protected activeEditor: vs.TextEditor | undefined;
-	protected flutterOutline: TRoot | undefined;
+	protected abstract flutterOutline: unknown;
 	protected rootNode: FlutterWidgetItem | undefined;
 	protected treeNodesByLine: { [key: number]: FlutterWidgetItem[]; } = [];
 	protected updateTimeout: NodeJS.Timer | undefined;
@@ -87,15 +91,15 @@ abstract class FlutterOutlineProvider<TRoot> implements vs.TreeDataProvider<Flut
 		if (!this.activeEditor || !this.flutterOutline || fsPath(this.activeEditor.document.uri) !== fsPath(uri) || !this.treeNodesByLine[pos.line])
 			return;
 
-		const offset = this.activeEditor.document.offsetAt(pos);
 		const nodes = this.treeNodesByLine[pos.line];
 		// We want the last node that started before the position (eg. most specific).
 		let currentBest: FlutterWidgetItem | undefined;
 		for (const item of nodes) {
-			if (item.outline.offset <= offset
-				&& item.outline.offset + item.outline.length >= offset) {
+			const range = "range" in item.outline
+				? lspToRange(item.outline.range)
+				: toRange(this.activeEditor.document, item.outline.offset, item.outline.length);
+			if (range.contains(pos))
 				currentBest = item;
-			}
 		}
 
 		if (currentBest === this.rootNode)
@@ -137,8 +141,9 @@ abstract class FlutterOutlineProvider<TRoot> implements vs.TreeDataProvider<Flut
 	}
 }
 
-export class DasFlutterOutlineProvider extends FlutterOutlineProvider<as.FlutterOutline> {
-	constructor(protected readonly analyzer: DasAnalyzer) {
+export class DasFlutterOutlineProvider extends FlutterOutlineProvider {
+	protected flutterOutline: as.FlutterOutline | undefined;
+	constructor(private readonly analyzer: DasAnalyzer) {
 		super();
 		this.analyzer.client.registerForServerConnected((c) => {
 			if (analyzer.client.capabilities.supportsFlutterOutline) {
@@ -212,12 +217,84 @@ export class DasFlutterOutlineProvider extends FlutterOutlineProvider<as.Flutter
 	}
 }
 
-function isWidget(outline: as.FlutterOutline) {
+export class LspFlutterOutlineProvider extends FlutterOutlineProvider {
+	protected flutterOutline: FlutterOutline | undefined;
+	constructor(private readonly analyzer: LspAnalyzer) {
+		super();
+		this.analyzer.fileTracker.onFlutterOutline.listen((n) => {
+			if (this.activeEditor && fsPath(vs.Uri.parse(n.uri)) === fsPath(this.activeEditor.document.uri)) {
+				this.flutterOutline = n.outline;
+				this.treeNodesByLine = [];
+				// Delay this so if we're getting lots of updates we don't flicker.
+				if (this.updateTimeout)
+					clearTimeout(this.updateTimeout);
+				if (!this.rootNode)
+					this.update();
+				else
+					this.updateTimeout = setTimeout(() => this.update(), 200);
+			}
+		});
+
+		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.setTrackingFile(e)));
+		if (vs.window.activeTextEditor) {
+			this.setTrackingFile(vs.window.activeTextEditor);
+		}
+	}
+
+	protected loadExistingOutline() {
+		this.flutterOutline = this.activeEditor ? this.analyzer.fileTracker.getFlutterOutlineFor(this.activeEditor.document.uri) : undefined;
+		if (this.flutterOutline)
+			this.update();
+		else {
+			this.rootNode = undefined;
+			this.refresh(); // Force update (to nothing) while requests are in-flight.
+		}
+	}
+
+	private async update() {
+		// Build the tree from our outline
+		if (this.flutterOutline) {
+			this.rootNode = await this.createTreeNode(undefined, this.flutterOutline, this.activeEditor);
+			FlutterOutlineProvider.showTree();
+		} else {
+			this.rootNode = undefined;
+			FlutterOutlineProvider.hideTree();
+		}
+		this.refresh();
+	}
+
+	private async createTreeNode(parent: FlutterWidgetItem | undefined, outline: FlutterOutline, editor: vs.TextEditor | undefined): Promise<FlutterWidgetItem | undefined> {
+		// Ensure we're still active editor before trying to use.
+		if (editor && editor.document && !editor.document.isClosed && this.activeEditor === editor) {
+			const node = new FlutterWidgetItem(parent, outline, editor);
+
+			// Add this node to a lookup by line so we can quickly find it as the user moves around the doc.
+			const startLine = outline.range.start.line;
+			const endLine = outline.range.end.line;
+			for (let line = startLine; line <= endLine; line++) {
+				if (!this.treeNodesByLine[line]) {
+					this.treeNodesByLine[line] = [];
+				}
+				this.treeNodesByLine[line].push(node);
+			}
+			if (outline.children)
+				node.children = (await Promise.all(outline.children.map((c) => this.createTreeNode(node, c, editor)))).filter((n) => n).map((n) => n!);
+
+			return node;
+		}
+
+		return undefined;
+	}
+}
+
+function isWidget(outline: CommonOutline) {
 	return outline.kind !== "DART_ELEMENT";
 }
 
-async function getFixes(editor: vs.TextEditor, outline: as.FlutterOutline): Promise<Array<vs.Command | vs.CodeAction>> {
-	const pos = editor.document.positionAt(outline.offset);
+async function getFixes(editor: vs.TextEditor, outline: CommonOutline): Promise<Array<vs.Command | vs.CodeAction>> {
+	const pos = "range" in outline
+		? lspToPosition(outline.range.start)
+		: editor.document.positionAt(outline.offset);
 	const range = new vs.Range(pos, pos);
 	const fixes: Array<vs.Command | vs.CodeAction> | undefined = await vs.commands.executeCommand(
 		"vscode.executeCodeActionProvider",
@@ -227,12 +304,33 @@ async function getFixes(editor: vs.TextEditor, outline: as.FlutterOutline): Prom
 	return fixes || [];
 }
 
+export type CommonOutline = {
+	// TODO: !!!
+	attributes?: Array<{ name: string, label: string }>;
+	variableName?: string;
+	className?: string;
+	label?: string;
+	// TODO: !!!
+	children?: CommonOutline[];
+	dartElement?: {
+		kind: string;
+		name: string,
+		parameters?: string,
+		returnType?: string,
+		typeParameters?: string
+	};
+	kind: string;
+} & (
+		{ range: lsp.Range, codeRange: lsp.Range, dartElement?: { range: lsp.Range } }
+		| { offset: number, length: number, codeOffset: number, codeLength: number, dartElement?: { location?: { offset?: number } } }
+	);
+
 export class FlutterWidgetItem extends vs.TreeItem {
 	public children: FlutterWidgetItem[] = [];
 	public fixes: vs.CodeAction[] = [];
 	constructor(
 		public readonly parent: FlutterWidgetItem | undefined,
-		public readonly outline: as.FlutterOutline,
+		public readonly outline: CommonOutline,
 		editor: vs.TextEditor,
 	) {
 		super(
@@ -256,20 +354,30 @@ export class FlutterWidgetItem extends vs.TreeItem {
 			arguments: [
 				editor,
 				// Code to fit on screen
-				new vs.Range(
-					editor.document.positionAt(outline.offset),
-					editor.document.positionAt(outline.offset + outline.length),
-				),
+				"range" in outline
+					? outline.range
+					: new vs.Range(
+						editor.document.positionAt(outline.offset),
+						editor.document.positionAt(outline.offset + outline.length),
+					),
 				// Code to highlight
-				new vs.Range(
-					editor.document.positionAt(outline.codeOffset),
-					editor.document.positionAt(outline.codeOffset + outline.codeLength),
-				),
+				"codeRange" in outline
+					? outline.codeRange
+					: new vs.Range(
+						editor.document.positionAt(outline.codeOffset),
+						editor.document.positionAt(outline.codeOffset + outline.codeLength),
+					),
 				// Selection (we just want to move cursor, so it's 0-length)
-				new vs.Range(
-					editor.document.positionAt((outline.dartElement ? outline.dartElement.location! : outline).offset),
-					editor.document.positionAt((outline.dartElement ? outline.dartElement.location! : outline).offset),
-				),
+				outline.dartElement && "range" in outline.dartElement
+					? new vs.Range(
+						lspToPosition(outline.dartElement.range.start),
+						lspToPosition(outline.dartElement.range.start),
+					)
+					: new vs.Range(
+						// TODO: Find a better way to handle these "any"s
+						editor.document.positionAt((outline.dartElement ? outline.dartElement.location! : outline as any).offset),
+						editor.document.positionAt((outline.dartElement ? outline.dartElement.location! : outline as any).offset),
+					),
 			],
 			command: "_dart.showCode",
 			title: "",
@@ -281,7 +389,7 @@ export class FlutterWidgetItem extends vs.TreeItem {
 		}
 	}
 
-	private static getLabel(outline: as.FlutterOutline): string {
+	private static getLabel(outline: CommonOutline): string {
 		let label = "";
 
 		if (outline.dartElement) {
