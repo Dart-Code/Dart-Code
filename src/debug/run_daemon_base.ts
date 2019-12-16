@@ -8,7 +8,7 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 		public readonly mode: RunMode,
 		logFile: string | undefined,
 		logger: Logger,
-		private readonly urlExposer: (url: string) => Promise<string>,
+		private readonly urlExposer: (url: string) => Promise<{ url: string }>,
 		maxLogLineLength: number,
 		messagesWrappedInBrackets: boolean = false,
 		treatHandlingErrorsAsUnhandledMessages: boolean = false) {
