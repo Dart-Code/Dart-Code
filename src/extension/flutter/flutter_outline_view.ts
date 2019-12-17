@@ -321,7 +321,7 @@ export type CommonOutline = {
 	};
 	kind: string;
 } & (
-		{ range: lsp.Range, codeRange: lsp.Range, dartElement?: { range: lsp.Range } }
+		{ range: lsp.Range, codeRange: lsp.Range, dartElement?: { range?: lsp.Range } }
 		| { offset: number, length: number, codeOffset: number, codeLength: number, dartElement?: { location?: { offset?: number } } }
 	);
 
@@ -350,34 +350,37 @@ export class FlutterWidgetItem extends vs.TreeItem {
 			};
 		}
 
+		const displayRange = "range" in outline
+			? outline.range
+			: new vs.Range(
+				editor.document.positionAt(outline.offset),
+				editor.document.positionAt(outline.offset + outline.length),
+			);
+
+		const highlightRange = "codeRange" in outline
+			? outline.codeRange
+			: new vs.Range(
+				editor.document.positionAt(outline.codeOffset),
+				editor.document.positionAt(outline.codeOffset + outline.codeLength),
+			);
+
+		const selectionPos = "range" in outline
+			? outline.dartElement && outline.dartElement.range
+				? lspToPosition(outline.dartElement.range.start)
+				: lspToPosition(outline.range.start)
+			: outline.dartElement && outline.dartElement.location && outline.dartElement.location.offset
+				? editor.document.positionAt(outline.dartElement.location.offset)
+				: editor.document.positionAt(outline.offset);
+
 		this.command = {
 			arguments: [
 				editor,
 				// Code to fit on screen
-				"range" in outline
-					? outline.range
-					: new vs.Range(
-						editor.document.positionAt(outline.offset),
-						editor.document.positionAt(outline.offset + outline.length),
-					),
+				displayRange,
 				// Code to highlight
-				"codeRange" in outline
-					? outline.codeRange
-					: new vs.Range(
-						editor.document.positionAt(outline.codeOffset),
-						editor.document.positionAt(outline.codeOffset + outline.codeLength),
-					),
+				highlightRange,
 				// Selection (we just want to move cursor, so it's 0-length)
-				outline.dartElement && "range" in outline.dartElement
-					? new vs.Range(
-						lspToPosition(outline.dartElement.range.start),
-						lspToPosition(outline.dartElement.range.start),
-					)
-					: new vs.Range(
-						// TODO: Find a better way to handle these "any"s
-						editor.document.positionAt((outline.dartElement ? outline.dartElement.location! : outline as any).offset),
-						editor.document.positionAt((outline.dartElement ? outline.dartElement.location! : outline as any).offset),
-					),
+				new vs.Range(selectionPos, selectionPos),
 			],
 			command: "_dart.showCode",
 			title: "",
