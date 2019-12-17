@@ -19,7 +19,7 @@ jobs:
         bot: [flutter_debug, flutter_debug_chrome, flutter_test_debug, dart_web_debug, flutter_repo, dart_debug, dart, flutter, misc]
         include:
           - dart-version: stable
-            flutter-version: beta
+            flutter-version: stable
             code-version: stable
           - dart-version: dev
             flutter-version: dev
