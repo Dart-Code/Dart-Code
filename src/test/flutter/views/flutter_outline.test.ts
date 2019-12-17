@@ -2,7 +2,7 @@ import * as assert from "assert";
 import { waitFor } from "../../../shared/utils/promises";
 import { activate, extApi, flutterHelloWorldOutlineFile, getExpectedResults, getPackages, makeTextTree, openFile, waitForResult } from "../../helpers";
 
-describe("flutter_outline", () => {
+describe.only("flutter_outline", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	before("activate", () => activate());

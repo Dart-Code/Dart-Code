@@ -305,12 +305,10 @@ async function getFixes(editor: vs.TextEditor, outline: CommonOutline): Promise<
 }
 
 export type CommonOutline = {
-	// TODO: !!!
 	attributes?: Array<{ name: string, label: string }>;
 	variableName?: string;
 	className?: string;
 	label?: string;
-	// TODO: !!!
 	children?: CommonOutline[];
 	dartElement?: {
 		kind: string;

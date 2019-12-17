@@ -56,10 +56,14 @@ export interface FlutterOutlineParams {
 }
 
 export interface FlutterOutline {
-	readonly dartElement: Element | undefined;
+	readonly attributes?: Array<{ name: string, label: string }>;
+	readonly variableName?: string;
+	readonly className?: string;
+	readonly label?: string;
+	readonly dartElement?: Element;
 	readonly range: Range;
 	readonly codeRange: Range;
-	readonly children: FlutterOutline[] | undefined;
+	readonly children?: FlutterOutline[];
 	readonly kind: string;
 }
 
@@ -67,4 +71,7 @@ export interface Element {
 	readonly name: string;
 	readonly range: Range | undefined;
 	readonly kind: string;
+	readonly parameters?: string;
+	readonly typeParameters?: string;
+	readonly returnType?: string;
 }
