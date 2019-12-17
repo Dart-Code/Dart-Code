@@ -52,6 +52,7 @@ export class SdkCommands {
 			context.subscriptions.push(vs.commands.registerCommand("dart.changeFlutterSdk", () => flutterSdkManager.changeSdk()));
 		}
 		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", async (uri: string | Uri | undefined) => {
+			this.logger.warn(`Running get packagges for ${uri}`);
 			if (!uri || !(uri instanceof Uri)) {
 				uri = await this.getFolderToRunCommandIn("Select which folder to get packages for");
 				// If the user cancelled, bail out (otherwise we'll prompt them again below).
@@ -299,7 +300,8 @@ export class SdkCommands {
 		const foldersRequiringPackageGet = uniq(folders)
 			.map(vs.Uri.file)
 			.filter((uri) => config.for(uri).promptToGetPackages)
-			.filter(isPubGetProbablyRequired);
+			.filter((f) => isPubGetProbablyRequired(this.logger, f));
+		this.logger.warn(`There are ${foldersRequiringPackageGet.length} folders requiring pub get (forcePrompt=${forcePrompt})`);
 		if (!forcePrompt && foldersRequiringPackageGet.length === 0)
 			await vs.commands.executeCommand("dart.getPackages", uri);
 		else if (!forcePrompt && foldersRequiringPackageGet.length === 1)

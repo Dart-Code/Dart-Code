@@ -13,7 +13,7 @@ import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
 import { forceWindowsDriveLetterToUppercase, isWithinPath } from "../shared/utils";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
-import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
+import { extensionVersion } from "../shared/vscode/extension_utils";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
 import { envUtils, fsPath, getDartWorkspaceFolders, isRunningLocally } from "../shared/vscode/utils";
@@ -117,8 +117,8 @@ const loggers: Array<{ dispose: () => Promise<void> | void }> = [];
 const logger = new EmittingLogger();
 
 export async function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
-	if (isDevExtension)
-		logToConsole(logger);
+	// if (isDevExtension)
+	logToConsole(logger);
 
 	vs.commands.executeCommand("setContext", IS_RUNNING_LOCALLY_CONTEXT, isRunningLocally);
 	buildLogHeaders();
