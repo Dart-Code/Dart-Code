@@ -29,6 +29,9 @@ function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilit
 	if (config.analyzerObservatoryPort)
 		analyzerArgs.push(`--enable-vm-service=${config.analyzerObservatoryPort}`);
 
+	if (config.analyzerAdditionalVmArgs)
+		analyzerArgs = analyzerArgs.concat(config.analyzerAdditionalVmArgs);
+
 	analyzerArgs.push(analyzerPath);
 
 	if (isLsp)

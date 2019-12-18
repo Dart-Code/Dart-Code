@@ -133,6 +133,10 @@ export class DasAnalyzerClient extends AnalyzerGen {
 		});
 	}
 
+	protected processUnhandledMessage(message: string): void {
+		console.warn(`ANALYZER: ${message}`);
+	}
+
 	private resolvedPromise = Promise.resolve();
 	public get currentAnalysis(): Promise<void> {
 		if (!this.isAnalyzing)
