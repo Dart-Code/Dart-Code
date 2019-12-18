@@ -1,4 +1,4 @@
-import { ConfigurationTarget, Uri, version as codeVersion, workspace, WorkspaceConfiguration } from "vscode";
+import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from "vscode";
 import { createFolderForFile, resolvePaths } from "./utils";
 import { NullAsUndefined, nullToUndefined } from "./utils/misc";
 import { setupToolEnv } from "./utils/processes";
@@ -161,13 +161,4 @@ class ResourceConfig {
 	}
 }
 
-export class CodeCapabilities {
-	public version: string;
-	constructor(version: string) {
-		this.version = version;
-	}
-	// get requiresEmptyDebugConfigWithNullTypeToOpenLaunchJson() { return !versionIsAtLeast(this.version, "1.27.9"); }
-}
-
 export const config = new Config();
-export const vsCodeVersion = new CodeCapabilities(codeVersion);
