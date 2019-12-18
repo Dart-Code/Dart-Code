@@ -1,6 +1,5 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { isWin } from "../../../shared/constants";
 import { LazyCompletionItem } from "../../../shared/vscode/interfaces";
 import { acceptFirstSuggestion, activate, currentDoc, emptyFile, ensureCompletion, ensureNoCompletion, ensureTestContent, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, getCompletionsViaProviderAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, resolveCompletion, select, setTestContent } from "../../helpers";
 
@@ -137,12 +136,7 @@ main() {
 
 	it.skip("sorts completions by relevance");
 
-	it("inserts full text for overrides", async function () {
-		// Skip on Windows until VS Code issue is resolved
-		// https://github.com/microsoft/vscode/issues/83239
-		if (isWin)
-			return this.skip();
-
+	it("inserts full text for overrides", async () => {
 		await setTestContent(`
 abstract class Person {
   String get name;
@@ -155,6 +149,9 @@ class Student extends Person {
 		select(rangeOf("na|| //"));
 
 		await acceptFirstSuggestion();
+		const expectedBody = extApi.dartCapabilities.generatesCodeWithUnimplementedError
+			? "throw UnimplementedError()"
+			: "null";
 		await ensureTestContentWithSelection(`
 abstract class Person {
   String get name;
@@ -163,7 +160,7 @@ abstract class Person {
 class Student extends Person {
   @override
   // TODO: implement name
-  String get name => |null|; //
+  String get name => |${expectedBody}|; //
 }
 	`);
 	});

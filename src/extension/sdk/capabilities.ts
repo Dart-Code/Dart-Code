@@ -9,6 +9,7 @@ export class DartCapabilities {
 		this.version = dartVersion;
 	}
 
+	get generatesCodeWithUnimplementedError() { return versionIsAtLeast(this.version, "2.8.0-dev.0.0"); }
 	get supportsDevTools() { return versionIsAtLeast(this.version, "2.1.0"); }
 	get includesSourceForSdkLibs() { return versionIsAtLeast(this.version, "2.2.1"); }
 	get handlesBreakpointsInPartFiles() { return versionIsAtLeast(this.version, "2.2.1-edge"); }

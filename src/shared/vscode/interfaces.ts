@@ -35,6 +35,7 @@ export interface InternalExtensionApi {
 	isInTestFile: boolean;
 	isInImplementationFile: boolean;
 	dartCapabilities: {
+		generatesCodeWithUnimplementedError: boolean;
 		supportsDevTools: boolean;
 		includesSourceForSdkLibs: boolean;
 		handlesBreakpointsInPartFiles: boolean;
