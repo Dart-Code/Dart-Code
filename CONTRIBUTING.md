@@ -10,6 +10,8 @@ If you've found an issue or have a suggestion for Dart Code, please do [open an 
 
 If you're going to work on an issue, please add a comment to the issue so others know it's being looked at. If there isn't an issue for the work you want to do, please create one. The [good first issue](https://github.com/Dart-Code/Dart-Code/labels/good%20first%20issue%20%3Aoctocat%3A) issues might make good starting points for new contributors.
 
+For general details on developing VS Code extensions see the [VS Code API docs](https://code.visualstudio.com/api).
+
 ## Project Structure
 
 Dart Code is currently written in TypeScript. There's a lot of configuration for how Code interacts with Dart Code in `package.json` though the main entry point is the `activate` method in `src/extension/extension.ts`. Functionality is split into classes that provide small pieces of functionality via the Code APIs ([which are documented here](https://code.visualstudio.com/docs/extensionAPI/vscode-api)).
