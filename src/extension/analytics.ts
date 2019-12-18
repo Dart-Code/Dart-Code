@@ -95,7 +95,7 @@ export class Analytics {
 	}
 	public logExtensionShutdown(): PromiseLike<void> { return this.event(Category.Extension, EventAction.Deactivated); }
 	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
-	public logAnalyzerError(description: string, fatal: boolean) { this.error("AS: " + description, fatal); }
+	public logError(description: string, fatal: boolean) { this.error(description, fatal); }
 	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS); }
 	public logDebugSessionDuration(debuggerType: string, timeInMS: number) { this.time(Category.Debugger, TimingVariable.SessionDuration, timeInMS, debuggerType); }
 	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS); }
@@ -151,7 +151,7 @@ export class Analytics {
 
 	private error(description: string, fatal: boolean) {
 		const data: any = {
-			exd: description.split(/[\n\{\/\\]/)[0].substring(0, 150).trim(),
+			exd: description.trim(),
 			exf: fatal ? 1 : 0,
 			t: "exception",
 		};
