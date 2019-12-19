@@ -73,6 +73,8 @@ main() {
 		const comp = ensureCompletion(completions, vs.CompletionItemKind.Variable, "foo: ", "foo: ");
 		if (typeof comp.insertText === "string")
 			throw new Error("Expected SnippetString, got string");
+		else if (comp.insertText!.value.includes("{"))
+			assert.equal(comp.insertText!.value, "foo: ${1:}");
 		else
 			assert.equal(comp.insertText!.value, "foo: $0");
 	});
