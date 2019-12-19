@@ -9,6 +9,5 @@
 		"lib/excluded"
 	],
 	"dart.showIgnoreQuickFixes": true,
-	"dart.showDartDeveloperLogs": true,
-	"dart.analyzerPath": "/Users/dantup/Dev/Google/dart-sdk/sdk/pkg/analysis_server/bin/server.dart",
+	"dart.showDartDeveloperLogs": true
 }
