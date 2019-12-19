@@ -382,7 +382,7 @@ import 'package:hello_world/everything.dart';
 			const completions = await getCompletionsAt("^// top level");
 
 			ensureCompletion(completions, vs.CompletionItemKind.Enum, "Theme", "Theme");
-			ensureNoCompletion(completions, vs.CompletionItemKind.EnumMember, "Theme.Dark");
+			ensureNoCompletion(completions, extApi.isLsp ? vs.CompletionItemKind.Enum : vs.CompletionItemKind.EnumMember, "Theme.Dark");
 		});
 	});
 });
