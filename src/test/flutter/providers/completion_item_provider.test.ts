@@ -35,12 +35,7 @@ main() {
 			assert.equal(edgeInsetsCompletions.length >= 5, true);
 		});
 
-		it("does not include overlapping unimported symbols from multiple files if one is already imported", async function () {
-			if (!extApi.analyzerCapabilities.supportsIncludedImports) {
-				this.skip();
-				return;
-			}
-
+		it("does not include overlapping unimported symbols from multiple files if one is already imported", async () => {
 			await setTestContent(`
 import 'package:flutter/rendering.dart';
 
@@ -54,12 +49,7 @@ main() {
 			assert.equal(edgeInsetsCompletions.length, 1);
 		});
 
-		it("does not include duplicate enum values from multiple files if one is already imported", async function () {
-			if (!extApi.analyzerCapabilities.supportsIncludedImports) {
-				this.skip();
-				return;
-			}
-
+		it("does not include duplicate enum values from multiple files if one is already imported", async () => {
 			await setTestContent(`
 import 'package:flutter/material.dart';
 
