@@ -12,7 +12,7 @@ import { internalApiSymbol } from "../shared/symbols";
 import { BufferedLogger, filenameSafe, flatMap } from "../shared/utils";
 import { fsPath, tryDeleteFile } from "../shared/utils/fs";
 import { waitFor } from "../shared/utils/promises";
-import { DelayedCompletionItem, InternalExtensionApi } from "../shared/vscode/interfaces";
+import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { SourceSortMembersCodeActionKind } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 
@@ -636,21 +636,13 @@ export function ensureIsRange(actual: vs.Range, expected: vs.Range) {
 	assert.equal(actual.end.character, expected.end.character, "End characters did not match");
 }
 
-export async function getCompletionsAt(searchText: string, triggerCharacter?: string): Promise<vs.CompletionItem[]> {
-	const position = positionOf(searchText);
-	const results = await (vs.commands.executeCommand("vscode.executeCompletionItemProvider", currentDoc().uri, position, triggerCharacter) as Thenable<vs.CompletionList>);
-	return results.items;
+export function snippetValue(text: string | vs.SnippetString | undefined) {
+	return !text || typeof text === "string" ? text : text.value;
 }
 
-export async function getCompletionsViaProviderAt(searchText: string, triggerCharacter?: string): Promise<vs.CompletionItem[]> {
+export async function getCompletionsAt(searchText: string, triggerCharacter?: string): Promise<vs.CompletionItem[]> {
 	const position = positionOf(searchText);
-	const results = await extApi.completionItemProvider.provideCompletionItems(
-		currentDoc(),
-		position,
-		fakeCancellationToken,
-		{ triggerCharacter, triggerKind: triggerCharacter ? vs.CompletionTriggerKind.TriggerCharacter : vs.CompletionTriggerKind.Invoke },
-	) as vs.CompletionList;
-
+	const results = await (vs.commands.executeCommand("vscode.executeCompletionItemProvider", currentDoc().uri, position, triggerCharacter, 100000) as Thenable<vs.CompletionList>);
 	return results.items;
 }
 
@@ -675,11 +667,6 @@ export function ensureCompletion(items: vs.CompletionItem[], kind: vs.Completion
 		assert.equal((completion.documentation as any).value.trim(), documentation);
 	}
 	return completion;
-}
-
-export async function resolveCompletion(completion: vs.CompletionItem): Promise<vs.CompletionItem> {
-	const resolved = await extApi.completionItemProvider.resolveCompletionItem!(completion as DelayedCompletionItem, fakeCancellationToken);
-	return resolved || completion;
 }
 
 export function ensureSnippet(items: vs.CompletionItem[], label: string, filterText: string, documentation?: string): void {

@@ -610,6 +610,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			get isInTestFile() { return isInTestFile; },
 			getLogHeader,
 			initialAnalysis: analyzer.onInitialAnalysis,
+			isLsp: isUsingLsp,
 			logger,
 			nextAnalysis: () => analyzer.onNextAnalysisComplete,
 			packagesTreeProvider: dartPackagesProvider,
