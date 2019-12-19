@@ -51,7 +51,7 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 			.readdirSync(folder, { withFileTypes: true })
 			.filter((item) => item.isDirectory())
 			.filter((item) => item.name.endsWith(".xcworkspace") || item.name.endsWith(".xcodeproj"))
-			.sort((f1, f2) => f1.name.endsWith(".xcworkspace") ? 0 : 1);
+			.sort((f1, f2) => f1.name.endsWith(".xcworkspace") ? -1 : 1);
 
 		if (!files || !files.length) {
 			vs.window.showErrorMessage(`Unable to find an Xcode project in your 'ios' folder`);
