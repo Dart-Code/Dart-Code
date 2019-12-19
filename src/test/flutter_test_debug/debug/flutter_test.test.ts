@@ -2,7 +2,6 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { versionIsAtLeast } from "../../../shared/utils";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { killFlutterTester } from "../../debug_helpers";
@@ -12,11 +11,8 @@ describe("flutter test debugger", () => {
 
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
-	let testPrefix = "- ";
 	beforeEach("activate flutterTestMainFile", async () => {
 		await activate(flutterTestMainFile);
-		if (versionIsAtLeast(extApi.analyzerCapabilities.version, "1.20.3"))
-			testPrefix = "";
 	});
 
 	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
@@ -72,9 +68,9 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(flutterTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutputContains("stdout", `✓ ${testPrefix}Hello world test`),
+			dc.assertOutputContains("stdout", `✓ Hello world test`),
 			dc.waitForEvent("terminated"),
-			dc.assertPassingTest(`${testPrefix}Hello world test`),
+			dc.assertPassingTest(`Hello world test`),
 			dc.launch(config),
 		]);
 	});
@@ -84,8 +80,8 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(`\${workspaceFolder}/${relativePath}`);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutputContains("stdout", `✓ ${testPrefix}Hello world test`),
-			dc.assertPassingTest(`${testPrefix}Hello world test`),
+			dc.assertOutputContains("stdout", `✓ Hello world test`),
+			dc.assertPassingTest(`Hello world test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -96,8 +92,8 @@ describe("flutter test debugger", () => {
 		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterTestMainFile));
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutputContains("stdout", `✓ ${testPrefix}Hello world test`),
-			dc.assertPassingTest(`${testPrefix}Hello world test`),
+			dc.assertOutputContains("stdout", `✓ Hello world test`),
+			dc.assertPassingTest(`Hello world test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -108,8 +104,8 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(flutterTestOtherFile);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutputContains("stdout", `✓ ${testPrefix}Other tests group Other test\n`),
-			dc.assertPassingTest(`${testPrefix}Other tests group Other test`),
+			dc.assertOutputContains("stdout", `✓ Other tests group Other test\n`),
+			dc.assertPassingTest(`Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -120,8 +116,8 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(undefined);
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutputContains("stdout", `✓ ${testPrefix}Other tests group Other test\n`),
-			dc.assertPassingTest(`${testPrefix}Other tests group Other test`),
+			dc.assertOutputContains("stdout", `✓ Other tests group Other test\n`),
+			dc.assertPassingTest(`Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -132,8 +128,8 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger("${file}");
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertOutputContains("stdout", `✓ ${testPrefix}Other tests group Other test\n`),
-			dc.assertPassingTest(`${testPrefix}Other tests group Other test`),
+			dc.assertOutputContains("stdout", `✓ Other tests group Other test\n`),
+			dc.assertPassingTest(`Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		]);
@@ -228,7 +224,7 @@ describe("flutter test debugger", () => {
 		config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
-			dc.assertErroringTest(`${testPrefix}Hello world test`),
+			dc.assertErroringTest(`Hello world test`),
 			dc.assertOutput("stderr", "Test failed. See exception logs above.\n"),
 			dc.assertOutputContains("stdout", "EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK"),
 			dc.launch(config),

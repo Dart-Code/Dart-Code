@@ -18,14 +18,13 @@ export interface DebugCommandHandler {
 }
 
 export interface InternalExtensionApi {
-	analyzerCapabilities: {
+	analyzerCapabilities?: {
 		supportsGetSignature: boolean;
 		isDart2: boolean;
 		hasNewSignatureFormat: boolean;
 		hasNewHoverLibraryFormat: boolean;
 		supportsAvailableSuggestions: boolean;
 		supportsIncludedImports: boolean;
-		version: string;
 	};
 	cancelAllAnalysisRequests: () => void;
 	completionItemProvider: CompletionItemProvider;

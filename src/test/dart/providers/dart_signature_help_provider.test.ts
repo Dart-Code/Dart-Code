@@ -1,13 +1,9 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, extApi, positionOf, setTestContent } from "../../helpers";
+import { activate, currentDoc, positionOf, setTestContent } from "../../helpers";
 
 describe("dart_signature_provider", () => {
 	beforeEach("activate", () => activate());
-	beforeEach("skip if analyzer doesn't support getSignature", function () {
-		if (!extApi.analyzerCapabilities.supportsGetSignature)
-			this.skip();
-	});
 
 	async function getSignatureAt(searchText: string): Promise<vs.SignatureHelp> {
 		const position = positionOf(searchText);
