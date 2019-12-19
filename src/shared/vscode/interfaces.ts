@@ -34,6 +34,7 @@ export interface InternalExtensionApi {
 	cursorIsInTest: boolean;
 	isInTestFile: boolean;
 	isInImplementationFile: boolean;
+	isLsp: boolean;
 	dartCapabilities: {
 		generatesCodeWithUnimplementedError: boolean;
 		supportsDevTools: boolean;
