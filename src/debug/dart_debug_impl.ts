@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { CapabilitiesEvent, DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
+import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { config } from "../extension/config";
 import { notUndefined } from "../extension/utils";
@@ -98,6 +98,7 @@ export class DartDebugSession extends DebugSession {
 		response.body.supportsConditionalBreakpoints = true;
 		response.body.supportsLogPoints = true;
 		response.body.supportsTerminateRequest = true;
+		response.body.supportsRestartFrame = true;
 		response.body.exceptionBreakpointFilters = [
 			{ filter: "All", label: "All Exceptions", default: false },
 			{ filter: "Unhandled", label: "Uncaught Exceptions", default: true },
@@ -139,9 +140,6 @@ export class DartDebugSession extends DebugSession {
 		this.debuggerHandlesPathsEverywhereForBreakpoints = args.debuggerHandlesPathsEverywhereForBreakpoints;
 		this.logFile = args.observatoryLogFile;
 		this.maxLogLineLength = args.maxLogLineLength;
-
-		if (args.previewDebuggerStepBack)
-			this.sendEvent(new CapabilitiesEvent({ supportsStepBack: true }));
 
 		this.sendResponse(response);
 
@@ -1093,15 +1091,21 @@ export class DartDebugSession extends DebugSession {
 		}).catch((error) => this.errorResponse(response, `${error}`));
 	}
 
-	protected stepBackRequest(response: DebugProtocol.StepBackResponse, args: DebugProtocol.StepBackArguments): void {
-		const thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
-		if (!thread) {
-			this.errorResponse(response, `No thread with id ${args.threadId}`);
+	protected restartFrameRequest(response: DebugProtocol.RestartFrameResponse, args: DebugProtocol.RestartFrameArguments): void {
+		const frameId = args.frameId;
+		// const context: string = args.context; // "watch", "repl", "hover"
+
+		if (!frameId) {
+			this.errorResponse(response, "global evaluation not supported");
 			return;
 		}
-		thread.resume("Rewind").then((_) => {
+
+		const data = this.threadManager.getStoredData(frameId);
+		const thread = data.thread;
+		const frame: VMFrame = data.data as VMFrame;
+
+		thread.resume("Rewind", frame.index).then((_) => {
 			this.sendResponse(response);
-			this.requestCoverageUpdate("rewind");
 		}).catch((error) => this.errorResponse(response, `${error}`));
 	}
 

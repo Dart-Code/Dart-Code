@@ -451,8 +451,8 @@ export class ObservatoryConnection {
 	}
 
 	// Into, Over, OverAsyncSuspension, and Out
-	public resume(isolateId: string, step?: string): Promise<DebuggerResult> {
-		return this.callMethod("resume", { isolateId, step });
+	public resume(isolateId: string, step?: string, frameIndex?: number): Promise<DebuggerResult> {
+		return this.callMethod("resume", { isolateId, step, frameIndex });
 	}
 
 	public getStack(isolateId: string): Promise<DebuggerResult> {

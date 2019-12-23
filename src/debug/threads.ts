@@ -313,13 +313,13 @@ export class ThreadInfo {
 		this.paused = false;
 	}
 
-	public async resume(step?: string): Promise<void> {
+	public async resume(step?: string, frameIndex?: number): Promise<void> {
 		if (!this.paused || this.hasPendingResume || !this.manager.debugSession.observatory)
 			return;
 
 		this.hasPendingResume = true;
 		try {
-			await this.manager.debugSession.observatory.resume(this.ref.id, step);
+			await this.manager.debugSession.observatory.resume(this.ref.id, step, frameIndex);
 			this.handleResumed();
 		} finally {
 			this.hasPendingResume = false;
