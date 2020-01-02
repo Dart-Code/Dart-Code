@@ -456,6 +456,7 @@ export function positionOf(searchText: string): vs.Position {
 export function rangeOf(searchText: string, inside: vs.Range | undefined, allowMissing: true): vs.Range | undefined;
 export function rangeOf(searchText: string, inside?: vs.Range): vs.Range;
 export function rangeOf(searchText: string, inside?: vs.Range, allowMissing = false): vs.Range | undefined {
+	searchText = searchText.replace(/\r/g, "").replace(/\n/g, documentEol);
 	const doc = currentDoc();
 	const startOffset = searchText.indexOf("|");
 	assert.notEqual(startOffset, -1, `Couldn't find a | in search text (${searchText})`);
@@ -465,7 +466,7 @@ export function rangeOf(searchText: string, inside?: vs.Range, allowMissing = fa
 	const startSearchAt = inside ? doc.offsetAt(inside.start) : 0;
 	const endSearchAt = inside ? doc.offsetAt(inside.end) : -1;
 	const docText = doc.getText();
-	let matchedTextIndex = docText.indexOf(searchText.replace(/\|/g, "").replace(/\n/g, documentEol), startSearchAt);
+	let matchedTextIndex = docText.indexOf(searchText.replace(/\|/g, ""), startSearchAt);
 	if (endSearchAt > -1 && matchedTextIndex > endSearchAt)
 		matchedTextIndex = -1;
 	if (matchedTextIndex === -1 && allowMissing)
