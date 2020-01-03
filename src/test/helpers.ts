@@ -557,7 +557,7 @@ export function ensureError(errors: vs.Diagnostic[], text: string) {
 	);
 }
 
-export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName: string, uriOrMatch: vs.Uri | { endsWith?: string }): void {
+export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName: string | undefined, uriOrMatch: vs.Uri | { endsWith?: string }): void {
 	let symbol = symbols.find((f) =>
 		f.name === name
 		&& f.kind === kind

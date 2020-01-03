@@ -16,15 +16,15 @@ describe("workspace_symbol_provider", () => {
 	it("includes items from 'everything.dart'", async () => {
 		const symbols = await getWorkspaceSymbols("mytest");
 
-		ensureWorkspaceSymbol(symbols, "MyTestClass", vs.SymbolKind.Class, `lib${path.sep}everything.dart`, everythingFile);
-		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestNumField", vs.SymbolKind.Field, `lib${path.sep}everything.dart`, everythingFile);
-		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestHttpClient", vs.SymbolKind.Field, `lib${path.sep}everything.dart`, everythingFile);
-		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestFutureString", vs.SymbolKind.Field, `lib${path.sep}everything.dart`, everythingFile);
-		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestNumGetter", vs.SymbolKind.Property, `lib${path.sep}everything.dart`, everythingFile);
-		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestNumSetter", vs.SymbolKind.Property, `lib${path.sep}everything.dart`, everythingFile);
-		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestNamed()", vs.SymbolKind.Constructor, `lib${path.sep}everything.dart`, everythingFile);
-		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestVoidReturningMethod()", vs.SymbolKind.Method, `lib${path.sep}everything.dart`, everythingFile);
-		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestStringReturningMethod()", vs.SymbolKind.Method, `lib${path.sep}everything.dart`, everythingFile);
+		ensureWorkspaceSymbol(symbols, "MyTestClass", vs.SymbolKind.Class, undefined, everythingFile);
+		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestNumField", vs.SymbolKind.Field, undefined, everythingFile);
+		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestHttpClient", vs.SymbolKind.Field, undefined, everythingFile);
+		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestFutureString", vs.SymbolKind.Field, undefined, everythingFile);
+		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestNumGetter", vs.SymbolKind.Property, undefined, everythingFile);
+		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestNumSetter", vs.SymbolKind.Property, undefined, everythingFile);
+		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestNamed()", vs.SymbolKind.Constructor, undefined, everythingFile);
+		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestVoidReturningMethod()", vs.SymbolKind.Method, undefined, everythingFile);
+		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestStringReturningMethod()", vs.SymbolKind.Method, undefined, everythingFile);
 	});
 
 	it("includes items from pub packages", async () => {

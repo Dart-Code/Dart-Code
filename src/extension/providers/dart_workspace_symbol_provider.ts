@@ -3,7 +3,6 @@ import { CancellationToken, Location, SymbolInformation, SymbolKind, Uri, worksp
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { escapeRegExp } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
 import { toRange } from "../../shared/vscode/utils";
 import { DasAnalyzerClient, getSymbolKindForElementKind } from "../analysis/analyzer_das";
 
@@ -39,7 +38,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	}
 
 	private convertWorkspaceResult(result: as.ElementDeclaration, file: string): SymbolInformation {
-		const names = this.getNames(result, true, file);
+		const names = this.getNames(result, file);
 
 		const symbol: any = new PartialSymbolInformation(
 			names.name,
@@ -60,7 +59,7 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		return symbol;
 	}
 
-	private getNames(result: as.ElementDeclaration, includeFilename: boolean, file: string) {
+	private getNames(result: as.ElementDeclaration, file: string) {
 		let name = result.name;
 		// Constructors don't come prefixed with class name, so add them for a nice display:
 		//    () => MyTestClass()
@@ -76,49 +75,44 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		}
 		if (result.parameters && result.kind !== "SETTER")
 			name += result.parameters;
-		let containerName: string | undefined;
-		if (includeFilename) {
-			containerName = this.createDisplayPath(file);
-			if (result.className && !nameIsPrefixedWithClass)
-				name = `${result.className}.${name}`;
-		} else {
-			containerName = result.className;
-		}
+		if (result.className && !nameIsPrefixedWithClass)
+			name = `${result.className}.${name}`;
+
+		const containerName = this.createExternalPackagePath(file);
+
 		return { name, containerName };
 	}
 
-	private createDisplayPath(inputPath: string): string | undefined {
+	private createExternalPackagePath(inputPath: string): string | undefined {
 		// HACK: The AS returns paths to the PUB_CACHE folder, which Code can't
 		// convert to relative paths (so they look terrible). If the file exists in
 		// workspace.rootPath we rewrite the path to there which gives us a nice
 		// relative path.
 
-		const root = workspace.getWorkspaceFolder(Uri.file(inputPath));
-		if (root) {
-			inputPath = root && path.relative(fsPath(root.uri), inputPath);
-		} else {
-			const pathSlash = escapeRegExp(path.sep);
-			const notSlashes = `[^${pathSlash}]+`;
-			const pattern = new RegExp(`.*${pathSlash}(?:hosted${pathSlash}${notSlashes}|git)${pathSlash}(${notSlashes})${pathSlash}(.*)`);
-			const matches = pattern.exec(inputPath);
-			if (matches && matches.length === 3) {
-				// Packages in pubcache are versioned so trim the "-x.x.x" off the end of the foldername.
-				const packageName = matches[1].split("-")[0];
+		// If the file is in the workspace, don't create a path since VS Code will
+		// show a relative path.
+		if (workspace.getWorkspaceFolder(Uri.file(inputPath)))
+			return undefined;
 
-				// Trim off anything up to lib/ to make it more like the uri you'd import.
-				const libPrefix = `lib${path.sep}`;
-				const libIndex = matches[2].indexOf(libPrefix);
-				const filePath = libIndex !== -1
-					? matches[2].substr(libIndex + libPrefix.length)
-					: matches[2];
+		const pathSlash = escapeRegExp(path.sep);
+		const notSlashes = `[^${pathSlash}]+`;
+		const pattern = new RegExp(`.*${pathSlash}(?:hosted${pathSlash}${notSlashes}|git)${pathSlash}(${notSlashes})${pathSlash}(.*)`);
+		const matches = pattern.exec(inputPath);
+		if (!matches || matches.length !== 3)
+			return undefined;
 
-				// Return 'package:foo/bar.dart'.
-				inputPath = `package:${packageName}/${filePath.replace(/\\/g, "/")}`;
-			} else {
-				return undefined;
-			}
-		}
-		return inputPath;
+		// Packages in pubcache are versioned so trim the "-x.x.x" off the end of the foldername.
+		const packageName = matches[1].split("-")[0];
+
+		// Trim off anything up to lib/ to make it more like the uri you'd import.
+		const libPrefix = `lib${path.sep}`;
+		const libIndex = matches[2].indexOf(libPrefix);
+		const filePath = libIndex !== -1
+			? matches[2].substr(libIndex + libPrefix.length)
+			: matches[2];
+
+		// Return 'package:foo/bar.dart'.
+		return `package:${packageName}/${filePath.replace(/\\/g, "/")}`;
 	}
 }
 
