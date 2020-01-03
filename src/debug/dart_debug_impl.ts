@@ -178,7 +178,9 @@ export class DartDebugSession extends DebugSession {
 				this.lastLoggingEvent,
 				new Promise((resolve) => setTimeout(resolve, 500)),
 			]);
-			this.sendEvent(new TerminatedEvent());
+			// Add a small delay to allow for async events to complete first
+			// to reduce the chance of closing output.
+			setTimeout(() => this.sendEvent(new TerminatedEvent()), 250);
 		});
 
 		if (!this.shouldConnectDebugger)
@@ -1265,7 +1267,7 @@ export class DartDebugSession extends DebugSession {
 	private lastLoggingEvent = Promise.resolve();
 	public async handleLoggingEvent(event: VMEvent): Promise<void> {
 		// Logging may involve async operations (for ex. fetching exception text
-		// and calls tacks) so we must ensure each log is not processed until
+		// and call stacks) so we must ensure each log is not processed until
 		// the previous one has been processed.
 		this.lastLoggingEvent = this.lastLoggingEvent.then(() => this.processLoggingEvent(event));
 	}
