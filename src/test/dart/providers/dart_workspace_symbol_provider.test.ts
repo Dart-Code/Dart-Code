@@ -17,25 +17,24 @@ describe("workspace_symbol_provider", () => {
 		const symbols = await getWorkspaceSymbols("mytest");
 
 		ensureWorkspaceSymbol(symbols, "MyTestClass", vs.SymbolKind.Class, undefined, everythingFile);
-		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestNumField", vs.SymbolKind.Field, undefined, everythingFile);
-		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestHttpClient", vs.SymbolKind.Field, undefined, everythingFile);
-		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestFutureString", vs.SymbolKind.Field, undefined, everythingFile);
-		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestNumGetter", vs.SymbolKind.Property, undefined, everythingFile);
-		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestNumSetter", vs.SymbolKind.Property, undefined, everythingFile);
-		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestNamed()", vs.SymbolKind.Constructor, undefined, everythingFile);
-		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestVoidReturningMethod()", vs.SymbolKind.Method, undefined, everythingFile);
-		ensureWorkspaceSymbol(symbols, "MyTestClass.myTestStringReturningMethod()", vs.SymbolKind.Method, undefined, everythingFile);
+		ensureWorkspaceSymbol(symbols, "myTestNumField", vs.SymbolKind.Field, "MyTestClass", everythingFile);
+		ensureWorkspaceSymbol(symbols, "myTestHttpClient", vs.SymbolKind.Field, "MyTestClass", everythingFile);
+		ensureWorkspaceSymbol(symbols, "myTestFutureString", vs.SymbolKind.Field, "MyTestClass", everythingFile);
+		ensureWorkspaceSymbol(symbols, "myTestNumGetter", vs.SymbolKind.Property, "MyTestClass", everythingFile);
+		ensureWorkspaceSymbol(symbols, "myTestNumSetter(…)", vs.SymbolKind.Property, "MyTestClass", everythingFile);
+		ensureWorkspaceSymbol(symbols, "myTestNamed()", vs.SymbolKind.Constructor, "MyTestClass", everythingFile);
+		ensureWorkspaceSymbol(symbols, "myTestVoidReturningMethod()", vs.SymbolKind.Method, "MyTestClass", everythingFile);
+		ensureWorkspaceSymbol(symbols, "myTestStringReturningMethod()", vs.SymbolKind.Method, "MyTestClass", everythingFile);
 	});
 
 	it("includes items from pub packages", async () => {
 		const symbols = await getWorkspaceSymbols("IOClient");
-
-		ensureWorkspaceSymbol(symbols, "IOClient", vs.SymbolKind.Class, "package:http/src/io_client.dart", { endsWith: `${path.sep}src${path.sep}io_client.dart` });
+		ensureWorkspaceSymbol(symbols, "IOClient", vs.SymbolKind.Class, undefined, { endsWith: `${path.sep}src${path.sep}io_client.dart` });
 	});
 
 	it("includes items from git dependencies", async () => {
 		const symbols = await getWorkspaceSymbols("ProtobufEnum");
 
-		ensureWorkspaceSymbol(symbols, "ProtobufEnum", vs.SymbolKind.Class, "package:protobuf/src/protobuf/protobuf_enum.dart", { endsWith: `${path.sep}src${path.sep}protobuf${path.sep}protobuf_enum.dart` });
+		ensureWorkspaceSymbol(symbols, "ProtobufEnum", vs.SymbolKind.Class, undefined, { endsWith: `${path.sep}src${path.sep}protobuf${path.sep}protobuf_enum.dart` });
 	});
 });
