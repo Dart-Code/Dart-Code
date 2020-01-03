@@ -1152,14 +1152,14 @@ export class DartDebugSession extends DebugSession {
 					result = await this.observatory!.evaluate(thread.ref.id, exceptionId, expression.substr(3), true);
 			}
 			if (!result) {
-				// Don't wait more than half a second for the response:
+				// Don't wait more than a second for the response:
 				//   1. VS Code's watch window behaves badly when there are incomplete evaluate requests
 				//      https://github.com/Microsoft/vscode/issues/52317
 				//   2. The VM sometimes doesn't respond to your requests at all
 				//      https://github.com/flutter/flutter/issues/18595
 				result = await Promise.race([
 					this.observatory!.evaluateInFrame(thread.ref.id, frame.index, expression, true),
-					new Promise<never>((resolve, reject) => setTimeout(() => reject(new Error("<timed out>")), 500)),
+					new Promise<never>((resolve, reject) => setTimeout(() => reject(new Error("<timed out>")), 1000)),
 				]);
 			}
 
