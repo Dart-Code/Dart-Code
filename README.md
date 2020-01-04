@@ -18,8 +18,8 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 
 ## Features
 
-- Edit and Debug Flutter mobile apps
-- Edit and Debug Dart command line apps
+- Edit and Debug Flutter mobile apps (launch using `F5` or the `Debug` menu)
+- Edit and Debug Dart command line apps (launch using `F5` or the `Debug` menu)
 - [Automatic hot reloads for Flutter](https://dartcode.org/docs/settings/#dartflutterhotreloadonsave)
 - [Refactorings and Code fixes (lightbulb)](https://dartcode.org/docs/refactorings-and-code-fixes/)
 - [Quickly switch between devices for Flutter](https://dartcode.org/docs/quickly-switching-between-flutter-devices/)
