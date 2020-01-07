@@ -33,7 +33,7 @@ export class AnalysisTokensProvider implements SemanticTokensProvider {
 			if (type === undefined) return;
 
 			const location = document.positionAt(token.offset);
-			builder.push(location.line, location.character, token.length, type, 0);
+			builder.push(location.line, location.character, token.length, type, this.modifierBitmask(token.type));
 		});
 
 		return new SemanticTokens(builder.build());
