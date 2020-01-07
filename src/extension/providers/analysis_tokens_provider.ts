@@ -56,6 +56,10 @@ export class AnalysisTokensProvider implements SemanticTokensProvider {
 				return Type.enum;
 			case "TYPE_PARAMETER":
 				return Type.parameterType;
+			case "INSTANCE_METHOD_DECLARATION":
+			case "INSTANCE_METHOD_REFERENCE":
+			case "STATIC_METHOD_DECLARATION":
+			case "STATIC_METHOD_REFERENCE":
 			case "TOP_LEVEL_FUNCTION_DECLARATION":
 			case "TOP_LEVEL_FUNCTION_REFERENCE":
 			case "LOCAL_FUNCTION_DECLARATION":
