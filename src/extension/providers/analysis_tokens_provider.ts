@@ -40,7 +40,7 @@ export class AnalysisTokensProvider implements SemanticTokensProvider {
 	}
 
 	private mappedType(regionType: HighlightRegionType): number| undefined {
-		// mapping oriented on how the IntelliJ plugins handles highlighting:
+		// mapping oriented on how the IntelliJ plugin handles highlighting:
 		// https://github.com/JetBrains/intellij-plugins/blob/e280cb041505b0fb706d1ce852e3c1f38ffdf896/Dart/src/com/jetbrains/lang/dart/ide/annotator/DartAnnotator.java#L48-L143
 		switch (regionType) {
 			case "ANNOTATION":
@@ -60,6 +60,7 @@ export class AnalysisTokensProvider implements SemanticTokensProvider {
 			case "TOP_LEVEL_FUNCTION_REFERENCE":
 			case "LOCAL_FUNCTION_DECLARATION":
 			case "LOCAL_FUNCTION_REFERENCE":
+			case "CONSTRUCTOR":
 				return Type.function;
 			case "DYNAMIC_PARAMETER_DECLARATION":
 			case "DYNAMIC_PARAMETER_REFERENCE":

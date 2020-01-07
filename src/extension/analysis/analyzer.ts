@@ -46,6 +46,10 @@ function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilit
 	if (config.analyzerInstrumentationLogFile)
 		analyzerArgs.push(`--instrumentation-log-file=${config.analyzerInstrumentationLogFile}`);
 
+	// Enable more detailed highlighting when enabled
+	if (config.analysisServerHighlighting)
+		analyzerArgs.push(`--useAnalysisHighlight2`);
+
 	// Allow arbitrary args to be passed to the analysis server.
 	if (config.analyzerAdditionalArgs)
 		analyzerArgs = analyzerArgs.concat(config.analyzerAdditionalArgs);

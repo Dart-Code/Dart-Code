@@ -15,7 +15,7 @@ export class DasFileTracker implements IAmDisposable {
 	private readonly flutterOutlines: { [key: string]: FlutterOutline } = {};
 	private readonly occurrences: { [key: string]: Occurrences[] } = {};
 	private readonly folding: { [key: string]: FoldingRegion[] } = {};
-	private readonly highlights: {[key: string]: HighlightRegion[]} = {};
+	private readonly highlights: {[key: string]: HighlightRegion[] } = {};
 	private readonly pubRunTestSupport: { [key: string]: boolean } = {};
 	private lastPriorityFiles: string[] = [];
 	private lastSubscribedFiles: string[] = [];
