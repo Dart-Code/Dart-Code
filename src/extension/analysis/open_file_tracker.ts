@@ -1,8 +1,9 @@
 import { Disposable, TextDocument, Uri, window, workspace } from "vscode";
-import { FlutterOutline, FoldingRegion, Occurrences, Outline } from "../../shared/analysis_server_types";
+import { FlutterOutline, FoldingRegion, HighlightRegion, Occurrences, Outline } from "../../shared/analysis_server_types";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
 import { WorkspaceContext } from "../../shared/workspace";
+import { config } from "../config";
 import { isUsingLsp } from "../extension";
 import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
@@ -14,6 +15,7 @@ export class DasFileTracker implements IAmDisposable {
 	private readonly flutterOutlines: { [key: string]: FlutterOutline } = {};
 	private readonly occurrences: { [key: string]: Occurrences[] } = {};
 	private readonly folding: { [key: string]: FoldingRegion[] } = {};
+	private readonly highlights: {[key: string]: HighlightRegion[]} = {};
 	private readonly pubRunTestSupport: { [key: string]: boolean } = {};
 	private lastPriorityFiles: string[] = [];
 	private lastSubscribedFiles: string[] = [];
@@ -34,6 +36,7 @@ export class DasFileTracker implements IAmDisposable {
 			delete this.occurrences[path];
 			delete this.folding[path];
 			delete this.pubRunTestSupport[path];
+			delete this.highlights[path];
 			this.updateSubscriptions();
 		}));
 		this.disposables.push(window.onDidChangeVisibleTextEditors((e) => this.updatePriorityFiles()));
@@ -41,6 +44,8 @@ export class DasFileTracker implements IAmDisposable {
 		this.disposables.push(this.analyzer.registerForFlutterOutline((o) => this.flutterOutlines[o.file] = o.outline));
 		this.disposables.push(this.analyzer.registerForAnalysisOccurrences((o) => this.occurrences[o.file] = o.occurrences));
 		this.disposables.push(this.analyzer.registerForAnalysisFolding((f) => this.folding[f.file] = f.regions));
+		this.disposables.push(this.analyzer.registerForAnalysisHighlights((f) => this.highlights[f.file] = f.regions));
+
 		// Handle already-open files.
 		this.updatePriorityFiles();
 		this.updateSubscriptions();
@@ -71,17 +76,22 @@ export class DasFileTracker implements IAmDisposable {
 
 		// Keep track of files to compare next time.
 		this.lastSubscribedFiles = openFiles;
+		const lspTargets = isUsingLsp ? undefined : openFiles;
 
 		// Set subscriptions.
 		try {
-			await this.analyzer.analysisSetSubscriptions({
-				subscriptions: {
-					CLOSING_LABELS: this.analyzer.capabilities.supportsClosingLabels ? openFiles : undefined,
-					FOLDING: isUsingLsp ? undefined : openFiles,
-					OCCURRENCES: isUsingLsp ? undefined : openFiles,
-					OUTLINE: openFiles,
-				},
-			});
+			const subscriptions: { [key: string]: string[] | undefined; } = {
+				CLOSING_LABELS: this.analyzer.capabilities.supportsClosingLabels ? openFiles : undefined,
+				FOLDING: lspTargets,
+				OCCURRENCES: lspTargets,
+				OUTLINE: openFiles,
+			};
+
+			if (config.analysisServerHighlighting) {
+				subscriptions.HIGHLIGHTS = lspTargets;
+			}
+
+			await this.analyzer.analysisSetSubscriptions({subscriptions});
 		} catch (e) {
 			this.logger.error(e);
 		}
@@ -140,6 +150,10 @@ export class DasFileTracker implements IAmDisposable {
 
 	public getFoldingRegionsFor(file: Uri): FoldingRegion[] | undefined {
 		return this.folding[fsPath(file)];
+	}
+
+	public getHighlightsFor(file: Uri): HighlightRegion[] | undefined {
+		return this.highlights[fsPath(file)];
 	}
 
 	public getLastPriorityFiles(): string[] {

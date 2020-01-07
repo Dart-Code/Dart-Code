@@ -5,8 +5,9 @@
 	"version": "3.8.0-dev",
 	"publisher": "Dart-Code",
 	"engines": {
-		"vscode": "^1.40.0"
+		"vscode": "^1.41.0"
 	},
+	"enableProposedApi": true,
 	"extensionKind": [
 		"workspace"
 	],
@@ -61,8 +62,9 @@
 				"configuration": "./syntaxes/dart-language-configuration.json"
 			}
 		],
-		"grammars": [
+		"$commented_out$grammars": [
 			{
+				"$reason": "Temporariliy commented out so that server highlights are more obvious. Undo before merge",
 				"language": "dart",
 				"scopeName": "source.dart",
 				"path": "./syntaxes/dart.json"
@@ -981,6 +983,12 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Whether to use folding data from the Dart analysis server instead of the built-in VS Code indent-based folding.",
+					"scope": "window"
+				},
+				"dart.analysisServerHighlighting": {
+					"type": "boolean",
+					"default": false,
+					"description": "(Experimental) Whether to use syntax highlighting data form the Dart analysis server in addition to the built-in grammar.",
 					"scope": "window"
 				},
 				"dart.analysisExcludedFolders": {

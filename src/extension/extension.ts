@@ -46,6 +46,7 @@ import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { FlutterOutlineProvider } from "./flutter/flutter_outline_view";
 import { HotReloadOnSaveHandler } from "./flutter/hot_reload_save_handler";
+import { AnalysisTokensProvider, dasTokenLegend } from "./providers/analysis_tokens_provider";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
@@ -235,6 +236,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		const formattingEditProvider = new DartFormattingEditProvider(logger, dasClient, extContext);
 		context.subscriptions.push(formattingEditProvider);
 		formattingEditProvider.registerDocumentFormatter(activeFileFilters);
+
+		if (config.analysisServerHighlighting) {
+			context.subscriptions.push(vs.languages.registerSemanticTokensProvider(activeFileFilters, new AnalysisTokensProvider(dasAnalyzer), dasTokenLegend));
+		}
+
 		// Only for Dart.
 		formattingEditProvider.registerTypingFormatter(DART_MODE, "}", ";");
 	}

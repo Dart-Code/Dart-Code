@@ -27,6 +27,7 @@
 			"options": "allow-empty-catch"
 		},
 		"space-before-function-paren": false,
+		"no-duplicate-switch-case": true,
 		// TODO: These don't seem to work?
 		// "no-unused-expression": true,
 		// "no-floating-promises": true,
