@@ -1,5 +1,6 @@
-import { CancellationToken, SemanticTokens, SemanticTokensBuilder, SemanticTokensLegend, SemanticTokensProvider, SemanticTokensRequestOptions, TextDocument } from "vscode";
+import { CancellationToken, SemanticTokens, SemanticTokensBuilder, SemanticTokensLegend, SemanticTokensProvider, SemanticTokensRequestOptions, TextDocument, TextLine } from "vscode";
 import { HighlightRegion, HighlightRegionType } from "../../shared/analysis_server_types";
+import { MappedRegion, removeOverlappings } from "../../shared/utils/region_split";
 import { DasAnalyzer } from "../analysis/analyzer_das";
 
 const emptyBuffer = new Uint32Array();
@@ -24,22 +25,36 @@ export class AnalysisTokensProvider implements SemanticTokensProvider {
 			return new SemanticTokens(emptyBuffer);
 		}
 
-		// tokens must be sorted because VS Code encodes positions with deltas
-		dasHightlights.sort((a, b) => a.offset - b.offset);
+		// map to token types declared in the legend, filter out regions we're not
+		// interested in (like directives or set literals. Those have child regions, we only
+		// care about those).
+		let mapped = dasHightlights.map<MappedRegion | undefined>((token) => {
+			const type = this.mappedType(token.type);
+			if (type === undefined) return undefined;
+
+			return new MappedRegion(
+				token.offset,
+				token.length,
+				type,
+				this.modifierBitmask(token.type),
+			);
+		}).filter((r): r is MappedRegion => r !== undefined);
+
+		// split at line endings and nested regions. We map first so that tokens we're not
+		// insterested in (like set literals) don't cause many tokens when we split at nested
+		// regions.
+		mapped = splitRegions(mapped, document);
 
 		const builder = new SemanticTokensBuilder();
-		dasHightlights.forEach((token) => {
-			const type = this.mappedType(token.type);
-			if (type === undefined) return;
-
-			const location = document.positionAt(token.offset);
-			builder.push(location.line, location.character, token.length, type, this.modifierBitmask(token.type));
+		mapped.forEach((region) => {
+			const start = document.positionAt(region.offset);
+			builder.push(start.line, start.character, region.length, region.tokenType, region.tokenModifier);
 		});
 
 		return new SemanticTokens(builder.build());
 	}
 
-	private mappedType(regionType: HighlightRegionType): number| undefined {
+	private mappedType(regionType: HighlightRegionType): number | undefined {
 		// mapping oriented on how the IntelliJ plugin handles highlighting:
 		// https://github.com/JetBrains/intellij-plugins/blob/e280cb041505b0fb706d1ce852e3c1f38ffdf896/Dart/src/com/jetbrains/lang/dart/ide/annotator/DartAnnotator.java#L48-L143
 		switch (regionType) {
@@ -203,3 +218,48 @@ export const dasTokenLegend: SemanticTokensLegend = {
 	tokenModifiers: Object.keys(Modifier).filter((k) => typeof Modifier[k as any] === "number"),
 	tokenTypes: Object.keys(Type).filter((k) => typeof Type[k as any] === "number"),
 };
+
+/**
+ * Transforms mapped highlight regions into something than be sent to VS Code for highlighting.
+ * In particular, this includes
+ *  - sorting tokens by their start positions, so that they can be encoded by deltas
+ *  - splitting multi-line tokens at each covered line ending
+ *  - flattening nested regions
+ *
+ * @param regions unsorted regions reported by the analyzer
+ * @param document the matching document providing line endings
+ */
+function splitRegions(regions: MappedRegion[], document: TextDocument): MappedRegion[] {
+	regions = removeOverlappings(regions); // will also take care of sorting them
+
+	function startOf(line: TextLine): number {
+		return document.offsetAt(line.range.start);
+	}
+
+	function endOf(line: TextLine): number {
+		return document.offsetAt(line.range.end);
+	}
+
+	const output = Array<MappedRegion>();
+	regions.forEach((region) => {
+		const startLine = document.positionAt(region.offset).line;
+		const endLine = document.positionAt(region.endOffset - 1).line;
+
+		if (startLine === endLine) {
+			output.push(region); // nothing to transform
+		} else {
+			// add the part of the first line that belongs to the region
+			output.push(region.copyWithRange(region.offset, endOf(document.lineAt(startLine))));
+
+			// lines in between can just be added in entirely
+			for (let line = startLine + 1; line < endLine; line++) {
+				const textLine = document.lineAt(line);
+				output.push(region.copyWithRange(startOf(textLine), endOf(textLine)));
+			}
+
+			// add the part of the last line that belongs to the region
+			output.push(region.copyWithRange(startOf(document.lineAt(endLine)), region.endOffset));
+		}
+	});
+	return output;
+}
