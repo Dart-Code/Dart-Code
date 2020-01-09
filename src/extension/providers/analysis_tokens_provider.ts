@@ -1,5 +1,5 @@
 import { CancellationToken, SemanticTokens, SemanticTokensBuilder, SemanticTokensLegend, SemanticTokensProvider, SemanticTokensRequestOptions, TextDocument, TextLine } from "vscode";
-import { HighlightRegion, HighlightRegionType } from "../../shared/analysis_server_types";
+import { HighlightRegionType } from "../../shared/analysis_server_types";
 import { MappedRegion, removeOverlappings } from "../../shared/utils/region_split";
 import { DasAnalyzer } from "../analysis/analyzer_das";
 
@@ -10,15 +10,7 @@ export class AnalysisTokensProvider implements SemanticTokensProvider {
 	constructor(private readonly analyzer: DasAnalyzer) { }
 
 	public async provideSemanticTokens(document: TextDocument, options: SemanticTokensRequestOptions, token: CancellationToken): Promise<SemanticTokens> {
-		let dasHightlights: HighlightRegion[] | undefined;
-
-		for (let i = 0; i < 5; i++) {
-			dasHightlights = this.analyzer.fileTracker.getHighlightsFor(document.uri);
-			if (dasHightlights) break;
-
-			await new Promise((resolve) => setTimeout(resolve, (i + 1) * 1000).unref());
-			if (token?.isCancellationRequested ?? false) break;
-		}
+		const dasHightlights = await this.analyzer.fileTracker.awaitHighlights(document.uri, token);
 
 		if (!dasHightlights) {
 			// no data available, so don't report any tokens

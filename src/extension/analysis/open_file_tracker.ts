@@ -1,4 +1,4 @@
-import { Disposable, TextDocument, Uri, window, workspace } from "vscode";
+import { CancellationToken, Disposable, Event, EventEmitter, TextDocument, Uri, window, workspace } from "vscode";
 import { FlutterOutline, FoldingRegion, HighlightRegion, Occurrences, Outline } from "../../shared/analysis_server_types";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
@@ -7,6 +7,7 @@ import { config } from "../config";
 import { isUsingLsp } from "../extension";
 import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
+import { firstOf } from "../utils/vscode/events";
 import { DasAnalyzerClient } from "./analyzer_das";
 
 export class DasFileTracker implements IAmDisposable {
@@ -15,8 +16,8 @@ export class DasFileTracker implements IAmDisposable {
 	private readonly flutterOutlines: { [key: string]: FlutterOutline } = {};
 	private readonly occurrences: { [key: string]: Occurrences[] } = {};
 	private readonly folding: { [key: string]: FoldingRegion[] } = {};
-	private readonly highlights: {[key: string]: HighlightRegion[] } = {};
 	private readonly pubRunTestSupport: { [key: string]: boolean } = {};
+	private readonly highlights: ObservableStorage<HighlightRegion[]> = new ObservableStorage();
 	private lastPriorityFiles: string[] = [];
 	private lastSubscribedFiles: string[] = [];
 
@@ -36,15 +37,23 @@ export class DasFileTracker implements IAmDisposable {
 			delete this.occurrences[path];
 			delete this.folding[path];
 			delete this.pubRunTestSupport[path];
-			delete this.highlights[path];
+			this.highlights.clear(path);
 			this.updateSubscriptions();
 		}));
+
+		this.disposables.push(workspace.onDidChangeTextDocument((event) => {
+			// remove cached highlights for this file, they're stale now.
+			this.highlights.clear(fsPath(event.document.uri));
+		}));
+
+		this.disposables.push(this.highlights);
+
 		this.disposables.push(window.onDidChangeVisibleTextEditors((e) => this.updatePriorityFiles()));
 		this.disposables.push(this.analyzer.registerForAnalysisOutline((o) => this.outlines[o.file] = o.outline));
 		this.disposables.push(this.analyzer.registerForFlutterOutline((o) => this.flutterOutlines[o.file] = o.outline));
 		this.disposables.push(this.analyzer.registerForAnalysisOccurrences((o) => this.occurrences[o.file] = o.occurrences));
 		this.disposables.push(this.analyzer.registerForAnalysisFolding((f) => this.folding[f.file] = f.regions));
-		this.disposables.push(this.analyzer.registerForAnalysisHighlights((f) => this.highlights[f.file] = f.regions));
+		this.disposables.push(this.analyzer.registerForAnalysisHighlights((f) => this.highlights.update(f.file, f.regions)));
 
 		// Handle already-open files.
 		this.updatePriorityFiles();
@@ -91,7 +100,7 @@ export class DasFileTracker implements IAmDisposable {
 				subscriptions.HIGHLIGHTS = lspTargets;
 			}
 
-			await this.analyzer.analysisSetSubscriptions({subscriptions});
+			await this.analyzer.analysisSetSubscriptions({ subscriptions });
 		} catch (e) {
 			this.logger.error(e);
 		}
@@ -152,8 +161,8 @@ export class DasFileTracker implements IAmDisposable {
 		return this.folding[fsPath(file)];
 	}
 
-	public getHighlightsFor(file: Uri): HighlightRegion[] | undefined {
-		return this.highlights[fsPath(file)];
+	public awaitHighlights(file: Uri, cancel: CancellationToken): Promise<HighlightRegion[] | undefined> {
+		return this.highlights.waitFor(file, cancel);
 	}
 
 	public getLastPriorityFiles(): string[] {
@@ -168,5 +177,51 @@ export class DasFileTracker implements IAmDisposable {
 		// TODO: This (and others) should probably await, in case thye're promises.
 		// And also not fail on first error.
 		this.disposables.forEach((d) => d.dispose());
+	}
+}
+
+class ObservableStorage<T> implements Disposable {
+
+	private readonly content: { [key: string]: T } = {};
+	private readonly emitters: Map<string, EventEmitter<any>> = new Map();
+
+	private changeEvents(path: string): Event<any> {
+		if (this.emitters.has(path)) {
+			return this.emitters.get(path)!.event;
+		}
+
+		const emitter = new EventEmitter<any>();
+		this.emitters.set(path, emitter);
+		return emitter.event;
+	}
+
+	public getLast(file: Uri): T | undefined {
+		return this.content[fsPath(file)];
+	}
+
+	public async waitFor(file: Uri, cancel: CancellationToken): Promise<T | undefined> {
+		// don't wait for anything if data is available right now
+		const path = fsPath(file);
+		const initialValue = this.content[path];
+		if (initialValue !== undefined) return initialValue;
+
+		// wait until we have data available or until cancellation was requested. Whatever happens first
+		await firstOf(this.changeEvents(path), cancel.onCancellationRequested);
+		return this.content[path];
+	}
+
+	public update(path: string, data: T) {
+		this.content[path] = data;
+		this.emitters.get(path)?.fire(undefined);
+	}
+
+	public clear(path: string) {
+		delete this.content[path];
+	}
+
+	public dispose() {
+		for (const value of this.emitters.values()) {
+			value.dispose();
+		}
 	}
 }
