@@ -56,7 +56,14 @@ export class FileChangeHandler implements vs.Disposable {
 
 		const files: { [key: string]: as.ChangeContentOverlay } = {};
 		files[filePath] = {
-			edits: e.contentChanges.map((c) => this.convertChange(e.document, c)),
+			edits: e.contentChanges
+				.map((c) => this.convertChange(e.document, c))
+				// We must sort them last-to-first because server will apply them
+				// sequentially and VS Code doesn't guarantee them in reverse order
+				// (or at least, it'd not documented):
+				// https://github.com/microsoft/vscode/issues/88310
+				// https://github.com/microsoft/vscode/issues/88570
+				.sort((c1, c2) => c2.offset - c1.offset),
 			type: "change",
 		};
 		this.analyzer.analysisUpdateContent({ files });
