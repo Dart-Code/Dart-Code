@@ -29,6 +29,7 @@ export class AnalyzerStatusReporter {
 		analyzer.registerForServerStatus((n) => this.handleServerStatus(n));
 		analyzer.registerForServerError((e) => this.handleServerError(e));
 		analyzer.registerForRequestError((e) => this.handleRequestError(e));
+		analyzer.registerForServerTerminated(() => this.handleServerTerminated());
 
 		if (sendFakeErrorAtStartup) {
 			setTimeout(() => {
@@ -68,6 +69,14 @@ export class AnalyzerStatusReporter {
 				this.analyzingPromise.resolve();
 				this.analyzingPromise = undefined;
 			}
+		}
+	}
+
+	private handleServerTerminated() {
+		this.analysisInProgress = false;
+		if (this.analyzingPromise) {
+			this.analyzingPromise.resolve();
+			this.analyzingPromise = undefined;
 		}
 	}
 

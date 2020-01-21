@@ -113,6 +113,9 @@ export class DasAnalyzerClient extends AnalyzerGen {
 		}
 
 		this.createProcess(undefined, binaryPath, processArgs);
+		this.process?.on("exit", (code, signal) => {
+			this.notify(this.serverTerminatedSubscriptions, undefined);
+		});
 
 		this.serverSetSubscriptions({
 			subscriptions: ["STATUS"],
@@ -267,6 +270,11 @@ export class DasAnalyzerClient extends AnalyzerGen {
 				}
 			}, () => reject());
 		});
+	}
+
+	private serverTerminatedSubscriptions: Array<() => void> = [];
+	public registerForServerTerminated(subscriber: () => void): vs.Disposable {
+		return this.subscribe(this.serverTerminatedSubscriptions, subscriber);
 	}
 }
 
