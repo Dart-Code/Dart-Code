@@ -56,6 +56,12 @@ export class DartDebugSession extends DebugSession {
 	private logStream?: fs.WriteStream;
 	public debugSdkLibraries = false;
 	public debugExternalLibraries = false;
+	// Usually we buffer messages so we can scan whole lines for stack frames, but
+	// for terminal apps that accept input this can result in the rendered text
+	// being out of order if messages don't end with newlines. Since we don't support
+	// linking up stack frames for terminal anyway, it's safe to just disable the
+	// buffering there.
+	public allowMessageBuffering = true;
 	public sendOutputAsCustomEvent = false;
 	public showDartDeveloperLogs = true;
 	public useFlutterStructuredErrors = false;
@@ -137,6 +143,7 @@ export class DartDebugSession extends DebugSession {
 		this.useFlutterStructuredErrors = args.useFlutterStructuredErrors;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
 		this.sendOutputAsCustomEvent = args.console === "terminal";
+		this.allowMessageBuffering = args.console !== "terminal";
 		this.debuggerHandlesPathsEverywhereForBreakpoints = args.debuggerHandlesPathsEverywhereForBreakpoints;
 		this.logFile = args.observatoryLogFile;
 		this.maxLogLineLength = args.maxLogLineLength;
@@ -1814,6 +1821,11 @@ export class DartDebugSession extends DebugSession {
 	///    [5:01:50 PM] [General] [Info] [stderr]     main (file:///D:/a/
 	///    [5:01:50 PM] [General] [Info] [stderr] Dart-Code/Dart-Code/src/test/test_projects/hello_world/bin/broken.dart:2:3)
 	protected logToUserBuffered(message: string, category: string) {
+		if (!this.allowMessageBuffering) {
+			this.logToUser(message, category);
+			return;
+		}
+
 		this.logBuffer[category] = this.logBuffer[category] || "";
 		this.logBuffer[category] += message;
 
