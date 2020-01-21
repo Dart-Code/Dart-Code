@@ -11,7 +11,8 @@ import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { getSdkVersion, notUndefined, openExtensionLogFile, reloadExtension, resolvePaths } from "../utils";
+import { ringLog } from "../extension";
+import { getSdkVersion, notUndefined, openLogContents, promptToReloadExtension, resolvePaths } from "../utils";
 
 // TODO: Tidy this class up (it exists mainly to share logger).
 export class SdkUtils {
@@ -71,7 +72,7 @@ export class SdkUtils {
 	}
 
 	public showFluttersDartSdkActivationFailure() {
-		reloadExtension("Could not find Dart in your Flutter SDK. " +
+		promptToReloadExtension("Could not find Dart in your Flutter SDK. " +
 			"Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
 			"Reload",
 			true,
@@ -108,6 +109,7 @@ export class SdkUtils {
 		let displayMessage = `Could not find a ${sdkType} SDK. ` +
 			`Please ensure ${sdkType.toLowerCase()} is installed and in your PATH (you may need to restart).`;
 		while (true) {
+			const ringLogContents = ringLog.toString();
 			const selectedItem = await window.showErrorMessage(displayMessage,
 				locateAction,
 				downloadAction,
@@ -121,7 +123,7 @@ export class SdkUtils {
 					const matchingSdkFolder = search(selectedFolders.map(fsPath));
 					if (matchingSdkFolder) {
 						await saveSdkPath(matchingSdkFolder);
-						await reloadExtension();
+						await promptToReloadExtension();
 						if (commandToReRun) {
 							commands.executeCommand(commandToReRun);
 						}
@@ -134,7 +136,7 @@ export class SdkUtils {
 				await envUtils.openInBrowser(downloadUrl);
 				break;
 			} else if (selectedItem === showLogAction) {
-				openExtensionLogFile();
+				openLogContents(undefined, ringLogContents);
 				break;
 			} else {
 				break;

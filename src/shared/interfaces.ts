@@ -42,6 +42,7 @@ export interface LogMessage {
 	readonly message: string;
 	readonly severity: LogSeverity;
 	readonly category: LogCategory;
+	toLine(maxLength: number): string;
 }
 
 export interface IAmDisposable {

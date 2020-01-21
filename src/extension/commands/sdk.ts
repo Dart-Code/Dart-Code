@@ -180,7 +180,7 @@ export class SdkCommands {
 			if (!fs.existsSync(tempDir))
 				fs.mkdirSync(tempDir);
 			await this.runFlutterInFolder(tempDir, ["upgrade"], "flutter");
-			await util.reloadExtension();
+			await util.promptToReloadExtension();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.flutter.createSampleProject", (_) => this.createFlutterSampleProject()));

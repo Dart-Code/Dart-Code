@@ -11,7 +11,7 @@ import { envUtils, getDartWorkspaceFolders } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { markProjectCreationEnded, markProjectCreationStarted } from "./commands/sdk";
-import { reloadExtension } from "./utils";
+import { promptToReloadExtension } from "./utils";
 
 export async function showUserPrompts(logger: Logger, context: Context, workspaceContext: WorkspaceContext): Promise<void> {
 	handleNewProjects(logger, context);
@@ -97,7 +97,7 @@ async function promptToInstallFlutterExtension(): Promise<boolean> {
 				});
 			},
 		);
-		reloadExtension();
+		promptToReloadExtension();
 	}
 
 	return false;

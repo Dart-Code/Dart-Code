@@ -23,7 +23,7 @@ export class EmittingLogger implements Logger, IAmDisposable {
 	public readonly onLog = (listener: (message: LogMessage) => void) => this.onLogEmitter.onLog(listener);
 
 	private log(message: string, severity: LogSeverity, category = LogCategory.General): void {
-		this.onLogEmitter.fire({ message, severity, category });
+		this.onLogEmitter.fire(new LogMessageImpl(message, severity, category));
 		// TODO: ????
 		// // Warn/Error always go to General.
 		// if (category !== LogCategory.General && severity !== LogSeverity.Info) {
@@ -43,6 +43,26 @@ export class EmittingLogger implements Logger, IAmDisposable {
 
 	public dispose(): void {
 		this.onLogEmitter.removeAllListeners();
+	}
+}
+
+class LogMessageImpl implements LogMessage {
+	constructor(
+		readonly message: string,
+		readonly severity: LogSeverity,
+		readonly category: LogCategory,
+	) { }
+
+	public toLine(maxLength: number): string {
+		const logMessage = (
+			maxLength && this.message && this.message.length > maxLength
+				? this.message.substring(0, maxLength) + "…"
+				: (this.message || "<empty message>")
+		).trimRight();
+
+		const time = `[${(new Date()).toLocaleTimeString()}]`;
+		const prefix = `[${LogCategory[this.category]}] [${LogSeverity[this.severity]}]`;
+		return `${time} ${prefix} ${logMessage}`;
 	}
 }
 
@@ -83,9 +103,9 @@ export function logProcess(logger: Logger, category: LogCategory, process: Spawn
 export function logToConsole(logger: EmittingLogger): void {
 	logger.onLog((m) => {
 		if (m.severity === LogSeverity.Error)
-			console.error(`[${LogCategory[m.category]}] ${m.message}`);
+			console.error(m.toLine(1000));
 		else if (m.severity === LogSeverity.Warn)
-			console.warn(`[${LogCategory[m.category]}] ${m.message}`);
+			console.warn(m.toLine(1000));
 	});
 }
 
@@ -116,12 +136,7 @@ export function captureLogs(logger: EmittingLogger, file: string, header: string
 		if (!shouldLog)
 			return;
 
-		const message = e.message ? e.message.trimRight() : "<empty message>";
-		const logMessage = maxLogLineLength && message.length > maxLogLineLength
-			? message.substring(0, maxLogLineLength) + "…"
-			: message;
-		const prefix = `${time()}[${LogCategory[e.category]}] [${LogSeverity[e.severity]}] `;
-		logStream.write(`${prefix}${logMessage}${os.EOL}`);
+		logStream.write(`${e.toLine(maxLogLineLength)}${os.EOL}`);
 	});
 	return {
 		dispose(): Promise<void> | void {
@@ -138,4 +153,24 @@ export function captureLogs(logger: EmittingLogger, file: string, header: string
 			});
 		},
 	};
+}
+
+export class RingLog {
+	private readonly lines: string[];
+	private pointer = 0;
+
+	public get rawLines(): ReadonlyArray<string> { return this.lines; }
+
+	constructor(private size: number) {
+		this.lines = new Array<string>(this.size);
+	}
+
+	public log(message: string) {
+		this.lines[this.pointer] = message;
+		this.pointer = (this.pointer + 1) % this.size;
+	}
+
+	public toString(): string {
+		return this.lines.slice(this.pointer, this.size).concat(this.lines.slice(0, this.pointer)).filter((l) => l).join("\n");
+	}
 }

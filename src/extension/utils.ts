@@ -5,12 +5,12 @@ import * as path from "path";
 import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { showLogAction } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
-import { fsPath, hasPubspec, isWithinPath, mkDirRecursive } from "../shared/utils/fs";
+import { fsPath, getRandomInt, hasPubspec, isWithinPath, mkDirRecursive } from "../shared/utils/fs";
 import { isDartWorkspaceFolder } from "../shared/vscode/utils";
 import { config } from "./config";
+import { ringLog } from "./extension";
 import { locateBestProjectRoot } from "./project";
 import { referencesFlutterSdk } from "./sdk/utils";
-import { getExtensionLogPath } from "./utils/log";
 
 export function isFlutterWorkspaceFolder(folder?: WorkspaceFolder): boolean {
 	return !!(folder && isDartWorkspaceFolder(folder) && isFlutterProjectFolder(fsPath(folder.uri)));
@@ -202,12 +202,13 @@ export function escapeShell(args: string[]) {
 	return ret.join(" ");
 }
 
-export async function reloadExtension(prompt?: string, buttonText?: string, offerLogFile = false) {
+export async function promptToReloadExtension(prompt?: string, buttonText?: string, offerLog?: boolean) {
 	const restartAction = buttonText || "Restart";
-	const actions = offerLogFile ? [restartAction, showLogAction] : [restartAction];
+	const actions = offerLog ? [restartAction, showLogAction] : [restartAction];
+	const ringLogContents = ringLog.toString();
 	const chosenAction = prompt && await window.showInformationMessage(prompt, ...actions);
 	if (chosenAction === showLogAction) {
-		openExtensionLogFile();
+		openLogContents(undefined, ringLogContents);
 	} else if (!prompt || chosenAction === restartAction) {
 		commands.executeCommand("_dart.reloadExtension");
 	}
@@ -229,8 +230,10 @@ export const logTime = (taskFinished?: string) => {
 	last = diff;
 };
 
-export function openExtensionLogFile() {
-	workspace.openTextDocument(getExtensionLogPath()).then(window.showTextDocument);
+export function openLogContents(logType = `txt`, logContents: string) {
+	const tempPath = path.join(os.tmpdir(), `log-${getRandomInt(0x1000, 0x10000).toString(16)}.${logType}`);
+	fs.writeFileSync(tempPath, logContents);
+	workspace.openTextDocument(tempPath).then(window.showTextDocument);
 }
 
 export function notUndefined<T>(x: T | undefined): x is T {

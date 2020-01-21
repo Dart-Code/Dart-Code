@@ -8,7 +8,7 @@ import { dartPlatformName, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEB
 import { LogCategory } from "../shared/enums";
 import { setUserAgent } from "../shared/fetch";
 import { DartWorkspaceContext, IFlutterDaemon, Sdks } from "../shared/interfaces";
-import { captureLogs, EmittingLogger, logToConsole } from "../shared/logging";
+import { captureLogs, EmittingLogger, logToConsole, RingLog } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
 import { forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../shared/utils/fs";
@@ -112,13 +112,19 @@ let previousSettings: string;
 const loggers: Array<{ dispose: () => Promise<void> | void }> = [];
 export let isUsingLsp = false;
 
-// TODO: If dev mode, subscribe to logs for errors/warnings and surface to UI
-// (with dispose calls)
 const logger = new EmittingLogger();
 
+// Keep a running in-memory buffer of last 200 log events we can give to the
+// user when something crashed even if they don't have disk-logging enabled.
+export const ringLog: RingLog = new RingLog(200);
+
 export async function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
-	if (isDevExtension)
-		logToConsole(logger);
+	if (!isRestart) {
+		if (isDevExtension)
+			logToConsole(logger);
+
+		logger.onLog((message) => ringLog.log(message.toLine(500)));
+	}
 
 	vs.commands.executeCommand("setContext", IS_RUNNING_LOCALLY_CONTEXT, isRunningLocally);
 	buildLogHeaders();
@@ -536,7 +542,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			|| newWorkspaceContext.hasProjectsInFuchsiaTree !== workspaceContext.hasProjectsInFuchsiaTree
 			|| newWorkspaceContext.isDartSdkRepo !== workspaceContext.isDartSdkRepo
 		) {
-			util.reloadExtension();
+			util.promptToReloadExtension();
 			return;
 		}
 
@@ -668,7 +674,7 @@ function handleConfigurationChange(sdks: Sdks) {
 	}
 
 	if (settingsChanged) {
-		util.reloadExtension();
+		util.promptToReloadExtension();
 	}
 }
 

@@ -1,17 +1,13 @@
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
-import { env, ProgressLocation, version as codeVersion, window, workspace } from "vscode";
+import { env, ProgressLocation, version as codeVersion, window } from "vscode";
 import { RequestError, ServerErrorNotification, ServerStatusNotification } from "../../shared/analysis_server_types";
 import { LogCategory } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
-import { getRandomInt } from "../../shared/utils/fs";
 import { extensionVersion } from "../../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { getSdkVersion } from "../utils";
+import { getSdkVersion, openLogContents } from "../utils";
 import { DasAnalyzerClient } from "./analyzer_das";
 
 const maxErrorReportCount = 3;
@@ -141,11 +137,6 @@ ${error.message}
 ${error.stackTrace.trim()}
 `;
 
-		const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.md`;
-		const tempPath = path.join(os.tmpdir(), fileName);
-		fs.writeFileSync(tempPath, data.trim());
-		workspace.openTextDocument(tempPath).then((document) => {
-			window.showTextDocument(document);
-		});
+		openLogContents("md", data);
 	}
 }
