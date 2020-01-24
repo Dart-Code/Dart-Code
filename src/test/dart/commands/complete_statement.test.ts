@@ -1,7 +1,12 @@
 import * as vs from "vscode";
-import { activate, ensureTestContentWithCursorPos, rangeOf, select, setTestContent, waitForEditorChange } from "../../helpers";
+import { activate, ensureTestContentWithCursorPos, extApi, rangeOf, select, setTestContent, waitForEditorChange } from "../../helpers";
 
 describe("complete statement", () => {
+	beforeEach("skip for LSP", async function () {
+		if (extApi.isLsp)
+			this.skip();
+	});
+
 	beforeEach("activate", () => activate());
 
 	it("completes a simple print", async () => {

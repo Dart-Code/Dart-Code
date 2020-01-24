@@ -26,6 +26,8 @@ export const androidStudioPaths = androidStudioExecutableNames.map((s) => "bin/"
 export const DART_DOWNLOAD_URL = "https://dart.dev/get-dart";
 export const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
 
+export const IS_LSP_CONTEXT = "dart-code:isLsp";
+
 export const DART_TEST_SUITE_NODE_CONTEXT = "dart-code:testSuiteNode";
 export const DART_TEST_GROUP_NODE_CONTEXT = "dart-code:testGroupNode";
 export const DART_TEST_TEST_NODE_CONTEXT = "dart-code:testTestNode";

@@ -539,7 +539,7 @@
 				},
 				{
 					"command": "dart.completeStatement",
-					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
+					"when": "dart-code:dartProjectLoaded && editorLangId == dart && !dart-code:isLsp"
 				},
 				{
 					"command": "dart.showTypeHierarchy",
