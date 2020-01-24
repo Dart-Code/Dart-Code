@@ -179,3 +179,31 @@ export interface TestOutlineInfo {
 	length: number;
 	isGroup: boolean;
 }
+
+export class ClassOutlineVisitor extends OutlineVisitor {
+	public readonly classes: ClassInfo[] = [];
+	protected visitClass(outline: as.Outline) {
+		this.addClass(outline);
+		super.visitClass(outline);
+	}
+
+	private addClass(outline: as.Outline) {
+		if (!outline.element || !outline.element.location || !outline.element.name)
+			return;
+		this.classes.push({
+			className: outline.element.name,
+			codeLength: outline.codeLength,
+			codeOffset: outline.codeOffset,
+			length: outline.length,
+			offset: outline.offset,
+		});
+	}
+}
+
+export interface ClassInfo {
+	className: string;
+	offset: number;
+	length: number;
+	codeOffset: number;
+	codeLength: number;
+}

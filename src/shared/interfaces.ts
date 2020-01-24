@@ -18,6 +18,10 @@ export interface DartSdks extends Sdks {
 	readonly dart: string;
 }
 
+export interface FlutterSdks extends Sdks {
+	readonly flutter: string;
+}
+
 export interface DartWorkspaceContext extends WorkspaceContext {
 	readonly sdks: DartSdks;
 }
