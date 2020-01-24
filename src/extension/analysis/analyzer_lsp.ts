@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as stream from "stream";
-import { LanguageClient, LanguageClientOptions, StreamInfo } from "vscode-languageclient";
-import { AnalyzerStatusNotification, DiagnosticServerRequest } from "../../shared/analysis/lsp/custom_protocol";
+import { LanguageClient, LanguageClientOptions, Location, StreamInfo, TextDocumentPositionParams, WorkspaceEdit } from "vscode-languageclient";
+import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { dartVMPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
@@ -37,6 +37,13 @@ export class LspAnalyzer extends Analyzer {
 
 	public async getDiagnosticServerPort(): Promise<{ port: number }> {
 		return this.client.sendRequest(DiagnosticServerRequest.type, undefined);
+	}
+
+	public async getSuper(params: TextDocumentPositionParams): Promise<Location | null> {
+		return this.client.sendRequest(
+			SuperRequest.type,
+			params,
+		);
 	}
 }
 
