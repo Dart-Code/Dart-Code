@@ -7,7 +7,7 @@ import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/
 import { dartPlatformName, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, isWin, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { setUserAgent } from "../shared/fetch";
-import { DartWorkspaceContext, IFlutterDaemon, Sdks } from "../shared/interfaces";
+import { DartWorkspaceContext, FlutterSdks, IFlutterDaemon, Sdks } from "../shared/interfaces";
 import { captureLogs, EmittingLogger, logToConsole, RingLog } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
@@ -24,6 +24,7 @@ import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
 import { FileChangeHandler } from "./analysis/file_change_handler";
 import { Analytics } from "./analytics";
 import { DartExtensionApi } from "./api";
+import { FlutterDartPadSamplesCodeLensProvider } from "./code_lens/flutter_dartpad_samples";
 import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
 import { AnalyzerCommands } from "./commands/analyzer";
 import { DebugCommands } from "./commands/debug";
@@ -267,6 +268,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		rankingCodeActionProvider.registerProvider(new IgnoreLintCodeActionProvider(activeFileFilters));
 		if (config.showTestCodeLens) {
 			const codeLensProvider = new TestCodeLensProvider(logger, dasAnalyzer);
+			context.subscriptions.push(codeLensProvider);
+			context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
+		}
+		if (config.showDartPadSampleCodeLens && sdks.flutter) {
+			const codeLensProvider = new FlutterDartPadSamplesCodeLensProvider(logger, dasAnalyzer, sdks as FlutterSdks);
 			context.subscriptions.push(codeLensProvider);
 			context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
 		}
