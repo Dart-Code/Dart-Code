@@ -44,6 +44,10 @@ export class DasFileTracker implements IAmDisposable {
 		// Handle already-open files.
 		this.updatePriorityFiles();
 		this.updateSubscriptions();
+		// It's possible that after the server gives us the version, we may send different subscriptions (eg.
+		// based on capabilities, like supporting priority files outside of the workspace root) so we may need
+		// to send again.
+		this.disposables.push(this.analyzer.registerForServerConnected((s) => this.updateSubscriptions()));
 	}
 
 	public async updatePriorityFiles() {
