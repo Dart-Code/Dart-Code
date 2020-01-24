@@ -1121,6 +1121,12 @@
 					"description": "Whether to show Code Lens actions in the editor for quick running/debugging tests.",
 					"scope": "window"
 				},
+				"dart.showDartPadSampleCodeLens": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to show Code Lens actions in the editor for opening online DartPad samples.",
+					"scope": "window"
+				},
 				"dart.showTodos": {
 					"type": "boolean",
 					"default": true,
