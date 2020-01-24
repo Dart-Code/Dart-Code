@@ -45,6 +45,13 @@ export class LspAnalyzer extends Analyzer {
 			params,
 		);
 	}
+
+	public async completeStatement(params: TextDocumentPositionParams): Promise<WorkspaceEdit | null> {
+		return this.client.sendRequest(
+			CompleteStatementRequest.type,
+			params,
+		);
+	}
 }
 
 function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext): LanguageClient {
