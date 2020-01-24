@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, userPromptContextPrefix, yesAction } from "../shared/constants";
+import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, userPromptContextPrefix, yesAction } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { Logger, StagehandTemplate } from "../shared/interfaces";
 import { fsPath } from "../shared/utils/fs";
@@ -36,6 +36,27 @@ export async function showUserPrompts(logger: Logger, context: Context, workspac
 		await new Promise((resolve) => setTimeout(resolve, 20000));
 		if (!checkHasFlutterExtension())
 			return showPrompt(installFlutterExtensionPromptKey, promptToInstallFlutterExtension);
+	}
+
+	// Check the user hasn't installed Flutter in a forbidden location that will cause issues.
+	if (workspaceContext.hasAnyFlutterProjects && workspaceContext.sdks.flutter) {
+		if (isWin) {
+			const forbiddenLocations = [
+				process.env.COMMONPROGRAMFILES,
+				process.env["COMMONPROGRAMFILES(x86)"],
+				process.env.CommonProgramW6432,
+				process.env.PROGRAMFILES,
+				process.env.ProgramW6432,
+				process.env["PROGRAMFILES(X86)"],
+			];
+
+			const installedForbiddenLocation = forbiddenLocations.find((fl) => fl && workspaceContext.sdks.flutter?.toLowerCase().startsWith(fl.toLowerCase()));
+
+			if (installedForbiddenLocation) {
+				logger.error(`Flutter is installed in protected folder: ${installedForbiddenLocation}`);
+				vs.window.showErrorMessage("The Flutter SDK is installed in a protected folder and may not function correctly. Please move the SDK to a location that is user-writable without Administration permissions and restart.");
+			}
+		}
 	}
 
 	const lastSeenVersionNotification = context.lastSeenVersion;
