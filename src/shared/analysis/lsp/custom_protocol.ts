@@ -1,4 +1,4 @@
-import { Location, NotificationType, Range, RequestType, TextDocumentPositionParams } from "vscode-languageclient";
+import { Location, NotificationType, Range, RequestType, TextDocumentPositionParams, WorkspaceEdit } from "vscode-languageclient";
 
 export class AnalyzerStatusNotification {
 	public static type = new NotificationType<AnalyzerStatusParams, void>("$/analyzerStatus");
@@ -26,6 +26,10 @@ export class SuperRequest {
 
 export class DiagnosticServerRequest {
 	public static type = new RequestType<void, { port: number }, void, void>("dart/diagnosticServer");
+}
+
+export class CompleteStatementRequest {
+	public static type = new RequestType<TextDocumentPositionParams, WorkspaceEdit | null, void, void>("dart/completeStatement");
 }
 
 export interface ClosingLabelsParams {
