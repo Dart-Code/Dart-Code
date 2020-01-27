@@ -38,7 +38,7 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		if (!outline || !outline.children || !outline.children.length)
 			return;
 
-		// We should only show the Code Lens for projects we know can actually handle `pub run` (for ex. the
+		// We should only show the CodeLens for projects we know can actually handle `pub run` (for ex. the
 		// SDK codebase cannot, and will therefore run all tests when you click them).
 		if (!this.analyzer.fileTracker.supportsPubRunTest(document.uri))
 			return;
