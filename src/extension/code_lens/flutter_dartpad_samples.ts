@@ -42,7 +42,7 @@ export class FlutterDartPadSamplesCodeLensProvider implements CodeLensProvider, 
 		if (!outline || !outline.children || !outline.children.length)
 			return;
 
-		const libraryName = filePath.substr(this.flutterPackagesFolder.length).split("/")[0];
+		const libraryName = filePath.substr(this.flutterPackagesFolder.length).replace("\\", "/").split("/")[0];
 
 		const visitor = new ClassOutlineVisitor(this.logger);
 		visitor.visit(outline);
