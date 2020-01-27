@@ -1,7 +1,8 @@
 import * as assert from "assert";
 import * as path from "path";
+import * as sinon from "sinon";
 import * as vs from "vscode";
-import { activate, extApi, getCodeLens, getPackages, openFile, positionOf, waitForResult } from "../../helpers";
+import { activate, extApi, getCodeLens, getPackages, openFile, positionOf, sb, waitForResult } from "../../helpers";
 
 describe("test_flutter_dartpad_samples", () => {
 	before("get packages", () => getPackages());
@@ -35,5 +36,11 @@ describe("test_flutter_dartpad_samples", () => {
 		const sampleInfo = codeLens.command!.arguments![0] as { libraryName: string, className: string };
 		assert.equal(sampleInfo.libraryName, "material");
 		assert.equal(sampleInfo.className, "AppBar");
+
+		// Execute the command and ensure it tried to open the correct URL.
+		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").withArgs(sinon.match.any).resolves(true);
+		vs.commands.executeCommand(codeLens.command.command, ...codeLens.command.arguments!);
+		assert.ok(openBrowserCommand.calledOnce);
+		assert.ok(openBrowserCommand.calledWith("https://api.flutter.dev/flutter/material/AppBar-class.html#material.AppBar.1"));
 	});
 });
