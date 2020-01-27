@@ -12,8 +12,8 @@ export function showFlutterSurveyNotificationIfAppropriate(context: Context, ope
 	if (now <= surveyStart || now >= surveyEnd)
 		return false;
 
-	const lastShown = context.flutterSurvey2019Q4NotificationLastShown;
-	const doNotShow = context.flutterSurvey2019Q4NotificationDoNotShow;
+	const lastShown = context.flutterSurvey2020Q1NotificationLastShown;
+	const doNotShow = context.flutterSurvey2020Q1NotificationDoNotShow;
 
 	// Don't show this notification if user previously said not to.
 	if (doNotShow)
@@ -48,16 +48,16 @@ export function showFlutterSurveyNotificationIfAppropriate(context: Context, ope
 
 	// Mark the last time we've shown it (now) so we can avoid showing again for
 	// 40 hours.
-	context.flutterSurvey2019Q4NotificationLastShown = Date.now();
+	context.flutterSurvey2020Q1NotificationLastShown = Date.now();
 
 	// Prompt to show and handle response.
 	vs.window.showInformationMessage(prompt, takeSurveyAction, doNotAskAgainAction).then(async (choice) => {
 		if (choice === doNotAskAgainAction) {
-			context.flutterSurvey2019Q4NotificationDoNotShow = true;
+			context.flutterSurvey2020Q1NotificationDoNotShow = true;
 		} else if (choice === takeSurveyAction) {
 			// Mark as do-not-show-again if they answer it, since it seems silly
 			// to show them again if they already completed it.
-			context.flutterSurvey2019Q4NotificationDoNotShow = true;
+			context.flutterSurvey2020Q1NotificationDoNotShow = true;
 			await openInBrowser(surveyUrl);
 		}
 	});
