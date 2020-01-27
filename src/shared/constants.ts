@@ -53,16 +53,17 @@ export const alwaysOpenAction = "Always Open";
 export const notTodayAction = "Not Now";
 export const doNotAskAgainAction = "Never Ask";
 
-export const surveyBaseUrl = "https://google.qualtrics.com/jfe/form/SV_5BhR2R8DZIEE6dn?Source=VSCode";
-export const flutterSurveyPromptWithAnalytics = "Help improve Flutter! Take our Q4 survey. By clicking on this link you agree to share feature usage along with the survey responses.";
-export const flutterSurveyPromptWithoutAnalytics = "Help improve Flutter! Take our Q4 survey.";
+export const surveyBaseUrl = "https://google.qualtrics.com/jfe/form/SV_6YBXYxIR69pgpr7?Source=VSCode";
+export const flutterSurveyPromptWithAnalytics = "Help improve Flutter! Take our Q1 survey. By clicking on this link you agree to share feature usage along with the survey responses.";
+export const flutterSurveyPromptWithoutAnalytics = "Help improve Flutter! Take our Q1 survey.";
 export const takeSurveyAction = "Take Survey";
 // To confirm dates in PST(/PDT), paste this into Chrome dev console:
 // new Date(Date.UTC(...)).toLocaleString("en-US", {timeZone: "America/Los_Angeles"})
-// "11/23/2019, 9:00:00 AM"
-export const surveyStart = Date.UTC(2019, 10 /* Month is 0-based!! */, 22, 17, 0);
-// "12/1/2019, 6:00:00 PM"
-export const surveyEnd = Date.UTC(2019, 11 /* Month is 0-based!! */, 2, 2, 0);
+// Paste the results into comments for easier reviewing!
+// "2/24/2020, 9:00:00 AM"
+export const surveyStart = Date.UTC(2020, 1 /* Month is 0-based!! */, 24, 17, 0);
+// "3/2/2020, 9:00:00 AM"
+export const surveyEnd = Date.UTC(2020, 2 /* Month is 0-based!! */, 2, 17, 0);
 
 // Minutes.
 export const fiveMinutesInMs = 1000 * 60 * 5;
