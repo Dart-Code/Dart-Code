@@ -8,7 +8,7 @@ describe("test_flutter_dartpad_samples", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate());
 
-	it("includes run/debug actions for tests", async function () {
+	it("includes interactive sample links for Flutter widgets", async function () {
 		const appBarUri = vs.Uri.file(path.join(extApi.workspaceContext.sdks.flutter!, "packages/flutter/lib/src/material/app_bar.dart"));
 		const editor = await openFile(appBarUri);
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(appBarUri));
