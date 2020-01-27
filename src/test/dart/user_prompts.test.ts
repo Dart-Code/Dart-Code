@@ -139,14 +139,14 @@ describe("Survey notification", async () => {
 
 		// Flags were updated.
 		const context = extApi.context;
-		assert.equal(context.flutterSurvey2019Q4NotificationDoNotShow, true);
+		assert.equal(context.flutterSurvey2020Q1NotificationDoNotShow, true);
 		// Marked as shown within the last 10 seconds.
-		assert.equal(context.flutterSurvey2019Q4NotificationLastShown && context.flutterSurvey2019Q4NotificationLastShown > Date.now() - 10000 && context.flutterSurvey2019Q4NotificationLastShown <= Date.now(), true);
+		assert.equal(context.flutterSurvey2020Q1NotificationLastShown && context.flutterSurvey2020Q1NotificationLastShown > Date.now() - 10000 && context.flutterSurvey2020Q1NotificationLastShown <= Date.now(), true);
 	});
 
 	it("shows and updates context values when already seen", async () => {
 		const context = extApi.context;
-		context.flutterSurvey2019Q4NotificationLastShown = surveyIsOpenDate - (longRepeatPromptThreshold + twoHoursInMs);
+		context.flutterSurvey2020Q1NotificationLastShown = surveyIsOpenDate - (longRepeatPromptThreshold + twoHoursInMs);
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(takeSurveyAction);
@@ -162,16 +162,16 @@ describe("Survey notification", async () => {
 		assert.equal(res, true);
 
 		// Flags were updated.
-		assert.equal(context.flutterSurvey2019Q4NotificationDoNotShow, true);
+		assert.equal(context.flutterSurvey2020Q1NotificationDoNotShow, true);
 		// Marked as shown within the last 10 seconds.
-		assert.equal(context.flutterSurvey2019Q4NotificationLastShown > Date.now() - 10000 && context.flutterSurvey2019Q4NotificationLastShown <= Date.now(), true);
+		assert.equal(context.flutterSurvey2020Q1NotificationLastShown > Date.now() - 10000 && context.flutterSurvey2020Q1NotificationLastShown <= Date.now(), true);
 	});
 
 	it("does not show if shown in the last 40 hours", async () => {
 		const context = extApi.context;
 		const now = surveyIsOpenDate;
 		const fiveHoursInMs = 1000 * 60 * 60 * 5;
-		context.flutterSurvey2019Q4NotificationLastShown = now - fiveHoursInMs;
+		context.flutterSurvey2020Q1NotificationLastShown = now - fiveHoursInMs;
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(takeSurveyAction);
@@ -200,12 +200,12 @@ describe("Survey notification", async () => {
 		assert.equal(res, true);
 
 		// Flag was written.
-		await waitFor(() => extApi.context.flutterSurvey2019Q4NotificationDoNotShow);
-		assert.equal(extApi.context.flutterSurvey2019Q4NotificationDoNotShow, true);
+		await waitFor(() => extApi.context.flutterSurvey2020Q1NotificationDoNotShow);
+		assert.equal(extApi.context.flutterSurvey2020Q1NotificationDoNotShow, true);
 	});
 
 	it("does not prompt if told not to ask again", async () => {
-		extApi.context.flutterSurvey2019Q4NotificationDoNotShow = true;
+		extApi.context.flutterSurvey2020Q1NotificationDoNotShow = true;
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const openSurveyPrompt = showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(doNotAskAgainAction);
