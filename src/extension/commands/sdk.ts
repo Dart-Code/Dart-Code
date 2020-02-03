@@ -8,7 +8,7 @@ import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, FLUTTER_CREATE_PROJEC
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, DartWorkspaceContext, Logger, SpawnedProcess, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
-import { PromiseCompleter, uniq } from "../../shared/utils";
+import { notUndefined, PromiseCompleter, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
 import { findProjectFolders, fsPath, mkDirRecursive } from "../../shared/utils/fs";
@@ -387,7 +387,7 @@ export class SdkCommands {
 				label: path.relative(workspacePathParent, f),
 				path: f,
 			} as vs.QuickPickItem & { path: string };
-		}).filter(util.notUndefined);
+		}).filter(notUndefined);
 
 		const selectedFolder = await vs.window.showQuickPick(items, { placeHolder });
 		return selectedFolder && selectedFolder.path;

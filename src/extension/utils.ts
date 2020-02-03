@@ -235,7 +235,3 @@ export function openLogContents(logType = `txt`, logContents: string) {
 	fs.writeFileSync(tempPath, logContents);
 	workspace.openTextDocument(tempPath).then(window.showTextDocument);
 }
-
-export function notUndefined<T>(x: T | undefined): x is T {
-	return x !== undefined;
-}

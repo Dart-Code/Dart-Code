@@ -472,6 +472,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			? debugConfig.debuggerHandlesPathsEverywhereForBreakpoints
 			: this.dartCapabilities.handlesPathsEverywhereForBreakpoints;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
+		debugConfig.previewToStringInDebugViews = debugConfig.previewToStringInDebugViews || config.previewToStringInDebugViews;
 		if (isFlutter && this.sdks.flutter) {
 			debugConfig.args = conf.flutterAdditionalArgs.concat(debugConfig.args);
 			debugConfig.forceFlutterVerboseMode = isLogging || isCI;

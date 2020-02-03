@@ -4,7 +4,7 @@ import { commands, ExtensionContext, window } from "vscode";
 import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isWin, showLogAction } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
-import { flatMap, isDartSdkFromFlutter } from "../../shared/utils";
+import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { findProjectFolders, fsPath, hasPubspec } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
@@ -12,7 +12,7 @@ import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { ringLog } from "../extension";
-import { getSdkVersion, notUndefined, openLogContents, promptToReloadExtension, resolvePaths } from "../utils";
+import { getSdkVersion, openLogContents, promptToReloadExtension, resolvePaths } from "../utils";
 
 // TODO: Tidy this class up (it exists mainly to share logger).
 export class SdkUtils {
