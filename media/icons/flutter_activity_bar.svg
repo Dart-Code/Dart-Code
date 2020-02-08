@@ -1,10 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
+
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24" height="24"
-	 viewBox="30 30 180 180" xml:space="preserve">
+	 viewBox="30 30 150 180" xml:space="preserve">
 <style type="text/css">
-	.st1{fill:#d7dae0;}
+	.st1{stroke:#d7dae0; 
+	fill:transparent; 
+	stroke-width:8;
+	stroke-linejoin:round}
 </style>
-<polygon class="st1" points="126.8,205.6 126.7,205.6 80.1,159 106.7,132.3 179.9,205.6 "/>
-<polygon class="st1" points="126.7,112.3 126.7,112.3 80,158.9 106.7,185.5 179.9,112.3 "/>
-<polygon class="st1" points="126.7,32.5 126.6,32.4 39.9,119 66.6,145.7 179.8,32.5 "/>
+<polygon class="st1"
+ points="126.7,205.6 80.1,159 126.7,112.3 179.9,112.3 130.7,160.5 177.9,205.6 "/>
+<polygon class="st1"
+ points="126.7,32.5 126.6,32.4 39.9,119 66.6,145.7 179.8,32.5 "/>
 </svg>
