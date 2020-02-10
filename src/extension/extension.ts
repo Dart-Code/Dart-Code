@@ -280,7 +280,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, new SourceCodeActionProvider(), SourceCodeActionProvider.metadata));
 		context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, new DartImplementationProvider(dasAnalyzer)));
 
-		rankingCodeActionProvider.registerProvider(new IgnoreLintCodeActionProvider(activeFileFilters));
 		if (config.showTestCodeLens) {
 			const codeLensProvider = new TestCodeLensProvider(logger, dasAnalyzer);
 			context.subscriptions.push(codeLensProvider);
@@ -292,6 +291,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
 		}
 	}
+
+	rankingCodeActionProvider.registerProvider(new IgnoreLintCodeActionProvider(activeFileFilters));
 
 	// Register the ranking provider from VS Code now that it has all of its delegates.
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, rankingCodeActionProvider, rankingCodeActionProvider.metadata));
