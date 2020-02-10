@@ -2,7 +2,7 @@ import * as path from "path";
 import { CancellationToken, CodeLens, CodeLensProvider, commands, Event, EventEmitter, TextDocument } from "vscode";
 import { FlutterSdks, IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
-import { ClassOutlineVisitor } from "../../shared/utils/outline";
+import { ClassOutlineVisitor } from "../../shared/utils/outline_das";
 import { envUtils, toRange } from "../../shared/vscode/utils";
 import { DasAnalyzer } from "../analysis/analyzer_das";
 
