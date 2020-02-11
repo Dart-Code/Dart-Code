@@ -1,6 +1,6 @@
 import { Uri } from "vscode";
 import { LanguageClient } from "vscode-languageclient";
-import { FlutterOutline, FlutterOutlineParams, Outline, PublishFlutterOutlineNotification, PublishOutlineNotification } from "../../shared/analysis/lsp/custom_protocol";
+import { FlutterOutline, FlutterOutlineParams, Outline, OutlineParams, PublishFlutterOutlineNotification, PublishOutlineNotification } from "../../shared/analysis/lsp/custom_protocol";
 import { EventEmitter } from "../../shared/events";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
@@ -13,6 +13,8 @@ export class LspFileTracker implements IAmDisposable {
 	private readonly flutterOutlines: { [key: string]: FlutterOutline } = {};
 	private readonly pubRunTestSupport: { [key: string]: boolean } = {};
 
+	protected readonly onOutlineEmitter = new EventEmitter<OutlineParams>();
+	public readonly onOutline = this.onOutlineEmitter.event;
 	protected readonly onFlutterOutlineEmitter = new EventEmitter<FlutterOutlineParams>();
 	public readonly onFlutterOutline = this.onFlutterOutlineEmitter.event;
 
@@ -21,6 +23,7 @@ export class LspFileTracker implements IAmDisposable {
 			this.analyzer.onNotification(PublishOutlineNotification.type, (n) => {
 				const filePath = fsPath(Uri.parse(n.uri));
 				this.outlines[filePath] = n.outline;
+				this.onOutlineEmitter.fire(n);
 			});
 			this.analyzer.onNotification(PublishFlutterOutlineNotification.type, (n) => {
 				const filePath = fsPath(Uri.parse(n.uri));
