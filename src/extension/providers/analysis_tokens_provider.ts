@@ -1,15 +1,15 @@
-import { CancellationToken, SemanticTokens, SemanticTokensBuilder, SemanticTokensLegend, SemanticTokensProvider, SemanticTokensRequestOptions, TextDocument, TextLine } from "vscode";
+import { CancellationToken, DocumentSemanticTokensProvider, SemanticTokens, SemanticTokensBuilder, SemanticTokensLegend, TextDocument, TextLine } from "vscode";
 import { HighlightRegionType } from "../../shared/analysis_server_types";
 import { MappedRegion, removeOverlappings } from "../../shared/utils/region_split";
 import { DasAnalyzer } from "../analysis/analyzer_das";
 
 const emptyBuffer = new Uint32Array();
 
-export class AnalysisTokensProvider implements SemanticTokensProvider {
+export class AnalysisTokensProvider implements DocumentSemanticTokensProvider {
 
 	constructor(private readonly analyzer: DasAnalyzer) { }
 
-	public async provideSemanticTokens(document: TextDocument, options: SemanticTokensRequestOptions, token: CancellationToken): Promise<SemanticTokens> {
+	public async provideDocumentSemanticTokens(document: TextDocument, token: CancellationToken): Promise<SemanticTokens> {
 		const dasHightlights = await this.analyzer.fileTracker.awaitHighlights(document.uri, token);
 
 		if (!dasHightlights) {

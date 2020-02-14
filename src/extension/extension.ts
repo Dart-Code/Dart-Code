@@ -238,7 +238,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		formattingEditProvider.registerDocumentFormatter(activeFileFilters);
 
 		if (config.analysisServerHighlighting) {
-			context.subscriptions.push(vs.languages.registerSemanticTokensProvider(activeFileFilters, new AnalysisTokensProvider(dasAnalyzer), dasTokenLegend));
+			vs.languages.registerDocumentSemanticTokensProvider(activeFileFilters, new AnalysisTokensProvider(dasAnalyzer), dasTokenLegend);
 		}
 
 		// Only for Dart.
