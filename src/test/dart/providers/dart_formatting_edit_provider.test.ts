@@ -85,7 +85,7 @@ describe("dart_formatting_edit_provider", () => {
 		assert.equal(currentDoc().getText(), unformattedContent);
 	});
 
-	it.skip("formats a huge document of unicode characters without corrupting", async () => {
+	it("formats a huge document of unicode characters without corrupting", async () => {
 		// https://github.com/Dart-Code/Dart-Code/issues/2140
 		// Set the test document to 130 lines of 62 commented emojis
 		const testDocument = `// ${`🙈`.repeat(62)}${documentEol}`.repeat(130);
