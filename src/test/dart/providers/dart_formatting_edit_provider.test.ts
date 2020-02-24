@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as vs from "vscode";
 import { platformEol } from "../../../shared/constants";
-import { activate, currentDoc, currentEditor, emptyExcludedFile, emptyFileInExcludedFolder, openFile, positionOf, setConfigForTest, setTestContent } from "../../helpers";
+import { activate, currentDoc, currentEditor, documentEol, emptyExcludedFile, emptyFileInExcludedFolder, openFile, positionOf, setConfigForTest, setTestContent } from "../../helpers";
 
 const formattingOptions: vs.FormattingOptions = { tabSize: 2, insertSpaces: true };
 
@@ -83,5 +83,15 @@ describe("dart_formatting_edit_provider", () => {
 		await setTestContent(unformattedContent);
 		await formatDocument(false);
 		assert.equal(currentDoc().getText(), unformattedContent);
+	});
+
+	it.skip("formats a huge document of unicode characters without corrupting", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/2140
+		// Set the test document to 130 lines of 62 commented emojis
+		const testDocument = `// ${`🙈`.repeat(62)}${documentEol}`.repeat(130);
+		// Add two blank lines so that there's a change to format
+		await setTestContent(`${documentEol.repeat(2)}${testDocument}`);
+		await formatDocument();
+		assert.equal(currentDoc().getText(), testDocument);
 	});
 });
