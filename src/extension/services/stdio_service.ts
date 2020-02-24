@@ -37,15 +37,15 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 		this.logTraffic(`    PID: ${process.pid}`);
 
-		this.process.stdout.on("data", (data: Buffer) => {
+		this.process.stdout.on("data", (data: Buffer | string) => {
 			// Add this message to the buffer for processing.
-			this.messageBuffers.push(data);
+			this.messageBuffers.push(Buffer.isBuffer(data) ? data : Buffer.from(data));
 
 			// Kick off processing if we have a full message.
 			if (data.toString().indexOf("\n") >= 0)
 				this.processMessageBuffer();
 		});
-		this.process.stderr.on("data", (data: Buffer) => {
+		this.process.stderr.on("data", (data: Buffer | string) => {
 			this.logTraffic(`${data.toString()}`, true);
 		});
 		this.process.on("exit", (code, signal) => {
