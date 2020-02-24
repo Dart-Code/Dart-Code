@@ -12,7 +12,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	protected readonly additionalPidsToTerminate: number[] = [];
 	private nextRequestID = 1;
 	private readonly activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] | "CANCELLED" } = {};
-	private messageBuffer: string[] = [];
+	private messageBuffers: Buffer[] = [];
 	private openLogFile: string | undefined;
 	private logStream?: fs.WriteStream;
 	private readonly requestErrorSubscriptions: Array<(notification: any) => void> = [];
@@ -38,13 +38,11 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		this.logTraffic(`    PID: ${process.pid}`);
 
 		this.process.stdout.on("data", (data: Buffer) => {
-			const message = data.toString();
-
 			// Add this message to the buffer for processing.
-			this.messageBuffer.push(message);
+			this.messageBuffers.push(data);
 
 			// Kick off processing if we have a full message.
-			if (message.indexOf("\n") >= 0)
+			if (data.toString().indexOf("\n") >= 0)
 				this.processMessageBuffer();
 		});
 		this.process.stderr.on("data", (data: Buffer) => {
@@ -96,19 +94,19 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	protected processMessageBuffer() {
-		let fullBuffer = this.messageBuffer.join("");
-		this.messageBuffer = [];
+		let fullBuffer = Buffer.concat(this.messageBuffers);
+		this.messageBuffers = [];
 
 		// If the message doesn't end with \n then put the last part back into the buffer.
-		if (!fullBuffer.endsWith("\n")) {
-			const lastNewline = fullBuffer.lastIndexOf("\n");
-			const incompleteMessage = fullBuffer.substring(lastNewline + 1);
-			fullBuffer = fullBuffer.substring(0, lastNewline);
-			this.messageBuffer.push(incompleteMessage);
+		const lastNewline = fullBuffer.lastIndexOf("\n");
+		if (lastNewline !== fullBuffer.length - 1) {
+			const incompleteMessage = fullBuffer.slice(lastNewline + 1);
+			fullBuffer = fullBuffer.slice(0, lastNewline);
+			this.messageBuffers.push(incompleteMessage);
 		}
 
 		// Process the complete messages in the buffer.
-		fullBuffer.split("\n").filter((m) => m.trim() !== "").forEach((m) => this.handleMessage(`${m}\n`));
+		fullBuffer.toString().split("\n").filter((m) => m.trim() !== "").forEach((m) => this.handleMessage(`${m}\n`));
 	}
 
 	protected abstract shouldHandleMessage(message: string): boolean;
