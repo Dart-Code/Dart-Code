@@ -7,7 +7,7 @@ import { nullLogger } from "../../shared/logging";
 import { fsPath } from "../../shared/utils/fs";
 import { extensionPath } from "../../shared/vscode/extension_utils";
 import { getIconForSymbolKind } from "../../shared/vscode/mappings";
-import { DasAnalyzerClient, getSymbolKindForElementKind } from "../analysis/analyzer_das";
+import { DasAnalyzer, getSymbolKindForElementKind } from "../analysis/analyzer_das";
 import { flutterOutlineCommands } from "../commands/flutter_outline";
 import { isAnalyzable } from "../utils";
 
@@ -18,7 +18,7 @@ const WIDGET_SUPPORTS_CONTEXT_PREFIX = "dart-code:widgetSupports:";
 export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidgetItem>, vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
 	private activeEditor: vs.TextEditor | undefined;
-	private flutterOutline: as.FlutterOutlineNotification | undefined;
+	private flutterOutline: as.FlutterOutline | undefined;
 	private rootNode: FlutterWidgetItem | undefined;
 	private treeNodesByLine: { [key: number]: FlutterWidgetItem[]; } = [];
 	private updateTimeout: NodeJS.Timer | undefined;
@@ -26,13 +26,13 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 	public readonly onDidChangeTreeData: vs.Event<FlutterWidgetItem | undefined> = this.onDidChangeTreeDataEmitter.event;
 	private lastSelectedWidget: FlutterWidgetItem | undefined;
 
-	constructor(private readonly analyzer: DasAnalyzerClient) {
+	constructor(private readonly analyzer: DasAnalyzer) {
 		this.analyzer = analyzer;
-		this.analyzer.registerForServerConnected((c) => {
-			if (analyzer.capabilities.supportsFlutterOutline) {
-				this.analyzer.registerForFlutterOutline((n) => {
+		this.analyzer.client.registerForServerConnected((c) => {
+			if (analyzer.client.capabilities.supportsFlutterOutline) {
+				this.analyzer.client.registerForFlutterOutline((n) => {
 					if (this.activeEditor && n.file === fsPath(this.activeEditor.document.uri)) {
-						this.flutterOutline = n;
+						this.flutterOutline = n.outline;
 						this.treeNodesByLine = [];
 						// Delay this so if we're getting lots of updates we don't flicker.
 						if (this.updateTimeout)
@@ -55,7 +55,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 	private async update() {
 		// Build the tree from our outline
 		if (this.flutterOutline) {
-			this.rootNode = await this.createTreeNode(undefined, this.flutterOutline.outline, this.activeEditor);
+			this.rootNode = await this.createTreeNode(undefined, this.flutterOutline, this.activeEditor);
 			FlutterOutlineProvider.showTree();
 		} else {
 			this.rootNode = undefined;
@@ -90,10 +90,14 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 	private setTrackingFile(editor: vs.TextEditor | undefined) {
 		if (editor && isAnalyzable(editor.document)) {
 			this.activeEditor = editor;
-			this.flutterOutline = undefined;
-			this.rootNode = undefined;
-			this.refresh(); // Force update (to nothing) while requests are in-flight.
-			this.analyzer.forceNotificationsFor(fsPath(editor.document.uri));
+			this.flutterOutline = this.analyzer.fileTracker.getFlutterOutlineFor(this.activeEditor.document.uri);
+			if (this.flutterOutline)
+				this.update();
+			else {
+				this.rootNode = undefined;
+				this.refresh(); // Force update (to nothing) while requests are in-flight.
+			}
+			this.analyzer.client.forceNotificationsFor(fsPath(editor.document.uri));
 		} else if (editor && editor.document.uri.scheme === "file") {
 			// HACK: We can't currently reliably tell when editors are changed that are only real
 			// text editors (debug window is considered an editor) so we should only hide the tree
@@ -149,7 +153,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 	}
 
 	public getNodeAt(uri: vs.Uri, pos: vs.Position): FlutterWidgetItem | undefined {
-		if (!this.activeEditor || !this.flutterOutline || this.flutterOutline.file !== fsPath(uri) || !this.treeNodesByLine[pos.line])
+		if (!this.activeEditor || !this.flutterOutline || fsPath(this.activeEditor.document.uri) !== fsPath(uri) || !this.treeNodesByLine[pos.line])
 			return;
 
 		const offset = this.activeEditor.document.offsetAt(pos);
