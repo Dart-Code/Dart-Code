@@ -454,7 +454,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	let flutterOutlineTreeProvider: FlutterOutlineProvider | undefined;
 	if (!isUsingLsp && config.flutterOutline && dasClient) {
 		// TODO: Extract this out - it's become messy since TreeView was added in.
-		flutterOutlineTreeProvider = new FlutterOutlineProvider(dasClient);
+		flutterOutlineTreeProvider = new FlutterOutlineProvider(dasAnalyzer);
 		const tree = vs.window.createTreeView("dartFlutterOutline", { treeDataProvider: flutterOutlineTreeProvider, showCollapseAll: true });
 		tree.onDidChangeSelection((e) => {
 			// TODO: This should be in a tree, not the data provider.
