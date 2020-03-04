@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, delay, emptyFile, emptyFileInExcludedFolder, ensureError, openFile, setTestContent, waitForDiagnosticChange } from "../../helpers";
+import { activate, delay, emptyFile, emptyFileInExcludedFolder, ensureError, extApi, openFile, setTestContent, waitForDiagnosticChange } from "../../helpers";
 
 describe("diagnostics_provider", () => {
 
@@ -34,7 +34,10 @@ main() {
 		ensureError(errors, "Unterminated string literal");
 	});
 
-	it("does not return errors for an excluded file", async () => {
+	it("does not return errors for an excluded file", async function () {
+		if (extApi.isLsp)
+			this.skip();
+
 		await openFile(emptyFileInExcludedFolder);
 		await setTestContent(`
 main() {
