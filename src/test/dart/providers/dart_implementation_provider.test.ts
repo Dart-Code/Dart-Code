@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, currentDoc, ensureLocation, ensureNoLocation, helloWorldFolder, positionOf, rangeOf } from "../../helpers";
+import { activate, currentDoc, ensureLocation, ensureNoLocation, extApi, helloWorldFolder, positionOf, rangeOf } from "../../helpers";
 
 const testFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_implementation.dart"));
 
@@ -82,7 +82,10 @@ describe("dart_implementation_provider", () => {
 		ensureLocation(impls, testFile, rangeOf("void |b|() /* D */ {"));
 	});
 
-	it("returns even if selection is not on method name", async () => {
+	it("returns even if selection is not on method name", async function () {
+		if (extApi.isLsp)
+			this.skip();
+
 		const impls = await getImplementationsAt("^void b();");
 		ensureLocation(impls, testFile, rangeOf("void |b|() /* B */ {"));
 		ensureLocation(impls, testFile, rangeOf("void |b|() /* C */ {"));

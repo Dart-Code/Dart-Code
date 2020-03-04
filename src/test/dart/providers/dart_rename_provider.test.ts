@@ -32,7 +32,10 @@ describe("rename_provider", () => {
 		`);
 	});
 
-	it("renames alias on the import keyword", async () => {
+	it("renames alias on the import keyword", async function () {
+		if (extApi.isLsp)
+			this.skip();
+
 		const doc = currentDoc();
 		await setTestContent(`
 			import "dart:async" as async;
@@ -47,7 +50,10 @@ describe("rename_provider", () => {
 		`);
 	});
 
-	it("renames the class on the class keyword", async () => {
+	it("renames the class on the class keyword", async function () {
+		if (extApi.isLsp)
+			this.skip();
+
 		const doc = currentDoc();
 		await setTestContent(`
 			class Danny {}
