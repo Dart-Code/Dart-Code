@@ -51,7 +51,7 @@ export interface InternalExtensionApi {
 		openInBrowser(url: string): Promise<boolean>;
 	};
 	fileTracker: {
-		getOutlineFor(file: Uri): Outline | undefined;
+		getOutlineFor(file: Uri): Outline | lsp.Outline | undefined;
 		getFlutterOutlineFor?: (file: Uri) => FlutterOutline | lsp.FlutterOutline | undefined;
 		getLastPriorityFiles?: () => string[];
 		getLastSubscribedFiles?: () => string[];
