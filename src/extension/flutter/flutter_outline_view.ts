@@ -30,6 +30,7 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 
 	protected setTrackingFile(editor: vs.TextEditor | undefined) {
 		if (editor && isAnalyzable(editor.document)) {
+			this.activeEditor = editor;
 			this.loadExistingOutline();
 		} else if (editor && editor.document.uri.scheme === "file") {
 			// HACK: We can't currently reliably tell when editors are changed that are only real
