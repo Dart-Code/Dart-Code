@@ -16,7 +16,7 @@ jobs:
         dart-version: [dev]
         # for now, code-version will mirror dart-version to reduce number of bots
         # code-version: [stable] #, insiders]
-        bot: [dart, dart_lsp, flutter, flutter_lsp]
+        bot: [flutter_debug, flutter_debug_chrome, flutter_test_debug, dart_web_debug, flutter_repo, dart_debug, dart, dart_lsp, flutter, flutter_lsp, misc]
         include:
           - dart-version: dev
             flutter-version: master
