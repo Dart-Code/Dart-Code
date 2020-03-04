@@ -1,5 +1,7 @@
 import * as assert from "assert";
+import { fsPath } from "../../../shared/utils/fs";
 import { TestOutlineVisitor } from "../../../shared/utils/outline_das";
+import { LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
 import { activate, extApi, flutterTestOtherFile, getPackages, logger, waitForResult } from "../../helpers";
 
 describe("test_outline_visitor", () => {
@@ -17,8 +19,8 @@ describe("test_outline_visitor", () => {
 
 		const outline = extApi.fileTracker.getOutlineFor(flutterTestOtherFile);
 
-		const visitor = new TestOutlineVisitor(logger);
-		visitor.visit(outline!);
+		const visitor = extApi.isLsp ? new LspTestOutlineVisitor(logger, fsPath(flutterTestOtherFile)) : new TestOutlineVisitor(logger);
+		visitor.visit(outline as any); // TODO: Remove when we don't have two outlines
 
 		assert.equal(visitor.tests.length, 2);
 		assert.equal(visitor.tests[0].isGroup, true);
