@@ -13,11 +13,14 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
         node-version: [10]
-        dart-version: [dev]
+        dart-version: [stable, dev]
         # for now, code-version will mirror dart-version to reduce number of bots
         # code-version: [stable] #, insiders]
-        bot: [flutter_debug, flutter_debug_chrome, flutter_test_debug, dart_web_debug, flutter_repo, dart_debug, dart, dart_lsp, flutter, flutter_lsp, misc]
+        bot: [flutter_debug, flutter_debug_chrome, flutter_test_debug, dart_web_debug, flutter_repo, dart_debug, dart, flutter, misc]
         include:
+          - dart-version: stable
+            flutter-version: stable
+            code-version: stable
           - dart-version: dev
             flutter-version: dev
             code-version: insiders
@@ -33,16 +36,16 @@ jobs:
       - name: Setup Chrome
         if: matrix.os == 'macOS-latest'
         run: brew update && brew cask install google-chrome
-
+        
       - name: Setup Node v${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Setup Dart be
+      - name: Setup Dart ${{ matrix.dart-version }}
         uses: DanTup/gh-actions/setup-dart@master
         with:
-          channel: be
+          channel: ${{ matrix.dart-version }}
 
       - name: Setup Flutter ${{ matrix.flutter-version }}
         id: flutter
@@ -50,7 +53,7 @@ jobs:
         uses: DanTup/gh-actions/setup-flutter@master
         with:
           channel: ${{ matrix.flutter-version }}
-
+      
       - run: flutter update-packages
         if: matrix.bot == 'flutter_repo'
 
@@ -77,10 +80,10 @@ jobs:
 
       - name: npm install
         run: npm install
-
+        
       - name: npm lint
         run: npm run lint
-
+          
       - name: npm build
         run: npm run build
 
