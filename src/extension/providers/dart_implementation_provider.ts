@@ -1,10 +1,9 @@
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
-import { flatMap } from "../../shared/utils";
+import { flatMap, notUndefined } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { toRange } from "../../shared/vscode/utils";
 import { DasAnalyzer } from "../analysis/analyzer_das";
-import { notUndefined } from "../utils";
 import { findNearestOutlineNode } from "../utils/vscode/outline";
 
 export class DartImplementationProvider implements vs.ImplementationProvider {

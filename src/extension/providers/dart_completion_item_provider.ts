@@ -446,7 +446,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 						completionText.appendPlaceholder(arg);
 					}
 				} else
-					completionText.appendTabstop(config.previewNewCompletionPlaceholders ? undefined : 0); // Put a tap stop between parens since there are optional args.
+					completionText.appendTabstop(0); // Put a tap stop between parens since there are optional args.
 				completionText.appendText(")");
 			} else if (insertArgumentPlaceholders && !nextCharacterIsOpenParen) {
 				completionText.appendText(suggestion.completionText);
@@ -468,7 +468,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			if (selection)
 				completionText.appendPlaceholder(selection);
 			else
-				completionText.appendTabstop(config.previewNewCompletionPlaceholders ? undefined : 0);
+				completionText.appendTabstop(0);
 			completionText.appendText(after);
 		} else {
 			completionText.appendText(suggestion.completionText);

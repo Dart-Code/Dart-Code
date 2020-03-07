@@ -15,10 +15,10 @@ export class Context {
 	set devToolsNotificationLastShown(value: number | undefined) { this.context.globalState.update("devToolsNotificationLastShown", value); }
 	get devToolsNotificationDoNotShow(): boolean | undefined { return !!this.context.globalState.get("devToolsNotificationDoNotShowAgain"); }
 	set devToolsNotificationDoNotShow(value: boolean | undefined) { this.context.globalState.update("devToolsNotificationDoNotShowAgain", value); }
-	get flutterSurvey2019Q4NotificationLastShown(): number | undefined { return this.context.globalState.get("flutterSurvey2019Q4NotificationLastShown") as number; }
-	set flutterSurvey2019Q4NotificationLastShown(value: number | undefined) { this.context.globalState.update("flutterSurvey2019Q4NotificationLastShown", value); }
-	get flutterSurvey2019Q4NotificationDoNotShow(): boolean | undefined { return !!this.context.globalState.get("flutterSurvey2019Q4NotificationDoNotShowAgain"); }
-	set flutterSurvey2019Q4NotificationDoNotShow(value: boolean | undefined) { this.context.globalState.update("flutterSurvey2019Q4NotificationDoNotShowAgain", value); }
+	get flutterSurvey2020Q1NotificationLastShown(): number | undefined { return this.context.globalState.get("flutterSurvey2020Q1NotificationLastShown") as number; }
+	set flutterSurvey2020Q1NotificationLastShown(value: number | undefined) { this.context.globalState.update("flutterSurvey2020Q1NotificationLastShown", value); }
+	get flutterSurvey2020Q1NotificationDoNotShow(): boolean | undefined { return !!this.context.globalState.get("flutterSurvey2020Q1NotificationDoNotShowAgain"); }
+	set flutterSurvey2020Q1NotificationDoNotShow(value: boolean | undefined) { this.context.globalState.update("flutterSurvey2020Q1NotificationDoNotShowAgain", value); }
 	get hasWarnedAboutFormatterSyntaxLimitation(): boolean { return !!this.context.globalState.get("hasWarnedAboutFormatterSyntaxLimitation"); }
 	set hasWarnedAboutFormatterSyntaxLimitation(value: boolean) { this.context.globalState.update("hasWarnedAboutFormatterSyntaxLimitation", value); }
 	get lastSeenVersion(): string | undefined { return this.context.globalState.get("lastSeenVersion"); }

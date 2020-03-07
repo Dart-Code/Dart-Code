@@ -74,7 +74,7 @@ main() {
 		if (typeof comp.insertText === "string")
 			throw new Error("Expected SnippetString, got string");
 		else
-			assert.equal(comp.insertText!.value, "foo: $1");
+			assert.equal(comp.insertText!.value, "foo: $0");
 	});
 
 	it("includes classes and constructors from other files", async () => {

@@ -52,7 +52,7 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 					? workspaceFolder
 					: path.join(cwd, "src", "test", "test_projects", workspaceFolder),
 				"--user-data-dir",
-				path.join(cwd, ".dart_code_test_data_dir"),
+				path.join(cwd, ".dart_code_test_data_dir", testFolder),
 			],
 			version: process.env.CODE_VERSION,
 		});

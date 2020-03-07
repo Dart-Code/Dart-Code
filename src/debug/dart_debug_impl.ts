@@ -2,8 +2,6 @@ import * as fs from "fs";
 import * as path from "path";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { config } from "../extension/config";
-import { notUndefined } from "../extension/utils";
 import { getLogHeader } from "../extension/utils/log";
 import { safeSpawn } from "../extension/utils/processes";
 import { VmServiceCapabilities } from "../shared/capabilities/vm_service";
@@ -11,7 +9,7 @@ import { observatoryListeningBannerPattern, pleaseReportBug } from "../shared/co
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { LogMessage, SpawnedProcess } from "../shared/interfaces";
 import { PackageMap } from "../shared/pub/package_map";
-import { errorString, flatMap, throttle, uniq, uriToFilePath } from "../shared/utils";
+import { errorString, flatMap, notUndefined, throttle, uniq, uriToFilePath } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
 import { applyColor, grey, grey2 } from "../shared/utils/colors";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
@@ -56,10 +54,17 @@ export class DartDebugSession extends DebugSession {
 	private logStream?: fs.WriteStream;
 	public debugSdkLibraries = false;
 	public debugExternalLibraries = false;
+	// Usually we buffer messages so we can scan whole lines for stack frames, but
+	// for terminal apps that accept input this can result in the rendered text
+	// being out of order if messages don't end with newlines. Since we don't support
+	// linking up stack frames for terminal anyway, it's safe to just disable the
+	// buffering there.
+	public allowMessageBuffering = true;
 	public sendOutputAsCustomEvent = false;
 	public showDartDeveloperLogs = true;
 	public useFlutterStructuredErrors = false;
 	public evaluateGettersInDebugViews = false;
+	protected previewToStringInDebugViews = false;
 	public debuggerHandlesPathsEverywhereForBreakpoints = false;
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
@@ -136,7 +141,9 @@ export class DartDebugSession extends DebugSession {
 		this.showDartDeveloperLogs = args.showDartDeveloperLogs;
 		this.useFlutterStructuredErrors = args.useFlutterStructuredErrors;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
+		this.previewToStringInDebugViews = args.previewToStringInDebugViews;
 		this.sendOutputAsCustomEvent = args.console === "terminal";
+		this.allowMessageBuffering = args.console !== "terminal";
 		this.debuggerHandlesPathsEverywhereForBreakpoints = args.debuggerHandlesPathsEverywhereForBreakpoints;
 		this.logFile = args.observatoryLogFile;
 		this.maxLogLineLength = args.maxLogLineLength;
@@ -1673,7 +1680,7 @@ export class DartDebugSession extends DebugSession {
 			// (or a string expression) in the response.
 			val.evaluateName = canEvaluate ? evaluateName : undefined;
 
-			const str = config.previewToStringInDebugViews && allowFetchFullString && !val.valueAsString
+			const str = this.previewToStringInDebugViews && allowFetchFullString && !val.valueAsString
 				? await this.fullValueAsString(thread.ref, val)
 				: this.valueAsString(val);
 
@@ -1814,6 +1821,11 @@ export class DartDebugSession extends DebugSession {
 	///    [5:01:50 PM] [General] [Info] [stderr]     main (file:///D:/a/
 	///    [5:01:50 PM] [General] [Info] [stderr] Dart-Code/Dart-Code/src/test/test_projects/hello_world/bin/broken.dart:2:3)
 	protected logToUserBuffered(message: string, category: string) {
+		if (!this.allowMessageBuffering) {
+			this.logToUser(message, category);
+			return;
+		}
+
 		this.logBuffer[category] = this.logBuffer[category] || "";
 		this.logBuffer[category] += message;
 

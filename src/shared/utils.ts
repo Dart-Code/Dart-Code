@@ -163,3 +163,7 @@ export class BufferedLogger implements Logger {
 		logger.info("Done flushing log messages...");
 	}
 }
+
+export function notUndefined<T>(x: T | undefined): x is T {
+	return x !== undefined;
+}

@@ -568,8 +568,14 @@ export class ObservatoryConnection {
 			const streamId = params.streamId;
 
 			const callback = this.eventListeners[streamId];
+			// Responses to requests (above) are processed by completing a promise
+			// which will be processed asynchronously. If we call callback here
+			// synchronously then it may trigger before a response that was recieved
+			// before it. The setTimeout forces it to go into the queue to be
+			// processed in order.
+			// TODO: Try to find a better way.
 			if (callback)
-				callback(params.event);
+				setTimeout(callback, 0, params.event);
 		}
 	}
 

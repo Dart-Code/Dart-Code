@@ -11,7 +11,7 @@ import { PromiseCompleter } from "../../shared/utils";
 import { config } from "../config";
 import { FLUTTER_SUPPORTS_ATTACH } from "../extension";
 import { StdIOService } from "../services/stdio_service";
-import { reloadExtension } from "../utils";
+import { promptToReloadExtension } from "../utils";
 import { globalFlutterArgs, safeSpawn } from "../utils/processes";
 
 export class FlutterDaemon extends StdIOService<UnknownNotification> implements IFlutterDaemon {
@@ -51,7 +51,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		try {
 			super.sendMessage(json);
 		} catch (e) {
-			reloadExtension("The Flutter Daemon has terminated.", undefined, true);
+			promptToReloadExtension("The Flutter Daemon has terminated.", undefined, true);
 			throw e;
 		}
 	}

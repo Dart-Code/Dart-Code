@@ -7,8 +7,8 @@ import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/
 import { dartPlatformName, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, isWin, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { setUserAgent } from "../shared/fetch";
-import { DartWorkspaceContext, IFlutterDaemon, Sdks } from "../shared/interfaces";
-import { captureLogs, EmittingLogger, logToConsole } from "../shared/logging";
+import { DartWorkspaceContext, FlutterSdks, IFlutterDaemon, Sdks } from "../shared/interfaces";
+import { captureLogs, EmittingLogger, logToConsole, RingLog } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
 import { forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../shared/utils/fs";
@@ -24,6 +24,7 @@ import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
 import { FileChangeHandler } from "./analysis/file_change_handler";
 import { Analytics } from "./analytics";
 import { DartExtensionApi } from "./api";
+import { FlutterDartPadSamplesCodeLensProvider } from "./code_lens/flutter_dartpad_samples";
 import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
 import { AnalyzerCommands } from "./commands/analyzer";
 import { DebugCommands } from "./commands/debug";
@@ -113,13 +114,19 @@ let previousSettings: string;
 const loggers: Array<{ dispose: () => Promise<void> | void }> = [];
 export let isUsingLsp = false;
 
-// TODO: If dev mode, subscribe to logs for errors/warnings and surface to UI
-// (with dispose calls)
 const logger = new EmittingLogger();
 
+// Keep a running in-memory buffer of last 200 log events we can give to the
+// user when something crashed even if they don't have disk-logging enabled.
+export const ringLog: RingLog = new RingLog(200);
+
 export async function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
-	if (isDevExtension)
-		logToConsole(logger);
+	if (!isRestart) {
+		if (isDevExtension)
+			logToConsole(logger);
+
+		logger.onLog((message) => ringLog.log(message.toLine(500)));
+	}
 
 	vs.commands.executeCommand("setContext", IS_RUNNING_LOCALLY_CONTEXT, isRunningLocally);
 	buildLogHeaders();
@@ -267,6 +274,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		rankingCodeActionProvider.registerProvider(new IgnoreLintCodeActionProvider(activeFileFilters));
 		if (config.showTestCodeLens) {
 			const codeLensProvider = new TestCodeLensProvider(logger, dasAnalyzer);
+			context.subscriptions.push(codeLensProvider);
+			context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
+		}
+		if (config.showDartPadSampleCodeLens && sdks.flutter) {
+			const codeLensProvider = new FlutterDartPadSamplesCodeLensProvider(logger, dasAnalyzer, sdks as FlutterSdks);
 			context.subscriptions.push(codeLensProvider);
 			context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
 		}
@@ -448,7 +460,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	let flutterOutlineTreeProvider: FlutterOutlineProvider | undefined;
 	if (!isUsingLsp && config.flutterOutline && dasClient) {
 		// TODO: Extract this out - it's become messy since TreeView was added in.
-		flutterOutlineTreeProvider = new FlutterOutlineProvider(dasClient);
+		flutterOutlineTreeProvider = new FlutterOutlineProvider(dasAnalyzer);
 		const tree = vs.window.createTreeView("dartFlutterOutline", { treeDataProvider: flutterOutlineTreeProvider, showCollapseAll: true });
 		tree.onDidChangeSelection((e) => {
 			// TODO: This should be in a tree, not the data provider.
@@ -542,7 +554,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			|| newWorkspaceContext.hasProjectsInFuchsiaTree !== workspaceContext.hasProjectsInFuchsiaTree
 			|| newWorkspaceContext.isDartSdkRepo !== workspaceContext.isDartSdkRepo
 		) {
-			util.reloadExtension();
+			util.promptToReloadExtension();
 			return;
 		}
 
@@ -674,7 +686,7 @@ function handleConfigurationChange(sdks: Sdks) {
 	}
 
 	if (settingsChanged) {
-		util.reloadExtension();
+		util.promptToReloadExtension();
 	}
 }
 

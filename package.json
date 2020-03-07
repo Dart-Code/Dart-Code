@@ -2,7 +2,7 @@
 	"name": "dart-code",
 	"displayName": "Dart",
 	"description": "Dart language support and debugger for Visual Studio Code.",
-	"version": "3.8.0-dev",
+	"version": "3.9.0-dev",
 	"publisher": "Dart-Code",
 	"engines": {
 		"vscode": "^1.42.0"
@@ -1126,7 +1126,13 @@
 				"dart.showTestCodeLens": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to show Code Lens actions in the editor for quick running/debugging tests.",
+					"description": "Whether to show CodeLens actions in the editor for quick running/debugging tests.",
+					"scope": "window"
+				},
+				"dart.showDartPadSampleCodeLens": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to show CodeLens actions in the editor for opening online DartPad samples.",
 					"scope": "window"
 				},
 				"dart.showTodos": {
