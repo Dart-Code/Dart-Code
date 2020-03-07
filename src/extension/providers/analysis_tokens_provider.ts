@@ -1,4 +1,4 @@
-import { CancellationToken, DocumentSemanticTokensProvider, SemanticTokens, SemanticTokensBuilder, SemanticTokensLegend, TextDocument, TextLine } from "vscode";
+import { CancellationToken, DocumentSemanticTokensProvider, Event, SemanticTokens, SemanticTokensBuilder, SemanticTokensLegend, TextDocument, TextLine } from "vscode";
 import { HighlightRegionType } from "../../shared/analysis_server_types";
 import { MappedRegion, removeOverlappings } from "../../shared/utils/region_split";
 import { DasAnalyzer } from "../analysis/analyzer_das";
@@ -9,17 +9,21 @@ export class AnalysisTokensProvider implements DocumentSemanticTokensProvider {
 
 	constructor(private readonly analyzer: DasAnalyzer) { }
 
+	public get onDidChangeSemanticTokens(): Event<void> {
+		return this.analyzer.fileTracker.highlights.updates;
+	}
+
 	public async provideDocumentSemanticTokens(document: TextDocument, token: CancellationToken): Promise<SemanticTokens> {
-		const dasHightlights = await this.analyzer.fileTracker.awaitHighlights(document.uri, token);
+		const dasHightlights = await this.analyzer.fileTracker.highlights.waitFor(document.uri, token);
 
 		if (!dasHightlights) {
 			// no data available, so don't report any tokens
 			return new SemanticTokens(emptyBuffer);
 		}
 
-		// map to token types declared in the legend, filter out regions we're not
-		// interested in (like directives or set literals. Those have child regions, we only
-		// care about those).
+		// Map to token types declared in the legend and filter out regions we're not
+		// interested in (like directives or set literals). Removing those regions
+		// early speeds up the transformation later.
 		let mapped = dasHightlights.map<MappedRegion | undefined>((token) => {
 			const type = this.mappedType(token.type);
 			if (type === undefined) return undefined;
@@ -222,7 +226,8 @@ export const dasTokenLegend: SemanticTokensLegend = {
  * @param document the matching document providing line endings
  */
 function splitRegions(regions: MappedRegion[], document: TextDocument): MappedRegion[] {
-	regions = removeOverlappings(regions); // will also take care of sorting them
+	// Flatten nested regions. This also sorts them by their start offset.
+	regions = removeOverlappings(regions);
 
 	function startOf(line: TextLine): number {
 		return document.offsetAt(line.range.start);
@@ -231,6 +236,9 @@ function splitRegions(regions: MappedRegion[], document: TextDocument): MappedRe
 	function endOf(line: TextLine): number {
 		return document.offsetAt(line.range.end);
 	}
+
+	// The analysis server can report multiline tokens (like for ''' string literals). VS Code
+	// doesn't accept multiline tokens, so we split at line endings.
 
 	const output = Array<MappedRegion>();
 	regions.forEach((region) => {

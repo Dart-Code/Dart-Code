@@ -19,12 +19,14 @@ export class MappedRegion {
 }
 
 /**
- * Transform regions so that there are no overlappings between them. Regions with a higher start
- * offset overidde previous regions.
+ * Transform regions so that there are no two regions that overlap each other. For this purpose,
+ * regions with a higher start offset take priority over regions with a lower start offset.
  *
- * Some examples (numbers indicate region type, dashes indicate offsets):
- *
- *  * 00000 and --1-- would be tranformed to 00100
+ * For instance, let's say we had a string literal token `'hello\nworld'` with a start offset
+ * of 0 and a length of 16. We also have a valid string escape token from offset 7 and a length
+ * of 2. To remove overlapping regions, we would transform this into three tokens: A string literal
+ * `'hello` from 0..6 (inclusive). Next, we'd emit the string escape token unchanged (7..8) followed
+ * by the string literal `world'` from 9..16.
  *
  * The output will also be sorted by start offsets.
  *

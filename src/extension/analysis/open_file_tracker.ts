@@ -17,7 +17,7 @@ export class DasFileTracker implements IAmDisposable {
 	private readonly occurrences: { [key: string]: Occurrences[] } = {};
 	private readonly folding: { [key: string]: FoldingRegion[] } = {};
 	private readonly pubRunTestSupport: { [key: string]: boolean } = {};
-	private readonly highlights: ObservableStorage<HighlightRegion[]> = new ObservableStorage();
+	public readonly highlights: ObservableStorage<HighlightRegion[]> = new ObservableStorage();
 	private lastPriorityFiles: string[] = [];
 	private lastSubscribedFiles: string[] = [];
 
@@ -165,10 +165,6 @@ export class DasFileTracker implements IAmDisposable {
 		return this.folding[fsPath(file)];
 	}
 
-	public awaitHighlights(file: Uri, cancel: CancellationToken): Promise<HighlightRegion[] | undefined> {
-		return this.highlights.waitFor(file, cancel);
-	}
-
 	public getLastPriorityFiles(): string[] {
 		return this.lastPriorityFiles.slice();
 	}
@@ -187,14 +183,19 @@ export class DasFileTracker implements IAmDisposable {
 class ObservableStorage<T> implements Disposable {
 
 	private readonly content: { [key: string]: T } = {};
-	private readonly emitters: Map<string, EventEmitter<any>> = new Map();
+	private readonly emitters: Map<string, EventEmitter<void>> = new Map();
+	private readonly anyUpdated: EventEmitter<void> = new EventEmitter();
 
-	private changeEvents(path: string): Event<any> {
+	public get updates(): Event<void> {
+		return this.anyUpdated.event;
+	}
+
+	private changeEvents(path: string): Event<void> {
 		if (this.emitters.has(path)) {
 			return this.emitters.get(path)!.event;
 		}
 
-		const emitter = new EventEmitter<any>();
+		const emitter = new EventEmitter<void>();
 		this.emitters.set(path, emitter);
 		return emitter.event;
 	}
@@ -217,6 +218,7 @@ class ObservableStorage<T> implements Disposable {
 	public update(path: string, data: T) {
 		this.content[path] = data;
 		this.emitters.get(path)?.fire(undefined);
+		this.anyUpdated?.fire(undefined);
 	}
 
 	public clear(path: string) {
