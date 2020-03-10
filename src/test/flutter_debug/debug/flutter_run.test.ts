@@ -3,6 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { isLinux } from "../../../shared/constants";
 import { VmService, VmServiceExtension } from "../../../shared/enums";
 import { fetch } from "../../../shared/fetch";
 import { grey, grey2 } from "../../../shared/utils/colors";
@@ -870,7 +871,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		const classInstance = await dc.getVariables(variables.find((v) => v.name === "danny")!.variablesReference);
 		ensureVariable(classInstance, "danny.kind", "kind", `"Person"`);
-		ensureVariable(classInstance, "danny.name", "name", `"Danny"`);
+		// TODO: Remove this Linux-skip when this bug is fixed:
+		// https://github.com/dart-lang/sdk/issues/39330
+		if (!isLinux)
+			ensureVariable(classInstance, "danny.name", "name", `"Danny"`);
 		ensureVariable(classInstance, undefined, "throws", { starts: "Unhandled exception:\nOops!" });
 
 		await Promise.all([
