@@ -318,6 +318,11 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		if (numReloads && extApi.flutterCapabilities.hasEvictBug)
 			return this.skip();
 
+		// TODO: Unskip this when this issue is resolved:
+		// https://github.com/dart-lang/webdev/issues/904#issuecomment-597051799
+		if (flutterTestDeviceIsWeb)
+			return this.skip();
+
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(flutterHelloWorldMainFile);
 		const expectedLocation = {
@@ -743,7 +748,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		]);
 	});
 
-	it("provides local variables when stopped at a breakpoint", async () => {
+	it("provides local variables when stopped at a breakpoint", async function () {
+		// TODO: Unskip this when this issue is resolved:
+		// https://github.com/dart-lang/webdev/issues/904#issuecomment-597051799
+		if (flutterTestDeviceIsWeb)
+			return this.skip();
+
 		await setConfigForTest("dart", "previewToStringInDebugViews", true);
 		await openFile(flutterHelloWorldMainFile);
 		const debugConfig = await startDebugger(flutterHelloWorldMainFile);
