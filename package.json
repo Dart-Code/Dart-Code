@@ -959,6 +959,12 @@
 					},
 					"scope": "window"
 				},
+				"dart.allowTestsOutsideTestFolder": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to consider files ending '_test.dart' that are outside of the test folder as tests. This should be enabled if you put tests inside the 'lib' folder of your Flutter application so they will be run with 'flutter test' and not 'flutter run'.",
+					"scope": "window"
+				},
 				"dart.enableSdkFormatter": {
 					"type": "boolean",
 					"default": true,

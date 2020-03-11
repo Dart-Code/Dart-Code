@@ -1,9 +1,11 @@
 import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument, workspace } from "vscode";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { flatMap } from "../../shared/utils";
+import { fsPath } from "../../shared/utils/fs";
 import { TestOutlineVisitor } from "../../shared/utils/outline_das";
 import { toRange } from "../../shared/vscode/utils";
 import { DasAnalyzer } from "../analysis/analyzer_das";
+import { isTestFile } from "../utils";
 
 export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	private disposables: IAmDisposable[] = [];
@@ -27,6 +29,11 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		// We should only show the CodeLens for projects we know can actually handle `pub run` (for ex. the
 		// SDK codebase cannot, and will therefore run all tests when you click them).
 		if (!this.analyzer.fileTracker.supportsPubRunTest(document.uri))
+			return;
+
+		// If we don't consider this a test file, we should also not show links (since we may try to run the
+		// app with 'flutter run' instead of 'flutter test' which will fail due to no `-name` argument).
+		if (!isTestFile(fsPath(document.uri)))
 			return;
 
 		const runConfigs = workspace.getConfiguration("launch", document.uri).get<any[]>("configurations") || [];
