@@ -167,3 +167,20 @@ export class BufferedLogger implements Logger {
 export function notUndefined<T>(x: T | undefined): x is T {
 	return x !== undefined;
 }
+
+export function asHexColor({ r, g, b, a }: { r: number, g: number, b: number, a: number }): string {
+	r = clamp(r, 0, 255);
+	g = clamp(g, 0, 255);
+	b = clamp(b, 0, 255);
+	a = clamp(a, 0, 255);
+
+	return `${asHex(a)}${asHex(r)}${asHex(g)}${asHex(b)}`.toLowerCase();
+}
+
+export function asHex(v: number) {
+	return Math.round(v).toString(16).padStart(2, "0");
+}
+
+export function clamp(v: number, min: number, max: number) {
+	return Math.min(Math.max(min, v), max);
+}
