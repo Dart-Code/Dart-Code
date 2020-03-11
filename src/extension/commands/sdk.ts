@@ -425,7 +425,6 @@ export class SdkCommands {
 
 		const channelName = commandName.substr(0, 1).toUpperCase() + commandName.substr(1);
 		const channel = channels.createChannel(channelName);
-		channel.show(true);
 
 		// Figure out if there's already one of this command running, in which case we'll chain off the
 		// end of it.
@@ -456,6 +455,10 @@ export class SdkCommands {
 				channels.runProcessInChannel(proc, channel);
 				this.logger.info(`(PROC ${proc.pid}) Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogCategory.CommandProcesses);
 				logProcess(this.logger, LogCategory.CommandProcesses, proc);
+				proc.on("close", (code) => {
+					if (code)
+						channel.show(true);
+				});
 				return proc;
 			}, existingProcess);
 			this.runningCommands[commandId] = process;
