@@ -998,6 +998,15 @@
 					},
 					"scope": "resource"
 				},
+				"dart.analysisIgnoredErrors": {
+					"type": "array",
+					"default": [],
+					"description": "An array of error codes to ignore from Dart analysis. This option should usually be set at the Workspace level.",
+					"items": {
+						"type": "string"
+					},
+					"scope": "window"
+				},
 				"dart.debugSdkLibraries": {
 					"type": "boolean",
 					"default": false,

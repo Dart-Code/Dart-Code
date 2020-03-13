@@ -32,6 +32,8 @@ export class DartDiagnosticProvider {
 		let errors = notification.errors;
 		if (!config.showTodos)
 			errors = errors.filter((error) => error.type !== "TODO");
+		if (config.analysisIgnoredErrors.length > 0)
+			errors = errors.filter((error) => !config.analysisIgnoredErrors.includes(error.code));
 		this.diagnostics.set(
 			Uri.file(notification.file),
 			errors.map((e) => DartDiagnosticProvider.createDiagnostic(e)),

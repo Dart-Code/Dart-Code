@@ -94,6 +94,7 @@ class Config {
 	get showTestCodeLens(): boolean { return this.getConfig<boolean>("showTestCodeLens", true); }
 	get showDartPadSampleCodeLens(): boolean { return this.getConfig<boolean>("showDartPadSampleCodeLens", true); }
 	get showTodos(): boolean { return this.getConfig<boolean>("showTodos", true); }
+	get analysisIgnoredErrors(): string[] { return this.getConfig<string[]>("analysisIgnoredErrors", []); }
 	get triggerSignatureHelpAutomatically(): boolean { return this.getConfig<boolean>("triggerSignatureHelpAutomatically", false); }
 	get useKnownChromeOSPorts(): boolean { return this.getConfig<boolean>("useKnownChromeOSPorts", true); }
 	get warnWhenEditingFilesOutsideWorkspace(): boolean { return this.getConfig<boolean>("warnWhenEditingFilesOutsideWorkspace", true); }
