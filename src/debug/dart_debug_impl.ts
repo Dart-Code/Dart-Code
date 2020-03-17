@@ -352,8 +352,6 @@ export class DartDebugSession extends DebugSession {
 				url.pathname = `${url.pathname}/ws`;
 
 			this.stopServiceFilePolling();
-			this.logToUser(`${this.vmServiceInfoFile}\n`);
-			this.logToUser(url.toString());
 			this.initDebugger(url.toString());
 		} catch (e) {
 			this.logger.error(e, LogCategory.Observatory);
