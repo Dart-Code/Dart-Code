@@ -36,6 +36,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	debuggerHandlesPathsEverywhereForBreakpoints: boolean;
 	evaluateGettersInDebugViews: boolean;
 	previewToStringInDebugViews: boolean;
+	useWriteServiceInfo: boolean;
 	env: any;
 	program: string;
 	args: string[];

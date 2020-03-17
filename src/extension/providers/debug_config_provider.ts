@@ -473,6 +473,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			: this.dartCapabilities.handlesPathsEverywhereForBreakpoints;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		debugConfig.previewToStringInDebugViews = debugConfig.previewToStringInDebugViews || config.previewToStringInDebugViews;
+		debugConfig.useWriteServiceInfo = debugConfig.useWriteServiceInfo !== undefined && debugConfig.useWriteServiceInfo !== null
+			? debugConfig.useWriteServiceInfo
+			: this.dartCapabilities.supportsWriteServiceInfo;
 		if (isFlutter && this.sdks.flutter) {
 			debugConfig.args = conf.flutterAdditionalArgs.concat(debugConfig.args);
 			debugConfig.forceFlutterVerboseMode = isLogging || isCI;
