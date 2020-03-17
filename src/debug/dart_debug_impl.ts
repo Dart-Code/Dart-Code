@@ -1,5 +1,7 @@
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
+import { URL } from "url";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { getLogHeader } from "../extension/utils/log";
@@ -12,6 +14,7 @@ import { PackageMap } from "../shared/pub/package_map";
 import { errorString, flatMap, notUndefined, throttle, uniq, uriToFilePath } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
 import { applyColor, grey, grey2 } from "../shared/utils/colors";
+import { getRandomInt } from "../shared/utils/fs";
 import { DebuggerResult, ObservatoryConnection, SourceReportKind, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
 import { ThreadInfo, ThreadManager } from "./threads";
@@ -65,6 +68,9 @@ export class DartDebugSession extends DebugSession {
 	public useFlutterStructuredErrors = false;
 	public evaluateGettersInDebugViews = false;
 	protected previewToStringInDebugViews = false;
+	protected useWriteServiceInfo = false;
+	protected vmServiceInfoFile?: string;
+	private serviceInfoPollTimer?: NodeJS.Timer;
 	public debuggerHandlesPathsEverywhereForBreakpoints = false;
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
@@ -142,6 +148,7 @@ export class DartDebugSession extends DebugSession {
 		this.useFlutterStructuredErrors = args.useFlutterStructuredErrors;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
 		this.previewToStringInDebugViews = args.previewToStringInDebugViews;
+		this.useWriteServiceInfo = args.useWriteServiceInfo;
 		this.sendOutputAsCustomEvent = args.console === "terminal";
 		this.allowMessageBuffering = args.console !== "terminal";
 		this.debuggerHandlesPathsEverywhereForBreakpoints = args.debuggerHandlesPathsEverywhereForBreakpoints;
@@ -151,6 +158,12 @@ export class DartDebugSession extends DebugSession {
 		this.sendResponse(response);
 
 		this.childProcess = this.spawnProcess(args);
+
+		// Start watching for the service info file.
+		if (this.vmServiceInfoFile) {
+			this.startServiceFilePolling();
+		}
+
 		const process = this.childProcess;
 		this.processExited = false;
 		this.processExit = new Promise((resolve) => process.on("exit", resolve));
@@ -173,6 +186,7 @@ export class DartDebugSession extends DebugSession {
 			this.logToUser(`${error}\n`, "stderr");
 		});
 		process.on("exit", async (code, signal) => {
+			this.stopServiceFilePolling();
 			this.processExited = true;
 			this.log(`Process exited (${signal ? `${signal}`.toLowerCase() : code})`);
 			if (!code && !signal)
@@ -243,6 +257,12 @@ export class DartDebugSession extends DebugSession {
 			appArgs.push(`--enable-vm-service=${args.vmServicePort}`);
 			appArgs.push("--pause_isolates_on_start=true");
 		}
+		if (this.useWriteServiceInfo) {
+			this.parseObservatoryUriFromStdOut = false;
+			this.vmServiceInfoFile = path.join(os.tmpdir(), `dart-vm-service-${getRandomInt(0x1000, 0x10000).toString(16)}.json`);
+			appArgs.push(`--write-service-info=${this.vmServiceInfoFile}`);
+			appArgs.push("-DSILENT_OBSERVATORY=true");
+		}
 		if (args.enableAsserts !== false) { // undefined = on
 			appArgs.push("--enable-asserts");
 		}
@@ -291,6 +311,53 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		this.sendEvent(new Event("dart.log", { message, severity, category: LogCategory.Observatory } as LogMessage));
+	}
+
+	private startServiceFilePolling() {
+		// Ensure we stop if we were already running, to avoid leaving timers running
+		// if this is somehow called twice.
+		this.stopServiceFilePolling();
+		this.serviceInfoPollTimer = setInterval(() => this.tryReadServiceFile(), 50);
+	}
+
+	private stopServiceFilePolling() {
+		if (this.serviceInfoPollTimer)
+			clearInterval(this.serviceInfoPollTimer);
+		if (this.vmServiceInfoFile && fs.existsSync(this.vmServiceInfoFile)) {
+			try {
+				fs.unlinkSync(this.vmServiceInfoFile);
+				this.vmServiceInfoFile = undefined;
+			} catch (e) {
+				// Don't complain if we failed - the file may have been cleaned up
+				// in the meantime.
+			}
+		}
+	}
+
+	private tryReadServiceFile() {
+		if (!this.vmServiceInfoFile || !fs.existsSync(this.vmServiceInfoFile))
+			return;
+
+		try {
+			const serviceInfoJson = fs.readFileSync(this.vmServiceInfoFile, "utf8");
+			const serviceInfo: { uri: string } = JSON.parse(serviceInfoJson);
+
+			const url = new URL(serviceInfo.uri);
+			url.protocol = "ws";
+			// Ensure we no trailing /
+			if (url.pathname.endsWith("/"))
+				url.pathname = url.pathname.substr(0, url.pathname.length - 1);
+			// Ensure we always end with /ws
+			if (!url.pathname.endsWith("/ws"))
+				url.pathname = `${url.pathname}/ws`;
+
+			this.stopServiceFilePolling();
+			this.logToUser(`${this.vmServiceInfoFile}\n`);
+			this.logToUser(url.toString());
+			this.initDebugger(url.toString());
+		} catch (e) {
+			this.logger.error(e, LogCategory.Observatory);
+		}
 	}
 
 	protected async initDebugger(uri: string): Promise<void> {
@@ -457,6 +524,7 @@ export class DartDebugSession extends DebugSession {
 		const signal = force ? "SIGKILL" : "SIGINT";
 		const request = force ? "DISC" : "TERM";
 		this.log(`${request}: Requested to terminate with ${signal}...`);
+		this.stopServiceFilePolling();
 		if (this.shouldKillProcessOnTerminate && this.childProcess && !this.processExited) {
 			this.log(`${request}: Terminating processes...`);
 			for (const pid of this.additionalPidsToTerminate) {
