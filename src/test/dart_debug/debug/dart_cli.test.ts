@@ -138,16 +138,32 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it("receives the expected output when running in the terminal", async () => {
-		const config = await startDebugger(helloWorldMainFile);
-		config.console = "terminal";
+	it("can run in a terminal", async () => {
+		await openFile(helloWorldMainFile);
+		const config = await startDebugger(helloWorldMainFile, {
+			console: "terminal",
+			name: "dart-terminal-test",
+		});
+
+		// Stop at a breakpoint so the app won't quit while we're checking the terminal.
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(helloWorldMainFile),
+		});
+
+		// Ensure we have a terminal for it.
+		let terminal = vs.window.terminals.find((t) => t.name === config.name);
+		assert.ok(terminal);
+
+		// Resume and wait for it to finish.
 		await Promise.all([
-			dc.configurationSequence(),
-			dc.waitForCustomEvent("dart.output", (msg: { message: string, category: string | undefined }) => msg.category === "stdout" && msg.message === `Hello, world!${platformEol}`),
-			dc.waitForCustomEvent("dart.output", (msg: { message: string, category: string | undefined }) => (msg.category === "console" || !msg.category) && msg.message === `${grey("[log] ")}Logging from dart:developer!\n`),
 			dc.waitForEvent("terminated"),
-			dc.launch(config),
+			dc.resume(),
 		]);
+
+		// Ensure the terminal is gone.
+		terminal = vs.window.terminals.find((t) => t.name === config.name);
+		assert.ok(terminal === undefined);
 	});
 
 	it("passes launch.json's vmAdditionalArgs to the VM", async () => {
