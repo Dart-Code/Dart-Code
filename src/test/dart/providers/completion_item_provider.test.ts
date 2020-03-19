@@ -120,7 +120,7 @@ main() {
 		assert.equal(cl.kind, vs.CompletionItemKind.Method);
 		assert.equal(cl.label, "methodWithArgsAndReturnValue(…)");
 		assert.notEqual(cl.preselect, true);
-		assert.equal(cl.range!.isEqual(rangeOf("|return| str")), true);
+		assert.equal((cl.range as vs.Range).isEqual(rangeOf("|return| str")), true);
 		assert.equal(cl.sortText, "998943"); // TODO: This may be fragile...
 	});
 
@@ -214,7 +214,7 @@ main() {
 			assert.equal(completion.kind, vs.CompletionItemKind.Class);
 			assert.equal(completion.label, "ProcessInfo");
 			assert.notEqual(completion.preselect, true);
-			assert.equal(completion.range!.isEqual(rangeOf("|ProcessInf|")), true);
+			assert.equal((completion.range as vs.Range).isEqual(rangeOf("|ProcessInf|")), true);
 			assert.equal(completion.sortText, "999997"); // TODO: This may be fragile...
 		});
 
@@ -246,7 +246,7 @@ main() {
 			assert.equal(completion.kind, vs.CompletionItemKind.Constructor);
 			assert.equal(completion.label, "ProcessInfo()");
 			assert.notEqual(completion.preselect, true);
-			assert.equal(completion.range!.isEqual(rangeOf("|ProcessInf|")), true);
+			assert.equal((completion.range as vs.Range).isEqual(rangeOf("|ProcessInf|")), true);
 			assert.equal(completion.sortText, "999997"); // TODO: This may be fragile...
 		});
 
@@ -278,7 +278,7 @@ main() {
 			assert.equal(completion.kind, vs.CompletionItemKind.Constructor);
 			assert.equal(completion.label, "HashMap(…)");
 			assert.notEqual(completion.preselect, true);
-			assert.equal(completion.range!.isEqual(rangeOf("|HashMa|")), true);
+			assert.equal((completion.range as vs.Range).isEqual(rangeOf("|HashMa|")), true);
 			assert.equal(completion.sortText, "999997"); // TODO: This may be fragile...
 		});
 
