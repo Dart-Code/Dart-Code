@@ -156,7 +156,8 @@ export class DartDebugSession extends DebugSession {
 			this.startServiceFilePolling();
 		}
 
-		if (args.console === "terminal") {
+		// Terminal mode is only supported if we can use writeServiceInfo.
+		if (args.console === "terminal" && this.useWriteServiceInfo) {
 			this.childProcess = await this.spawnRemoteEditorProcess(args);
 
 			this.remoteEditorTerminalClosedCompleter = new PromiseCompleter<{ code: number | undefined }>();

@@ -1559,7 +1559,7 @@
 									"terminal"
 								],
 								"default": "debugConsole",
-								"description": "Whether to run applications in the debug console (which does not support reading user input) or a VS Code terminal (which does)."
+								"description": "Whether to run applications in the debug console (which does not support reading user input) or a VS Code terminal (which does). Running in a terminal is only supported for Dart SDKs from v2.7.1."
 							},
 							"enableAsserts": {
 								"type": "boolean",
