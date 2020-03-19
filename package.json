@@ -1559,7 +1559,7 @@
 									"terminal"
 								],
 								"default": "debugConsole",
-								"description": "Whether to run applications in the debug console (which does not support reading user input) or a pseudo terminal (which does)."
+								"description": "Whether to run applications in the debug console (which does not support reading user input) or a VS Code terminal (which does)."
 							},
 							"enableAsserts": {
 								"type": "boolean",
