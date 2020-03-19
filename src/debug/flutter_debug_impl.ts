@@ -54,7 +54,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		super.initializeRequest(response, args);
 	}
 
-	protected launchRequest(response: DebugProtocol.LaunchResponse, args: FlutterLaunchRequestArguments): void {
+	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: FlutterLaunchRequestArguments): Promise<void> {
 		this.flutterTrackWidgetCreation = args && args.flutterTrackWidgetCreation;
 		this.outputCategory = "stdout";
 		return super.launchRequest(response, args);
@@ -64,7 +64,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		// For flutter attach, we actually do the same thing as launch - we run a flutter process
 		// (flutter attach instead of flutter run).
 		// this.observatoryUriIsProbablyReconnectable = true;
-		this.launchRequest(response, args);
+		return this.launchRequest(response, args);
 	}
 
 	protected spawnProcess(args: FlutterLaunchRequestArguments): any {

@@ -17,7 +17,7 @@ import { ServiceExtensionArgs, timeDilationNormal, timeDilationSlow, VmServiceEx
 import { DebuggerType } from "../providers/debug_config_provider";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools";
-import { DartDebugSessionInformation, DartDebugSessionPseudoterminal } from "../utils/vscode/debug";
+import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
 // export let mostRecentAttachedProbablyReusableObservatoryUri: string;
@@ -265,15 +265,7 @@ export class DebugCommands {
 			return;
 
 		const debuggerType = s.configuration ? DebuggerType[s.configuration.debuggerType] : "<unknown>";
-		const consoleType: "debugConsole" | "terminal" = s.configuration.console;
-		let terminal: DartDebugSessionPseudoterminal | undefined;
-		if (consoleType === "terminal") {
-			const terminalName = s.name || debuggerType;
-			terminal = new DartDebugSessionPseudoterminal(terminalName);
-			terminal.userInput((input) => s.customRequest("dart.userInput", { input }));
-			terminal.close.then(() => s.customRequest("disconnect"));
-		}
-		const session = new DartDebugSessionInformation(s, debuggerType, terminal);
+		const session = new DartDebugSessionInformation(s, debuggerType);
 		// If we're the first fresh debug session, reset all settings to default.
 		// Subsequent launches will inherit the "current" values.
 		if (debugSessions.length === 0)
@@ -330,9 +322,6 @@ export class DebugCommands {
 		debugSessions.splice(sessionIndex, 1);
 
 		this.clearProgressIndicators(session);
-
-		if (session.terminal)
-			session.terminal.end();
 
 		const debugSessionEnd = new Date();
 		this.analytics.logDebugSessionDuration(session.debuggerType, debugSessionEnd.getTime() - session.sessionStart.getTime());
@@ -415,12 +404,6 @@ export class DebugCommands {
 			);
 		} else if (e.event === "dart.launched") {
 			this.clearProgressIndicators(session);
-		} else if (e.event === "dart.output") {
-			if (session.terminal) {
-				session.terminal.addOutput(e.body.message, e.body.category);
-			} else {
-				this.logger.warn(`Got output event for session without pseudoterminal: ${e.body.message}`);
-			}
 		} else if (e.event === "dart.webLaunchUrl") {
 			const launched = !!e.body.launched;
 			if (!launched) {
@@ -463,6 +446,25 @@ export class DebugCommands {
 					session.progressReporter = undefined;
 				}
 			}
+		} else if (e.event === "dart.startTerminalProcess") {
+			session.terminal = vs.window.createTerminal({
+				cwd: e.body.cwd,
+				env: e.body.env,
+				name: e.session.name,
+				shellArgs: e.body.args,
+				shellPath: e.body.binPath,
+			});
+
+			const sub = vs.window.onDidCloseTerminal((t) => {
+				if (t === session.terminal) {
+					session.session.customRequest("remoteEditorTerminalClosed", { code: t.exitStatus?.code });
+					sub.dispose();
+				}
+			});
+			session.terminal.show();
+			session.terminal.processId.then((pid) => {
+				session.session.customRequest("remoteEditorTerminalLaunch", { pid });
+			});
 		} else if (e.event === "dart.debuggerUris") {
 			session.observatoryUri = e.body.observatoryUri;
 			session.vmServiceUri = e.body.vmServiceUri;
