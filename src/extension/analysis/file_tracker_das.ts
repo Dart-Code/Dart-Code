@@ -108,7 +108,7 @@ export class DasFileTracker implements IAmDisposable {
 			|| last.some((f, i) => f !== current[i]);
 	}
 
-	private validPathsFor(paths: TextDocument[]): string[] {
+	private validPathsFor(paths: readonly TextDocument[]): string[] {
 		const isAnalyzeable = this.analyzer.capabilities.supportsPriorityFilesOutsideAnalysisRoots
 			? util.isAnalyzable
 			: util.isAnalyzableAndInWorkspace;
