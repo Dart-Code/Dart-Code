@@ -5,7 +5,7 @@
 	"version": "3.9.0-dev",
 	"publisher": "Dart-Code",
 	"engines": {
-		"vscode": "^1.40.0"
+		"vscode": "^1.43.0"
 	},
 	"extensionKind": [
 		"workspace"
@@ -1788,7 +1788,7 @@
 		"@types/node": "^12.12.14",
 		"@types/semver": "^6.2.0",
 		"@types/sinon": "5.0.5",
-		"@types/vscode": "^1.40.0",
+		"@types/vscode": "^1.43.0",
 		"@types/ws": "^6.0.4",
 		"glob": "^7.1.6",
 		"istanbul-instrumenter-loader": "^3.0.1",
