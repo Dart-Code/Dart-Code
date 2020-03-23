@@ -191,6 +191,9 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.create", (projectPath: string, projectName?: string, sampleID?: string) => {
 			const args = ["create"];
+			if (config.flutterCreateOffline) {
+				args.push("--offline");
+			}
 			if (projectName) {
 				args.push("--project-name");
 				args.push(projectName);
@@ -209,6 +212,9 @@ export class SdkCommands {
 			}
 			if (config.flutterAndroidX) {
 				args.push("--androidx");
+			}
+			if (config.flutterCreateOffline) {
+				args.push("--offline");
 			}
 			if (sampleID) {
 				args.push("--sample");
