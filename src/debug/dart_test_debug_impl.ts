@@ -17,6 +17,7 @@ export class DartTestDebugSession extends DartDebugSession {
 		super();
 
 		this.sendStdOutToConsole = false;
+		this.allowWriteServiceInfo = false;
 		this.requiresProgram = false;
 	}
 

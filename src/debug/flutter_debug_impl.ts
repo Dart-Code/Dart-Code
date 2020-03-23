@@ -32,6 +32,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		super();
 
 		this.sendStdOutToConsole = false;
+		this.allowWriteServiceInfo = false;
 		// We get the Observatory URI from the `flutter run` process. If we parse
 		// it out of verbose logging and connect to it, it'll be before Flutter is
 		// finished setting up and bad things can happen (like us sending events

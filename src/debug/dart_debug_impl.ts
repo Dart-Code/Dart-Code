@@ -49,6 +49,7 @@ export class DartDebugSession extends DebugSession {
 	// potential VM services come and go.
 	// https://github.com/Dart-Code/Dart-Code/issues/1673
 	protected connectVmEvenForNoDebug = false;
+	protected allowWriteServiceInfo = true;
 	protected processExited = false;
 	public observatory?: ObservatoryConnection;
 	protected cwd?: string;
@@ -143,7 +144,7 @@ export class DartDebugSession extends DebugSession {
 		this.useFlutterStructuredErrors = args.useFlutterStructuredErrors;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
 		this.previewToStringInDebugViews = args.previewToStringInDebugViews;
-		this.useWriteServiceInfo = args.useWriteServiceInfo;
+		this.useWriteServiceInfo = this.allowWriteServiceInfo && args.useWriteServiceInfo;
 		this.debuggerHandlesPathsEverywhereForBreakpoints = args.debuggerHandlesPathsEverywhereForBreakpoints;
 		this.logFile = args.observatoryLogFile;
 		this.maxLogLineLength = args.maxLogLineLength;
@@ -398,6 +399,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected async initDebugger(uri: string): Promise<void> {
+		this.log(`Initialising debugger for ${uri}`);
 		// Send the uri back to the editor so it can be used to launch browsers etc.
 		let browserFriendlyUri: string;
 		if (uri.endsWith("/ws")) {
