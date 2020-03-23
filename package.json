@@ -1231,6 +1231,12 @@
 					"description": "Whether to automatically send a Hot Restart request during a debug session when saving files if Hot Reload is not available but Hot Restart is.",
 					"scope": "window"
 				},
+				"dart.flutterCreateOffline": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to create new flutter project using offline mode",
+					"scope": "window"
+				},
 				"dart.flutterCreateOrganization": {
 					"type": [
 						"null",
