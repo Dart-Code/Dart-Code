@@ -294,8 +294,8 @@ export class DartDebugSession extends DebugSession {
 			appArgs.push(`--enable-vm-service=${args.vmServicePort}`);
 			appArgs.push("--pause_isolates_on_start=true");
 		}
-		if (this.useWriteServiceInfo) {
-			appArgs.push(`--write-service-info=${this.vmServiceInfoFile}`);
+		if (this.useWriteServiceInfo && this.vmServiceInfoFile) {
+			appArgs.push(`--write-service-info=${formatPathForVm(this.vmServiceInfoFile)}`);
 			appArgs.push("-DSILENT_OBSERVATORY=true");
 		}
 		if (args.enableAsserts !== false) { // undefined = on
