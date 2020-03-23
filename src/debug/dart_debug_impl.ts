@@ -366,13 +366,14 @@ export class DartDebugSession extends DebugSession {
 
 		try {
 			const serviceInfoJson = fs.readFileSync(this.vmServiceInfoFile, "utf8");
-			const serviceInfo: { uri: string } = JSON.parse(serviceInfoJson);
 
 			// It's possible we read the file before the VM had started writing it, so
 			// do some crude checks and bail to reduce the chances of logging half-written
 			// files as errors.
 			if (serviceInfoJson.length < 2 || !serviceInfoJson.trimRight().endsWith("}"))
 				return;
+
+			const serviceInfo: { uri: string } = JSON.parse(serviceInfoJson);
 
 			const url = new URL(serviceInfo.uri);
 			url.protocol = "ws";
