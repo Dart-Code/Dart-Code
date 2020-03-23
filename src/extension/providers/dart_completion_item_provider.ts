@@ -272,7 +272,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 				return [];
 			}
 
-			const unresolvedItems = suggestionSet.items
+			const items = suggestionSet.items
 				.filter((r) => elementKinds[r.element.kind])
 				.filter((suggestion) => {
 					// Check existing imports to ensure we don't already import
@@ -303,45 +303,51 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 					includedItems[fullItemKey] = true;
 
 					return !itemHasAlreadyBeenIncluded;
-				})
-				.map((suggestion): DelayedCompletionItem => {
-					// Calculate the relevance for this item.
-					let relevanceBoost = 0;
-					if (suggestion.relevanceTags)
-						suggestion.relevanceTags.forEach((t) => relevanceBoost = Math.max(relevanceBoost, tagBoosts[t] || 0));
-
-					const completionItem = this.createCompletionItemFromSuggestion(
-						document,
-						nextCharacter,
-						enableCommitCharacters,
-						insertArgumentPlaceholders,
-						resp.replacementOffset,
-						resp.replacementLength,
-						undefined,
-						includedSuggestionSet.relevance + relevanceBoost,
-						suggestion,
-						undefined,
-					);
-
-					// Attach additional info that resolve will need.
-					const delayedCompletionItem: DelayedCompletionItem = {
-						autoImportUri: includedSuggestionSet.displayUri || suggestionSet.uri,
-						document,
-						enableCommitCharacters,
-						filePath,
-						insertArgumentPlaceholders,
-						nextCharacter,
-						offset,
-						relevance: includedSuggestionSet.relevance + relevanceBoost,
-						replacementLength: resp.replacementLength,
-						replacementOffset: resp.replacementOffset,
-						suggestion,
-						suggestionSetID: includedSuggestionSet.id,
-						...completionItem,
-					};
-
-					return delayedCompletionItem;
 				});
+
+			const unresolvedItems = new Array<DelayedCompletionItem>(items.length);
+			for (let i = 0; i < items.length; i++) {
+				const suggestion = items[i];
+
+				if (i % 100 === 0)
+					await resolvedPromise;
+
+				// Calculate the relevance for this item.
+				let relevanceBoost = 0;
+				if (suggestion.relevanceTags)
+					suggestion.relevanceTags.forEach((t) => relevanceBoost = Math.max(relevanceBoost, tagBoosts[t] || 0));
+
+				const completionItem = this.createCompletionItemFromSuggestion(
+					document,
+					nextCharacter,
+					enableCommitCharacters,
+					insertArgumentPlaceholders,
+					resp.replacementOffset,
+					resp.replacementLength,
+					undefined,
+					includedSuggestionSet.relevance + relevanceBoost,
+					suggestion,
+					undefined,
+				);
+
+				// Attach additional info that resolve will need.
+				unresolvedItems[i] = {
+					autoImportUri: includedSuggestionSet.displayUri || suggestionSet.uri,
+					document,
+					enableCommitCharacters,
+					filePath,
+					insertArgumentPlaceholders,
+					nextCharacter,
+					offset,
+					relevance: includedSuggestionSet.relevance + relevanceBoost,
+					replacementLength: resp.replacementLength,
+					replacementOffset: resp.replacementOffset,
+					suggestion,
+					suggestionSetID: includedSuggestionSet.id,
+					...completionItem,
+				};
+			}
+
 			suggestionSetResults.push(unresolvedItems);
 		}
 
