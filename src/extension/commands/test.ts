@@ -160,8 +160,13 @@ export class DasTestCommands extends TestCommands {
 		const visitor = new TestOutlineVisitor(this.logger);
 		visitor.visit(outline);
 		return visitor.tests.reverse().find((t) => {
-			const start = document.positionAt(t.offset);
-			const end = document.positionAt(t.offset + t.length);
+			let start = document.positionAt(t.offset);
+			let end = document.positionAt(t.offset + t.length);
+
+			// Widen the range to start/end of lines.
+			start = document.lineAt(start.line).rangeIncludingLineBreak.start;
+			end = document.lineAt(end.line).rangeIncludingLineBreak.end;
+
 			return new vs.Range(start, end).contains(editor.selection);
 		});
 	}
