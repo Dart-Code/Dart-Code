@@ -6,9 +6,7 @@ const Lint = require("tslint");
 
 class Rule extends Lint.Rules.AbstractRule {
 	apply(sourceFile) {
-		if (sourceFile.fileName.indexOf("src/debug/") === -1) {
-			return this.applyWithWalker(new NoNonSharedCode(sourceFile, this.getOptions()));
-		}
+		return this.applyWithWalker(new NoNonSharedCode(sourceFile, this.getOptions()));
 	}
 }
 Rule.DEBUG_FAILURE_STRING = "Do not import debugger code because it is expected to run in another process.";
