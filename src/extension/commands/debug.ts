@@ -1,7 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { CoverageData } from "../../debug/utils";
 import { isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
 import { DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { Logger, LogMessage } from "../../shared/interfaces";
@@ -40,8 +39,6 @@ export class DebugCommands {
 	public readonly onWillHotReload = this.onWillHotReloadEmitter.event;
 	private onWillHotRestartEmitter = new vs.EventEmitter<void>();
 	public readonly onWillHotRestart = this.onWillHotRestartEmitter.event;
-	private onReceiveCoverageEmitter = new vs.EventEmitter<CoverageData[]>();
-	public readonly onReceiveCoverage = this.onReceiveCoverageEmitter.event;
 	private onFirstFrameEmitter = new vs.EventEmitter<void>();
 	public readonly onFirstFrame = this.onFirstFrameEmitter.event;
 	private onDebugSessionVmServiceAvailableEmitter = new vs.EventEmitter<DartDebugSessionInformation>();
@@ -146,12 +143,6 @@ export class DebugCommands {
 			this.onWillHotRestartEmitter.fire();
 			debugSessions.forEach((s) => s.session.customRequest("hotRestart", args));
 			analytics.logDebuggerRestart();
-		}));
-		context.subscriptions.push(vs.commands.registerCommand("_dart.requestCoverageUpdate", (scriptUris: string[]) => {
-			debugSessions.forEach((s) => s.session.customRequest("requestCoverageUpdate", { scriptUris }));
-		}));
-		context.subscriptions.push(vs.commands.registerCommand("_dart.coverageFilesUpdate", (scriptUris: string[]) => {
-			debugSessions.forEach((s) => s.session.customRequest("coverageFilesUpdate", { scriptUris }));
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugging", (resource: vs.Uri) => {
 			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), {
@@ -380,8 +371,6 @@ export class DebugCommands {
 			this.debugMetrics.text = message;
 			this.debugMetrics.tooltip = "This is the amount of memory being consumed by your applications heaps (out of what has been allocated).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage.";
 			this.debugMetrics.show();
-		} else if (e.event === "dart.coverage") {
-			this.onReceiveCoverageEmitter.fire(e.body);
 		} else if (e.event === "dart.navigate") {
 			if (e.body.file && e.body.line && e.body.column)
 				vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(e.body.file), e.body.line, e.body.column);

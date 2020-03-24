@@ -188,7 +188,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			appArgs.push("-v");
 		}
 
-		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterPath, args.cwd, appArgs, args.env, args.flutterRunLogFile, logger, this.maxLogLineLength);
+		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterPath, args.globalFlutterArgs || [], args.cwd, appArgs, args.env, args.flutterRunLogFile, logger, this.maxLogLineLength);
 	}
 
 	private connectToObservatoryIfReady() {
@@ -243,7 +243,6 @@ export class FlutterDebugSession extends DartDebugSession {
 		const restartType = hotRestart ? "hot-restart" : "hot-reload";
 		try {
 			await this.runDaemon.restart(this.currentRunningAppId, !this.noDebug, hotRestart, reason);
-			this.requestCoverageUpdate(restartType);
 		} catch (e) {
 			this.sendEvent(new OutputEvent(`Error running ${restartType}: ${e}\n`, "stderr"));
 		} finally {
@@ -413,8 +412,6 @@ export class FlutterDebugSession extends DartDebugSession {
 	public handleExtensionEvent(event: VMEvent) {
 		if (event.kind === "Extension" && event.extensionKind === "Flutter.FirstFrame") {
 			this.sendEvent(new Event("dart.flutter.firstFrame", {}));
-		} else if (event.kind === "Extension" && event.extensionKind === "Flutter.Frame") {
-			this.requestCoverageUpdate("frame");
 		} else if (event.kind === "Extension" && event.extensionKind === "Flutter.Error") {
 			this.handleFlutterErrorEvent(event);
 		} else if (event.kind === "Extension" && event.extensionKind === "Flutter.ServiceExtensionStateChanged") {

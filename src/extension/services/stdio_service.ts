@@ -2,7 +2,7 @@ import * as fs from "fs";
 import { IAmDisposable, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { UnknownResponse } from "../../shared/services/interfaces";
 import { getLogHeader } from "../utils/log";
-import { safeSpawn } from "../utils/processes";
+import { safeToolSpawn } from "../utils/processes";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
@@ -33,7 +33,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		if (envOverrides)
 			this.logTraffic(`..  with ${JSON.stringify(envOverrides)}`);
 
-		this.process = safeSpawn(workingDirectory, binPath, args, envOverrides);
+		this.process = safeToolSpawn(workingDirectory, binPath, args, envOverrides);
 
 		this.logTraffic(`    PID: ${process.pid}`);
 

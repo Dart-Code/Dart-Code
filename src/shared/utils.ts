@@ -20,27 +20,6 @@ export async function flatMapAsync<T1, T2>(input: T1[], f: (input: T1) => Promis
 	return res;
 }
 
-export function throttle(fn: (...args: any[]) => void, limitMilliseconds: number): (...args: any[]) => void {
-	let timer: NodeJS.Timer;
-	let lastRunTime: number;
-	return (...args: any[]) => {
-		const run = () => {
-			lastRunTime = Date.now();
-			fn(...args);
-		};
-		const now = Date.now();
-		if (lastRunTime && now < lastRunTime + limitMilliseconds) {
-			// Delay the call until the timer has expired.
-			clearTimeout(timer);
-			// Set the timer in future, but compensate for how far through we are.
-			const runInMilliseconds = limitMilliseconds - (now - lastRunTime);
-			timer = setTimeout(run, runInMilliseconds);
-		} else {
-			run();
-		}
-	};
-}
-
 export function filenameSafe(input: string) {
 	return input.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
 }

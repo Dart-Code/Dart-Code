@@ -84,7 +84,7 @@ import { SdkUtils } from "./sdk/utils";
 import { showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
-import { safeSpawn } from "./utils/processes";
+import { safeToolSpawn } from "./utils/processes";
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestItemTreeItem, TestResultsProvider } from "./views/test_view";
 
@@ -629,7 +629,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			packagesTreeProvider: dartPackagesProvider,
 			pubGlobal,
 			renameProvider,
-			safeSpawn,
+			safeToolSpawn,
 			testTreeProvider,
 			workspaceContext,
 		} as InternalExtensionApi,

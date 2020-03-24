@@ -78,7 +78,7 @@ export interface InternalExtensionApi {
 		uninstall(packageID: string): Promise<void>;
 	};
 	renameProvider: RenameProvider | undefined;
-	safeSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any) => SpawnedProcess;
+	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any) => SpawnedProcess;
 	testTreeProvider: TestResultsProvider;
 	workspaceContext: WorkspaceContext;
 }

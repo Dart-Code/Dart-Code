@@ -10,7 +10,7 @@ import { CategoryLogger } from "../../shared/logging";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { DartCapabilities } from "../sdk/capabilities";
-import { safeSpawn } from "../utils/processes";
+import { safeToolSpawn } from "../utils/processes";
 import { getAnalyzerArgs } from "./analyzer";
 import { LspFileTracker } from "./file_tracker_lsp";
 
@@ -81,7 +81,7 @@ function spawnServer(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapab
 	const vmPath = path.join(sdks.dart, dartVMPath);
 	const args = getAnalyzerArgs(logger, sdks, dartCapabilities, true);
 
-	const process = safeSpawn(undefined, vmPath, args);
+	const process = safeToolSpawn(undefined, vmPath, args);
 
 	const reader = process.stdout.pipe(new LoggingTransform(logger, "<=="));
 	const writer = new LoggingTransform(logger, "==>");

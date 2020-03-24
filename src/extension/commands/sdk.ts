@@ -27,7 +27,7 @@ import { getFlutterSnippets } from "../sdk/flutter_docs_snippets";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
 import { SdkUtils } from "../sdk/utils";
 import * as util from "../utils";
-import { globalFlutterArgs, safeSpawn } from "../utils/processes";
+import { globalFlutterArgs, safeToolSpawn } from "../utils/processes";
 import * as channels from "./channels";
 
 const packageNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
@@ -451,7 +451,7 @@ export class SdkCommands {
 			const process = new ChainedProcess(() => {
 				channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
 				progress.report({ message: "running..." });
-				const proc = safeSpawn(folder, binPath, args);
+				const proc = safeToolSpawn(folder, binPath, args);
 				channels.runProcessInChannel(proc, channel);
 				this.logger.info(`(PROC ${proc.pid}) Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogCategory.CommandProcesses);
 				logProcess(this.logger, LogCategory.CommandProcesses, proc);

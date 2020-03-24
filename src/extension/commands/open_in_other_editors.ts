@@ -6,7 +6,7 @@ import { LogCategory } from "../../shared/enums";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { fsPath } from "../../shared/utils/fs";
-import { safeSpawn } from "../utils/processes";
+import { safeToolSpawn } from "../utils/processes";
 
 export class OpenInOtherEditorCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
@@ -31,13 +31,13 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 
 		if (isMac && androidStudioDir.endsWith("/Contents")) {
 			androidStudioDir = androidStudioDir.substr(0, androidStudioDir.length - "/Contents".length);
-			safeSpawn(folder, "open", ["-a", androidStudioDir, folder]);
+			safeToolSpawn(folder, "open", ["-a", androidStudioDir, folder]);
 			return;
 		} else {
 			for (const androidStudioPath of androidStudioPaths) {
 				const fullPath = path.join(androidStudioDir, androidStudioPath);
 				if (fs.existsSync(fullPath)) {
-					safeSpawn(folder, fullPath, [folder]);
+					safeToolSpawn(folder, fullPath, [folder]);
 					return;
 				}
 			}
@@ -59,7 +59,7 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 		}
 
 		const file = path.join(folder, files[0].name);
-		safeSpawn(folder, "open", [file]);
+		safeToolSpawn(folder, "open", [file]);
 	}
 
 	private getAndroidStudioDir(folder: string): Promise<string> {
@@ -70,7 +70,7 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 				return;
 			}
 			const binPath = path.join(this.sdks.flutter, flutterPath);
-			const proc = safeSpawn(folder, binPath, ["config", "--machine"]);
+			const proc = safeToolSpawn(folder, binPath, ["config", "--machine"]);
 			logProcess(this.logger, LogCategory.CommandProcesses, proc);
 			const output: string[] = [];
 			proc.stdout.on("data", (data: Buffer) => {

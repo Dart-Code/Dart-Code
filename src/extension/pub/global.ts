@@ -8,7 +8,7 @@ import { PubApi } from "../../shared/pub/api";
 import { versionIsAtLeast } from "../../shared/utils";
 import { envUtils } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
-import { safeSpawn } from "../utils/processes";
+import { safeToolSpawn } from "../utils/processes";
 
 export class PubGlobal {
 	constructor(private readonly logger: Logger, private context: Context, private sdks: DartSdks, private pubApi: PubApi) { }
@@ -107,7 +107,7 @@ export class PubGlobal {
 		const pubBinPath = path.join(dartSdkPath, pubPath);
 
 		return new Promise((resolve, reject) => {
-			const proc = safeSpawn(undefined, pubBinPath, args);
+			const proc = safeToolSpawn(undefined, pubBinPath, args);
 			logProcess(this.logger, LogCategory.CommandProcesses, proc);
 
 			const stdout: string[] = [];

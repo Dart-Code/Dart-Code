@@ -4,21 +4,20 @@ import * as path from "path";
 import { URL } from "url";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { getLogHeader } from "../extension/utils/log";
-import { safeSpawn } from "../extension/utils/processes";
 import { VmServiceCapabilities } from "../shared/capabilities/vm_service";
 import { observatoryListeningBannerPattern, pleaseReportBug } from "../shared/constants";
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { LogMessage, SpawnedProcess } from "../shared/interfaces";
+import { safeSpawn } from "../shared/processes";
 import { PackageMap } from "../shared/pub/package_map";
-import { errorString, flatMap, notUndefined, PromiseCompleter, throttle, uniq, uriToFilePath } from "../shared/utils";
+import { errorString, notUndefined, PromiseCompleter, uniq, uriToFilePath } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
 import { applyColor, grey, grey2 } from "../shared/utils/colors";
 import { getRandomInt } from "../shared/utils/fs";
-import { DebuggerResult, ObservatoryConnection, SourceReportKind, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibrary, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMSourceReport, VMStack, VMTypeRef } from "./dart_debug_protocol";
+import { DebuggerResult, ObservatoryConnection, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
 import { ThreadInfo, ThreadManager } from "./threads";
-import { CoverageData, DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm } from "./utils";
+import { DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm } from "./utils";
 
 const maxValuesToCallToString = 15;
 // Prefix that appears at the start of stack frame names that are unoptimized
@@ -55,6 +54,7 @@ export class DartDebugSession extends DebugSession {
 	protected cwd?: string;
 	public noDebug?: boolean;
 	private logFile?: string;
+	private logHeader?: string;
 	private logStream?: fs.WriteStream;
 	public debugSdkLibraries = false;
 	public debugExternalLibraries = false;
@@ -147,6 +147,7 @@ export class DartDebugSession extends DebugSession {
 		this.useWriteServiceInfo = this.allowWriteServiceInfo && args.useWriteServiceInfo;
 		this.debuggerHandlesPathsEverywhereForBreakpoints = args.debuggerHandlesPathsEverywhereForBreakpoints;
 		this.logFile = args.observatoryLogFile;
+		this.logHeader = args.logHeader;
 		this.maxLogLineLength = args.maxLogLineLength;
 
 		this.sendResponse(response);
@@ -262,7 +263,7 @@ export class DartDebugSession extends DebugSession {
 		this.log(`Spawning ${args.dartPath} with args ${JSON.stringify(appArgs)}`);
 		if (args.cwd)
 			this.log(`..  in ${args.cwd}`);
-		const process = safeSpawn(args.cwd, args.dartPath, appArgs, args.env);
+		const process = safeSpawn(args.cwd, args.dartPath, appArgs, { envOverrides: args.env, toolEnv: args.toolEnv });
 
 		this.log(`    PID: ${process.pid}`);
 
@@ -328,7 +329,7 @@ export class DartDebugSession extends DebugSession {
 		if (this.logFile) {
 			if (!this.logStream) {
 				this.logStream = fs.createWriteStream(this.logFile);
-				this.logStream.write(getLogHeader());
+				this.logStream.write(this.logHeader);
 			}
 			this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
 			if (this.maxLogLineLength && message.length > this.maxLogLineLength)
@@ -1170,7 +1171,6 @@ export class DartDebugSession extends DebugSession {
 		thread.resume().then((_) => {
 			response.body = { allThreadsContinued: false };
 			this.sendResponse(response);
-			this.requestCoverageUpdate("resume");
 		}).catch((error) => this.errorResponse(response, `${error}`));
 	}
 
@@ -1183,7 +1183,6 @@ export class DartDebugSession extends DebugSession {
 		const type = thread.atAsyncSuspension ? "OverAsyncSuspension" : "Over";
 		thread.resume(type).then((_) => {
 			this.sendResponse(response);
-			this.requestCoverageUpdate("step-over");
 		}).catch((error) => this.errorResponse(response, `${error}`));
 	}
 
@@ -1195,7 +1194,6 @@ export class DartDebugSession extends DebugSession {
 		}
 		thread.resume("Into").then((_) => {
 			this.sendResponse(response);
-			this.requestCoverageUpdate("step-in");
 		}).catch((error) => this.errorResponse(response, `${error}`));
 	}
 
@@ -1207,7 +1205,6 @@ export class DartDebugSession extends DebugSession {
 		}
 		thread.resume("Out").then((_) => {
 			this.sendResponse(response);
-			this.requestCoverageUpdate("step-out");
 		}).catch((error) => this.errorResponse(response, `${error}`));
 	}
 
@@ -1309,14 +1306,6 @@ export class DartDebugSession extends DebugSession {
 	protected async customRequest(request: string, response: DebugProtocol.Response, args: any): Promise<void> {
 		try {
 			switch (request) {
-				case "coverageFilesUpdate":
-					this.knownOpenFiles = args.scriptUris;
-					this.sendResponse(response);
-					break;
-				case "requestCoverageUpdate":
-					this.requestCoverageUpdate("editor");
-					this.sendResponse(response);
-					break;
 				case "service":
 					await this.callService(args.type, args.params);
 					this.sendResponse(response);
@@ -1635,91 +1624,6 @@ export class DartDebugSession extends DebugSession {
 
 	private notifyServiceRegistered(service: string, method: string | undefined) {
 		this.sendEvent(new Event("dart.serviceRegistered", { service, method }));
-	}
-
-	private knownOpenFiles: string[] = []; // Keep track of these for internal requests
-	protected requestCoverageUpdate = throttle(async (reason: string): Promise<void> => {
-		if (!this.knownOpenFiles || !this.knownOpenFiles.length)
-			return;
-
-		const coverageReport = await this.getCoverageReport(this.knownOpenFiles);
-
-		// Unwrap tokenPos into real locations.
-		const coverageData: CoverageData[] = coverageReport.map((r) => {
-			const allTokens = [r.startPos, r.endPos, ...r.hits, ...r.misses];
-			const hitLines: number[] = [];
-			r.hits.forEach((h) => {
-				const startTokenIndex = allTokens.indexOf(h);
-				const endTokenIndex = startTokenIndex < allTokens.length - 1 ? startTokenIndex + 1 : startTokenIndex;
-				const startLoc = this.resolveFileLocation(r.script, allTokens[startTokenIndex]);
-				const endLoc = this.resolveFileLocation(r.script, allTokens[endTokenIndex]);
-				if (startLoc && endLoc) {
-					for (let i = startLoc.line; i <= endLoc.line; i++)
-						hitLines.push(i);
-				}
-			});
-			return {
-				hitLines,
-				scriptPath: r.hostScriptPath,
-			};
-		});
-
-		this.sendEvent(new Event("dart.coverage", coverageData));
-	}, 2000);
-
-	private async getCoverageReport(scriptUris: string[]): Promise<Array<{ hostScriptPath: string, script: VMScript, tokenPosTable: number[][], startPos: number, endPos: number, hits: number[], misses: number[] }>> {
-		if (!scriptUris || !scriptUris.length || !this.observatory)
-			return [];
-
-		const result = await this.observatory.getVM();
-		const vm = result.result as VM;
-
-		const isolatePromises = vm.isolates.map((isolateRef) => this.observatory!.getIsolate(isolateRef.id));
-		const isolatesResponses = await Promise.all(isolatePromises);
-		const isolates = isolatesResponses.map((response) => response.result as VMIsolate);
-
-		// Make a quick map for looking up with scripts we are tracking.
-		const trackedScriptUris: { [key: string]: boolean } = {};
-		scriptUris.forEach((uri) => trackedScriptUris[uri] = true);
-
-		const results: Array<{ hostScriptPath: string, script: VMScript, tokenPosTable: number[][], startPos: number, endPos: number, hits: number[], misses: number[] }> = [];
-		for (const isolate of isolates) {
-			const libraryPromises = isolate.libraries.map((library) => this.observatory!.getObject(isolate.id, library.id));
-			const libraryResponses = await Promise.all(libraryPromises);
-			const libraries = libraryResponses.map((response) => response.result as VMLibrary);
-
-			const scriptRefs = flatMap(libraries, (library) => library.scripts);
-
-			// Filter scripts to the ones we care about.
-			const scripts = scriptRefs.filter((s) => trackedScriptUris[s.uri]);
-
-			for (const scriptRef of scripts) {
-				const script = (await this.observatory.getObject(isolate.id, scriptRef.id)).result as VMScript;
-				try {
-					const report = await this.observatory.getSourceReport(isolate, [SourceReportKind.Coverage], scriptRef);
-					const sourceReport = report.result as VMSourceReport;
-					const ranges = sourceReport.ranges.filter((r) => r.coverage && r.coverage.hits && r.coverage.hits.length);
-
-					for (const range of ranges) {
-						if (!range.coverage)
-							continue;
-						results.push({
-							endPos: range.endPos,
-							hits: range.coverage.hits,
-							hostScriptPath: uriToFilePath(script.uri),
-							misses: range.coverage.misses,
-							script,
-							startPos: range.startPos,
-							tokenPosTable: script.tokenPosTable,
-						});
-					}
-				} catch (e) {
-					this.logger.error(e, LogCategory.Observatory);
-				}
-			}
-		}
-
-		return results;
 	}
 
 	public errorResponse(response: DebugProtocol.Response, message: string) {
