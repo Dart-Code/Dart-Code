@@ -183,7 +183,7 @@ export class DebugCommands {
 				const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(folder));
 				const name = path.basename(path.dirname(folder));
 				vs.debug.startDebugging(ws, {
-					name: `Dart ${name}`,
+					name: `${name} tests`,
 					noDebug: true,
 					// To run all tests, we set `program` to a test folder.
 					program: folder,
