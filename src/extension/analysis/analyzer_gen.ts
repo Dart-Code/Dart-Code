@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { UnknownNotification, UnknownResponse } from "../../shared/services/interfaces";
-import { StdIOService } from "../services/stdio_service";
+import { StdIOService } from "../../shared/services/stdio_service";
 
 export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	constructor(logger: Logger, maxLogLineLength: number | undefined) {

@@ -37,7 +37,6 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	evaluateGettersInDebugViews: boolean;
 	previewToStringInDebugViews: boolean;
 	useWriteServiceInfo: boolean;
-	logHeader: string;
 	toolEnv: any;
 	globalFlutterArgs: string[] | undefined;
 	env: any;

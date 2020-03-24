@@ -8,6 +8,7 @@ import { LogCategory, VmService } from "../../shared/enums";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { UnknownNotification } from "../../shared/services/interfaces";
+import { StdIOService } from "../../shared/services/stdio_service";
 import { getRandomInt } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
 import { envUtils, isRunningLocally } from "../../shared/vscode/utils";
@@ -16,7 +17,7 @@ import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions } from "../commands/debug";
 import { config } from "../config";
 import { PubGlobal } from "../pub/global";
-import { StdIOService } from "../services/stdio_service";
+import { toolEnv } from "../utils/processes";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 const devtools = "devtools";
@@ -185,7 +186,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 
 		this.registerForServerStarted((n) => this.additionalPidsToTerminate.push(n.pid));
 
-		this.createProcess(undefined, pubBinPath, args);
+		this.createProcess(undefined, pubBinPath, args, { toolEnv });
 	}
 
 	protected shouldHandleMessage(message: string): boolean {

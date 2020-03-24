@@ -1,7 +1,7 @@
 import * as child_process from "child_process";
 import { SpawnedProcess } from "./interfaces";
 
-export function safeSpawn(workingDirectory: string | undefined, binPath: string, args: string[], env: { envOverrides?: any, toolEnv: any }): SpawnedProcess {
+export function safeSpawn(workingDirectory: string | undefined, binPath: string, args: string[], env: { envOverrides?: any, toolEnv: {} }): SpawnedProcess {
 	// Spawning processes on Windows with funny symbols in the path requires quoting. However if you quote an
 	// executable with a space in its path and an argument also has a space, you have to then quote all of the
 	// arguments too!\

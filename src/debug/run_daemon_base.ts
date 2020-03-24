@@ -1,7 +1,7 @@
-import { StdIOService } from "../extension/services/stdio_service";
 import * as f from "../shared/flutter/daemon_interfaces";
 import { IAmDisposable, Logger } from "../shared/interfaces";
 import { UnknownNotification, UnknownResponse } from "../shared/services/interfaces";
+import { StdIOService } from "../shared/services/stdio_service";
 
 export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 	constructor(

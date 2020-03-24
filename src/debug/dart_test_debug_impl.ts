@@ -59,7 +59,7 @@ export class DartTestDebugSession extends DartDebugSession {
 	}
 
 	protected createRunner(executable: string, projectFolder: string | undefined, program: string, args: string[], envOverrides: any, logFile: string | undefined, logger: Logger, maxLogLineLength: number) {
-		const runner = new TestRunner(executable, projectFolder, args, envOverrides, logFile, logger, maxLogLineLength);
+		const runner = new TestRunner(executable, projectFolder, args, { envOverrides, toolEnv: this.toolEnv }, logFile, logger, maxLogLineLength);
 
 		// Set up subscriptions.
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));

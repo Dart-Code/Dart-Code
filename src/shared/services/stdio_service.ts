@@ -1,8 +1,7 @@
 import * as fs from "fs";
 import { IAmDisposable, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { UnknownResponse } from "../../shared/services/interfaces";
-import { getLogHeader } from "../utils/log";
-import { safeToolSpawn } from "../utils/processes";
+import { safeSpawn } from "../processes";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
@@ -26,14 +25,14 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		private logFile?: string) {
 	}
 
-	protected createProcess(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any) {
+	protected createProcess(workingDirectory: string | undefined, binPath: string, args: string[], env: { envOverrides?: any, toolEnv: {} }) {
 		this.logTraffic(`Spawning ${binPath} with args ${JSON.stringify(args)}`);
 		if (workingDirectory)
 			this.logTraffic(`..  in ${workingDirectory}`);
-		if (envOverrides)
-			this.logTraffic(`..  with ${JSON.stringify(envOverrides)}`);
+		if (env.envOverrides || env.toolEnv)
+			this.logTraffic(`..  with ${JSON.stringify(env)}`);
 
-		this.process = safeToolSpawn(workingDirectory, binPath, args, envOverrides);
+		this.process = safeSpawn(workingDirectory, binPath, args, env);
 
 		this.logTraffic(`    PID: ${process.pid}`);
 
@@ -234,7 +233,6 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 		if (!this.logStream) {
 			this.logStream = fs.createWriteStream(this.logFile);
-			this.logStream.write(getLogHeader());
 			this.openLogFile = this.logFile;
 		}
 		this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);

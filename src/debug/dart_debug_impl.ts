@@ -54,7 +54,7 @@ export class DartDebugSession extends DebugSession {
 	protected cwd?: string;
 	public noDebug?: boolean;
 	private logFile?: string;
-	private logHeader?: string;
+	protected toolEnv?: any;
 	private logStream?: fs.WriteStream;
 	public debugSdkLibraries = false;
 	public debugExternalLibraries = false;
@@ -147,7 +147,7 @@ export class DartDebugSession extends DebugSession {
 		this.useWriteServiceInfo = this.allowWriteServiceInfo && args.useWriteServiceInfo;
 		this.debuggerHandlesPathsEverywhereForBreakpoints = args.debuggerHandlesPathsEverywhereForBreakpoints;
 		this.logFile = args.observatoryLogFile;
-		this.logHeader = args.logHeader;
+		this.toolEnv = args.toolEnv;
 		this.maxLogLineLength = args.maxLogLineLength;
 
 		this.sendResponse(response);
@@ -329,7 +329,6 @@ export class DartDebugSession extends DebugSession {
 		if (this.logFile) {
 			if (!this.logStream) {
 				this.logStream = fs.createWriteStream(this.logFile);
-				this.logStream.write(this.logHeader);
 			}
 			this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
 			if (this.maxLogLineLength && message.length > this.maxLogLineLength)

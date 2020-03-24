@@ -12,6 +12,7 @@ import { Analytics } from "../analytics";
 import { config } from "../config";
 import { DartCapabilities } from "../sdk/capabilities";
 import { escapeShell, promptToReloadExtension } from "../utils";
+import { toolEnv } from "../utils/processes";
 import { getAnalyzerArgs } from "./analyzer";
 import { AnalyzerGen } from "./analyzer_gen";
 import { DasFileTracker } from "./file_tracker_das";
@@ -112,7 +113,7 @@ export class DasAnalyzerClient extends AnalyzerGen {
 			];
 		}
 
-		this.createProcess(undefined, binaryPath, processArgs);
+		this.createProcess(undefined, binaryPath, processArgs, { toolEnv });
 		this.process?.on("exit", (code, signal) => {
 			this.notify(this.serverTerminatedSubscriptions, undefined);
 		});
