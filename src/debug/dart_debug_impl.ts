@@ -146,7 +146,7 @@ export class DartDebugSession extends DebugSession {
 		this.useFlutterStructuredErrors = args.useFlutterStructuredErrors;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
 		this.previewToStringInDebugViews = args.previewToStringInDebugViews;
-		this.useWriteServiceInfo = this.allowWriteServiceInfo && args.useWriteServiceInfo;
+		this.useWriteServiceInfo = this.allowWriteServiceInfo && args.useWriteServiceInfo !== false;
 		this.debuggerHandlesPathsEverywhereForBreakpoints = args.debuggerHandlesPathsEverywhereForBreakpoints;
 		this.logFile = args.observatoryLogFile;
 		this.toolEnv = args.toolEnv;
