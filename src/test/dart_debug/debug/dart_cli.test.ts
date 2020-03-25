@@ -9,7 +9,7 @@ import { grey } from "../../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, delay, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, logger, openFile, positionOf, sb, setConfigForTest, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, delay, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, logger, openFile, positionOf, sb, setConfigForTest, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -152,8 +152,7 @@ describe("dart cli debugger", () => {
 		});
 
 		// Ensure we have a terminal for it.
-		let terminal = vs.window.terminals.find((t) => t.name === config.name);
-		assert.ok(terminal);
+		waitForResult(() => vs.window.terminals.find((t) => t.name === config.name) !== undefined);
 
 		// Resume and wait for it to finish.
 		await Promise.all([
@@ -161,9 +160,8 @@ describe("dart cli debugger", () => {
 			dc.resume(),
 		]);
 
-		// Ensure the terminal is gone.
-		terminal = vs.window.terminals.find((t) => t.name === config.name);
-		assert.ok(terminal === undefined);
+		// Ensure the terminal disappears.
+		waitForResult(() => vs.window.terminals.find((t) => t.name === config.name) === undefined);
 	});
 
 	it("passes launch.json's vmAdditionalArgs to the VM", async () => {

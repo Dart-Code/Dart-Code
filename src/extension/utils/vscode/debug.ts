@@ -11,7 +11,6 @@ export class DartDebugSessionInformation {
 	public progressPromise?: PromiseCompleter<void>;
 	public progressReporter?: vs.Progress<{ message?: string; increment?: number; }>;
 	public progressID?: string;
-	public terminal?: vs.Terminal;
 	public readonly sessionStart: Date = new Date();
 	constructor(public readonly session: vs.DebugSession, public readonly debuggerType: string) { }
 }
