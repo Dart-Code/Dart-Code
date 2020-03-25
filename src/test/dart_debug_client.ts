@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import { SpawnOptionsWithoutStdio } from "child_process";
-import { DebugSession, DebugSessionCustomEvent } from "vscode";
+import { Writable } from "stream";
+import { DebugSession, DebugSessionCustomEvent, window } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
 import { not } from "../shared/utils/array";
@@ -15,6 +16,19 @@ export class DartDebugClient extends DebugClient {
 	private currentSession?: DebugSession;
 	constructor(runtime: string, executable: string, debugType: string, spawnOptions: SpawnOptionsWithoutStdio | undefined, private debugCommands: DebugCommandHandler, testProvider: TestResultsProvider | undefined) {
 		super(runtime, executable, debugType, spawnOptions, true);
+
+		// HACK to handle incoming requests..
+		const me = (this as unknown as { dispatch(body: string): void });
+		const oldDispatch = me.dispatch;
+		me.dispatch = (body: string) => {
+			const rawData = JSON.parse(body);
+			if (rawData.type === "request") {
+				const request = rawData as DebugProtocol.Request;
+				this.emit(request.command, request);
+			} else {
+				oldDispatch.bind(this)(body);
+			}
+		};
 
 		// Set up handlers for any custom events our tests may rely on (can't find
 		// a way to just do them all 🤷‍♂️).
@@ -33,6 +47,22 @@ export class DartDebugClient extends DebugClient {
 		this.on("initialized", (event: DebugProtocol.InitializedEvent) => {
 			logger.info(`[initialized]`);
 		});
+		this.on("runInTerminal", (request: DebugProtocol.RunInTerminalRequest) => {
+			logger.info(`[runInTerminal]`);
+
+			const terminal = window.createTerminal({
+				cwd: request.arguments.cwd,
+				env: request.arguments.env,
+				name: request.arguments.title,
+				shellArgs: request.arguments.args.slice(1),
+				shellPath: request.arguments.args[0],
+			});
+
+			terminal.show();
+			terminal.processId.then((pid) => {
+				this.sendResponse(request, { shellProcessId: pid });
+			});
+		});
 		// If we were given a test provider, forward the test notifications on to
 		// it as it won't receive the events normally because this is not a Code-spawned
 		// debug session.
@@ -40,6 +70,23 @@ export class DartDebugClient extends DebugClient {
 			this.on("dart.testRunNotification", (e: DebugSessionCustomEvent) => testProvider.handleDebugSessionCustomEvent(e));
 			this.on("terminated", (e: DebugProtocol.TerminatedEvent) => testProvider.handleDebugSessionEnd(this.currentSession!));
 		}
+	}
+
+	private sendResponse(request: DebugProtocol.Request, body: any): void {
+		// Hack: Underlyung class doesn't have response support.
+		const me = (this as unknown as { outputStream: Writable, sequence: number });
+
+		const response: DebugProtocol.Response = {
+			body,
+			command: request.command,
+			request_seq: request.seq,
+			seq: me.sequence++,
+			success: true,
+			type: "response",
+		};
+
+		const json = JSON.stringify(response);
+		me.outputStream.write(`Content-Length: ${Buffer.byteLength(json, "utf8")}\r\n\r\n${json}`, "utf8");
 	}
 
 	private handleCustomEvent(e: DebugSessionCustomEvent) {
