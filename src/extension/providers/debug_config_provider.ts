@@ -451,6 +451,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.type = debugConfig.type || "dart";
 		debugConfig.request = debugConfig.request || "launch";
 		debugConfig.toolEnv = toolEnv;
+		debugConfig.sendLogsToClient = true;
 		debugConfig.globalFlutterArgs = globalFlutterArgs;
 		debugConfig.cwd = debugConfig.cwd || (folder && fsPath(folder.uri));
 		debugConfig.args = debugConfig.args || [];
