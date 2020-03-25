@@ -25,6 +25,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	name: string;
 	type: string;
 	request: string;
+	sendLogsToClient?: boolean;
 	cwd?: string;
 	enableAsserts: boolean;
 	console: "debugConsole" | "terminal";

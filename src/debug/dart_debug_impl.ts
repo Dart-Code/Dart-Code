@@ -54,6 +54,7 @@ export class DartDebugSession extends DebugSession {
 	protected cwd?: string;
 	public noDebug?: boolean;
 	private logFile?: string;
+	private sendLogsToClient = false;
 	protected toolEnv?: any;
 	private logStream?: fs.WriteStream;
 	public debugSdkLibraries = false;
@@ -149,6 +150,7 @@ export class DartDebugSession extends DebugSession {
 		this.useWriteServiceInfo = this.allowWriteServiceInfo && args.useWriteServiceInfo !== false;
 		this.debuggerHandlesPathsEverywhereForBreakpoints = args.debuggerHandlesPathsEverywhereForBreakpoints;
 		this.logFile = args.observatoryLogFile;
+		this.sendLogsToClient = !!args.sendLogsToClient;
 		this.toolEnv = args.toolEnv;
 		this.maxLogLineLength = args.maxLogLineLength;
 
@@ -346,7 +348,8 @@ export class DartDebugSession extends DebugSession {
 				this.logStream.write(message.trim() + "\r\n");
 		}
 
-		this.sendEvent(new Event("dart.log", { message, severity, category: LogCategory.Observatory } as LogMessage));
+		if (this.sendLogsToClient)
+			this.sendEvent(new Event("dart.log", { message, severity, category: LogCategory.Observatory } as LogMessage));
 	}
 
 	private startServiceFilePolling() {
