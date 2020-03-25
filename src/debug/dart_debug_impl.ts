@@ -10,7 +10,7 @@ import { LogCategory, LogSeverity } from "../shared/enums";
 import { LogMessage, SpawnedProcess } from "../shared/interfaces";
 import { safeSpawn } from "../shared/processes";
 import { PackageMap } from "../shared/pub/package_map";
-import { errorString, notUndefined, PromiseCompleter, uniq, uriToFilePath } from "../shared/utils";
+import { errorString, notUndefined, uniq, uriToFilePath } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
 import { applyColor, grey, grey2 } from "../shared/utils/colors";
 import { getRandomInt } from "../shared/utils/fs";
@@ -35,7 +35,7 @@ const messageWithUriPattern = new RegExp(`(.*?)((?:package|dart|file):.*\\.dart)
 // completionsRequest(response: DebugProtocol.CompletionsResponse, args: DebugProtocol.CompletionsArguments): void;
 export class DartDebugSession extends DebugSession {
 	// TODO: Tidy all this up
-	protected childProcess?: SpawnedProcess | RemoteEditorTerminal;
+	protected childProcess?: SpawnedProcess | RemoteEditorTerminalProcess;
 	protected additionalPidsToTerminate: number[] = [];
 	// We normally track the pid from Observatory to terminate the VM afterwards, but for Flutter Run it's
 	// a remote PID and therefore doesn't make sense to try and terminate.
@@ -65,8 +65,7 @@ export class DartDebugSession extends DebugSession {
 	protected useWriteServiceInfo = false;
 	protected vmServiceInfoFile?: string;
 	private serviceInfoPollTimer?: NodeJS.Timer;
-	private remoteEditorTerminalLaunchCompleter?: PromiseCompleter<RemoteEditorTerminal>;
-	private remoteEditorTerminalClosedCompleter?: PromiseCompleter<{ code: number | undefined }>;
+	private remoteEditorTerminalLaunched?: Promise<RemoteEditorTerminalProcess>;
 	public debuggerHandlesPathsEverywhereForBreakpoints = false;
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
@@ -79,6 +78,7 @@ export class DartDebugSession extends DebugSession {
 	protected maxLogLineLength: number = 1000; // This should always be overriden in launch/attach requests but we have it here for narrower types.
 	protected shouldKillProcessOnTerminate = true;
 	protected logCategory = LogCategory.General; // This isn't used as General, since both debuggers override it.
+	protected supportsRunInTerminalRequest = false;
 	// protected observatoryUriIsProbablyReconnectable = false;
 	private readonly logger = new DebugAdapterLogger(this, LogCategory.Observatory);
 
@@ -98,6 +98,8 @@ export class DartDebugSession extends DebugSession {
 		response: DebugProtocol.InitializeResponse,
 		args: DebugProtocol.InitializeRequestArguments,
 	): void {
+		this.supportsRunInTerminalRequest = !!args.supportsRunInTerminalRequest;
+
 		response.body = response.body || {};
 		response.body.supportsConfigurationDoneRequest = true;
 		response.body.supportsEvaluateForHovers = true;
@@ -159,13 +161,12 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		// Terminal mode is only supported if we can use writeServiceInfo.
-		if (args.console === "terminal" && this.useWriteServiceInfo) {
+		// TODO: Move useWriteServiceInfo check to the client, so other clients do not need to provide this.
+		if (args.console === "terminal" && !this.supportsRunInTerminalRequest) {
+			this.log("Ignoring request to run in terminal because client does not support runInTerminalRequest", LogSeverity.Warn);
+		}
+		if (args.console === "terminal" && this.useWriteServiceInfo && this.supportsRunInTerminalRequest) {
 			this.childProcess = await this.spawnRemoteEditorProcess(args);
-
-			this.remoteEditorTerminalClosedCompleter = new PromiseCompleter<{ code: number | undefined }>();
-			this.processExit = this.remoteEditorTerminalClosedCompleter.promise.then((({ code }) => {
-				return { code: code !== undefined ? code : null, signal: null };
-			}));
 		} else {
 			const process = this.spawnProcess(args);
 
@@ -190,25 +191,25 @@ export class DartDebugSession extends DebugSession {
 			process.on("error", (error) => {
 				this.logToUser(`${error}\n`, "stderr");
 			});
+			this.processExit.then(async ({ code, signal }) => {
+				this.stopServiceFilePolling();
+				this.processExited = true;
+				this.log(`Process exited (${signal ? `${signal}`.toLowerCase() : code})`);
+				if (!code && !signal)
+					this.logToUser("Exited\n");
+				else
+					this.logToUser(`Exited (${signal ? `${signal}`.toLowerCase() : code})\n`);
+				// To reduce the chances of losing async logs, wait a short period
+				// before terminating.
+				await Promise.race([
+					this.lastLoggingEvent,
+					new Promise((resolve) => setTimeout(resolve, 500)),
+				]);
+				// Add a small delay to allow for async events to complete first
+				// to reduce the chance of closing output.
+				setTimeout(() => this.sendEvent(new TerminatedEvent()), 250);
+			});
 		}
-		this.processExit.then(async ({ code, signal }) => {
-			this.stopServiceFilePolling();
-			this.processExited = true;
-			this.log(`Process exited (${signal ? `${signal}`.toLowerCase() : code})`);
-			if (!code && !signal)
-				this.logToUser("Exited\n");
-			else
-				this.logToUser(`Exited (${signal ? `${signal}`.toLowerCase() : code})\n`);
-			// To reduce the chances of losing async logs, wait a short period
-			// before terminating.
-			await Promise.race([
-				this.lastLoggingEvent,
-				new Promise((resolve) => setTimeout(resolve, 500)),
-			]);
-			// Add a small delay to allow for async events to complete first
-			// to reduce the chance of closing output.
-			setTimeout(() => this.sendEvent(new TerminatedEvent()), 250);
-		});
 
 		if (!this.shouldConnectDebugger)
 			this.sendEvent(new InitializedEvent());
@@ -270,24 +271,32 @@ export class DartDebugSession extends DebugSession {
 		return process;
 	}
 
-	protected async spawnRemoteEditorProcess(args: DartLaunchRequestArguments): Promise<RemoteEditorTerminal> {
+	protected async spawnRemoteEditorProcess(args: DartLaunchRequestArguments): Promise<RemoteEditorTerminalProcess> {
 		const appArgs = this.buildAppArgs(args);
 
 		this.log(`Spawning ${args.dartPath} remotely with args ${JSON.stringify(appArgs)}`);
 		if (args.cwd)
 			this.log(`..  in ${args.cwd}`);
 
-		this.remoteEditorTerminalLaunchCompleter = new PromiseCompleter<RemoteEditorTerminal>();
-		this.sendEvent(new Event("dart.startTerminalProcess", {
-			args: appArgs,
-			binPath: args.dartPath,
-			cwd: args.cwd,
-			env: args.env,
-		}));
+		this.remoteEditorTerminalLaunched = new Promise<RemoteEditorTerminalProcess>((resolve, reject) => {
+			this.sendRequest("runInTerminal", {
+				args: [args.dartPath].concat(appArgs),
+				cwd: args.cwd,
+				env: args.env,
+				kind: "integrated",
+				title: args.name,
+			} as DebugProtocol.RunInTerminalRequestArguments, 15000, (response: DebugProtocol.Response) => {
+				if (response.success) {
+					this.log(`    PID: ${process.pid}`);
+					const resp = response as DebugProtocol.RunInTerminalResponse;
+					resolve(new RemoteEditorTerminalProcess(resp.body.processId || resp.body.shellProcessId));
+				} else {
+					reject(response.message);
+				}
+			});
+		});
 
-		this.log(`    PID: ${process.pid}`);
-
-		return this.remoteEditorTerminalLaunchCompleter.promise;
+		return this.remoteEditorTerminalLaunched;
 	}
 
 	private buildAppArgs(args: DartLaunchRequestArguments) {
@@ -388,9 +397,9 @@ export class DartDebugSession extends DebugSession {
 			this.stopServiceFilePolling();
 			// Ensure we don't try to start anything before we've finished
 			// setting up the process when running remotely.
-			if (this.remoteEditorTerminalLaunchCompleter) {
-				await this.remoteEditorTerminalLaunchCompleter.promise;
-				await new Promise((resolve) => setTimeout(resolve, 0));
+			if (this.remoteEditorTerminalLaunched) {
+				await this.remoteEditorTerminalLaunched;
+				await new Promise((resolve) => setTimeout(resolve, 5));
 			}
 			this.initDebugger(url.toString());
 		} catch (e) {
@@ -514,9 +523,9 @@ export class DartDebugSession extends DebugSession {
 					// wipe out the logfile with just a "process exited" or similar message.
 					this.logFile = undefined;
 				}
-				// If we don't have a process (eg. we're attached) then this is our signal to quit, since we won't
-				// get a process exit event.
-				if (!this.childProcess) {
+				// If we don't have a process (eg. we're attached) or we ran as a terminal, then this is our signal to quit,
+				// since we won't get a process exit event.
+				if (!this.childProcess || this.childProcess instanceof RemoteEditorTerminalProcess) {
 					this.sendEvent(new TerminatedEvent());
 				} else {
 					// In some cases Observatory closes but we never get the exit/close events from the process
@@ -1315,22 +1324,6 @@ export class DartDebugSession extends DebugSession {
 					await this.threadManager.setLibrariesDuggableForAllIsolates();
 					this.sendResponse(response);
 					break;
-				case "remoteEditorTerminalLaunch":
-					if (!this.remoteEditorTerminalLaunchCompleter) {
-						this.log(`Invalid ${request} because no completer`, LogSeverity.Warn);
-						return;
-					}
-					this.remoteEditorTerminalLaunchCompleter.resolve(new RemoteEditorTerminal(args.pid));
-					this.sendResponse(response);
-					break;
-				case "remoteEditorTerminalClosed":
-					if (!this.remoteEditorTerminalClosedCompleter) {
-						this.log(`Invalid ${request} because no completer`, LogSeverity.Warn);
-						return;
-					}
-					this.remoteEditorTerminalClosedCompleter.resolve({ code: args?.code });
-					this.sendResponse(response);
-					break;
 				// Flutter requests that may be sent during test runs or other places
 				// that we don't currently support. TODO: Fix this by moving all the
 				// service extension stuff out of Flutter to here, and making it not
@@ -1919,8 +1912,8 @@ interface MessageWithUriData {
 	sourceUri: string;
 }
 
-class RemoteEditorTerminal {
+class RemoteEditorTerminalProcess {
 	public killed = false;
 
-	constructor(public readonly pid: number) { }
+	constructor(public readonly pid?: number) { }
 }

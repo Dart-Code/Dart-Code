@@ -435,25 +435,6 @@ export class DebugCommands {
 					session.progressReporter = undefined;
 				}
 			}
-		} else if (e.event === "dart.startTerminalProcess") {
-			session.terminal = vs.window.createTerminal({
-				cwd: e.body.cwd,
-				env: e.body.env,
-				name: e.session.name,
-				shellArgs: e.body.args,
-				shellPath: e.body.binPath,
-			});
-
-			const sub = vs.window.onDidCloseTerminal((t) => {
-				if (t === session.terminal) {
-					session.session.customRequest("remoteEditorTerminalClosed", { code: t.exitStatus?.code });
-					sub.dispose();
-				}
-			});
-			session.terminal.show();
-			session.terminal.processId.then((pid) => {
-				session.session.customRequest("remoteEditorTerminalLaunch", { pid });
-			});
 		} else if (e.event === "dart.debuggerUris") {
 			session.observatoryUri = e.body.observatoryUri;
 			session.vmServiceUri = e.body.vmServiceUri;
