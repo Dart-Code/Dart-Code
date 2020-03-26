@@ -58,7 +58,7 @@ export class DartTestDebugSession extends DartDebugSession {
 		return this.createRunner(args.dartPath, args.cwd, args.program, appArgs, args.env, args.pubTestLogFile, logger, args.maxLogLineLength);
 	}
 
-	protected createRunner(executable: string, projectFolder: string | undefined, program: string, args: string[], envOverrides: any, logFile: string | undefined, logger: Logger, maxLogLineLength: number) {
+	protected createRunner(executable: string, projectFolder: string | undefined, program: string, args: string[], envOverrides: { [key: string]: string | undefined } | undefined, logFile: string | undefined, logger: Logger, maxLogLineLength: number) {
 		const runner = new TestRunner(executable, projectFolder, args, { envOverrides, toolEnv: this.toolEnv }, logFile, logger, maxLogLineLength);
 
 		// Set up subscriptions.
