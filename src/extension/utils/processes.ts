@@ -34,12 +34,12 @@ export function setupToolEnv(envOverrides?: object) {
 // TODO: Should we move this to extension activate?
 setupToolEnv();
 
-export function safeToolSpawn(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any): SpawnedProcess {
+export function safeToolSpawn(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }): SpawnedProcess {
 	return safeSpawn(workingDirectory, binPath, args, { envOverrides, toolEnv });
 }
 
 /// Runs a process and returns the exit code, stdout, stderr. Always resolves even for non-zero exit codes.
-export function runProcess(logger: Logger, workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any): Promise<RunProcessResult> {
+export function runProcess(logger: Logger, workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }): Promise<RunProcessResult> {
 	return new Promise((resolve) => {
 		logger.info(`Spawning ${binPath} with args ${JSON.stringify(args)} in ${workingDirectory} with env ${JSON.stringify(envOverrides)}`);
 		const proc = safeToolSpawn(workingDirectory, binPath, args, envOverrides);
