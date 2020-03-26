@@ -27,7 +27,7 @@ import { getFlutterSnippets } from "../sdk/flutter_docs_snippets";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
 import { SdkUtils } from "../sdk/utils";
 import * as util from "../utils";
-import { globalFlutterArgs, safeToolSpawn } from "../utils/processes";
+import { getGlobalFlutterArgs, safeToolSpawn } from "../utils/processes";
 import * as channels from "./channels";
 
 const packageNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
@@ -401,7 +401,7 @@ export class SdkCommands {
 		if (!this.sdks.flutter)
 			throw new Error("Flutter SDK not available");
 		const binPath = path.join(this.sdks.flutter, flutterPath);
-		args = globalFlutterArgs
+		args = getGlobalFlutterArgs()
 			.concat(config.for(vs.Uri.file(folder)).flutterAdditionalArgs)
 			.concat(args);
 		return this.runCommandInFolder(shortPath, "flutter", folder, binPath, args);

@@ -6,9 +6,7 @@ export function safeSpawn(workingDirectory: string | undefined, binPath: string,
 	// executable with a space in its path and an argument also has a space, you have to then quote all of the
 	// arguments too!\
 	// https://github.com/nodejs/node/issues/7367
-	const customEnv = env.envOverrides
-		? Object.assign(Object.create(env.toolEnv), env.envOverrides) // Do it this way so we can override toolEnv if required.
-		: env.toolEnv;
+	const customEnv = Object.assign({}, process.env, env.toolEnv, env.envOverrides);
 	const quotedArgs = args.map((a) => `"${a.replace(/"/g, `\\"`)}"`);
 	return child_process.spawn(`"${binPath}"`, quotedArgs, { cwd: workingDirectory, env: customEnv, shell: true }) as SpawnedProcess;
 }
