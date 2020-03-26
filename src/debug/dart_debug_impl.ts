@@ -257,7 +257,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected sourceFileForArgs(args: DartLaunchRequestArguments) {
-		return path.relative(args.cwd!, args.program);
+		return args.cwd ? path.relative(args.cwd, args.program) : args.program;
 	}
 
 	protected spawnProcess(args: DartLaunchRequestArguments) {
