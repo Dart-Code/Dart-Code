@@ -5,11 +5,19 @@ import { safeSpawn } from "../../shared/processes";
 import { nullToUndefined } from "./misc";
 
 // Environment used when spawning Dart and Flutter processes.
-export let toolEnv: { [key: string]: string } = {};
-export let globalFlutterArgs: string[] = [];
+let toolEnv: /*{ [key: string]: string | undefined }*/ any = {};
+let globalFlutterArgs: string[] = [];
+
+export function getToolEnv() {
+	return toolEnv;
+}
+
+export function getGlobalFlutterArgs() {
+	return globalFlutterArgs;
+}
 
 export function setupToolEnv(envOverrides?: object) {
-	toolEnv = Object.create(process.env);
+	toolEnv = {};
 	globalFlutterArgs = [];
 
 	toolEnv.FLUTTER_HOST = "VSCode";
@@ -21,7 +29,7 @@ export function setupToolEnv(envOverrides?: object) {
 
 	// Add on any overrides.
 	if (envOverrides)
-		toolEnv = Object.assign(Object.create(toolEnv), envOverrides);
+		toolEnv = Object.assign(toolEnv, envOverrides);
 }
 // TODO: Should we move this to extension activate?
 setupToolEnv();

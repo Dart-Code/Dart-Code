@@ -12,7 +12,7 @@ import { PromiseCompleter } from "../../shared/utils";
 import { config } from "../config";
 import { FLUTTER_SUPPORTS_ATTACH } from "../extension";
 import { promptToReloadExtension } from "../utils";
-import { globalFlutterArgs, safeToolSpawn, toolEnv } from "../utils/processes";
+import { getGlobalFlutterArgs, getToolEnv, safeToolSpawn } from "../utils/processes";
 
 export class FlutterDaemon extends StdIOService<UnknownNotification> implements IFlutterDaemon {
 	private hasStarted = false;
@@ -32,8 +32,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		});
 
 		const flutterAdditionalArgs = config.for(vs.Uri.file(projectFolder)).flutterAdditionalArgs;
-		const args = globalFlutterArgs.concat(flutterAdditionalArgs).concat(["daemon"]);
-		this.createProcess(projectFolder, flutterBinPath, args, { toolEnv });
+		const args = getGlobalFlutterArgs().concat(flutterAdditionalArgs).concat(["daemon"]);
+		this.createProcess(projectFolder, flutterBinPath, args, { toolEnv: getToolEnv() });
 
 		if (isChromeOS && config.flutterAdbConnectOnChromeOs) {
 			logger.info("Running ADB Connect on Chrome OS");

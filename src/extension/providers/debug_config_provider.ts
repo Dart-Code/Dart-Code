@@ -27,7 +27,7 @@ import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
 import { DartCapabilities } from "../sdk/capabilities";
 import { checkProjectSupportsPubRunTest, isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder } from "../utils";
-import { globalFlutterArgs, toolEnv } from "../utils/processes";
+import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 import { TestResultsProvider } from "../views/test_view";
 
 const isCI = !!process.env.CI;
@@ -450,9 +450,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 		debugConfig.type = debugConfig.type || "dart";
 		debugConfig.request = debugConfig.request || "launch";
-		debugConfig.toolEnv = toolEnv;
+		debugConfig.toolEnv = getToolEnv();
 		debugConfig.sendLogsToClient = true;
-		debugConfig.globalFlutterArgs = globalFlutterArgs;
+		debugConfig.globalFlutterArgs = getGlobalFlutterArgs();
 		debugConfig.cwd = debugConfig.cwd || (folder && fsPath(folder.uri));
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;

@@ -17,7 +17,7 @@ import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions } from "../commands/debug";
 import { config } from "../config";
 import { PubGlobal } from "../pub/global";
-import { toolEnv } from "../utils/processes";
+import { getToolEnv } from "../utils/processes";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 const devtools = "devtools";
@@ -186,7 +186,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 
 		this.registerForServerStarted((n) => this.additionalPidsToTerminate.push(n.pid));
 
-		this.createProcess(undefined, pubBinPath, args, { toolEnv });
+		this.createProcess(undefined, pubBinPath, args, { toolEnv: getToolEnv() });
 	}
 
 	protected shouldHandleMessage(message: string): boolean {
