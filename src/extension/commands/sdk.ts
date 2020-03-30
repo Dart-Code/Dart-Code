@@ -213,9 +213,6 @@ export class SdkCommands {
 			if (config.flutterAndroidX) {
 				args.push("--androidx");
 			}
-			if (config.flutterCreateOffline) {
-				args.push("--offline");
-			}
 			if (sampleID) {
 				args.push("--sample");
 				args.push(sampleID);

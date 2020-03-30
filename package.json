@@ -1234,7 +1234,7 @@
 				"dart.flutterCreateOffline": {
 					"type": "boolean",
 					"default": false,
-					"description": "Whether to create new flutter project using offline mode",
+					"description": "Whether to use offline mode when creating new projects with the 'Flutter: New Project' command.",
 					"scope": "window"
 				},
 				"dart.flutterCreateOrganization": {
