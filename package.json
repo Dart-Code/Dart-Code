@@ -1514,6 +1514,12 @@
 					"description": "Whether to perform hot-reload-on-save based on a filesystem watcher for Dart files rather than using VS Code's onDidSave event. This allows reloads to trigger when external tools modify Dart source files.",
 					"scope": "window"
 				},
+				"dart.previewLsp": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to run the analyzer in LSP mode (experimental, requires restart).",
+					"scope": "window"
+				},
 				"dart.previewNewCompletionPlaceholders": {
 					"type": "boolean",
 					"default": true,
