@@ -1788,32 +1788,32 @@
 	"dependencies": {
 		"minimatch": "^3.0.4",
 		"semver": "^6.3.0",
-		"vscode-debugadapter": "^1.39.1",
-		"vscode-debugprotocol": "^1.39.0",
+		"vscode-debugadapter": "^1.40.0",
+		"vscode-debugprotocol": "^1.40.0",
 		"vscode-languageclient": "^5.2.1",
-		"ws": "^7.2.0"
+		"ws": "^7.2.3"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
 		"@types/minimatch": "^3.0.3",
 		"@types/mocha": "^5.2.7",
-		"@types/node": "^12.12.14",
-		"@types/semver": "^6.2.0",
+		"@types/node": "^12.12.34",
+		"@types/semver": "^6.2.1",
 		"@types/sinon": "5.0.5",
 		"@types/vscode": "^1.43.0",
 		"@types/ws": "^6.0.4",
 		"glob": "^7.1.6",
 		"istanbul-instrumenter-loader": "^3.0.1",
-		"mocha": "^6.2.2",
-		"nyc": "^15.0.0-beta.3",
-		"sinon": "^7.3.2",
+		"mocha": "^6.2.3",
+		"nyc": "^15.0.1",
+		"sinon": "^7.5.0",
 		"source-map-support": "^0.5.16",
-		"ts-loader": "^6.2.1",
+		"ts-loader": "^6.2.2",
 		"tslint": "^5.20.1",
-		"typescript": "^3.7.3",
-		"vscode-debugadapter-testsupport": "^1.40.0",
-		"vscode-test": "^1.2.3",
-		"webpack": "^4.41.2",
-		"webpack-cli": "^3.3.10"
+		"typescript": "^3.8.3",
+		"vscode-debugadapter-testsupport": "^1.40.3",
+		"vscode-test": "^1.3.0",
+		"webpack": "^4.42.1",
+		"webpack-cli": "^3.3.11"
 	}
 }
