@@ -1772,7 +1772,8 @@
 		]
 	},
 	"scripts": {
-		"vscode:prepublish": "webpack --mode production",
+		"ensure-icon-submodule": "if [ ! -f media/doc-icons/material/ac_unit.png ]; then exit 999; fi",
+		"vscode:prepublish": "npm run ensure-icon-submodule && webpack --mode production",
 		"build": "webpack --mode development",
 		"build-with-instrumentation": "webpack --env.instrumentation --mode development",
 		"watch": "webpack --mode development --watch --info-verbosity verbose",
