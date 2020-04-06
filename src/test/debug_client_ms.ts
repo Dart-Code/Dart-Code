@@ -157,7 +157,8 @@ export class DebugClient extends ProtocolClient {
 				adapterID: this._debugType,
 				linesStartAt1: true,
 				columnsStartAt1: true,
-				pathFormat: 'path'
+				pathFormat: 'path',
+				supportsRunInTerminalRequest: true,
 			};
 		}
 		return this.send('initialize', args);

@@ -1,8 +1,6 @@
-import * as path from "path";
 import { CancellationToken, Location, SymbolInformation, SymbolKind, Uri, workspace, WorkspaceSymbolProvider } from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
-import { escapeRegExp } from "../../shared/utils";
 import { toRange } from "../../shared/vscode/utils";
 import { DasAnalyzerClient, getSymbolKindForElementKind } from "../analysis/analyzer_das";
 
@@ -38,12 +36,11 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	}
 
 	private convertWorkspaceResult(result: as.ElementDeclaration, file: string): SymbolInformation {
-		const names = this.getNames(result, file);
-
+		const nameSuffix = result.parameters ? (result.parameters === "()" ? "()" : "(…)") : "";
 		const symbol: any = new PartialSymbolInformation(
-			names.name,
+			result.name + nameSuffix,
 			getSymbolKindForElementKind(this.logger, result.kind),
-			names.containerName || "",
+			result.className || "",
 			// HACK: Work around the incorrect typing in VS Code with !
 			// https://github.com/microsoft/vscode/issues/69558
 			new Location(Uri.file(file), undefined!),
@@ -57,62 +54,6 @@ export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 		);
 
 		return symbol;
-	}
-
-	private getNames(result: as.ElementDeclaration, file: string) {
-		let name = result.name;
-		// Constructors don't come prefixed with class name, so add them for a nice display:
-		//    () => MyTestClass()
-		//    named() => MyTestClass.named()
-		let nameIsPrefixedWithClass = false;
-		if (result.kind === "CONSTRUCTOR" && result.className) {
-			if (name) {
-				nameIsPrefixedWithClass = true;
-				name = `${result.className}.${name}`;
-			} else {
-				name = result.className;
-			}
-		}
-		if (result.parameters && result.kind !== "SETTER")
-			name += result.parameters;
-		if (result.className && !nameIsPrefixedWithClass)
-			name = `${result.className}.${name}`;
-
-		const containerName = this.createExternalPackagePath(file);
-
-		return { name, containerName };
-	}
-
-	private createExternalPackagePath(inputPath: string): string | undefined {
-		// HACK: The AS returns paths to the PUB_CACHE folder, which Code can't
-		// convert to relative paths (so they look terrible). If the file exists in
-		// workspace.rootPath we rewrite the path to there which gives us a nice
-		// relative path.
-
-		// If the file is in the workspace, don't create a path since VS Code will
-		// show a relative path.
-		if (workspace.getWorkspaceFolder(Uri.file(inputPath)))
-			return undefined;
-
-		const pathSlash = escapeRegExp(path.sep);
-		const notSlashes = `[^${pathSlash}]+`;
-		const pattern = new RegExp(`.*${pathSlash}(?:hosted${pathSlash}${notSlashes}|git)${pathSlash}(${notSlashes})${pathSlash}(.*)`);
-		const matches = pattern.exec(inputPath);
-		if (!matches || matches.length !== 3)
-			return undefined;
-
-		// Packages in pubcache are versioned so trim the "-x.x.x" off the end of the foldername.
-		const packageName = matches[1].split("-")[0];
-
-		// Trim off anything up to lib/ to make it more like the uri you'd import.
-		const libPrefix = `lib${path.sep}`;
-		const libIndex = matches[2].indexOf(libPrefix);
-		const filePath = libIndex !== -1
-			? matches[2].substr(libIndex + libPrefix.length)
-			: matches[2];
-
-		// Return 'package:foo/bar.dart'.
-		return `package:${packageName}/${filePath.replace(/\\/g, "/")}`;
 	}
 }
 

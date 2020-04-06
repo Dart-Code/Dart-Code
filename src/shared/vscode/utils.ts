@@ -1,6 +1,7 @@
 import { URL } from "url";
 import * as vs from "vscode";
 import { CodeActionKind, env as vsEnv, ExtensionKind, extensions, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType, Uri, workspace, WorkspaceFolder } from "vscode";
+import * as lsp from "vscode-languageclient";
 import { dartCodeExtensionIdentifier } from "../constants";
 import { Location, Logger } from "../interfaces";
 import { nullLogger } from "../logging";
@@ -33,8 +34,16 @@ export function toRange(document: TextDocument, offset: number, length: number):
 	return new Range(document.positionAt(offset), document.positionAt(offset + length));
 }
 
+export function lspToRange(range: lsp.Range): Range {
+	return new Range(lspToPosition(range.start), lspToPosition(range.end));
+}
+
 export function toPosition(location: Location): Position {
 	return new Position(location.startLine - 1, location.startColumn - 1);
+}
+
+export function lspToPosition(position: lsp.Position): Position {
+	return new Position(position.line, position.character);
 }
 
 // Translates an offset/length to a Range.

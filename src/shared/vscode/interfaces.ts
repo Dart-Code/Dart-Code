@@ -1,4 +1,5 @@
 import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
+import * as lsp from "../analysis/lsp/custom_protocol";
 import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server_types";
 import { Analyzer } from "../analyzer";
 import { TestStatus, VersionStatus, VmService, VmServiceExtension } from "../enums";
@@ -18,14 +19,13 @@ export interface DebugCommandHandler {
 }
 
 export interface InternalExtensionApi {
-	analyzerCapabilities: {
+	analyzerCapabilities?: {
 		supportsGetSignature: boolean;
 		isDart2: boolean;
 		hasNewSignatureFormat: boolean;
 		hasNewHoverLibraryFormat: boolean;
 		supportsAvailableSuggestions: boolean;
 		supportsIncludedImports: boolean;
-		version: string;
 	};
 	cancelAllAnalysisRequests: () => void;
 	completionItemProvider: CompletionItemProvider;
@@ -34,6 +34,7 @@ export interface InternalExtensionApi {
 	cursorIsInTest: boolean;
 	isInTestFile: boolean;
 	isInImplementationFile: boolean;
+	isLsp: boolean;
 	dartCapabilities: {
 		generatesCodeWithUnimplementedError: boolean;
 		supportsDevTools: boolean;
@@ -50,10 +51,10 @@ export interface InternalExtensionApi {
 		openInBrowser(url: string): Promise<boolean>;
 	};
 	fileTracker: {
-		getOutlineFor(file: Uri): Outline | undefined;
-		getFlutterOutlineFor(file: Uri): FlutterOutline | undefined;
-		getLastPriorityFiles(): string[];
-		getLastSubscribedFiles(): string[];
+		getOutlineFor(file: Uri): Outline | lsp.Outline | undefined;
+		getFlutterOutlineFor?: (file: Uri) => FlutterOutline | lsp.FlutterOutline | undefined;
+		getLastPriorityFiles?: () => string[];
+		getLastSubscribedFiles?: () => string[];
 	};
 	flutterCapabilities: {
 		supportsPidFileForMachine: boolean;
@@ -77,7 +78,7 @@ export interface InternalExtensionApi {
 		uninstall(packageID: string): Promise<void>;
 	};
 	renameProvider: RenameProvider | undefined;
-	safeSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: any) => SpawnedProcess;
+	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }) => SpawnedProcess;
 	testTreeProvider: TestResultsProvider;
 	workspaceContext: WorkspaceContext;
 }

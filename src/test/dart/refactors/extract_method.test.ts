@@ -3,11 +3,15 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../shared/constants";
 import { PromiseCompleter } from "../../../shared/utils";
-import { activate, currentDoc, ensureTestContent, positionOf, rangeOf, sb, setTestContent, waitForResult } from "../../helpers";
+import { activate, currentDoc, ensureTestContent, extApi, positionOf, rangeOf, sb, setTestContent, waitForResult } from "../../helpers";
 
 describe("refactor", () => {
 
 	beforeEach("activate", () => activate());
+	beforeEach("skip for LSP", async function () {
+		if (extApi.isLsp)
+			this.skip();
+	});
 
 	it("can extract simple code into a method", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");

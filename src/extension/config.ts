@@ -40,6 +40,7 @@ class Config {
 
 	get additionalAnalyzerFileExtensions(): string[] { return this.getConfig<string[]>("additionalAnalyzerFileExtensions", []); }
 	get allowAnalytics(): boolean { return this.getConfig<boolean>("allowAnalytics", true); }
+	get allowTestsOutsideTestFolder(): boolean { return this.getConfig<boolean>("allowTestsOutsideTestFolder", false); }
 	get analysisServerFolding(): boolean { return this.getConfig<boolean>("analysisServerFolding", true); }
 	get analysisServerHighlighting(): boolean { return this.getConfig<boolean>("analysisServerHighlighting", false); }
 	get analyzeAngularTemplates(): boolean { return this.getConfig<boolean>("analyzeAngularTemplates", true); }
@@ -67,6 +68,7 @@ class Config {
 	get flutterAndroidX(): boolean { return this.getConfig<boolean>("flutterAndroidX", false); }
 	get flutterCreateAndroidLanguage(): "java" | "kotlin" { return this.getConfig<"java" | "kotlin">("flutterCreateAndroidLanguage", "kotlin"); }
 	get flutterCreateIOSLanguage(): "objc" | "swift" { return this.getConfig<"objc" | "swift">("flutterCreateIOSLanguage", "swift"); }
+	get flutterCreateOffline(): boolean { return this.getConfig<boolean>("flutterCreateOffline", false); }
 	get flutterCreateOrganization(): undefined | string { return this.getConfig<null | string>("flutterCreateOrganization", null); }
 	get flutterDaemonLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterDaemonLogFile", null))); }
 	get flutterGutterIcons(): boolean { return this.getConfig<boolean>("flutterGutterIcons", true); }
@@ -116,6 +118,9 @@ class Config {
 	public setOpenDevTools(value: "never" | "flutter" | "always" | undefined): Thenable<void> { return this.setConfig("openDevTools", value, ConfigurationTarget.Global); }
 	public setSdkPath(value: string | undefined): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
 	public setWarnWhenEditingFilesOutsideWorkspace(value: boolean): Thenable<void> { return this.setConfig("warnWhenEditingFilesOutsideWorkspace", value, ConfigurationTarget.Global); }
+
+	// Preview features.
+	get previewLsp() { return this.getConfig<boolean>("previewLsp", false); }
 
 	public for(uri?: Uri): ResourceConfig {
 		return new ResourceConfig(uri);

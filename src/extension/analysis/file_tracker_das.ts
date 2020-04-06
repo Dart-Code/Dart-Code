@@ -127,7 +127,7 @@ export class DasFileTracker implements IAmDisposable {
 			|| last.some((f, i) => f !== current[i]);
 	}
 
-	private validPathsFor(paths: TextDocument[]): string[] {
+	private validPathsFor(paths: readonly TextDocument[]): string[] {
 		const isAnalyzeable = this.analyzer.capabilities.supportsPriorityFilesOutsideAnalysisRoots
 			? util.isAnalyzable
 			: util.isAnalyzableAndInWorkspace;
@@ -151,6 +151,7 @@ export class DasFileTracker implements IAmDisposable {
 	}
 
 	public supportsPubRunTest(file: Uri): boolean | undefined {
+		// TODO: Both FileTrackers have a copy of this!
 		const path = fsPath(file);
 		if (!util.isPubRunnableTestFile(path))
 			return false;

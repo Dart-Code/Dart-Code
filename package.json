@@ -2,10 +2,10 @@
 	"name": "dart-code",
 	"displayName": "Dart",
 	"description": "Dart language support and debugger for Visual Studio Code.",
-	"version": "3.9.0-dev",
+	"version": "3.9.1",
 	"publisher": "Dart-Code",
 	"engines": {
-		"vscode": "^1.42.0"
+		"vscode": "^1.43.0"
 	},
 	"enableProposedApi": true,
 	"extensionKind": [
@@ -489,7 +489,7 @@
 				},
 				{
 					"command": "dart.runAllTestsWithoutDebugging",
-					"when": "dart-code:dartProjectLoaded && !inDebugMode"
+					"when": "dart-code:dartProjectLoaded"
 				},
 				{
 					"command": "dart.rerunLastDebugSession",
@@ -541,7 +541,7 @@
 				},
 				{
 					"command": "dart.completeStatement",
-					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
+					"when": "dart-code:dartProjectLoaded && editorLangId == dart && !dart-code:isLsp"
 				},
 				{
 					"command": "dart.showTypeHierarchy",
@@ -961,6 +961,12 @@
 					},
 					"scope": "window"
 				},
+				"dart.allowTestsOutsideTestFolder": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to consider files ending '_test.dart' that are outside of the test folder as tests. This should be enabled if you put tests inside the 'lib' folder of your Flutter application so they will be run with 'flutter test' and not 'flutter run'.",
+					"scope": "window"
+				},
 				"dart.enableSdkFormatter": {
 					"type": "boolean",
 					"default": true,
@@ -1231,6 +1237,12 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Whether to automatically send a Hot Restart request during a debug session when saving files if Hot Reload is not available but Hot Restart is.",
+					"scope": "window"
+				},
+				"dart.flutterCreateOffline": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to use offline mode when creating new projects with the 'Flutter: New Project' command.",
 					"scope": "window"
 				},
 				"dart.flutterCreateOrganization": {
@@ -1510,6 +1522,12 @@
 					"description": "Whether to perform hot-reload-on-save based on a filesystem watcher for Dart files rather than using VS Code's onDidSave event. This allows reloads to trigger when external tools modify Dart source files.",
 					"scope": "window"
 				},
+				"dart.previewLsp": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to run the analyzer in LSP mode (experimental, requires restart).",
+					"scope": "window"
+				},
 				"dart.previewNewCompletionPlaceholders": {
 					"type": "boolean",
 					"default": true,
@@ -1561,7 +1579,7 @@
 									"terminal"
 								],
 								"default": "debugConsole",
-								"description": "Whether to run applications in the debug console (which does not support reading user input) or a pseudo terminal (which does)."
+								"description": "Whether to run applications in the debug console (which does not support reading user input) or a VS Code terminal (which does). Running in a terminal is only supported for Dart SDKs from v2.7.1."
 							},
 							"enableAsserts": {
 								"type": "boolean",
@@ -1762,7 +1780,8 @@
 		]
 	},
 	"scripts": {
-		"vscode:prepublish": "webpack --mode production",
+		"ensure-icon-submodule": "if [ ! -f media/doc-icons/material/ac_unit.png ]; then exit 999; fi",
+		"vscode:prepublish": "npm run ensure-icon-submodule && webpack --mode production",
 		"build": "webpack --mode development",
 		"build-with-instrumentation": "webpack --env.instrumentation --mode development",
 		"watch": "webpack --mode development --watch --info-verbosity verbose",
@@ -1778,32 +1797,32 @@
 	"dependencies": {
 		"minimatch": "^3.0.4",
 		"semver": "^6.3.0",
-		"vscode-debugadapter": "^1.37.1",
-		"vscode-debugprotocol": "^1.37.0",
+		"vscode-debugadapter": "^1.40.0",
+		"vscode-debugprotocol": "^1.40.0",
 		"vscode-languageclient": "^5.2.1",
-		"ws": "^7.2.0"
+		"ws": "^7.2.3"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
 		"@types/minimatch": "^3.0.3",
 		"@types/mocha": "^5.2.7",
-		"@types/node": "^12.12.14",
-		"@types/semver": "^6.2.0",
+		"@types/node": "^12.12.34",
+		"@types/semver": "^6.2.1",
 		"@types/sinon": "5.0.5",
-		"@types/vscode": "^1.40.0",
+		"@types/vscode": "^1.43.0",
 		"@types/ws": "^6.0.4",
 		"glob": "^7.1.6",
 		"istanbul-instrumenter-loader": "^3.0.1",
-		"mocha": "^6.2.2",
-		"nyc": "^15.0.0-beta.3",
-		"sinon": "^7.3.2",
+		"mocha": "^6.2.3",
+		"nyc": "^15.0.1",
+		"sinon": "^7.5.0",
 		"source-map-support": "^0.5.16",
-		"ts-loader": "^6.2.1",
+		"ts-loader": "^6.2.2",
 		"tslint": "^5.20.1",
-		"typescript": "^3.7.3",
-		"vscode-debugadapter-testsupport": "^1.40.0",
-		"vscode-test": "^1.2.3",
-		"webpack": "^4.41.2",
-		"webpack-cli": "^3.3.10"
+		"typescript": "^3.8.3",
+		"vscode-debugadapter-testsupport": "^1.40.3",
+		"vscode-test": "^1.3.0",
+		"webpack": "^4.42.1",
+		"webpack-cli": "^3.3.11"
 	}
 }

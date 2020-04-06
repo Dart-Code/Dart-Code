@@ -129,7 +129,9 @@ export function isTestFile(file: string): boolean {
 	// https://github.com/Dart-Code/Dart-Code/issues/1165
 	// https://github.com/Dart-Code/Dart-Code/issues/2021
 	// https://github.com/Dart-Code/Dart-Code/issues/2034
-	return !!file && isDartFile(file) && isInsideFolderNamed(file, "test") && file.toLowerCase().endsWith("_test.dart");
+	return !!file && isDartFile(file)
+		&& (isInsideFolderNamed(file, "test") || config.allowTestsOutsideTestFolder)
+		&& file.toLowerCase().endsWith("_test.dart");
 }
 
 // Similate to isTestFile, but requires that the file is _test.dart because it will be used as

@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as vs from "vscode";
 import { platformEol } from "../../../shared/constants";
-import { activate, currentDoc, currentEditor, documentEol, emptyExcludedFile, emptyFileInExcludedFolder, openFile, positionOf, setConfigForTest, setTestContent } from "../../helpers";
+import { activate, currentDoc, currentEditor, documentEol, emptyExcludedFile, emptyFileInExcludedFolder, extApi, openFile, positionOf, setConfigForTest, setTestContent } from "../../helpers";
 
 const formattingOptions: vs.FormattingOptions = { tabSize: 2, insertSpaces: true };
 
@@ -71,14 +71,20 @@ describe("dart_formatting_edit_provider", () => {
 		assert.equal(currentDoc().getText(), formattedContent);
 	});
 
-	it("does not format an excluded file", async () => {
+	it("does not format an excluded file", async function () {
+		if (extApi.isLsp)
+			this.skip();
+
 		await openFile(emptyExcludedFile);
 		await setTestContent(unformattedContent);
 		await formatDocument(false);
 		assert.equal(currentDoc().getText(), unformattedContent);
 	});
 
-	it("does not format a file in an excluded folder", async () => {
+	it("does not format a file in an excluded folder", async function () {
+		if (extApi.isLsp)
+			this.skip();
+
 		await openFile(emptyFileInExcludedFolder);
 		await setTestContent(unformattedContent);
 		await formatDocument(false);

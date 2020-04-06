@@ -12,9 +12,10 @@ import { Analytics } from "../analytics";
 import { config } from "../config";
 import { DartCapabilities } from "../sdk/capabilities";
 import { escapeShell, promptToReloadExtension } from "../utils";
+import { getToolEnv } from "../utils/processes";
 import { getAnalyzerArgs } from "./analyzer";
 import { AnalyzerGen } from "./analyzer_gen";
-import { DasFileTracker } from "./open_file_tracker";
+import { DasFileTracker } from "./file_tracker_das";
 
 export class AnalyzerCapabilities {
 	public static get empty() { return new AnalyzerCapabilities("0.0.0"); }
@@ -112,7 +113,7 @@ export class DasAnalyzerClient extends AnalyzerGen {
 			];
 		}
 
-		this.createProcess(undefined, binaryPath, processArgs);
+		this.createProcess(undefined, binaryPath, processArgs, { toolEnv: getToolEnv() });
 		this.process?.on("exit", (code, signal) => {
 			this.notify(this.serverTerminatedSubscriptions, undefined);
 		});
@@ -278,7 +279,7 @@ export class DasAnalyzerClient extends AnalyzerGen {
 	}
 }
 
-export function getSymbolKindForElementKind(logger: Logger, kind: as.ElementKind): vs.SymbolKind {
+export function getSymbolKindForElementKind(logger: Logger, kind: as.ElementKind | string): vs.SymbolKind {
 	switch (kind) {
 		case "CLASS":
 		case "CLASS_TYPE_ALIAS":

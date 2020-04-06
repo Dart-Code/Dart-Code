@@ -1,3 +1,4 @@
+import * as lsp from "../analysis/lsp/custom_protocol";
 import * as as from "../analysis_server_types";
 import { Logger } from "../interfaces";
 
@@ -53,4 +54,58 @@ export abstract class FlutterOutlineVisitor {
 	protected visitPlaceholder(outline: as.FlutterOutline): void { this.visitChildren(outline); }
 	// tslint:disable-next-line: no-empty
 	protected visitAttribute(attribute: as.FlutterOutlineAttribute): void { }
+}
+
+export abstract class FlutterOutlineVisitorLsp {
+	constructor(private logger: Logger) { }
+
+	public visit(outline: lsp.FlutterOutline) {
+		this.visitNode(outline);
+	}
+
+	private visitChildren(outline: lsp.FlutterOutline) {
+		if (outline.children) {
+			for (const child of outline.children) {
+				this.visit(child);
+			}
+		}
+	}
+
+	private visitNode(outline: lsp.FlutterOutline) {
+		switch (outline && outline.kind) {
+			case "DART_ELEMENT":
+				this.visitDartElement(outline);
+				break;
+			case "GENERIC":
+				this.visitGeneric(outline);
+				break;
+			case "NEW_INSTANCE":
+				this.visitNewInstance(outline);
+				break;
+			case "INVOCATION":
+				this.visitInvocation(outline);
+				break;
+			case "VARIABLE":
+				this.visitVariable(outline);
+				break;
+			case "PLACEHOLDER":
+				this.visitPlaceholder(outline);
+				break;
+			default:
+				this.logger.error(`Unknown Flutter Outline item! ${outline && outline.kind}`);
+		}
+		if (outline.attributes) {
+			for (const attribute of outline.attributes)
+				this.visitAttribute(attribute);
+		}
+	}
+
+	protected visitDartElement(outline: lsp.FlutterOutline): void { this.visitChildren(outline); }
+	protected visitGeneric(outline: lsp.FlutterOutline): void { this.visitChildren(outline); }
+	protected visitNewInstance(outline: lsp.FlutterOutline): void { this.visitChildren(outline); }
+	protected visitInvocation(outline: lsp.FlutterOutline): void { this.visitChildren(outline); }
+	protected visitVariable(outline: lsp.FlutterOutline): void { this.visitChildren(outline); }
+	protected visitPlaceholder(outline: lsp.FlutterOutline): void { this.visitChildren(outline); }
+	// tslint:disable-next-line: no-empty
+	protected visitAttribute(attribute: lsp.FlutterOutlineAttribute): void { }
 }

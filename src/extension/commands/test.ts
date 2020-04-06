@@ -3,8 +3,11 @@ import * as path from "path";
 import * as vs from "vscode";
 import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
-import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
-import { DasFileTracker } from "../analysis/open_file_tracker";
+import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline_das";
+import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../shared/utils/outline_lsp";
+import { getLaunchConfig } from "../../shared/utils/test";
+import { DasFileTracker } from "../analysis/file_tracker_das";
+import { LspFileTracker } from "../analysis/file_tracker_lsp";
 import { isDartDocument } from "../editors";
 import { isTestFile } from "../utils";
 
@@ -26,6 +29,19 @@ abstract class TestCommands implements vs.Disposable {
 			vs.window.onDidChangeTextEditorSelection((e) => this.updateSelectionContexts(e)),
 			vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)),
 		);
+
+		this.disposables.push(vs.commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => {
+			vs.debug.startDebugging(
+				vs.workspace.getWorkspaceFolder(vs.Uri.file(test.file)),
+				getLaunchConfig(false, test.file, test.fullName, test.isGroup, launchTemplate),
+			);
+		}));
+		this.disposables.push(vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => {
+			vs.debug.startDebugging(
+				vs.workspace.getWorkspaceFolder(vs.Uri.file(test.file)),
+				getLaunchConfig(true, test.file, test.fullName, test.isGroup, launchTemplate),
+			);
+		}));
 	}
 
 	private async runTestAtCursor(debug: boolean): Promise<void> {
@@ -144,9 +160,43 @@ export class DasTestCommands extends TestCommands {
 		const visitor = new TestOutlineVisitor(this.logger);
 		visitor.visit(outline);
 		return visitor.tests.reverse().find((t) => {
-			const start = document.positionAt(t.offset);
-			const end = document.positionAt(t.offset + t.length);
+			let start = document.positionAt(t.offset);
+			let end = document.positionAt(t.offset + t.length);
+
+			// Widen the range to start/end of lines.
+			start = document.lineAt(start.line).rangeIncludingLineBreak.start;
+			end = document.lineAt(end.line).rangeIncludingLineBreak.end;
+
 			return new vs.Range(start, end).contains(editor.selection);
+		});
+	}
+}
+
+export class LspTestCommands extends TestCommands {
+	constructor(logger: Logger, private readonly fileTracker: LspFileTracker) {
+		super(logger);
+	}
+
+	protected testForCursor(editor: vs.TextEditor): LspTestOutlineInfo | undefined {
+		const document = editor.document;
+		const outline = this.fileTracker.getOutlineFor(document.uri);
+		if (!outline || !outline.children || !outline.children.length)
+			return;
+
+		// We should only allow running for projects we know can actually handle `pub run` (for ex. the
+		// SDK codebase cannot, and will therefore run all tests).
+		if (!this.fileTracker.supportsPubRunTest(document.uri))
+			return;
+
+		const visitor = new LspTestOutlineVisitor(this.logger, fsPath(document.uri));
+		visitor.visit(outline);
+		return visitor.tests.reverse().find((t) => {
+			const vsRange = new vs.Range(t.range.start.line,
+				t.range.start.character,
+				t.range.end.line,
+				t.range.end.character,
+			);
+			return vsRange.contains(editor.selection);
 		});
 	}
 }

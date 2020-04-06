@@ -1,4 +1,3 @@
-import { globalFlutterArgs } from "../extension/utils/processes";
 import { LogCategory } from "../shared/enums";
 import { DartTestDebugSession } from "./dart_test_debug_impl";
 import { DebugAdapterLogger } from "./logging";
@@ -21,6 +20,6 @@ export class FlutterTestDebugSession extends DartTestDebugSession {
 			appArgs.push(this.sourceFileForArgs(args));
 
 		const logger = new DebugAdapterLogger(this, LogCategory.FlutterTest);
-		return this.createRunner(args.flutterPath, args.cwd, args.program, globalFlutterArgs.concat(["test", "--machine"]).concat(appArgs), args.env, args.flutterTestLogFile, logger, args.maxLogLineLength);
+		return this.createRunner(args.flutterPath, args.cwd, args.program, (args.globalFlutterArgs || []).concat(["test", "--machine"]).concat(appArgs), args.env, args.flutterTestLogFile, logger, args.maxLogLineLength);
 	}
 }

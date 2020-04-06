@@ -536,7 +536,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		// 555 -> 999455
 		//  10 -> 999990
 		//   1 -> 999999
-		completion.sortText = (1000000 - suggestion.relevance).toString() + label.trim();
+		completion.sortText = (1000000 - suggestion.relevance).toString();
 		return completion;
 	}
 

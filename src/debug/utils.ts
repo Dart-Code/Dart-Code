@@ -25,6 +25,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	name: string;
 	type: string;
 	request: string;
+	sendLogsToClient?: boolean;
 	cwd?: string;
 	enableAsserts: boolean;
 	console: "debugConsole" | "terminal";
@@ -36,7 +37,10 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	debuggerHandlesPathsEverywhereForBreakpoints: boolean;
 	evaluateGettersInDebugViews: boolean;
 	previewToStringInDebugViews: boolean;
-	env: any;
+	useWriteServiceInfo: boolean | undefined;
+	toolEnv?: { [key: string]: string | undefined };
+	globalFlutterArgs: string[] | undefined;
+	env?: { [key: string]: string | undefined };
 	program: string;
 	args: string[];
 	vmAdditionalArgs: string[];
@@ -80,12 +84,6 @@ export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestA
 export interface FlutterAttachRequestArguments extends DartAttachRequestArguments {
 	deviceId: string;
 	flutterPath: string;
-}
-
-export interface CoverageData {
-	scriptPath: string;
-	// Lines that were it. These are 1-based, unlike VS Code!
-	hitLines: number[];
 }
 
 export interface FileLocation {

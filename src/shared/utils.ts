@@ -20,27 +20,6 @@ export async function flatMapAsync<T1, T2>(input: T1[], f: (input: T1) => Promis
 	return res;
 }
 
-export function throttle(fn: (...args: any[]) => void, limitMilliseconds: number): (...args: any[]) => void {
-	let timer: NodeJS.Timer;
-	let lastRunTime: number;
-	return (...args: any[]) => {
-		const run = () => {
-			lastRunTime = Date.now();
-			fn(...args);
-		};
-		const now = Date.now();
-		if (lastRunTime && now < lastRunTime + limitMilliseconds) {
-			// Delay the call until the timer has expired.
-			clearTimeout(timer);
-			// Set the timer in future, but compensate for how far through we are.
-			const runInMilliseconds = limitMilliseconds - (now - lastRunTime);
-			timer = setTimeout(run, runInMilliseconds);
-		} else {
-			run();
-		}
-	};
-}
-
 export function filenameSafe(input: string) {
 	return input.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
 }
@@ -166,4 +145,21 @@ export class BufferedLogger implements Logger {
 
 export function notUndefined<T>(x: T | undefined): x is T {
 	return x !== undefined;
+}
+
+export function asHexColor({ r, g, b, a }: { r: number, g: number, b: number, a: number }): string {
+	r = clamp(r, 0, 255);
+	g = clamp(g, 0, 255);
+	b = clamp(b, 0, 255);
+	a = clamp(a, 0, 255);
+
+	return `${asHex(a)}${asHex(r)}${asHex(g)}${asHex(b)}`.toLowerCase();
+}
+
+export function asHex(v: number) {
+	return Math.round(v).toString(16).padStart(2, "0");
+}
+
+export function clamp(v: number, min: number, max: number) {
+	return Math.min(Math.max(min, v), max);
 }

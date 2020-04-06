@@ -39,7 +39,7 @@ function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilit
 		analyzerArgs.push(`--port=${config.analyzerDiagnosticsPort}`);
 
 	// Add info about the extension that will be collected for crash reports etc.
-	analyzerArgs.push(`--client-id=Dart-Code.dart-code`);
+	analyzerArgs.push(`--client-id=VS-Code`);
 	analyzerArgs.push(`--client-version=${extensionVersion}`);
 
 	// The analysis server supports a verbose instrumentation log file.

@@ -87,6 +87,9 @@ async function runAllTests(): Promise<void> {
 		if (!process.env.BOT || process.env.BOT === "dart") {
 			await runTests("dart", "hello_world");
 		}
+		if (!process.env.BOT || process.env.BOT === "dart_lsp") {
+			await runTests("dart", "hello_world", "lsp", { DART_CODE_FORCE_LSP: "true" });
+		}
 		if (!process.env.BOT || process.env.BOT === "dart_debug") {
 			await runTests("dart_debug", "hello_world");
 		}
@@ -95,6 +98,9 @@ async function runAllTests(): Promise<void> {
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter") {
 			await runTests("flutter", "flutter_hello_world");
+		}
+		if (!process.env.BOT || process.env.BOT === "flutter_lsp") {
+			await runTests("flutter", "flutter_hello_world", "lsp", { DART_CODE_FORCE_LSP: "true" });
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter_debug") {
 			await runTests("flutter_debug", "flutter_hello_world");

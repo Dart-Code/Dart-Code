@@ -7,7 +7,7 @@ import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { referencesBuildRunner } from "../sdk/utils";
 import * as util from "../utils";
-import { toolEnv } from "../utils/processes";
+import { getToolEnv } from "../utils/processes";
 
 export class PubBuildRunnerTaskProvider implements vs.TaskProvider {
 	constructor(private sdks: Sdks) { }
@@ -48,7 +48,7 @@ export class PubBuildRunnerTaskProvider implements vs.TaskProvider {
 			new vs.ProcessExecution(
 				program,
 				args,
-				{ cwd: fsPath(folder.uri), env: toolEnv },
+				{ cwd: fsPath(folder.uri), env: getToolEnv() },
 			),
 			"$dart-pub-build_runner");
 		task.group = group;

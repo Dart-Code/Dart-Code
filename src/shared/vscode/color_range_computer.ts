@@ -1,10 +1,13 @@
 import * as vs from "vscode";
 import { flutterColors } from "../flutter/colors";
+import { asHexColor } from "../utils";
 import { toRange } from "./utils";
 
 export class ColorRangeComputer {
 	private readonly namedColorPattern = new RegExp("Colors\\.([\\w_\\[\\]\\.]+)", "g");
 	private readonly colorConstructorPattern = new RegExp(" Color\\(0x([\\w_]{8})\\)", "g");
+	private readonly colorConstructorPattern2 = new RegExp(" Color\\.fromRGBO\\(([\\w_]+), ([\\w_]+), ([\\w_]+), ([\\w_.]+)\\)", "g");
+	private readonly colorConstructorPattern3 = new RegExp(" Color\\.fromARGB\\(([\\w_]+), ([\\w_]+), ([\\w_]+), ([\\w_]+)\\)", "g");
 
 	public compute(document: vs.TextDocument): { [key: string]: vs.Range[] } {
 		const text = document.getText();
@@ -36,6 +39,48 @@ export class ColorRangeComputer {
 		// tslint:disable-next-line: no-conditional-assignment
 		while (result = this.colorConstructorPattern.exec(text)) {
 			const colorHex = result[1].toLowerCase();
+
+			if (!decs[colorHex])
+				decs[colorHex] = [];
+
+			decs[colorHex].push(toRange(
+				document,
+				result.index + 1, // + 1 to account for space
+				result[0].length - 1, // -1 to account for the above
+			));
+		}
+		// tslint:disable-next-line: no-conditional-assignment
+		while (result = this.colorConstructorPattern2.exec(text)) {
+			const r = parseInt(result[1], 10);
+			const g = parseInt(result[2], 10);
+			const b = parseInt(result[3], 10);
+			const opacity = parseFloat(result[4]);
+
+			if (isNaN(r) || isNaN(g) || isNaN(b) || isNaN(opacity))
+				continue;
+
+			const colorHex = asHexColor({ r, g, b, a: opacity * 255 });
+
+			if (!decs[colorHex])
+				decs[colorHex] = [];
+
+			decs[colorHex].push(toRange(
+				document,
+				result.index + 1, // + 1 to account for space
+				result[0].length - 1, // -1 to account for the above
+			));
+		}
+		// tslint:disable-next-line: no-conditional-assignment
+		while (result = this.colorConstructorPattern3.exec(text)) {
+			const a = parseInt(result[1], 10);
+			const r = parseInt(result[2], 10);
+			const g = parseInt(result[3], 10);
+			const b = parseInt(result[4], 10);
+
+			if (isNaN(r) || isNaN(g) || isNaN(b) || isNaN(a))
+				continue;
+
+			const colorHex = asHexColor({ a, r, g, b });
 
 			if (!decs[colorHex])
 				decs[colorHex] = [];

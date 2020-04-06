@@ -32,4 +32,17 @@ describe("run test at cursor", () => {
 		// Allow some time to check, because the flag is flipped in a selection change handler
 		await waitForResult(() => !extApi.cursorIsInTest);
 	});
+
+	it("command is available when cursor is on same line as start/end of test but outside", async () => {
+		const editor = await openFile(helloWorldTestMainFile);
+		editor.selection = new vs.Selection(positionOf(`^  group("String"`), positionOf(`^  group("String"`));
+
+		// Allow some time to check, because the flag is flipped in a selection change handler
+		await waitForResult(() => extApi.cursorIsInTest);
+
+		// Also ensure the command exists.
+		const command = (await vs.commands.getCommands(true)).filter((id) => id === "dart.runTestAtCursor");
+		assert.ok(command);
+		assert.ok(command.length);
+	});
 });

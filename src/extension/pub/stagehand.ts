@@ -4,7 +4,7 @@ import { pubPath, stagehandInstallationInstructionsUrl } from "../../shared/cons
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
-import { safeSpawn } from "../utils/processes";
+import { safeToolSpawn } from "../utils/processes";
 import { PubGlobal } from "./global";
 
 const packageName = "Stagehand";
@@ -38,7 +38,7 @@ export class Stagehand {
 		const pubBinPath = path.join(dartSdkPath, pubPath);
 
 		return new Promise((resolve, reject) => {
-			const proc = safeSpawn(undefined, pubBinPath, args);
+			const proc = safeToolSpawn(undefined, pubBinPath, args);
 			logProcess(this.logger, LogCategory.CommandProcesses, proc);
 
 			const stdout: string[] = [];

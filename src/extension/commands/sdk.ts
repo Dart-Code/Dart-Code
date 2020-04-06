@@ -27,7 +27,7 @@ import { getFlutterSnippets } from "../sdk/flutter_docs_snippets";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
 import { SdkUtils } from "../sdk/utils";
 import * as util from "../utils";
-import { globalFlutterArgs, safeSpawn } from "../utils/processes";
+import { getGlobalFlutterArgs, safeToolSpawn } from "../utils/processes";
 import * as channels from "./channels";
 
 const packageNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
@@ -191,6 +191,9 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.create", (projectPath: string, projectName?: string, sampleID?: string) => {
 			const args = ["create"];
+			if (config.flutterCreateOffline) {
+				args.push("--offline");
+			}
 			if (projectName) {
 				args.push("--project-name");
 				args.push(projectName);
@@ -401,7 +404,7 @@ export class SdkCommands {
 		if (!this.sdks.flutter)
 			throw new Error("Flutter SDK not available");
 		const binPath = path.join(this.sdks.flutter, flutterPath);
-		args = globalFlutterArgs
+		args = getGlobalFlutterArgs()
 			.concat(config.for(vs.Uri.file(folder)).flutterAdditionalArgs)
 			.concat(args);
 		return this.runCommandInFolder(shortPath, "flutter", folder, binPath, args);
@@ -425,7 +428,6 @@ export class SdkCommands {
 
 		const channelName = commandName.substr(0, 1).toUpperCase() + commandName.substr(1);
 		const channel = channels.createChannel(channelName);
-		channel.show(true);
 
 		// Figure out if there's already one of this command running, in which case we'll chain off the
 		// end of it.
@@ -452,10 +454,14 @@ export class SdkCommands {
 			const process = new ChainedProcess(() => {
 				channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
 				progress.report({ message: "running..." });
-				const proc = safeSpawn(folder, binPath, args);
+				const proc = safeToolSpawn(folder, binPath, args);
 				channels.runProcessInChannel(proc, channel);
 				this.logger.info(`(PROC ${proc.pid}) Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogCategory.CommandProcesses);
 				logProcess(this.logger, LogCategory.CommandProcesses, proc);
+				proc.on("close", (code) => {
+					if (code)
+						channel.show(true);
+				});
 				return proc;
 			}, existingProcess);
 			this.runningCommands[commandId] = process;

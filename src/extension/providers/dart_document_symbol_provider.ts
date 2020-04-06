@@ -4,7 +4,7 @@ import { Logger } from "../../shared/interfaces";
 import { waitFor } from "../../shared/utils/promises";
 import { toRange } from "../../shared/vscode/utils";
 import { getSymbolKindForElementKind } from "../analysis/analyzer_das";
-import { DasFileTracker } from "../analysis/open_file_tracker";
+import { DasFileTracker } from "../analysis/file_tracker_das";
 
 export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 	constructor(private readonly logger: Logger, private readonly fileTracker: DasFileTracker) { }

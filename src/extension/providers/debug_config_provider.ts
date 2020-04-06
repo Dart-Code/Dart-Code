@@ -27,6 +27,7 @@ import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
 import { DartCapabilities } from "../sdk/capabilities";
 import { checkProjectSupportsPubRunTest, isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder } from "../utils";
+import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 import { TestResultsProvider } from "../views/test_view";
 
 const isCI = !!process.env.CI;
@@ -173,7 +174,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			&& !isInsideFolderNamed(debugConfig.program, "tool")
 			&& !isInsideFolderNamed(debugConfig.program, ".dart_tool")) {
 			// Check if we're a Flutter or Web project.
-			if (isInsideFolderNamed(debugConfig.program, "web")) {
+			if (isInsideFolderNamed(debugConfig.program, "web") && !isInsideFolderNamed(debugConfig.program, "test")) {
 				debugType = DebuggerType.Web;
 			} else if (isFlutterProjectFolder(debugConfig.cwd as string))
 				debugType = DebuggerType.Flutter;
@@ -449,6 +450,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 		debugConfig.type = debugConfig.type || "dart";
 		debugConfig.request = debugConfig.request || "launch";
+		debugConfig.toolEnv = getToolEnv();
+		debugConfig.sendLogsToClient = true;
+		debugConfig.globalFlutterArgs = getGlobalFlutterArgs();
 		debugConfig.cwd = debugConfig.cwd || (folder && fsPath(folder.uri));
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
@@ -473,6 +477,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			: this.dartCapabilities.handlesPathsEverywhereForBreakpoints;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		debugConfig.previewToStringInDebugViews = debugConfig.previewToStringInDebugViews || config.previewToStringInDebugViews;
+		debugConfig.useWriteServiceInfo = debugConfig.useWriteServiceInfo !== undefined && debugConfig.useWriteServiceInfo !== null
+			? debugConfig.useWriteServiceInfo
+			: this.dartCapabilities.supportsWriteServiceInfo;
 		if (isFlutter && this.sdks.flutter) {
 			debugConfig.args = conf.flutterAdditionalArgs.concat(debugConfig.args);
 			debugConfig.forceFlutterVerboseMode = isLogging || isCI;

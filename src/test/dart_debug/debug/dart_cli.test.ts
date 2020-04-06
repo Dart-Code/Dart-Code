@@ -9,7 +9,7 @@ import { grey } from "../../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, delay, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, logger, openFile, positionOf, sb, setConfigForTest, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, delay, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, logger, openFile, positionOf, sb, setConfigForTest, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -138,16 +138,30 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it("receives the expected output when running in the terminal", async () => {
-		const config = await startDebugger(helloWorldMainFile);
-		config.console = "terminal";
+	it("can run in a terminal", async () => {
+		await openFile(helloWorldMainFile);
+		const config = await startDebugger(helloWorldMainFile, {
+			console: "terminal",
+			name: "dart-terminal-test",
+		});
+
+		// Stop at a breakpoint so the app won't quit while we're checking the terminal.
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(helloWorldMainFile),
+		});
+
+		// Ensure we have a terminal for it.
+		waitForResult(() => vs.window.terminals.find((t) => t.name === config.name) !== undefined);
+
+		// Resume and wait for it to finish.
 		await Promise.all([
-			dc.configurationSequence(),
-			dc.waitForCustomEvent("dart.output", (msg: { message: string, category: string | undefined }) => msg.category === "stdout" && msg.message === `Hello, world!${platformEol}`),
-			dc.waitForCustomEvent("dart.output", (msg: { message: string, category: string | undefined }) => (msg.category === "console" || !msg.category) && msg.message === `${grey("[log] ")}Logging from dart:developer!\n`),
 			dc.waitForEvent("terminated"),
-			dc.launch(config),
+			dc.resume(),
 		]);
+
+		// Ensure the terminal disappears.
+		waitForResult(() => vs.window.terminals.find((t) => t.name === config.name) === undefined);
 	});
 
 	it("passes launch.json's vmAdditionalArgs to the VM", async () => {

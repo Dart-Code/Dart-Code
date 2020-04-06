@@ -1,7 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { CoverageData } from "../../debug/utils";
 import { isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
 import { DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { Logger, LogMessage } from "../../shared/interfaces";
@@ -17,7 +16,7 @@ import { ServiceExtensionArgs, timeDilationNormal, timeDilationSlow, VmServiceEx
 import { DebuggerType } from "../providers/debug_config_provider";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools";
-import { DartDebugSessionInformation, DartDebugSessionPseudoterminal } from "../utils/vscode/debug";
+import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
 // export let mostRecentAttachedProbablyReusableObservatoryUri: string;
@@ -40,8 +39,6 @@ export class DebugCommands {
 	public readonly onWillHotReload = this.onWillHotReloadEmitter.event;
 	private onWillHotRestartEmitter = new vs.EventEmitter<void>();
 	public readonly onWillHotRestart = this.onWillHotRestartEmitter.event;
-	private onReceiveCoverageEmitter = new vs.EventEmitter<CoverageData[]>();
-	public readonly onReceiveCoverage = this.onReceiveCoverageEmitter.event;
 	private onFirstFrameEmitter = new vs.EventEmitter<void>();
 	public readonly onFirstFrame = this.onFirstFrameEmitter.event;
 	private onDebugSessionVmServiceAvailableEmitter = new vs.EventEmitter<DartDebugSessionInformation>();
@@ -147,12 +144,6 @@ export class DebugCommands {
 			debugSessions.forEach((s) => s.session.customRequest("hotRestart", args));
 			analytics.logDebuggerRestart();
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("_dart.requestCoverageUpdate", (scriptUris: string[]) => {
-			debugSessions.forEach((s) => s.session.customRequest("requestCoverageUpdate", { scriptUris }));
-		}));
-		context.subscriptions.push(vs.commands.registerCommand("_dart.coverageFilesUpdate", (scriptUris: string[]) => {
-			debugSessions.forEach((s) => s.session.customRequest("coverageFilesUpdate", { scriptUris }));
-		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugging", (resource: vs.Uri) => {
 			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), {
 				name: "Dart",
@@ -183,7 +174,7 @@ export class DebugCommands {
 				const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(folder));
 				const name = path.basename(path.dirname(folder));
 				vs.debug.startDebugging(ws, {
-					name: `Dart ${name}`,
+					name: `${name} tests`,
 					noDebug: true,
 					// To run all tests, we set `program` to a test folder.
 					program: folder,
@@ -265,15 +256,7 @@ export class DebugCommands {
 			return;
 
 		const debuggerType = s.configuration ? DebuggerType[s.configuration.debuggerType] : "<unknown>";
-		const consoleType: "debugConsole" | "terminal" = s.configuration.console;
-		let terminal: DartDebugSessionPseudoterminal | undefined;
-		if (consoleType === "terminal") {
-			const terminalName = s.name || debuggerType;
-			terminal = new DartDebugSessionPseudoterminal(terminalName);
-			terminal.userInput((input) => s.customRequest("dart.userInput", { input }));
-			terminal.close.then(() => s.customRequest("disconnect"));
-		}
-		const session = new DartDebugSessionInformation(s, debuggerType, terminal);
+		const session = new DartDebugSessionInformation(s, debuggerType);
 		// If we're the first fresh debug session, reset all settings to default.
 		// Subsequent launches will inherit the "current" values.
 		if (debugSessions.length === 0)
@@ -330,9 +313,6 @@ export class DebugCommands {
 		debugSessions.splice(sessionIndex, 1);
 
 		this.clearProgressIndicators(session);
-
-		if (session.terminal)
-			session.terminal.end();
 
 		const debugSessionEnd = new Date();
 		this.analytics.logDebugSessionDuration(session.debuggerType, debugSessionEnd.getTime() - session.sessionStart.getTime());
@@ -391,8 +371,6 @@ export class DebugCommands {
 			this.debugMetrics.text = message;
 			this.debugMetrics.tooltip = "This is the amount of memory being consumed by your applications heaps (out of what has been allocated).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage.";
 			this.debugMetrics.show();
-		} else if (e.event === "dart.coverage") {
-			this.onReceiveCoverageEmitter.fire(e.body);
 		} else if (e.event === "dart.navigate") {
 			if (e.body.file && e.body.line && e.body.column)
 				vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(e.body.file), e.body.line, e.body.column);
@@ -415,12 +393,6 @@ export class DebugCommands {
 			);
 		} else if (e.event === "dart.launched") {
 			this.clearProgressIndicators(session);
-		} else if (e.event === "dart.output") {
-			if (session.terminal) {
-				session.terminal.addOutput(e.body.message, e.body.category);
-			} else {
-				this.logger.warn(`Got output event for session without pseudoterminal: ${e.body.message}`);
-			}
 		} else if (e.event === "dart.webLaunchUrl") {
 			const launched = !!e.body.launched;
 			if (!launched) {
