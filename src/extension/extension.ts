@@ -11,6 +11,7 @@ import { DartWorkspaceContext, FlutterSdks, IFlutterDaemon, Sdks } from "../shar
 import { captureLogs, EmittingLogger, logToConsole, RingLog } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
+import { uniq } from "../shared/utils";
 import { forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../shared/utils/fs";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
@@ -90,10 +91,6 @@ import { TestItemTreeItem, TestResultsProvider } from "./views/test_view";
 
 const DART_MODE = { language: "dart", scheme: "file" };
 const HTML_MODE = { language: "html", scheme: "file" };
-
-const additionalModes = config.additionalAnalyzerFileExtensions.map((ext) => {
-	return { scheme: "file", pattern: `**/*.${ext}` };
-});
 
 const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
 // TODO: Define what this means better. Some commands a general Flutter (eg. Hot
@@ -239,13 +236,21 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const completionItemProvider = isUsingLsp || !dasClient ? undefined : new DartCompletionItemProvider(logger, dasClient);
 	const referenceProvider = isUsingLsp || !dasClient ? undefined : new DartReferenceProvider(dasClient);
 
-	const activeFileFilters: vs.DocumentSelector = [DART_MODE];
+	const activeFileFilters: vs.DocumentFilter[] = [DART_MODE];
 
-	if (!isUsingLsp && config.analyzeAngularTemplates) {
-		// Analyze files supported by plugins
-		// Analyze Angular2 templates, requires the angular_analyzer_plugin.
+	// Analyze Angular2 templates, requires the angular_analyzer_plugin.
+	if (config.analyzeAngularTemplates) {
 		activeFileFilters.push(HTML_MODE);
-		activeFileFilters.push(...additionalModes);
+	}
+	// Analyze files supported by plugins.
+	for (const ext of uniq(config.additionalAnalyzerFileExtensions)) {
+		// We can't check that these don't overlap with the existing language filters
+		// because vs.languages.match() won't take an extension, only a TextDocument.
+		// So we'll just manually exclude file names we know for sure overlap with them.
+		if (ext === "dart" || (config.analyzeAngularTemplates && (ext === "htm" || ext === "html")))
+			continue;
+
+		activeFileFilters.push({ scheme: "file", pattern: `**/*.${ext}` });
 	}
 
 	// This is registered with VS Code further down, so it's metadata can be collected from all
