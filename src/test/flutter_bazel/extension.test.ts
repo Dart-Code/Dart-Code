@@ -32,15 +32,15 @@ describe("extension", () => {
 		assert.ok(workspaceContext.sdks);
 		assert.ok(workspaceContext.sdks.dart);
 		assert.ok(workspaceContext.sdks.flutter);
-		assert.ok(workspaceContext.bazelWorkspaceConfig);
-		assert.equal(workspaceContext.bazelWorkspaceConfig?.configFile, path.join(readonlyPath, "dart/config/intellij-plugins/flutter.json"));
-		assert.equal(workspaceContext.bazelWorkspaceConfig?.devtoolsScript, path.join(readonlyPath, "scripts/custom_devtools.sh"));
-		assert.equal(workspaceContext.bazelWorkspaceConfig?.flutterDaemonScript, path.join(readonlyPath, "scripts/custom_daemon.sh"));
-		assert.equal(workspaceContext.bazelWorkspaceConfig?.flutterDoctorScript, path.join(readonlyPath, "scripts/custom_doctor.sh"));
-		assert.equal(workspaceContext.bazelWorkspaceConfig?.flutterLaunchScript, path.join(readonlyPath, "scripts/custom_run.sh"));
-		assert.equal(workspaceContext.bazelWorkspaceConfig?.flutterSdkHome, path.normalize(path.join(readonlyPath, "../my-flutter-sdk")));
-		assert.equal(workspaceContext.bazelWorkspaceConfig?.flutterTestScript, path.join(readonlyPath, "scripts/custom_test.sh"));
-		assert.equal(workspaceContext.bazelWorkspaceConfig?.flutterVersionFile, path.normalize(path.join(readonlyPath, "../my-flutter-version")));
+		assert.ok(workspaceContext.workspaceConfig);
+		assert.equal(workspaceContext.workspaceConfig?.configFile, path.join(readonlyPath, "dart/config/intellij-plugins/flutter.json"));
+		assert.equal(workspaceContext.workspaceConfig?.devtoolsScript, path.join(readonlyPath, "scripts/custom_devtools.sh"));
+		assert.equal(workspaceContext.workspaceConfig?.flutterDaemonScript, path.join(readonlyPath, "scripts/custom_daemon.sh"));
+		assert.equal(workspaceContext.workspaceConfig?.flutterDoctorScript, path.join(readonlyPath, "scripts/custom_doctor.sh"));
+		assert.equal(workspaceContext.workspaceConfig?.flutterLaunchScript, path.join(readonlyPath, "scripts/custom_run.sh"));
+		assert.equal(workspaceContext.workspaceConfig?.flutterSdkHome, path.normalize(path.join(readonlyPath, "../my-flutter-sdk")));
+		assert.equal(workspaceContext.workspaceConfig?.flutterTestScript, path.join(readonlyPath, "scripts/custom_test.sh"));
+		assert.equal(workspaceContext.workspaceConfig?.flutterVersionFile, path.normalize(path.join(readonlyPath, "../my-flutter-version")));
 		logger.info("        " + JSON.stringify(workspaceContext, undefined, 8).trim().slice(1, -1).trim());
 	});
 	// This test requires another clone of the SDK to verify the path (symlinks
