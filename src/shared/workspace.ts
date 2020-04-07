@@ -5,7 +5,7 @@ export class WorkspaceContext {
 	// TODO: Move things from Sdks to this class that aren't related to the SDKs.
 	constructor(
 		public readonly sdks: Sdks,
-		public readonly bazelWorkspaceConfig: WorkspaceConfig | undefined,
+		public readonly workspaceConfig: WorkspaceConfig | undefined,
 		public readonly hasAnyFlutterMobileProjects: boolean,
 		public readonly hasAnyWebProjects: boolean,
 		public readonly hasAnyStandardDartProjects: boolean,
