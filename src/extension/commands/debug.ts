@@ -53,7 +53,7 @@ export class DebugCommands {
 
 	constructor(private readonly logger: Logger, private context: Context, workspaceContext: WorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
 		this.vmServices = new VmServiceExtensions(this.sendServiceSetting);
-		this.devTools = new DevToolsManager(logger, context, workspaceContext.sdks, this, analytics, pubGlobal);
+		this.devTools = new DevToolsManager(logger, workspaceContext.sdks, this, analytics, pubGlobal);
 		context.subscriptions.push(this.devTools);
 		context.subscriptions.push(this.debugOptions);
 		context.subscriptions.push(this.debugMetrics);
