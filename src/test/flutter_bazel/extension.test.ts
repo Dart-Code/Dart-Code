@@ -40,7 +40,7 @@ describe("extension", () => {
 		assert.equal(workspaceContext.bazelWorkspaceConfig?.flutterLaunchScript, path.join(readonlyPath, "scripts/custom_run.sh"));
 		assert.equal(workspaceContext.bazelWorkspaceConfig?.flutterSdkHome, path.normalize(path.join(readonlyPath, "../my-flutter-sdk")));
 		assert.equal(workspaceContext.bazelWorkspaceConfig?.flutterTestScript, path.join(readonlyPath, "scripts/custom_test.sh"));
-		assert.equal(workspaceContext.bazelWorkspaceConfig?.flutterVersionFile, "/path/to/flutter/version");
+		assert.equal(workspaceContext.bazelWorkspaceConfig?.flutterVersionFile, path.normalize(path.join(readonlyPath, "../my-flutter-version")));
 		logger.info("        " + JSON.stringify(workspaceContext, undefined, 8).trim().slice(1, -1).trim());
 	});
 	// This test requires another clone of the SDK to verify the path (symlinks
