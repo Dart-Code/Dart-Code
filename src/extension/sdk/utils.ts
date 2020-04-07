@@ -173,7 +173,8 @@ export class SdkUtils {
 
 		// Search for a Bazel workspace root.
 		let bazelWorkspaceRoot: string | undefined;
-		topLevelFolders.forEach((folder) => bazelWorkspaceRoot = bazelWorkspaceRoot || findBazelWorkspaceRoot(folder));
+		if (!isWin)
+			topLevelFolders.forEach((folder) => bazelWorkspaceRoot = bazelWorkspaceRoot || findBazelWorkspaceRoot(folder));
 		const workspaceConfig = tryLoadBazelFlutterConfig(this.logger, bazelWorkspaceRoot);
 
 		// Search for Git root to see if this is the Dart SDK.
