@@ -661,8 +661,8 @@ function buildLogHeaders(workspaceContext?: WorkspaceContext) {
 		addToLogHeader(() => `Workspace type: ${workspaceContext.workspaceTypeDescription}`);
 		addToLogHeader(() => `Multi-root?: ${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1}`);
 		const sdks = workspaceContext.sdks;
-		addToLogHeader(() => `Dart SDK:\n    Loc: ${sdks.dart}\n    Ver: ${util.getSdkVersion(logger, sdks.dart)}`);
-		addToLogHeader(() => `Flutter SDK:\n    Loc: ${sdks.flutter}\n    Ver: ${util.getSdkVersion(logger, sdks.flutter)}`);
+		addToLogHeader(() => `Dart SDK:\n    Loc: ${sdks.dart}\n    Ver: ${sdks.dartVersion}`);
+		addToLogHeader(() => `Flutter SDK:\n    Loc: ${sdks.flutter}\n    Ver: ${sdks.flutterVersion}`);
 	}
 	addToLogHeader(() => `HTTP_PROXY: ${process.env.HTTP_PROXY}`);
 	addToLogHeader(() => `NO_PROXY: ${process.env.NO_PROXY}`);

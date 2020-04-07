@@ -7,7 +7,7 @@ import { extensionVersion } from "../../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { getSdkVersion, openLogContents } from "../utils";
+import { openLogContents } from "../utils";
 import { DasAnalyzerClient } from "./analyzer_das";
 
 const maxErrorReportCount = 3;
@@ -109,10 +109,8 @@ export class AnalyzerStatusReporter {
 	}
 
 	private showErrorLog(error: ServerErrorNotification, method?: string) {
-		const sdkVersion = getSdkVersion(this.logger, this.workspaceContext.sdks.dart);
-		const flutterSdkVersion = this.workspaceContext.sdks.dartSdkIsFromFlutter
-			? getSdkVersion(this.logger, this.workspaceContext.sdks.flutter)
-			: undefined;
+		const sdkVersion = this.workspaceContext.sdks.dartVersion;
+		const flutterSdkVersion = this.workspaceContext.sdks.flutterVersion;
 
 		const analyzerArgs = this.analyzer.getAnalyzerLaunchArgs();
 
