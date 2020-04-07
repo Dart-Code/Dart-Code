@@ -30,7 +30,7 @@ export function tryLoadBazelFlutterConfig(logger: Logger, bazelWorkspaceRoot: st
 			devtoolsRunScript: makeFullPath(config.devtoolsRunScript),
 			flutterDaemonScript: makeFullPath(config.daemonScript),
 			flutterDoctorScript: makeFullPath(config.doctorScript),
-			flutterLaunchScript: makeFullPath(config.launchScript),
+			flutterRunScript: makeFullPath(config.launchScript),
 			flutterSdkHome: makeFullPath(config.sdkHome),
 			flutterTestScript: makeFullPath(config.testScript),
 			flutterVersionFile: makeFullPath(config.versionFile),
