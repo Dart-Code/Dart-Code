@@ -61,6 +61,7 @@ export interface FlutterLaunchRequestArguments extends DartLaunchRequestArgument
 	flutterTrackWidgetCreation: boolean;
 	flutterPath: string;
 	flutterCustomRunScript: string | undefined;
+	flutterCustomTestScript: string | undefined;
 	flutterMode?: "debug" | "profile" | "release";
 	flutterPlatform?: "default" | "android-arm" | "android-arm64" | "android-x86" | "android-x64";
 	flutterRunLogFile?: string;

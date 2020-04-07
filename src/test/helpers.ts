@@ -89,6 +89,7 @@ export const flutterHelloWorldThrowInLocalPackageFile = vs.Uri.file(path.join(fs
 export const flutterBazelRoot = vs.Uri.file(path.join(testFolder, "test_projects/bazel_workspace"));
 export const flutterBazelHelloWorldFolder = vs.Uri.file(path.join(fsPath(flutterBazelRoot), "flutter_hello_world_bazel"));
 export const flutterBazelHelloWorldMainFile = vs.Uri.file(path.join(fsPath(flutterBazelHelloWorldFolder), "lib/main.dart"));
+export const flutterBazelTestMainFile = vs.Uri.file(path.join(fsPath(flutterBazelHelloWorldFolder), "test/widget_test.dart"));
 // Flutter tests
 export const flutterTestMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/widget_test.dart"));
 export const flutterTestOtherFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/other_test.dart"));
