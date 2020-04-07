@@ -26,6 +26,10 @@ export interface DartWorkspaceContext extends WorkspaceContext {
 	readonly sdks: DartSdks;
 }
 
+export interface FlutterWorkspaceContext extends WorkspaceContext {
+	readonly sdks: FlutterSdks;
+}
+
 export interface WorkspaceConfig {
 	readonly configFile: string;
 	readonly flutterDaemonScript: string | undefined;
