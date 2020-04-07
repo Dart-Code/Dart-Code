@@ -1,6 +1,6 @@
 {
 	"sdkHome": "../my-flutter-sdk",
-	"versionFile": "/path/to/flutter/version",
+	"versionFile": "../my-flutter-version",
 	"daemonScript": "scripts/custom_daemon.sh",
 	"doctorScript": "scripts/custom_doctor.sh",
 	"launchScript": "scripts/custom_run.sh",

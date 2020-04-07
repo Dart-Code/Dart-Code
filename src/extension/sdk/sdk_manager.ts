@@ -50,7 +50,7 @@ abstract class SdkManager {
 			// Then we need to take the executable name and /bin back off
 			const actualFolder = path.dirname(path.dirname(actualBinary));
 
-			const version = getSdkVersion(this.logger, actualFolder);
+			const version = getSdkVersion(this.logger, { sdkRoot: actualFolder });
 			return {
 				description: f === this.currentSdk && this.configuredSdk ? "Current setting" : "",
 				detail: f,
