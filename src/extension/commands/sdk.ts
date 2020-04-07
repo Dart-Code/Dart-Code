@@ -150,7 +150,7 @@ export class SdkCommands {
 
 			const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : undefined;
 			const args = deviceId ? ["screenshot", "-d", deviceId] : ["screenshot"];
-			await this.runFlutterInFolder(this.flutterScreenshotPath, args, "screenshot");
+			await this.runFlutterInFolder(this.flutterScreenshotPath, args, "screenshot", true);
 
 			if (shouldNotify) {
 				const res = await vs.window.showInformationMessage(`Screenshots will be saved to ${this.flutterScreenshotPath}`, "Show Folder");
@@ -169,7 +169,7 @@ export class SdkCommands {
 			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
 			if (!fs.existsSync(tempDir))
 				fs.mkdirSync(tempDir);
-			return this.runFlutterInFolder(tempDir, ["doctor", "-v"], "flutter");
+			return this.runFlutterInFolder(tempDir, ["doctor", "-v"], "flutter", true);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.upgrade", async (selection) => {
 			if (!workspace.sdks.flutter) {
@@ -179,7 +179,7 @@ export class SdkCommands {
 			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
 			if (!fs.existsSync(tempDir))
 				fs.mkdirSync(tempDir);
-			await this.runFlutterInFolder(tempDir, ["upgrade"], "flutter");
+			await this.runFlutterInFolder(tempDir, ["upgrade"], "flutter", true);
 			await util.promptToReloadExtension();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
@@ -400,34 +400,36 @@ export class SdkCommands {
 		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection);
 	}
 
-	private runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined): Thenable<number | undefined> {
+	private runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined, alwaysShowOutput = false): Thenable<number | undefined> {
 		if (!this.sdks.flutter)
 			throw new Error("Flutter SDK not available");
 		const binPath = path.join(this.sdks.flutter, flutterPath);
 		args = getGlobalFlutterArgs()
 			.concat(config.for(vs.Uri.file(folder)).flutterAdditionalArgs)
 			.concat(args);
-		return this.runCommandInFolder(shortPath, "flutter", folder, binPath, args);
+		return this.runCommandInFolder(shortPath, "flutter", folder, binPath, args, alwaysShowOutput);
 	}
 
 	private runPub(args: string[], selection?: vs.Uri): Thenable<number | undefined> {
 		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${args.join(" ")}" in`, args, selection);
 	}
 
-	private runPubInFolder(folder: string, args: string[], shortPath: string): Thenable<number | undefined> {
+	private runPubInFolder(folder: string, args: string[], shortPath: string, alwaysShowOutput = false): Thenable<number | undefined> {
 		if (!this.sdks.dart)
 			throw new Error("Flutter SDK not available");
 
 		const binPath = path.join(this.sdks.dart, pubPath);
 		args = args.concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
-		return this.runCommandInFolder(shortPath, "pub", folder, binPath, args);
+		return this.runCommandInFolder(shortPath, "pub", folder, binPath, args, alwaysShowOutput);
 	}
 
-	private runCommandInFolder(shortPath: string | undefined, commandName: string, folder: string, binPath: string, args: string[], isStartingBecauseOfTermination: boolean = false): Thenable<number | undefined> {
+	private runCommandInFolder(shortPath: string | undefined, commandName: string, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean): Thenable<number | undefined> {
 		shortPath = shortPath || path.basename(folder);
 
 		const channelName = commandName.substr(0, 1).toUpperCase() + commandName.substr(1);
 		const channel = channels.createChannel(channelName);
+		if (alwaysShowOutput)
+			channel.show();
 
 		// Figure out if there's already one of this command running, in which case we'll chain off the
 		// end of it.
