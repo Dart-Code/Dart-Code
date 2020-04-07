@@ -86,8 +86,8 @@ export const flutterHelloWorldThrowInSdkFile = vs.Uri.file(path.join(fsPath(flut
 export const flutterHelloWorldThrowInExternalPackageFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/throw_in_external_package.dart"));
 export const flutterHelloWorldThrowInLocalPackageFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/throw_in_local_package.dart"));
 // Flutter Bazel
-export const flutterBazelReadonlyFolder = vs.Uri.file(path.join(testFolder, "test_projects/bazel_workspace/READONLY"));
-export const flutterBazelHelloWorldFolder = vs.Uri.file(path.join(testFolder, "test_projects/bazel_workspace/flutter_hello_world_bazel"));
+export const flutterBazelRoot = vs.Uri.file(path.join(testFolder, "test_projects/bazel_workspace"));
+export const flutterBazelHelloWorldFolder = vs.Uri.file(path.join(fsPath(flutterBazelRoot), "flutter_hello_world_bazel"));
 export const flutterBazelHelloWorldMainFile = vs.Uri.file(path.join(fsPath(flutterBazelHelloWorldFolder), "lib/main.dart"));
 // Flutter tests
 export const flutterTestMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/widget_test.dart"));
@@ -870,7 +870,7 @@ export function deleteFileIfExists(filePath: string) {
 }
 
 export function prepareHasRunFile(name: string) {
-	const filePath = path.join(fsPath(flutterBazelReadonlyFolder), "scripts/has_run/custom_devtools");
+	const filePath = path.join(fsPath(flutterBazelRoot), `scripts/has_run/${name}`);
 	deleteFileIfExists(filePath);
 	return filePath;
 }

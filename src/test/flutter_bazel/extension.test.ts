@@ -1,9 +1,10 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
+import { isWin } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
-import { activateWithoutAnalysis, ext, extApi, flutterBazelReadonlyFolder, logger } from "../helpers";
+import { activateWithoutAnalysis, ext, extApi, flutterBazelHelloWorldFolder, flutterBazelRoot, logger } from "../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -17,6 +18,11 @@ describe("test environment", () => {
 });
 
 describe("extension", () => {
+	beforeEach(function () {
+		if (isWin)
+			this.skip();
+	});
+
 	it("activated", async () => {
 		await activateWithoutAnalysis();
 		assert.equal(ext.isActive, true);
@@ -25,21 +31,20 @@ describe("extension", () => {
 		await activateWithoutAnalysis();
 		assert.ok(extApi);
 
-		const readonlyPath = path.join(fsPath(flutterBazelReadonlyFolder), "flutter_hello_world_bazel");
 		const workspaceContext = extApi.workspaceContext;
 
 		assert.ok(workspaceContext.sdks);
 		assert.ok(workspaceContext.sdks.dart);
 		assert.ok(workspaceContext.sdks.flutter);
 		assert.ok(workspaceContext.workspaceConfig);
-		assert.equal(workspaceContext.workspaceConfig?.configFile, path.join(readonlyPath, "dart/config/intellij-plugins/flutter.json"));
-		assert.equal(workspaceContext.workspaceConfig?.devtoolsScript, path.join(readonlyPath, "../scripts/custom_devtools.sh"));
-		assert.equal(workspaceContext.workspaceConfig?.flutterDaemonScript, path.join(readonlyPath, "../scripts/custom_daemon.sh"));
-		assert.equal(workspaceContext.workspaceConfig?.flutterDoctorScript, path.join(readonlyPath, "../scripts/custom_doctor.sh"));
-		assert.equal(workspaceContext.workspaceConfig?.flutterLaunchScript, path.join(readonlyPath, "../scripts/custom_run.sh"));
-		assert.equal(workspaceContext.workspaceConfig?.flutterSdkHome, path.join(readonlyPath, "../my-flutter-sdk"));
-		assert.equal(workspaceContext.workspaceConfig?.flutterTestScript, path.join(readonlyPath, "../scripts/custom_test.sh"));
-		assert.equal(workspaceContext.workspaceConfig?.flutterVersionFile, path.join(readonlyPath, "../my-flutter-version"));
+		assert.equal(workspaceContext.workspaceConfig?.configFile, path.join(fsPath(flutterBazelHelloWorldFolder), "dart/config/intellij-plugins/flutter.json"));
+		assert.equal(workspaceContext.workspaceConfig?.devtoolsScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_devtools.sh"));
+		assert.equal(workspaceContext.workspaceConfig?.flutterDaemonScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_daemon.sh"));
+		assert.equal(workspaceContext.workspaceConfig?.flutterDoctorScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_doctor.sh"));
+		assert.equal(workspaceContext.workspaceConfig?.flutterLaunchScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_run.sh"));
+		assert.equal(workspaceContext.workspaceConfig?.flutterSdkHome, path.join(fsPath(flutterBazelRoot), "my-flutter-sdk"));
+		assert.equal(workspaceContext.workspaceConfig?.flutterTestScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_test.sh"));
+		assert.equal(workspaceContext.workspaceConfig?.flutterVersionFile, path.join(fsPath(flutterBazelRoot), "my-flutter-version"));
 		logger.info("        " + JSON.stringify(workspaceContext, undefined, 8).trim().slice(1, -1).trim());
 	});
 	// This test requires another clone of the SDK to verify the path (symlinks
@@ -56,24 +61,22 @@ describe("extension", () => {
 		assert.ok(extApi);
 
 		const sdks: Sdks = extApi.workspaceContext.sdks;
-		const workspaceRoot = fsPath(vs.workspace.workspaceFolders![0].uri);
 
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.equal(sdks.dartSdkIsFromFlutter, true);
 		assert.equal(sdks.flutterVersion, "9.8.7");
-		assert.equal(sdks.flutter, path.join(fsPath(flutterBazelReadonlyFolder), "my-flutter-sdk"));
+		assert.equal(sdks.flutter, path.join(fsPath(flutterBazelRoot), "my-flutter-sdk"));
 	});
 	it.skip("used Bazel's Flutter's Dart version", async () => {
 		await activateWithoutAnalysis();
 		assert.ok(extApi);
 
 		const sdks: Sdks = extApi.workspaceContext.sdks;
-		const workspaceRoot = fsPath(vs.workspace.workspaceFolders![0].uri);
 
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.equal(sdks.dartSdkIsFromFlutter, true);
-		assert.equal(sdks.dart, path.join(fsPath(flutterBazelReadonlyFolder), "my-flutter-sdk/bin/cache/dart-sdk"));
+		assert.equal(sdks.dart, path.join(fsPath(flutterBazelRoot), "my-flutter-sdk/bin/cache/dart-sdk"));
 	});
 });

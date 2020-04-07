@@ -7,8 +7,7 @@ export function tryLoadBazelFlutterConfig(logger: Logger, bazelWorkspaceRoot: st
 		return;
 
 	try {
-		const readonlyPath = path.join(bazelWorkspaceRoot, "../READONLY", path.basename(bazelWorkspaceRoot));
-		const configPath = path.join(readonlyPath, "dart/config/intellij-plugins/flutter.json");
+		const configPath = path.join(bazelWorkspaceRoot, "dart/config/intellij-plugins/flutter.json");
 
 		if (!fs.existsSync(configPath))
 			return;
@@ -22,7 +21,7 @@ export function tryLoadBazelFlutterConfig(logger: Logger, bazelWorkspaceRoot: st
 				return undefined;
 			if (path.isAbsolute(relOrAbsolute))
 				return relOrAbsolute;
-			return path.join(readonlyPath, relOrAbsolute);
+			return path.join(bazelWorkspaceRoot!, relOrAbsolute);
 		}
 
 		return {
