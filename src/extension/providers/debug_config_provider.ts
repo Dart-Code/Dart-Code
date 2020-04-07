@@ -14,7 +14,7 @@ import { WebTestDebugSession } from "../../debug/web_test_debug_impl";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { CHROME_OS_VM_SERVICE_PORT, dartVMPath, debugAnywayAction, flutterPath, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isChromeOS, pubPath, pubSnapshotPath, showErrorsAction } from "../../shared/constants";
 import { Device } from "../../shared/flutter/daemon_interfaces";
-import { IFlutterDaemon, Logger, Sdks } from "../../shared/interfaces";
+import { IFlutterDaemon, Logger } from "../../shared/interfaces";
 import { filenameSafe } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../../shared/utils/fs";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
@@ -37,7 +37,7 @@ const isCI = !!process.env.CI;
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugServers: { [index: string]: net.Server } = {};
 
-	constructor(private readonly logger: Logger, private readonly wsContext: WorkspaceContext, private readonly sdks: Sdks, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly daemon: IFlutterDaemon, private readonly deviceManager: FlutterDeviceManager, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
+	constructor(private readonly logger: Logger, private readonly wsContext: WorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly daemon: IFlutterDaemon, private readonly deviceManager: FlutterDeviceManager, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
 
 	public provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
 		const isFlutter = isFlutterWorkspaceFolder(folder);
@@ -465,12 +465,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
 		debugConfig.vmServicePort = debugConfig.vmServicePort || (isChromeOS && config.useKnownChromeOSPorts ? CHROME_OS_VM_SERVICE_PORT : 0);
-		debugConfig.dartPath = debugConfig.dartPath || path.join(this.sdks.dart!, dartVMPath);
+		debugConfig.dartPath = debugConfig.dartPath || path.join(this.wsContext.sdks.dart!, dartVMPath);
 		debugConfig.observatoryLogFile = this.insertSessionName(debugConfig, debugConfig.observatoryLogFile || conf.observatoryLogFile);
 		debugConfig.webDaemonLogFile = this.insertSessionName(debugConfig, debugConfig.webDaemonLogFile || conf.webDaemonLogFile);
 		debugConfig.maxLogLineLength = debugConfig.maxLogLineLength || config.maxLogLineLength;
-		debugConfig.pubPath = debugConfig.pubPath || path.join(this.sdks.dart!, pubPath);
-		debugConfig.pubSnapshotPath = debugConfig.pubSnapshotPath || path.join(this.sdks.dart!, pubSnapshotPath);
+		debugConfig.pubPath = debugConfig.pubPath || path.join(this.wsContext.sdks.dart!, pubPath);
+		debugConfig.pubSnapshotPath = debugConfig.pubSnapshotPath || path.join(this.wsContext.sdks.dart!, pubSnapshotPath);
 		debugConfig.pubTestLogFile = this.insertSessionName(debugConfig, debugConfig.pubTestLogFile || conf.pubTestLogFile);
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries !== undefined && debugConfig.debugSdkLibraries !== null
 			? debugConfig.debugSdkLibraries
@@ -490,7 +490,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.useWriteServiceInfo = debugConfig.useWriteServiceInfo !== undefined && debugConfig.useWriteServiceInfo !== null
 			? debugConfig.useWriteServiceInfo
 			: this.dartCapabilities.supportsWriteServiceInfo;
-		if (isFlutter && this.sdks.flutter) {
+		if (isFlutter && this.wsContext.sdks.flutter) {
 			debugConfig.args = conf.flutterAdditionalArgs.concat(debugConfig.args);
 			debugConfig.forceFlutterVerboseMode = isLogging || isCI;
 			debugConfig.flutterTrackWidgetCreation =
@@ -501,7 +501,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					conf.flutterTrackWidgetCreation;
 			debugConfig.flutterMode = debugConfig.flutterMode || "debug";
 			debugConfig.flutterPlatform = debugConfig.flutterPlatform || "default";
-			debugConfig.flutterPath = debugConfig.flutterPath || path.join(this.sdks.flutter, flutterPath);
+			debugConfig.flutterPath = debugConfig.flutterPath || path.join(this.wsContext.sdks.flutter, flutterPath);
+			debugConfig.flutterCustomRunScript = this.wsContext.workspaceConfig?.flutterRunScript;
 			debugConfig.flutterRunLogFile = this.insertSessionName(debugConfig, debugConfig.flutterRunLogFile || conf.flutterRunLogFile);
 			debugConfig.flutterTestLogFile = this.insertSessionName(debugConfig, debugConfig.flutterTestLogFile || conf.flutterTestLogFile);
 			if (!debugConfig.deviceId && device) {

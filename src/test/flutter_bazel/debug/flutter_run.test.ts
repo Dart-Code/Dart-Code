@@ -36,8 +36,26 @@ describe(`flutter run debugger`, () => {
 
 	afterEach(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 
-	it("can launch DevTools", async function () {
-		const hasRunFile = prepareHasRunFile("devtools");
+	it("runs using custom script", async () => {
+		const hasRunFile = prepareHasRunFile("flutter_run");
+
+		const config = await startDebugger(dc, flutterBazelHelloWorldMainFile);
+		await Promise.all([
+			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
+			dc.configurationSequence(),
+			dc.launch(config),
+		]);
+
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+
+		assert.ok(fs.existsSync(hasRunFile));
+	});
+
+	it("can launch DevTools using custom script", async function () {
+		const hasRunFile = prepareHasRunFile("devtools_run");
 
 		if (!extApi.flutterCapabilities.supportsDevTools)
 			return this.skip();

@@ -34,7 +34,7 @@ export interface WorkspaceConfig {
 	readonly configFile: string;
 	readonly flutterDaemonScript: string | undefined;
 	readonly flutterDoctorScript: string | undefined;
-	readonly flutterLaunchScript: string | undefined;
+	readonly flutterRunScript: string | undefined;
 	readonly flutterTestScript: string | undefined;
 	readonly flutterSdkHome: string | undefined;
 	readonly flutterVersionFile: string | undefined;

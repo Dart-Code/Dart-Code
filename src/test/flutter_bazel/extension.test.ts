@@ -42,7 +42,7 @@ describe("extension", () => {
 		assert.equal(workspaceContext.workspaceConfig?.devtoolsRunScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_devtools_run.sh"));
 		assert.equal(workspaceContext.workspaceConfig?.flutterDaemonScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_daemon.sh"));
 		assert.equal(workspaceContext.workspaceConfig?.flutterDoctorScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_doctor.sh"));
-		assert.equal(workspaceContext.workspaceConfig?.flutterLaunchScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_run.sh"));
+		assert.equal(workspaceContext.workspaceConfig?.flutterRunScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_run.sh"));
 		assert.equal(workspaceContext.workspaceConfig?.flutterSdkHome, path.join(fsPath(flutterBazelRoot), "my-flutter-sdk"));
 		assert.equal(workspaceContext.workspaceConfig?.flutterTestScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_test.sh"));
 		assert.equal(workspaceContext.workspaceConfig?.flutterVersionFile, path.join(fsPath(flutterBazelRoot), "my-flutter-version"));
