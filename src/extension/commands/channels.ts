@@ -4,9 +4,13 @@ import { SpawnedProcess } from "../../shared/interfaces";
 const channels: { [key: string]: vs.OutputChannel } = {};
 
 export function createChannel(name: string): vs.OutputChannel {
-	if (!channels[name])
-		channels[name] = vs.window.createOutputChannel(name);
+	// Remove any pre-existing output channel with this name.
+	if (channels[name]) {
+		channels[name].hide();
+		channels[name].dispose();
+	}
 
+	channels[name] = vs.window.createOutputChannel(name);
 	return channels[name];
 }
 

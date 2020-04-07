@@ -407,7 +407,7 @@ export class SdkCommands {
 		args = getGlobalFlutterArgs()
 			.concat(config.for(vs.Uri.file(folder)).flutterAdditionalArgs)
 			.concat(args);
-		return this.runCommandInFolder(shortPath, "flutter", folder, binPath, args, alwaysShowOutput);
+		return this.runCommandInFolder(shortPath, folder, binPath, args, alwaysShowOutput);
 	}
 
 	private runPub(args: string[], selection?: vs.Uri): Thenable<number | undefined> {
@@ -420,14 +420,14 @@ export class SdkCommands {
 
 		const binPath = path.join(this.sdks.dart, pubPath);
 		args = args.concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
-		return this.runCommandInFolder(shortPath, "pub", folder, binPath, args, alwaysShowOutput);
+		return this.runCommandInFolder(shortPath, folder, binPath, args, alwaysShowOutput);
 	}
 
-	private runCommandInFolder(shortPath: string | undefined, commandName: string, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean): Thenable<number | undefined> {
+	private runCommandInFolder(shortPath: string | undefined, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean): Thenable<number | undefined> {
 		shortPath = shortPath || path.basename(folder);
+		const commandName = path.basename(binPath);
 
-		const channelName = commandName.substr(0, 1).toUpperCase() + commandName.substr(1);
-		const channel = channels.createChannel(channelName);
+		const channel = channels.createChannel(commandName);
 		if (alwaysShowOutput)
 			channel.show();
 

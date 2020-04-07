@@ -255,6 +255,24 @@ function logOpenEditors() {
 	}
 }
 
+export function captureOutput(name: string) {
+	// Create a channel that buffers its output.
+	const buffer: string[] = [];
+	const channel = vs.window.createOutputChannel(name);
+
+	sb.stub(channel, "append").callsFake((s: string) => buffer.push(s));
+	sb.stub(channel, "appendLine").callsFake((s: string) => buffer.push(`${s}\n`));
+
+	// Ensure calls to create this output channel return our stubbed output channel.
+	const createOutputChannel = sb.stub(vs.window, "createOutputChannel").callThrough();
+	createOutputChannel.withArgs(name).returns(channel);
+
+	return {
+		buffer,
+		channel,
+	};
+}
+
 export async function closeAllOpenFiles(): Promise<void> {
 	logger.info(`Closing all open editors...`);
 	logOpenEditors();
