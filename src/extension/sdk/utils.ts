@@ -406,31 +406,31 @@ function extractFlutterSdkPathFromPackagesFile(file: string): string | undefined
 }
 
 function findFuchsiaRoot(folder: string): string | undefined {
-	return findRootContainingFolder(folder, ".jiri_root");
+	return findRootContaining(folder, ".jiri_root");
 }
 
 function findGitRoot(folder: string): string | undefined {
-	return findRootContainingFolder(folder, ".git");
+	return findRootContaining(folder, ".git");
 }
 
-function findRootContainingFolder(folder: string, childFolderName: string): string | undefined {
+function findRootContaining(folder: string, childName: string, expectFile = false): string | undefined {
 	if (folder) {
 		// Walk up the directories from the workspace root, and see if there
-		// exists a directory which has ".git" directory as a child.
-		// If such directory is found, that is our git root.
-		let dir = folder;
-		while (dir) {
+		// exists a directory which has `childName` file/directory as a child.
+		let child = folder;
+		while (child) {
 			try {
-				if (fs.statSync(path.join(dir, childFolderName)).isDirectory()) {
-					return dir;
+				const stat = fs.statSync(path.join(child, childName));
+				if (expectFile ? stat.isFile() : stat.isDirectory()) {
+					return child;
 				}
 			} catch { }
 
-			const parentDir = path.dirname(dir);
-			if (dir === parentDir)
+			const parentDir = path.dirname(child);
+			if (child === parentDir)
 				break;
 
-			dir = parentDir;
+			child = parentDir;
 		}
 	}
 
