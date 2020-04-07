@@ -38,7 +38,8 @@ describe("extension", () => {
 		assert.ok(workspaceContext.sdks.flutter);
 		assert.ok(workspaceContext.workspaceConfig);
 		assert.equal(workspaceContext.workspaceConfig?.configFile, path.join(fsPath(flutterBazelHelloWorldFolder), "dart/config/intellij-plugins/flutter.json"));
-		assert.equal(workspaceContext.workspaceConfig?.devtoolsScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_devtools.sh"));
+		assert.equal(workspaceContext.workspaceConfig?.devtoolsActivateScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_devtools_activate.sh"));
+		assert.equal(workspaceContext.workspaceConfig?.devtoolsRunScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_devtools_run.sh"));
 		assert.equal(workspaceContext.workspaceConfig?.flutterDaemonScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_daemon.sh"));
 		assert.equal(workspaceContext.workspaceConfig?.flutterDoctorScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_doctor.sh"));
 		assert.equal(workspaceContext.workspaceConfig?.flutterLaunchScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_run.sh"));
