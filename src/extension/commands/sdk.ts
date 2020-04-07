@@ -191,7 +191,7 @@ export class SdkCommands {
 			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
 			if (!fs.existsSync(tempDir))
 				fs.mkdirSync(tempDir);
-			return this.runFlutterInFolder(tempDir, ["doctor", "-v"], "flutter", true);
+			return this.runFlutterInFolder(tempDir, ["doctor", "-v"], "flutter", true, { customScript: workspace.bazelWorkspaceConfig?.flutterDoctorScript });
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.upgrade", async (selection) => {
 			if (!workspace.sdks.flutter) {
@@ -423,14 +423,33 @@ export class SdkCommands {
 		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection, alwaysShowOutput);
 	}
 
-	private runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined, alwaysShowOutput = false): Thenable<number | undefined> {
+	private withCustomScript(binPath: string, binArgs: string[], options?: { customScript?: string, customScriptReplacesNumArgs?: number }) {
+		if (options?.customScript) {
+			binPath = options.customScript;
+			const numArgsToRemove = options.customScriptReplacesNumArgs !== undefined
+				? options.customScriptReplacesNumArgs
+				: 1; // Default to removing one arg.
+			binArgs = binArgs.slice(numArgsToRemove);
+		}
+
+		return { binPath, binArgs };
+	}
+
+	private runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined, alwaysShowOutput = false, options?: { customScript?: string, customScriptReplacesNumArgs?: number }): Thenable<number | undefined> {
 		if (!this.sdks.flutter)
 			throw new Error("Flutter SDK not available");
-		const binPath = path.join(this.sdks.flutter, flutterPath);
-		args = getGlobalFlutterArgs()
+
+		const { binPath, binArgs } = this.withCustomScript(
+			path.join(this.sdks.flutter, flutterPath),
+			args,
+			options,
+		);
+
+		const allArgs = getGlobalFlutterArgs()
 			.concat(config.for(vs.Uri.file(folder)).flutterAdditionalArgs)
-			.concat(args);
-		return this.runCommandInFolder(shortPath, folder, binPath, args, alwaysShowOutput);
+			.concat(binArgs);
+
+		return this.runCommandInFolder(shortPath, folder, binPath, allArgs, alwaysShowOutput);
 	}
 
 	private runPub(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false): Thenable<number | undefined> {
