@@ -1,9 +1,9 @@
 {
 	"sdkHome": "../my-flutter-sdk",
 	"versionFile": "../my-flutter-version",
-	"daemonScript": "scripts/custom_daemon.sh",
-	"doctorScript": "scripts/custom_doctor.sh",
-	"launchScript": "scripts/custom_run.sh",
-	"testScript": "scripts/custom_test.sh",
-	"devtoolsScript": "scripts/custom_devtools.sh"
+	"daemonScript": "../scripts/custom_daemon.sh",
+	"doctorScript": "../scripts/custom_doctor.sh",
+	"launchScript": "../scripts/custom_run.sh",
+	"testScript": "../scripts/custom_test.sh",
+	"devtoolsScript": "../scripts/custom_devtools.sh"
 }

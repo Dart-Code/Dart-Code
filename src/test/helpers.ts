@@ -85,6 +85,10 @@ export const flutterHelloWorldLocalPackageFile = vs.Uri.file(path.join(fsPath(fl
 export const flutterHelloWorldThrowInSdkFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/throw_in_sdk_code.dart"));
 export const flutterHelloWorldThrowInExternalPackageFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/throw_in_external_package.dart"));
 export const flutterHelloWorldThrowInLocalPackageFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/throw_in_local_package.dart"));
+// Flutter Bazel
+export const flutterBazelReadonlyFolder = vs.Uri.file(path.join(testFolder, "test_projects/bazel_workspace/READONLY"));
+export const flutterBazelHelloWorldFolder = vs.Uri.file(path.join(testFolder, "test_projects/bazel_workspace/flutter_hello_world_bazel"));
+export const flutterBazelHelloWorldMainFile = vs.Uri.file(path.join(fsPath(flutterBazelHelloWorldFolder), "lib/main.dart"));
 // Flutter tests
 export const flutterTestMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/widget_test.dart"));
 export const flutterTestOtherFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/other_test.dart"));
@@ -857,6 +861,18 @@ export async function writeBrokenDartCodeIntoFileForTest(file: vs.Uri): Promise<
 	await delay(500);
 	await extApi.currentAnalysis();
 	defer(() => tryDelete(file));
+}
+
+export function deleteFileIfExists(filePath: string) {
+	if (fs.existsSync(filePath)) {
+		fs.unlinkSync(filePath);
+	}
+}
+
+export function prepareHasRunFile(name: string) {
+	const filePath = path.join(fsPath(flutterBazelReadonlyFolder), "scripts/has_run/custom_devtools");
+	deleteFileIfExists(filePath);
+	return filePath;
 }
 
 export async function saveTrivialChangeToFile(uri: vs.Uri) {
