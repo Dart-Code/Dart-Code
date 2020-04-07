@@ -12,7 +12,6 @@ import { StdIOService } from "../../shared/services/stdio_service";
 import { getRandomInt } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
 import { envUtils, isRunningLocally } from "../../shared/vscode/utils";
-import { Context } from "../../shared/vscode/workspace";
 import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions } from "../commands/debug";
 import { config } from "../config";
@@ -38,7 +37,7 @@ export class DevToolsManager implements vs.Disposable {
 	/// concurrent launches can wait on the same promise.
 	private devtoolsUrl: Thenable<string> | undefined;
 
-	constructor(private logger: Logger, private readonly context: Context, private sdks: Sdks, private debugCommands: DebugCommands, private analytics: Analytics, private pubGlobal: PubGlobal) {
+	constructor(private logger: Logger, private sdks: Sdks, private debugCommands: DebugCommands, private analytics: Analytics, private pubGlobal: PubGlobal) {
 		this.disposables.push(this.devToolsStatusBarItem);
 	}
 
