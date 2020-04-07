@@ -5,6 +5,7 @@ import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath,
 import { Logger } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
+import { tryLoadBazelFlutterConfig } from "../../shared/utils/bazel";
 import { findProjectFolders, fsPath, hasPubspec } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
@@ -163,12 +164,17 @@ export class SdkUtils {
 				dart: config.sdkPath,
 				dartSdkIsFromFlutter: false,
 				flutter: undefined,
-			}, false, false, false, false, false);
+			}, undefined, false, false, false, false, false);
 		}
 
 		// Search for a Fuchsia root.
 		let fuchsiaRoot: string | undefined;
 		topLevelFolders.forEach((folder) => fuchsiaRoot = fuchsiaRoot || findFuchsiaRoot(folder));
+
+		// Search for a Bazel workspace root.
+		let bazelWorkspaceRoot: string | undefined;
+		topLevelFolders.forEach((folder) => bazelWorkspaceRoot = bazelWorkspaceRoot || findBazelWorkspaceRoot(folder));
+		const workspaceConfig = tryLoadBazelFlutterConfig(this.logger, bazelWorkspaceRoot);
 
 		// Search for Git root to see if this is the Dart SDK.
 		let gitRoot: string | undefined;
@@ -228,6 +234,7 @@ export class SdkUtils {
 		}
 
 		const flutterSdkSearchPaths = [
+			workspaceConfig?.flutterSdkHome,
 			config.flutterSdkPath,
 			fuchsiaRoot && path.join(fuchsiaRoot, "lib/flutter"),
 			fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter"),
@@ -269,6 +276,7 @@ export class SdkUtils {
 				flutter: flutterSdkPath,
 				flutterVersion: getSdkVersion(this.logger, flutterSdkPath),
 			},
+			workspaceConfig,
 			hasAnyFlutterMobileProject,
 			hasAnyWebProject,
 			hasAnyStandardDartProject,
@@ -407,6 +415,10 @@ function extractFlutterSdkPathFromPackagesFile(file: string): string | undefined
 
 function findFuchsiaRoot(folder: string): string | undefined {
 	return findRootContaining(folder, ".jiri_root");
+}
+
+function findBazelWorkspaceRoot(folder: string): string | undefined {
+	return findRootContaining(folder, "WORKSPACE", true);
 }
 
 function findGitRoot(folder: string): string | undefined {

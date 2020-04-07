@@ -26,6 +26,17 @@ export interface DartWorkspaceContext extends WorkspaceContext {
 	readonly sdks: DartSdks;
 }
 
+export interface WorkspaceConfig {
+	readonly configFile: string;
+	readonly flutterDaemonScript: string | undefined;
+	readonly flutterDoctorScript: string | undefined;
+	readonly flutterLaunchScript: string | undefined;
+	readonly flutterTestScript: string | undefined;
+	readonly flutterSdkHome: string | undefined;
+	readonly flutterVersionFile: string | undefined;
+	readonly devtoolsScript: string | undefined;
+}
+
 export interface StagehandTemplate {
 	readonly name: string;
 	readonly label: string;

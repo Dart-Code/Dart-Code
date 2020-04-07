@@ -1,10 +1,11 @@
-import { Sdks } from "./interfaces";
+import { Sdks, WorkspaceConfig } from "./interfaces";
 
 export class WorkspaceContext {
 	public readonly workspaceTypeDescription: string;
 	// TODO: Move things from Sdks to this class that aren't related to the SDKs.
 	constructor(
 		public readonly sdks: Sdks,
+		public readonly bazelWorkspaceConfig: WorkspaceConfig | undefined,
 		public readonly hasAnyFlutterMobileProjects: boolean,
 		public readonly hasAnyWebProjects: boolean,
 		public readonly hasAnyStandardDartProjects: boolean,
