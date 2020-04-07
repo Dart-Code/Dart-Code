@@ -24,9 +24,10 @@ export function tryLoadBazelFlutterConfig(logger: Logger, bazelWorkspaceRoot: st
 			return path.join(bazelWorkspaceRoot!, relOrAbsolute);
 		}
 
-		return {
+		const resolvedConfig = {
 			configFile: configPath,
-			devtoolsScript: makeFullPath(config.devtoolsScript),
+			devtoolsActivateScript: makeFullPath(config.devtoolsActivateScript),
+			devtoolsRunScript: makeFullPath(config.devtoolsRunScript),
 			flutterDaemonScript: makeFullPath(config.daemonScript),
 			flutterDoctorScript: makeFullPath(config.doctorScript),
 			flutterLaunchScript: makeFullPath(config.launchScript),
@@ -34,6 +35,10 @@ export function tryLoadBazelFlutterConfig(logger: Logger, bazelWorkspaceRoot: st
 			flutterTestScript: makeFullPath(config.testScript),
 			flutterVersionFile: makeFullPath(config.versionFile),
 		};
+
+		logger.info(`Using resolved config: ${JSON.stringify(resolvedConfig, undefined, 8)}`);
+
+		return resolvedConfig;
 	} catch (e) {
 		logger.error(e);
 	}

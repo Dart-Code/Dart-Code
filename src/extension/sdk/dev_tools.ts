@@ -174,7 +174,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		const { binPath, binArgs } = usingCustomScript(
 			path.join(workspaceContext.sdks.dart, pubPath),
 			["global", "run", "devtools", "--machine", "--enable-notifications", "--try-ports", "10"],
-			{ customScript: workspaceContext.workspaceConfig?.devtoolsScript, customScriptReplacesNumArgs: 3 },
+			{ customScript: workspaceContext.workspaceConfig?.devtoolsRunScript, customScriptReplacesNumArgs: 3 },
 		);
 
 		// Store the port we'll use for later so we can re-bind to the same port if we restart.

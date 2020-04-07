@@ -38,7 +38,8 @@ export interface WorkspaceConfig {
 	readonly flutterTestScript: string | undefined;
 	readonly flutterSdkHome: string | undefined;
 	readonly flutterVersionFile: string | undefined;
-	readonly devtoolsScript: string | undefined;
+	readonly devtoolsActivateScript: string | undefined;
+	readonly devtoolsRunScript: string | undefined;
 }
 
 export interface StagehandTemplate {
