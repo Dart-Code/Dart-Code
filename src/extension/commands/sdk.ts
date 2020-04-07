@@ -8,7 +8,7 @@ import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, FLUTTER_CREATE_PROJEC
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, DartWorkspaceContext, Logger, SpawnedProcess, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
-import { notUndefined, PromiseCompleter, uniq } from "../../shared/utils";
+import { notUndefined, PromiseCompleter, uniq, usingCustomScript } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
 import { findProjectFolders, fsPath, mkDirRecursive } from "../../shared/utils/fs";
@@ -423,23 +423,11 @@ export class SdkCommands {
 		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection, alwaysShowOutput);
 	}
 
-	private withCustomScript(binPath: string, binArgs: string[], options?: { customScript?: string, customScriptReplacesNumArgs?: number }) {
-		if (options?.customScript) {
-			binPath = options.customScript;
-			const numArgsToRemove = options.customScriptReplacesNumArgs !== undefined
-				? options.customScriptReplacesNumArgs
-				: 1; // Default to removing one arg.
-			binArgs = binArgs.slice(numArgsToRemove);
-		}
-
-		return { binPath, binArgs };
-	}
-
 	private runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined, alwaysShowOutput = false, options?: { customScript?: string, customScriptReplacesNumArgs?: number }): Thenable<number | undefined> {
 		if (!this.sdks.flutter)
 			throw new Error("Flutter SDK not available");
 
-		const { binPath, binArgs } = this.withCustomScript(
+		const { binPath, binArgs } = usingCustomScript(
 			path.join(this.sdks.flutter, flutterPath),
 			args,
 			options,

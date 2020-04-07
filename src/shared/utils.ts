@@ -92,6 +92,18 @@ export function isStableSdk(sdkVersion?: string): boolean {
 	return !!(sdkVersion && !semver.prerelease(sdkVersion));
 }
 
+export function usingCustomScript(binPath: string, binArgs: string[], options?: { customScript?: string, customScriptReplacesNumArgs?: number }) {
+	if (options?.customScript) {
+		binPath = options.customScript;
+		const numArgsToRemove = options.customScriptReplacesNumArgs !== undefined
+			? options.customScriptReplacesNumArgs
+			: 1; // Default to removing one arg.
+		binArgs = binArgs.slice(numArgsToRemove);
+	}
+
+	return { binPath, binArgs };
+}
+
 export function errorString(error: SomeError): string {
 	if (!error)
 		return "<empty error>";
