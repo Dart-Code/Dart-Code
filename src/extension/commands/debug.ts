@@ -3,13 +3,12 @@ import * as path from "path";
 import * as vs from "vscode";
 import { isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
 import { DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
-import { Logger, LogMessage } from "../../shared/interfaces";
+import { DartWorkspaceContext, Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
 import { findProjectFolders, fsPath } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
-import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { ServiceExtensionArgs, timeDilationNormal, timeDilationSlow, VmServiceExtensions } from "../flutter/vm_service_extensions";
@@ -51,9 +50,9 @@ export class DebugCommands {
 	public readonly vmServices: VmServiceExtensions;
 	private readonly devTools: DevToolsManager;
 
-	constructor(private readonly logger: Logger, private context: Context, workspaceContext: WorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
+	constructor(private readonly logger: Logger, private context: Context, workspaceContext: DartWorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
 		this.vmServices = new VmServiceExtensions(this.sendServiceSetting);
-		this.devTools = new DevToolsManager(logger, workspaceContext.sdks, this, analytics, pubGlobal);
+		this.devTools = new DevToolsManager(logger, workspaceContext, this, analytics, pubGlobal);
 		context.subscriptions.push(this.devTools);
 		context.subscriptions.push(this.debugOptions);
 		context.subscriptions.push(this.debugMetrics);

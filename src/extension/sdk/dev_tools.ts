@@ -5,10 +5,11 @@ import * as vs from "vscode";
 import { window, workspace } from "vscode";
 import { CHROME_OS_DEVTOOLS_PORT, isChromeOS, pubPath } from "../../shared/constants";
 import { LogCategory, VmService } from "../../shared/enums";
-import { Logger, Sdks } from "../../shared/interfaces";
+import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { UnknownNotification } from "../../shared/services/interfaces";
 import { StdIOService } from "../../shared/services/stdio_service";
+import { usingCustomScript } from "../../shared/utils";
 import { getRandomInt } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
 import { envUtils, isRunningLocally } from "../../shared/vscode/utils";
@@ -37,7 +38,7 @@ export class DevToolsManager implements vs.Disposable {
 	/// concurrent launches can wait on the same promise.
 	private devtoolsUrl: Thenable<string> | undefined;
 
-	constructor(private logger: Logger, private sdks: Sdks, private debugCommands: DebugCommands, private analytics: Analytics, private pubGlobal: PubGlobal) {
+	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal) {
 		this.disposables.push(this.devToolsStatusBarItem);
 	}
 
@@ -127,7 +128,7 @@ export class DevToolsManager implements vs.Disposable {
 	/// Starts the devtools server and returns the URL of the running app.
 	private startServer(): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
-			const service = new DevToolsService(this.logger, this.sdks);
+			const service = new DevToolsService(this.logger, this.workspaceContext);
 			this.disposables.push(service);
 
 			service.registerForServerStarted((n) => {
@@ -167,11 +168,14 @@ export class DevToolsManager implements vs.Disposable {
 }
 
 class DevToolsService extends StdIOService<UnknownNotification> {
-	constructor(logger: Logger, sdks: Sdks) {
+	constructor(logger: Logger, workspaceContext: DartWorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.DevTools), config.maxLogLineLength);
 
-		const pubBinPath = path.join(sdks.dart!, pubPath);
-		const args = ["global", "run", "devtools", "--machine", "--enable-notifications", "--try-ports", "10"];
+		const { binPath, binArgs } = usingCustomScript(
+			path.join(workspaceContext.sdks.dart, pubPath),
+			["global", "run", "devtools", "--machine", "--enable-notifications", "--try-ports", "10"],
+			{ customScript: workspaceContext.workspaceConfig?.devtoolsScript, customScriptReplacesNumArgs: 3 },
+		);
 
 		// Store the port we'll use for later so we can re-bind to the same port if we restart.
 		portToBind = config.devToolsPort // Always config first
@@ -179,13 +183,13 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 			|| (isChromeOS && config.useKnownChromeOSPorts ? CHROME_OS_DEVTOOLS_PORT : undefined);
 
 		if (portToBind) {
-			args.push("--port");
-			args.push(portToBind.toString());
+			binArgs.push("--port");
+			binArgs.push(portToBind.toString());
 		}
 
 		this.registerForServerStarted((n) => this.additionalPidsToTerminate.push(n.pid));
 
-		this.createProcess(undefined, pubBinPath, args, { toolEnv: getToolEnv() });
+		this.createProcess(undefined, binPath, binArgs, { toolEnv: getToolEnv() });
 	}
 
 	protected shouldHandleMessage(message: string): boolean {

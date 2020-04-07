@@ -1,4 +1,6 @@
 import * as assert from "assert";
+import * as os from "os";
+import * as path from "path";
 import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { isWin, observatoryListeningBannerPattern } from "../shared/constants";
@@ -6,10 +8,31 @@ import { LogCategory } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
 import { DartDebugClient } from "./dart_debug_client";
-import { currentTestName, defer, extApi, getLaunchConfiguration, logger } from "./helpers";
+import { currentTestName, defer, extApi, fileSafeCurrentTestName, getLaunchConfiguration, logger, watchPromise } from "./helpers";
 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
+
+export async function startDebugger(dc: DartDebugClient, script?: Uri | string, extraConfiguration?: { [key: string]: any }): Promise<DebugConfiguration> {
+	extraConfiguration = Object.assign(
+		{},
+		{
+			// Use pid-file as a convenient way of getting the test name into the command line args
+			// for easier debugging of processes that hang around on CI (we dump the process command
+			// line at the end of the test run).
+			args: extApi.flutterCapabilities.supportsPidFileForMachine
+				? ["--pid-file", path.join(os.tmpdir(), fileSafeCurrentTestName)]
+				: [],
+			deviceId: flutterTestDeviceId,
+		},
+		extraConfiguration,
+	);
+	const config = await getLaunchConfiguration(script, extraConfiguration);
+	if (!config)
+		throw new Error(`Could not get launch configuration (got ${config})`);
+	await watchPromise("startDebugger->start", dc.start(config.debugServer));
+	return config;
+}
 
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {
 	assert.ok(variables && variables.length, "No variables given to search");
