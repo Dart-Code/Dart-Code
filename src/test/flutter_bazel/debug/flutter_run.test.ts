@@ -2,6 +2,7 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { isWin } from "../../../shared/constants";
 import { fetch } from "../../../shared/fetch";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
@@ -10,7 +11,12 @@ import { activate, defer, ext, extApi, flutterBazelHelloWorldFolder, flutterBaze
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
-describe.only(`flutter run debugger`, () => {
+describe(`flutter run debugger`, () => {
+	beforeEach(function () {
+		if (isWin)
+			this.skip();
+	});
+
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterBazelHelloWorldMainFile));

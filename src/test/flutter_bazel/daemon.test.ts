@@ -1,19 +1,22 @@
+import * as fs from "fs";
 import * as vs from "vscode";
-import { activate, captureOutput, waitForResult } from "../helpers";
+import { isWin } from "../../shared/constants";
+import { activate, prepareHasRunFile, waitForResult } from "../helpers";
 
 describe("flutter daemon", () => {
+	beforeEach(function () {
+		if (isWin)
+			this.skip();
+	});
+
 	beforeEach("activate", () => activate());
 
 	it("runs using custom script", async () => {
-		// Set up buffering channel mock.
-		const buffer = captureOutput("flutter daemon");
+		const hasRunFile = prepareHasRunFile("daemon");
 
 		// Restart the extension so the daemon picks up our buffered channel.
 		await vs.commands.executeCommand("_dart.reloadExtension");
 
-		await waitForResult(() => {
-			const output = buffer.buffer.join("").trim();
-			return output.indexOf("You are using the custom daemon") !== -1;
-		});
+		await waitForResult(() => fs.existsSync(hasRunFile));
 	});
 });
