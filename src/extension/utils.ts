@@ -67,10 +67,11 @@ export function createFolderForFile(file?: string): string | undefined {
 	}
 }
 
-export function getSdkVersion(logger: Logger, sdkRoot?: string): string | undefined {
-	if (!sdkRoot)
+export function getSdkVersion(logger: Logger, { sdkRoot, versionFile }: { sdkRoot?: string, versionFile?: string }): string | undefined {
+	if (!sdkRoot && !versionFile)
 		return undefined;
-	const versionFile = path.join(sdkRoot, "version");
+	if (!versionFile)
+		versionFile = path.join(sdkRoot!, "version");
 	if (!fs.existsSync(versionFile))
 		return undefined;
 	try {

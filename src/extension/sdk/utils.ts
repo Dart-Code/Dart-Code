@@ -272,9 +272,9 @@ export class SdkUtils {
 			{
 				dart: dartSdkPath,
 				dartSdkIsFromFlutter: !!dartSdkPath && isDartSdkFromFlutter(dartSdkPath),
-				dartVersion: getSdkVersion(this.logger, dartSdkPath),
+				dartVersion: getSdkVersion(this.logger, { sdkRoot: dartSdkPath }),
 				flutter: flutterSdkPath,
-				flutterVersion: getSdkVersion(this.logger, flutterSdkPath),
+				flutterVersion: getSdkVersion(this.logger, { sdkRoot: flutterSdkPath, versionFile: workspaceConfig?.flutterVersionFile }),
 			},
 			workspaceConfig,
 			hasAnyFlutterMobileProject,
