@@ -98,6 +98,7 @@ async function runAllTests(): Promise<void> {
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter") {
 			await runTests("flutter", "flutter_hello_world");
+			await runTests("flutter_bazel", "bazel_workspace/flutter_hello_world_bazel");
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter_lsp") {
 			await runTests("flutter", "flutter_hello_world", "lsp", { DART_CODE_FORCE_LSP: "true" });
