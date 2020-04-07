@@ -3,10 +3,10 @@ import { isArray } from "util";
 import * as vs from "vscode";
 import { Analyzer } from "../shared/analyzer";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
-import { dartPlatformName, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isWin, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName, PUB_OUTDATED_SUPPORTED_CONTEXT } from "../shared/constants";
+import { dartPlatformName, flutterExtensionIdentifier, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isWin, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName, PUB_OUTDATED_SUPPORTED_CONTEXT } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
-import { DartWorkspaceContext, FlutterSdks, IFlutterDaemon, Sdks } from "../shared/interfaces";
+import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IFlutterDaemon, Sdks } from "../shared/interfaces";
 import { captureLogs, EmittingLogger, logToConsole, RingLog } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
@@ -376,8 +376,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Fire up Flutter daemon if required.
 	if (workspaceContext.hasAnyFlutterMobileProjects && sdks.flutter) {
-		flutterDaemon = new FlutterDaemon(logger, path.join(sdks.flutter, flutterPath), sdks.flutter);
-		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config, config.flutterSelectDeviceWhenConnected);
+		flutterDaemon = new FlutterDaemon(logger, workspaceContext as FlutterWorkspaceContext);
+		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config);
 
 		context.subscriptions.push(deviceManager);
 		context.subscriptions.push(flutterDaemon);

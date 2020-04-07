@@ -17,7 +17,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	public currentDevice?: f.Device;
 	private readonly knownEmulatorNames: { [key: string]: string } = {};
 
-	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[] }, private readonly autoSelectNewlyConnectedDevices: boolean) {
+	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[], flutterSelectDeviceWhenConnected: boolean }) {
 		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
 		this.statusBarItem.tooltip = "Flutter";
 		this.statusBarItem.command = "flutter.selectDevice";
@@ -49,7 +49,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		this.devices.push(dev);
 		// undefined is treated as true for backwards compatibility.
 		const canAutoSelectDevice = dev.ephemeral !== false;
-		const maySelectThisDevice = () => !this.currentDevice || (this.autoSelectNewlyConnectedDevices && canAutoSelectDevice);
+		const maySelectThisDevice = () => !this.currentDevice || (this.config.flutterSelectDeviceWhenConnected && canAutoSelectDevice);
 		if (maySelectThisDevice()) {
 			// Finally, check if it's valid for the workspace. We don't want to
 			// auto-select to a mobile if you have a web-only project open.

@@ -1,14 +1,15 @@
+import * as path from "path";
 import * as vs from "vscode";
 import { ProgressLocation } from "vscode";
 import { DaemonCapabilities } from "../../shared/capabilities/flutter";
-import { isChromeOS } from "../../shared/constants";
+import { flutterPath, isChromeOS } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import * as f from "../../shared/flutter/daemon_interfaces";
-import { IFlutterDaemon, Logger } from "../../shared/interfaces";
+import { FlutterWorkspaceContext, IFlutterDaemon, Logger } from "../../shared/interfaces";
 import { CategoryLogger, logProcess } from "../../shared/logging";
 import { UnknownNotification, UnknownResponse } from "../../shared/services/interfaces";
 import { StdIOService } from "../../shared/services/stdio_service";
-import { PromiseCompleter } from "../../shared/utils";
+import { PromiseCompleter, usingCustomScript } from "../../shared/utils";
 import { config } from "../config";
 import { FLUTTER_SUPPORTS_ATTACH } from "../extension";
 import { promptToReloadExtension } from "../utils";
@@ -20,8 +21,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private daemonStartedCompleter = new PromiseCompleter();
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
-	constructor(logger: Logger, flutterBinPath: string, projectFolder: string) {
+	constructor(logger: Logger, workspaceContext: FlutterWorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.FlutterDaemon), config.maxLogLineLength, true);
+
+		const folder = workspaceContext.sdks.flutter;
 
 		this.registerForDaemonConnected((e) => {
 			this.additionalPidsToTerminate.push(e.pid);
@@ -31,9 +34,15 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			this.deviceEnable();
 		});
 
-		const flutterAdditionalArgs = config.for(vs.Uri.file(projectFolder)).flutterAdditionalArgs;
-		const args = getGlobalFlutterArgs().concat(flutterAdditionalArgs).concat(["daemon"]);
-		this.createProcess(projectFolder, flutterBinPath, args, { toolEnv: getToolEnv() });
+		const { binPath, binArgs } = usingCustomScript(
+			path.join(workspaceContext.sdks.flutter, flutterPath),
+			["daemon"],
+			{ customScript: workspaceContext.workspaceConfig?.flutterDaemonScript },
+		);
+
+		const flutterAdditionalArgs = config.for(vs.Uri.file(folder)).flutterAdditionalArgs;
+		const args = getGlobalFlutterArgs().concat(flutterAdditionalArgs).concat(binArgs);
+		this.createProcess(folder, binPath, args, { toolEnv: getToolEnv() });
 
 		if (isChromeOS && config.flutterAdbConnectOnChromeOs) {
 			logger.info("Running ADB Connect on Chrome OS");
