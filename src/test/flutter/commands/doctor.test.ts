@@ -8,13 +8,13 @@ describe("flutter doctor", () => {
 	beforeEach("activate", () => activate());
 
 	it("runs and prints output", async () => {
-		const buffer = captureOutput("flutter");
+		const buffer = captureOutput(flutterExecutableName);
 		const exitCode = await vs.commands.executeCommand("flutter.doctor");
 		assert.equal(exitCode, 0);
 
 		const output = buffer.buffer.join("").trim();
 		assert.equal(output.startsWith(`[flutter] ${flutterExecutableName} --suppress-analytics doctor -v`), true);
-		assert.notEqual(output.indexOf("[✓] Flutter (Channel"), -1);
+		assert.notEqual(output.indexOf("] Flutter (Channel"), -1);
 		assert.equal(output.endsWith("exit code 0"), true);
 	});
 });
