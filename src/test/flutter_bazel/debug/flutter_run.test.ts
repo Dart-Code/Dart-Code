@@ -55,7 +55,8 @@ describe(`flutter run debugger`, () => {
 	});
 
 	it("can launch DevTools using custom script", async function () {
-		const hasRunFile = prepareHasRunFile("devtools_run");
+		const activateHasRunFile = prepareHasRunFile("devtools_activate");
+		const runHasRunFile = prepareHasRunFile("devtools_run");
 
 		if (!extApi.flutterCapabilities.supportsDevTools)
 			return this.skip();
@@ -83,6 +84,7 @@ describe(`flutter run debugger`, () => {
 			dc.terminateRequest(),
 		]);
 
-		assert.ok(fs.existsSync(hasRunFile));
+		assert.ok(fs.existsSync(activateHasRunFile));
+		assert.ok(fs.existsSync(runHasRunFile));
 	});
 });

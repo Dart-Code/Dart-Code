@@ -5,7 +5,7 @@ import { LogCategory, VersionStatus } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { PubApi } from "../../shared/pub/api";
-import { versionIsAtLeast } from "../../shared/utils";
+import { usingCustomScript, versionIsAtLeast } from "../../shared/utils";
 import { envUtils } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { safeToolSpawn } from "../utils/processes";
@@ -13,8 +13,8 @@ import { safeToolSpawn } from "../utils/processes";
 export class PubGlobal {
 	constructor(private readonly logger: Logger, private context: Context, private sdks: DartSdks, private pubApi: PubApi) { }
 
-	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion?: string, autoUpdate: boolean = false): Promise<boolean> {
-		const versionStatus = await this.getInstalledStatus(packageName, packageID, requiredVersion);
+	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion: string, customActivateScript?: string, autoUpdate: boolean = false): Promise<boolean> {
+		const versionStatus = customActivateScript ? VersionStatus.UpdateRequired : await this.getInstalledStatus(packageName, packageID, requiredVersion);
 		if (versionStatus === VersionStatus.Valid)
 			return true;
 
@@ -31,7 +31,10 @@ export class PubGlobal {
 		let action =
 			// If we need an update and we're allowed to auto-update, to the same as if the user
 			// clicked the activate button, otherwise prompt them.
-			(versionStatus === VersionStatus.UpdateRequired || versionStatus === VersionStatus.UpdateAvailable) && autoUpdate
+			// TODO: VERIFY THIS:
+			//    Custom activate scripts bypass the check and are always just immediately called.
+			customActivateScript
+				|| (autoUpdate && (versionStatus === VersionStatus.UpdateRequired || versionStatus === VersionStatus.UpdateAvailable))
 				? activateForMe
 				: await vs.window.showWarningMessage(message, activateForMe, moreInfo);
 
@@ -42,7 +45,7 @@ export class PubGlobal {
 			const actionName = versionStatus === VersionStatus.NotInstalled ? `Activating ${packageName}` : `Updating ${packageName}`;
 
 			const args = ["global", "activate", packageID];
-			await this.runCommandWithProgress(packageName, `${actionName}...`, args);
+			await this.runCommandWithProgress(packageName, `${actionName}...`, args, customActivateScript);
 			if (await this.getInstalledStatus(packageName, packageID) === VersionStatus.Valid) {
 				return true;
 			} else {
@@ -95,19 +98,23 @@ export class PubGlobal {
 		return VersionStatus.Valid;
 	}
 
-	private runCommandWithProgress(packageName: string, title: string, args: string[]): Thenable<string> {
+	private runCommandWithProgress(packageName: string, title: string, args: string[], customActivateScript: string | undefined): Thenable<string> {
 		return vs.window.withProgress({
 			location: vs.ProgressLocation.Notification,
 			title,
-		}, (_) => this.runCommand(packageName, args));
+		}, (_) => this.runCommand(packageName, args, customActivateScript));
 	}
 
-	private runCommand(packageName: string, args: string[]): Thenable<string> {
-		const dartSdkPath = this.sdks.dart;
-		const pubBinPath = path.join(dartSdkPath, pubPath);
+	private runCommand(packageName: string, args: string[], customScript?: string | undefined): Thenable<string> {
+		const { binPath, binArgs } = usingCustomScript(
+			path.join(this.sdks.dart, pubPath),
+			args,
+			{ customScript, customScriptReplacesNumArgs: 3 },
+		);
 
 		return new Promise((resolve, reject) => {
-			const proc = safeToolSpawn(undefined, pubBinPath, args);
+			this.logger.info(`Spawning ${binPath} with args ${JSON.stringify(binArgs)}`);
+			const proc = safeToolSpawn(undefined, binPath, binArgs);
 			logProcess(this.logger, LogCategory.CommandProcesses, proc);
 
 			const stdout: string[] = [];
