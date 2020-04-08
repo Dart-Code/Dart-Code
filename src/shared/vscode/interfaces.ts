@@ -3,6 +3,7 @@ import * as lsp from "../analysis/lsp/custom_protocol";
 import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server_types";
 import { Analyzer } from "../analyzer";
 import { TestStatus, VersionStatus, VmService, VmServiceExtension } from "../enums";
+import { WebClient } from "../fetch";
 import { SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
 import { WorkspaceContext } from "../workspace";
@@ -80,6 +81,7 @@ export interface InternalExtensionApi {
 	renameProvider: RenameProvider | undefined;
 	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }) => SpawnedProcess;
 	testTreeProvider: TestResultsProvider;
+	webClient: WebClient;
 	workspaceContext: WorkspaceContext;
 }
 

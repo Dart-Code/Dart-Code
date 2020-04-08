@@ -6,7 +6,7 @@ import { Analyzer } from "../shared/analyzer";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
 import { dartPlatformName, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, isWin, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
-import { setUserAgent } from "../shared/fetch";
+import { WebClient } from "../shared/fetch";
 import { DartWorkspaceContext, FlutterSdks, IFlutterDaemon, Sdks } from "../shared/interfaces";
 import { captureLogs, EmittingLogger, logToConsole, RingLog } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
@@ -135,6 +135,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	setupLog(getExtensionLogPath(), LogCategory.General);
 
 	const extContext = Context.for(context);
+	const webClient = new WebClient(extensionVersion);
 
 	util.logTime("Code called activate");
 
@@ -377,7 +378,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	util.logTime("All other stuff before debugger..");
 
-	const pubApi = new PubApi();
+	const pubApi = new PubApi(webClient);
 	const pubGlobal = new PubGlobal(logger, extContext, sdks, pubApi);
 
 	// Set up debug stuff.
@@ -547,7 +548,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Prompt user for any special config we might want to set.
 	if (!isRestart)
-		showUserPrompts(logger, extContext, workspaceContext);
+		showUserPrompts(logger, extContext, webClient, workspaceContext);
 
 	// Turn on all the commands.
 	setCommandVisiblity(true, workspaceContext);
@@ -604,8 +605,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		checkForPackages();
 	}));
 
-	setUserAgent(extensionVersion);
-
 	return {
 		...new DartExtensionApi(),
 		[internalApiSymbol]: {
@@ -636,6 +635,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			renameProvider,
 			safeToolSpawn,
 			testTreeProvider,
+			webClient,
 			workspaceContext,
 		} as InternalExtensionApi,
 	};

@@ -4,7 +4,6 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { debugAnywayAction, platformEol, showErrorsAction } from "../../../shared/constants";
-import { fetch } from "../../../shared/fetch";
 import { grey } from "../../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
@@ -243,7 +242,7 @@ describe("dart cli debugger", () => {
 		defer(devTools.dispose);
 		assert.ok(devTools.url);
 
-		const serverResponse = await fetch(devTools.url);
+		const serverResponse = await extApi.webClient.fetch(devTools.url);
 		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1);
 	});
 

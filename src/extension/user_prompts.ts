@@ -3,6 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, userPromptContextPrefix, yesAction } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
+import { WebClient } from "../shared/fetch";
 import { Logger, StagehandTemplate } from "../shared/interfaces";
 import { fsPath } from "../shared/utils/fs";
 import { checkHasFlutterExtension, extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
@@ -13,7 +14,7 @@ import { WorkspaceContext } from "../shared/workspace";
 import { markProjectCreationEnded, markProjectCreationStarted } from "./commands/sdk";
 import { promptToReloadExtension } from "./utils";
 
-export async function showUserPrompts(logger: Logger, context: Context, workspaceContext: WorkspaceContext): Promise<void> {
+export async function showUserPrompts(logger: Logger, context: Context, webClient: WebClient, workspaceContext: WorkspaceContext): Promise<void> {
 	handleNewProjects(logger, context);
 
 	function shouldSuppress(key: string): boolean {
@@ -73,7 +74,7 @@ export async function showUserPrompts(logger: Logger, context: Context, workspac
 	}
 
 	if (workspaceContext.hasAnyFlutterProjects) {
-		if (showFlutterSurveyNotificationIfAppropriate(context, envUtils.openInBrowser, Date.now(), logger))
+		if (await showFlutterSurveyNotificationIfAppropriate(context, webClient, envUtils.openInBrowser, Date.now(), logger))
 			return; // Bail if we showed it, so we won't show any other notifications.
 	}
 
