@@ -95,7 +95,7 @@ describe("pub global", () => {
 		const installPrompt = sb.stub(vs.window, "showWarningMessage");
 
 		// Ensure we're not prompted but it's updated.
-		const installed = await extApi.pubGlobal.promptToInstallIfRequired(installedButBelowMinimumPackage2, installedButBelowMinimumPackage2, "", installedButBelowMinimumPackage2NewVersion, true);
+		const installed = await extApi.pubGlobal.promptToInstallIfRequired(installedButBelowMinimumPackage2, installedButBelowMinimumPackage2, "", installedButBelowMinimumPackage2NewVersion, undefined, true);
 		assert.equal(installed, true);
 		assert.equal(installPrompt.called, false);
 
@@ -108,7 +108,7 @@ describe("pub global", () => {
 		const installPrompt = sb.stub(vs.window, "showWarningMessage");
 
 		// Ensure we're not prompted but it's updated.
-		const installed = await extApi.pubGlobal.promptToInstallIfRequired(installedButOutOfDatePackage2, installedButOutOfDatePackage2, "", undefined, true);
+		const installed = await extApi.pubGlobal.promptToInstallIfRequired(installedButOutOfDatePackage2, installedButOutOfDatePackage2, "", undefined, undefined, true);
 		assert.equal(installed, true);
 		assert.equal(installPrompt.called, false);
 

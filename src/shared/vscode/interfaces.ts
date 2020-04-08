@@ -75,7 +75,7 @@ export interface InternalExtensionApi {
 	nextAnalysis: () => Promise<void>;
 	packagesTreeProvider: TreeDataProvider<TreeItem>;
 	pubGlobal: {
-		promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink?: string, requiredVersion?: string, autoUpdate?: boolean): Promise<boolean>;
+		promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink?: string, requiredVersion?: string, customActivateScript?: string, autoUpdate?: boolean): Promise<boolean>;
 		getInstalledStatus(packageName: string, packageID: string, requiredVersion?: string): Promise<VersionStatus>;
 		uninstall(packageID: string): Promise<void>;
 	};
