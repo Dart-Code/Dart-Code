@@ -1130,7 +1130,11 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		]);
 	});
 
-	it("moves known files from call stacks to metadata", async () => {
+	it("moves known files from call stacks to metadata", async function () {
+		// https://github.com/dart-lang/webdev/issues/949
+		if (flutterTestDeviceIsWeb)
+			return this.skip();
+
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(flutterHelloWorldBrokenFile);
 		await Promise.all([
