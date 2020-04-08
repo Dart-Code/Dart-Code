@@ -3,7 +3,6 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
-import { fetch } from "../../../shared/fetch";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { flutterTestDeviceIsWeb, killFlutterTester, startDebugger } from "../../debug_helpers";
@@ -76,7 +75,7 @@ describe(`flutter run debugger`, () => {
 		defer(devTools.dispose);
 		assert.ok(devTools.url);
 
-		const serverResponse = await fetch(devTools.url);
+		const serverResponse = await extApi.webClient.fetch(devTools.url);
 		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1);
 
 		await Promise.all([
