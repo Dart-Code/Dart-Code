@@ -55,17 +55,10 @@ export const alwaysOpenAction = "Always Open";
 export const notTodayAction = "Not Now";
 export const doNotAskAgainAction = "Never Ask";
 
-export const surveyBaseUrl = "https://google.qualtrics.com/jfe/form/SV_6YBXYxIR69pgpr7?Source=VSCode";
-export const flutterSurveyPromptWithAnalytics = "Help improve Flutter! Take our Q1 survey. By clicking on this link you agree to share feature usage along with the survey responses.";
-export const flutterSurveyPromptWithoutAnalytics = "Help improve Flutter! Take our Q1 survey.";
+export const flutterSurveyDataUrl = "https://flutter.dev/f/flutter-survey-metadata.json";
+export const flutterSurveyAnalyticsText = "By clicking on this link you agree to share feature usage along with the survey responses.";
 export const takeSurveyAction = "Take Survey";
-// To confirm dates in PST(/PDT), paste this into Chrome dev console:
-// new Date(Date.UTC(...)).toLocaleString("en-US", {timeZone: "America/Los_Angeles"})
-// Paste the results into comments for easier reviewing!
-// "3/3/2020, 9:00:00 AM"
-export const surveyStart = Date.UTC(2020, 2 /* Month is 0-based!! */, 3, 17, 0);
-// "3/10/2020, 9:00:00 AM"
-export const surveyEnd = Date.UTC(2020, 2 /* Month is 0-based!! */, 10, 16, 0);
+export const skipThisSurveyAction = "Skip This Survey";
 
 // Minutes.
 export const fiveMinutesInMs = 1000 * 60 * 5;

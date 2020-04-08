@@ -105,6 +105,8 @@ export const webTestMainFile = vs.Uri.file(path.join(fsPath(webHelloWorldFolder)
 export const webTestBrokenFile = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "test/broken_test.dart"));
 export const webTestOtherFile = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "test/other_test.dart"));
 
+export const flutterTestSurveyID = "flutterVsCodeTestSurvey";
+
 const startOfDocument = new vs.Range(new vs.Position(0, 0), new vs.Position(0, 0));
 
 export function currentEditor(): vs.TextEditor {
@@ -933,8 +935,8 @@ export async function addLaunchConfigsForTest(workspaceUri: vs.Uri, configs: any
 export function clearAllContext(context: Context): Promise<void> {
 	context.devToolsNotificationLastShown = undefined;
 	context.devToolsNotificationDoNotShow = undefined;
-	context.flutterSurvey2020Q1NotificationLastShown = undefined;
-	context.flutterSurvey2020Q1NotificationDoNotShow = undefined;
+	context.setFlutterSurveyNotificationLastShown(flutterTestSurveyID, undefined);
+	context.setFlutterSurveyNotificationDoNotShow(flutterTestSurveyID, undefined);
 
 	// HACK Updating context is async, but since we use setters we can't easily wait
 	// and this is only test code...

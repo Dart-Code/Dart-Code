@@ -2,18 +2,38 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { alwaysOpenAction, doNotAskAgainAction, flutterSurveyPromptWithAnalytics, flutterSurveyPromptWithoutAnalytics, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, notTodayAction, openDevToolsAction, surveyBaseUrl, surveyEnd, surveyStart, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
-import { Logger } from "../interfaces";
+import { alwaysOpenAction, doNotAskAgainAction, flutterSurveyAnalyticsText, flutterSurveyDataUrl, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, notTodayAction, openDevToolsAction, skipThisSurveyAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
+import { WebClient } from "../fetch";
+import { FlutterRawSurveyData, FlutterSurveyData, Logger } from "../interfaces";
 import { Context } from "./workspace";
 
 /// Shows Survey notification if appropriate. Returns whether a notification was shown
 /// (not whether it was clicked/opened).
-export function showFlutterSurveyNotificationIfAppropriate(context: Context, openInBrowser: (url: string) => Promise<boolean>, now: number, logger: Logger): boolean {
-	if (now <= surveyStart || now >= surveyEnd)
+export async function showFlutterSurveyNotificationIfAppropriate(context: Context, webClient: WebClient, openInBrowser: (url: string) => Promise<boolean>, now: number, logger: Logger): Promise<boolean> {
+	let rawSurveyData: FlutterRawSurveyData;
+	let surveyData: FlutterSurveyData;
+	try {
+		const rawSurveyJson = await webClient.fetch(flutterSurveyDataUrl);
+		rawSurveyData = JSON.parse(rawSurveyJson);
+
+		surveyData = {
+			...rawSurveyData,
+			endDate: new Date(rawSurveyData.endDate).getTime(),
+			startDate: new Date(rawSurveyData.startDate).getTime(),
+		};
+
+		if (!surveyData.uniqueId || !surveyData.title || !surveyData.url)
+			throw new Error(`Survey data did not include ID, Title or URL:\n${rawSurveyJson}`);
+	} catch (e) {
+		logger.error(e);
+		return false;
+	}
+
+	if (now <= surveyData.startDate || now >= surveyData.endDate)
 		return false;
 
-	const lastShown = context.flutterSurvey2020Q1NotificationLastShown;
-	const doNotShow = context.flutterSurvey2020Q1NotificationDoNotShow;
+	const lastShown = context.getFlutterSurveyNotificationLastShown(surveyData.uniqueId);
+	const doNotShow = context.getFlutterSurveyNotificationDoNotShow(surveyData.uniqueId);
 
 	// Don't show this notification if user previously said not to.
 	if (doNotShow)
@@ -42,22 +62,22 @@ export function showFlutterSurveyNotificationIfAppropriate(context: Context, ope
 		logger.warn("Unable to read Flutter settings for preparing survey link");
 	}
 
-	const prompt = clientID ? flutterSurveyPromptWithAnalytics : flutterSurveyPromptWithoutAnalytics;
-	const surveyUrl = surveyBaseUrl
-		+ (clientID ? `&ClientID=${encodeURIComponent(clientID)}` : "");
+	const prompt = clientID ? `${surveyData.title} ${flutterSurveyAnalyticsText}` : surveyData.title;
+	const firstQsSep = surveyData.url.indexOf("?") !== -1 ? "&" : "?";
+	const surveyUrl = `${surveyData.url}${firstQsSep}Source=VSCode${clientID ? `&ClientID=${encodeURIComponent(clientID)}` : ""}`;
 
 	// Mark the last time we've shown it (now) so we can avoid showing again for
 	// 40 hours.
-	context.flutterSurvey2020Q1NotificationLastShown = Date.now();
+	context.setFlutterSurveyNotificationLastShown(surveyData.uniqueId, Date.now());
 
 	// Prompt to show and handle response.
-	vs.window.showInformationMessage(prompt, takeSurveyAction, doNotAskAgainAction).then(async (choice) => {
-		if (choice === doNotAskAgainAction) {
-			context.flutterSurvey2020Q1NotificationDoNotShow = true;
+	vs.window.showInformationMessage(prompt, takeSurveyAction, skipThisSurveyAction).then(async (choice) => {
+		if (choice === skipThisSurveyAction) {
+			context.setFlutterSurveyNotificationDoNotShow(surveyData.uniqueId, true);
 		} else if (choice === takeSurveyAction) {
 			// Mark as do-not-show-again if they answer it, since it seems silly
 			// to show them again if they already completed it.
-			context.flutterSurvey2020Q1NotificationDoNotShow = true;
+			context.setFlutterSurveyNotificationDoNotShow(surveyData.uniqueId, true);
 			await openInBrowser(surveyUrl);
 		}
 	});

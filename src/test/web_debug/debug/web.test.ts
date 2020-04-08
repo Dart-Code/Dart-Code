@@ -3,7 +3,6 @@ import * as path from "path";
 import * as vs from "vscode";
 import { isLinux } from "../../../shared/constants";
 import { VmService } from "../../../shared/enums";
-import { fetch } from "../../../shared/fetch";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureVariable } from "../../debug_helpers";
@@ -211,7 +210,7 @@ describe("web debugger", () => {
 		assert.ok(devTools.url);
 		defer(devTools.dispose);
 
-		const serverResponse = await fetch(devTools.url);
+		const serverResponse = await extApi.webClient.fetch(devTools.url);
 		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1);
 
 		await Promise.all([

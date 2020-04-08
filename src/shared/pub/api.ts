@@ -1,6 +1,9 @@
-import { fetch } from "../../shared/fetch";
+import { WebClient } from "../fetch";
 
 export class PubApi {
+	constructor(private readonly webClient: WebClient) {
+	}
+
 	public async getPackage(packageID: string): Promise<PubPackage> {
 		return this.get<PubPackage>(`packages/${packageID}`);
 	}
@@ -9,7 +12,7 @@ export class PubApi {
 		const headers = {
 			Accept: "application/vnd.pub.v2+json",
 		};
-		return JSON.parse(await fetch(`https://pub.dev/api/${url}`, headers)) as T;
+		return JSON.parse(await this.webClient.fetch(`https://pub.dev/api/${url}`, headers)) as T;
 	}
 }
 

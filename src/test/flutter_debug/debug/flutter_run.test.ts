@@ -5,7 +5,6 @@ import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { isLinux } from "../../../shared/constants";
 import { VmService, VmServiceExtension } from "../../../shared/enums";
-import { fetch } from "../../../shared/fetch";
 import { grey, grey2 } from "../../../shared/utils/colors";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
@@ -304,7 +303,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		defer(devTools.dispose);
 		assert.ok(devTools.url);
 
-		const serverResponse = await fetch(devTools.url);
+		const serverResponse = await extApi.webClient.fetch(devTools.url);
 		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1);
 
 		await Promise.all([

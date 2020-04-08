@@ -76,6 +76,22 @@ export interface Location {
 	length: number;
 }
 
+export interface FlutterRawSurveyData {
+	uniqueId: string;
+	title: string;
+	url: string;
+	startDate: string;
+	endDate: string;
+}
+
+export interface FlutterSurveyData {
+	uniqueId: string;
+	title: string;
+	url: string;
+	startDate: number;
+	endDate: number;
+}
+
 export type SpawnedProcess = child_process.ChildProcess & {
 	stdin: stream.Writable,
 	stdout: stream.Readable,
