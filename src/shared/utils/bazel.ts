@@ -24,13 +24,15 @@ export function tryLoadBazelFlutterConfig(logger: Logger, bazelWorkspaceRoot: st
 			return path.join(bazelWorkspaceRoot!, relOrAbsolute);
 		}
 
-		const resolvedConfig = {
+		const resolvedConfig: WorkspaceConfig = {
 			configFile: configPath,
+			dartSdkHomeLinux: makeFullPath(config.dartSdkHome?.linux),
+			dartSdkHomeMac: makeFullPath(config.dartSdkHome?.macos),
 			devtoolsActivateScript: makeFullPath(config.devtoolsActivateScript),
 			devtoolsRunScript: makeFullPath(config.devtoolsRunScript),
 			flutterDaemonScript: makeFullPath(config.daemonScript),
 			flutterDoctorScript: makeFullPath(config.doctorScript),
-			flutterRunScript: makeFullPath(config.launchScript),
+			flutterRunScript: makeFullPath(config.runScript),
 			flutterSdkHome: makeFullPath(config.sdkHome),
 			flutterTestScript: makeFullPath(config.testScript),
 			flutterVersionFile: makeFullPath(config.versionFile),

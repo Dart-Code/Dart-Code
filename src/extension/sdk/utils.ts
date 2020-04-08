@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, window } from "vscode";
-import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isWin, showLogAction } from "../../shared/constants";
+import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isMac, isWin, showLogAction } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
@@ -251,6 +251,7 @@ export class SdkUtils {
 		await resolvedPromise;
 
 		const dartSdkSearchPaths = [
+			isMac ? workspaceConfig?.dartSdkHomeMac : workspaceConfig?.dartSdkHomeLinux,
 			fuchsiaRoot && path.join(fuchsiaRoot, "topaz/tools/prebuilt-dart-sdk", `${dartPlatformName}-x64`),
 			fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart/tools/sdks/dart-sdk"),
 			fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart/tools/sdks", dartPlatformName, "dart-sdk"),

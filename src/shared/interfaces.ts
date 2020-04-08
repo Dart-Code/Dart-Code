@@ -37,6 +37,8 @@ export interface WorkspaceConfig {
 	readonly flutterRunScript: string | undefined;
 	readonly flutterTestScript: string | undefined;
 	readonly flutterSdkHome: string | undefined;
+	readonly dartSdkHomeLinux: string | undefined;
+	readonly dartSdkHomeMac: string | undefined;
 	readonly flutterVersionFile: string | undefined;
 	readonly devtoolsActivateScript: string | undefined;
 	readonly devtoolsRunScript: string | undefined;
