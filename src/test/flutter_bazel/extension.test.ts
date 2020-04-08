@@ -44,6 +44,8 @@ describe("extension", () => {
 		assert.equal(workspaceContext.workspaceConfig?.flutterDoctorScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_doctor.sh"));
 		assert.equal(workspaceContext.workspaceConfig?.flutterRunScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_run.sh"));
 		assert.equal(workspaceContext.workspaceConfig?.flutterSdkHome, path.join(fsPath(flutterBazelRoot), "my-flutter-sdk"));
+		assert.equal(workspaceContext.workspaceConfig?.dartSdkHomeLinux, path.join(fsPath(flutterBazelRoot), "my-linux-dart-sdk"));
+		assert.equal(workspaceContext.workspaceConfig?.dartSdkHomeMac, path.join(fsPath(flutterBazelRoot), "my-mac-dart-sdk"));
 		assert.equal(workspaceContext.workspaceConfig?.flutterTestScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_test.sh"));
 		assert.equal(workspaceContext.workspaceConfig?.flutterVersionFile, path.join(fsPath(flutterBazelRoot), "my-flutter-version"));
 		logger.info("        " + JSON.stringify(workspaceContext, undefined, 8).trim().slice(1, -1).trim());

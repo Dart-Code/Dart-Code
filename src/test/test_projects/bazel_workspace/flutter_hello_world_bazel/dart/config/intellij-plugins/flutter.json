@@ -1,9 +1,13 @@
 {
+	"dartSdkHome": {
+		"linux": "../my-linux-dart-sdk",
+		"macos": "../my-mac-dart-sdk"
+	},
 	"sdkHome": "../my-flutter-sdk",
 	"versionFile": "../my-flutter-version",
 	"daemonScript": "../scripts/custom_daemon.sh",
 	"doctorScript": "../scripts/custom_doctor.sh",
-	"launchScript": "../scripts/custom_run.sh",
+	"runScript": "../scripts/custom_run.sh",
 	"testScript": "../scripts/custom_test.sh",
 	"devtoolsActivateScript": "../scripts/custom_devtools_activate.sh",
 	"devtoolsRunScript": "../scripts/custom_devtools_run.sh"
