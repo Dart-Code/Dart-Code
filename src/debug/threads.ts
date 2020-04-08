@@ -5,7 +5,7 @@ import { Logger } from "../shared/interfaces";
 import { errorString, PromiseCompleter } from "../shared/utils";
 import { isKnownInfrastructureThread } from "../shared/utils/debugger";
 import { DartDebugSession, InstanceWithEvaluateName, VmExceptionMode } from "./dart_debug_impl";
-import { DebuggerResult, VMBreakpoint, VMInstanceRef, VMIsolate, VMIsolateRef, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
+import { DebuggerResult, VMBreakpoint, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibraryRef, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
 
 export class ThreadManager {
 	public nextThreadId: number = 0;
@@ -106,26 +106,35 @@ export class ThreadManager {
 		// Set whether libraries should be debuggable based on user settings.
 		const response = await this.debugSession.observatory.getIsolate(isolateRef.id);
 		const isolate: VMIsolate = response.result as VMIsolate;
-		let hasLoggedError = false;
-		await Promise.all(
-			isolate.libraries.filter((l) => this.debugSession.isValidToDebug(l.uri)).map((library): Promise<any> => {
-				if (!this.debugSession.observatory)
-					return Promise.resolve(true);
-				// Note: Condition is negated.
-				const shouldDebug = !(
-					// Inside here is shouldNotDebug!
-					(this.debugSession.isSdkLibrary(library.uri) && !this.debugSession.debugSdkLibraries)
-					|| (this.debugSession.isExternalLibrary(library.uri) && !this.debugSession.debugExternalLibraries));
-				return this.debugSession.observatory.setLibraryDebuggable(isolate.id, library.id, shouldDebug);
-			})).catch((e) => {
-				// Only log the first setLibraryDebuggable error for now
-				// because for web we get a *lot* and it's very sapammy in the logs.
-				// Remove this variable/condition when https://github.com/dart-lang/webdev/issues/606
-				// is resolved and change `info` to `warn`.
-				if (!hasLoggedError)
-					this.logger.info(errorString(e));
-				hasLoggedError = true;
-			});
+		const validDebugLibraries = isolate.libraries.filter((l) => this.debugSession.isValidToDebug(l.uri));
+		if (validDebugLibraries.length === 0)
+			return;
+
+		const debugSession = this.debugSession;
+		function setLibrary(library: VMLibraryRef): Promise<any> {
+			if (!debugSession.observatory)
+				return Promise.resolve(true);
+			// Note: Condition is negated.
+			const shouldDebug = !(
+				// Inside here is shouldNotDebug!
+				(debugSession.isSdkLibrary(library.uri) && !debugSession.debugSdkLibraries)
+				|| (debugSession.isExternalLibrary(library.uri) && !debugSession.debugExternalLibraries));
+			return debugSession.observatory.setLibraryDebuggable(isolate.id, library.id, shouldDebug);
+		}
+
+		// We usually send these requests all concurrently, however on web this is not currently
+		// supported (https://github.com/dart-lang/webdev/issues/606) which results in a lot of
+		// bloat in the logs. Instead, send the first one, and if it works successfully, then
+		// do the whole lot.
+		const firstLib = validDebugLibraries[0];
+		try {
+			await setLibrary(firstLib);
+		} catch (e) {
+			this.logger.info(errorString(e));
+			return;
+		}
+		// Do all.
+		await Promise.all(validDebugLibraries.map(setLibrary)).catch((e) => this.logger.info(errorString(e)));
 	}
 
 	// Just resends existing breakpoints
