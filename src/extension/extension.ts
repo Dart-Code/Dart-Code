@@ -382,7 +382,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const pubGlobal = new PubGlobal(logger, extContext, sdks, pubApi);
 
 	// Set up debug stuff.
-	const debugProvider = new DebugConfigProvider(logger, sdks, analytics, pubGlobal, flutterDaemon, deviceManager, dartCapabilities, flutterCapabilities);
+	const debugProvider = new DebugConfigProvider(logger, workspaceContext, sdks, analytics, pubGlobal, flutterDaemon, deviceManager, dartCapabilities, flutterCapabilities);
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
 	context.subscriptions.push(debugProvider);
 

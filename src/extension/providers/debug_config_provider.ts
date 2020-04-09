@@ -18,6 +18,7 @@ import { IFlutterDaemon, Logger, Sdks } from "../../shared/interfaces";
 import { filenameSafe } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../../shared/utils/fs";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
+import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { LastDebugSession } from "../commands/debug";
 import { isLogging } from "../commands/logging";
@@ -35,7 +36,7 @@ const isCI = !!process.env.CI;
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	private debugServers: { [index: string]: net.Server } = {};
 
-	constructor(private readonly logger: Logger, private readonly sdks: Sdks, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly daemon: IFlutterDaemon, private readonly deviceManager: FlutterDeviceManager, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
+	constructor(private readonly logger: Logger, private readonly wsContext: WorkspaceContext, private readonly sdks: Sdks, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly daemon: IFlutterDaemon, private readonly deviceManager: FlutterDeviceManager, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
 
 	public provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
 		const isFlutter = isFlutterWorkspaceFolder(folder);
@@ -190,7 +191,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const isTest = debugConfig.program && isTestFileOrFolder(debugConfig.program as string);
 		if (isTest)
 			logger.info(`Detected launch project as a Test project`);
-		const canPubRunTest = isTest && debugConfig.cwd && checkProjectSupportsPubRunTest(debugConfig.cwd as string);
+		const canPubRunTest = isTest && debugConfig.cwd && checkProjectSupportsPubRunTest(debugConfig.cwd as string, this.wsContext.isDartSdkRepo);
 		if (isTest && !canPubRunTest)
 			logger.info(`Project does not appear to support 'pub run test', will use VM directly`);
 		if (isTest) {

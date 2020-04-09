@@ -4,6 +4,7 @@ import { FlutterOutline, FlutterOutlineParams, Outline, OutlineParams, PublishFl
 import { EventEmitter } from "../../shared/events";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
+import { WorkspaceContext } from "../../shared/workspace";
 import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
 
@@ -18,7 +19,7 @@ export class LspFileTracker implements IAmDisposable {
 	protected readonly onFlutterOutlineEmitter = new EventEmitter<FlutterOutlineParams>();
 	public readonly onFlutterOutline = this.onFlutterOutlineEmitter.event;
 
-	constructor(private readonly logger: Logger, private readonly analyzer: LanguageClient) {
+	constructor(private readonly logger: Logger, private readonly analyzer: LanguageClient, private readonly wsContext: WorkspaceContext) {
 		analyzer.onReady().then(() => {
 			this.analyzer.onNotification(PublishOutlineNotification.type, (n) => {
 				const filePath = fsPath(Uri.parse(n.uri));
@@ -48,7 +49,7 @@ export class LspFileTracker implements IAmDisposable {
 			return false;
 		if (this.pubRunTestSupport[path] === undefined) {
 			const projectRoot = locateBestProjectRoot(path);
-			this.pubRunTestSupport[path] = !!(projectRoot && util.checkProjectSupportsPubRunTest(projectRoot));
+			this.pubRunTestSupport[path] = !!(projectRoot && util.checkProjectSupportsPubRunTest(projectRoot, this.wsContext.isDartSdkRepo));
 		}
 		return this.pubRunTestSupport[fsPath(file)];
 	}

@@ -21,7 +21,7 @@ export class LspAnalyzer extends Analyzer {
 	constructor(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
 		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext);
-		this.fileTracker = new LspFileTracker(logger, this.client);
+		this.fileTracker = new LspFileTracker(logger, this.client, wsContext);
 		this.disposables.push(this.client.start());
 		this.disposables.push(this.fileTracker);
 
