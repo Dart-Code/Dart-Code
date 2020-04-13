@@ -53,7 +53,7 @@ describe("flutter", () => {
 
 		const contents = fs.readFileSync(mainFile);
 		if (contents.indexOf(expectedString) === -1)
-			assert.fail(`Did not find "${expectedString}'" in the sample file:\n\n${contents}`);
+			assert.fail(`Did not find "${expectedString}'" in the sample file (${mainFile}):\n\n${contents}`);
 	});
 
 	it("triggered Flutter mode", () => {
