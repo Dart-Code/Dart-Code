@@ -181,6 +181,7 @@ export class Analytics {
 			cd18: this.workspaceContext.hasAnyFlutterProjects && resourceUri
 				? config.for(resourceUri).flutterStructuredErrors ? "On" : "Off"
 				: null,
+			cd19: env.remoteName || "None",
 			cd2: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,

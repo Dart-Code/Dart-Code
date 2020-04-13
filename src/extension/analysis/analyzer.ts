@@ -4,6 +4,7 @@ import * as vs from "vscode";
 import { analyzerSnapshotPath } from "../../shared/constants";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { extensionVersion } from "../../shared/vscode/extension_utils";
+import { isRunningLocally } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { DartCapabilities } from "../sdk/capabilities";
 
@@ -39,7 +40,8 @@ function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilit
 		analyzerArgs.push(`--port=${config.analyzerDiagnosticsPort}`);
 
 	// Add info about the extension that will be collected for crash reports etc.
-	analyzerArgs.push(`--client-id=VS-Code`);
+	const clientID = isRunningLocally ? "VS-Code" : "VS-Code-Remote";
+	analyzerArgs.push(`--client-id=${clientID}`);
 	analyzerArgs.push(`--client-version=${extensionVersion}`);
 
 	// The analysis server supports a verbose instrumentation log file.
