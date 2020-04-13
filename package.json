@@ -495,7 +495,7 @@
 				},
 				{
 					"command": "dart.runTestAtCursor",
-					"when": "dart-code:dartProjectLoaded && !inDebugMode && dart-code:cursorIsInTest"
+					"when": "dart-code:dartProjectLoaded && dart-code:cursorIsInTest"
 				},
 				{
 					"command": "dart.goToTestOrImplementationFile",
@@ -503,7 +503,7 @@
 				},
 				{
 					"command": "dart.debugTestAtCursor",
-					"when": "dart-code:dartProjectLoaded && !inDebugMode && dart-code:cursorIsInTest"
+					"when": "dart-code:dartProjectLoaded && dart-code:cursorIsInTest"
 				},
 				{
 					"command": "dart.startWithoutDebugging",
@@ -876,32 +876,32 @@
 					"command": "_flutter.outline.refactor.flutter.removeWidget"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testSuiteNode",
+					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:testSuiteNode",
 					"command": "dart.startDebuggingTest",
 					"group": "4.5_exec@1"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testSuiteNode",
+					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:testSuiteNode",
 					"command": "dart.startWithoutDebuggingTest",
 					"group": "4.5_exec@1"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testGroupNode",
+					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:testGroupNode",
 					"command": "dart.startDebuggingTest",
 					"group": "4.5_exec@1"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testGroupNode",
+					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:testGroupNode",
 					"command": "dart.startWithoutDebuggingTest",
 					"group": "4.5_exec@1"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testTestNode",
+					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:testTestNode",
 					"command": "dart.startDebuggingTest",
 					"group": "4.5_exec@1"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && !inDebugMode && viewItem == dart-code:testTestNode",
+					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:testTestNode",
 					"command": "dart.startWithoutDebuggingTest",
 					"group": "4.5_exec@1"
 				}
