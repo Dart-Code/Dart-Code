@@ -427,7 +427,7 @@ export class SdkCommands {
 		shortPath = shortPath || path.basename(folder);
 		const commandName = path.basename(binPath);
 
-		const channel = channels.createChannel(commandName);
+		const channel = channels.createChannel(`${commandName} (${shortPath})`);
 		if (alwaysShowOutput)
 			channel.show();
 
