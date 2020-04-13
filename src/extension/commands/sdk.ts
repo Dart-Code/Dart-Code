@@ -69,6 +69,21 @@ export class SdkCommands {
 				DartHoverProvider.clearPackageMapCaches();
 			}
 		}));
+		context.subscriptions.push(vs.commands.registerCommand("dart.listOutdatedPackages", async (uri: string | Uri | undefined) => {
+			if (!uri || !(uri instanceof Uri)) {
+				uri = await this.getFolderToRunCommandIn("Select which folder to check for outdated packages");
+				// If the user cancelled, bail out (otherwise we'll prompt them again below).
+				if (!uri)
+					return;
+			}
+			if (typeof uri === "string")
+				uri = vs.Uri.file(uri);
+
+			if (util.isInsideFlutterProject(uri))
+				return this.runFlutter(["packages", "outdated"], uri, true);
+			else
+				return this.runPub(["outdated"], uri, true);
+		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages", async (uri: string | Uri | undefined) => {
 			// TODO: Doesn't this instanceof mean passing a string can't work?
 			if (!uri || !(uri instanceof Uri))
@@ -88,9 +103,13 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("pub.upgrade", (selection) => {
 			return vs.commands.executeCommand("dart.upgradePackages", selection);
 		}));
+		context.subscriptions.push(vs.commands.registerCommand("pub.outdated", (selection) => {
+			return vs.commands.executeCommand("dart.listOutdatedPackages", selection);
+		}));
 
 		// Flutter commands.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", async (selection): Promise<number | undefined> => {
+			// TODO: This should just bounce to dart.getPackages, and ensure that handles all of the cases here.
 			if (!selection) {
 				const path = await this.getFolderToRunCommandIn(`Select the folder to run "flutter packages get" in`, selection);
 				if (!path)
@@ -160,6 +179,9 @@ export class SdkCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => {
 			return vs.commands.executeCommand("dart.upgradePackages", selection);
+		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.outdated", (selection) => {
+			return vs.commands.executeCommand("dart.listOutdatedPackages", selection);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", (selection) => {
 			if (!workspace.sdks.flutter) {
@@ -326,10 +348,11 @@ export class SdkCommands {
 	}
 
 	private async runCommandForWorkspace(
-		handler: (folder: string, args: string[], shortPath: string) => Thenable<number | undefined>,
+		handler: (folder: string, args: string[], shortPath: string, alwaysShowOutput: boolean) => Thenable<number | undefined>,
 		placeHolder: string,
 		args: string[],
-		selection?: vs.Uri,
+		selection: vs.Uri | undefined,
+		alwaysShowOutput = false,
 	): Promise<number | undefined> {
 		const folderToRunCommandIn = await this.getFolderToRunCommandIn(placeHolder, selection);
 		if (!folderToRunCommandIn)
@@ -347,7 +370,7 @@ export class SdkCommands {
 		const shortPath = path.relative(containingWorkspacePath, folderToRunCommandIn)
 			|| path.basename(folderToRunCommandIn);
 
-		return handler(folderToRunCommandIn, args, shortPath);
+		return handler(folderToRunCommandIn, args, shortPath, alwaysShowOutput);
 	}
 
 	private async getFolderToRunCommandIn(placeHolder: string, selection?: vs.Uri, flutterOnly = false): Promise<string | undefined> {
@@ -396,8 +419,8 @@ export class SdkCommands {
 		return selectedFolder && selectedFolder.path;
 	}
 
-	private runFlutter(args: string[], selection?: vs.Uri): Thenable<number | undefined> {
-		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection);
+	private runFlutter(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false): Thenable<number | undefined> {
+		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection, alwaysShowOutput);
 	}
 
 	private runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined, alwaysShowOutput = false): Thenable<number | undefined> {
@@ -410,8 +433,8 @@ export class SdkCommands {
 		return this.runCommandInFolder(shortPath, folder, binPath, args, alwaysShowOutput);
 	}
 
-	private runPub(args: string[], selection?: vs.Uri): Thenable<number | undefined> {
-		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${args.join(" ")}" in`, args, selection);
+	private runPub(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false): Thenable<number | undefined> {
+		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${args.join(" ")}" in`, args, selection, alwaysShowOutput);
 	}
 
 	private runPubInFolder(folder: string, args: string[], shortPath: string, alwaysShowOutput = false): Thenable<number | undefined> {
