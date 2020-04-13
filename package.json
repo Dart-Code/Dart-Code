@@ -114,6 +114,11 @@
 				}
 			},
 			{
+				"command": "pub.outdated",
+				"title": "List Outdated Packages",
+				"category": "Pub"
+			},
+			{
 				"command": "dart.attach",
 				"title": "Attach to Dart Process",
 				"category": "Debug"
@@ -240,6 +245,11 @@
 					"light": "./media/commands/pull.svg",
 					"dark": "./media/commands/pull-inverse.svg"
 				}
+			},
+			{
+				"command": "flutter.packages.outdated",
+				"title": "List Outdated Packages",
+				"category": "Flutter"
 			},
 			{
 				"command": "flutter.clean",
@@ -482,6 +492,10 @@
 					"when": "dart-code:dartProjectLoaded"
 				},
 				{
+					"command": "pub.outdated",
+					"when": "dart-code:dartProjectLoaded"
+				},
+				{
 					"command": "dart.startDebugging",
 					"when": "false"
 				},
@@ -567,6 +581,10 @@
 				},
 				{
 					"command": "flutter.packages.upgrade",
+					"when": "dart-code:anyFlutterProjectLoaded"
+				},
+				{
+					"command": "flutter.packages.outdated",
 					"when": "dart-code:anyFlutterProjectLoaded"
 				},
 				{
@@ -770,12 +788,20 @@
 					"command": "pub.upgrade"
 				},
 				{
+					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"command": "pub.outdated"
+				},
+				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.packages.get"
 				},
 				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.packages.upgrade"
+				},
+				{
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"command": "flutter.packages.outdated"
 				}
 			],
 			"explorer/context": [
@@ -788,12 +814,20 @@
 					"command": "pub.upgrade"
 				},
 				{
+					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"command": "pub.outdated"
+				},
+				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.packages.get"
 				},
 				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.packages.upgrade"
+				},
+				{
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"command": "flutter.packages.outdated"
 				},
 				{
 					"when": "resourceLangId == dart && dart-code:dartProjectLoaded && !inDebugMode",
