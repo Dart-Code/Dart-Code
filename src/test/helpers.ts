@@ -871,9 +871,19 @@ export function deleteFileIfExists(filePath: string) {
 }
 
 export function prepareHasRunFile(name: string) {
-	const filePath = path.join(fsPath(flutterBazelRoot), `scripts/has_run/${name}`);
-	deleteFileIfExists(filePath);
-	return filePath;
+	const hasRunFile = path.join(fsPath(flutterBazelRoot), `scripts/has_run/${name}`);
+	deleteFileIfExists(hasRunFile);
+	return hasRunFile;
+}
+
+export function ensureHasRunRecently(name: string, allowedModificationSeconds = 30) {
+	const hasRunFile = path.isAbsolute(name)
+		? name
+		: path.join(fsPath(flutterBazelRoot), `scripts/has_run/${name}`);
+	assert.ok(fs.existsSync(hasRunFile));
+	const lastModified = fs.statSync(hasRunFile).mtime;
+	const modifiedSecondsAgo = (Date.now() - lastModified.getTime()) / 1000;
+	assert.ok(modifiedSecondsAgo < allowedModificationSeconds, `File hasn't been modified for ${modifiedSecondsAgo} seconds`);
 }
 
 export async function saveTrivialChangeToFile(uri: vs.Uri) {

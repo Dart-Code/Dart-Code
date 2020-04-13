@@ -1,8 +1,7 @@
 import * as assert from "assert";
-import * as fs from "fs";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
-import { activate, captureOutput, prepareHasRunFile } from "../../helpers";
+import { activate, captureOutput, ensureHasRunRecently, prepareHasRunFile } from "../../helpers";
 
 describe("flutter doctor", () => {
 	beforeEach(function () {
@@ -24,6 +23,6 @@ describe("flutter doctor", () => {
 		assert.notEqual(output.indexOf("[✓] Flutter (Channel"), -1);
 		assert.equal(output.endsWith("exit code 0"), true);
 
-		assert.ok(fs.existsSync(hasRunFile));
+		ensureHasRunRecently(hasRunFile);
 	});
 });

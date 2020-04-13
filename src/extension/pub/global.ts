@@ -18,6 +18,11 @@ export class PubGlobal {
 		if (versionStatus === VersionStatus.Valid)
 			return true;
 
+		// Custom activation scripts always auto run without prompt since we
+		// are unable to check whether they are required.
+		if (customActivateScript)
+			autoUpdate = true;
+
 		const moreInfo = "More Info";
 		const activateForMe = versionStatus === VersionStatus.NotInstalled ? `Activate ${packageName}` : `Update ${packageName}`;
 		const message = versionStatus === VersionStatus.NotInstalled
@@ -31,10 +36,7 @@ export class PubGlobal {
 		let action =
 			// If we need an update and we're allowed to auto-update, to the same as if the user
 			// clicked the activate button, otherwise prompt them.
-			// TODO: VERIFY THIS:
-			//    Custom activate scripts bypass the check and are always just immediately called.
-			customActivateScript
-				|| (autoUpdate && (versionStatus === VersionStatus.UpdateRequired || versionStatus === VersionStatus.UpdateAvailable))
+			autoUpdate && (versionStatus === VersionStatus.UpdateRequired || versionStatus === VersionStatus.UpdateAvailable)
 				? activateForMe
 				: await vs.window.showWarningMessage(message, activateForMe, moreInfo);
 
@@ -58,6 +60,15 @@ export class PubGlobal {
 		}
 
 		return false;
+	}
+
+	public async backgroundActivate(packageName: string, packageID: string, silent: boolean, customActivateScript: string | undefined): Promise<void> {
+		const actionName = `Activating ${packageName}`;
+		const args = ["global", "activate", packageID];
+		if (silent)
+			await this.runCommand(packageName, args, customActivateScript);
+		else
+			await this.runCommandWithProgress(packageName, `${actionName}...`, args, customActivateScript);
 	}
 
 	public async uninstall(packageID: string): Promise<void> {

@@ -20,7 +20,7 @@ import { PubGlobal } from "../pub/global";
 import { getToolEnv } from "../utils/processes";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
-const devtools = "devtools";
+const devtoolsPackageID = "devtools";
 const devtoolsPackageName = "Dart DevTools";
 
 // This starts off undefined, which means we'll read from config.devToolsPort and fall back to undefined (use default).
@@ -33,6 +33,8 @@ let portToBind: number | undefined;
 export class DevToolsManager implements vs.Disposable {
 	private readonly disposables: vs.Disposable[] = [];
 	private readonly devToolsStatusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 100);
+	private devToolsActivationPromise: Promise<void> | undefined;
+	public get devToolsActivation() { return this.devToolsActivationPromise; }
 
 	/// Resolves to the DevTools URL. This is created immediately when a new process is being spawned so that
 	/// concurrent launches can wait on the same promise.
@@ -40,6 +42,21 @@ export class DevToolsManager implements vs.Disposable {
 
 	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal) {
 		this.disposables.push(this.devToolsStatusBarItem);
+
+		if (workspaceContext.workspaceConfig?.activateDevToolsEagerly) {
+			this.preActivate(true).then(
+				() => { this.logger.info(`Finished background activating DevTools`); },
+				(e) => {
+					this.logger.error("Failed to background activate DevTools");
+					this.logger.error(e);
+					vs.window.showErrorMessage(`Failed to activate DevTools: ${e}`);
+				});
+		}
+	}
+
+	private async preActivate(silent: boolean): Promise<void> {
+		this.devToolsActivationPromise = this.pubGlobal.backgroundActivate(devtoolsPackageName, devtoolsPackageID, silent, this.workspaceContext.workspaceConfig?.devtoolsActivateScript);
+		await this.devToolsActivationPromise;
 	}
 
 	/// Spawns DevTools and returns the full URL to open for that session
@@ -47,9 +64,15 @@ export class DevToolsManager implements vs.Disposable {
 	public async spawnForSession(session: DartDebugSessionInformation & { vmServiceUri: string }, reuseWindows: boolean, notify: boolean, page: string | undefined): Promise<{ url: string, dispose: () => void } | undefined> {
 		this.analytics.logDebuggerOpenDevTools();
 
-		const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtools, undefined, "0.1.10", this.workspaceContext.workspaceConfig?.devtoolsActivateScript, true);
-		if (!isAvailable) {
-			return undefined;
+		// If we're mid-silent-activation, wait until that's finished.
+		await this.devToolsActivationPromise;
+
+		// Don't try to check for install when we run eagerly.
+		if (!this.workspaceContext.workspaceConfig?.activateDevToolsEagerly) {
+			const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtoolsPackageID, undefined, "0.1.10", this.workspaceContext.workspaceConfig?.devtoolsActivateScript, true);
+			if (!isAvailable) {
+				return undefined;
+			}
 		}
 
 		if (!this.devtoolsUrl) {

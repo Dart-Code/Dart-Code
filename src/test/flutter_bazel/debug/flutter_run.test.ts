@@ -1,12 +1,11 @@
 import * as assert from "assert";
-import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { flutterTestDeviceIsWeb, killFlutterTester, startDebugger } from "../../debug_helpers";
-import { activate, defer, ext, extApi, flutterBazelHelloWorldFolder, flutterBazelHelloWorldMainFile, getPackages, prepareHasRunFile, sb, watchPromise } from "../../helpers";
+import { activate, defer, ensureHasRunRecently, ext, extApi, flutterBazelHelloWorldFolder, flutterBazelHelloWorldMainFile, getPackages, prepareHasRunFile, sb, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -50,12 +49,19 @@ describe(`flutter run debugger`, () => {
 			dc.terminateRequest(),
 		]);
 
-		assert.ok(fs.existsSync(hasRunFile));
+		ensureHasRunRecently(hasRunFile);
+	});
+
+	it("does automatically activate devtools", () => {
+		// Because the custom DevTools activate script runs at extension activation, we
+		// can't easily wrap a test around it, and instead just ensure that it's run
+		// in the last 10 minutes.
+		// TODO: Make this better.
+		ensureHasRunRecently("devtools_activate", 60 * 10);
 	});
 
 	it("can launch DevTools using custom script", async function () {
-		const activateHasRunFile = prepareHasRunFile("devtools_activate");
-		const runHasRunFile = prepareHasRunFile("devtools_run");
+		const hasRunFile = prepareHasRunFile("devtools_run");
 
 		if (!extApi.flutterCapabilities.supportsDevTools)
 			return this.skip();
@@ -83,7 +89,6 @@ describe(`flutter run debugger`, () => {
 			dc.terminateRequest(),
 		]);
 
-		assert.ok(fs.existsSync(activateHasRunFile));
-		assert.ok(fs.existsSync(runHasRunFile));
+		ensureHasRunRecently(hasRunFile);
 	});
 });
