@@ -25,6 +25,7 @@ export function tryLoadBazelFlutterConfig(logger: Logger, bazelWorkspaceRoot: st
 		}
 
 		const resolvedConfig: WorkspaceConfig = {
+			activateDevToolsEagerly: !!config.devtoolsActivateScript,
 			configFile: configPath,
 			dartSdkHomeLinux: makeFullPath(config.dartSdkHome?.linux),
 			dartSdkHomeMac: makeFullPath(config.dartSdkHome?.macos),

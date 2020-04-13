@@ -41,6 +41,7 @@ export interface WorkspaceConfig {
 	readonly dartSdkHomeMac: string | undefined;
 	readonly flutterVersionFile: string | undefined;
 	readonly devtoolsActivateScript: string | undefined;
+	readonly activateDevToolsEagerly: boolean;
 	readonly devtoolsRunScript: string | undefined;
 }
 

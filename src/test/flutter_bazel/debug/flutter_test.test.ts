@@ -1,11 +1,9 @@
-import * as assert from "assert";
-import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterBazelHelloWorldFolder, flutterBazelTestMainFile, getLaunchConfiguration, getPackages, logger, prepareHasRunFile, withTimeout } from "../../helpers";
+import { activate, defer, delay, ensureHasRunRecently, ext, extApi, flutterBazelHelloWorldFolder, flutterBazelTestMainFile, getLaunchConfiguration, getPackages, logger, prepareHasRunFile, withTimeout } from "../../helpers";
 
 describe("flutter test debugger", () => {
 
@@ -65,6 +63,6 @@ describe("flutter test debugger", () => {
 			dc.launch(config),
 		]);
 
-		assert.ok(fs.existsSync(hasRunFile));
+		ensureHasRunRecently(hasRunFile);
 	});
 });
