@@ -876,7 +876,7 @@ export function prepareHasRunFile(name: string) {
 	return hasRunFile;
 }
 
-export function ensureHasRunRecently(name: string, allowedModificationSeconds = 30) {
+export function ensureHasRunRecently(name: string, allowedModificationSeconds = 60) {
 	const hasRunFile = path.isAbsolute(name)
 		? name
 		: path.join(fsPath(flutterBazelRoot), `scripts/has_run/${name}`);
