@@ -179,7 +179,7 @@ export class FlutterDebugSession extends DartDebugSession {
 				}
 
 				if (args.supportsWsVmService)
-					appArgs.push("--web-server-debug-protocol", "sse");
+					appArgs.push("--web-server-debug-protocol", "ws");
 				if (args.supportsExposeUrl)
 					appArgs.push("--web-allow-expose-url");
 			}
