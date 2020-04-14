@@ -61,7 +61,7 @@ export class SdkCommands {
 				uri = vs.Uri.file(uri);
 			try {
 				if (util.isInsideFlutterProject(uri))
-					return this.runFlutter(["packages", "get"], uri);
+					return this.runFlutter(["pub", "get"], uri);
 				else
 					return this.runPub(["get"], uri);
 			} finally {
@@ -76,7 +76,7 @@ export class SdkCommands {
 			if (typeof uri === "string")
 				uri = vs.Uri.file(uri);
 			if (util.isInsideFlutterProject(uri))
-				return this.runFlutter(["packages", "upgrade"], uri);
+				return this.runFlutter(["pub", "upgrade"], uri);
 			else
 				return this.runPub(["upgrade"], uri);
 		}));
@@ -104,7 +104,7 @@ export class SdkCommands {
 			}
 
 			try {
-				return this.runFlutter(["packages", "get"], selection);
+				return this.runFlutter(["pub", "get"], selection);
 			} finally {
 				// TODO: Move this to a reusable event.
 				DartHoverProvider.clearPackageMapCaches();
