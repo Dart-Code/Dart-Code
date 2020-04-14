@@ -109,6 +109,7 @@ export class DartDebugSession extends DebugSession {
 		response.body.supportsLogPoints = true;
 		response.body.supportsTerminateRequest = true;
 		response.body.supportsRestartFrame = true;
+		response.body.supportsClipboardContext = true;
 		response.body.exceptionBreakpointFilters = [
 			{ filter: "All", label: "All Exceptions", default: false },
 			{ filter: "Unhandled", label: "Uncaught Exceptions", default: true },
@@ -1243,6 +1244,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): Promise<void> {
+		const isClipboardContext = args.context === "clipboard";
 		const expression: string = args.expression;
 		// Stack frame scope; if not specified, the expression is evaluated in the global scope.
 		const frameId = args.frameId;
@@ -1299,7 +1301,7 @@ export class DartDebugSession extends DebugSession {
 			} else {
 				const instanceRef: InstanceWithEvaluateName = result.result as InstanceWithEvaluateName;
 				instanceRef.evaluateName = expression;
-				const text = await this.fullValueAsString(thread.ref, instanceRef);
+				const text = await this.fullValueAsString(thread.ref, instanceRef, isClipboardContext);
 				response.body = {
 					result: text || "<unknown>",
 					variablesReference: this.isSimpleKind(instanceRef.kind) ? 0 : thread.storeData(instanceRef),
@@ -1548,10 +1550,10 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	// Like valueAsString, but will call toString() if the thing is truncated.
-	private async fullValueAsString(isolate: VMIsolateRef | undefined, instanceRef: VMInstanceRef): Promise<string | undefined> {
+	private async fullValueAsString(isolate: VMIsolateRef | undefined, instanceRef: VMInstanceRef, suppressQuotesAroundStrings = false): Promise<string | undefined> {
 		let text: string | undefined;
 		if (!instanceRef.valueAsStringIsTruncated)
-			text = this.valueAsString(instanceRef, false);
+			text = this.valueAsString(instanceRef, false, suppressQuotesAroundStrings);
 		if (!text && isolate)
 			text = await this.callToString(isolate, instanceRef, true);
 		// If it has a custom toString(), put that in parens after the type name.
@@ -1654,7 +1656,7 @@ export class DartDebugSession extends DebugSession {
 		return uri;
 	}
 
-	private valueAsString(ref: VMInstanceRef | VMSentinel, useClassNameAsFallback = true, suppressQuotesAroundStrings: boolean = false): string | undefined {
+	private valueAsString(ref: VMInstanceRef | VMSentinel, useClassNameAsFallback = true, suppressQuotesAroundStrings = false): string | undefined {
 		if (ref.type === "Sentinel")
 			return ref.valueAsString;
 
