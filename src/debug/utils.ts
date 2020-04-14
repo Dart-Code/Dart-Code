@@ -65,7 +65,7 @@ export interface FlutterLaunchRequestArguments extends DartLaunchRequestArgument
 	flutterRunLogFile?: string;
 	flutterTestLogFile?: string;
 	supportsExposeUrl: boolean;
-	supportsForceWsVmService: boolean;
+	supportsWsVmService: boolean;
 }
 
 export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestArguments {
