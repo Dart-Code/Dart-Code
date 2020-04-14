@@ -42,7 +42,11 @@ export class FixCodeActionProvider implements RankedCodeActionProvider {
 				}
 			}
 
-			return Object.keys(allActions).map((a) => allActions[a]);
+			const allFixes = Object.keys(allActions).map((a) => allActions[a]);
+
+			return context.only
+				? allFixes.filter((f) => context.only?.contains(f.kind!))
+				: allFixes;
 		} catch (e) {
 			this.logger.error(e);
 			throw e;
@@ -52,6 +56,9 @@ export class FixCodeActionProvider implements RankedCodeActionProvider {
 	private convertResult(document: TextDocument, change: as.SourceChange, error: as.AnalysisError): CodeAction {
 		const title = change.message;
 		const diagnostics = error ? [DartDiagnosticProvider.createDiagnostic(error)] : undefined;
+		// const fixId = change.id
+		// 	? CodeActionKind.QuickFix.append(change.id.replace("dart.assist.", ""))
+		// 	: CodeActionKind.QuickFix;
 		const action = new CodeAction(title, CodeActionKind.QuickFix);
 		action.command = {
 			arguments: [document, change],

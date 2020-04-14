@@ -39,7 +39,12 @@ export class RefactorCodeActionProvider implements RankedCodeActionProvider {
 			});
 			if (token && token.isCancellationRequested)
 				return;
-			return result.kinds.map((k) => this.getRefactorForKind(document, range, k)).filter(notUndefined);
+
+			const allRefactors = result.kinds.map((k) => this.getSupportedRefactorForKind(document, range, k)).filter(notUndefined);
+
+			return context.only
+				? allRefactors.filter((r) => context.only?.contains(r.kind!))
+				: allRefactors;
 		} catch (e) {
 			// TODO: Swap this back to logError/throw when https://github.com/dart-lang/sdk/issues/33471 is fixed.
 			return [];
@@ -48,7 +53,7 @@ export class RefactorCodeActionProvider implements RankedCodeActionProvider {
 		}
 	}
 
-	private getRefactorForKind(document: TextDocument, range: Range, k: as.RefactoringKind): CodeAction | undefined {
+	private getSupportedRefactorForKind(document: TextDocument, range: Range, k: as.RefactoringKind): CodeAction | undefined {
 		if (!supportedRefactors[k])
 			return;
 

@@ -30,7 +30,12 @@ export class AssistCodeActionProvider implements RankedCodeActionProvider {
 				length: range.end.character - range.start.character,
 				offset: document.offsetAt(range.start),
 			});
-			return assists.assists.map((assist) => this.convertResult(document, assist));
+
+			const allAssists = assists.assists.map((assist) => this.convertResult(document, assist));
+
+			return context.only
+				? allAssists.filter((ca) => context.only?.contains(ca.kind!))
+				: allAssists;
 		} catch (e) {
 			this.logger.error(e);
 		}
