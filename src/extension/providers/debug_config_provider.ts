@@ -476,7 +476,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.debuggerHandlesPathsEverywhereForBreakpoints = debugConfig.debuggerHandlesPathsEverywhereForBreakpoints !== undefined && debugConfig.debuggerHandlesPathsEverywhereForBreakpoints !== null
 			? debugConfig.debuggerHandlesPathsEverywhereForBreakpoints
 			: this.dartCapabilities.handlesPathsEverywhereForBreakpoints;
-		debugConfig.supportsForceWsVmService = this.flutterCapabilities.supportsForceWsVmService;
+		debugConfig.supportsWsVmService = this.flutterCapabilities.supportsWsVmService;
 		debugConfig.supportsExposeUrl = this.flutterCapabilities.supportsExposeUrl;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		debugConfig.previewToStringInDebugViews = debugConfig.previewToStringInDebugViews || config.previewToStringInDebugViews;

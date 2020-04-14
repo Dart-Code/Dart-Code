@@ -20,8 +20,8 @@ export class FlutterCapabilities {
 	// TODO: Figure this out.
 	get webSupportsDebugging() { return false; }
 	// TODO: Fix these versions.
-	get supportsForceWsVmService() { return versionIsAtLeast(this.version, "1.12.4"); }
-	get supportsExposeUrl() { return versionIsAtLeast(this.version, "1.12.4"); }
+	get supportsWsVmService() { return versionIsAtLeast(this.version, "1.18.0"); }
+	get supportsExposeUrl() { return versionIsAtLeast(this.version, "1.18.0"); }
 }
 
 export class DaemonCapabilities {
