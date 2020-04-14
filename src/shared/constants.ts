@@ -37,6 +37,7 @@ export const DART_DEP_PACKAGE_NODE_CONTEXT = "dart-code:depPackageNode";
 export const DART_DEP_FOLDER_NODE_CONTEXT = "dart-code:depFolderNode";
 export const DART_DEP_FILE_NODE_CONTEXT = "dart-code:depFileNode";
 export const DART_IS_CAPTURING_LOGS_CONTEXT = "dart-code:isCapturingLogs";
+export const PUB_OUTDATED_SUPPORTED_CONTEXT = "dart-code:pubOutdatedSupported";
 
 export const IS_RUNNING_LOCALLY_CONTEXT = "dart-code:isRunningLocally";
 

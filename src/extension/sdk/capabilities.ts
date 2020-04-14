@@ -17,6 +17,7 @@ export class DartCapabilities {
 	get handlesPathsEverywhereForBreakpoints() { return versionIsAtLeast(this.version, "2.2.1-edge"); }
 	get supportsDisableServiceTokens() { return versionIsAtLeast(this.version, "2.2.1-dev.4.2"); }
 	get supportsWriteServiceInfo() { return versionIsAtLeast(this.version, "2.7.1"); }
+	get supportsPubOutdated() { return versionIsAtLeast(this.version, "2.8.0-a"); }
 	// TODO: Update this (along with Flutter) when supported.
 	get webSupportsEvaluation() { return false; }
 	get webSupportsDebugging() { return false; }

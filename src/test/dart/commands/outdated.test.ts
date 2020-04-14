@@ -1,11 +1,16 @@
 import * as assert from "assert";
 import * as vs from "vscode";
 import { pubExecutableName } from "../../../shared/constants";
-import { activate, captureOutput, getPackages } from "../../helpers";
+import { activate, captureOutput, extApi, getPackages } from "../../helpers";
 
 describe("pub outdated", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate());
+
+	beforeEach("skip if not supported", function () {
+		if (!extApi.dartCapabilities.supportsPubOutdated)
+			this.skip();
+	});
 
 	it("runs and prints output", async () => {
 		const buffer = captureOutput("pub");

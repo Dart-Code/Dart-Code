@@ -4,7 +4,7 @@ import { isArray } from "util";
 import * as vs from "vscode";
 import { Analyzer } from "../shared/analyzer";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
-import { dartPlatformName, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, isWin, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName } from "../shared/constants";
+import { dartPlatformName, flutterExtensionIdentifier, flutterPath, HAS_LAST_DEBUG_CONFIG, isWin, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName, PUB_OUTDATED_SUPPORTED_CONTEXT } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { DartWorkspaceContext, FlutterSdks, IFlutterDaemon, Sdks } from "../shared/interfaces";
@@ -192,6 +192,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		checkForStandardDartSdkUpdates(logger, workspaceContext);
 		context.subscriptions.push(new StatusBarVersionTracker(workspaceContext));
 	}
+	vs.commands.executeCommand("setContext", PUB_OUTDATED_SUPPORTED_CONTEXT, dartCapabilities.supportsPubOutdated);
 
 	if (config.previewLsp || process.env.DART_CODE_FORCE_LSP) {
 		isUsingLsp = true;
