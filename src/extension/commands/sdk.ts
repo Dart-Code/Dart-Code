@@ -80,7 +80,7 @@ export class SdkCommands {
 				uri = vs.Uri.file(uri);
 
 			if (util.isInsideFlutterProject(uri))
-				return this.runFlutter(["packages", "outdated"], uri, true);
+				return this.runFlutter(["pub", "outdated"], uri, true);
 			else
 				return this.runPub(["outdated"], uri, true);
 		}));
