@@ -1732,7 +1732,7 @@ export class DartDebugSession extends DebugSession {
 			return false;
 
 		// package:flutter won't be in pub-cache, but should be considered external.
-		if (uri.startsWith("package:flutter/"))
+		if (uri.startsWith("package:flutter/") || uri.startsWith("package:flutter_test/"))
 			return true;
 
 		const path = this.packageMap.resolvePackageUri(uri);
@@ -1889,7 +1889,7 @@ export class DartDebugSession extends DebugSession {
 
 			// Colour based on whether it's framework code or not.
 			const isFramework = this.isSdkLibrary(frame.sourceUri)
-				|| (this.isExternalLibrary(frame.sourceUri) && frame.sourceUri.startsWith("package:flutter/"));
+				|| (this.isExternalLibrary(frame.sourceUri) && (frame.sourceUri.startsWith("package:flutter/") || frame.sourceUri.startsWith("package:flutter_test/")));
 
 			const colouredText = isFramework ? applyColor(text, grey) : applyColor(text, grey2);
 			output.body.output = `${colouredText}\n`;
