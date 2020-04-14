@@ -493,7 +493,7 @@
 				},
 				{
 					"command": "pub.outdated",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:dartProjectLoaded && dart-code:pubOutdatedSupported"
 				},
 				{
 					"command": "dart.startDebugging",
@@ -585,7 +585,7 @@
 				},
 				{
 					"command": "flutter.packages.outdated",
-					"when": "dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported"
 				},
 				{
 					"command": "flutter.clean",
@@ -788,7 +788,7 @@
 					"command": "pub.upgrade"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
 					"command": "pub.outdated"
 				},
 				{
@@ -800,7 +800,7 @@
 					"command": "flutter.packages.upgrade"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
 					"command": "flutter.packages.outdated"
 				}
 			],
@@ -814,7 +814,7 @@
 					"command": "pub.upgrade"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
 					"command": "pub.outdated"
 				},
 				{
@@ -826,7 +826,7 @@
 					"command": "flutter.packages.upgrade"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
 					"command": "flutter.packages.outdated"
 				},
 				{
