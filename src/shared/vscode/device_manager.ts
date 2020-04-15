@@ -120,7 +120,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		};
 
 		// Kick off a request to get emulators only once.
-		this.getEmulatorItems(true, supportedTypes)
+		this.getPickableEmulators(true, supportedTypes)
 			.then((emulators) => emulatorDevices = emulators)
 			.then(() => quickPick.busy = false)
 			.then(() => updatePickableDeviceList());
@@ -258,12 +258,15 @@ export class FlutterDeviceManager implements vs.Disposable {
 				};
 			}
 
-			// Add/overwrite any custom emulators.
+			// Add/update any custom emulators.
 			for (const e of this.config.flutterCustomEmulators) {
+				const existing = allEmulatorsByID[e.id];
 				allEmulatorsByID[e.id] = {
+					category: "custom",
+					...existing,
 					...e,
 					type: "custom-emulator",
-				};
+				} as Emulator;
 			}
 
 			const allEmulators = Object.values(allEmulatorsByID);
@@ -280,7 +283,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	public async promptForAndLaunchEmulator(allowAutomaticSelection = false): Promise<boolean> {
-		const emulators = await this.getEmulatorItems(false);
+		const emulators = await this.getPickableEmulators(false);
 
 		// Because the above call is async, it's possible a device was connected while we were calling. If so,
 		// just use that instead of showing the prompt.
@@ -349,7 +352,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			: "emulator";
 	}
 
-	private async getEmulatorItems(showAsEmulators: boolean, supportedTypes?: f.PlatformType[]): Promise<PickableDevice[]> {
+	public async getPickableEmulators(showAsEmulators: boolean, supportedTypes?: f.PlatformType[]): Promise<PickableDevice[]> {
 		if (!isRunningLocally)
 			return [];
 

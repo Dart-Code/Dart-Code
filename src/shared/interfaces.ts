@@ -75,8 +75,8 @@ export type Emulator = (f.FlutterEmulator & { type: "emulator" }) | CustomEmulat
 export interface CustomEmulator {
 	id: string;
 	type: "custom-emulator";
-	category?: undefined;
-	platformType?: undefined;
+	category: "custom" | f.Category;
+	platformType?: undefined | f.PlatformType;
 	name: string;
 	executable: string;
 	args?: string[];

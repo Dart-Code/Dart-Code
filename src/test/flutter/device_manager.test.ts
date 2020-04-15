@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import { DaemonCapabilities } from "../../shared/capabilities/flutter";
 import * as f from "../../shared/flutter/daemon_interfaces";
-import { IAmDisposable, IFlutterDaemon } from "../../shared/interfaces";
+import { CustomEmulatorDefinition, IAmDisposable, IFlutterDaemon } from "../../shared/interfaces";
 import { UnknownResponse } from "../../shared/services/interfaces";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { logger } from "../helpers";
@@ -14,7 +14,7 @@ describe("device_manager", () => {
 	beforeEach(() => {
 		daemon = new FakeFlutterDaemon();
 		// TODO: Tests for custom emulators.
-		dm = new FlutterDeviceManager(logger, daemon, { flutterCustomEmulators: [] }, true);
+		dm = new FlutterDeviceManager(logger, daemon, { flutterCustomEmulators: customEmulators }, true);
 	});
 
 	afterEach(() => {
@@ -53,6 +53,44 @@ describe("device_manager", () => {
 		await daemon.connect(emulatediOSMobile, true);
 		assert.deepStrictEqual(dm.currentDevice, emulatediOSMobile);
 		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice!), emulatediOSMobile.name);
+	});
+
+	it("includes custom emulators", async () => {
+		const emulators = await dm.getPickableEmulators(true);
+		const em = emulators.find((e) => e.device.id === customEmulator1.id);
+
+		if (!em)
+			throw new Error("Custom emulator was missing");
+		if (em.device.type !== "custom-emulator")
+			throw new Error("Wrong device type");
+		assert.equal(em.alwaysShow, false);
+		assert.equal(em.description, "custom emulator");
+		assert.equal(em.detail, undefined);
+		assert.equal(em.device.id, customEmulator1.id);
+		assert.equal(em.device.executable, "echo");
+		assert.deepEqual(em.device.args, ["args"]);
+		assert.equal(em.device.platformType, undefined);
+		assert.equal(em.device.type, "custom-emulator");
+		assert.equal(em.label, "Start My custom emulator");
+	});
+
+	it("overrides real emulators with custom definitions", async () => {
+		const emulators = await dm.getPickableEmulators(true);
+		const em = emulators.find((e) => e.device.id === customEmulator2.id);
+
+		if (!em)
+			throw new Error("Custom emulator was missing");
+		if (em.device.type !== "custom-emulator")
+			throw new Error("Wrong device type");
+		assert.equal(em.alwaysShow, false);
+		assert.equal(em.description, "mobile emulator"); // Preserved from base
+		assert.equal(em.detail, undefined);
+		assert.equal(em.device.id, customEmulator2.id);
+		assert.equal(em.device.executable, "echo");
+		assert.deepEqual(em.device.args, ["args"]);
+		assert.equal(em.device.platformType, "android"); // Preserved from base
+		assert.equal(em.device.type, "custom-emulator");
+		assert.equal(em.label, "Start My emulator override");
 	});
 
 	it("auto-selects devices if supported platforms are not known", async () => {
@@ -147,7 +185,7 @@ class FakeFlutterDaemon extends FakeStdIOService implements IFlutterDaemon {
 		throw new Error("Method not implemented.");
 	}
 	public async getEmulators(): Promise<f.FlutterEmulator[]> {
-		return [androidEmulator];
+		return [androidEmulator, androidEmulatorToOverride];
 	}
 	public launchEmulator(emulatorId: string): Thenable<void> {
 		throw new Error("Method not implemented.");
@@ -232,6 +270,13 @@ const androidEmulator: f.FlutterEmulator = {
 	platformType: "android",
 };
 
+const androidEmulatorToOverride: f.FlutterEmulator = {
+	category: "mobile",
+	id: "my_emulator_id_to_override",
+	name: "WILL BE OVERRIDEN EMULATOR",
+	platformType: "android",
+};
+
 const physicaliOSMobile: f.Device = {
 	category: "mobile",
 	emulator: false,
@@ -262,3 +307,19 @@ const iOSEmulator: f.FlutterEmulator = {
 	name: "My Cool iOS Emulator!",
 	platformType: "ios",
 };
+
+const customEmulator1: CustomEmulatorDefinition = {
+	args: ["args"],
+	executable: "echo",
+	id: "my-custom-emulator",
+	name: "My custom emulator",
+};
+
+const customEmulator2: CustomEmulatorDefinition = {
+	args: ["args"],
+	executable: "echo",
+	id: "my_emulator_id_to_override",
+	name: "My emulator override",
+};
+
+const customEmulators = [customEmulator1, customEmulator2];
