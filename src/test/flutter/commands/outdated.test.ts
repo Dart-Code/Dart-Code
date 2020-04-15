@@ -19,7 +19,7 @@ describe("flutter packages outdated", () => {
 		assert.equal(exitCode, 0);
 
 		const output = buffer.buffer.join("").trim();
-		assert.equal(output.startsWith(`[flutter_hello_world] ${flutterExecutableName} --suppress-analytics packages outdated`), true);
+		assert.equal(output.startsWith(`[flutter_hello_world] ${flutterExecutableName} --suppress-analytics pub outdated`), true);
 		assert.equal(output.endsWith("exit code 0"), true);
 	});
 });
