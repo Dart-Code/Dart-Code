@@ -1182,6 +1182,12 @@
 					"description": "Whether to insert argument placeholders during code completions. This feature is automatically disabled when enableCompletionCommitCharacters is enabled.",
 					"scope": "resource"
 				},
+				"dart.showMainCodeLens": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to show CodeLens actions in the editor for quick running/debugging scripts with main methods.",
+					"scope": "window"
+				},
 				"dart.showTestCodeLens": {
 					"type": "boolean",
 					"default": true,
@@ -1668,10 +1674,12 @@
 								"default": "default"
 							},
 							"template": {
-								"description": "Uses this launch configuration as a template for launching tests.",
+								"description": "Uses this launch configuration as a template for launching scripts and tests.",
 								"enum": [
 									"run-test",
-									"debug-test"
+									"debug-test",
+									"run-file",
+									"debug-file"
 								]
 							},
 							"args": {
