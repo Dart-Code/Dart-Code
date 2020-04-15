@@ -17,11 +17,10 @@ export class FlutterCapabilities {
 	get hasEvictBug() { return !versionIsAtLeast(this.version, "1.2.2"); }
 	get hasUpdatedStructuredErrorsFormat() { return versionIsAtLeast(this.version, "1.8.0"); }
 	get supportsFlutterCreateListSamples() { return versionIsAtLeast(this.version, "1.3.10"); }
+	get supportsWsVmService() { return versionIsAtLeast(this.version, "1.18.0-dev.5.0"); }
+	get supportsExposeUrl() { return versionIsAtLeast(this.version, "1.18.0-dev.5.0"); }
 	// TODO: Figure this out.
 	get webSupportsDebugging() { return false; }
-	// TODO: Fix these versions.
-	get supportsWsVmService() { return versionIsAtLeast(this.version, "1.17.0"); }
-	get supportsExposeUrl() { return versionIsAtLeast(this.version, "1.17.0"); }
 }
 
 export class DaemonCapabilities {
