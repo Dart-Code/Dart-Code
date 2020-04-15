@@ -155,7 +155,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		return this.sendRequest("device.enable");
 	}
 
-	public getEmulators(): Thenable<f.Emulator[]> {
+	public getEmulators(): Thenable<f.FlutterEmulator[]> {
 		return this.sendRequest("emulator.getEmulators");
 	}
 

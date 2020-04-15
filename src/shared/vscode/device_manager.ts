@@ -2,8 +2,11 @@ import * as vs from "vscode";
 import { flatMap } from "../../shared/utils";
 import { findProjectFolders, fsPath } from "../../shared/utils/fs";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { LogCategory } from "../enums";
 import * as f from "../flutter/daemon_interfaces";
-import { IFlutterDaemon, Logger } from "../interfaces";
+import { CustomEmulator, CustomEmulatorDefinition, Emulator, EmulatorCreator, IFlutterDaemon, Logger } from "../interfaces";
+import { logProcess } from "../logging";
+import { safeSpawn } from "../processes";
 import { unique } from "../utils/array";
 import { isRunningLocally } from "./utils";
 
@@ -14,7 +17,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	public currentDevice?: f.Device;
 	private readonly knownEmulatorNames: { [key: string]: string } = {};
 
-	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly autoSelectNewlyConnectedDevices: boolean) {
+	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[] }, private readonly autoSelectNewlyConnectedDevices: boolean) {
 		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
 		this.statusBarItem.tooltip = "Flutter";
 		this.statusBarItem.command = "flutter.selectDevice";
@@ -36,7 +39,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		this.subscriptions.forEach((s) => s.dispose());
 	}
 
-	public isSupported(types: f.PlatformType[] | undefined, device: { platformType: f.PlatformType | null | undefined } | undefined) {
+	public isSupported(types: f.PlatformType[] | undefined, device: { platformType?: f.PlatformType | null | undefined } | undefined) {
 		// If we don't get any types to filter, assume everything is valid.
 		return device && (!types || !types.length || !device.platformType || types.indexOf(device.platformType) !== -1);
 	}
@@ -147,6 +150,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 					this.currentDevice = undefined;
 					this.statusBarItem.text = `Creating ${emulatorTypeLabel}...`;
 					await this.createEmulator();
+					this.updateStatusBar();
 					break;
 				case "emulator":
 					// Clear the current device so we can wait for the new one
@@ -154,6 +158,15 @@ export class FlutterDeviceManager implements vs.Disposable {
 					this.currentDevice = undefined;
 					this.statusBarItem.text = `Launching ${emulatorTypeLabel}...`;
 					await this.launchEmulator(selection.device);
+					this.updateStatusBar();
+					break;
+				case "custom-emulator":
+					// Clear the current device so we can wait for the new one
+					// to connect.
+					this.currentDevice = undefined;
+					this.statusBarItem.text = `Launching ${emulatorTypeLabel}...`;
+					await this.launchCustomEmulator(selection.device);
+					this.updateStatusBar();
 					break;
 				case "device":
 					this.currentDevice = selection.device;
@@ -230,21 +243,36 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 	}
 
-	private async getEmulators(): Promise<f.Emulator[]> {
+	private async getEmulators(): Promise<Emulator[]> {
 		try {
 			const emus = await this.daemon.getEmulators();
 
+			const allEmulatorsByID: { [key: string]: Emulator } = {};
+			for (const e of emus) {
+				allEmulatorsByID[e.id] = {
+					category: e.category,
+					id: e.id,
+					name: e.name || e.id,
+					platformType: e.platformType,
+					type: "emulator",
+				};
+			}
+
+			// Add/overwrite any custom emulators.
+			for (const e of this.config.flutterCustomEmulators) {
+				allEmulatorsByID[e.id] = {
+					...e,
+					type: "custom-emulator",
+				};
+			}
+
+			const allEmulators = Object.values(allEmulatorsByID);
+
 			// Whenever we see emulators, record all their names.
-			for (const e of emus.filter((e) => e.id))
+			for (const e of allEmulators)
 				this.knownEmulatorNames[e.id] = e.name;
 
-			return emus.map((e) => ({
-				category: e.category,
-				id: e.id,
-				name: e.name || e.id,
-				platformType: e.platformType,
-				type: "emulator",
-			}));
+			return allEmulators;
 		} catch (e) {
 			this.logger.error({ message: e });
 			return [];
@@ -282,6 +310,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 			return this.createEmulator();
 		} else if (selectedEmulator && selectedEmulator.device && selectedEmulator.device.type === "emulator") {
 			return this.launchEmulator(selectedEmulator.device);
+		} else if (selectedEmulator && selectedEmulator.device && selectedEmulator.device.type === "custom-emulator") {
+			return this.launchCustomEmulator(selectedEmulator.device);
 		} else {
 			return !!(this.currentDevice);
 		}
@@ -328,10 +358,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			.map((e) => ({
 				alwaysShow: false,
 				description: showAsEmulators ? `${e.category || "mobile"} ${this.emulatorLabel(e.platformType)}` : e.platformType || undefined,
-				device: {
-					...e,
-					type: "emulator",
-				},
+				device: e,
 				label: showAsEmulators ? `Start ${e.name}` : e.name,
 			}));
 
@@ -339,14 +366,14 @@ export class FlutterDeviceManager implements vs.Disposable {
 		if (this.daemon.capabilities.canCreateEmulators && this.isSupported(supportedTypes, { platformType: "android" })) {
 			emulators.push({
 				alwaysShow: true,
-				device: { type: "emulator-creator", platformType: "android" },
+				device: { type: "emulator-creator", platformType: "android", name: "Create Android emulator" } as EmulatorCreator,
 				label: "Create Android emulator",
 			});
 		}
 		return emulators;
 	}
 
-	private async launchEmulator(emulator: { id: string, name: string }): Promise<boolean> {
+	private async launchEmulator(emulator: f.FlutterEmulator): Promise<boolean> {
 		try {
 			await vs.window.withProgress({
 				location: vs.ProgressLocation.Notification,
@@ -370,6 +397,37 @@ export class FlutterDeviceManager implements vs.Disposable {
 		await new Promise((resolve) => setTimeout(resolve, 1000));
 		return true;
 	}
+
+	private async launchCustomEmulator(emulator: CustomEmulator): Promise<boolean> {
+		try {
+			await vs.window.withProgress({
+				location: vs.ProgressLocation.Notification,
+			}, async (progress) => {
+				progress.report({ message: `Launching ${emulator.name}...` });
+				const binPath = emulator.executable;
+				const args = emulator.args || [];
+
+				const customEmulatorProc = safeSpawn(undefined, emulator.executable, args, {});
+				this.logger.info(`(PROC ${customEmulatorProc.pid}) Spawned ${binPath} ${args.join(" ")}`, LogCategory.CommandProcesses);
+				logProcess(this.logger, LogCategory.CommandProcesses, customEmulatorProc);
+
+				progress.report({ message: `Waiting for ${emulator.name} to connect...` });
+				// Wait up to 60 seconds for emulator to launch.
+				for (let i = 0; i < 120; i++) {
+					await new Promise((resolve) => setTimeout(resolve, 500));
+					if (this.currentDevice)
+						return;
+				}
+				throw new Error("Emulator didn't connect within 60 seconds");
+			});
+		} catch (e) {
+			vs.window.showErrorMessage(`Failed to launch ${emulator.name}: ${e}`);
+			return false;
+		}
+		// Wait an additional second to try and void some possible races.
+		await new Promise((resolve) => setTimeout(resolve, 1000));
+		return true;
+	}
 }
 
-type PickableDevice = vs.QuickPickItem & { device: f.Device | f.Emulator | f.EmulatorCreator };
+type PickableDevice = vs.QuickPickItem & { device: f.Device | Emulator | EmulatorCreator };
