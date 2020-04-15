@@ -109,14 +109,18 @@
 				"title": "Upgrade Packages",
 				"category": "Pub",
 				"icon": {
-					"light": "./media/commands/pull.svg",
-					"dark": "./media/commands/pull-inverse.svg"
+					"light": "./media/commands/update.svg",
+					"dark": "./media/commands/update-inverse.svg"
 				}
 			},
 			{
 				"command": "pub.outdated",
 				"title": "List Outdated Packages",
-				"category": "Pub"
+				"category": "Pub",
+				"icon": {
+					"light": "./media/commands/outdated.svg",
+					"dark": "./media/commands/outdated-inverse.svg"
+				}
 			},
 			{
 				"command": "dart.attach",
@@ -242,14 +246,18 @@
 				"title": "Upgrade Packages",
 				"category": "Flutter",
 				"icon": {
-					"light": "./media/commands/pull.svg",
-					"dark": "./media/commands/pull-inverse.svg"
+					"light": "./media/commands/update.svg",
+					"dark": "./media/commands/update-inverse.svg"
 				}
 			},
 			{
 				"command": "flutter.packages.outdated",
 				"title": "List Outdated Packages",
-				"category": "Flutter"
+				"category": "Flutter",
+				"icon": {
+					"light": "./media/commands/outdated.svg",
+					"dark": "./media/commands/outdated-inverse.svg"
+				}
 			},
 			{
 				"command": "flutter.clean",
@@ -768,14 +776,33 @@
 				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
 					"command": "pub.get",
-					"alt": "pub.upgrade",
-					"group": "navigation"
+					"group": "navigation@1"
+				},
+				{
+					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"command": "pub.upgrade",
+					"group": "navigation@2"
+				},
+				{
+					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"command": "pub.outdated",
+					"group": "navigation@3"
 				},
 				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.packages.get",
 					"alt": "flutter.packages.upgrade",
-					"group": "navigation"
+					"group": "navigation@1"
+				},
+				{
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"command": "flutter.packages.upgrade",
+					"group": "navigation@2"
+				},
+				{
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"command": "flutter.packages.outdated",
+					"group": "navigation@3"
 				}
 			],
 			"editor/context": [
