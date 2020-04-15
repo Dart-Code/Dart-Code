@@ -144,22 +144,26 @@ export class DebugCommands {
 			debugSessions.forEach((s) => s.session.customRequest("hotRestart", args));
 			analytics.logDebuggerRestart();
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugging", (resource: vs.Uri) => {
-			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), {
-				name: "Dart",
-				program: fsPath(resource),
-				request: "launch",
-				type: "dart",
-			});
+		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugging", (resource: vs.Uri, launchTemplate: any | undefined) => {
+			const launchConfig = Object.assign(
+				{},
+				launchTemplate,
+				{
+					program: fsPath(resource),
+				},
+			);
+			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig);
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("dart.startWithoutDebugging", (resource: vs.Uri) => {
-			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), {
-				name: "Dart",
-				noDebug: true,
-				program: fsPath(resource),
-				request: "launch",
-				type: "dart",
-			});
+		context.subscriptions.push(vs.commands.registerCommand("dart.startWithoutDebugging", (resource: vs.Uri, launchTemplate: any | undefined) => {
+			const launchConfig = Object.assign(
+				{},
+				launchTemplate,
+				{
+					noDebug: true,
+					program: fsPath(resource),
+				},
+			);
+			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", async () => {
 			const topLevelFolders = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
