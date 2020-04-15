@@ -42,7 +42,7 @@ describe("test_code_lens", () => {
 		const fileCodeLens = await getCodeLens(editor.document);
 		const groupPos = positionOf("group^(");
 
-		const codeLensForGroup = fileCodeLens.filter((cl) => cl.range.contains(groupPos));
+		const codeLensForGroup = fileCodeLens.filter((cl) => cl.range.start.line === groupPos.line);
 		assert.equal(codeLensForGroup.length, 2);
 
 		const runAction = codeLensForGroup.find((cl) => cl.command!.title === "Run");
@@ -134,7 +134,7 @@ describe("test_code_lens", () => {
 		const fileCodeLens = await getCodeLens(editor.document);
 		const groupPos = positionOf("group^(");
 
-		const codeLensForGroup = fileCodeLens.filter((cl) => cl.range.contains(groupPos));
+		const codeLensForGroup = fileCodeLens.filter((cl) => cl.range.start.line === groupPos.line);
 		assert.equal(codeLensForGroup.length, 4);
 
 		if (!codeLensForGroup[0].command) {
