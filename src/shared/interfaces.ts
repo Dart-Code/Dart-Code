@@ -57,7 +57,7 @@ export interface IFlutterDaemon extends IAmDisposable {
 	capabilities: DaemonCapabilities;
 
 	deviceEnable(): Thenable<UnknownResponse>;
-	getEmulators(): Thenable<f.Emulator[]>;
+	getEmulators(): Thenable<f.FlutterEmulator[]>;
 	launchEmulator(emulatorId: string): Thenable<void>;
 	createEmulator(name?: string): Thenable<{ success: boolean, emulatorName: string, error: string }>;
 	getSupportedPlatforms(projectRoot: string): Thenable<f.SupportedPlatformsResponse>;
@@ -68,6 +68,31 @@ export interface IFlutterDaemon extends IAmDisposable {
 	registerForDaemonLogMessage(subscriber: (notification: f.DaemonLogMessage) => void): IAmDisposable;
 	registerForDaemonLog(subscriber: (notification: f.DaemonLog) => void): IAmDisposable;
 	registerForDaemonShowMessage(subscriber: (notification: f.ShowMessage) => void): IAmDisposable;
+}
+
+export type Emulator = (f.FlutterEmulator & { type: "emulator" }) | CustomEmulator;
+
+export interface CustomEmulator {
+	id: string;
+	type: "custom-emulator";
+	category?: undefined;
+	platformType?: undefined;
+	name: string;
+	executable: string;
+	args?: string[];
+}
+
+export interface EmulatorCreator {
+	id?: undefined;
+	type: "emulator-creator";
+	platformType: "android";
+}
+
+export interface CustomEmulatorDefinition {
+	id: string;
+	name: string;
+	executable: string;
+	args?: string[];
 }
 
 export interface Location {

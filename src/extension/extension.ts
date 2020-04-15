@@ -378,7 +378,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Fire up Flutter daemon if required.
 	if (workspaceContext.hasAnyFlutterMobileProjects && sdks.flutter) {
 		flutterDaemon = new FlutterDaemon(logger, path.join(sdks.flutter, flutterPath), sdks.flutter);
-		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config.flutterSelectDeviceWhenConnected);
+		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config, config.flutterSelectDeviceWhenConnected);
 
 		context.subscriptions.push(deviceManager);
 		context.subscriptions.push(flutterDaemon);

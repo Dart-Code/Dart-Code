@@ -13,18 +13,11 @@ export interface Device {
 	type: "device";
 }
 
-export interface Emulator {
+export interface FlutterEmulator {
 	id: string;
 	name: string;
-	category: Category | undefined | null;
-	platformType: PlatformType | undefined | null;
-	type: "emulator";
-}
-
-export interface EmulatorCreator {
-	platformType: PlatformType | null | undefined;
-	type: "emulator-creator";
-	id?: undefined;
+	category?: Category | undefined | null;
+	platformType?: PlatformType | undefined | null;
 }
 
 export interface DaemonConnected {

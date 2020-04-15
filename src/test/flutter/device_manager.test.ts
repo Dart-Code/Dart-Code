@@ -13,7 +13,8 @@ describe("device_manager", () => {
 
 	beforeEach(() => {
 		daemon = new FakeFlutterDaemon();
-		dm = new FlutterDeviceManager(logger, daemon, true);
+		// TODO: Tests for custom emulators.
+		dm = new FlutterDeviceManager(logger, daemon, { flutterCustomEmulators: [] }, true);
 	});
 
 	afterEach(() => {
@@ -145,7 +146,7 @@ class FakeFlutterDaemon extends FakeStdIOService implements IFlutterDaemon {
 	public deviceEnable(): Thenable<UnknownResponse> {
 		throw new Error("Method not implemented.");
 	}
-	public async getEmulators(): Promise<f.Emulator[]> {
+	public async getEmulators(): Promise<f.FlutterEmulator[]> {
 		return [androidEmulator];
 	}
 	public launchEmulator(emulatorId: string): Thenable<void> {
@@ -224,12 +225,11 @@ const emulatedAndroidMobile: f.Device = {
 	type: "device",
 };
 
-const androidEmulator: f.Emulator = {
+const androidEmulator: f.FlutterEmulator = {
 	category: "mobile",
 	id: "my_emulator_id",
 	name: "My Cool Emulator!",
 	platformType: "android",
-	type: "emulator",
 };
 
 const physicaliOSMobile: f.Device = {
@@ -256,10 +256,9 @@ const emulatediOSMobile: f.Device = {
 	type: "device",
 };
 
-const iOSEmulator: f.Emulator = {
+const iOSEmulator: f.FlutterEmulator = {
 	category: "mobile",
 	id: "my_emulator_id",
 	name: "My Cool iOS Emulator!",
 	platformType: "ios",
-	type: "emulator",
 };
