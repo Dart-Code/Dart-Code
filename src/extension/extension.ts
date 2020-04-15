@@ -763,6 +763,7 @@ function getSettingsThatRequireRestart() {
 		+ config.closingLabels
 		+ config.analyzeAngularTemplates
 		+ config.analysisServerFolding
+		+ config.showMainCodeLens
 		+ config.showTestCodeLens
 		+ config.previewBuildRunnerTasks
 		+ config.flutterOutline
