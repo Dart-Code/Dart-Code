@@ -233,7 +233,7 @@ export interface Version extends VMResponse {
 
 export interface VMMapEntry extends VMResponse {
 	keyId: string;
-	mapEvaluateName: string;
+	mapEvaluateName: string | undefined;
 	valueId: string;
 }
 

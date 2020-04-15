@@ -962,7 +962,7 @@ export class DartDebugSession extends DebugSession {
 
 				variables.push(await this.instanceRefToVariable(thread, false, "key", "key", keyInstanceRef, true));
 
-				if (this.isSimpleKind(keyInstanceRef.kind)) {
+				if (this.isSimpleKind(keyInstanceRef.kind) && mapRef.mapEvaluateName) {
 					canEvaluateValueName = true;
 					valueEvaluateName = `${mapRef.mapEvaluateName}[${this.valueAsString(keyInstanceRef)}]`;
 				}
@@ -1012,7 +1012,7 @@ export class DartDebugSession extends DebugSession {
 							// Add them in order.
 							const elementVariables = await Promise.all(elementPromises);
 							variables = variables.concat(elementVariables);
-						} else if (instance.associations && instanceRef.evaluateName) {
+						} else if (instance.associations) {
 							const len = instance.associations.length;
 							for (let i = 0; i < len; i++) {
 								const association = instance.associations[i];
