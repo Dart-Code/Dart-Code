@@ -73,7 +73,7 @@ export function trimTrailingSlashes(s: string) {
 
 export function warnIfPathCaseMismatch(logger: Logger, p: string, pathDescription: string, helpText: string) {
 	const userPath = trimTrailingSlashes(forceWindowsDriveLetterToUppercase(p));
-	const realPath = trimTrailingSlashes(forceWindowsDriveLetterToUppercase(fs.realpathSync.native(userPath)));
+	const realPath = fs.existsSync(userPath) && trimTrailingSlashes(forceWindowsDriveLetterToUppercase(fs.realpathSync.native(userPath)));
 	// Since realpathSync.native will resolve symlinks, we'll only show these warnings
 	// when there was no symlink (eg. the lowercase version of both paths match).
 	if (userPath && realPath && userPath.toLowerCase() === realPath.toLowerCase() && userPath !== realPath) {
