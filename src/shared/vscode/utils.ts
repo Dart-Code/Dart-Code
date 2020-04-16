@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import { URL } from "url";
 import * as vs from "vscode";
 import { CodeActionKind, env as vsEnv, ExtensionKind, extensions, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType, Uri, workspace, WorkspaceFolder } from "vscode";
@@ -5,6 +6,7 @@ import * as lsp from "vscode-languageclient";
 import { dartCodeExtensionIdentifier } from "../constants";
 import { Location, Logger } from "../interfaces";
 import { nullLogger } from "../logging";
+import { forceWindowsDriveLetterToUppercase } from "../utils/fs";
 
 export const SourceSortMembersCodeActionKind = CodeActionKind.Source.append("sortMembers");
 
@@ -63,6 +65,25 @@ export function showCode(editor: TextEditor, displayRange: Range, highlightRange
 
 	// TODO: Implement highlighting
 	// See https://github.com/Microsoft/vscode/issues/45059
+}
+
+export function trimTrailingSlashes(s: string) {
+	return s.replace(/[\/\\]+$/, "");
+}
+
+export function warnIfPathCaseMismatch(logger: Logger, p: string, pathDescription: string, helpText: string) {
+	const userPath = trimTrailingSlashes(forceWindowsDriveLetterToUppercase(p));
+	const realPath = trimTrailingSlashes(forceWindowsDriveLetterToUppercase(fs.realpathSync.native(userPath)));
+	// Since realpathSync.native will resolve symlinks, we'll only show these warnings
+	// when there was no symlink (eg. the lowercase version of both paths match).
+	if (userPath && realPath && userPath.toLowerCase() === realPath.toLowerCase() && userPath !== realPath) {
+		const message = `The casing of ${pathDescription} does not match the casing on disk; please ${helpText}. `
+			+ `Expected ${realPath} but got ${userPath}`;
+		logger.warn(message);
+		vs.window.showWarningMessage(message);
+		return true;
+	}
+	return false;
 }
 
 class EnvUtils {

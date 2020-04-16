@@ -1,4 +1,3 @@
-import * as fs from "fs";
 import * as path from "path";
 import { isArray } from "util";
 import * as vs from "vscode";
@@ -12,12 +11,12 @@ import { captureLogs, EmittingLogger, logToConsole, RingLog } from "../shared/lo
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
 import { uniq } from "../shared/utils";
-import { forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../shared/utils/fs";
+import { fsPath, isWithinPath } from "../shared/utils/fs";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
-import { envUtils, getDartWorkspaceFolders, isRunningLocally } from "../shared/vscode/utils";
+import { envUtils, getDartWorkspaceFolders, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { DasAnalyzer } from "./analysis/analyzer_das";
@@ -545,17 +544,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Warn the user if they've opened a folder with mismatched casing.
 	if (vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length) {
 		for (const wf of vs.workspace.workspaceFolders) {
-			const userPath = forceWindowsDriveLetterToUppercase(fsPath(wf.uri));
-			const realPath = forceWindowsDriveLetterToUppercase(fs.realpathSync.native(userPath));
-			// Since realpathSync.native will resolve symlinks, we'll only show these warnings
-			// when there was no symlink (eg. the lowercase version of both paths match).
-			if (userPath && realPath && userPath.toLowerCase() === realPath.toLowerCase() && userPath !== realPath) {
-				vs.window.showWarningMessage(
-					`The casing of the open workspace folder does not match the casing on the underlying disk; please re-open the folder using the File Open dialog. `
-					+ `Expected ${realPath} but got ${userPath}`,
-				);
+			if (warnIfPathCaseMismatch(logger, fsPath(wf.uri), "the open workspace folder", "re-open the folder using the File Open dialog"))
 				break;
-			}
 		}
 	}
 

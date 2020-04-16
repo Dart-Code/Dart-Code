@@ -18,6 +18,7 @@ import { IFlutterDaemon, Logger, Sdks } from "../../shared/interfaces";
 import { filenameSafe } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../../shared/utils/fs";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
+import { warnIfPathCaseMismatch } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { LastDebugSession } from "../commands/debug";
@@ -315,6 +316,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		if (token && token.isCancellationRequested)
 			return;
+
+		const didWarnAboutCwd = debugConfig.cwd && path.isAbsolute(debugConfig.cwd)
+			? warnIfPathCaseMismatch(logger, debugConfig.cwd, "the launch script working directory", "check the 'cwd' field in your launch configuration file (.vscode/launch.json)")
+			: false;
+		if (!didWarnAboutCwd && debugConfig.program && path.isAbsolute(debugConfig.program))
+			warnIfPathCaseMismatch(logger, debugConfig.program, "the launch script", "check the 'program' field in your launch configuration file (.vscode/launch.json)");
 
 		// Start port listener on launch of first debug session.
 		const debugServer = this.getDebugServer(debugType, debugConfig.debugServer);
