@@ -31,6 +31,11 @@ export class LastDebugSession {
 	public static debugConfig?: vs.DebugConfiguration;
 }
 
+export class LastTestDebugSession {
+	public static workspaceFolder?: vs.WorkspaceFolder;
+	public static debugConfig?: vs.DebugConfiguration;
+}
+
 export class DebugCommands {
 	private debugOptions = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left, 0);
 	private currentDebugOption = DebugOption.MyCode;
@@ -192,6 +197,13 @@ export class DebugCommands {
 				vs.debug.startDebugging(LastDebugSession.workspaceFolder, LastDebugSession.debugConfig);
 			} else {
 				vs.window.showErrorMessage("There is no previous debug session to run.");
+			}
+		}));
+		context.subscriptions.push(vs.commands.registerCommand("dart.rerunLastTestDebugSession", () => {
+			if (LastTestDebugSession.debugConfig) {
+				vs.debug.startDebugging(LastTestDebugSession.workspaceFolder, LastTestDebugSession.debugConfig);
+			} else {
+				vs.window.showErrorMessage("There is no previous test session to run.");
 			}
 		}));
 

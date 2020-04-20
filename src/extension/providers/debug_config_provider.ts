@@ -12,7 +12,7 @@ import { FlutterLaunchRequestArguments } from "../../debug/utils";
 import { WebDebugSession } from "../../debug/web_debug_impl";
 import { WebTestDebugSession } from "../../debug/web_test_debug_impl";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { CHROME_OS_VM_SERVICE_PORT, dartVMPath, debugAnywayAction, flutterPath, HAS_LAST_DEBUG_CONFIG, isChromeOS, pubPath, pubSnapshotPath, showErrorsAction } from "../../shared/constants";
+import { CHROME_OS_VM_SERVICE_PORT, dartVMPath, debugAnywayAction, flutterPath, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isChromeOS, pubPath, pubSnapshotPath, showErrorsAction } from "../../shared/constants";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { IFlutterDaemon, Logger, Sdks } from "../../shared/interfaces";
 import { filenameSafe } from "../../shared/utils";
@@ -21,7 +21,7 @@ import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { warnIfPathCaseMismatch } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
-import { LastDebugSession } from "../commands/debug";
+import { LastDebugSession, LastTestDebugSession } from "../commands/debug";
 import { isLogging } from "../commands/logging";
 import { config } from "../config";
 import { locateBestProjectRoot } from "../project";
@@ -349,10 +349,17 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		logger.info(`Debug session starting...\n    ${JSON.stringify(debugConfig, undefined, 4).replace(/\n/g, "\n    ")}`);
 
-		// Stash the config to support the "rerun last test(s)" command.
+		// Stash the config to support the "rerun last debug session" command.
 		LastDebugSession.workspaceFolder = folder;
 		LastDebugSession.debugConfig = Object.assign({}, debugConfig);
 		vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, true);
+
+		// Stash the config to support the "rerun last test(s)" command.
+		if (isTest) {
+			LastTestDebugSession.workspaceFolder = folder;
+			LastTestDebugSession.debugConfig = Object.assign({}, debugConfig);
+			vs.commands.executeCommand("setContext", HAS_LAST_TEST_DEBUG_CONFIG, true);
+		}
 
 		return debugConfig;
 	}
