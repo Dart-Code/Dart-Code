@@ -153,6 +153,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.rerunLastTestDebugSession",
+				"title": "Rerun Last Test Session",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.runTestAtCursor",
 				"title": "Run Test At Cursor",
 				"category": "Dart"
@@ -513,7 +518,11 @@
 				},
 				{
 					"command": "dart.rerunLastDebugSession",
-					"when": "dart-code:dartProjectLoaded && dart-code:hasLastDebugConfig && !inDebugMode"
+					"when": "dart-code:dartProjectLoaded && dart-code:hasLastDebugConfig"
+				},
+				{
+					"command": "dart.rerunLastTestDebugSession",
+					"when": "dart-code:dartProjectLoaded && dart-code:hasLastTestDebugConfig"
 				},
 				{
 					"command": "dart.runTestAtCursor",
