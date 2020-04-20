@@ -68,6 +68,687 @@
 				"path": "./syntaxes/dart.json"
 			}
 		],
+		"codeActions": [
+			{
+				"languages": [
+					"dart"
+				],
+				"actions": [
+					{
+						"kind": "quickfix.add.async",
+						"title": "Add 'async' modifier"
+					},
+					{
+						"kind": "quickfix.add.await",
+						"title": "Add 'await' keyword"
+					},
+					{
+						"kind": "quickfix.add.const",
+						"title": "Add 'const' modifier"
+					},
+					{
+						"kind": "quickfix.add.curlyBraces",
+						"title": "Add curly braces"
+					},
+					{
+						"kind": "quickfix.add.diagnosticPropertyReference",
+						"title": "Add a debug reference to this property"
+					},
+					{
+						"kind": "quickfix.add.fieldFormalParameters",
+						"title": "Add final field formal parameters"
+					},
+					{
+						"kind": "quickfix.add.missingEnumCaseClauses",
+						"title": "Add missing case clauses"
+					},
+					{
+						"kind": "quickfix.add.missingParameterNamed",
+						"title": "Add named parameter '...'"
+					},
+					{
+						"kind": "quickfix.add.missingParameterPositional",
+						"title": "Add optional positional parameter"
+					},
+					{
+						"kind": "quickfix.add.missingParameterRequired",
+						"title": "Add required parameter"
+					},
+					{
+						"kind": "quickfix.add.missingRequiredArgument",
+						"title": "Add required argument '...'"
+					},
+					{
+						"kind": "quickfix.add.returnType",
+						"title": "Add return type"
+					},
+					{
+						"kind": "quickfix.add.static",
+						"title": "Add 'static' modifier"
+					},
+					{
+						"kind": "quickfix.add.superConstructorInvocation",
+						"title": "Add super constructor ... invocation"
+					},
+					{
+						"kind": "quickfix.add.typeAnnotation",
+						"title": "Add type annotation"
+					},
+					{
+						"kind": "quickfix.change.argumentName",
+						"title": "Change to '...'"
+					},
+					{
+						"kind": "quickfix.change.to",
+						"title": "Change to '...'"
+					},
+					{
+						"kind": "quickfix.change.toStaticAccess",
+						"title": "Change access to static using '...'"
+					},
+					{
+						"kind": "quickfix.change.typeAnnotation",
+						"title": "Change '...' to '{1}' type annotation"
+					},
+					{
+						"kind": "quickfix.convert.toContains",
+						"title": "Convert to using 'contains'"
+					},
+					{
+						"kind": "quickfix.convert.toExpressionBody",
+						"title": "Convert to expression body"
+					},
+					{
+						"kind": "quickfix.convert.toForElement",
+						"title": "Convert to a 'for' element"
+					},
+					{
+						"kind": "quickfix.convert.toGenericFunctionSyntax",
+						"title": "Convert into 'Function' syntax"
+					},
+					{
+						"kind": "quickfix.convert.toIfElement",
+						"title": "Convert to an 'if' element"
+					},
+					{
+						"kind": "quickfix.convert.toIntLiteral",
+						"title": "Convert to an int literal"
+					},
+					{
+						"kind": "quickfix.convert.toLineComment",
+						"title": "Convert to line documentation comment"
+					},
+					{
+						"kind": "quickfix.convert.toListLiteral",
+						"title": "Convert to list literal"
+					},
+					{
+						"kind": "quickfix.convert.toMapLiteral",
+						"title": "Convert to map literal"
+					},
+					{
+						"kind": "quickfix.convert.toNamedArguments",
+						"title": "Convert to named arguments"
+					},
+					{
+						"kind": "quickfix.convert.toRelativeImport",
+						"title": "Convert to relative import"
+					},
+					{
+						"kind": "quickfix.convert.toSetLiteral",
+						"title": "Convert to set literal"
+					},
+					{
+						"kind": "quickfix.convert.toSingleQuotedString",
+						"title": "Convert to single quoted string"
+					},
+					{
+						"kind": "quickfix.convert.toSpread",
+						"title": "Convert to a spread"
+					},
+					{
+						"kind": "quickfix.convert.toWhereType",
+						"title": "Convert to a use 'whereType'"
+					},
+					{
+						"kind": "quickfix.create.class",
+						"title": "Create class '...'"
+					},
+					{
+						"kind": "quickfix.create.constructor",
+						"title": "Create constructor '...'"
+					},
+					{
+						"kind": "quickfix.create.constructorForFinalFields",
+						"title": "Create constructor for final fields"
+					},
+					{
+						"kind": "quickfix.create.constructorSuper",
+						"title": "Create constructor to call ..."
+					},
+					{
+						"kind": "quickfix.create.field",
+						"title": "Create field '...'"
+					},
+					{
+						"kind": "quickfix.create.file",
+						"title": "Create file '...'"
+					},
+					{
+						"kind": "quickfix.create.function",
+						"title": "Create function '...'"
+					},
+					{
+						"kind": "quickfix.create.getter",
+						"title": "Create getter '...'"
+					},
+					{
+						"kind": "quickfix.create.localVariable",
+						"title": "Create local variable '...'"
+					},
+					{
+						"kind": "quickfix.create.method",
+						"title": "Create method '...'"
+					},
+					{
+						"kind": "quickfix.create.mixin",
+						"title": "Create mixin '...'"
+					},
+					{
+						"kind": "quickfix.create.noSuchMethod",
+						"title": "Create 'noSuchMethod' method"
+					},
+					{
+						"kind": "quickfix.create.setter",
+						"title": "Create setter '...'"
+					},
+					{
+						"kind": "quickfix.extendClassForMixin",
+						"title": "Extend the class '...'"
+					},
+					{
+						"kind": "quickfix.flutter.wrap.text",
+						"title": "Wrap in a 'Text' widget"
+					},
+					{
+						"kind": "quickfix.import.libraryPrefix",
+						"title": "Use imported library '...' with prefix '{1}'"
+					},
+					{
+						"kind": "quickfix.import.libraryProject1",
+						"title": "Import library '...'"
+					},
+					{
+						"kind": "quickfix.import.libraryProject2",
+						"title": "Import library '...'"
+					},
+					{
+						"kind": "quickfix.import.libraryProject3",
+						"title": "Import library '...'"
+					},
+					{
+						"kind": "quickfix.import.librarySdk",
+						"title": "Import library '...'"
+					},
+					{
+						"kind": "quickfix.import.libraryShow",
+						"title": "Update library '...' import"
+					},
+					{
+						"kind": "quickfix.inlineInvocation",
+						"title": "Inline invocation of '...'"
+					},
+					{
+						"kind": "quickfix.inlineTypedef",
+						"title": "Inline the definition of '...'"
+					},
+					{
+						"kind": "quickfix.makeClassAbstract",
+						"title": "Make class '...' abstract"
+					},
+					{
+						"kind": "quickfix.makeFieldNotFinal",
+						"title": "Make field '...' not final"
+					},
+					{
+						"kind": "quickfix.makeFinal",
+						"title": "Make final"
+					},
+					{
+						"kind": "quickfix.makeVariableNotFinal",
+						"title": "Make variable '...' not final"
+					},
+					{
+						"kind": "quickfix.moveTypeArgumentsToClass",
+						"title": "Move type arguments to after class name"
+					},
+					{
+						"kind": "quickfix.qualifyReference",
+						"title": "Use '...'"
+					},
+					{
+						"kind": "quickfix.remove.annotation",
+						"title": "Remove the '...' annotation"
+					},
+					{
+						"kind": "quickfix.remove.argument",
+						"title": "Remove argument"
+					},
+					{
+						"kind": "quickfix.remove.await",
+						"title": "Remove await"
+					},
+					{
+						"kind": "quickfix.remove.const",
+						"title": "Remove const"
+					},
+					{
+						"kind": "quickfix.remove.deadCode",
+						"title": "Remove dead code"
+					},
+					{
+						"kind": "quickfix.remove.duplicateCase",
+						"title": "Remove duplicate case statement"
+					},
+					{
+						"kind": "quickfix.remove.emptyCatch",
+						"title": "Remove empty catch clause"
+					},
+					{
+						"kind": "quickfix.remove.emptyConstructorBody",
+						"title": "Remove empty constructor body"
+					},
+					{
+						"kind": "quickfix.remove.emptyElse",
+						"title": "Remove empty else clause"
+					},
+					{
+						"kind": "quickfix.remove.emptyStatement",
+						"title": "Remove empty statement"
+					},
+					{
+						"kind": "quickfix.remove.initializer",
+						"title": "Remove initializer"
+					},
+					{
+						"kind": "quickfix.remove.interpolationBraces",
+						"title": "Remove unnecessary interpolation braces"
+					},
+					{
+						"kind": "quickfix.remove.methodDeclaration",
+						"title": "Remove method declaration"
+					},
+					{
+						"kind": "quickfix.remove.nameFromCombinator",
+						"title": "Remove name from '...'"
+					},
+					{
+						"kind": "quickfix.remove.operator",
+						"title": "Remove the operator"
+					},
+					{
+						"kind": "quickfix.remove.parametersInGetterDeclaration",
+						"title": "Remove parameters in getter declaration"
+					},
+					{
+						"kind": "quickfix.remove.parenthesisInGetterInvocation",
+						"title": "Remove parentheses in getter invocation"
+					},
+					{
+						"kind": "quickfix.remove.thisExpression",
+						"title": "Remove this expression"
+					},
+					{
+						"kind": "quickfix.remove.typeAnnotation",
+						"title": "Remove type annotation"
+					},
+					{
+						"kind": "quickfix.remove.typeArguments",
+						"title": "Remove type arguments"
+					},
+					{
+						"kind": "quickfix.remove.unnecessaryConst",
+						"title": "Remove unnecessary const keyword"
+					},
+					{
+						"kind": "quickfix.remove.unnecessaryNew",
+						"title": "Remove unnecessary new keyword"
+					},
+					{
+						"kind": "quickfix.remove.unusedCatchClause",
+						"title": "Remove unused 'catch' clause"
+					},
+					{
+						"kind": "quickfix.remove.unusedCatchStack",
+						"title": "Remove unused stack trace variable"
+					},
+					{
+						"kind": "quickfix.remove.unusedElement",
+						"title": "Remove unused element"
+					},
+					{
+						"kind": "quickfix.remove.unusedField",
+						"title": "Remove unused field"
+					},
+					{
+						"kind": "quickfix.remove.unusedLabel",
+						"title": "Remove unused label"
+					},
+					{
+						"kind": "quickfix.remove.unusedLocalVariable",
+						"title": "Remove unused local variable"
+					},
+					{
+						"kind": "quickfix.removeSetting",
+						"title": "Remove '...'"
+					},
+					{
+						"kind": "quickfix.rename.toCamelCase",
+						"title": "Rename to '...'"
+					},
+					{
+						"kind": "quickfix.replace.finalWithConst",
+						"title": "Replace 'final' with 'const'"
+					},
+					{
+						"kind": "quickfix.replace.newWithConst",
+						"title": "Replace 'new' with 'const'"
+					},
+					{
+						"kind": "quickfix.replace.nullWithClosure",
+						"title": "Replace 'null' with a closure"
+					},
+					{
+						"kind": "quickfix.replace.returnTypeFuture",
+						"title": "Return 'Future' from 'async' function"
+					},
+					{
+						"kind": "quickfix.replace.varWithDynamic",
+						"title": "Replace 'var' with 'dynamic'"
+					},
+					{
+						"kind": "quickfix.replace.withBrackets",
+						"title": "Replace with { }"
+					},
+					{
+						"kind": "quickfix.replace.withEightDigitHex",
+						"title": "Replace with '...'"
+					},
+					{
+						"kind": "quickfix.replace.withExtensionName",
+						"title": "Replace with '...'"
+					},
+					{
+						"kind": "quickfix.replace.withIdentifier",
+						"title": "Replace with identifier"
+					},
+					{
+						"kind": "quickfix.replace.withInterpolation",
+						"title": "Replace with interpolation"
+					},
+					{
+						"kind": "quickfix.replace.withIsEmpty",
+						"title": "Replace with 'isEmpty'"
+					},
+					{
+						"kind": "quickfix.replace.withIsNotEmpty",
+						"title": "Replace with 'isNotEmpty'"
+					},
+					{
+						"kind": "quickfix.replace.withVar",
+						"title": "Replace type annotation with 'var'"
+					},
+					{
+						"kind": "quickfix.sort.childPropertyLast",
+						"title": "Move child property to end of arguments"
+					},
+					{
+						"kind": "quickfix.sort.directives",
+						"title": "Sort directives"
+					},
+					{
+						"kind": "quickfix.updateSdkConstraints",
+						"title": "Update the SDK constraints"
+					},
+					{
+						"kind": "quickfix.use.const",
+						"title": "Change to constant"
+					},
+					{
+						"kind": "quickfix.use.rethrow",
+						"title": "Replace throw with rethrow"
+					},
+					{
+						"kind": "quickfix.wrap.future",
+						"title": "Wrap in 'Future.value'"
+					},
+					{
+						"kind": "refactor.add.diagnosticPropertyReference",
+						"title": "Add a debug reference to this property"
+					},
+					{
+						"kind": "refactor.add.returnType",
+						"title": "Add return type"
+					},
+					{
+						"kind": "refactor.add.showCombinator",
+						"title": "Add explicit 'show' combinator"
+					},
+					{
+						"kind": "refactor.add.typeAnnotation",
+						"title": "Add type annotation"
+					},
+					{
+						"kind": "refactor.assignToVariable",
+						"title": "Assign value to new local variable"
+					},
+					{
+						"kind": "refactor.convert.blockComment",
+						"title": "Convert to block documentation comment"
+					},
+					{
+						"kind": "refactor.convert.bodyToAsync",
+						"title": "Convert to async function body"
+					},
+					{
+						"kind": "refactor.convert.bodyToBlock",
+						"title": "Convert to block body"
+					},
+					{
+						"kind": "refactor.convert.bodyToExpression",
+						"title": "Convert to expression body"
+					},
+					{
+						"kind": "refactor.convert.classToMixin",
+						"title": "Convert class to a mixin"
+					},
+					{
+						"kind": "refactor.convert.finalFieldToGetter",
+						"title": "Convert to getter"
+					},
+					{
+						"kind": "refactor.convert.getterToFinalField",
+						"title": "Convert to final field"
+					},
+					{
+						"kind": "refactor.convert.lineComment",
+						"title": "Convert to line documentation comment"
+					},
+					{
+						"kind": "refactor.convert.partOfToPartUri",
+						"title": "Convert to use a URI"
+					},
+					{
+						"kind": "refactor.convert.toConstructorFieldParameter",
+						"title": "Convert to field formal parameter"
+					},
+					{
+						"kind": "refactor.convert.toConstructorNormalParameter",
+						"title": "Convert to normal parameter"
+					},
+					{
+						"kind": "refactor.convert.toDoubleQuotedString",
+						"title": "Convert to double quoted string"
+					},
+					{
+						"kind": "refactor.convert.toForElement",
+						"title": "Convert to a 'for' element"
+					},
+					{
+						"kind": "refactor.convert.toGenericFunctionSyntax",
+						"title": "Convert into 'Function' syntax"
+					},
+					{
+						"kind": "refactor.convert.toIfElement",
+						"title": "Convert to an 'if' element"
+					},
+					{
+						"kind": "refactor.convert.toIntLiteral",
+						"title": "Convert to an int literal"
+					},
+					{
+						"kind": "refactor.convert.toMultilineString",
+						"title": "Convert to multiline string"
+					},
+					{
+						"kind": "refactor.convert.toSingleQuotedString",
+						"title": "Convert to single quoted string"
+					},
+					{
+						"kind": "refactor.convert.toSpread",
+						"title": "Convert to a spread"
+					},
+					{
+						"kind": "refactor.encapsulateField",
+						"title": "Encapsulate field"
+					},
+					{
+						"kind": "refactor.exchangeOperands",
+						"title": "Exchange operands"
+					},
+					{
+						"kind": "refactor.flutter.convert.toStatefulWidget",
+						"title": "Convert to StatefulWidget"
+					},
+					{
+						"kind": "refactor.flutter.move.down",
+						"title": "Move widget down"
+					},
+					{
+						"kind": "refactor.flutter.move.up",
+						"title": "Move widget up"
+					},
+					{
+						"kind": "refactor.flutter.removeWidget",
+						"title": "Remove this widget"
+					},
+					{
+						"kind": "refactor.flutter.swap.withChild",
+						"title": "Swap with child"
+					},
+					{
+						"kind": "refactor.flutter.swap.withParent",
+						"title": "Swap with parent"
+					},
+					{
+						"kind": "refactor.flutter.wrap.center",
+						"title": "Wrap with Center"
+					},
+					{
+						"kind": "refactor.flutter.wrap.column",
+						"title": "Wrap with Column"
+					},
+					{
+						"kind": "refactor.flutter.wrap.container",
+						"title": "Wrap with Container"
+					},
+					{
+						"kind": "refactor.flutter.wrap.generic",
+						"title": "Wrap with widget..."
+					},
+					{
+						"kind": "refactor.flutter.wrap.padding",
+						"title": "Wrap with Padding"
+					},
+					{
+						"kind": "refactor.flutter.wrap.row",
+						"title": "Wrap with Row"
+					},
+					{
+						"kind": "refactor.flutter.wrap.streamBuilder",
+						"title": "Wrap with StreamBuilder"
+					},
+					{
+						"kind": "refactor.inline",
+						"title": "Inline invocation of '...'"
+					},
+					{
+						"kind": "refactor.introduceLocalCast",
+						"title": "Introduce new local with tested type"
+					},
+					{
+						"kind": "refactor.invertIf",
+						"title": "Invert 'if' statement"
+					},
+					{
+						"kind": "refactor.joinVariableDeclaration",
+						"title": "Join variable declaration"
+					},
+					{
+						"kind": "refactor.joinWithInnerIf",
+						"title": "Join 'if' statement with inner 'if' statement"
+					},
+					{
+						"kind": "refactor.joinWithOuterIf",
+						"title": "Join 'if' statement with outer 'if' statement"
+					},
+					{
+						"kind": "refactor.replace.withVar",
+						"title": "Replace type annotation with 'var'"
+					},
+					{
+						"kind": "refactor.shadowField",
+						"title": "Create a local variable that shadows the field"
+					},
+					{
+						"kind": "refactor.sort.child.properties.last",
+						"title": "Move child property to end of arguments"
+					},
+					{
+						"kind": "refactor.splitIfConjunction",
+						"title": "Split && condition"
+					},
+					{
+						"kind": "refactor.splitVariableDeclaration",
+						"title": "Split variable declaration"
+					},
+					{
+						"kind": "refactor.surround.block",
+						"title": "Surround with block"
+					},
+					{
+						"kind": "refactor.surround.curlyBraces",
+						"title": "Use curly braces"
+					},
+					{
+						"kind": "refactor.surround.forEach",
+						"title": "Surround with 'for'"
+					},
+					{
+						"kind": "refactor.surround.if",
+						"title": "Surround with 'if'"
+					},
+					{
+						"kind": "refactor.surround.setState",
+						"title": "Surround with 'setState'"
+					},
+					{
+						"kind": "refactor.surround.while",
+						"title": "Surround with 'while'"
+					}
+				]
+			}
+		],
 		"colors": [
 			{
 				"id": "dart.closingLabels",
