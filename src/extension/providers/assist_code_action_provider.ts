@@ -43,10 +43,10 @@ export class AssistCodeActionProvider implements RankedCodeActionProvider {
 
 	private convertResult(document: TextDocument, change: as.SourceChange): CodeAction {
 		const title = change.message;
-		const refactorId = change.id
+		const kind = change.id
 			? CodeActionKind.Refactor.append(change.id.replace("dart.assist.", ""))
 			: CodeActionKind.Refactor;
-		const action = new CodeAction(title, refactorId);
+		const action = new CodeAction(title, kind);
 		action.command = {
 			arguments: [document, change],
 			command: "_dart.applySourceChange",

@@ -56,10 +56,10 @@ export class FixCodeActionProvider implements RankedCodeActionProvider {
 	private convertResult(document: TextDocument, change: as.SourceChange, error: as.AnalysisError): CodeAction {
 		const title = change.message;
 		const diagnostics = error ? [DartDiagnosticProvider.createDiagnostic(error)] : undefined;
-		// const fixId = change.id
-		// 	? CodeActionKind.QuickFix.append(change.id.replace("dart.assist.", ""))
-		// 	: CodeActionKind.QuickFix;
-		const action = new CodeAction(title, CodeActionKind.QuickFix);
+		const kind = change.id
+			? CodeActionKind.QuickFix.append(change.id.replace("dart.fix.", ""))
+			: CodeActionKind.QuickFix;
+		const action = new CodeAction(title, kind);
 		action.command = {
 			arguments: [document, change],
 			command: "_dart.applySourceChange",
