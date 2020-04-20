@@ -15,9 +15,17 @@ export function getLaunchConfig(noDebug: boolean, path: string, testName: string
 	);
 }
 
+const regexEscapedInterpolationExpressionPattern = /\\\$(?:(?:\w+)|(?:\\\{.*\\\}))/g;
 export function makeRegexForTest(name: string, isGroup: boolean) {
 	const prefix = "^";
+	// We can't anchor to the end for groups, as we want them to run all children.
 	const suffix = isGroup ? "" : "$";
-	// Require exact match (though for group, allow anything afterwards).
-	return prefix + escapeRegExp(name) + suffix;
+	const escapedName = escapeRegExp(name);
+
+	// If a test name contains interpolated expressions, passing the exact
+	// name won't match. So we just replace them out with wildcards. We'll need
+	// to do this after escaping for regex, to ensure the original expression
+	// is escaped but our wildcard is not.
+	const substitutedName = escapedName.replace(regexEscapedInterpolationExpressionPattern, ".*");
+	return `${prefix}${substitutedName}${suffix}`;
 }

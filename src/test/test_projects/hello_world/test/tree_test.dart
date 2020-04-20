@@ -8,8 +8,8 @@ import "package:test/test.dart";
 //     failing group 1 (fail.svg)
 //         group 1.1 (pass.svg)
 //             passing test 1 with ' some " quotes in name (pass.svg)
-//         passing test 1 (pass.svg)
-//         failing test 1 (fail.svg)
+//         passing test 1 2 (pass.svg)
+//         failing test 1 some string (fail.svg)
 //         skipped test 1 (skip.svg)
 //     skipped group 2 (fail.svg)
 //         skipped group 2.1 (skip.svg)
@@ -24,9 +24,10 @@ import "package:test/test.dart";
 // == /EXPECTED RESULTS ==
 
 void main() {
+  final foo = "some string";
   group("failing group 1", () {
-    test("passing test 1", () => expect(1, equals(1)));
-    test("failing test 1", () => expect(1, equals(2)));
+    test("passing test 1 ${1 + 1}", () => expect(1, equals(1)));
+    test("failing test 1 $foo", () => expect(1, equals(2)));
     test("skipped test 1", () {}, skip: true);
     group("group 1.1", () {
       test("passing test 1 with ' some \" quotes in name",

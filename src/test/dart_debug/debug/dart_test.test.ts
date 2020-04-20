@@ -228,8 +228,9 @@ describe("dart test debugger", () => {
 				helloWorldTestTreeFile,
 				["--name", makeRegexForTest(test.fullName, test.isGroup)],
 				// Ensure the output contained the test name as a sanity check
-				// that it ran.
-				dc.assertOutputContains("stdout", test.fullName),
+				// that it ran. Because some tests have variables added to the
+				// end, just stop at the $ to avoid failing on them.
+				dc.assertOutputContains("stdout", test.fullName.split("$")[0]),
 			);
 			await checkResults(`After running ${numRuns++} tests (most recently ${test.fullName})`);
 		}

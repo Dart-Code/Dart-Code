@@ -168,6 +168,13 @@ export class TestOutlineVisitor extends OutlineVisitor {
 		elementName = elementName
 			.substring(openParen + 2, closeParen - 1);
 
+		// For tests with variables, we often end up with additional quotes wrapped
+		// around them...
+		if ((elementName.startsWith("'") || elementName.startsWith('"'))
+			&& (elementName.endsWith("'") || elementName.endsWith('"')))
+			elementName = elementName
+				.substring(1, elementName.length - 1);
+
 		return elementName;
 	}
 }
