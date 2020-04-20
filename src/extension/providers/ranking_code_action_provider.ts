@@ -1,4 +1,4 @@
-import { CancellationToken, CodeAction, CodeActionContext, CodeActionProvider, CodeActionProviderMetadata, Command, DocumentSelector, languages, Range, TextDocument } from "vscode";
+import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, CodeActionProviderMetadata, Command, DocumentSelector, languages, Range, TextDocument } from "vscode";
 import { flatMap, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 
@@ -31,3 +31,14 @@ export type RankedCodeActionProvider =
 	& { selector: DocumentSelector }
 	& { metadata: CodeActionProviderMetadata }
 	& { rank: number };
+
+export function getKindFor(id: string | undefined, base: CodeActionKind): CodeActionKind {
+	if (!id)
+		return base;
+	const newID = id
+		.replace("dart.assist.", "")
+		.replace("dart.fix.", "")
+		.replace("analysisOptions.assist.", "")
+		.replace("analysisOptions.fix.", "");
+	return base.append(newID);
+}

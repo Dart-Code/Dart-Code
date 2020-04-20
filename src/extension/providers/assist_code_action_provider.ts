@@ -4,7 +4,7 @@ import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { isAnalyzableAndInWorkspace } from "../utils";
-import { RankedCodeActionProvider } from "./ranking_code_action_provider";
+import { getKindFor, RankedCodeActionProvider } from "./ranking_code_action_provider";
 
 export class AssistCodeActionProvider implements RankedCodeActionProvider {
 	constructor(private readonly logger: Logger, public readonly selector: DocumentSelector, private readonly analyzer: DasAnalyzerClient) { }
@@ -43,9 +43,7 @@ export class AssistCodeActionProvider implements RankedCodeActionProvider {
 
 	private convertResult(document: TextDocument, change: as.SourceChange): CodeAction {
 		const title = change.message;
-		const kind = change.id
-			? CodeActionKind.Refactor.append(change.id.replace("dart.assist.", ""))
-			: CodeActionKind.Refactor;
+		const kind = getKindFor(change.id, CodeActionKind.Refactor);
 		const action = new CodeAction(title, kind);
 		action.command = {
 			arguments: [document, change],

@@ -5,7 +5,7 @@ import { fsPath } from "../../shared/utils/fs";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { isAnalyzableAndInWorkspace } from "../utils";
 import { DartDiagnosticProvider } from "./dart_diagnostic_provider";
-import { RankedCodeActionProvider } from "./ranking_code_action_provider";
+import { getKindFor, RankedCodeActionProvider } from "./ranking_code_action_provider";
 
 export class FixCodeActionProvider implements RankedCodeActionProvider {
 	constructor(private readonly logger: Logger, public readonly selector: DocumentSelector, private readonly analyzer: DasAnalyzerClient) { }
@@ -56,9 +56,7 @@ export class FixCodeActionProvider implements RankedCodeActionProvider {
 	private convertResult(document: TextDocument, change: as.SourceChange, error: as.AnalysisError): CodeAction {
 		const title = change.message;
 		const diagnostics = error ? [DartDiagnosticProvider.createDiagnostic(error)] : undefined;
-		const kind = change.id
-			? CodeActionKind.QuickFix.append(change.id.replace("dart.fix.", ""))
-			: CodeActionKind.QuickFix;
+		const kind = getKindFor(change.id, CodeActionKind.QuickFix);
 		const action = new CodeAction(title, kind);
 		action.command = {
 			arguments: [document, change],
