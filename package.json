@@ -464,7 +464,7 @@
 			},
 			{
 				"command": "dart.rerunLastDebugSession",
-				"when": "dart-code:dartProjectLoaded && dart-code:hasLastDebugConfig && !inDebugMode",
+				"when": "dart-code:dartProjectLoaded && dart-code:hasLastDebugConfig",
 				"key": "cmd+shift+f5",
 				"win": "ctrl+shift+f5"
 			},
@@ -857,12 +857,12 @@
 					"command": "flutter.packages.outdated"
 				},
 				{
-					"when": "resourceLangId == dart && dart-code:dartProjectLoaded && !inDebugMode",
+					"when": "resourceLangId == dart && dart-code:dartProjectLoaded",
 					"command": "dart.startDebugging",
 					"group": "4.5_exec@1"
 				},
 				{
-					"when": "resourceLangId == dart && dart-code:dartProjectLoaded && !inDebugMode",
+					"when": "resourceLangId == dart && dart-code:dartProjectLoaded",
 					"command": "dart.startWithoutDebugging",
 					"group": "4.5_exec@1"
 				},
