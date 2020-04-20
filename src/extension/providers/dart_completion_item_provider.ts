@@ -37,16 +37,17 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		if (!this.shouldAllowCompletion(line, context))
 			return;
 
+		const offset = document.offsetAt(position);
 		const resp = await this.analyzer.completionGetSuggestionsResults({
 			file: fsPath(document.uri),
-			offset: document.offsetAt(position),
+			offset,
 		});
 
 		if (token && token.isCancellationRequested) {
 			return undefined;
 		}
 
-		const includedResults = resp.results.map((r) => this.convertResult(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, resp, r));
+		const includedResults = resp.results.map((r) => this.convertResult(document, offset, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, resp, r));
 		const cachedResults = await this.getCachedResults(document, token, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, document.offsetAt(position), resp);
 
 		await resolvedPromise;
@@ -160,6 +161,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		// Rebuild the completion using the additional resolved info.
 		return this.createCompletionItemFromSuggestion(
 			item.document,
+			item.offset,
 			item.nextCharacter,
 			item.enableCommitCharacters,
 			item.insertArgumentPlaceholders,
@@ -174,6 +176,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 	private createCompletionItemFromSuggestion(
 		document: TextDocument,
+		offset: number,
 		nextCharacter: string,
 		enableCommitCharacters: boolean,
 		insertArgumentPlaceholders: boolean,
@@ -184,7 +187,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		suggestion: as.AvailableSuggestion,
 		resolvedResult: as.CompletionGetSuggestionDetailsResponse | undefined,
 	) {
-		const completionItem = this.makeCompletion(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, {
+		const completionItem = this.makeCompletion(document, offset, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, {
 			autoImportUri: displayUri,
 			completionText: (resolvedResult && resolvedResult.completion) || suggestion.label,
 			defaultArgumentListString: suggestion.defaultArgumentListString,
@@ -312,6 +315,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 					const completionItem = this.createCompletionItemFromSuggestion(
 						document,
+						offset,
 						nextCharacter,
 						enableCommitCharacters,
 						insertArgumentPlaceholders,
@@ -350,13 +354,14 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 	private convertResult(
 		document: TextDocument,
+		offset: number,
 		nextCharacter: string,
 		enableCommitCharacters: boolean,
 		insertArgumentPlaceholders: boolean,
 		notification: as.CompletionResultsNotification,
 		suggestion: as.CompletionSuggestion,
 	): CompletionItem {
-		return this.makeCompletion(document, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, {
+		return this.makeCompletion(document, offset, nextCharacter, enableCommitCharacters, insertArgumentPlaceholders, {
 			completionText: suggestion.completion,
 			defaultArgumentListString: suggestion.defaultArgumentListString,
 			defaultArgumentListTextRanges: suggestion.defaultArgumentListTextRanges,
@@ -379,7 +384,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	}
 
 	private makeCompletion(
-		document: TextDocument, nextCharacter: string, enableCommitCharacters: boolean, insertArgumentPlaceholders: boolean, suggestion: {
+		document: TextDocument, offset: number, nextCharacter: string, enableCommitCharacters: boolean, insertArgumentPlaceholders: boolean, suggestion: {
 			autoImportUri?: string,
 			completionText: string,
 			defaultArgumentListString: string | undefined,
@@ -509,10 +514,16 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		completion._documentation = docs ? new MarkdownString(docs) : undefined;
 		completion.insertText = completionText;
 		completion.keepWhitespace = true;
-		completion.range = new Range(
-			document.positionAt(suggestion.replacementOffset),
-			document.positionAt(suggestion.replacementOffset + suggestion.replacementLength),
-		);
+		completion.range = {
+			inserting: new Range(
+				document.positionAt(suggestion.replacementOffset),
+				document.positionAt(Math.min(offset, suggestion.replacementOffset + suggestion.replacementLength)),
+			),
+			replacing: new Range(
+				document.positionAt(suggestion.replacementOffset),
+				document.positionAt(suggestion.replacementOffset + suggestion.replacementLength),
+			),
+		};
 		if (enableCommitCharacters)
 			completion.commitCharacters = this.getCommitCharacters(suggestion.kind);
 

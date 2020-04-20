@@ -568,6 +568,11 @@ export async function acceptFirstSuggestion(): Promise<void> {
 	await delay(1000);
 }
 
+export function ensureInsertReplaceRanges(range: undefined | vs.Range | { inserting: vs.Range, replacing: vs.Range }, insertRangeMatch: string, replaceRangeMatch: string) {
+	assert.equal((range && "inserting" in range ? range.inserting : undefined)!.isEqual(rangeOf(insertRangeMatch)), true);
+	assert.equal((range && "replacing" in range ? range.replacing : undefined)!.isEqual(rangeOf(replaceRangeMatch)), true);
+}
+
 export function ensureError(errors: vs.Diagnostic[], text: string) {
 	const error = errors.find((e) => e.message.indexOf(text) !== -1);
 	assert.ok(

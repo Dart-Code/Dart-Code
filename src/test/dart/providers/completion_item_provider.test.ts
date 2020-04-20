@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
 import { isWin } from "../../../shared/constants";
 import { LazyCompletionItem } from "../../../shared/vscode/interfaces";
-import { acceptFirstSuggestion, activate, currentDoc, emptyFile, ensureCompletion, ensureNoCompletion, ensureTestContent, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent, snippetValue } from "../../helpers";
+import { acceptFirstSuggestion, activate, currentDoc, emptyFile, ensureCompletion, ensureInsertReplaceRanges, ensureNoCompletion, ensureTestContent, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent, snippetValue } from "../../helpers";
 
 describe("completion_item_provider", () => {
 
@@ -99,7 +99,7 @@ main() {
 
 	it("fully populates a completion", async () => {
 		await openFile(everythingFile);
-		const completions = await getCompletionsAt(`^return str`);
+		const completions = await getCompletionsAt(`ret^urn str`);
 
 		const cl: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Method, "methodWithArgsAndReturnValue(…)", "methodWithArgsAndReturnValue");
 		assert.equal(cl.additionalTextEdits, undefined); // Tested in the unimported imports test.
@@ -120,7 +120,7 @@ main() {
 		assert.equal(cl.kind, vs.CompletionItemKind.Method);
 		assert.equal(cl.label, "methodWithArgsAndReturnValue(…)");
 		assert.notEqual(cl.preselect, true);
-		assert.equal((cl.range as vs.Range).isEqual(rangeOf("|return| str")), true);
+		ensureInsertReplaceRanges(cl.range, "|ret|urn str", "|return| str");
 		assert.equal(cl.sortText, "998943"); // TODO: This may be fragile...
 	});
 
@@ -195,7 +195,7 @@ main() {
   ProcessInf
 }
 		`);
-			const completions = await getCompletionsAt("ProcessInf^");
+			const completions = await getCompletionsAt("Process^Inf");
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
 
@@ -214,7 +214,7 @@ main() {
 			assert.equal(completion.kind, vs.CompletionItemKind.Class);
 			assert.equal(completion.label, "ProcessInfo");
 			assert.notEqual(completion.preselect, true);
-			assert.equal((completion.range as vs.Range).isEqual(rangeOf("|ProcessInf|")), true);
+			ensureInsertReplaceRanges(completion.range, "|Process|Inf", "|ProcessInf|");
 			assert.equal(completion.sortText, "999997"); // TODO: This may be fragile...
 		});
 
@@ -224,7 +224,7 @@ main() {
   ProcessInf
 }
 		`);
-			const completions = await getCompletionsAt("ProcessInf^");
+			const completions = await getCompletionsAt("Process^Inf");
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
 
@@ -246,7 +246,7 @@ main() {
 			assert.equal(completion.kind, vs.CompletionItemKind.Constructor);
 			assert.equal(completion.label, "ProcessInfo()");
 			assert.notEqual(completion.preselect, true);
-			assert.equal((completion.range as vs.Range).isEqual(rangeOf("|ProcessInf|")), true);
+			ensureInsertReplaceRanges(completion.range, "|Process|Inf", "|ProcessInf|");
 			assert.equal(completion.sortText, "999997"); // TODO: This may be fragile...
 		});
 
@@ -256,7 +256,7 @@ main() {
   HashMa
 }
 		`);
-			const completions = await getCompletionsAt("HashMa^");
+			const completions = await getCompletionsAt("Hash^Ma");
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "HashMap(…)", "HashMap");
 
@@ -278,7 +278,7 @@ main() {
 			assert.equal(completion.kind, vs.CompletionItemKind.Constructor);
 			assert.equal(completion.label, "HashMap(…)");
 			assert.notEqual(completion.preselect, true);
-			assert.equal((completion.range as vs.Range).isEqual(rangeOf("|HashMa|")), true);
+			ensureInsertReplaceRanges(completion.range, "|Hash|Ma", "|HashMa|");
 			assert.equal(completion.sortText, "999997"); // TODO: This may be fragile...
 		});
 
