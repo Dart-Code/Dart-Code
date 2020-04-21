@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, addLaunchConfigsForTest, extApi, getCodeLens, getPackages, helloWorldMainFile, openFile, positionOf, waitForResult } from "../../helpers";
+import { activate, addLaunchConfigsForTest, extApi, getCodeLens, getPackages, helloWorldMainFile, helloWorldTestMainFile, openFile, positionOf, waitForResult } from "../../helpers";
 
 describe("main_code_lens", () => {
 	before("get packages", () => getPackages());
@@ -80,6 +80,55 @@ describe("main_code_lens", () => {
 		const debugAction = codeLensForMainMethod.find((cl) => cl.command!.title === "Debug in Terminal");
 		assert.equal(debugAction!.command!.command, "dart.startDebugging");
 		assert.equal(fsPath(debugAction!.command!.arguments![0]), fsPath(helloWorldMainFile));
+		assert.equal(debugAction!.command!.arguments![1].console, "terminal");
+	});
+
+	it("includes custom run/debug actions from launch templates for test files", async function () {
+		await addLaunchConfigsForTest(
+			vs.workspace.workspaceFolders![0].uri,
+			[
+				{
+					console: "terminal",
+					name: "Run Test in Terminal",
+					request: "launch",
+					template: "run-test-file",
+					type: "dart",
+				},
+				{
+					console: "terminal",
+					name: "Debug Test in Terminal",
+					request: "launch",
+					template: "debug-test-file",
+					type: "dart",
+				},
+			],
+		);
+
+		const editor = await openFile(helloWorldTestMainFile);
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
+
+		const fileCodeLens = await getCodeLens(editor.document);
+		const mainMethodPos = positionOf(`main^() {`);
+
+		const codeLensForMainMethod = fileCodeLens.filter((cl) => cl.range.start.line === mainMethodPos.line);
+		assert.equal(codeLensForMainMethod.length, 4);
+
+		if (!codeLensForMainMethod[0].command) {
+			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+			// race condition. Rather than failing our test runs, skip.
+			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+			this.skip();
+			return;
+		}
+
+		const runAction = codeLensForMainMethod.find((cl) => cl.command!.title === "Run Test in Terminal")!;
+		assert.equal(runAction!.command!.command, "dart.startWithoutDebugging");
+		assert.equal(fsPath(runAction!.command!.arguments![0]), fsPath(helloWorldTestMainFile));
+		assert.equal(runAction!.command!.arguments![1].console, "terminal");
+
+		const debugAction = codeLensForMainMethod.find((cl) => cl.command!.title === "Debug Test in Terminal");
+		assert.equal(debugAction!.command!.command, "dart.startDebugging");
+		assert.equal(fsPath(debugAction!.command!.arguments![0]), fsPath(helloWorldTestMainFile));
 		assert.equal(debugAction!.command!.arguments![1].console, "terminal");
 	});
 });

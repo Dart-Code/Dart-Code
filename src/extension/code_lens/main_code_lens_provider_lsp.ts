@@ -1,7 +1,9 @@
 import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument, workspace } from "vscode";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
+import { fsPath } from "../../shared/utils/fs";
 import { lspToRange } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
+import { isTestFile } from "../utils";
 
 export class LspMainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	private disposables: IAmDisposable[] = [];
@@ -23,7 +25,8 @@ export class LspMainCodeLensProvider implements CodeLensProvider, IAmDisposable 
 			return;
 
 		const runConfigs = workspace.getConfiguration("launch", document.uri).get<any[]>("configurations") || [];
-		const runFileTemplates = runConfigs.filter((c) => c && c.type === "dart" && c.template && (c.template === "run-file" || c.template === "debug-file"));
+		const templateType = isTestFile(fsPath(document.uri)) ? "test-file" : "file";
+		const runFileTemplates = runConfigs.filter((c) => c && c.type === "dart" && (c.template === `run-${templateType}` || c.template === `debug-${templateType}`));
 
 		const mainMethod = outline.children?.find((o) => o.element.name === "main");
 		if (!mainMethod)
@@ -50,7 +53,7 @@ export class LspMainCodeLensProvider implements CodeLensProvider, IAmDisposable 
 			lspToRange(mainMethod.range),
 			{
 				arguments: [document.uri, t],
-				command: t.template === "run-file" ? "dart.startWithoutDebugging" : "dart.startDebugging",
+				command: t.template === `run-${templateType}` ? "dart.startWithoutDebugging" : "dart.startDebugging",
 				title: t.name,
 			},
 		)));
