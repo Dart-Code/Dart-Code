@@ -1370,7 +1370,7 @@
 				"dart.analyzeAngularTemplates": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to enable analysis for AngularDart templates (requires the angular_analyzer_plugin).",
+					"description": "Whether to enable analysis for AngularDart templates (requires the Angular analyzer plugin to be enabled in analysis_options.yaml).",
 					"scope": "window"
 				},
 				"dart.flutterOutline": {
