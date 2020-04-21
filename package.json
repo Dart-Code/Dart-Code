@@ -1076,10 +1076,21 @@
 					"items": {
 						"type": "object",
 						"properties": {
-							"id": {"type": "string"},
-							"name": {"type": "string"},
-							"executable": {"type": "string"},
-							"args": {"type": "array", "items": {"type": "string"}}
+							"id": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"executable": {
+								"type": "string"
+							},
+							"args": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							}
 						}
 					},
 					"scope": "window"
