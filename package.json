@@ -1685,6 +1685,10 @@
 								"type": "string",
 								"description": "Path to the script to start (eg. bin/main.dart or lib/main.dart) or optionally a test folder to run a whole suite."
 							},
+							"runTestsOnDevice": {
+								"type": "boolean",
+								"description": "Whether to run Flutter test scipts on a device using 'flutter run' instead of 'flutter test'. Only works for whole scripts, not individual tests."
+							},
 							"showMemoryUsage": {
 								"type": "boolean",
 								"description": "Show memory usage for your Flutter app in the status bar during debug sessions (if not set, will automatically show for profile builds).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage."

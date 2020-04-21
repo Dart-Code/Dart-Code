@@ -188,8 +188,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Some helpers for conditions below.
 		const isAnyFlutter = debugType === DebuggerType.Flutter || debugType === DebuggerType.Web;
 		const isStandardFlutter = debugType === DebuggerType.Flutter;
-
 		const isTest = debugConfig.program && isTestFileOrFolder(debugConfig.program as string);
+		const argsHaveTestNameFilter = isTest && debugConfig.args && (debugConfig.args.indexOf("--name") !== -1 || debugConfig.args.indexOf("--pname") !== -1);
+
 		if (isTest)
 			logger.info(`Detected launch project as a Test project`);
 		const canPubRunTest = isTest && debugConfig.cwd && checkProjectSupportsPubRunTest(debugConfig.cwd as string, this.wsContext.isDartSdkRepo);
@@ -202,7 +203,15 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 						debugType = DebuggerType.PubTest;
 					break;
 				case DebuggerType.Flutter:
-					debugType = DebuggerType.FlutterTest;
+					if (!debugConfig.runTestsOnDevice || argsHaveTestNameFilter) {
+						if (debugConfig.runTestsOnDevice && argsHaveTestNameFilter) {
+							vs.window.showWarningMessage("Running with 'flutter test' as 'runTestsOnDevice' is not supported for individual tests.");
+							logger.info(`runTestsOnDevice is set but args have test filter so will still use Flutter`);
+						}
+						debugType = DebuggerType.FlutterTest;
+					} else {
+						logger.info(`runTestsOnDevice is set, so will use Flutter instead of FlutterTest`);
+					}
 					break;
 				case DebuggerType.Web:
 					debugType = DebuggerType.WebTest;
@@ -241,7 +250,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		let deviceToLaunchOn = this.deviceManager && this.deviceManager.currentDevice;
 
 		// Ensure we have a device if required.
-		if (isStandardFlutter && !isTest && this.deviceManager && this.daemon && debugConfig.deviceId !== "flutter-tester") {
+		if (debugType === DebuggerType.Flutter && this.deviceManager && this.daemon && debugConfig.deviceId !== "flutter-tester") {
 			const supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
 				? (await this.daemon.getSupportedPlatforms(debugConfig.cwd)).platforms
 				: [];
@@ -341,8 +350,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
 		if (debugType === DebuggerType.FlutterTest /*|| debugType === DebuggerType.WebTest*/ || debugType === DebuggerType.PubTest) {
-			const isRunningTestSubset = debugConfig.args && (debugConfig.args.indexOf("--name") !== -1 || debugConfig.args.indexOf("--pname") !== -1);
-			TestResultsProvider.flagSuiteStart(debugConfig.program, !isRunningTestSubset);
+			TestResultsProvider.flagSuiteStart(debugConfig.program, !argsHaveTestNameFilter);
 		}
 
 		debugConfig.debuggerType = debugType;
