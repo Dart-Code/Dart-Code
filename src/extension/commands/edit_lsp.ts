@@ -6,11 +6,18 @@ export class LspEditCommands implements vs.Disposable {
 	private commands: vs.Disposable[] = [];
 
 	constructor(private readonly analyzer: LspAnalyzer) {
+		this.commands.push(
+			vs.commands.registerCommand("dart.sortMembers", () => this.runCodeAction("source.sortMembers")),
+		);
 		// TODO: Enable this when https://github.com/dart-lang/sdk/issues/33521
 		// is resolved.
 		// this.commands.push(
 		// 	vs.commands.registerCommand("dart.completeStatement", this.completeStatement, this),
 		// );
+	}
+
+	private async runCodeAction(action: string) {
+		return vs.commands.executeCommand("editor.action.codeAction", { kind: action, apply: "ifSingle" });
 	}
 
 	private async completeStatement(): Promise<void> {
