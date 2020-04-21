@@ -162,8 +162,9 @@ export function isInsideFolderNamed(file: string, folderName: string): boolean {
 		return false;
 
 	const relPath = path.relative(fsPath(ws.uri), file).toLowerCase();
+	const segments = relPath.split(path.sep);
 
-	return relPath === folderName || relPath.startsWith(`${folderName}${path.sep}`) || relPath.indexOf(`${path.sep}${folderName}${path.sep}`) !== -1;
+	return segments.indexOf(folderName.toLowerCase()) !== -1;
 }
 
 export function getLatestSdkVersion(): PromiseLike<string> {
