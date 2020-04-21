@@ -360,7 +360,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			// never set up the analyzer
 			let hasWarnedAboutLooseDartFiles = false;
 			const handleOpenFile = (d: vs.TextDocument) => {
-				if (d.languageId === "dart" && analysisRoots.length === 0 && !hasWarnedAboutLooseDartFiles) {
+				if (!hasWarnedAboutLooseDartFiles && d.languageId === "dart" && d.uri.scheme === "file" && analysisRoots.length === 0) {
 					hasWarnedAboutLooseDartFiles = true;
 					vs.window.showWarningMessage("For full Dart language support, please open a folder containing your Dart files instead of individual loose files");
 				}
