@@ -199,8 +199,7 @@ main() {
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
 
-			// TODO: Uncomment this when https://github.com/microsoft/vscode/issues/87346 is resolved.
-			// assert.ok(completion.additionalTextEdits!.length);
+			assert.ok(completion.additionalTextEdits!.length);
 			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:io'");
@@ -228,8 +227,7 @@ main() {
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
 
-			// TODO: Uncomment this when https://github.com/microsoft/vscode/issues/87346 is resolved.
-			// assert.ok(completion.additionalTextEdits!.length);
+			assert.ok(completion.additionalTextEdits!.length);
 			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:io'\n\n() → ProcessInfo");
@@ -260,8 +258,7 @@ main() {
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "HashMap(…)", "HashMap");
 
-			// TODO: Uncomment this when https://github.com/microsoft/vscode/issues/87346 is resolved.
-			// assert.ok(completion.additionalTextEdits!.length);
+			assert.ok(completion.additionalTextEdits!.length);
 			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:collection'\n\n({bool equals(K key1, K key2), int hashCode(K key), bool isValidKey(potentialKey)}) → HashMap");
