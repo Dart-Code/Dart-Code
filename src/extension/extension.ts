@@ -186,19 +186,19 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		analytics.flutterSdkVersion = sdks.flutterVersion;
 	}
 
+	if (config.previewLsp || process.env.DART_CODE_FORCE_LSP) {
+		isUsingLsp = true;
+	}
+	vs.commands.executeCommand("setContext", IS_LSP_CONTEXT, isUsingLsp);
+
 	// Show the SDK version in the status bar.
 	if (sdks.dartVersion) {
 		dartCapabilities.version = sdks.dartVersion;
 		analytics.sdkVersion = sdks.dartVersion;
 		checkForStandardDartSdkUpdates(logger, workspaceContext);
-		context.subscriptions.push(new StatusBarVersionTracker(workspaceContext));
+		context.subscriptions.push(new StatusBarVersionTracker(workspaceContext, isUsingLsp));
 	}
 	vs.commands.executeCommand("setContext", PUB_OUTDATED_SUPPORTED_CONTEXT, dartCapabilities.supportsPubOutdated);
-
-	if (config.previewLsp || process.env.DART_CODE_FORCE_LSP) {
-		isUsingLsp = true;
-	}
-	vs.commands.executeCommand("setContext", IS_LSP_CONTEXT, isUsingLsp);
 
 	// Fire up the analyzer process.
 	const analyzerStartTime = new Date();

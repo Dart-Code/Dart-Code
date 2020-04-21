@@ -6,7 +6,7 @@ import { isAnalyzable } from "../utils";
 export class StatusBarVersionTracker implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
 
-	constructor(workspaceContext: WorkspaceContext) {
+	constructor(workspaceContext: WorkspaceContext, isLsp: boolean) {
 		const dartIsFromFlutter = workspaceContext.sdks.dartSdkIsFromFlutter;
 
 		// Which switcher we show is based on whether we're in a Flutter project or not.
@@ -26,7 +26,7 @@ export class StatusBarVersionTracker implements vs.Disposable {
 		if (versionLabel) {
 			this.addStatusBarItem(
 				`${label}: ` + (versionLabel.length > 20 ? versionLabel.substr(0, 17) + "…" : versionLabel),
-				`${label} SDK: ${versionLabel}`,
+				`${label} SDK (${isLsp ? "LSP" : "DAS"}): ${versionLabel}`,
 				switchSdkCommand,
 			);
 		}
