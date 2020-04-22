@@ -46,7 +46,7 @@ export class DartDiagnosticProvider {
 			DartDiagnosticProvider.getSeverity(error.severity, error.type),
 			error.type,
 		);
-		diag.code = error.code;
+		diag.code = error.url ? { value: error.code, target: Uri.parse(error.url) } : error.code;
 		diag.source = "dart";
 		diag.tags = DartDiagnosticProvider.getTags(error);
 		if (error.correction)
