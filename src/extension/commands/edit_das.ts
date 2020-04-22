@@ -205,9 +205,8 @@ export class DasEditCommands implements vs.Disposable {
 			if (currentPos !== p.offset)
 				snippet.appendText(documentText.substring(currentPos, p.offset));
 			// Add the choices / placeholder.
-			// Uncomment for https://github.com/Dart-Code/Dart-Code/issues/569 when there's an API we can use
 			if (p.choices && p.choices.length > 1)
-				snippet.appendText("").value += "${" + p.placeholderNumber + "|" + p.choices.map((c) => this.snippetStringEscape(c)).join(",") + "|}";
+				snippet.appendChoice(p.choices, p.placeholderNumber);
 			else
 				snippet.appendPlaceholder(p.defaultValue, p.placeholderNumber);
 			currentPos = p.offset + p.length;
