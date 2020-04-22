@@ -63,7 +63,16 @@ export class DartTestDebugSession extends DartDebugSession {
 
 		// Set up subscriptions.
 		// this.flutter.registerForUnhandledMessages((msg) => this.log(msg));
-		runner.registerForUnhandledMessages((msg) => this.logToUserIfAppropriate(msg, "stdout"));
+		runner.registerForUnhandledMessages((msg) => {
+			// Hack: Would be better to have an event for this.
+			// https://github.com/dart-lang/test/issues/1216
+			if (msg.toLowerCase().indexOf("waiting for current test(s) to finish") !== -1)
+				this.sendEvent(new Event(
+					"dart.terminating",
+					{ message: msg },
+				));
+			this.logToUserIfAppropriate(msg, "stdout");
+		});
 		runner.registerForTestStartedProcess((n) => this.initDebugger(`${n.observatoryUri}ws`));
 		runner.registerForAllTestNotifications((n) => {
 			try {

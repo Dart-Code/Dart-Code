@@ -409,6 +409,15 @@ export class DebugCommands {
 			);
 		} else if (e.event === "dart.launched") {
 			this.clearProgressIndicators(session);
+		} else if (e.event === "dart.terminating") {
+			vs.window.withProgress(
+				{ location: vs.ProgressLocation.Notification },
+				(progress) => {
+					progress.report({ message: e.body.message });
+					session.terminatingProgressReporter = progress;
+					return session.terminatingProgressPromise.promise;
+				},
+			);
 		} else if (e.event === "dart.webLaunchUrl") {
 			const launched = !!e.body.launched;
 			if (!launched) {
@@ -512,6 +521,9 @@ export class DebugCommands {
 		if (session.launchProgressPromise)
 			session.launchProgressPromise.resolve();
 		session.launchProgressReporter = undefined;
+		if (session.terminatingProgressPromise)
+			session.terminatingProgressPromise.resolve();
+		session.terminatingProgressReporter = undefined;
 		if (session.progressPromise)
 			session.progressPromise.resolve();
 		session.progressPromise = undefined;
