@@ -649,6 +649,7 @@ export class DartDebugSession extends DebugSession {
 		args: DebugProtocol.TerminateArguments,
 	): Promise<void> {
 		this.log(`Termination requested!`);
+		this.sendEvent(new Event("dart.terminating", { message: "Terminating debug session..." }));
 		try {
 			await this.terminate(false);
 		} catch (e) {

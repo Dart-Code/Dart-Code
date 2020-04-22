@@ -410,14 +410,18 @@ export class DebugCommands {
 		} else if (e.event === "dart.launched") {
 			this.clearProgressIndicators(session);
 		} else if (e.event === "dart.terminating") {
-			vs.window.withProgress(
-				{ location: vs.ProgressLocation.Notification },
-				(progress) => {
-					progress.report({ message: e.body.message });
-					session.terminatingProgressReporter = progress;
-					return session.terminatingProgressPromise.promise;
-				},
-			);
+			if (session.terminatingProgressReporter) {
+				session.terminatingProgressReporter.report({ message: e.body.message });
+			} else {
+				vs.window.withProgress(
+					{ location: vs.ProgressLocation.Notification },
+					(progress) => {
+						progress.report({ message: e.body.message });
+						session.terminatingProgressReporter = progress;
+						return session.terminatingProgressPromise.promise;
+					},
+				);
+			}
 		} else if (e.event === "dart.webLaunchUrl") {
 			const launched = !!e.body.launched;
 			if (!launched) {

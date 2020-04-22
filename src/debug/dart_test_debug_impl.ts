@@ -69,7 +69,7 @@ export class DartTestDebugSession extends DartDebugSession {
 			if (msg.toLowerCase().indexOf("waiting for current test(s) to finish") !== -1)
 				this.sendEvent(new Event(
 					"dart.terminating",
-					{ message: msg },
+					{ message: `${msg.trim()}..` },
 				));
 			this.logToUserIfAppropriate(msg, "stdout");
 		});
