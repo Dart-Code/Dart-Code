@@ -601,6 +601,9 @@ export class DartDebugSession extends DebugSession {
 				} else {
 					this.log(`${request}: Process had no PID.`);
 				}
+
+				// If we didn't quit, it might be because we're paused.
+				await this.removeAllBreakpointsAndResumeAllThreads(request);
 			} else {
 				this.log(`${request}: Main process had already quit.`);
 			}
@@ -609,22 +612,8 @@ export class DartDebugSession extends DebugSession {
 			// We also use !childProcess to mean we're attached.
 			// this.childProcess = undefined;
 		} else if (!this.shouldKillProcessOnTerminate && this.observatory) {
-			try {
-				this.log(`${request}: Disconnecting from process...`);
-				// Remove all breakpoints from the VM.
-				await await Promise.race([
-					Promise.all(this.threadManager.threads.map((thread) => thread.removeAllBreakpoints())),
-					new Promise((resolve) => setTimeout(resolve, 500)),
-				]);
-
-				// Restart any paused threads.
-				// Note: Only wait up to 500ms here because sometimes we don't get responses because the VM terminates.
-				this.log(`${request}: Unpausing all threads...`);
-				await Promise.race([
-					Promise.all(this.threadManager.threads.map((thread) => thread.resume())),
-					new Promise((resolve) => setTimeout(resolve, 500)),
-				]);
-			} catch { }
+			this.log(`${request}: Disconnecting from process...`);
+			await this.removeAllBreakpointsAndResumeAllThreads(request);
 			try {
 				this.log(`${request}: Closing observatory...`);
 				this.observatory.close();
@@ -642,6 +631,29 @@ export class DartDebugSession extends DebugSession {
 		await this.processExit;
 
 		this.log(`${request}: Disconnecting...`);
+	}
+
+	// When shutting down, we may need to remove all breakpoints and resume all threads
+	// to avoid things like waiting for tests to exit that will never exit.
+	private async removeAllBreakpointsAndResumeAllThreads(request: string) {
+		try {
+			this.log(`${request}: Disabling break-on-exception`);
+			this.threadManager.setExceptionPauseMode("None");
+
+			this.log(`${request}: Removing all breakpoints...`);
+			// Remove all breakpoints from the VM.
+			await await Promise.race([
+				Promise.all(this.threadManager.threads.map((thread) => thread.removeAllBreakpoints())),
+				new Promise((resolve) => setTimeout(resolve, 500)),
+			]);
+			// Restart any paused threads.
+			// Note: Only wait up to 500ms here because sometimes we don't get responses because the VM terminates.
+			this.log(`${request}: Unpausing all threads...`);
+			await Promise.race([
+				Promise.all(this.threadManager.threads.map((thread) => thread.resume())),
+				new Promise((resolve) => setTimeout(resolve, 500)),
+			]);
+		} catch { }
 	}
 
 	protected async terminateRequest(
