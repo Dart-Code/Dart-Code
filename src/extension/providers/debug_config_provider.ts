@@ -49,23 +49,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}];
 	}
 
-	public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration | undefined | null> {
+	public async resolveDebugConfigurationWithSubstitutedVariables(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration | undefined | null> {
 		const logger = this.logger;
 		const openFile = window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri.scheme === "file"
 			? fsPath(window.activeTextEditor.document.uri)
 			: undefined;
-
-		function resolveVariables(input?: string): string | undefined {
-			if (!input)
-				return input;
-			if (openFile)
-				input = input.replace(/\${file}/gi, openFile);
-			if (folder) {
-				const folderPath = fsPath(folder.uri);
-				input = input.replace(/\${(workspaceFolder|workspaceRoot)}/gi, folderPath);
-			}
-			return input;
-		}
 
 		/** Gets the first unresolved variable from the given string. */
 		function getUnresolvedVariable(input?: string): string | undefined {
@@ -93,9 +81,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			logger.info(`    program  : ${debugConfig.program}`);
 		if (debugConfig.cwd)
 			logger.info(`    cwd      : ${debugConfig.cwd}`);
-
-		debugConfig.program = resolveVariables(debugConfig.program);
-		debugConfig.cwd = resolveVariables(debugConfig.cwd);
 
 		if (warnOnUnresolvedVariables("program", debugConfig.program) || warnOnUnresolvedVariables("cwd", debugConfig.cwd)) {
 			// Warning is shown from inside warnOnUnresolvedVariables.

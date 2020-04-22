@@ -829,7 +829,7 @@ async function getResolvedDebugConfiguration(extraConfiguration?: { [key: string
 		request: "launch",
 		type: "dart",
 	}, extraConfiguration);
-	return await extApi.debugProvider.resolveDebugConfiguration!(vs.workspace.workspaceFolders![0], debugConfig);
+	return await extApi.debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(vs.workspace.workspaceFolders![0], debugConfig);
 }
 
 export async function getLaunchConfiguration(script?: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {

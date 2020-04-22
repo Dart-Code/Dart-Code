@@ -128,11 +128,6 @@ describe.skip("web debugger", () => {
 		assert.equal(config!.program, fsPath(webHelloWorldMainFile));
 	});
 
-	it("resolves variables like ${workspaceFolder}", async () => {
-		const config = await getLaunchConfiguration(webHelloWorldMainFile, { cwd: "${workspaceFolder}/foo" });
-		assert.equal(config!.cwd, `${fsPath(webProjectContainerFolder)}/foo`);
-	});
-
 	it.skip("hot reloads successfully", async () => {
 		const config = await startDebugger(webHelloWorldIndexFile);
 		await Promise.all([

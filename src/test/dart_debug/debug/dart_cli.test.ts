@@ -183,11 +183,6 @@ describe("dart cli debugger", () => {
 		assert.equal(config!.program, fsPath(helloWorldMainFile));
 	});
 
-	it("resolves variables like ${workspaceFolder}", async () => {
-		const config = await getLaunchConfiguration(helloWorldMainFile, { cwd: "${workspaceFolder}/foo" });
-		assert.equal(config!.cwd, `${fsPath(helloWorldFolder)}/foo`);
-	});
-
 	it("resolves program as bin/main.dart if no file is open/provided", async () => {
 		await closeAllOpenFiles();
 		const config = await getLaunchConfiguration(undefined);
