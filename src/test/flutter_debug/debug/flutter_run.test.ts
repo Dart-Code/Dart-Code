@@ -185,11 +185,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		assert.equal(config!.program, fsPath(flutterHelloWorldMainFile));
 	});
 
-	it("resolves variables like ${workspaceFolder}", async () => {
-		const config = await getLaunchConfiguration(flutterHelloWorldMainFile, { cwd: "${workspaceFolder}/foo" });
-		assert.equal(config!.cwd, `${fsPath(flutterHelloWorldFolder)}/foo`);
-	});
-
 	it("can hot reload", async function () {
 		if (flutterTestDeviceIsWeb)
 			return this.skip();

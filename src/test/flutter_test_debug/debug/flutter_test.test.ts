@@ -77,18 +77,6 @@ describe("flutter test debugger", () => {
 		]);
 	});
 
-	it("receives the expected events from a Flutter test script when run with variables in launch config", async () => {
-		const relativePath = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterTestMainFile));
-		const config = await startDebugger(`\${workspaceFolder}/${relativePath}`);
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.assertOutputContains("stdout", `✓ Hello world test`),
-			dc.assertPassingTest(`Hello world test`),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
-		]);
-	});
-
 	it("successfully runs a Flutter test script with a relative path", async () => {
 		const config = await startDebugger(flutterTestMainFile);
 		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterTestMainFile));
@@ -116,18 +104,6 @@ describe("flutter test debugger", () => {
 	it("runs the open script if no file is provided", async () => {
 		await openFile(flutterTestOtherFile);
 		const config = await startDebugger(undefined);
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.assertOutputContains("stdout", `✓ Other tests group Other test\n`),
-			dc.assertPassingTest(`Other tests group Other test`),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
-		]);
-	});
-
-	it("runs the open script if program is set to ${file}", async () => {
-		await openFile(flutterTestOtherFile);
-		const config = await startDebugger("${file}");
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutputContains("stdout", `✓ Other tests group Other test\n`),
