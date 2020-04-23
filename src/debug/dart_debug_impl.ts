@@ -1323,7 +1323,11 @@ export class DartDebugSession extends DebugSession {
 			}
 		} catch (e) {
 			if (e && e.message && e.message.indexOf("UnimplementedError") !== -1)
-				this.errorResponse(response, `Evaluation not yet implemented`);
+				this.errorResponse(response, `<not yet implemented>`);
+			else if (e && e.message && e.message.indexOf("Expression compilation error") !== -1)
+				this.errorResponse(response, `not available`);
+			else if (e && e.message && e.message.indexOf("noSuchMethodException") !== -1)
+				this.errorResponse(response, `not available`);
 			else
 				this.errorResponse(response, `${e}`);
 		}
