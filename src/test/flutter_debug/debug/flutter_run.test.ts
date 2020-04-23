@@ -753,7 +753,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		if (flutterTestDeviceIsWeb)
 			return this.skip();
 
-		await setConfigForTest("dart", "previewToStringInDebugViews", true);
 		await openFile(flutterHelloWorldMainFile);
 		const debugConfig = await startDebugger(flutterHelloWorldMainFile);
 		await dc.hitBreakpoint(debugConfig, {

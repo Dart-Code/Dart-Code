@@ -62,7 +62,7 @@ export class DartDebugSession extends DebugSession {
 	public showDartDeveloperLogs = true;
 	public useFlutterStructuredErrors = false;
 	public evaluateGettersInDebugViews = false;
-	protected previewToStringInDebugViews = false;
+	protected evaluateToStringInDebugViews = false;
 	protected useWriteServiceInfo = false;
 	protected vmServiceInfoFile?: string;
 	private serviceInfoPollTimer?: NodeJS.Timer;
@@ -147,7 +147,7 @@ export class DartDebugSession extends DebugSession {
 		this.showDartDeveloperLogs = args.showDartDeveloperLogs;
 		this.useFlutterStructuredErrors = args.useFlutterStructuredErrors;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
-		this.previewToStringInDebugViews = args.previewToStringInDebugViews;
+		this.evaluateToStringInDebugViews = args.evaluateToStringInDebugViews;
 		this.useWriteServiceInfo = this.allowWriteServiceInfo && args.useWriteServiceInfo !== false; /* undefined assumes it's available */
 		this.debuggerHandlesPathsEverywhereForBreakpoints = args.debuggerHandlesPathsEverywhereForBreakpoints;
 		this.logFile = args.observatoryLogFile;
@@ -1738,7 +1738,7 @@ export class DartDebugSession extends DebugSession {
 			// (or a string expression) in the response.
 			val.evaluateName = canEvaluate ? evaluateName : undefined;
 
-			const str = this.previewToStringInDebugViews && allowFetchFullString && !val.valueAsString
+			const str = this.evaluateToStringInDebugViews && allowFetchFullString && !val.valueAsString
 				? await this.fullValueAsString(thread.ref, val)
 				: this.valueAsString(val);
 
