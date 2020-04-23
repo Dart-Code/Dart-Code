@@ -173,7 +173,7 @@ export class SdkUtils {
 
 		// Search for a Bazel workspace root.
 		let bazelWorkspaceRoot: string | undefined;
-		if (!isWin)
+		if (!isWin && config.previewBazelWorkspaceCustomScripts)
 			topLevelFolders.forEach((folder) => bazelWorkspaceRoot = bazelWorkspaceRoot || findBazelWorkspaceRoot(folder));
 		const workspaceConfig = tryLoadBazelFlutterConfig(this.logger, bazelWorkspaceRoot);
 

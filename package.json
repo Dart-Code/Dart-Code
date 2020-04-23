@@ -1640,6 +1640,12 @@
 					"default": true,
 					"description": "Whether to prompt before running if there are errors in your project. Test scripts will be excluded from the check unless they're the script being run.",
 					"scope": "window"
+				},
+				"dart.previewBazelWorkspaceCustomScripts": {
+					"type": "boolean",
+					"default": false,
+					"description": "EXPERIMENTAL: Whether to look for custom script definitions at dart/config/intellij-plugins/flutter.json in Bazel workspaces. Currently supported for macOS and Linux only.",
+					"scope": "window"
 				}
 			}
 		},
