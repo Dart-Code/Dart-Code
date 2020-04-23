@@ -6,6 +6,7 @@ import { fsPath } from "../../shared/utils/fs";
 export class LspClosingLabelsDecorations implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
 	private closingLabels: { [key: string]: ClosingLabelsParams } = {};
+	private editors: { [key: string]: vs.TextEditor } = {};
 	private updateTimeout?: NodeJS.Timer;
 
 	private readonly decorationType = vs.window.createTextEditorDecorationType({
@@ -84,10 +85,19 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 			}
 		}
 
+		this.editors[filePath] = editor;
 		editor.setDecorations(this.decorationType, Object.keys(decorations).map((k) => parseInt(k, 10)).map((k) => decorations[k]));
 	}
 
 	public dispose() {
+		for (const editor of Object.values(this.editors)) {
+			try {
+				editor.setDecorations(this.decorationType, []);
+			} catch {
+				// It's possible the editor was closed, but there
+				// doesn't seem to be a way to tell.
+			}
+		}
 		this.subscriptions.forEach((s) => s.dispose());
 	}
 }

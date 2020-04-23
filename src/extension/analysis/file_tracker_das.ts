@@ -47,7 +47,7 @@ export class DasFileTracker implements IAmDisposable {
 		// It's possible that after the server gives us the version, we may send different subscriptions (eg.
 		// based on capabilities, like supporting priority files outside of the workspace root) so we may need
 		// to send again.
-		this.disposables.push(this.analyzer.registerForServerConnected((s) => this.updateSubscriptions()));
+		this.disposables.push(this.analyzer.registerForServerConnected((s) => this.updateSubscriptions(true)));
 	}
 
 	public async updatePriorityFiles() {
@@ -67,10 +67,10 @@ export class DasFileTracker implements IAmDisposable {
 		}
 	}
 
-	public async updateSubscriptions() {
+	public async updateSubscriptions(force = false) {
 		const openFiles = this.validPathsFor(workspace.textDocuments);
 
-		if (!this.pathsHaveChanged(this.lastSubscribedFiles, openFiles))
+		if (!force && !this.pathsHaveChanged(this.lastSubscribedFiles, openFiles))
 			return;
 
 		// Keep track of files to compare next time.

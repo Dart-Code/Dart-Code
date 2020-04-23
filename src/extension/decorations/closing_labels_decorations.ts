@@ -77,16 +77,24 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	}
 
 	private setTrackingFile(editor: vs.TextEditor | undefined) {
-		if (editor && isAnalyzable(editor.document)) {
+		if (!editor || !isAnalyzable(editor.document))
+			return;
+
+		if (editor !== this.activeEditor)
+			this.activeEditor?.setDecorations(this.decorationType, []);
+
+		if (editor) {
 			this.activeEditor = editor;
 			this.closingLabels = undefined;
-
 			this.analyzer.forceNotificationsFor(fsPath(editor.document.uri));
-		} else
+		} else {
 			this.activeEditor = undefined;
+			this.closingLabels = undefined;
+		}
 	}
 
 	public dispose() {
+		this.activeEditor?.setDecorations(this.decorationType, []);
 		this.activeEditor = undefined;
 		this.subscriptions.forEach((s) => s.dispose());
 	}
