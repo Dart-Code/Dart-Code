@@ -5,7 +5,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { killFlutterTester } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, flutterHelloWorldFolder, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getExpectedResults, getLaunchConfiguration, getPackages, logger, makeTextTree, openFile, positionOf, withTimeout } from "../../helpers";
+import { activate, defer, deferUntilLast, delay, ext, extApi, flutterHelloWorldFolder, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getExpectedResults, getLaunchConfiguration, getPackages, logger, makeTextTree, openFile, positionOf, watchPromise, withTimeout } from "../../helpers";
 
 describe("flutter test debugger", () => {
 
@@ -13,6 +13,10 @@ describe("flutter test debugger", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate flutterTestMainFile", async () => {
 		await activate(flutterTestMainFile);
+	});
+
+	beforeEach(() => {
+		deferUntilLast(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 	});
 
 	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
@@ -44,8 +48,6 @@ describe("flutter test debugger", () => {
 			60,
 		));
 	});
-
-	afterEach(killFlutterTester);
 
 	async function startDebugger(script?: vs.Uri | string): Promise<vs.DebugConfiguration> {
 		const config = await getLaunchConfiguration(script);

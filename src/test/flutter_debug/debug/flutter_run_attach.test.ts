@@ -6,7 +6,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, spawnFlutterProcess } from "../../debug_helpers";
-import { activate, defer, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldExampleSubFolder, flutterHelloWorldFolder, flutterHelloWorldMainFile, getAttachConfiguration, getPackages, logger, watchPromise } from "../../helpers";
+import { activate, defer, deferUntilLast, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldExampleSubFolder, flutterHelloWorldFolder, flutterHelloWorldMainFile, getAttachConfiguration, getPackages, logger, watchPromise } from "../../helpers";
 
 describe("flutter run debugger (attach)", () => {
 	beforeEach("Skip attach tests for web devices", function () {
@@ -24,7 +24,7 @@ describe("flutter run debugger (attach)", () => {
 	before("run 'flutter create' for example", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldExampleSubFolder)));
 
 	beforeEach(() => {
-		defer(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
+		deferUntilLast(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 	});
 
 	let dc: DartDebugClient;

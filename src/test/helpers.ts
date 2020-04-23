@@ -364,11 +364,6 @@ beforeEach("create sinon sandbox", () => {
 		logger.info(`Creating sinon sandbox`);
 	sb = sinon.createSandbox();
 });
-afterEach("destroy sinon sandbox", () => {
-	if (logger)
-		logger.info(`Restoring sinon sandbox`);
-	sb.restore();
-});
 
 before("throw if DART_CODE_IS_TEST_RUN is not set", () => {
 	if (!process.env.DART_CODE_IS_TEST_RUN)
@@ -401,6 +396,12 @@ export function defer(callback: (result?: "failed" | "passed") => Promise<any> |
 export function deferUntilLast(callback: (result?: "failed" | "passed") => Promise<any> | any): void {
 	deferredToLastItems.push(callback);
 }
+
+afterEach("destroy sinon sandbox", () => {
+	if (logger)
+		logger.info(`Restoring sinon sandbox`);
+	sb.restore();
+});
 
 export async function setTestContent(content: string): Promise<void> {
 	const editor = currentEditor();
