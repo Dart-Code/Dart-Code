@@ -1620,7 +1620,7 @@
 				"dart.previewLsp": {
 					"type": "boolean",
 					"default": false,
-					"description": "Whether to run the analyzer in LSP mode (experimental, requires restart).",
+					"description": "EXPERIMENTAL: Whether to run the analyzer in LSP mode (requires restart).",
 					"scope": "window"
 				},
 				"dart.previewNewCompletionPlaceholders": {
