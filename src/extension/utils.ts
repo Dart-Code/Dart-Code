@@ -51,14 +51,20 @@ export function homeRelativePath(p?: string) {
 	return p;
 }
 
-export function createFolderForFile(file?: string) {
-	if (!file || !path.isAbsolute(file))
-		return;
+export function createFolderForFile(file?: string): string | undefined {
+	try {
+		if (!file || !path.isAbsolute(file))
+			return undefined;
 
-	const folder = path.dirname(file);
-	if (!fs.existsSync(folder))
-		mkDirRecursive(folder);
-	return file;
+		const folder = path.dirname(file);
+		if (!fs.existsSync(folder))
+			mkDirRecursive(folder);
+
+		return file;
+	} catch {
+		console.warn(`Ignoring invalid file path ${file}`);
+		return undefined;
+	}
 }
 
 export function getSdkVersion(logger: Logger, sdkRoot?: string): string | undefined {
