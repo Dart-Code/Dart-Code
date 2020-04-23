@@ -118,7 +118,10 @@ Debug adapters currently run in-process and debugging them is the same as any ot
 
 - Set the version number correctly in `packages.json`
 - Commit and push to GitHub (pushing before creating the GH release is important for the tag to be against the correct version)
-- Create a new Release on GitHub with the title "Dart Code v{x.y.z}" where `{x.y.z}` is the correct version number and copy the body text from a previous release, amending the version number/release notes link
+- Run `vsce ls` to preview files that will be included in the release (ensure there are no artifacts/log files/etc. hanging around in your directory that haven't been excluded by `.vscodeignore`)
+
+- **Run `vsce package` to build the extension**
+- Create a new Release on GitHub with the title "Dart Code v{x.y.z}" where `{x.y.z}` is the correct version number and copy the body text from a previous release, amending the version number/release notes link and attaching the build vsix
 - Use the `tool/generate_release_notes.dart` script in the [Website](https://github.com/Dart-Code/Website) repo to generate placeholder release notes from the latest GitHub milestone
 - Review/reword release notes, adding screenshots for any significant features
 - If the version is not final, set `provisional: true` in the release notes YAML front matter
@@ -126,7 +129,6 @@ Debug adapters currently run in-process and debugging them is the same as any ot
 
 To release Dart Code you will need access to the Publisher account on the VS marketplace and will need to install [`vsce`](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#vsce). Follow [these instructions](https://code.visualstudio.com/docs/extensions/publish-extension) to get vsce set up and authorised with a personal access token.
 
-- Run `vsce ls` to preview files that will be included in the release (ensure there are no artifacts/log files/etc. hanging around in your directory that haven't been excluded by `.vscodeignore`)
 - **Run `vsce publish` to publish the extension**
 - Open your stable version of Code (which should have Dart Code installed) and ensure it shows the update/auto-updates
   - This may take a few minutes due to VS Code marketplace caching

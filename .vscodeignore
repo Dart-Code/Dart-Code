@@ -8,6 +8,7 @@
 .vscode-test/**
 .vscode/**
 *.log
+*.vsix
 **/*.map
 CONTRIBUTING.md
 coverage/**
