@@ -1,11 +1,16 @@
 import * as path from "path";
 import * as vs from "vscode";
+import { isWin } from "../../../shared/constants";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { killFlutterTester } from "../../debug_helpers";
 import { activate, defer, delay, ensureHasRunRecently, ext, extApi, flutterBazelHelloWorldFolder, flutterBazelTestMainFile, getLaunchConfiguration, getPackages, logger, prepareHasRunFile, withTimeout } from "../../helpers";
 
 describe("flutter test debugger", () => {
+	beforeEach(function () {
+		if (isWin)
+			this.skip();
+	});
 
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
