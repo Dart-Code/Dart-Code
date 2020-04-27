@@ -68,7 +68,7 @@ describe("extension", () => {
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.equal(sdks.dartSdkIsFromFlutter, true);
-		assert.equal(sdks.flutterVersion, "9.8.7");
+		assert.equal(sdks.flutterVersion, "1.2.3");
 		assert.equal(sdks.flutter, path.join(fsPath(flutterBazelRoot), "my-flutter-sdk"));
 	});
 	it.skip("used Bazel's Flutter's Dart version", async () => {
