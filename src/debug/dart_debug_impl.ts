@@ -142,18 +142,8 @@ export class DartDebugSession extends DebugSession {
 		// the exception mode.
 		this.threadManager.setExceptionPauseMode(this.noDebug ? "None" : "Unhandled");
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program || args.cwd));
-		this.debugSdkLibraries = args.debugSdkLibraries;
-		this.debugExternalLibraries = args.debugExternalLibraries;
-		this.showDartDeveloperLogs = args.showDartDeveloperLogs;
-		this.useFlutterStructuredErrors = args.useFlutterStructuredErrors;
-		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
-		this.evaluateToStringInDebugViews = args.evaluateToStringInDebugViews;
 		this.useWriteServiceInfo = this.allowWriteServiceInfo && args.useWriteServiceInfo !== false; /* undefined assumes it's available */
-		this.debuggerHandlesPathsEverywhereForBreakpoints = args.debuggerHandlesPathsEverywhereForBreakpoints;
-		this.logFile = args.observatoryLogFile;
-		this.sendLogsToClient = !!args.sendLogsToClient;
-		this.toolEnv = args.toolEnv;
-		this.maxLogLineLength = args.maxLogLineLength;
+		this.readSharedArgs(args);
 
 		this.sendResponse(response);
 
@@ -218,6 +208,20 @@ export class DartDebugSession extends DebugSession {
 			this.sendEvent(new InitializedEvent());
 	}
 
+	private readSharedArgs(args: DartLaunchRequestArguments | DartAttachRequestArguments) {
+		this.debugExternalLibraries = args.debugExternalLibraries;
+		this.debuggerHandlesPathsEverywhereForBreakpoints = args.debuggerHandlesPathsEverywhereForBreakpoints;
+		this.debugSdkLibraries = args.debugSdkLibraries;
+		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
+		this.evaluateToStringInDebugViews = args.evaluateToStringInDebugViews;
+		this.logFile = args.observatoryLogFile;
+		this.maxLogLineLength = args.maxLogLineLength;
+		this.sendLogsToClient = !!args.sendLogsToClient;
+		this.showDartDeveloperLogs = args.showDartDeveloperLogs;
+		this.toolEnv = args.toolEnv;
+		this.useFlutterStructuredErrors = args.useFlutterStructuredErrors;
+	}
+
 	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DartAttachRequestArguments): Promise<void> {
 		if (!args || !args.observatoryUri) {
 			return this.errorResponse(response, "Unable to attach; no Observatory address provided.");
@@ -226,12 +230,7 @@ export class DartDebugSession extends DebugSession {
 		// this.observatoryUriIsProbablyReconnectable = true;
 		this.shouldKillProcessOnTerminate = false;
 		this.cwd = args.cwd;
-		this.debugSdkLibraries = args.debugSdkLibraries;
-		this.debugExternalLibraries = args.debugExternalLibraries;
-		this.showDartDeveloperLogs = args.showDartDeveloperLogs;
-		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
-		this.logFile = args.observatoryLogFile;
-		this.maxLogLineLength = args.maxLogLineLength;
+		this.readSharedArgs(args);
 
 		this.log(`Attaching to process via ${args.observatoryUri}`);
 

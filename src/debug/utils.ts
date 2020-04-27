@@ -21,33 +21,36 @@ export function formatPathForVm(file: string): string {
 		return `file:///${encodeURI(file)}`;
 }
 
-export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
+export interface DartSharedArgs {
+	debugExternalLibraries: boolean;
+	debuggerHandlesPathsEverywhereForBreakpoints: boolean;
+	debugSdkLibraries: boolean;
+	evaluateGettersInDebugViews: boolean;
+	evaluateToStringInDebugViews: boolean;
+	maxLogLineLength: number;
+	observatoryLogFile?: string;
+	sendLogsToClient?: boolean;
+	showDartDeveloperLogs: boolean;
+	toolEnv?: { [key: string]: string | undefined };
+	useFlutterStructuredErrors: boolean;
+}
+
+export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, DartSharedArgs {
 	name: string;
 	type: string;
 	request: string;
-	sendLogsToClient?: boolean;
 	cwd?: string;
 	enableAsserts: boolean;
 	console: "debugConsole" | "terminal";
 	dartPath: string;
-	debugSdkLibraries: boolean;
-	debugExternalLibraries: boolean;
-	showDartDeveloperLogs: boolean;
-	useFlutterStructuredErrors: boolean;
-	debuggerHandlesPathsEverywhereForBreakpoints: boolean;
-	evaluateGettersInDebugViews: boolean;
-	evaluateToStringInDebugViews: boolean;
 	useWriteServiceInfo: boolean | undefined;
-	toolEnv?: { [key: string]: string | undefined };
 	globalFlutterArgs: string[] | undefined;
 	env?: { [key: string]: string | undefined };
 	program: string;
 	args: string[];
 	vmAdditionalArgs: string[];
 	vmServicePort: number;
-	observatoryLogFile?: string;
 	webDaemonLogFile?: string;
-	maxLogLineLength: number;
 	pubPath: string;
 	pubSnapshotPath: string;
 	pubTestLogFile?: string;
@@ -70,19 +73,13 @@ export interface FlutterLaunchRequestArguments extends DartLaunchRequestArgument
 	supportsWsVmService: boolean;
 }
 
-export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestArguments {
+export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestArguments, DartSharedArgs {
 	type: string;
 	request: string;
 	cwd: string;
 	program: string;
-	debugSdkLibraries: boolean;
-	debugExternalLibraries: boolean;
-	showDartDeveloperLogs: boolean;
-	evaluateGettersInDebugViews: boolean;
-	maxLogLineLength: number;
 	packages: string;
 	observatoryUri: string;
-	observatoryLogFile: string;
 }
 
 export interface FlutterAttachRequestArguments extends DartAttachRequestArguments {
