@@ -1,6 +1,7 @@
 .dart_code_test_logs/**
 .dart_code_test_data_dir/**
 .gitattributes
+.gitmodules
 .github/
 .gitignore
 .nyc_output/**
