@@ -532,8 +532,8 @@ export async function getDocumentSymbols(): Promise<Array<vs.DocumentSymbol & { 
 	));
 }
 
-export async function getDefinitions(position: vs.Position): Promise<vs.Location[]> {
-	const definitionResult = await (vs.commands.executeCommand("vscode.executeDefinitionProvider", currentDoc().uri, position) as Thenable<vs.Location[]>);
+export async function getDefinitions(position: vs.Position): Promise<Array<vs.Location | vs.DefinitionLink>> {
+	const definitionResult = await (vs.commands.executeCommand("vscode.executeDefinitionProvider", currentDoc().uri, position) as Thenable<Array<vs.Location | vs.DefinitionLink>>);
 	return definitionResult || [];
 }
 
@@ -542,10 +542,25 @@ export async function getCodeLens(document: vs.TextDocument): Promise<vs.CodeLen
 	return fileCodeLens || [];
 }
 
-export async function getDefinition(position: vs.Position): Promise<vs.Location> {
+export async function getDefinition(position: vs.Position): Promise<vs.Location | vs.DefinitionLink> {
 	const defs = await getDefinitions(position);
 	assert.ok(defs && defs.length);
 	return defs[0];
+}
+
+export function breakpointFor(def: vs.Location | vs.DefinitionLink) {
+	return {
+		line: rangeFor(def).start.line + 1,
+		path: fsPath(uriFor(def)),
+	};
+}
+
+export function uriFor(def: vs.Location | vs.DefinitionLink) {
+	return "uri" in def ? def.uri : def.targetUri;
+}
+
+export function rangeFor(def: vs.Location | vs.DefinitionLink) {
+	return "range" in def ? def.range : def.targetRange;
 }
 
 export async function getWorkspaceSymbols(query: string): Promise<vs.SymbolInformation[]> {

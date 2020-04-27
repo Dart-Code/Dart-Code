@@ -8,7 +8,7 @@ import { grey, grey2 } from "../../../shared/utils/colors";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, deferUntilLast, delay, ext, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getPackages, makeTrivialChangeToFileDirectly, openFile, positionOf, saveTrivialChangeToFile, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, deferUntilLast, delay, ext, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getPackages, makeTrivialChangeToFileDirectly, openFile, positionOf, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -458,12 +458,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await Promise.all([
 			dc.assertStoppedLocation("step", {
 				// Ensure we stepped into the external file
-				path: fsPath(httpReadDef.uri),
+				path: fsPath(uriFor(httpReadDef)),
 			}).then((response) => {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "read");
-				assert.equal(frame.source!.path, fsPath(httpReadDef.uri));
+				assert.equal(frame.source!.path, fsPath(uriFor(httpReadDef)));
 				assert.equal(frame.source!.name, "package:http/http.dart");
 			}),
 			dc.stepIn(),
@@ -517,12 +517,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await Promise.all([
 			dc.assertStoppedLocation("step", {
 				// Ensure we stepped into the external file
-				path: fsPath(printMyThingDef.uri),
+				path: fsPath(uriFor(printMyThingDef)),
 			}).then((response) => {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "printMyThing");
-				assert.equal(frame.source!.path, fsPath(printMyThingDef.uri));
+				assert.equal(frame.source!.path, fsPath(uriFor(printMyThingDef)));
 				assert.equal(frame.source!.name, "package:my_package/my_thing.dart");
 			}),
 			dc.stepIn(),
