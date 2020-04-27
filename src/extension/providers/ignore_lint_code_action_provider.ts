@@ -38,16 +38,19 @@ export class IgnoreLintCodeActionProvider implements RankedCodeActionProvider {
 	}
 
 	private convertResult(document: TextDocument, diagnostic: Diagnostic): CodeAction {
+		const type = diagnostic instanceof DartDiagnostic ? `${diagnostic.type.toLowerCase()} ` : "";
+		const dCode: any = diagnostic.code || "";
+		const code = "value" in dCode ? dCode.value : dCode;
+
 		const edit = new WorkspaceEdit();
 		const line = document.lineAt(diagnostic.range.start.line);
 		edit.insert(
 			document.uri,
 			line.range.start,
-			`${" ".repeat(line.firstNonWhitespaceCharacterIndex)}// ignore: ${diagnostic.code}\n`,
+			`${" ".repeat(line.firstNonWhitespaceCharacterIndex)}// ignore: ${code}\n`,
 		);
 
-		const type = diagnostic instanceof DartDiagnostic ? `${diagnostic.type.toLowerCase()} ` : "";
-		const title = `Ignore ${type}'${diagnostic.code}' for this line`;
+		const title = `Ignore ${type}'${code}' for this line`;
 		const action = new CodeAction(title, CodeActionKind.QuickFix);
 		action.edit = edit;
 		return action;
