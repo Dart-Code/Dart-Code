@@ -194,10 +194,7 @@ export class DartDebugSession extends DebugSession {
 					this.logToUser(`Exited (${signal ? `${signal}`.toLowerCase() : code})\n`);
 				// To reduce the chances of losing async logs, wait a short period
 				// before terminating.
-				await Promise.race([
-					this.lastLoggingEvent,
-					new Promise((resolve) => setTimeout(resolve, 500)),
-				]);
+				this.raceIgnoringErrors(() => this.lastLoggingEvent, 500);
 				// Add a small delay to allow for async events to complete first
 				// to reduce the chance of closing output.
 				setTimeout(() => this.sendEvent(new TerminatedEvent()), 250);
@@ -635,15 +632,31 @@ export class DartDebugSession extends DebugSession {
 	// When shutting down, we may need to remove all breakpoints and resume all threads
 	// to avoid things like waiting for tests to exit that will never exit. We don't wait
 	// for any responses here as if the VM has shut down we won't get them.
-	private tryRemoveAllBreakpointsAndResumeAllThreads(request: string) {
-		try {
-			this.log(`${request}: Disabling break-on-exception`);
-			this.threadManager.setExceptionPauseMode("None");
+	private async tryRemoveAllBreakpointsAndResumeAllThreads(request: string) {
+		this.log(`${request}: Disabling break-on-exception and removing all breakpoints`);
+		await this.raceIgnoringErrors(() => Promise.all([
+			this.threadManager.setExceptionPauseMode("None"),
+			this.threadManager.threads.map((thread) => thread.removeAllBreakpoints()),
+		]));
 
-			// Remove all breakpoints from the VM (don't wait, as they may never complete if it shut down).
-			this.log(`${request}: Removing all breakpoints & unpausing...`);
-			this.threadManager.threads.map((thread) => thread.removeAllBreakpoints().then(() => thread.resume()));
-		} catch { }
+		this.log(`${request}: Unpausing all threads...`);
+		await this.raceIgnoringErrors(() => Promise.all([
+			this.threadManager.threads.map((thread) => thread.resume()),
+		]));
+	}
+
+	// Run some code, but don't wait longer than a certain time period for the result
+	// as it may never come. Returns true if the operation completed.
+	private async raceIgnoringErrors(action: () => Promise<any>, timeout: number = 250): Promise<boolean> {
+		try {
+			return await Promise.race([
+				action().then((_) => true),
+				new Promise<boolean>((resolve) => setTimeout(() => resolve(false), timeout)),
+			]);
+		} catch (e) {
+			this.log(`Error while while waiting for action: ${e}`);
+			return false;
+		}
 	}
 
 	protected async terminateRequest(
@@ -666,12 +679,9 @@ export class DartDebugSession extends DebugSession {
 	): Promise<void> {
 		this.log(`Disconnect requested!`);
 		try {
-			const didTimeout = await Promise.race([
-				this.terminate(false).then((_) => false),
-				new Promise((resolve) => setTimeout(() => resolve(true), 2000)),
-			]);
+			const succeeded = this.raceIgnoringErrors(() => this.terminate(false), 2000);
 			// If we hit the 2s timeout, then terminate more forcefully.
-			if (didTimeout)
+			if (!succeeded)
 				await this.terminate(true);
 		} catch (e) {
 			return this.errorResponse(response, `${e}`);

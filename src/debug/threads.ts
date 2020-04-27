@@ -78,24 +78,25 @@ export class ThreadManager {
 		return this.threads.map((thread: ThreadInfo) => new Thread(thread.num, thread.ref.name));
 	}
 
-	public setExceptionPauseMode(mode: VmExceptionMode) {
+	public async setExceptionPauseMode(mode: VmExceptionMode) {
 		this.exceptionMode = mode;
 		if (!this.debugSession.observatory)
 			return;
 
-		for (const thread of this.threads) {
-			if (thread.runnable) {
-				let threadMode = mode;
+		await Promise.all(this.threads.map(async (thread) => {
+			if (!thread.runnable || !this.debugSession.observatory)
+				return;
 
-				// If the mode is set to "All Exceptions" but the thread is a snapshot from pub
-				// then downgrade it to Uncaught because the user is unlikely to want to be stopping
-				// on internal exceptions such trying to parse versions.
-				if (mode === "All" && thread.isInfrastructure)
-					threadMode = "Unhandled";
+			let threadMode = mode;
 
-				this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, threadMode);
-			}
-		}
+			// If the mode is set to "All Exceptions" but the thread is a snapshot from pub
+			// then downgrade it to Uncaught because the user is unlikely to want to be stopping
+			// on internal exceptions such trying to parse versions.
+			if (mode === "All" && thread.isInfrastructure)
+				threadMode = "Unhandled";
+
+			this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, threadMode);
+		}));
 	}
 
 	private async setLibrariesDebuggable(isolateRef: VMIsolateRef): Promise<void> {
