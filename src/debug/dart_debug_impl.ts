@@ -26,6 +26,7 @@ const unoptimizedPrefix = "[Unoptimized] ";
 const stackFrameWithUriPattern = new RegExp(`(.*#\\d+.*)\\(((?:package|dart|file):.*\\.dart):(\\d+):(\\d+)\\)\\s*$`, "m");
 const webStackFrameWithUriPattern = new RegExp(`((?:package|dart|file):.*\\.dart) (\\d+):(\\d+)\\s*(\\S+)\\s*$`, "m");
 const messageWithUriPattern = new RegExp(`(.*?)((?:package|dart|file):.*\\.dart):(\\d+):(\\d+)\\s*$`, "m");
+const trailingSemicolonPattern = new RegExp(`;\\s*$`, "m");
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -1280,7 +1281,7 @@ export class DartDebugSession extends DebugSession {
 
 	protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): Promise<void> {
 		const isClipboardContext = args.context === "clipboard";
-		const expression: string = args.expression;
+		const expression: string = args.expression.replace(trailingSemicolonPattern, "");
 		// Stack frame scope; if not specified, the expression is evaluated in the global scope.
 		const frameId = args.frameId;
 		// const context: string = args.context; // "watch", "repl", "hover"

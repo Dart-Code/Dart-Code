@@ -858,6 +858,22 @@ describe("dart cli debugger", () => {
 			assert.equal(evaluateResult.result, (new Date()).getFullYear());
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
+
+		it("can evaluate expressions with trailing semicolons", async () => {
+			await openFile(helloWorldMainFile);
+			const config = await startDebugger(helloWorldMainFile);
+			await Promise.all([
+				dc.hitBreakpoint(config, {
+					line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
+					path: fsPath(helloWorldMainFile),
+				}),
+			]);
+
+			const evaluateResult = await dc.evaluate(`(new DateTime.now()).year;`);
+			assert.ok(evaluateResult);
+			assert.equal(evaluateResult.result, (new Date()).getFullYear());
+			assert.equal(evaluateResult.variablesReference, 0);
+		});
 	});
 
 	it("stops on exception", async () => {
