@@ -37,6 +37,8 @@ export class DartDebugSession extends DebugSession {
 	// TODO: Tidy all this up
 	protected childProcess?: SpawnedProcess | RemoteEditorTerminalProcess;
 	protected additionalPidsToTerminate: number[] = [];
+	protected expectAdditionalPidToTerminate = false;
+	private additionalPidCompleter = new PromiseCompleter<void>();
 	// We normally track the pid from Observatory to terminate the VM afterwards, but for Flutter Run it's
 	// a remote PID and therefore doesn't make sense to try and terminate.
 	protected allowTerminatingObservatoryVmPid = true;
@@ -301,6 +303,7 @@ export class DartDebugSession extends DebugSession {
 	private buildAppArgs(args: DartLaunchRequestArguments) {
 		let appArgs = [];
 		if (this.shouldConnectDebugger) {
+			this.expectAdditionalPidToTerminate = true;
 			appArgs.push(`--enable-vm-service=${args.vmServicePort}`);
 			appArgs.push("--pause_isolates_on_start=true");
 		}
@@ -465,8 +468,8 @@ export class DartDebugSession extends DebugSession {
 						// we should keep a ref to this process to terminate when we quit. This avoids issues where our process is a shell
 						// (we use shell execute to fix issues on Windows) and the kill signal isn't passed on correctly.
 						// See: https://github.com/Dart-Code/Dart-Code/issues/907
-						if (this.allowTerminatingObservatoryVmPid && this.childProcess && this.childProcess.pid !== vm.pid) {
-							this.additionalPidsToTerminate.push(vm.pid);
+						if (this.allowTerminatingObservatoryVmPid && this.childProcess) {
+							this.recordAdditionalPid(vm.pid);
 						}
 
 						const isolates = await Promise.all(vm.isolates.map((isolateRef) => this.observatory!.getIsolate(isolateRef.id)));
@@ -548,6 +551,11 @@ export class DartDebugSession extends DebugSession {
 		});
 	}
 
+	protected recordAdditionalPid(pid: number) {
+		this.additionalPidsToTerminate.push(pid);
+		this.additionalPidCompleter.resolve();
+	}
+
 	private subscribeToStreams() {
 		if (!this.observatory)
 			return;
@@ -576,6 +584,8 @@ export class DartDebugSession extends DebugSession {
 		if (this.shouldKillProcessOnTerminate && this.childProcess && !this.processExited) {
 			this.log(`${request}: Terminating processes...`);
 			for (const pid of this.additionalPidsToTerminate) {
+				if (pid === this.childProcess.pid)
+					continue;
 				try {
 					this.log(`${request}: Terminating related process ${pid} with ${signal}...`);
 					process.kill(pid, signal);
@@ -665,6 +675,18 @@ export class DartDebugSession extends DebugSession {
 	): Promise<void> {
 		this.log(`Termination requested!`);
 		this.sendEvent(new Event("dart.terminating", { message: "Terminating debug session..." }));
+
+		if (this.expectAdditionalPidToTerminate && !this.additionalPidsToTerminate.length) {
+			this.log(`Waiting for main process PID before terminating`);
+			this.sendEvent(new Event("dart.terminating", { message: "Waiting for process..." }));
+			const didGetPid = await this.raceIgnoringErrors(() => this.additionalPidCompleter.promise, 20000);
+			if (didGetPid)
+				this.log(`Got main process PID, continuing...`);
+			else
+				this.log(`Timed out waiting for main process PID, continuing anyway...`);
+			this.sendEvent(new Event("dart.terminating", { message: "Terminating process..." }));
+		}
+
 		try {
 			await this.terminate(false);
 		} catch (e) {

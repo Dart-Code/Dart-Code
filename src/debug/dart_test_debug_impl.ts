@@ -35,6 +35,7 @@ export class DartTestDebugSession extends DartDebugSession {
 
 		// Instead, we do it the VM way for now...
 		if (this.shouldConnectDebugger) {
+			this.expectAdditionalPidToTerminate = true;
 			appArgs.push("--enable-vm-service=0");
 			appArgs.push("--pause_isolates_on_start=true");
 		}
@@ -110,7 +111,7 @@ export class DartTestDebugSession extends DartDebugSession {
 			case "start":
 				const pid = notification.pid;
 				if (pid) {
-					this.additionalPidsToTerminate.push(pid);
+					this.recordAdditionalPid(pid);
 				}
 				break;
 			case "debug":
