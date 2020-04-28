@@ -2,15 +2,16 @@ import { escapeRegExp } from "../../shared/utils";
 
 export function getLaunchConfig(noDebug: boolean, path: string, testName: string | undefined, isGroup: boolean, template?: any | undefined) {
 	return Object.assign(
-		{},
+		{
+			name: "Tests",
+			request: "launch",
+			type: "dart",
+			noDebug,
+		},
 		template,
 		{
 			args: (template ? (template.args || []) : []).concat(testName ? ["--name", makeRegexForTest(testName, isGroup)] : []),
-			name: "Tests",
-			noDebug,
 			program: path,
-			request: "launch",
-			type: "dart",
 		},
 	);
 }

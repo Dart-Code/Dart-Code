@@ -150,7 +150,11 @@ export class DebugCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugging", (resource: vs.Uri, launchTemplate: any | undefined) => {
 			const launchConfig = Object.assign(
-				{},
+				{
+					request: "launch",
+					type: "dart",
+					noDebug: false,
+				},
 				launchTemplate,
 				{
 					program: fsPath(resource),
@@ -160,10 +164,13 @@ export class DebugCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.startWithoutDebugging", (resource: vs.Uri, launchTemplate: any | undefined) => {
 			const launchConfig = Object.assign(
-				{},
+				{
+					request: "launch",
+					type: "dart",
+					noDebug: true,
+				},
 				launchTemplate,
 				{
-					noDebug: true,
 					program: fsPath(resource),
 				},
 			);
