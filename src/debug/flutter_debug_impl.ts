@@ -86,11 +86,12 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.allowTerminatingObservatoryVmPid = args.deviceId === "flutter-tester" && !isAttach;
 
 		const logger = new DebugAdapterLogger(this, this.logCategory);
+		this.expectAdditionalPidToTerminate = true;
 		this.runDaemon = this.spawnRunDaemon(isAttach, args, logger);
 		this.runDaemon.registerForUnhandledMessages((msg) => this.handleLogOutput(msg));
 
 		// Set up subscriptions.
-		this.runDaemon.registerForDaemonConnect((n) => this.additionalPidsToTerminate.push(n.pid));
+		this.runDaemon.registerForDaemonConnect((n) => this.recordAdditionalPid(n.pid));
 		this.runDaemon.registerForAppStart((n) => this.currentRunningAppId = n.appId);
 		this.runDaemon.registerForAppDebugPort((n) => {
 			this.observatoryUri = n.wsUri;

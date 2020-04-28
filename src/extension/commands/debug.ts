@@ -416,6 +416,7 @@ export class DebugCommands {
 		} else if (e.event === "dart.launched") {
 			this.clearProgressIndicators(session);
 		} else if (e.event === "dart.terminating") {
+			this.clearLaunchProgessIndicator(session);
 			if (session.terminatingProgressReporter) {
 				session.terminatingProgressReporter.report({ message: e.body.message });
 			} else {
@@ -528,9 +529,7 @@ export class DebugCommands {
 	}
 
 	private clearProgressIndicators(session: DartDebugSessionInformation): void {
-		if (session.launchProgressPromise)
-			session.launchProgressPromise.resolve();
-		session.launchProgressReporter = undefined;
+		this.clearLaunchProgessIndicator(session);
 		if (session.terminatingProgressPromise)
 			session.terminatingProgressPromise.resolve();
 		session.terminatingProgressReporter = undefined;
@@ -538,6 +537,12 @@ export class DebugCommands {
 			session.progressPromise.resolve();
 		session.progressPromise = undefined;
 		session.progressReporter = undefined;
+	}
+
+	private clearLaunchProgessIndicator(session: DartDebugSessionInformation) {
+		if (session.launchProgressPromise)
+			session.launchProgressPromise.resolve();
+		session.launchProgressReporter = undefined;
 	}
 
 	private async promptForDebugSession(): Promise<DartDebugSessionInformation | undefined> {
