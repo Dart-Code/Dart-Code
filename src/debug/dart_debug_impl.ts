@@ -1281,6 +1281,7 @@ export class DartDebugSession extends DebugSession {
 
 	protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): Promise<void> {
 		const isClipboardContext = args.context === "clipboard";
+		const isWatchContext = args.context === "watch";
 		const expression: string = args.expression.replace(trailingSemicolonPattern, "");
 		// Stack frame scope; if not specified, the expression is evaluated in the global scope.
 		const frameId = args.frameId;
@@ -1347,10 +1348,14 @@ export class DartDebugSession extends DebugSession {
 		} catch (e) {
 			if (e && e.message && e.message.indexOf("UnimplementedError") !== -1)
 				this.errorResponse(response, `<not yet implemented>`);
-			else if (e && e.message && e.message.indexOf("Expression compilation error") !== -1)
+			else if (isWatchContext && e && e.message && e.message.indexOf("Expression compilation error") !== -1)
 				this.errorResponse(response, `not available`);
-			else if (e && e.message && e.message.indexOf("noSuchMethodException") !== -1)
+			else if (isWatchContext && e && e.message && e.message.indexOf("noSuchMethodException") !== -1)
 				this.errorResponse(response, `not available`);
+			else if (e && e.data && e.data.details)
+				this.errorResponse(response, `${e.data.details}`);
+			else if (e && e.message)
+				this.errorResponse(response, `${e.message}`);
 			else
 				this.errorResponse(response, `${e}`);
 		}

@@ -874,6 +874,34 @@ describe("dart cli debugger", () => {
 			assert.equal(evaluateResult.result, (new Date()).getFullYear());
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
+
+		it("returns a full error message for repl context", async () => {
+			await openFile(helloWorldMainFile);
+			const config = await startDebugger(helloWorldMainFile);
+			await Promise.all([
+				dc.hitBreakpoint(config, {
+					line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
+					path: fsPath(helloWorldMainFile),
+				}),
+			]);
+
+			const error = await dc.evaluate("DateTime.now().ye", "repl").catch((e) => e);
+			assert.notEqual(error.message.indexOf("The getter 'ye' isn't defined for the class 'DateTime'"), -1);
+		});
+
+		it("returns a short error message for watch context", async () => {
+			await openFile(helloWorldMainFile);
+			const config = await startDebugger(helloWorldMainFile);
+			await Promise.all([
+				dc.hitBreakpoint(config, {
+					line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
+					path: fsPath(helloWorldMainFile),
+				}),
+			]);
+
+			const error = await dc.evaluate("DateTime.now().ye", "watch").catch((e) => e);
+			assert.equal(error.message, "not available");
+		});
 	});
 
 	it("stops on exception", async () => {

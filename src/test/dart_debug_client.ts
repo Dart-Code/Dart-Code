@@ -195,7 +195,7 @@ export class DartDebugClient extends DebugClient {
 		return variables.body.variables;
 	}
 
-	public async evaluate(expression: string): Promise<{
+	public async evaluate(expression: string, context?: string): Promise<{
 		result: string;
 		type?: string;
 		variablesReference: number;
@@ -204,7 +204,7 @@ export class DartDebugClient extends DebugClient {
 	}> {
 		const thread = await this.getMainThread();
 		const stack = await this.stackTraceRequest({ threadId: thread.id });
-		const result = await this.evaluateRequest({ expression, frameId: stack.body.stackFrames[0].id });
+		const result = await this.evaluateRequest({ expression, frameId: stack.body.stackFrames[0].id, context });
 		return result.body;
 	}
 
