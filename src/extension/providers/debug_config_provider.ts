@@ -49,6 +49,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}];
 	}
 
+	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
+		debugConfig.type = debugConfig.type || "dart";
+		debugConfig.request = debugConfig.request || "launch";
+
+		return debugConfig;
+	}
+
 	public async resolveDebugConfigurationWithSubstitutedVariables(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration | undefined | null> {
 		const logger = this.logger;
 		const openFile = window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri.scheme === "file"
@@ -456,8 +463,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				debugConfig.name = "Dart";
 			}
 		}
-		debugConfig.type = debugConfig.type || "dart";
-		debugConfig.request = debugConfig.request || "launch";
 		debugConfig.toolEnv = getToolEnv();
 		debugConfig.sendLogsToClient = true;
 		debugConfig.globalFlutterArgs = getGlobalFlutterArgs();
