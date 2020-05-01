@@ -4,9 +4,9 @@ export function getLaunchConfig(noDebug: boolean, path: string, testName: string
 	return Object.assign(
 		{
 			name: "Tests",
+			noDebug,
 			request: "launch",
 			type: "dart",
-			noDebug,
 		},
 		template,
 		{
