@@ -469,7 +469,7 @@
 			},
 			{
 				"command": "dart.rerunLastDebugSession",
-				"when": "dart-code:dartProjectLoaded && dart-code:hasLastDebugConfig",
+				"when": "dart-code:dartProjectLoaded && dart-code:hasLastDebugConfig && !inDebugMode",
 				"key": "cmd+shift+f5",
 				"win": "ctrl+shift+f5"
 			},
