@@ -455,7 +455,7 @@ export class SdkCommands {
 
 	private runCommandInFolder(shortPath: string | undefined, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean): Thenable<number | undefined> {
 		shortPath = shortPath || path.basename(folder);
-		const commandName = path.basename(binPath);
+		const commandName = path.basename(binPath).split(".")[0]; // Trim file extension.
 
 		const channel = channels.createChannel(`${commandName} (${shortPath})`);
 		if (alwaysShowOutput)
