@@ -9,7 +9,7 @@ import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
-import { BufferedLogger, escapeRegExp, filenameSafe, flatMap } from "../shared/utils";
+import { BufferedLogger, filenameSafe, flatMap } from "../shared/utils";
 import { fsPath, tryDeleteFile } from "../shared/utils/fs";
 import { waitFor } from "../shared/utils/promises";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
@@ -272,7 +272,7 @@ export function captureOutput(name: string) {
 
 	// Ensure calls to create this output channel return our stubbed output channel.
 	const createOutputChannel = sb.stub(vs.window, "createOutputChannel").callThrough();
-	createOutputChannel.withArgs(sinon.match(new RegExp(`^${escapeRegExp(name)}`))).returns(channel);
+	createOutputChannel.withArgs(name).returns(channel);
 
 	return {
 		buffer,
