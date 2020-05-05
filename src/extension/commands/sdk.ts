@@ -384,7 +384,7 @@ export class SdkCommands {
 
 		// Otherwise look for what projects we have.
 		const topLevelFolders = getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
-		const selectableFolders = (await findProjectFolders(topLevelFolders, { sort: true }))
+		const selectableFolders = (await findProjectFolders(topLevelFolders, { requirePubspec: true, sort: true }))
 			.filter(flutterOnly ? util.isFlutterProjectFolder : () => true);
 
 		if (!selectableFolders || !selectableFolders.length) {
