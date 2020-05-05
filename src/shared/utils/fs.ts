@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import * as path from "path";
-import { logTime } from "../../extension/utils";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, isWin } from "../constants";
 import { flatMapAsync } from "../utils";
 import { sortBy } from "./array";
@@ -81,12 +80,10 @@ async function fileExists(p: string): Promise<boolean> {
 // - have a project create trigger file
 // - are the Flutter repo root
 export async function findProjectFolders(roots: string[], options: { sort?: boolean, requirePubspec?: boolean } = {}): Promise<string[]> {
-	logTime(`Collecting all potential project roots`);
 	const level2Folders = await flatMapAsync(roots, getChildFolders);
 	const level3Folders = await flatMapAsync(level2Folders, getChildFolders);
 	const allPossibleFolders = roots.concat(level2Folders).concat(level3Folders);
 
-	logTime(`Scanning ${allPossibleFolders.length} folders for project roots`);
 	const projectFolderPromises = allPossibleFolders.map(async (folder) => {
 		return {
 			exists: options && options.requirePubspec
@@ -100,7 +97,6 @@ export async function findProjectFolders(roots: string[], options: { sort?: bool
 		.filter((res) => res.exists)
 		.map((res) => res.folder);
 
-	logTime(`Found ${projectFolders.length} project roots`);
 	return options && options.sort
 		? sortBy(projectFolders, (p) => p.toLowerCase())
 		: projectFolders;
