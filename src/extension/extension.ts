@@ -46,7 +46,8 @@ import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { FlutterColorDecorations } from "./decorations/flutter_color_decorations";
-import { FlutterIconDecorations } from "./decorations/flutter_icon_decorations";
+import { FlutterIconDecorationsDas } from "./decorations/flutter_icon_decorations_das";
+import { FlutterIconDecorationsLsp } from "./decorations/flutter_icon_decorations_lsp";
 import { FlutterUiGuideDecorationsDas } from "./decorations/flutter_ui_guides_decorations_das";
 import { FlutterUiGuideDecorationsLsp } from "./decorations/flutter_ui_guides_decorations_lsp";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
@@ -407,7 +408,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			context.subscriptions.push(new FlutterUiGuideDecorationsDas(dasAnalyzer));
 
 		if (config.flutterGutterIcons)
-			context.subscriptions.push(new FlutterIconDecorations(logger, dasAnalyzer));
+			context.subscriptions.push(new FlutterIconDecorationsDas(logger, dasAnalyzer));
 
 		// Setup that requires server version/capabilities.
 		const connectedSetup = dasClient.registerForServerConnected((sc) => {
@@ -448,6 +449,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	} else if (isUsingLsp && lspClient && lspAnalyzer) {
 		if (config.previewFlutterUiGuides)
 			context.subscriptions.push(new FlutterUiGuideDecorationsLsp(lspAnalyzer));
+
+		if (config.flutterGutterIcons)
+			context.subscriptions.push(new FlutterIconDecorationsLsp(logger, lspAnalyzer));
 	}
 
 	// Handle config changes so we can reanalyze if necessary.
