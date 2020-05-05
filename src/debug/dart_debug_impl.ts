@@ -83,6 +83,7 @@ export class DartDebugSession extends DebugSession {
 	protected shouldKillProcessOnTerminate = true;
 	protected logCategory = LogCategory.General; // This isn't used as General, since both debuggers override it.
 	protected supportsRunInTerminalRequest = false;
+	protected supportsDebugInternalLibraries = false;
 	// protected observatoryUriIsProbablyReconnectable = false;
 	private readonly logger = new DebugAdapterLogger(this, LogCategory.Observatory);
 
@@ -146,6 +147,7 @@ export class DartDebugSession extends DebugSession {
 		this.threadManager.setExceptionPauseMode(this.noDebug ? "None" : "Unhandled");
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program || args.cwd));
 		this.useWriteServiceInfo = this.allowWriteServiceInfo && args.useWriteServiceInfo !== false; /* undefined assumes it's available */
+		this.supportsDebugInternalLibraries = !!args.supportsDebugInternalLibraries;
 		this.readSharedArgs(args);
 
 		this.sendResponse(response);
@@ -803,7 +805,7 @@ export class DartDebugSession extends DebugSession {
 
 		data.thread.getScript(scriptRef).then((script: VMScript) => {
 			if (script.source) {
-				response.body = { content: script.source };
+				response.body = { content: script.source, mimeType: "text/x-dart" };
 			} else {
 				response.success = false;
 				response.message = "<source not available>";
@@ -1782,8 +1784,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	public isValidToDebug(uri: string) {
-		// TODO: See https://github.com/dart-lang/sdk/issues/29813
-		return !uri.startsWith("dart:_");
+		return this.supportsDebugInternalLibraries || !uri.startsWith("dart:_");
 	}
 
 	public isSdkLibrary(uri: string) {

@@ -43,6 +43,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	enableAsserts: boolean;
 	console: "debugConsole" | "terminal";
 	dartPath: string;
+	supportsDebugInternalLibraries: boolean | undefined;
 	useWriteServiceInfo: boolean | undefined;
 	globalFlutterArgs: string[] | undefined;
 	env?: { [key: string]: string | undefined };

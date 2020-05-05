@@ -495,6 +495,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.useWriteServiceInfo = debugConfig.useWriteServiceInfo !== undefined && debugConfig.useWriteServiceInfo !== null
 			? debugConfig.useWriteServiceInfo
 			: this.dartCapabilities.supportsWriteServiceInfo;
+		debugConfig.supportsDebugInternalLibraries = debugConfig.supportsDebugInternalLibraries !== undefined && debugConfig.supportsDebugInternalLibraries !== null
+			? debugConfig.supportsDebugInternalLibraries
+			: this.dartCapabilities.supportsDebugInternalLibraries;
 		if (isFlutter && this.wsContext.sdks.flutter) {
 			debugConfig.args = conf.flutterAdditionalArgs.concat(debugConfig.args);
 			debugConfig.forceFlutterVerboseMode = isLogging || isCI;
