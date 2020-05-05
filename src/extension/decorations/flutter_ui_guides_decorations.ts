@@ -1,9 +1,6 @@
 import * as vs from "vscode";
-import { FlutterOutline } from "../../shared/analysis_server_types";
 import { flatMap } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
 import { DocumentPositionTracker } from "../../shared/vscode/trackers";
-import { DasAnalyzer } from "../analysis/analyzer_das";
 import { config } from "../config";
 
 const nonBreakingSpace = "\xa0";
@@ -12,15 +9,15 @@ const horizontalLine = "─";
 const bottomCorner = "└";
 const middleCorner = "├";
 
-export class FlutterUiGuideDecorations implements vs.Disposable {
-	private disposables: vs.Disposable[] = [];
-	private tracker: WidgetGuideTracker | undefined;
+export abstract class FlutterUiGuideDecorations implements vs.Disposable {
+	protected disposables: vs.Disposable[] = [];
+	protected tracker: WidgetGuideTracker | undefined;
 
 	private readonly borderDecoration = vs.window.createTextEditorDecorationType({
 		rangeBehavior: vs.DecorationRangeBehavior.OpenOpen,
 	});
 
-	constructor(private readonly analyzer: DasAnalyzer) {
+	constructor() {
 		// Update any editor that becomes active.
 		this.disposables.push(vs.window.onDidChangeActiveTextEditor((e) => this.buildForTextEditor(e)));
 
@@ -34,47 +31,17 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 		}
 
 		// Update the current visible editor when we were registered.
-		if (vs.window.activeTextEditor)
-			this.buildForTextEditor(vs.window.activeTextEditor);
-
-		// Whenever we get a new Flutter Outline, if it's for the active document,
-		// update that too.
-		this.disposables.push(this.analyzer.client.registerForFlutterOutline((on) => {
-			const editor = vs.window.activeTextEditor;
-			if (editor && editor.document && fsPath(editor.document.uri) === on.file)
-				this.buildFromOutline(editor, on.outline);
-		}));
+		setImmediate(() => this.buildForTextEditor(vs.window.activeTextEditor));
 	}
 
-	private buildForTextEditor(editor: vs.TextEditor | undefined): void {
-		if (editor && editor.document)
-			this.buildFromOutline(editor, this.analyzer.fileTracker.getFlutterOutlineFor(editor.document.uri));
-	}
-
-	private buildFromOutline(editor: vs.TextEditor, outline: FlutterOutline | undefined): void {
-		if (this.tracker)
-			this.tracker.clear();
-		if (!editor || !editor.document || !outline)
-			return;
-
-		// Check that the outline we got looks like it still matches the document.
-		// If the lengths are different, just bail without doing anything since
-		// there have probably been new edits and we'll get a new outline soon.
-		if (editor.document.getText().length !== outline.length)
-			return;
-
-		const guides = this.extractGuides(editor.document, outline);
-		if (this.tracker)
-			this.tracker.trackDoc(editor.document, guides);
-		this.renderGuides(editor, guides, "#A3A3A3");
-	}
+	protected abstract buildForTextEditor(editor: vs.TextEditor | undefined): void;
 
 	private buildFromUpdatedGuides(doc: vs.TextDocument, guides: WidgetGuide[]) {
 		if (vs.window.activeTextEditor && vs.window.activeTextEditor.document === doc)
 			this.renderGuides(vs.window.activeTextEditor, guides, "#A3A3A3" /*"#FFA3A3"*/);
 	}
 
-	private renderGuides(editor: vs.TextEditor, guides: WidgetGuide[], color: string) {
+	protected renderGuides(editor: vs.TextEditor, guides: WidgetGuide[], color: string) {
 		const guidesByLine: { [key: number]: WidgetGuide[]; } = {};
 		for (const guide of guides) {
 			for (let line = guide.start.line; line <= guide.end.line; line++) {
@@ -155,36 +122,11 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 		return decorations;
 	}
 
-	private firstNonWhitespace(document: vs.TextDocument, lineNumber: number): vs.Position {
+	protected firstNonWhitespace(document: vs.TextDocument, lineNumber: number): vs.Position {
 		return new vs.Position(
 			lineNumber,
 			document.lineAt(lineNumber).firstNonWhitespaceCharacterIndex,
 		);
-	}
-
-	private extractGuides(document: vs.TextDocument, node: FlutterOutline): WidgetGuide[] {
-		let guides: WidgetGuide[] = [];
-		if (node.kind === "NEW_INSTANCE") {
-			const parentLine = document.positionAt(node.offset).line;
-			const childLines = node.children && node.children
-				.map((c) => document.positionAt(c.offset).line)
-				.filter((cl) => cl > parentLine);
-			if (childLines) {
-				const startPos = this
-					.firstNonWhitespace(document, parentLine);
-				childLines.forEach((childLine, i) => {
-					const firstCodeChar = this.firstNonWhitespace(document, childLine);
-					guides.push(new WidgetGuide(startPos, firstCodeChar));
-				});
-			}
-		}
-
-		// Recurse down the tree to include childrens (and they'll include their
-		// childrens, etc.).
-		if (node.children)
-			guides = guides.concat(flatMap(node.children, (c) => this.extractGuides(document, c)));
-
-		return guides;
 	}
 
 	public dispose() {

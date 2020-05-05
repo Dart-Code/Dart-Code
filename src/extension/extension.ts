@@ -47,7 +47,8 @@ import { config } from "./config";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { FlutterColorDecorations } from "./decorations/flutter_color_decorations";
 import { FlutterIconDecorations } from "./decorations/flutter_icon_decorations";
-import { FlutterUiGuideDecorations } from "./decorations/flutter_ui_guides_decorations";
+import { FlutterUiGuideDecorationsDas } from "./decorations/flutter_ui_guides_decorations_das";
+import { FlutterUiGuideDecorationsLsp } from "./decorations/flutter_ui_guides_decorations_lsp";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { DasFlutterOutlineProvider, FlutterOutlineProvider, LspFlutterOutlineProvider } from "./flutter/flutter_outline_view";
@@ -403,7 +404,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	if (!isUsingLsp && dasClient && dasAnalyzer) {
 		if (config.previewFlutterUiGuides)
-			context.subscriptions.push(new FlutterUiGuideDecorations(dasAnalyzer));
+			context.subscriptions.push(new FlutterUiGuideDecorationsDas(dasAnalyzer));
 
 		if (config.flutterGutterIcons)
 			context.subscriptions.push(new FlutterIconDecorations(logger, dasAnalyzer));
@@ -444,6 +445,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 				});
 			}
 		});
+	} else if (isUsingLsp && lspClient && lspAnalyzer) {
+		if (config.previewFlutterUiGuides)
+			context.subscriptions.push(new FlutterUiGuideDecorationsLsp(lspAnalyzer));
 	}
 
 	// Handle config changes so we can reanalyze if necessary.
