@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import { logTime } from "../../extension/utils";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, isWin } from "../constants";
 import { flatMapAsync } from "../utils";
 import { sortBy } from "./array";
@@ -53,12 +54,25 @@ export function hasPubspec(folder: string): boolean {
 	return fs.existsSync(path.join(folder, "pubspec.yaml"));
 }
 
-export function hasCreateTriggerFile(folder: string): boolean {
-	return fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
+export async function hasPubspecAsync(folder: string): Promise<boolean> {
+	return await fileExists(path.join(folder, "pubspec.yaml"));
 }
 
-export function isFlutterRepo(folder: string): boolean {
-	return fs.existsSync(path.join(folder, "bin/flutter")) && fs.existsSync(path.join(folder, "bin/cache/dart-sdk"));
+export async function hasCreateTriggerFileAsync(folder: string): Promise<boolean> {
+	return await fileExists(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
+}
+
+export async function isFlutterRepoAsync(folder: string): Promise<boolean> {
+	return await fileExists(path.join(folder, "bin/flutter")) && await fileExists(path.join(folder, "bin/cache/dart-sdk"));
+}
+
+async function fileExists(p: string): Promise<boolean> {
+	try {
+		await fs.promises.access(p);
+		return true;
+	} catch {
+		return false;
+	}
 }
 
 // Walks a few levels down and returns all folders that look like project
@@ -67,15 +81,26 @@ export function isFlutterRepo(folder: string): boolean {
 // - have a project create trigger file
 // - are the Flutter repo root
 export async function findProjectFolders(roots: string[], options: { sort?: boolean, requirePubspec?: boolean } = {}): Promise<string[]> {
+	logTime(`Collecting all potential project roots`);
 	const level2Folders = await flatMapAsync(roots, getChildFolders);
 	const level3Folders = await flatMapAsync(level2Folders, getChildFolders);
 	const allPossibleFolders = roots.concat(level2Folders).concat(level3Folders);
 
-	const projectFolders = allPossibleFolders.filter((f) => {
-		return options && options.requirePubspec
-			? hasPubspec(f)
-			: hasPubspec(f) || hasCreateTriggerFile(f) || isFlutterRepo(f);
+	logTime(`Scanning ${allPossibleFolders.length} folders for project roots`);
+	const projectFolderPromises = allPossibleFolders.map(async (folder) => {
+		return {
+			exists: options && options.requirePubspec
+				? await hasPubspecAsync(folder)
+				: await hasPubspecAsync(folder) || await hasCreateTriggerFileAsync(folder) || await isFlutterRepoAsync(folder),
+			folder,
+		};
 	});
+	const projectFoldersChecks = await Promise.all(projectFolderPromises);
+	const projectFolders = projectFoldersChecks
+		.filter((res) => res.exists)
+		.map((res) => res.folder);
+
+	logTime(`Found ${projectFolders.length} project roots`);
 	return options && options.sort
 		? sortBy(projectFolders, (p) => p.toLowerCase())
 		: projectFolders;
