@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { window, workspace } from "vscode";
-import { CHROME_OS_DEVTOOLS_PORT, isChromeOS, pubPath } from "../../shared/constants";
+import { CHROME_OS_DEVTOOLS_PORT, isChromeOS, noAction, pubPath, yesAction } from "../../shared/constants";
 import { LogCategory, VmService } from "../../shared/enums";
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
@@ -149,7 +149,7 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 	/// Starts the devtools server and returns the URL of the running app.
-	private startServer(): Promise<string> {
+	private startServer(hasReinstalled = false): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
 			const service = new DevToolsService(this.logger, this.workspaceContext);
 			this.disposables.push(service);
@@ -171,14 +171,31 @@ export class DevToolsManager implements vs.Disposable {
 				resolve(`http://${n.host}:${n.port}/`);
 			});
 
-			service.process!.on("close", (code) => {
+			service.process!.on("close", async (code) => {
 				this.devtoolsUrl = undefined;
 				this.devToolsStatusBarItem.hide();
 				if (code && code !== 0) {
 					// Reset the port to 0 on error in case it was from us trying to reuse the previous port.
 					portToBind = 0;
-					const errorMessage = `${devtoolsPackageName} exited with code ${code}`;
+					const errorMessage = `${devtoolsPackageName} exited with code ${code}.`;
 					this.logger.error(errorMessage);
+
+					// If we haven't tried reinstalling and we don't have a custom activate script, prompt
+					// to retry.
+					if (!hasReinstalled && !this.workspaceContext.workspaceConfig?.devtoolsActivateScript) {
+						const resp = await vs.window.showErrorMessage(`${errorMessage} Would you like to try reactivating DevTools?`, yesAction, noAction);
+						if (resp === yesAction) {
+							try {
+								await this.preActivate(false);
+								await this.startServer(true);
+								resolve();
+							} catch (e) {
+								reject(e);
+							}
+							return;
+						}
+					}
+
 					reject(errorMessage);
 				}
 			});
