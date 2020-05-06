@@ -309,6 +309,7 @@ export class SdkCommands {
 		runPubGetDelayTimer = setTimeout(() => {
 			runPubGetDelayTimer = undefined;
 			lastPubspecSaveReason = undefined;
+			// tslint:disable-next-line: no-floating-promises
 			this.fetchPackagesOrPrompt(uri);
 		}, debounceDuration); // TODO: Does this need to be configurable?
 	}
@@ -688,6 +689,7 @@ class ChainedProcess {
 	constructor(private readonly spawn: () => SpawnedProcess, parent: ChainedProcess | undefined) {
 		// We'll either start immediately, or if given a parent process only when it completes.
 		if (parent) {
+			// tslint:disable-next-line: no-floating-promises
 			parent.completed.then(() => this.start());
 		} else {
 			this.start();

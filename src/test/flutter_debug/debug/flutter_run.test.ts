@@ -119,6 +119,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		// Kick off a build, but do not await it...
+		// tslint:disable-next-line: no-floating-promises
 		Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -354,6 +355,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		config.noDebug = true;
 
 		let didStop = false;
+		// tslint:disable-next-line: no-floating-promises
 		dc.waitForEvent("stopped").then(() => didStop = true);
 		await Promise.all([
 			dc.waitForEvent("terminated"),
@@ -1045,6 +1047,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		config.noDebug = true;
 
 		let didStop = false;
+		// tslint:disable-next-line: no-floating-promises
 		dc.waitForEvent("stopped").then(() => didStop = true);
 		await Promise.all([
 			dc.configurationSequence()

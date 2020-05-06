@@ -73,6 +73,7 @@ export class SdkUtils {
 	}
 
 	public showFluttersDartSdkActivationFailure() {
+		// tslint:disable-next-line: no-floating-promises
 		promptToReloadExtension("Could not find Dart in your Flutter SDK. " +
 			"Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
 			"Reload",
@@ -80,6 +81,7 @@ export class SdkUtils {
 		);
 	}
 	public showFlutterActivationFailure(commandToReRun?: string) {
+		// tslint:disable-next-line: no-floating-promises
 		this.showSdkActivationFailure(
 			"Flutter",
 			(p) => this.findFlutterSdk(p),
@@ -89,6 +91,7 @@ export class SdkUtils {
 		);
 	}
 	public showDartActivationFailure(commandToReRun?: string) {
+		// tslint:disable-next-line: no-floating-promises
 		this.showSdkActivationFailure(
 			"Dart",
 			(p) => this.findDartSdk(p),

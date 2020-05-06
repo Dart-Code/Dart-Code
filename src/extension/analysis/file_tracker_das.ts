@@ -24,30 +24,32 @@ export class DasFileTracker implements IAmDisposable {
 		this.lastPriorityFiles = [];
 		this.lastSubscribedFiles = [];
 
-		this.disposables.push(workspace.onDidOpenTextDocument((td) => {
-			this.updateSubscriptions();
+		this.disposables.push(workspace.onDidOpenTextDocument(async (td) => {
+			await this.updateSubscriptions();
 		}));
-		this.disposables.push(workspace.onDidCloseTextDocument((td) => {
+		this.disposables.push(workspace.onDidCloseTextDocument(async (td) => {
 			const path = fsPath(td.uri);
 			delete this.outlines[path];
 			delete this.flutterOutlines[path];
 			delete this.occurrences[path];
 			delete this.folding[path];
 			delete this.pubRunTestSupport[path];
-			this.updateSubscriptions();
+			await this.updateSubscriptions();
 		}));
 		this.disposables.push(window.onDidChangeVisibleTextEditors((e) => this.updatePriorityFiles()));
 		this.disposables.push(this.analyzer.registerForAnalysisOutline((o) => this.outlines[o.file] = o.outline));
 		this.disposables.push(this.analyzer.registerForFlutterOutline((o) => this.flutterOutlines[o.file] = o.outline));
 		this.disposables.push(this.analyzer.registerForAnalysisOccurrences((o) => this.occurrences[o.file] = o.occurrences));
 		this.disposables.push(this.analyzer.registerForAnalysisFolding((f) => this.folding[f.file] = f.regions));
-		// Handle already-open files.
-		this.updatePriorityFiles();
-		this.updateSubscriptions();
 		// It's possible that after the server gives us the version, we may send different subscriptions (eg.
 		// based on capabilities, like supporting priority files outside of the workspace root) so we may need
 		// to send again.
 		this.disposables.push(this.analyzer.registerForServerConnected((s) => this.updateSubscriptions(true)));
+		// Handle already-open files.
+		// tslint:disable-next-line: no-floating-promises
+		this.updatePriorityFiles();
+		// tslint:disable-next-line: no-floating-promises
+		this.updateSubscriptions();
 	}
 
 	public async updatePriorityFiles() {

@@ -15,6 +15,7 @@ import { markProjectCreationEnded, markProjectCreationStarted } from "./commands
 import { promptToReloadExtension } from "./utils";
 
 export async function showUserPrompts(logger: Logger, context: Context, webClient: WebClient, workspaceContext: WorkspaceContext): Promise<void> {
+	// tslint:disable-next-line: no-floating-promises
 	handleNewProjects(logger, context);
 
 	function shouldSuppress(key: string): boolean {
@@ -67,6 +68,7 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 		context.lastSeenVersion = extensionVersion;
 	} else if (!isDevExtension && lastSeenVersionNotification !== extensionVersion) {
 		const versionLink = extensionVersion.split(".").slice(0, 2).join(".").replace(".", "-");
+		// tslint:disable-next-line: no-floating-promises
 		promptToShowReleaseNotes(extensionVersion, versionLink).then(() =>
 			context.lastSeenVersion = extensionVersion,
 		);
@@ -97,7 +99,7 @@ async function promptToUseRecommendedSettings(): Promise<boolean> {
 	if (action === yesAction) {
 		await vs.commands.executeCommand("dart.writeRecommendedSettings");
 	} else if (action === showRecommendedSettingsAction) {
-		envUtils.openInBrowser(recommendedSettingsUrl);
+		await envUtils.openInBrowser(recommendedSettingsUrl);
 	}
 	return true;
 }
@@ -119,6 +121,7 @@ async function promptToInstallFlutterExtension(): Promise<boolean> {
 				});
 			},
 		);
+		// tslint:disable-next-line: no-floating-promises
 		promptToReloadExtension();
 	}
 
@@ -131,7 +134,7 @@ async function promptToShowReleaseNotes(versionDisplay: string, versionLink: str
 		`Show Release Notes`,
 	);
 	if (res) {
-		envUtils.openInBrowser(`https://dartcode.org/releases/v${versionLink}/`);
+		await envUtils.openInBrowser(`https://dartcode.org/releases/v${versionLink}/`);
 	}
 	return true; // Always mark this as done; we don't want to prompt the user multiple times.
 }
@@ -147,7 +150,9 @@ async function handleNewProjects(logger: Logger, context: Context): Promise<void
 	if (process.env.DART_CODE_IS_TEST_RUN)
 		await new Promise((resolve) => setTimeout(resolve, 5000));
 	getDartWorkspaceFolders().forEach((wf) => {
+		// tslint:disable-next-line: no-floating-promises
 		handleStagehandTrigger(logger, wf, DART_STAGEHAND_PROJECT_TRIGGER_FILE);
+		// tslint:disable-next-line: no-floating-promises
 		handleFlutterCreateTrigger(wf);
 	});
 }

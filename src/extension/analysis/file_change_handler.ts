@@ -29,6 +29,7 @@ export class FileChangeHandler implements vs.Disposable {
 			type: "add",
 		};
 
+		// tslint:disable-next-line: no-floating-promises
 		this.analyzer.analysisUpdateContent({ files });
 	}
 
@@ -59,6 +60,7 @@ export class FileChangeHandler implements vs.Disposable {
 			edits: e.contentChanges.map((c) => this.convertChange(e.document, c)),
 			type: "change",
 		};
+		// tslint:disable-next-line: no-floating-promises
 		this.analyzer.analysisUpdateContent({ files });
 	}
 
@@ -72,6 +74,7 @@ export class FileChangeHandler implements vs.Disposable {
 			type: "remove",
 		};
 
+		// tslint:disable-next-line: no-floating-promises
 		this.analyzer.analysisUpdateContent({ files });
 	}
 

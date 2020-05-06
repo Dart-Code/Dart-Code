@@ -31,6 +31,7 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 	protected setTrackingFile(editor: vs.TextEditor | undefined) {
 		if (editor && isAnalyzable(editor.document)) {
 			this.activeEditor = editor;
+			// tslint:disable-next-line: no-floating-promises
 			this.loadExistingOutline();
 		} else if (editor && editor.document.uri.scheme === "file") {
 			// HACK: We can't currently reliably tell when editors are changed that are only real
@@ -52,7 +53,7 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 		}
 	}
 
-	protected abstract loadExistingOutline(): void;
+	protected abstract loadExistingOutline(): Promise<void>;
 
 	public async setContexts(selection: FlutterWidgetItem[]) {
 		// Unmark the old node as being selected.
@@ -156,6 +157,7 @@ export class DasFlutterOutlineProvider extends FlutterOutlineProvider {
 						if (this.updateTimeout)
 							clearTimeout(this.updateTimeout);
 						if (!this.rootNode)
+							// tslint:disable-next-line: no-floating-promises
 							this.update();
 						else
 							this.updateTimeout = setTimeout(() => this.update(), 200);
@@ -170,10 +172,10 @@ export class DasFlutterOutlineProvider extends FlutterOutlineProvider {
 		});
 	}
 
-	protected loadExistingOutline() {
+	protected async loadExistingOutline() {
 		this.flutterOutline = this.activeEditor ? this.analyzer.fileTracker.getFlutterOutlineFor(this.activeEditor.document.uri) : undefined;
 		if (this.flutterOutline)
-			this.update();
+			await this.update();
 		else {
 			this.rootNode = undefined;
 			this.refresh(); // Force update (to nothing) while requests are in-flight.
@@ -230,6 +232,7 @@ export class LspFlutterOutlineProvider extends FlutterOutlineProvider {
 				if (this.updateTimeout)
 					clearTimeout(this.updateTimeout);
 				if (!this.rootNode)
+					// tslint:disable-next-line: no-floating-promises
 					this.update();
 				else
 					this.updateTimeout = setTimeout(() => this.update(), 200);
@@ -242,10 +245,10 @@ export class LspFlutterOutlineProvider extends FlutterOutlineProvider {
 		}
 	}
 
-	protected loadExistingOutline() {
+	protected async loadExistingOutline() {
 		this.flutterOutline = this.activeEditor ? this.analyzer.fileTracker.getFlutterOutlineFor(this.activeEditor.document.uri) : undefined;
 		if (this.flutterOutline)
-			this.update();
+			await this.update();
 		else {
 			this.rootNode = undefined;
 			this.refresh(); // Force update (to nothing) while requests are in-flight.

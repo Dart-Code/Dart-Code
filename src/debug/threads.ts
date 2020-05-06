@@ -95,7 +95,7 @@ export class ThreadManager {
 			if (mode === "All" && thread.isInfrastructure)
 				threadMode = "Unhandled";
 
-			this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, threadMode);
+			await this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, threadMode);
 		}));
 	}
 
@@ -312,6 +312,7 @@ export class ThreadInfo {
 
 	public checkResume() {
 		if (this.paused && this.gotPauseStart && this.initialBreakpoints && this.hasConfigurationDone)
+			// tslint:disable-next-line: no-floating-promises
 			this.resume();
 	}
 

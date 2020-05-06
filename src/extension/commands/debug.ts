@@ -305,6 +305,7 @@ export class DebugCommands {
 
 		eventsToProcess.forEach((e) => {
 			this.logger.info(`Processing delayed event ${e.event} for session ${e.session.id}`);
+			// tslint:disable-next-line: no-floating-promises
 			this.handleCustomEventWithSession(session, e);
 		});
 
@@ -322,6 +323,7 @@ export class DebugCommands {
 			pendingCustomEvents.push(e);
 			return;
 		}
+		// tslint:disable-next-line: no-floating-promises
 		this.handleCustomEventWithSession(session, e);
 	}
 
@@ -434,7 +436,7 @@ export class DebugCommands {
 			if (!launched) {
 				try {
 					const uri = vs.Uri.parse(e.body.url, true);
-					envUtils.openInBrowser(uri.toString());
+					await envUtils.openInBrowser(uri.toString());
 				} catch (e) {
 					this.logger.error(`Failed to parse URL from Flutter app.webLaunchUrl event: ${e.body.url}`);
 				}
@@ -494,6 +496,7 @@ export class DebugCommands {
 					if (shouldLaunch)
 						vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true });
 				} else if (debuggerType === DebuggerType.Flutter) {
+					// tslint:disable-next-line: no-floating-promises
 					showDevToolsNotificationIfAppropriate(this.context).then((res) => {
 						if (res.shouldAlwaysOpen)
 							config.setOpenDevTools("flutter");

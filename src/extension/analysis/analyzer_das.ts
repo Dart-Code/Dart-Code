@@ -118,10 +118,6 @@ export class DasAnalyzerClient extends AnalyzerGen {
 			this.notify(this.serverTerminatedSubscriptions, undefined);
 		});
 
-		this.serverSetSubscriptions({
-			subscriptions: ["STATUS"],
-		});
-
 		this.registerForServerStatus((n) => {
 			if (n.analysis) {
 				if (n.analysis.isAnalyzing) {
@@ -134,6 +130,11 @@ export class DasAnalyzerClient extends AnalyzerGen {
 					}
 				}
 			}
+		});
+
+		// tslint:disable-next-line: no-floating-promises
+		this.serverSetSubscriptions({
+			subscriptions: ["STATUS"],
 		});
 	}
 
@@ -154,6 +155,7 @@ export class DasAnalyzerClient extends AnalyzerGen {
 			const message = this.version
 				? "The Dart Analyzer has terminated."
 				: "The Dart Analyzer could not be started.";
+			// tslint:disable-next-line: no-floating-promises
 			promptToReloadExtension(message, undefined, true);
 			throw e;
 		}
@@ -191,6 +193,7 @@ export class DasAnalyzerClient extends AnalyzerGen {
 			edits: [{ offset: 0, length: 0, replacement: "", id: "" }],
 			type: "change",
 		};
+		// tslint:disable-next-line: no-floating-promises
 		this.analysisUpdateContent({ files });
 	}
 

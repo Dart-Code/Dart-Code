@@ -144,7 +144,7 @@ export class DartDebugSession extends DebugSession {
 		// Set default exception mode based on noDebug. This will be sent to threads
 		// prior to VS Code sending (or, in the case of noDebug, due to not sending)
 		// the exception mode.
-		this.threadManager.setExceptionPauseMode(this.noDebug ? "None" : "Unhandled");
+		await this.threadManager.setExceptionPauseMode(this.noDebug ? "None" : "Unhandled");
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program || args.cwd));
 		this.useWriteServiceInfo = this.allowWriteServiceInfo && args.useWriteServiceInfo !== false; /* undefined assumes it's available */
 		this.supportsDebugInternalLibraries = !!args.supportsDebugInternalLibraries;
@@ -172,13 +172,13 @@ export class DartDebugSession extends DebugSession {
 			this.processExited = false;
 			this.processExit = new Promise((resolve) => process.on("exit", (code, signal) => resolve({ code, signal })));
 			process.stdout.setEncoding("utf8");
-			process.stdout.on("data", (data) => {
+			process.stdout.on("data", async (data) => {
 				let match: RegExpExecArray | null = null;
 				if (this.shouldConnectDebugger && this.parseObservatoryUriFromStdOut && !this.observatory) {
 					match = observatoryListeningBannerPattern.exec(data.toString());
 				}
 				if (match) {
-					this.initDebugger(this.websocketUriForObservatoryUri(match[1]));
+					await this.initDebugger(this.websocketUriForObservatoryUri(match[1]));
 				} else if (this.sendStdOutToConsole)
 					this.logToUserBuffered(data.toString(), "stdout");
 			});
@@ -189,6 +189,7 @@ export class DartDebugSession extends DebugSession {
 			process.on("error", (error) => {
 				this.logToUser(`${error}\n`, "stderr");
 			});
+			// tslint:disable-next-line: no-floating-promises
 			this.processExit.then(async ({ code, signal }) => {
 				this.stopServiceFilePolling();
 				this.processExited = true;
@@ -199,7 +200,7 @@ export class DartDebugSession extends DebugSession {
 					this.logToUser(`Exited (${signal ? `${signal}`.toLowerCase() : code})\n`);
 				// To reduce the chances of losing async logs, wait a short period
 				// before terminating.
-				this.raceIgnoringErrors(() => this.lastLoggingEvent, 500);
+				await this.raceIgnoringErrors(() => this.lastLoggingEvent, 500);
 				// Add a small delay to allow for async events to complete first
 				// to reduce the chance of closing output.
 				setTimeout(() => this.sendEvent(new TerminatedEvent()), 250);
@@ -407,7 +408,7 @@ export class DartDebugSession extends DebugSession {
 				await this.remoteEditorTerminalLaunched;
 				await new Promise((resolve) => setTimeout(resolve, 5));
 			}
-			this.initDebugger(url.toString());
+			await this.initDebugger(url.toString());
 		} catch (e) {
 			this.logger.error(e, LogCategory.Observatory);
 		}
@@ -453,19 +454,19 @@ export class DartDebugSession extends DebugSession {
 					return;
 
 				// Read the version to update capabilities before doing anything else.
-				this.observatory.getVersion().then((versionResult) => {
+				await this.observatory.getVersion().then(async (versionResult) => {
 					const version: Version = versionResult.result as Version;
 					this.capabilities.version = `${version.major}.${version.minor}.0`;
 
 					if (!this.observatory)
 						return;
 
-					this.observatory.getVM().then(async (vmResult): Promise<void> => {
+					await this.observatory.getVM().then(async (vmResult): Promise<void> => {
 						if (!this.observatory)
 							return;
 						const vm: VM = vmResult.result as VM;
 
-						this.subscribeToStreams();
+						await this.subscribeToStreams();
 
 						// If we own this process (we launched it, didn't attach) and the PID we get from Observatory is different, then
 						// we should keep a ref to this process to terminate when we quit. This avoids issues where our process is a shell
@@ -498,7 +499,7 @@ export class DartDebugSession extends DebugSession {
 
 						await Promise.all(isolates.map(async (response) => {
 							const isolate: VMIsolate = response.result as VMIsolate;
-							this.threadManager.registerThread(
+							await this.threadManager.registerThread(
 								isolate,
 								isolate.runnable ? "IsolateRunnable" : "IsolateStart",
 							);
@@ -559,19 +560,20 @@ export class DartDebugSession extends DebugSession {
 		this.additionalPidCompleter.resolve();
 	}
 
-	private subscribeToStreams() {
+	private async subscribeToStreams(): Promise<void> {
 		if (!this.observatory)
 			return;
 
-		this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event));
-		this.observatory.on("Extension", (event: VMEvent) => this.handleExtensionEvent(event));
-		this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event));
-
 		const serviceStreamName = this.capabilities.serviceStreamIsPublic ? "Service" : "_Service";
-		this.observatory.on(serviceStreamName, (event: VMEvent) => this.handleServiceEvent(event));
+		await Promise.all([
+			this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event)),
+			this.observatory.on("Extension", (event: VMEvent) => this.handleExtensionEvent(event)),
+			this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event)),
+			this.observatory.on(serviceStreamName, (event: VMEvent) => this.handleServiceEvent(event)),
+		]);
 
 		if (this.capabilities.hasLoggingStream && this.showDartDeveloperLogs) {
-			this.observatory.on("Logging", (event: VMEvent) => this.handleLoggingEvent(event)).catch((e) => {
+			await this.observatory.on("Logging", (event: VMEvent) => this.handleLoggingEvent(event)).catch((e) => {
 				this.logger.info(errorString(e));
 				// For web, the protocol version says this is supported, but it throws.
 				// TODO: Remove this catch block if/when the stable release does not throw.
@@ -750,10 +752,10 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	protected setExceptionBreakPointsRequest(
+	protected async setExceptionBreakPointsRequest(
 		response: DebugProtocol.SetExceptionBreakpointsResponse,
 		args: DebugProtocol.SetExceptionBreakpointsArguments,
-	): void {
+	): Promise<void> {
 		const filters: string[] = args.filters;
 
 		let mode: VmExceptionMode = "None";
@@ -766,7 +768,7 @@ export class DartDebugSession extends DebugSession {
 				mode = "All";
 		}
 
-		this.threadManager.setExceptionPauseMode(mode);
+		await this.threadManager.setExceptionPauseMode(mode);
 
 		this.sendResponse(response);
 	}
@@ -1420,10 +1422,10 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	// IsolateStart, IsolateRunnable, IsolateExit, IsolateUpdate, ServiceExtensionAdded
-	public handleIsolateEvent(event: VMEvent) {
+	public async handleIsolateEvent(event: VMEvent): Promise<void> {
 		const kind = event.kind;
 		if (kind === "IsolateStart" || kind === "IsolateRunnable") {
-			this.threadManager.registerThread(event.isolate!, kind);
+			await this.threadManager.registerThread(event.isolate!, kind);
 		} else if (kind === "IsolateExit") {
 			this.threadManager.handleIsolateExit(event.isolate!);
 		} else if (kind === "ServiceExtensionAdded") {
@@ -1605,7 +1607,7 @@ export class DartDebugSession extends DebugSession {
 			if (shouldRemainedStoppedOnBreakpoint) {
 				this.sendEvent(new StoppedEvent(reason, thread.num, exceptionText));
 			} else {
-				thread.resume();
+				await thread.resume();
 			}
 		}
 	}

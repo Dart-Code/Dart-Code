@@ -23,8 +23,9 @@ export abstract class Analyzer implements IAmDisposable {
 	public abstract getDiagnosticServerPort(): Promise<{ port: number }>;
 
 	constructor(protected readonly logger: Logger) {
-		this.setup();
 		this.disposables.push(this.onAnalysisStatusChangeEmitter);
+		// tslint:disable-next-line: no-floating-promises
+		this.setup();
 	}
 
 	private async setup(): Promise<void> {

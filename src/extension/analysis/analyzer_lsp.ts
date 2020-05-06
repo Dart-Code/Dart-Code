@@ -25,6 +25,7 @@ export class LspAnalyzer extends Analyzer {
 		this.disposables.push(this.client.start());
 		this.disposables.push(this.fileTracker);
 
+		// tslint:disable-next-line: no-floating-promises
 		this.client.onReady().then(() => {
 			// Reminder: These onNotification calls only hold ONE handler!
 			// https://github.com/microsoft/vscode-languageserver-node/issues/174

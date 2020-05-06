@@ -112,7 +112,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	// tslint:disable-next-line:no-empty
 	protected processUnhandledMessage(message: string): void { }
 
-	public handleMessage(message: string): void {
+	public async handleMessage(message: string): Promise<void> {
 		this.logTraffic(`<== ${message.trimRight()}\r\n`);
 
 		if (!this.shouldHandleMessage(message.trim())) {
@@ -140,7 +140,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			if (msg && this.isNotification(msg))
 				this.handleNotification(msg as T);
 			else if (msg && this.isRequest(msg))
-				this.processServerRequest(msg as Request<any>);
+				await this.processServerRequest(msg as Request<any>);
 			else if (msg && this.isResponse(msg))
 				this.handleResponse(msg as UnknownResponse);
 			else {
@@ -195,7 +195,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 		if (error && error.code === "SERVER_ERROR") {
 			error.method = method;
-			this.notify(this.requestErrorSubscriptions, error).catch((e) => console.error(e));
+			this.notify(this.requestErrorSubscriptions, error);
 		}
 
 		if (error) {
@@ -205,8 +205,8 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		}
 	}
 
-	protected async notify<T>(subscriptions: Array<(notification: T) => void>, notification: T): Promise<void> {
-		await Promise.all(subscriptions.slice().map((sub) => sub(notification)));
+	protected notify<T>(subscriptions: Array<(notification: T) => void>, notification: T): void {
+		Promise.all(subscriptions.slice().map((sub) => sub(notification))).catch((e) => console.error(e));
 	}
 
 	protected subscribe<T>(subscriptions: Array<(notification: T) => void>, subscriber: (notification: T) => void): IAmDisposable {

@@ -75,9 +75,9 @@ export class DartTestDebugSession extends DartDebugSession {
 			this.logToUserIfAppropriate(msg, "stdout");
 		});
 		runner.registerForTestStartedProcess((n) => this.initDebugger(`${n.observatoryUri}ws`));
-		runner.registerForAllTestNotifications((n) => {
+		runner.registerForAllTestNotifications(async (n) => {
 			try {
-				this.handleTestEvent(n);
+				await this.handleTestEvent(n);
 			} catch (e) {
 				this.log(e);
 				this.logToUser(`${e}\n`);
@@ -105,7 +105,7 @@ export class DartTestDebugSession extends DartDebugSession {
 
 	private readonly suitePaths: string[] = [];
 	private readonly tests: Test[] = [];
-	protected handleTestEvent(notification: any) {
+	protected async handleTestEvent(notification: any) {
 		// Handle basic output
 		switch (notification.type) {
 			case "start":
@@ -119,7 +119,7 @@ export class DartTestDebugSession extends DartDebugSession {
 				if (observatoryUri) {
 					const match = observatoryHttpLinkPattern.exec(observatoryUri);
 					if (match) {
-						this.initDebugger(this.websocketUriForObservatoryUri(match[1]));
+						await this.initDebugger(this.websocketUriForObservatoryUri(match[1]));
 					}
 				}
 				break;
