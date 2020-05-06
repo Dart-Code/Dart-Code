@@ -151,7 +151,7 @@ describe("dart cli debugger", () => {
 		});
 
 		// Ensure we have a terminal for it.
-		waitForResult(() => vs.window.terminals.find((t) => t.name === config.name) !== undefined);
+		await waitForResult(() => vs.window.terminals.find((t) => t.name === config.name) !== undefined);
 
 		// Resume and wait for it to finish.
 		await Promise.all([
@@ -160,7 +160,7 @@ describe("dart cli debugger", () => {
 		]);
 
 		// Ensure the terminal disappears.
-		waitForResult(() => vs.window.terminals.find((t) => t.name === config.name) === undefined);
+		await waitForResult(() => vs.window.terminals.find((t) => t.name === config.name) === undefined);
 	});
 
 	it("passes launch.json's vmAdditionalArgs to the VM", async () => {
