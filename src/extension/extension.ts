@@ -155,7 +155,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 				logger.error(e);
 			}
 		}
-		activate(context, true);
+		await activate(context, true);
 		logger.info("Done!");
 	}));
 
@@ -197,6 +197,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	if (sdks.dartVersion) {
 		dartCapabilities.version = sdks.dartVersion;
 		analytics.sdkVersion = sdks.dartVersion;
+		// tslint:disable-next-line: no-floating-promises
 		checkForStandardDartSdkUpdates(logger, workspaceContext);
 		context.subscriptions.push(new StatusBarVersionTracker(workspaceContext, isUsingLsp));
 	}
@@ -212,6 +213,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const lspClient = dasClient ? undefined : (analyzer as LspAnalyzer).client;
 	context.subscriptions.push(analyzer);
 
+	// tslint:disable-next-line: no-floating-promises
 	analyzer.onReady.then(() => {
 		const analyzerEndTime = new Date();
 		analytics.logAnalyzerStartupTime(analyzerEndTime.getTime() - analyzerStartTime.getTime());
@@ -411,7 +413,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			context.subscriptions.push(new FlutterIconDecorationsDas(logger, dasAnalyzer));
 
 		// Setup that requires server version/capabilities.
-		const connectedSetup = dasClient.registerForServerConnected((sc) => {
+		const connectedSetup = dasClient.registerForServerConnected(async (sc) => {
 			connectedSetup.dispose();
 
 			if (dasClient.capabilities.supportsClosingLabels && config.closingLabels) {
@@ -441,7 +443,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 			// Set up completions for unimported items.
 			if (dasClient.capabilities.supportsAvailableSuggestions && config.autoImportCompletions) {
-				dasClient.completionSetSubscriptions({
+				await dasClient.completionSetSubscriptions({
 					subscriptions: ["AVAILABLE_SUGGESTION_SETS"],
 				});
 			}
@@ -523,9 +525,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 		flutterOutlineTreeProvider = dasAnalyzer ? new DasFlutterOutlineProvider(dasAnalyzer) : new LspFlutterOutlineProvider(lspAnalyzer!);
 		const tree = vs.window.createTreeView("dartFlutterOutline", { treeDataProvider: flutterOutlineTreeProvider, showCollapseAll: true });
-		tree.onDidChangeSelection((e) => {
+		tree.onDidChangeSelection(async (e) => {
 			// TODO: This should be in a tree, not the data provider.
-			flutterOutlineTreeProvider!.setContexts(e.selection);
+			await flutterOutlineTreeProvider!.setContexts(e.selection);
 		});
 
 		context.subscriptions.push(vs.window.onDidChangeTextEditorSelection((e) => {
@@ -559,6 +561,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Prompt user for any special config we might want to set.
 	if (!isRestart)
+		// tslint:disable-next-line: no-floating-promises
 		showUserPrompts(logger, extContext, webClient, workspaceContext);
 
 	// Turn on all the commands.
@@ -570,6 +573,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		// Don't prompt for package updates in the Fuchsia tree/Dart SDK repo.
 		if (workspaceContext.shouldAvoidFetchingPackages)
 			return;
+		// tslint:disable-next-line: no-floating-promises
 		sdkCommands.fetchPackagesOrPrompt(undefined, { alwaysPrompt: true });
 	}
 	if (!isRestart)
@@ -607,6 +611,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			|| newWorkspaceContext.hasProjectsInFuchsiaTree !== workspaceContext.hasProjectsInFuchsiaTree
 			|| newWorkspaceContext.isDartSdkRepo !== workspaceContext.isDartSdkRepo
 		) {
+			// tslint:disable-next-line: no-floating-promises
 			util.promptToReloadExtension();
 			return;
 		}
@@ -717,6 +722,7 @@ function recalculateAnalysisRoots() {
 		}
 	});
 
+	// tslint:disable-next-line: no-floating-promises
 	(analyzer as DasAnalyzer).client.analysisSetAnalysisRoots({
 		excluded: excludeFolders,
 		included: analysisRoots,
@@ -735,10 +741,12 @@ function handleConfigurationChange(sdks: Sdks) {
 	previousSettings = newSettings;
 
 	if (todoSettingChanged && analyzer instanceof DasAnalyzer) {
+		// tslint:disable-next-line: no-floating-promises
 		analyzer.client.analysisReanalyze();
 	}
 
 	if (settingsChanged) {
+		// tslint:disable-next-line: no-floating-promises
 		util.promptToReloadExtension();
 	}
 }

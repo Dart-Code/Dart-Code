@@ -60,6 +60,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		try {
 			super.sendMessage(json);
 		} catch (e) {
+			// tslint:disable-next-line: no-floating-promises
 			promptToReloadExtension("The Flutter Daemon has terminated.", undefined, true);
 			throw e;
 		}

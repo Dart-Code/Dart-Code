@@ -19,11 +19,11 @@ export class FlutterDartPadSamplesCodeLensProvider implements CodeLensProvider, 
 			this.onDidChangeCodeLensesEmitter.fire();
 		}));
 
-		this.disposables.push(commands.registerCommand("_dart.openDartPadSample", (sample: DartPadSampleInfo) => {
+		this.disposables.push(commands.registerCommand("_dart.openDartPadSample", async (sample: DartPadSampleInfo) => {
 			// Link down to first code snippet.
 			const fragment = `#${sample.libraryName}.${sample.className}.1`;
 			const url = `https://api.flutter.dev/flutter/${sample.libraryName}/${sample.className}-class.html${fragment}`;
-			envUtils.openInBrowser(url);
+			await envUtils.openInBrowser(url);
 		}));
 
 		this.flutterPackagesFolder = path.join(sdks.flutter, "packages/flutter/lib/src/").toLowerCase();

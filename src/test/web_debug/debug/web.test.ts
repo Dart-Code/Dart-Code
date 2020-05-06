@@ -103,6 +103,7 @@ describe.skip("web debugger", () => {
 	it.skip("can quit during a build", async () => {
 		const config = await startDebugger(webHelloWorldIndexFile);
 		// Kick off a build, but do not await it...
+		// tslint:disable-next-line: no-floating-promises
 		Promise.all([
 			dc.configurationSequence(),
 			dc.launch(config),

@@ -93,13 +93,13 @@ export class FlutterDebugSession extends DartDebugSession {
 		// Set up subscriptions.
 		this.runDaemon.registerForDaemonConnect((n) => this.recordAdditionalPid(n.pid));
 		this.runDaemon.registerForAppStart((n) => this.currentRunningAppId = n.appId);
-		this.runDaemon.registerForAppDebugPort((n) => {
+		this.runDaemon.registerForAppDebugPort(async (n) => {
 			this.observatoryUri = n.wsUri;
-			this.connectToObservatoryIfReady();
+			await this.connectToObservatoryIfReady();
 		});
-		this.runDaemon.registerForAppStarted((n) => {
+		this.runDaemon.registerForAppStarted(async (n) => {
 			this.appHasStarted = true;
-			this.connectToObservatoryIfReady();
+			await this.connectToObservatoryIfReady();
 			this.sendEvent(new Event("dart.launched"));
 		});
 		this.runDaemon.registerForAppStop((n) => {
@@ -197,9 +197,9 @@ export class FlutterDebugSession extends DartDebugSession {
 		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterPath, args.flutterCustomRunScript, args.globalFlutterArgs || [], args.cwd, appArgs, { envOverrides: args.env, toolEnv: this.toolEnv }, args.flutterRunLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
 	}
 
-	private connectToObservatoryIfReady() {
+	private async connectToObservatoryIfReady() {
 		if (this.observatoryUri && this.appHasStarted && !this.observatory)
-			this.initDebugger(this.observatoryUri);
+			await this.initDebugger(this.observatoryUri);
 	}
 
 	protected async terminate(force: boolean): Promise<void> {
@@ -224,16 +224,16 @@ export class FlutterDebugSession extends DartDebugSession {
 				// Ignore failures here (we're shutting down and will send kill signals).
 			}
 		}
-		super.terminate(force);
+		await super.terminate(force);
 	}
 
-	protected restartRequest(
+	protected async restartRequest(
 		response: DebugProtocol.RestartResponse,
 		args: DebugProtocol.RestartArguments,
-	): void {
+	): Promise<void> {
 		this.sendEvent(new Event("dart.hotRestartRequest"));
 		this.sendEvent(new ContinuedEvent(0, true));
-		this.performReload(true, restartReasonManual);
+		await this.performReload(true, restartReasonManual);
 		super.restartRequest(response, args);
 	}
 
@@ -294,7 +294,7 @@ export class FlutterDebugSession extends DartDebugSession {
 					break;
 
 				default:
-					super.customRequest(request, response, args);
+					await super.customRequest(request, response, args);
 					break;
 			}
 		} catch (e) {
