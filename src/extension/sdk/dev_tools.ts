@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { window, workspace } from "vscode";
-import { CHROME_OS_DEVTOOLS_PORT, isChromeOS, noAction, pubPath, yesAction } from "../../shared/constants";
+import { CHROME_OS_DEVTOOLS_PORT, isChromeOS, pubPath, reactivateDevToolsAction, skipAction } from "../../shared/constants";
 import { LogCategory, VmService } from "../../shared/enums";
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
@@ -183,8 +183,8 @@ export class DevToolsManager implements vs.Disposable {
 					// If we haven't tried reinstalling and we don't have a custom activate script, prompt
 					// to retry.
 					if (!hasReinstalled && !this.workspaceContext.workspaceConfig?.devtoolsActivateScript) {
-						const resp = await vs.window.showErrorMessage(`${errorMessage} Would you like to try reactivating DevTools?`, yesAction, noAction);
-						if (resp === yesAction) {
+						const resp = await vs.window.showErrorMessage(`${errorMessage} Would you like to try reactivating DevTools?`, reactivateDevToolsAction, skipAction);
+						if (resp === reactivateDevToolsAction) {
 							try {
 								await this.preActivate(false);
 								await this.startServer(true);

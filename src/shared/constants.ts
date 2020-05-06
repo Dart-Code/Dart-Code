@@ -101,9 +101,11 @@ export const installFlutterExtensionPromptKey = "install_flutter_extension_3";
 export const useRecommendedSettingsPromptKey = "use_recommended_settings";
 export const yesAction = "Yes";
 export const noAction = "No";
+export const skipAction = "Skip";
 export const showRecommendedSettingsAction = "Show Recommended Settings";
 export const recommendedSettingsUrl = "https://dartcode.org/docs/recommended-settings/";
 export const openSettingsAction = "Open Settings File";
+export const reactivateDevToolsAction = "Reactivate DevTools";
 
 export const observatoryListeningBannerPattern: RegExp = new RegExp("Observatory (?:listening on|.* is available at:) (http:.+)");
 export const observatoryHttpLinkPattern: RegExp = new RegExp("(http://[\\d\\.:]+/)");
