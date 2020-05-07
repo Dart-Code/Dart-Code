@@ -67,15 +67,15 @@ export class DevToolsManager implements vs.Disposable {
 		// If we're mid-silent-activation, wait until that's finished.
 		await this.devToolsActivationPromise;
 
-		// Don't try to check for install when we run eagerly.
-		if (!this.workspaceContext.workspaceConfig?.activateDevToolsEagerly) {
-			const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtoolsPackageID, undefined, "0.1.10", this.workspaceContext.workspaceConfig?.devtoolsActivateScript, true);
-			if (!isAvailable) {
-				return undefined;
-			}
-		}
-
 		if (!this.devtoolsUrl) {
+			// Don't try to check for install when we run eagerly.
+			if (!this.workspaceContext.workspaceConfig?.activateDevToolsEagerly) {
+				const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtoolsPackageID, undefined, "0.1.10", this.workspaceContext.workspaceConfig?.devtoolsActivateScript, true);
+				if (!isAvailable) {
+					return undefined;
+				}
+			}
+
 			this.devtoolsUrl = vs.window.withProgress({
 				location: vs.ProgressLocation.Notification,
 				title: "Starting Dart DevTools...",
