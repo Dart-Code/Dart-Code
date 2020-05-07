@@ -39,7 +39,7 @@ describe("versionIsAtLeast", () => {
 	});
 });
 
-describe.only("pubVersionIsAtLeast", () => {
+describe("pubVersionIsAtLeast", () => {
 	it("should consider build metadata newer than without", () => {
 		assert.equal(pubVersionIsAtLeast("1.2.3+012345", "1.2.3"), true);
 		assert.equal(pubVersionIsAtLeast("1.2.3", "1.2.3+012345"), false);
