@@ -5,7 +5,7 @@ import { LogCategory, VersionStatus } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { PubApi } from "../../shared/pub/api";
-import { usingCustomScript, versionIsAtLeast } from "../../shared/utils";
+import { pubVersionIsAtLeast, usingCustomScript } from "../../shared/utils";
 import { envUtils } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { safeToolSpawn } from "../utils/processes";
@@ -78,7 +78,7 @@ export class PubGlobal {
 
 	public async getInstalledStatus(packageName: string, packageID: string, requiredVersion?: string): Promise<VersionStatus> {
 		const output = await this.runCommand(packageName, ["global", "list"]);
-		const versionMatch = new RegExp(`^${packageID} (\\d+\\.\\d+\\.\\d+)(?: at| from|$|\\-|\\+)`, "m");
+		const versionMatch = new RegExp(`^${packageID} (\\d+\\.\\d+\\.\\d+.*)(?: |$)`, "m");
 		const match = versionMatch.exec(output);
 
 		// No match = not installed.
@@ -86,7 +86,7 @@ export class PubGlobal {
 			return VersionStatus.NotInstalled;
 
 		// If we need a specific version, check it here.
-		if (requiredVersion && !versionIsAtLeast(match[1], requiredVersion))
+		if (requiredVersion && !pubVersionIsAtLeast(match[1], requiredVersion))
 			return VersionStatus.UpdateRequired;
 
 		// If we haven't checked in the last 24 hours, check if there's an update available.
@@ -95,7 +95,7 @@ export class PubGlobal {
 			this.context.setPackageLastCheckedForUpdates(packageID, Date.now());
 			try {
 				const pubPackage = await this.pubApi.getPackage(packageID);
-				if (!versionIsAtLeast(match[1], pubPackage.latest.version))
+				if (!pubVersionIsAtLeast(match[1], pubPackage.latest.version))
 					return VersionStatus.UpdateAvailable;
 			} catch (e) {
 				// If we fail to call the API to check for a new version, then we can run
