@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as path from "path";
-import { isDartSdkFromFlutter, isStableSdk, versionIsAtLeast } from "../../shared/utils";
+import { isDartSdkFromFlutter, isStableSdk, pubVersionIsAtLeast, versionIsAtLeast } from "../../shared/utils";
 import { applyColor, red } from "../../shared/utils/colors";
 
 describe("versionIsAtLeast", () => {
@@ -36,6 +36,27 @@ describe("versionIsAtLeast", () => {
 		assert.equal(versionIsAtLeast("2.2.1-dev.1", "2.2.1-edge"), false);
 		assert.equal(versionIsAtLeast("2.2.1-edge", "2.2.1-edge"), true);
 		assert.equal(versionIsAtLeast("2.2.1-edge.foo", "2.2.1-edge"), true);
+	});
+});
+
+describe.only("pubVersionIsAtLeast", () => {
+	it("should consider build metadata newer than without", () => {
+		assert.equal(pubVersionIsAtLeast("1.2.3+012345", "1.2.3"), true);
+		assert.equal(pubVersionIsAtLeast("1.2.3", "1.2.3+012345"), false);
+	});
+	it("should sort build metadata the same way as pre-release", () => {
+		assert.equal(pubVersionIsAtLeast("1.2.3+123", "1.2.3+122"), true);
+		assert.equal(pubVersionIsAtLeast("1.2.3+122", "1.2.3+123"), false);
+	});
+	it("should sort pre-release before build metadata", () => {
+		assert.equal(pubVersionIsAtLeast("1.2.3-123", "1.2.3+122"), false);
+		assert.equal(pubVersionIsAtLeast("1.2.3+122", "1.2.3-123"), true);
+		assert.equal(pubVersionIsAtLeast("1.2.3-123+122", "1.2.3-122+123"), true);
+		assert.equal(pubVersionIsAtLeast("1.2.3-122+123", "1.2.3-123+122"), false);
+	});
+	it("should sort by build metadata if pre-release is equal", () => {
+		assert.equal(pubVersionIsAtLeast("1.2.3-123+123", "1.2.3-123+122"), true);
+		assert.equal(pubVersionIsAtLeast("1.2.3-123+122", "1.2.3-123+123"), false);
 	});
 });
 

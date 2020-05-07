@@ -86,6 +86,30 @@ export function versionIsAtLeast(inputVersion: string, requiredVersion: string):
 	return semver.gte(inputVersion, requiredVersion);
 }
 
+export function pubVersionIsAtLeast(inputVersion: string, requiredVersion: string): boolean {
+	// Standard semver gt/lt
+	if (semver.gt(inputVersion, requiredVersion))
+		return true;
+	else if (semver.lt(inputVersion, requiredVersion))
+		return false;
+
+	// If the versions are equal, we need to handle build metadata like pub does.
+	// https://github.com/dart-lang/pub_semver/
+
+	// If only one of them has build metadata, it's newest.
+	if (inputVersion.indexOf("+") !== -1 && requiredVersion.indexOf("+") === -1)
+		return true;
+	if (inputVersion.indexOf("+") === -1 && requiredVersion.indexOf("+") !== -1)
+		return false;
+
+	// Otherwise, since they're both otherwise equal and both have build
+	// metadata we can treat the build metadata like pre-release by converting
+	// it to pre-release (with -) or appending it to existing pre-release.
+	inputVersion = inputVersion.replace("+", inputVersion.indexOf("-") === -1 ? "-" : ".");
+	requiredVersion = requiredVersion.replace("+", requiredVersion.indexOf("-") === -1 ? "-" : ".");
+	return versionIsAtLeast(inputVersion, requiredVersion);
+}
+
 export function isStableSdk(sdkVersion?: string): boolean {
 	// We'll consider empty versions as dev; stable versions will likely always
 	// be shipped with valid version files.
