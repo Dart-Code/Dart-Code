@@ -4,8 +4,9 @@ import { fsPath } from "../../shared/utils/fs";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { isAnalyzable } from "../utils";
 
+export const validLastCharacters = [")", "]"];
+
 export class ClosingLabelsDecorations implements vs.Disposable {
-	private readonly validLastCharacters = [")", "]"];
 	private subscriptions: vs.Disposable[] = [];
 	private activeEditor?: vs.TextEditor;
 	private closingLabels?: as.AnalysisClosingLabelsNotification;
@@ -43,25 +44,17 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 			// might be stale (eg. we sent two updates, and the outline from in between them just
 			// arrived). In this case, we'll just bail and do nothing, assuming a future update will
 			// have the correct info.
-			const endPos = this.activeEditor.document.positionAt(r.offset + r.length);
-			const lastChar = this.activeEditor.document.getText(new vs.Range(endPos.translate({ characterDelta: -1 }), endPos));
-			if (this.validLastCharacters.indexOf(lastChar) === -1)
-				return;
-
-			console.log(`Calculating position for ${this.activeEditor.document.uri} (${r.offset}, ${r.length})`);
 			const finalCharacterPosition = this.activeEditor.document.positionAt(r.offset + r.length);
-			console.log(`finalCharacterPosition is ${finalCharacterPosition.line}:${finalCharacterPosition.character}`);
-			const finalCharacterRange =
-				finalCharacterPosition.character > 0
-					? new vs.Range(finalCharacterPosition.translate({ characterDelta: -1 }), finalCharacterPosition)
-					: new vs.Range(finalCharacterPosition, finalCharacterPosition.translate({ characterDelta: 1 }));
-			const finalCharacterText = this.activeEditor.document.getText(finalCharacterRange);
-			const endOfLine = this.activeEditor.document.lineAt(finalCharacterPosition).range.end;
-
-			// We won't update if we had any bad notifications as this usually means either bad code resulted
-			// in wonky results or the document was updated before the notification came back.
-			if (finalCharacterText !== "]" && finalCharacterText !== ")")
+			if (finalCharacterPosition.character < 1)
 				return;
+
+			const finalCharacterRange = new vs.Range(finalCharacterPosition.translate({ characterDelta: -1 }), finalCharacterPosition);
+			const finalCharacterText = this.activeEditor.document.getText(finalCharacterRange);
+			if (validLastCharacters.indexOf(finalCharacterText) === -1)
+				return;
+
+			// Get the end of the line where we'll show the labels.
+			const endOfLine = this.activeEditor.document.lineAt(finalCharacterPosition).range.end;
 
 			const existingDecorationForLine = decorations[endOfLine.line];
 			if (existingDecorationForLine) {

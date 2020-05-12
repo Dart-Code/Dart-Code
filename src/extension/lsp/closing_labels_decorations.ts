@@ -2,6 +2,7 @@ import * as vs from "vscode";
 import { LanguageClient } from "vscode-languageclient";
 import { ClosingLabelsParams, PublishClosingLabelsNotification } from "../../shared/analysis/lsp/custom_protocol";
 import { fsPath } from "../../shared/utils/fs";
+import { validLastCharacters } from "../decorations/closing_labels_decorations";
 
 export class LspClosingLabelsDecorations implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
@@ -55,31 +56,30 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 
 		const decorations: { [key: number]: vs.DecorationOptions & { renderOptions: { after: {} } } } = [];
 		for (const r of this.closingLabels[filePath].labels) {
-			const range = this.analyzer.protocol2CodeConverter.asRange(r.range);
-			const finalCharacterRange =
-				range.end.character > 0
-					? new vs.Range(
-						range.end.translate({ characterDelta: -1 }),
-						range.end,
-					)
-					: new vs.Range(
-						range.end,
-						range.end.translate({ characterDelta: 1 }),
-					);
-			const finalCharacterText = editor.document.getText(finalCharacterRange);
-			const endOfLine = editor.document.lineAt(range.end.line).range.end;
+			const labelRange = this.analyzer.protocol2CodeConverter.asRange(r.range);
 
-			// We won't update if we had any bad notifications as this usually means either bad code resulted
-			// in wonky results or the document was updated before the notification came back.
-			if (finalCharacterText !== "]" && finalCharacterText !== ")")
+			// Ensure the label we got looks like a sensible range, otherwise the outline info
+			// might be stale (eg. we sent two updates, and the outline from in between them just
+			// arrived). In this case, we'll just bail and do nothing, assuming a future update will
+			// have the correct info.
+			const finalCharacterPosition = labelRange.end;
+			if (finalCharacterPosition.character < 1)
 				return;
+
+			const finalCharacterRange = new vs.Range(finalCharacterPosition.translate({ characterDelta: -1 }), finalCharacterPosition);
+			const finalCharacterText = editor.document.getText(finalCharacterRange);
+			if (validLastCharacters.indexOf(finalCharacterText) === -1)
+				return;
+
+			// Get the end of the line where we'll show the labels.
+			const endOfLine = editor.document.lineAt(finalCharacterPosition).range.end;
 
 			const existingDecorationForLine = decorations[endOfLine.line];
 			if (existingDecorationForLine) {
 				existingDecorationForLine.renderOptions.after.contentText = " // " + r.label + " " + existingDecorationForLine.renderOptions.after.contentText;
 			} else {
 				const dec = {
-					range: new vs.Range(range.start, endOfLine),
+					range: new vs.Range(labelRange.start, endOfLine),
 					renderOptions: { after: { contentText: " // " + r.label } },
 				};
 				decorations[endOfLine.line] = dec;
