@@ -6,6 +6,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
 import { not } from "../shared/utils/array";
 import { isKnownInfrastructureThread } from "../shared/utils/debugger";
+import { waitFor } from "../shared/utils/promises";
 import { DebugCommandHandler, TestResultsProvider } from "../shared/vscode/interfaces";
 import { DebugClient, ILocation, IPartialLocation } from "./debug_client_ms";
 import { delay, logger, watchPromise, withTimeout } from "./helpers";
@@ -259,6 +260,11 @@ export class DartDebugClient extends DebugClient {
 			"dart.testRunNotification",
 			(event) => event.notification.type === type && filter(event.notification as T),
 		);
+	}
+	public async tryWaitUntilGlobalEvaluationIsAvailable(): Promise<void> {
+		// We can't evaluate until the main thread is runnable (which there's no event for) so
+		// just retry for a short period until it works (or times out).
+		await waitFor(() => this.evaluateRequest({ expression: `"test"` }).then(() => true, () => false));
 	}
 
 	private assertTestStatus(testName: string, expectedStatus: "success" | "failure" | "error"): Promise<void> {
