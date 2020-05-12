@@ -298,7 +298,12 @@ export class FlutterDebugSession extends DartDebugSession {
 					break;
 			}
 		} catch (e) {
-			this.sendEvent(new OutputEvent(`${e}\n`, "stderr"));
+			const error = e && e.message ? e.message : e;
+			const message = `Error handling '${request}' custom request: ${error}`;
+			this.sendEvent(new OutputEvent(`${message}\n`, "stderr"));
+
+			this.logger.error(message);
+			this.errorResponse(response, message);
 		}
 	}
 
@@ -434,7 +439,8 @@ export class FlutterDebugSession extends DartDebugSession {
 			return;
 
 		if (event.extensionRPC === VmServiceExtension.InspectorStructuredErrors && this.useFlutterStructuredErrors) {
-			this.runDaemon.callServiceExtension(this.currentRunningAppId, event.extensionRPC, { enabled: true });
+			this.runDaemon.callServiceExtension(this.currentRunningAppId, event.extensionRPC, { enabled: true })
+				.catch((e) => this.logger.error(e));
 		}
 	}
 }

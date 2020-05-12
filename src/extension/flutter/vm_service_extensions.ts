@@ -1,6 +1,7 @@
 import * as vs from "vscode";
 import { isWin, TRACK_WIDGET_CREATION_ENABLED } from "../../shared/constants";
 import { VmService, VmServiceExtension } from "../../shared/enums";
+import { Logger } from "../../shared/interfaces";
 import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
 import { DebuggerType } from "../providers/debug_config_provider";
 
@@ -53,7 +54,7 @@ export class VmServiceExtensions {
 	private currentExtensionState = Object.assign({}, defaultToggleExtensionState);
 	private sendValueToVM: (extension: VmServiceExtension) => void;
 
-	constructor(sendRequest: (extension: VmServiceExtension, args: ServiceExtensionArgs) => void) {
+	constructor(private readonly logger: Logger, sendRequest: (extension: VmServiceExtension, args: ServiceExtensionArgs) => void) {
 		// To avoid any code in this class accidentally calling sendRequestToFlutter directly, we wrap it here and don't
 		// keep a reference to it.
 		this.sendValueToVM = (extension: VmServiceExtension) => {
@@ -71,37 +72,41 @@ export class VmServiceExtensions {
 	}
 
 	/// Handles an event from the Debugger, such as extension services being loaded and values updated.
-	public handleDebugEvent(e: vs.DebugSessionCustomEvent): void {
+	public async handleDebugEvent(e: vs.DebugSessionCustomEvent): Promise<void> {
 		if (e.event === "dart.serviceExtensionAdded") {
 			this.handleServiceExtensionLoaded(e.body.id);
 
-			// If the isWidgetCreationTracked extension loads, send a command to the debug adapter
-			// asking it to query whether it's enabled (it'll send us an event back with the answer).
-			if (e.body.id === "ext.flutter.inspector.isWidgetCreationTracked") {
-				// TODO: Why do we send these events to the editor for it to send one back? Why don't we just
-				// do the second request in the debug adapter directly and only transmit the result?
-				e.session.customRequest("checkIsWidgetCreationTracked");
-				// If it's the PlatformOverride, send a request to get the current value.
-			} else if (e.body.id === VmServiceExtension.PlatformOverride) {
-				e.session.customRequest("checkPlatformOverride");
-			} else if (e.body.id === VmServiceExtension.InspectorSetPubRootDirectories) {
-				// TODO: We should send all open workspaces (arg0, arg1, arg2) so that it
-				// works for open packages too.
-				const debuggerType: DebuggerType = e.session.configuration.debuggerType;
-				if (debuggerType !== DebuggerType.Web) {
-					e.session.customRequest(
-						"serviceExtension",
-						{
-							params: {
-								arg0: this.formatPathForPubRootDirectories(e.session.configuration.cwd),
-								arg1: e.session.configuration.cwd,
-								// TODO: Is this OK???
-								isolateId: e.body.isolateId,
+			try {
+				// If the isWidgetCreationTracked extension loads, send a command to the debug adapter
+				// asking it to query whether it's enabled (it'll send us an event back with the answer).
+				if (e.body.id === "ext.flutter.inspector.isWidgetCreationTracked") {
+					// TODO: Why do we send these events to the editor for it to send one back? Why don't we just
+					// do the second request in the debug adapter directly and only transmit the result?
+					await e.session.customRequest("checkIsWidgetCreationTracked");
+					// If it's the PlatformOverride, send a request to get the current value.
+				} else if (e.body.id === VmServiceExtension.PlatformOverride) {
+					await e.session.customRequest("checkPlatformOverride");
+				} else if (e.body.id === VmServiceExtension.InspectorSetPubRootDirectories) {
+					// TODO: We should send all open workspaces (arg0, arg1, arg2) so that it
+					// works for open packages too.
+					const debuggerType: DebuggerType = e.session.configuration.debuggerType;
+					if (debuggerType !== DebuggerType.Web) {
+						await e.session.customRequest(
+							"serviceExtension",
+							{
+								params: {
+									arg0: this.formatPathForPubRootDirectories(e.session.configuration.cwd),
+									arg1: e.session.configuration.cwd,
+									// TODO: Is this OK???
+									isolateId: e.body.isolateId,
+								},
+								type: "ext.flutter.inspector.setPubRootDirectories",
 							},
-							type: "ext.flutter.inspector.setPubRootDirectories",
-						},
-					);
+						);
+					}
 				}
+			} catch (e) {
+				this.logger.error(e);
 			}
 		} else if (e.event === "dart.serviceRegistered") {
 			this.handleServiceRegistered(e.body.service, e.body.method);

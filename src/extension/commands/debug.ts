@@ -51,7 +51,7 @@ export class DebugCommands {
 	private readonly devTools: DevToolsManager;
 
 	constructor(private readonly logger: Logger, private context: Context, workspaceContext: DartWorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
-		this.vmServices = new VmServiceExtensions(this.sendServiceSetting);
+		this.vmServices = new VmServiceExtensions(logger, this.sendServiceSetting);
 		this.devTools = new DevToolsManager(logger, workspaceContext, this, analytics, pubGlobal);
 		context.subscriptions.push(this.devTools);
 		context.subscriptions.push(this.debugOptions);

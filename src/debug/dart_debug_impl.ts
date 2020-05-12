@@ -85,7 +85,7 @@ export class DartDebugSession extends DebugSession {
 	protected supportsRunInTerminalRequest = false;
 	protected supportsDebugInternalLibraries = false;
 	// protected observatoryUriIsProbablyReconnectable = false;
-	private readonly logger = new DebugAdapterLogger(this, LogCategory.Observatory);
+	protected readonly logger = new DebugAdapterLogger(this, LogCategory.Observatory);
 
 	protected readonly capabilities = VmServiceCapabilities.empty;
 
