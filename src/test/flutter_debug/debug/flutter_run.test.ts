@@ -6,6 +6,7 @@ import { isLinux } from "../../../shared/constants";
 import { VmService, VmServiceExtension } from "../../../shared/enums";
 import { grey, grey2 } from "../../../shared/utils/colors";
 import { fsPath } from "../../../shared/utils/fs";
+import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, deferUntilLast, delay, ext, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getPackages, makeTrivialChangeToFileDirectly, openFile, positionOf, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
@@ -656,32 +657,40 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
 
-			const completionEvent: Promise<any> =
-				shouldStop
-					? dc.assertStoppedLocation("breakpoint", {})
-						.then(() => dc.waitForEvent("terminated"))
-					: dc.waitForEvent("terminated");
-			const errorOutputEvent: Promise<any> =
-				expectedError
-					? dc.assertOutputContains("console", expectedError)
-					: Promise.resolve();
+			let didStop = false;
+			// tslint:disable-next-line: no-floating-promises
+			dc.waitForEvent("stopped").then(() => didStop = true);
+
+			let expectation: Promise<any> = resolvedPromise;
+			if (shouldStop)
+				expectation = expectation.then(() => dc.waitForEvent("stopped"));
+
+			if (expectedError)
+				expectation = expectation.then(() => dc.assertOutputContains("console", expectedError));
+
+			// If we don't have another expectation, then we need to keep running for some period
+			// after launch to ensure we didn't stop unexpectedly.
+			if (expectation === resolvedPromise)
+				// This may be too low for web.
+				expectation = dc.waitForEvent("initialized").then(() => delay(2000));
 
 			await Promise.all([
-				dc.waitForEvent("initialized").then((_) => dc.setBreakpointsRequest({
-					// positionOf is 0-based, but seems to want 1-based
-					breakpoints: [{
-						condition,
-						line: positionOf("^// BREAKPOINT1").line,
-					}],
-					source: { path: fsPath(flutterHelloWorldMainFile) },
-				}))
-					.then(() => dc.configurationDoneRequest())
-					.then(() => delay(2000))
-					.then(() => dc.terminateRequest()),
-				completionEvent,
-				errorOutputEvent,
+				dc.waitForEvent("terminated"),
+				dc.waitForEvent("initialized")
+					.then((_) => dc.setBreakpointsRequest({
+						// positionOf is 0-based, but seems to want 1-based
+						breakpoints: [{
+							condition,
+							line: positionOf("^// BREAKPOINT1").line,
+						}],
+						source: { path: fsPath(flutterHelloWorldMainFile) },
+					}))
+					.then(() => dc.configurationDoneRequest()),
+				expectation.then(() => dc.terminateRequest()),
 				dc.launch(config),
 			]);
+
+			assert.equal(didStop, shouldStop);
 		};
 	}
 
@@ -700,23 +709,30 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 
+		let didStop = false;
+		// tslint:disable-next-line: no-floating-promises
+		dc.waitForEvent("stopped").then(() => didStop = true);
+
 		await Promise.all([
-			dc.waitForEvent("initialized").then((_) => dc.setBreakpointsRequest({
-				breakpoints: [{
-					line: positionOf("^// BREAKPOINT1").line,
-					// VS Code says to use {} for expressions, but we want to support Dart's native too, so
-					// we have examples of both (as well as "escaped" brackets).
-					logMessage: '${s} The \\{year} is """{(new DateTime.now()).year}"""',
-				}],
-				source: { path: fsPath(flutterHelloWorldMainFile) },
-			}))
-				.then(() => dc.configurationDoneRequest())
-				.then(() => delay(5000))
+			dc.waitForEvent("initialized")
+				.then((_) => dc.setBreakpointsRequest({
+					breakpoints: [{
+						line: positionOf("^// BREAKPOINT1").line,
+						// VS Code says to use {} for expressions, but we want to support Dart's native too, so
+						// we have examples of both (as well as "escaped" brackets).
+						logMessage: '${s} The \\{year} is """{(new DateTime.now()).year}"""',
+					}],
+					source: { path: fsPath(flutterHelloWorldMainFile) },
+				}))
+				.then(() => dc.configurationDoneRequest()),
+			dc.assertOutputContains("stdout", `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`)
+				.then(() => delay(2000))
 				.then(() => dc.terminateRequest()),
 			dc.waitForEvent("terminated"),
-			dc.assertOutputContains("stdout", `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`),
 			dc.launch(config),
 		]);
+
+		assert.equal(didStop, false);
 	});
 
 	it("provides local variables when stopped at a breakpoint", async () => {

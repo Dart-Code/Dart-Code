@@ -6,6 +6,7 @@ import * as vs from "vscode";
 import { debugAnywayAction, platformEol, showErrorsAction } from "../../../shared/constants";
 import { grey } from "../../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../../shared/utils/fs";
+import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused } from "../../debug_helpers";
 import { activate, breakpointFor, closeAllOpenFiles, defer, delay, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, logger, openFile, positionOf, sb, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
@@ -569,33 +570,41 @@ describe("dart cli debugger", () => {
 		return async () => {
 			await openFile(helloWorldMainFile);
 			const config = await startDebugger(helloWorldMainFile);
-			const completionEvent: Promise<any> =
-				shouldStop
-					? dc.assertStoppedLocation("breakpoint", {})
-						.then(() => dc.waitForEvent("terminated"))
-					: dc.waitForEvent("terminated");
-			const errorOutputEvent: Promise<any> =
-				expectedError
-					? dc.assertOutput("console", expectedError)
-					: Promise.resolve();
+
+			let didStop = false;
+			// tslint:disable-next-line: no-floating-promises
+			dc.waitForEvent("stopped").then(() => didStop = true);
+
+			let expectation: Promise<any> = resolvedPromise;
+			if (shouldStop)
+				expectation = expectation.then(() => dc.waitForEvent("stopped"));
+
+			if (expectedError)
+				expectation = expectation.then(() => dc.assertOutputContains("console", expectedError));
+
+			// If we don't have another expectation, then we need to keep running for some period
+			// after launch to ensure we didn't stop unexpectedly.
+			if (expectation === resolvedPromise)
+				// This may be too low for web.
+				expectation = dc.waitForEvent("initialized").then(() => delay(2000));
+
 			await Promise.all([
-				dc.waitForEvent("initialized").then((event) => {
-					return dc.setBreakpointsRequest({
+				dc.waitForEvent("terminated"),
+				dc.waitForEvent("initialized")
+					.then((_) => dc.setBreakpointsRequest({
 						// positionOf is 0-based, but seems to want 1-based
 						breakpoints: [{
 							condition,
-							line: positionOf("^// BREAKPOINT1").line + 1,
+							line: positionOf("^// BREAKPOINT1").line,
 						}],
 						source: { path: fsPath(helloWorldMainFile) },
-					});
-				})
-					.then(() => dc.configurationDoneRequest())
-					.then(() => delay(2000))
-					.then(() => dc.terminateRequest()),
-				completionEvent,
-				errorOutputEvent,
+					}))
+					.then(() => dc.configurationDoneRequest()),
+				expectation.then(() => dc.terminateRequest()),
 				dc.launch(config),
 			]);
+
+			assert.equal(didStop, shouldStop);
 		};
 	}
 

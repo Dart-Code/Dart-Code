@@ -108,7 +108,7 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 		return this.sendRequest("app.stop", { appId });
 	}
 
-	public callServiceExtension(appId: string, methodName: string, params: any): Thenable<any> {
+	public callServiceExtension(appId: string, methodName: string, params: any): Promise<any> {
 		return this.sendRequest("app.callServiceExtension", { appId, methodName, params });
 	}
 
