@@ -1265,7 +1265,7 @@ export class DartDebugSession extends DebugSession {
 		// const context: string = args.context; // "watch", "repl", "hover"
 
 		if (!frameId) {
-			this.errorResponse(response, "global evaluation not supported");
+			this.errorResponse(response, "unable to restart with no frame");
 			return;
 		}
 
