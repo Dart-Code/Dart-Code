@@ -9,7 +9,7 @@ import { fsPath, getRandomInt } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, breakpointFor, closeAllOpenFiles, defer, delay, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, logger, openFile, positionOf, sb, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, breakpointFor, closeAllOpenFiles, defer, delay, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, logger, openFile, positionOf, sb, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -909,6 +909,105 @@ describe("dart cli debugger", () => {
 			]);
 
 			const error = await dc.evaluateForFrame("DateTime.now().ye", "watch").catch((e) => e);
+			assert.equal(error.message, "not available");
+		});
+	});
+
+	describe("can evaluate when not at a breakpoint", () => {
+		it("simple expressions", async () => {
+			await openFile(helloWorldLongRunningFile);
+			const config = await startDebugger(helloWorldLongRunningFile);
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.launch(config),
+			]);
+
+			await dc.tryWaitUntilGlobalEvaluationIsAvailable();
+
+			const evaluateResult = await dc.evaluateRequest({ expression: `"test"` });
+			assert.ok(evaluateResult);
+			assert.ok(evaluateResult.body);
+			assert.equal(evaluateResult.body.result, `"test"`);
+			assert.equal(evaluateResult.body.variablesReference, 0);
+		});
+
+		it("complex expression expressions", async () => {
+			await openFile(helloWorldLongRunningFile);
+			const config = await startDebugger(helloWorldLongRunningFile);
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.launch(config),
+			]);
+
+			await dc.tryWaitUntilGlobalEvaluationIsAvailable();
+
+			const evaluateResult = await dc.evaluateRequest({ expression: `(new DateTime.now()).year` });
+			assert.ok(evaluateResult);
+			assert.ok(evaluateResult.body);
+			assert.equal(evaluateResult.body.result, (new Date()).getFullYear());
+			assert.equal(evaluateResult.body.variablesReference, 0);
+		});
+
+		it("an expression that returns a variable", async () => {
+			await openFile(helloWorldLongRunningFile);
+			const config = await startDebugger(helloWorldLongRunningFile);
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.launch(config),
+			]);
+
+			await dc.tryWaitUntilGlobalEvaluationIsAvailable();
+
+			const evaluateResult = await dc.evaluateRequest({ expression: `new DateTime.now()` });
+			const thisYear = new Date().getFullYear().toString();
+			assert.ok(evaluateResult);
+			assert.ok(evaluateResult.body);
+			assert.ok(evaluateResult.body.result.startsWith("DateTime (" + thisYear), `Result '${evaluateResult.body.result}' did not start with ${thisYear}`);
+			assert.ok(evaluateResult.body.variablesReference);
+		});
+
+		it("can evaluate expressions with trailing semicolons", async () => {
+			await openFile(helloWorldLongRunningFile);
+			const config = await startDebugger(helloWorldLongRunningFile);
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.launch(config),
+			]);
+
+			await dc.tryWaitUntilGlobalEvaluationIsAvailable();
+
+			const evaluateResult = await dc.evaluateRequest({ expression: `(new DateTime.now()).year;` });
+			assert.ok(evaluateResult);
+			assert.ok(evaluateResult.body);
+			assert.equal(evaluateResult.body.result, (new Date()).getFullYear());
+			assert.equal(evaluateResult.body.variablesReference, 0);
+		});
+
+		it("returns a full error message for repl context", async () => {
+			await openFile(helloWorldLongRunningFile);
+			const config = await startDebugger(helloWorldLongRunningFile);
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.launch(config),
+			]);
+
+			await dc.tryWaitUntilGlobalEvaluationIsAvailable();
+
+			const error = await dc.evaluateRequest({ expression: "DateTime.now().ye", context: "repl" }).catch((e) => e);
+			assert.notEqual(error.message.indexOf("The getter 'ye' isn't defined for the class 'DateTime'"), -1);
+		});
+
+		it("returns a short error message for watch context", async () => {
+			await openFile(helloWorldLongRunningFile);
+			const config = await startDebugger(helloWorldLongRunningFile);
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.launch(config),
+			]);
+
+			await dc.tryWaitUntilGlobalEvaluationIsAvailable();
+
+			const error = await dc.evaluateRequest({ expression: "DateTime.now().ye", context: "watch" }).catch((e) => e);
 			assert.equal(error.message, "not available");
 		});
 	});

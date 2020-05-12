@@ -1294,49 +1294,71 @@ export class DartDebugSession extends DebugSession {
 		const frameId = args.frameId;
 		// const context: string = args.context; // "watch", "repl", "hover"
 
-		if (!frameId) {
-			this.errorResponse(response, "global evaluation not supported");
-			return;
-		}
-
-		const data = this.threadManager.getStoredData(frameId);
-		const thread = data.thread;
-		const frame: VMFrame = data.data as VMFrame;
+		const data = frameId ? this.threadManager.getStoredData(frameId) : undefined;
+		const thread = data ? data.thread : this.threadManager.threads[0];
 
 		try {
 			let result: DebuggerResult | undefined;
-			if ((expression === "$e" || expression.startsWith("$e.")) && thread.exceptionReference) {
-				const exceptionData = this.threadManager.getStoredData(thread.exceptionReference);
-				const exceptionInstanceRef = exceptionData && exceptionData.data as VMInstanceRef;
-
-				if (expression === "$e") {
-					response.body = {
-						result: await this.fullValueAsString(thread.ref, exceptionInstanceRef) || "<unknown>",
-						variablesReference: thread.exceptionReference,
-					};
-					this.sendResponse(response);
+			if (!data) {
+				if (!this.observatory || !thread) {
+					this.errorResponse(response, "global evaluation requires a thread to have been loaded");
 					return;
 				}
 
-				const exceptionId = exceptionInstanceRef && exceptionInstanceRef.id;
+				const isolate = (await this.observatory.getIsolate(thread.ref.id)).result as VMIsolate;
+				const rootLib = isolate.rootLib;
 
-				if (exceptionId)
-					result = await this.observatory!.evaluate(thread.ref.id, exceptionId, expression.substr(3), true);
-			}
-			if (!result) {
+				if (!rootLib) {
+					this.errorResponse(response, "global evaluation requires a rootLib on the initial thread");
+					return;
+				}
+
 				// Don't wait more than a second for the response:
 				//   1. VS Code's watch window behaves badly when there are incomplete evaluate requests
 				//      https://github.com/Microsoft/vscode/issues/52317
 				//   2. The VM sometimes doesn't respond to your requests at all
 				//      https://github.com/flutter/flutter/issues/18595
 				result = await Promise.race([
-					this.observatory!.evaluateInFrame(thread.ref.id, frame.index, expression, true),
+					this.observatory!.evaluate(thread.ref.id, rootLib.id, expression, true),
 					new Promise<never>((resolve, reject) => setTimeout(() => reject(new Error("<timed out>")), 1000)),
 				]);
+			} else {
+				const frame = data.data as VMFrame;
+				if ((expression === "$e" || expression.startsWith("$e.")) && thread.exceptionReference) {
+					const exceptionData = this.threadManager.getStoredData(thread.exceptionReference);
+					const exceptionInstanceRef = exceptionData && exceptionData.data as VMInstanceRef;
+
+					if (expression === "$e") {
+						response.body = {
+							result: await this.fullValueAsString(thread.ref, exceptionInstanceRef) || "<unknown>",
+							variablesReference: thread.exceptionReference,
+						};
+						this.sendResponse(response);
+						return;
+					}
+
+					const exceptionId = exceptionInstanceRef && exceptionInstanceRef.id;
+
+					if (exceptionId)
+						result = await this.observatory!.evaluate(thread.ref.id, exceptionId, expression.substr(3), true);
+				}
+				if (!result) {
+					// Don't wait more than a second for the response:
+					//   1. VS Code's watch window behaves badly when there are incomplete evaluate requests
+					//      https://github.com/Microsoft/vscode/issues/52317
+					//   2. The VM sometimes doesn't respond to your requests at all
+					//      https://github.com/flutter/flutter/issues/18595
+					result = await Promise.race([
+						this.observatory!.evaluateInFrame(thread.ref.id, frame.index, expression, true),
+						new Promise<never>((resolve, reject) => setTimeout(() => reject(new Error("<timed out>")), 1000)),
+					]);
+				}
 			}
 
-			// InstanceRef or ErrorRef
-			if (result.result.type === "@Error") {
+			if (!result) {
+				this.errorResponse(response, "No evaluation result");
+			} else if (result.result.type === "@Error") {
+				// InstanceRef or ErrorRef
 				const error: VMErrorRef = result.result as VMErrorRef;
 				let str: string = error.message;
 				if (str)

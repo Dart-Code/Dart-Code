@@ -1038,6 +1038,74 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		});
 	});
 
+	describe("can evaluate when not at a breakpoint (global expression evaluation)", function () {
+		this.beforeEach(function () {
+			if (flutterTestDeviceIsWeb)
+				this.skip();
+		});
+
+		it("simple expressions", async () => {
+			await openFile(flutterHelloWorldMainFile);
+			const config = await startDebugger(dc, flutterHelloWorldMainFile);
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.launch(config),
+			]);
+
+			const evaluateResult = await dc.evaluateRequest({ expression: `"test"` });
+			assert.ok(evaluateResult);
+			assert.ok(evaluateResult.body);
+			assert.equal(evaluateResult.body.result, `"test"`);
+			assert.equal(evaluateResult.body.variablesReference, 0);
+
+			await Promise.all([
+				dc.waitForEvent("terminated"),
+				dc.terminateRequest(),
+			]);
+		});
+
+		it("complex expression expressions", async () => {
+			await openFile(flutterHelloWorldMainFile);
+			const config = await startDebugger(dc, flutterHelloWorldMainFile);
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.launch(config),
+			]);
+
+			const evaluateResult = await dc.evaluateRequest({ expression: `(new DateTime.now()).year` });
+			assert.ok(evaluateResult);
+			assert.ok(evaluateResult.body);
+			assert.equal(evaluateResult.body.result, (new Date()).getFullYear());
+			assert.equal(evaluateResult.body.variablesReference, 0);
+
+			await Promise.all([
+				dc.waitForEvent("terminated"),
+				dc.terminateRequest(),
+			]);
+		});
+
+		it("an expression that returns a variable", async () => {
+			await openFile(flutterHelloWorldMainFile);
+			const config = await startDebugger(dc, flutterHelloWorldMainFile);
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.launch(config),
+			]);
+
+			const evaluateResult = await dc.evaluateRequest({ expression: `new DateTime.now()` });
+			const thisYear = new Date().getFullYear().toString();
+			assert.ok(evaluateResult);
+			assert.ok(evaluateResult.body);
+			assert.ok(evaluateResult.body.result.startsWith("DateTime (" + thisYear), `Result '${evaluateResult.body.result}' did not start with ${thisYear}`);
+			assert.ok(evaluateResult.body.variablesReference);
+
+			await Promise.all([
+				dc.waitForEvent("terminated"),
+				dc.terminateRequest(),
+			]);
+		});
+	});
+
 	// Skipped due to https://github.com/flutter/flutter/issues/17007.
 	it.skip("stops on exception", async () => {
 		await openFile(flutterHelloWorldBrokenFile);
