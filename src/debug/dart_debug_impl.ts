@@ -85,6 +85,7 @@ export class DartDebugSession extends DebugSession {
 	protected supportsRunInTerminalRequest = false;
 	protected supportsDebugInternalLibraries = false;
 	// protected observatoryUriIsProbablyReconnectable = false;
+	protected isTerminating = false;
 	protected readonly logger = new DebugAdapterLogger(this, LogCategory.Observatory);
 
 	protected readonly capabilities = VmServiceCapabilities.empty;
@@ -679,6 +680,7 @@ export class DartDebugSession extends DebugSession {
 		args: DebugProtocol.TerminateArguments,
 	): Promise<void> {
 		this.log(`Termination requested!`);
+		this.isTerminating = true;
 		this.sendEvent(new Event("dart.terminating", { message: "Terminating debug session..." }));
 
 		if (this.expectAdditionalPidToTerminate && !this.additionalPidsToTerminate.length) {
@@ -705,6 +707,7 @@ export class DartDebugSession extends DebugSession {
 		args: DebugProtocol.DisconnectArguments,
 	): Promise<void> {
 		this.log(`Disconnect requested!`);
+		this.isTerminating = true;
 		try {
 			const succeeded = await this.raceIgnoringErrors(() => this.terminate(false), 2000);
 			// If we hit the 2s timeout, then terminate more forcefully.

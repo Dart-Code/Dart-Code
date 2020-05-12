@@ -300,8 +300,9 @@ export class FlutterDebugSession extends DartDebugSession {
 		} catch (e) {
 			const error = e && e.message ? e.message : e;
 			const message = `Error handling '${request}' custom request: ${error}`;
-			this.sendEvent(new OutputEvent(`${message}\n`, "stderr"));
 
+			if (!this.isTerminating)
+				this.sendEvent(new OutputEvent(`${message}\n`, "stderr"));
 			this.logger.error(message);
 			this.errorResponse(response, message);
 		}
