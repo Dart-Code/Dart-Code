@@ -48,7 +48,9 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 			if (this.validLastCharacters.indexOf(lastChar) === -1)
 				return;
 
+			console.log(`Calculating position for ${this.activeEditor.document.uri} (${r.offset}, ${r.length})`);
 			const finalCharacterPosition = this.activeEditor.document.positionAt(r.offset + r.length);
+			console.log(`finalCharacterPosition is ${finalCharacterPosition.line}:${finalCharacterPosition.character}`);
 			const finalCharacterRange =
 				finalCharacterPosition.character > 0
 					? new vs.Range(finalCharacterPosition.translate({ characterDelta: -1 }), finalCharacterPosition)
