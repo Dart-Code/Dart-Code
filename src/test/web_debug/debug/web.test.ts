@@ -281,7 +281,7 @@ describe.skip("web debugger", () => {
 				}),
 			]);
 
-			const evaluateResult = await dc.evaluate(`"test"`);
+			const evaluateResult = await dc.evaluateForFrame(`"test"`);
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, `"test"`);
 			assert.equal(evaluateResult.variablesReference, 0);
@@ -302,7 +302,7 @@ describe.skip("web debugger", () => {
 				}),
 			]);
 
-			const evaluateResult = await dc.evaluate(`(new DateTime.now()).year`);
+			const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`);
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, (new Date()).getFullYear());
 			assert.equal(evaluateResult.variablesReference, 0);
@@ -323,7 +323,7 @@ describe.skip("web debugger", () => {
 				}),
 			]);
 
-			const evaluateResult = await dc.evaluate(`new DateTime.now()`);
+			const evaluateResult = await dc.evaluateForFrame(`new DateTime.now()`);
 			const thisYear = new Date().getFullYear().toString();
 			assert.ok(evaluateResult);
 			assert.ok(evaluateResult.result.startsWith("DateTime (" + thisYear), `Result '${evaluateResult.result}' did not start with ${thisYear}`);
@@ -345,7 +345,7 @@ describe.skip("web debugger", () => {
 				}),
 			]);
 
-			const evaluateResult = await dc.evaluate(`(new DateTime.now()).year`);
+			const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`);
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, (new Date()).getFullYear());
 			assert.equal(evaluateResult.variablesReference, 0);

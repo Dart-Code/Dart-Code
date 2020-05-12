@@ -753,7 +753,7 @@ describe("dart cli debugger", () => {
 			const evaluateName = (variable as any).evaluateName;
 			if (!evaluateName)
 				continue;
-			const evaluateResult = await dc.evaluate(evaluateName);
+			const evaluateResult = await dc.evaluateForFrame(evaluateName);
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, variable.value);
 			assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);
@@ -778,7 +778,7 @@ describe("dart cli debugger", () => {
 			const evaluateName = (variable as any).evaluateName;
 			if (!evaluateName)
 				continue;
-			const evaluateResult = await dc.evaluate(evaluateName);
+			const evaluateResult = await dc.evaluateForFrame(evaluateName);
 			assert.ok(evaluateResult);
 			if (variable.value.endsWith("…\"")) {
 				// If the value was truncated, the evaluate responses should be longer
@@ -804,7 +804,7 @@ describe("dart cli debugger", () => {
 				}),
 			]);
 
-			const evaluateResult = await dc.evaluate(`"test"`);
+			const evaluateResult = await dc.evaluateForFrame(`"test"`);
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, `"test"`);
 			assert.equal(evaluateResult.variablesReference, 0);
@@ -820,7 +820,7 @@ describe("dart cli debugger", () => {
 				}),
 			]);
 
-			const evaluateResult = await dc.evaluate(`(new DateTime.now()).year`);
+			const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`);
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, (new Date()).getFullYear());
 			assert.equal(evaluateResult.variablesReference, 0);
@@ -836,7 +836,7 @@ describe("dart cli debugger", () => {
 				}),
 			]);
 
-			const evaluateResult = await dc.evaluate(`new DateTime.now()`);
+			const evaluateResult = await dc.evaluateForFrame(`new DateTime.now()`);
 			const thisYear = new Date().getFullYear().toString();
 			assert.ok(evaluateResult);
 			assert.ok(evaluateResult.result.startsWith("DateTime (" + thisYear), `Result '${evaluateResult.result}' did not start with ${thisYear}`);
@@ -853,7 +853,7 @@ describe("dart cli debugger", () => {
 				}),
 			]);
 
-			const evaluateResult = await dc.evaluate(`(new DateTime.now()).year`);
+			const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`);
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, (new Date()).getFullYear());
 			assert.equal(evaluateResult.variablesReference, 0);
@@ -869,7 +869,7 @@ describe("dart cli debugger", () => {
 				}),
 			]);
 
-			const evaluateResult = await dc.evaluate(`(new DateTime.now()).year;`);
+			const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year;`);
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, (new Date()).getFullYear());
 			assert.equal(evaluateResult.variablesReference, 0);
@@ -885,7 +885,7 @@ describe("dart cli debugger", () => {
 				}),
 			]);
 
-			const error = await dc.evaluate("DateTime.now().ye", "repl").catch((e) => e);
+			const error = await dc.evaluateForFrame("DateTime.now().ye", "repl").catch((e) => e);
 			assert.notEqual(error.message.indexOf("The getter 'ye' isn't defined for the class 'DateTime'"), -1);
 		});
 
@@ -899,7 +899,7 @@ describe("dart cli debugger", () => {
 				}),
 			]);
 
-			const error = await dc.evaluate("DateTime.now().ye", "watch").catch((e) => e);
+			const error = await dc.evaluateForFrame("DateTime.now().ye", "watch").catch((e) => e);
 			assert.equal(error.message, "not available");
 		});
 	});

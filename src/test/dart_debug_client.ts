@@ -196,7 +196,7 @@ export class DartDebugClient extends DebugClient {
 		return variables.body.variables;
 	}
 
-	public async evaluate(expression: string, context?: string): Promise<{
+	public async evaluateForFrame(expression: string, context?: string): Promise<{
 		result: string;
 		type?: string;
 		variablesReference: number;
