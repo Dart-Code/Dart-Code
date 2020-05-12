@@ -1640,7 +1640,8 @@ export class DartDebugSession extends DebugSession {
 				// To be considered true, we need to have a value and either be not-a-bool
 				const breakpointconditionEvaluatesToTrue =
 					(evalResult.kind === "Bool" && evalResult.valueAsString === "true")
-					|| (evalResult.kind === "Int" && evalResult.valueAsString !== "0");
+					|| (evalResult.kind === "Int" && evalResult.valueAsString !== "0")
+					|| (evalResult.kind === "Double" && evalResult.valueAsString !== "0");
 				if (breakpointconditionEvaluatesToTrue)
 					return true;
 
