@@ -493,7 +493,10 @@ describe("dart cli debugger", () => {
 				assert.equal(frame.source!.name, "dart:core/print.dart");
 				const source = await dc.sourceRequest({ source: frame.source, sourceReference: frame.source!.sourceReference! });
 				assert.ok(source.body.content);
-				assert.notEqual(source.body.content.indexOf("void print(Object object) {"), -1);
+				assert.ok(
+					source.body.content.indexOf("void print(Object object) {") !== -1
+					|| source.body.content.indexOf("void print(Object? object) {") !== -1,
+				);
 				// Ensure comments are present (see #178).
 				assert.notEqual(source.body.content.indexOf("\n//"), -1);
 			}),
