@@ -37,6 +37,7 @@ export class AnalyzerCapabilities {
 	get supportsGetDeclerations() { return versionIsAtLeast(this.version, "1.18.7"); }
 	get supportsGetDeclerationsForFile() { return versionIsAtLeast(this.version, "1.19.0"); }
 	get supportsGetSignature() { return versionIsAtLeast(this.version, "1.20.5"); }
+	get supportsMoveFile() { return versionIsAtLeast(this.version, "1.27.0"); }
 	get isDart2() { return versionIsAtLeast(this.version, "1.19.0"); }
 	get hasNewSignatureFormat() { return versionIsAtLeast(this.version, "1.27.1"); }
 	get hasNewHoverLibraryFormat() { return versionIsAtLeast(this.version, "1.27.1"); }

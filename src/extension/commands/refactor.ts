@@ -1,10 +1,13 @@
+import * as fs from "fs";
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
+import { flatMap } from "../../shared/utils";
 import { unique } from "../../shared/utils/array";
 import { fsPath } from "../../shared/utils/fs";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
+import { hasOverlappingEdits } from "./edit_das";
 
 const refactorOptions: { [key: string]: (feedback?: as.RefactoringFeedback) => as.RefactoringOptions } = {
 	EXTRACT_LOCAL_VARIABLE: getExtractLocalVariableArgs,
@@ -19,6 +22,8 @@ export class RefactorCommands implements vs.Disposable {
 		this.commands.push(
 			vs.commands.registerCommand("_dart.performRefactor", this.performRefactor, this),
 		);
+		if (analyzer.capabilities.supportsMoveFile)
+			this.commands.push(vs.workspace.onWillRenameFiles((e) => this.onWillRenameFiles(e)));
 	}
 
 	private async performRefactor(document: vs.TextDocument, range: vs.Range, refactorKind: as.RefactoringKind): Promise<void> {
@@ -93,7 +98,7 @@ export class RefactorCommands implements vs.Disposable {
 		return false;
 	}
 
-	private async shouldApplyEdits(editResult: as.EditGetRefactoringResponse, document: vs.TextDocument, originalDocumentVersion: number) {
+	private async shouldApplyEdits(editResult: as.EditGetRefactoringResponse, document?: vs.TextDocument, originalDocumentVersion?: number) {
 		const allProblems = editResult.initialProblems
 			.concat(editResult.optionsProblems)
 			.concat(editResult.finalProblems);
@@ -121,12 +126,78 @@ export class RefactorCommands implements vs.Disposable {
 		}
 
 		// If we're trying to apply changes but the document is modified, we have to quit.
-		if (applyEdits && document.version !== originalDocumentVersion) {
+		if (applyEdits && document && document.version !== originalDocumentVersion) {
 			vs.window.showErrorMessage(REFACTOR_FAILED_DOC_MODIFIED);
 			return false;
 		}
 
 		return applyEdits;
+	}
+
+	private onWillRenameFiles(e: vs.FileWillRenameEvent) {
+		// TODO: VS Code always calls this once-per-file, concurrently for multiple files moved at once
+		// which currently results in REFACTOR_CANCELLED for all but the first since the server doesn't
+		// support multiple refactors at the same time. Running them sequentially may be an option, but
+		// would also potentially slow down the operation significantly.
+		const filesToRename = flatMap(e.files, (f) => this.getFilesToRename({ oldPath: fsPath(f.oldUri), newPath: fsPath(f.newUri) }));
+		const edits = this.getRenameEdits(filesToRename);
+		if (edits)
+			e.waitUntil(edits);
+	}
+
+	private async getRenameEdits(filesToRename: Array<{ oldPath: string, newPath: string }>): Promise<vs.WorkspaceEdit | undefined> {
+		const changes = new vs.WorkspaceEdit();
+
+		for (const file of filesToRename) {
+			const editResult = await this.analyzer.editGetRefactoring({
+				file: file.oldPath,
+				kind: "MOVE_FILE",
+				length: 0, // Not used for MOVE_FILE
+				offset: 0, // Not used for MOVE_FILE
+				options: { newFile: file.newPath },
+				validateOnly: false,
+			});
+
+			if (!editResult.change)
+				continue;
+
+			const applyEdits = await this.shouldApplyEdits(editResult);
+			if (!applyEdits)
+				continue;
+
+			if (hasOverlappingEdits(editResult.change)) {
+				vs.window.showErrorMessage("Unable to update references; edits contain ambigious positions.");
+				this.logger.error(`Unable to apply MOVE_FILE edits due to ambigious edits:\n\n${JSON.stringify(editResult.change, undefined, 4)}`);
+				return;
+			}
+
+			for (const edit of editResult.change.edits) {
+				for (const e of edit.edits) {
+					const uri = vs.Uri.file(edit.file);
+					const document = await vs.workspace.openTextDocument(uri);
+					changes.replace(
+						vs.Uri.file(edit.file),
+						new vs.Range(
+							document.positionAt(e.offset),
+							document.positionAt(e.offset + e.length),
+						),
+						e.replacement,
+					);
+				}
+			}
+		}
+
+		return changes;
+	}
+
+	private getFilesToRename(rename: { oldPath: string, newPath: string }): Array<{ oldPath: string, newPath: string }> {
+		// TODO: Support folders?
+		const filesToRename: Array<{ oldPath: string, newPath: string }> = [];
+		if (fs.statSync(rename.oldPath).isFile()) {
+			// TODO: if (isAnalyzableAndInWorkspace(rename.oldPath))
+			filesToRename.push(rename);
+		}
+		return filesToRename;
 	}
 
 	public dispose(): any {
