@@ -313,9 +313,12 @@ export class DebugCommands {
 	}
 
 	public handleDebugSessionCustomEvent(e: vs.DebugSessionCustomEvent): void {
-		this.vmServices.handleDebugEvent(e);
+		this.vmServices.handleDebugEvent(e)
+			.catch((e) => this.logger.error(e));
+
 		if (this.handleCustomEvent(e))
 			return;
+
 		const session = debugSessions.find((ds) => ds.session.id === e.session.id);
 		if (!session) {
 			this.logger.warn(`Did not find session ${e.session.id} to handle ${e.event}. There were ${debugSessions.length} sessions:\n${debugSessions.map((ds) => `  ${ds.session.id}`).join("\n")}`);
