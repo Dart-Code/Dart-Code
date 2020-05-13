@@ -70,6 +70,7 @@ export class DartDebugSession extends DebugSession {
 	protected vmServiceInfoFile?: string;
 	private serviceInfoPollTimer?: NodeJS.Timer;
 	private remoteEditorTerminalLaunched?: Promise<RemoteEditorTerminalProcess>;
+	private serviceInfoFileCompleter?: PromiseCompleter<string>;
 	public debuggerHandlesPathsEverywhereForBreakpoints = false;
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
@@ -132,13 +133,11 @@ export class DartDebugSession extends DebugSession {
 		// Force relative paths to absolute.
 		if (args.program && !path.isAbsolute(args.program)) {
 			if (!args.cwd) {
-				this.logToUser("Unable to start debugging. program was specified as a relative path without cwd.\n");
-				this.sendEvent(new TerminatedEvent());
-				return;
+				return this.errorResponse(response, "Unable to start debugging. program was specified as a relative path without cwd.");
 			}
-
 			args.program = path.join(args.cwd, args.program);
 		}
+
 		this.shouldKillProcessOnTerminate = true;
 		this.cwd = args.cwd;
 		this.noDebug = args.noDebug;
@@ -156,56 +155,66 @@ export class DartDebugSession extends DebugSession {
 		if (this.useWriteServiceInfo) {
 			this.parseObservatoryUriFromStdOut = false;
 			this.vmServiceInfoFile = path.join(os.tmpdir(), `dart-vm-service-${getRandomInt(0x1000, 0x10000).toString(16)}.json`);
-			this.startServiceFilePolling();
 		}
 
-		// Terminal mode is only supported if we can use writeServiceInfo.
-		// TODO: Move useWriteServiceInfo check to the client, so other clients do not need to provide this.
-		if (args.console === "terminal" && !this.supportsRunInTerminalRequest) {
-			this.log("Ignoring request to run in terminal because client does not support runInTerminalRequest", LogSeverity.Warn);
-		}
-		if (args.console === "terminal" && this.useWriteServiceInfo && this.supportsRunInTerminalRequest) {
-			this.childProcess = await this.spawnRemoteEditorProcess(args);
-		} else {
-			const process = this.spawnProcess(args);
+		try {
+			// Terminal mode is only supported if we can use writeServiceInfo.
+			// TODO: Move useWriteServiceInfo check to the client, so other clients do not need to provide this.
+			if (args.console === "terminal" && !this.supportsRunInTerminalRequest) {
+				this.log("Ignoring request to run in terminal because client does not support runInTerminalRequest", LogSeverity.Warn);
+			}
+			if (args.console === "terminal" && this.useWriteServiceInfo && this.supportsRunInTerminalRequest) {
+				this.childProcess = await this.spawnRemoteEditorProcess(args);
+			} else {
+				const process = this.spawnProcess(args);
 
-			this.childProcess = process;
-			this.processExited = false;
-			this.processExit = new Promise((resolve) => process.on("exit", (code, signal) => resolve({ code, signal })));
-			process.stdout.setEncoding("utf8");
-			process.stdout.on("data", async (data) => {
-				let match: RegExpExecArray | null = null;
-				if (this.shouldConnectDebugger && this.parseObservatoryUriFromStdOut && !this.observatory) {
-					match = observatoryListeningBannerPattern.exec(data.toString());
-				}
-				if (match) {
-					await this.initDebugger(this.websocketUriForObservatoryUri(match[1]));
-				} else if (this.sendStdOutToConsole)
-					this.logToUserBuffered(data.toString(), "stdout");
-			});
-			process.stderr.setEncoding("utf8");
-			process.stderr.on("data", (data) => {
-				this.logToUserBuffered(data.toString(), "stderr");
-			});
-			process.on("error", (error) => {
-				this.logToUser(`${error}\n`, "stderr");
-			});
-			// tslint:disable-next-line: no-floating-promises
-			this.processExit.then(async ({ code, signal }) => {
-				this.stopServiceFilePolling();
-				this.processExited = true;
-				this.log(`Process exited (${signal ? `${signal}`.toLowerCase() : code})`);
-				if (!code && !signal)
-					this.logToUser("Exited\n");
-				else
-					this.logToUser(`Exited (${signal ? `${signal}`.toLowerCase() : code})\n`);
-				// To reduce the chances of losing async logs, wait a short period
-				// before terminating.
-				await this.raceIgnoringErrors(() => this.lastLoggingEvent, 500);
-				// Add a small delay to allow for async events to complete first
-				// to reduce the chance of closing output.
-				setTimeout(() => this.sendEvent(new TerminatedEvent()), 250);
-			});
+				this.childProcess = process;
+				this.processExited = false;
+				this.processExit = new Promise((resolve) => process.on("exit", (code, signal) => resolve({ code, signal })));
+				process.stdout.setEncoding("utf8");
+				process.stdout.on("data", async (data) => {
+					let match: RegExpExecArray | null = null;
+					if (this.shouldConnectDebugger && this.parseObservatoryUriFromStdOut && !this.observatory) {
+						match = observatoryListeningBannerPattern.exec(data.toString());
+					}
+					if (match) {
+						await this.initDebugger(this.websocketUriForObservatoryUri(match[1]));
+					} else if (this.sendStdOutToConsole)
+						this.logToUserBuffered(data.toString(), "stdout");
+				});
+				process.stderr.setEncoding("utf8");
+				process.stderr.on("data", (data) => {
+					this.logToUserBuffered(data.toString(), "stderr");
+				});
+				process.on("error", (error) => {
+					this.logToUser(`${error}\n`, "stderr");
+				});
+				// tslint:disable-next-line: no-floating-promises
+				this.processExit.then(async ({ code, signal }) => {
+					this.stopServiceFilePolling();
+					this.processExited = true;
+					this.log(`Process exited (${signal ? `${signal}`.toLowerCase() : code})`);
+					if (!code && !signal)
+						this.logToUser("Exited\n");
+					else
+						this.logToUser(`Exited (${signal ? `${signal}`.toLowerCase() : code})\n`);
+					// To reduce the chances of losing async logs, wait a short period
+					// before terminating.
+					await this.raceIgnoringErrors(() => this.lastLoggingEvent, 500);
+					// Add a small delay to allow for async events to complete first
+					// to reduce the chance of closing output.
+					setTimeout(() => this.sendEvent(new TerminatedEvent()), 250);
+				});
+			}
+
+			if (this.useWriteServiceInfo && this.shouldConnectDebugger) {
+				const url = await this.startServiceFilePolling();
+				await this.initDebugger(url.toString());
+			}
+		} catch (e) {
+			this.logToUser(`Unable to start debugging: ${e}`);
+			this.sendEvent(new TerminatedEvent());
+			return;
 		}
 
 		if (!this.shouldConnectDebugger)
@@ -227,8 +236,8 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DartAttachRequestArguments): Promise<void> {
-		if (!args || !args.observatoryUri) {
-			return this.errorResponse(response, "Unable to attach; no Observatory address provided.");
+		if (!args || (!args.observatoryUri && !args.serviceInfoFile)) {
+			return this.errorResponse(response, "Unable to attach; no Observatory address or service info file provided.");
 		}
 
 		// this.observatoryUriIsProbablyReconnectable = true;
@@ -236,14 +245,14 @@ export class DartDebugSession extends DebugSession {
 		this.cwd = args.cwd;
 		this.readSharedArgs(args);
 
-		this.log(`Attaching to process via ${args.observatoryUri}`);
+		this.log(`Attaching to process via ${args.observatoryUri || args.serviceInfoFile}`);
 
 		// If we were given an explicity packages path, use it (otherwise we'll try
 		// to extract from the VM)
 		if (args.packages) {
 			// Support relative paths
 			if (args.packages && !path.isAbsolute(args.packages))
-				args.packages = path.join(args.cwd, args.packages);
+				args.packages = args.cwd ? path.join(args.cwd, args.packages) : args.packages;
 
 			try {
 				this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.packages));
@@ -252,11 +261,25 @@ export class DartDebugSession extends DebugSession {
 			}
 		}
 
+		this.sendResponse(response);
+
 		try {
-			await this.initDebugger(this.websocketUriForObservatoryUri(args.observatoryUri));
+			let url: string;
+			if (args.observatoryUri) {
+				url = this.websocketUriForObservatoryUri(args.observatoryUri);
+			} else {
+				this.vmServiceInfoFile = args.serviceInfoFile;
+				this.sendEvent(new Event("dart.progress", { message: `Waiting for ${this.vmServiceInfoFile}`, finished: false }));
+				url = await this.startServiceFilePolling();
+				this.sendEvent(new Event("dart.launched"));
+			}
+			await this.initDebugger(url);
+
 			this.sendResponse(response);
 		} catch (e) {
-			this.errorResponse(response, `Unable to connect to Observatory: ${e}`);
+			this.logToUser(`Unable to start connect to VM service: ${e}`);
+			this.sendEvent(new TerminatedEvent());
+			return;
 		}
 	}
 
@@ -357,17 +380,25 @@ export class DartDebugSession extends DebugSession {
 			this.sendEvent(new Event("dart.log", { message, severity, category: LogCategory.Observatory } as LogMessage));
 	}
 
-	private startServiceFilePolling() {
+	private startServiceFilePolling(): Promise<string> {
 		// Ensure we stop if we were already running, to avoid leaving timers running
 		// if this is somehow called twice.
 		this.stopServiceFilePolling();
+		if (this.serviceInfoFileCompleter)
+			this.serviceInfoFileCompleter.reject("Cancelled");
+		this.serviceInfoFileCompleter = new PromiseCompleter<string>();
 		this.serviceInfoPollTimer = setInterval(() => this.tryReadServiceFile(), 50);
+		return this.serviceInfoFileCompleter.promise;
 	}
 
 	private stopServiceFilePolling() {
 		if (this.serviceInfoPollTimer)
 			clearInterval(this.serviceInfoPollTimer);
-		if (this.vmServiceInfoFile && fs.existsSync(this.vmServiceInfoFile)) {
+		if (this.vmServiceInfoFile
+			&& fs.existsSync(this.vmServiceInfoFile)
+			// And we launched the process - we don't want to delete files we
+			// didn't create.
+			&& this.remoteEditorTerminalLaunched) {
 			try {
 				fs.unlinkSync(this.vmServiceInfoFile);
 				this.vmServiceInfoFile = undefined;
@@ -409,9 +440,10 @@ export class DartDebugSession extends DebugSession {
 				await this.remoteEditorTerminalLaunched;
 				await new Promise((resolve) => setTimeout(resolve, 5));
 			}
-			await this.initDebugger(url.toString());
+			this.serviceInfoFileCompleter?.resolve(url.toString());
 		} catch (e) {
 			this.logger.error(e, LogCategory.Observatory);
+			this.serviceInfoFileCompleter?.reject(e);
 		}
 	}
 

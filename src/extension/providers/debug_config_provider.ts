@@ -223,7 +223,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		// If we're attaching to Dart, ensure we get an observatory URI.
-		if (isAttachRequest) {
+		if (isAttachRequest && !debugConfig.serviceInfoFile) {
 			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
 			if (!isStandardFlutter) { // TEMP Condition because there's no point asking yet as the user doesn't know how to get this..
 				debugConfig.observatoryUri = await this.getFullVmServiceUri(debugConfig.observatoryUri/*, mostRecentAttachedProbablyReusableObservatoryUri*/);
