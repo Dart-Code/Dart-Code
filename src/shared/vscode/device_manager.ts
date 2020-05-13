@@ -49,7 +49,13 @@ export class FlutterDeviceManager implements vs.Disposable {
 		this.devices.push(dev);
 		// undefined is treated as true for backwards compatibility.
 		const canAutoSelectDevice = dev.ephemeral !== false;
-		const maySelectThisDevice = () => !this.currentDevice || (this.config.flutterSelectDeviceWhenConnected && canAutoSelectDevice);
+		const maySelectThisDevice = () => !this.currentDevice
+			|| (this.config.flutterSelectDeviceWhenConnected && canAutoSelectDevice)
+			// HACK: If the Chrome device becomes available and the selected device is
+			// web-server, allow switching because most users would prefer the Chrome device.
+			// We can revert this in future if Flutter changes the order these devices show up
+			// or has some other way of deciding priority.
+			|| (this.currentDevice?.id === "web-server" && dev.id === "chrome");
 		if (maySelectThisDevice()) {
 			// Finally, check if it's valid for the workspace. We don't want to
 			// auto-select to a mobile if you have a web-only project open.
