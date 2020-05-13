@@ -346,6 +346,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		else {
 			testNode.status = TestStatus.Unknown;
 		}
+		if (evt.time)
+			testNode.description = `${evt.time}ms`;
 
 		this.updateNode(testNode);
 		this.updateNode(testNode.parent);
@@ -535,6 +537,7 @@ export abstract class TestItemTreeItem extends vs.TreeItem {
 	set status(status: TestStatus) {
 		this._status = status;
 		this.iconPath = getIconPath(status, this.isStale);
+		this.description = undefined; // Clear old run duration.
 
 		if (status === TestStatus.Errored || status === TestStatus.Failed
 			|| status === TestStatus.Passed
