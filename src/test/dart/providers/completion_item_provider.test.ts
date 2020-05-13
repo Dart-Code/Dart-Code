@@ -261,7 +261,11 @@ main() {
 			assert.ok(completion.additionalTextEdits!.length);
 			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
-			assert.equal(completion.detail, "Auto import from 'dart:collection'\n\n({bool equals(K key1, K key2), int hashCode(K key), bool isValidKey(potentialKey)}) → HashMap");
+			// This signature changed in a newer Dev version of Dart (2020-05-13).
+			assert.ok(
+				completion.detail === "Auto import from 'dart:collection'\n\n({bool equals(K key1, K key2), int hashCode(K key), bool isValidKey(potentialKey)}) → HashMap"
+				|| completion.detail === "Auto import from 'dart:collection'\n\n({bool Function(K, K)? equals, int Function(K)? hashCode, bool Function(dynamic)? isValidKey}) → HashMap",
+			);
 			if (extApi.dartCapabilities.hasDocumentationInCompletions)
 				assert.equal((completion.documentation as vs.MarkdownString).value, "Creates an unordered hash-table based [Map].");
 			assert.equal(completion.filterText ?? completion.label, "HashMap");
