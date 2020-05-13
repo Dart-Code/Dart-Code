@@ -1788,6 +1788,10 @@
 							"observatoryUri": {
 								"type": "string",
 								"description": "URI of the Observatory instance to attach to."
+							},
+							"serviceInfoFile": {
+								"type": "string",
+								"description": "File to read (expected to be written with --write-service-info) VM service details from if observatoryUri is not supplied."
 							}
 						}
 					}

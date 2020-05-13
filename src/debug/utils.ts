@@ -77,10 +77,11 @@ export interface FlutterLaunchRequestArguments extends DartLaunchRequestArgument
 export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestArguments, DartSharedArgs {
 	type: string;
 	request: string;
-	cwd: string;
-	program: string;
-	packages: string;
-	observatoryUri: string;
+	cwd: string | undefined;
+	program: string | undefined;
+	packages: string | undefined;
+	observatoryUri: string | undefined;
+	serviceInfoFile: string | undefined;
 }
 
 export interface FlutterAttachRequestArguments extends DartAttachRequestArguments {
