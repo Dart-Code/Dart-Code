@@ -3,10 +3,11 @@ import * as os from "os";
 import * as path from "path";
 import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { isWin, observatoryListeningBannerPattern } from "../shared/constants";
+import { dartVMPath, isWin, observatoryListeningBannerPattern } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
+import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
 import { currentTestName, defer, extApi, fileSafeCurrentTestName, getLaunchConfiguration, logger, watchPromise } from "./helpers";
 
@@ -97,18 +98,21 @@ export async function ensureMapEntry(mapEntries: DebugProtocol.Variable[], entry
 	assert.ok(found, `Didn't find map entry for ${entry.key.value}=${entry.value.value}\nGot:\n  ${keyValues.join("\n  ")})`);
 }
 
-export function spawnDartProcessPaused(config: DebugConfiguration | undefined | null, ...vmArgs: string[]): DartProcess {
-	if (!config)
-		throw new Error(`Debug config resolved to ${config}!`);
+export function spawnDartProcessPaused(program: Uri, cwd: Uri, ...vmArgs: string[]): DartProcess {
+	const programPath = fsPath(program);
+	const cwdPath = fsPath(cwd);
+	const dartPath = path.join(extApi.workspaceContext.sdks.dart!, dartVMPath);
+	const allArgs = [
+		"--enable-vm-service=0",
+		"--pause_isolates_on_start=true",
+		...vmArgs,
+		programPath,
+	];
+	logger.info(`Spawning ${dartPath} in ${cwdPath} with args ${JSON.stringify(allArgs)}`);
 	const process = extApi.safeToolSpawn(
-		config.cwd,
-		config.dartPath,
-		[
-			"--enable-vm-service=0",
-			"--pause_isolates_on_start=true",
-			...vmArgs,
-			config.program,
-		],
+		cwdPath,
+		dartPath,
+		allArgs,
 	);
 	logProcess(logger, LogCategory.CI, process);
 	const dartProcess = new DartProcess(process);
