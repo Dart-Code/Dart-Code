@@ -381,6 +381,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private startServiceFilePolling(): Promise<string> {
+		this.logger.info(`Starting to poll for file ${this.vmServiceInfoFile}`);
 		// Ensure we stop if we were already running, to avoid leaving timers running
 		// if this is somehow called twice.
 		this.stopServiceFilePolling();
@@ -392,8 +393,10 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private stopServiceFilePolling() {
-		if (this.serviceInfoPollTimer)
+		if (this.serviceInfoPollTimer) {
+			this.logger.info(`Stopping polling for file ${this.vmServiceInfoFile}`);
 			clearInterval(this.serviceInfoPollTimer);
+		}
 		if (this.vmServiceInfoFile
 			&& fs.existsSync(this.vmServiceInfoFile)
 			// And we launched the process - we don't want to delete files we
@@ -424,6 +427,8 @@ export class DartDebugSession extends DebugSession {
 
 			const serviceInfo: { uri: string } = JSON.parse(serviceInfoJson);
 
+			this.logger.info(`Succesfully read JSON from ${this.vmServiceInfoFile}`);
+
 			const url = new URL(serviceInfo.uri);
 			url.protocol = "ws";
 			// Ensure we no trailing /
@@ -442,7 +447,7 @@ export class DartDebugSession extends DebugSession {
 			}
 			this.serviceInfoFileCompleter?.resolve(url.toString());
 		} catch (e) {
-			this.logger.error(e, LogCategory.Observatory);
+			this.logger.error(e);
 			this.serviceInfoFileCompleter?.reject(e);
 		}
 	}
@@ -1235,7 +1240,7 @@ export class DartDebugSession extends DebugSession {
 				return this.valueAsString(evalResult, undefined, true);
 			}
 		} catch (e) {
-			this.logger.error(e, LogCategory.Observatory);
+			this.logger.error(e);
 			return undefined;
 		}
 	}
@@ -1559,7 +1564,7 @@ export class DartDebugSession extends DebugSession {
 				await this.handleInspectEvent(event);
 			}
 		} catch (e) {
-			this.logger.error(e, LogCategory.Observatory);
+			this.logger.error(e);
 		}
 	}
 
@@ -1587,7 +1592,7 @@ export class DartDebugSession extends DebugSession {
 			try {
 				await this.threadManager.resetBreakpoints();
 			} catch (e) {
-				this.logger.error(e, LogCategory.Observatory);
+				this.logger.error(e);
 			}
 			try {
 				await this.observatory.resume(event.isolate.id);
