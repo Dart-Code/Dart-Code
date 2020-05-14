@@ -274,8 +274,6 @@ export class DartDebugSession extends DebugSession {
 				this.sendEvent(new Event("dart.launched"));
 			}
 			await this.initDebugger(url);
-
-			this.sendResponse(response);
 		} catch (e) {
 			const messageSuffix = args.serviceInfoFile ? `\n    VM info was read from ${args.serviceInfoFile}` : "";
 			this.logToUser(`Unable to connect to VM service at ${url || "??"}${messageSuffix}\n    ${e}`);
