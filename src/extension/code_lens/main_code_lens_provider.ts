@@ -1,5 +1,7 @@
+import { isArray } from "util";
 import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument, workspace } from "vscode";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
+import { escapeRegExp } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { toRange } from "../../shared/vscode/utils";
 import { DasAnalyzer } from "../analysis/analyzer_das";
@@ -24,14 +26,29 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		if (!outline || !outline.children || !outline.children.length)
 			return;
 
-		const runConfigs = workspace.getConfiguration("launch", document.uri).get<any[]>("configurations") || [];
-		const templateType = isTestFile(fsPath(document.uri)) ? "test-file" : "file";
-		const runFileTemplates = runConfigs.filter((c) => c && c.type === "dart" && (c.template === `run-${templateType}` || c.template === `debug-${templateType}`));
+		const runConfigs: TemplatedLaunchConfig[] = workspace.getConfiguration("launch", document.uri).get<any[]>("configurations") || [];
+		const fileType = isTestFile(fsPath(document.uri)) ? "test-file" : "file";
+		const wantedTemplateTypes = [`run-${fileType}`, `debug-${fileType}`];
+
+		// Loop through each launch config and add the relevant templates. Configs may be
+		// added multiple times if they have multiple template types.
+		const runFileTemplates: Array<{ name: string, template: string }> = [];
+		for (const templateType of wantedTemplateTypes) {
+			const relevantLaunchConfigs = runConfigs.filter((c) => c.type === "dart" && isTemplateOfType(c, templateType));
+			for (const launchConfig of relevantLaunchConfigs) {
+				runFileTemplates.push({
+					...launchConfig,
+					name: launchConfig.name || "${debugType}",
+					template: templateType,
+				});
+			}
+		}
 
 		const mainMethod = outline.children?.find((o) => o.element.name === "main");
 		if (!mainMethod)
 			return;
 
+		const debugTypeRegex = new RegExp(escapeRegExp("${debugType}"), "gi");
 		return [
 			new CodeLens(
 				toRange(document, mainMethod.offset, mainMethod.length),
@@ -53,8 +70,8 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 			toRange(document, mainMethod.offset, mainMethod.length),
 			{
 				arguments: [document.uri, t],
-				command: t.template === `run-${templateType}` ? "dart.startWithoutDebugging" : "dart.startDebugging",
-				title: t.name,
+				command: t.template === `run-${fileType}` ? "dart.startWithoutDebugging" : "dart.startDebugging",
+				title: t.name.replace(debugTypeRegex, t.template === `run-${fileType}` ? "Run" : "Debug"),
 			},
 		)));
 	}
@@ -62,4 +79,17 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	public dispose(): any {
 		this.disposables.forEach((d) => d.dispose());
 	}
+}
+
+function isTemplateOfType(config: TemplatedLaunchConfig, templateType: string): boolean {
+	return !!config.template && (
+		(typeof config.template === "string" && config.template === templateType)
+		|| (isArray(config.template) && config.template.indexOf(templateType) !== -1)
+	);
+}
+
+interface TemplatedLaunchConfig {
+	name?: string;
+	type?: string;
+	template?: string | string[];
 }

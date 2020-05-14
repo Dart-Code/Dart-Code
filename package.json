@@ -1721,13 +1721,30 @@
 							},
 							"template": {
 								"description": "Uses this launch configuration as a template for launching scripts and tests.",
-								"enum": [
-									"run-test",
-									"debug-test",
-									"run-file",
-									"debug-file",
-									"run-test-file",
-									"debug-test-file"
+								"anyOf": [
+									{
+										"type": "array",
+										"items": {
+											"enum": [
+												"run-test",
+												"debug-test",
+												"run-file",
+												"debug-file",
+												"run-test-file",
+												"debug-test-file"
+											]
+										}
+									},
+									{
+										"enum": [
+											"run-test",
+											"debug-test",
+											"run-file",
+											"debug-file",
+											"run-test-file",
+											"debug-test-file"
+										]
+									}
 								]
 							},
 							"args": {
