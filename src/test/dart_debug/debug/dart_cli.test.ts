@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import { log } from "console";
+import * as os from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
@@ -1090,7 +1091,7 @@ describe("dart cli debugger", () => {
 
 	describe("attaches", () => {
 		it("to a paused Dart script and can unpause to run it to completion", async () => {
-			const process = spawnDartProcessPaused(await getLaunchConfiguration(helloWorldMainFile));
+			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder);
 			const observatoryUri = await process.observatoryUri;
 
 			const config = await attachDebugger(observatoryUri);
@@ -1101,9 +1102,24 @@ describe("dart cli debugger", () => {
 			]);
 		});
 
+		it("to a Dart script launched externally using --write-service-info and can unpause to run it to completion", async () => {
+			const tempVmServiceInfoFile = path.join(os.tmpdir(), `dart-vm-service-${getRandomInt(0x1000, 0x10000).toString(16)}.json`);
+			const vmArgs = [
+				`--write-service-info=${vs.Uri.file(tempVmServiceInfoFile)}`,
+			];
+			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder, ...vmArgs);
+
+			const config = await attachDebugger(undefined, { serviceInfoFile: tempVmServiceInfoFile });
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.waitForEvent("terminated"),
+				dc.launch(config),
+			]);
+		});
+
 		it("when provided only a port in launch.config", async () => {
 			const vmArgs = extApi.dartCapabilities.supportsDisableServiceTokens ? ["--disable-service-auth-codes"] : [];
-			const process = spawnDartProcessPaused(await getLaunchConfiguration(helloWorldMainFile), ...vmArgs);
+			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder, ...vmArgs);
 			const observatoryUri = await process.observatoryUri;
 			const observatoryPort = /:([0-9]+)\//.exec(observatoryUri)![1];
 
@@ -1117,7 +1133,7 @@ describe("dart cli debugger", () => {
 		});
 
 		it("to the observatory uri provided by the user when not specified in launch.json", async () => {
-			const process = spawnDartProcessPaused(await getLaunchConfiguration(helloWorldMainFile));
+			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder);
 			const observatoryUri = await process.observatoryUri;
 
 			const showInputBox = sb.stub(vs.window, "showInputBox");
@@ -1134,7 +1150,7 @@ describe("dart cli debugger", () => {
 		});
 
 		it("to a paused Dart script and can set breakpoints", async () => {
-			const process = spawnDartProcessPaused(await getLaunchConfiguration(helloWorldMainFile));
+			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder);
 			const observatoryUri = await process.observatoryUri;
 
 			const config = await attachDebugger(observatoryUri);
@@ -1145,7 +1161,7 @@ describe("dart cli debugger", () => {
 		});
 
 		it("and removes breakpoints and unpauses on detach", async () => {
-			const process = spawnDartProcessPaused(await getLaunchConfiguration(helloWorldMainFile));
+			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder);
 			const observatoryUri = await process.observatoryUri;
 
 			const config = await attachDebugger(observatoryUri);
