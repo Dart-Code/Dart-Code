@@ -263,8 +263,8 @@ export class DartDebugSession extends DebugSession {
 
 		this.sendResponse(response);
 
+		let url: string | undefined;
 		try {
-			let url: string;
 			if (args.observatoryUri) {
 				url = this.websocketUriForObservatoryUri(args.observatoryUri);
 			} else {
@@ -277,7 +277,8 @@ export class DartDebugSession extends DebugSession {
 
 			this.sendResponse(response);
 		} catch (e) {
-			this.logToUser(`Unable to start connect to VM service: ${e}`);
+			const messageSuffix = args.serviceInfoFile ? `\n    VM info was read from ${args.serviceInfoFile}` : "";
+			this.logToUser(`Unable to connect to VM service at ${url || "??"}${messageSuffix}\n    ${e}`);
 			this.sendEvent(new TerminatedEvent());
 			return;
 		}
