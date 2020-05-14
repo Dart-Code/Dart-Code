@@ -138,7 +138,7 @@ describe("dart cli debugger", () => {
 		]);
 	});
 
-	it.only("can run in a terminal", async () => {
+	it("can run in a terminal", async () => {
 		await openFile(helloWorldMainFile);
 		const config = await startDebugger(helloWorldMainFile, {
 			console: "terminal",
