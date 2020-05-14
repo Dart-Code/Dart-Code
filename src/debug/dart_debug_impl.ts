@@ -384,7 +384,7 @@ export class DartDebugSession extends DebugSession {
 		this.logger.info(`Starting to poll for file ${this.vmServiceInfoFile}`);
 		// Ensure we stop if we were already running, to avoid leaving timers running
 		// if this is somehow called twice.
-		this.stopServiceFilePolling();
+		this.stopServiceFilePolling(false);
 		if (this.serviceInfoFileCompleter)
 			this.serviceInfoFileCompleter.reject("Cancelled");
 		this.serviceInfoFileCompleter = new PromiseCompleter<string>();
@@ -392,12 +392,13 @@ export class DartDebugSession extends DebugSession {
 		return this.serviceInfoFileCompleter.promise;
 	}
 
-	private stopServiceFilePolling() {
+	private stopServiceFilePolling(allowDelete = true) {
 		if (this.serviceInfoPollTimer) {
 			this.logger.info(`Stopping polling for file ${this.vmServiceInfoFile}`);
 			clearInterval(this.serviceInfoPollTimer);
 		}
-		if (this.vmServiceInfoFile
+		if (allowDelete
+			&& this.vmServiceInfoFile
 			&& fs.existsSync(this.vmServiceInfoFile)
 			// And we launched the process - we don't want to delete files we
 			// didn't create.
