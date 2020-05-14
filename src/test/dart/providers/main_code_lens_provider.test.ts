@@ -34,101 +34,50 @@ describe("main_code_lens", () => {
 		assert.equal(fsPath(debugAction!.command!.arguments![0]), fsPath(helloWorldMainFile));
 	});
 
-	it("includes custom run/debug actions from launch templates for files", async function () {
-		await addLaunchConfigsForTest(
-			vs.workspace.workspaceFolders![0].uri,
-			[
-				{
-					console: "terminal",
-					name: "Run in Terminal",
-					request: "launch",
-					template: "run-file",
-					type: "dart",
-				},
-				{
-					console: "terminal",
-					name: "Debug in Terminal",
-					request: "launch",
-					template: "debug-file",
-					type: "dart",
-				},
-			],
-		);
+	for (const debugType of [
+		{ type: "run", name: "Run" },
+		{ type: "debug", name: "Debug" },
+	]) {
+		for (const testConfig of [
+			{ type: "file", fileUri: helloWorldMainFile, lensLocation: "main^() async {" },
+			{ type: "test-file", fileUri: helloWorldTestMainFile, lensLocation: "main^() {" },
+		]) {
+			it(`includes custom templated ${debugType.type} actions from launch templates for ${testConfig.type}`, async function () {
+				await addLaunchConfigsForTest(
+					vs.workspace.workspaceFolders![0].uri,
+					[
+						{
+							console: "terminal",
+							name: "${debugType} in Terminal",
+							request: "launch",
+							template: [`${debugType.type}-${testConfig.type}`],
+							type: "dart",
+						},
+					],
+				);
 
-		const editor = await openFile(helloWorldMainFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldMainFile));
+				const editor = await openFile(testConfig.fileUri);
+				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(testConfig.fileUri));
 
-		const fileCodeLens = await getCodeLens(editor.document);
-		const mainMethodPos = positionOf(`main^() async {`);
+				const fileCodeLens = await getCodeLens(editor.document);
+				const mainMethodPos = positionOf(testConfig.lensLocation);
 
-		const codeLensForMainMethod = fileCodeLens.filter((cl) => cl.range.start.line === mainMethodPos.line);
-		assert.equal(codeLensForMainMethod.length, 4);
+				const codeLensForMainMethod = fileCodeLens.filter((cl) => cl.range.start.line === mainMethodPos.line);
+				assert.equal(codeLensForMainMethod.length, 3);
 
-		if (!codeLensForMainMethod[0].command) {
-			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-			// race condition. Rather than failing our test runs, skip.
-			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
-			this.skip();
-			return;
+				if (!codeLensForMainMethod[0].command) {
+					// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+					// race condition. Rather than failing our test runs, skip.
+					// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+					this.skip();
+					return;
+				}
+
+				const action = codeLensForMainMethod.find((cl) => cl.command!.title === `${debugType.name} in Terminal`)!;
+				assert.equal(action!.command!.command, debugType.type === "debug" ? "dart.startDebugging" : "dart.startWithoutDebugging");
+				assert.equal(fsPath(action!.command!.arguments![0]), fsPath(testConfig.fileUri));
+				assert.equal(action!.command!.arguments![1].console, "terminal");
+			});
 		}
-
-		const runAction = codeLensForMainMethod.find((cl) => cl.command!.title === "Run in Terminal")!;
-		assert.equal(runAction!.command!.command, "dart.startWithoutDebugging");
-		assert.equal(fsPath(runAction!.command!.arguments![0]), fsPath(helloWorldMainFile));
-		assert.equal(runAction!.command!.arguments![1].console, "terminal");
-
-		const debugAction = codeLensForMainMethod.find((cl) => cl.command!.title === "Debug in Terminal");
-		assert.equal(debugAction!.command!.command, "dart.startDebugging");
-		assert.equal(fsPath(debugAction!.command!.arguments![0]), fsPath(helloWorldMainFile));
-		assert.equal(debugAction!.command!.arguments![1].console, "terminal");
-	});
-
-	it("includes custom run/debug actions from launch templates for test files", async function () {
-		await addLaunchConfigsForTest(
-			vs.workspace.workspaceFolders![0].uri,
-			[
-				{
-					console: "terminal",
-					name: "Run Test in Terminal",
-					request: "launch",
-					template: "run-test-file",
-					type: "dart",
-				},
-				{
-					console: "terminal",
-					name: "Debug Test in Terminal",
-					request: "launch",
-					template: "debug-test-file",
-					type: "dart",
-				},
-			],
-		);
-
-		const editor = await openFile(helloWorldTestMainFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
-
-		const fileCodeLens = await getCodeLens(editor.document);
-		const mainMethodPos = positionOf(`main^() {`);
-
-		const codeLensForMainMethod = fileCodeLens.filter((cl) => cl.range.start.line === mainMethodPos.line);
-		assert.equal(codeLensForMainMethod.length, 4);
-
-		if (!codeLensForMainMethod[0].command) {
-			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-			// race condition. Rather than failing our test runs, skip.
-			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
-			this.skip();
-			return;
-		}
-
-		const runAction = codeLensForMainMethod.find((cl) => cl.command!.title === "Run Test in Terminal")!;
-		assert.equal(runAction!.command!.command, "dart.startWithoutDebugging");
-		assert.equal(fsPath(runAction!.command!.arguments![0]), fsPath(helloWorldTestMainFile));
-		assert.equal(runAction!.command!.arguments![1].console, "terminal");
-
-		const debugAction = codeLensForMainMethod.find((cl) => cl.command!.title === "Debug Test in Terminal");
-		assert.equal(debugAction!.command!.command, "dart.startDebugging");
-		assert.equal(fsPath(debugAction!.command!.arguments![0]), fsPath(helloWorldTestMainFile));
-		assert.equal(debugAction!.command!.arguments![1].console, "terminal");
-	});
+	}
 });
