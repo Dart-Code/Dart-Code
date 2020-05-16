@@ -519,14 +519,12 @@ export class ObservatoryConnection {
 		const completer = new PromiseCompleter<DebuggerResult>();
 		this.completers[id] = completer;
 
-		let json: {
-			id: string,
-			method: string,
-			params?: any,
+		const json = {
+			id,
+			jsonrpc: "2.0",
+			method,
+			params: params || {},
 		};
-		json = { id, method };
-		if (params)
-			json.params = params;
 		const str = JSON.stringify(json);
 		this.logTraffic(`==> ${str}\n`);
 		this.socket.send(str);
