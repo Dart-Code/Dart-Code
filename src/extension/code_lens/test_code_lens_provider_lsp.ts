@@ -1,10 +1,12 @@
-import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument, workspace } from "vscode";
+import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument } from "vscode";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { LspTestOutlineVisitor } from "../../shared/utils/outline_lsp";
+import { debugTypeTokenRegex, getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
 import { lspToRange } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
+import { isTestFile } from "../utils";
 
 export class LspTestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	private disposables: IAmDisposable[] = [];
@@ -30,8 +32,12 @@ export class LspTestCodeLensProvider implements CodeLensProvider, IAmDisposable 
 		if (!this.analyzer.fileTracker.supportsPubRunTest(document.uri))
 			return;
 
-		const runConfigs = workspace.getConfiguration("launch", document.uri).get<any[]>("configurations") || [];
-		const runTestTemplates = runConfigs.filter((c) => c && c.type === "dart" && c.template && (c.template === "run-test" || c.template === "debug-test"));
+		// If we don't consider this a test file, we should also not show links (since we may try to run the
+		// app with 'flutter run' instead of 'flutter test' which will fail due to no `-name` argument).
+		if (!isTestFile(fsPath(document.uri)))
+			return;
+
+		const templates = getTemplatedLaunchConfigs(document, "test");
 
 		const visitor = new LspTestOutlineVisitor(this.logger, fsPath(document.uri));
 		visitor.visit(outline);
@@ -56,12 +62,12 @@ export class LspTestCodeLensProvider implements CodeLensProvider, IAmDisposable 
 								title: "Debug",
 							},
 						),
-					].concat(runTestTemplates.map((t) => new CodeLens(
+					].concat(templates.map((t) => new CodeLens(
 						lspToRange(test.range),
 						{
 							arguments: [test, t],
 							command: t.template === "run-test" ? "_dart.startWithoutDebuggingTestFromOutline" : "_dart.startDebuggingTestFromOutline",
-							title: t.name,
+							title: t.name.replace(debugTypeTokenRegex, t.template === `run-test` ? "Run" : "Debug"),
 						},
 					)));
 				}),

@@ -56,105 +56,71 @@ describe("test_code_lens", () => {
 		assert.equal(debugAction!.command!.arguments![0].isGroup, true);
 	});
 
-	it("includes custom run/debug actions from launch templates for tests", async function () {
-		await addLaunchConfigsForTest(
-			vs.workspace.workspaceFolders![0].uri,
-			[
-				{
-					env: { MY_VAR: "FOO" },
-					name: "Run in Browser",
-					request: "launch",
-					template: "run-test",
-					type: "dart",
-				},
-				{
-					env: { MY_VAR: "BAR" },
-					name: "Debug in Browser",
-					request: "launch",
-					template: "debug-test",
-					type: "dart",
-				},
-			],
-		);
+	for (const debugType of [
+		{ type: "run", name: "Run" },
+		{ type: "debug", name: "Debug" },
+	]) {
+		const launchConfigs = [
+			{
+				env: { MY_VAR: "FOO" },
+				name: "${debugType} in Browser",
+				request: "launch",
+				template: [`${debugType.type}-test`],
+				type: "dart",
+			},
+		];
+		it(`includes custom ${debugType.type}  actions from launch templates for tests`, async function () {
+			await addLaunchConfigsForTest(vs.workspace.workspaceFolders![0].uri, launchConfigs);
 
-		const editor = await openFile(helloWorldTestMainFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
+			const editor = await openFile(helloWorldTestMainFile);
+			await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
-		const fileCodeLens = await getCodeLens(editor.document);
-		const testPos = positionOf(`test^(".split() splits`);
+			const fileCodeLens = await getCodeLens(editor.document);
+			const testPos = positionOf(`test^(".split() splits`);
 
-		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
-		assert.equal(codeLensForTest.length, 4);
+			const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
+			assert.equal(codeLensForTest.length, 3);
 
-		if (!codeLensForTest[0].command) {
-			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-			// race condition. Rather than failing our test runs, skip.
-			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
-			this.skip();
-			return;
-		}
+			if (!codeLensForTest[0].command) {
+				// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+				// race condition. Rather than failing our test runs, skip.
+				// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+				this.skip();
+				return;
+			}
 
-		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run in Browser");
-		assert.equal(runAction!.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
-		assert.equal(runAction!.command!.arguments![0].fullName, "String .split() splits the string on the delimiter");
-		assert.equal(runAction!.command!.arguments![0].isGroup, false);
-		assert.deepStrictEqual(runAction!.command!.arguments![1].env, { MY_VAR: "FOO" });
+			const action = codeLensForTest.find((cl) => cl.command!.title === `${debugType.name} in Browser`);
+			assert.equal(action!.command!.command, debugType.type === "debug" ? "_dart.startDebuggingTestFromOutline" : "_dart.startWithoutDebuggingTestFromOutline");
+			assert.equal(action!.command!.arguments![0].fullName, "String .split() splits the string on the delimiter");
+			assert.equal(action!.command!.arguments![0].isGroup, false);
+			assert.deepStrictEqual(action!.command!.arguments![1].env, { MY_VAR: "FOO" });
+		});
 
-		const debugAction = codeLensForTest.find((cl) => cl.command!.title === "Debug in Browser");
-		assert.equal(debugAction!.command!.command, "_dart.startDebuggingTestFromOutline");
-		assert.equal(debugAction!.command!.arguments![0].fullName, "String .split() splits the string on the delimiter");
-		assert.equal(debugAction!.command!.arguments![0].isGroup, false);
-		assert.deepStrictEqual(debugAction!.command!.arguments![1].env, { MY_VAR: "BAR" });
-	});
+		it(`includes custom ${debugType.type} actions from launch templates for groups`, async function () {
+			await addLaunchConfigsForTest(vs.workspace.workspaceFolders![0].uri, launchConfigs);
 
-	it("includes custom run/debug actions from launch templates for groups", async function () {
-		await addLaunchConfigsForTest(
-			vs.workspace.workspaceFolders![0].uri,
-			[
-				{
-					env: { MY_VAR: "FOO" },
-					name: "Run in Browser",
-					request: "launch",
-					template: "run-test",
-					type: "dart",
-				},
-				{
-					env: { MY_VAR: "BAR" },
-					name: "Debug in Browser",
-					request: "launch",
-					template: "debug-test",
-					type: "dart",
-				},
-			],
-		);
+			const editor = await openFile(helloWorldTestMainFile);
+			await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
-		const editor = await openFile(helloWorldTestMainFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
+			const fileCodeLens = await getCodeLens(editor.document);
+			const groupPos = positionOf("group^(");
 
-		const fileCodeLens = await getCodeLens(editor.document);
-		const groupPos = positionOf("group^(");
+			const codeLensForGroup = fileCodeLens.filter((cl) => cl.range.start.line === groupPos.line);
+			assert.equal(codeLensForGroup.length, 3);
 
-		const codeLensForGroup = fileCodeLens.filter((cl) => cl.range.start.line === groupPos.line);
-		assert.equal(codeLensForGroup.length, 4);
+			if (!codeLensForGroup[0].command) {
+				// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+				// race condition. Rather than failing our test runs, skip.
+				// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+				this.skip();
+				return;
+			}
 
-		if (!codeLensForGroup[0].command) {
-			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-			// race condition. Rather than failing our test runs, skip.
-			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
-			this.skip();
-			return;
-		}
-
-		const runAction = codeLensForGroup.find((cl) => cl.command!.title === "Run in Browser");
-		assert.equal(runAction!.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
-		assert.equal(runAction!.command!.arguments![0].fullName, "String");
-		assert.equal(runAction!.command!.arguments![0].isGroup, true);
-		assert.deepStrictEqual(runAction!.command!.arguments![1].env, { MY_VAR: "FOO" });
-
-		const debugAction = codeLensForGroup.find((cl) => cl.command!.title === "Debug in Browser");
-		assert.equal(debugAction!.command!.command, "_dart.startDebuggingTestFromOutline");
-		assert.equal(debugAction!.command!.arguments![0].fullName, "String");
-		assert.equal(debugAction!.command!.arguments![0].isGroup, true);
-		assert.deepStrictEqual(debugAction!.command!.arguments![1].env, { MY_VAR: "BAR" });
-	});
+			const action = codeLensForGroup.find((cl) => cl.command!.title === `${debugType.name} in Browser`);
+			assert.equal(action!.command!.command, debugType.type === "debug" ? "_dart.startDebuggingTestFromOutline" : "_dart.startWithoutDebuggingTestFromOutline");
+			assert.equal(action!.command!.arguments![0].fullName, "String");
+			assert.equal(action!.command!.arguments![0].isGroup, true);
+			assert.deepStrictEqual(action!.command!.arguments![1].env, { MY_VAR: "FOO" });
+		});
+	}
 });

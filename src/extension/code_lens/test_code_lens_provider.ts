@@ -1,8 +1,9 @@
-import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument, workspace } from "vscode";
+import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument } from "vscode";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { TestOutlineVisitor } from "../../shared/utils/outline_das";
+import { debugTypeTokenRegex, getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
 import { toRange } from "../../shared/vscode/utils";
 import { DasAnalyzer } from "../analysis/analyzer_das";
 import { isTestFile } from "../utils";
@@ -36,8 +37,7 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		if (!isTestFile(fsPath(document.uri)))
 			return;
 
-		const runConfigs = workspace.getConfiguration("launch", document.uri).get<any[]>("configurations") || [];
-		const runTestTemplates = runConfigs.filter((c) => c && c.type === "dart" && c.template && (c.template === "run-test" || c.template === "debug-test"));
+		const templates = getTemplatedLaunchConfigs(document, "test");
 
 		const visitor = new TestOutlineVisitor(this.logger);
 		visitor.visit(outline);
@@ -62,12 +62,12 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 								title: "Debug",
 							},
 						),
-					].concat(runTestTemplates.map((t) => new CodeLens(
+					].concat(templates.map((t) => new CodeLens(
 						toRange(document, test.offset, test.length),
 						{
 							arguments: [test, t],
 							command: t.template === "run-test" ? "_dart.startWithoutDebuggingTestFromOutline" : "_dart.startDebuggingTestFromOutline",
-							title: t.name,
+							title: t.name.replace(debugTypeTokenRegex, t.template === `run-test` ? "Run" : "Debug"),
 						},
 					)));
 				}),
