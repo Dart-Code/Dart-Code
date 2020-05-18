@@ -66,11 +66,12 @@ export const everythingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "l
 export const myPackageFolder = vs.Uri.file(path.join(testFolder, "test_projects/my_package"));
 export const myPackageThingFile = vs.Uri.file(path.join(fsPath(myPackageFolder), "lib/my_thing.dart"));
 // Dart tests
-export const helloWorldTestMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/basic_test.dart"));
-export const helloWorldTestTreeFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/tree_test.dart"));
-export const helloWorldTestDupeNameFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/dupe_name_test.dart"));
-export const helloWorldTestBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/broken_test.dart"));
-export const helloWorldTestSkipFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/skip_test.dart"));
+export const helloWorldTestFolder = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test"));
+export const helloWorldTestMainFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "basic_test.dart"));
+export const helloWorldTestTreeFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "tree_test.dart"));
+export const helloWorldTestDupeNameFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "dupe_name_test.dart"));
+export const helloWorldTestBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "broken_test.dart"));
+export const helloWorldTestSkipFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "skip_test.dart"));
 // Flutter
 export const flutterHelloWorldFolder = vs.Uri.file(path.join(testFolder, "test_projects/flutter_hello_world"));
 export const flutterEmptyFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/empty.dart"));

@@ -80,4 +80,35 @@ describe("main_code_lens", () => {
 			});
 		}
 	}
+
+	it(`excludes templates where templateFor doesn't include the current file`, async () => {
+		await addLaunchConfigsForTest(
+			vs.workspace.workspaceFolders![0].uri,
+			[
+				{
+					console: "terminal",
+					name: "Run in Terminal",
+					request: "launch",
+					template: ["run-file", "run-test-file"],
+					templateFor: "test",
+					type: "dart",
+				},
+			],
+		);
+
+		for (const testConfig of [
+			{ fileUri: helloWorldMainFile, lensLocation: "main^() async {", expectMatch: false },
+			{ fileUri: helloWorldTestMainFile, lensLocation: "main^() {", expectMatch: true },
+		]) {
+
+			const editor = await openFile(testConfig.fileUri);
+			await waitForResult(() => !!extApi.fileTracker.getOutlineFor(testConfig.fileUri));
+
+			const fileCodeLens = await getCodeLens(editor.document);
+			const mainMethodPos = positionOf(testConfig.lensLocation);
+
+			const codeLensForMainMethod = fileCodeLens.filter((cl) => cl.range.start.line === mainMethodPos.line);
+			assert.equal(codeLensForMainMethod.length, testConfig.expectMatch ? 3 : 2);
+		}
+	});
 });

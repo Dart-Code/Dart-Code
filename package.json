@@ -1719,8 +1719,12 @@
 								],
 								"default": "default"
 							},
+							"templateFor": {
+								"type": "string",
+								"description": "A relative path to a folder if CodeLens templates should be restricted to a specific folder/subfolders."
+							},
 							"template": {
-								"description": "Uses this launch configuration as a template for launching scripts and tests.",
+								"description": "Uses this launch configuration as a CodeLens template for launching scripts and tests.",
 								"anyOf": [
 									{
 										"type": "array",
