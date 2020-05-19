@@ -1,5 +1,4 @@
 import * as path from "path";
-import { isArray } from "util";
 import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, MarkdownString, Position, SnippetString, TextDocument, Uri } from "vscode";
 import { extensionPath, readJson } from "../../shared/vscode/extension_utils";
 
@@ -16,7 +15,7 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 				const completionItem = new CompletionItem(snippetName, CompletionItemKind.Snippet);
 				completionItem.filterText = snippet.prefix;
 				completionItem.insertText = new SnippetString(
-					isArray(snippet.body)
+					Array.isArray(snippet.body)
 						? snippet.body.join("\n")
 						: snippet.body,
 				);

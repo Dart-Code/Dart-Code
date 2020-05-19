@@ -1,5 +1,4 @@
 import * as path from "path";
-import { isArray } from "util";
 import * as vs from "vscode";
 import { Analyzer } from "../shared/analyzer";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
@@ -712,7 +711,7 @@ function recalculateAnalysisRoots() {
 	getDartWorkspaceFolders().forEach((f) => {
 		const excludedForWorkspace = config.for(f.uri).analysisExcludedFolders;
 		const workspacePath = fsPath(f.uri);
-		if (excludedForWorkspace && isArray(excludedForWorkspace)) {
+		if (excludedForWorkspace && Array.isArray(excludedForWorkspace)) {
 			excludedForWorkspace.forEach((folder) => {
 				// Handle both relative and absolute paths.
 				if (!path.isAbsolute(folder))
