@@ -366,7 +366,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			defaultArgumentListString: suggestion.defaultArgumentListString,
 			defaultArgumentListTextRanges: suggestion.defaultArgumentListTextRanges,
 			displayText: suggestion.displayText,
-			docSummary: suggestion.docSummary,
+			docComplete: suggestion.docComplete,
 			elementKind: suggestion.element ? suggestion.element.kind : undefined,
 			isDeprecated: suggestion.isDeprecated,
 			kind: suggestion.kind,
@@ -390,7 +390,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			defaultArgumentListString: string | undefined,
 			defaultArgumentListTextRanges: number[] | undefined,
 			displayText: string | undefined,
-			docSummary?: string | undefined,
+			docComplete?: string | undefined,
 			elementKind: as.ElementKind | undefined,
 			isDeprecated: boolean,
 			kind: as.CompletionSuggestionKind | undefined,
@@ -504,7 +504,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		// If we didnt have a CompletionItemKind from our element, base it on the CompletionSuggestionKind.
 		// This covers things like Keywords that don't have elements.
 		const kind = completionItemKind || (suggestion.kind ? this.getSuggestionKind(suggestion.kind, label) : undefined);
-		const docs = cleanDartdoc(suggestion.docSummary);
+		const docs = cleanDartdoc(suggestion.docComplete);
 
 		const completion: LazyCompletionItem = new CompletionItem(label, kind);
 		completion.filterText = label.split("(")[0]; // Don't ever include anything after a ( in filtering.
