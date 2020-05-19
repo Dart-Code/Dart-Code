@@ -1,18 +1,18 @@
-name: Mark stale issues and pull requests
+name: Mark stale issues
 
 on:
   schedule:
-  - cron: "*/5 * * * *"
+    - cron: '*/5 * * * *'
 
 jobs:
   stale:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/stale@v3
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        stale-issue-message: 'This issue has been marked stale because it is tagged awaiting-info for 30 days with no activity. Remove the stale label or comment to prevent the issue being closed in 10 days.'
-        stale-issue-label: 'stale'
-        only-labels: 'awaiting-info'
-        days-before-stale: 30
-        days-before-close: 10
+      - uses: actions/stale@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-issue-message: 'This issue has been marked stale because it is tagged awaiting-info for 30 days with no activity. Remove the stale label or comment to prevent the issue being closed in 10 days.'
+          stale-issue-label: 'stale'
+          only-labels: 'awaiting-info'
+          days-before-stale: 30
+          days-before-close: 10
