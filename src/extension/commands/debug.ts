@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
+import { doNotAskAgainAction, isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
 import { DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { DartWorkspaceContext, Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
@@ -24,6 +24,8 @@ export const debugSessions: DartDebugSessionInformation[] = [];
 // will keep any events that arrive before their session "started" and then
 // replace them when the start event comes through.
 let pendingCustomEvents: vs.DebugSessionCustomEvent[] = [];
+
+let hasPromptedAboutDebugSettings = false;
 
 export class LastDebugSession {
 	public static workspaceFolder?: vs.WorkspaceFolder;
@@ -57,6 +59,7 @@ export class DebugCommands {
 		context.subscriptions.push(this.debugOptions);
 		context.subscriptions.push(this.debugMetrics);
 
+		context.subscriptions.push(vs.debug.onDidChangeBreakpoints((e) => this.handleBreakpointChange(e)));
 		context.subscriptions.push(vs.debug.onDidStartDebugSession((s) => this.handleDebugSessionStart(s)));
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		context.subscriptions.push(vs.debug.onDidTerminateDebugSession((s) => this.handleDebugSessionEnd(s)));
@@ -270,7 +273,40 @@ export class DebugCommands {
 			this.currentDebugOption = DebugOption.MyCodePackages;
 		context.subscriptions.push(vs.commands.registerCommand("_dart.toggleDebugOptions", this.toggleDebugOptions, this));
 		this.debugOptions.text = `Debug ${debugOptionNames[this.currentDebugOption]}`;
+		this.debugOptions.tooltip = `Controls whether to step into or stop at breakpoints in only files in this workspace or also those in SDK and/or external Pub packages`;
 		this.debugOptions.command = "_dart.toggleDebugOptions";
+	}
+
+	public handleBreakpointChange(e: vs.BreakpointsChangeEvent): void {
+		if (hasPromptedAboutDebugSettings)
+			return;
+
+		for (const bp of e.added)
+			this.promptAboutDebuggerSettingsIfBreakpointOutsideWorkspace(bp);
+	}
+
+	public promptAboutDebuggerSettingsIfBreakpointOutsideWorkspace(e: vs.Breakpoint): void {
+		if (hasPromptedAboutDebugSettings || this.context.breakpointOutsideWorkspaceDoNotShow || !(e instanceof vs.SourceBreakpoint))
+			return;
+
+		// If it's inside the workspace we don't want to prompt.
+		if (vs.workspace.getWorkspaceFolder(e.location.uri))
+			return;
+
+		hasPromptedAboutDebugSettings = true;
+		const message = `You have a breakpoint outside of your workspace but debug settings are set to 'my code'. Would you like to change settings? You can also change this from the status bar while debugging.`;
+
+		const debugJustMyCodeAction = "Debug just my code";
+		const debugEverything = "Debug my code + packages + SDK";
+		vs.window.showWarningMessage(message, debugJustMyCodeAction, debugEverything, doNotAskAgainAction).then((choice) => {
+			if (choice === doNotAskAgainAction)
+				this.context.breakpointOutsideWorkspaceDoNotShow = true;
+			if (choice !== debugEverything)
+				return;
+
+			this.currentDebugOption = DebugOption.MyCodePackagesSdk;
+			this.applyNewDebugOption();
+		});
 	}
 
 	public handleDebugSessionStart(s: vs.DebugSession): void {
@@ -518,6 +554,10 @@ export class DebugCommands {
 	private toggleDebugOptions() {
 		// -1 is because we skip the last combination when toggling since it seems uncommon.
 		this.currentDebugOption = (this.currentDebugOption + 1) % (debugOptionNames.length - 1);
+		this.applyNewDebugOption();
+	}
+
+	private applyNewDebugOption() {
 		this.debugOptions.text = `Debug ${debugOptionNames[this.currentDebugOption]}`;
 
 		const debugExternalLibraries = this.currentDebugOption === DebugOption.MyCodePackages || this.currentDebugOption === DebugOption.MyCodePackagesSdk;
