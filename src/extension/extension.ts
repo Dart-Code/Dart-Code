@@ -670,15 +670,22 @@ function buildLogHeaders(workspaceContext?: WorkspaceContext) {
 		const ext = vs.extensions.getExtension(flutterExtensionIdentifier)!;
 		return `Flutter extension: ${ext.packageJSON.version} (${ext.isActive ? "" : "not "}activated)`;
 	});
-	addToLogHeader(() => `VS Code: ${vs.version}`);
+	addToLogHeader(() => ``);
+	addToLogHeader(() => `App: ${vs.env.appName}`);
+	if (vs.env.remoteName)
+		addToLogHeader(() => `Remote: ${vs.env.remoteName}`);
+	addToLogHeader(() => `Version: ${vs.version}`);
 	addToLogHeader(() => `Platform: ${platformDisplayName}`);
 	if (workspaceContext) {
+		addToLogHeader(() => ``);
 		addToLogHeader(() => `Workspace type: ${workspaceContext.workspaceTypeDescription}`);
 		addToLogHeader(() => `Multi-root?: ${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1}`);
 		const sdks = workspaceContext.sdks;
+		addToLogHeader(() => ``);
 		addToLogHeader(() => `Dart SDK:\n    Loc: ${sdks.dart}\n    Ver: ${sdks.dartVersion}`);
 		addToLogHeader(() => `Flutter SDK:\n    Loc: ${sdks.flutter}\n    Ver: ${sdks.flutterVersion}`);
 	}
+	addToLogHeader(() => ``);
 	addToLogHeader(() => `HTTP_PROXY: ${process.env.HTTP_PROXY}`);
 	addToLogHeader(() => `NO_PROXY: ${process.env.NO_PROXY}`);
 }

@@ -183,6 +183,7 @@ export class Analytics {
 				: null,
 			cd19: env.remoteName || "None",
 			cd2: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
+			cd20: env.appName || "Unknown",
 			cd3: this.sdkVersion,
 			cd4: this.analysisServerVersion,
 			cd5: codeVersion,
