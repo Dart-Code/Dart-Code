@@ -62,10 +62,13 @@ describe("test_code_lens", () => {
 	]) {
 		const launchConfigs = [
 			{
+				codeLens: {
+					for: [`${debugType.type}-test`],
+					title: "${debugType} (browser)",
+				},
 				env: { MY_VAR: "FOO" },
-				name: "${debugType} in Browser",
+				name: "Run in Browser",
 				request: "launch",
-				template: [`${debugType.type}-test`],
 				type: "dart",
 			},
 		];
@@ -89,7 +92,7 @@ describe("test_code_lens", () => {
 				return;
 			}
 
-			const action = codeLensForTest.find((cl) => cl.command!.title === `${debugType.name} in Browser`);
+			const action = codeLensForTest.find((cl) => cl.command!.title === `${debugType.name} (browser)`);
 			assert.equal(action!.command!.command, debugType.type === "debug" ? "_dart.startDebuggingTestFromOutline" : "_dart.startWithoutDebuggingTestFromOutline");
 			assert.equal(action!.command!.arguments![0].fullName, "String .split() splits the string on the delimiter");
 			assert.equal(action!.command!.arguments![0].isGroup, false);
@@ -116,7 +119,7 @@ describe("test_code_lens", () => {
 				return;
 			}
 
-			const action = codeLensForGroup.find((cl) => cl.command!.title === `${debugType.name} in Browser`);
+			const action = codeLensForGroup.find((cl) => cl.command!.title === `${debugType.name} (browser)`);
 			assert.equal(action!.command!.command, debugType.type === "debug" ? "_dart.startDebuggingTestFromOutline" : "_dart.startWithoutDebuggingTestFromOutline");
 			assert.equal(action!.command!.arguments![0].fullName, "String");
 			assert.equal(action!.command!.arguments![0].isGroup, true);

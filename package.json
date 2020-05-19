@@ -1719,14 +1719,21 @@
 								],
 								"default": "default"
 							},
-							"templateFor": {
-								"type": "string",
-								"description": "A relative path to a folder if CodeLens templates should be restricted to a specific folder/subfolders."
-							},
-							"template": {
-								"description": "Uses this launch configuration as a CodeLens template for launching scripts and tests.",
-								"anyOf": [
-									{
+							"codeLens": {
+								"description": "Shows this launch config in CodeLens links for main and/or test methods.",
+								"type": "object",
+								"required": ["for"],
+								"properties": {
+									"title": {
+										"description": "Text for the CodeLens link. ${debugType} will be replaced with 'Run' or 'Debug' depending on the link type (see 'for' property).",
+										"type": "string"
+									},
+									"path": {
+										"description": "Optionally filters this CodeLens to only files within a relative path from the workspace root.",
+										"type": "string"
+									},
+									"for": {
+										"description": "The type of entry point to show this launch config against.",
 										"type": "array",
 										"items": {
 											"enum": [
@@ -1738,18 +1745,8 @@
 												"debug-test-file"
 											]
 										}
-									},
-									{
-										"enum": [
-											"run-test",
-											"debug-test",
-											"run-file",
-											"debug-file",
-											"run-test-file",
-											"debug-test-file"
-										]
 									}
-								]
+								}
 							},
 							"args": {
 								"type": "array",

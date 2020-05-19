@@ -47,10 +47,13 @@ describe("main_code_lens", () => {
 					vs.workspace.workspaceFolders![0].uri,
 					[
 						{
+							codeLens: {
+								for: [`${debugType.type}-${testConfig.type}`],
+								title: "${debugType} (terminal)",
+							},
 							console: "terminal",
-							name: "${debugType} in Terminal",
+							name: "Run in Terminal",
 							request: "launch",
-							template: [`${debugType.type}-${testConfig.type}`],
 							type: "dart",
 						},
 					],
@@ -73,7 +76,7 @@ describe("main_code_lens", () => {
 					return;
 				}
 
-				const action = codeLensForMainMethod.find((cl) => cl.command!.title === `${debugType.name} in Terminal`)!;
+				const action = codeLensForMainMethod.find((cl) => cl.command!.title === `${debugType.name} (terminal)`)!;
 				assert.equal(action!.command!.command, debugType.type === "debug" ? "dart.startDebugging" : "dart.startWithoutDebugging");
 				assert.equal(fsPath(action!.command!.arguments![0]), fsPath(testConfig.fileUri));
 				assert.equal(action!.command!.arguments![1].console, "terminal");
@@ -86,11 +89,14 @@ describe("main_code_lens", () => {
 			vs.workspace.workspaceFolders![0].uri,
 			[
 				{
+					codeLens: {
+						for: ["run-file", "run-test-file"],
+						path: "test",
+						title: "Run (terminal)",
+					},
 					console: "terminal",
 					name: "Run in Terminal",
 					request: "launch",
-					template: ["run-file", "run-test-file"],
-					templateFor: "test",
 					type: "dart",
 				},
 			],

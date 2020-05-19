@@ -1,10 +1,9 @@
 import * as path from "path";
-import { isArray } from "util";
 import { TextDocument, workspace } from "vscode";
 import { escapeRegExp } from "../utils";
 import { fsPath, isWithinPath } from "../utils/fs";
 
-export const debugTypeTokenRegex = new RegExp(escapeRegExp("${debugType}"), "gi");
+const debugTypeTokenRegex = new RegExp(escapeRegExp("${debugType}"), "gi");
 
 export function getTemplatedLaunchConfigs(document: TextDocument, fileType: string) {
 	const runConfigs: TemplatedLaunchConfig[] = workspace.getConfiguration("launch", document.uri).get<any[]>("configurations") || [];
@@ -19,11 +18,11 @@ export function getTemplatedLaunchConfigs(document: TextDocument, fileType: stri
 	for (const templateType of wantedTemplateTypes) {
 		const relevantLaunchConfigs = runConfigs
 			.filter((c) => c.type === "dart" && isTemplateOfType(c, templateType))
-			.filter((c) => c.templateFor && workspacePath ? isWithinPath(filePath, path.join(workspacePath, c.templateFor)) : !c.templateFor);
+			.filter((c) => c.codeLens?.path && workspacePath ? isWithinPath(filePath, path.join(workspacePath, c.codeLens?.path)) : !c.codeLens?.path);
 		for (const launchConfig of relevantLaunchConfigs) {
 			runFileTemplates.push({
 				...launchConfig,
-				name: launchConfig.name || "${debugType}",
+				name: (launchConfig.codeLens?.title || launchConfig.name || "${debugType}").replace(debugTypeTokenRegex, templateType.indexOf("run-") === 0 ? "Run" : "Debug"),
 				template: templateType,
 			});
 		}
@@ -33,15 +32,20 @@ export function getTemplatedLaunchConfigs(document: TextDocument, fileType: stri
 }
 
 export function isTemplateOfType(config: TemplatedLaunchConfig, templateType: string): boolean {
-	return !!config.template && (
-		(typeof config.template === "string" && config.template === templateType)
-		|| (isArray(config.template) && config.template.indexOf(templateType) !== -1)
+	const template = config.codeLens?.for || config.template;
+	return !!template && (
+		(typeof template === "string" && template === templateType)
+		|| (Array.isArray(template) && template.indexOf(templateType) !== -1)
 	);
 }
 
 export interface TemplatedLaunchConfig {
 	name?: string;
 	type?: string;
-	template?: string | string[];
-	templateFor: string;
+	template: string;
+	codeLens?: {
+		for: string | string[];
+		path?: string;
+		title?: string;
+	};
 }

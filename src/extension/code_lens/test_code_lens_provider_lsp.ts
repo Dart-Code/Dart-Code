@@ -3,7 +3,7 @@ import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { LspTestOutlineVisitor } from "../../shared/utils/outline_lsp";
-import { debugTypeTokenRegex, getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
+import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
 import { lspToRange } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
 import { isTestFile } from "../utils";
@@ -67,7 +67,7 @@ export class LspTestCodeLensProvider implements CodeLensProvider, IAmDisposable 
 						{
 							arguments: [test, t],
 							command: t.template === "run-test" ? "_dart.startWithoutDebuggingTestFromOutline" : "_dart.startDebuggingTestFromOutline",
-							title: t.name.replace(debugTypeTokenRegex, t.template === `run-test` ? "Run" : "Debug"),
+							title: t.name,
 						},
 					)));
 				}),

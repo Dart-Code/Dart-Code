@@ -1,7 +1,7 @@
 import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument } from "vscode";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
-import { debugTypeTokenRegex, getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
+import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
 import { toRange } from "../../shared/vscode/utils";
 import { DasAnalyzer } from "../analysis/analyzer_das";
 import { isTestFile } from "../utils";
@@ -54,7 +54,7 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 			{
 				arguments: [document.uri, t],
 				command: t.template === `run-${fileType}` ? "dart.startWithoutDebugging" : "dart.startDebugging",
-				title: t.name.replace(debugTypeTokenRegex, t.template === `run-${fileType}` ? "Run" : "Debug"),
+				title: t.name,
 			},
 		)));
 	}
