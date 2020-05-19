@@ -16,3 +16,4 @@ jobs:
           only-labels: 'awaiting-info'
           days-before-stale: 30
           days-before-close: 10
+          debug-only: true
