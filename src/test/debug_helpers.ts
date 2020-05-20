@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { dartVMPath, isWin, observatoryListeningBannerPattern } from "../shared/constants";
+import { dartVMPath, isWin, vmServiceListeningBannerPattern } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
@@ -164,15 +164,15 @@ export async function spawnFlutterProcess(script: string | Uri): Promise<DartPro
 }
 
 export class DartProcess {
-	public readonly observatoryUri: Promise<string>;
+	public readonly vmServiceUri: Promise<string>;
 	public readonly exitCode: Promise<number | null>;
 	public get hasExited() { return this.exited; }
 	private exited: boolean = false;
 
 	constructor(public readonly process: SpawnedProcess) {
-		this.observatoryUri = new Promise((resolve, reject) => {
+		this.vmServiceUri = new Promise((resolve, reject) => {
 			process.stdout.on("data", (data) => {
-				const match = observatoryListeningBannerPattern.exec(data.toString());
+				const match = vmServiceListeningBannerPattern.exec(data.toString());
 				if (match)
 					resolve(match[1]);
 			});

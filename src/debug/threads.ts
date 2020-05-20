@@ -355,7 +355,7 @@ export class ThreadInfo {
 					completer.reject(error);
 				});
 			} else {
-				completer.reject(`Observatory connection is no longer available`);
+				completer.reject(`VM service connection is no longer available`);
 			}
 
 			return completer.promise;

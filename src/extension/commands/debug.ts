@@ -230,9 +230,9 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.attachProcess", () => {
 			vs.debug.startDebugging(undefined, {
 				name: "Flutter: Attach to Process",
-				observatoryUri: "${command:dart.promptForVmService}",
 				request: "attach",
 				type: "dart",
+				vmServiceUri: "${command:dart.promptForVmService}",
 			});
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.attach", () => {
@@ -246,8 +246,8 @@ export class DebugCommands {
 			const defaultValue = typeof defaultValueOrConfig === "string" ? defaultValueOrConfig : undefined;
 			return vs.window.showInputBox({
 				ignoreFocusOut: true, // Don't close the window if the user tabs away to get the uri
-				placeHolder: "Paste an Observatory URI",
-				prompt: "Enter Observatory URI",
+				placeHolder: "Paste an VM Service URI",
+				prompt: "Enter VM Service URI",
 				validateInput: (input) => {
 					if (!input)
 						return;
@@ -262,7 +262,7 @@ export class DebugCommands {
 
 					if (!input.startsWith("http://") && !input.startsWith("https://")
 						&& !input.startsWith("ws://") && !input.startsWith("wss://"))
-						return "Please enter a valid Observatory URI";
+						return "Please enter a valid VM Service URI";
 				},
 				value: defaultValue,
 			});
