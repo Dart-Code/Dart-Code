@@ -95,7 +95,6 @@ export class DartDebugSession extends DebugSession {
 	protected logCategory = LogCategory.General; // This isn't used as General, since both debuggers override it.
 	protected supportsRunInTerminalRequest = false;
 	protected supportsDebugInternalLibraries = false;
-	// protected observatoryUriIsProbablyReconnectable = false;
 	protected isTerminating = false;
 	protected readonly logger = new DebugAdapterLogger(this, LogCategory.VmService);
 
@@ -248,7 +247,7 @@ export class DartDebugSession extends DebugSession {
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
 		this.evaluateToStringInDebugViews = args.evaluateToStringInDebugViews;
-		this.logFile = args.observatoryLogFile;
+		this.logFile = args.vmServiceLogFile;
 		this.maxLogLineLength = args.maxLogLineLength;
 		this.sendLogsToClient = !!args.sendLogsToClient;
 		this.showDartDeveloperLogs = args.showDartDeveloperLogs;
@@ -257,18 +256,18 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DartAttachRequestArguments): Promise<void> {
-		if (!args || (!args.observatoryUri && !args.serviceInfoFile)) {
+		const vmServiceUri = (args.vmServiceUri || args.observatoryUri);
+		if (!args || (!vmServiceUri && !args.serviceInfoFile)) {
 			return this.errorResponse(response, "Unable to attach; no VM service address or service info file provided.");
 		}
 
 		this.sendEvent(new ProgressStartEvent(debugLaunchProgressId, "", "Waiting for application…"));
 
-		// this.observatoryUriIsProbablyReconnectable = true;
 		this.shouldKillProcessOnTerminate = false;
 		this.cwd = args.cwd;
 		this.readSharedArgs(args);
 
-		this.log(`Attaching to process via ${args.observatoryUri || args.serviceInfoFile}`);
+		this.log(`Attaching to process via ${vmServiceUri || args.serviceInfoFile}`);
 
 		// If we were given an explicity packages path, use it (otherwise we'll try
 		// to extract from the VM)
@@ -288,8 +287,8 @@ export class DartDebugSession extends DebugSession {
 
 		let url: string | undefined;
 		try {
-			if (args.observatoryUri) {
-				url = this.websocketUriForObservatoryUri(args.observatoryUri);
+			if (vmServiceUri) {
+				url = this.websocketUriForObservatoryUri(vmServiceUri);
 			} else {
 				this.vmServiceInfoFile = args.serviceInfoFile;
 				this.sendEvent(new ProgressUpdateEvent(debugLaunchProgressId, `Waiting for ${this.vmServiceInfoFile}…`));
@@ -488,11 +487,6 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		this.sendEvent(new Event("dart.debuggerUris", {
-			// If we won't be killing the process on terminate, then it's likely the
-			// process will remain around and can be reconnected to, so let the
-			// editor know that it should stash this URL for easier re-attaching.
-			// isProbablyReconnectable: this.observatoryUriIsProbablyReconnectable,
-
 			// If we don't support Observatory, don't send its URL back to the editor.
 			observatoryUri: this.supportsObservatory ? browserFriendlyUri.toString() : undefined,
 			vmServiceUri: browserFriendlyUri.toString(),

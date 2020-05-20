@@ -27,8 +27,8 @@ function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilit
 	let analyzerArgs = [];
 
 	// Optionally start the VM service for the analyzer.
-	if (config.analyzerObservatoryPort)
-		analyzerArgs.push(`--enable-vm-service=${config.analyzerObservatoryPort}`);
+	if (config.analyzerVmServicePort)
+		analyzerArgs.push(`--enable-vm-service=${config.analyzerVmServicePort}`);
 
 	analyzerArgs.push(analyzerPath);
 

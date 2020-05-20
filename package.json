@@ -1442,13 +1442,13 @@
 					"description": "The path to a log file for communication between Dart Code and the analysis server.",
 					"scope": "machine-overridable"
 				},
-				"dart.analyzerObservatoryPort": {
+				"dart.analyzerVmServicePort": {
 					"type": [
 						"null",
 						"number"
 					],
 					"default": null,
-					"description": "The port number to be used for the Dart analysis server observatory.",
+					"description": "The port number to be used for the Dart analysis server VM service.",
 					"scope": "window"
 				},
 				"dart.analyzerPath": {
@@ -1521,19 +1521,19 @@
 					"description": "The path to a log file for 'pub run test' runs. This is useful when trying to diagnose issues with unit test executions. Use ${name} in the log file name to prevent concurrent debug sessions overwriting each others logs.",
 					"scope": "machine-overridable"
 				},
-				"dart.observatoryLogFile": {
+				"dart.vmServiceLogFile": {
 					"type": [
 						"null",
 						"string"
 					],
 					"default": null,
-					"description": "The path to a log file for communication between Dart Code and Observatory (the VM debugger). This is useful when trying to diagnose issues with debugging such as missed breakpoints. Use ${name} in the log file name to prevent concurrent debug sessions overwriting each others logs.",
+					"description": "The path to a log file for communication between Dart Code and the VM service. This is useful when trying to diagnose issues with debugging such as missed breakpoints. Use ${name} in the log file name to prevent concurrent debug sessions overwriting each others logs.",
 					"scope": "machine-overridable"
 				},
 				"dart.useKnownChromeOSPorts": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to use specific ports for Observatory and DevTools when running in Chrome OS. This is required to connect from the native Chrome OS browser but will prevent apps from launching if the ports are already in-use (for example if trying to run a second app).",
+					"description": "Whether to use specific ports for the VM service and DevTools when running in Chrome OS. This is required to connect from the native Chrome OS browser but will prevent apps from launching if the ports are already in-use (for example if trying to run a second app).",
 					"scope": "window"
 				},
 				"dart.webDaemonLogFile": {
@@ -1788,13 +1788,13 @@
 								"type": "string",
 								"description": "Path to the packages file (only required if cannot be discovered from the running process automatically)."
 							},
-							"observatoryUri": {
+							"vmServiceUri": {
 								"type": "string",
-								"description": "URI of the Observatory instance to attach to."
+								"description": "URI of the VM service to attach to."
 							},
 							"serviceInfoFile": {
 								"type": "string",
-								"description": "File to read (expected to be written with --write-service-info) VM service details from if observatoryUri is not supplied."
+								"description": "File to read (expected to be written with --write-service-info) VM service details from if vmServiceUri is not supplied."
 							}
 						}
 					}

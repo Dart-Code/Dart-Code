@@ -232,14 +232,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// If we're attaching to Dart, ensure we get a VM service URI.
 		if (isAttachRequest && !debugConfig.serviceInfoFile) {
-			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
+			// For attaching, the VM service address must be specified. If it's not provided already, prompt for it.
 			if (!isStandardFlutter) { // TEMP Condition because there's no point asking yet as the user doesn't know how to get this..
-				debugConfig.observatoryUri = await this.getFullVmServiceUri(debugConfig.observatoryUri/*, mostRecentAttachedProbablyReusableObservatoryUri*/);
+				debugConfig.vmServiceUri = await this.getFullVmServiceUri(debugConfig.vmServiceUri || debugConfig.observatoryUri);
 			}
 
-			if (!debugConfig.observatoryUri && !isStandardFlutter) {
-				logger.warn("No Observatory URI/port was provided");
-				window.showInformationMessage("You must provide an Observatory URI/port to attach a debugger");
+			if (!debugConfig.vmServiceUri && !isStandardFlutter) {
+				logger.warn("No VM service URI/port was provided");
+				window.showInformationMessage("You must provide a VM service URI/port to attach a debugger");
 				return undefined; // undefined means silent (don't open launch.json).
 			}
 		}
@@ -410,16 +410,16 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return this.guessBestEntryPoint(undefined, path.join(projectRoot, "example"));
 	}
 
-	private async getFullVmServiceUri(observatoryUri: string | undefined, defaultValue?: string): Promise<string | undefined> {
-		observatoryUri = observatoryUri || await vs.commands.executeCommand("dart.promptForVmService", defaultValue);
-		observatoryUri = observatoryUri && observatoryUri.trim();
+	private async getFullVmServiceUri(vmServiceUriOrPort: string | undefined): Promise<string | undefined> {
+		vmServiceUriOrPort = vmServiceUriOrPort || await vs.commands.executeCommand("dart.promptForVmService");
+		vmServiceUriOrPort = vmServiceUriOrPort && vmServiceUriOrPort.trim();
 
 		// If the input is just a number, treat is as a localhost port.
-		if (observatoryUri && /^[0-9]+$/.exec(observatoryUri)) {
-			observatoryUri = `http://127.0.0.1:${observatoryUri}`;
+		if (vmServiceUriOrPort && /^[0-9]+$/.exec(vmServiceUriOrPort)) {
+			vmServiceUriOrPort = `http://127.0.0.1:${vmServiceUriOrPort}`;
 		}
 
-		return observatoryUri;
+		return vmServiceUriOrPort;
 	}
 
 	private getDebugServer(debugType: DebuggerType, port?: number) {
@@ -480,7 +480,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
 		debugConfig.vmServicePort = debugConfig.vmServicePort || (isChromeOS && config.useKnownChromeOSPorts ? CHROME_OS_VM_SERVICE_PORT : 0);
 		debugConfig.dartPath = debugConfig.dartPath || path.join(this.wsContext.sdks.dart!, dartVMPath);
-		debugConfig.observatoryLogFile = this.insertSessionName(debugConfig, debugConfig.observatoryLogFile || conf.observatoryLogFile);
+		debugConfig.vmServiceLogFile = this.insertSessionName(debugConfig, debugConfig.vmServiceLogFile || conf.vmServiceLogFile);
 		debugConfig.webDaemonLogFile = this.insertSessionName(debugConfig, debugConfig.webDaemonLogFile || conf.webDaemonLogFile);
 		debugConfig.maxLogLineLength = debugConfig.maxLogLineLength || config.maxLogLineLength;
 		debugConfig.pubPath = debugConfig.pubPath || path.join(this.wsContext.sdks.dart!, pubPath);
