@@ -35,19 +35,19 @@ export interface WritableWorkspaceConfig {
 	// should be what is expected from a standard workspace without any additional
 	// config.
 
-	flutterDaemonScript?: string;
-	flutterDoctorScript?: string;
-	flutterRunScript?: string;
-	flutterTestScript?: string;
-	flutterSdkHome?: string;
+	activateDevToolsEagerly?: boolean;
 	dartSdkHomeLinux?: string;
 	dartSdkHomeMac?: string;
-	flutterVersionFile?: string;
 	devtoolsActivateScript?: string;
-	activateDevToolsEagerly?: boolean;
 	devtoolsRunScript?: string;
 	disableAutomaticPackageGet?: boolean;
 	disableSdkUpdateChecks?: boolean;
+	flutterDaemonScript?: string;
+	flutterDoctorScript?: string;
+	flutterRunScript?: string;
+	flutterSdkHome?: string;
+	flutterTestScript?: string;
+	flutterVersionFile?: string;
 	useVmForTests?: boolean;
 }
 
