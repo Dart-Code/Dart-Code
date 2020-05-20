@@ -389,7 +389,7 @@ export class FlutterWidgetItem extends vs.TreeItem {
 		};
 
 		this.tooltip = this.label;
-		if (outline.attributes) {
+		if (outline.attributes && outline.attributes.length) {
 			this.tooltip += "\n  " + outline.attributes.map((a) => `${a.name}: ${a.label}`).join("\n   ");
 		}
 	}
