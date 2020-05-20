@@ -27,7 +27,7 @@ export interface DartSharedArgs {
 	evaluateGettersInDebugViews: boolean;
 	evaluateToStringInDebugViews: boolean;
 	maxLogLineLength: number;
-	observatoryLogFile?: string;
+	vmServiceLogFile?: string;
 	sendLogsToClient?: boolean;
 	showDartDeveloperLogs: boolean;
 	toolEnv?: { [key: string]: string | undefined };
@@ -77,7 +77,9 @@ export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestA
 	cwd: string | undefined;
 	program: string | undefined;
 	packages: string | undefined;
+	// For backwards compatibility
 	observatoryUri: string | undefined;
+	vmServiceUri: string | undefined;
 	serviceInfoFile: string | undefined;
 	dartVersion: string;
 }

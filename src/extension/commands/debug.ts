@@ -17,7 +17,6 @@ import { DevToolsManager } from "../sdk/dev_tools";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
-// export let mostRecentAttachedProbablyReusableObservatoryUri: string;
 
 // Workaround for https://github.com/microsoft/vscode/issues/100115
 const dynamicDebugSessionName = "Dart ";
@@ -496,12 +495,6 @@ export class DebugCommands {
 					});
 				}
 			}
-
-			// if (e.body.isProbablyReconnectable) {
-			// 	mostRecentAttachedProbablyReusableObservatoryUri = session.observatoryUri;
-			// } else {
-			// 	mostRecentAttachedProbablyReusableObservatoryUri = undefined;
-			// }
 		}
 	}
 
