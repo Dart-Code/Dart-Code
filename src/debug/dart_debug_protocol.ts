@@ -383,7 +383,7 @@ export class RPCError {
 	}
 }
 
-export class ObservatoryConnection {
+export class VmServiceConnection {
 	public socket: WebSocket;
 	private completers: { [key: string]: PromiseCompleter<DebuggerResult> } = {};
 	private logging?: (message: string) => void;
