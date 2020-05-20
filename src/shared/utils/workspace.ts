@@ -3,10 +3,10 @@ import * as path from "path";
 import { Logger, WritableWorkspaceConfig } from "../interfaces";
 
 export function processKnownGitRepositories(logger: Logger, config: WritableWorkspaceConfig, gitRoot: string) {
-	// Disable automatic package fetching in the Dart SDK repo.
 	const isDartSdkRepo = fs.existsSync(path.join(gitRoot, "README.dart-sdk")) && fs.existsSync(path.join(gitRoot, ".packages"));
 	if (isDartSdkRepo) {
 		config.disableAutomaticPackageGet = true;
+		// The Dart SDKs tests cannot run using pub, so also force them to use the VM.
 		config.useVmForTests = true;
 	}
 }
@@ -17,11 +17,9 @@ export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspac
 }
 
 export function processBazelWorkspace(logger: Logger, config: WritableWorkspaceConfig, bazelWorkspaceRoot: string) {
-	// For all bazel workspaces, we disabled automatically running pub get.
 	config.disableAutomaticPackageGet = true;
 	config.disableSdkUpdateChecks = true;
 
-	// Load config from the flutter.json file.
 	tryProcessBazelFlutterConfig(logger, config, bazelWorkspaceRoot);
 }
 
@@ -31,7 +29,7 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 		if (!fs.existsSync(flutterConfigPath))
 			return;
 
-		logger.info(`Loading bazel Flutter config from ${flutterConfigPath}`);
+		logger.info(`Loading Bazel Flutter config from ${flutterConfigPath}`);
 		const flutterConfigJson = fs.readFileSync(flutterConfigPath, "utf8");
 		const flutterConfig = JSON.parse(flutterConfigJson);
 
