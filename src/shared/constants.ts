@@ -110,8 +110,8 @@ export const recommendedSettingsUrl = "https://dartcode.org/docs/recommended-set
 export const openSettingsAction = "Open Settings File";
 export const reactivateDevToolsAction = "Reactivate DevTools";
 
-export const observatoryListeningBannerPattern: RegExp = new RegExp("Observatory (?:listening on|.* is available at:) (http:.+)");
-export const observatoryHttpLinkPattern: RegExp = new RegExp("(http://[\\d\\.:]+/)");
+export const vmServiceListeningBannerPattern: RegExp = new RegExp("Observatory (?:listening on|.* is available at:) (http:.+)");
+export const vmServiceHttpLinkPattern: RegExp = new RegExp("(http://[\\d\\.:]+/)");
 
 export const dartRecommendedConfig = {
 	// Automatically format code on save and during typing of certain characters

@@ -1,6 +1,6 @@
 import * as path from "path";
 import { Event, OutputEvent, ProgressUpdateEvent } from "vscode-debugadapter";
-import { debugTerminatingProgressId, observatoryHttpLinkPattern } from "../shared/constants";
+import { debugTerminatingProgressId, vmServiceHttpLinkPattern } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
 import { ErrorNotification, GroupNotification, PrintNotification, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
@@ -114,9 +114,9 @@ export class DartTestDebugSession extends DartDebugSession {
 			case "debug":
 				const observatoryUri = notification.observatory;
 				if (observatoryUri) {
-					const match = observatoryHttpLinkPattern.exec(observatoryUri);
+					const match = vmServiceHttpLinkPattern.exec(observatoryUri);
 					if (match) {
-						await this.initDebugger(this.websocketUriForObservatoryUri(match[1]));
+						await this.initDebugger(this.vmServiceWsUriFor(match[1]));
 					}
 				}
 				break;

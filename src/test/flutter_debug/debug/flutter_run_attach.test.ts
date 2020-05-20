@@ -34,7 +34,7 @@ describe("flutter run debugger (attach)", () => {
 		defer(() => dc.stop());
 	});
 
-	async function attachDebugger(observatoryUri?: string): Promise<vs.DebugConfiguration> {
+	async function attachDebugger(vmServiceUri?: string): Promise<vs.DebugConfiguration> {
 		const config = await getAttachConfiguration({
 			// Use pid-file as a convenient way of getting the test name into the command line args
 			// for easier debugging of processes that hang around on CI (we dump the process command
@@ -43,7 +43,7 @@ describe("flutter run debugger (attach)", () => {
 				? ["--pid-file", path.join(os.tmpdir(), fileSafeCurrentTestName)]
 				: [],
 			deviceId: flutterTestDeviceId,
-			observatoryUri,
+			vmServiceUri,
 		});
 		if (!config)
 			throw new Error(`Could not get attach configuration (got ${config})`);
@@ -58,8 +58,8 @@ describe("flutter run debugger (attach)", () => {
 
 	it("attaches to a Flutter application and remains active until told to detach", async () => {
 		const process = await spawnFlutterProcess(flutterHelloWorldMainFile);
-		const observatoryUri = await process.observatoryUri;
-		const config = await attachDebugger(observatoryUri);
+		const vmServiceUri = await process.vmServiceUri;
+		const config = await attachDebugger(vmServiceUri);
 
 		await Promise.all([
 			watchPromise("attaches_and_waits->configurationSequence", dc.configurationSequence()),
@@ -78,8 +78,8 @@ describe("flutter run debugger (attach)", () => {
 
 	it("detaches without terminating the app", async () => {
 		const process = await spawnFlutterProcess(flutterHelloWorldMainFile);
-		const observatoryUri = await process.observatoryUri;
-		const config = await attachDebugger(observatoryUri);
+		const vmServiceUri = await process.vmServiceUri;
+		const config = await attachDebugger(vmServiceUri);
 
 		await Promise.all([
 			watchPromise("attaches_and_waits->configurationSequence", dc.configurationSequence()),
