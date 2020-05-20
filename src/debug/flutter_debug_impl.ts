@@ -82,7 +82,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		// because it's on a remote device, however in the case of the flutter-tester, it is local
 		// and otherwise might be left hanging around.
 		// Unless, of course, we attached in which case we expect to detach by default.
-		this.allowTerminatingObservatoryVmPid = args.deviceId === "flutter-tester" && !isAttach;
+		this.allowTerminatingVmServicePid = args.deviceId === "flutter-tester" && !isAttach;
 
 		const logger = new DebugAdapterLogger(this, this.logCategory);
 		this.expectAdditionalPidToTerminate = true;
@@ -214,7 +214,7 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	private async connectToObservatoryIfReady() {
-		if (this.observatoryUri && this.appHasStarted && !this.observatory)
+		if (this.observatoryUri && this.appHasStarted && !this.vmService)
 			await this.initDebugger(this.observatoryUri);
 	}
 

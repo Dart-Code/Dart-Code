@@ -230,7 +230,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.noDebug = true;
 		}
 
-		// If we're attaching to Dart, ensure we get an observatory URI.
+		// If we're attaching to Dart, ensure we get a VM service URI.
 		if (isAttachRequest && !debugConfig.serviceInfoFile) {
 			// For attaching, the Observatory address must be specified. If it's not provided already, prompt for it.
 			if (!isStandardFlutter) { // TEMP Condition because there's no point asking yet as the user doesn't know how to get this..

@@ -50,7 +50,7 @@ export enum LogCategory {
 	FlutterDaemon,
 	FlutterRun,
 	FlutterTest,
-	Observatory,
+	VmService,
 	WebDaemon,
 }
 

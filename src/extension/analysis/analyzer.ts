@@ -26,7 +26,7 @@ export function getAnalyzerArgs(logger: Logger, sdks: DartSdks, dartCapabilities
 function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilities, isLsp: boolean) {
 	let analyzerArgs = [];
 
-	// Optionally start Observatory for the analyzer.
+	// Optionally start the VM service for the analyzer.
 	if (config.analyzerObservatoryPort)
 		analyzerArgs.push(`--enable-vm-service=${config.analyzerObservatoryPort}`);
 

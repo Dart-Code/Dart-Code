@@ -36,9 +36,9 @@ export class ThreadManager {
 		if (eventKind === "IsolateRunnable" && !thread.runnable) {
 			thread.runnable = true;
 
-			if (this.debugSession.observatory) {
+			if (this.debugSession.vmService) {
 				await Promise.all([
-					this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, this.exceptionMode),
+					this.debugSession.vmService.setExceptionPauseMode(thread.ref.id, this.exceptionMode),
 					this.setLibrariesDebuggable(thread.ref),
 					this.resetBreakpoints(),
 				]);
@@ -80,11 +80,11 @@ export class ThreadManager {
 
 	public async setExceptionPauseMode(mode: VmExceptionMode) {
 		this.exceptionMode = mode;
-		if (!this.debugSession.observatory)
+		if (!this.debugSession.vmService)
 			return;
 
 		await Promise.all(this.threads.map(async (thread) => {
-			if (!thread.runnable || !this.debugSession.observatory)
+			if (!thread.runnable || !this.debugSession.vmService)
 				return;
 
 			let threadMode = mode;
@@ -95,17 +95,17 @@ export class ThreadManager {
 			if (mode === "All" && thread.isInfrastructure)
 				threadMode = "Unhandled";
 
-			await this.debugSession.observatory.setExceptionPauseMode(thread.ref.id, threadMode);
+			await this.debugSession.vmService.setExceptionPauseMode(thread.ref.id, threadMode);
 		}));
 	}
 
 	private async setLibrariesDebuggable(isolateRef: VMIsolateRef): Promise<void> {
-		if (this.debugSession.noDebug || !this.debugSession.observatory)
+		if (this.debugSession.noDebug || !this.debugSession.vmService)
 			return;
 
 		// Helpers to categories libraries as SDK/ExternalLibrary/not.
 		// Set whether libraries should be debuggable based on user settings.
-		const response = await this.debugSession.observatory.getIsolate(isolateRef.id);
+		const response = await this.debugSession.vmService.getIsolate(isolateRef.id);
 		const isolate: VMIsolate = response.result as VMIsolate;
 		const validDebugLibraries = isolate.libraries.filter((l) => this.debugSession.isValidToDebug(l.uri));
 		if (validDebugLibraries.length === 0)
@@ -113,14 +113,14 @@ export class ThreadManager {
 
 		const debugSession = this.debugSession;
 		function setLibrary(library: VMLibraryRef): Promise<any> {
-			if (!debugSession.observatory)
+			if (!debugSession.vmService)
 				return Promise.resolve(true);
 			// Note: Condition is negated.
 			const shouldDebug = !(
 				// Inside here is shouldNotDebug!
 				(debugSession.isSdkLibrary(library.uri) && !debugSession.debugSdkLibraries)
 				|| (debugSession.isExternalLibrary(library.uri) && !debugSession.debugExternalLibraries));
-			return debugSession.observatory.setLibraryDebuggable(isolate.id, library.id, shouldDebug);
+			return debugSession.vmService.setLibraryDebuggable(isolate.id, library.id, shouldDebug);
 		}
 
 		// We usually send these requests all concurrently, however on web this is not currently
@@ -245,9 +245,9 @@ export class ThreadInfo {
 		const removeBreakpointPromises = [];
 		const breakpoints = this.vmBps[uri];
 		if (breakpoints) {
-			if (this.manager.debugSession.observatory) {
+			if (this.manager.debugSession.vmService) {
 				for (const bp of breakpoints) {
-					removeBreakpointPromises.push(this.manager.debugSession.observatory.removeBreakpoint(this.ref.id, bp.id));
+					removeBreakpointPromises.push(this.manager.debugSession.vmService.removeBreakpoint(this.ref.id, bp.id));
 				}
 			}
 			delete this.vmBps[uri];
@@ -273,16 +273,16 @@ export class ThreadInfo {
 		return Promise.all(
 			breakpoints.map(async (bp) => {
 				try {
-					if (!this.manager.debugSession.observatory)
+					if (!this.manager.debugSession.vmService)
 						return undefined;
 
-					const result = await this.manager.debugSession.observatory.addBreakpointWithScriptUri(this.ref.id, uri, bp.line, bp.column);
+					const result = await this.manager.debugSession.vmService.addBreakpointWithScriptUri(this.ref.id, uri, bp.line, bp.column);
 					const vmBp: VMBreakpoint = (result.result as VMBreakpoint);
 					this.vmBps[uri].push(vmBp);
 					this.breakpoints[vmBp.id] = bp;
 					return vmBp;
 				} catch (e) {
-					logger.error(e, LogCategory.Observatory);
+					logger.error(e, LogCategory.VmService);
 					return undefined;
 				}
 			}),
@@ -325,12 +325,12 @@ export class ThreadInfo {
 	}
 
 	public async resume(step?: string, frameIndex?: number): Promise<void> {
-		if (!this.paused || this.hasPendingResume || !this.manager.debugSession.observatory)
+		if (!this.paused || this.hasPendingResume || !this.manager.debugSession.vmService)
 			return;
 
 		this.hasPendingResume = true;
 		try {
-			await this.manager.debugSession.observatory.resume(this.ref.id, step, frameIndex);
+			await this.manager.debugSession.vmService.resume(this.ref.id, step, frameIndex);
 			this.handleResumed();
 		} finally {
 			this.hasPendingResume = false;
@@ -347,8 +347,8 @@ export class ThreadInfo {
 			const completer: PromiseCompleter<VMScript> = new PromiseCompleter();
 			this.scriptCompleters[scriptId] = completer;
 
-			if (this.manager.debugSession.observatory) {
-				this.manager.debugSession.observatory.getObject(this.ref.id, scriptRef.id).then((result: DebuggerResult) => {
+			if (this.manager.debugSession.vmService) {
+				this.manager.debugSession.vmService.getObject(this.ref.id, scriptRef.id).then((result: DebuggerResult) => {
 					const script: VMScript = result.result as VMScript;
 					completer.resolve(script);
 				}).catch((error) => {

@@ -15,7 +15,7 @@ import { errorString, notUndefined, PromiseCompleter, uniq, uriToFilePath } from
 import { sortBy } from "../shared/utils/array";
 import { applyColor, grey, grey2 } from "../shared/utils/colors";
 import { getRandomInt } from "../shared/utils/fs";
-import { DebuggerResult, ObservatoryConnection, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMStack, VMTypeRef } from "./dart_debug_protocol";
+import { DebuggerResult, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VmServiceConnection, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
 import { ThreadInfo, ThreadManager } from "./threads";
 import { DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation, formatPathForVm } from "./utils";
@@ -48,9 +48,9 @@ export class DartDebugSession extends DebugSession {
 
 	protected expectAdditionalPidToTerminate = false;
 	private additionalPidCompleter = new PromiseCompleter<void>();
-	// We normally track the pid from Observatory to terminate the VM afterwards, but for Flutter Run it's
+	// We normally track the pid from the VM service to terminate the VM afterwards, but for Flutter Run it's
 	// a remote PID and therefore doesn't make sense to try and terminate.
-	protected allowTerminatingObservatoryVmPid = true;
+	protected allowTerminatingVmServicePid = true;
 	// Normally we don't connect to the VM when running no noDebug mode, but for
 	// Flutter, this means we can't call service extensions (for ex. toggling
 	// debug modes) so we allow it to override this (and then we skip things
@@ -61,7 +61,7 @@ export class DartDebugSession extends DebugSession {
 	protected connectVmEvenForNoDebug = false;
 	protected allowWriteServiceInfo = true;
 	protected processExited = false;
-	public observatory?: ObservatoryConnection;
+	public vmService?: VmServiceConnection;
 	protected cwd?: string;
 	public noDebug?: boolean;
 	private logFile?: string;
@@ -97,7 +97,7 @@ export class DartDebugSession extends DebugSession {
 	protected supportsDebugInternalLibraries = false;
 	// protected observatoryUriIsProbablyReconnectable = false;
 	protected isTerminating = false;
-	protected readonly logger = new DebugAdapterLogger(this, LogCategory.Observatory);
+	protected readonly logger = new DebugAdapterLogger(this, LogCategory.VmService);
 
 	protected get shouldConnectDebugger() {
 		return !this.noDebug || this.connectVmEvenForNoDebug;
@@ -187,7 +187,7 @@ export class DartDebugSession extends DebugSession {
 				process.stdout.setEncoding("utf8");
 				process.stdout.on("data", async (data) => {
 					let match: RegExpExecArray | null = null;
-					if (this.shouldConnectDebugger && this.parseObservatoryUriFromStdOut && !this.observatory) {
+					if (this.shouldConnectDebugger && this.parseObservatoryUriFromStdOut && !this.vmService) {
 						match = observatoryListeningBannerPattern.exec(data.toString());
 					}
 					if (match) {
@@ -258,7 +258,7 @@ export class DartDebugSession extends DebugSession {
 
 	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DartAttachRequestArguments): Promise<void> {
 		if (!args || (!args.observatoryUri && !args.serviceInfoFile)) {
-			return this.errorResponse(response, "Unable to attach; no Observatory address or service info file provided.");
+			return this.errorResponse(response, "Unable to attach; no VM service address or service info file provided.");
 		}
 
 		this.sendEvent(new ProgressStartEvent(debugLaunchProgressId, "", "Waiting for application…"));
@@ -399,7 +399,7 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		if (this.sendLogsToClient)
-			this.sendEvent(new Event("dart.log", { message, severity, category: LogCategory.Observatory } as LogMessage));
+			this.sendEvent(new Event("dart.log", { message, severity, category: LogCategory.VmService } as LogMessage));
 	}
 
 	private startServiceFilePolling(): Promise<string> {
@@ -504,41 +504,41 @@ export class DartDebugSession extends DebugSession {
 		return new Promise<void>((resolve, reject) => {
 			this.log(`Connecting to VM Service at ${uri}`);
 			this.logToUser(`Connecting to VM Service at ${uri}\n`);
-			this.observatory = new ObservatoryConnection(uri);
-			this.observatory.onLogging((message) => this.log(message));
+			this.vmService = new VmServiceConnection(uri);
+			this.vmService.onLogging((message) => this.log(message));
 			// TODO: Extract some code here and change to async/await. This is
 			// super confusing, for ex. it's not clear the resolve() inside onOpen
 			// fires immediately opon opening, not when all the code in the getVM
 			// callback fires (so it may as well have come first - unless it's
 			// a bug/race and it was supposed to be after all the setup!).
-			this.observatory.onOpen(async () => {
-				if (!this.observatory)
+			this.vmService.onOpen(async () => {
+				if (!this.vmService)
 					return;
 
 				// Read the version to update capabilities before doing anything else.
-				await this.observatory.getVersion().then(async (versionResult) => {
+				await this.vmService.getVersion().then(async (versionResult) => {
 					const version: Version = versionResult.result as Version;
 					this.vmServiceCapabilities.version = `${version.major}.${version.minor}.0`;
 
-					if (!this.observatory)
+					if (!this.vmService)
 						return;
 
-					await this.observatory.getVM().then(async (vmResult): Promise<void> => {
-						if (!this.observatory)
+					await this.vmService.getVM().then(async (vmResult): Promise<void> => {
+						if (!this.vmService)
 							return;
 						const vm: VM = vmResult.result as VM;
 
 						await this.subscribeToStreams();
 
-						// If we own this process (we launched it, didn't attach) and the PID we get from Observatory is different, then
+						// If we own this process (we launched it, didn't attach) and the PID we get from the VM service is different, then
 						// we should keep a ref to this process to terminate when we quit. This avoids issues where our process is a shell
 						// (we use shell execute to fix issues on Windows) and the kill signal isn't passed on correctly.
 						// See: https://github.com/Dart-Code/Dart-Code/issues/907
-						if (this.allowTerminatingObservatoryVmPid && this.childProcess) {
+						if (this.allowTerminatingVmServicePid && this.childProcess) {
 							this.recordAdditionalPid(vm.pid);
 						}
 
-						const isolates = await Promise.all(vm.isolates.map((isolateRef) => this.observatory!.getIsolate(isolateRef.id)));
+						const isolates = await Promise.all(vm.isolates.map((isolateRef) => this.vmService!.getIsolate(isolateRef.id)));
 
 						// TODO: Is it valid to assume the first (only?) isolate with a rootLib is the one we care about here?
 						// If it's always the first, could we even just query the first instead of getting them all before we
@@ -583,9 +583,9 @@ export class DartDebugSession extends DebugSession {
 				resolve();
 			});
 
-			this.observatory.onClose((code: number, message: string) => {
+			this.vmService.onClose((code: number, message: string) => {
 
-				this.log(`Observatory connection closed: ${code} (${message})`);
+				this.log(`VM service connection closed: ${code} (${message})`);
 				if (this.logStream) {
 					this.logStream.end();
 					this.logStream = undefined;
@@ -598,11 +598,11 @@ export class DartDebugSession extends DebugSession {
 				if (!this.childProcess || this.childProcess instanceof RemoteEditorTerminalProcess) {
 					this.sendEvent(new TerminatedEvent());
 				} else {
-					// In some cases Observatory closes but we never get the exit/close events from the process
+					// In some cases the VM service closes but we never get the exit/close events from the process
 					// so this is a fallback to termiante the session after a short period. Without this, we have
 					// issues like https://github.com/Dart-Code/Dart-Code/issues/1268 even though when testing from
 					// the terminal the app does terminate as expected.
-					// 2019-07-10: Increased delay because when we tell Flutter to stop Observatory quits quickly and
+					// 2019-07-10: Increased delay because when we tell Flutter to stop the VM service quits quickly and
 					// this code results in a TerminatedEvent() even though the process hasn't quit. The TerminatedEvent()
 					// results in VS Code sending disconnectRequest() and we then try to more forefully kill.
 					setTimeout(() => {
@@ -612,7 +612,7 @@ export class DartDebugSession extends DebugSession {
 				}
 			});
 
-			this.observatory.onError((error) => {
+			this.vmService.onError((error) => {
 				reject(error);
 			});
 		});
@@ -624,19 +624,19 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private async subscribeToStreams(): Promise<void> {
-		if (!this.observatory)
+		if (!this.vmService)
 			return;
 
 		const serviceStreamName = this.vmServiceCapabilities.serviceStreamIsPublic ? "Service" : "_Service";
 		await Promise.all([
-			this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event)),
-			this.observatory.on("Extension", (event: VMEvent) => this.handleExtensionEvent(event)),
-			this.observatory.on("Debug", (event: VMEvent) => this.handleDebugEvent(event)),
-			this.observatory.on(serviceStreamName, (event: VMEvent) => this.handleServiceEvent(event)),
+			this.vmService.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event)),
+			this.vmService.on("Extension", (event: VMEvent) => this.handleExtensionEvent(event)),
+			this.vmService.on("Debug", (event: VMEvent) => this.handleDebugEvent(event)),
+			this.vmService.on(serviceStreamName, (event: VMEvent) => this.handleServiceEvent(event)),
 		]);
 
 		if (this.vmServiceCapabilities.hasLoggingStream && this.showDartDeveloperLogs) {
-			await this.observatory.on("Logging", (event: VMEvent) => this.handleLoggingEvent(event)).catch((e) => {
+			await this.vmService.on("Logging", (event: VMEvent) => this.handleLoggingEvent(event)).catch((e) => {
 				this.logger.info(errorString(e));
 				// For web, the protocol version says this is supported, but it throws.
 				// TODO: Remove this catch block if/when the stable release does not throw.
@@ -685,14 +685,14 @@ export class DartDebugSession extends DebugSession {
 			// test finish) so we may need to send again it we get another disconnectRequest.
 			// We also use !childProcess to mean we're attached.
 			// this.childProcess = undefined;
-		} else if (!this.shouldKillProcessOnTerminate && this.observatory) {
+		} else if (!this.shouldKillProcessOnTerminate && this.vmService) {
 			this.log(`${request}: Disconnecting from process...`);
 			await this.tryRemoveAllBreakpointsAndResumeAllThreads(request);
 			try {
-				this.log(`${request}: Closing observatory...`);
-				this.observatory.close();
+				this.log(`${request}: Closing VM service connection...`);
+				this.vmService.close();
 			} catch { } finally {
-				this.observatory = undefined;
+				this.vmService = undefined;
 			}
 		} else {
 			this.log(`${request}: Did not need to terminate processes`);
@@ -855,12 +855,12 @@ export class DartDebugSession extends DebugSession {
 			return;
 		}
 
-		if (!this.observatory) {
-			this.errorResponse(response, `No observatory connection`);
+		if (!this.vmService) {
+			this.errorResponse(response, `No VM service connection`);
 			return;
 		}
 
-		this.observatory.pause(thread.ref.id)
+		this.vmService.pause(thread.ref.id)
 			.then((_) => this.sendResponse(response))
 			.catch((error) => this.errorResponse(response, `${error}`));
 	}
@@ -896,12 +896,12 @@ export class DartDebugSession extends DebugSession {
 			return;
 		}
 
-		if (!this.observatory) {
-			this.errorResponse(response, `No observatory connection`);
+		if (!this.vmService) {
+			this.errorResponse(response, `No VM service connection`);
 			return;
 		}
 
-		this.observatory.getStack(thread.ref.id).then((result: DebuggerResult) => {
+		this.vmService.getStack(thread.ref.id).then((result: DebuggerResult) => {
 			const stack: VMStack = result.result as VMStack;
 			let vmFrames = stack.asyncCausalFrames || stack.frames;
 			const totalFrames = vmFrames.length;
@@ -1024,8 +1024,8 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): Promise<void> {
-		if (!this.observatory) {
-			this.errorResponse(response, `No observatory connection`);
+		if (!this.vmService) {
+			this.errorResponse(response, `No VM service connection`);
 			return;
 		}
 
@@ -1054,8 +1054,8 @@ export class DartDebugSession extends DebugSession {
 		} else if (data.data.type === "MapEntry") {
 			const mapRef = data.data as VMMapEntry;
 
-			const keyResult = this.observatory.getObject(thread.ref.id, mapRef.keyId);
-			const valueResult = this.observatory.getObject(thread.ref.id, mapRef.valueId);
+			const keyResult = this.vmService.getObject(thread.ref.id, mapRef.keyId);
+			const valueResult = this.vmService.getObject(thread.ref.id, mapRef.valueId);
 
 			const variables: DebugProtocol.Variable[] = [];
 			let canEvaluateValueName = false;
@@ -1097,7 +1097,7 @@ export class DartDebugSession extends DebugSession {
 			const instanceRef = data.data as InstanceWithEvaluateName;
 
 			try {
-				const result = await this.observatory.getObject(thread.ref.id, instanceRef.id, start, count);
+				const result = await this.vmService.getObject(thread.ref.id, instanceRef.id, start, count);
 				let variables: DebugProtocol.Variable[] = [];
 				// If we're the top-level exception, or our parent has an evaluateName of undefined (its children)
 				// we cannot evaluate (this will disable "Add to Watch" etc).
@@ -1168,7 +1168,7 @@ export class DartDebugSession extends DebugSession {
 								// Call each getter, adding the result as a variable.
 								const getterPromises = getterNames.map(async (getterName, i) => {
 									try {
-										const getterResult = await this.observatory!.evaluate(thread.ref.id, instanceRef.id, getterName, true);
+										const getterResult = await this.vmService!.evaluate(thread.ref.id, instanceRef.id, getterName, true);
 										if (getterResult.result.type === "@Error") {
 											return { name: getterName, value: (getterResult.result as VMErrorRef).message, variablesReference: 0 };
 										} else if (getterResult.result.type === "Sentinel") {
@@ -1226,8 +1226,8 @@ export class DartDebugSession extends DebugSession {
 
 	private async getGetterNamesForHierarchy(thread: VMIsolateRef, classRef: VMClassRef | undefined): Promise<string[]> {
 		let getterNames: string[] = [];
-		while (this.observatory && classRef) {
-			const classResponse = await this.observatory.getObject(thread.id, classRef.id);
+		while (this.vmService && classRef) {
+			const classResponse = await this.vmService.getObject(thread.id, classRef.id);
 			if (classResponse.result.type !== "Class")
 				break;
 
@@ -1252,20 +1252,20 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private async callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef, getFullString: boolean = false): Promise<string | undefined> {
-		if (!this.observatory)
+		if (!this.vmService)
 			return;
 
 		try {
 			const result = this.vmServiceCapabilities.hasInvoke
-				? await this.observatory.invoke(isolate.id, instanceRef.id, "toString", [], true)
-				: await this.observatory.evaluate(isolate.id, instanceRef.id, "toString()", true);
+				? await this.vmService.invoke(isolate.id, instanceRef.id, "toString", [], true)
+				: await this.vmService.evaluate(isolate.id, instanceRef.id, "toString()", true);
 			if (result.result.type === "@Error") {
 				return undefined;
 			} else {
 				let evalResult: VMInstanceRef = result.result as VMInstanceRef;
 
 				if (evalResult.valueAsStringIsTruncated && getFullString) {
-					const result = await this.observatory!.getObject(isolate.id, evalResult.id);
+					const result = await this.vmService!.getObject(isolate.id, evalResult.id);
 					evalResult = result.result as VMInstanceRef;
 				}
 
@@ -1369,12 +1369,12 @@ export class DartDebugSession extends DebugSession {
 		try {
 			let result: DebuggerResult | undefined;
 			if (!data) {
-				if (!this.observatory || !thread) {
+				if (!this.vmService || !thread) {
 					this.errorResponse(response, "global evaluation requires a thread to have been loaded");
 					return;
 				}
 
-				const isolate = (await this.observatory.getIsolate(thread.ref.id)).result as VMIsolate;
+				const isolate = (await this.vmService.getIsolate(thread.ref.id)).result as VMIsolate;
 				const rootLib = isolate.rootLib;
 
 				if (!rootLib) {
@@ -1388,7 +1388,7 @@ export class DartDebugSession extends DebugSession {
 				//   2. The VM sometimes doesn't respond to your requests at all
 				//      https://github.com/flutter/flutter/issues/18595
 				result = await Promise.race([
-					this.observatory!.evaluate(thread.ref.id, rootLib.id, expression, true),
+					this.vmService!.evaluate(thread.ref.id, rootLib.id, expression, true),
 					new Promise<never>((resolve, reject) => setTimeout(() => reject(new Error("<timed out>")), 1000)),
 				]);
 			} else {
@@ -1409,7 +1409,7 @@ export class DartDebugSession extends DebugSession {
 					const exceptionId = exceptionInstanceRef && exceptionInstanceRef.id;
 
 					if (exceptionId)
-						result = await this.observatory!.evaluate(thread.ref.id, exceptionId, expression.substr(3), true);
+						result = await this.vmService!.evaluate(thread.ref.id, exceptionId, expression.substr(3), true);
 				}
 				if (!result) {
 					// Don't wait more than a second for the response:
@@ -1418,7 +1418,7 @@ export class DartDebugSession extends DebugSession {
 					//   2. The VM sometimes doesn't respond to your requests at all
 					//      https://github.com/flutter/flutter/issues/18595
 					result = await Promise.race([
-						this.observatory!.evaluateInFrame(thread.ref.id, frame.index, expression, true),
+						this.vmService!.evaluateInFrame(thread.ref.id, frame.index, expression, true),
 						new Promise<never>((resolve, reject) => setTimeout(() => reject(new Error("<timed out>")), 1000)),
 					]);
 				}
@@ -1614,8 +1614,8 @@ export class DartDebugSession extends DebugSession {
 			return;
 		}
 
-		if (!this.observatory) {
-			this.logger.warn("No observatory connection");
+		if (!this.vmService) {
+			this.logger.warn("No VM service connection");
 			return;
 		}
 
@@ -1627,7 +1627,7 @@ export class DartDebugSession extends DebugSession {
 				this.logger.error(e);
 			}
 			try {
-				await this.observatory.resume(event.isolate.id);
+				await this.vmService.resume(event.isolate.id);
 			} catch (e) {
 				// Ignore failed-to-resume errors https://github.com/flutter/flutter/issues/10934
 				if (e.code !== 106)
@@ -1758,16 +1758,16 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private callService(type: string, args: any): Promise<any> {
-		if (!this.observatory)
-			throw new Error("Observatory connection is not available");
-		return this.observatory.callMethod(type, args);
+		if (!this.vmService)
+			throw new Error("VM service connection is not available");
+		return this.vmService.callMethod(type, args);
 	}
 
 	private async evaluateAndSendErrors(thread: ThreadInfo, expression: string): Promise<VMInstanceRef | undefined> {
-		if (!this.observatory)
+		if (!this.vmService)
 			return;
 		try {
-			const result = await this.observatory.evaluateInFrame(thread.ref.id, 0, expression, true);
+			const result = await this.vmService.evaluateInFrame(thread.ref.id, 0, expression, true);
 			if (result.result.type !== "@Error") {
 				return result.result as VMInstanceRef;
 			} else {
@@ -1937,13 +1937,13 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private async pollForMemoryUsage(): Promise<void> {
-		if (!this.childProcess || this.childProcess.killed || !this.observatory)
+		if (!this.childProcess || this.childProcess.killed || !this.vmService)
 			return;
 
-		const result = await this.observatory.getVM();
+		const result = await this.vmService.getVM();
 		const vm = result.result as VM;
 
-		const isolatePromises = vm.isolates.map((isolateRef) => this.observatory!.getIsolate(isolateRef.id));
+		const isolatePromises = vm.isolates.map((isolateRef) => this.vmService!.getIsolate(isolateRef.id));
 		const isolatesResponses = await Promise.all(isolatePromises);
 		const isolates = isolatesResponses.map((response) => response.result as VMIsolate);
 
