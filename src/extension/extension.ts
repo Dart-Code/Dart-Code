@@ -570,7 +570,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Prompt for pub get if required
 	function checkForPackages() {
 		// Don't prompt for package updates in the Fuchsia tree/Dart SDK repo.
-		if (workspaceContext.shouldAvoidFetchingPackages)
+		if (workspaceContext.config.disableAutomaticPackageGet)
 			return;
 		// tslint:disable-next-line: no-floating-promises
 		sdkCommands.fetchPackagesOrPrompt(undefined, { alwaysPrompt: true });
@@ -605,10 +605,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		// we'll perform a silent restart so that we do new SDK searches.
 		const newWorkspaceContext = await sdkUtils.scanWorkspace();
 		if (
-			newWorkspaceContext.hasOnlyDartProjects !== workspaceContext.hasOnlyDartProjects
-			|| newWorkspaceContext.hasAnyFlutterProjects !== workspaceContext.hasAnyFlutterProjects
+			newWorkspaceContext.hasAnyFlutterProjects !== workspaceContext.hasAnyFlutterProjects
 			|| newWorkspaceContext.hasProjectsInFuchsiaTree !== workspaceContext.hasProjectsInFuchsiaTree
-			|| newWorkspaceContext.isDartSdkRepo !== workspaceContext.isDartSdkRepo
 		) {
 			// tslint:disable-next-line: no-floating-promises
 			util.promptToReloadExtension();

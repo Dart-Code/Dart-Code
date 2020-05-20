@@ -30,20 +30,28 @@ export interface FlutterWorkspaceContext extends WorkspaceContext {
 	readonly sdks: FlutterSdks;
 }
 
-export interface WorkspaceConfig {
-	readonly configFile: string;
-	readonly flutterDaemonScript: string | undefined;
-	readonly flutterDoctorScript: string | undefined;
-	readonly flutterRunScript: string | undefined;
-	readonly flutterTestScript: string | undefined;
-	readonly flutterSdkHome: string | undefined;
-	readonly dartSdkHomeLinux: string | undefined;
-	readonly dartSdkHomeMac: string | undefined;
-	readonly flutterVersionFile: string | undefined;
-	readonly devtoolsActivateScript: string | undefined;
-	readonly activateDevToolsEagerly: boolean;
-	readonly devtoolsRunScript: string | undefined;
+export interface WritableWorkspaceConfig {
+	// All fields here should handle undefined, and the default (undefined) state
+	// should be what is expected from a standard workspace without any additional
+	// config.
+
+	flutterDaemonScript?: string;
+	flutterDoctorScript?: string;
+	flutterRunScript?: string;
+	flutterTestScript?: string;
+	flutterSdkHome?: string;
+	dartSdkHomeLinux?: string;
+	dartSdkHomeMac?: string;
+	flutterVersionFile?: string;
+	devtoolsActivateScript?: string;
+	activateDevToolsEagerly?: boolean;
+	devtoolsRunScript?: string;
+	disableAutomaticPackageGet?: boolean;
+	disableSdkUpdateChecks?: boolean;
+	useVmForTests?: boolean;
 }
+
+export type WorkspaceConfig = Readonly<WritableWorkspaceConfig>;
 
 export interface StagehandTemplate {
 	readonly name: string;

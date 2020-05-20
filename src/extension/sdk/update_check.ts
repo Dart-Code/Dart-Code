@@ -8,7 +8,7 @@ import { config } from "../config";
 import { getLatestSdkVersion } from "../utils";
 
 export async function checkForStandardDartSdkUpdates(logger: Logger, workspaceContext: WorkspaceContext): Promise<void> {
-	if (!config.checkForSdkUpdates || !workspaceContext.hasOnlyDartProjects)
+	if (!config.checkForSdkUpdates || workspaceContext.config.disableSdkUpdateChecks)
 		return;
 
 	// Someties people use the Dart SDK inside Flutter for non-Flutter projects. Since we'll never want

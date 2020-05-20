@@ -140,7 +140,7 @@ export class DasFileTracker implements IAmDisposable {
 			return false;
 		if (this.pubRunTestSupport[path] === undefined) {
 			const projectRoot = locateBestProjectRoot(path);
-			this.pubRunTestSupport[path] = !!(projectRoot && util.checkProjectSupportsPubRunTest(projectRoot, this.wsContext.isDartSdkRepo));
+			this.pubRunTestSupport[path] = !!(projectRoot && util.projectShouldUsePubForTests(projectRoot, this.wsContext.config));
 		}
 		return this.pubRunTestSupport[fsPath(file)];
 	}

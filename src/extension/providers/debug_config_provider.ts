@@ -28,7 +28,7 @@ import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
 import { DartCapabilities } from "../sdk/capabilities";
-import { checkProjectSupportsPubRunTest, isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder } from "../utils";
+import { isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 import { TestResultsProvider } from "../views/test_view";
 
@@ -185,7 +185,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		if (isTest)
 			logger.info(`Detected launch project as a Test project`);
-		const canPubRunTest = isTest && debugConfig.cwd && checkProjectSupportsPubRunTest(debugConfig.cwd as string, this.wsContext.isDartSdkRepo);
+		const canPubRunTest = isTest && debugConfig.cwd && shouldUsePubForTests(debugConfig.cwd as string, this.wsContext.config);
 		if (isTest && !canPubRunTest)
 			logger.info(`Project does not appear to support 'pub run test', will use VM directly`);
 		if (isTest) {
@@ -510,8 +510,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.flutterMode = debugConfig.flutterMode || "debug";
 			debugConfig.flutterPlatform = debugConfig.flutterPlatform || "default";
 			debugConfig.flutterPath = debugConfig.flutterPath || path.join(this.wsContext.sdks.flutter, flutterPath);
-			debugConfig.flutterCustomRunScript = this.wsContext.workspaceConfig?.flutterRunScript;
-			debugConfig.flutterCustomTestScript = this.wsContext.workspaceConfig?.flutterTestScript;
+			debugConfig.flutterCustomRunScript = this.wsContext.config?.flutterRunScript;
+			debugConfig.flutterCustomTestScript = this.wsContext.config?.flutterTestScript;
 			debugConfig.flutterRunLogFile = this.insertSessionName(debugConfig, debugConfig.flutterRunLogFile || conf.flutterRunLogFile);
 			debugConfig.flutterTestLogFile = this.insertSessionName(debugConfig, debugConfig.flutterTestLogFile || conf.flutterTestLogFile);
 			if (!debugConfig.deviceId && device) {

@@ -4,7 +4,7 @@ import * as os from "os";
 import * as path from "path";
 import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { showLogAction } from "../shared/constants";
-import { Logger } from "../shared/interfaces";
+import { Logger, WorkspaceConfig } from "../shared/interfaces";
 import { fsPath, getRandomInt, hasPubspec, isWithinPath, mkDirRecursive } from "../shared/utils/fs";
 import { isDartWorkspaceFolder } from "../shared/vscode/utils";
 import { config } from "./config";
@@ -151,8 +151,8 @@ export function isTestFolder(path: string): boolean {
 	return !!path && isInsideFolderNamed(path, "test") && fs.existsSync(path) && fs.statSync(path).isDirectory();
 }
 
-export function checkProjectSupportsPubRunTest(folder: string, isDartSdkRepo: boolean): boolean {
-	return hasPubspec(folder) && !isDartSdkRepo;
+export function projectShouldUsePubForTests(folder: string, config: WorkspaceConfig): boolean {
+	return hasPubspec(folder) && !config.useVmForTests;
 }
 
 export function isDartFile(file: string): boolean {
