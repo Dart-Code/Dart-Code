@@ -175,12 +175,6 @@ class ResourceConfig {
 	get showDartDeveloperLogs(): boolean { return this.getConfig<boolean>("showDartDeveloperLogs", true); }
 	get vmAdditionalArgs(): string[] { return this.getConfig<string[]>("vmAdditionalArgs", []); }
 	get webDaemonLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("webDaemonLogFile", null))); }
-
-	get runPubGetOnPubspecChangesIsConfiguredExplicitly() {
-		const runPubGet = this.config.inspect("runPubGetOnPubspecChanges");
-		// Return whether any of them are explicitly set, in which case we'll then read normally from the settings.
-		return runPubGet && (runPubGet.globalValue !== undefined || runPubGet.workspaceValue !== undefined || runPubGet.workspaceFolderValue !== undefined);
-	}
 }
 
 export const config = new Config();

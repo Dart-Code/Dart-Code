@@ -2,12 +2,12 @@ import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, window } from "vscode";
 import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isMac, isWin, showLogAction } from "../../shared/constants";
-import { Logger } from "../../shared/interfaces";
+import { Logger, WorkspaceConfig } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
-import { tryLoadBazelFlutterConfig } from "../../shared/utils/bazel";
 import { findProjectFolders, fsPath, hasPubspec } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
+import { processBazelWorkspace, processFuchsiaWorkspace, processKnownGitRepositories } from "../../shared/utils/workspace";
 import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
@@ -167,25 +167,24 @@ export class SdkUtils {
 				dart: config.sdkPath,
 				dartSdkIsFromFlutter: false,
 				flutter: undefined,
-			}, undefined, false, false, false, false, false);
+			}, {}, false, false, false, false);
 		}
 
-		// Search for a Fuchsia root.
-		let fuchsiaRoot: string | undefined;
-		topLevelFolders.forEach((folder) => fuchsiaRoot = fuchsiaRoot || findFuchsiaRoot(folder));
+		// Certain types of workspaces will have special config, so read them here.
+		const workspaceConfig: WorkspaceConfig = {};
+		// Helper that searches for a specific folder/file up the tree and
+		// runs some specific processing.
+		const processWorkspaceType = (search: (folder: string) => string | undefined, process: (logger: Logger, config: WorkspaceConfig, folder: string) => void): string | undefined => {
+			const root = topLevelFolders.find((f) => search(f));
+			if (root)
+				process(this.logger, workspaceConfig, root);
+			return root;
+		};
 
-		// Search for a Bazel workspace root.
-		let bazelWorkspaceRoot: string | undefined;
+		processWorkspaceType(findGitRoot, processKnownGitRepositories);
 		if (!isWin && config.previewBazelWorkspaceCustomScripts)
-			topLevelFolders.forEach((folder) => bazelWorkspaceRoot = bazelWorkspaceRoot || findBazelWorkspaceRoot(folder));
-		const workspaceConfig = tryLoadBazelFlutterConfig(this.logger, bazelWorkspaceRoot);
-
-		// Search for Git root to see if this is the Dart SDK.
-		let gitRoot: string | undefined;
-		topLevelFolders.forEach((folder) => gitRoot = gitRoot || findGitRoot(folder));
-		const isDartSdkRepo = !!(gitRoot
-			&& fs.existsSync(path.join(gitRoot, "README.dart-sdk"))
-			&& fs.existsSync(path.join(gitRoot, ".packages")));
+			processWorkspaceType(findBazelWorkspaceRoot, processBazelWorkspace);
+		const fuchsiaRoot = processWorkspaceType(findFuchsiaRoot, processFuchsiaWorkspace);
 
 		// TODO: This has gotten very messy and needs tidying up...
 
@@ -240,6 +239,7 @@ export class SdkUtils {
 		const flutterSdkSearchPaths = [
 			workspaceConfig?.flutterSdkHome,
 			config.flutterSdkPath,
+			// TODO: These could move into processFuchsiaWorkspace and be set on the config?
 			fuchsiaRoot && path.join(fuchsiaRoot, "lib/flutter"),
 			fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter"),
 			firstFlutterMobileProject,
@@ -255,6 +255,7 @@ export class SdkUtils {
 
 		const dartSdkSearchPaths = [
 			isMac ? workspaceConfig?.dartSdkHomeMac : workspaceConfig?.dartSdkHomeLinux,
+			// TODO: These could move into processFuchsiaWorkspace and be set on the config?
 			fuchsiaRoot && path.join(fuchsiaRoot, "topaz/tools/prebuilt-dart-sdk", `${dartPlatformName}-x64`),
 			fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart/tools/sdks/dart-sdk"),
 			fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart/tools/sdks", dartPlatformName, "dart-sdk"),
@@ -286,7 +287,6 @@ export class SdkUtils {
 			hasAnyWebProject,
 			hasAnyStandardDartProject,
 			!!fuchsiaRoot && hasAnyStandardDartProject,
-			isDartSdkRepo,
 		);
 	}
 

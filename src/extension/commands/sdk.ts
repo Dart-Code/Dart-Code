@@ -191,7 +191,7 @@ export class SdkCommands {
 			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
 			if (!fs.existsSync(tempDir))
 				fs.mkdirSync(tempDir);
-			return this.runFlutterInFolder(tempDir, ["doctor", "-v"], "flutter", true, { customScript: workspace.workspaceConfig?.flutterDoctorScript });
+			return this.runFlutterInFolder(tempDir, ["doctor", "-v"], "flutter", true, { customScript: workspace.config?.flutterDoctorScript });
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.upgrade", async (selection) => {
 			if (!workspace.sdks.flutter) {
@@ -274,6 +274,12 @@ export class SdkCommands {
 			return;
 		}
 
+		// Or if the workspace config says we shouldn't run.
+		if (this.workspace.config.disableAutomaticPackageGet) {
+			this.logger.info(`Workspace suppresses automatic "pub get"`);
+			return;
+		}
+
 		// Never do anything for files inside .dart_tool folders.
 		if (fsPath(uri).indexOf(`${path.sep}.dart_tool${path.sep}`) !== -1) {
 			this.logger.info(`Change was inside a .dart_tool folder, skipping`);
@@ -284,14 +290,6 @@ export class SdkCommands {
 		// may  be fetched automatically.
 		if (numProjectCreationsInProgress > 0) {
 			this.logger.info("Skipping package fetch because project creation is in progress");
-			return;
-		}
-
-		// If we're in Fuchsia, we don't want to `pub get` by default but we do want to allow
-		// it to be overridden, so only read the setting if it's been declared explicitly.
-		// TODO: This should be handled per-project for a multi-root workspace.
-		if (this.workspace.shouldAvoidFetchingPackages && !conf.runPubGetOnPubspecChangesIsConfiguredExplicitly) {
-			this.logger.info(`Workspace suppresses "pub get"`);
 			return;
 		}
 

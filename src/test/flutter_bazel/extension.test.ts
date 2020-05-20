@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { isWin } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
-import { activateWithoutAnalysis, ext, extApi, flutterBazelHelloWorldFolder, flutterBazelRoot, logger } from "../helpers";
+import { activateWithoutAnalysis, ext, extApi, flutterBazelRoot, logger } from "../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -36,18 +36,17 @@ describe("extension", () => {
 		assert.ok(workspaceContext.sdks);
 		assert.ok(workspaceContext.sdks.dart);
 		assert.ok(workspaceContext.sdks.flutter);
-		assert.ok(workspaceContext.workspaceConfig);
-		assert.equal(workspaceContext.workspaceConfig?.configFile, path.join(fsPath(flutterBazelHelloWorldFolder), "dart/config/intellij-plugins/flutter.json"));
-		assert.equal(workspaceContext.workspaceConfig?.devtoolsActivateScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_devtools_activate.sh"));
-		assert.equal(workspaceContext.workspaceConfig?.devtoolsRunScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_devtools_run.sh"));
-		assert.equal(workspaceContext.workspaceConfig?.flutterDaemonScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_daemon.sh"));
-		assert.equal(workspaceContext.workspaceConfig?.flutterDoctorScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_doctor.sh"));
-		assert.equal(workspaceContext.workspaceConfig?.flutterRunScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_run.sh"));
-		assert.equal(workspaceContext.workspaceConfig?.flutterSdkHome, path.join(fsPath(flutterBazelRoot), "my-flutter-sdk"));
-		assert.equal(workspaceContext.workspaceConfig?.dartSdkHomeLinux, path.join(fsPath(flutterBazelRoot), "my-linux-dart-sdk"));
-		assert.equal(workspaceContext.workspaceConfig?.dartSdkHomeMac, path.join(fsPath(flutterBazelRoot), "my-mac-dart-sdk"));
-		assert.equal(workspaceContext.workspaceConfig?.flutterTestScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_test.sh"));
-		assert.equal(workspaceContext.workspaceConfig?.flutterVersionFile, path.join(fsPath(flutterBazelRoot), "my-flutter-version"));
+		assert.ok(workspaceContext.config);
+		assert.equal(workspaceContext.config?.devtoolsActivateScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_devtools_activate.sh"));
+		assert.equal(workspaceContext.config?.devtoolsRunScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_devtools_run.sh"));
+		assert.equal(workspaceContext.config?.flutterDaemonScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_daemon.sh"));
+		assert.equal(workspaceContext.config?.flutterDoctorScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_doctor.sh"));
+		assert.equal(workspaceContext.config?.flutterRunScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_run.sh"));
+		assert.equal(workspaceContext.config?.flutterSdkHome, path.join(fsPath(flutterBazelRoot), "my-flutter-sdk"));
+		assert.equal(workspaceContext.config?.dartSdkHomeLinux, path.join(fsPath(flutterBazelRoot), "my-linux-dart-sdk"));
+		assert.equal(workspaceContext.config?.dartSdkHomeMac, path.join(fsPath(flutterBazelRoot), "my-mac-dart-sdk"));
+		assert.equal(workspaceContext.config?.flutterTestScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_test.sh"));
+		assert.equal(workspaceContext.config?.flutterVersionFile, path.join(fsPath(flutterBazelRoot), "my-flutter-version"));
 		logger.info("        " + JSON.stringify(workspaceContext, undefined, 8).trim().slice(1, -1).trim());
 	});
 	// This test requires another clone of the SDK to verify the path (symlinks

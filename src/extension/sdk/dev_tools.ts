@@ -43,7 +43,7 @@ export class DevToolsManager implements vs.Disposable {
 	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal) {
 		this.disposables.push(this.devToolsStatusBarItem);
 
-		if (workspaceContext.workspaceConfig?.activateDevToolsEagerly) {
+		if (workspaceContext.config?.activateDevToolsEagerly) {
 			this.preActivate(true).then(
 				() => { this.logger.info(`Finished background activating DevTools`); },
 				(e) => {
@@ -55,7 +55,7 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 	private async preActivate(silent: boolean): Promise<void> {
-		this.devToolsActivationPromise = this.pubGlobal.backgroundActivate(devtoolsPackageName, devtoolsPackageID, silent, this.workspaceContext.workspaceConfig?.devtoolsActivateScript);
+		this.devToolsActivationPromise = this.pubGlobal.backgroundActivate(devtoolsPackageName, devtoolsPackageID, silent, this.workspaceContext.config?.devtoolsActivateScript);
 		await this.devToolsActivationPromise;
 	}
 
@@ -69,8 +69,8 @@ export class DevToolsManager implements vs.Disposable {
 
 		if (!this.devtoolsUrl) {
 			// Don't try to check for install when we run eagerly.
-			if (!this.workspaceContext.workspaceConfig?.activateDevToolsEagerly) {
-				const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtoolsPackageID, undefined, "0.1.10", this.workspaceContext.workspaceConfig?.devtoolsActivateScript, true);
+			if (!this.workspaceContext.config?.activateDevToolsEagerly) {
+				const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtoolsPackageID, undefined, "0.1.10", this.workspaceContext.config?.devtoolsActivateScript, true);
 				if (!isAvailable) {
 					return undefined;
 				}
@@ -182,7 +182,7 @@ export class DevToolsManager implements vs.Disposable {
 
 					// If we haven't tried reinstalling and we don't have a custom activate script, prompt
 					// to retry.
-					if (!hasReinstalled && !this.workspaceContext.workspaceConfig?.devtoolsActivateScript) {
+					if (!hasReinstalled && !this.workspaceContext.config?.devtoolsActivateScript) {
 						const resp = await vs.window.showErrorMessage(`${errorMessage} Would you like to try reactivating DevTools?`, reactivateDevToolsAction, skipAction);
 						if (resp === reactivateDevToolsAction) {
 							try {
@@ -214,7 +214,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		const { binPath, binArgs } = usingCustomScript(
 			path.join(workspaceContext.sdks.dart, pubPath),
 			["global", "run", "devtools", "--machine", "--enable-notifications", "--try-ports", "10"],
-			{ customScript: workspaceContext.workspaceConfig?.devtoolsRunScript, customScriptReplacesNumArgs: 3 },
+			{ customScript: workspaceContext.config?.devtoolsRunScript, customScriptReplacesNumArgs: 3 },
 		);
 
 		// Store the port we'll use for later so we can re-bind to the same port if we restart.
