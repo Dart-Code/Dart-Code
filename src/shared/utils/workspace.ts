@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import { isWin } from "../constants";
 import { Logger, WritableWorkspaceConfig } from "../interfaces";
 
 export function processKnownGitRepositories(logger: Logger, config: WritableWorkspaceConfig, gitRoot: string) {
@@ -16,14 +17,19 @@ export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspac
 	config.disableSdkUpdateChecks = true;
 }
 
-export function processBazelWorkspace(logger: Logger, config: WritableWorkspaceConfig, bazelWorkspaceRoot: string) {
+export function processBazelWorkspace(logger: Logger, config: WritableWorkspaceConfig, bazelWorkspaceRoot: string, parseFlutterJson: boolean) {
 	config.disableAutomaticPackageGet = true;
 	config.disableSdkUpdateChecks = true;
 
-	tryProcessBazelFlutterConfig(logger, config, bazelWorkspaceRoot);
+	if (parseFlutterJson)
+		tryProcessBazelFlutterConfig(logger, config, bazelWorkspaceRoot);
 }
 
 export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWorkspaceConfig, bazelWorkspaceRoot: string) {
+	// flutter.json does not support windows.
+	if (isWin)
+		return;
+
 	try {
 		const flutterConfigPath = path.join(bazelWorkspaceRoot, "dart/config/intellij-plugins/flutter.json");
 		if (!fs.existsSync(flutterConfigPath))

@@ -182,8 +182,8 @@ export class SdkUtils {
 		};
 
 		processWorkspaceType(findGitRoot, processKnownGitRepositories);
-		if (!isWin && config.previewBazelWorkspaceCustomScripts)
-			processWorkspaceType(findBazelWorkspaceRoot, processBazelWorkspace);
+		// TODO: Remove this lambda when the preview flag is removed.
+		processWorkspaceType(findBazelWorkspaceRoot, (l, c, b) => processBazelWorkspace(l, c, b, config.previewBazelWorkspaceCustomScripts));
 		const fuchsiaRoot = processWorkspaceType(findFuchsiaRoot, processFuchsiaWorkspace);
 
 		// TODO: This has gotten very messy and needs tidying up...
