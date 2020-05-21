@@ -6,7 +6,9 @@ import { Logger } from "../../shared/interfaces";
 import { flatMap } from "../../shared/utils";
 import { unique } from "../../shared/utils/array";
 import { fsPath } from "../../shared/utils/fs";
+import { resolvedPromise } from "../../shared/utils/promises";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
+import { config } from "../config";
 import { hasOverlappingEdits } from "./edit_das";
 
 const refactorOptions: { [key: string]: (feedback?: as.RefactoringFeedback) => as.RefactoringOptions } = {
@@ -16,14 +18,14 @@ const refactorOptions: { [key: string]: (feedback?: as.RefactoringFeedback) => a
 };
 
 export class RefactorCommands implements vs.Disposable {
-	private commands: vs.Disposable[] = [];
+	private subscriptions: vs.Disposable[] = [];
 
 	constructor(private readonly logger: Logger, private readonly context: vs.ExtensionContext, private readonly analyzer: DasAnalyzerClient) {
-		this.commands.push(
+		this.subscriptions.push(
 			vs.commands.registerCommand("_dart.performRefactor", this.performRefactor, this),
 		);
-		if (analyzer.capabilities.supportsMoveFile)
-			this.commands.push(vs.workspace.onWillRenameFiles((e) => this.onWillRenameFiles(e)));
+		if (analyzer.capabilities.supportsMoveFile && config.previewUpdateImportsOnRename)
+			this.subscriptions.push(vs.workspace.onWillRenameFiles((e) => this.onWillRenameFiles(e)));
 	}
 
 	private async performRefactor(document: vs.TextDocument, range: vs.Range, refactorKind: as.RefactoringKind): Promise<void> {
@@ -134,29 +136,47 @@ export class RefactorCommands implements vs.Disposable {
 		return applyEdits;
 	}
 
+	private isProcessingMoveEvent = false;
 	private onWillRenameFiles(e: vs.FileWillRenameEvent) {
 		// TODO: VS Code always calls this once-per-file, concurrently for multiple files moved at once
 		// which currently results in REFACTOR_CANCELLED for all but the first since the server doesn't
-		// support multiple refactors at the same time. Running them sequentially may be an option, but
-		// would also potentially slow down the operation significantly.
-		const filesToRename = flatMap(e.files, (f) => this.getFilesToRename({ oldPath: fsPath(f.oldUri), newPath: fsPath(f.newUri) }));
-		const edits = this.getRenameEdits(filesToRename);
-		if (edits)
-			e.waitUntil(edits);
+		// support multiple refactors at the same time. Running them sequentially fixes this, however it
+		// hits an issue in VS Code (https://github.com/microsoft/vscode/issues/98309) so for now, we will
+		// only process a single event at a time.
+		if (this.isProcessingMoveEvent) {
+			this.logger.info(`Skipping rename event for some files because another is in progress`);
+			return;
+		}
+		this.isProcessingMoveEvent = true;
+		try {
+			const filesToRename = flatMap(e.files, (f) => this.getFilesToRename({ oldPath: fsPath(f.oldUri), newPath: fsPath(f.newUri) }));
+			const edits = this.getRenameEdits(filesToRename);
+			e.waitUntil(edits.finally(() => this.isProcessingMoveEvent = false));
+		} catch (e) {
+			this.isProcessingMoveEvent = false;
+		}
+	}
+
+	/// Server only supports one refactoring at a time, so we need to ensure we
+	/// wait for any previous one to finish before sending this.
+	private inProgressRefactor: Promise<any> = resolvedPromise;
+	private async runSequentially<T>(func: () => Promise<T>) {
+		this.inProgressRefactor = this.inProgressRefactor.then(() => func());
+		return this.inProgressRefactor;
 	}
 
 	private async getRenameEdits(filesToRename: Array<{ oldPath: string, newPath: string }>): Promise<vs.WorkspaceEdit | undefined> {
 		const changes = new vs.WorkspaceEdit();
 
 		for (const file of filesToRename) {
-			const editResult = await this.analyzer.editGetRefactoring({
+			const editResult = await this.runSequentially(() => this.analyzer.editGetRefactoring({
 				file: file.oldPath,
 				kind: "MOVE_FILE",
 				length: 0, // Not used for MOVE_FILE
 				offset: 0, // Not used for MOVE_FILE
 				options: { newFile: file.newPath },
 				validateOnly: false,
-			});
+			}));
 
 			if (!editResult.change)
 				continue;
@@ -201,7 +221,7 @@ export class RefactorCommands implements vs.Disposable {
 	}
 
 	public dispose(): any {
-		for (const command of this.commands)
+		for (const command of this.subscriptions)
 			command.dispose();
 	}
 }
