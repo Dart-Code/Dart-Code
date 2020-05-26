@@ -175,7 +175,8 @@ export class SdkUtils {
 		// Helper that searches for a specific folder/file up the tree and
 		// runs some specific processing.
 		const processWorkspaceType = (search: (folder: string) => string | undefined, process: (logger: Logger, config: WorkspaceConfig, folder: string) => void): string | undefined => {
-			const root = topLevelFolders.find((f) => search(f));
+			let root: string | undefined;
+			topLevelFolders.forEach((folder) => root = root || search(folder));
 			if (root)
 				process(this.logger, workspaceConfig, root);
 			return root;
