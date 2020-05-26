@@ -289,6 +289,10 @@ export class DebugCommands {
 		if (hasPromptedAboutDebugSettings || this.context.breakpointOutsideWorkspaceDoNotShow || !(e instanceof vs.SourceBreakpoint))
 			return;
 
+		// Don't consider non-Dart files.
+		if (!fsPath(e.location.uri).toLocaleLowerCase().endsWith(".dart"))
+			return;
+
 		// If it's inside the workspace we don't want to prompt.
 		if (vs.workspace.getWorkspaceFolder(e.location.uri))
 			return;
