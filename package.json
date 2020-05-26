@@ -1221,7 +1221,7 @@
 				"dart.showMainCodeLens": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to show CodeLens actions in the editor for quick running/debugging scripts with main methods.",
+					"description": "Whether to show CodeLens actions in the editor for quick running/debugging scripts with main functions.",
 					"scope": "window"
 				},
 				"dart.showTestCodeLens": {

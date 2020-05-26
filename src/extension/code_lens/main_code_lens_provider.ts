@@ -28,13 +28,13 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		const fileType = isTestFile(fsPath(document.uri)) ? "test-file" : "file";
 		const templates = getTemplatedLaunchConfigs(document, fileType);
 
-		const mainMethod = outline.children?.find((o) => o.element.name === "main");
-		if (!mainMethod)
+		const mainFunction = outline.children?.find((o) => o.element.name === "main");
+		if (!mainFunction)
 			return;
 
 		return [
 			new CodeLens(
-				toRange(document, mainMethod.offset, mainMethod.length),
+				toRange(document, mainFunction.offset, mainFunction.length),
 				{
 					arguments: [document.uri],
 					command: "dart.startWithoutDebugging",
@@ -42,7 +42,7 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 				},
 			),
 			new CodeLens(
-				toRange(document, mainMethod.offset, mainMethod.length),
+				toRange(document, mainFunction.offset, mainFunction.length),
 				{
 					arguments: [document.uri],
 					command: "dart.startDebugging",
@@ -50,7 +50,7 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 				},
 			),
 		].concat(templates.map((t) => new CodeLens(
-			toRange(document, mainMethod.offset, mainMethod.length),
+			toRange(document, mainFunction.offset, mainFunction.length),
 			{
 				arguments: [document.uri, t],
 				command: t.template === `run-${fileType}` ? "dart.startWithoutDebugging" : "dart.startDebugging",

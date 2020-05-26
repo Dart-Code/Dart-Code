@@ -28,13 +28,13 @@ export class LspMainCodeLensProvider implements CodeLensProvider, IAmDisposable 
 		const templateType = isTestFile(fsPath(document.uri)) ? "test-file" : "file";
 		const runFileTemplates = runConfigs.filter((c) => c && c.type === "dart" && (c.template === `run-${templateType}` || c.template === `debug-${templateType}`));
 
-		const mainMethod = outline.children?.find((o) => o.element.name === "main");
-		if (!mainMethod)
+		const mainFunction = outline.children?.find((o) => o.element.name === "main");
+		if (!mainFunction)
 			return;
 
 		return [
 			new CodeLens(
-				lspToRange(mainMethod.range),
+				lspToRange(mainFunction.range),
 				{
 					arguments: [document.uri],
 					command: "dart.startWithoutDebugging",
@@ -42,7 +42,7 @@ export class LspMainCodeLensProvider implements CodeLensProvider, IAmDisposable 
 				},
 			),
 			new CodeLens(
-				lspToRange(mainMethod.range),
+				lspToRange(mainFunction.range),
 				{
 					arguments: [document.uri],
 					command: "dart.startDebugging",
@@ -50,7 +50,7 @@ export class LspMainCodeLensProvider implements CodeLensProvider, IAmDisposable 
 				},
 			),
 		].concat(runFileTemplates.map((t) => new CodeLens(
-			lspToRange(mainMethod.range),
+			lspToRange(mainFunction.range),
 			{
 				arguments: [document.uri, t],
 				command: t.template === `run-${templateType}` ? "dart.startWithoutDebugging" : "dart.startDebugging",

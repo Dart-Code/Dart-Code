@@ -7,17 +7,17 @@ describe("main_code_lens", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate());
 
-	it("includes run/debug actions for main methods", async function () {
+	it("includes run/debug actions for main function", async function () {
 		const editor = await openFile(helloWorldMainFile);
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
-		const mainMethodPos = positionOf(`main^() async {`);
+		const mainFunctionPos = positionOf(`main^() async {`);
 
-		const codeLensForMainMethod = fileCodeLens.filter((cl) => cl.range.start.line === mainMethodPos.line);
-		assert.equal(codeLensForMainMethod.length, 2);
+		const codeLensForMainFunction = fileCodeLens.filter((cl) => cl.range.start.line === mainFunctionPos.line);
+		assert.equal(codeLensForMainFunction.length, 2);
 
-		if (!codeLensForMainMethod[0].command) {
+		if (!codeLensForMainFunction[0].command) {
 			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 			// race condition. Rather than failing our test runs, skip.
 			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
@@ -25,11 +25,11 @@ describe("main_code_lens", () => {
 			return;
 		}
 
-		const runAction = codeLensForMainMethod.find((cl) => cl.command!.title === "Run")!;
+		const runAction = codeLensForMainFunction.find((cl) => cl.command!.title === "Run")!;
 		assert.equal(runAction!.command!.command, "dart.startWithoutDebugging");
 		assert.equal(fsPath(runAction!.command!.arguments![0]), fsPath(helloWorldMainFile));
 
-		const debugAction = codeLensForMainMethod.find((cl) => cl.command!.title === "Debug");
+		const debugAction = codeLensForMainFunction.find((cl) => cl.command!.title === "Debug");
 		assert.equal(debugAction!.command!.command, "dart.startDebugging");
 		assert.equal(fsPath(debugAction!.command!.arguments![0]), fsPath(helloWorldMainFile));
 	});
@@ -63,12 +63,12 @@ describe("main_code_lens", () => {
 				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(testConfig.fileUri));
 
 				const fileCodeLens = await getCodeLens(editor.document);
-				const mainMethodPos = positionOf(testConfig.lensLocation);
+				const mainFunctionPos = positionOf(testConfig.lensLocation);
 
-				const codeLensForMainMethod = fileCodeLens.filter((cl) => cl.range.start.line === mainMethodPos.line);
-				assert.equal(codeLensForMainMethod.length, 3);
+				const codeLensForMainFunction = fileCodeLens.filter((cl) => cl.range.start.line === mainFunctionPos.line);
+				assert.equal(codeLensForMainFunction.length, 3);
 
-				if (!codeLensForMainMethod[0].command) {
+				if (!codeLensForMainFunction[0].command) {
 					// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 					// race condition. Rather than failing our test runs, skip.
 					// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
@@ -76,7 +76,7 @@ describe("main_code_lens", () => {
 					return;
 				}
 
-				const action = codeLensForMainMethod.find((cl) => cl.command!.title === `${debugType.name} (terminal)`)!;
+				const action = codeLensForMainFunction.find((cl) => cl.command!.title === `${debugType.name} (terminal)`)!;
 				assert.equal(action!.command!.command, debugType.type === "debug" ? "dart.startDebugging" : "dart.startWithoutDebugging");
 				assert.equal(fsPath(action!.command!.arguments![0]), fsPath(testConfig.fileUri));
 				assert.equal(action!.command!.arguments![1].console, "terminal");
@@ -111,10 +111,10 @@ describe("main_code_lens", () => {
 			await waitForResult(() => !!extApi.fileTracker.getOutlineFor(testConfig.fileUri));
 
 			const fileCodeLens = await getCodeLens(editor.document);
-			const mainMethodPos = positionOf(testConfig.lensLocation);
+			const mainFunctionPos = positionOf(testConfig.lensLocation);
 
-			const codeLensForMainMethod = fileCodeLens.filter((cl) => cl.range.start.line === mainMethodPos.line);
-			assert.equal(codeLensForMainMethod.length, testConfig.expectMatch ? 3 : 2);
+			const codeLensForMainFunction = fileCodeLens.filter((cl) => cl.range.start.line === mainFunctionPos.line);
+			assert.equal(codeLensForMainFunction.length, testConfig.expectMatch ? 3 : 2);
 		}
 	});
 });

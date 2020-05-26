@@ -2,7 +2,7 @@
 	".source.dart": {
 		"main": {
 			"prefix": "main",
-			"description": "Insert a main method, used as an entry point.",
+			"description": "Insert a main function, used as an entry point.",
 			"body": [
 				"main(List<String> args) {",
 				"  $0",
