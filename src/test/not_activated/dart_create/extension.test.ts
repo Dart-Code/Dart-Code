@@ -34,7 +34,7 @@ describe("command", () => {
 
 		const projectName = "my_test_dart_proj";
 		const templateName = "console-full";
-		const templateEntrypoint = "bin/main.dart";
+		const templateEntrypoint = "bin/__projectName__.dart";
 
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves(projectName);
