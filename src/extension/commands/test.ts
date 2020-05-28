@@ -191,10 +191,17 @@ export class LspTestCommands extends TestCommands {
 		const visitor = new LspTestOutlineVisitor(this.logger, fsPath(document.uri));
 		visitor.visit(outline);
 		return visitor.tests.reverse().find((t) => {
-			const vsRange = new vs.Range(t.range.start.line,
-				t.range.start.character,
-				t.range.end.line,
-				t.range.end.character,
+			let start = t.range.start;
+			let end = t.range.end;
+
+			// Widen the range to start/end of lines.
+			start = document.lineAt(start.line).rangeIncludingLineBreak.start;
+			end = document.lineAt(end.line).rangeIncludingLineBreak.end;
+
+			const vsRange = new vs.Range(start.line,
+				start.character,
+				end.line,
+				end.character,
 			);
 			return vsRange.contains(editor.selection);
 		});
