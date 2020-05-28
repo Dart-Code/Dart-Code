@@ -40,7 +40,7 @@ export class IgnoreLintCodeActionProvider implements RankedCodeActionProvider {
 	private convertResult(document: TextDocument, diagnostic: Diagnostic): CodeAction {
 		const type = diagnostic instanceof DartDiagnostic ? `${diagnostic.type.toLowerCase()} ` : "";
 		const dCode: any = diagnostic.code || "";
-		const code = "value" in dCode ? dCode.value : dCode;
+		const code = typeof dCode === "string" ? dCode : dCode.value;
 
 		const edit = new WorkspaceEdit();
 		const line = document.lineAt(diagnostic.range.start.line);
