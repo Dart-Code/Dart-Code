@@ -1,6 +1,7 @@
-import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument, workspace } from "vscode";
+import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument } from "vscode";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
+import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
 import { lspToRange } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
 import { isTestFile } from "../utils";
@@ -24,9 +25,8 @@ export class LspMainCodeLensProvider implements CodeLensProvider, IAmDisposable 
 		if (!outline || !outline.children || !outline.children.length)
 			return;
 
-		const runConfigs = workspace.getConfiguration("launch", document.uri).get<any[]>("configurations") || [];
-		const templateType = isTestFile(fsPath(document.uri)) ? "test-file" : "file";
-		const runFileTemplates = runConfigs.filter((c) => c && c.type === "dart" && (c.template === `run-${templateType}` || c.template === `debug-${templateType}`));
+		const fileType = isTestFile(fsPath(document.uri)) ? "test-file" : "file";
+		const templates = getTemplatedLaunchConfigs(document, fileType);
 
 		const mainFunction = outline.children?.find((o) => o.element.name === "main");
 		if (!mainFunction)
@@ -49,11 +49,11 @@ export class LspMainCodeLensProvider implements CodeLensProvider, IAmDisposable 
 					title: "Debug",
 				},
 			),
-		].concat(runFileTemplates.map((t) => new CodeLens(
+		].concat(templates.map((t) => new CodeLens(
 			lspToRange(mainFunction.range),
 			{
 				arguments: [document.uri, t],
-				command: t.template === `run-${templateType}` ? "dart.startWithoutDebugging" : "dart.startDebugging",
+				command: t.template === `run-${fileType}` ? "dart.startWithoutDebugging" : "dart.startDebugging",
 				title: t.name,
 			},
 		)));
