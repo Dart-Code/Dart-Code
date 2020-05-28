@@ -3,14 +3,14 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../../shared/constants";
 import { PromiseCompleter } from "../../../shared/utils";
-import { activate, currentDoc, ensureTestContent, rangeOf, sb, setTestContent, waitForResult } from "../../helpers";
+import { activate, ensureTestContent, executeCodeAction, extApi, getCodeActions, rangeOf, sb, setTestContent, waitForResult } from "../../helpers";
 
-describe("refactor", () => {
+describe("extract widget refactor", () => {
 	beforeEach("activate", () => activate());
 
 	it("can extract simple code into a widget", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
-		showInputBox.resolves("MyOtherWidget");
+		showInputBox.resolves("NewWidget");
 
 		await setTestContent(`
 import 'package:flutter/widgets.dart';
@@ -22,19 +22,20 @@ class MyWidget extends StatelessWidget {
   }
 }
 		`);
-		await (vs.commands.executeCommand("_dart.performRefactor", currentDoc(), rangeOf("||Container()"), "EXTRACT_WIDGET"));
+		await executeCodeAction({ title: "Extract Widget" }, rangeOf("||Container()"));
+
 		await ensureTestContent(`
 import 'package:flutter/widgets.dart';
 
 class MyWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return new MyOtherWidget();
+    return new NewWidget();
   }
 }
 
-class MyOtherWidget extends StatelessWidget {
-  const MyOtherWidget({
+class NewWidget extends StatelessWidget {
+  const NewWidget({
     Key key,
   }) : super(key: key);
 
@@ -46,9 +47,7 @@ class MyOtherWidget extends StatelessWidget {
 		`, true);
 	});
 
-	it("displays an error if an invalid range is selected", async () => {
-		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
-
+	it("is not available for an invalid range", async () => {
 		await setTestContent(`
 import 'package:flutter/widgets.dart';
 
@@ -59,23 +58,15 @@ class MyWidget extends StatelessWidget {
   }
 }
 		`);
-		await (vs.commands.executeCommand("_dart.performRefactor", currentDoc(), rangeOf("|MyWidget|"), "EXTRACT_WIDGET"));
 
-		// Ensure the content was not modified.
-		await ensureTestContent(`
-import 'package:flutter/widgets.dart';
-
-class MyWidget extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return new Container();
-  }
-}
-		`);
-		assert(showErrorMessage.calledOnce);
+		const codeActions = await getCodeActions({ title: "Extract Widget" }, rangeOf("|MyWidget|"));
+		assert.equal(codeActions.length, 0);
 	});
 
-	it("displays an error if an invalid new name is provided", async () => {
+	it("displays an error if an invalid new name is provided", async function () {
+		if (extApi.isLsp)
+			this.skip(); // LSP doesn't ask for the name
+
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("\"\"\"");
 		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
@@ -90,7 +81,7 @@ class MyWidget extends StatelessWidget {
   }
 }
 		`);
-		await (vs.commands.executeCommand("_dart.performRefactor", currentDoc(), rangeOf("||Container()"), "EXTRACT_WIDGET"));
+		await executeCodeAction({ title: "Extract Widget" }, rangeOf("||Container()"));
 
 		// Ensure the content was not modified.
 		await ensureTestContent(`
@@ -106,7 +97,10 @@ class MyWidget extends StatelessWidget {
 		assert(showErrorMessage.calledOnce);
 	});
 
-	it("does not apply changes when there are errors if the user does not approve", async () => {
+	it("does not apply changes when there are errors if the user does not approve", async function () {
+		if (extApi.isLsp)
+			this.skip(); // LSP doesn't ask for the name
+
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("MyWidget");
 		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
@@ -122,7 +116,7 @@ class MyWidget extends StatelessWidget {
   }
 }
 		`);
-		await (vs.commands.executeCommand("_dart.performRefactor", currentDoc(), rangeOf("||Container()"), "EXTRACT_WIDGET"));
+		await executeCodeAction({ title: "Extract Widget" }, rangeOf("||Container()"));
 
 		// Ensure the content was not modified.
 		await ensureTestContent(`
@@ -138,7 +132,10 @@ class MyWidget extends StatelessWidget {
 		assert(refactorPrompt.calledOnce);
 	});
 
-	it("applies changes when there are errors if the user approves", async () => {
+	it("applies changes when there are errors if the user approves", async function () {
+		if (extApi.isLsp)
+			this.skip(); // LSP doesn't ask for the name
+
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("MyWidget");
 		const showErrorMessage = sb.stub(vs.window, "showErrorMessage").callThrough();
@@ -154,7 +151,7 @@ class MyWidget extends StatelessWidget {
   }
 }
 		`);
-		await (vs.commands.executeCommand("_dart.performRefactor", currentDoc(), rangeOf("||Container()"), "EXTRACT_WIDGET"));
+		await executeCodeAction({ title: "Extract Widget" }, rangeOf("||Container()"));
 
 		// Ensure the content was modified.
 		await ensureTestContent(`
@@ -182,7 +179,10 @@ class MyWidget extends StatelessWidget {
 		assert(refactorPrompt.calledOnce);
 	});
 
-	it("rejects the edit if the document has been modified before the user approves", async () => {
+	it("rejects the edit if the document has been modified before the user approves", async function () {
+		if (extApi.isLsp)
+			this.skip(); // LSP doesn't prompt
+
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("MyWidget");
 		const showErrorMessage = sb.stub(vs.window, "showErrorMessage").callThrough();
@@ -203,7 +203,7 @@ class MyWidget extends StatelessWidget {
 		`);
 
 		// Start the command but don't await it.
-		const refactorCommand = (vs.commands.executeCommand("_dart.performRefactor", currentDoc(), rangeOf("||Container()"), "EXTRACT_WIDGET"));
+		const refactorCommand = executeCodeAction({ title: "Extract Widget" }, rangeOf("||Container()"));
 
 		// Wait for the message to appear.
 		await waitForResult(() => refactorPrompt.called);

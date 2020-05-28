@@ -40,7 +40,6 @@ main() {
 		`);
 		const codeActions = await getCodeActions({ title: "Extract Method" }, new vs.Range(positionOf("^main("), positionOf("world^")));
 		assert.equal(codeActions.length, 0);
-
 	});
 
 	it("displays an error if an invalid new name is provided", async function () {
