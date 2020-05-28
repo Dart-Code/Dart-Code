@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
 import { isWin } from "../../../shared/constants";
 import { LazyCompletionItem } from "../../../shared/vscode/interfaces";
-import { acceptFirstSuggestion, activate, currentDoc, emptyFile, ensureCompletion, ensureInsertReplaceRanges, ensureNoCompletion, ensureTestContent, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent, snippetValue } from "../../helpers";
+import { acceptFirstSuggestion, activate, currentDoc, emptyFile, ensureCompletion, ensureInsertReplaceRanges as ensureRanges, ensureNoCompletion, ensureTestContent, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent, snippetValue } from "../../helpers";
 
 describe("completion_item_provider", () => {
 
@@ -120,7 +120,7 @@ main() {
 		assert.equal(cl.kind, vs.CompletionItemKind.Method);
 		assert.equal(cl.label, "methodWithArgsAndReturnValue(…)");
 		assert.notEqual(cl.preselect, true);
-		ensureInsertReplaceRanges(cl.range, "|ret|urn str", "|return| str");
+		ensureRanges(cl.range, "|ret|urn str", "|return| str");
 		assert.equal(cl.sortText, "998943"); // TODO: This may be fragile...
 	});
 
@@ -213,7 +213,7 @@ main() {
 			assert.equal(completion.kind, vs.CompletionItemKind.Class);
 			assert.equal(completion.label, "ProcessInfo");
 			assert.notEqual(completion.preselect, true);
-			ensureInsertReplaceRanges(completion.range, "|Process|Inf", "|ProcessInf|");
+			ensureRanges(completion.range, "|Process|Inf", "|ProcessInf|");
 			assert.equal(completion.sortText, "999997"); // TODO: This may be fragile...
 		});
 
@@ -244,7 +244,7 @@ main() {
 			assert.equal(completion.kind, vs.CompletionItemKind.Constructor);
 			assert.equal(completion.label, "ProcessInfo()");
 			assert.notEqual(completion.preselect, true);
-			ensureInsertReplaceRanges(completion.range, "|Process|Inf", "|ProcessInf|");
+			ensureRanges(completion.range, "|Process|Inf", "|ProcessInf|");
 			assert.equal(completion.sortText, "999997"); // TODO: This may be fragile...
 		});
 
@@ -279,7 +279,7 @@ main() {
 			assert.equal(completion.kind, vs.CompletionItemKind.Constructor);
 			assert.equal(completion.label, "HashMap(…)");
 			assert.notEqual(completion.preselect, true);
-			ensureInsertReplaceRanges(completion.range, "|Hash|Ma", "|HashMa|");
+			ensureRanges(completion.range, "|Hash|Ma", "|HashMa|");
 			assert.equal(completion.sortText, "999997"); // TODO: This may be fragile...
 		});
 
