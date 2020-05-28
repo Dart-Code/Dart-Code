@@ -451,18 +451,25 @@ export function select(range: vs.Range) {
 }
 
 export async function executeOrganizeImportsCodeAction() {
-	return executeCodeActionByKind(vs.CodeActionKind.SourceOrganizeImports, startOfDocument);
+	return executeCodeAction({ kind: vs.CodeActionKind.SourceOrganizeImports }, startOfDocument);
 }
 
 export async function executeSortMembersCodeAction() {
-	return executeCodeActionByKind(SourceSortMembersCodeActionKind, startOfDocument);
+	return executeCodeAction({ kind: SourceSortMembersCodeActionKind }, startOfDocument);
 }
 
-export async function executeCodeActionByKind(kind: vs.CodeActionKind, range: vs.Range) {
+export async function getCodeActions({ kind, title }: { kind?: vs.CodeActionKind, title?: string }, range: vs.Range) {
 	const codeActions = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, range) as Thenable<vs.CodeAction[]>);
-	const matchingAction = codeActions.filter((ca) => kind.contains(ca.kind!));
-	assert.equal(matchingAction.length, 1);
-	await waitForEditorChange(() => vs.commands.executeCommand(matchingAction[0].command!.command, ...matchingAction[0].command!.arguments!));
+	const matchingActions = codeActions.filter((ca) => {
+		return (!kind || kind.contains(ca.kind!))
+			&& (!title || ca.title === title);
+	});
+	return matchingActions;
+}
+export async function executeCodeAction({ kind, title }: { kind?: vs.CodeActionKind, title?: string }, range: vs.Range) {
+	const matchingActions = await getCodeActions({ kind, title }, range);
+	assert.equal(matchingActions.length, 1);
+	await waitForEditorChange(() => vs.commands.executeCommand(matchingActions[0].command!.command, ...matchingActions[0].command!.arguments!));
 }
 
 export function positionOf(searchText: string): vs.Position {
