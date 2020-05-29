@@ -763,6 +763,7 @@ function getSettingsThatRequireRestart() {
 	// activation time will also need to be included.
 	return "CONF-"
 		+ config.sdkPath
+		+ config.sdkPaths?.length
 		+ config.analyzerPath
 		+ config.analyzerDiagnosticsPort
 		+ config.analyzerObservatoryPort
@@ -770,6 +771,7 @@ function getSettingsThatRequireRestart() {
 		+ config.extensionLogFile
 		+ config.analyzerAdditionalArgs
 		+ config.flutterSdkPath
+		+ config.flutterSdkPaths?.length
 		+ config.flutterSelectDeviceWhenConnected
 		+ config.closingLabels
 		+ config.analyzeAngularTemplates
