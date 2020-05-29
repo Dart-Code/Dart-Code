@@ -1728,7 +1728,9 @@
 							"codeLens": {
 								"description": "Shows this launch config in CodeLens links for main and/or test methods.",
 								"type": "object",
-								"required": ["for"],
+								"required": [
+									"for"
+								],
 								"properties": {
 									"title": {
 										"description": "Text for the CodeLens link. ${debugType} will be replaced with 'Run' or 'Debug' depending on the link type (see 'for' property).",
