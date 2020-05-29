@@ -1587,10 +1587,10 @@
 					"description": "Whether to register Pub Build Runner tasks with VS Code.",
 					"scope": "window"
 				},
-				"dart.previewUpdateImportsOnRename": {
+				"dart.updateImportsOnRename": {
 					"type": "boolean",
-					"default": false,
-					"description": "EXPERIMENTAL: Whether to automatically update imports when moving/renaming files. Currently only works for single-file moves/renames.",
+					"default": true,
+					"description": "Whether to automatically update imports when moving/renaming files. Currently only works for single-file moves/renames.",
 					"scope": "window"
 				},
 				"dart.flutterGutterIcons": {

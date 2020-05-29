@@ -777,7 +777,7 @@ function getSettingsThatRequireRestart() {
 		+ config.showMainCodeLens
 		+ config.showTestCodeLens
 		+ config.previewBuildRunnerTasks
-		+ config.previewUpdateImportsOnRename
+		+ config.updateImportsOnRename
 		+ config.previewBazelWorkspaceCustomScripts
 		+ config.flutterOutline
 		+ config.triggerSignatureHelpAutomatically

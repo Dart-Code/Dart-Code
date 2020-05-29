@@ -94,7 +94,7 @@ class Config {
 	get previewHotReloadOnSaveWatcher(): boolean { return this.getConfig<boolean>("previewHotReloadOnSaveWatcher", false); }
 	get previewLsp(): boolean { return this.getConfig<boolean>("previewLsp", false); }
 	get previewNewCompletionPlaceholders(): boolean { return this.getConfig<boolean>("previewNewCompletionPlaceholders", true); }
-	get previewUpdateImportsOnRename(): boolean { return this.getConfig<boolean>("previewUpdateImportsOnRename", false); }
+	get updateImportsOnRename(): boolean { return this.getConfig<boolean>("updateImportsOnRename", true); }
 	get promptToRunIfErrors(): boolean { return this.getConfig<boolean>("promptToRunIfErrors", true); }
 	get pubTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("pubTestLogFile", null))); }
 	get sdkPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("sdkPath", null)); }

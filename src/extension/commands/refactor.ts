@@ -24,7 +24,7 @@ export class RefactorCommands implements vs.Disposable {
 		this.subscriptions.push(
 			vs.commands.registerCommand("_dart.performRefactor", this.performRefactor, this),
 		);
-		if (analyzer.capabilities.supportsMoveFile && config.previewUpdateImportsOnRename)
+		if (analyzer.capabilities.supportsMoveFile && config.updateImportsOnRename)
 			this.subscriptions.push(vs.workspace.onWillRenameFiles((e) => this.onWillRenameFiles(e)));
 	}
 
