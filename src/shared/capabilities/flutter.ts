@@ -19,6 +19,7 @@ export class FlutterCapabilities {
 	get supportsFlutterCreateListSamples() { return versionIsAtLeast(this.version, "1.3.10"); }
 	get supportsWsVmService() { return versionIsAtLeast(this.version, "1.18.0-5"); }
 	get supportsExposeUrl() { return versionIsAtLeast(this.version, "1.18.0-5"); }
+	get supportsDartDefine() { return versionIsAtLeast(this.version, "1.17.0"); }
 	// TODO: Figure this out.
 	get webSupportsDebugging() { return false; }
 }

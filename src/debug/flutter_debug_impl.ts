@@ -168,6 +168,9 @@ export class FlutterDebugSession extends DartDebugSession {
 					appArgs.push("--track-widget-creation");
 				else
 					appArgs.push("--no-track-widget-creation");
+
+				if (this.useFlutterStructuredErrors && this.flutterCapabilities.supportsDartDefine)
+					appArgs.push("--dart-define=flutter.inspector.structuredErrors=true");
 			}
 
 			if (args.flutterPlatform && args.flutterPlatform !== "default") {
