@@ -1222,16 +1222,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
 
-		await Promise.all([
-			dc.configurationSequence(),
-			dc.launch(config),
-		]);
-
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.InspectorStructuredErrors) === true);
-
-		// Allow the initial error to be printed before we start collecting stderr.
-		await delay(500);
-
 		// Collect all output to stderr.
 		let stderrOutput = "";
 		const handleOutput = (event: DebugProtocol.OutputEvent) => {
@@ -1240,9 +1230,13 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			}
 		};
 		dc.on("output", handleOutput);
-
 		try {
-			await dc.hotReload();
+
+			await Promise.all([
+				dc.configurationSequence(),
+				dc.launch(config),
+			]);
+
 			await waitForResult(
 				() => stderrOutput.toLowerCase().indexOf("exception caught by widgets library") !== -1
 					&& stderrOutput.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1,
