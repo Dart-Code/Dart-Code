@@ -342,6 +342,7 @@ export class FlutterWidgetItem extends vs.TreeItem {
 				: vs.TreeItemCollapsibleState.None,
 		);
 
+		this.description = FlutterWidgetItem.getDescription(outline);
 		if (isWidget(outline)) {
 			this.iconPath = vs.Uri.file(path.join(extensionPath, "media/icons/flutter_widget.svg"));
 		} else if (outline.dartElement) {
@@ -401,10 +402,6 @@ export class FlutterWidgetItem extends vs.TreeItem {
 			label += " " + outline.dartElement.name;
 			if (outline.dartElement.typeParameters)
 				label += outline.dartElement.typeParameters;
-			if (outline.dartElement.parameters)
-				label += outline.dartElement.parameters;
-			if (outline.dartElement.returnType)
-				label += " → " + outline.dartElement.returnType;
 		}
 
 		if (outline.variableName)
@@ -415,6 +412,26 @@ export class FlutterWidgetItem extends vs.TreeItem {
 
 		if (outline.label)
 			label += " " + outline.label;
+
+		return label.trim();
+	}
+
+	private static getDescription(outline: CommonOutline): string | undefined {
+		let label = "";
+
+		if (outline.dartElement) {
+			if (outline.dartElement.parameters)
+				label += outline.dartElement.parameters;
+			if (outline.dartElement.returnType)
+				label += " → " + outline.dartElement.returnType;
+		}
+
+		// Prefer an attribute named "data", but otherwise try some others
+		// in order that appear useful.
+		const attributeToShow = outline.attributes?.find((a) => a.name === "data")
+			|| outline.attributes?.find((a) => a.name === "icon" || a.name === "value");
+		if (attributeToShow)
+			label += " " + attributeToShow.label;
 
 		return label.trim();
 	}
