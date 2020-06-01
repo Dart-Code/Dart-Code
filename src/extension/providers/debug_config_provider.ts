@@ -11,6 +11,7 @@ import { FlutterTestDebugSession } from "../../debug/flutter_test_debug_impl";
 import { FlutterLaunchRequestArguments } from "../../debug/utils";
 import { WebDebugSession } from "../../debug/web_debug_impl";
 import { WebTestDebugSession } from "../../debug/web_test_debug_impl";
+import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { CHROME_OS_VM_SERVICE_PORT, dartVMPath, debugAnywayAction, flutterPath, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isChromeOS, pubPath, pubSnapshotPath, showErrorsAction } from "../../shared/constants";
 import { Device } from "../../shared/flutter/daemon_interfaces";
@@ -27,7 +28,6 @@ import { config } from "../config";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
-import { DartCapabilities } from "../sdk/capabilities";
 import { isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 import { TestResultsProvider } from "../views/test_view";
@@ -463,6 +463,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				debugConfig.name = "Dart";
 			}
 		}
+		debugConfig.dartVersion = this.dartCapabilities.version;
 		debugConfig.toolEnv = getToolEnv();
 		debugConfig.sendLogsToClient = true;
 		debugConfig.globalFlutterArgs = getGlobalFlutterArgs();
@@ -485,20 +486,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			: config.debugExternalLibraries;
 		debugConfig.showDartDeveloperLogs = conf.showDartDeveloperLogs;
 		debugConfig.useFlutterStructuredErrors = conf.flutterStructuredErrors;
-		debugConfig.debuggerHandlesPathsEverywhereForBreakpoints = debugConfig.debuggerHandlesPathsEverywhereForBreakpoints !== undefined && debugConfig.debuggerHandlesPathsEverywhereForBreakpoints !== null
-			? debugConfig.debuggerHandlesPathsEverywhereForBreakpoints
-			: this.dartCapabilities.handlesPathsEverywhereForBreakpoints;
-		debugConfig.supportsWsVmService = this.flutterCapabilities.supportsWsVmService;
-		debugConfig.supportsExposeUrl = this.flutterCapabilities.supportsExposeUrl;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		debugConfig.evaluateToStringInDebugViews = debugConfig.evaluateToStringInDebugViews || config.evaluateToStringInDebugViews;
-		debugConfig.useWriteServiceInfo = debugConfig.useWriteServiceInfo !== undefined && debugConfig.useWriteServiceInfo !== null
-			? debugConfig.useWriteServiceInfo
-			: this.dartCapabilities.supportsWriteServiceInfo;
-		debugConfig.supportsDebugInternalLibraries = debugConfig.supportsDebugInternalLibraries !== undefined && debugConfig.supportsDebugInternalLibraries !== null
-			? debugConfig.supportsDebugInternalLibraries
-			: this.dartCapabilities.supportsDebugInternalLibraries;
 		if (isFlutter && this.wsContext.sdks.flutter) {
+			debugConfig.flutterVersion = this.flutterCapabilities.version;
 			debugConfig.args = conf.flutterAdditionalArgs.concat(debugConfig.args);
 			debugConfig.forceFlutterVerboseMode = isLogging || isCI;
 			debugConfig.flutterTrackWidgetCreation =

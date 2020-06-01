@@ -1,12 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { DartCapabilities } from "../../shared/capabilities/dart";
 import { analyzerSnapshotPath } from "../../shared/constants";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { extensionVersion } from "../../shared/vscode/extension_utils";
 import { isRunningLocally } from "../../shared/vscode/utils";
 import { config } from "../config";
-import { DartCapabilities } from "../sdk/capabilities";
 
 export function getAnalyzerArgs(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, isLsp: boolean) {
 	const analyzerPath = config.analyzerPath || path.join(sdks.dart, analyzerSnapshotPath);

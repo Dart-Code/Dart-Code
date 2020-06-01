@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { Analyzer } from "../shared/analyzer";
+import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
 import { dartPlatformName, flutterExtensionIdentifier, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isWin, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName, PUB_OUTDATED_SUPPORTED_CONTEXT } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
@@ -80,7 +81,6 @@ import { SnippetCompletionItemProvider } from "./providers/snippet_completion_it
 import { SourceCodeActionProvider } from "./providers/source_code_action_provider";
 import { PubBuildRunnerTaskProvider } from "./pub/build_runner_task_provider";
 import { PubGlobal } from "./pub/global";
-import { DartCapabilities } from "./sdk/capabilities";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
 import { SdkUtils } from "./sdk/utils";

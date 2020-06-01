@@ -1,5 +1,6 @@
 import { ContinuedEvent, Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { FlutterCapabilities } from "../shared/capabilities/flutter";
 import { restartReasonManual } from "../shared/constants";
 import { LogCategory, VmServiceExtension } from "../shared/enums";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
@@ -24,6 +25,7 @@ export class FlutterDebugSession extends DartDebugSession {
 	private appHasBeenToldToStopOrDetach = false;
 	private observatoryUri?: string;
 	private isReloadInProgress = false;
+	protected readonly flutterCapabilities = FlutterCapabilities.empty;
 
 	// Allow flipping into stderr mode for red exceptions when we see the start/end of a Flutter exception dump.
 	private outputCategory: "stdout" | "stderr" = "stdout";
@@ -56,6 +58,7 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: FlutterLaunchRequestArguments): Promise<void> {
+		this.flutterCapabilities.version = args.flutterVersion;
 		this.flutterTrackWidgetCreation = args && args.flutterTrackWidgetCreation;
 		this.outputCategory = "stdout";
 		return super.launchRequest(response, args);
@@ -179,9 +182,9 @@ export class FlutterDebugSession extends DartDebugSession {
 					appArgs.push(args.vmServicePort.toString());
 				}
 
-				if (args.supportsWsVmService)
+				if (this.flutterCapabilities.supportsWsVmService)
 					appArgs.push("--web-server-debug-protocol", "ws");
-				if (args.supportsExposeUrl)
+				if (this.flutterCapabilities.supportsExposeUrl)
 					appArgs.push("--web-allow-expose-url");
 			}
 		}

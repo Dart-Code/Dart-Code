@@ -23,7 +23,6 @@ export function formatPathForVm(file: string): string {
 
 export interface DartSharedArgs {
 	debugExternalLibraries: boolean;
-	debuggerHandlesPathsEverywhereForBreakpoints: boolean;
 	debugSdkLibraries: boolean;
 	evaluateGettersInDebugViews: boolean;
 	evaluateToStringInDebugViews: boolean;
@@ -43,8 +42,6 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	enableAsserts: boolean;
 	console: "debugConsole" | "terminal";
 	dartPath: string;
-	supportsDebugInternalLibraries: boolean | undefined;
-	useWriteServiceInfo: boolean | undefined;
 	globalFlutterArgs: string[] | undefined;
 	env?: { [key: string]: string | undefined };
 	program: string;
@@ -56,6 +53,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	pubSnapshotPath: string;
 	pubTestLogFile?: string;
 	showMemoryUsage: boolean;
+	dartVersion: string;
 }
 
 export interface FlutterLaunchRequestArguments extends DartLaunchRequestArguments {
@@ -70,8 +68,7 @@ export interface FlutterLaunchRequestArguments extends DartLaunchRequestArgument
 	flutterPlatform?: "default" | "android-arm" | "android-arm64" | "android-x86" | "android-x64";
 	flutterRunLogFile?: string;
 	flutterTestLogFile?: string;
-	supportsExposeUrl: boolean;
-	supportsWsVmService: boolean;
+	flutterVersion: string;
 }
 
 export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestArguments, DartSharedArgs {
@@ -82,11 +79,13 @@ export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestA
 	packages: string | undefined;
 	observatoryUri: string | undefined;
 	serviceInfoFile: string | undefined;
+	dartVersion: string;
 }
 
 export interface FlutterAttachRequestArguments extends DartAttachRequestArguments {
 	deviceId: string;
 	flutterPath: string;
+	flutterVersion: string;
 }
 
 export interface FileLocation {

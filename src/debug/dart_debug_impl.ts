@@ -4,6 +4,7 @@ import * as path from "path";
 import { URL } from "url";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { DartCapabilities } from "../shared/capabilities/dart";
 import { VmServiceCapabilities } from "../shared/capabilities/vm_service";
 import { observatoryListeningBannerPattern, pleaseReportBug } from "../shared/constants";
 import { LogCategory, LogSeverity } from "../shared/enums";
@@ -66,6 +67,8 @@ export class DartDebugSession extends DebugSession {
 	public useFlutterStructuredErrors = false;
 	public evaluateGettersInDebugViews = false;
 	protected evaluateToStringInDebugViews = false;
+	protected readonly dartCapabilities = DartCapabilities.empty;
+	protected readonly vmServiceCapabilities = VmServiceCapabilities.empty;
 	protected useWriteServiceInfo = false;
 	protected vmServiceInfoFile?: string;
 	private serviceInfoPollTimer?: NodeJS.Timer;
@@ -88,8 +91,6 @@ export class DartDebugSession extends DebugSession {
 	// protected observatoryUriIsProbablyReconnectable = false;
 	protected isTerminating = false;
 	protected readonly logger = new DebugAdapterLogger(this, LogCategory.Observatory);
-
-	protected readonly capabilities = VmServiceCapabilities.empty;
 
 	protected get shouldConnectDebugger() {
 		return !this.noDebug || this.connectVmEvenForNoDebug;
@@ -146,8 +147,9 @@ export class DartDebugSession extends DebugSession {
 		// the exception mode.
 		await this.threadManager.setExceptionPauseMode(this.noDebug ? "None" : "Unhandled");
 		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program || args.cwd));
-		this.useWriteServiceInfo = this.allowWriteServiceInfo && args.useWriteServiceInfo !== false; /* undefined assumes it's available */
-		this.supportsDebugInternalLibraries = !!args.supportsDebugInternalLibraries;
+		this.dartCapabilities.version = args.dartVersion;
+		this.useWriteServiceInfo = this.allowWriteServiceInfo && this.dartCapabilities.supportsWriteServiceInfo;
+		this.supportsDebugInternalLibraries = this.dartCapabilities.supportsDebugInternalLibraries;
 		this.readSharedArgs(args);
 
 		this.sendResponse(response);
@@ -223,7 +225,7 @@ export class DartDebugSession extends DebugSession {
 
 	private readSharedArgs(args: DartLaunchRequestArguments | DartAttachRequestArguments) {
 		this.debugExternalLibraries = args.debugExternalLibraries;
-		this.debuggerHandlesPathsEverywhereForBreakpoints = args.debuggerHandlesPathsEverywhereForBreakpoints;
+		this.debuggerHandlesPathsEverywhereForBreakpoints = this.dartCapabilities.handlesPathsEverywhereForBreakpoints;
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
 		this.evaluateToStringInDebugViews = args.evaluateToStringInDebugViews;
@@ -495,7 +497,7 @@ export class DartDebugSession extends DebugSession {
 				// Read the version to update capabilities before doing anything else.
 				await this.observatory.getVersion().then(async (versionResult) => {
 					const version: Version = versionResult.result as Version;
-					this.capabilities.version = `${version.major}.${version.minor}.0`;
+					this.vmServiceCapabilities.version = `${version.major}.${version.minor}.0`;
 
 					if (!this.observatory)
 						return;
@@ -603,7 +605,7 @@ export class DartDebugSession extends DebugSession {
 		if (!this.observatory)
 			return;
 
-		const serviceStreamName = this.capabilities.serviceStreamIsPublic ? "Service" : "_Service";
+		const serviceStreamName = this.vmServiceCapabilities.serviceStreamIsPublic ? "Service" : "_Service";
 		await Promise.all([
 			this.observatory.on("Isolate", (event: VMEvent) => this.handleIsolateEvent(event)),
 			this.observatory.on("Extension", (event: VMEvent) => this.handleExtensionEvent(event)),
@@ -611,7 +613,7 @@ export class DartDebugSession extends DebugSession {
 			this.observatory.on(serviceStreamName, (event: VMEvent) => this.handleServiceEvent(event)),
 		]);
 
-		if (this.capabilities.hasLoggingStream && this.showDartDeveloperLogs) {
+		if (this.vmServiceCapabilities.hasLoggingStream && this.showDartDeveloperLogs) {
 			await this.observatory.on("Logging", (event: VMEvent) => this.handleLoggingEvent(event)).catch((e) => {
 				this.logger.info(errorString(e));
 				// For web, the protocol version says this is supported, but it throws.
@@ -1225,7 +1227,7 @@ export class DartDebugSession extends DebugSession {
 			return;
 
 		try {
-			const result = this.capabilities.hasInvoke
+			const result = this.vmServiceCapabilities.hasInvoke
 				? await this.observatory.invoke(isolate.id, instanceRef.id, "toString", [], true)
 				: await this.observatory.evaluate(isolate.id, instanceRef.id, "toString()", true);
 			if (result.result.type === "@Error") {
