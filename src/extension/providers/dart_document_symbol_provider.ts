@@ -1,5 +1,5 @@
 import { CancellationToken, DocumentSymbol, DocumentSymbolProvider, SymbolTag, TextDocument } from "vscode";
-import { Outline } from "../../shared/analysis_server_types";
+import { Element, Outline } from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { waitFor } from "../../shared/utils/promises";
 import { toRange } from "../../shared/vscode/utils";
@@ -23,7 +23,7 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 		const location = outline.element.location || outline;
 		const symbol = new DocumentSymbol(
 			name,
-			outline.element.parameters || "",
+			this.getDetail(outline.element),
 			getSymbolKindForElementKind(this.logger, outline.element.kind),
 			this.getCodeOffset(document, outline),
 			toRange(document, location.offset, location.length),
@@ -45,6 +45,17 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 		if (outline.element.kind === "CONSTRUCTOR_INVOCATION" || outline.element.kind === "FUNCTION_INVOCATION")
 			return false;
 		return true;
+	}
+
+	private getDetail(element: Element): string {
+		let label = "";
+
+		if (element.parameters)
+			label += element.parameters;
+		if (element.returnType)
+			label += " → " + element.returnType;
+
+		return label.trim();
 	}
 
 	private getCodeOffset(document: TextDocument, outline: Outline & { codeOffset?: number, codeLength?: number }) {
