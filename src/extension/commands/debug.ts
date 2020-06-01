@@ -286,7 +286,7 @@ export class DebugCommands {
 	}
 
 	public promptAboutDebuggerSettingsIfBreakpointOutsideWorkspace(e: vs.Breakpoint): void {
-		if (hasPromptedAboutDebugSettings || this.context.breakpointOutsideWorkspaceDoNotShow || !(e instanceof vs.SourceBreakpoint))
+		if (hasPromptedAboutDebugSettings || this.context.breakpointOutsideWorkspaceDoNotShow || !(e instanceof vs.SourceBreakpoint) || !e.enabled)
 			return;
 
 		// Don't consider non-Dart files.
