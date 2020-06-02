@@ -1758,7 +1758,7 @@
 							},
 							"args": {
 								"type": "array",
-								"description": "Command line arguments to the application.",
+								"description": "Arguments to be passed to your Dart script or the Flutter tool.",
 								"items": {
 									"type": "string"
 								}
