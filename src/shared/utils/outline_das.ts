@@ -17,7 +17,7 @@ export abstract class OutlineVisitor {
 	}
 
 	private visitNode(outline: as.Outline) {
-		switch (outline && outline.element && outline.element.kind) {
+		switch (outline?.element?.kind) {
 			case "CLASS":
 				this.visitClass(outline);
 				break;
@@ -69,6 +69,9 @@ export abstract class OutlineVisitor {
 			case "METHOD":
 				this.visitMethod(outline);
 				break;
+			case "MIXIN":
+				this.visitMixin(outline);
+				break;
 			case "PARAMETER":
 				this.visitParameter(outline);
 				break;
@@ -94,7 +97,7 @@ export abstract class OutlineVisitor {
 				this.visitUnknown(outline);
 				break;
 			default:
-				this.logger.error(`Unknown Outline item! ${outline && outline.element && outline.element.kind}`);
+				this.logger.error(`Unknown Outline item! ${outline?.element?.kind} (${outline?.element?.name})`);
 		}
 	}
 
@@ -114,6 +117,7 @@ export abstract class OutlineVisitor {
 	protected visitLabel(outline: as.Outline): void { this.visitChildren(outline); }
 	protected visitLibrary(outline: as.Outline): void { this.visitChildren(outline); }
 	protected visitLocalVariable(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitMixin(outline: as.Outline): void { this.visitChildren(outline); }
 	protected visitMethod(outline: as.Outline): void { this.visitChildren(outline); }
 	protected visitParameter(outline: as.Outline): void { this.visitChildren(outline); }
 	protected visitPrefix(outline: as.Outline): void { this.visitChildren(outline); }
@@ -195,6 +199,11 @@ export class ClassOutlineVisitor extends OutlineVisitor {
 	protected visitClass(outline: as.Outline) {
 		this.addClass(outline);
 		super.visitClass(outline);
+	}
+
+	protected visitMixin(outline: as.Outline) {
+		this.addClass(outline);
+		super.visitMixin(outline);
 	}
 
 	private addClass(outline: as.Outline) {
