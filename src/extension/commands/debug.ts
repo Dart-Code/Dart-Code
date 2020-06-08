@@ -286,6 +286,10 @@ export class DebugCommands {
 	}
 
 	public promptAboutDebuggerSettingsIfBreakpointOutsideWorkspace(e: vs.Breakpoint): void {
+		// If the user has enabled any of these, assume they understand the setting.
+		if (config.debugSdkLibraries || config.debugExternalLibraries)
+			return;
+
 		if (hasPromptedAboutDebugSettings || this.context.breakpointOutsideWorkspaceDoNotShow || !(e instanceof vs.SourceBreakpoint) || !e.enabled)
 			return;
 
