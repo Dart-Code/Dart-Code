@@ -1,7 +1,7 @@
-import { ContinuedEvent, Event, OutputEvent } from "vscode-debugadapter";
+import { ContinuedEvent, Event, OutputEvent, ProgressUpdateEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { FlutterCapabilities } from "../shared/capabilities/flutter";
-import { restartReasonManual } from "../shared/constants";
+import { debugLaunchProgressId, restartReasonManual } from "../shared/constants";
 import { LogCategory, VmServiceExtension } from "../shared/enums";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
 import { Logger } from "../shared/interfaces";
@@ -73,10 +73,6 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	protected spawnProcess(args: FlutterLaunchRequestArguments): any {
 		const isAttach = args.request === "attach";
-		if (isAttach)
-			this.sendEvent(new Event("dart.launching", { message: "Waiting for Application to connect...", finished: false }));
-		else
-			this.sendEvent(new Event("dart.launching", { message: "Launching...", finished: false }));
 
 		if (args.showMemoryUsage) {
 			this.pollforMemoryMs = 1000;
@@ -103,7 +99,6 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.runDaemon.registerForAppStarted(async (n) => {
 			this.appHasStarted = true;
 			await this.connectToObservatoryIfReady();
-			this.sendEvent(new Event("dart.launched"));
 		});
 		this.runDaemon.registerForAppStop((n) => {
 			this.currentRunningAppId = undefined;
@@ -112,7 +107,16 @@ export class FlutterDebugSession extends DartDebugSession {
 				this.runDaemon = undefined;
 			}
 		});
-		this.runDaemon.registerForAppProgress((e) => this.sendEvent(new Event("dart.progress", { message: e.message, finished: e.finished, progressID: e.progressId || e.id })));
+
+		this.runDaemon.registerForAppProgress((e) => {
+			// We're ignoring finish progress events because we use a single ID for progress
+			// to avoid multiple progress indicators and don't want to hide the overall progress
+			// when the first step completes.
+			//
+			// We'll hide the overall progress when we connect to the VM service.
+			if (!e.finished && e.message)
+				this.sendEvent(new ProgressUpdateEvent(debugLaunchProgressId, e.message));
+		});
 		this.runDaemon.registerForAppWebLaunchUrl((e) => this.sendEvent(new Event("dart.webLaunchUrl", { url: e.url, launched: e.launched })));
 		// TODO: Should this use logToUser?
 		this.runDaemon.registerForError((err) => this.sendEvent(new OutputEvent(`${err}\n`, "stderr")));

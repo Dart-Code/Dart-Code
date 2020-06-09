@@ -4,7 +4,6 @@ import * as vs from "vscode";
 import { doNotAskAgainAction, isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
 import { DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { DartWorkspaceContext, Logger, LogMessage } from "../../shared/interfaces";
-import { PromiseCompleter } from "../../shared/utils";
 import { findProjectFolders, fsPath } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
@@ -389,8 +388,6 @@ export class DebugCommands {
 		const session = debugSessions[sessionIndex];
 		debugSessions.splice(sessionIndex, 1);
 
-		this.clearProgressIndicators(session);
-
 		const debugSessionEnd = new Date();
 		this.analytics.logDebugSessionDuration(session.debuggerType, debugSessionEnd.getTime() - session.sessionStart.getTime());
 
@@ -459,32 +456,7 @@ export class DebugCommands {
 	}
 
 	private async handleCustomEventWithSession(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent) {
-		if (e.event === "dart.launching") {
-			vs.window.withProgress(
-				{ location: vs.ProgressLocation.Notification },
-				(progress) => {
-					progress.report({ message: e.body.message });
-					session.launchProgressReporter = progress;
-					return session.launchProgressPromise.promise;
-				},
-			);
-		} else if (e.event === "dart.launched") {
-			this.clearProgressIndicators(session);
-		} else if (e.event === "dart.terminating") {
-			this.clearLaunchProgessIndicator(session);
-			if (session.terminatingProgressReporter) {
-				session.terminatingProgressReporter.report({ message: e.body.message });
-			} else {
-				vs.window.withProgress(
-					{ location: vs.ProgressLocation.Notification },
-					(progress) => {
-						progress.report({ message: e.body.message });
-						session.terminatingProgressReporter = progress;
-						return session.terminatingProgressPromise.promise;
-					},
-				);
-			}
-		} else if (e.event === "dart.webLaunchUrl") {
+		if (e.event === "dart.webLaunchUrl") {
 			const launched = !!e.body.launched;
 			if (!launched) {
 				try {
@@ -503,38 +475,6 @@ export class DebugCommands {
 			} catch (e) {
 				this.logger.error(`Failed to expose URL ${originalUrl}: ${e}`);
 				session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl: originalUrl });
-			}
-		} else if (e.event === "dart.progress") {
-			if (e.body.message) {
-				if (session.launchProgressReporter) {
-					session.launchProgressReporter.report({ message: e.body.message });
-				} else if (session.progressReporter) {
-					session.progressReporter.report({ message: e.body.message });
-				} else {
-					session.progressID = e.body.progressID;
-					vs.window.withProgress(
-						{ location: vs.ProgressLocation.Notification },
-						(progress) => {
-							progress.report({ message: e.body.message });
-							session.progressReporter = progress;
-							if (!session.progressPromise)
-								session.progressPromise = new PromiseCompleter<void>();
-							return session.progressPromise.promise;
-						},
-					);
-				}
-			}
-			if (e.body.finished) {
-				if (session.launchProgressReporter) {
-					// Ignore "finished" events during launch, as we'll keep the progress indicator
-					// until we get dart.launched.
-				} else if (session.progressID === e.body.progressID) {
-					// Otherwise, signal completion if it matches the thing that started the progress.
-					if (session.progressPromise)
-						session.progressPromise.resolve();
-					session.progressPromise = undefined;
-					session.progressReporter = undefined;
-				}
 			}
 		} else if (e.event === "dart.debuggerUris") {
 			session.observatoryUri = e.body.observatoryUri;
@@ -586,23 +526,6 @@ export class DebugCommands {
 				debugSdkLibraries,
 			});
 		});
-	}
-
-	private clearProgressIndicators(session: DartDebugSessionInformation): void {
-		this.clearLaunchProgessIndicator(session);
-		if (session.terminatingProgressPromise)
-			session.terminatingProgressPromise.resolve();
-		session.terminatingProgressReporter = undefined;
-		if (session.progressPromise)
-			session.progressPromise.resolve();
-		session.progressPromise = undefined;
-		session.progressReporter = undefined;
-	}
-
-	private clearLaunchProgessIndicator(session: DartDebugSessionInformation) {
-		if (session.launchProgressPromise)
-			session.launchProgressPromise.resolve();
-		session.launchProgressReporter = undefined;
 	}
 
 	private async promptForDebugSession(): Promise<DartDebugSessionInformation | undefined> {
