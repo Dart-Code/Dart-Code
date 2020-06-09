@@ -2,11 +2,11 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { URL } from "url";
-import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
+import { DebugSession, Event, InitializedEvent, OutputEvent, ProgressEndEvent, ProgressStartEvent, ProgressUpdateEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { VmServiceCapabilities } from "../shared/capabilities/vm_service";
-import { observatoryListeningBannerPattern, pleaseReportBug } from "../shared/constants";
+import { debugLaunchProgressId, debugTerminatingProgressId, observatoryListeningBannerPattern, pleaseReportBug } from "../shared/constants";
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { LogMessage, SpawnedProcess } from "../shared/interfaces";
 import { safeSpawn } from "../shared/processes";
@@ -138,6 +138,8 @@ export class DartDebugSession extends DebugSession {
 			return;
 		}
 
+		this.sendEvent(new ProgressStartEvent(debugLaunchProgressId, "Launching"));
+
 		// Force relative paths to absolute.
 		if (args.program && !path.isAbsolute(args.program)) {
 			if (!args.cwd) {
@@ -227,6 +229,7 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		if (!this.shouldConnectDebugger) {
+			this.sendEvent(new ProgressEndEvent(debugLaunchProgressId));
 			this.sendEvent(new InitializedEvent());
 
 			// If we're not connecting a debugger and we spawned a remote process, we have
@@ -255,6 +258,8 @@ export class DartDebugSession extends DebugSession {
 		if (!args || (!args.observatoryUri && !args.serviceInfoFile)) {
 			return this.errorResponse(response, "Unable to attach; no Observatory address or service info file provided.");
 		}
+
+		this.sendEvent(new ProgressStartEvent(debugLaunchProgressId, "Waiting for application"));
 
 		// this.observatoryUriIsProbablyReconnectable = true;
 		this.shouldKillProcessOnTerminate = false;
@@ -285,9 +290,9 @@ export class DartDebugSession extends DebugSession {
 				url = this.websocketUriForObservatoryUri(args.observatoryUri);
 			} else {
 				this.vmServiceInfoFile = args.serviceInfoFile;
-				this.sendEvent(new Event("dart.progress", { message: `Waiting for ${this.vmServiceInfoFile}`, finished: false }));
+				this.sendEvent(new ProgressUpdateEvent(debugLaunchProgressId, `Waiting for ${this.vmServiceInfoFile}…`));
 				url = await this.startServiceFilePolling();
-				this.sendEvent(new Event("dart.launched"));
+				this.sendEvent(new ProgressEndEvent(debugLaunchProgressId));
 			}
 			await this.initDebugger(url);
 		} catch (e) {
@@ -568,6 +573,7 @@ export class DartDebugSession extends DebugSession {
 						if (this.pollforMemoryMs)
 							setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs);
 
+						this.sendEvent(new ProgressEndEvent(debugLaunchProgressId));
 						this.sendEvent(new InitializedEvent());
 					});
 				});
@@ -735,17 +741,17 @@ export class DartDebugSession extends DebugSession {
 	): Promise<void> {
 		this.log(`Termination requested!`);
 		this.isTerminating = true;
-		this.sendEvent(new Event("dart.terminating", { message: "Terminating debug session..." }));
+		this.sendEvent(new ProgressStartEvent(debugTerminatingProgressId, "Terminating debug session…"));
 
 		if (this.expectAdditionalPidToTerminate && !this.additionalPidsToTerminate.size) {
 			this.log(`Waiting for main process PID before terminating`);
-			this.sendEvent(new Event("dart.terminating", { message: "Waiting for process..." }));
+			this.sendEvent(new ProgressUpdateEvent(debugTerminatingProgressId, "Waiting for process…"));
 			const didGetPid = await this.raceIgnoringErrors(() => this.additionalPidCompleter.promise, 20000);
 			if (didGetPid)
 				this.log(`Got main process PID, continuing...`);
 			else
 				this.log(`Timed out waiting for main process PID, continuing anyway...`);
-			this.sendEvent(new Event("dart.terminating", { message: "Terminating process..." }));
+			this.sendEvent(new ProgressUpdateEvent(debugTerminatingProgressId, "Terminating process…"));
 		}
 
 		try {

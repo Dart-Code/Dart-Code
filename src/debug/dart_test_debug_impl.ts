@@ -1,6 +1,6 @@
 import * as path from "path";
-import { Event, OutputEvent } from "vscode-debugadapter";
-import { observatoryHttpLinkPattern } from "../shared/constants";
+import { Event, OutputEvent, ProgressUpdateEvent } from "vscode-debugadapter";
+import { debugTerminatingProgressId, observatoryHttpLinkPattern } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
 import { ErrorNotification, GroupNotification, PrintNotification, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
@@ -68,10 +68,7 @@ export class DartTestDebugSession extends DartDebugSession {
 			// Hack: Would be better to have an event for this.
 			// https://github.com/dart-lang/test/issues/1216
 			if (msg.toLowerCase().indexOf("waiting for current test(s) to finish") !== -1)
-				this.sendEvent(new Event(
-					"dart.terminating",
-					{ message: `${msg.trim()}..` },
-				));
+				this.sendEvent(new ProgressUpdateEvent(debugTerminatingProgressId, `${msg.trim()}…`));
 			this.logToUserIfAppropriate(msg, "stdout");
 		});
 		runner.registerForTestStartedProcess((n) => this.initDebugger(`${n.observatoryUri}ws`));
