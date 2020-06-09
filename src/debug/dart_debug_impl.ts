@@ -38,7 +38,14 @@ const trailingSemicolonPattern = new RegExp(`;\\s*$`, "m");
 export class DartDebugSession extends DebugSession {
 	// TODO: Tidy all this up
 	protected childProcess?: SpawnedProcess | RemoteEditorTerminalProcess;
-	protected additionalPidsToTerminate: number[] = [];
+
+	/** The additional process IDs to terminate when terminating a debugging session.
+	 *
+	 * A Set is used so a Process ID does not appear multiple times within the collection as
+	 * that can cause a (eg. testing) session to be terminated prematurely while waiting for it to end.
+	 */
+	protected readonly additionalPidsToTerminate = new Set<number>();
+
 	protected expectAdditionalPidToTerminate = false;
 	private additionalPidCompleter = new PromiseCompleter<void>();
 	// We normally track the pid from Observatory to terminate the VM afterwards, but for Flutter Run it's
@@ -597,7 +604,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected recordAdditionalPid(pid: number) {
-		this.additionalPidsToTerminate.push(pid);
+		this.additionalPidsToTerminate.add(pid);
 		this.additionalPidCompleter.resolve();
 	}
 
@@ -723,7 +730,7 @@ export class DartDebugSession extends DebugSession {
 		this.isTerminating = true;
 		this.sendEvent(new Event("dart.terminating", { message: "Terminating debug session..." }));
 
-		if (this.expectAdditionalPidToTerminate && !this.additionalPidsToTerminate.length) {
+		if (this.expectAdditionalPidToTerminate && !this.additionalPidsToTerminate.size) {
 			this.log(`Waiting for main process PID before terminating`);
 			this.sendEvent(new Event("dart.terminating", { message: "Waiting for process..." }));
 			const didGetPid = await this.raceIgnoringErrors(() => this.additionalPidCompleter.promise, 20000);
