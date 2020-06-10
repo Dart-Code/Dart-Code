@@ -86,6 +86,16 @@ jobs:
       - name: npm build
         run: npm run build
 
+      - name: pub get (hello_world)
+        if: "!startsWith(matrix.bot, 'dart')"
+        run: pub get
+        working-directory: src/test/test_projects/hello_world
+
+      - name: flutter pub get (flutter_hello_world)
+        if: "startsWith(matrix.bot, 'flutter')"
+        run: flutter packages get
+        working-directory: src/test/test_projects/flutter_hello_world
+
       - name: npm test
         run: npm test
         env:
