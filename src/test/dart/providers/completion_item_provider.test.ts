@@ -184,7 +184,7 @@ main() {
   ProcessInf
 }
 		`);
-			const completions = await getCompletionsAt("ProcessInf^");
+			const completions = await getCompletionsAt("ProcessInf^", undefined, 5000);
 
 			ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
 		});
@@ -195,7 +195,7 @@ main() {
   ProcessInf
 }
 		`);
-			const completions = await getCompletionsAt("Process^Inf");
+			const completions = await getCompletionsAt("ProcessInf^", undefined, 5000);
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
 
@@ -223,7 +223,7 @@ main() {
   ProcessInf
 }
 		`);
-			const completions = await getCompletionsAt("Process^Inf");
+			const completions = await getCompletionsAt("Process^Inf", undefined, 5000);
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
 
@@ -254,7 +254,7 @@ main() {
   HashMa
 }
 		`);
-			const completions = await getCompletionsAt("Hash^Ma");
+			const completions = await getCompletionsAt("Hash^Ma", undefined, 5000);
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "HashMap(…)", "HashMap");
 
@@ -289,7 +289,7 @@ main() {
   ProcessInf
 }
 		`);
-			const completions = await getCompletionsAt("ProcessInf^");
+			const completions = await getCompletionsAt("ProcessInf^", undefined, 5000);
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
 

@@ -702,9 +702,9 @@ export function snippetValue(text: string | vs.SnippetString | undefined) {
 	return !text || typeof text === "string" ? text : text.value;
 }
 
-export async function getCompletionsAt(searchText: string, triggerCharacter?: string): Promise<vs.CompletionItem[]> {
+export async function getCompletionsAt(searchText: string, triggerCharacter?: string, resolveCount = 1): Promise<vs.CompletionItem[]> {
 	const position = positionOf(searchText);
-	const results = await (vs.commands.executeCommand("vscode.executeCompletionItemProvider", currentDoc().uri, position, triggerCharacter, 100000) as Thenable<vs.CompletionList>);
+	const results = await (vs.commands.executeCommand("vscode.executeCompletionItemProvider", currentDoc().uri, position, triggerCharacter, resolveCount) as Thenable<vs.CompletionList>);
 	return results.items;
 }
 
