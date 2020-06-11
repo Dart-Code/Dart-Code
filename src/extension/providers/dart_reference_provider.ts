@@ -44,7 +44,7 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 		if (token && token.isCancellationRequested)
 			return;
 
-		return flatMap(resp.regions, (region) => {
+		const definitions = flatMap(resp.regions, (region) => {
 			return region.targets.map((targetIndex) => {
 				const target = resp.targets[targetIndex];
 				// HACK: We sometimes get a startColumn of 0 (should be 1-based). Just treat this as 1 for now.
@@ -59,5 +59,16 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 				} as DefinitionLink;
 			});
 		});
+
+		// For some locations (for example on the "var" keyword ), we'll get multiple results
+		// where some of them are the location we invoked at, or the name of the variable. If
+		// there are any results that are on a different line/different file to where we were
+		// invoked, return only those. If the only results are on the same line of the same
+		// file then just return them all.
+		const definitionsOnOtherLines = definitions
+			.filter((d) => fsPath(d.targetUri) !== fsPath(document.uri)
+				|| d.targetRange.start.line !== position.line);
+
+		return definitionsOnOtherLines.length ? definitionsOnOtherLines : definitions;
 	}
 }
