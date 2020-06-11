@@ -136,7 +136,7 @@ describe("flutter test debugger", () => {
 		for (const file of testFiles) {
 			await openFile(file);
 			const expectedResults = getExpectedResults();
-			const actualResults = (await makeTextTree(file, extApi.testTreeProvider)).join("\n");
+			const actualResults = (await makeTextTree(file, extApi.testTreeProvider, false)).join("\n");
 
 			assert.ok(expectedResults);
 			assert.ok(actualResults);
