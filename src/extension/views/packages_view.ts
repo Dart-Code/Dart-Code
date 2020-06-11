@@ -21,7 +21,7 @@ export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<
 	}
 
 	public refresh(): void {
-		this.onDidChangeTreeDataEmitter.fire();
+		this.onDidChangeTreeDataEmitter.fire(undefined);
 	}
 
 	public getTreeItem(element: PackageDep): vs.TreeItem {
