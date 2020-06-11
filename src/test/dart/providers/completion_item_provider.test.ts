@@ -195,7 +195,7 @@ main() {
   ProcessInf
 }
 		`);
-			const completions = await getCompletionsAt("ProcessInf^", undefined, 5000);
+			const completions = await getCompletionsAt("Process^Inf", undefined, 5000);
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
 
