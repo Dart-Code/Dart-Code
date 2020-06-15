@@ -615,7 +615,7 @@ export class DebugCommands {
 		return selectedItem && selectedItem.session;
 	}
 
-	private sendServiceSetting(extension: VmServiceExtension, args: ServiceExtensionArgs) {
+	private sendServiceSetting(args: ServiceExtensionArgs) {
 		debugSessions.forEach((session) => {
 			session.session.customRequest("serviceExtension", args);
 		});

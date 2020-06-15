@@ -54,7 +54,7 @@ export class VmServiceExtensions {
 	private currentExtensionState = Object.assign({}, defaultToggleExtensionState);
 	private sendValueToVM: (extension: VmServiceExtension) => void;
 
-	constructor(private readonly logger: Logger, sendRequest: (extension: VmServiceExtension, args: ServiceExtensionArgs) => void) {
+	constructor(private readonly logger: Logger, sendRequest: (args: ServiceExtensionArgs) => void) {
 		// To avoid any code in this class accidentally calling sendRequestToFlutter directly, we wrap it here and don't
 		// keep a reference to it.
 		this.sendValueToVM = (extension: VmServiceExtension) => {
@@ -64,7 +64,7 @@ export class VmServiceExtensions {
 				const params = { [toggleExtensionStateKeys[extension]]: this.currentExtensionState[extension] };
 				const args = { type: extension, params };
 
-				sendRequest(extension, args);
+				sendRequest(args);
 
 				this.syncInspectingWidgetContext(extension);
 			}
