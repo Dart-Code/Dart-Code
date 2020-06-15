@@ -3,7 +3,8 @@ import { escapeRegExp } from "../../shared/utils";
 export function getLaunchConfig(noDebug: boolean, path: string, testName: string | undefined, isGroup: boolean, template?: any | undefined) {
 	return Object.assign(
 		{
-			name: "Tests",
+			// Trailing space is a workaround for https://github.com/microsoft/vscode/issues/100115
+			name: "Tests ",
 			noDebug,
 			request: "launch",
 			type: "dart",
