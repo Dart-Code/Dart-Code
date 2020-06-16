@@ -423,10 +423,10 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			detail = suggestion.parameters;
 
 			const hasParams = (suggestion.parameterNames && suggestion.parameterNames.length > 0)
-				|| (config.previewNewCompletionPlaceholders && !!suggestion.defaultArgumentListString);
+				|| (insertArgumentPlaceholders && !!suggestion.defaultArgumentListString);
 
 			// Add placeholders for params to the completion.
-			if (config.previewNewCompletionPlaceholders && insertArgumentPlaceholders && hasParams && !nextCharacterIsOpenParen) {
+			if (insertArgumentPlaceholders && hasParams && !nextCharacterIsOpenParen) {
 				completionText.appendText(suggestion.completionText);
 				completionText.appendText("(");
 				if (suggestion.defaultArgumentListString) {
