@@ -147,8 +147,4 @@ export const dartRecommendedConfig = {
 	// This results in code completion suggesting words when editing comments and
 	// strings. This setting will prevent that.
 	"editor.wordBasedSuggestions": false,
-
-	// Force all files to have a trailing newline for consistency and reduced diffs
-	// when adding new lines at the bottom of the file.
-	"files.insertFinalNewline": true,
 };

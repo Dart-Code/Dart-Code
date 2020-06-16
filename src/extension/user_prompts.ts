@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, userPromptContextPrefix, yesAction } from "../shared/constants";
+import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { Logger, StagehandTemplate } from "../shared/interfaces";
@@ -80,18 +80,17 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 			return; // Bail if we showed it, so we won't show any other notifications.
 	}
 
-	// TODO: Once we're happy with settings.
-	// if (!shouldSuppress(useRecommendedSettingsPromptKey)) {
-	// 	showPrompt(useRecommendedSettingsPromptKey, promptToUseRecommendedSettings);
-	// 	return;
-	// }
+	if (!shouldSuppress(useRecommendedSettingsPromptKey)) {
+		showPrompt(useRecommendedSettingsPromptKey, promptToUseRecommendedSettings);
+		return;
+	}
 
 	// (though, there are no other notifications right now...)
 }
 
 async function promptToUseRecommendedSettings(): Promise<boolean> {
 	const action = await vs.window.showInformationMessage(
-		"Use recommended VS Code settings for Dart & Flutter?",
+		"Would you like to use recommended VS Code settings for Dart & Flutter?",
 		yesAction,
 		noAction,
 		showRecommendedSettingsAction,
