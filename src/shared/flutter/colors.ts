@@ -621,4 +621,4 @@ export const flutterCupertinoColors: { [key: string]: string } = {
 	"tertiarySystemGroupedBackground.highContrastColor": "ffebebf0",
 	"tertiarySystemGroupedBackground.highContrastElevatedColor": "ffebebf0",
 	"white": "ffffffff",
-}
+};
