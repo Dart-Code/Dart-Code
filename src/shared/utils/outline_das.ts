@@ -43,10 +43,10 @@ export abstract class OutlineVisitor {
 				this.visitField(outline);
 				break;
 			case "FILE":
-				this.visitXXX(outline);
+				this.visitFile(outline);
 				break;
 			case "FUNCTION":
-				this.visitFile(outline);
+				this.visitFunction(outline);
 				break;
 			case "FUNCTION_INVOCATION":
 				this.visitFunctionInvocation(outline);
@@ -109,8 +109,8 @@ export abstract class OutlineVisitor {
 	protected visitEnum(outline: as.Outline): void { this.visitChildren(outline); }
 	protected visitEnumConstant(outline: as.Outline): void { this.visitChildren(outline); }
 	protected visitField(outline: as.Outline): void { this.visitChildren(outline); }
-	protected visitXXX(outline: as.Outline): void { this.visitChildren(outline); }
 	protected visitFile(outline: as.Outline): void { this.visitChildren(outline); }
+	protected visitFunction(outline: as.Outline): void { this.visitChildren(outline); }
 	protected visitFunctionInvocation(outline: as.Outline): void { this.visitChildren(outline); }
 	protected visitFunctionTypeAlias(outline: as.Outline): void { this.visitChildren(outline); }
 	protected visitGetter(outline: as.Outline): void { this.visitChildren(outline); }

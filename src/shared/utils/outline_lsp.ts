@@ -45,10 +45,10 @@ export abstract class LspOutlineVisitor {
 				this.visitField(outline);
 				break;
 			case "FILE":
-				this.visitXXX(outline);
+				this.visitFile(outline);
 				break;
 			case "FUNCTION":
-				this.visitFile(outline);
+				this.visitFunction(outline);
 				break;
 			case "FUNCTION_INVOCATION":
 				this.visitFunctionInvocation(outline);
@@ -70,6 +70,9 @@ export abstract class LspOutlineVisitor {
 				break;
 			case "METHOD":
 				this.visitMethod(outline);
+				break;
+			case "MIXIN":
+				this.visitMixin(outline);
 				break;
 			case "PARAMETER":
 				this.visitParameter(outline);
@@ -108,8 +111,8 @@ export abstract class LspOutlineVisitor {
 	protected visitEnum(outline: Outline): void { this.visitChildren(outline); }
 	protected visitEnumConstant(outline: Outline): void { this.visitChildren(outline); }
 	protected visitField(outline: Outline): void { this.visitChildren(outline); }
-	protected visitXXX(outline: Outline): void { this.visitChildren(outline); }
 	protected visitFile(outline: Outline): void { this.visitChildren(outline); }
+	protected visitFunction(outline: Outline): void { this.visitChildren(outline); }
 	protected visitFunctionInvocation(outline: Outline): void { this.visitChildren(outline); }
 	protected visitFunctionTypeAlias(outline: Outline): void { this.visitChildren(outline); }
 	protected visitGetter(outline: Outline): void { this.visitChildren(outline); }
@@ -117,6 +120,7 @@ export abstract class LspOutlineVisitor {
 	protected visitLibrary(outline: Outline): void { this.visitChildren(outline); }
 	protected visitLocalVariable(outline: Outline): void { this.visitChildren(outline); }
 	protected visitMethod(outline: Outline): void { this.visitChildren(outline); }
+	protected visitMixin(outline: Outline): void { this.visitChildren(outline); }
 	protected visitParameter(outline: Outline): void { this.visitChildren(outline); }
 	protected visitPrefix(outline: Outline): void { this.visitChildren(outline); }
 	protected visitSetter(outline: Outline): void { this.visitChildren(outline); }
