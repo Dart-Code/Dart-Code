@@ -262,7 +262,8 @@ export class DebugCommands {
 					// Uri.parse doesn't seem to work as expected, so do our own basic validation
 					// https://github.com/Microsoft/vscode/issues/49818
 
-					if (!input.startsWith("http://") && !input.startsWith("https://"))
+					if (!input.startsWith("http://") && !input.startsWith("https://")
+						&& !input.startsWith("ws://") && !input.startsWith("wss://"))
 						return "Please enter a valid Observatory URI";
 				},
 				value: defaultValue,
