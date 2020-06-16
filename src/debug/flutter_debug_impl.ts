@@ -329,23 +329,28 @@ export class FlutterDebugSession extends DartDebugSession {
 			"ext.flutter.inspector.getSelectedSummaryWidget",
 			{ previousSelectionId: null, objectGroup: objectGroupName },
 		);
-		if (selectedWidget && selectedWidget.result && selectedWidget.result.creationLocation) {
-			const loc = selectedWidget.result.creationLocation;
-			const file = loc.file;
-			const line = loc.line;
-			const column = loc.column;
-			this.sendEvent(new Event("dart.navigate", { file, line, column }));
+		try {
+			if (selectedWidget && selectedWidget.result && selectedWidget.result.creationLocation) {
+				const loc = selectedWidget.result.creationLocation;
+				const file = loc.file;
+				const line = loc.line;
+				const column = loc.column;
+				this.sendEvent(new Event("dart.navigate", { file, line, column }));
+			} else {
+				await super.handleInspectEvent(event);
+			}
+		} finally {
+			// console.log(JSON.stringify(selectedWidget));
+			await this.runDaemon.callServiceExtension(
+				this.currentRunningAppId,
+				"ext.flutter.inspector.disposeGroup",
+				{ objectGroup: objectGroupName },
+			);
+			// TODO: How can we translate this back to source?
+			// const evt = event as any;
+			// const thread: VMIsolateRef = evt.isolate;
+			// const inspectee = (event as any).inspectee;
 		}
-		// console.log(JSON.stringify(selectedWidget));
-		await this.runDaemon.callServiceExtension(
-			this.currentRunningAppId,
-			"ext.flutter.inspector.disposeGroup",
-			{ objectGroup: objectGroupName },
-		);
-		// TODO: How can we translate this back to source?
-		// const evt = event as any;
-		// const thread: VMIsolateRef = evt.isolate;
-		// const inspectee = (event as any).inspectee;
 	}
 
 	private handleFlutterErrorEvent(event: VMEvent) {

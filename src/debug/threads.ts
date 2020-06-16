@@ -175,7 +175,7 @@ export class ThreadManager {
 	public nextDataId: number = 1;
 	public storedData: { [id: number]: StoredData } = {};
 
-	public storeData(thread: ThreadInfo, data: VMResponse): number {
+	public storeData(thread: ThreadInfo, data: StorableData): number {
 		const id = this.nextDataId;
 		this.nextDataId++;
 		this.storedData[id] = new StoredData(thread, data);
@@ -211,9 +211,9 @@ export class ThreadManager {
 
 class StoredData {
 	public thread: ThreadInfo;
-	public data: VMResponse;
+	public data: StorableData;
 
-	constructor(thread: ThreadInfo, data: VMResponse) {
+	constructor(thread: ThreadInfo, data: StorableData) {
 		this.thread = thread;
 		this.data = data;
 	}
@@ -374,4 +374,8 @@ export class ThreadInfo {
 		}
 		this.paused = true;
 	}
+}
+
+export interface StorableData {
+	type: string;
 }

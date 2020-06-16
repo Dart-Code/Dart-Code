@@ -1070,7 +1070,14 @@ export class DartDebugSession extends DebugSession {
 
 			response.body = { variables };
 			this.sendResponse(response);
-
+		} else if (data.data.type === InspectedVariable.type) {
+			const variable = data.data as InspectedVariable;
+			response.body = {
+				variables: [
+					{ name: "insp", value: "<inspected variable>", variablesReference: variable.variablesReference },
+				],
+			};
+			this.sendResponse(response);
 		} else {
 			const instanceRef = data.data as InstanceWithEvaluateName;
 
@@ -1685,7 +1692,20 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected async handleInspectEvent(event: VMEvent): Promise<void> {
-		// No implementation for Dart.
+		const isolateRef = event.isolate;
+		const instanceRef = (event as any).inspectee as VMInstanceRef;
+		const thread = isolateRef ? this.threadManager.getThreadInfoFromRef(isolateRef) : undefined;
+		if (isolateRef && instanceRef && thread) {
+			const text = await this.fullValueAsString(isolateRef, instanceRef, false);
+
+			this.sendVariable(thread.storeData(new InspectedVariable(thread.storeData(instanceRef))));
+		}
+	}
+
+	private sendVariable(variablesReference: number) {
+		const evt = new OutputEvent("");
+		(evt.body as any).variablesReference = variablesReference;
+		this.sendEvent(evt);
 	}
 
 	// Like valueAsString, but will call toString() if the thing is truncated.
@@ -2060,4 +2080,10 @@ class RemoteEditorTerminalProcess {
 	public killed = false;
 
 	constructor(public readonly pid?: number) { }
+}
+
+class InspectedVariable {
+	public static readonly type = "InspectedVariable";
+	get type() { return InspectedVariable.type; }
+	constructor(public readonly variablesReference: number) { }
 }
