@@ -9,8 +9,8 @@ import { grey } from "../../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
-import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused } from "../../debug_helpers";
-import { activate, breakpointFor, closeAllOpenFiles, defer, delay, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, logger, openFile, positionOf, sb, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused } from "../../debug_helpers";
+import { activate, breakpointFor, closeAllOpenFiles, defer, delay, ext, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, logger, openFile, positionOf, sb, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -1014,6 +1014,30 @@ describe("dart cli debugger", () => {
 			const error = await dc.evaluateRequest({ expression: "DateTime.now().ye", context: "watch" }).catch((e) => e);
 			assert.equal(error.message, "not available");
 		});
+	});
+
+	it("prints the output of inspected variables", async () => {
+		await openFile(helloWorldInspectFile);
+		const debugConfig = await startDebugger(helloWorldInspectFile);
+		const expectedVariablesTree = `
+insp=<inspected variable>
+  [0]=Person
+    name="Danny"
+  [1]=Person
+    name="Fred"
+		`.trim();
+
+		await Promise.all([
+			dc.waitForCustomEvent<{ variablesReference?: number }>("output", (e) => !!e?.variablesReference)
+				.then(async (output) => {
+					const variablesTree = await getVariablesTree(dc, output.variablesReference!);
+					assert.equal(variablesTree.join("\n"), expectedVariablesTree);
+				})
+				.then(() => dc.terminateRequest()),
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(debugConfig),
+		]);
 	});
 
 	it("stops on exception", async () => {
