@@ -10,6 +10,7 @@ describe("flutter_icon_decorations", () => {
 	it("locates the expected icons", async () => {
 		await waitForNextAnalysis(() => setTestContent(`
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 
 var btn1 = RaisedButton.icon(
   icon: const Icon(Icons.add, size: 16.0),
@@ -18,7 +19,7 @@ var btn1 = RaisedButton.icon(
 );
 
 var btn2 = RaisedButton.icon(
-  icon: const Icon(Icons.airline_seat_legroom_reduced, size: 16.0),
+  icon: const Icon(CupertinoIcons.battery_75_percent, size: 16.0),
   label: const Text('BUTTON TEXT'),
   onPressed: () {},
 );
@@ -31,10 +32,10 @@ var btn2 = RaisedButton.icon(
 			: new IconRangeComputer(extApi.logger).compute(doc, outline as das.FlutterOutline);
 
 		assert.ok(results);
-		assert.deepStrictEqual(Object.keys(results), ["add", "airline_seat_legroom_reduced"]);
-		assert.equal(results.add.length, 1);
-		assert.ok(results.add[0].isEqual(rangeOf("|Icons.add|")));
-		assert.equal(results.airline_seat_legroom_reduced.length, 1);
-		assert.ok(results.airline_seat_legroom_reduced[0].isEqual(rangeOf("|Icons.airline_seat_legroom_reduced|")));
+		assert.deepStrictEqual(Object.keys(results), ["material/add", "cupertino/battery_75_percent"]);
+		assert.equal(results["material/add"].length, 1);
+		assert.ok(results["material/add"][0].isEqual(rangeOf("|Icons.add|")));
+		assert.equal(results["cupertino/battery_75_percent"].length, 1);
+		assert.ok(results["cupertino/battery_75_percent"][0].isEqual(rangeOf("|CupertinoIcons.battery_75_percent|")));
 	});
 });
