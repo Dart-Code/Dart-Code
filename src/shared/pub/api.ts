@@ -1,7 +1,9 @@
 import { WebClient } from "../fetch";
 
 export class PubApi {
+	private readonly pubHost: string;
 	constructor(private readonly webClient: WebClient) {
+		this.pubHost = process.env.PUB_HOSTED_URL || "https://pub.dev";
 	}
 
 	public async getPackage(packageID: string): Promise<PubPackage> {
@@ -12,7 +14,7 @@ export class PubApi {
 		const headers = {
 			Accept: "application/vnd.pub.v2+json",
 		};
-		return JSON.parse(await this.webClient.fetch(`https://pub.dev/api/${url}`, headers)) as T;
+		return JSON.parse(await this.webClient.fetch(`${this.pubHost}/api/${url}`, headers)) as T;
 	}
 }
 
