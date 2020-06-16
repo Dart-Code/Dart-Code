@@ -98,6 +98,22 @@ export async function ensureMapEntry(mapEntries: DebugProtocol.Variable[], entry
 	assert.ok(found, `Didn't find map entry for ${entry.key.value}=${entry.value.value}\nGot:\n  ${keyValues.join("\n  ")})`);
 }
 
+export async function getVariablesTree(dc: DartDebugClient, variablesReference: number): Promise<string[]> {
+	let outputLines: string[] = [];
+	for (const variable of await dc.getVariables(variablesReference)) {
+		// Ignore types that recurse indefinitely, or we just don't want to check
+		// in tests.
+		if (variable.name === "runtimeType" || variable.name === "hashCode")
+			continue;
+		outputLines.push(`${variable.name}=${variable.value}`);
+		if (variable.variablesReference) {
+			const childLines = await getVariablesTree(dc, variable.variablesReference);
+			outputLines = outputLines.concat(childLines.map((l) => `  ${l}`));
+		}
+	}
+	return outputLines;
+}
+
 export function spawnDartProcessPaused(program: Uri, cwd: Uri, ...vmArgs: string[]): DartProcess {
 	const programPath = fsPath(program);
 	const cwdPath = fsPath(cwd);
