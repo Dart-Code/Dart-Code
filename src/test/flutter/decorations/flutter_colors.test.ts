@@ -9,6 +9,7 @@ describe("flutter_color_decorations", () => {
 	it("locates the expected colors", async () => {
 		await waitForNextAnalysis(() => setTestContent(`
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoColors;
 
 final ThemeData base2 = ThemeData(
   indicatorColor: Colors.white,
@@ -22,6 +23,14 @@ final ThemeData base2 = ThemeData(
     hoverColor: Colors.amberAccent[100],
   ),
 );
+
+var cupertino = [
+  CupertinoColors.activeOrange,
+  CupertinoColors.activeOrange.darkColor,
+  CupertinoColors.destructiveRed,
+  CupertinoColors.systemYellow,
+  CupertinoColors.systemYellow.darkHighContrastElevatedColor,
+];
 		`));
 
 		const doc = currentDoc();
@@ -29,7 +38,7 @@ final ThemeData base2 = ThemeData(
 		const results = computer.compute(doc);
 
 		assert.ok(results);
-		assert.equal(Object.keys(results).length, 7);
+		assert.equal(Object.keys(results).length, 12);
 		const ensureColor = (hex: string, ranges: Range[]) => {
 			assert.ok(results[hex], hex);
 			assert.deepStrictEqual(results[hex].map(rangeString), ranges.map(rangeString), hex);
@@ -41,5 +50,11 @@ final ThemeData base2 = ThemeData(
 		ensureColor("ffff4081", rangesOf("|Colors.pinkAccent|"));
 		ensureColor("ffd500f9", rangesOf("|Colors.purpleAccent.shade400|"));
 		ensureColor("ffffe57f", rangesOf("|Colors.amberAccent[100]|"));
+
+		ensureColor("ffff9500", rangesOf("|CupertinoColors.activeOrange|,"));
+		ensureColor("ffff9f0a", rangesOf("|CupertinoColors.activeOrange.darkColor|"));
+		ensureColor("ffff3b30", rangesOf("|CupertinoColors.destructiveRed|"));
+		ensureColor("ffffcc00", rangesOf("|CupertinoColors.systemYellow|,"));
+		ensureColor("ffffd426", rangesOf("|CupertinoColors.systemYellow.darkHighContrastElevatedColor|"));
 	});
 });

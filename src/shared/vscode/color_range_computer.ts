@@ -1,10 +1,11 @@
 import * as vs from "vscode";
-import { flutterColors } from "../flutter/colors";
+import { flutterCupertinoColors, flutterMaterialColors } from "../flutter/colors";
 import { asHexColor } from "../utils";
 import { toRange } from "./utils";
 
 export class ColorRangeComputer {
-	private readonly namedColorPattern = new RegExp("Colors\\.([\\w_\\[\\]\\.]+)", "g");
+	private readonly materialNameColorPattern = new RegExp("Colors\\.([\\w_\\[\\]\\.]+)", "g");
+	private readonly cupertinoNameColorPattern = new RegExp("CupertinoColors\\.([\\w_\\[\\]\\.]+)", "g");
 	private readonly colorConstructorPattern = new RegExp(" Color\\(0x([\\w_]{8})\\)", "g");
 	private readonly colorConstructorPattern2 = new RegExp(" Color\\.fromRGBO\\(([\\w_]+), ([\\w_]+), ([\\w_]+), ([\\w_.]+)\\)", "g");
 	private readonly colorConstructorPattern3 = new RegExp(" Color\\.fromARGB\\(([\\w_]+), ([\\w_]+), ([\\w_]+), ([\\w_]+)\\)", "g");
@@ -18,16 +19,36 @@ export class ColorRangeComputer {
 
 		// Handle named colors.
 		let result: RegExpExecArray | null;
+
+		// Material
 		// tslint:disable-next-line: no-conditional-assignment
-		while (result = this.namedColorPattern.exec(text)) {
+		while (result = this.materialNameColorPattern.exec(text)) {
 			const colorName = result[1].replace(/\.shade(\d+)/, "[$1]");
 
-			if (!(colorName in flutterColors || `${colorName}.primary` in flutterColors)) {
+			if (!(colorName in flutterMaterialColors || `${colorName}.primary` in flutterMaterialColors)) {
 				console.log(`${colorName} missing`);
 				continue;
 			}
 
-			const colorHex = (flutterColors[colorName] || flutterColors[`${colorName}.primary`]).toLowerCase();
+			const colorHex = (flutterMaterialColors[colorName] || flutterMaterialColors[`${colorName}.primary`]).toLowerCase();
+
+			if (!decs[colorHex])
+				decs[colorHex] = [];
+
+			decs[colorHex].push(toRange(document, result.index, result[0].length));
+		}
+
+		// Cupertino
+		// tslint:disable-next-line: no-conditional-assignment
+		while (result = this.cupertinoNameColorPattern.exec(text)) {
+			const colorName = result[1].replace(/\.color/, "[$1]");
+
+			if (!(colorName in flutterCupertinoColors || `${colorName}.color` in flutterCupertinoColors)) {
+				console.log(`${colorName} missing`);
+				continue;
+			}
+
+			const colorHex = (flutterCupertinoColors[colorName] || flutterCupertinoColors[`${colorName}.color`]).toLowerCase();
 
 			if (!decs[colorHex])
 				decs[colorHex] = [];
