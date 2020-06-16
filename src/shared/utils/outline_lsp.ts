@@ -183,3 +183,32 @@ export class LspTestOutlineVisitor extends LspOutlineVisitor {
 export interface LspTestOutlineInfo extends TestOutlineInfo {
 	range: Range;
 }
+
+export class LspClassOutlineVisitor extends LspOutlineVisitor {
+	public readonly classes: LspClassInfo[] = [];
+	protected visitClass(outline: Outline) {
+		this.addClass(outline);
+		super.visitClass(outline);
+	}
+
+	protected visitMixin(outline: Outline) {
+		this.addClass(outline);
+		super.visitMixin(outline);
+	}
+
+	private addClass(outline: Outline) {
+		if (!outline.element || !outline.element.range || !outline.element.name)
+			return;
+		this.classes.push({
+			className: outline.element.name,
+			codeRange: outline.codeRange,
+			range: outline.range,
+		});
+	}
+}
+
+export interface LspClassInfo {
+	className: string;
+	range: Range;
+	codeRange: Range;
+}

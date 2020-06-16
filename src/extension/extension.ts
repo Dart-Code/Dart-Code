@@ -26,6 +26,7 @@ import { FileChangeHandler } from "./analysis/file_change_handler";
 import { Analytics } from "./analytics";
 import { DartExtensionApi } from "./api";
 import { FlutterDartPadSamplesCodeLensProvider } from "./code_lens/flutter_dartpad_samples";
+import { LspFlutterDartPadSamplesCodeLensProvider } from "./code_lens/flutter_dartpad_samples_lsp";
 import { MainCodeLensProvider } from "./code_lens/main_code_lens_provider";
 import { LspMainCodeLensProvider } from "./code_lens/main_code_lens_provider_lsp";
 import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
@@ -316,6 +317,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		}
 		if (config.showTestCodeLens) {
 			const codeLensProvider = new LspTestCodeLensProvider(logger, lspAnalyzer);
+			context.subscriptions.push(codeLensProvider);
+			context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
+		}
+		if (config.showDartPadSampleCodeLens && sdks.flutter) {
+			const codeLensProvider = new LspFlutterDartPadSamplesCodeLensProvider(logger, lspAnalyzer, sdks as FlutterSdks);
 			context.subscriptions.push(codeLensProvider);
 			context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
 		}
