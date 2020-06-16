@@ -42,7 +42,7 @@ export class SdkCommands {
 	// A map of any in-progress commands so we can terminate them if we want to run another.
 	private runningCommands: { [workspaceUriAndCommand: string]: ChainedProcess | undefined; } = {};
 
-	constructor(private readonly logger: Logger, readonly context: vs.ExtensionContext, private readonly workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities, private readonly deviceManager: FlutterDeviceManager) {
+	constructor(private readonly logger: Logger, private readonly context: vs.ExtensionContext, private readonly workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities, private readonly deviceManager: FlutterDeviceManager) {
 		this.sdks = workspace.sdks;
 		const dartSdkManager = new DartSdkManager(this.logger, this.workspace.sdks);
 		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => dartSdkManager.changeSdk()));
@@ -50,51 +50,9 @@ export class SdkCommands {
 			const flutterSdkManager = new FlutterSdkManager(this.logger, workspace.sdks);
 			context.subscriptions.push(vs.commands.registerCommand("dart.changeFlutterSdk", () => flutterSdkManager.changeSdk()));
 		}
-		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", async (uri: string | Uri | undefined) => {
-			if (!uri || !(uri instanceof Uri)) {
-				uri = await this.getFolderToRunCommandIn("Select which folder to get packages for");
-				// If the user cancelled, bail out (otherwise we'll prompt them again below).
-				if (!uri)
-					return;
-			}
-			if (typeof uri === "string")
-				uri = vs.Uri.file(uri);
-			try {
-				if (util.isInsideFlutterProject(uri))
-					return this.runFlutter(["pub", "get"], uri);
-				else
-					return this.runPub(["get"], uri);
-			} finally {
-				// TODO: Move this to a reusable event.
-				DartHoverProvider.clearPackageMapCaches();
-			}
-		}));
-		context.subscriptions.push(vs.commands.registerCommand("dart.listOutdatedPackages", async (uri: string | Uri | undefined) => {
-			if (!uri || !(uri instanceof Uri)) {
-				uri = await this.getFolderToRunCommandIn("Select which folder to check for outdated packages");
-				// If the user cancelled, bail out (otherwise we'll prompt them again below).
-				if (!uri)
-					return;
-			}
-			if (typeof uri === "string")
-				uri = vs.Uri.file(uri);
-
-			if (util.isInsideFlutterProject(uri))
-				return this.runFlutter(["pub", "outdated"], uri, true);
-			else
-				return this.runPub(["outdated"], uri, true);
-		}));
-		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages", async (uri: string | Uri | undefined) => {
-			// TODO: Doesn't this instanceof mean passing a string can't work?
-			if (!uri || !(uri instanceof Uri))
-				uri = await this.getFolderToRunCommandIn("Select which folder to upgrade packages in");
-			if (typeof uri === "string")
-				uri = vs.Uri.file(uri);
-			if (util.isInsideFlutterProject(uri))
-				return this.runFlutter(["pub", "upgrade"], uri);
-			else
-				return this.runPub(["upgrade"], uri);
-		}));
+		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", this.getPackages, this));
+		context.subscriptions.push(vs.commands.registerCommand("dart.listOutdatedPackages", this.listOutdatedPackages, this));
+		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages", this.upgradePackages, this));
 
 		// Pub commands.
 		context.subscriptions.push(vs.commands.registerCommand("pub.get", (selection) => {
@@ -108,149 +66,209 @@ export class SdkCommands {
 		}));
 
 		// Flutter commands.
-		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", async (selection): Promise<number | undefined> => {
-			// TODO: This should just bounce to dart.getPackages, and ensure that handles all of the cases here.
-			if (!selection) {
-				const path = await this.getFolderToRunCommandIn(`Select the folder to run "flutter packages get" in`, selection);
-				if (!path)
-					return;
-				selection = vs.Uri.file(path);
-			}
-
-			// If we're working on the flutter repository, map this on to update-packages.
-			if (selection && fsPath(selection) === workspace.sdks.flutter) {
-				return this.runFlutter(["update-packages"], selection);
-			}
-
-			try {
-				return this.runFlutter(["pub", "get"], selection);
-			} finally {
-				// TODO: Move this to a reusable event.
-				DartHoverProvider.clearPackageMapCaches();
-			}
+		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", this.flutterGetPackages, this));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.clean", this.flutterClean, this));
+		context.subscriptions.push(vs.commands.registerCommand("_flutter.screenshot.touchBar", (args: any) => {
+			return vs.commands.executeCommand("flutter.screenshot", args);
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.clean", async (selection): Promise<number | undefined> => {
-			if (!selection) {
-				const path = await this.getFolderToRunCommandIn(`Select the folder to run "flutter clean" in`, selection, true);
-				if (!path)
-					return;
-				selection = vs.Uri.file(path);
-			}
-
-			return this.runFlutter(["clean"], selection);
-		}));
-		context.subscriptions.push(vs.commands.registerCommand("_flutter.screenshot.touchBar", (args: any) => vs.commands.executeCommand("flutter.screenshot", args)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", async () => {
-			let shouldNotify = false;
-
-			// If there is no path for this session, or it differs from config, use the one from config.
-			if (!this.flutterScreenshotPath ||
-				(config.flutterScreenshotPath && this.flutterScreenshotPath !== config.flutterScreenshotPath)) {
-				this.flutterScreenshotPath = config.flutterScreenshotPath;
-				shouldNotify = true;
-			}
-
-			// If path is still empty, bring up the folder selector.
-			if (!this.flutterScreenshotPath) {
-				const selectedFolder =
-					await window.showOpenDialog({ canSelectFolders: true, openLabel: "Set screenshots folder" });
-				if (selectedFolder && selectedFolder.length > 0) {
-					// Set variable to selected path. This allows prompting the user only once.
-					this.flutterScreenshotPath = selectedFolder[0].path;
-					shouldNotify = true;
-				} else {
-					// Do nothing if the user cancelled the folder selection.
-					return;
-				}
-			}
-
-			// Ensure folder exists.
-			mkDirRecursive(this.flutterScreenshotPath);
-
-			const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : undefined;
-			const args = deviceId ? ["screenshot", "-d", deviceId] : ["screenshot"];
-			await this.runFlutterInFolder(this.flutterScreenshotPath, args, "screenshot", true);
-
-			if (shouldNotify) {
-				const res = await vs.window.showInformationMessage(`Screenshots will be saved to ${this.flutterScreenshotPath}`, "Show Folder");
-				if (res)
-					await vs.commands.executeCommand("revealFileInOS", Uri.file(this.flutterScreenshotPath));
-			}
-		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", this.flutterScreenshot, this));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => {
 			return vs.commands.executeCommand("dart.upgradePackages", selection);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.outdated", (selection) => {
 			return vs.commands.executeCommand("dart.listOutdatedPackages", selection);
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", (selection) => {
-			if (!workspace.sdks.flutter) {
-				this.sdkUtils.showFlutterActivationFailure("flutter.doctor");
-				return;
-			}
-			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
-			if (!fs.existsSync(tempDir))
-				fs.mkdirSync(tempDir);
-			return this.runFlutterInFolder(tempDir, ["doctor", "-v"], "flutter", true, { customScript: workspace.config?.flutterDoctorScript });
-		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.upgrade", async (selection) => {
-			if (!workspace.sdks.flutter) {
-				this.sdkUtils.showFlutterActivationFailure("flutter.upgrade");
-				return;
-			}
-			const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
-			if (!fs.existsSync(tempDir))
-				fs.mkdirSync(tempDir);
-			await this.runFlutterInFolder(tempDir, ["upgrade"], "flutter", true);
-			await util.promptToReloadExtension();
-		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", (_) => this.createFlutterProject()));
-		context.subscriptions.push(vs.commands.registerCommand("_dart.flutter.createSampleProject", (_) => this.createFlutterSampleProject()));
-		context.subscriptions.push(vs.commands.registerCommand("dart.createProject", (_) => this.createDartProject()));
-		context.subscriptions.push(vs.commands.registerCommand("_dart.create", (projectPath: string, templateName: string) => {
-			const args = ["global", "run", "stagehand", templateName];
-			return this.runPubInFolder(projectPath, args, templateName);
-		}));
-		context.subscriptions.push(vs.commands.registerCommand("_flutter.create", (projectPath: string, projectName?: string, sampleID?: string) => {
-			const args = ["create"];
-			if (config.flutterCreateOffline) {
-				args.push("--offline");
-			}
-			if (projectName) {
-				args.push("--project-name");
-				args.push(projectName);
-			}
-			if (config.flutterCreateOrganization) {
-				args.push("--org");
-				args.push(config.flutterCreateOrganization);
-			}
-			if (config.flutterCreateIOSLanguage) {
-				args.push("--ios-language");
-				args.push(config.flutterCreateIOSLanguage);
-			}
-			if (config.flutterCreateAndroidLanguage) {
-				args.push("--android-language");
-				args.push(config.flutterCreateAndroidLanguage);
-			}
-			if (config.flutterAndroidX) {
-				args.push("--androidx");
-			}
-			if (sampleID) {
-				args.push("--sample");
-				args.push(sampleID);
-				args.push("--overwrite");
-			}
-			args.push(".");
-			return this.runFlutterInFolder(projectPath, args, projectName);
-		}));
-		context.subscriptions.push(vs.commands.registerCommand("_flutter.clean", (projectPath: string, projectName?: string) => {
-			projectName = projectName || path.basename(projectPath);
-			const args = ["clean"];
-			return this.runFlutterInFolder(projectPath, args, projectName);
-		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", this.flutterDoctor, this));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.upgrade", this.flutterUpgrade, this));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", this.createFlutterProject, this));
+		context.subscriptions.push(vs.commands.registerCommand("_dart.flutter.createSampleProject", this.createFlutterSampleProject, this));
+		context.subscriptions.push(vs.commands.registerCommand("dart.createProject", this.createDartProject, this));
+		context.subscriptions.push(vs.commands.registerCommand("_dart.create", this.dartCreate, this));
+		context.subscriptions.push(vs.commands.registerCommand("_flutter.create", this.flutterCreate, this));
+		context.subscriptions.push(vs.commands.registerCommand("_flutter.clean", this.flutterClean, this));
 
 		// Hook saving pubspec to run pub.get.
 		this.setupPubspecWatcher(context);
+	}
+
+	private async getPackages(uri: string | Uri | undefined) {
+		if (!uri || !(uri instanceof Uri)) {
+			uri = await this.getFolderToRunCommandIn("Select which folder to get packages for");
+			// If the user cancelled, bail out (otherwise we'll prompt them again below).
+			if (!uri)
+				return;
+		}
+		if (typeof uri === "string")
+			uri = vs.Uri.file(uri);
+		try {
+			if (util.isInsideFlutterProject(uri))
+				return this.runFlutter(["pub", "get"], uri);
+			else
+				return this.runPub(["get"], uri);
+		} finally {
+			// TODO: Move this to a reusable event.
+			DartHoverProvider.clearPackageMapCaches();
+		}
+	}
+
+	private async listOutdatedPackages(uri: string | Uri | undefined) {
+		if (!uri || !(uri instanceof Uri)) {
+			uri = await this.getFolderToRunCommandIn("Select which folder to check for outdated packages");
+			// If the user cancelled, bail out (otherwise we'll prompt them again below).
+			if (!uri)
+				return;
+		}
+		if (typeof uri === "string")
+			uri = vs.Uri.file(uri);
+
+		if (util.isInsideFlutterProject(uri))
+			return this.runFlutter(["pub", "outdated"], uri, true);
+		else
+			return this.runPub(["outdated"], uri, true);
+	}
+
+	private async upgradePackages(uri: string | Uri | undefined) {
+		// TODO: Doesn't this instanceof mean passing a string can't work?
+		if (!uri || !(uri instanceof Uri))
+			uri = await this.getFolderToRunCommandIn("Select which folder to upgrade packages in");
+		if (typeof uri === "string")
+			uri = vs.Uri.file(uri);
+		if (util.isInsideFlutterProject(uri))
+			return this.runFlutter(["pub", "upgrade"], uri);
+		else
+			return this.runPub(["upgrade"], uri);
+	}
+
+	private async flutterGetPackages(selection: vs.Uri | undefined): Promise<number | undefined> {
+		// TODO: This should just bounce to dart.getPackages, and ensure that handles all of the cases here.
+		if (!selection) {
+			const path = await this.getFolderToRunCommandIn(`Select the folder to run "flutter packages get" in`, selection);
+			if (!path)
+				return;
+			selection = vs.Uri.file(path);
+		}
+
+		// If we're working on the flutter repository, map this on to update-packages.
+		if (selection && fsPath(selection) === this.workspace.sdks.flutter) {
+			return this.runFlutter(["update-packages"], selection);
+		}
+
+		try {
+			return this.runFlutter(["pub", "get"], selection);
+		} finally {
+			// TODO: Move this to a reusable event.
+			DartHoverProvider.clearPackageMapCaches();
+		}
+	}
+
+	private async flutterClean(selection: vs.Uri | undefined): Promise<number | undefined> {
+		if (!selection) {
+			const path = await this.getFolderToRunCommandIn(`Select the folder to run "flutter clean" in`, selection, true);
+			if (!path)
+				return;
+			selection = vs.Uri.file(path);
+		}
+
+		return this.runFlutter(["clean"], selection);
+	}
+
+	private async flutterScreenshot() {
+		let shouldNotify = false;
+
+		// If there is no path for this session, or it differs from config, use the one from config.
+		if (!this.flutterScreenshotPath ||
+			(config.flutterScreenshotPath && this.flutterScreenshotPath !== config.flutterScreenshotPath)) {
+			this.flutterScreenshotPath = config.flutterScreenshotPath;
+			shouldNotify = true;
+		}
+
+		// If path is still empty, bring up the folder selector.
+		if (!this.flutterScreenshotPath) {
+			const selectedFolder =
+				await window.showOpenDialog({ canSelectFolders: true, openLabel: "Set screenshots folder" });
+			if (selectedFolder && selectedFolder.length > 0) {
+				// Set variable to selected path. This allows prompting the user only once.
+				this.flutterScreenshotPath = selectedFolder[0].path;
+				shouldNotify = true;
+			} else {
+				// Do nothing if the user cancelled the folder selection.
+				return;
+			}
+		}
+
+		// Ensure folder exists.
+		mkDirRecursive(this.flutterScreenshotPath);
+
+		const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : undefined;
+		const args = deviceId ? ["screenshot", "-d", deviceId] : ["screenshot"];
+		await this.runFlutterInFolder(this.flutterScreenshotPath, args, "screenshot", true);
+
+		if (shouldNotify) {
+			const res = await vs.window.showInformationMessage(`Screenshots will be saved to ${this.flutterScreenshotPath}`, "Show Folder");
+			if (res)
+				await vs.commands.executeCommand("revealFileInOS", Uri.file(this.flutterScreenshotPath));
+		}
+	}
+
+	private dartCreate(projectPath: string, templateName: string) {
+		const args = ["global", "run", "stagehand", templateName];
+		return this.runPubInFolder(projectPath, args, templateName);
+	}
+
+	public flutterDoctor() {
+		if (!this.workspace.sdks.flutter) {
+			this.sdkUtils.showFlutterActivationFailure("flutter.doctor");
+			return;
+		}
+		const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
+		if (!fs.existsSync(tempDir))
+			fs.mkdirSync(tempDir);
+		return this.runFlutterInFolder(tempDir, ["doctor", "-v"], "flutter", true, { customScript: this.workspace.config?.flutterDoctorScript });
+	}
+
+	private async flutterUpgrade() {
+		if (!this.workspace.sdks.flutter) {
+			this.sdkUtils.showFlutterActivationFailure("flutter.upgrade");
+			return;
+		}
+		const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
+		if (!fs.existsSync(tempDir))
+			fs.mkdirSync(tempDir);
+		await this.runFlutterInFolder(tempDir, ["upgrade"], "flutter", true);
+		await util.promptToReloadExtension();
+	}
+
+	private flutterCreate(projectPath: string, projectName?: string, sampleID?: string) {
+		const args = ["create"];
+		if (config.flutterCreateOffline) {
+			args.push("--offline");
+		}
+		if (projectName) {
+			args.push("--project-name");
+			args.push(projectName);
+		}
+		if (config.flutterCreateOrganization) {
+			args.push("--org");
+			args.push(config.flutterCreateOrganization);
+		}
+		if (config.flutterCreateIOSLanguage) {
+			args.push("--ios-language");
+			args.push(config.flutterCreateIOSLanguage);
+		}
+		if (config.flutterCreateAndroidLanguage) {
+			args.push("--android-language");
+			args.push(config.flutterCreateAndroidLanguage);
+		}
+		if (config.flutterAndroidX) {
+			args.push("--androidx");
+		}
+		if (sampleID) {
+			args.push("--sample");
+			args.push(sampleID);
+			args.push("--overwrite");
+		}
+		args.push(".");
+		return this.runFlutterInFolder(projectPath, args, projectName);
 	}
 
 	private setupPubspecWatcher(context: vs.ExtensionContext) {
