@@ -28,7 +28,7 @@ import { config } from "../config";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
-import { isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
+import { isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, isTestFolder, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 import { TestResultsProvider } from "../views/test_view";
 
@@ -220,6 +220,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			logger.error("Tests in web projects are not currently supported");
 			window.showErrorMessage("Tests in web projects are not currently supported");
 			return undefined; // undefined means silent (don't open launch.json).
+		}
+
+		if (debugType === DebuggerType.FlutterTest && isTestFolder(debugConfig.program) && !debugConfig.noDebug) {
+			// When running `flutter test (folder)`, multiple debug sessions are created - one for each file. This is
+			// different to how `pub run test (folder)` works (one debug session, which each file in an isolate). The
+			// debugger does not currently support multiple VM service sessions so we have to downgrade this to noDebug.
+			logger.warn("Setting noDebug=true for Flutter test run because it's a folder");
+			debugConfig.noDebug = true;
 		}
 
 		// If we're attaching to Dart, ensure we get an observatory URI.
