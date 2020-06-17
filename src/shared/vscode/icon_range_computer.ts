@@ -56,10 +56,11 @@ export class IconRangeComputerLsp {
 		// icons so if any were removed, we will clear their decorations.
 		const decs: { [key: string]: vs.Range[] } = {};
 		iconVisitor.icons.forEach((icon) => {
-			if (!decs[icon.iconName])
-				decs[icon.iconName] = [];
+			const iconFile = `${icon.type}/${icon.iconName}`;
+			if (!decs[iconFile])
+				decs[iconFile] = [];
 
-			decs[icon.iconName].push(lspToRange(icon.range));
+			decs[iconFile].push(lspToRange(icon.range));
 		});
 
 		return decs;
@@ -67,14 +68,18 @@ export class IconRangeComputerLsp {
 }
 
 class FlutterOutlineIconVisitorLsp extends FlutterOutlineVisitorLsp {
-	public readonly icons: Array<{ range: lsc.Range, iconName: string }> = [];
-	private readonly iconValuePattern = new RegExp("Icons\\.([\\w_]+)");
+	public readonly icons: Array<{ range: lsc.Range, type: "material" | "cupertino", iconName: string }> = [];
+	private readonly materialIconValuePattern = new RegExp("^Icons\\.([\\w_]+)$");
+	private readonly cupertinoIconValuePattern = new RegExp("^CupertinoIcons\\.([\\w_]+)$");
 
 	protected visitAttribute(attribute: lsp.FlutterOutlineAttribute) {
 		if (attribute.label && attribute.valueRange) {
-			const match = this.iconValuePattern.exec(attribute.label);
+			let match = this.materialIconValuePattern.exec(attribute.label);
 			if (match)
-				this.icons.push({ iconName: match[1], range: attribute.valueRange });
+				this.icons.push({ iconName: match[1], range: attribute.valueRange, type: "material" });
+			match = this.cupertinoIconValuePattern.exec(attribute.label);
+			if (match)
+				this.icons.push({ iconName: match[1], range: attribute.valueRange, type: "cupertino" });
 		}
 	}
 }
