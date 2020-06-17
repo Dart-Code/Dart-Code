@@ -138,8 +138,6 @@ export class DartDebugSession extends DebugSession {
 			return;
 		}
 
-		this.sendEvent(new ProgressStartEvent(debugLaunchProgressId, "Launching"));
-
 		// Force relative paths to absolute.
 		if (args.program && !path.isAbsolute(args.program)) {
 			if (!args.cwd) {
@@ -147,6 +145,10 @@ export class DartDebugSession extends DebugSession {
 			}
 			args.program = path.join(args.cwd, args.program);
 		}
+
+		// TODO: It's not clear if passing an empty string for title is reasonable, but it works better in VS Code.
+		// See https://github.com/microsoft/language-server-protocol/issues/1025.
+		this.sendEvent(new ProgressStartEvent(debugLaunchProgressId, "", "Launching…"));
 
 		this.shouldKillProcessOnTerminate = true;
 		this.cwd = args.cwd;
