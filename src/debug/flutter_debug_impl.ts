@@ -140,7 +140,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			// This text comes through as stdout and not Progress, so map it over
 			// to progress indicator.
 			if (msg.indexOf("Waiting for connection from") !== -1) {
-				this.sendEvent(new Event("dart.progress", { message: msg, progressID: "DEBUG-EXT" }));
+				this.sendEvent(new ProgressUpdateEvent(debugLaunchProgressId, msg));
 			}
 
 			this.logToUser(msg, forceErrorCategory ? "stderr" : this.outputCategory);
