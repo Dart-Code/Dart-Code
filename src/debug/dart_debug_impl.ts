@@ -261,7 +261,7 @@ export class DartDebugSession extends DebugSession {
 			return this.errorResponse(response, "Unable to attach; no Observatory address or service info file provided.");
 		}
 
-		this.sendEvent(new ProgressStartEvent(debugLaunchProgressId, "Waiting for application"));
+		this.sendEvent(new ProgressStartEvent(debugLaunchProgressId, "", "Waiting for application…"));
 
 		// this.observatoryUriIsProbablyReconnectable = true;
 		this.shouldKillProcessOnTerminate = false;
