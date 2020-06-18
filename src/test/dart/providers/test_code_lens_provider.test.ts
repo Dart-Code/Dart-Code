@@ -72,7 +72,7 @@ describe("test_code_lens", () => {
 				type: "dart",
 			},
 		];
-		it(`includes custom ${debugType.type}  actions from launch templates for tests`, async function () {
+		it(`includes custom ${debugType.type} actions from launch templates for tests`, async function () {
 			await addLaunchConfigsForTest(vs.workspace.workspaceFolders![0].uri, launchConfigs);
 
 			const editor = await openFile(helloWorldTestMainFile);

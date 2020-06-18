@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { window, workspace } from "vscode";
 import { CHROME_OS_DEVTOOLS_PORT, isChromeOS, pubPath, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
-import { DartWorkspaceContext, Logger } from "../../../shared/interfaces";
+import { DartWorkspaceContext, Logger, SomeError } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
 import { UnknownNotification } from "../../../shared/services/interfaces";
 import { StdIOService } from "../../../shared/services/stdio_service";
@@ -61,7 +61,7 @@ export class DevToolsManager implements vs.Disposable {
 
 	/// Spawns DevTools and returns the full URL to open for that session
 	///   eg. http://127.0.0.1:8123/?port=8543
-	public async spawnForSession(session: DartDebugSessionInformation & { vmServiceUri: string }, reuseWindows: boolean, notify: boolean, page: string | undefined): Promise<{ url: string, dispose: () => void } | undefined> {
+	public async spawnForSession(session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions): Promise<{ url: string, dispose: () => void } | undefined> {
 		this.analytics.logDebuggerOpenDevTools();
 
 		// If we're mid-silent-activation, wait until that's finished.
@@ -70,7 +70,7 @@ export class DevToolsManager implements vs.Disposable {
 		if (!this.devtoolsUrl) {
 			// Don't try to check for install when we run eagerly.
 			if (!this.workspaceContext.config?.activateDevToolsEagerly) {
-				const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtoolsPackageID, undefined, "0.1.10", this.workspaceContext.config?.devtoolsActivateScript, true);
+				const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtoolsPackageID, undefined, "0.2.5", this.workspaceContext.config?.devtoolsActivateScript, true);
 				if (!isAvailable) {
 					return undefined;
 				}
@@ -81,59 +81,19 @@ export class DevToolsManager implements vs.Disposable {
 				title: "Starting Dart DevTools...",
 			}, async (_) => this.startServer());
 		}
+
 		try {
 			const url = await this.devtoolsUrl;
 			await vs.window.withProgress({
 				location: vs.ProgressLocation.Notification,
 				title: "Opening Dart DevTools...",
 			}, async (_) => {
-				const queryParams: { [key: string]: string | undefined } = {
-					hide: "debugger",
-					ide: "VSCode",
-					theme: config.useDevToolsDarkTheme ? "dark" : undefined,
-				};
+
 				const canLaunchDevToolsThroughService = isRunningLocally
 					&& !process.env.DART_CODE_IS_TEST_RUN
 					&& await waitFor(() => this.debugCommands.vmServices.serviceIsRegistered(VmService.LaunchDevTools), 500);
-				if (canLaunchDevToolsThroughService) {
-					try {
-						await session.session.customRequest(
-							"service",
-							{
-								params: {
-									notify,
-									page,
-									queryParams,
-									reuseWindows,
-								},
-								type: this.debugCommands.vmServices.getServiceMethodName(VmService.LaunchDevTools),
-							},
-						);
 
-						return true;
-					} catch (e) {
-						this.logger.error(`DevTools failed to launch Chrome, will launch default browser locally instead: ${e.message}`);
-						vs.window.showWarningMessage(`Dart DevTools was unable to launch Chrome so your default browser was launched instead.`, "Show Full Error").then((res) => {
-							if (res) {
-								const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`;
-								const tempPath = path.join(os.tmpdir(), fileName);
-								fs.writeFileSync(tempPath, e.message || e);
-								workspace.openTextDocument(tempPath).then((document) => {
-									window.showTextDocument(document);
-								});
-							}
-						});
-					}
-				}
-
-				const paramsString = Object.keys(queryParams)
-					.filter((key) => queryParams[key] !== undefined)
-					.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key]!)}`)
-					.join("&");
-				const vmServiceUri = vs.Uri.parse(session.vmServiceUri);
-				const exposedUrl = await envUtils.exposeUrl(vmServiceUri, this.logger);
-				const fullUrl = `${url}?${paramsString}&uri=${encodeURIComponent(exposedUrl)}`;
-				await envUtils.openInBrowser(fullUrl, this.logger);
+				await this.launch(!!canLaunchDevToolsThroughService, session, options);
 			});
 
 			this.devToolsStatusBarItem.text = "Dart DevTools";
@@ -143,8 +103,82 @@ export class DevToolsManager implements vs.Disposable {
 			return { url, dispose: () => this.dispose() };
 		} catch (e) {
 			this.devToolsStatusBarItem.hide();
-			this.logger.error(e);
-			vs.window.showErrorMessage(`${e}`);
+			this.showError(e);
+		}
+	}
+
+	private showError(e: SomeError) {
+		this.logger.error(e);
+		vs.window.showErrorMessage(`${e}`);
+	}
+
+	private async launch(allowLaunchThroughService: boolean, session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions) {
+		const url = await this.devtoolsUrl;
+		if (!url) {
+			this.showError(`DevTools URL not available`);
+			return;
+		}
+
+		const queryParams: { [key: string]: string | undefined } = {
+			hide: "debugger",
+			ide: "VSCode",
+			theme: config.useDevToolsDarkTheme ? "dark" : undefined,
+		};
+
+		// Try to launch via service if allowed.
+		if (allowLaunchThroughService && this.launchThroughService(session, { ...options, queryParams }))
+			return true;
+
+		// Otherwise, fall back launching manually.
+		if (options.page)
+			queryParams.page = options.page;
+		const fullUrl = await this.buildDevToolsUrl(queryParams, session, url);
+		await envUtils.openInBrowser(fullUrl.toString(), this.logger);
+	}
+
+	private async buildDevToolsUrl(queryParams: { [key: string]: string | undefined; }, session: DartDebugSessionInformation & { vmServiceUri: string; }, url: string) {
+		const paramsString = Object.keys(queryParams)
+			.filter((key) => queryParams[key] !== undefined)
+			.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key]!)}`)
+			.join("&");
+		const vmServiceUri = vs.Uri.parse(session.vmServiceUri);
+		const exposedUrl = await envUtils.exposeUrl(vmServiceUri, this.logger);
+		return vs.Uri.parse(`${url}?${paramsString}&uri=${encodeURIComponent(exposedUrl)}`);
+	}
+
+	private async launchThroughService(
+		session: DartDebugSessionInformation & { vmServiceUri: string },
+		params: {
+			notify?: boolean,
+			page?: string,
+			queryParams: { [key: string]: string | undefined },
+			reuseWindows?: boolean,
+		},
+	): Promise<boolean> {
+		try {
+			await session.session.customRequest(
+				"service",
+				{
+					params,
+					type: this.debugCommands.vmServices.getServiceMethodName(VmService.LaunchDevTools),
+				},
+			);
+
+			return true;
+		} catch (e) {
+			this.logger.error(`DevTools failed to launch Chrome, will launch default browser locally instead: ${e.message}`);
+			vs.window.showWarningMessage(`Dart DevTools was unable to launch Chrome so your default browser was launched instead.`, "Show Full Error").then((res) => {
+				if (res) {
+					const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`;
+					const tempPath = path.join(os.tmpdir(), fileName);
+					fs.writeFileSync(tempPath, e.message || e);
+					workspace.openTextDocument(tempPath).then((document) => {
+						window.showTextDocument(document);
+					});
+				}
+			});
+
+			return false;
 		}
 	}
 
@@ -264,4 +298,10 @@ export interface ServerStartedNotification {
 	host: string;
 	port: number;
 	pid: number;
+}
+
+interface DevToolsOptions {
+	reuseWindows?: boolean;
+	notify?: boolean;
+	page?: string;
 }
