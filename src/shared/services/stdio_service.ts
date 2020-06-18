@@ -288,6 +288,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 				this.logger.error({ message: e.toString() });
 			}
 		});
+		this.disposables.length = 0;
 
 		// Clear log file so if any more log events come through later, we don't
 		// create a new log file and overwrite what we had.
