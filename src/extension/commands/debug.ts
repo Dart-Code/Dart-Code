@@ -103,7 +103,7 @@ export class DebugCommands {
 			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", () => vs.commands.executeCommand("dart.openDevTools")));
-		["Inspector", "Timeline", "Memory", "Performance"].forEach((pageName) => {
+		["Inspector", "Timeline", "Memory", "Performance", "Network", "Logging"].forEach((pageName) => {
 			context.subscriptions.push(vs.commands.registerCommand(`dart.openDevTools${pageName}`, async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean }): Promise<{ url: string, dispose: () => void } | undefined> => {
 				options = Object.assign({}, options, { page: pageName.toLowerCase() });
 				return vs.commands.executeCommand("dart.openDevTools", options);

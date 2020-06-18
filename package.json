@@ -395,6 +395,16 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.openDevToolsNetwork",
+				"title": "Open DevTools Network Page",
+				"category": "Dart"
+			},
+			{
+				"command": "dart.openDevToolsLogging",
+				"title": "Open DevTools Logging Page",
+				"category": "Dart"
+			},
+			{
 				"command": "_dart.openDevTools.touchBar",
 				"title": "DevTools",
 				"category": "Dart"
@@ -689,6 +699,14 @@
 				{
 					"command": "dart.openDevToolsPerformance",
 					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded && dart-code:isInFlutterProfileModeDebugSession"
+				},
+				{
+					"command": "dart.openDevToolsNetwork",
+					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
+				},
+				{
+					"command": "dart.openDevToolsLogging",
+					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "_dart.openDevTools.touchBar",
