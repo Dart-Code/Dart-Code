@@ -125,7 +125,7 @@ export class DebugCommands {
 			// Only show a notification if we were not triggered automatically.
 			const notify = !options || options.triggeredAutomatically !== true;
 			const reuseWindows = config.devToolsReuseWindows;
-			const page = options ? options.page : undefined;
+			const page = options?.page;
 
 			if (session.vmServiceUri) {
 				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, { reuseWindows, notify, page });
