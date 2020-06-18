@@ -168,6 +168,7 @@ export class DevToolsManager implements vs.Disposable {
 			queryParams.embed = "true";
 		const fullUrl = await this.buildDevToolsUrl(queryParams, session, url);
 		if (config.previewEmbeddedDevTools)
+			// TODO: What should really we do it we don't have a page?
 			this.launchInEmbeddedWebView(fullUrl, session, options.page || "inspector");
 		else
 			await envUtils.openInBrowser(fullUrl.toString(), this.logger);
