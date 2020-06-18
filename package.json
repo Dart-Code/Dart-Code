@@ -686,19 +686,19 @@
 				},
 				{
 					"command": "dart.openDevToolsInspector",
-					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded && dart-code:isInFlutterDebugModeDebugSession"
+					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "dart.openDevToolsTimeline",
-					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded && dart-code:isInFlutterProfileModeDebugSession"
+					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "dart.openDevToolsMemory",
-					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded && dart-code:isInFlutterProfileModeDebugSession"
+					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "dart.openDevToolsPerformance",
-					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded && dart-code:isInFlutterProfileModeDebugSession"
+					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "dart.openDevToolsNetwork",
