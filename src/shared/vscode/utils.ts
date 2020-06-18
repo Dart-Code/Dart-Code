@@ -6,6 +6,7 @@ import * as lsp from "vscode-languageclient";
 import { dartCodeExtensionIdentifier } from "../constants";
 import { Location, Logger } from "../interfaces";
 import { nullLogger } from "../logging";
+import { notUndefined } from "../utils";
 import { forceWindowsDriveLetterToUppercase } from "../utils/fs";
 
 export const SourceSortMembersCodeActionKind = CodeActionKind.Source.append("sortMembers");
@@ -140,3 +141,23 @@ function uriToString(uri: vs.Uri) {
 }
 
 export const envUtils = new EnvUtils();
+
+export function usedEditorColumns(): Set<number> {
+	return new Set(vs.window.visibleTextEditors.map((e) => e.viewColumn as number | undefined).filter(notUndefined));
+}
+
+export function firstNonEditorColumn(): vs.ViewColumn | undefined {
+	const usedColumns = usedEditorColumns();
+	for (let i = 1; i <= 9; i++) {
+		if (!usedColumns.has(i))
+			return i;
+	}
+}
+
+export function firstEditorColumn(): vs.ViewColumn | undefined {
+	const usedColumns = usedEditorColumns();
+	for (let i = 1; i <= 9; i++) {
+		if (usedColumns.has(i))
+			return i;
+	}
+}

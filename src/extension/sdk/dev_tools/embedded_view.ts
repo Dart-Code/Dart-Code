@@ -1,5 +1,6 @@
 import * as vs from "vscode";
 import { Event, EventEmitter } from "../../../shared/events";
+import { firstNonEditorColumn } from "../../../shared/vscode/utils";
 import { DartDebugSessionInformation } from "../../utils/vscode/debug";
 
 const devToolsPageNames: { [key: string]: string } = {
@@ -36,7 +37,8 @@ export class DevToolsEmbeddedView {
 
 	constructor(public session: DartDebugSessionInformation, readonly devToolsUri: vs.Uri, readonly page: string) {
 		const pageName = devToolsPageNames[page] || "Dart DevTools";
-		this.panel = vs.window.createWebviewPanel("dartDevTools", pageName, vs.ViewColumn.Nine, {
+		const column = firstNonEditorColumn() || vs.ViewColumn.Beside;
+		this.panel = vs.window.createWebviewPanel("dartDevTools", pageName, column, {
 			enableScripts: true,
 			localResourceRoots: [],
 			retainContextWhenHidden: true,

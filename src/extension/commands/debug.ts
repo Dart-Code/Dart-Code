@@ -447,7 +447,7 @@ export class DebugCommands {
 			this.debugMetrics.show();
 		} else if (e.event === "dart.navigate") {
 			if (e.body.file && e.body.line && e.body.column)
-				vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(e.body.file), e.body.line, e.body.column);
+				vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(e.body.file), e.body.line, e.body.column, e.body.inFirstEditorColumn);
 		} else {
 			// Not handled, will fall through in the caller.
 			return false;

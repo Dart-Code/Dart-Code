@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { dartRecommendedConfig, openSettingsAction } from "../../shared/constants";
-import { showCode } from "../../shared/vscode/utils";
+import { firstEditorColumn, showCode } from "../../shared/vscode/utils";
 
 export class EditCommands implements vs.Disposable {
 	private commands: vs.Disposable[] = [];
@@ -13,12 +13,18 @@ export class EditCommands implements vs.Disposable {
 		);
 	}
 
-	private async jumpToLineColInUri(uri: vs.Uri, lineNumber?: number, columnNumber?: number) {
+	private async jumpToLineColInUri(uri: vs.Uri, lineNumber?: number, columnNumber?: number, inOtherEditorColumn?: boolean) {
 		if (!uri || uri.scheme !== "file")
 			return;
 
+		// When navigating while using the inspector, we don't expect this file to replace
+		// the inspector tab, so we always target a column that's showing an editor.
+		const column = inOtherEditorColumn
+			? firstEditorColumn() || vs.ViewColumn.Beside
+			: vs.ViewColumn.Active;
+
 		const doc = await vs.workspace.openTextDocument(uri);
-		const editor = await vs.window.showTextDocument(doc);
+		const editor = await vs.window.showTextDocument(doc, column, inOtherEditorColumn);
 		if (lineNumber && columnNumber) {
 			const line = doc.lineAt(lineNumber > 0 ? lineNumber - 1 : 0);
 			const firstChar = line.range.start.translate({ characterDelta: line.firstNonWhitespaceCharacterIndex });
