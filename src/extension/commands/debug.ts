@@ -13,7 +13,7 @@ import { config } from "../config";
 import { ServiceExtensionArgs, timeDilationNormal, timeDilationSlow, VmServiceExtensions } from "../flutter/vm_service_extensions";
 import { DebuggerType } from "../providers/debug_config_provider";
 import { PubGlobal } from "../pub/global";
-import { DevToolsManager } from "../sdk/dev_tools";
+import { DevToolsManager } from "../sdk/dev_tools/manager";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
