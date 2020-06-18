@@ -385,6 +385,7 @@ export class DebugCommands {
 
 		// Grab the session and remove it from the list so we don't try to interact with it anymore.
 		const session = debugSessions[sessionIndex];
+		session.hasEnded = true;
 		debugSessions.splice(sessionIndex, 1);
 
 		const debugSessionEnd = new Date();
