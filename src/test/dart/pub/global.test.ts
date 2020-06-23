@@ -24,7 +24,7 @@ describe("pub global", () => {
 	});
 
 	it("reports valid for a package that's installed and up-to-date", async () => {
-		const installedVersion = await extApi.pubGlobal.getInstalledVersion(definitelyNotInstalledPackage1, definitelyNotInstalledPackage1);
+		const installedVersion = await extApi.pubGlobal.getInstalledVersion(alreadyInstalledPackage, alreadyInstalledPackage);
 		const status = await extApi.pubGlobal.checkVersionStatus(alreadyInstalledPackage, installedVersion, "0.0.1");
 		assert.equal(status, VersionStatus.Valid);
 	});
