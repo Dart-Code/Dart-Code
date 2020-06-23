@@ -18,25 +18,29 @@ describe("pub global", () => {
 	beforeEach("activate", () => activate(null));
 
 	it("reports not-installed for a package that's not installed", async () => {
-		const status = await extApi.pubGlobal.getInstalledStatus(definitelyNotInstalledPackage1, definitelyNotInstalledPackage1);
+		const installedVersion = await extApi.pubGlobal.getInstalledVersion(definitelyNotInstalledPackage1, definitelyNotInstalledPackage1);
+		const status = await extApi.pubGlobal.checkVersionStatus(definitelyNotInstalledPackage1, installedVersion);
 		assert.equal(status, VersionStatus.NotInstalled);
 	});
 
 	it("reports valid for a package that's installed and up-to-date", async () => {
-		const status = await extApi.pubGlobal.getInstalledStatus(alreadyInstalledPackage, alreadyInstalledPackage, "0.0.1");
+		const installedVersion = await extApi.pubGlobal.getInstalledVersion(definitelyNotInstalledPackage1, definitelyNotInstalledPackage1);
+		const status = await extApi.pubGlobal.checkVersionStatus(alreadyInstalledPackage, installedVersion, "0.0.1");
 		assert.equal(status, VersionStatus.Valid);
 	});
 
 	it("reports update-required for a package installed but old", async () => {
 		// DevTools is installed by CI scripts. Probably it'll never reach v999.999.999.
-		const status = await extApi.pubGlobal.getInstalledStatus(alreadyInstalledPackage, alreadyInstalledPackage, "999.999.999");
+		const installedVersion = await extApi.pubGlobal.getInstalledVersion(alreadyInstalledPackage, alreadyInstalledPackage);
+		const status = await extApi.pubGlobal.checkVersionStatus(alreadyInstalledPackage, installedVersion, "999.999.999");
 		assert.equal(status, VersionStatus.UpdateRequired);
 	});
 
 	it("does not report update-available for an out-of-date package if checked within 24 hours", async () => {
 		extApi.context.setPackageLastCheckedForUpdates(installedButOutOfDatePackage1, Date.now() - twoHoursInMs);
 
-		const status = await extApi.pubGlobal.getInstalledStatus(installedButOutOfDatePackage1, installedButOutOfDatePackage1);
+		const installedVersion = await extApi.pubGlobal.getInstalledVersion(installedButOutOfDatePackage1, installedButOutOfDatePackage1);
+		const status = await extApi.pubGlobal.checkVersionStatus(installedButOutOfDatePackage1, installedVersion);
 		assert.equal(status, VersionStatus.Valid);
 	});
 
@@ -44,21 +48,23 @@ describe("pub global", () => {
 		const twentyFiveHoursInMs = 1000 * 60 * 60 * 25;
 		extApi.context.setPackageLastCheckedForUpdates(installedButOutOfDatePackage1, Date.now() - twentyFiveHoursInMs);
 
-		const status = await extApi.pubGlobal.getInstalledStatus(installedButOutOfDatePackage1, installedButOutOfDatePackage1);
+		const installedVersion = await extApi.pubGlobal.getInstalledVersion(installedButOutOfDatePackage1, installedButOutOfDatePackage1);
+		const status = await extApi.pubGlobal.checkVersionStatus(installedButOutOfDatePackage1, installedVersion);
 		assert.equal(status, VersionStatus.UpdateAvailable);
 	});
 
 	it("can install a package that's not installed", async () => {
 		const installPrompt = sb.stub(vs.window, "showWarningMessage").resolves(`Activate ${definitelyNotInstalledPackage2}`);
 
-		// Prompt to install it, and ensure it's successful.
 		const installed = await extApi.pubGlobal.promptToInstallIfRequired(definitelyNotInstalledPackage2, definitelyNotInstalledPackage2);
 		assert.equal(installed, true);
 		assert.equal(installPrompt.calledOnce, true);
 
 		// Ensure new status checks includes it.
 		defer(() => extApi.pubGlobal.uninstall(definitelyNotInstalledPackage2));
-		const status = await extApi.pubGlobal.getInstalledStatus(definitelyNotInstalledPackage2, definitelyNotInstalledPackage2);
+		// Prompt to install it, and ensure it's successful.
+		const installedVersion = await extApi.pubGlobal.getInstalledVersion(definitelyNotInstalledPackage2, definitelyNotInstalledPackage2);
+		const status = await extApi.pubGlobal.checkVersionStatus(definitelyNotInstalledPackage2, installedVersion);
 		assert.equal(status, VersionStatus.Valid);
 	});
 
@@ -71,7 +77,8 @@ describe("pub global", () => {
 		assert.equal(installPrompt.calledOnce, true);
 
 		// Ensure new status checks includes it.
-		const status = await extApi.pubGlobal.getInstalledStatus(installedButBelowMinimumPackage1, installedButBelowMinimumPackage1);
+		const installedVersion = await extApi.pubGlobal.getInstalledVersion(installedButBelowMinimumPackage1, installedButBelowMinimumPackage1);
+		const status = await extApi.pubGlobal.checkVersionStatus(installedButBelowMinimumPackage1, installedVersion);
 		assert.equal(status, VersionStatus.Valid);
 	});
 
@@ -86,7 +93,8 @@ describe("pub global", () => {
 		assert.equal(installPrompt.calledOnce, true);
 
 		// Ensure new status checks includes it.
-		const status = await extApi.pubGlobal.getInstalledStatus(installedButOutOfDatePackage1, installedButOutOfDatePackage1);
+		const installedVersion = await extApi.pubGlobal.getInstalledVersion(installedButOutOfDatePackage1, installedButOutOfDatePackage1);
+		const status = await extApi.pubGlobal.checkVersionStatus(installedButOutOfDatePackage1, installedVersion);
 		assert.equal(status, VersionStatus.Valid);
 	});
 
@@ -100,7 +108,8 @@ describe("pub global", () => {
 		assert.equal(installPrompt.called, false);
 
 		// Ensure new status checks includes it.
-		const status = await extApi.pubGlobal.getInstalledStatus(installedButBelowMinimumPackage2, installedButBelowMinimumPackage2);
+		const installedVersion = await extApi.pubGlobal.getInstalledVersion(installedButBelowMinimumPackage2, installedButBelowMinimumPackage2);
+		const status = await extApi.pubGlobal.checkVersionStatus(installedButBelowMinimumPackage2, installedVersion);
 		assert.equal(status, VersionStatus.Valid);
 	});
 
@@ -113,7 +122,8 @@ describe("pub global", () => {
 		assert.equal(installPrompt.called, false);
 
 		// Ensure new status checks includes it.
-		const status = await extApi.pubGlobal.getInstalledStatus(installedButOutOfDatePackage2, installedButOutOfDatePackage2);
+		const installedVersion = await extApi.pubGlobal.getInstalledVersion(installedButOutOfDatePackage2, installedButOutOfDatePackage2);
+		const status = await extApi.pubGlobal.checkVersionStatus(installedButOutOfDatePackage2, installedVersion);
 		assert.equal(status, VersionStatus.Valid);
 	});
 

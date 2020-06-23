@@ -13,10 +13,13 @@ import { safeToolSpawn } from "../utils/processes";
 export class PubGlobal {
 	constructor(private readonly logger: Logger, private context: Context, private sdks: DartSdks, private pubApi: PubApi) { }
 
-	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion: string, customActivateScript?: string, autoUpdate: boolean = false): Promise<boolean> {
-		const versionStatus = customActivateScript ? VersionStatus.UpdateRequired : await this.getInstalledStatus(packageName, packageID, requiredVersion);
+	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion: string, customActivateScript?: string, autoUpdate: boolean = false): Promise<string | undefined> {
+		let installedVersion = await this.getInstalledVersion(packageName, packageID);
+		const versionStatus = customActivateScript
+			? VersionStatus.UpdateRequired
+			: await this.checkVersionStatus(packageID, installedVersion, requiredVersion);
 		if (versionStatus === VersionStatus.Valid)
-			return true;
+			return installedVersion!;
 
 		// Custom activation scripts always auto run without prompt since we
 		// are unable to check whether they are required.
@@ -42,24 +45,25 @@ export class PubGlobal {
 
 		if (action === moreInfo) {
 			await envUtils.openInBrowser(moreInfoLink);
-			return false;
+			return undefined;
 		} else if (action === activateForMe) {
 			const actionName = versionStatus === VersionStatus.NotInstalled ? `Activating ${packageName}` : `Updating ${packageName}`;
 
 			const args = ["global", "activate", packageID];
 			await this.runCommandWithProgress(packageName, `${actionName}...`, args, customActivateScript);
-			if (await this.getInstalledStatus(packageName, packageID) === VersionStatus.Valid) {
-				return true;
+			installedVersion = await this.getInstalledVersion(packageName, packageID);
+			if (await this.checkVersionStatus(packageID, installedVersion) === VersionStatus.Valid) {
+				return installedVersion;
 			} else {
 				action = await vs.window.showErrorMessage(`${actionName} failed. Please try running 'pub global activate ${packageID}' manually.`, moreInfo);
 				if (action === moreInfo) {
 					await envUtils.openInBrowser(moreInfoLink);
 				}
-				return false;
+				return undefined;
 			}
 		}
 
-		return false;
+		return undefined;
 	}
 
 	public async backgroundActivate(packageName: string, packageID: string, silent: boolean, customActivateScript: string | undefined): Promise<void> {
@@ -76,17 +80,12 @@ export class PubGlobal {
 		await this.runCommand(packageID, args);
 	}
 
-	public async getInstalledStatus(packageName: string, packageID: string, requiredVersion?: string): Promise<VersionStatus> {
-		const output = await this.runCommand(packageName, ["global", "list"]);
-		const versionMatch = new RegExp(`^${packageID} (\\d+\\.\\d+\\.\\d+[\\w.\\-+]*)(?: |$)`, "m");
-		const match = versionMatch.exec(output);
-
-		// No match = not installed.
-		if (!match)
+	public async checkVersionStatus(packageID: string, installedVersion: string | undefined, requiredVersion?: string): Promise<VersionStatus> {
+		if (!installedVersion)
 			return VersionStatus.NotInstalled;
 
 		// If we need a specific version, check it here.
-		if (requiredVersion && !pubVersionIsAtLeast(match[1], requiredVersion))
+		if (requiredVersion && !pubVersionIsAtLeast(installedVersion, requiredVersion))
 			return VersionStatus.UpdateRequired;
 
 		// If we haven't checked in the last 24 hours, check if there's an update available.
@@ -95,7 +94,7 @@ export class PubGlobal {
 			this.context.setPackageLastCheckedForUpdates(packageID, Date.now());
 			try {
 				const pubPackage = await this.pubApi.getPackage(packageID);
-				if (!pubVersionIsAtLeast(match[1], pubPackage.latest.version))
+				if (!pubVersionIsAtLeast(installedVersion, pubPackage.latest.version))
 					return VersionStatus.UpdateAvailable;
 			} catch (e) {
 				// If we fail to call the API to check for a new version, then we can run
@@ -107,6 +106,14 @@ export class PubGlobal {
 
 		// Otherwise, we're installed and have a new enough version.
 		return VersionStatus.Valid;
+	}
+
+	public async getInstalledVersion(packageName: string, packageID: string): Promise<string | undefined> {
+		const output = await this.runCommand(packageName, ["global", "list"]);
+		const versionMatch = new RegExp(`^${packageID} (\\d+\\.\\d+\\.\\d+[\\w.\\-+]*)(?: |$)`, "m");
+		const match = versionMatch.exec(output);
+		const installedVersion = match ? match[1] : undefined;
+		return installedVersion;
 	}
 
 	private runCommandWithProgress(packageName: string, title: string, args: string[], customActivateScript: string | undefined): Thenable<string> {
