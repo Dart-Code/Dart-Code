@@ -18,7 +18,8 @@ window.addEventListener('message', (event) => {
 		case "setUrl":
 			const theme = document.body.classList.contains('vscode-light') ? 'light': 'dark';
 			const background = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background');
-			const url = \`\${message.url}&theme=\${theme}&background=\${background}\`;
+			const foreground = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-foreground');
+			const url = \`\${message.url}&theme=\${theme}&background=\${encodeURIComponent(background)}&foreground=\${encodeURIComponent(foreground)}\`;
 			if (devToolsFrame.src !== url)
 				devToolsFrame.src = url;
 			break;
