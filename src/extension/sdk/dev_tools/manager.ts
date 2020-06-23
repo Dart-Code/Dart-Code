@@ -3,6 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { window, workspace } from "vscode";
+import { DevToolsCapabilities } from "../../../shared/capabilities/devtools";
 import { CHROME_OS_DEVTOOLS_PORT, isChromeOS, pubPath, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, Logger, SomeError } from "../../../shared/interfaces";
@@ -39,6 +40,8 @@ export class DevToolsManager implements vs.Disposable {
 	private devToolsEmbeddedViews: { [key: string]: DevToolsEmbeddedView[] | undefined } = {};
 	public get devToolsActivation() { return this.devToolsActivationPromise; }
 	private service?: DevToolsService;
+	private capabilities = DevToolsCapabilities.empty;
+	public get shouldEmbed() { return config.previewEmbeddedDevTools && this.capabilities.supportsEmbedFlag; }
 
 	/// Resolves to the DevTools URL. This is created immediately when a new process is being spawned so that
 	/// concurrent launches can wait on the same promise.
@@ -80,10 +83,11 @@ export class DevToolsManager implements vs.Disposable {
 		if (!this.devtoolsUrl) {
 			// Don't try to check for install when we run eagerly.
 			if (!this.workspaceContext.config?.activateDevToolsEagerly) {
-				const isAvailable = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtoolsPackageID, undefined, "0.2.5", this.workspaceContext.config?.devtoolsActivateScript, true);
-				if (!isAvailable) {
+				const installedVersion = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtoolsPackageID, undefined, "0.2.5", this.workspaceContext.config?.devtoolsActivateScript, true);
+				if (!installedVersion) {
 					return undefined;
 				}
+				this.capabilities.version = installedVersion;
 			}
 
 			this.devtoolsUrl = vs.window.withProgress({
@@ -100,7 +104,7 @@ export class DevToolsManager implements vs.Disposable {
 			}, async (_) => {
 
 				const canLaunchDevToolsThroughService = isRunningLocally
-					&& !config.previewEmbeddedDevTools
+					&& !this.shouldEmbed
 					&& !process.env.DART_CODE_IS_TEST_RUN
 					&& await waitFor(() => this.debugCommands.vmServices.serviceIsRegistered(VmService.LaunchDevTools), 500);
 
@@ -126,7 +130,7 @@ export class DevToolsManager implements vs.Disposable {
 	/// When a new Debug session starts, we can reconnect any views that are still open
 	// in the disconnected state.
 	public async reconnectDisconnectedEmbeddedViews(session: DartDebugSessionInformation & { vmServiceUri: string }): Promise<void> {
-		if (!config.previewEmbeddedDevTools || !this.devtoolsUrl)
+		if (!this.shouldEmbed || !this.devtoolsUrl)
 			return;
 
 		for (const page of Object.keys(this.devToolsEmbeddedViews)) {
@@ -154,7 +158,7 @@ export class DevToolsManager implements vs.Disposable {
 		const queryParams: { [key: string]: string | undefined } = {
 			hide: "debugger",
 			ide: "VSCode",
-			theme: config.useDevToolsDarkTheme && !config.previewEmbeddedDevTools ? "dark" : undefined,
+			theme: config.useDevToolsDarkTheme && !this.shouldEmbed ? "dark" : undefined,
 		};
 
 		// Try to launch via service if allowed.
@@ -164,10 +168,10 @@ export class DevToolsManager implements vs.Disposable {
 		// Otherwise, fall back to embedded or launching manually.
 		if (options.page)
 			queryParams.page = options.page;
-		if (config.previewEmbeddedDevTools)
+		if (this.shouldEmbed)
 			queryParams.embed = "true";
 		const fullUrl = await this.buildDevToolsUrl(queryParams, session, url);
-		if (config.previewEmbeddedDevTools)
+		if (this.shouldEmbed)
 			// TODO: What should really we do it we don't have a page?
 			this.launchInEmbeddedWebView(fullUrl, session, options.page || "inspector");
 		else
@@ -247,7 +251,7 @@ export class DevToolsManager implements vs.Disposable {
 					this.logger.error(e);
 				}
 			}
-			this.service = new DevToolsService(this.logger, this.workspaceContext);
+			this.service = new DevToolsService(this.logger, this.workspaceContext, this);
 			const service = this.service;
 			this.disposables.push(service);
 
@@ -310,7 +314,7 @@ export class DevToolsManager implements vs.Disposable {
 class DevToolsService extends StdIOService<UnknownNotification> {
 	private spawnedArgs?: string[];
 
-	constructor(logger: Logger, workspaceContext: DartWorkspaceContext) {
+	constructor(logger: Logger, workspaceContext: DartWorkspaceContext, private readonly manager: DevToolsManager) {
 		super(new CategoryLogger(logger, LogCategory.DevTools), config.maxLogLineLength);
 
 		this.spawnedArgs = this.getDevToolsArgs();
@@ -341,7 +345,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 	}
 
 	private getDevToolsArgs() {
-		const additionalArgs = config.previewEmbeddedDevTools
+		const additionalArgs = this.manager.shouldEmbed
 			? ["--allow-embedding"]
 			: ["--enable-notifications"];
 		const args = ["global", "run", "devtools", "--machine", "--try-ports", "10"].concat(additionalArgs);
