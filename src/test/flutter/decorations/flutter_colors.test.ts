@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import { Range } from "vscode";
 import { ColorRangeComputer } from "../../../shared/vscode/color_range_computer";
-import { activate, currentDoc, rangesOf, rangeString, setTestContent, waitForNextAnalysis } from "../../helpers";
+import { activate, currentDoc, rangeOf, rangesOf, rangeString, setTestContent, waitForNextAnalysis } from "../../helpers";
 
 describe("flutter_color_decorations", () => {
 	beforeEach("activate", () => activate());
@@ -31,6 +31,11 @@ var cupertino = [
   CupertinoColors.systemYellow,
   CupertinoColors.systemYellow.darkHighContrastElevatedColor,
 ];
+
+var formats = [
+	Color.fromARGB(255, 30, 30, 30),
+	Color.fromARGB(255, 0x1e, 0x1e, 0x1e)
+];
 		`));
 
 		const doc = currentDoc();
@@ -38,10 +43,10 @@ var cupertino = [
 		const results = computer.compute(doc);
 
 		assert.ok(results);
-		assert.equal(Object.keys(results).length, 12);
+		assert.equal(Object.keys(results).length, 13);
 		const ensureColor = (hex: string, ranges: Range[]) => {
-			assert.ok(results[hex], hex);
-			assert.deepStrictEqual(results[hex].map(rangeString), ranges.map(rangeString), hex);
+			assert.ok(results[hex], `No results for ${hex}`);
+			assert.deepStrictEqual(results[hex].map(rangeString), ranges.map(rangeString), `Incorrect ranges for ${hex}`);
 		};
 		ensureColor("ffffffff", rangesOf("|Colors.white|"));
 		ensureColor("ff1e88e5", rangesOf("|Color(0xFF1E88E5)|"));
@@ -56,5 +61,10 @@ var cupertino = [
 		ensureColor("ffff3b30", rangesOf("|CupertinoColors.destructiveRed|"));
 		ensureColor("ffffcc00", rangesOf("|CupertinoColors.systemYellow|,"));
 		ensureColor("ffffd426", rangesOf("|CupertinoColors.systemYellow.darkHighContrastElevatedColor|"));
+
+		ensureColor("ff1e1e1e", [
+			rangeOf("|Color.fromARGB(255, 30, 30, 30)|"),
+			rangeOf("|Color.fromARGB(255, 0x1e, 0x1e, 0x1e)|"),
+		]);
 	});
 });
