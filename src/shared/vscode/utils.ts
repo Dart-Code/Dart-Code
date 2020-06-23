@@ -142,7 +142,7 @@ function uriToString(uri: vs.Uri) {
 
 export const envUtils = new EnvUtils();
 
-export function usedEditorColumns(): Set<number> {
+function usedEditorColumns(): Set<number> {
 	return new Set(vs.window.visibleTextEditors.map((e) => e.viewColumn as number | undefined).filter(notUndefined));
 }
 
