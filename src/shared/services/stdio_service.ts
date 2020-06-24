@@ -42,12 +42,25 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		this.process.on("error", (error) => this.handleError(error));
 	}
 
+	/// Flutter may send only \r as a line terminator for improved terminal output
+	/// but we should always treat this as a standard newline (eg. terminating a message)
+	/// so all \r's can be replaced with \n immediately. Blank lines (from \n\n)
+	/// are already handled gracefully.
+	///
+	/// https://github.com/flutter/flutter/pull/57590
+	private normalizeNewlines(data: Buffer | string): Buffer {
+		const normalised = data.toString().replace(/\r/g, "\n");
+		return Buffer.from(normalised);
+	}
+
 	protected handleStdOut(data: Buffer | string) {
+		data = this.normalizeNewlines(data);
+
 		// Add this message to the buffer for processing.
-		this.messageBuffers.push(Buffer.isBuffer(data) ? data : Buffer.from(data));
+		this.messageBuffers.push(data);
 
 		// Kick off processing if we have a full message.
-		if (data.toString().indexOf("\n") >= 0)
+		if (data.indexOf("\n") >= 0)
 			this.processMessageBuffer();
 	}
 
