@@ -41,70 +41,70 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	private executionLaunchDataSubscriptions: ((notification: as.ExecutionLaunchDataNotification) => void)[] = [];
 	private flutterOutlineSubscriptions: ((notification: as.FlutterOutlineNotification) => void)[] = [];
 
-	protected handleNotification(evt: UnknownNotification) {
+	protected async handleNotification(evt: UnknownNotification): Promise<void> {
 		switch (evt.event) {
 			case "server.connected":
-				this.notify(this.serverConnectedSubscriptions, <as.ServerConnectedNotification>evt.params);
+				await this.notify(this.serverConnectedSubscriptions, <as.ServerConnectedNotification>evt.params);
 				break;
 			case "server.error":
-				this.notify(this.serverErrorSubscriptions, <as.ServerErrorNotification>evt.params);
+				await this.notify(this.serverErrorSubscriptions, <as.ServerErrorNotification>evt.params);
 				break;
 			case "server.status":
-				this.notify(this.serverStatusSubscriptions, <as.ServerStatusNotification>evt.params);
+				await this.notify(this.serverStatusSubscriptions, <as.ServerStatusNotification>evt.params);
 				break;
 			case "analysis.analyzedFiles":
-				this.notify(this.analysisAnalyzedFilesSubscriptions, <as.AnalysisAnalyzedFilesNotification>evt.params);
+				await this.notify(this.analysisAnalyzedFilesSubscriptions, <as.AnalysisAnalyzedFilesNotification>evt.params);
 				break;
 			case "analysis.closingLabels":
-				this.notify(this.analysisClosingLabelsSubscriptions, <as.AnalysisClosingLabelsNotification>evt.params);
+				await this.notify(this.analysisClosingLabelsSubscriptions, <as.AnalysisClosingLabelsNotification>evt.params);
 				break;
 			case "analysis.errors":
-				this.notify(this.analysisErrorsSubscriptions, <as.AnalysisErrorsNotification>evt.params);
+				await this.notify(this.analysisErrorsSubscriptions, <as.AnalysisErrorsNotification>evt.params);
 				break;
 			case "analysis.flushResults":
-				this.notify(this.analysisFlushResultsSubscriptions, <as.AnalysisFlushResultsNotification>evt.params);
+				await this.notify(this.analysisFlushResultsSubscriptions, <as.AnalysisFlushResultsNotification>evt.params);
 				break;
 			case "analysis.folding":
-				this.notify(this.analysisFoldingSubscriptions, <as.AnalysisFoldingNotification>evt.params);
+				await this.notify(this.analysisFoldingSubscriptions, <as.AnalysisFoldingNotification>evt.params);
 				break;
 			case "analysis.highlights":
-				this.notify(this.analysisHighlightsSubscriptions, <as.AnalysisHighlightsNotification>evt.params);
+				await this.notify(this.analysisHighlightsSubscriptions, <as.AnalysisHighlightsNotification>evt.params);
 				break;
 			case "analysis.implemented":
-				this.notify(this.analysisImplementedSubscriptions, <as.AnalysisImplementedNotification>evt.params);
+				await this.notify(this.analysisImplementedSubscriptions, <as.AnalysisImplementedNotification>evt.params);
 				break;
 			case "analysis.invalidate":
-				this.notify(this.analysisInvalidateSubscriptions, <as.AnalysisInvalidateNotification>evt.params);
+				await this.notify(this.analysisInvalidateSubscriptions, <as.AnalysisInvalidateNotification>evt.params);
 				break;
 			case "analysis.navigation":
-				this.notify(this.analysisNavigationSubscriptions, <as.AnalysisNavigationNotification>evt.params);
+				await this.notify(this.analysisNavigationSubscriptions, <as.AnalysisNavigationNotification>evt.params);
 				break;
 			case "analysis.occurrences":
-				this.notify(this.analysisOccurrencesSubscriptions, <as.AnalysisOccurrencesNotification>evt.params);
+				await this.notify(this.analysisOccurrencesSubscriptions, <as.AnalysisOccurrencesNotification>evt.params);
 				break;
 			case "analysis.outline":
-				this.notify(this.analysisOutlineSubscriptions, <as.AnalysisOutlineNotification>evt.params);
+				await this.notify(this.analysisOutlineSubscriptions, <as.AnalysisOutlineNotification>evt.params);
 				break;
 			case "analysis.overrides":
-				this.notify(this.analysisOverridesSubscriptions, <as.AnalysisOverridesNotification>evt.params);
+				await this.notify(this.analysisOverridesSubscriptions, <as.AnalysisOverridesNotification>evt.params);
 				break;
 			case "completion.results":
-				this.notify(this.completionResultsSubscriptions, <as.CompletionResultsNotification>evt.params);
+				await this.notify(this.completionResultsSubscriptions, <as.CompletionResultsNotification>evt.params);
 				break;
 			case "completion.availableSuggestions":
-				this.notify(this.completionAvailableSuggestionsSubscriptions, <as.CompletionAvailableSuggestionsNotification>evt.params);
+				await this.notify(this.completionAvailableSuggestionsSubscriptions, <as.CompletionAvailableSuggestionsNotification>evt.params);
 				break;
 			case "completion.existingImports":
-				this.notify(this.completionExistingImportsSubscriptions, <as.CompletionExistingImportsNotification>evt.params);
+				await this.notify(this.completionExistingImportsSubscriptions, <as.CompletionExistingImportsNotification>evt.params);
 				break;
 			case "search.results":
-				this.notify(this.searchResultsSubscriptions, <as.SearchResultsNotification>evt.params);
+				await this.notify(this.searchResultsSubscriptions, <as.SearchResultsNotification>evt.params);
 				break;
 			case "execution.launchData":
-				this.notify(this.executionLaunchDataSubscriptions, <as.ExecutionLaunchDataNotification>evt.params);
+				await this.notify(this.executionLaunchDataSubscriptions, <as.ExecutionLaunchDataNotification>evt.params);
 				break;
 			case "flutter.outline":
-				this.notify(this.flutterOutlineSubscriptions, <as.FlutterOutlineNotification>evt.params);
+				await this.notify(this.flutterOutlineSubscriptions, <as.FlutterOutlineNotification>evt.params);
 				break;
 		}
 	}

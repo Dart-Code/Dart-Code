@@ -118,14 +118,13 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 	protected abstract shouldHandleMessage(message: string): boolean;
 	// tslint:disable-next-line:no-empty
-	protected processUnhandledMessage(message: string): void { }
+	protected async processUnhandledMessage(message: string): Promise<void> { }
 
 	public async handleMessage(message: string): Promise<void> {
 		this.logTraffic(`<== ${message.trimRight()}\r\n`);
 
 		if (!this.shouldHandleMessage(message.trim())) {
-			this.processUnhandledMessage(message);
-			return;
+			return this.processUnhandledMessage(message);
 		}
 
 		let msg: any;
@@ -137,8 +136,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		} catch (e) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
 				this.logger.error(`Unexpected non-JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
-				this.processUnhandledMessage(message);
-				return;
+				return this.processUnhandledMessage(message);
 			} else {
 				throw e;
 			}
@@ -146,26 +144,27 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 		try {
 			if (msg && this.isNotification(msg))
-				this.handleNotification(msg as T);
+				// tslint:disable-next-line: no-floating-promises
+				this.handleNotification(msg as T).catch((e) => this.logger.error(e));
 			else if (msg && this.isRequest(msg))
-				await this.processServerRequest(msg as Request<any>);
+				this.processServerRequest(msg as Request<any>).catch((e) => this.logger.error(e));
 			else if (msg && this.isResponse(msg))
-				this.handleResponse(msg as UnknownResponse);
+				this.handleResponse(msg as UnknownResponse).catch((e) => this.logger.error(e));
 			else {
 				this.logger.error(`Unexpected JSON message, assuming normal stdout : ${message}`);
-				this.processUnhandledMessage(message);
+				this.processUnhandledMessage(message).catch((e) => this.logger.error(e));
 			}
 		} catch (e) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
 				this.logger.error(`Failed to handle JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
-				this.processUnhandledMessage(message);
+				this.processUnhandledMessage(message).catch((e) => this.logger.error(e));
 			} else {
 				throw e;
 			}
 		}
 	}
 
-	protected abstract handleNotification(evt: T): void;
+	protected abstract handleNotification(evt: T): Promise<void>;
 	// tslint:disable-next-line: no-empty
 	protected async handleRequest(method: string, args: any): Promise<any> { }
 	protected isNotification(msg: any): boolean { return !!msg.event; }
@@ -187,7 +186,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		this.sendMessage(json);
 	}
 
-	private handleResponse(evt: UnknownResponse) {
+	private async handleResponse(evt: UnknownResponse): Promise<void> {
 		const handler = this.activeRequests[evt.id];
 		delete this.activeRequests[evt.id];
 
@@ -207,9 +206,9 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		}
 
 		if (error) {
-			handler[1](error);
+			await handler[1](error);
 		} else {
-			handler[0](evt.result);
+			await handler[0](evt.result);
 		}
 	}
 

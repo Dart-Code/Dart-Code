@@ -20,9 +20,9 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 		return message.startsWith("[{") && message.endsWith("}]");
 	}
 
-	protected processUnhandledMessage(message: string): void {
+	protected async processUnhandledMessage(message: string): Promise<void> {
 		// tslint:disable-next-line: no-floating-promises
-		this.notify(this.unhandledMessageSubscriptions, message);
+		await this.notify(this.unhandledMessageSubscriptions, message);
 	}
 
 	private unhandledMessageSubscriptions: Array<(notification: string) => void> = [];
@@ -41,41 +41,41 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 
 	// TODO: Can we code-gen all this like the analysis server?
 
-	protected handleNotification(evt: UnknownNotification) {
+	protected async handleNotification(evt: UnknownNotification): Promise<void> {
 		// Always send errors up, no matter where they're from.
 		if (evt.params.error) {
-			this.notify(this.errorSubscriptions, evt.params.error as string);
+			await this.notify(this.errorSubscriptions, evt.params.error as string);
 		}
 		switch (evt.event) {
 			case "daemon.connected":
-				this.notify(this.daemonConnectedSubscriptions, evt.params as f.DaemonConnected);
+				await this.notify(this.daemonConnectedSubscriptions, evt.params as f.DaemonConnected);
 				break;
 			case "app.start":
-				this.notify(this.appStartSubscriptions, evt.params as f.AppStart);
+				await this.notify(this.appStartSubscriptions, evt.params as f.AppStart);
 				break;
 			case "app.debugPort":
-				this.notify(this.appDebugPortSubscriptions, evt.params as f.AppDebugPort);
+				await this.notify(this.appDebugPortSubscriptions, evt.params as f.AppDebugPort);
 				break;
 			case "app.started":
-				this.notify(this.appStartedSubscriptions, evt.params as f.AppEvent);
+				await this.notify(this.appStartedSubscriptions, evt.params as f.AppEvent);
 				break;
 			case "app.webLaunchUrl":
-				this.notify(this.appWebLaunchUrlSubscriptions, evt.params as f.AppWebLaunchUrl);
+				await this.notify(this.appWebLaunchUrlSubscriptions, evt.params as f.AppWebLaunchUrl);
 				break;
 			case "app.stop":
-				this.notify(this.appStopSubscriptions, evt.params as f.AppEvent);
+				await this.notify(this.appStopSubscriptions, evt.params as f.AppEvent);
 				break;
 			case "app.progress":
-				this.notify(this.appProgressSubscriptions, evt.params as f.AppProgress);
+				await this.notify(this.appProgressSubscriptions, evt.params as f.AppProgress);
 				break;
 			case "app.log":
-				this.notify(this.appLogSubscriptions, evt.params as f.AppLog);
+				await this.notify(this.appLogSubscriptions, evt.params as f.AppLog);
 				break;
 			case "daemon.logMessage":
-				this.notify(this.daemonLogMessageSubscriptions, evt.params as f.DaemonLogMessage);
+				await this.notify(this.daemonLogMessageSubscriptions, evt.params as f.DaemonLogMessage);
 				break;
 			case "daemon.log":
-				this.notify(this.daemonLogSubscriptions, evt.params as f.AppLog);
+				await this.notify(this.daemonLogSubscriptions, evt.params as f.AppLog);
 				break;
 		}
 	}

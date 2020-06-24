@@ -2,6 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
 import { TestStatus } from "../../shared/enums";
+import { Logger } from "../../shared/interfaces";
 import { ErrorNotification, Group, GroupNotification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../../shared/test_protocol";
 import { flatMap, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
@@ -67,7 +68,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 
 	private owningDebugSessions: { [key: string]: vs.DebugSession | undefined } = {};
 
-	constructor() {
+	constructor(private readonly logger: Logger) {
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
@@ -165,7 +166,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			if (e.body.notification.type === "suite")
 				this.owningDebugSessions[e.body.suitePath] = e.session;
 
-			this.handleNotification(e.body.suitePath, e.body.notification);
+			// tslint:disable-next-line: no-floating-promises
+			this.handleNotification(e.body.suitePath, e.body.notification).catch((e) => this.logger.error(e));
 		}
 	}
 
@@ -241,7 +243,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.disposables.forEach((d) => d.dispose());
 	}
 
-	private handleNotification(suitePath: string, evt: any) {
+	private async handleNotification(suitePath: string, evt: any): Promise<void> {
 		const suite = suites[suitePath];
 		switch (evt.type) {
 			// We won't get notifications that aren't directly tied to Suites because

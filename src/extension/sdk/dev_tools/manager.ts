@@ -360,10 +360,10 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 	// the server.started event.
 	protected isNotification(msg: any): boolean { return msg.event || msg.method === "server.started"; }
 
-	protected handleNotification(evt: UnknownNotification): void {
+	protected async handleNotification(evt: UnknownNotification): Promise<void> {
 		switch ((evt as any).method || evt.event) {
 			case "server.started":
-				this.notify(this.serverStartedSubscriptions, evt.params as ServerStartedNotification);
+				await this.notify(this.serverStartedSubscriptions, evt.params as ServerStartedNotification);
 				break;
 
 		}

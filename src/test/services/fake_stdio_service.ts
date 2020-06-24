@@ -14,11 +14,11 @@ export class FakeProcessStdIOService<T> extends StdIOService<T> {
 		return message.startsWith("{") && message.trim().endsWith("}");
 	}
 
-	protected processUnhandledMessage(message: string): void {
+	protected async processUnhandledMessage(message: string): Promise<void> {
 		this.unhandledMessages.push(message);
 	}
 
-	protected handleNotification(notification: T): void {
+	protected async handleNotification(notification: T): Promise<void> {
 		this.notifications.push(notification);
 	}
 

@@ -127,25 +127,25 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	// TODO: Can we code-gen all this like the analysis server?
 
-	protected handleNotification(evt: UnknownNotification) {
+	protected async handleNotification(evt: UnknownNotification): Promise<void> {
 		switch (evt.event) {
 			case "daemon.connected":
-				this.notify(this.daemonConnectedSubscriptions, evt.params as f.DaemonConnected).catch((e) => this.logger.error(e));
+				await this.notify(this.daemonConnectedSubscriptions, evt.params as f.DaemonConnected);
 				break;
 			case "device.added":
-				this.notify(this.deviceAddedSubscriptions, evt.params as f.Device).catch((e) => this.logger.error(e));
+				await this.notify(this.deviceAddedSubscriptions, evt.params as f.Device);
 				break;
 			case "device.removed":
-				this.notify(this.deviceRemovedSubscriptions, evt.params as f.Device).catch((e) => this.logger.error(e));
+				await this.notify(this.deviceRemovedSubscriptions, evt.params as f.Device);
 				break;
 			case "daemon.logMessage":
-				this.notify(this.daemonLogMessageSubscriptions, evt.params as f.DaemonLogMessage).catch((e) => this.logger.error(e));
+				await this.notify(this.daemonLogMessageSubscriptions, evt.params as f.DaemonLogMessage);
 				break;
 			case "daemon.log":
-				this.notify(this.daemonLogSubscriptions, evt.params as f.DaemonLog).catch((e) => this.logger.error(e));
+				await this.notify(this.daemonLogSubscriptions, evt.params as f.DaemonLog);
 				break;
 			case "daemon.showMessage":
-				this.notify(this.daemonShowMessageSubscriptions, evt.params as f.ShowMessage).catch((e) => this.logger.error(e));
+				await this.notify(this.daemonShowMessageSubscriptions, evt.params as f.ShowMessage);
 				break;
 		}
 	}

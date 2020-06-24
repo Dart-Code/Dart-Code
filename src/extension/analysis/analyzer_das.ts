@@ -115,9 +115,7 @@ export class DasAnalyzerClient extends AnalyzerGen {
 		}
 
 		this.createProcess(undefined, binaryPath, processArgs, { toolEnv: getToolEnv() });
-		this.process?.on("exit", (code, signal) => {
-			this.notify(this.serverTerminatedSubscriptions, undefined);
-		});
+		this.process?.on("exit", (code, signal) => this.notify(this.serverTerminatedSubscriptions, undefined));
 
 		this.registerForServerStatus((n) => {
 			if (n.analysis) {

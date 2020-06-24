@@ -15,8 +15,8 @@ export class TestRunner extends StdIOService<{ type: string }> {
 	protected isNotification(msg: any): boolean { return !!(msg.type || msg.event); }
 	protected isResponse(msg: any): boolean { return false; }
 
-	protected processUnhandledMessage(message: string): void {
-		this.notify(this.unhandledMessageSubscriptions, message);
+	protected async processUnhandledMessage(message: string): Promise<void> {
+		await this.notify(this.unhandledMessageSubscriptions, message);
 	}
 
 	private unhandledMessageSubscriptions: Array<(notification: string) => void> = [];
@@ -24,16 +24,16 @@ export class TestRunner extends StdIOService<{ type: string }> {
 		return this.subscribe(this.unhandledMessageSubscriptions, subscriber);
 	}
 
-	protected handleNotification(evt: any) {
+	protected async handleNotification(evt: any): Promise<void> {
 		// console.log(JSON.stringify(evt));
 		switch (evt.event) {
 			case "test.startedProcess":
-				this.notify(this.testStartedProcessSubscriptions, evt.params as TestStartedProcess);
+				await this.notify(this.testStartedProcessSubscriptions, evt.params as TestStartedProcess);
 				break;
 		}
 
 		// Send all events to the editor.
-		this.notify(this.allTestNotificationsSubscriptions, evt);
+		await this.notify(this.allTestNotificationsSubscriptions, evt);
 	}
 
 	// Subscription lists.

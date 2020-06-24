@@ -508,7 +508,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		dartPackagesProvider,
 		packagesTreeView,
 	);
-	const testTreeProvider = new TestResultsProvider();
+	const testTreeProvider = new TestResultsProvider(logger);
 	const testTreeView = vs.window.createTreeView("dartTestTree", { treeDataProvider: testTreeProvider });
 	context.subscriptions.push(
 		testTreeProvider,
