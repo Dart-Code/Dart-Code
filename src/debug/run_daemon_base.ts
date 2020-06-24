@@ -21,7 +21,6 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 	}
 
 	protected async processUnhandledMessage(message: string): Promise<void> {
-		// tslint:disable-next-line: no-floating-promises
 		await this.notify(this.unhandledMessageSubscriptions, message);
 	}
 
