@@ -82,7 +82,7 @@ describe("test_code_lens", () => {
 			const testPos = positionOf(`test^(".split() splits`);
 
 			const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
-			assert.equal(codeLensForTest.length, 3);
+			assert.equal(codeLensForTest.length, 3, `Didn't get 3 launch configs, got: ${JSON.stringify(codeLensForTest, undefined, 4)}`);
 
 			if (!codeLensForTest[0].command) {
 				// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
