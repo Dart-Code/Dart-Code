@@ -92,7 +92,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		Object.keys(this.activeRequests).forEach((key) => this.activeRequests[key] = "CANCELLED");
 	}
 
-	protected sendMessage<T>(json: string) {
+	protected sendMessage(json: string) {
 		this.logTraffic(`==> ${json}`);
 		if (this.process)
 			this.process.stdin.write(json);
@@ -203,7 +203,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 		if (error && error.code === "SERVER_ERROR") {
 			error.method = method;
-			this.notify(this.requestErrorSubscriptions, error);
+			this.notify(this.requestErrorSubscriptions, error).catch((e) => this.logger.error(e));
 		}
 
 		if (error) {
@@ -213,8 +213,8 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		}
 	}
 
-	protected notify<T>(subscriptions: Array<(notification: T) => void>, notification: T): void {
-		Promise.all(subscriptions.slice().map((sub) => sub(notification))).catch((e) => console.error(e));
+	protected notify<T>(subscriptions: Array<(notification: T) => void>, notification: T): Promise<unknown> {
+		return Promise.all(subscriptions.slice().map((sub) => sub(notification))).catch((e) => console.error(e));
 	}
 
 	protected subscribe<T>(subscriptions: Array<(notification: T) => void>, subscriber: (notification: T) => void): IAmDisposable {

@@ -5,7 +5,7 @@ import { CustomEmulatorDefinition, IAmDisposable, IFlutterDaemon } from "../../s
 import { UnknownResponse } from "../../shared/services/interfaces";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { logger } from "../helpers";
-import { FakeStdIOService } from "../services/fake_stdio_service";
+import { FakeProcessStdIOService } from "../services/fake_stdio_service";
 
 describe("device_manager", () => {
 	let dm: FlutterDeviceManager;
@@ -155,7 +155,7 @@ describe("device_manager", () => {
 	});
 });
 
-class FakeFlutterDaemon extends FakeStdIOService implements IFlutterDaemon {
+class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlutterDaemon {
 	public capabilities = DaemonCapabilities.empty;
 	public supportedPlatforms: f.PlatformType[] = [];
 

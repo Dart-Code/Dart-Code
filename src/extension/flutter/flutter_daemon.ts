@@ -130,22 +130,22 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	protected handleNotification(evt: UnknownNotification) {
 		switch (evt.event) {
 			case "daemon.connected":
-				this.notify(this.daemonConnectedSubscriptions, evt.params as f.DaemonConnected);
+				this.notify(this.daemonConnectedSubscriptions, evt.params as f.DaemonConnected).catch((e) => this.logger.error(e));
 				break;
 			case "device.added":
-				this.notify(this.deviceAddedSubscriptions, evt.params as f.Device);
+				this.notify(this.deviceAddedSubscriptions, evt.params as f.Device).catch((e) => this.logger.error(e));
 				break;
 			case "device.removed":
-				this.notify(this.deviceRemovedSubscriptions, evt.params as f.Device);
+				this.notify(this.deviceRemovedSubscriptions, evt.params as f.Device).catch((e) => this.logger.error(e));
 				break;
 			case "daemon.logMessage":
-				this.notify(this.daemonLogMessageSubscriptions, evt.params as f.DaemonLogMessage);
+				this.notify(this.daemonLogMessageSubscriptions, evt.params as f.DaemonLogMessage).catch((e) => this.logger.error(e));
 				break;
 			case "daemon.log":
-				this.notify(this.daemonLogSubscriptions, evt.params as f.DaemonLog);
+				this.notify(this.daemonLogSubscriptions, evt.params as f.DaemonLog).catch((e) => this.logger.error(e));
 				break;
 			case "daemon.showMessage":
-				this.notify(this.daemonShowMessageSubscriptions, evt.params as f.ShowMessage);
+				this.notify(this.daemonShowMessageSubscriptions, evt.params as f.ShowMessage).catch((e) => this.logger.error(e));
 				break;
 		}
 	}

@@ -1,36 +1,44 @@
-import { IAmDisposable } from "../../shared/interfaces";
+import { StdIOService } from "../../shared/services/stdio_service";
+import { logger } from "../helpers";
 
-export class FakeStdIOService implements IAmDisposable {
-	private readonly disposables: IAmDisposable[] = [];
+export class FakeProcessStdIOService<T> extends StdIOService<T> {
+	public readonly unhandledMessages: string[] = [];
+	public readonly notifications: T[] = [];
+	public readonly sentMessages: string[] = [];
 
-	protected async notify<T>(subscriptions: Array<(notification: T) => void>, notification: T): Promise<void> {
-		await Promise.all(subscriptions.slice().map((sub) => sub(notification)));
+	constructor() {
+		super(logger, undefined);
 	}
 
-	protected subscribe<T>(subscriptions: Array<(notification: T) => void>, subscriber: (notification: T) => void): IAmDisposable {
-		subscriptions.push(subscriber);
-		const disposable = {
-			dispose: () => {
-				// Remove from the subscription list.
-				let index = subscriptions.indexOf(subscriber);
-				if (index >= 0) {
-					subscriptions.splice(index, 1);
-				}
-
-				// Also remove from our disposables (else we'll leak it).
-				index = this.disposables.indexOf(disposable);
-				if (index >= 0) {
-					this.disposables.splice(index, 1);
-				}
-			},
-		};
-
-		this.disposables.push(disposable);
-
-		return disposable;
+	protected shouldHandleMessage(message: string): boolean {
+		return message.startsWith("{") && message.trim().endsWith("}");
 	}
 
-	public dispose() {
-		this.disposables.forEach((d) => d.dispose());
+	protected processUnhandledMessage(message: string): void {
+		this.unhandledMessages.push(message);
+	}
+
+	protected handleNotification(notification: T): void {
+		this.notifications.push(notification);
+	}
+
+	protected createProcess(workingDirectory: string | undefined, binPath: string, args: string[], env: { envOverrides?: { [key: string]: string | undefined }, toolEnv?: { [key: string]: string | undefined } }) {
+		// Don't really spawn a process.
+	}
+
+	public sendStdOut(data: string | Buffer) {
+		this.handleStdOut(data);
+	}
+
+	public sendStdErr(data: string | Buffer) {
+		this.handleStdErr(data);
+	}
+
+	public sendExit(code: number | null, signal: NodeJS.Signals | null) {
+		this.handleExit(code, signal);
+	}
+
+	public sendError(error: Error) {
+		this.handleError(error);
 	}
 }
