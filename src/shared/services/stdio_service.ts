@@ -36,24 +36,32 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 		this.logTraffic(`    PID: ${process.pid}`);
 
-		this.process.stdout.on("data", (data: Buffer | string) => {
-			// Add this message to the buffer for processing.
-			this.messageBuffers.push(Buffer.isBuffer(data) ? data : Buffer.from(data));
+		this.process.stdout.on("data", (data: Buffer | string) => this.handleStdOut(data));
+		this.process.stderr.on("data", (data: Buffer | string) => this.handleStdErr(data));
+		this.process.on("exit", (code, signal) => this.handleExit(code, signal));
+		this.process.on("error", (error) => this.handleError(error));
+	}
 
-			// Kick off processing if we have a full message.
-			if (data.toString().indexOf("\n") >= 0)
-				this.processMessageBuffer();
-		});
-		this.process.stderr.on("data", (data: Buffer | string) => {
-			this.logTraffic(`${data.toString()}`, true);
-		});
-		this.process.on("exit", (code, signal) => {
-			this.logTraffic(`Process terminated! ${code}, ${signal}`);
-			this.processExited = true;
-		});
-		this.process.on("error", (error) => {
-			this.logTraffic(`Process errored! ${error}`);
-		});
+	protected handleStdOut(data: Buffer | string) {
+		// Add this message to the buffer for processing.
+		this.messageBuffers.push(Buffer.isBuffer(data) ? data : Buffer.from(data));
+
+		// Kick off processing if we have a full message.
+		if (data.toString().indexOf("\n") >= 0)
+			this.processMessageBuffer();
+	}
+
+	protected handleStdErr(data: Buffer | string) {
+		this.logTraffic(`${data.toString()}`, true);
+	}
+
+	protected handleExit(code: number | null, signal: NodeJS.Signals | null) {
+		this.logTraffic(`Process terminated! ${code}, ${signal}`);
+		this.processExited = true;
+	}
+
+	protected handleError(error: Error) {
+		this.logTraffic(`Process errored! ${error}`);
 	}
 
 	protected buildRequest<TReq>(id: number, method: string, params?: TReq): { id: string, method: string, params?: TReq } {
