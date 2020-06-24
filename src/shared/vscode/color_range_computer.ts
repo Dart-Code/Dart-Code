@@ -27,7 +27,6 @@ export class ColorRangeComputer {
 			const colorName = result[1].replace(/\.shade(\d+)/, "[$1]");
 
 			if (!(colorName in flutterMaterialColors || `${colorName}.primary` in flutterMaterialColors)) {
-				console.log(`${colorName} missing`);
 				continue;
 			}
 
