@@ -39,12 +39,11 @@ describe("stdio_service", () => {
 
 			assert.deepStrictEqual(service.notifications, [event1]);
 		});
+
+		it("processes unhandled messages", async () => {
+			sendRaw(`this is a string${terminator}this is a string${terminator}`);
+
+			assert.deepStrictEqual(service.unhandledMessages, [`this is a string\n`, `this is a string\n`]);
+		});
 	});
-
-	it("processed unhandled messages", async () => {
-		service.sendStdOut("this is a string\n");
-
-		assert.deepStrictEqual(service.unhandledMessages, ["this is a string\n"]);
-	});
-
 });
