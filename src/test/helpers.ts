@@ -990,9 +990,14 @@ export async function setConfigForTest(section: string, key: string, value: any)
 export async function addLaunchConfigsForTest(workspaceUri: vs.Uri, configs: any[]) {
 	const launchConfig = vs.workspace.getConfiguration("launch", workspaceUri);
 	const originalConfigs = launchConfig.get<any[]>("configurations") || [];
+	logger.info(`Adding ${configs?.length} launch configs to the ${originalConfigs?.length} that already existed!`);
 	const newConfigs = (originalConfigs || []).slice().concat(configs);
 	await launchConfig.update("configurations", newConfigs);
-	defer(() => launchConfig.update("configurations", originalConfigs.length ? originalConfigs : undefined));
+	defer(async () => {
+		logger.info(`Resetting back to ${originalConfigs?.length} original launch configs`);
+		await launchConfig.update("configurations", originalConfigs.length ? originalConfigs : undefined);
+		logger.info(`Done resetting back to ${originalConfigs?.length} original launch configs!`);
+	});
 }
 
 export function clearAllContext(context: Context): Promise<void> {
