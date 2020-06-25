@@ -83,7 +83,7 @@ export class DevToolsManager implements vs.Disposable {
 		if (!this.devtoolsUrl) {
 			// Don't try to check for install when we run eagerly.
 			if (!this.workspaceContext.config?.activateDevToolsEagerly) {
-				const installedVersion = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtoolsPackageID, undefined, "0.2.5", this.workspaceContext.config?.devtoolsActivateScript, true);
+				const installedVersion = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtoolsPackageID, undefined, "0.8.0", this.workspaceContext.config?.devtoolsActivateScript, true);
 				if (!installedVersion) {
 					return undefined;
 				}
