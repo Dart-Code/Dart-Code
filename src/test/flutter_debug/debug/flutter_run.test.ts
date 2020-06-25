@@ -294,6 +294,11 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		if (numReloads && extApi.flutterCapabilities.hasEvictBug)
 			return this.skip();
 
+		// Restart not working for web in Flutter
+		// https://github.com/flutter/flutter/issues/60273
+		if (numReloads && flutterTestDeviceIsWeb)
+			return this.skip();
+
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		const expectedLocation = {
