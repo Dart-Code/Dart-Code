@@ -135,9 +135,16 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	private sendProgressEvent(e: AppProgress) {
 		const progressID = `flutter-${e.appId}-${e.progressId}`;
-		if (e.finished)
-			this.sendEvent(new ProgressEndEvent(progressID));
-		else
+		if (e.finished) {
+			let finalMessage = e.message;
+			if (!finalMessage) {
+				if (e.progressId === "hot.reload")
+					finalMessage = "Hot Reload completed!";
+				else if (e.progressId === "hot.restart")
+					finalMessage = "Hot Restart completed!";
+			}
+			this.sendEvent(new ProgressEndEvent(progressID, finalMessage));
+		} else
 			this.sendEvent(new ProgressStartEvent(progressID, "", e.message || "Working"));
 	}
 
