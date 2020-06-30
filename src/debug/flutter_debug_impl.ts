@@ -466,7 +466,10 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	// Extension
-	public handleExtensionEvent(event: VMEvent) {
+	public async handleExtensionEvent(event: VMEvent) {
+		// Don't process any events while the debugger is still running init code.
+		await this.debuggerInit;
+
 		if (event.kind === "Extension" && event.extensionKind === "Flutter.FirstFrame") {
 			this.sendEvent(new Event("dart.flutter.firstFrame", {}));
 		} else if (event.kind === "Extension" && event.extensionKind === "Flutter.Error") {

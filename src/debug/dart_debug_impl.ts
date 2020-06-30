@@ -97,6 +97,7 @@ export class DartDebugSession extends DebugSession {
 	protected supportsDebugInternalLibraries = false;
 	protected isTerminating = false;
 	protected readonly logger = new DebugAdapterLogger(this, LogCategory.VmService);
+	protected debuggerInit: Promise<void> | undefined;
 
 	protected get shouldConnectDebugger() {
 		return !this.noDebug || this.connectVmEvenForNoDebug;
@@ -493,7 +494,7 @@ export class DartDebugSession extends DebugSession {
 		if (!this.shouldConnectDebugger)
 			return;
 
-		return new Promise<void>((resolve, reject) => {
+		this.debuggerInit = new Promise<void>((resolve, reject) => {
 			this.log(`Connecting to VM Service at ${uri}`);
 			this.logToUser(`Connecting to VM Service at ${uri}\n`);
 			this.vmService = new VmServiceConnection(uri);
@@ -608,6 +609,8 @@ export class DartDebugSession extends DebugSession {
 				reject(error);
 			});
 		});
+
+		return this.debuggerInit;
 	}
 
 	protected recordAdditionalPid(pid: number) {
@@ -1538,6 +1541,9 @@ export class DartDebugSession extends DebugSession {
 
 	// IsolateStart, IsolateRunnable, IsolateExit, IsolateUpdate, ServiceExtensionAdded
 	public async handleIsolateEvent(event: VMEvent): Promise<void> {
+		// Don't process any events while the debugger is still running init code.
+		await this.debuggerInit;
+
 		const kind = event.kind;
 		if (kind === "IsolateStart" || kind === "IsolateRunnable") {
 			await this.threadManager.registerThread(event.isolate!, kind);
@@ -1554,7 +1560,10 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	// Service
-	public handleServiceEvent(event: VMEvent) {
+	public async handleServiceEvent(event: VMEvent) {
+		// Don't process any events while the debugger is still running init code.
+		await this.debuggerInit;
+
 		const kind = event.kind;
 		if (kind === "ServiceRegistered")
 			this.handleServiceRegistered(event);
@@ -1608,6 +1617,9 @@ export class DartDebugSession extends DebugSession {
 	// PauseStart, PauseExit, PauseBreakpoint, PauseInterrupted, PauseException, Resume,
 	// BreakpointAdded, BreakpointResolved, BreakpointRemoved, Inspect, None
 	public async handleDebugEvent(event: VMEvent): Promise<void> {
+		// Don't process any events while the debugger is still running init code.
+		await this.debuggerInit;
+
 		try {
 			const kind = event.kind;
 
