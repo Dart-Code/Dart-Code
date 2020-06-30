@@ -4,6 +4,7 @@ import * as vs from "vscode";
 import { doNotAskAgainAction, isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
 import { DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { DartWorkspaceContext, Logger, LogMessage } from "../../shared/interfaces";
+import { PromiseCompleter } from "../../shared/utils";
 import { findProjectFolders, fsPath } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
@@ -14,7 +15,7 @@ import { ServiceExtensionArgs, timeDilationNormal, timeDilationSlow, VmServiceEx
 import { DebuggerType } from "../providers/debug_config_provider";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools/manager";
-import { DartDebugSessionInformation } from "../utils/vscode/debug";
+import { DartDebugSessionInformation, ProgressMessage } from "../utils/vscode/debug";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
 
@@ -388,6 +389,10 @@ export class DebugCommands {
 		session.hasEnded = true;
 		debugSessions.splice(sessionIndex, 1);
 
+		// Close any in-progress progress notifications.
+		for (const progressID of Object.keys(session.progress))
+			session.progress[progressID]?.complete();
+
 		const debugSessionEnd = new Date();
 		this.analytics.logDebugSessionDuration(session.debuggerType, debugSessionEnd.getTime() - session.sessionStart.getTime());
 
@@ -496,6 +501,28 @@ export class DebugCommands {
 					});
 				}
 			}
+		} else if (e.event === "dart.progressStart") {
+			vs.window.withProgress(
+				{ location: vs.ProgressLocation.Window },
+				(progress) => {
+					// Complete any existing one with this ID.
+					session.progress[e.body.progressID]?.complete();
+
+					// Build a new progress and store it in the session.
+					const completer = new PromiseCompleter<void>();
+					session.progress[e.body.progressID] = new ProgressMessage(progress, completer);
+					session.progress[e.body.progressID]?.report(e.body.message);
+					return completer.promise;
+				},
+			);
+		} else if (e.event === "dart.progressUpdate") {
+			session.progress[e.body.progressID]?.report(e.body.message);
+		} else if (e.event === "dart.progressEnd") {
+			if (e.body.message) {
+				session.progress[e.body.progressID]?.report(e.body.message);
+				await new Promise((resolve) => setTimeout(resolve, 400));
+			}
+			session.progress[e.body.progressID]?.complete();
 		}
 	}
 

@@ -1,4 +1,4 @@
-import { ContinuedEvent, Event, OutputEvent, ProgressEndEvent, ProgressStartEvent, ProgressUpdateEvent } from "vscode-debugadapter";
+import { ContinuedEvent, Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { FlutterCapabilities } from "../shared/capabilities/flutter";
 import { debugLaunchProgressId, restartReasonManual } from "../shared/constants";
@@ -130,22 +130,23 @@ export class FlutterDebugSession extends DartDebugSession {
 		//
 		// We'll hide the overall launch progress when we connect to the VM service.
 		if (!e.finished && e.message)
-			this.sendEvent(new ProgressUpdateEvent(debugLaunchProgressId, e.message));
+			this.updateProgress(debugLaunchProgressId, e.message);
 	}
 
 	private sendProgressEvent(e: AppProgress) {
 		const progressID = `flutter-${e.appId}-${e.progressId}`;
 		if (e.finished) {
-			let finalMessage = e.message;
+			let finalMessage: string | undefined;
 			if (!finalMessage) {
 				if (e.progressId === "hot.reload")
-					finalMessage = "Hot Reload completed!";
+					finalMessage = "Hot Reload complete!";
 				else if (e.progressId === "hot.restart")
-					finalMessage = "Hot Restart completed!";
+					finalMessage = "Hot Restart complete!";
 			}
-			this.sendEvent(new ProgressEndEvent(progressID, finalMessage));
-		} else
-			this.sendEvent(new ProgressStartEvent(progressID, "", e.message || "Working"));
+			this.endProgress(progressID, finalMessage);
+		} else {
+			this.startProgress(progressID, e.message);
+		}
 	}
 
 	private handleLogOutput(msg: string, forceErrorCategory = false) {
@@ -162,7 +163,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			// This text comes through as stdout and not Progress, so map it over
 			// to progress indicator.
 			if (msg.indexOf("Waiting for connection from") !== -1) {
-				this.sendEvent(new ProgressUpdateEvent(debugLaunchProgressId, msg));
+				this.updateProgress(debugLaunchProgressId, msg.trim());
 			}
 
 			this.logToUser(msg, forceErrorCategory ? "stderr" : this.outputCategory);

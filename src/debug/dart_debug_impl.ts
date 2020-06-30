@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { URL } from "url";
-import { DebugSession, Event, InitializedEvent, OutputEvent, ProgressEndEvent, ProgressStartEvent, ProgressUpdateEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
+import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { VmServiceCapabilities } from "../shared/capabilities/vm_service";
@@ -145,9 +145,7 @@ export class DartDebugSession extends DebugSession {
 			args.program = path.join(args.cwd, args.program);
 		}
 
-		// TODO: It's not clear if passing an empty string for title is reasonable, but it works better in VS Code.
-		// See https://github.com/microsoft/language-server-protocol/issues/1025.
-		this.sendEvent(new ProgressStartEvent(debugLaunchProgressId, "", "Launching…"));
+		this.startProgress(debugLaunchProgressId, "Launching");
 
 		this.shouldKillProcessOnTerminate = true;
 		this.cwd = args.cwd;
@@ -230,7 +228,7 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		if (!this.shouldConnectDebugger) {
-			this.sendEvent(new ProgressEndEvent(debugLaunchProgressId));
+			this.endProgress(debugLaunchProgressId);
 			this.sendEvent(new InitializedEvent());
 
 			// If we're not connecting a debugger and we spawned a remote process, we have
@@ -261,7 +259,7 @@ export class DartDebugSession extends DebugSession {
 			return this.errorResponse(response, "Unable to attach; no VM service address or service info file provided.");
 		}
 
-		this.sendEvent(new ProgressStartEvent(debugLaunchProgressId, "", "Waiting for application…"));
+		this.startProgress(debugLaunchProgressId, "Waiting for application");
 
 		this.shouldKillProcessOnTerminate = false;
 		this.cwd = args.cwd;
@@ -291,9 +289,9 @@ export class DartDebugSession extends DebugSession {
 				url = this.vmServiceWsUriFor(vmServiceUri);
 			} else {
 				this.vmServiceInfoFile = args.serviceInfoFile;
-				this.sendEvent(new ProgressUpdateEvent(debugLaunchProgressId, `Waiting for ${this.vmServiceInfoFile}…`));
+				this.updateProgress(debugLaunchProgressId, `Waiting for ${this.vmServiceInfoFile}`);
 				url = await this.startServiceFilePolling();
-				this.sendEvent(new ProgressEndEvent(debugLaunchProgressId));
+				this.endProgress(debugLaunchProgressId);
 			}
 			await this.initDebugger(url);
 		} catch (e) {
@@ -569,7 +567,7 @@ export class DartDebugSession extends DebugSession {
 						if (this.pollforMemoryMs)
 							setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs);
 
-						this.sendEvent(new ProgressEndEvent(debugLaunchProgressId));
+						this.endProgress(debugLaunchProgressId);
 						this.sendEvent(new InitializedEvent());
 					});
 				});
@@ -737,17 +735,17 @@ export class DartDebugSession extends DebugSession {
 	): Promise<void> {
 		this.log(`Termination requested!`);
 		this.isTerminating = true;
-		this.sendEvent(new ProgressStartEvent(debugTerminatingProgressId, "Terminating debug session…"));
+		this.startProgress(debugTerminatingProgressId, "Terminating debug session");
 
 		if (this.expectAdditionalPidToTerminate && !this.additionalPidsToTerminate.size) {
 			this.log(`Waiting for main process PID before terminating`);
-			this.sendEvent(new ProgressUpdateEvent(debugTerminatingProgressId, "Waiting for process…"));
+			this.updateProgress(debugTerminatingProgressId, "Waiting for process");
 			const didGetPid = await this.raceIgnoringErrors(() => this.additionalPidCompleter.promise, 20000);
 			if (didGetPid)
 				this.log(`Got main process PID, continuing...`);
 			else
 				this.log(`Timed out waiting for main process PID, continuing anyway...`);
-			this.sendEvent(new ProgressUpdateEvent(debugTerminatingProgressId, "Terminating process…"));
+			this.updateProgress(debugTerminatingProgressId, "Terminating process");
 		}
 
 		try {
@@ -1464,6 +1462,35 @@ export class DartDebugSession extends DebugSession {
 		this.sendEvent(new Event("dart.exposeUrl", { url }));
 
 		return completer.promise;
+	}
+
+	protected startProgress(progressID: string, message: string | undefined) {
+		message = message || "Working";
+		message = message.endsWith("…") || message.endsWith("...") ? message : `${message}…`;
+		// TODO: It's not clear if passing an empty string for title is reasonable, but it works better in VS Code.
+		// See https://github.com/microsoft/language-server-protocol/issues/1025.
+
+		// TODO: Revert these changes if VS Code removes the delay.
+		// https://github.com/microsoft/vscode/issues/101405
+		// this.sendEvent(new ProgressStartEvent(progressID, "", e.message));
+		this.sendEvent(new Event("dart.progressStart", { progressID, message }));
+	}
+
+	protected updateProgress(progressID: string, message: string | undefined) {
+		if (!message)
+			return;
+		message = message.endsWith("…") || message.endsWith("...") ? message : `${message}…`;
+		// TODO: Revert these changes if VS Code removes the delay.
+		// https://github.com/microsoft/vscode/issues/101405
+		// this.sendEvent(new ProgressUpdateEvent(progressID, message));
+		this.sendEvent(new Event("dart.progressUpdate", { progressID, message }));
+	}
+
+	protected endProgress(progressID: string, message?: string | undefined) {
+		// TODO: Revert these changes if VS Code removes the delay.
+		// https://github.com/microsoft/vscode/issues/101405
+		// this.sendEvent(new ProgressEndEvent(progressID, e.message));
+		this.sendEvent(new Event("dart.progressEnd", { progressID, message }));
 	}
 
 	protected async customRequest(request: string, response: DebugProtocol.Response, args: any): Promise<void> {
