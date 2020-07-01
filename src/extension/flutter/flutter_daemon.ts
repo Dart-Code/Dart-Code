@@ -22,7 +22,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
 	constructor(logger: Logger, workspaceContext: FlutterWorkspaceContext) {
-		super(new CategoryLogger(logger, LogCategory.FlutterDaemon), config.maxLogLineLength, true);
+		super(new CategoryLogger(logger, LogCategory.FlutterDaemon), config.maxLogLineLength, true, true);
 
 		const folder = workspaceContext.sdks.flutter;
 

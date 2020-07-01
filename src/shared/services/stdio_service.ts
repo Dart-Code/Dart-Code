@@ -20,8 +20,9 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	constructor(
 		protected readonly logger: Logger,
 		public readonly maxLogLineLength: number | undefined,
-		public messagesWrappedInBrackets: boolean = false,
-		public readonly treatHandlingErrorsAsUnhandledMessages: boolean = false,
+		public messagesWrappedInBrackets = false,
+		public readonly treatHandlingErrorsAsUnhandledMessages = false,
+		public readonly treatCarriageReturnsAsNewlines = false,
 		private logFile?: string) {
 	}
 
@@ -49,7 +50,9 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	///
 	/// https://github.com/flutter/flutter/pull/57590
 	private normalizeNewlines(data: Buffer | string): Buffer {
-		const normalised = data.toString().replace(/\r/g, "\n");
+		const normalised = this.treatCarriageReturnsAsNewlines
+			? Buffer.from(data.toString().replace(/\r/g, "\n"))
+			: data;
 		return Buffer.from(normalised);
 	}
 

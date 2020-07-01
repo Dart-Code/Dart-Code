@@ -12,7 +12,7 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 		maxLogLineLength: number,
 		messagesWrappedInBrackets: boolean = false,
 		treatHandlingErrorsAsUnhandledMessages: boolean = false) {
-		super(logger, maxLogLineLength, messagesWrappedInBrackets, treatHandlingErrorsAsUnhandledMessages, logFile);
+		super(logger, maxLogLineLength, messagesWrappedInBrackets, treatHandlingErrorsAsUnhandledMessages, true, logFile);
 	}
 
 	protected shouldHandleMessage(message: string): boolean {
