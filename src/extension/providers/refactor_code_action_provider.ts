@@ -32,10 +32,12 @@ export class RefactorCodeActionProvider implements RankedCodeActionProvider {
 			return undefined;
 
 		try {
+			const startOffset = document.offsetAt(range.start);
+			const endOffset = document.offsetAt(range.end);
 			const result = await this.analyzer.editGetAvailableRefactorings({
 				file: fsPath(document.uri),
-				length: document.offsetAt(range.end) - document.offsetAt(range.start),
-				offset: document.offsetAt(range.start),
+				length: endOffset - startOffset,
+				offset: startOffset,
 			});
 			if (token && token.isCancellationRequested)
 				return;

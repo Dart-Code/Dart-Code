@@ -1,4 +1,4 @@
-import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, DocumentSelector, Range, TextDocument } from "vscode";
+import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, DocumentSelector, Range, Selection, TextDocument } from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
@@ -16,7 +16,7 @@ export class FixCodeActionProvider implements RankedCodeActionProvider {
 		providedCodeActionKinds: [CodeActionKind.QuickFix],
 	};
 
-	public async provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken): Promise<CodeAction[] | undefined> {
+	public async provideCodeActions(document: TextDocument, range: Range | Selection, context: CodeActionContext, token: CancellationToken): Promise<CodeAction[] | undefined> {
 		if (!isAnalyzableAndInWorkspace(document))
 			return undefined;
 
@@ -26,9 +26,10 @@ export class FixCodeActionProvider implements RankedCodeActionProvider {
 			return undefined;
 
 		try {
+			const pos = "active" in range ? range.active : range.start;
 			const result = await this.analyzer.editGetFixes({
 				file: fsPath(document.uri),
-				offset: document.offsetAt(range.start),
+				offset: document.offsetAt(pos),
 			});
 			if (token && token.isCancellationRequested)
 				return;

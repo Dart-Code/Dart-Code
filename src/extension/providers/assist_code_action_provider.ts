@@ -25,10 +25,12 @@ export class AssistCodeActionProvider implements RankedCodeActionProvider {
 			return undefined;
 
 		try {
+			const startOffset = document.offsetAt(range.start);
+			const endOffset = document.offsetAt(range.end);
 			const assists = await this.analyzer.editGetAssists({
 				file: fsPath(document.uri),
-				length: range.end.character - range.start.character,
-				offset: document.offsetAt(range.start),
+				length: endOffset - startOffset,
+				offset: startOffset,
 			});
 
 			const allAssists = assists.assists.map((assist) => this.convertResult(document, assist));
