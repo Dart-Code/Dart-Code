@@ -283,7 +283,15 @@ export class SdkCommands {
 	}
 
 	private handlePubspecChange(uri: vs.Uri) {
-		this.logger.info(`Pubspec ${fsPath(uri)} was modified`);
+		const filePath = fsPath(uri);
+
+		// Never do anything for files inside hidden or build folders.
+		if (filePath.indexOf(`${path.sep}.`) !== -1 || filePath.indexOf(`${path.sep}build${path.sep}`) !== -1) {
+			this.logger.info(`Skipping pubspec change for ignored folder ${filePath}`);
+			return;
+		}
+
+		this.logger.info(`Pubspec ${filePath} was modified`);
 		const conf = config.for(uri);
 
 		// Don't do anything if we're disabled.
@@ -295,12 +303,6 @@ export class SdkCommands {
 		// Or if the workspace config says we shouldn't run.
 		if (this.workspace.config.disableAutomaticPackageGet) {
 			this.logger.info(`Workspace suppresses automatic "pub get"`);
-			return;
-		}
-
-		// Never do anything for files inside .dart_tool folders.
-		if (fsPath(uri).indexOf(`${path.sep}.dart_tool${path.sep}`) !== -1) {
-			this.logger.info(`Change was inside a .dart_tool folder, skipping`);
 			return;
 		}
 
