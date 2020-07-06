@@ -24,7 +24,7 @@ export const analyzerSnapshotPath = "bin/snapshots/analysis_server.dart.snapshot
 export const flutterPath = "bin/" + flutterExecutableName;
 export const androidStudioPaths = androidStudioExecutableNames.map((s) => "bin/" + s);
 export const DART_DOWNLOAD_URL = "https://dart.dev/get-dart";
-export const FLUTTER_DOWNLOAD_URL = "https://flutter.io/setup/";
+export const FLUTTER_DOWNLOAD_URL = "https://flutter.dev/setup/";
 
 export const IS_LSP_CONTEXT = "dart-code:isLsp";
 
