@@ -450,6 +450,8 @@ async function findFlutterSnapSdkRoot(folder: string): Promise<string | undefine
 						location: ProgressLocation.Notification,
 						title: initializingSnapMessage,
 					},
+					// TODO: Can we show the user better progress and/or include this in logs?
+					// TODO: Handle errors/failures?
 					() => util.promisify(child_process.exec)(flutterSnapScript),
 				);
 			}
