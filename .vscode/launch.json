@@ -262,6 +262,30 @@
 			]
 		},
 		{
+			"name": "Launch Tests (Flutter Linux Snap)",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"${workspaceRoot}/src/test/test_projects/empty",
+				"--extensionDevelopmentPath=${workspaceRoot}",
+				"--extensionTestsPath=${workspaceRoot}/out/src/test/flutter_snap",
+				"--user-data-dir=${workspaceRoot}/.dart_code_test_data_dir"
+			],
+			"env": {
+				"DART_CODE_IS_TEST_RUN": "true"
+			},
+			"outFiles": [
+				"${workspaceRoot}/out/**/*.js"
+			],
+			"preLaunchTask": "npm: watch-tests",
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			]
+		},
+		{
 			"name": "Launch Tests (Flutter LSP)",
 			"type": "extensionHost",
 			"request": "launch",
