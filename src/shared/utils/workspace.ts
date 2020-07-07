@@ -1,6 +1,9 @@
+import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-import { isWin } from "../constants";
+import * as util from "util";
+import { ProgressLocation, window } from "vscode";
+import { flutterSnapScript, isWin } from "../constants";
 import { CustomScript, Logger, WritableWorkspaceConfig } from "../interfaces";
 
 export function processKnownGitRepositories(logger: Logger, config: WritableWorkspaceConfig, gitRoot: string) {
@@ -10,6 +13,28 @@ export function processKnownGitRepositories(logger: Logger, config: WritableWork
 		// The Dart SDKs tests cannot run using pub, so also force them to use the VM.
 		config.useVmForTests = true;
 	}
+}
+
+export async function processFlutterSnap(logger: Logger, config: WritableWorkspaceConfig, snapSdkRoot: string) {
+	// If the Flutter snap is installed but not initialised, initialise it now.
+	if (!fs.existsSync(snapSdkRoot + "/.git")) {
+		const displayMessage = "The Flutter snap is installed but not initialized. Would you like to initialize it now?";
+		const yesAction = "Yes";
+		const noAction = "No";
+		const selectedItem = await window.showInformationMessage(displayMessage, yesAction, noAction);
+		if (selectedItem === yesAction) {
+			await window.withProgress(
+				{
+					location: ProgressLocation.Notification,
+					title: "Initializing Flutter snap",
+				},
+				async () => {
+					await util.promisify(child_process.exec)(flutterSnapScript);
+				});
+		}
+	}
+	config.flutterSdkHome = snapSdkRoot;
+	config.flutterScript = { replacesArgs: 0, script: flutterSnapScript };
 }
 
 export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspaceConfig, fuchsiaRoot: string) {
