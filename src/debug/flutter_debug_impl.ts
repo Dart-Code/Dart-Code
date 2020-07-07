@@ -234,7 +234,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			appArgs.push("-v");
 		}
 
-		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterPath, args.flutterCustomRunScript, args.globalFlutterArgs || [], args.cwd, appArgs, { envOverrides: args.env, toolEnv: this.toolEnv }, args.flutterRunLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
+		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterPath, args.workspaceConfig, args.globalFlutterArgs || [], args.cwd, appArgs, { envOverrides: args.env, toolEnv: this.toolEnv }, args.flutterRunLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
 	}
 
 	private async connectToVmServiceIfReady() {

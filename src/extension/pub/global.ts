@@ -2,7 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { noRepeatPromptThreshold, pubGlobalDocsUrl, pubPath } from "../../shared/constants";
 import { LogCategory, VersionStatus } from "../../shared/enums";
-import { DartSdks, Logger } from "../../shared/interfaces";
+import { CustomScript, DartSdks, Logger } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { PubApi } from "../../shared/pub/api";
 import { pubVersionIsAtLeast, usingCustomScript } from "../../shared/utils";
@@ -13,7 +13,7 @@ import { safeToolSpawn } from "../utils/processes";
 export class PubGlobal {
 	constructor(private readonly logger: Logger, private context: Context, private sdks: DartSdks, private pubApi: PubApi) { }
 
-	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion: string, customActivateScript?: string, autoUpdate: boolean = false): Promise<string | undefined> {
+	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion: string, customActivateScript?: CustomScript, autoUpdate: boolean = false): Promise<string | undefined> {
 		let installedVersion = await this.getInstalledVersion(packageName, packageID);
 		const versionStatus = customActivateScript
 			? VersionStatus.UpdateRequired
@@ -66,7 +66,7 @@ export class PubGlobal {
 		return undefined;
 	}
 
-	public async backgroundActivate(packageName: string, packageID: string, silent: boolean, customActivateScript: string | undefined): Promise<void> {
+	public async backgroundActivate(packageName: string, packageID: string, silent: boolean, customActivateScript: CustomScript | undefined): Promise<void> {
 		const actionName = `Activating ${packageName}`;
 		const args = ["global", "activate", packageID];
 		if (silent)
@@ -116,18 +116,18 @@ export class PubGlobal {
 		return installedVersion;
 	}
 
-	private runCommandWithProgress(packageName: string, title: string, args: string[], customActivateScript: string | undefined): Thenable<string> {
+	private runCommandWithProgress(packageName: string, title: string, args: string[], customScript?: CustomScript): Thenable<string> {
 		return vs.window.withProgress({
 			location: vs.ProgressLocation.Notification,
 			title,
-		}, (_) => this.runCommand(packageName, args, customActivateScript));
+		}, (_) => this.runCommand(packageName, args, customScript));
 	}
 
-	private runCommand(packageName: string, args: string[], customScript?: string | undefined): Thenable<string> {
+	private runCommand(packageName: string, args: string[], customScript?: CustomScript): Thenable<string> {
 		const { binPath, binArgs } = usingCustomScript(
 			path.join(this.sdks.dart, pubPath),
 			args,
-			{ customScript, customScriptReplacesNumArgs: 3 },
+			customScript,
 		);
 
 		return new Promise((resolve, reject) => {

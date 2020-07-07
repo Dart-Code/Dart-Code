@@ -23,7 +23,7 @@ export class FlutterTestDebugSession extends DartTestDebugSession {
 		const { binPath, binArgs } = usingCustomScript(
 			args.flutterPath,
 			["test", "--machine"],
-			{ customScript: args.flutterCustomTestScript },
+			args.workspaceConfig?.flutterTestScript || args.workspaceConfig?.flutterScript,
 		);
 
 		const logger = new DebugAdapterLogger(this, LogCategory.FlutterTest);
