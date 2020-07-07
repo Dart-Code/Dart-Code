@@ -407,7 +407,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	private guessBestEntryPoint(openFile: string | undefined, folder: string | undefined): string | undefined {
 		// For certain open files, assume the user wants to run them.
 		if (openFile && isDartFile(openFile) &&
-			(isTestFile(openFile) || (isInsideFolderNamed(openFile, "bin") || isInsideFolderNamed(openFile, "tool")))) {
+			(isTestFile(openFile) || (isInsideFolderNamed(openFile, "bin") || isInsideFolderNamed(openFile, "tool") || isInsideFolderNamed(openFile, "test_driver")))) {
 			this.logger.info(`Using open file as entry point: ${openFile}`);
 			return openFile;
 		}
