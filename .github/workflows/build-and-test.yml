@@ -19,7 +19,7 @@ jobs:
         dart-version: [stable, dev]
         # for now, code-version will mirror dart-version to reduce number of bots
         # code-version: [stable] #, insiders]
-        bot: [flutter_debug, flutter_debug_chrome, flutter_test_debug, dart_web_debug, flutter_repo, dart_debug, dart, flutter_bazel, flutter_snap, flutter, misc]
+        bot: [flutter_debug, flutter_debug_chrome, flutter_test_debug, dart_web_debug, flutter_repo, dart_debug, dart, flutter, misc]
         include:
           - dart-version: stable
             flutter-version: stable
@@ -27,6 +27,8 @@ jobs:
           - dart-version: dev
             flutter-version: dev
             code-version: insiders
+          - os: ubuntu-latest
+            bot: flutter_snap
 
     steps:
 
@@ -42,29 +44,34 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Setup Dart ${{ matrix.dart-version }}
+        if: "matrix.bot != 'flutter_snap'"
         uses: DanTup/gh-actions/setup-dart@master
         with:
           channel: ${{ matrix.dart-version }}
 
       - name: Setup Flutter ${{ matrix.flutter-version }}
         id: flutter
-        if: "!startsWith(matrix.bot, 'dart')"
+        if: "!startsWith(matrix.bot, 'dart') && matrix.bot != 'flutter_snap'"
         uses: DanTup/gh-actions/setup-flutter@master
         with:
           channel: ${{ matrix.flutter-version }}
-      
+
+      - run: sudo snap install flutter --classic
+        if: "matrix.bot == 'flutter_snap'"
+
       - run: flutter update-packages
         if: matrix.bot == 'flutter_repo'
 
       - name: Print Dart version
+        if: "matrix.bot != 'flutter_snap'"
         run: dart --version
 
       - name: Print Flutter version
-        if: "!startsWith(matrix.bot, 'dart')"
+        if: "!startsWith(matrix.bot, 'dart') && matrix.bot != 'flutter_snap'"
         run: flutter --version
 
       - name: Enable Flutter web support
-        if: "startsWith(matrix.bot, 'flutter')"
+        if: "startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'"
         run: flutter config --enable-web
 
       - run: |
@@ -75,24 +82,25 @@ jobs:
           pub global activate --no-executables meta 1.1.6
           pub global activate --no-executables pedantic 1.4.0
           pub global activate --no-executables json_annotation 1.2.0
+        if: "matrix.bot != 'flutter_snap'"
         shell: pwsh
 
       - name: npm install
         run: npm install
-        
+
       - name: npm lint
         run: npm run lint
-          
+
       - name: npm build
         run: npm run build
 
       - name: pub get (hello_world)
-        if: "!startsWith(matrix.bot, 'dart')"
+        if: "startsWith(matrix.bot, 'dart')"
         run: pub get
         working-directory: src/test/test_projects/hello_world
 
       - name: flutter pub get (flutter_hello_world)
-        if: "startsWith(matrix.bot, 'flutter')"
+        if: "startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'"
         run: flutter packages get
         working-directory: src/test/test_projects/flutter_hello_world
 
