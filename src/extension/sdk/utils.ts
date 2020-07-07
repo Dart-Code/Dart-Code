@@ -1,9 +1,10 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import * as util from "util";
 import { commands, ExtensionContext, ProgressLocation, window } from "vscode";
-import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, flutterSnapScript, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isLinux, isMac, isWin, showLogAction } from "../../shared/constants";
+import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, flutterSnapScript, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, initializeSnapPrompt, initializingSnapMessage, isLinux, isMac, isWin, noAction, showLogAction, yesAction } from "../../shared/constants";
 import { Logger, WorkspaceConfig } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
@@ -439,22 +440,18 @@ async function findGitRoot(folder: string): Promise<string | undefined> {
 
 async function findFlutterSnapSdkRoot(folder: string): Promise<string | undefined> {
 	if (isLinux && fs.existsSync(flutterSnapScript)) {
-		const snapSdkRoot = process.env.HOME + "/snap/flutter/common/flutter";
+		const snapSdkRoot = path.join(os.homedir(), "/snap/flutter/common/flutter");
 
 		if (!fs.existsSync(snapSdkRoot + "/.git")) {
-			const displayMessage = "The Flutter snap is installed but not initialized. Would you like to initialize it now?";
-			const yesAction = "Yes";
-			const noAction = "No";
-			const selectedItem = await window.showInformationMessage(displayMessage, yesAction, noAction);
+			const selectedItem = await window.showInformationMessage(initializeSnapPrompt, yesAction, noAction);
 			if (selectedItem === yesAction) {
 				await window.withProgress(
 					{
 						location: ProgressLocation.Notification,
-						title: "Initializing Flutter snap",
+						title: initializingSnapMessage,
 					},
-					async () => {
-						await util.promisify(child_process.exec)(flutterSnapScript);
-					});
+					() => util.promisify(child_process.exec)(flutterSnapScript),
+				);
 			}
 		}
 
